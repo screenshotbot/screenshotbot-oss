@@ -1,0 +1,22 @@
+# CL-Gravatar
+
+Common Lisp bindings to the popular [Gravatar](https://secure.gravatar.com/) service.
+
+### (image-url _email_ &key _size default force-default-p rating_)
+
+* _size_ is an integer for the number of pixels along a side. Gravatar images are always square.
+* _default_ may be either a URL to your own image, or one of `:404`, `:mm`, `:identicon`, `:monsterid`, `:wavatar`, or `:retro`.
+* _force-default-p_ indicates whether to always use the default, even if another image is available. This is useful when you use a hash-based default like `:identicon` that is unique per user.
+* _rating_ may be one of `:g`, `:pg`, `:r`, or `:x` and indicates the level of "vulgarity" that you allow on your site. The default is `:g`.
+
+### (profile _email_)
+
+This returns the cl-json formatted profile of the user. Eventually we'll parse this into better structures, but that is TBD.
+
+### (profile-url _email_ _js-callback_)
+
+If you want to process the profile data using client-side JavaScript, this generates a URL that you can use as a `src` value to the HTML `script` element. And the JavaScript function named by _js-callback_ will be called on the resulting JSON data.
+
+### (qr-code-url _email_ &key _size_)
+
+This returns an image URL for a QR code that encodes the URL of the user's profile page.
