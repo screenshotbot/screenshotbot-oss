@@ -1,37 +1,7 @@
 # bknr.datastore
 
-An in-memory CLOS based data store. This is a significant fork of the
-very fantastic bknr.datastore.
-
-# Changes from OG version
-
-* The data format on disk is unchanged
-* Lispworks support: we've been running this in LW for several years now.
-* Multiple hook points to support things like file locks, and multiple datastore reading but only one writing.
-* Slot accessors on STORE-OBJECTs no longer need to be wrapped in WITH-TRANSACTION.
-* Snapshot for object-subsystem is parallel: i.e. it runs on multiple threads to speed up the encoding process.
-* WITH-TRANSACTION is a no-op
-  - In particular, we no longer support rollbacks
-  - WITH-TRANSACTION is generally complicated, difficult for a n00b to understand, and has a lot of rough edges (for instance, it does not rollback changes to indices)
-  - But, it also enabled an easy way to batch multiple IO requests. Without WITH-TRANSACTION, the only way to batch IO requests is to create an explicit named transaction.
-  - Removing the ability of rollbacks also allows us to implement things like Raft consensus protocol for High Availability situations.
-* There are probably bunch of other small changes in here that have accumulated over time.
-
-# Planned changes from OG version
-
-* Asynchronous snapshots
-* Getting rid of skip-lists and replacing with fset. (required for async snapshots)
-* There's a bug somewhere that makes indexes fail during hot reloads. This bug is non-deterministic and has been bugging me for years. The workaround is to never define an index on a slot using `:index-type ...`. Instead define an index in a `defvar` and then use `:index *my-index*`.
-* bknr.cluster... will be a separate repository but we'll continually make changes to bknr.datastore to support it.
+An in-memory CLOS based data store.
 
 # installing through quicklisp
 
-This fork is not available in Quicklisp. The bknr.datastore in Quicklisp is the OG version.
-
-To install you can use quick-patch;
-
-```
-    (ql:quickload :quick-patch)
-    (quick-patch:register "https://github.com/tdrhq/bknr-datastore" "main")
-    (quick-patch:checkout-all "build/")
-```
+Please use [Quicklisp](http://quicklisp.org/) to install bknr-datastore

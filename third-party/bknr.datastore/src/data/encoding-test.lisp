@@ -164,7 +164,7 @@
 (test-encoding array.3
                (make-array '(2 2) :element-type 'fixnum :initial-element 3))
 
-(test-encoding (array.3b)
+(test-encoding (array.3b :skip "will be fixed later - http://trac.common-lisp.net/bknr/ticket/31")
                (make-array '(2 2) :element-type '(mod 10) :initial-element 3))
 
 (test-encoding array.4
@@ -213,7 +213,7 @@
 
 ;; cons
 
-(test-encoding cons.1.1 '(1 2 3))
+(test-encoding cons.1 '(1 2 3))
 (test-encoding cons.2 '((1 2 3)))
 (test-encoding cons.3 '(#\Space 1 1.2 1.3 #(1 2 3)))
 

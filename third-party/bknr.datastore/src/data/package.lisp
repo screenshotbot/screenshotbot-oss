@@ -127,3 +127,6 @@
            ;; JSON serialization
            #:with-json-ignore-slots
            #:*json-ignore-slots*))
+
+(defpackage :bknr.datastore.tests
+  (:use :cl :bknr.datastore :bknr.indices :unit-test))
