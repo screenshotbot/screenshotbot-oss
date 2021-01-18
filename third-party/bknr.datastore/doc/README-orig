@@ -1,0 +1,48 @@
+BKNR CODENAME: SPUTNIK
+
+Hans Huebner, David Lichteblau, Manuel Odendahl
+
+1. Introduction
+
+BKNR is a software launch platform for LISP satellites. You could
+replace ``launch platform'' with framework and ``satellites'' with
+``applications'', but that would be too many buzzwords.
+
+BKNR is made of facilities that are not very useful on their own, but
+they can be used to quickly build shiny and elegant LISP
+satellites. For example, a very important component of BKNR is its
+datastore, which brings persistence to CLOS in a very simple way. By
+adding a few declarations to your class definitions, you can have
+persistent objects. You can also add XML import/export to your objects
+in a similar way. I think this is the single most attractive feature
+of BKNR: no more mapping from a relational database to LISP objects,
+no more XML parsing and XML generation, you just write plain
+application code.
+
+2. Installation
+
+BKNR has been developed with CMUCL 19a under FreeBSD, and has been
+tested with Allegro Common Lisp 6.2 under Windows and Freebsd. Install
+the BKNR sourcecode and the thirdparty sourcecode.
+
+Then configure the pathnames in bknr/init.lisp, and load
+bknr/init.lisp. Afterwards, you can use ASDF to load the BKNR
+facilities.
+
+To load the BKNR indices facility:
+(asdf:oos 'asdf:load-op :bknr-indices)
+
+To load the BKNR datastore facility:
+(asdf:oos 'asdf:load-op :bknr-indices)
+
+To load the BKNR impex facility:
+(asdf:oos 'asdf:load-op :bknr-indices)
+
+To load the BKNR framework:
+(asdf:oos 'asdf:load-op :bknr)
+
+3. Further documentation
+
+You can read the BKNR manual in bknr/doc/ . You can also browse the
+sourcecode for the tutorials in bknr/src/indices/tutorial.lisp,
+bknr/src/data/tutorial.lisp and bknr/src/xml-impex/tutorial.lisp.

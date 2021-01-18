@@ -1,0 +1,11 @@
+- text based encoding wieder fuer angenehmeres debuggen vielleicht (?)
+
+x rollforward until, restore until, usw...
+
+- tutorial fertig schreiben
+
+- import-image anschauen, nicht mehr failsafe
+
+- tx-persistent-change-class does not maintain indices
+
+- XXXX broken initialize-persistent-instance (?)

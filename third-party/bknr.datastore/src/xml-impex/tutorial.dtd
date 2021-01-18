@@ -1,0 +1,7 @@
+<!ELEMENT books (book)*>
+<!ELEMENT book (author,title)>
+<!ELEMENT author (#PCDATA)>
+<!ELEMENT title (#PCDATA)>
+
+<!ATTLIST book id   ID    #REQUIRED
+               isbn CDATA #REQUIRED>

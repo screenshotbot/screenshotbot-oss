@@ -1,0 +1,14 @@
+<library>
+  <author id="1">
+    <name>J.R.R Tolkien</name>
+  </author>
+  <author id="2">
+     <name>William Gibson</name>
+  </author>
+  <book id="3" author="1">
+    <title>Lord of the Rings</title>
+  </book>
+  <book id="4" author="2">
+    <title>Neuromancer</title>
+  </book>
+</library>

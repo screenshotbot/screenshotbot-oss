@@ -1,0 +1,7 @@
+# bknr.datastore
+
+An in-memory CLOS based data store.
+
+# installing through quicklisp
+
+Please use [Quicklisp](http://quicklisp.org/) to install bknr-datastore

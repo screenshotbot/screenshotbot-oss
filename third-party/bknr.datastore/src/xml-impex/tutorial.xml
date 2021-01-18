@@ -1,0 +1,10 @@
+<books>
+  <book id="1" isbn="234114">
+    <author>J.R.R Tolkien</author>
+    <title>The Lord of the Rings</title>
+  </book>
+  <book id="2" isbn="235431">
+    <author>William Gibson</author>
+    <title>Neuromancer</title>
+  </book>
+</books>

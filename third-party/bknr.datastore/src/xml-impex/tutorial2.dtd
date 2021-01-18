@@ -1,0 +1,7 @@
+<!ELEMENT test EMPTY>
+<!ELEMENT test2 EMPTY>
+<!ELEMENT test3 EMPTY>
+
+<!ATTLIST test id ID #REQUIRED>
+<!ATTLIST test2 id ID #REQUIRED>
+<!ATTLIST test3 id ID #REQUIRED>

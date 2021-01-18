@@ -1,0 +1,17 @@
+BKNR - Lisp Satelliten
+
+von manuel <manuel@bknr.net>
+
+Intro.
+
+Heute wimmelt es im grossen Internet nur so von Content-Management
+Systemen, von Datenbanken, von Template-Systemen und anderen
+buzzword-kompatiblen Webanwendungen. 
+
+
+BKNR Datastore: RAM ist ja soooo billig.
+
+MOP: Alles Meta oder was?
+
+
+

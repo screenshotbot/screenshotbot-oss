@@ -1,0 +1,4 @@
+<!ELEMENT adult (child)*>
+<!ELEMENT child EMPTY>
+<!ATTLIST adult name CDATA #REQUIRED>
+<!ATTLIST child name CDATA #REQUIRED>

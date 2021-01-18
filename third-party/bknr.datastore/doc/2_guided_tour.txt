@@ -1,0 +1,97 @@
+2. Guided Tour of the BKNR Launch Platform
+
+[Icon mit Leine]
+
+Let's take a guided tour of the BKNR sourcecode. Most facilities are
+independent of each other, and can be used to build completely
+different types of applications. However, all use the common toolbox
+called `BKNR.UTILS', which contains a lot of small lisp
+functions. These functions are not very important, and we will leave
+them behind to get to the first important facility of the BKNR launch
+platform.
+
+
+The Datastore [container]
+
+The datastore is one of the oldest facilities in BKNR, its role is to
+store the application data, so that this data is persistent between
+LISP sessions. Most existing applications use a back-end
+database to store persistent objects, for example a relational
+database or an object-oriented database. Despite the immediate
+advantages of having an existing database (reliability, speed,
+management tools), this approach is quite cumbersome: every
+application data structure has to be mapped onto a data structure in
+the database. This is not trivial, as can be seen by the gazillions
+attempts to write automatic conversion tools. Another fundamental
+problem is the integration of the database into the language itself,
+and into the development workflow. Errors in the database are
+"external" to the LISP process, rollback, error-catching, transactions
+are not as easy to write as they would be by having an "internal"
+database. In the end, we believe that the advantages of having an
+external database are outweighed by the disadvantages.
+
+With the decreasing hardware costs nowadays, it is quite feasible for
+most applications to keep their entire dataset in memory, and indeed
+this is the approach taken by the BKNR datastore. Even with a growing
+data set, memory costs decrease faster than the data grows, so that
+evolution is not a problem. This approach is known as "prevalence",
+and the BKNR datastore was initially based on the prevalence solution
+by Sven Van Caekenberghe (also see
+`http://homepage.mac.com/svc/prevalence/readme.html'). The key points
+of the prevalence model are that:
+
+  - All data is held in RAM
+
+  - Changes to persistent data are written to a transaction log
+   file. When loading the datastore, the transaction log is read, and
+   all changes are applied to the persistent data. All changes ever
+   made to the persistent data are executed in order, and the data is
+   recovered.
+
+ - If the data model supports it, the persistent data state can be
+   captured and written to a file, which is called a "snapshot
+   file". The snapshot file is read when loading the datastore, and
+   the snapshotted data is used as a "starting point" for the
+   transaction log.
+
+In the datastore, transactions which are logged to the transaction log
+are LISP functions defined using the `DEFTRANSACTION' form. Thus, all
+transactions transforming persistent data are made explicit in the
+source code. This if different from object-oriented databases, where
+the fundamental transactions are object creation, object deletion and
+slot access, which are not special cases in the prevalence model at
+all. The main problem with this approach is that it is possible to
+modify the persistent data in a way that is not logged into the
+transaction log, which leads to lost data after reloading the
+database. However, the BKNR datastore has a lot of development and
+debugging helps, warning the user when he is making dangerous changes
+(or forbidding them alltogether).
+
+The datastore has gone through a few development iterations, which are
+actually quite interesting to explain, as they show which compromises
+have been made, and how the datastore can be tweaked. After having
+used the prevalence solution of Sven van Caekenberghe and deciding
+that it didn't quite fit our needs, we wrote a simple datastore
+closely modelled on Sven's approach. However, the datastore featured
+helpers to create and modify indexed CLOS objects. Also, the
+transaction log consisted of SEXPs, and the loading of the transaction
+log consisted of using the `LOAD' LISP function. The main part of the
+object datastore consisted of a really big `DEFINE-PERSISTENT-CLASS'
+macro, which generated a `DEFCLASS', and overrided a lot of methods
+making up a store generic method protocol. Special slot options could
+be used to tell the store to index objects. For example, you could
+specify that the slot `NAME' of the class `USER' was stored in an
+index called `USER-NAME-INDEX'. The persistent objects could be
+snapshotted and written to a snapshot file, which again was a LISP
+file.
+
+
+The XML Import/Export
+
+The Webhandlers
+
+The Templater
+
+eboy.com
+
+

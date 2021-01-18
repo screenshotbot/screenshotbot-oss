@@ -1,0 +1,10 @@
+<family>
+  <adult name="Clara">
+    <child name="Robert"/>
+    <child name="Anton"/>
+  </adult>
+  <adult name="Joseph">
+    <child name="Ludwig"/>
+    <child name="Benediktine"/>
+  </adult>
+</family>

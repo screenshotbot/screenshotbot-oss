@@ -1,0 +1,213 @@
+\chapter{Guided Tour}
+
+\vbox{
+\centering
+\includegraphics{guidedtouricon}
+\vspace{1cm}
+}
+
+Let's take a guided tour of the BKNR sourcecode. Most facilities are
+independent of each other, and can be used to build completely
+different types of applications. However, all use the common toolbox
+called `BKNR-UTILS', which contains a lot of small lisp
+functions. These functions are not very important, and we will leave
+them behind to get to the first important facility of the BKNR launch
+platform.
+
+\section{The Datastore}
+
+The datastore is one of the oldest facilities in BKNR, its role is to
+store the application data, so that this data is persistent between
+LISP sessions. Most existing applications use a back-end
+database to store persistent objects, for example a relational
+database or an object-oriented database. Despite the immediate
+advantages of having an existing database (reliability, speed,
+management tools), this approach is quite cumbersome: every
+application data structure has to be mapped onto a data structure in
+the database. This is not trivial, as can be seen by the gazillions
+attempts to write automatic conversion tools. Another fundamental
+problem is the integration of the database into the language itself,
+and into the development workflow. Errors in the database are
+"external" to the LISP process, rollback, error-catching, transactions
+are not as easy to write as they would be by having an "internal"
+database. In the end, we believe that the advantages of having an
+external database are outweighed by the disadvantages.
+
+With the decreasing hardware costs nowadays, it is quite feasible for
+most applications to keep their entire dataset in memory, and indeed
+this is the approach taken by the BKNR datastore. Even with a growing
+data set, memory costs decrease faster than the data grows, so that
+evolution is not a problem. This approach is known as "prevalence",
+and the BKNR datastore was initially based on the prevalence solution
+by Sven Van Caekenberghe (also see
+`http://homepage.mac.com/svc/prevalence/readme.html'). The key points
+of the prevalence model are:
+
+\begin{itemize}
+\item All data is held in RAM
+
+\item Changes to persistent data are written to a transaction log
+   file. When loading the datastore, the transaction log is read, and
+   all changes are applied to the persistent data. All changes ever
+   made to the persistent data are executed in order, and the data is
+   recovered.
+
+\item If the data model supports it, the persistent data state can be
+   captured and written to a file, which is called a "snapshot
+   file". The snapshot file is read when loading the datastore, and
+   the snapshotted data is used as a "starting point" for the
+   transaction log.
+\end{itemize}
+
+In the datastore, transactions which are logged to the transaction log
+are LISP functions defined using the `DEFTRANSACTION' form. Thus, all
+transactions transforming persistent data are made explicit in the
+source code. This if different from object-oriented databases, where
+the fundamental transactions are object creation, object deletion and
+slot access, which are not special cases in the prevalence model at
+all. The main problem with this approach is that it is possible to
+modify the persistent data in a way that is not logged into the
+transaction log, which leads to lost data after reloading the
+database. However, the BKNR datastore has a lot of development and
+debugging helps, warning the user when he is making dangerous changes
+(or forbidding them alltogether).
+
+The datastore has gone through a few development iterations, which are
+actually quite interesting to explain, as they show which compromises
+have been made, and how the datastore can be tweaked. After having
+used the prevalence solution of Sven van Caekenberghe and deciding
+that it didn't quite fit our needs, we wrote a simple datastore
+closely modelled on Sven's approach. However, the datastore featured
+helpers to create and modify indexed CLOS objects. Also, the
+transaction log consisted of SEXPs, and the loading of the transaction
+log consisted of using the `LOAD' LISP function. The main part of the
+object datastore consisted of a really big `DEFINE-PERSISTENT-CLASS'
+macro, which generated a `DEFCLASS' form, and overrided a lot of
+methods, making up a store generic method protocol. Special slot
+options could be used to tell the store to index objects. For example,
+you could specify that the slot `NAME' of the class `USER' was stored
+in an index called `USER-NAME-INDEX'. The persistent objects could be
+snapshotted and written to a snapshot file, which again was a LISP
+file.
+
+The main problem with this first approach was the lack of real CLOS
+support. For example, you could modify an object using standard CLOS
+methods like `SETF SLOT-VALUE' without ever getting a warning that
+modifying the persistent state outside a transaction is
+dangerous. Moreover, the `DEFINE-PERSISTENT-CLASS' macro was difficult
+to modify, and the slot options for indices could not be modified
+easily. This lead to the development of a separate index layer, a
+separate transaction system, and of an object datastore combining the
+two systems with additional CLOS support built using the Metaobject
+Protocol.
+
+\subsection{The transaction layer}
+
+The transaction layer is now separate from the object oriented
+datastore. It provides the functionality to declare explicit
+transactions (still using the `DEFTRANSACTION' form), and to serialize
+the transactions coming from multiple threads to a transaction log in
+the filesystem. Using the transaction system is done by instantiating
+an instance of the `STORE' class (or `MP-STORE' to serialize
+concurrent transactions) and specifying a directory where the
+transaction logs has to be stored. Only a single transaction system
+can be open in a LISP session. When a transaction is executed, the
+store serializes the transaction call (the transaction name and its
+arguments) to the transaction log. It also stores the timestamp at
+which the transaction was executed. This allows the user to restore
+the transaction system state until a certain time (for debugging his
+application or reverting to an old data state). When a datastore is
+created or restored, the transaction log is read, and all the
+transaction calls are re-executed. After all the transactions have
+been executed, the persistent state is restored.
+
+A transaction store can have multiple subsystems, which control a
+certain subset of the persistent data. For example, the object
+datastore which controls persistent CLOS objects is realized as a
+subsystem of the transaction layer. A subsystem can snapshot the
+current persistent state, and write it to disk. When the persistent
+data is snapshotted, the transaction log can be discarded. Restoring
+this state then consists of loading the snapshot file, and then
+executing the transactions stored in the new transaction log. This
+allows for a much faster restore procedure. The snapshotting procedure
+takes care to backup the old transaction log, so that a restore until
+a certain timestamp is still possible.
+
+\subsection{The object datastore}
+
+The object datastore combines several aspects:
+\begin{itemize}
+  \item It is a subsystem of the transaction layer, and can snapshot
+persistent CLOS objects to a snapshot file, saving their slot values.
+  \item It provides a CLOS Metaclass for persistent objects. Using
+this metaclass, you can specify additional slot options for persistent
+objects. For example, you can specify that a certain slot is
+transient, which means that it will not be snapshotted and that its
+value can be changed outside of a transaction.
+  \item The persistent object metaclass also provides the index
+facility of `BKNR-INDICES', so that persistent objects automatically
+get indexed when restored from the store. The index facility is also
+used by the store itself to keep track of the instantiated objects of
+each class, and to index the objects by their unique ID.
+\end{itemize}
+
+The object datastore also provides a few helpers for developers. For
+example, you cannot change the value of a slot when you are outside of
+a transaction. The store throws an error when such an illegal
+operation is made. The store also warns you when you change a class
+definition. As the class definitions are not stored in the datastore,
+a snapshot is necessary after schema evolution.
+
+\section{The XML Import/Export Facility}
+
+BKNR applications often have to communicate with the external world,
+for example getting data from external sources, or exporting the data
+from the object datastore to external sources. In order to reduce the
+amount of conversion and parsing code that has to be written to
+accomodate these tasks, the BKNR framework provides an automatic
+mapping from CLOS classes to XML data. Using a special Metaclass for
+XML objects, you can map a CLOS class to XML according to a XML
+DTD.
+
+In the following paragraphs, we will use the CLOS class `USER' to show
+how the XML import/export facility works. The class `USER' has a slot
+`PARENT' which points to another `USER', a slot `NAME' which contains
+a string (the name of the user, obviously) and a slot `AGE' which
+contains an integer (the age of the user).
+
+A DTD consists of element declaration and of attribute declarations
+(we will leave entity declarations aside for now). Most of the time,
+the mapping between the XML data and the CLOS representation is quite
+straightforward. An object is represented as an XML element, and its
+slots are represented as either attributes of the element, or child
+elements. All the data in the XML file is encoded as a string, and
+read as such by the CXML parser used by BKNR. You can however specify
+custom parsing and serializing routines for slots.
+
+After the CLOS class has been annotated using specific slot-options,
+objects can be read from an existing XML file (which validates against
+the DTD file), or CLOS objects can be serialized to XML. Furthermore,
+parent-child relations can be directly created by the parsing code, or
+following by the serializing code. XML impex slot options can also be
+combined with BKNR indices, which makes browsing XML data very simple.
+
+Exporting and importing XML data now is a breeze!
+
+\section{The BKNR Web Framework}
+
+BKNR also features a web framework, providing an object oriented web
+handler architecture. Adding handlers for special kinds of data (for
+example RSS feeds for a custom data structure) can easily be achieved
+using multiple inheritance. Furthermore, a template handler is
+available, making it possible to access LISP functions from an XHTML
+file. Sadly, as the web framework has been heavily rewritten in the
+last months, we were not able to document it. However, you can have a
+look at the example sourcecode for different applications on the bknr
+webpage.
+
+
+%\section{The Templater}
+
+
+%\section{eboy.com}
+

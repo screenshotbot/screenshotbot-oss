@@ -1,0 +1,55 @@
+\documentclass[a4paper,11pt,titlepage]{book}
+\usepackage{amssymb}
+\usepackage{fancyvrb,color,palatino}
+\definecolor{gray}{gray}{0.6}
+
+
+\newif\ifpdf
+\ifx\pdfoutput\undefined
+\pdffalse % es wird kein PDFLaTeX benutzt
+\else
+\pdfoutput=1 % es wird PDFLaTeX benutzt
+\pdftrue
+\fi
+
+\ifpdf
+\usepackage[pdftex]{graphicx}
+\else
+\usepackage{graphicx}
+\fi
+
+\upshape
+\frenchspacing
+\title{BKNR Manual}
+\author{BKNR}
+
+\begin{document}
+
+\begin{titlepage}
+\begin{center}
+
+  \vspace*{6cm}
+  \begin{figure}[htbp]
+    \centering
+    \includegraphics[scale=0.6]{bknrlogo}
+  \end{figure}
+  \vspace{2cm}
+  \Large
+  CODENAME: VOSTOK
+  (THIS MANUAL IS UNDER EDIT, PLEASE DO NOT PRINT OR DISTRIBUTE)
+
+\end{center}
+\end{titlepage}
+
+\tableofcontents
+
+\include{introduction}
+\include{guidedtour}
+\include{indices}
+\include{datastore}
+\include{impex}
+%\include{web}
+%\include{templates}
+%\include{example}
+
+\end{document}
