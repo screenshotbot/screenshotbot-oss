@@ -15,6 +15,9 @@
 #+screenshotbot-oss
 (ql:quickload "bknr.datastore")
 
+#+screenshotbot-oss
+(ql:quickload "fiveam")
+
 
 #+lispworks
 (ql:quickload :osicat :silent t)
