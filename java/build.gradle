@@ -1,0 +1,100 @@
+// Copyright 2018-Present Modern Interpreters Inc.
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+apply plugin: 'java'
+apply plugin: 'kotlin'
+
+repositories {
+	mavenCentral()
+    jcenter()
+    // maven {
+    //     // url "https://repository.mulesoft.org/nexus/content/repositories/public/"
+    //     // url "http://maven.jahia.org/maven2/"
+    //     // url "https://repo.spring.io/libs-release/"
+    // }
+    maven {
+        url "https://repo.eclipse.org/content/groups/releases/"
+    }
+}
+
+dependencies {
+	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+	compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
+    compile files('libs/lispcalls.jar')
+
+// https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-s3
+	compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.875'
+    compile group: 'org.eclipse.mylyn.github', name: 'org.eclipse.egit.github.core', version: '5.10.0.202012080955-r'
+    compile group: 'com.slack.api', name: 'slack-api-client', version: '1.5.0-M1'
+	compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
+    compile group: 'com.atlassian.jira', name: 'jira-rest-java-client-api', version: '5.2.2'
+    compile group: 'com.atlassian.jira', name: 'jira-rest-java-client-core', version: '5.2.2'
+    compile group: 'com.atlassian.jira', name: 'jira-rest-java-client-app', version: '5.2.2'
+    compile group: 'com.asana', name: 'asana', version: '0.10.3'
+    compile group: 'com.taskadapter', name: 'trello-java-wrapper', version: '0.14'
+    compile group: 'com.auth0', name: 'java-jwt', version: '3.12.0'
+    compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.68'
+    compile group: 'org.gitlab4j', name: 'gitlab4j-api', version: '4.15.7'
+
+    // Only required for Selenium tests, but whatever :/
+    compile group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '3.141.59'
+    compile group: 'org.json', name: 'json', version: '20210307'
+}
+
+java {
+    sourceCompatibility org.gradle.api.JavaVersion.VERSION_1_8
+    targetCompatibility org.gradle.api.JavaVersion.VERSION_1_8
+}
+
+
+jar {
+	manifest {
+	    attributes "Main-Class": "com.baeldung.fatjar.Application"
+	}
+
+	from {
+	    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+	}
+}
+
+
+buildscript {
+	ext.kotlin_version = '1.4.10'
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+	}
+}
+compileKotlin {
+	kotlinOptions {
+		jvmTarget = "1.8"
+	}
+}
+compileTestKotlin {
+	kotlinOptions {
+		jvmTarget = "1.8"
+	}
+}
+
+tasks.register("makeClasspath") {
+    doLast {
+        File file = new File("build/libs/classpath.txt")
+        file.delete()
+        file.delete()
+        sourceSets.main.runtimeClasspath.each {
+            file.append(it)
+            if (it.isDirectory()) {
+                file.append("/")
+            }
+            file.append("\n")
+        }
+    }
+    dependsOn("build")
+}
