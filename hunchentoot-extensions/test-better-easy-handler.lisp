@@ -83,7 +83,7 @@
     (is (eql 'unused1 (caar *url-list*)))
     (is (equal '(car) (url-handler-request-args (cdar *url-list*))))
     (is (equal '(:join (:path "foo") (:optional (:variable "bar"))) (url-handler-parse-tree (cdar *url-list*))))
-    (is (equal "/foo/zoidberg" (util:make-url 'unused1 :bar "zoidberg")))))
+    (is (equal "/foo/zoidberg" (hex:make-url 'unused1 :bar "zoidberg")))))
 
 (test doesnt-match-subdirs
   (let ((regex (make-uri-regex "/foo/:bar")))
