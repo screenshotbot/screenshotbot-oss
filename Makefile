@@ -150,10 +150,10 @@ $(sbcl): build/distinfo.txt scripts/build-image.lisp
 	$(SBCL_CORE) --script scripts/build-image.lisp
 
 
-selenium-tests:
+selenium-tests: $(LW)
 	xvfb-run $(LW_SCRIPT) scripts/run-selenium-tests.lisp
 
-selenium-tests-without-x:
+selenium-tests-without-x: $(LW)
 	$(LW_SCRIPT) scripts/run-selenium-tests.lisp
 
 assets: $(LW) .PHONY

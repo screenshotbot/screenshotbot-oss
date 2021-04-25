@@ -18,22 +18,23 @@
 
 (load "quicklisp/setup.lisp")
 
+(push (pathname (format nil "~alocal-projects/" (uiop:getcwd))) ql:*local-project-directories*)
+(push (pathname (format nil "~asrc/" (uiop:getcwd))) ql:*local-project-directories*)
+(push (pathname (format nil "~athird-party/" (uiop:getcwd))) ql:*local-project-directories*)
+
 
 (pushnew :screenshotbot-oss *features*)
 
 
 (ql:quickload "log4cl")
+
+(log:info "*local-project-directories: ~S" ql:*local-project-directories*)
 (ql:quickload "swank")
-(ql:quickload "ironclad")
 #+lispworks
 (require "java-interface")
 
 (swank-loader:init :load-contribs t)
 
-(log:info "Web directory is: ~a" (uiop:getcwd))
-(push (pathname (format nil "~alocal-projects" (uiop:getcwd))) ql:*local-project-directories*)
-(push (pathname (format nil "~asrc" (uiop:getcwd))) ql:*local-project-directories*)
-(push (pathname (format nil "~athird-party" (uiop:getcwd))) ql:*local-project-directories*)
 
 ;; make sure we have build asd
 (push (pathname (format nil "~a/build-utils/" (namestring (uiop:getcwd))))
