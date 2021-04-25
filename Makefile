@@ -16,7 +16,8 @@ tests= \
 JIPR=../jippo
 LW=build/lw-console
 LW_CORE=/opt/software/lispworks/lispworks-7-1-0-*
-LISP_FILES=$(shell find . -name '*.lisp') $(shell find . -name '*.asd')
+SRC_DIRS=src local-projects third-party
+LISP_FILES=$(shell find $(SRC_DIRS) -name '*.lisp') $(shell find $(SRC_DIRS) -name '*.asd')
 JAR_FILE=java/build/lib/java.jar
 SO=$(JAR_FILE)
 LW_SCRIPT=timeout 5m $(LW) -quiet -build
@@ -26,7 +27,7 @@ JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/
 SBCL_SCRIPT=timeout 5m $(sbcl) --script
 CCL_SCRIPT=CCL_DEFAULT_DIRECTORY=$(CCL_DEFAULT_DIRECTORY) $(CCL_CORE) -b -I $(CCL_IMAGE)
 
-QUICKLISP=local-projects/quicklisp/dists/quicklisp/
+QUICKLISP=quicklisp/dists/quicklisp/
 
 define clsql_check_tests
 	TMP=$(TMPFILE) && $1 | tee  $$TMP &&  ! ( grep  "total tests failed" $$TMP ) && grep "Finished Running Tests Against" $$TMP && rm $$TMP
@@ -60,6 +61,8 @@ show-info:
 
 clean-sys-index:
 	rm -f system-index.txt
+	rm -rf local-projects/quicklisp
+	rm -rf */system-index.txt
 
 tests:| show-info clean-sys-index update-quicklisp test-parts selenium-tests
 
@@ -136,7 +139,7 @@ deploy-rsync: .PHONY web-bin
 
 build/distinfo.txt: .PHONY
 	mkdir -p build
-	if ! ( test -e $(QUICKLISP)/distinfo.txt && test -e $@ && diff -q $@ $(QUICKLISP)/distinfo.txt ) ; then \
+	if test -e $(QUICKLISP)/distinfo.txt && ! ( test -e $@ && diff -q $@ $(QUICKLISP)/distinfo.txt ) ; then \
 		cp $(QUICKLISP)/distinfo.txt $@ ; \
 	fi
 

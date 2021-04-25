@@ -16,7 +16,7 @@
 (progn
   (lw:set-default-character-element-type 'character))
 
-(load "local-projects/quicklisp/setup.lisp")
+(load "quicklisp/setup.lisp")
 
 
 (pushnew :screenshotbot-oss *features*)
@@ -31,7 +31,9 @@
 (swank-loader:init :load-contribs t)
 
 (log:info "Web directory is: ~a" (uiop:getcwd))
-(push (pathname (uiop:getcwd)) ql:*local-project-directories*)
+(push (pathname (format nil "~alocal-projects" (uiop:getcwd))) ql:*local-project-directories*)
+(push (pathname (format nil "~asrc" (uiop:getcwd))) ql:*local-project-directories*)
+(push (pathname (format nil "~athird-party" (uiop:getcwd))) ql:*local-project-directories*)
 
 ;; make sure we have build asd
 (push (pathname (format nil "~a/build-utils/" (namestring (uiop:getcwd))))
