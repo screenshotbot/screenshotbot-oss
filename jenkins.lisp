@@ -25,7 +25,7 @@
 #+lispworks
 (setf dspec:*redefinition-action* :error)
 
-#+ccl
+#+ (and ccl (not :screenshotbot-oss))
 (progn
   (ql:quickload :util) ;; got to do this
   (funcall (find-symbol "JVM-INIT-FOR-CCL" "UTIL"))
