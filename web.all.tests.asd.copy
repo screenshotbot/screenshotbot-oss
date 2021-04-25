@@ -1,3 +1,0 @@
-(defsystem :web.all.tests
-  :serial t
-  :depends-on (:screenshotbot.tests)
