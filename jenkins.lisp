@@ -12,6 +12,9 @@
 (ql:quickload "colorize" :silent t)
 (ql:quickload "tmpdir" :silent t)
 
+#+screenshotbot-oss
+(ql:quickload "bknr.datastore")
+
 
 #+lispworks
 (ql:quickload :osicat :silent t)
