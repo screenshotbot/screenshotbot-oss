@@ -64,7 +64,7 @@ clean-sys-index:
 	rm -rf local-projects/quicklisp
 	rm -rf */system-index.txt
 
-tests:| show-info clean-sys-index update-quicklisp test-parts selenium-tests
+tests:| show-info clean-sys-index test-parts selenium-tests
 
 test-parts: test-sb test-lw test-ccl test-store web-bin
 
@@ -87,7 +87,7 @@ deploy-jipr:
 	cd $(JIPR) && buck build jipr
 	cd $(JIPR) && cp `buck targets --show-output jipr | cut -d ' ' -f 2`  $(PWD)/jipr/static/binary/jipr.jar
 
-restart: | update-quicklisp test-lw  web-bin
+restart: | test-lw  web-bin
 	kill -9 `curl https://tdrhq.com/deploy/getpid`
 
 
