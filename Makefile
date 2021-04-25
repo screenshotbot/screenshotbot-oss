@@ -67,13 +67,13 @@ test-parts: test-sb test-lw test-ccl test-store web-bin
 $(JAR_FILE): $(shell find java | grep -v build | grep -v .gradle)
 	cd java && JAVA_HOME=$(JAVA_HOME) ./gradlew build makeClasspath
 
-test-sb: submodule $(SO) $(sbcl)
+test-sb: submodule $(SO) $(sbcl) $(JAR_FILE)
 	$(sbcl) --script ./jenkins.lisp
 
-test-ccl: submodule $(SO) $(CCL_IMAGE)
+test-ccl: submodule $(SO) $(CCL_IMAGE) $(JAR_FILE)
 	$(CCL_SCRIPT) ./jenkins.lisp
 
-test-lw: submodule $(SO) $(LW)
+test-lw: submodule $(SO) $(LW) $(JAR_FILE)
 	$(LW_SCRIPT) ./jenkins.lisp
 
 test-store: submodule $(LW)
