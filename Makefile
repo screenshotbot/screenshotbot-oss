@@ -136,7 +136,7 @@ deploy-rsync: .PHONY web-bin
 
 build/distinfo.txt: .PHONY
 	mkdir -p build
-	if ! ( test -e $@ && diff -q $@ $(QUICKLISP)/distinfo.txt ) ; then \
+	if ! ( test -e $(QUICKLISP)/distinfo.txt && test -e $@ && diff -q $@ $(QUICKLISP)/distinfo.txt ) ; then \
 		cp $(QUICKLISP)/distinfo.txt $@ ; \
 	fi
 
