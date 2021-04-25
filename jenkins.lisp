@@ -52,7 +52,7 @@
     (make-instance #-screenshotbot-oss
                    'util:safe-mp-store
                    #+screenshotbot-oss
-                   bknr.datastore:mp-store
+                   'bknr.datastore:mp-store
                    :directory tmpdir
                    :subsystems (list (make-instance
                                       'bknr.datastore:store-object-subsystem)
