@@ -34,7 +34,7 @@
                #-screenshotbot-oss
                "web.all.tests"
                #+screenshotbot-oss
-               "screenshotbot.tests")))
+               "screenshotbot.oss.tests")))
  (ql:quickload system))
 
 ;;(ql:quickload "auth")
