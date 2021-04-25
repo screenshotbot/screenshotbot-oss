@@ -1,4 +1,4 @@
 (defsystem :screenshotbot.oss.tests
   :serial t
-  :depends-on (:hunchentoot-extensions
+  :depends-on (:hunchentoot-extensions/tests
                :fiveam))

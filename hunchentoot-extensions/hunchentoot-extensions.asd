@@ -16,3 +16,11 @@
                (:file "url")
                (:file "acceptor-with-plugins")
                (:file "better-easy-handler")))
+
+(defsystem :hunchentoot-extensions/tests
+  :serial t
+  :depends-on (:hunchentoot-extensions
+               :fiveam)
+  :components ((:file "test-acceptor-with-plugins")
+               (:file "test-better-easy-handler")
+               (:file "test-url")))
