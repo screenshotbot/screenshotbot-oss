@@ -25,10 +25,11 @@
 #+lispworks
 (setf dspec:*redefinition-action* :error)
 
+(ql:quickload :jvm)
+
 #+ (and ccl (not :screenshotbot-oss))
 (progn
-  (ql:quickload :util) ;; got to do this
-  (funcall (find-symbol "JVM-INIT-FOR-CCL" "UTIL"))
+  (funcall (find-symbol "JVM-INIT-FOR-CCL" "JVM"))
   (setf *debugger-hook* nil))
 
 
@@ -58,8 +59,8 @@
                                       'bknr.datastore:store-object-subsystem)
                                      (make-instance
                                       'bknr.datastore:blob-subsystem)))
-    #+ (and (or ccl lispworks) (not screenshotbot-oss))
-    (util:jvm-init)
+    #+ (or ccl lispworks)
+    (jvm:jvm-init)
     (fiveam:test foo-bar
       (fiveam:is-true (equal "foo" "foo")))
     (if (not (fiveam:run-all-tests))
