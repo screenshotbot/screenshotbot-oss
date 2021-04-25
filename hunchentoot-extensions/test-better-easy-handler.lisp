@@ -1,7 +1,7 @@
 (defpackage :util.test-better-easy-handler
   (:use :cl
         :fiveam
-        :util)
+        :hex)
   (:import-from :hex
                 :make-uri-regex
                 :%make-uri-regex

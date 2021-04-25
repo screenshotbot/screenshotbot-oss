@@ -1,7 +1,7 @@
 (defpackage :util.test-url
   (:use :cl
         :fiveam
-        :util)
+        :hex)
   (:import-from :hex
                 :missing-required-arg))
 (in-package :util.test-url)

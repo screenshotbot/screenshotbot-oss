@@ -2,7 +2,7 @@
   (:use :cl
    :alexandria
         :fiveam)
-  (:import-from :util
+  (:import-from :hex
                 :make-prefix-matcher))
 (in-package :util.acceptor-with-plugins)
 
