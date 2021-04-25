@@ -19,6 +19,9 @@
 (load "~/quicklisp/setup.lisp")
 
 
+(pushnew :screenshotbot-oss *features*)
+
+
 (ql:quickload "log4cl")
 (ql:quickload "swank")
 (ql:quickload "ironclad")

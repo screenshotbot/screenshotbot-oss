@@ -31,7 +31,10 @@
                (let ((pos (position "-system" system:*line-arguments-list* :test 'equal)))
                  (when pos
                    (elt system:*line-arguments-list* (1+ pos))))
-               "web.all.tests")))
+               #-screenshotbot-oss
+               "web.all.tests"
+               #+screenshotbot-oss
+               "screenshotbot.tests")))
  (ql:quickload system))
 
 ;;(ql:quickload "auth")
