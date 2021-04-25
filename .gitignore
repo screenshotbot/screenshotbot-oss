@@ -1,4 +1,3 @@
-quicklisp/
 bazel-*
 *.pyc
 .#*

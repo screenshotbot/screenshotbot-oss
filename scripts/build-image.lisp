@@ -16,7 +16,7 @@
 (progn
   (lw:set-default-character-element-type 'character))
 
-(load "~/quicklisp/setup.lisp")
+(load "local-projects/quicklisp/setup.lisp")
 
 
 (pushnew :screenshotbot-oss *features*)
