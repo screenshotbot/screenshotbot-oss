@@ -59,7 +59,7 @@ show-info:
 	env
 
 clean-sys-index:
-	rm system-index.txt
+	rm -f system-index.txt
 
 tests:| show-info clean-sys-index update-quicklisp test-parts selenium-tests
 
