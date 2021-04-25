@@ -58,7 +58,7 @@
                                       'bknr.datastore:store-object-subsystem)
                                      (make-instance
                                       'bknr.datastore:blob-subsystem)))
-    #+(or ccl lispworks)
+    #+(or ccl lispworks (not screnshotbot-oss))
     (util:jvm-init)
     (fiveam:test foo-bar
       (fiveam:is-true (equal "foo" "foo")))
