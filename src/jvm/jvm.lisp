@@ -23,6 +23,7 @@
             unless (or (path:-e f) (path:-d f)
                        (str:ends-with-p "resources/main" f))
               do (error "File in class-path not found: ~a" f))
+      #+ccl
       (pushnew (asdf:system-relative-pathname :cl+j "cl_j.jar")
                class-path)
       class-path)))
