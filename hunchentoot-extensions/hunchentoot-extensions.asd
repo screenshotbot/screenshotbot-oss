@@ -9,6 +9,7 @@
   :depends-on (:hunchentoot
                :parse-declarations-1.0
                :str
+               :markup
                :do-urlencode
                :log4cl)
   :components ((:file "package")
