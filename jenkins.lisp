@@ -43,7 +43,10 @@
 
 (defun main ()
   (tmpdir:with-tmpdir (tmpdir)
-    (make-instance 'util:safe-mp-store
+    (make-instance #-screenshotbot-oss
+                   'util:safe-mp-store
+                   #+screenshotbot-oss
+                   bknr.datastore:mp-store
                    :directory tmpdir
                    :subsystems (list (make-instance
                                       'bknr.datastore:store-object-subsystem)
