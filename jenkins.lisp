@@ -27,9 +27,9 @@
 
 (ql:quickload :jvm)
 
-#+ (and ccl (not :screenshotbot-oss))
+#+ccl
 (progn
-  (funcall (find-symbol "JVM-INIT-FOR-CCL" "JVM"))
+  (funcall (find-symbol "JVM-INIT" "JVM"))
   (setf *debugger-hook* nil))
 
 
@@ -59,7 +59,8 @@
                                       'bknr.datastore:store-object-subsystem)
                                      (make-instance
                                       'bknr.datastore:blob-subsystem)))
-    #+ (or ccl lispworks)
+    ;; on CCL, the JVM is already loaded before the main systems
+    #+lispworks
     (jvm:jvm-init)
     (fiveam:test foo-bar
       (fiveam:is-true (equal "foo" "foo")))

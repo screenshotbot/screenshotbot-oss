@@ -27,9 +27,12 @@
                class-path)
       class-path)))
 
+(defun libjvm.so ()
+  "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so")
+
 #+ccl
 (defun jvm-init-for-ccl ()
-  (setf cl-user::*jvm-path* "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so")
+  (setf cl-user::*jvm-path* (libjvm.so))
   (setf cl-user::*jvm-options*
         (list "-Xrs"
               (format nil "-Djava.class.path=~a"
@@ -40,10 +43,14 @@
   (lw-ji:init-java-interface
    :java-class-path (jvm-get-classpath)
    :option-strings (list #+nil"-verbose")
-   :jvm-library-path "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so")
+   :jvm-library-path (libjvm.so))
 
   #+ccl
-  (funcall (find-symbol "JAVA-INIT" "CL+J"))
+  (progn
+    (jvm-init-for-ccl)
+    (pushnew "local-projects/cl+j-0.4/" asdf:*central-registry*)
+    (asdf:load-system :cl+j)
+    (funcall (find-symbol "JAVA-INIT" "CL+J")))
 
   #+lispworks
   (lw-ji:find-java-class "io.tdrhq.TdrhqS3"))
