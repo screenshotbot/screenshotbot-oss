@@ -26,6 +26,7 @@ JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/
 SBCL_SCRIPT=timeout 5m $(sbcl) --script
 CCL_SCRIPT=CCL_DEFAULT_DIRECTORY=$(CCL_DEFAULT_DIRECTORY) $(CCL_CORE) -b -I $(CCL_IMAGE)
 
+QUICKLISP=local-projects/quicklisp/dists/quicklisp/
 
 define clsql_check_tests
 	TMP=$(TMPFILE) && $1 | tee  $$TMP &&  ! ( grep  "total tests failed" $$TMP ) && grep "Finished Running Tests Against" $$TMP && rm $$TMP
@@ -135,8 +136,8 @@ deploy-rsync: .PHONY web-bin
 
 build/distinfo.txt: .PHONY
 	mkdir -p build
-	if ! ( test -e $@ && diff -q $@ ~/quicklisp/dists/quicklisp/distinfo.txt ) ; then \
-		cp ~/quicklisp/dists/quicklisp/distinfo.txt $@ ; \
+	if ! ( test -e $@ && diff -q $@ $(QUICKLISP)/distinfo.txt ) ; then \
+		cp $(QUICKLISP)/distinfo.txt $@ ; \
 	fi
 
 build/lw-console: build/distinfo.txt scripts/build-image.lisp
