@@ -28,9 +28,9 @@ public class PropertiesClient {
 
 
     private final static Map<String, String> DEFAULT_PROPERTY_VALUES = ImmutableMap.<String, String>builder()
-            .put(JIRA_HOME, "https://screenshotbot.atlassian.net")
-            .put(CONSUMER_KEY, "OauthKey")
-            .put(PRIVATE_KEY, "MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBAOm1Zh5J+Cv4TQkB4qf6ZydqCsUjQ9+l0+w6PjjXX+S4D3Pz3I/sMJOUKCvZzWD2argqOZ1fP1lyjdqDORhOHhw2w/efZKYoBBPdLSwwkeG3D1/ojvMwQO0++dnWQI/qw/CYt7RCZFAM/K56Mb85gFXWzMjRDLIDJoK72laso7EpAgMBAAECgYEA2OfEDE6Ip35/OOHoFBEiFgGkV00gnHyS0MdJooW5+VQe+3YUefszJnU2R2SQ6fIqIB0IdhfFeuYH5AswPW+bHrwZr11hABZY9OTmgTvaypSEgscM3pTfK3A33EZV4s33xFr3lHnowhPvNnH2NkTpLybTiLktAb/KvVFSYVkuabUCQQD9xTk662Obp0IjEEMNu35ZF6nzhiL3IwQkzCoN20ZpyqQEESj7/F5Jw0f7h3zjcpIbL6fUPMJTZthDqxo4qZsHAkEA68MNeKUXtJtdefkxvH33ywvtt5ZmGF+atjj20n3rrYAfUgV5zEypvAwIO95ke0l9yFrp7NL863lBqWqDo2PWTwJBANE/iaQqqhSTwvYUl6XAHzupRoq15Sjw557L9jU8xH/BBqMP30KAYuLhsf4WRwVo2E6waeuYOgf5OoP5lwJ334sCQDl+UZSwPf2vPbZ3DKf42CrN9+SjarZa6jGx5o8iYgznh7vK1g76SxIupPtkmoBuRZxMf2tfcIpEAb082mlH+YUCQQDtvrsVv+ptrGAkMwiG6wbP1bhqaWMH1pf3YGOBKIV6gOPn0Wm96FUjR18Xj10VVsdVtHhB9tFKCvCGGu7+17bN")
+            .put(JIRA_HOME, "unused")
+            .put(CONSUMER_KEY, "unused")
+            .put(PRIVATE_KEY, "unused")
             .build();
 
     private final String fileUrl;
