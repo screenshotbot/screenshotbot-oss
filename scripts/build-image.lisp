@@ -17,7 +17,7 @@
   (lw:set-default-character-element-type 'character))
 
 (load "quicklisp/setup.lisp")
-(ql:update-all-dists)
+(ql:update-all-dists :prompt nil)
 
 (pushnew :screenshotbot-oss *features*)
 

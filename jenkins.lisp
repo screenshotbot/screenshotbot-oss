@@ -32,21 +32,39 @@
   (funcall (find-symbol "JVM-INIT" "JVM"))
   (setf *debugger-hook* nil))
 
+(defun find-tests ()
+  (let* ((pathname "src/")
+         (index (ql::ensure-system-index pathname)))
+    (when index
+      (with-open-file (stream index)
+        (remove-if 'null
+                    (loop for line = (read-line stream nil)
+                          while line
+                          collect
+                          (let ((system (pathname-name (pathname line))))
+                            (cond
+                              ((str:ends-with-p ".tests" system)
+                               system)
+                              ((str:ends-with-p ".test" system)
+                               system)
+                              (t
+                               (let ((x (asdf:find-system (format nil "~a/tests" system) nil)))
+                                 (when x
+                                   (asdf:component-name x))))))))))))
 
-(let ((system (or
-               #+lispworks
-               (let ((pos (position "-system" system:*line-arguments-list* :test 'equal)))
-                 (when pos
-                   (elt system:*line-arguments-list* (1+ pos))))
-               #-screenshotbot-oss
-               "web.all.tests"
-               #+screenshotbot-oss
-               "screenshotbot.oss.tests")))
- (ql:quickload system))
+(let ((systems (or
+                #+lispworks
+                (let ((pos (position "-system" system:*line-arguments-list* :test 'equal)))
+                  (when pos
+                    (list (elt system:*line-arguments-list* (1+ pos)))))
+                (find-tests))))
+  (mapc 'ql:quickload systems))
 
 ;;(ql:quickload "auth")
 ;;(asdf:load-system "auth")
 
+#-screenshotbot-oss
+(ql:quickload "markup.test")
 
 (defun main ()
   (tmpdir:with-tmpdir (tmpdir)
