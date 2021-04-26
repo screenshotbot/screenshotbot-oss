@@ -55,10 +55,8 @@
                "cl-json"
                "hunchentoot-extensions"
                "net.mfiano.lisp.stripe"
-               "closer-mop"
                "log4cl"
-               "cl-cron"
-               "ironclad")
+               "cl-cron")
   :serial t
   :components ((:file "package")
                (:file "mockable")
