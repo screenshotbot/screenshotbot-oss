@@ -54,6 +54,7 @@
                "drakma"
                "cl-json"
                "hunchentoot-extensions"
+               #-screenshotbot-oss
                "net.mfiano.lisp.stripe"
                "log4cl"
                "cl-cron")
@@ -63,6 +64,7 @@
                (:file "object-id")
                (:file "asdf")
                (:file "lists")
+               #-screenshotbot-oss
                (:file "payment-method")
                (:file "cdn")
                (lib-source-file "store-native")
