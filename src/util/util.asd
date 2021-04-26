@@ -62,7 +62,6 @@
   :serial t
   :components ((:file "package")
                (:file "mockable")
-               (:file "olark")
                (:file "object-id")
                (:file "asdf")
                (:file "lists")
