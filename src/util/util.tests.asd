@@ -1,6 +1,5 @@
 (defsystem :util.tests
-  :depends-on (:util
-               :mysqladmin)
+  :depends-on (:util)
   :serial t
   :components ((:module "tests"
                         :components ((:file "test-package")
