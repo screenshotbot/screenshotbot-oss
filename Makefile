@@ -176,3 +176,7 @@ $(CCL_IMAGE): build/distinfo.txt scripts/build-image.lisp
 	rm -f $@
 	$(CCL_CORE) -l scripts/build-image.lisp
 	chmod a+x $@
+
+
+update-ip: $(sbcl)
+	$(SBCL_SCRIPT) update-ip.lisp
