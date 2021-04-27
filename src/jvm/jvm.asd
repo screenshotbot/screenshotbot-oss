@@ -7,5 +7,6 @@
 (defsystem :jvm
   :serial t
   :depends-on (:str
-               :cffi)
+               :cffi
+               :trivial-garbage)
   :components ((:file "jvm")))
