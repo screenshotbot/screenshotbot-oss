@@ -6,5 +6,6 @@
 
 (defsystem :jvm
   :serial t
-  :depends-on (:str)
+  :depends-on (:str
+               :cffi)
   :components ((:file "jvm")))
