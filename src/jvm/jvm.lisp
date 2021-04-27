@@ -53,5 +53,5 @@
     (asdf:load-system :cl+j)
     (funcall (find-symbol "JAVA-INIT" "CL+J")))
 
-  #+lispworks
+  #+(and :lispworks (not :screenshotbot-oss))
   (lw-ji:find-java-class "io.tdrhq.TdrhqS3"))
