@@ -7,7 +7,10 @@
 ;; these quickloads are required because we need to load them before
 ;; we set dspec:*redefinition-action* to :error
 (ql:quickload "babel" :silent t)
+
+#-screenshotbot-oss
 (ql:quickload "clsql" :silent t)
+#-screenshotbot-oss
 (ql:quickload "clsql-helper" :silent t)
 (ql:quickload "colorize" :silent t)
 (ql:quickload "tmpdir" :silent t)
