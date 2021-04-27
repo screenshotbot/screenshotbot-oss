@@ -27,6 +27,9 @@
 
 (ql:quickload "log4cl")
 
+;; required for some ASDF builds
+(ql:quickload "uffi")
+
 (log:info "*local-project-directories: ~S" ql:*local-project-directories*)
 (ql:quickload "swank")
 #+lispworks
