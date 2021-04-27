@@ -23,8 +23,6 @@
 
 (push (pathname (format nil "~alocal-projects/" (uiop:getcwd))) ql:*local-project-directories*)
 (push (pathname (format nil "~asrc/" (uiop:getcwd))) ql:*local-project-directories*)
-
-#-screenshotbot-oss
 (push (pathname (format nil "~athird-party/" (uiop:getcwd))) ql:*local-project-directories*)
 
 (ql:quickload "log4cl")
