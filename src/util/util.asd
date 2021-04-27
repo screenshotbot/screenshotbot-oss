@@ -3,10 +3,6 @@
    :asdf))
 (in-package :util-system)
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-   (unless (find-package 'uffi)
-     (asdf:operate 'asdf:load-op 'uffi)))
-
 (defclass lib-source-file (c-source-file)
   ())
 
@@ -14,10 +10,16 @@
   (make-pathname :name nil :type nil
                  :defaults *load-truename*))
 
+(defun default-foreign-library-type ()
+  "Returns string naming default library type for platform"
+  #+(or win32 win64 cygwin mswindows windows) "dll"
+  #+(or macosx darwin ccl-5.0) "dylib"
+  #-(or win32 win64 cygwin mswindows windows macosx darwin ccl-5.0) "so"
+)
+
 (defmethod output-files ((o compile-op) (c lib-source-file))
   (let ((library-file-type
-          (funcall (intern (symbol-name'#:default-foreign-library-type)
-                           (symbol-name '#:uffi)))))
+          (default-foreign-library-type)))
     (list (make-pathname :name (component-name c)
                          :type library-file-type
                          :defaults *library-file-dir*))))
