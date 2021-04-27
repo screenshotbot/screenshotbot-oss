@@ -72,12 +72,15 @@ $(JAR_FILE): $(shell find java | grep -v build | grep -v .gradle)
 	cd java && JAVA_HOME=$(JAVA_HOME) ./gradlew build makeClasspath
 
 test-sb: submodule $(SO) $(sbcl) $(JAR_FILE)
+	pwd
 	$(sbcl) --script ./jenkins.lisp
 
 test-ccl: submodule $(SO) $(CCL_IMAGE) $(JAR_FILE)
+	pwd
 	$(CCL_SCRIPT) ./jenkins.lisp
 
 test-lw: submodule $(SO) $(LW) $(JAR_FILE)
+	pwd
 	$(LW_SCRIPT) ./jenkins.lisp
 
 test-store: submodule $(LW)
