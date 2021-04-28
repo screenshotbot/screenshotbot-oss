@@ -1,3 +1,9 @@
+;; Copyright 2018-Present Modern Interpreters Inc.
+;;
+;; This Source Code Form is subject to the terms of the Mozilla Public
+;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 (defpackage :screenshotbot/java/java
   (:use :cl)
   (:export :*bfalse*
@@ -98,7 +104,7 @@
 
 #+ccl
 (defun fix-arg-for-jmethod-invoke (arg)
-  (format t "fixing arg: ~S~%" arg)
+  ;;(format t "fixing arg: ~S~%" arg)
   (finish-output t)
   (cond
     ((stringp arg)
@@ -190,7 +196,7 @@
     ret))
 
 (defun %make-java-array (args)
-  (format t "Creating array out of ~S~%" args)
+  ;;(format t "Creating array out of ~S~%" args)
   (let (#+ccl (args (mapcar 'fix-arg-for-jmethod-invoke args)))
    (let ((ret (#+lispworks lw-ji:make-java-array
                #+ccl cl+j::jnew[]
@@ -219,13 +225,13 @@
     (%get-logger "getLogger" :staticp t))
 
 (defun %new-instance (klass &rest args)
-  (format t "Creating new instance ~S, ~S~%" klass args)
+  ;;(format t "Creating new instance ~S, ~S~%" klass args)
   (unwrap-primitive (%%new-instance klass (%make-java-array args))))
 
 
 (defun init-booleans ()
   (unless (boundp '*btrue*)
-    (format t "init-booleans~%")
+    ;;(format t "init-booleans~%")
     (setf *btrue* (read-java-field (intern "com.tdrhq.SimpleNativeLibrary" :keyword) "btrue"))
     (setf *bfalse* (read-java-field (intern "com.tdrhq.SimpleNativeLibrary" :keyword) "bfalse"))))
 
@@ -255,13 +261,13 @@
 
 #+lispworks
 (defun read-java-field (obj field)
-  (format t "read-java-field: ~S, ~S~%" obj field)
+  ;;(format t "read-java-field: ~S, ~S~%" obj field)
   (finish-output t)
   (let ((field (string field)))
    (let ((staticp (symbolp obj)))
      (if staticp
          (let ((class (jclass-of! obj)))
-           (format t "class is ~S, ~S~%" class field)
+           ;;(format t "class is ~S, ~S~%" class field)
            (finish-output t)
            (%%read-static-field class field))
          (%%read-java-field obj field)))))
@@ -323,7 +329,7 @@
         (error (format nil "null class for ~a" sym)))))
 
 (defun jobject-of-class-p (obj class-name)
-  (format t "testing jobject with ~s, ~s~%" obj class-name)
+  ;;(format t "testing jobject with ~s, ~s~%" obj class-name)
   (finish-output t)
   (#+lispworks lw-ji:jobject-of-class-p
    #+ccl (lambda (obj class-name)
@@ -432,7 +438,7 @@
 (defparameter *type-locator* *default-locator-impl*)
 
 (defun %pp (x expr)
-  (log:info "Got: ~S for ~S" x expr)
+  ;;(log:info "Got: ~S for ~S" x expr)
   x)
 
 (defmacro pp (x)
