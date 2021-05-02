@@ -33,7 +33,7 @@ pipeline {
 
 
             parallel {
-                stage("run on LIspworks") {
+                stage("run on Lispworks") {
                     agent {
                         label 'master'
                     }
@@ -41,8 +41,8 @@ pipeline {
                         doCheckout()
                         sh "make clean-sys-index"
                         sh "make test-lw"
-                        sh "make selenium-tests"
-                        sh "make web-bin"
+                        sh "test -f src/screenshotbot.oss.tests.asd || make selenium-tests"
+                        sh "test -f src/screenshotbot.oss.tests.asd || make web-bin"
                     }
                 }
 
@@ -66,7 +66,7 @@ pipeline {
 
                 stage ("Copybara") {
                     steps {
-                        sh "make conditional-copybara"
+                        sh "test -f src/screenshotbot.oss.tests.asd || make conditional-copybara"
                     }
                 }
             }
