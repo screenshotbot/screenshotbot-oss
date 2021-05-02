@@ -72,16 +72,15 @@ pipeline {
             }
         }
 
-        post {
-            success {
-                sh "make update-phabricator-pass"
-            }
-
-            failure {
-                sh "make update-phabricator-fail"
-            }
-        }
 
     }
+    post {
+        success {
+            sh "make update-phabricator-pass"
+        }
 
+        failure {
+            sh "make update-phabricator-fail"
+        }
+    }
 }
