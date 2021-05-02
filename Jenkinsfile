@@ -17,7 +17,7 @@ def doCheckout () {
 }
 
 def cleanRepo () {
-    sh "git clean -fd"
+    sh "git clean -ffd"
     sh "make clean-sys-index"
 
     // Some debugging information to make sure
