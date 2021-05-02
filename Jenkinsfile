@@ -19,7 +19,7 @@ def doCheckout () {
 def cleanRepo () {
     sh "git clean -ffd"
     sh "make clean-sys-index"
-
+    sh "git submodule init && git submodule update"
     // Some debugging information to make sure
     // we're doing this pipeline correctly.
     sh "git status"
