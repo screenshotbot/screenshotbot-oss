@@ -17,10 +17,6 @@ def doCheckout () {
 }
 
 pipeline {
-    // parameters {
-    //     commitId,
-    // }
-
     agent {
         label 'master';
     }
