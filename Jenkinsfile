@@ -47,6 +47,7 @@ pipeline {
                 }
 
                 stage ("test on SBCL") {
+                    agent any
                     steps {
                         doCheckout()
                         sh "make update-quicklisp"
