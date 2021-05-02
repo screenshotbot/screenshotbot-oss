@@ -52,6 +52,11 @@ pipeline {
                     agent any
                     steps {
                         //unstash 'source'
+
+                        // Some debugging information to make sure
+                        // we're doing this pipeline correctly.
+                        sh "git status"
+
                         sh "make update-quicklisp"
                         sh "make clean-sys-index"
                         sh "make test-sb"
