@@ -28,6 +28,7 @@ SBCL_SCRIPT=timeout 5m $(sbcl) --script
 CCL_SCRIPT=CCL_DEFAULT_DIRECTORY=$(CCL_DEFAULT_DIRECTORY) $(CCL_CORE) -b -I $(CCL_IMAGE)
 
 QUICKLISP=quicklisp/dists/quicklisp/
+COPYBARA=java -jar scripts/copybara_deploy.jar
 
 define clsql_check_tests
 	TMP=$(TMPFILE) && $1 | tee  $$TMP &&  ! ( grep  "total tests failed" $$TMP ) && grep "Finished Running Tests Against" $$TMP && rm $$TMP
@@ -64,7 +65,7 @@ clean-sys-index:
 	rm -rf local-projects/quicklisp
 	rm -rf */system-index.txt
 
-tests:| show-info clean-sys-index test-parts selenium-tests
+tests:| show-info clean-sys-index test-parts selenium-tests conditional-copybara
 
 test-parts: test-sb test-lw test-ccl test-store web-bin
 
@@ -183,3 +184,14 @@ $(CCL_IMAGE): build/distinfo.txt scripts/build-image.lisp
 
 update-ip: $(sbcl)
 	$(SBCL_SCRIPT) update-ip.lisp
+
+copybara: .PHONY
+	$(COPYBARA) copy.bara.sky
+
+conditional-copybara: validate-copybara
+	if [ x$$DIFF_ID = x ] ; then \
+		$(MAKE) copybara ; \
+	fi
+
+validate-copybara: .PHONY
+	$(COPYBARA) validate copy.bara.sky
