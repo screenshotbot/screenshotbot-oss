@@ -186,11 +186,13 @@ update-ip: $(sbcl)
 	$(SBCL_SCRIPT) update-ip.lisp
 
 copybara: .PHONY
+	# This is on arnold's jenkins server. Disregard for OSS use.
+	ssh-add ~/.ssh/id_rsa_screenshotbot_oss
 	$(COPYBARA) copy.bara.sky
 
 conditional-copybara: validate-copybara
 	if [ x$$DIFF_ID = x ] ; then \
-		$(MAKE) copybara ; \
+		ssh-agent $(MAKE) copybara ; \
 	fi
 
 validate-copybara: .PHONY
