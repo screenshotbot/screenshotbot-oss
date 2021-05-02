@@ -76,11 +76,11 @@ pipeline {
     }
     post {
         success {
-            sh "make update-harbormaster-pass"
+            sh "test -f src/screenshotbot.oss.tests.asd || make update-harbormaster-pass"
         }
 
         failure {
-            sh "make update-harbormaster-fail"
+            sh "test -f src/screenshotbot.oss.tests.asd || make update-harbormaster-fail"
         }
     }
 }
