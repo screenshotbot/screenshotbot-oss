@@ -2,7 +2,7 @@
 def doCheckout () {
     checkout([
         $class: 'GitSCM',
-        branches: [[name: env.GIT_SHA + ]],
+        branches: [[name: env.GIT_SHA ]],
         doGenerateSubmoduleConfigurations: false,
         extensions: [[$class: 'SubmoduleOption',
                       disableSubmodules:false,
