@@ -16,6 +16,15 @@ def doCheckout () {
     )
 }
 
+def cleanRepo () {
+    sh "git clean -fd"
+    sh "make clean-sys-index"
+
+    // Some debugging information to make sure
+    // we're doing this pipeline correctly.
+    sh "git status"
+}
+
 pipeline {
     agent {
         label 'master';
@@ -40,7 +49,7 @@ pipeline {
                     }
                     steps {
                         //unstash 'source'
-                        sh "make clean-sys-index"
+                        cleanRepo()
                         sh "make test-lw"
                         sh "test -f src/screenshotbot.oss.tests.asd || make test-store"
                         sh "test -f src/screenshotbot.oss.tests.asd || make selenium-tests"
@@ -53,12 +62,8 @@ pipeline {
                     steps {
                         //unstash 'source'
 
-                        // Some debugging information to make sure
-                        // we're doing this pipeline correctly.
-                        sh "git status"
-
+                        cleanRepo()
                         sh "make update-quicklisp"
-                        sh "make clean-sys-index"
                         sh "make test-sb"
                     }
                 }
@@ -67,7 +72,7 @@ pipeline {
                     agent any
                     steps {
                         //unstash 'source'
-                        sh "make clean-sys-index"
+                        cleanRepo()
                         sh "make test-ccl"
                     }
                 }
