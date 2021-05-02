@@ -37,6 +37,19 @@ pipeline {
 
 
             parallel {
+                stage("run on LIspworks") {
+                    agent {
+                        label 'master'
+                    }
+                    steps {
+                        doCheckout()
+                        sh "make clean-sys-index"
+                        sh "make test-lw"
+                        sh "make selenium-tests"
+                        sh "make web-bin"
+                    }
+                }
+
                 stage ("test on SBCL") {
                     agent {
                         label 'master';
@@ -57,19 +70,6 @@ pipeline {
                         doCheckout()
                         sh "make clean-sys-index"
                         sh "make test-ccl"
-                    }
-                }
-
-                stage("run on LIspworks") {
-                    agent {
-                        label 'master'
-                    }
-                    steps {
-                        doCheckout()
-                        sh "make clean-sys-index"
-                        sh "make test-lw"
-                        sh "make selenium-tests"
-                        sh "make web-bin"
                     }
                 }
 
