@@ -76,11 +76,11 @@ pipeline {
     }
     post {
         success {
-            sh "make update-phabricator-pass"
+            sh "make update-harbormaster-pass"
         }
 
         failure {
-            sh "make update-phabricator-fail"
+            sh "make update-harbormaster-fail"
         }
     }
 }
