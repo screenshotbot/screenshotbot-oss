@@ -2,7 +2,7 @@
 def doCheckout () {
     checkout([
         $class: 'GitSCM',
-        branches: [[name: env.GIT_SHA]],
+        branches: [[name: env.GIT_SHA + ]],
         doGenerateSubmoduleConfigurations: false,
         extensions: [[$class: 'SubmoduleOption',
                       disableSubmodules:false,
@@ -51,9 +51,7 @@ pipeline {
                 }
 
                 stage ("test on SBCL") {
-                    agent {
-                        label 'master';
-                    }
+                    agent any
                     steps {
                         doCheckout()
                         sh "make update-quicklisp"
@@ -63,9 +61,7 @@ pipeline {
                 }
 
                 stage("run on CCL") {
-                    agent {
-                        label 'master'
-                    }
+                    agent any
                     steps {
                         doCheckout()
                         sh "make clean-sys-index"
