@@ -47,7 +47,6 @@ pipeline {
                 }
 
                 stage ("test on SBCL") {
-                    agent any
                     steps {
                         doCheckout()
                         sh "make update-quicklisp"
@@ -70,6 +69,16 @@ pipeline {
                         sh "make conditional-copybara"
                     }
                 }
+            }
+        }
+
+        post {
+            success {
+                sh "make update-phabricator-pass"
+            }
+
+            failure {
+                sh "make update-phabricator-fail"
             }
         }
 

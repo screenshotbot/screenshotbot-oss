@@ -197,3 +197,9 @@ conditional-copybara: validate-copybara
 
 validate-copybara: .PHONY
 	$(COPYBARA) validate copy.bara.sky
+
+update-harbormaster-pass: $(sbcl)
+	$(SBCL_SCRIPT) ./scripts/update-phabricator.lisp pass
+
+update-harbormaster-fail: $(sbcl)
+	$(SBCL_SCRIPT) ./scripts/update-phabricator.lisp fail
