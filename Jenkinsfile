@@ -41,6 +41,7 @@ pipeline {
                         doCheckout()
                         sh "make clean-sys-index"
                         sh "make test-lw"
+                        sh "test -f src/screenshotbot.oss.tests.asd || make test-store"
                         sh "test -f src/screenshotbot.oss.tests.asd || make selenium-tests"
                         sh "test -f src/screenshotbot.oss.tests.asd || make web-bin"
                     }
