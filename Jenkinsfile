@@ -1,0 +1,86 @@
+
+def doCheckout () {
+    checkout([
+        $class: 'GitSCM',
+        branches: [[name: env.GIT_SHA]],
+        doGenerateSubmoduleConfigurations: false,
+        extensions: [[$class: 'SubmoduleOption',
+                      disableSubmodules:false,
+                      parentCredentials: true,
+                      recursiveSubmodules:true,
+                      reference:'',
+                      trackingSubmodules:false]],
+        submoduleCfg: [],
+        userRemoteConfigs: [[credentialsId: 'jenkins', url: 'https://github.com/screenshotbot/screenshotbot-oss.git']]
+    ]
+    )
+}
+
+pipeline {
+    // parameters {
+    //     commitId,
+    // }
+
+    agent {
+        label 'master';
+    }
+
+    stages {
+
+        stage ("Checkout on primary") {
+            steps {
+                doCheckout()
+            }
+        }
+
+        stage("Run tests in parallel") {
+
+
+            parallel {
+                stage ("test on SBCL") {
+                    agent {
+                        label 'master';
+                    }
+                    steps {
+                        doCheckout()
+                        sh "make update-quicklisp"
+                        sh "make clean-sys-index"
+                        sh "make test-sb"
+                    }
+                }
+
+                stage("run on CCL") {
+                    agent {
+                        label 'master'
+                    }
+                    steps {
+                        doCheckout()
+                        sh "make clean-sys-index"
+                        sh "make test-ccl"
+                    }
+                }
+
+                stage("run on LIspworks") {
+                    agent {
+                        label 'master'
+                    }
+                    steps {
+                        doCheckout()
+                        sh "make clean-sys-index"
+                        sh "make test-lw"
+                        sh "make selenium-tests-without-x"
+                        sh "make web-bin"
+                    }
+                }
+
+                stage ("Copybara") {
+                    steps {
+                        sh "make conditional-copybara"
+                    }
+                }
+            }
+        }
+
+    }
+
+}
