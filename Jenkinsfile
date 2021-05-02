@@ -68,7 +68,7 @@ pipeline {
                         doCheckout()
                         sh "make clean-sys-index"
                         sh "make test-lw"
-                        sh "make selenium-tests-without-x"
+                        sh "make selenium-tests"
                         sh "make web-bin"
                     }
                 }
