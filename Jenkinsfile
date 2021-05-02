@@ -26,7 +26,7 @@ pipeline {
         stage ("Checkout on primary") {
             steps {
                 doCheckout()
-                stash 'source'
+                //stash 'source'
             }
         }
 
@@ -39,7 +39,7 @@ pipeline {
                         label 'master'
                     }
                     steps {
-                        unstash 'source'
+                        //unstash 'source'
                         sh "make clean-sys-index"
                         sh "make test-lw"
                         sh "test -f src/screenshotbot.oss.tests.asd || make test-store"
@@ -51,7 +51,7 @@ pipeline {
                 stage ("test on SBCL") {
                     agent any
                     steps {
-                        unstash 'source'
+                        //unstash 'source'
                         sh "make update-quicklisp"
                         sh "make clean-sys-index"
                         sh "make test-sb"
@@ -61,7 +61,7 @@ pipeline {
                 stage("run on CCL") {
                     agent any
                     steps {
-                        unstash 'source'
+                        //unstash 'source'
                         sh "make clean-sys-index"
                         sh "make test-ccl"
                     }
