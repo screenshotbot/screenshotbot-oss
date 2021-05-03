@@ -34,6 +34,7 @@
 
 (swank-loader:init :load-contribs t)
 
+(ql:quickload :cl-ppcre) ;; used by sdk.deliver
 
 ;; make sure we have build asd
 (push (pathname (format nil "~a/build-utils/" (namestring (uiop:getcwd))))
