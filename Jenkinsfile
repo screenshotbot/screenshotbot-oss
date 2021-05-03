@@ -88,7 +88,9 @@ pipeline {
         stage ('Deploy') {
             parallel {
                 stage('Deploy - Linux SDK') {
-                    agent 'master'
+                    agent {
+                        label 'master'
+                    }
 
                     steps {
                         sh "make build/lw-console"
@@ -97,7 +99,9 @@ pipeline {
                 }
 
                 stage('Deploy - Mac SDK') {
-                    agent 'mac'
+                    agent {
+                        label 'mac'
+                    }
 
                     steps {
                         sh "make build/lw-console"
