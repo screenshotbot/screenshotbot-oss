@@ -165,7 +165,7 @@ $(sbcl): build/distinfo.txt scripts/build-image.lisp
 	$(SBCL_CORE) --script scripts/build-image.lisp
 
 
-selenium-tests: $(LW)
+selenium-tests: $(LW) $(JAR_FILE)
 	xvfb-run $(LW_SCRIPT) scripts/run-selenium-tests.lisp
 
 selenium-tests-without-x: $(LW)
