@@ -30,6 +30,8 @@ CCL_SCRIPT=CCL_DEFAULT_DIRECTORY=$(CCL_DEFAULT_DIRECTORY) $(CCL_CORE) -b -I $(CC
 QUICKLISP=quicklisp/dists/quicklisp/
 COPYBARA=java -jar scripts/copybara_deploy.jar
 
+UNAME=$(shell uname -s)
+
 ifeq ($(UNAME),Linux)
 	LW=/opt/software/lispworks/lispworks-7-1-*
 endif
