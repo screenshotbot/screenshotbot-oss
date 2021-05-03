@@ -92,7 +92,7 @@ pipeline {
 
                     steps {
                         sh "make build/lw-console"
-                        sh "build/lw-console -build scripts/deploy-sdk.lisp"
+                        sh "build/lw-console -build scripts/deliver-sdk.lisp"
                     }
                 }
             }
