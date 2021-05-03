@@ -14,7 +14,7 @@ tests= \
 	./test-stuff2.lisp
 
 JIPR=../jippo
-LW=build/lw-console
+LW=lispworks-unknown
 LW_CORE=/opt/software/lispworks/lispworks-7-1-0-*
 SRC_DIRS=src local-projects third-party
 LISP_FILES=$(shell find $(SRC_DIRS) -name '*.lisp') $(shell find $(SRC_DIRS) -name '*.asd')
@@ -29,6 +29,15 @@ CCL_SCRIPT=CCL_DEFAULT_DIRECTORY=$(CCL_DEFAULT_DIRECTORY) $(CCL_CORE) -b -I $(CC
 
 QUICKLISP=quicklisp/dists/quicklisp/
 COPYBARA=java -jar scripts/copybara_deploy.jar
+
+ifeq ($(UNAME),Linux)
+	LW=/opt/software/lispworks/lispworks-7-1-*
+endif
+
+ifeq ($(UNAME),Darwin)
+	LW=/Applications/LispWorks\ 7.1\ \(64-bit\)/LispWorks\ \(64-bit\).app/Contents/MacOS/lispworks-7-1-0-amd64-darwin
+endif
+
 
 define clsql_check_tests
 	TMP=$(TMPFILE) && $1 | tee  $$TMP &&  ! ( grep  "total tests failed" $$TMP ) && grep "Finished Running Tests Against" $$TMP && rm $$TMP
