@@ -52,8 +52,18 @@ pipeline {
                         cleanRepo()
                         sh "make test-lw"
                         sh "test -f src/screenshotbot.oss.tests.asd || make test-store"
-                        sh "test -f src/screenshotbot.oss.tests.asd || make selenium-tests"
                         sh "test -f src/screenshotbot.oss.tests.asd || make web-bin"
+                    }
+                }
+
+                stage("Selenium tests") {
+                    agent {
+                        label 'master'
+                    }
+                    steps {
+                        //unstash 'source'
+                        cleanRepo()
+                        sh "test -f src/screenshotbot.oss.tests.asd || make selenium-tests"
                     }
                 }
 
