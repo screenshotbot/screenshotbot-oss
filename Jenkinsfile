@@ -89,8 +89,11 @@ pipeline {
             parallel {
                 stage('Deploy - Linux SDK') {
                     agent any
-                    sh "make build/lw-console"
-                    sh "build/lw-console -build scripts/deploy-sdk.lisp"
+
+                    steps {
+                        sh "make build/lw-console"
+                        sh "build/lw-console -build scripts/deploy-sdk.lisp"
+                    }
                 }
             }
         }
