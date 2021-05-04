@@ -33,6 +33,8 @@ COPYBARA=java -jar scripts/copybara_deploy.jar
 
 UNAME=$(shell uname -s)
 
+REVISION_ID=$(shell echo '{"ids":["$(DIFF_ID)"]}' | arc call-conduit differential.querydiffs | jq -r '.["response"]["$(DIFF_ID)"]["revisionID"]')
+
 ifeq ($(UNAME),Linux)
 	LW_CORE=/opt/software/lispworks/lispworks-7-1-*
 endif
@@ -225,3 +227,15 @@ update-harbormaster-pass: $(sbcl)
 
 update-harbormaster-fail: $(sbcl)
 	$(SBCL_SCRIPT) ./scripts/update-phabricator.lisp fail
+
+
+autoland:
+	if ( echo "{\"revision_id\":\"$(REVISION_ID)\"}" | arc call-conduit differential.getcommitmessage | grep "#autoland" ) ; then \
+	 	$(MAKE) -s actually-land ; \
+	fi
+
+actually-land:
+	rm .buckconfig.local
+	git status
+	echo "Landing..."
+	arc land  --keep-branch

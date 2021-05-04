@@ -96,6 +96,17 @@ pipeline {
             }
         }
 
+        stage ('Land') {
+            when {
+                expression {
+                    return params.DIFF_ID != ""
+                }
+            }
+
+            sh "test -f src/screenshotbot.oss.tests.asd || make update-harbormaster-pass"
+            make autoland
+        }
+
         stage ('Deploy') {
             when {
                 expression {
