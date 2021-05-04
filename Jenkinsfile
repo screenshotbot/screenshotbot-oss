@@ -99,7 +99,7 @@ pipeline {
         stage ('Deploy') {
             when {
                 expression {
-                    return params.DIFF_ID == "" && !File("src/screenshotbot.oss.tests.asd").exists()
+                    return params.DIFF_ID == "" && !fileExists("src/screenshotbot.oss.tests.asd")
                 }
             }
 
