@@ -11,7 +11,7 @@ def doCheckout () {
                       reference:'',
                       trackingSubmodules:false]],
         submoduleCfg: [],
-        userRemoteConfigs: [[credentialsId: 'jenkins', url: 'https://github.com/screenshotbot/screenshotbot-oss.git']]
+        userRemoteConfigs: [[credentialsId: 'jenkins-root', url: 'https://github.com/screenshotbot/screenshotbot-oss.git']]
     ]
     )
 }
