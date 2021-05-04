@@ -99,7 +99,7 @@ pipeline {
         stage ('Deploy') {
             when {
                 expression {
-                    return params.DIFF_ID == ""
+                    return params.DIFF_ID == "" && !File("src/screenshotbot.oss.tests.asd").exists()
                 }
             }
 
@@ -114,7 +114,6 @@ pipeline {
                         sh "make build/lw-console"
                         sh "build/lw-console -build scripts/deliver-sdk.lisp"
                     }
-                    stash includes: "build/screenshotbot-sdk-installer-linux.sh", name "screenshotbot-sdk-installer-linux"
                 }
 
                 stage('Deploy - Mac SDK') {
@@ -127,18 +126,7 @@ pipeline {
                         sh "make build/lw-console"
                         sh "build/lw-console -build scripts/deliver-sdk.lisp"
                     }
-                    stash includes: "build/screenshotbot-sdk-installer-mac.sh", name "screenshotbot-sdk-installer-mac"
 
-                }
-
-                stage ("Copy artifacts to destination") {
-                    // Quick sanity check
-                    unstash "screenshotbot-sdk-installer-linux"
-                    unstash "screenshotbot-sdk-installer-mac"
-                    steps {
-                        sh "[ `hostname` = thecharmer ]"
-
-                    }
                 }
             }
         }
