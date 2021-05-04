@@ -132,10 +132,12 @@ pipeline {
 
                 stage ("Copy artifacts to destination") {
                     // Quick sanity check
-                    sh "[ `hostname` = thecharmer ]"
+                    steps {
+                        sh "[ `hostname` = thecharmer ]"
 
-                    unstash "screenshotbot-sdk-installer-linux"
-                    unstash "screenshotbot-sdk-installer-mac"
+                        unstash "screenshotbot-sdk-installer-linux"
+                        unstash "screenshotbot-sdk-installer-mac"
+                    }
                 }
             }
         }
