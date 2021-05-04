@@ -104,7 +104,7 @@ pipeline {
             }
 
             sh "test -f src/screenshotbot.oss.tests.asd || make update-harbormaster-pass"
-            make autoland
+            sh "make autoland"
         }
 
         stage ('Deploy') {
