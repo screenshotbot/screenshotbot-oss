@@ -5,6 +5,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 sbcl=build/sbcl-console
+CACHE_KEY=4
 SBCL_CORE=sbcl
 CCL_DEFAULT_DIRECTORY=/opt/software/ccl
 CCL_CORE=$(CCL_DEFAULT_DIRECTORY)/lx86cl64
@@ -56,6 +57,15 @@ submodule:
 	#	git submodule init
 	# git submodule update
 
+build/cache-key: .PHONY
+	if ! [ -e build/cache-key ] || ! [ x`cat build/cache-key` = x$(CACHE_KEY) ] ; then \
+		echo "Cleaning build/ directory" ; \
+		rm -rf build/asdf-cache build/slime-fasls ; \
+		rm -rf quicklisp/dists/quicklisp/software ; \
+		mkdir build ; \
+		echo $(CACHE_KEY) > $@ ; \
+	fi
+
 .PHONY:
 
 update-quicklisp: .PHONY
@@ -105,6 +115,7 @@ deploy-jipr:
 restart: | test-lw  web-bin
 	kill -9 `curl https://tdrhq.com/deploy/getpid`
 
+build: | build/cache-key build/distinfo.txt
 
 web-bin: $(LISP_FILES) $(SO) $(LW)
 	$(LW_SCRIPT) build-web-bin.lisp
@@ -158,10 +169,10 @@ build/distinfo.txt: .PHONY
 		cp $(QUICKLISP)/distinfo.txt $@ ; \
 	fi
 
-build/lw-console: build/distinfo.txt scripts/build-image.lisp
+build/lw-console: build scripts/build-image.lisp
 	$(LW_CORE) -build scripts/build-image.lisp
 
-$(sbcl): build/distinfo.txt scripts/build-image.lisp
+$(sbcl): build scripts/build-image.lisp
 	$(SBCL_CORE) --script scripts/build-image.lisp
 
 
@@ -187,7 +198,7 @@ deploy-bin: assets
 deploy-pull:
 	ssh web@screenshotbot.io 'cd web && git pull'
 
-$(CCL_IMAGE): build/distinfo.txt scripts/build-image.lisp
+$(CCL_IMAGE): build scripts/build-image.lisp
 	rm -f $@
 	$(CCL_CORE) -l scripts/build-image.lisp
 	chmod a+x $@

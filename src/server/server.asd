@@ -5,8 +5,7 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defsystem "server"
-  :depends-on ("swank"
-               "cl-cli"
+  :depends-on ("cl-cli"
                "util"
                "cl-cron"
                "jvm"

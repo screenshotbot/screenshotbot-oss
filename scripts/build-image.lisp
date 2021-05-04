@@ -7,10 +7,24 @@
 (in-package "CL-USER")
 
 (require :asdf)
+
+(asdf:initialize-output-translations `(:output-translations
+                                       :inherit-configuration
+                                       (,(namestring (uiop:getcwd))
+                                         ,(format nil "~abuild/asdf-cache/~a/" (uiop:getcwd)
+                                                  (uiop:implementation-identifier)))))
+
 #+lispworks
 (require "java-interface" )
 
-(pushnew :asdf-unicode *features*)
+(defun use-utf-8-for-all-lisp-files (pathname ext-format-spec first-byte max-extent)
+  (cond
+    ((equal "lisp" (pathname-type pathname))
+     :utf-8)
+    (t ext-format-spec)))
+
+#+lispworks
+(push 'use-utf-8-for-all-lisp-files system:*file-encoding-detection-algorithm*)
 
 #+lispworks
 (progn
@@ -28,11 +42,15 @@
 (ql:quickload "log4cl")
 
 (log:info "*local-project-directories: ~S" ql:*local-project-directories*)
-(ql:quickload "swank")
+
+(load "third-party/slime/swank-loader.lisp")
+(setf swank-loader:*fasl-directory* (format nil "~abuild/slime-fasls/~a/" (uiop:getcwd)
+                                            (uiop:implementation-identifier)))
+(push 'swank-indentation swank-loader::*contribs*)
+(swank-loader:init :load-contribs t)
+
 #+lispworks
 (require "java-interface")
-
-(swank-loader:init :load-contribs t)
 
 (ql:quickload :cl-ppcre) ;; used by sdk.deliver
 
