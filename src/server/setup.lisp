@@ -12,9 +12,6 @@
            #:swank-loop))
 (in-package #:server)
 
-(defparameter *lightspeed-root* (util:system-source-directory :web.all))
-(defparameter *pidfile* (merge-pathnames #P"log/pidfile" *lightspeed-root*))
-
 (defvar *shutdown-cv* (bt:make-condition-variable))
 (defvar *server-lock* (bt:make-lock))
 
@@ -147,7 +144,7 @@
        (init-multi-acceptor)
        #+lispworks
        (jvm:jvm-init)
-       (let ((log-file (path:catfile (util:system-source-directory "web.all")  "log/logs")))
+       (let ((log-file (path:catfile "log/logs")))
          (log4cl:clear-logging-configuration)
          (log:config :info)
          (log4cl:add-appender log4cl:*root-logger* (make-instance 'utf-8-daily-file-appender
