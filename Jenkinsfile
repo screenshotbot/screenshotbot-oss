@@ -113,6 +113,7 @@ pipeline {
                         cleanRepo()
                         sh "make build/lw-console"
                         sh "build/lw-console -build scripts/deliver-sdk.lisp"
+                        stash includes: "build/screenshotbot-sdk-installer-linux.sh", name "screenshotbot-sdk-installer-linux"
                     }
                 }
 
@@ -125,7 +126,16 @@ pipeline {
                         cleanRepo()
                         sh "make build/lw-console"
                         sh "build/lw-console -build scripts/deliver-sdk.lisp"
+                        stash includes: "build/screenshotbot-sdk-installer-mac.sh", name "screenshotbot-sdk-installer-mac"
                     }
+                }
+
+                stage ("Copy artifacts to destination") {
+                    // Quick sanity check
+                    sh "[ `hostname` = thecharmer ]"
+
+                    unstash "screenshotbot-sdk-installer-linux"
+                    unstash "screenshotbot-sdk-installer-mac"
                 }
             }
         }
