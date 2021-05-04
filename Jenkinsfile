@@ -17,6 +17,7 @@ def doCheckout () {
 }
 
 def cleanRepo () {
+    doCheckout()
     sh "git clean -ffd"
     sh "make clean-sys-index"
     sh "git submodule init && git submodule update"
