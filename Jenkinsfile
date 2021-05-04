@@ -97,6 +97,12 @@ pipeline {
         }
 
         stage ('Deploy') {
+            when {
+                expression {
+                    return params.DIFF_ID == ""
+                }
+            }
+
             parallel {
                 stage('Deploy - Linux SDK') {
                     agent {
