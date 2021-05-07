@@ -26,6 +26,16 @@
   ((db-config :initarg :db-config
               :accessor acceptor-db-config)))
 
+(defvar *logger* (log4cl:make-logger))
+
+(defmethod hunchentoot:acceptor-log-message ((acceptor base-acceptor) log-level format-string &rest format-arguments)
+  (let ((output (apply 'format nil format-string format-arguments)))
+    (case log-level
+      (:info (log:info output))
+      (:error (log:error output))
+      (:warning (log:warn output))
+      (otherwise (log:info "Could not find log-level ~S" log-level)))))
+
 ;; parse tree format:
 ;; tree -> (:join tree1 tree2)
 ;; tree -> (:optional tree)
