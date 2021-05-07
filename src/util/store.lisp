@@ -60,5 +60,5 @@
 
 (cl-cron:make-cron-job 'cron-snapshot
                         :minute 0
-                        :step-hour 6
+                        :hour 6
                         :hash-key 'cron-snapshot)
