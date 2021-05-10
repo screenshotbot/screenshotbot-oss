@@ -109,6 +109,15 @@ pipeline {
                         cleanRepo()
                         sh "make build/lw-console"
                         sh "build/lw-console -build scripts/deliver-sdk.lisp"
+                        withCredentials([sshUserPrivateKey(credentialsId: 'deploy', keyFileVariable: 'keyFile')]) {
+                            stage('scp') {
+                                steps {
+                                    sh "git rev-parse HEAD"
+                                    sh "ssh -i ${keyFile} deploy@tdrhq.com mkdir -p /data/deploy/web/`git rev-parse HEAD`/"
+                                    sh "scp -i ${keyFile} build/screenshotbot-sdk-installer-linux.sh deploy@tdrhq.com:/data/deploy/web/`git rev-parse HEAD` "
+                                }
+                            }
+                        }
                     }
                 }
 
