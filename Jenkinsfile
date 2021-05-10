@@ -16,6 +16,14 @@ def doCheckout () {
     )
 }
 
+def copySdk(output) {
+    withCredentials([sshUserPrivateKey(credentialsId: 'deploy', keyFileVariable: 'keyFile')]) {
+        sh "git rev-parse HEAD"
+        sh "ssh -i ${keyFile} deploy@tdrhq.com mkdir -p /data/deploy/web/`git rev-parse HEAD`/"
+        sh "scp -i ${keyFile} ${output} deploy@tdrhq.com:/data/deploy/web/`git rev-parse HEAD` "
+    }
+}
+
 def cleanRepo () {
     doCheckout()
     sh "git clean -ffd"
@@ -109,11 +117,7 @@ pipeline {
                         cleanRepo()
                         sh "make build/lw-console"
                         sh "build/lw-console -build scripts/deliver-sdk.lisp"
-                        withCredentials([sshUserPrivateKey(credentialsId: 'deploy', keyFileVariable: 'keyFile')]) {
-                            sh "git rev-parse HEAD"
-                            sh "ssh -i ${keyFile} deploy@tdrhq.com mkdir -p /data/deploy/web/`git rev-parse HEAD`/"
-                            sh "scp -i ${keyFile} build/screenshotbot-sdk-installer-linux.sh deploy@tdrhq.com:/data/deploy/web/`git rev-parse HEAD` "
-                        }
+                        copySdk("build/screenshotbot-sdk-installer-linux.sh")
                     }
                 }
 
@@ -126,6 +130,7 @@ pipeline {
                         cleanRepo()
                         sh "make build/lw-console"
                         sh "build/lw-console -build scripts/deliver-sdk.lisp"
+                        copySdk("build/screenshotbot-sdk-installer-mac.sh")
                     }
 
                 }
