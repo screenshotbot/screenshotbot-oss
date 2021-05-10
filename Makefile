@@ -239,3 +239,19 @@ actually-land:
 	git status
 	echo "Landing..."
 	arc land  --keep-branch
+
+src/java/libs: .PHONY
+	# This is manually run, not meant to run during build
+	rm -rf $@
+	mkdir -p $@
+	cd java && ./gradlew build makeClasspath
+	cp scripts/java-jar-prefix.txt $@/java.libs.asd
+
+	for x in `cat java/build/libs/classpath.txt` ; do \
+		if [ -f $$x ] ; then \
+			cp $$x $@/ ; \
+            echo "(build-utils:jar-file \"$$(basename $$x .jar)\")" >> $@/java.libs.asd ; \
+		fi ; \
+	done
+
+	echo "))" >> $@/java.libs.asd

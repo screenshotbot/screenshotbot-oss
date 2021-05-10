@@ -98,3 +98,13 @@ tasks.register("makeClasspath") {
     }
     dependsOn("build")
 }
+
+tasks.register("copyDependencies") {
+    doLast {
+        soureSets.main.compileClasspath.each {
+            File output = new File("../src/java/lib/");
+            if (!it.isDirectory()) {
+            }
+        }
+    }
+}
