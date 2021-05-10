@@ -19,8 +19,8 @@ def doCheckout () {
 def copySdk(output) {
     withCredentials([sshUserPrivateKey(credentialsId: 'deploy', keyFileVariable: 'keyFile')]) {
         sh "git rev-parse HEAD"
-        sh "ssh -i ${keyFile} deploy@192.168.1.119 mkdir -p /data/deploy/web/`git rev-parse HEAD`/"
-        sh "scp -i ${keyFile} ${output} deploy@192.168.1.119:/data/deploy/web/`git rev-parse HEAD` "
+        sh "ssh -o UserKnownHostsFile=scripts/known_hosts -i ${keyFile} deploy@192.168.1.119 mkdir -p /data/deploy/web/`git rev-parse HEAD`/"
+        sh "scp -o UserKnownHostsFile=scripts/known_hosts -i ${keyFile} ${output} deploy@192.168.1.119:/data/deploy/web/`git rev-parse HEAD` "
     }
 }
 
