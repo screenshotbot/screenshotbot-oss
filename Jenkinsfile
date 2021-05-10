@@ -45,25 +45,12 @@ pipeline {
 
             parallel {
                 stage("run on Lispworks") {
-                    agent {
-                        label 'master'
-                    }
                     steps {
                         //unstash 'source'
                         cleanRepo()
                         sh "make test-lw"
                         sh "test -f src/screenshotbot.oss.tests.asd || make test-store"
                         sh "test -f src/screenshotbot.oss.tests.asd || make web-bin"
-                    }
-                }
-
-                stage("Selenium tests") {
-                    agent {
-                        label 'master'
-                    }
-                    steps {
-                        //unstash 'source'
-                        cleanRepo()
                         sh "test -f src/screenshotbot.oss.tests.asd || make selenium-tests"
                     }
                 }
@@ -118,10 +105,6 @@ pipeline {
 
             parallel {
                 stage('Deploy - Linux SDK') {
-                    agent {
-                        label 'master'
-                    }
-
                     steps {
                         cleanRepo()
                         sh "make build/lw-console"
