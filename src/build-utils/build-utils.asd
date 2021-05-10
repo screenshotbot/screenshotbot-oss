@@ -7,7 +7,8 @@
 (defsystem :build-utils
   :serial t
   :depends-on (:tmpdir)
-  :components ((:file "package")
-               (:file "wild-module")
+  :components ((:file "wild-module")
+               (:file "jar-file")
                (:file "js-package")
-               (:file "css-package")))
+               (:file "css-package")
+               (:file "all")))

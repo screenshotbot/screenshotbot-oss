@@ -1,5 +1,9 @@
-(in-package :build-utils)
-
+(defpackage :build-utils/wild-module
+  (:use :cl
+        :asdf
+        :alexandria)
+  (:export :*-module))
+(in-package :build-utils/wild-module)
 
 (defclass *-module (module)
   ((component-class :accessor wild-module-component-class

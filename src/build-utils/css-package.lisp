@@ -4,7 +4,17 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :build-utils)
+(defpackage :build-utils/css-package
+  (:use :cl
+        :asdf
+   :alexandria)
+  (:import-from :build-utils/js-package
+                :web-asset)
+  (:export :css-library
+   :css-system
+           :css-file
+           :scss-file))
+(in-package :build-utils/css-package)
 
 (defclass css-library (asdf:system)
   ((import-path :initarg :import-path

@@ -4,7 +4,16 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :build-utils)
+(defpackage :build-utils/js-package
+  (:use :cl
+        :asdf
+   :alexandria)
+  (:export :web-asset
+   :js-system
+           :js-library
+   :js-file))
+(in-package :build-utils/js-package)
+
 
 (defclass web-asset ()
   ())
