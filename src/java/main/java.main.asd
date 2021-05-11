@@ -23,10 +23,13 @@
                              (build-utils:java-file "JiraOAuthTokenFactory")
                              (build-utils:java-file "OAuthClient")))
                (:module "com/tdrhq"
-                :components ((build-utils:java-file "CustomCommitService")
+                :components (#-screenshotbot-oss
+                             (build-utils:java-file "CustomCommitService")
+                             #-screenshotbot-oss
                              (build-utils:java-file "Github")
                              (build-utils:java-file "PemUtils")
                              (build-utils:java-file "PrimitiveWrapper")
                              (build-utils:java-file "SimpleNativeLibrary")
+                             #-screenshotbot-oss
                              (build-utils:java-file "TdrhqS3")
                              (build-utils:java-file "Whitebox")))))
