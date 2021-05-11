@@ -8,5 +8,6 @@
 
 (defsystem sentry-js
   :class build-utils:js-library
+  :defsystem-depends-on (:build-utils)
   :components ((build-utils:js-file "bundle.min")
                (build-utils:js-file "config")))

@@ -1,6 +1,12 @@
-(defpackage :java.libs-asdf
+;; Copyright 2018-Present Modern Interpreters Inc.
+;;
+;; This Source Code Form is subject to the terms of the Mozilla Public
+;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+(defpackage :java.main-asdf
   (:use :cl :asdf))
-(in-package :java.libs-asdf)
+(in-package :java.main-asdf)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
    (unless (find-package :build-utils)
@@ -11,7 +17,7 @@
   :class build-utils:java-library
   :defsystem-depends-on (:build-utils)
   :depends-on (:java.libs)
-  :components ((jar-file "lispcalls")
+  :components ((build-utils:jar-file "lispcalls")
                (:module "com/atlassian/oauth/client/example"
                 :components ((build-utils:java-file "ClientMain")
                              (build-utils:java-file "JiraOAuthClient")
