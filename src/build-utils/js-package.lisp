@@ -11,9 +11,9 @@
   (:export :web-asset
    :js-system
            :js-library
+           :js-file
    :js-file))
 (in-package :build-utils/js-package)
-
 
 (defclass web-asset ()
   ())

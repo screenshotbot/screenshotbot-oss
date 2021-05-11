@@ -11,4 +11,5 @@
 (defsystem :popper-js
   :class build-utils:js-library
   :depends-on (:jquery-js)
+  :defsystem-depends-on (:build-utils)
   :components ((build-utils:js-file "popper")))
