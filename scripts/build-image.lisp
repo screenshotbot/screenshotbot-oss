@@ -39,6 +39,10 @@
 (push (pathname (format nil "~asrc/" (uiop:getcwd))) ql:*local-project-directories*)
 (push (pathname (format nil "~athird-party/" (uiop:getcwd))) ql:*local-project-directories*)
 
+(ql:quickload "azula")
+
+(azula:config :root #P "./")
+
 (ql:quickload "log4cl")
 
 (log:info "*local-project-directories: ~S" ql:*local-project-directories*)
