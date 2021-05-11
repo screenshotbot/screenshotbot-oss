@@ -27,6 +27,7 @@
                              (build-utils:java-file "CustomCommitService")
                              #-screenshotbot-oss
                              (build-utils:java-file "Github")
+                             #-screenshotbot-oss
                              (build-utils:java-file "PemUtils")
                              (build-utils:java-file "PrimitiveWrapper")
                              (build-utils:java-file "SimpleNativeLibrary")
