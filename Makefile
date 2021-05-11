@@ -19,8 +19,6 @@ LW=build/lw-console
 LW_CORE=lispworks-unknown-location
 SRC_DIRS=src local-projects third-party
 LISP_FILES=$(shell find $(SRC_DIRS) -name '*.lisp') $(shell find $(SRC_DIRS) -name '*.asd')
-JAR_FILE=java/build/lib/java.jar
-SO=$(JAR_FILE)
 LW_SCRIPT=timeout 5m $(LW) -quiet -build
 SBCL_SCRIPT=$(sbcl) --script
 TMPFILE=$(shell mktemp)
@@ -92,18 +90,15 @@ tests:| show-info clean-sys-index test-parts selenium-tests conditional-copybara
 
 test-parts: test-sb test-lw test-ccl test-store web-bin
 
-$(JAR_FILE): $(shell find java | grep -v build | grep -v .gradle)
-	cd java && JAVA_HOME=$(JAVA_HOME) ./gradlew build makeClasspath
-
-test-sb: submodule $(SO) $(sbcl) $(JAR_FILE)
+test-sb: submodule $(sbcl)
 	pwd
 	$(sbcl) --script ./jenkins.lisp
 
-test-ccl: submodule $(SO) $(CCL_IMAGE) $(JAR_FILE)
+test-ccl: submodule $(CCL_IMAGE)
 	pwd
 	$(CCL_SCRIPT) ./jenkins.lisp
 
-test-lw: submodule $(SO) $(LW) $(JAR_FILE)
+test-lw: submodule $(LW)
 	pwd
 	$(LW_SCRIPT) ./jenkins.lisp
 
@@ -119,7 +114,7 @@ restart: | test-lw  web-bin
 
 build: | build/cache-key build/distinfo.txt
 
-web-bin: $(LISP_FILES) $(SO) $(LW)
+web-bin: $(LISP_FILES) $(LW)
 	$(LW_SCRIPT) build-web-bin.lisp
 
 clean-fasl: .PHONY
@@ -178,7 +173,7 @@ $(sbcl): build scripts/build-image.lisp
 	$(SBCL_CORE) --script scripts/build-image.lisp
 
 
-selenium-tests: $(LW) $(JAR_FILE)
+selenium-tests: $(LW)
 	xvfb-run $(LW_SCRIPT) scripts/run-selenium-tests.lisp
 
 selenium-tests-without-x: $(LW)
@@ -191,7 +186,7 @@ assets: $(LW) .PHONY
 deploy-assets: | deploy-assets-excl-bin deploy-bin deploy-pull
 
 deploy-assets-excl-bin: assets
-	rsync -aPz --exclude screenshotbot assets web@screenshotbot.io:~/web/
+	rsync --checksum -aPz --exclude screenshotbot assets web@screenshotbot.io:~/web/
 
 deploy-bin: assets
 	rsync -aPz assets/screenshotbot web@screenshotbot.io:~/web/assets/screenshotbot-copy

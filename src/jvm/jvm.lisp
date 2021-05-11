@@ -15,18 +15,16 @@
   (require "java-interface"))
 
 (defun jvm-get-classpath ()
-  (let ((classpath-file "java/build/libs/classpath.txt"))
-    (unless (path:-e classpath-file)
-      (error "classes built yet: ~a" classpath-file))
-    (let ((class-path (uiop:read-file-lines classpath-file)))
-      (loop for f in class-path
-            unless (or (path:-e f) (path:-d f)
-                       (str:ends-with-p "resources/main" f))
-              do (error "File in class-path not found: ~a" f))
-      #+ccl
-      (pushnew (asdf:system-relative-pathname :cl+j "cl_j.jar")
-               class-path)
-      class-path)))
+  (let ((class-path
+          (cond
+            (util:*delivered-image*
+             (fad:list-directory "assets/java-libs/"))
+            (t
+             (build-utils:java-class-path (asdf:find-system :java.main))))))
+    #+ccl
+    (pushnew (asdf:system-relative-pathname :cl+j "cl_j.jar")
+             class-path)
+    class-path))
 
 (defun libjvm.so ()
   "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so")

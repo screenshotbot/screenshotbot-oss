@@ -8,5 +8,8 @@
   :serial t
   :depends-on (:str
                :cffi
+               :cl-fad
+               :java.main
+               :util
                :trivial-garbage)
   :components ((:file "jvm")))
