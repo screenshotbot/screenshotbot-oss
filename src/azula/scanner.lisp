@@ -35,6 +35,7 @@
                       (%scan dir (join-azula-dirs prefix (car (last (pathname-directory dir))))))))))
        (%scan (azula-root) "//")
        (resolve-targets *targets*)
+       (verify-no-loops *targets*)
        (setf new-targets *targets*)))
 
     (setf *targets* new-targets)))
@@ -66,5 +67,19 @@
                     collect
                     (%resolve-dep (target-build-file target)
                                   dep)))))))
+
+(defun verify-no-loops (targets)
+  (let ((seen (make-hash-table :test 'equal)))
+    (labels ((visit (target)
+               (setf (gethash target seen) t)
+               (dolist (dep (target-deps target))
+                 (when (gethash dep seen)
+                   (error "Found cyclical dependency between: ~S and ~S"
+                          (canonical-name target)
+                          (canonical-name dep)))
+                 (visit dep))))
+      (dolist (target targets)
+        (unless (gethash target seen)
+          (visit target))))))
 
 ;; (scan)
