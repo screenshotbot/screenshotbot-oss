@@ -1,0 +1,9 @@
+(js-library
+    :name "sentry"
+    :srcs (list "bundle.min.js"
+                "config.js"))
+
+(js-binary
+ :name "sentry-bin"
+ :deps (list
+        ":sentry"))
