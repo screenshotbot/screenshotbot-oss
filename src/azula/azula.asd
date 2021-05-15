@@ -13,4 +13,4 @@
 (defsystem :azula/tests
     :serial t
     :depends-on (:azula)
-    :components (:file "test-main"))
+    :components ((:file "test-main")))

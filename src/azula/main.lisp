@@ -95,7 +95,7 @@
   (let ((stream (flexi-streams:make-in-memory-input-stream (flexi-streams:string-to-octets  str))))
     (make-hash stream)))
 
-(defmethod initialize-instance :after ((executor executor))
+(defmethod initialize-instance :after ((executor executor) &key)
   (setf (executor-cache-key executor)
         (make-hash-from-string
          (json:encode-json (executor-config executor)))))
