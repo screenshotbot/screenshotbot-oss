@@ -80,3 +80,31 @@
   (let ((build-file (target-build-file target)))
     (format nil "~a:~a" (canonical-name build-file)
             (target-name target))))
+
+(defclass executor ()
+  ((config :initarg :config
+           :accessor executor-config)
+   (cache-key :accessor executor-cache-key)))
+
+(defun make-hash (stream)
+  (let ((digest (ironclad:make-digest 'ironclad:sha1)))
+    (ironclad:digest-stream digest stream)
+    (ironclad:produce-digest digest)))
+
+(defun make-hash-from-string (str)
+  (let ((stream (flexi-streams:make-in-memory-input-stream (flexi-streams:string-to-octets  str))))
+    (make-hash stream)))
+
+(defmethod initialize-instance :after ((executor executor))
+  (setf (executor-cache-key executor)
+        (make-hash-from-string
+         (json:encode-json (executor-config executor)))))
+
+(defgeneric cache-key (executor target)
+  (:documentation "Cache key of the target all its inputs and
+  configuration. If the key is the same, the output is always
+  guaranteed to be the same"))
+
+(defmethod cache-key (executor target)
+  "Default cache-key, build cache key only for the executor"
+  (sha ))

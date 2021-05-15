@@ -2,6 +2,7 @@
     :serial t
     :depends-on (:str
                  :log4cl
+                 :ironclad
                  :cl-fad)
     :components ((:file "main")
                  (:file "js")
@@ -11,4 +12,5 @@
 
 (defsystem :azula/tests
     :serial t
-    :depends-on (:azula))
+    :depends-on (:azula)
+    :components (:file "test-main"))
