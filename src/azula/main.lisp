@@ -8,12 +8,17 @@
   (:use :cl)
   (:export :config
    :azula-root
+   :cache-key
            :build))
 (in-package :azula/main)
+
+(defparameter *cache-version* 1)
 
 (defclass build-file ()
   ((canonical-name :initarg :canonical-name
                    :accessor canonical-name)
+   (pathname :initarg :load-pathname
+              :accessor build-file-pathname)
    (targets :initform nil)))
 
 (defclass target ()
@@ -64,7 +69,8 @@
 
 (defun load-build-file (build-file canonical-name)
   (let ((*package* (find-package :azula/build-file-env))
-        (*current-build-file* (make-instance 'build-file :canonical-name canonical-name)))
+        (*current-build-file* (make-instance 'build-file :canonical-name canonical-name
+                                             :load-pathname build-file)))
    (load build-file)))
 
 (defun load-target (target)
@@ -95,6 +101,10 @@
   (let ((stream (flexi-streams:make-in-memory-input-stream (flexi-streams:string-to-octets  str))))
     (make-hash stream)))
 
+(defun make-hash-from-file (file)
+  (with-open-file (stream file :element-type '(unsigned-byte 8))
+    (make-hash stream)))
+
 (defmethod initialize-instance :after ((executor executor) &key)
   (setf (executor-cache-key executor)
         (make-hash-from-string
@@ -105,6 +115,22 @@
   configuration. If the key is the same, the output is always
   guaranteed to be the same"))
 
+(defmethod file-key ((executor executor) file)
+  ;; todo: cache the file key
+  (make-hash-from-file file))
+
+(defun pp (x)
+  (log:info "~S" x)
+  x)
+
+
 (defmethod cache-key (executor target)
   "Default cache-key, build cache key only for the executor"
-  (sha ))
+  (make-hash
+   (flexi-streams:make-in-memory-input-stream
+    (apply 'concatenate 'vector
+                 (append
+                  (loop for dep in (target-deps target) collect
+                                                        (cache-key executor dep))
+                  (loop for file in (target-srcs target) collect
+                                                         (file-key executor file)))))))

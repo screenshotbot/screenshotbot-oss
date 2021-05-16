@@ -4,8 +4,11 @@
   (:import-from :azula/main
    :azula-root
                 :canonical-name
-                :target-build-file
+   :target-build-file
+                :target-srcs
+                :build-file-path
                 :target-deps
+                :build-file-pathname
                 :load-build-file
                 :*targets*))
 (in-package :azula/scanner)
@@ -35,6 +38,7 @@
                       (%scan dir (join-azula-dirs prefix (car (last (pathname-directory dir))))))))))
        (%scan (azula-root) "//")
        (resolve-targets *targets*)
+       (mapc 'resolve-srcs *targets*)
        (verify-no-loops *targets*)
        (setf new-targets *targets*)))
 
@@ -81,5 +85,16 @@
       (dolist (target targets)
         (unless (gethash target seen)
           (visit target))))))
+
+(defun resolve-srcs (target)
+  (let ((build-file (target-build-file target)))
+   (setf (target-srcs target)
+         (loop for src in (target-srcs target)
+               collect
+               (let ((file (path:catfile (build-file-pathname build-file)
+                                         src)))
+                 (unless (path:-e file)
+                   (error "File: ~A does not exist" file))
+                 file)))))
 
 ;; (scan)

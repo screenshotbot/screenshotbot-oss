@@ -2,7 +2,8 @@
   (:use :cl
    :alexandria)
   (:import-from :azula/main
-   :target)
+   :target
+   :cache-key)
   (:export :js-library
            :js-binary))
 (in-package :azula/js)
@@ -12,3 +13,6 @@
 
 (defclass js-binary (target)
   ())
+
+(defmethod cache-key (executor (target js-library))
+  (call-next-method))

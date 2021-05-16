@@ -12,5 +12,6 @@
 
 (defsystem :azula/tests
     :serial t
-    :depends-on (:azula)
+    :depends-on (:azula
+                 :tmpdir)
     :components ((:file "test-main")))
