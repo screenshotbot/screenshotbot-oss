@@ -4,27 +4,26 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/java/java
-  (:use :cl)
-  (:export :*bfalse*
-   :*btrue*
-           :safe-jvref
-   :invoke
-   :java-equals
-           :classp
-           :jclass-of
-           :read-java-field
-           :new-instance
-   :jclass-of!
-           :array->list)
+(pkg:define-package :screenshotbot/java/java
+    (:use :cl)
+  (:export #:*bfalse*
+           #:*btrue*
+           #:safe-jvref
+           #:invoke
+           #:java-equals
+           #:classp
+           #:jclass-of
+           #:read-java-field
+           #:new-instance
+           #:jclass-of!
+           #:array->list)
   #+lispworks
   (:import-from :lw-ji
-   :find-java-class
-   :java-objects-eq
-   :java-array-length)
+                #:find-java-class
+                #:java-objects-eq
+                #:java-array-length)
   #+ccl
   (:import-from :cl+j))
-(in-package :screenshotbot/java/java)
 
 #+lispworks
 (require "java-interface")

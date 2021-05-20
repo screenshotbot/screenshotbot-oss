@@ -4,16 +4,14 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/java/reader
-  (:use :cl)
+(pkg:define-package :screenshotbot/java/reader
+  (:use #:cl)
   #+lispworks
-  (:import-from :screenshotbot/java/java
-   :invoke
-   :array->list)
-  (:export :java-list->list
-           :java-syntax))
-(in-package :screenshotbot/java/reader)
-
+  (:import-from ./java
+                #:invoke
+                #:array->list)
+  (:export #:java-list->list
+           #:java-syntax))
 
 (defun read-case-sensitive-symbol (stream char recursive)
   (declare (ignore recursive char))

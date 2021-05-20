@@ -4,30 +4,27 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage screenshotbot/java/test-java
-  (:use :cl
-      :fiveam)
-     (:import-from :screenshotbot/java/java
-      :*type-locator*
-                   #+ccl
-      :fix-arg-for-jmethod-invoke
-      :safe-make-java-array
-      :java-objects-eq
-      :invoke
-      :define-java-callers
-      :jvref
-      :java-array-p
-      :list->array
-      :java-equals
-      :new-instance
-      :find-java-class
-      :find_class2
-      :jclass-of
-      :primitive-locator
-      :make-type-locator))
-(in-package :screenshotbot/java/test-java)
-
-(def-suite* :screenshotbot/java/test-java)
+(pkg:define-package screenshotbot/java/test-java
+  (:use #:cl
+        #:fiveam)
+  (:import-from ./java
+                #:*type-locator*
+                #+ccl
+                #:fix-arg-for-jmethod-invoke
+                #:safe-make-java-array
+                #:java-objects-eq
+                #:invoke
+                #:define-java-callers
+                #:jvref
+                #:java-array-p
+                #:list->array
+                #:java-equals
+                #:new-instance
+                #:find-java-class
+                #:find_class2
+                #:jclass-of
+                #:primitive-locator
+                #:make-type-locator))
 
 (defvar *jippo-locator*
   (make-type-locator

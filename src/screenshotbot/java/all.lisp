@@ -4,8 +4,8 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/java
+(pkg:define-package :screenshotbot/java
     (:use-reexport
      #+ (or ccl lispworks)
-     :screenshotbot/java/java
-     :screenshotbot/java/reader))
+     :./java/java
+     :./java/reader))
