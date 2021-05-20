@@ -4,13 +4,12 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :azula/main
+(pkg:define-package :azula/main
   (:use :cl)
   (:export :config
    :azula-root
    :cache-key
            :build))
-(in-package :azula/main)
 
 (defparameter *cache-version* 1)
 
