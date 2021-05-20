@@ -85,7 +85,7 @@ pipeline {
 
                 stage ("Copybara") {
                     steps {
-                        sh "test -f src/screenshotbot.oss.tests.asd || make conditional-copybara"
+                        //sh "test -f src/screenshotbot.oss.tests.asd || make conditional-copybara"
                     }
                 }
             }

@@ -1,2 +1,2 @@
-(uiop:define-package :azula
+(pkg:define-package :azula
   (:use-reexport :azula/main))

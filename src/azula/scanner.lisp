@@ -1,7 +1,7 @@
-(defpackage :azula/scanner
+(pkg:define-package :azula/scanner
   (:use :cl
    :alexandria)
-  (:import-from :azula/main
+  (:import-from ./main
    :azula-root
                 :canonical-name
    :target-build-file

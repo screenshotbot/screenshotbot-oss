@@ -1,6 +1,6 @@
-(defpackage :azula/build-file-env
+(pkg:define-package :azula/build-file-env
   (:use :cl)
-  (:import-from :azula/main
+  (:import-from ./main
                 :define-target))
 (in-package :azula/build-file-env)
 

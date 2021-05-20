@@ -1,7 +1,7 @@
-(defpackage :azula/js
+(pkg:define-package :azula/js
   (:use :cl
    :alexandria)
-  (:import-from :azula/main
+  (:import-from ./main
    :target
    :cache-key)
   (:export :js-library
@@ -16,3 +16,9 @@
 
 (defmethod cache-key (executor (target js-library))
   (call-next-method))
+
+#+nil
+(defun glob (expr &key (directory (build-file-pathname *current-build-file*)))
+  (let ((parts (str:split "/" expr :limit 2)))
+    (cond
+      ((equal "parts ")))))

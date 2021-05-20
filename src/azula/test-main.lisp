@@ -1,15 +1,15 @@
-(defpackage :azula/test-main
+(pkg:define-package :azula/test-main
   (:use :cl
    :alexandria
         :fiveam)
-  (:import-from :azula/main
+  (:import-from ./main
    :make-hash-from-string
                 :config
    :*targets*
                 :*config*
                 :cache-key
                 :executor)
-  (:import-from :azula/scanner
+  (:import-from ./scanner
                 :scan))
 (in-package :azula/test-main)
 

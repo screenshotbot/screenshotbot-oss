@@ -2,6 +2,7 @@
     :serial t
     :depends-on (:str
                  :log4cl
+                 :pkg
                  :ironclad
                  :cl-fad)
     :components ((:file "main")
