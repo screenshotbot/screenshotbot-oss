@@ -8,15 +8,14 @@
   (:use #:cl
         #:bknr.datastore
         #:hex)
-  (:import-from :alexandria
-                :assoc-value
-                )
-  (:import-from :hex
-   :acceptor-with-plugins
-                :make-url
-                :make-prefix-matcher
-                :acceptor-plugins
-                :make-full-url)
+  (:import-from #:alexandria
+                #:assoc-value)
+  (:import-from #:hex
+                #:acceptor-with-plugins
+                #:make-url
+                #:make-prefix-matcher
+                #:acceptor-plugins
+                #:make-full-url)
   (:export #:head
            #:google-analytics
            #:safe-redirect
@@ -81,17 +80,17 @@
            #:tail))
 
 (defpackage :mquery
-  (:use :cl
-        :markup
-        :alexandria)
-  (:export :$
-           :attr
-           :add-class
-   :remove-class
-   :has-class-p
-           :namequery
-           :text
-           :parent
-           :after
-           :val
-           :with-document))
+  (:use #:cl
+        #:markup
+        #:alexandria)
+  (:export #:$
+           #:attr
+           #:add-class
+           #:remove-class
+           #:has-class-p
+           #:namequery
+           #:text
+           #:parent
+           #:after
+           #:val
+           #:with-document))
