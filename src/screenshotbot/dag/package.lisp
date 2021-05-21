@@ -5,15 +5,15 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :dag
-  (:use :cl
-   :alexandria)
-  (:export :dag
-   :add-commit
-           :commit
-   :merge-dag
-           :parents
-           :ancestorp
-   :get-commit
-   :write-to-stream
-   :read-from-stream))
+  (:use #:cl
+        #:alexandria)
+  (:export #:dag
+           #:add-commit
+           #:commit
+           #:merge-dag
+           #:parents
+           #:ancestorp
+           #:get-commit
+           #:write-to-stream
+           #:read-from-stream))
 (in-package :dag)

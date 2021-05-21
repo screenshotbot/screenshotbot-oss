@@ -5,17 +5,17 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot.dag.test-dag
-  (:use :cl
-        :dag
-   :alexandria
-   :fiveam)
-  (:import-from :dag
-   :dag
-                :merge-dag
-                :get-commit
-                :commit
-   :node-already-exists
-   :add-commit))
+  (:use #:cl
+        #:dag
+        #:alexandria
+        #:fiveam)
+  (:import-from #:dag
+                #:dag
+                #:merge-dag
+                #:get-commit
+                #:commit
+                #:node-already-exists
+                #:add-commit))
 
 (in-package :screenshotbot.dag.test-dag)
 
