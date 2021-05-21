@@ -1,17 +1,16 @@
 (pkg:define-package :azula/test-main
-  (:use :cl
-   :alexandria
-        :fiveam)
+    (:use #:cl
+          #:alexandria
+          #:fiveam)
   (:import-from ./main
-   :make-hash-from-string
-                :config
-   :*targets*
-                :*config*
-                :cache-key
-                :executor)
+                #:make-hash-from-string
+                #:config
+                #:*targets*
+                #:*config*
+                #:cache-key
+                #:executor)
   (:import-from ./scanner
-                :scan))
-(in-package :azula/test-main)
+                #:scan))
 
 (test make-hash
   (is (equalp #(11 238 199 181 234 63 15 219 201 93 13 212 127 60 91 194 117 218 138 51)

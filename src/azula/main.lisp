@@ -5,11 +5,11 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (pkg:define-package :azula/main
-  (:use :cl)
-  (:export :config
-   :azula-root
-   :cache-key
-           :build))
+    (:use #:cl)
+  (:export #:config
+           #:azula-root
+           #:cache-key
+           #:build))
 
 (defparameter *cache-version* 1)
 

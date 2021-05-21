@@ -1,17 +1,16 @@
 (pkg:define-package :azula/scanner
-  (:use :cl
-   :alexandria)
+    (:use #:cl
+          #:alexandria)
   (:import-from ./main
-   :azula-root
-                :canonical-name
-   :target-build-file
-                :target-srcs
-                :build-file-path
-                :target-deps
-                :build-file-pathname
-                :load-build-file
-                :*targets*))
-(in-package :azula/scanner)
+                #:azula-root
+                #:canonical-name
+                #:target-build-file
+                #:target-srcs
+                #:build-file-path
+                #:target-deps
+                #:build-file-pathname
+                #:load-build-file
+                #:*targets*))
 
 (defvar *current-build-file*)
 
