@@ -3,6 +3,8 @@
     :depends-on (:str
                  :log4cl
                  :pkg
+                 :flexi-streams
+                 :cl-json
                  :ironclad
                  :cl-fad)
     :components ((:file "main")
