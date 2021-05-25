@@ -5,14 +5,16 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :build-utils/js-package
-  (:use :cl
-        :asdf
-   :alexandria)
-  (:export :web-asset
-   :js-system
-           :js-library
-           :js-file
-   :js-file))
+  (:use #:cl
+        #:asdf
+        #:alexandria)
+  (:import-from :build-utils/common
+                #:find-transitive-system-deps)
+  (:export #:web-asset
+           #:js-system
+           #:js-library
+           #:js-file
+           #:js-file))
 (in-package :build-utils/js-package)
 
 (defclass web-asset ()
@@ -27,19 +29,20 @@
 (defclass js-file (asdf:static-file)
   ((asdf::type :initform "js")))
 
-(defmethod js-input-files ((o compile-op) (m module))
+(defmethod js-lib-input-files ((o compile-op) (m module))
   (loop for x in (component-children m) appending
-        (js-input-files o x)))
+        (js-lib-input-files o x)))
 
-(defmethod js-input-files ((o compile-op) (j js-file))
+(defmethod js-lib-input-files ((o compile-op) (j js-file))
   (asdf:input-files o j))
 
-(defmethod js-input-files ((o compile-op) (j js-library))
-  (append
-   (loop for x in (system-depends-on j) appending
-         (js-input-files o (find-component x nil)))
-   (loop for x in (component-children j) appending
-                                         (js-input-files o x))))
+(defmethod js-lib-input-files ((o compile-op) (j js-library))
+  (call-next-method))
+
+(defmethod js-input-files ((o compile-op) (j js-system))
+  (let ((libraries (find-transitive-system-deps j 'js-library)))
+    (loop for lib in libraries
+          appending (js-lib-input-files o lib))))
 
 (defmethod asdf:output-files ((o compile-op) (j js-system))
   (list
@@ -63,8 +66,9 @@
            (namestring
             (asdf:system-relative-pathname
              :web.all "closure-compiler/closure-compiler-v20200830.jar"))
-           ;; "--compilation_level"
-           ;; "WHITESPACE_ONLY"
+            "--compilation_level"
+            "WHITESPACE_ONLY"
+            "--checks_only"
            "--js_output_file"
            (namestring (car (output-files o j)))
            "--create_source_map"

@@ -8,6 +8,7 @@
   :serial t
   :depends-on (:tmpdir)
   :components ((:file "wild-module")
+               (:file "common")
                (:file "jar-file")
                (:file "js-package")
                (:file "css-package")
