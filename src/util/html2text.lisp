@@ -9,11 +9,18 @@
 (markup:enable-reader)
 
 (defun html2text (markup)
-  (let* ((markup (if (stringp markup) markup
-                     (markup:write-html markup)))
-         (input-stream (make-string-input-stream markup))
-         (output-stream (make-string-output-stream)))
-    (uiop:run-program (list "html2text")
-                      :input input-stream
-                      :output output-stream)
-    (get-output-stream-string output-stream)))
+  (uiop:with-temporary-file (:stream input-stream
+                             :pathname input-pathname
+                             :prefix "input-html"
+                             :direction :io :external-format :utf-8)
+   (let* ((markup (if (stringp markup) markup
+                      (markup:write-html markup))))
+     (write-string markup input-stream)
+     (finish-output input-stream)
+
+     (uiop:with-temporary-file (:pathname output-pathname
+                                :prefix "output-html")
+      (uiop:run-program (list "html2text" "-utf8")
+                        :input input-pathname
+                        :output output-pathname)
+      (uiop:read-file-string output-pathname :external-format :utf-8)))))
