@@ -68,7 +68,6 @@
              :web.all "closure-compiler/closure-compiler-v20200830.jar"))
             "--compilation_level"
             "WHITESPACE_ONLY"
-            "--checks_only"
            "--js_output_file"
            (namestring (car (output-files o j)))
            "--create_source_map"
