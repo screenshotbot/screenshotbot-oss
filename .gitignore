@@ -14,6 +14,7 @@ system-index.txt
 .sass-cache
 repl.lisp-repl
 *.64ufasl
+*.fasl
 build
 /assets
 screenshotbot-installer.sh

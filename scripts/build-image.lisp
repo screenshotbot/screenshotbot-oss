@@ -6,7 +6,10 @@
 
 (in-package "CL-USER")
 
-(require :asdf)
+(let ((output (compile-file "scripts/asdf.lisp")))
+  (load output))
+
+(provide "asdf")
 
 (asdf:initialize-output-translations `(:output-translations
                                        :inherit-configuration

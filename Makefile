@@ -166,10 +166,10 @@ build/distinfo.txt: .PHONY
 		cp $(QUICKLISP)/distinfo.txt $@ ; \
 	fi
 
-build/lw-console: build scripts/build-image.lisp
+build/lw-console: build scripts/build-image.lisp scripts/asdf.lisp
 	$(LW_CORE) -build scripts/build-image.lisp
 
-$(sbcl): build scripts/build-image.lisp
+$(sbcl): build scripts/build-image.lisp scripts/asdf.lisp
 	$(SBCL_CORE) --script scripts/build-image.lisp
 
 
@@ -195,7 +195,7 @@ deploy-bin: assets
 deploy-pull:
 	ssh web@screenshotbot.io 'cd web && git pull'
 
-$(CCL_IMAGE): build scripts/build-image.lisp
+$(CCL_IMAGE): build scripts/build-image.lisp scripts/asdf.lisp
 	rm -f $@
 	$(CCL_CORE) -l scripts/build-image.lisp
 	chmod a+x $@
