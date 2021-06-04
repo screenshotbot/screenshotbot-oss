@@ -11,6 +11,10 @@
 
 (provide "asdf")
 
+#+nil
+(push (pathname (format nil "~a/local-projects/poiu/" (namestring (uiop:getcwd))))
+      asdf:*central-registry*)
+
 (asdf:initialize-output-translations `(:output-translations
                                        :inherit-configuration
                                        (,(namestring (uiop:getcwd))
