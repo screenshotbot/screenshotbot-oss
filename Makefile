@@ -174,7 +174,7 @@ $(sbcl): build scripts/build-image.lisp scripts/asdf.lisp
 
 
 selenium-tests: $(LW)
-	xvfb-run $(LW_SCRIPT) scripts/run-selenium-tests.lisp
+	xvfb-run -a $(LW_SCRIPT) scripts/run-selenium-tests.lisp
 
 selenium-tests-without-x: $(LW)
 	$(LW_SCRIPT) scripts/run-selenium-tests.lisp
