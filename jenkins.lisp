@@ -61,7 +61,10 @@
                   (when pos
                     (list (elt system:*line-arguments-list* (1+ pos)))))
                 (find-tests))))
-  (mapc 'ql:quickload systems))
+  (loop for system in systems
+        do
+        (let ((res (ql:quickload system)))
+          (format t "Got quickload result: ~S" res))))
 
 ;;(ql:quickload "auth")
 ;;(asdf:load-system "auth")
