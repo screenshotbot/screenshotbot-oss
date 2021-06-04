@@ -6,7 +6,10 @@
 
 (in-package "CL-USER")
 
-(let ((output (compile-file "scripts/asdf.lisp")))
+#+lispworks
+(require "java-interface" )
+
+(let ((output (compile-file "scripts/asdf.lisp" :verbose nil :print nil)))
   (load output))
 
 (provide "asdf")
@@ -15,14 +18,14 @@
 (push (pathname (format nil "~a/local-projects/poiu/" (namestring (uiop:getcwd))))
       asdf:*central-registry*)
 
+
 (asdf:initialize-output-translations `(:output-translations
                                        :inherit-configuration
                                        (,(namestring (uiop:getcwd))
                                          ,(format nil "~abuild/asdf-cache/~a/" (uiop:getcwd)
                                                   (uiop:implementation-identifier)))))
 
-#+lispworks
-(require "java-interface" )
+
 
 (defun use-utf-8-for-all-lisp-files (pathname ext-format-spec first-byte max-extent)
   (cond
@@ -38,6 +41,7 @@
   (lw:set-default-character-element-type 'character))
 
 (load "quicklisp/setup.lisp")
+
 
 #+nil
 (ql:update-all-dists :prompt nil)

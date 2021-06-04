@@ -64,7 +64,7 @@
   (loop for system in systems
         do
         (let ((res (ql:quickload system)))
-          (format t "Got quickload result: ~S" res))))
+          #+nil(format t "Got quickload result: ~S" res))))
 
 ;;(ql:quickload "auth")
 ;;(asdf:load-system "auth")
