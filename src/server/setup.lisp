@@ -41,9 +41,13 @@
 (defvar *port*)
 (defvar *swank-port*)
 (defvar *verify-store*)
+(defvar *socketmaster*)
+(defvar *shell*)
 
 (defparameter *options*
   `((*port* "4001" "" :params ("PORT"))
+    (*socketmaster* t "" :params ("SOCKETMASTER"))
+    (*shell* nil "")
     (*swank-port* "4005" "" :params ("SWANK-PORT"))
     (util:*object-store* "/data/arnold/object-store/" "" :params ("OBJECT-STORE"))
     (*verify-store* nil "")))
@@ -55,8 +59,12 @@
 (defmethod hunchentoot:start-listening ((acceptor my-acceptor))
   ;; always listen on the PORT setup on fd 3. Assuming we'll be
   ;; started by socketmaster
-  (setf (hunchentoot::acceptor-listen-socket acceptor)
-        (usocket::make-stream-server-socket 3 :element-type '(unsigned-byte 8))))
+  (cond
+    (*socketmaster*
+     (setf (hunchentoot::acceptor-listen-socket acceptor)
+           (usocket::make-stream-server-socket 3 :element-type '(unsigned-byte 8))))
+    (t
+     (call-next-method))))
 
 (defvar *multi-acceptor*)
 
@@ -168,12 +176,17 @@
 
        (util:prepare-store)
 
-       (hunchentoot:start *multi-acceptor*)
-
 
        (log:info "starting up swank")
        (cl-cron:start-cron)
        (Server:swank-loop)
+
+
+       (cond
+         (*shell*
+          (log:info "Swank has started up, but we're not going to start hunchentoot. Call (QUIT) from swank when done."))
+         (t
+          (hunchentoot:start *multi-acceptor*)))
 
        (log:info "Now we wait indefinitely for shutdown notifications")
        (bt:condition-wait *shutdown-cv* *server-lock*))))
