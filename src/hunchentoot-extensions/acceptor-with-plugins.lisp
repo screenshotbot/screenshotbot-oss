@@ -49,10 +49,17 @@
   ((acceptor-plugins :accessor acceptor-plugins
                      :initform nil)))
 
+(defmacro declare-handler (name)
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+    (setf (get ,name 'handlerp) t)))
+
+
 (defmacro define-plugin-handler ((name &key uri method plugin-name) params &body body)
   (declare (ignore method))
   (unless uri
     (setf uri "/nil"))
+
+
   (multiple-value-bind (full-regex full-var-list)
       (hex:make-uri-regex uri)
     (declare (ignore full-regex))
@@ -61,34 +68,37 @@
           (direct-params (loop for param in param-names
                                if (not (member (string param) full-var-list :test 'string=))
                                  collect param)))
-     `(multiple-value-bind (full-regex vars parse-tree) (hex:make-uri-regex ,uri)
-        (declare (ignore vars))
-        (defun ,name (&key ,@param-names)
-          ,@body)
-        (setf
-         (assoc-value *acceptor-plugins-table* ',name)
-         (list ,plugin-name
-               full-regex
-               (lambda (relative-script-name)
-                 (multiple-value-bind (res args)
-                     (hex::matches-regex full-regex nil
-                                                      :script-name relative-script-name)
-                   (declare (ignore res))
-                   (,name
-                    ,@ (loop for param in direct-params
-                             appending
-                             (list (intern (string param) (symbol-package :foo))
-                                   `(hunchentoot:parameter ,(string param))))
-                    ,@ (loop for param in full-var-list
-                             for i from 0 to 1000
-                             appending
-                             (list (intern (string param) (symbol-package :foo))
-                                   `(elt args ,i))))))))
-        (setf (alexandria:assoc-value hex::*url-list* ',name)
-              (make-instance 'plugin-url-handler
-                             :parse-tree parse-tree
-                             :plugin-name ,plugin-name
-                             :request-args ',param-names))))))
+     `(eval-when (:compile-toplevel :load-toplevel :execute)
+        (declare-handler ',name)
+        (eval-when (:load-toplevel :execute)
+         (multiple-value-bind (full-regex vars parse-tree) (hex:make-uri-regex ,uri)
+           (declare (ignore vars))
+           (defun ,name (&key ,@param-names)
+             ,@body)
+           (setf
+            (assoc-value *acceptor-plugins-table* ',name)
+            (list ,plugin-name
+                  full-regex
+                  (lambda (relative-script-name)
+                    (multiple-value-bind (res args)
+                        (hex::matches-regex full-regex nil
+                                            :script-name relative-script-name)
+                      (declare (ignore res))
+                      (,name
+                       ,@ (loop for param in direct-params
+                                appending
+                                (list (intern (string param) (symbol-package :foo))
+                                      `(hunchentoot:parameter ,(string param))))
+                       ,@ (loop for param in full-var-list
+                                for i from 0 to 1000
+                                appending
+                                (list (intern (string param) (symbol-package :foo))
+                                      `(elt args ,i))))))))
+           (setf (alexandria:assoc-value hex::*url-list* ',name)
+                 (make-instance 'plugin-url-handler
+                                :parse-tree parse-tree
+                                :plugin-name ,plugin-name
+                                :request-args ',param-names))))))))
 
 
 (defmethod dispatch-plugin-request ((plugin acceptor-plugin)

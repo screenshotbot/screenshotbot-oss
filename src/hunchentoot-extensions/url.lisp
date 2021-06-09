@@ -104,6 +104,18 @@ to decide how to attach the new parameter to the end of the string."
                       (t (add key value)))))
              ret)))))))
 
+(define-compiler-macro make-url (&whole whole name &rest args)
+    (cond
+      ((and (listp name)
+            (eql 'quote (car name)))
+       (let ((name (cadr name)))
+         (unless (get name 'handlerp)
+           #-ccl ;; the tests fail on CCL for some reason
+           (error "make-url called with symbol ~S, but it has not been created as a handler yet"
+                  name)))
+       whole)
+      (t whole)))
+
 (defun get-request-domain-prefix (&optional (request hunchentoot:*request*))
   "Like https://xyz.com or http://localhost:3014. Appropriate for use
   in emails"

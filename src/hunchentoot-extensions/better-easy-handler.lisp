@@ -158,34 +158,37 @@
        ;; we call make-uri-regex twice, once for getting the variables
        ;; at macro time, and the second for use in the closure.
        (let ((acceptor-names (if (symbolp (eval acceptor-names)) `(list ,acceptor-names) acceptor-names)))
-         `(multiple-value-bind (,regex ,vars ,parse-tree) (make-uri-regex ,uri)
-            (declare (ignorable ,vars))
-            (hunchentoot:define-easy-handler (,name :uri (%only-request-of-type ,regex ,method) :acceptor-names ,acceptor-names) ,params
-              ,@decls
-              (when ,intern
-                (%assert-is-intern))
-              ;; todo: double regexing, but then, the acceptor is
-              ;; regexing a hundred or so different urls, so perhaps it
-              ;; doesn't matter.
-              ,(when full-var-list
-                 `(multiple-value-bind (res args)
-                      (matches-regex ,regex hunchentoot:*request*)
-                    (declare (ignore res))
-                    ,@ (loop for v in full-var-list
-                             for i from 0 to 100
-                             appending
-                             (loop for param in params
-                                   if (equal v (symbol-name param))
-                                     collect `(unless ,param (setf ,param (elt args ,i)))))))
-              (%easy-handler-wrap
-               (lambda ()
-                 (progn ,@body)) :html ,html))
-            (when ',name
-              (setf (alexandria:assoc-value *url-list* ',name)
-                    (make-instance 'url-handler
-                                   :parse-tree ,parse-tree
-                                   :request-args (loop for p in ',params collect
-                                                      (if (listp p) (car p) p)))))))))))
+         `(eval-when (:compile-toplevel :load-toplevel :execute)
+            (declare-handler ',name)
+            (eval-when (:load-toplevel :execute)
+             (multiple-value-bind (,regex ,vars ,parse-tree) (make-uri-regex ,uri)
+               (declare (ignorable ,vars))
+               (hunchentoot:define-easy-handler (,name :uri (%only-request-of-type ,regex ,method) :acceptor-names ,acceptor-names) ,params
+                 ,@decls
+                 (when ,intern
+                   (%assert-is-intern))
+                 ;; todo: double regexing, but then, the acceptor is
+                 ;; regexing a hundred or so different urls, so perhaps it
+                 ;; doesn't matter.
+                 ,(when full-var-list
+                    `(multiple-value-bind (res args)
+                         (matches-regex ,regex hunchentoot:*request*)
+                       (declare (ignore res))
+                       ,@ (loop for v in full-var-list
+                                for i from 0 to 100
+                                appending
+                                (loop for param in params
+                                      if (equal v (symbol-name param))
+                                        collect `(unless ,param (setf ,param (elt args ,i)))))))
+                 (%easy-handler-wrap
+                  (lambda ()
+                    (progn ,@body)) :html ,html))
+               (when ',name
+                 (setf (alexandria:assoc-value *url-list* ',name)
+                       (make-instance 'url-handler
+                                      :parse-tree ,parse-tree
+                                      :request-args (loop for p in ',params collect
+                                                                            (if (listp p) (car p) p)))))))))))))
 
 
 (defmethod acceptor-funcall-handler (acceptor fn)
