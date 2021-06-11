@@ -53,6 +53,7 @@
            #:fix-for-webp
            #:vpush
            #:oid
+           #:oid-bytes
            #:object-with-oid
            #:object-with-unindexed-oid
            #:file-lock

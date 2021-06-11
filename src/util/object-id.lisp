@@ -29,7 +29,8 @@
 
 (defclass object-with-unindexed-oid (store-object)
   ((oid
-    :initform (%make-oid)))
+    :initform (%make-oid)
+    :accessor oid-bytes))
   (:metaclass persistent-class))
 
 (defun find-by-oid (oid &optional type)

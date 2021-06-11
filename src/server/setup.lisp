@@ -144,7 +144,10 @@
              do (setf (symbol-value var) val))
 
        (when *verify-store*
-         (util:verify-store)
+         ;;(hcl:set-up-profiler)
+         (#+lispworks progn ;; hcl:profile
+          #-lispworks progn
+          (util:verify-store))
          (uiop:quit 0))
 
 
