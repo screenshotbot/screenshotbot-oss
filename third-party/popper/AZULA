@@ -1,4 +1,0 @@
-(js-library
-    :name "popper"
-    :srcs (list
-           "popper.js"))
