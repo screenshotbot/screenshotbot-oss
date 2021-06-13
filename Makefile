@@ -30,6 +30,7 @@ QUICKLISP=quicklisp/dists/quicklisp/
 COPYBARA=java -jar scripts/copybara_deploy.jar
 
 UNAME=$(shell uname -s)
+DISTINFO=quicklisp/dists/quicklisp/distinfo.txt
 
 REVISION_ID=$(shell echo '{"ids":["$(DIFF_ID)"]}' | arc call-conduit differential.querydiffs | jq -r '.["response"]["$(DIFF_ID)"]["revisionID"]')
 
@@ -112,7 +113,7 @@ deploy-jipr:
 restart: | test-lw  web-bin
 	kill -9 `curl https://tdrhq.com/deploy/getpid`
 
-build: | build/cache-key build/distinfo.txt
+build: | build/cache-key $(DISTINFO)
 
 web-bin: $(LISP_FILES) $(LW)
 	$(LW_SCRIPT) build-web-bin.lisp
@@ -160,16 +161,10 @@ deploy-rsync: .PHONY web-bin
 	rsync -aPz --exclude .git --exclude .web-bin-copy --exclude web-bin ./ ubuntu@mx.tdrhq.com:~/web/
 
 
-build/distinfo.txt: .PHONY
-	mkdir -p build
-	if test -e $(QUICKLISP)/distinfo.txt && ! ( test -e $@ && diff -q $@ $(QUICKLISP)/distinfo.txt ) ; then \
-		cp $(QUICKLISP)/distinfo.txt $@ ; \
-	fi
-
-build/lw-console: build scripts/build-image.lisp scripts/asdf.lisp
+build/lw-console: build scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO)
 	$(LW_CORE) -build scripts/build-image.lisp
 
-$(sbcl): build scripts/build-image.lisp scripts/asdf.lisp
+$(sbcl): build scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO)
 	$(SBCL_CORE) --script scripts/build-image.lisp
 
 
@@ -195,7 +190,7 @@ deploy-bin: assets
 deploy-pull:
 	ssh web@screenshotbot.io 'cd web && git pull'
 
-$(CCL_IMAGE): build scripts/build-image.lisp scripts/asdf.lisp
+$(CCL_IMAGE): build scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO)
 	rm -f $@
 	$(CCL_CORE) -l scripts/build-image.lisp
 	chmod a+x $@

@@ -34,6 +34,8 @@ acclimation acclimation acclimation asdf
 acclimation acclimation-temperature acclimation-temperature asdf
 adopt adopt adopt asdf bobbin split-sequence
 adopt adopt adopt/test 1am adopt
+adopt-subcommands adopt-subcommands adopt-subcommands adopt asdf bobbin split-sequence uiop
+adopt-subcommands adopt-subcommands-test adopt-subcommands-test adopt-subcommands asdf fiveam
 advanced-readtable advanced-readtable advanced-readtable named-readtables
 adw-charting adw-charting adw-charting iterate
 adw-charting adw-charting-google adw-charting-google adw-charting drakma
@@ -42,7 +44,7 @@ aether aether aether alexandria asdf cl-heap global-vars policy-cond
 aether aether-tests aether-tests aether asdf fiasco uiop
 agnostic-lizard agnostic-lizard agnostic-lizard asdf
 agnostic-lizard agnostic-lizard-debugger-prototype agnostic-lizard-debugger-prototype agnostic-lizard asdf bordeaux-threads
-agutil agutil agutil alexandria asdf trivia
+agutil agutil agutil alexandria asdf optima
 ahungry-fleece ahungry-fleece ahungry-fleece archive asdf chipz cl-json cl-yaml md5 split-sequence
 ahungry-fleece skeleton skeleton ahungry-fleece asdf
 alexa alexa alexa alexandria asdf cl-ppcre
@@ -70,6 +72,7 @@ apply-argv apply-argv apply-argv-tests apply-argv fiveam
 april aplesque aplesque alexandria array-operations asdf cl-ppcre lparallel parse-number symbol-munger
 april april april alexandria aplesque array-operations asdf cl-cpus cl-ppcre decimals lparallel parse-number prove simple-date-time symbol-munger trivia vex
 april april-demo.cnn april-demo.cnn april asdf lisp-binary
+april april-demo.dfns.graph april-demo.dfns.graph april asdf prove
 april vex vex alexandria array-operations asdf cl-ppcre maxpc prove symbol-munger
 arc-compat arc-compat arc-compat asdf babel bordeaux-threads cl-fad fiveam ironclad named-readtables
 architecture.builder-protocol architecture.builder-protocol architecture.builder-protocol alexandria asdf
@@ -256,8 +259,8 @@ buildnode buildnode-xhtml buildnode-xhtml buildnode
 buildnode buildnode-xul buildnode-xul buildnode
 burgled-batteries burgled-batteries burgled-batteries alexandria cffi cffi-grovel cl-fad parse-declarations-1.0 trivial-garbage
 burgled-batteries burgled-batteries-tests burgled-batteries-tests burgled-batteries cl-quickcheck lift
-burgled-batteries.syntax burgled-batteries.syntax burgled-batteries.syntax burgled-batteries esrap named-readtables
-burgled-batteries.syntax burgled-batteries.syntax-test burgled-batteries.syntax-test burgled-batteries.syntax lift
+burgled-batteries.syntax burgled-batteries.syntax burgled-batteries.syntax asdf burgled-batteries esrap named-readtables
+burgled-batteries.syntax burgled-batteries.syntax-test burgled-batteries.syntax-test asdf burgled-batteries.syntax lift
 bytecurry.asdf-ext bytecurry.asdf-ext bytecurry.asdf-ext asdf asdf-package-system
 bytecurry.mocks bytecurry.mocks bytecurry.mocks asdf asdf-package-system bytecurry.asdf-ext
 bytecurry.mocks bytecurry.mocks bytecurry.mocks/test bytecurry.mocks fiveam
@@ -520,6 +523,7 @@ cl-case-control cl-case-control cl-case-control trivial-types
 cl-catmull-rom-spline cl-catmull-rom-spline cl-catmull-rom-spline asdf
 cl-catmull-rom-spline cl-catmull-rom-spline cl-catmull-rom-spline/example bordeaux-threads cl-catmull-rom-spline lispbuilder-sdl lispbuilder-sdl-gfx lispbuilder-sdl-ttf
 cl-catmull-rom-spline cl-catmull-rom-spline cl-catmull-rom-spline/test arrow-macros cl-catmull-rom-spline fiveam uiop
+cl-cerf cl-cerf cl-cerf asdf cffi cffi-libffi
 cl-cffi-gtk cl-cffi-gtk cl-cffi-gtk asdf cl-cffi-gtk-cairo cl-cffi-gtk-gdk cl-cffi-gtk-gdk-pixbuf cl-cffi-gtk-gio cl-cffi-gtk-glib cl-cffi-gtk-gobject cl-cffi-gtk-pango
 cl-cffi-gtk cl-cffi-gtk-cairo cl-cffi-gtk-cairo asdf cl-cffi-gtk-glib
 cl-cffi-gtk cl-cffi-gtk-demo-cairo cl-cffi-gtk-demo-cairo asdf cl-cffi-gtk
@@ -599,10 +603,11 @@ cl-cut cl-cut cl-cut asdf
 cl-cut cl-cut.test cl-cut.test asdf cl-cut prove prove-asdf
 cl-cxx cxx cxx asdf cffi trivial-garbage
 cl-cxx cxx-test cxx-test asdf cxx prove prove-asdf
+cl-cxx-jit cxx-jit cxx-jit asdf cffi trivial-garbage uiop
 cl-darksky cl-darksky cl-darksky alexandria asdf dexador jonathan
 cl-darksky cl-darksky-test cl-darksky-test asdf cl-darksky prove prove-asdf
 cl-data-format-validation data-format-validation data-format-validation cl-ppcre
-cl-data-frame cl-data-frame cl-data-frame alexandria anaphora array-operations cl-num-utils cl-slice let-plus
+cl-data-frame cl-data-frame cl-data-frame alexandria anaphora array-operations asdf cl-num-utils cl-slice let-plus
 cl-data-frame cl-data-frame cl-data-frame-tests cl-data-frame clunit
 cl-data-structures cl-data-structures cl-data-structures alexandria asdf bordeaux-threads cl-ppcre closer-mop documentation-utils-extensions flexichain iterate lparallel metabang-bind more-conditions osicat scribble serapeum trivial-garbage uiop
 cl-data-structures cl-data-structures-tests cl-data-structures-tests asdf cl-data-structures prove prove-asdf
@@ -661,8 +666,8 @@ cl-enchant enchant-autoload enchant-autoload asdf enchant
 cl-enumeration enumerations enumerations asdf
 cl-env cl-env cl-env asdf
 cl-env cl-env cl-env/test cl-env lisp-unit
-cl-environments cl-environments cl-environments alexandria anaphora asdf collectors optima prove-asdf
-cl-environments cl-environments cl-environments/test cl-environments prove prove-asdf
+cl-environments cl-environments cl-environments alexandria anaphora asdf collectors optima
+cl-environments cl-environments cl-environments/test cl-environments fiveam
 cl-epmd epmd epmd com.gigamonkeys.binary-data usocket
 cl-epmd epmd-test epmd-test epmd fiveam flexi-streams
 cl-epoch cl-epoch cl-epoch asdf
@@ -697,6 +702,8 @@ cl-fluidinfo cl-fluiddb cl-fluiddb bordeaux-threads cl-json drakma flexi-streams
 cl-fluidinfo cl-fluiddb-test cl-fluiddb-test cl-fluiddb lift
 cl-fluidinfo cl-fluidinfo cl-fluidinfo cl-fluiddb
 cl-fond cl-fond cl-fond alexandria asdf cffi cl-opengl documentation-utils trivial-features trivial-garbage
+cl-form-types cl-form-types cl-form-types agutil alexandria anaphora arrows asdf cl-environments introspect-environment optima
+cl-form-types cl-form-types cl-form-types/test cl-form-types fiveam
 cl-forms cl-forms cl-forms alexandria asdf cl-ppcre clavier fmt hunchentoot ironclad uuid
 cl-forms cl-forms.demo cl-forms.demo asdf cl-css cl-forms cl-forms.test cl-forms.who cl-forms.who.bootstrap cl-who hunchentoot
 cl-forms cl-forms.djula cl-forms.djula asdf cl-forms cl-forms.who djula
@@ -1112,7 +1119,7 @@ cl-grip cl-grip cl-grip/tests chanl cl-grip cl-json local-time local-time-durati
 cl-grnm cl-grnm cl-grnm asdf
 cl-groupby groupby groupby
 cl-growl cl-growl cl-growl flexi-streams ironclad trivial-utf-8 usocket
-cl-gserver cl-gserver cl-gserver alexandria asdf blackbird cl-hamt cl-speedy-queue iterate log4cl lparallel str
+cl-gserver cl-gserver cl-gserver alexandria asdf atomics binding-arrows blackbird cl-hamt cl-speedy-queue log4cl lparallel str
 cl-gserver cl-gserver cl-gserver/docs cl-gserver mgl-pax
 cl-gserver cl-gserver cl-gserver/tests cl-gserver cl-mock fiveam trivia
 cl-gss cl-gss cl-gss asdf cffi cffi-grovel trivial-garbage trivial-utf-8
@@ -1148,12 +1155,16 @@ cl-httpsqs cl-httpsqs cl-httpsqs asdf drakma
 cl-hue cl-hue cl-hue alexandria drakma yason
 cl-i18n cl-i18n cl-i18n alexandria asdf babel cl-ppcre-unicode
 cl-iconv iconv iconv cffi cffi-grovel
+cl-incognia cl-incognia cl-incognia asdf dexador jonathan
+cl-incognia cl-incognia cl-incognia/tests cl-incognia rove
 cl-indentify cl-indentify cl-indentify alexandria asdf trivial-gray-streams uiop
 cl-indentify cl-indentify cl-indentify/cli cl-indentify command-line-arguments
 cl-indentify cl-indentify cl-indentify/tests cl-indentify rove trivial-escapes
 cl-inflector cl-inflector cl-inflector alexandria cl-ppcre
 cl-inflector cl-inflector cl-inflector-test cl-inflector lisp-unit2
 cl-influxdb cl-influxdb cl-influxdb asdf cl-annot cl-json do-urlencode drakma flexi-streams usocket
+cl-info cl-info cl-info asdf
+cl-info cl-info-test cl-info-test asdf hamcrest
 cl-ini cl-ini cl-ini asdf str
 cl-ini cl-ini-test cl-ini-test asdf cl-ini prove
 cl-inotify cl-inotify cl-inotify asdf binary-types cffi cffi-grovel iolib iolib.asdf iolib.conf iolib.grovel osicat trivial-utf-8
@@ -1219,7 +1230,7 @@ cl-launch cl-launch cl-launch asdf
 cl-ledger cl-ledger cl-ledger asdf cambl cl-ppcre local-time periods-series
 cl-lex cl-lex cl-lex cl-ppcre
 cl-lexer cl-lexer cl-lexer asdf regex
-cl-liballegro cl-liballegro cl-liballegro asdf cffi cffi-libffi trivial-garbage
+cl-liballegro cl-liballegro cl-liballegro asdf cffi cffi-libffi float-features trivial-garbage trivial-main-thread
 cl-liballegro-nuklear cl-liballegro-nuklear cl-liballegro-nuklear asdf cffi cffi-libffi
 cl-libevent2 cl-libevent2 cl-libevent2 asdf cffi
 cl-libevent2 cl-libevent2-ssl cl-libevent2-ssl asdf cffi cl-libevent2
@@ -1304,6 +1315,8 @@ cl-migratum cl-migratum.test cl-migratum.test asdf cl-migratum cl-migratum.drive
 cl-mime cl-mime cl-mime asdf cl-base64 cl-ppcre cl-qprint
 cl-mime cl-mime-test cl-mime-test asdf cl-mime rove
 cl-mime-from-string cl-mime-from-string cl-mime-from-string asdf
+cl-mimeparse cl-mimeparse cl-mimeparse asdf cl-ppcre parse-number
+cl-mimeparse cl-mimeparse-tests cl-mimeparse-tests asdf cl-mimeparse rt
 cl-minify-css cl-minify-css cl-minify-css asdf
 cl-minify-css cl-minify-css-test cl-minify-css-test asdf assert-p cacau cacau-asdf cl-minify-css
 cl-mixed cl-mixed cl-mixed alexandria asdf cffi documentation-utils static-vectors trivial-features
@@ -1317,6 +1330,7 @@ cl-mixed cl-mixed-oss cl-mixed-oss asdf cffi cl-mixed
 cl-mixed cl-mixed-out123 cl-mixed-out123 asdf cl-mixed cl-out123
 cl-mixed cl-mixed-pulse cl-mixed-pulse asdf cffi cl-mixed
 cl-mixed cl-mixed-sdl2 cl-mixed-sdl2 asdf cl-mixed sdl2
+cl-mixed cl-mixed-vorbis cl-mixed-vorbis asdf cl-mixed cl-vorbis
 cl-mixed cl-mixed-wasapi cl-mixed-wasapi asdf cffi cl-mixed com-on
 cl-mixed cl-mixed-wav cl-mixed-wav asdf cl-mixed
 cl-mixed cl-mixed-winmm cl-mixed-winmm asdf cffi cl-mixed
@@ -1363,7 +1377,14 @@ cl-mw cl-mw.examples.ping cl-mw.examples.ping cl-mw
 cl-mw cl-mw.examples.with-task-policy cl-mw.examples.with-task-policy cl-mw
 cl-mysql cl-mysql cl-mysql asdf cffi
 cl-mysql cl-mysql-test cl-mysql-test asdf cl-mysql stefil
-cl-naive-store cl-naive-store cl-naive-store asdf cl-fad cl-getx cl-murmurhash ironclad local-time split-sequence uuid
+cl-naive-store cl-naive-store cl-naive-store asdf cl-naive-store.document-type-defs cl-naive-store.document-types cl-naive-store.naive-core cl-naive-store.naive-documents cl-naive-store.naive-indexed cl-naive-store.naive-merkle
+cl-naive-store cl-naive-store.document-type-defs cl-naive-store.document-type-defs asdf cl-naive-store.document-types cl-naive-store.naive-core
+cl-naive-store cl-naive-store.document-types cl-naive-store.document-types asdf cl-naive-store.naive-core
+cl-naive-store cl-naive-store.naive-core cl-naive-store.naive-core asdf bordeaux-threads cl-cpus cl-fad cl-getx cl-murmurhash ironclad local-time lparallel split-sequence uuid
+cl-naive-store cl-naive-store.naive-documents cl-naive-store.naive-documents asdf cl-naive-store.document-type-defs cl-naive-store.document-types cl-naive-store.naive-core cl-naive-store.naive-indexed
+cl-naive-store cl-naive-store.naive-indexed cl-naive-store.naive-indexed asdf cl-naive-store.naive-core
+cl-naive-store cl-naive-store.naive-merkle cl-naive-store.naive-merkle asdf cl-naive-store.naive-documents
+cl-naive-store cl-naive-store.test cl-naive-store.test alexandria asdf cl-naive-store
 cl-ncurses cl-ncurses cl-ncurses uffi
 cl-neo4j cl-neo4j cl-neo4j alexandria anaphora babel cl-json cl-ppcre drakma split-sequence
 cl-neo4j cl-neo4j cl-neo4j.tests cl-neo4j fiveam
@@ -1376,7 +1397,7 @@ cl-notebook cl-notebook cl-notebook alexandria anaphora asdf cl-css cl-fad cl-wh
 cl-notebook cl-notebook cl-notebook/test cl-notebook prove-asdf test-utils
 cl-ntp-client cl-ntp-client cl-ntp-client alexandria asdf usocket
 cl-ntriples cl-ntriples cl-ntriples alexandria asdf
-cl-num-utils cl-num-utils cl-num-utils alexandria anaphora array-operations cl-slice let-plus
+cl-num-utils cl-num-utils cl-num-utils alexandria anaphora array-operations asdf cl-slice let-plus
 cl-num-utils cl-num-utils cl-num-utils-tests cl-num-utils clunit
 cl-nxt nxt nxt babel cffi static-vectors
 cl-nxt nxt-proxy nxt-proxy nxt usocket
@@ -1399,6 +1420,7 @@ cl-openal cl-alc cl-alc cffi cl-openal
 cl-openal cl-alut cl-alut cffi cl-openal
 cl-openal cl-openal cl-openal cffi
 cl-openal cl-openal-examples cl-openal-examples cffi cl-alc cl-alut cl-openal
+cl-opencl cl-opencl cl-opencl asdf cffi cffi-grovel
 cl-opengl cl-glu cl-glu asdf cffi cl-opengl
 cl-opengl cl-glut cl-glut alexandria asdf cffi cl-opengl
 cl-opengl cl-glut-examples cl-glut-examples asdf cffi cl-glu cl-glut cl-opengl
@@ -1473,7 +1495,7 @@ cl-ppcre cl-ppcre cl-ppcre-test cl-ppcre flexi-streams
 cl-ppcre cl-ppcre-unicode cl-ppcre-unicode asdf cl-ppcre cl-unicode
 cl-ppcre cl-ppcre-unicode cl-ppcre-unicode-test cl-ppcre-test cl-ppcre-unicode
 cl-prevalence cl-prevalence cl-prevalence asdf s-sysdeps s-xml
-cl-prevalence cl-prevalence-test cl-prevalence-test asdf cl-prevalence fiveam
+cl-prevalence cl-prevalence-test cl-prevalence-test asdf cl-prevalence find-port fiveam
 cl-primality cl-primality cl-primality iterate
 cl-primality cl-primality-test cl-primality-test cl-primality iterate stefil
 cl-prime-maker cl-prime-maker cl-prime-maker
@@ -1568,6 +1590,8 @@ cl-sat.glucose cl-sat.glucose cl-sat.glucose alexandria asdf cl-sat iterate triv
 cl-sat.glucose cl-sat.glucose.test cl-sat.glucose.test asdf cl-sat.glucose fiveam
 cl-sat.minisat cl-sat.minisat cl-sat.minisat alexandria asdf cl-sat iterate trivia trivial-package-manager
 cl-sat.minisat cl-sat.minisat.test cl-sat.minisat.test asdf cl-sat.minisat fiveam
+cl-schedule cl-schedule cl-schedule asdf bordeaux-threads local-time trivial-timers
+cl-schedule cl-schedule cl-schedule-test cl-schedule
 cl-scram cl-scram cl-scram cl-base64 cl-sasl ironclad secure-random split-sequence
 cl-scribd cl-scribd cl-scribd cxml drakma ironclad
 cl-scripting cl-scripting cl-scripting
@@ -1612,7 +1636,7 @@ cl-skkserv cl-skkserv cl-skkserv/mixed alexandria babel esrap named-readtables p
 cl-skkserv cl-skkserv cl-skkserv/skk alexandria babel cl-ppcre esrap jp-numeral named-readtables papyrus
 cl-skkserv cl-skkserv cl-skkserv/tests 1am cl-skkserv flexi-streams
 cl-sl4a cl-android cl-android cl-json usocket
-cl-slice cl-slice cl-slice alexandria anaphora let-plus
+cl-slice cl-slice cl-slice alexandria anaphora asdf let-plus
 cl-slice cl-slice cl-slice-tests cl-slice clunit
 cl-slp cl-slp cl-slp cffi
 cl-slug cl-slug cl-slug asdf cl-ppcre
@@ -1741,6 +1765,7 @@ cl-video cl-video-gif cl-video-gif alexandria asdf cl-video skippy
 cl-video cl-video-player cl-video-player asdf bordeaux-threads cl-portaudio cl-video-avi cl-video-gif cl-video-wav clx
 cl-video cl-video-wav cl-video-wav alexandria asdf cl-riff cl-video flexi-streams
 cl-virtualbox cl-virtualbox cl-virtualbox alexandria asdf cl-ppcre uiop usocket
+cl-vorbis cl-vorbis cl-vorbis asdf cffi documentation-utils static-vectors trivial-features trivial-garbage
 cl-voxelize cl-voxelize cl-voxelize alexandria
 cl-voxelize cl-voxelize-examples cl-voxelize-examples cl-ply cl-voxelize
 cl-voxelize cl-voxelize-test cl-voxelize-test cl-voxelize prove prove-asdf
@@ -1834,16 +1859,17 @@ classowary classowary classowary asdf documentation-utils
 classowary classowary-test classowary-test asdf classowary parachute
 clast clast clast asdf
 clast clast clast/tests clast fiveam
-clath clath clath alexandria asdf cl-hash-util cl-json cl-who clack cljwt-custom drakma flexi-streams ningle north ubiquitous
-clath cljwt-custom cljwt-custom asdf cl-base64 flexi-streams ironclad split-sequence yason
+clath clath clath alexandria asdf cl-hash-util cl-json cl-who clack drakma flexi-streams ironclad jose ningle north ubiquitous
 clavatar clavatar clavatar babel drakma iolib ironclad
-clavier clavier clavier alexandria chronicity cl-fad cl-ppcre closer-mop
-clavier clavier.test clavier.test clavier stefil
+clavier clavier clavier alexandria asdf chronicity cl-fad cl-ppcre closer-mop
+clavier clavier.test clavier.test asdf clavier stefil
 claw claw claw alexandria asdf cffi cl-json cl-ppcre claw-support local-time trivial-features uiop
 claw claw claw/cffi alexandria cffi cl-json cl-ppcre claw-support local-time trivial-features uiop
 claw claw claw/spec alexandria cl-json cl-ppcre claw-support local-time uiop
 claw claw claw/util alexandria cl-ppcre local-time uiop
 claw claw claw/wrapper alexandria cl-json cl-ppcre claw-support local-time uiop
+claw-olm claw-olm claw-olm asdf claw-olm-bindings
+claw-olm claw-olm-bindings claw-olm-bindings asdf cffi trivial-features uiop
 claw-support claw-support claw-support asdf
 claw-utils claw-utils claw-utils alexandria asdf cffi claw
 clawk clawk clawk asdf regex
@@ -2015,7 +2041,7 @@ common-doc-plump common-doc-plump-test common-doc-plump-test common-doc-plump fi
 common-html common-html common-html alexandria anaphora common-doc plump
 common-html common-html-test common-html-test common-html fiveam
 common-lisp-actors cl-actors cl-actors asdf bordeaux-threads
-common-lisp-jupyter common-lisp-jupyter common-lisp-jupyter alexandria asdf babel bordeaux-threads cl-base64 cl-indentify closer-mop dissect eclector ironclad iterate multilang-documentation puri pzmq shasht static-vectors trivial-do trivial-garbage trivial-gray-streams trivial-mimes
+common-lisp-jupyter common-lisp-jupyter common-lisp-jupyter alexandria asdf babel bordeaux-threads cl-base64 cl-indentify closer-mop dissect eclector ironclad multilang-documentation puri pzmq shasht static-vectors trivial-do trivial-garbage trivial-gray-streams trivial-mimes
 commonqt qt qt alexandria asdf cffi cl-ppcre closer-mop iterate named-readtables trivial-features trivial-garbage
 commonqt qt+libs qt+libs alexandria asdf cffi cl-ppcre closer-mop iterate named-readtables qt-libs trivial-features trivial-garbage
 commonqt qt-repl qt-repl asdf bordeaux-threads qt
@@ -2043,19 +2069,19 @@ configuration.options configuration.options-and-quri configuration.options-and-q
 configuration.options configuration.options-and-quri configuration.options-and-quri/test alexandria configuration.options configuration.options-and-quri fiveam let-plus
 configuration.options configuration.options-and-service-provider configuration.options-and-service-provider alexandria architecture.service-provider architecture.service-provider-and-hooks asdf configuration.options configuration.options-and-mop let-plus log4cl
 configuration.options configuration.options-and-service-provider configuration.options-and-service-provider/test alexandria architecture.service-provider configuration.options configuration.options-and-service-provider fiveam let-plus
-configuration.options configuration.options-source-commandline configuration.options-source-commandline alexandria architecture.service-provider asdf configuration.options let-plus log4cl net.didierverna.clon split-sequence
-configuration.options configuration.options-source-commandline configuration.options-source-commandline/test alexandria configuration.options configuration.options-source-commandline fiveam let-plus
 configuration.options configuration.options-syntax-ini configuration.options-syntax-ini alexandria asdf configuration.options let-plus parser.ini
 configuration.options configuration.options-syntax-ini configuration.options-syntax-ini/test alexandria configuration.options configuration.options-syntax-ini fiveam let-plus
 configuration.options configuration.options-syntax-xml configuration.options-syntax-xml alexandria asdf configuration.options let-plus xml.location
 configuration.options configuration.options-syntax-xml configuration.options-syntax-xml/test alexandria configuration.options configuration.options-syntax-xml fiveam let-plus
 configuration.options configuration.options configuration.options/test alexandria configuration.options fiveam let-plus
 conium conium conium asdf closer-mop
-consfigurator consfigurator consfigurator alexandria asdf babel babel-streams cffi cl-heredoc cl-interpol cl-ppcre named-readtables trivial-backtrace trivial-macroexpand-all
+consfigurator consfigurator consfigurator alexandria asdf babel babel-streams cffi cl-heredoc cl-interpol cl-ppcre closer-mop named-readtables trivial-backtrace trivial-macroexpand-all
 consfigurator consfigurator consfigurator/tests consfigurator
 consix consix consix alexandria asdf cl-glu cl-glut cl-opengl
 constantfold constantfold constantfold alexandria asdf iterate lisp-namespace trivia
 constantfold constantfold.test constantfold.test asdf constantfold fiveam
+context-lite context-lite context-lite asdf closer-mop
+context-lite context-lite context-lite/test context-lite fiveam
 contextl contextl contextl asdf closer-mop lw-compat
 contextl dynamic-wind dynamic-wind asdf lw-compat
 copy-directory copy-directory copy-directory cl-fad uiop which
@@ -2127,7 +2153,7 @@ dartscltools darts.lib.tools.test darts.lib.tools.test asdf bordeaux-threads dar
 dartscluuid darts.lib.uuid darts.lib.uuid asdf cl-ppcre ironclad trivial-utf-8
 dartscluuid darts.lib.uuid-test darts.lib.uuid-test asdf darts.lib.uuid stefil
 data-frame data-frame data-frame alexandria anaphora array-operations asdf let-plus num-utils select
-data-frame data-frame data-frame/tests clunit data-frame
+data-frame data-frame data-frame/tests clunit2 data-frame
 data-lens data-lens data-lens alexandria asdf cl-ppcre serapeum
 data-lens data-lens data-lens/beta/transducers alexandria data-lens
 data-lens data-lens data-lens/transducers/test alexandria data-lens fiveam
@@ -2164,10 +2190,14 @@ definitions definitions definitions asdf documentation-utils
 definitions-systems definitions-systems definitions-systems asdf canonicalized-initargs enhanced-defclass enhanced-find-class shared-preferences
 definitions-systems definitions-systems_tests definitions-systems_tests asdf definitions-systems parachute
 deflate deflate deflate asdf
+defmain defmain defmain asdf
+defmain defmain-test defmain-test asdf defmain hamcrest
 defmemo defmemo defmemo alexandria trivial-garbage
 defmemo defmemo defmemo-test defmemo
 defpackage-plus defpackage-plus defpackage-plus alexandria asdf
 defrec defrec defrec alexandria asdf
+defrest defrest defrest asdf cl-ppcre hunchentoot quri split-sequence
+defrest defrest defrest.test defrest drakma fiveam
 defstar defstar defstar
 defsystem-compatibility defsystem-compatibility defsystem-compatibility metatilities-base
 defsystem-compatibility defsystem-compatibility-test defsystem-compatibility-test defsystem-compatibility lift
@@ -2200,6 +2230,7 @@ destructuring-bind-star destructuring-bind-star destructuring-bind-star/test des
 dexador dexador dexador alexandria asdf babel bordeaux-threads chipz chunga cl+ssl cl-base64 cl-cookie cl-ppcre cl-reexport fast-http fast-io quri trivial-features trivial-gray-streams trivial-mimes usocket
 dexador dexador-test dexador-test asdf babel cl-cookie clack-test dexador lack-request rove
 dfio dfio dfio alexandria anaphora asdf cl-csv data-frame let-plus
+dfio dfio dfio/tests clunit2 dfio
 diff diff diff cl-ppcre trivial-gray-streams
 diff-match-patch diff-match-patch diff-match-patch asdf cl-ppcre iterate
 diff-match-patch diff-match-patch diff-match-patch/test cl-interpol diff-match-patch fiveam
@@ -2214,6 +2245,9 @@ dlist dlist dlist-test dlist lisp-unit
 dml dml dml alexandria asdf cl-cairo2 cl-ppcre donuts
 dns-client dns-client dns-client asdf documentation-utils usocket
 do-urlencode do-urlencode do-urlencode alexandria asdf babel
+doc 40ants-doc 40ants-doc asdf
+doc 40ants-doc-full 40ants-doc-full asdf
+doc 40ants-doc-test 40ants-doc-test asdf
 docbrowser docbrowser docbrowser alexandria asdf babel bordeaux-threads cl-json closer-mop colorize flexi-streams hunchentoot parse-number split-sequence string-case swank yacc
 docparser docparser docparser alexandria anaphora asdf cffi trivial-types
 docparser docparser-test docparser-test asdf docparser fiveam
@@ -2238,8 +2272,8 @@ dufy dufy dufy/extra-data alexandria
 dufy dufy dufy/hsluv alexandria
 dufy dufy dufy/internal alexandria
 dufy dufy dufy/munsell alexandria cl-ppcre
-dufy dufy dufy/test alexandria cl-csv dufy fiveam iterate lispbuilder-sdl lparallel parse-float
-duologue duologue duologue alexandria anaphora chronicity cl-ansi-text cl-fad cl-readline clavier drakma
+dufy dufy dufy/test alexandria cl-csv dufy fiveam parse-float
+duologue duologue duologue alexandria anaphora asdf chronicity cl-ansi-text cl-fad cl-readline clavier drakma
 dweet dweet dweet babel com.gigamonkeys.json drakma
 dynamic-classes dynamic-classes dynamic-classes metatilities-base
 dynamic-classes dynamic-classes-test dynamic-classes-test dynamic-classes lift
@@ -2268,6 +2302,7 @@ eazy-project eazy-project eazy-project asdf bordeaux-threads cl-emb cl-ppcre cl-
 eazy-project eazy-project.autoload eazy-project.autoload asdf eazy-project
 eazy-project eazy-project.test eazy-project.test asdf eazy-project fiveam
 ec2 ec2 ec2 drakma ironclad s-base64 s-xml
+ec2-price-finder ec2-price-finder ec2-price-finder asdf easy-routes hunchentoot lass local-time parse-float read-csv spinneret wu-decimal
 ecclesia ecclesia ecclesia acclimation asdf
 eclector eclector eclector acclimation alexandria asdf closer-mop
 eclector eclector-concrete-syntax-tree eclector-concrete-syntax-tree alexandria asdf concrete-syntax-tree eclector
@@ -2432,6 +2467,7 @@ fiasco fiasco fiasco-self-tests fiasco
 file-attributes file-attributes file-attributes asdf cffi documentation-utils trivial-features
 file-local-variable file-local-variable file-local-variable alexandria iterate trivia
 file-local-variable file-local-variable.test file-local-variable.test file-local-variable fiveam
+file-notify file-notify file-notify asdf cffi documentation-utils trivial-features
 file-select file-select file-select asdf cffi documentation-utils float-features trivial-features
 file-types file-types file-types
 filtered-functions filtered-functions filtered-functions closer-mop
@@ -2463,9 +2499,9 @@ flow flow flow asdf closer-mop documentation-utils
 flow flow-visualizer flow-visualizer asdf flow qtcore qtgui qtools
 flute flute flute asdf assoc-utils let-over-lambda
 flute flute-test flute-test asdf fiveam flute
-fmt fmt fmt alexandria
-fmt fmt-test fmt-test fiveam fmt
-fmt fmt-time fmt-time fmt local-time
+fmt fmt fmt alexandria asdf
+fmt fmt-test fmt-test asdf fiveam fmt
+fmt fmt-time fmt-time asdf fmt local-time
 fn fn fn named-readtables
 focus net.didierverna.focus net.didierverna.focus net.didierverna.focus.core net.didierverna.focus.flv net.didierverna.focus.setup
 focus net.didierverna.focus.core net.didierverna.focus.core net.didierverna.focus.setup
@@ -2512,6 +2548,7 @@ fred fred fred drakma s-xml
 freebsd-sysctl freebsd-sysctl freebsd-sysctl asdf cffi cffi-grovel
 freebsd-sysctl freebsd-sysctl freebsd-sysctl/tests fiveam freebsd-sysctl
 freesound freesound freesound alexandria asdf cl-ppcre dexador trivial-open-browser yason
+fresnel fresnel fresnel asdf fare-quasiquote-extras trivial-package-local-nicknames
 froute froute froute asdf cl-ppcre closer-mop
 froute froute froute/hunchentoot froute hunchentoot
 froute froute froute/test froute lisp-unit
@@ -2553,9 +2590,10 @@ gendl base base asdf
 gendl bus bus asdf gwl-graphics
 gendl cl-lite cl-lite asdf glisp
 gendl dom dom asdf cl-who yadd
-gendl gendl gendl asdf cl-lite gwl-graphics robot tasty yadd
+gendl gendl gendl asdf cl-lite geysr gwl-graphics robot yadd
 gendl gendl-asdf gendl-asdf asdf
 gendl geom-base geom-base asdf base cl-pdf cl-typesetting cl-who
+gendl geysr geysr asdf gendl-asdf gwl-graphics
 gendl glisp glisp asdf babel base bordeaux-threads cl-base64 cl-ppcre uiop
 gendl graphs graphs asdf gwl-graphics
 gendl gwl gwl asdf cl-html-parse cl-markdown cl-who glisp yason zaserve
@@ -2572,10 +2610,10 @@ gendl tree tree asdf gwl-graphics
 gendl wire-world wire-world asdf gwl-graphics
 gendl yadd yadd asdf cl-html-parse gwl-graphics
 generators generators generators alexandria cl-cont iterate
-generic-cl generic-cl generic-cl agutil alexandria anaphora arrows asdf cl-custom-hash-table prove-asdf static-dispatch trivia
-generic-cl generic-cl.util generic-cl.util asdf generic-cl prove-asdf
-generic-cl generic-cl.util generic-cl.util/test alexandria anaphora arrows generic-cl.util prove prove-asdf
-generic-cl generic-cl generic-cl/test generic-cl prove prove-asdf
+generic-cl generic-cl generic-cl agutil alexandria anaphora arrows asdf cl-custom-hash-table static-dispatch trivia
+generic-cl generic-cl.util generic-cl.util asdf generic-cl
+generic-cl generic-cl.util generic-cl.util/test alexandria anaphora arrows fiveam generic-cl.util
+generic-cl generic-cl generic-cl/test fiveam generic-cl
 generic-comparability generic-comparability generic-comparability alexandria asdf
 generic-comparability generic-comparability generic-comparability-test alexandria fiveam generic-comparability
 generic-sequences generic-sequences generic-sequences
@@ -3173,6 +3211,8 @@ log4cl log4cl-examples log4cl-examples asdf log4cl swank
 log4cl log4cl log4cl/syslog log4cl
 log4cl log4cl log4cl/test log4cl stefil
 log4cl log4slime log4slime asdf log4cl swank
+log4cl-extras log4cl-extras log4cl-extras asdf
+log4cl-extras log4cl-extras-test log4cl-extras-test asdf
 log5 log5 log5
 lorem-ipsum lorem-ipsum lorem-ipsum asdf
 lowlight lowlight lowlight alexandria cl-ppcre cl-who graylex spinneret yacc
@@ -3224,7 +3264,7 @@ maiden maiden-activatable maiden-activatable asdf maiden maiden-commands maiden-
 maiden maiden-api-access maiden-api-access asdf drakma jsown maiden plump
 maiden maiden-blocker maiden-blocker asdf cl-ppcre maiden-client-entities maiden-commands maiden-storage
 maiden maiden-channel-relay maiden-channel-relay asdf maiden-client-entities maiden-commands maiden-storage
-maiden maiden-chatlog maiden-chatlog asdf bordeaux-threads maiden-client-entities maiden-commands maiden-storage postmodern
+maiden maiden-chatlog maiden-chatlog asdf babel bordeaux-threads maiden-client-entities maiden-commands maiden-storage postmodern
 maiden maiden-client-entities maiden-client-entities asdf documentation-utils maiden
 maiden maiden-commands maiden-commands asdf lambda-fiddle maiden maiden-client-entities
 maiden maiden-core-manager maiden-core-manager asdf maiden-client-entities maiden-commands maiden-storage
@@ -3233,14 +3273,14 @@ maiden maiden-crimes maiden-crimes alexandria asdf cl-ppcre maiden-api-access ma
 maiden maiden-dictionary maiden-dictionary asdf maiden-client-entities maiden-commands maiden-storage oxenfurt
 maiden maiden-emoticon maiden-emoticon asdf cl-ppcre maiden-activatable maiden-client-entities maiden-commands maiden-storage
 maiden maiden-help maiden-help asdf documentation-utils maiden-client-entities maiden-commands
-maiden maiden-irc maiden-irc asdf babel cl-ppcre form-fiddle lambda-fiddle maiden-client-entities maiden-networking
+maiden maiden-irc maiden-irc asdf babel cl-base64 cl-ppcre form-fiddle lambda-fiddle maiden-client-entities maiden-networking
 maiden maiden-lastfm maiden-lastfm asdf bordeaux-threads maiden-api-access maiden-client-entities maiden-commands maiden-storage
 maiden maiden-lichat maiden-lichat asdf lichat-protocol maiden-client-entities maiden-networking
 maiden maiden-location maiden-location asdf maiden-api-access maiden-client-entities maiden-commands maiden-storage
 maiden maiden-lookup maiden-lookup asdf cl-ppcre drakma lquery maiden-api-access maiden-client-entities maiden-commands
 maiden maiden-markov maiden-markov alexandria asdf babel cl-ppcre fast-io maiden-activatable maiden-client-entities maiden-commands maiden-storage parse-number
 maiden maiden-medals maiden-medals asdf cl-ppcre maiden-accounts maiden-client-entities maiden-commands maiden-storage
-maiden maiden-networking maiden-networking asdf maiden usocket
+maiden maiden-networking maiden-networking asdf cl+ssl maiden usocket
 maiden maiden-notify maiden-notify asdf maiden-accounts maiden-client-entities maiden-commands maiden-storage
 maiden maiden-permissions maiden-permissions asdf cl-ppcre documentation-utils maiden-client-entities maiden-commands maiden-storage
 maiden maiden-relay maiden-relay asdf maiden-networking maiden-serialize
@@ -3277,7 +3317,8 @@ math math math/appr cl-utilities
 math math math/arr-matr cl-utilities
 math math math/coord
 math math math/core
-math math math/docs math
+math math math/docs codex math mnas-package
+math math math/geom
 math math math/gnuplot font-discovery vgplot
 math math math/list-matr cl-utilities
 math math math/ls-gauss cl-utilities
@@ -3416,6 +3457,23 @@ mnas-graph mnas-graph mnas-graph/view mnas-hash-table
 mnas-hash-table mnas-hash-table mnas-hash-table asdf
 mnas-hash-table mnas-hash-table mnas-hash-table/docs codex mnas-hash-table
 mnas-hash-table mnas-hash-table mnas-hash-table/tests fiveam mnas-hash-table
+mnas-package mnas-package mnas-package alexandria asdf closer-mop mnas-graph mnas-string slynk
+mnas-package mnas-package mnas-package/docs codex mnas-package
+mnas-package mnas-package mnas-package/example
+mnas-package mnas-package mnas-package/make alexandria closer-mop mnas-graph slynk
+mnas-package mnas-package mnas-package/obj closer-mop
+mnas-package mnas-package mnas-package/pkg alexandria closer-mop slynk
+mnas-package mnas-package mnas-package/sec alexandria closer-mop mnas-graph mnas-string slynk
+mnas-package mnas-package mnas-package/sys alexandria
+mnas-package mnas-package mnas-package/view alexandria closer-mop mnas-graph slynk
+mnas-string mnas-string mnas-string asdf cl-ppcre
+mnas-string mnas-string mnas-string/core cl-ppcre
+mnas-string mnas-string mnas-string/db cl-ppcre
+mnas-string mnas-string mnas-string/docs codex mnas-string
+mnas-string mnas-string mnas-string/parse cl-ppcre
+mnas-string mnas-string mnas-string/print
+mnas-string mnas-string mnas-string/tests fiveam mnas-string
+mnas-string mnas-string mnas-string/translit
 mockingbird mockingbird mockingbird
 mockingbird mockingbird-test mockingbird-test mockingbird prove prove-asdf
 modest-config modest-config modest-config asdf
@@ -3546,28 +3604,25 @@ numpy-file-format numpy-file-format numpy-file-format asdf ieee-floats trivial-f
 numpy-file-format numpy-file-format numpy-file-format/tests numpy-file-format uiop
 nyaml nyaml nyaml alexandria asdf babel cl-ppcre esrap fare-quasiquote fare-quasiquote-extras parse-number trivia
 nyaml nyaml nyaml/test alexandria esrap nyaml parachute split-sequence yason
-nyxt nyxt nyxt alexandria asdf bordeaux-threads calispel cl-containers cl-css cl-custom-hash-table cl-html-diff cl-json cl-markup cl-ppcre cl-ppcre-unicode cl-prevalence closer-mop cluffer dexador enchant file-attributes fset hu.dwim.defclass-star iolib local-time log4cl mk-string-metrics moptilities named-readtables parenscript plump quri serapeum str swank trivia trivial-clipboard trivial-features trivial-package-local-nicknames trivial-types uiop unix-opts
+nyxt nyxt nyxt alexandria asdf bordeaux-threads calispel cl-containers cl-css cl-custom-hash-table cl-html-diff cl-json cl-markup cl-ppcre cl-ppcre-unicode cl-prevalence closer-mop cluffer dexador enchant hu.dwim.defclass-star iolib local-time log4cl mk-string-metrics moptilities named-readtables parenscript plump quri serapeum str swank trivia trivial-clipboard trivial-features trivial-package-local-nicknames trivial-types uiop unix-opts
 nyxt nyxt nyxt/analysis alexandria cl-ppcre serapeum str
+nyxt nyxt nyxt/benchmark alexandria nyxt trivial-benchmark
 nyxt nyxt nyxt/class-star alexandria hu.dwim.defclass-star moptilities
 nyxt nyxt nyxt/class-star/tests alexandria hu.dwim.defclass-star moptilities prove
 nyxt nyxt nyxt/clean-fasls swank
-nyxt nyxt nyxt/documentation nyxt
 nyxt nyxt nyxt/download-manager calispel cl-ppcre dexador log4cl quri str
 nyxt nyxt nyxt/download-manager/tests calispel cl-ppcre dexador log4cl prove quri str
-nyxt nyxt nyxt/gobject/gtk bordeaux-threads cl-cffi-gtk cl-gobject-introspection cl-webkit2 nyxt
-nyxt nyxt nyxt/gobject/gtk-application bordeaux-threads cl-cffi-gtk cl-gobject-introspection cl-webkit2 nyxt
+nyxt nyxt nyxt/gi-gtk bordeaux-threads cl-cffi-gtk cl-gobject-introspection cl-webkit2 nyxt
+nyxt nyxt nyxt/gi-gtk-application bordeaux-threads cl-cffi-gtk cl-gobject-introspection cl-webkit2 nyxt
 nyxt nyxt nyxt/gtk cl-cffi-gtk cl-webkit2 nyxt
 nyxt nyxt nyxt/gtk-application cl-cffi-gtk cl-webkit2 nyxt
 nyxt nyxt nyxt/history-tree alexandria cl-custom-hash-table hu.dwim.defclass-star local-time moptilities trivial-package-local-nicknames
 nyxt nyxt nyxt/history-tree/tests alexandria cl-custom-hash-table hu.dwim.defclass-star local-time moptilities prove trivial-package-local-nicknames
-nyxt nyxt nyxt/keymap alexandria fset str
-nyxt nyxt nyxt/keymap/tests alexandria fset prove str
 nyxt nyxt nyxt/ospm alexandria calispel cl-ppcre hu.dwim.defclass-star local-time moptilities named-readtables serapeum str trivia
 nyxt nyxt nyxt/ospm/tests alexandria calispel cl-ppcre hu.dwim.defclass-star local-time moptilities named-readtables prove serapeum str trivia
 nyxt nyxt nyxt/password-manager alexandria bordeaux-threads cl-ppcre hu.dwim.defclass-star moptilities str trivial-clipboard uiop
-nyxt nyxt nyxt/prompter alexandria calispel cl-containers closer-mop fset hu.dwim.defclass-star mk-string-metrics moptilities serapeum str trivial-package-local-nicknames
-nyxt nyxt nyxt/prompter/tests alexandria calispel cl-containers closer-mop fset hu.dwim.defclass-star mk-string-metrics moptilities prove serapeum str trivial-package-local-nicknames
-nyxt nyxt nyxt/submodules
+nyxt nyxt nyxt/prompter alexandria calispel cl-containers closer-mop hu.dwim.defclass-star mk-string-metrics moptilities serapeum str trivial-package-local-nicknames
+nyxt nyxt nyxt/prompter/tests alexandria calispel cl-containers closer-mop hu.dwim.defclass-star mk-string-metrics moptilities prove serapeum str trivial-package-local-nicknames
 nyxt nyxt nyxt/tests nyxt prove
 nyxt nyxt nyxt/text-buffer cluffer
 nyxt nyxt nyxt/user-interface cl-markup
@@ -3607,6 +3662,7 @@ orizuru-orm orizuru-orm orizuru-orm alexandria anaphora asdf cl-fad cl-ppcre-uni
 osc osc osc asdf
 osicat osicat osicat alexandria asdf cffi cffi-grovel trivial-features
 osicat osicat osicat/tests osicat rt
+osmpbf osmpbf osmpbf asdf chipz com.google.base flexi-streams nibbles protobuf
 overlord overlord overlord asdf
 oxenfurt oxenfurt oxenfurt asdf oxenfurt-dexador
 oxenfurt oxenfurt-core oxenfurt-core alexandria asdf babel documentation-utils yason
@@ -3731,6 +3787,9 @@ planks planks planks babel bordeaux-threads closer-mop ironclad rucksack trivial
 plexippus-xpath xpath xpath asdf cl-ppcre cxml parse-number yacc
 plexippus-xpath xpath xpath/test xpath
 plokami plokami plokami asdf cffi uiop
+plot plot plot alexandria asdf cl-who lass
+plot plot plot/text cl-spark iterate select
+plot plot plot/vglt dfio let-plus plot yason
 pludeck pludeck pludeck asdf plump
 plump plump plump array-utils asdf documentation-utils
 plump plump-dom plump-dom asdf plump
@@ -4126,6 +4185,7 @@ sb-cga sb-cga sb-cga alexandria asdf
 sb-fastcgi sb-fastcgi sb-fastcgi asdf
 sb-vector-io sb-vector-io sb-vector-io
 sc-extensions sc-extensions sc-extensions alexandria asdf cl-collider named-readtables
+scheduler scheduler scheduler alexandria asdf bordeaux-threads local-time optima optima.ppcre split-sequence
 screamer screamer screamer asdf
 screamer screamer-tests screamer-tests asdf hu.dwim.stefil iterate screamer
 scriba scriba scriba common-doc-plump esrap plump-sexp
@@ -4142,8 +4202,9 @@ sealable-metaobjects sealable-metaobjects sealable-metaobjects asdf closer-mop
 secret-values secret-values secret-values asdf
 secure-random secure-random secure-random cl+ssl
 seedable-rng seedable-rng seedable-rng asdf cl-pcg golden-utils ironclad
-sel software-evolution-library software-evolution-library asdf asdf-package-system cffi-grovel
+sel software-evolution-library software-evolution-library asdf asdf-package-system cffi-grovel deploy
 sel software-evolution-library software-evolution-library/components/serapi-io arrow-macros fare-quasiquote gt
+sel software-evolution-library software-evolution-library/deploy-tree-sitter-interface deploy
 sel software-evolution-library software-evolution-library/run-dump-store
 sel software-evolution-library software-evolution-library/run-rest-server
 sel software-evolution-library software-evolution-library/run-tree-sitter-interface
@@ -4287,6 +4348,7 @@ specialization-store specialization-store-features specialization-store-features
 specialization-store specialization-store-tests specialization-store-tests asdf fiveam specialization-store
 specialized-function specialized-function specialized-function alexandria asdf iterate lisp-namespace trivia trivial-cltl2 type-r
 specialized-function specialized-function.test specialized-function.test asdf fiveam specialized-function
+speechless speechless speechless asdf cl-markless documentation-utils
 spell spell spell asdf
 spell spell spell/simple
 spellcheck spellcheck spellcheck alexandria cl-ppcre
@@ -4311,8 +4373,8 @@ staple staple-markless staple-markless asdf cl-markless-plump staple
 staple staple-package-recording staple-package-recording asdf
 staple staple-restructured-text staple-restructured-text asdf docutils staple
 staple staple-server staple-server asdf dissect documentation-utils hunchentoot staple-markdown staple-markless
-static-dispatch static-dispatch static-dispatch agutil alexandria anaphora arrows asdf cl-environments closer-mop iterate prove-asdf trivia
-static-dispatch static-dispatch static-dispatch/test cl-interpol prove prove-asdf static-dispatch
+static-dispatch static-dispatch static-dispatch agutil alexandria anaphora arrows asdf cl-environments closer-mop iterate optima
+static-dispatch static-dispatch static-dispatch/test fiveam static-dispatch
 static-vectors static-vectors static-vectors alexandria asdf cffi cffi-grovel
 static-vectors static-vectors static-vectors/test fiveam static-vectors
 stealth-mixin stealth-mixin stealth-mixin asdf closer-mop
@@ -4337,6 +4399,7 @@ structy-defclass structy-defclass structy-defclass
 studio-client studio-client studio-client asdf babel documentation-utils north-core yason
 stumpwm stumpwm stumpwm alexandria asdf cl-ppcre clx
 stumpwm stumpwm-tests stumpwm-tests asdf fiasco stumpwm
+stumpwm-sndioctl stumpwm-sndioctl stumpwm-sndioctl asdf stumpwm
 submarine submarine submarine iterate mop-utils postmodern
 sucle aabbcc aabbcc asdf quads utility
 sucle application application asdf bordeaux-threads cl-opengl deflazy glhelp scratch-buffer utility window
@@ -4601,7 +4664,7 @@ type-r type-r.test type-r.test asdf fiveam type-r
 uax-14 uax-14 uax-14 asdf documentation-utils
 uax-14 uax-14-test uax-14-test asdf cl-ppcre parachute uax-14
 uax-15 uax-15 uax-15 asdf cl-ppcre split-sequence uiop
-uax-15 uax-15 uax-15/tests cl-ppcre fiveam split-sequence uax-15 uiop
+uax-15 uax-15 uax-15/tests cl-ppcre parachute split-sequence uax-15 uiop
 uax-9 uax-9 uax-9 asdf documentation-utils
 uax-9 uax-9-test uax-9-test asdf cl-ppcre parachute uax-9
 ubiquitous ubiquitous ubiquitous asdf
@@ -4666,6 +4729,12 @@ vecto vecto vecto cl-vectors zpb-ttf zpng
 vecto vectometry vectometry vecto
 vector com.elbeno.vector com.elbeno.vector
 vectors vectors vectors
+vellum vellum vellum alexandria asdf cl-data-structures closer-mop documentation-utils-extensions iterate lparallel metabang-bind serapeum
+vellum vellum-tests vellum-tests asdf prove prove-asdf vellum
+vellum-clim vellum-clim vellum-clim asdf iterate mcclim vellum
+vellum-csv vellum-csv vellum-csv alexandria asdf documentation-utils-extensions fare-csv iterate serapeum vellum
+vellum-csv vellum-csv-tests vellum-csv-tests asdf prove prove-asdf vellum-csv
+vellum-postmodern vellum-postmodern vellum-postmodern alexandria asdf cl-postgres documentation-utils-extensions iterate postmodern s-sql serapeum vellum
 verbose verbose verbose asdf bordeaux-threads dissect documentation-utils local-time piping
 vernacular vernacular vernacular asdf
 verrazano verrazano verrazano alexandria cffi cl-ppcre closer-mop cxml iterate metabang-bind parse-number trivial-shell
@@ -4674,12 +4743,16 @@ vertex vertex vertex common-doc common-doc-plump plump-tex
 vertex vertex-test vertex-test fiveam vertex
 vgplot vgplot vgplot asdf cl-fad cl-ppcre ltk
 vgplot vgplot vgplot-test lisp-unit vgplot
+vk vk vk alexandria asdf cffi rove
+vk vk vk/tests rove vk
 vom vom vom
 vom-json vom-json vom-json asdf jonathan local-time vom
 vom-json vom-json vom-json/test rove vom-json
 vp-trees vp-trees vp-trees asdf
 vp-trees vp-trees vp-trees/tests fiveam vp-trees
 wallstreetflets wallstreetflets wallstreetflets asdf dexador lquery parse-number
+wasm-encoder wasm-encoder wasm-encoder agutil alexandria asdf babel flexi-streams generic-cl ieee-floats trivia
+wasm-encoder wasm-encoder wasm-encoder/test fiveam wasm-encoder
 water water water asdf parenscript
 weblocks weblocks weblocks anaphora asdf babel bordeaux-threads cl-cont cl-fad cl-json cl-ppcre cl-who closer-mop f-underscore html-template hunchentoot metatilities optima parenscript parse-number pretty-function puri salza2 split-sequence trivial-backtrace trivial-timeout weblocks-stores weblocks-util
 weblocks weblocks-demo-popover weblocks-demo-popover asdf metatilities weblocks weblocks-yarek
@@ -4721,7 +4794,7 @@ wild-package-inferred-system wild-package-inferred-system wild-package-inferred-
 winhttp winhttp winhttp asdf cffi
 winlock winlock winlock asdf cffi named-readtables serapeum
 winlock winlock winlock/test fiveam winlock
-with-c-syntax with-c-syntax with-c-syntax alexandria asdf float-features floating-point-contractions named-readtables osicat yacc
+with-c-syntax with-c-syntax with-c-syntax alexandria asdf cl-ppcre float-features floating-point-contractions named-readtables osicat yacc
 with-c-syntax with-c-syntax-test with-c-syntax-test 1am asdf floating-point trivial-cltl2 with-c-syntax
 with-cached-reader-conditionals with-cached-reader-conditionals with-cached-reader-conditionals
 with-contexts with-contexts with-contexts asdf
