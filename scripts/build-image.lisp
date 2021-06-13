@@ -9,8 +9,12 @@
 #+lispworks
 (require "java-interface" )
 
+#-screenshotbot-oss
 (let ((output (compile-file "scripts/asdf.lisp" :verbose nil :print nil)))
   (load output))
+
+#+screenshotbot-oss
+(require "asdf")
 
 (provide "asdf")
 
