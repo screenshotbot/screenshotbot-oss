@@ -155,7 +155,7 @@ build/deploy.tar.gz: web-bin .PHONY
 bknr-tests-lw:
 
 screenshotbot-tests: $(LW)
-	$(LW_SCRIPT) ./jenkins.lisp -system screenshotbot/tests
+	$(LW_SCRIPT) ./jenkins.lisp -system screenshotbot/tests,screenshotbot.pro/tests
 
 deploy-rsync: .PHONY web-bin
 	rsync -aPz --exclude .git --exclude .web-bin-copy --exclude web-bin ./ ubuntu@mx.tdrhq.com:~/web/

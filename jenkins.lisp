@@ -59,7 +59,7 @@
                 #+lispworks
                 (let ((pos (position "-system" system:*line-arguments-list* :test 'equal)))
                   (when pos
-                    (list (elt system:*line-arguments-list* (1+ pos)))))
+                    (str:split "," (elt system:*line-arguments-list* (1+ pos)))))
                 (find-tests))))
   (loop for system in systems
         do
