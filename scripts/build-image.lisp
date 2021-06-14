@@ -55,6 +55,7 @@
 (push (pathname (format nil "~athird-party/" (uiop:getcwd))) ql:*local-project-directories*)
 
 (ql:quickload "log4cl")
+(ql:quickload :documentation-utils)
 
 (log:info "*local-project-directories: ~S" ql:*local-project-directories*)
 
