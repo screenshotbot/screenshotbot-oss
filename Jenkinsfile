@@ -16,6 +16,8 @@ def cleanRepo () {
 }
 
 pipeline {
+    agent any
+
     stages {
         stage ('Run tests on CCL'){
             steps {
