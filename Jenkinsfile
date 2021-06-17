@@ -9,7 +9,6 @@ def doCheckout () {
 
 
 def cleanRepo () {
-    common.doCheckout()
     sh "git clean -ffd"
     sh "make clean-sys-index"
     sh "git status"
@@ -21,6 +20,7 @@ pipeline {
     stages {
         stage ('Run tests on CCL'){
             steps {
+                doCheckout()
                 cleanRepo()
                 sh "make test-ccl"
             }
