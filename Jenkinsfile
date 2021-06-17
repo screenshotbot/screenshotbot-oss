@@ -17,7 +17,9 @@ def cleanRepo () {
 
 pipeline {
     stage ('Run tests on CCL'){
-        cleanRepo()
-        sh "make test-ccl"
+        steps {
+            cleanRepo()
+            sh "make test-ccl"
+        }
     }
 }
