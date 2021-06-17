@@ -8,6 +8,7 @@
     :serial t
     :depends-on (:drakma
                  :com.google.flag
+                 :pkg
                  :ironclad
                  :cl-json
                  :log4cl

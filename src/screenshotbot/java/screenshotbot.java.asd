@@ -7,6 +7,7 @@
 (defsystem :screenshotbot.java
   :serial t
   :depends-on (:str
+               :pkg
                ;; We never want to load cl+j through quicklisp, always
                ;; call jvm:jvm-init instead.
                ;; :cl+j

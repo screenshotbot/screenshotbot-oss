@@ -7,6 +7,7 @@
 (defsystem :dag
   :serial t
   :depends-on (:graph
+               :pkg
                :ironclad)
   :components ((:file "package")
                (:file "dag")))
