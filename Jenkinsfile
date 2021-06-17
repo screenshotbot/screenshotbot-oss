@@ -16,10 +16,12 @@ def cleanRepo () {
 }
 
 pipeline {
-    stage ('Run tests on CCL'){
-        steps {
-            cleanRepo()
-            sh "make test-ccl"
+    stages {
+        stage ('Run tests on CCL'){
+            steps {
+                cleanRepo()
+                sh "make test-ccl"
+            }
         }
     }
 }
