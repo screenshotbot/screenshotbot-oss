@@ -4,8 +4,9 @@
   (:import-from :util
                 :with-fake-request)
   (:import-from :auth
-                :fix-cookie-domain
-                :read-windows-seed)
+   :fix-cookie-domain
+   #+windows
+   :read-windows-seed)
   (:export))
 (in-package :test-auth)
 
@@ -30,6 +31,7 @@
       (setf (auth:session-value :name) 44)
       (is (equal 44 (auth:session-value :name))))))
 
+#+windows
 (test read-windows-seed
   (is-true (read-windows-seed)))
 

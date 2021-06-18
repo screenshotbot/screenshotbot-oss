@@ -88,6 +88,7 @@
 
 (defvar *session-token-generator*)
 
+#+windows
 (defun read-windows-seed ()
   (cl-store:restore (path:catfile (util:system-source-directory :auth) "dummy-init-key.out")))
 
