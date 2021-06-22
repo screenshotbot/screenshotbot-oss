@@ -130,3 +130,7 @@
   (with-slots (id) nibble
    (format stream "\"~a\""
            (hex:make-url 'run-nibble :id id))))
+
+(defmethod hex:safe-redirect ((nibble nibble) &rest args)
+  (apply 'hex:safe-redirect (nibble-url nibble)
+          args))

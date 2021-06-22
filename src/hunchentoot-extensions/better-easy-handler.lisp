@@ -295,9 +295,9 @@ Apache log analysis tools.)"
                 host
                 (hunchentoot:host)))))
 
-(defun safe-redirect (target &rest args)
+(defmethod safe-redirect (target &rest args)
   (let ((target (if (and target (not (equal "" target)))
-                     target
+                    target
                     (hunchentoot:script-name hunchentoot:*request*))))
     (let ((target (apply 'make-url target args)))
      (cond
