@@ -5,5 +5,6 @@
            #:nibble-full-url
            #:nibble-url
            #:get-nibble
+           #:render-nibble
            #:nibble-id
            #:nibble-plugin))

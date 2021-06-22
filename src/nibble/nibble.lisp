@@ -77,18 +77,23 @@
         (push-nibble id nibble)))))
 
 (hex:define-plugin-handler (run-nibble :uri "/:id" :plugin-name 'nibble-plugin) (id)
+  (render-nibble hex:*acceptor-plugin* id))
+
+(defmethod render-nibble ((plugin nibble-plugin) id)
   (funcall
-   (nibble-plugin-wrapper hex:*acceptor-plugin*)
+   (nibble-plugin-wrapper plugin)
    (lambda ()
-     (let ((id (parse-integer id)))
+     (let ((id (cond
+                 ((stringp id) (parse-integer id))
+                 (t id))))
        (let ((nibble (get-nibble id)))
          (cond
            ((null nibble)
             <html>
-              <body>
-                The page you're looking for has expired.
-                <a href= "/">Go back</a>
-              </body>
+            <body>
+            The page you're looking for has expired.
+            <a href= "/">Go back</a>
+            </body>
             </html>)
            (t
             (with-slots (impl args session once check-session-p) nibble
@@ -96,10 +101,10 @@
                                 collect (hunchentoot:parameter (str:downcase arg)))))
                 (when (and (boundp 'hunchentoot:*request*) check-session-p)
                   (let ((current-session (current-session)))
-                   (unless (auth:session= session current-session)
-                     (error "Incorrect session, got ~A, expected ~A"
-                            session
-                            current-session))))
+                    (unless (auth:session= session current-session)
+                      (error "Incorrect session, got ~A, expected ~A"
+                             session
+                             current-session))))
                 (when once
                   ;; we need to make sure only one call of this nibble
                   ;; happens.
