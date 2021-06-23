@@ -9,6 +9,7 @@
   #+lispworks
   (:import-from ./java
                 #:invoke
+                #:%%read-java-field
                 #:array->list)
   (:export #:java-list->list
            #:java-syntax))
