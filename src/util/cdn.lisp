@@ -27,7 +27,6 @@
 (defun make-cdn (href)
   (cond
     ((and *cdn-domain*
-          (not util:*delivered-image*)
           (str:starts-with? "/" href)
           (not (str:starts-with? "//" href)))
      (util:add-get-param-to-url
