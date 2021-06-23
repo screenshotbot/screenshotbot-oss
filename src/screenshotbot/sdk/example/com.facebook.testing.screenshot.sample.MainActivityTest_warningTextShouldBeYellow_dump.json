@@ -1,0 +1,1092 @@
+{
+  "viewHierarchy": {
+    "class": "com.android.internal.policy.DecorView",
+    "left": 0,
+    "top": 0,
+    "width": 1080,
+    "height": 1920,
+    "children": [
+      {
+        "class": "android.widget.LinearLayout",
+        "left": 0,
+        "top": 0,
+        "width": 1080,
+        "height": 1794,
+        "children": [
+          {
+            "class": "android.view.ViewStub",
+            "left": 0,
+            "top": 0,
+            "width": 0,
+            "height": 0
+          },
+          {
+            "class": "android.widget.FrameLayout",
+            "left": 0,
+            "top": 0,
+            "width": 1080,
+            "height": 1794,
+            "children": [
+              {
+                "class": "androidx.appcompat.widget.FitWindowsLinearLayout",
+                "left": 0,
+                "top": 0,
+                "width": 1080,
+                "height": 1794,
+                "children": [
+                  {
+                    "class": "androidx.appcompat.widget.ViewStubCompat",
+                    "left": 0,
+                    "top": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  {
+                    "class": "androidx.appcompat.widget.ContentFrameLayout",
+                    "left": 0,
+                    "top": 0,
+                    "width": 1080,
+                    "height": 1794,
+                    "children": [
+                      {
+                        "class": "androidx.coordinatorlayout.widget.CoordinatorLayout",
+                        "left": 0,
+                        "top": 0,
+                        "width": 1080,
+                        "height": 1794,
+                        "children": [
+                          {
+                            "class": "com.google.android.material.appbar.AppBarLayout",
+                            "left": 0,
+                            "top": 63,
+                            "width": 1080,
+                            "height": 147,
+                            "children": [
+                              {
+                                "class": "androidx.appcompat.widget.Toolbar",
+                                "left": 0,
+                                "top": 63,
+                                "width": 1080,
+                                "height": 147,
+                                "children": [
+                                  {
+                                    "class": "androidx.appcompat.widget.AppCompatTextView",
+                                    "left": 42,
+                                    "top": 101,
+                                    "width": 882,
+                                    "height": 71
+                                  },
+                                  {
+                                    "class": "androidx.appcompat.widget.ActionMenuView",
+                                    "left": 975,
+                                    "top": 63,
+                                    "width": 105,
+                                    "height": 147,
+                                    "children": [
+                                      {
+                                        "class": "androidx.appcompat.widget.ActionMenuPresenter.OverflowMenuButton",
+                                        "left": 975,
+                                        "top": 73,
+                                        "width": 105,
+                                        "height": 126
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "class": "android.widget.LinearLayout",
+                            "left": 0,
+                            "top": 210,
+                            "width": 1080,
+                            "height": 1584,
+                            "children": [
+                              {
+                                "class": "androidx.appcompat.widget.AppCompatTextView",
+                                "left": 0,
+                                "top": 210,
+                                "width": 1080,
+                                "height": 1584
+                              }
+                            ]
+                          },
+                          {
+                            "class": "com.google.android.material.floatingactionbutton.FloatingActionButton",
+                            "left": 891,
+                            "top": 1605,
+                            "width": 147,
+                            "height": 147
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "left": 0,
+        "top": 1794,
+        "width": 1080,
+        "height": 126
+      },
+      {
+        "class": "android.view.View",
+        "left": 0,
+        "top": 0,
+        "width": 1080,
+        "height": 63
+      }
+    ]
+  },
+  "version": 1,
+  "axHierarchy": {
+    "class": "com.android.internal.policy.DecorView",
+    "actionList": [
+      4,
+      8,
+      64,
+      16908342
+    ],
+    "boundsInParent": {
+      "left": 0,
+      "right": 1080,
+      "top": 0,
+      "bottom": 1920
+    },
+    "boundsInScreen": {
+      "left": 0,
+      "right": 1080,
+      "top": 0,
+      "bottom": 1920
+    },
+    "canOpenPopup": false,
+    "childCount": 1,
+    "className": "android.widget.FrameLayout",
+    "collectionInfo": null,
+    "collectionItemInfo": null,
+    "contentDescription": null,
+    "error": null,
+    "extras": "Bundle[{}]",
+    "inputType": 0,
+    "isCheckable": false,
+    "isChecked": false,
+    "isClickable": false,
+    "isContentInvalid": false,
+    "isDismissable": false,
+    "isEditable": false,
+    "isEnabled": true,
+    "isFocusable": false,
+    "isImportantForAccessibility": true,
+    "isLongClickable": false,
+    "isMultiLine": false,
+    "isPassword": false,
+    "isScrollable": false,
+    "isSelected": false,
+    "isVisibleToUser": true,
+    "liveRegion": 0,
+    "maxTextLength": -1,
+    "movementGranularities": 0,
+    "rangeInfo": null,
+    "text": null,
+    "children": [
+      {
+        "class": "android.widget.LinearLayout",
+        "actionList": [
+          4,
+          8,
+          64,
+          16908342
+        ],
+        "boundsInParent": {
+          "left": 0,
+          "right": 1080,
+          "top": 0,
+          "bottom": 1794
+        },
+        "boundsInScreen": {
+          "left": 0,
+          "right": 1080,
+          "top": 0,
+          "bottom": 1794
+        },
+        "canOpenPopup": false,
+        "childCount": 1,
+        "className": "android.widget.LinearLayout",
+        "collectionInfo": null,
+        "collectionItemInfo": null,
+        "contentDescription": null,
+        "error": null,
+        "extras": "Bundle[{}]",
+        "inputType": 0,
+        "isCheckable": false,
+        "isChecked": false,
+        "isClickable": false,
+        "isContentInvalid": false,
+        "isDismissable": false,
+        "isEditable": false,
+        "isEnabled": true,
+        "isFocusable": false,
+        "isImportantForAccessibility": false,
+        "isLongClickable": false,
+        "isMultiLine": false,
+        "isPassword": false,
+        "isScrollable": false,
+        "isSelected": false,
+        "isVisibleToUser": true,
+        "liveRegion": 0,
+        "maxTextLength": -1,
+        "movementGranularities": 0,
+        "rangeInfo": null,
+        "text": null,
+        "children": [
+          {
+            "class": "android.view.ViewStub",
+            "actionList": [
+              4,
+              8,
+              64,
+              16908342
+            ],
+            "boundsInParent": {
+              "left": 0,
+              "right": 0,
+              "top": 0,
+              "bottom": 0
+            },
+            "boundsInScreen": {
+              "left": 0,
+              "right": 0,
+              "top": 0,
+              "bottom": 0
+            },
+            "canOpenPopup": false,
+            "childCount": 0,
+            "className": "android.view.View",
+            "collectionInfo": null,
+            "collectionItemInfo": null,
+            "contentDescription": null,
+            "error": null,
+            "extras": "Bundle[{}]",
+            "inputType": 0,
+            "isCheckable": false,
+            "isChecked": false,
+            "isClickable": false,
+            "isContentInvalid": false,
+            "isDismissable": false,
+            "isEditable": false,
+            "isEnabled": true,
+            "isFocusable": false,
+            "isImportantForAccessibility": false,
+            "isLongClickable": false,
+            "isMultiLine": false,
+            "isPassword": false,
+            "isScrollable": false,
+            "isSelected": false,
+            "isVisibleToUser": false,
+            "liveRegion": 0,
+            "maxTextLength": -1,
+            "movementGranularities": 0,
+            "rangeInfo": null,
+            "text": null,
+            "children": null
+          },
+          {
+            "class": "android.widget.FrameLayout",
+            "actionList": [
+              4,
+              8,
+              64,
+              16908342
+            ],
+            "boundsInParent": {
+              "left": 0,
+              "right": 1080,
+              "top": 0,
+              "bottom": 1794
+            },
+            "boundsInScreen": {
+              "left": 0,
+              "right": 1080,
+              "top": 0,
+              "bottom": 1794
+            },
+            "canOpenPopup": false,
+            "childCount": 1,
+            "className": "android.widget.FrameLayout",
+            "collectionInfo": null,
+            "collectionItemInfo": null,
+            "contentDescription": null,
+            "error": null,
+            "extras": "Bundle[{}]",
+            "inputType": 0,
+            "isCheckable": false,
+            "isChecked": false,
+            "isClickable": false,
+            "isContentInvalid": false,
+            "isDismissable": false,
+            "isEditable": false,
+            "isEnabled": true,
+            "isFocusable": false,
+            "isImportantForAccessibility": false,
+            "isLongClickable": false,
+            "isMultiLine": false,
+            "isPassword": false,
+            "isScrollable": false,
+            "isSelected": false,
+            "isVisibleToUser": true,
+            "liveRegion": 0,
+            "maxTextLength": -1,
+            "movementGranularities": 0,
+            "rangeInfo": null,
+            "text": null,
+            "children": [
+              {
+                "class": "androidx.appcompat.widget.FitWindowsLinearLayout",
+                "actionList": [
+                  4,
+                  8,
+                  64,
+                  16908342
+                ],
+                "boundsInParent": {
+                  "left": 0,
+                  "right": 1080,
+                  "top": 0,
+                  "bottom": 1794
+                },
+                "boundsInScreen": {
+                  "left": 0,
+                  "right": 1080,
+                  "top": 0,
+                  "bottom": 1794
+                },
+                "canOpenPopup": false,
+                "childCount": 1,
+                "className": "android.widget.LinearLayout",
+                "collectionInfo": null,
+                "collectionItemInfo": null,
+                "contentDescription": null,
+                "error": null,
+                "extras": "Bundle[{}]",
+                "inputType": 0,
+                "isCheckable": false,
+                "isChecked": false,
+                "isClickable": false,
+                "isContentInvalid": false,
+                "isDismissable": false,
+                "isEditable": false,
+                "isEnabled": true,
+                "isFocusable": false,
+                "isImportantForAccessibility": false,
+                "isLongClickable": false,
+                "isMultiLine": false,
+                "isPassword": false,
+                "isScrollable": false,
+                "isSelected": false,
+                "isVisibleToUser": true,
+                "liveRegion": 0,
+                "maxTextLength": -1,
+                "movementGranularities": 0,
+                "rangeInfo": null,
+                "text": null,
+                "children": [
+                  {
+                    "class": "androidx.appcompat.widget.ViewStubCompat",
+                    "actionList": [
+                      4,
+                      8,
+                      64,
+                      16908342
+                    ],
+                    "boundsInParent": {
+                      "left": 0,
+                      "right": 0,
+                      "top": 0,
+                      "bottom": 0
+                    },
+                    "boundsInScreen": {
+                      "left": 0,
+                      "right": 0,
+                      "top": 0,
+                      "bottom": 0
+                    },
+                    "canOpenPopup": false,
+                    "childCount": 0,
+                    "className": "android.view.View",
+                    "collectionInfo": null,
+                    "collectionItemInfo": null,
+                    "contentDescription": null,
+                    "error": null,
+                    "extras": "Bundle[{}]",
+                    "inputType": 0,
+                    "isCheckable": false,
+                    "isChecked": false,
+                    "isClickable": false,
+                    "isContentInvalid": false,
+                    "isDismissable": false,
+                    "isEditable": false,
+                    "isEnabled": true,
+                    "isFocusable": false,
+                    "isImportantForAccessibility": false,
+                    "isLongClickable": false,
+                    "isMultiLine": false,
+                    "isPassword": false,
+                    "isScrollable": false,
+                    "isSelected": false,
+                    "isVisibleToUser": false,
+                    "liveRegion": 0,
+                    "maxTextLength": -1,
+                    "movementGranularities": 0,
+                    "rangeInfo": null,
+                    "text": null,
+                    "children": null
+                  },
+                  {
+                    "class": "androidx.appcompat.widget.ContentFrameLayout",
+                    "actionList": [
+                      4,
+                      8,
+                      64,
+                      16908342
+                    ],
+                    "boundsInParent": {
+                      "left": 0,
+                      "right": 1080,
+                      "top": 0,
+                      "bottom": 1794
+                    },
+                    "boundsInScreen": {
+                      "left": 0,
+                      "right": 1080,
+                      "top": 0,
+                      "bottom": 1794
+                    },
+                    "canOpenPopup": false,
+                    "childCount": 1,
+                    "className": "android.widget.FrameLayout",
+                    "collectionInfo": null,
+                    "collectionItemInfo": null,
+                    "contentDescription": null,
+                    "error": null,
+                    "extras": "Bundle[{}]",
+                    "inputType": 0,
+                    "isCheckable": false,
+                    "isChecked": false,
+                    "isClickable": false,
+                    "isContentInvalid": false,
+                    "isDismissable": false,
+                    "isEditable": false,
+                    "isEnabled": true,
+                    "isFocusable": false,
+                    "isImportantForAccessibility": false,
+                    "isLongClickable": false,
+                    "isMultiLine": false,
+                    "isPassword": false,
+                    "isScrollable": false,
+                    "isSelected": false,
+                    "isVisibleToUser": true,
+                    "liveRegion": 0,
+                    "maxTextLength": -1,
+                    "movementGranularities": 0,
+                    "rangeInfo": null,
+                    "text": null,
+                    "children": [
+                      {
+                        "class": "androidx.coordinatorlayout.widget.CoordinatorLayout",
+                        "actionList": [
+                          4,
+                          8,
+                          64,
+                          16908342
+                        ],
+                        "boundsInParent": {
+                          "left": 0,
+                          "right": 1080,
+                          "top": 0,
+                          "bottom": 1794
+                        },
+                        "boundsInScreen": {
+                          "left": 0,
+                          "right": 1080,
+                          "top": 0,
+                          "bottom": 1794
+                        },
+                        "canOpenPopup": false,
+                        "childCount": 4,
+                        "className": "android.view.ViewGroup",
+                        "collectionInfo": null,
+                        "collectionItemInfo": null,
+                        "contentDescription": null,
+                        "error": null,
+                        "extras": "Bundle[{}]",
+                        "inputType": 0,
+                        "isCheckable": false,
+                        "isChecked": false,
+                        "isClickable": false,
+                        "isContentInvalid": false,
+                        "isDismissable": false,
+                        "isEditable": false,
+                        "isEnabled": true,
+                        "isFocusable": false,
+                        "isImportantForAccessibility": true,
+                        "isLongClickable": false,
+                        "isMultiLine": false,
+                        "isPassword": false,
+                        "isScrollable": false,
+                        "isSelected": false,
+                        "isVisibleToUser": true,
+                        "liveRegion": 0,
+                        "maxTextLength": -1,
+                        "movementGranularities": 0,
+                        "rangeInfo": null,
+                        "text": null,
+                        "children": [
+                          {
+                            "class": "com.google.android.material.appbar.AppBarLayout",
+                            "actionList": [
+                              4,
+                              8,
+                              64,
+                              16908342
+                            ],
+                            "boundsInParent": {
+                              "left": 0,
+                              "right": 1080,
+                              "top": 0,
+                              "bottom": 147
+                            },
+                            "boundsInScreen": {
+                              "left": 0,
+                              "right": 1080,
+                              "top": 63,
+                              "bottom": 210
+                            },
+                            "canOpenPopup": false,
+                            "childCount": 2,
+                            "className": "android.widget.LinearLayout",
+                            "collectionInfo": null,
+                            "collectionItemInfo": null,
+                            "contentDescription": null,
+                            "error": null,
+                            "extras": "Bundle[{}]",
+                            "inputType": 0,
+                            "isCheckable": false,
+                            "isChecked": false,
+                            "isClickable": false,
+                            "isContentInvalid": false,
+                            "isDismissable": false,
+                            "isEditable": false,
+                            "isEnabled": true,
+                            "isFocusable": false,
+                            "isImportantForAccessibility": false,
+                            "isLongClickable": false,
+                            "isMultiLine": false,
+                            "isPassword": false,
+                            "isScrollable": false,
+                            "isSelected": false,
+                            "isVisibleToUser": true,
+                            "liveRegion": 0,
+                            "maxTextLength": -1,
+                            "movementGranularities": 0,
+                            "rangeInfo": null,
+                            "text": null,
+                            "children": [
+                              {
+                                "class": "androidx.appcompat.widget.Toolbar",
+                                "actionList": [
+                                  4,
+                                  8,
+                                  64,
+                                  16908342
+                                ],
+                                "boundsInParent": {
+                                  "left": 0,
+                                  "right": 1080,
+                                  "top": 0,
+                                  "bottom": 147
+                                },
+                                "boundsInScreen": {
+                                  "left": 0,
+                                  "right": 1080,
+                                  "top": 63,
+                                  "bottom": 210
+                                },
+                                "canOpenPopup": false,
+                                "childCount": 2,
+                                "className": "android.view.ViewGroup",
+                                "collectionInfo": null,
+                                "collectionItemInfo": null,
+                                "contentDescription": null,
+                                "error": null,
+                                "extras": "Bundle[{}]",
+                                "inputType": 0,
+                                "isCheckable": false,
+                                "isChecked": false,
+                                "isClickable": false,
+                                "isContentInvalid": false,
+                                "isDismissable": false,
+                                "isEditable": false,
+                                "isEnabled": true,
+                                "isFocusable": false,
+                                "isImportantForAccessibility": false,
+                                "isLongClickable": false,
+                                "isMultiLine": false,
+                                "isPassword": false,
+                                "isScrollable": false,
+                                "isSelected": false,
+                                "isVisibleToUser": true,
+                                "liveRegion": 0,
+                                "maxTextLength": -1,
+                                "movementGranularities": 0,
+                                "rangeInfo": null,
+                                "text": null,
+                                "children": [
+                                  {
+                                    "class": "androidx.appcompat.widget.AppCompatTextView",
+                                    "actionList": [
+                                      4,
+                                      8,
+                                      64,
+                                      16908342,
+                                      256,
+                                      512,
+                                      131072
+                                    ],
+                                    "boundsInParent": {
+                                      "left": 0,
+                                      "right": 882,
+                                      "top": 0,
+                                      "bottom": 71
+                                    },
+                                    "boundsInScreen": {
+                                      "left": 42,
+                                      "right": 924,
+                                      "top": 101,
+                                      "bottom": 172
+                                    },
+                                    "canOpenPopup": false,
+                                    "childCount": 0,
+                                    "className": "android.widget.TextView",
+                                    "collectionInfo": null,
+                                    "collectionItemInfo": null,
+                                    "contentDescription": null,
+                                    "error": null,
+                                    "extras": "Bundle[{}]",
+                                    "inputType": 0,
+                                    "isCheckable": false,
+                                    "isChecked": false,
+                                    "isClickable": false,
+                                    "isContentInvalid": false,
+                                    "isDismissable": false,
+                                    "isEditable": false,
+                                    "isEnabled": true,
+                                    "isFocusable": false,
+                                    "isImportantForAccessibility": true,
+                                    "isLongClickable": false,
+                                    "isMultiLine": false,
+                                    "isPassword": false,
+                                    "isScrollable": false,
+                                    "isSelected": false,
+                                    "isVisibleToUser": true,
+                                    "liveRegion": 0,
+                                    "maxTextLength": -1,
+                                    "movementGranularities": 31,
+                                    "rangeInfo": null,
+                                    "text": "Screenshot Tests for Android Sample",
+                                    "children": null
+                                  },
+                                  {
+                                    "class": "androidx.appcompat.widget.ActionMenuView",
+                                    "actionList": [
+                                      4,
+                                      8,
+                                      64,
+                                      16908342
+                                    ],
+                                    "boundsInParent": {
+                                      "left": 0,
+                                      "right": 105,
+                                      "top": 0,
+                                      "bottom": 147
+                                    },
+                                    "boundsInScreen": {
+                                      "left": 975,
+                                      "right": 1080,
+                                      "top": 63,
+                                      "bottom": 210
+                                    },
+                                    "canOpenPopup": false,
+                                    "childCount": 1,
+                                    "className": "androidx.appcompat.widget.LinearLayoutCompat",
+                                    "collectionInfo": null,
+                                    "collectionItemInfo": null,
+                                    "contentDescription": null,
+                                    "error": null,
+                                    "extras": "Bundle[{}]",
+                                    "inputType": 0,
+                                    "isCheckable": false,
+                                    "isChecked": false,
+                                    "isClickable": false,
+                                    "isContentInvalid": false,
+                                    "isDismissable": false,
+                                    "isEditable": false,
+                                    "isEnabled": true,
+                                    "isFocusable": false,
+                                    "isImportantForAccessibility": false,
+                                    "isLongClickable": false,
+                                    "isMultiLine": false,
+                                    "isPassword": false,
+                                    "isScrollable": false,
+                                    "isSelected": false,
+                                    "isVisibleToUser": true,
+                                    "liveRegion": 0,
+                                    "maxTextLength": -1,
+                                    "movementGranularities": 0,
+                                    "rangeInfo": null,
+                                    "text": null,
+                                    "children": [
+                                      {
+                                        "class": "androidx.appcompat.widget.ActionMenuPresenter$OverflowMenuButton",
+                                        "actionList": [
+                                          16908356,
+                                          4,
+                                          8,
+                                          1,
+                                          64,
+                                          16,
+                                          32,
+                                          131072,
+                                          256,
+                                          512,
+                                          16908342
+                                        ],
+                                        "boundsInParent": {
+                                          "left": 0,
+                                          "right": 105,
+                                          "top": 0,
+                                          "bottom": 126
+                                        },
+                                        "boundsInScreen": {
+                                          "left": 975,
+                                          "right": 1080,
+                                          "top": 73,
+                                          "bottom": 199
+                                        },
+                                        "canOpenPopup": false,
+                                        "childCount": 0,
+                                        "className": "android.widget.ImageView",
+                                        "collectionInfo": null,
+                                        "collectionItemInfo": null,
+                                        "contentDescription": "More options",
+                                        "error": null,
+                                        "extras": "Bundle[{}]",
+                                        "inputType": 0,
+                                        "isCheckable": false,
+                                        "isChecked": false,
+                                        "isClickable": true,
+                                        "isContentInvalid": false,
+                                        "isDismissable": false,
+                                        "isEditable": false,
+                                        "isEnabled": true,
+                                        "isFocusable": true,
+                                        "isImportantForAccessibility": true,
+                                        "isLongClickable": true,
+                                        "isMultiLine": false,
+                                        "isPassword": false,
+                                        "isScrollable": false,
+                                        "isSelected": false,
+                                        "isVisibleToUser": true,
+                                        "liveRegion": 0,
+                                        "maxTextLength": -1,
+                                        "movementGranularities": 11,
+                                        "rangeInfo": null,
+                                        "text": null,
+                                        "children": null
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "class": "android.widget.LinearLayout",
+                            "actionList": [
+                              4,
+                              8,
+                              64,
+                              16908342
+                            ],
+                            "boundsInParent": {
+                              "left": 0,
+                              "right": 1080,
+                              "top": 0,
+                              "bottom": 1584
+                            },
+                            "boundsInScreen": {
+                              "left": 0,
+                              "right": 1080,
+                              "top": 210,
+                              "bottom": 1794
+                            },
+                            "canOpenPopup": false,
+                            "childCount": 1,
+                            "className": "android.widget.LinearLayout",
+                            "collectionInfo": null,
+                            "collectionItemInfo": null,
+                            "contentDescription": null,
+                            "error": null,
+                            "extras": "Bundle[{}]",
+                            "inputType": 0,
+                            "isCheckable": false,
+                            "isChecked": false,
+                            "isClickable": false,
+                            "isContentInvalid": false,
+                            "isDismissable": false,
+                            "isEditable": false,
+                            "isEnabled": true,
+                            "isFocusable": false,
+                            "isImportantForAccessibility": false,
+                            "isLongClickable": false,
+                            "isMultiLine": false,
+                            "isPassword": false,
+                            "isScrollable": false,
+                            "isSelected": false,
+                            "isVisibleToUser": true,
+                            "liveRegion": 0,
+                            "maxTextLength": -1,
+                            "movementGranularities": 0,
+                            "rangeInfo": null,
+                            "text": null,
+                            "children": [
+                              {
+                                "class": "androidx.appcompat.widget.AppCompatTextView",
+                                "actionList": [
+                                  4,
+                                  8,
+                                  64,
+                                  16908342,
+                                  256,
+                                  512,
+                                  131072
+                                ],
+                                "boundsInParent": {
+                                  "left": 0,
+                                  "right": 1080,
+                                  "top": 0,
+                                  "bottom": 1584
+                                },
+                                "boundsInScreen": {
+                                  "left": 0,
+                                  "right": 1080,
+                                  "top": 210,
+                                  "bottom": 1794
+                                },
+                                "canOpenPopup": false,
+                                "childCount": 0,
+                                "className": "android.widget.TextView",
+                                "collectionInfo": null,
+                                "collectionItemInfo": null,
+                                "contentDescription": null,
+                                "error": null,
+                                "extras": "Bundle[{}]",
+                                "inputType": 0,
+                                "isCheckable": false,
+                                "isChecked": false,
+                                "isClickable": false,
+                                "isContentInvalid": false,
+                                "isDismissable": false,
+                                "isEditable": false,
+                                "isEnabled": true,
+                                "isFocusable": false,
+                                "isImportantForAccessibility": true,
+                                "isLongClickable": false,
+                                "isMultiLine": true,
+                                "isPassword": false,
+                                "isScrollable": false,
+                                "isSelected": false,
+                                "isVisibleToUser": true,
+                                "liveRegion": 0,
+                                "maxTextLength": -1,
+                                "movementGranularities": 31,
+                                "rangeInfo": null,
+                                "text": "Status is WARNING",
+                                "children": null
+                              }
+                            ]
+                          },
+                          {
+                            "class": "com.google.android.material.floatingactionbutton.FloatingActionButton",
+                            "actionList": [
+                              4,
+                              8,
+                              2,
+                              64,
+                              16,
+                              16908342
+                            ],
+                            "boundsInParent": {
+                              "left": 0,
+                              "right": 147,
+                              "top": 0,
+                              "bottom": 147
+                            },
+                            "boundsInScreen": {
+                              "left": 891,
+                              "right": 1038,
+                              "top": 1605,
+                              "bottom": 1752
+                            },
+                            "canOpenPopup": false,
+                            "childCount": 0,
+                            "className": "android.widget.ImageButton",
+                            "collectionInfo": null,
+                            "collectionItemInfo": null,
+                            "contentDescription": null,
+                            "error": null,
+                            "extras": "Bundle[{}]",
+                            "inputType": 0,
+                            "isCheckable": false,
+                            "isChecked": false,
+                            "isClickable": true,
+                            "isContentInvalid": false,
+                            "isDismissable": false,
+                            "isEditable": false,
+                            "isEnabled": true,
+                            "isFocusable": true,
+                            "isImportantForAccessibility": true,
+                            "isLongClickable": false,
+                            "isMultiLine": false,
+                            "isPassword": false,
+                            "isScrollable": false,
+                            "isSelected": false,
+                            "isVisibleToUser": true,
+                            "liveRegion": 0,
+                            "maxTextLength": -1,
+                            "movementGranularities": 0,
+                            "rangeInfo": null,
+                            "text": null,
+                            "children": null
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "actionList": [
+          4,
+          8,
+          64,
+          16908342
+        ],
+        "boundsInParent": {
+          "left": 0,
+          "right": 1080,
+          "top": 0,
+          "bottom": 126
+        },
+        "boundsInScreen": {
+          "left": 0,
+          "right": 1080,
+          "top": 1794,
+          "bottom": 1920
+        },
+        "canOpenPopup": false,
+        "childCount": 0,
+        "className": "android.view.View",
+        "collectionInfo": null,
+        "collectionItemInfo": null,
+        "contentDescription": null,
+        "error": null,
+        "extras": "Bundle[{}]",
+        "inputType": 0,
+        "isCheckable": false,
+        "isChecked": false,
+        "isClickable": false,
+        "isContentInvalid": false,
+        "isDismissable": false,
+        "isEditable": false,
+        "isEnabled": true,
+        "isFocusable": false,
+        "isImportantForAccessibility": false,
+        "isLongClickable": false,
+        "isMultiLine": false,
+        "isPassword": false,
+        "isScrollable": false,
+        "isSelected": false,
+        "isVisibleToUser": true,
+        "liveRegion": 0,
+        "maxTextLength": -1,
+        "movementGranularities": 0,
+        "rangeInfo": null,
+        "text": null,
+        "children": null
+      },
+      {
+        "class": "android.view.View",
+        "actionList": [
+          4,
+          8,
+          64,
+          16908342
+        ],
+        "boundsInParent": {
+          "left": 0,
+          "right": 1080,
+          "top": 0,
+          "bottom": 63
+        },
+        "boundsInScreen": {
+          "left": 0,
+          "right": 1080,
+          "top": 0,
+          "bottom": 63
+        },
+        "canOpenPopup": false,
+        "childCount": 0,
+        "className": "android.view.View",
+        "collectionInfo": null,
+        "collectionItemInfo": null,
+        "contentDescription": null,
+        "error": null,
+        "extras": "Bundle[{}]",
+        "inputType": 0,
+        "isCheckable": false,
+        "isChecked": false,
+        "isClickable": false,
+        "isContentInvalid": false,
+        "isDismissable": false,
+        "isEditable": false,
+        "isEnabled": true,
+        "isFocusable": false,
+        "isImportantForAccessibility": false,
+        "isLongClickable": false,
+        "isMultiLine": false,
+        "isPassword": false,
+        "isScrollable": false,
+        "isSelected": false,
+        "isVisibleToUser": true,
+        "liveRegion": 0,
+        "maxTextLength": -1,
+        "movementGranularities": 0,
+        "rangeInfo": null,
+        "text": null,
+        "children": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "viewHierarchy": {
+    "class": "com.facebook.litho.LithoView",
+    "left": 0,
+    "top": 0,
+    "width": 795,
+    "height": 7479,
+    "children": [
+      {
+        "class": "com.facebook.litho.Column",
+        "left": 0,
+        "top": 0,
+        "width": 795,
+        "height": 7479,
+        "children": [
+          {
+            "class": "com.facebook.testing.screenshot.sample.ImageRow",
+            "left": 63,
+            "top": 63,
+            "width": 669,
+            "height": 336,
+            "children": [
+              {
+                "class": "com.facebook.litho.Row",
+                "left": 63,
+                "top": 63,
+                "width": 669,
+                "height": 336,
+                "children": [
+                  {
+                    "class": "com.facebook.litho.widget.Image",
+                    "left": 63,
+                    "top": 63,
+                    "width": 168,
+                    "height": 168,
+                    "children": []
+                  },
+                  {
+                    "class": "com.facebook.litho.widget.Image",
+                    "left": 231,
+                    "top": 63,
+                    "width": 336,
+                    "height": 336,
+                    "children": []
+                  },
+                  {
+                    "class": "com.facebook.litho.widget.Image",
+                    "left": 567,
+                    "top": 63,
+                    "width": 84,
+                    "height": 84,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "class": "com.facebook.litho.widget.Text",
+            "left": 63,
+            "top": 399,
+            "width": 669,
+            "height": 7017,
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "version": 1,
+  "axHierarchy": {
+    "class": "com.facebook.litho.LithoView",
+    "actionList": null,
+    "boundsInParent": {
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "bottom": 0
+    },
+    "boundsInScreen": {
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "bottom": 0
+    },
+    "canOpenPopup": false,
+    "childCount": 0,
+    "collectionInfo": null,
+    "collectionItemInfo": null,
+    "contentDescription": null,
+    "error": null,
+    "extras": "Bundle[{}]",
+    "inputType": 0,
+    "isCheckable": false,
+    "isChecked": false,
+    "isClickable": false,
+    "isContentInvalid": false,
+    "isDismissable": false,
+    "isEditable": false,
+    "isEnabled": false,
+    "isFocusable": false,
+    "isImportantForAccessibility": false,
+    "isLongClickable": false,
+    "isMultiLine": false,
+    "isPassword": false,
+    "isScrollable": false,
+    "isSelected": false,
+    "isVisibleToUser": false,
+    "liveRegion": 0,
+    "maxTextLength": -1,
+    "movementGranularities": 0,
+    "rangeInfo": null,
+    "text": null,
+    "children": null
+  }
+}

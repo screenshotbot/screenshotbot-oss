@@ -1,0 +1,168 @@
+{
+  "viewHierarchy": {
+    "class": "android.widget.LinearLayout",
+    "left": 0,
+    "top": 0,
+    "width": 787,
+    "height": 126,
+    "children": [
+      {
+        "class": "android.widget.EditText",
+        "left": 0,
+        "top": 1,
+        "width": 556,
+        "height": 118
+      },
+      {
+        "class": "android.widget.Button",
+        "left": 556,
+        "top": 0,
+        "width": 231,
+        "height": 126
+      }
+    ]
+  },
+  "version": 1,
+  "axHierarchy": {
+    "class": "android.widget.LinearLayout",
+    "actionList": null,
+    "boundsInParent": {
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "bottom": 0
+    },
+    "boundsInScreen": {
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "bottom": 0
+    },
+    "canOpenPopup": false,
+    "childCount": 0,
+    "collectionInfo": null,
+    "collectionItemInfo": null,
+    "contentDescription": null,
+    "error": null,
+    "extras": "Bundle[{}]",
+    "inputType": 0,
+    "isCheckable": false,
+    "isChecked": false,
+    "isClickable": false,
+    "isContentInvalid": false,
+    "isDismissable": false,
+    "isEditable": false,
+    "isEnabled": false,
+    "isFocusable": false,
+    "isImportantForAccessibility": false,
+    "isLongClickable": false,
+    "isMultiLine": false,
+    "isPassword": false,
+    "isScrollable": false,
+    "isSelected": false,
+    "isVisibleToUser": false,
+    "liveRegion": 0,
+    "maxTextLength": -1,
+    "movementGranularities": 0,
+    "rangeInfo": null,
+    "text": null,
+    "children": [
+      {
+        "class": "android.widget.EditText",
+        "actionList": [
+          2097152
+        ],
+        "boundsInParent": {
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "bottom": 0
+        },
+        "boundsInScreen": {
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "bottom": 0
+        },
+        "canOpenPopup": false,
+        "childCount": 0,
+        "collectionInfo": null,
+        "collectionItemInfo": null,
+        "contentDescription": null,
+        "error": null,
+        "extras": "Bundle[{}]",
+        "inputType": 1,
+        "isCheckable": false,
+        "isChecked": false,
+        "isClickable": false,
+        "isContentInvalid": false,
+        "isDismissable": false,
+        "isEditable": true,
+        "isEnabled": false,
+        "isFocusable": false,
+        "isImportantForAccessibility": false,
+        "isLongClickable": false,
+        "isMultiLine": false,
+        "isPassword": false,
+        "isScrollable": false,
+        "isSelected": false,
+        "isVisibleToUser": false,
+        "liveRegion": 0,
+        "maxTextLength": -1,
+        "movementGranularities": 0,
+        "rangeInfo": null,
+        "text": "搜索世界",
+        "children": null
+      },
+      {
+        "class": "android.widget.Button",
+        "actionList": [
+          256,
+          512,
+          131072
+        ],
+        "boundsInParent": {
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "bottom": 0
+        },
+        "boundsInScreen": {
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "bottom": 0
+        },
+        "canOpenPopup": false,
+        "childCount": 0,
+        "collectionInfo": null,
+        "collectionItemInfo": null,
+        "contentDescription": null,
+        "error": null,
+        "extras": "Bundle[{}]",
+        "inputType": 0,
+        "isCheckable": false,
+        "isChecked": false,
+        "isClickable": false,
+        "isContentInvalid": false,
+        "isDismissable": false,
+        "isEditable": false,
+        "isEnabled": false,
+        "isFocusable": false,
+        "isImportantForAccessibility": false,
+        "isLongClickable": false,
+        "isMultiLine": true,
+        "isPassword": false,
+        "isScrollable": false,
+        "isSelected": false,
+        "isVisibleToUser": false,
+        "liveRegion": 0,
+        "maxTextLength": -1,
+        "movementGranularities": 31,
+        "rangeInfo": null,
+        "text": "搜",
+        "children": null
+      }
+    ]
+  }
+}

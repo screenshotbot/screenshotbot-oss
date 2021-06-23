@@ -1,0 +1,520 @@
+@charset "UTF-8";
+
+$lili-purple: #4d196a;
+$lili-red:    #dd5068;
+$lili-yellow: #f9d25d;
+$lili-light-green: #6acaae;
+$lili-green: #4fa96f;
+
+$section-green: #52ad77;
+$section-yellow: #F9D25D;
+$section-pink: #DD5068;
+$section-blue: #3C42A7;
+
+@import "./bootstrap/scss/functions";
+@import "./bootstrap/scss/variables";
+@import "./bootstrap/scss/bootstrap";
+
+@import "variables";
+@import "breakpoints";
+@import "avatar";
+@import "headroom-custom";
+@import "vendor/baguetteBox";
+@import "sidebar";
+@import "bootstrap-icons";
+
+.change-image {
+    max-width: 40%;
+}
+
+.change-arrow {
+    font-size: 2em;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.screenshot-box-image {
+    max-width: 100%;
+}
+
+.screenshot-image {
+    background-image: url("/assets/images/img-background.png");
+    margin-top: 5px;
+    position: relative;
+    box-shadow: 0 0 2em lightgrey;
+}
+
+.landing-change-example .screenshot-image {
+    background-image: none;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 0 3px lightgrey;
+}
+
+@media(max-width: 768px) {
+    // make change image look downwards
+    .change-image {
+        display: inline-block;
+        width: 95%;
+        max-width: 95%;
+    }
+
+    .change-arrow {
+        display:block;
+        width: 100%;
+    }
+
+}
+
+/**
+ * The CSS shown here will not be introduced in the Quickstart guide, but shows
+ * how you can use CSS to style your Element's container.
+ */
+.StripeElement {
+  box-sizing: border-box;
+
+  height: 40px;
+
+  padding: 10px 12px;
+
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background-color: white;
+
+  box-shadow: 0 1px 3px 0 #e6ebf1;
+  -webkit-transition: box-shadow 150ms ease;
+  transition: box-shadow 150ms ease;
+}
+
+.StripeElement--focus {
+  box-shadow: 0 1px 3px 0 #cfd7df;
+}
+
+.StripeElement--invalid {
+  border-color: #fa755a;
+}
+
+.StripeElement--webkit-autofill {
+  background-color: #fefde5 !important;
+}
+
+/* body { */
+/*     display: flex; */
+/*     flex-direction: column; */
+/*     min-height: 100vh; */
+/* } */
+
+/* section:last-of-type { */
+/*     flex-grow:1; */
+/* } */
+
+
+.full-height {
+    min-height: 80vh;
+}
+
+h1 {
+    padding-top: 0em;
+}
+
+.doc-left-nav h2 {
+    font-size: 1em;
+}
+
+.doc-left-nav li {
+    font-size: 0.7em;
+}
+
+.doc-left-nav ul {
+    list-style-type: none;
+    padding-left: 0.5em;
+}
+
+.landing-hero-submit {
+}
+
+ul.settings-nav {
+    padding-left: 0;
+    font-size: 1.25em;
+}
+
+li.settings-nav-item {
+    list-style: none;
+    padding-left: 0;
+}
+
+.settings-nav-title {
+    text-transform: uppercase;
+    padding: 1.5em 0em;
+}
+
+.setting-item-title {
+    font-weight: bold;
+    font-size: 1.25em;
+    margin-top: 0;
+}
+
+.setting-item-subtitle {
+    font-weight: 300;
+}
+
+.setting-form-group {
+    padding-right: 3em;
+}
+
+.feature-check-mark.icon-round  {
+    font-size: 1rem;
+    height: 100%;
+    width: 1.5rem;
+    border-radius: 50%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.feature-check-mark.icon-round > .icon {
+    height: 1rem;
+}
+
+.feature-check-mark .icon path {
+    fill: #f8f9fa;
+}
+
+.bg-dark h3 {
+    color: $gray-100;
+}
+
+.landing-summary {
+}
+
+footer ul, footer p {
+}
+
+section.features-section .h6 {
+    font-size: 1rem;
+}
+
+section.features-section .text-muted {
+}
+
+section.features-section .text-small {
+    font-size: 1rem;
+}
+
+.nav-user .account-user-name {
+    font-size: 1rem;
+}
+
+.taskie-list.nonempty {
+    color: $gray-700;
+}
+
+ul.landing-summary li {
+    list-style: none;
+    padding-left: 0;
+}
+
+footer label {
+    color: $gray-100;
+}
+
+
+.about-us-image {
+    object-fit:cover;
+    border-radius: 50%;
+    width: 250px;
+    height: 250px;
+    box-shadow: 0px 0px 10px 5px $gray-200;
+
+}
+
+.navbar-brand-logo {
+    height: 1.5rem;
+    margin-bottom: 0.17em;
+}
+
+.navbar-brand {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.footer-brand-image {
+    height: 1.5rem;
+}
+
+.auth-brand-image {
+    height: 1.5rem;
+}
+
+.leftside-menu .logo {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.leftside-menu .logo-lg img {
+    height: 1.4rem;
+}
+
+.leftside-menu .logo-sm img {
+    height: 1.4rem;
+}
+
+.landing-pitch .text-muted {
+    color: $gray-700 !important;
+}
+
+.card-pricing .card-footer {
+    border-top: none;
+    margin-bottom: 1em;
+}
+
+.card-pricing {
+    height: 100%;
+}
+
+.navbar {
+    position: fixed;
+    top: 0;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+}
+
+.headroom--not-top.navbar-dark {
+    background: #00116edd ;
+}
+
+.headroom--not-top.navbar-light {
+    background: #fafbfeee;
+}
+
+body > section:nth-child(2) {
+    padding-top: 6em !important;
+}
+
+.image-comparison-modal-image {
+    max-width: 100%;
+}
+
+.image-comparison-modal .modal-dialog {
+    min-width: 80%;
+}
+
+.doc-image {
+    max-width: 100%;
+    box-shadow: 0px 0px 8px #888888;
+}
+
+.home-brand-logo {
+    max-width: 100%;
+
+}
+
+.home-brand-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.run-page-image {
+    max-width: 100%;
+    max-height: 25em;
+}
+
+.screenshot-header {
+    h4 {
+        display: inline;
+        max-width: 100%;
+    }
+    ul.screenshot-options-menu {
+        padding-left: 0;
+        display: inline;
+        li {
+            margin-left: 0;
+            list-style: none;
+            display: inline;
+            padding-left: 0;
+        }
+
+        li + li:before {
+            content: " | ";
+        }
+
+    }
+}
+
+
+.page-title-box {
+    margin-top: 2em;
+    .page-title {
+        display: inline;
+    }
+    .dropdown {
+        display: inline;
+    }
+}
+
+.acceptable.accept-link {
+    color: $green !important;
+}
+
+.acceptable.reject-link {
+    color: $red !important;
+}
+
+.dropdown-report-accepted {
+    background: $green;
+}
+
+.dropdown .dropdown-report-accepted {
+    background: $green !important;
+
+    &:hover {
+        background: darken($green, 5%) !important;
+    }
+}
+
+.dropdown .dropdown-report-rejected {
+    background-color: $red !important;
+
+    &:hover {
+        background-color: darken($red, 5%) !important;
+    }
+}
+
+#baguetteBox-overlay .full-image img {
+    background: url("/assets/images/img-background.png");
+}
+
+
+.pricing-table {
+    th {
+        .h6 {
+            margin-top: 0;
+            padding-top: 0;
+        }
+    }
+}
+
+.content-page-old {
+    flex: 1;
+    padding: 0;
+    margin: 0;
+    padding-left: 1em;
+    padding-right: 1em;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+body.dashboard {
+
+    .leftside-menu {
+        width: 280px;
+        height: 100vh;
+        float: left;
+        position: fixed;
+    }
+
+    overflow-x: hidden;
+
+    .content-page {
+        margin-left: calc(280px + 1em);
+        margin-right: 1em;
+    }
+
+    .logo-sm {
+        display:none;
+    }
+
+    @include media-breakpoint-down(md) {
+        .leftside-menu {
+            flex-direction: row !important;
+            flex-wrap: none !important;
+            width: 100%;
+            float: top;
+            height: auto;
+        }
+
+        .content-page {
+            padding-top: 5em;
+            margin-left: 1em;
+        }
+
+        .logo-lg {
+            display: none;
+        }
+
+        .logo-sm {
+            display: block;
+            padding-right: 1em;
+        }
+
+        .nav-link {
+            padding-right: 0.5em;
+            padding-left: 0.5em;
+        }
+        hr {
+            display: none;
+        }
+        #dropdownUser1 {
+            vertical-align: middle;
+            height: 100%;
+        }
+
+        .nav-item .material-icons {
+            padding-right: 0;
+        }
+
+        .nav-link .text, .user-full-name {
+            display: none;
+        }
+
+        ul.nav {
+            display:inline-block;
+        }
+
+        li.nav-item {
+            display: inline-block;
+        }
+    }
+
+}
+
+
+a {
+    text-decoration: none;
+}
+
+
+.material-icons {
+    vertical-align: middle;
+}
+
+
+.account-pages {
+    margin-top: 3.125rem !important;
+
+    .auth-brand-image {
+        height: 1.5rem;
+    }
+
+    input, .btn {
+        font-size: 0.9375rem;
+        margin-bottom: 0.625rem !important;
+        padding: 0.5rem 1.25rem;
+    }
+
+    h4 {
+        padding-top: 1em;
+        font-size: 1.5rem;
+        font-weight: 500;
+    }
+
+    .card-header {
+        padding: 1.5rem !important;
+    }
+
+    .card-body {
+        padding: 1.5rem !important;
+    }
+}
