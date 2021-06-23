@@ -208,6 +208,7 @@
   #+sbcl (typep condition 'sb-int:broken-pipe)
   #-sbcl nil)
 
+#-screenshotbot-oss
 (defmethod hunchentoot:maybe-invoke-debugger :after (condition)
            (when (and hunchentoot:*catch-errors-p*
                       (not *disable-sentry*)
