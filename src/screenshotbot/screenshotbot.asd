@@ -13,7 +13,6 @@
                :server
                :java.libs
                :jose
-               :sentry-client
                :screenshotbot.js-assets
                :screenshotbot.css-assets
                :screenshotbot.css-assets/doks
