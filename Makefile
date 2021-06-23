@@ -119,7 +119,7 @@ web-bin: $(LISP_FILES) $(LW)
 	$(LW_SCRIPT) build-web-bin.lisp
 
 clean-fasl: .PHONY
-	find . -name *.64ufasl -delete
+	find src -name *.64ufasl -delete
 
 clean: clean-fasl
 	rm -f web-bin
