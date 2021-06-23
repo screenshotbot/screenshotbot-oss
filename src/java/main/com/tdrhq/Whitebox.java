@@ -65,7 +65,7 @@ class Whitebox {
         if (args.length > 0) {
             classes = new Class[args.length];
             for (int i = 0; i < args.length; i++) {
-                classes[i] = args[i] == null ? null : args[i].getClass();
+                classes[i] = (args[i] == null) ? null : args[i].getClass();
             }
         }
         CacheKey cacheKey = new CacheKey(klass, methodName, classes);
@@ -73,8 +73,13 @@ class Whitebox {
         if (old == null) {
             old = MethodUtils.getMatchingAccessibleMethod(klass, methodName, classes);
             if (old == null) {
-                throw new RuntimeException("could not find appropriate method for: " + klass
-                                           + ", " + methodName);
+                String str = "could not find appropriate method for: " + klass
+                        + ", " + methodName + " and args: ";
+                for (Class param : classes) {
+                    str += param.getName() + ", ";
+                }
+                str = str.substring(0, str.length() - 2);
+                throw new RuntimeException(str);
             }
             methodCache.put(cacheKey, old);
         }

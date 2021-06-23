@@ -203,7 +203,8 @@
      (loop for i from 0 to 100000
            for x in args
            do
-              (setf (jvref ret i) x))
+              (when x ;; we don't have a good way of storing nulls on LW :/
+               (setf (jvref ret i) x)))
      (assert ret)
      ret)))
 
