@@ -95,6 +95,8 @@
                     :error-output :interactive))
 
 (defsystem :screenshotbot.sdk.deliver
+  :author "Arnold Noronha <arnold@screenshotbot.io>"
+  :license "Mozilla Public License, v 2.0"
   :defsystem-depends-on (:cl-ppcre #+nil :tmpdir)
   :depends-on (:screenshotbot.sdk)
   :components ((deliver-script "deliver-sdk")

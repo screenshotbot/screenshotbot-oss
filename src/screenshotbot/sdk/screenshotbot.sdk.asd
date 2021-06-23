@@ -5,24 +5,26 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defsystem :screenshotbot.sdk
-    :serial t
-    :depends-on (:drakma
-                 :com.google.flag
-                 :pkg
-                 :ironclad
-                 :cl-json
-                 :log4cl
-                 :cl-fad
-                 :cxml
-                 :zip
-                 :trivial-garbage
-                 :tmpdir
-                 :imago
-                 :imago/pngload
-                 :md5
-                 :dag
-                 :anaphora
-                 :str)
+  :author "Arnold Noronha <arnold@screenshotbot.io>"
+  :license "Mozilla Public License, v 2.0"
+  :serial t
+  :depends-on (:drakma
+               :com.google.flag
+               :pkg
+               :ironclad
+               :cl-json
+               :log4cl
+               :cl-fad
+               :cxml
+               :zip
+               :trivial-garbage
+               :tmpdir
+               :imago
+               :imago/pngload
+               :md5
+               :dag
+               :anaphora
+               :str)
   :components ((:file "package")
                (:file "flags")
                (:file "bundle")

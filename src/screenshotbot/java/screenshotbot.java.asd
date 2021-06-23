@@ -5,6 +5,8 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defsystem :screenshotbot.java
+  :author "Arnold Noronha <arnold@screenshotbot.io>"
+  :license "Mozilla Public License, v 2.0"
   :serial t
   :depends-on (:str
                :pkg
