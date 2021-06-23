@@ -20,16 +20,20 @@
      (symbol-package :foo))))
 
 (defun fix-clause (name clause)
-  (flet ((fix-rel (other)
-           (fix-name name other)))
+  (labels ((fix-rel (other)
+           (fix-name name other))
+           (fix-import-from (clause)
+             `(,(car clause) ,(fix-rel (cadr clause))
+               ,@(cddr clause))))
    (case (car clause)
      (:import-from
-      `(:import-from ,(fix-rel (cadr clause))
-                     ,@(cddr clause)))
+      (fix-import-from clause))
      (:use-reexport
       `(:use-reexport ,@ (mapcar #'fix-rel (cdr clause))))
      (:use
       `(:use ,@ (mapcar #'fix-rel (cdr clause))))
+     (:shadowing-import-from
+      (fix-import-from clause))
      (otherwise clause))))
 
 (defmacro define-package (name &rest clauses)
