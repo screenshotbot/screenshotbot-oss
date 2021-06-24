@@ -16,6 +16,10 @@
 (defvar *server-lock* (bt:make-lock))
 
 (defun wait-for-network ()
+  "If you start Screenshotbot with cron @reboot, you might encounter a
+situation where the Screenshotbot starts before the network is
+ready. This is a quick hack around it. I'm sure there are better
+ways."
   (loop while t
        do
        (format t "Waiting for network...~%")
@@ -26,17 +30,6 @@
                (format t "Got return code ~a~%" ret-code)
                (format t "~a" output)
                (sleep 3))))))
-
-(defun reset-all-systems ()
-  (asdf:clear-system :colada)
-  (asdf:clear-system :auth)
-  (asdf:clear-system :util)
-  (asdf:clear-system :jipr)
-  (asdf:clear-system :hightened)
-  (asdf:clear-system :scaile)
-  (ql:quickload "web.all"))
-
-;; (hightened:start-hightened)
 
 (defvar *port*)
 (defvar *swank-port*)
@@ -96,18 +89,6 @@
 
 (defvar *multi-server*)
 
-;; (setf hunchentoot-multi-acceptor:*default-acceptor* jipr:*jipr-acceptor*)
-
-#+nil
-(defun init-fiveam ()
-  (setq fiveam:*run-test-when-defined* t)
-  (setq fiveam:*debug-on-error* t)
-  (setq fiveam:*debug-on-failure* t))
-;; (init-fiveam)
-
-(defun init-debug-environment ()
-  (setq hunchentoot:*show-lisp-errors-p* t))
-
 (defclass utf-8-daily-file-appender (log4cl:daily-file-appender)
   ())
 
@@ -131,11 +112,8 @@
            :element-type 'character))))
 
 
-;; (init-debug-environment)
-;; (setf hunchentoot:*catch-errors-p* nil)
-;; (setf hunchentoot:*catch-errors-p* t)
 (defun main (&optional #+sbcl listen-fd)
-
+  "Called from launch scripts, either web-bin or launch.lisp"
   (bt:with-lock-held (*server-lock*)
    (let ((args (progn
                  #+lispworks system:*line-arguments-list*
@@ -146,18 +124,13 @@
          (cl-cli:parse-cli args
                            *options*)
 
-
        (loop for var in vars
           for val in vals
              do (setf (symbol-value var) val))
 
        (when *verify-store*
-         ;;(hcl:set-up-profiler)
-         (#+lispworks progn ;; hcl:profile
-          #-lispworks progn
-          (util:verify-store))
+         (util:verify-store)
          (uiop:quit 0))
-
 
        (log:info "The port is now ~a" *port*)
        (init-multi-acceptor)
@@ -166,14 +139,18 @@
        (let ((log-file (path:catfile "log/logs")))
          (log4cl:clear-logging-configuration)
          (log:config :info)
-         (log4cl:add-appender log4cl:*root-logger* (make-instance 'utf-8-daily-file-appender
-                                                                  :name-format log-file
-                                                                  :backup-name-format
-                                                                  (format nil "~a.%Y%m%d" log-file)
-                                                                  :filter 4
-                                                                  :layout (make-instance 'log4cl:simple-layout))))
+         (log4cl:add-appender log4cl:*root-logger*
+                              (make-instance 'utf-8-daily-file-appender
+                                              :name-format log-file
+                                              :backup-name-format
+                                              (format nil "~a.%Y%m%d" log-file)
+                                              :filter 4
+                                              :layout (make-instance 'log4cl:simple-layout))))
+
+       #-screenshotbot-oss
        (unless util:*delivered-image*
         (wait-for-network))
+
        #+sbcl
        (progn
          (format t "Using file descriptor ~A~%" listen-fd)
@@ -183,17 +160,14 @@
        (setf hunchentoot:*show-lisp-errors-p* t)
 
        (setf hunchentoot:*rewrite-for-session-urls* nil)
-       ;;(init-fiveam)
 
        (util:prepare-store)
 
        (cl-cron:start-cron)
 
-
        (when *start-swank*
          (log:info "starting up swank")
          (Server:swank-loop))
-
 
        (cond
          (*shell*
