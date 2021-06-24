@@ -68,6 +68,28 @@ state, you can just delete that directory and start over. But you must
 treat this directory as your database. We recommend keeping this on a
 device with high redundancy, such as RAID or Amazon EBS.
 
+### Configuration
+
+Screenshotbot has integrations with various external tools,
+e.g. GitHub, Jira, Gitlab etc. Most of these platforms require some
+kind of API key to access their APIs, and must be configured with
+Screenshotbot before you can use them.
+
+For simplicity and maintainability, we don't have complex GUIs to
+modify these _site-admin_ configurations. Instead each of these
+integrations are exposed as plugins that must be configured with basic
+Common Lisp code. The configuration can be hot-reloaded.
+
+Screenshotbot looks for a file called `config.lisp` in both the
+git-root, and in `~/.config/screenshotbot/`. If found, it loads this
+file as the configuration.
+
+See [Updating
+config.lisp](https://github.com/screenshotbot/screenshotbot-oss/wiki/Updating-config.lisp)
+for a more thorough discussion.
+
+### Upgrading
+
 
 ## Using the CLI tool
 
