@@ -94,7 +94,7 @@ for a more thorough discussion.
 
 ### Becoming a Site-Admin
 
-After installing Screenshotbot, we recommend setting up one
+After installing Screenshotbot, we recommend setting up one user as a
 site-admin. The site-admin get special administrative powers that will
 be required for hot-reloading config files, and hot-reloading
 updates. We might also build more configuration powers for site-admins
@@ -103,8 +103,8 @@ in the future.
 After signing up and logging in, go to
 `https://<domain>/site-admin/self-promotion`. Follow the steps. You'll
 need shell access to the directory with the Screenshotbot
-installation. At the end you'll get access to a Site Admin menu on the
-bottom left.
+installation. You'll now have access to an Admin menu on the bottom
+left.
 
 ### Upgrading
 
