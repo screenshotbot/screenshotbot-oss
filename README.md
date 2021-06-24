@@ -168,3 +168,27 @@ killing the Lisp process. However killing the Lisp process can cause a
 minor downtime. You can work around this by using a tool called
 `socketmaster`, but the description of that tool is beyond the scope
 of this document.
+
+## Contributing
+
+We welcome Pull Requests!
+
+Keep in mind, we'll do the code review on GitHub, but we'll merge it
+via our internal Phabricator instance. The source of truth for the
+code is in our internal mono-repo, which is copied over to the OSS
+code via Copybara, similar to the process that Google and Facebook
+use. We have open sourced many other projects where the source of
+truth is GitHub, but Screenshotbot is an actively-developed complex
+application that makes this difficult.
+
+We might reject large new features if we think it adds too much
+maintenance overhead for us. Bug-fixes are always welcome.
+
+## Authors
+
+Screenshotbot is built and maintained by Arnold Noronha
+(arnold@screenshotbot.io).
+
+## License
+
+Screenshot is licensed under the Mozilla Public License, v2.
