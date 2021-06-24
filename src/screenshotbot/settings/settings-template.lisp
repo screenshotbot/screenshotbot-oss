@@ -41,7 +41,10 @@
 
 (deftag settings-template (children)
   (let ((sections (mapcar 'settings-section (mapcar 'cdr (all-settings (installation))))))
-    (assert (equal (sort `(nil :vcs :tasks) #'string<) (sort (remove-duplicates sections) #'string<)))
+    (assert (equal nil
+                   (set-difference (remove-duplicates sections)
+                                   '(nil :vcs :tasks)
+                                   :test #'string=)))
 
       <dashboard-template scripts= (list
                                 "/assets/js/settings.js")
