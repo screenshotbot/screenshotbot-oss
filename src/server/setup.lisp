@@ -43,6 +43,7 @@
 (defvar *verify-store*)
 (defvar *socketmaster*)
 (defvar *shell*)
+(defvar *start-swank*)
 
 (defparameter *options*
   `((*port* #+screenshotbot-oss "4091"
@@ -52,7 +53,7 @@
     (*swank-port* #+screenshotbot-oss "4095"
                   #-screenshotbot-oss "4005"
                   "" :params ("SWANK-PORT"))
-    (*start-swank* #+screenshotot-oss nil
+    (*start-swank* #+screenshotbot-oss nil
                    #-screenshotbot-oss t
                    "")
     (util:*object-store* #+screenshotbot-oss "~/.config/screenshotbot/object-store/"
@@ -199,6 +200,9 @@
           (log:info "Swank has started up, but we're not going to start hunchentoot. Call (QUIT) from swank when done."))
          (t
           (hunchentoot:start *multi-acceptor*)))
+
+       (format t "The web server is live at port ~a. See logs/logs for more logs~%"
+               *port*)
 
        (log:info "Now we wait indefinitely for shutdown notifications")
        (bt:condition-wait *shutdown-cv* *server-lock*))))
