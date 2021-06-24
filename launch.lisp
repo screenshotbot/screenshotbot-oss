@@ -9,4 +9,6 @@
 (ql:quickload "server")
 (ql:quickload "screenshotbot")
 
+(screenshotbot/config:load-config)
+
 (server:main)

@@ -31,7 +31,3 @@
          (load config.lisp)))
       (t
        (log:info "No config.lisp found")))))
-
-#+screenshotbot-oss
-(defmethod hunchentoot:start :before ((acceptor screenshotbot/server:acceptor))
-  (load-config))
