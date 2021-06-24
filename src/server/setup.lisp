@@ -143,7 +143,7 @@ ways."
                               (make-instance 'utf-8-daily-file-appender
                                               :name-format log-file
                                               :backup-name-format
-                                              (format nil "~a.%Y%m%d" log-file)
+                                              "logs.%Y%m%d"
                                               :filter 4
                                               :layout (make-instance 'log4cl:simple-layout))))
 
