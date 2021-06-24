@@ -19,6 +19,21 @@ and we'll handle the rest.
 
 ## Installation
 
+Screenshotbot is written in Common Lisp. Common Lisp has several
+commercial and open source implementations. We officially support
+SBCL, Clozure CL (CCL) and LispWorks, but the core features should work on
+any compliant Common Lisp.
+
+Certain features, such as the Slack integration, use third-party Java
+libraries. Java is not supported in SBCL, so if you need these
+integrations you should use either CCL or LispWorks.
+
+LispWorks is a commercial platform, and can get expensive. Contact us
+if you need pre-built binaries on LispWorks, but it'll come with
+additional licensing restrictions. SBCL is more performant that CCL
+especially with multi-threading, but we think CCL should satisfy your
+needs if you do need Java support.
+
 ## Using the CLI tool
 
 ## Setting up Plugins
