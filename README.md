@@ -36,12 +36,34 @@ needs if you do need Java
 support. [screenshotbot.io](https://screenshotbot.io) is powered by
 LispWorks.
 
+### OS
+
+Currently we primarily support Linux.
+
+In theory we should be able to work on Mac (easy) and Windows
+(harder). If you do go this route, you're on your own. But please send
+us pull requests :)
+
 ### Dependencies
 
 Screenshotbot is built as a monolith service. It does not depend on
 any external service. It does not use an external database. There are
 a few command line tools (such as `imagemagic`) that we use, and we'll
 automatically pull in an Common Lisp dependencies with Quicklisp.
+
+### Launch
+
+Once you've picked your implementation, you can use the implementation
+to load launch.lisp. For example, with SBCL that looks like:
+
+```
+$ sbcl --script launch.lisp
+```
+
+This should start up Screenshotbot on port 4091. You can access it as
+http://localhost:4091 from the browser. All the data will be stored in
+~/.screenshotbot/data-store. If you need to reset the state, you can
+just delete that directory and start over.
 
 
 ## Using the CLI tool

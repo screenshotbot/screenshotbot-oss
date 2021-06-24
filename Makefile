@@ -33,6 +33,7 @@ UNAME=$(shell uname -s)
 DISTINFO=quicklisp/dists/quicklisp/distinfo.txt
 
 REVISION_ID=$(shell echo '{"ids":["$(DIFF_ID)"]}' | arc call-conduit differential.querydiffs | jq -r '.["response"]["$(DIFF_ID)"]["revisionID"]')
+IMAGE_DEPS=scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO) scripts/prepare-image.lisp
 
 ifeq ($(UNAME),Linux)
 	LW_CORE=/opt/software/lispworks/lispworks-7-1-*
@@ -161,10 +162,10 @@ deploy-rsync: .PHONY web-bin
 	rsync -aPz --exclude .git --exclude .web-bin-copy --exclude web-bin ./ ubuntu@mx.tdrhq.com:~/web/
 
 
-build/lw-console: build scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO)
+build/lw-console: build $(IMAGE_DEPS)
 	$(LW_CORE) -build scripts/build-image.lisp
 
-$(sbcl): build scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO)
+$(sbcl): build $(IMAGE_DEPS)
 	$(SBCL_CORE) --script scripts/build-image.lisp
 
 
@@ -190,7 +191,7 @@ deploy-bin: assets
 deploy-pull:
 	ssh web@screenshotbot.io 'cd web && git pull'
 
-$(CCL_IMAGE): build scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO)
+$(CCL_IMAGE): build $(IMAGE_DEPS)
 	rm -f $@
 	$(CCL_CORE) -l scripts/build-image.lisp
 	chmod a+x $@
