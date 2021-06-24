@@ -94,7 +94,7 @@
      (uiop:run-program
       (list
        (namestring
-        (asdf:system-relative-pathname :web.all "common/dart-sass/sass"))
+        (asdf:system-relative-pathname :build-utils "dart-sass/sass"))
        "-I" (namestring copy-dir)
        (let ((child (car (component-children c))))
          (namestring
