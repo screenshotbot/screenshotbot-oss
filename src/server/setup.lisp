@@ -45,11 +45,15 @@
 (defvar *shell*)
 
 (defparameter *options*
-  `((*port* "4001" "" :params ("PORT"))
+  `((*port* #+screenshotbot-oss "4091"
+            #-screenshotbot-oss "4001" "" :params ("PORT"))
     (*socketmaster* t "" :params ("SOCKETMASTER"))
     (*shell* nil "")
-    (*swank-port* "4005" "" :params ("SWANK-PORT"))
-    (util:*object-store* "/data/arnold/object-store/" "" :params ("OBJECT-STORE"))
+    (*swank-port* #+screenshotbot-oss "4095"
+                  #-screenshotbot-oss "4005"
+                  "" :params ("SWANK-PORT"))
+    (util:*object-store* #+screenshotbot-oss "~/.config/screenshotbot/object-store/"
+                         #-screenshotbot-oss "/data/arnold/object-store/" "" :params ("OBJECT-STORE"))
     (*verify-store* nil "")))
 
 (defclass my-acceptor (hunchentoot-multi-acceptor:multi-acceptor)

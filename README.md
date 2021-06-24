@@ -62,8 +62,10 @@ $ sbcl --script launch.lisp
 
 This should start up Screenshotbot on port 4091. You can access it as
 http://localhost:4091 from the browser. All the data will be stored in
-~/.screenshotbot/data-store. If you need to reset the state, you can
-just delete that directory and start over.
+`~/.config/screenshotbot/object-store`. If you need to reset the
+state, you can just delete that directory and start over. But you must
+treat this directory as your database. We recommend keeping this on a
+device with high redundancy, such as RAID or Amazon EBS.
 
 
 ## Using the CLI tool
