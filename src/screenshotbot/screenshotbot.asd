@@ -150,6 +150,10 @@
     :components ((:file "settings-template")
                  (:file "general")
                  (:file "security")))
+   (:module "admin"
+    :serial t
+    :components ((:file "core")
+                 (:file "index")))
    (:module "tasks"
     :serial t
     :components ((:file "common")))
