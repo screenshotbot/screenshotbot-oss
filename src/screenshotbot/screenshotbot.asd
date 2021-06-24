@@ -34,6 +34,7 @@
   ((:file "ignore-and-log-errors")
    (:file "analytics" :depends-on ("ignore-and-log-errors"))
    (:file "plugin")
+   (:file "mailer")
    (:file "installation")
    (:file "secret")
    (:file "server" :depends-on ("analytics"))

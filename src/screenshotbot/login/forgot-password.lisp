@@ -13,6 +13,10 @@
           #:../form-errors)
   (:import-from #:../server
                 #:defhandler)
+  (:import-from #:../installation
+                #:mailer*)
+  (:import-from #:../mailer
+                #:send-mail)
   (:import-from #:./common
                 #:auth-template)
   (:import-from #:bknr.datastore
@@ -121,10 +125,9 @@
                                          (reset-password-after-confirmation :user user
                                                                             :req request))))
                          (restart-case
-                             (util:send-mail
+                             (send-mail (mailer*)
                               :to email
                               :subject "Password recovery"
-                              :from "Screenshotbot <support@screenshotbot.io>"
                               :html-message (password-recovery-mail :confirm confirm))
                            (redirect-to-change-nibble-link ()
                              (hunchentoot:redirect (nibble:nibble-full-url confirm)))))

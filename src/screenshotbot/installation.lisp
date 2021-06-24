@@ -9,13 +9,17 @@
 (pkg:define-package :screenshotbot/installation
     (:use #:cl
           #:./plugin)
+  (:import-from #:./mailer
+                #:noop-mailer)
   (:export #:installation
            #:plugin
            #:find-plugin
            #:with-plugin
            #:plugins
+           #:mailer
            #:auth-provider
            #:auth-providers
+           #:mailer*
            #:auth-provider-signin-form
            #:auth-provider-signup-form
            #:standard-auth-provider))
@@ -24,10 +28,16 @@
   ((plugins :initform nil
             :initarg :plugins
             :accessor plugins)
+   (mailer :initform (make-instance 'noop-mailer)
+           :initarg :mailer
+           :accessor mailer)
    (auth-providers :initform (list
                               (make-instance 'standard-auth-provider))
                    :initarg :auth-providers
                    :accessor auth-providers)))
+
+(defun mailer* (&optional (installation (installation)))
+  (mailer installation))
 
 (defclass auth-provider ()
   ())

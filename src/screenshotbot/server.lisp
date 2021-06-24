@@ -76,7 +76,9 @@
   for a function, we'll run that as the landing page instead.")
 
 (defvar *disable-mail* nil
-  "Disable emails")
+  "Disable emails. In the future this should be part of NOOP-MAILER,
+  but this is here because we have historical code using it. We might
+  be able to remove it soon.")
 
 (defun document-root ()
   (path:catdir *root* #p"static/"))

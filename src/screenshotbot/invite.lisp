@@ -41,7 +41,10 @@
   (:import-from #:util
                 #:make-url)
   (:import-from #:./installation
+                #:mailer
                 #:installation)
+  (:import-from #:./mailer
+                #:send-mail)
   (:export #:invite-page
            #:render-invite-page))
 
@@ -133,8 +136,8 @@
 
 (defun send-email-for-invite (invite)
   (unless *disable-mail*
-    (util:send-mail
-     :from "Screenshotbot <hello@screenshotbot.io>"
+    (send-mail
+     (mailer (installation))
      :subject (format nil "~a has invited you to join ~a on Screenshotbot"
                       (user-full-name
                        (inviter invite))

@@ -25,9 +25,12 @@
                 #:defhandler)
   (:import-from #:../installation
                 #:auth-providers
+                #:mailer*
                 #:installation
                 #:auth-provider-signup-form
                 #:standard-auth-provider)
+  (:import-from #:../mailer
+                #:send-mail)
   (:import-from #:util
                 #:oid
                 #:find-by-oid)
@@ -245,11 +248,9 @@
 
 (defun send-signup-confirmation (email first-name confirmation)
   (unless *disable-mail*
-    (util:send-mail
-     :from "Screenshotbot <hello@screenshotbot.io>"
+    (send-mail (mailer*)
      :to email
      :subject "Welcome to Screenshotbot"
-     :bcc (list "arnold@tdrhq.com")
      :html-message (render-signup-confirmation first-name confirmation))))
 
 (defhandler (nil :uri "/send-test-confirmation") ()

@@ -48,8 +48,9 @@ us pull requests :)
 
 Screenshotbot is built as a monolith service. It does not depend on
 any external service. It does not use an external database. There are
-a few command line tools (such as `imagemagic`) that we use, and we'll
-automatically pull in an Common Lisp dependencies with Quicklisp.
+a few command line tools (`imagemagic` and `html2text`) that we use,
+and we'll automatically pull in an Common Lisp dependencies with
+Quicklisp.
 
 ### Launch
 
