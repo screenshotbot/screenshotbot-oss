@@ -7,8 +7,8 @@ etc. We provide several integrations to common Code Review and Task
 Management platforms, and have more in the pipeline.
 
 Screenshotbot provides an Open Source alternative to various other
-tools already on the market (Applitools, Percy, Happo etc.) It powers
-our own commercial platform
+tools already on the market (for example, Applitools, Percy,
+Happo). It powers our own commercial platform
 [screenshotbot.io](https://screenshotbot.io).
 
 Unlike the other tools mentioned, this open source library does not
