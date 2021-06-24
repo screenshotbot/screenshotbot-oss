@@ -95,8 +95,8 @@ for a more thorough discussion.
 ### Becoming a Site-Admin
 
 After installing Screenshotbot, we recommend setting up one user as a
-site-admin. The site-admin get special administrative powers that will
-be required for hot-reloading config files, and hot-reloading
+site-admin. The site-admin gets special administrative powers that
+will be required for hot-reloading config files, and hot-reloading
 updates. We might also build more configuration powers for site-admins
 in the future.
 
@@ -107,6 +107,29 @@ installation. You'll now have access to an Admin menu on the bottom
 left.
 
 ### Upgrading
+
+In most cases, upgrading will be done via hot-reloading. As a
+site-admin, you can `git pull` on the repository, on the shell, go to
+go `https://<domain>/admin` and hit `Reload`. This will bring the new
+code live without any downtime.
+
+Small catch: Our database is stored is in-memory (with transactions
+logged to disk for revoery). Hot-reloading code can force schema
+changes. For instance, if a field is deleted between two major
+versions, hot reloading will cause that field to be lost forever (but
+there are snapshots of old versions of the database for recovery). In
+general we'll try to guarantee that between minor versions, on
+released commits, as long as you're upgrading (as opposed to
+downgrading), we'll be able to auto-migrate any schema cleanly.
+
+You can also upgrade by killing the Lisp process and restarting it. If
+you do so, we recommend hitting `Snapshot` on the admin menu before
+killing the Lisp process. However killing the Lisp process can cause a
+minor downtime. You can work around this by using a tool called
+`socketmaster`, but the description of that tool is beyond the scope
+of this document.
+
+
 
 
 ## Using the CLI tool
