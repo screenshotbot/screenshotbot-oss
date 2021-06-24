@@ -235,3 +235,7 @@ Disallow: /n")
                               (sentry-client:capture-exception e)))))
        (funcall fn)))
    args))
+
+#+screenshotbot-oss
+(setf hunchentoot-multi-acceptor:*default-acceptor*
+      *acceptor*)
