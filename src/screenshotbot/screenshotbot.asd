@@ -26,7 +26,6 @@
                :random-sample
                :pem
                ;;:cljwt-custom ;; custom comes from clath, for rs-256
-               :crash-logs
                :screenshotbot/utils
                :do-urlencode
                :documentation-plugin
