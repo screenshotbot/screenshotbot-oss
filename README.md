@@ -106,7 +106,47 @@ need shell access to the directory with the Screenshotbot
 installation. You'll now have access to an Admin menu on the bottom
 left.
 
-### Upgrading
+
+## Calling Screenshotbot from your CI jobs
+
+First, you'll need to generate an API key inside Screenshotbot. You'll
+use this to access the API or the CLI tools.
+
+Next you need to build the CLI tool for your platform. Common Lisp is
+a compiled language, so in general you'll need different binaries for
+different platforms (Linux, Mac or Windows; Intel vs ARM). You can
+download pre-built binaries for Linux and Mac from
+https://screenshotbot.io/recorder.sh.
+
+(As an alternative, Armed Bear Common Lisp, is a specific
+implementation of Common Lisp that can generate platform independent
+JAR files from Common Lisp code. We will officially support ABCL in a
+future release)
+
+To create a binary on a specific platform, call the script
+`build-cli.lisp`. For instance, if you're using SBCL to build the CLI,
+it will look like:
+
+```
+ $ sbcl --script build-cli.lisp
+```
+
+This will generate a screenshotbot-cli executable script. Copy it to a
+location from which it can be dowloading during your CI runs, or check
+it in to your repository. (As of this writing SBCL generates a binary
+that is 105MB in size, and 24MB zipped; CCL 100MB/21MB excluding core;
+LispWorks 25MB/4.4MB. LispWorks has extra features to remove unused
+code.)
+
+For an example use of this executable see:
+https://github.com/tdrhq/fast-example/blob/master/.circleci/config.yml.
+You'll also have to pass the `--hostname` argument, which will be the
+URL of your Screenshotbot installation.
+
+
+## Setting up Plugins
+
+## Upgrading
 
 In most cases, upgrading will be done via hot-reloading. As a
 site-admin, you can `git pull` on the repository, on the shell, go to
@@ -128,12 +168,3 @@ killing the Lisp process. However killing the Lisp process can cause a
 minor downtime. You can work around this by using a tool called
 `socketmaster`, but the description of that tool is beyond the scope
 of this document.
-
-
-
-
-## Using the CLI tool
-
-## Setting up Plugins
-
-## Upgrading Screenshotbot
