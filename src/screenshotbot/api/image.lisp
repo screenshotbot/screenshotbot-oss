@@ -25,17 +25,6 @@
 
 (defvar *bucket* "screenshotbot")
 
-#|
-
-// Initialize the Amazon Cognito credentials provider
-CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
-    getApplicationContext(),
-    "us-east-1:c7d26365-ffca-4de8-b86c-b01b076fcea3", // Identity pool ID
-    Regions.US_EAST_1 // Region
-);
-
-|#
-
 (defclass temporary-credential ()
   ((api-key :type string
             :initarg :api-key
