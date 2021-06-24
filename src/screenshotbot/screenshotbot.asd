@@ -91,7 +91,8 @@
                  (:file "reports")
                  (:file "history")
                  (:file "image")
-                 (:file "mask-builder")))
+                 (:file "mask-builder")
+                 (:file "site-admin")))
    (:file "invite")
    (:module "documentation"
     :components ((:file "doc")))

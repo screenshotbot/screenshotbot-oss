@@ -68,10 +68,14 @@ state, you can just delete that directory and start over. But you must
 treat this directory as your database. We recommend keeping this on a
 device with high redundancy, such as RAID or Amazon EBS.
 
+This might be a good time to put this behing an Nginx or Apache
+webserver proxying to this port, and enable HTTPS. (We highly
+recommend using Certbot for free certificates).
+
 ### Configuration
 
 Screenshotbot has integrations with various external tools,
-e.g. GitHub, Jira, Gitlab etc. Most of these platforms require some
+e.g. GitHub, Jira, SSO etc. Most of these platforms require some
 kind of API key to access their APIs, and must be configured with
 Screenshotbot before you can use them.
 
@@ -87,6 +91,20 @@ file as the configuration.
 See [Updating
 config.lisp](https://github.com/screenshotbot/screenshotbot-oss/wiki/Updating-config.lisp)
 for a more thorough discussion.
+
+### Becoming a Site-Admin
+
+After installing Screenshotbot, we recommend setting up one
+site-admin. The site-admin get special administrative powers that will
+be required for hot-reloading config files, and hot-reloading
+updates. We might also build more configuration powers for site-admins
+in the future.
+
+After signing up and logging in, go to
+`https://<domain>/site-admin/self-promotion`. Follow the steps. You'll
+need shell access to the directory with the Screenshotbot
+installation. At the end you'll get access to a Site Admin menu on the
+bottom left.
 
 ### Upgrading
 
