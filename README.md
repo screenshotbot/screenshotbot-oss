@@ -114,7 +114,7 @@ go `https://<domain>/admin` and hit `Reload`. This will bring the new
 code live without any downtime.
 
 Small catch: Our database is stored is in-memory (with transactions
-logged to disk for revoery). Hot-reloading code can force schema
+logged to disk for recovery). Hot-reloading code can force schema
 changes. For instance, if a field is deleted between two major
 versions, hot reloading will cause that field to be lost forever (but
 there are snapshots of old versions of the database for recovery). In
