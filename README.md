@@ -32,7 +32,17 @@ LispWorks is a commercial platform, and can get expensive. Contact us
 if you need pre-built binaries on LispWorks, but it'll come with
 additional licensing restrictions. SBCL is more performant that CCL
 especially with multi-threading, but we think CCL should satisfy your
-needs if you do need Java support.
+needs if you do need Java
+support. [screenshotbot.io](https://screenshotbot.io) is powered by
+LispWorks.
+
+### Dependencies
+
+Screenshotbot is built as a monolith service. It does not depend on
+any external service. It does not use an external database. There are
+a few command line tools (such as `imagemagic`) that we use, and we'll
+automatically pull in an Common Lisp dependencies with Quicklisp.
+
 
 ## Using the CLI tool
 
