@@ -108,7 +108,6 @@
 
 (define-css "/assets/css/default.css" :screenshotbot.css-assets)
 
-(define-css "/assets/css/docs.css" :screenshotbot.css-assets/doks)
 
 (defhandler (nil :uri "/recorder.sh" :html nil) (no-cdn)
   (setf (hunchentoot:content-type*) "application/x-sh")

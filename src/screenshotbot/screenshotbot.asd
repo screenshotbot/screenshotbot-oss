@@ -15,7 +15,6 @@
                :jose
                :screenshotbot.js-assets
                :screenshotbot.css-assets
-               :screenshotbot.css-assets/doks
                :screenshotbot.java
                :opticl
                :anaphora
