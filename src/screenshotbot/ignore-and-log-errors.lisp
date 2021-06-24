@@ -24,10 +24,12 @@
                                 catch-p)
                                ;; if we don't have a debugger attached, only then
                                ;; send it over to Sentry.
+                               #-screenshotbot-oss
                                (sentry-client:capture-exception e))
                               ((not catch-p)
                                (invoke-debugger e))
                               (t
+                               #-screenshotbot-oss
                                (sentry-client:capture-exception e))))))
       (funcall fn)))))
 
