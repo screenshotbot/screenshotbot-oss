@@ -37,6 +37,7 @@
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:export #:signup-get
+           #:signup-get-page
            #:signup-post))
 
 

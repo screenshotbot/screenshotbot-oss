@@ -131,7 +131,7 @@
 (defmethod invite-signup-link ((invite invite))
   (hex:make-full-url
                   hunchentoot:*request*
-                 'signup-get-page
+                  "/signup"
                    :invite-code (invite-code invite)))
 
 (defun send-email-for-invite (invite)
