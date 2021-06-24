@@ -152,7 +152,7 @@
    (:module "tasks"
     :serial t
     :components ((:file "common")))
-   (:module "config")
+   (:file "config")
    (:file "package")))
 
 
