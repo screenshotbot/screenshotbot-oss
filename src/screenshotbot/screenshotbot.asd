@@ -28,7 +28,6 @@
                ;;:cljwt-custom ;; custom comes from clath, for rs-256
                :screenshotbot/utils
                :do-urlencode
-               :documentation-plugin
                :nibble
                :cl-json)
   :components
