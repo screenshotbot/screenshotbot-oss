@@ -68,9 +68,9 @@ state, you can just delete that directory and start over. But you must
 treat this directory as your database. We recommend keeping this on a
 device with high redundancy, such as RAID or Amazon EBS.
 
-This might be a good time to put this behing an Nginx or Apache
-webserver proxying to this port, and enable HTTPS. (We highly
-recommend using Certbot for free certificates).
+This might be a good time to put Screenshotbot behind an Nginx or
+Apache reverse-proxy, and enable HTTPS. (We highly recommend using
+Certbot for free certificates).
 
 ### Configuration
 
