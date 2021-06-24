@@ -1,4 +1,4 @@
-# Screenshotbot: Open Source Screenshot Testing Tool
+# Screenshotbot: Screenshot Testing Service
 
 Screenshotbot is a Screenshot Testing service. Screenshotbot will
 connect your existing Android, iOS or Selenium tests to track how
@@ -16,3 +16,11 @@ provide browser test runner. There are better open source tools to run
 Selenium or Cypress tests and generate screenshots. Screenshotbot just
 expects you to use these tools to generate a directory of screenshots,
 and we'll handle the rest.
+
+## Installation
+
+## Using the CLI tool
+
+## Setting up Plugins
+
+## Upgrading Screenshotbot
