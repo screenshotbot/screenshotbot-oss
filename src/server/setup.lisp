@@ -52,6 +52,9 @@
     (*swank-port* #+screenshotbot-oss "4095"
                   #-screenshotbot-oss "4005"
                   "" :params ("SWANK-PORT"))
+    (*start-swank* #+screenshotot-oss nil
+                   #-screenshotbot-oss t
+                   "")
     (util:*object-store* #+screenshotbot-oss "~/.config/screenshotbot/object-store/"
                          #-screenshotbot-oss "/data/arnold/object-store/" "" :params ("OBJECT-STORE"))
     (*verify-store* nil "")))
@@ -183,10 +186,12 @@
 
        (util:prepare-store)
 
-
-       (log:info "starting up swank")
        (cl-cron:start-cron)
-       (Server:swank-loop)
+
+
+       (when *start-swank*
+         (log:info "starting up swank")
+         (Server:swank-loop))
 
 
        (cond
