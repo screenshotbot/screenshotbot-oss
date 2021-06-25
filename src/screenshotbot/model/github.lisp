@@ -32,26 +32,6 @@
            #:known-emails
            #:access-token-string))
 
-(defclass oauth-access-token (store-object)
-  ((access-token :type (or null string)
-                 :initarg :access-token
-                 :accessor access-token-string)
-   (expires-in :type (or null integer)
-               :initarg :expires-in)
-   (refresh-token :type (or null string)
-                  :initarg :refresh-token)
-   (refresh-token-expires-in :type (or null integer)
-                             :initarg :refresh-token-expires-in)
-   (scope :type (or null string)
-          :initarg :scope)
-   (token-type :type (or null string)
-               :initarg :token-type))
-  (:metaclass persistent-class))
-
-(defclass github-access-token (oauth-access-token)
-  ()
-  (:metaclass persistent-class))
-
 (defclass github-user (store-object)
   ((gh-user-id :type integer
                :initarg :gh-user-id
@@ -63,8 +43,6 @@
           :initarg :email
           :initform nil
           :accessor oauth-user-email)
-   (access-token
-    :accessor access-token)
    (full-name :type (or null string)
               :initarg :full-name
               :initform nil
