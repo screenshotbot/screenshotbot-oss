@@ -9,6 +9,20 @@
           #:alexandria)
   (:import-from #:./installation
                 #:installation)
+  (:import-from #:./github
+                #:github-plugin)
+  (:import-from #:./phabricator
+                #:phabricator-plugin)
+  (:import-from #:./mailer
+                #:local-smtp-mailer
+                #:noop-mailer)
+  #+lispworks
+  (:import-from #:./slack
+                #:slack-plugin)
+  (:import-from #:screenshotbot/login/github-oauth
+                #:github-oauth-provider)
+  (:import-from #:screenshotbot/login/google-oauth
+                #:google-oauth-provider)
   (:export #:load-config))
 
 (defun find-config.lisp ()
