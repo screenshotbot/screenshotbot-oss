@@ -40,7 +40,7 @@
 (screenshotbot/admin/core:defadminhandler (reload-config-page :uri "/admin/reload-config") ()
   (hex:safe-redirect (nibble:nibble (:once t)
                        (screenshotbot/ui:confirmation-page
-                        :yes (nibble:nibble ()
+                        :yes (nibble:nibble (:once t)
                                (load-config)
                                (hex:safe-redirect "/admin"))
                         :no "/admin"
