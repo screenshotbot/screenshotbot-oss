@@ -26,6 +26,8 @@
   (:import-from #:bknr.datastore
                 #:store-objects-with-class
                 #:with-transaction)
+  (:import-from #:./oidc
+                #:oauth-get-access-token)
   (:export #:prepare-gh-user
            #:prepare-oauth-user
            #:make-gh-oauth-link
