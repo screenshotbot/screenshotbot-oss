@@ -9,3 +9,5 @@
                  (re-search-forward regexp nil t))
          (match-string-no-properties 2))))
    (slime-search-buffer-package)))
+
+(setf slime-find-buffer-package-function 'cl-pkg-search-buffer-package)

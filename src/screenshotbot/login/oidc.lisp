@@ -65,12 +65,8 @@
    (setf (cached-discovery oidc)
     (let ((url (format nil "~a/.well-known/openid-configuration"
                        (issuer oidc))))
-      (with-open-stream (stream
-                         (drakma:http-request
-                          url
-                          :want-stream t
-                          :force-binary t))
-        (json:decode-json stream))))))
+      (json:decode-json-from-string (dex:get url))))))
+
 
 (defmethod authorization-endpoint ((oidc oidc-provider))
   (assoc-value (discover oidc) :authorization--endpoint))
@@ -106,15 +102,14 @@
 
 (defun oauth-get-access-token (token-url &key client_id client_secret code
                                                       redirect_uri)
-  (with-open-stream (stream (drakma:http-request  token-url
-                                                  :want-stream t
-                                                  :method :post
-                                                  :accept "application/json"
-                                                  :parameters `(("client_id" . ,client_id)
-                                                                ("client_secret" . ,client_secret)
-                                                                ("code" . ,code)
-                                                                ("grant_type" . "authorization_code")
-                                                                ("redirect_uri" . ,redirect_uri))))
+  (with-open-stream (stream (dex:post token-url
+                                      :want-stream t
+                                      :headers `(("Accept" . "application/json"))
+                                      :content `(("client_id" . ,client_id)
+                                                 ("client_secret" . ,client_secret)
+                                                 ("code" . ,code)
+                                                 ("grant_type" . "authorization_code")
+                                                 ("redirect_uri" . ,redirect_uri))))
     (let ((resp
             (json:decode-json stream)))
       (log:info "Got response ~s" resp)
@@ -134,7 +129,7 @@
 
 (defun make-json-request (url &rest args)
   (multiple-value-bind (stream status-code)
-      (apply 'drakma:http-request url
+      (apply 'dex:request url
              :want-stream t
              args)
     (with-open-stream (stream stream)
@@ -158,10 +153,11 @@
                                 'oauth-callback))))
     (let ((user-info
             (make-json-request (userinfo-endpoint auth)
-                               :parameters `(("access_token"
-                                              .
-                                              ,(access-token-str token))
-                                             ("alt" . "json")))))
+                               :method :post
+                               :content `(("access_token"
+                                           .
+                                           ,(access-token-str token))
+                                          ("alt" . "json")))))
       (let ((user (prepare-oidc-user
                    auth
                    :user-id (assoc-value user-info :sub)

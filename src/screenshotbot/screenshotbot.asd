@@ -16,6 +16,7 @@
                :screenshotbot.js-assets
                :screenshotbot.css-assets
                :screenshotbot.java
+               :dexador
                :opticl
                :anaphora
                :dag
