@@ -31,3 +31,19 @@
          (load config.lisp)))
       (t
        (log:info "No config.lisp found")))))
+
+;;;; I suppose I'm misusing the screenshotbot/config package for bot
+;;;; this file and for the package the config.lisp is loaded from. In
+;;;; any case, I didn't want to pollute the package so that's why the
+;;;; following symbols are not imported.
+
+(screenshotbot/admin/core:defadminhandler (reload-config-page :uri "/admin/reload-config") ()
+  (hex:safe-redirect (nibble:nibble (:once t)
+                       (screenshotbot/ui:confirmation-page
+                        :yes (nibble:nibble ()
+                               (load-config)
+                               (hex:safe-redirect "/admin"))
+                        :no "/admin"
+                        "Reload the config.lisp?"))))
+
+(screenshotbot/admin/core:register-admin-menu "Reload config.lisp" 'reload-config-page)
