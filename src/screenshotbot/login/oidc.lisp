@@ -9,6 +9,8 @@
           #:alexandria
           #:nibble
           #:./common)
+  (:import-from #:../user-api
+                #:current-user)
   (:export #:client-id
            #:client-secret
            #:oidc-provider
@@ -18,7 +20,24 @@
            #:authorization-endpoint
            #:token-endpoint
            #:userinfo-endpoint
-           #:oidc-callback))
+           #:access-token-class
+           #:oidc-callback
+           #:prepare-oidc-user))
+
+(defclass oauth-access-token ()
+  ((access-token :type (or null string)
+                 :initarg :access-token
+                 :accessor access-token-string)
+   (expires-in :type (or null integer)
+               :initarg :expires-in)
+   (refresh-token :type (or null string)
+                  :initarg :refresh-token)
+   (refresh-token-expires-in :type (or null integer)
+                             :initarg :refresh-token-expires-in)
+   (scope :type (or null string)
+          :initarg :scope)
+   (token-type :type (or null string)
+               :initarg :token-type)))
 
 (defclass oidc-provider (abstract-oauth-provider)
   ((oauth-name :initform "Generic OIDC")
@@ -36,7 +55,9 @@
           :initform "openid"
           :documentation "The default scope used for authorization")
    (cached-discovery :initform nil
-                     :accessor cached-discovery)))
+                     :accessor cached-discovery)
+   (access-token-class :initform 'oauth-access-token
+                       :reader access-token-class)))
 
 (defmethod discover ((oidc oidc-provider))
   "Returns an alist of all the fields in the discovery document"
@@ -83,3 +104,81 @@
 
 (defmethod oauth-signup-link ((auth oidc-provider) redirect)
   (make-oidc-auth-link auth redirect))
+
+(defun oauth-get-access-token (token-url token-type &key client_id client_secret code
+                                                      redirect_uri)
+  (with-open-stream (stream (drakma:http-request  token-url
+                                                  :want-stream t
+                                                  :method :post
+                                                  :accept "application/json"
+                                                  :parameters `(("client_id" . ,client_id)
+                                                                ("client_secret" . ,client_secret)
+                                                                ("code" . ,code)
+                                                                ("grant_type" . "authorization_code")
+                                                                ("redirect_uri" . ,redirect_uri))))
+    (let ((resp
+            (json:decode-json stream)))
+      (log:info "Got response ~s" resp)
+      (when (assoc-value resp :error)
+        (error "oauth error: ~s" (assoc-value resp :error--description)))
+      (flet ((v (x) (assoc-value resp x)))
+        (let ((access-token (make-instance token-type
+                                           :access-token (v :access--token)
+                                           :expires-in (v :expires--in)
+                                           :refresh-token (v :refresh--token)
+                                           :refresh-token-expires-in (v :refresh--token--expires--in)
+                                           :scope (v :scope)
+                                           :token-type (v :token--type))))
+          access-token)))))
+
+
+
+(defun make-json-request (url &rest args)
+  (multiple-value-bind (stream status-code)
+      (apply 'drakma:http-request url
+             :want-stream t
+             args)
+    (with-open-stream (stream stream)
+     (case status-code
+       (200
+        (values
+         (json:decode-json stream)
+         status-code))
+       (otherwise
+        (error "Failed to make json request, status code ~a" status-code))))))
+
+
+(defmethod oidc-callback ((auth oidc-provider) code redirect)
+  (let ((token (oauth-get-access-token
+                (token-endpoint auth)
+                (access-token-class auth)
+                 :client_id (client-id auth)
+                 :client_secret (client-secret auth)
+                 :code code
+                 :redirect_uri (hex:make-full-url
+                                hunchentoot:*request*
+                                'oauth-callback))))
+    (let ((user-info
+            (make-json-request (userinfo-endpoint auth)
+                               :parameters `(("access_token"
+                                              .
+                                              ,(access-token-string token))
+                                             ("alt" . "json")))))
+      (let ((user (prepare-oidc-user
+                   auth
+                   :user-id (assoc-value user-info :sub)
+                   :email (assoc-value user-info :email)
+                   :full-name (assoc-value user-info :name)
+                   :avatar (assoc-value user-info :picture))))
+        (setf (current-user) user)
+        (hex:safe-redirect redirect)))))
+
+(defgeneric prepare-oidc-user (auth &key user-id email full-name avatar)
+  (:documentation "Once we have all the information about the user
+  that just logged in, convert this into a user in Screenshotbot. You
+  may have to look up existing users to figure out which user this is
+  mapped to."))
+
+(defmethod prepare-oidc-user ((auth oidc-provider) &key user-id email full-name avatar)
+  (declare (ignore user-id email full-name avatar))
+  (error "unimplemented"))

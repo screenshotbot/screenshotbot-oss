@@ -66,32 +66,6 @@
   (make-gh-oauth-link auth redirect))
 
 
-(defun oauth-get-access-token (token-url token-type &key client_id client_secret code
-                                                      redirect_uri)
-  (with-open-stream (stream (drakma:http-request  token-url
-                                                  :want-stream t
-                                                  :method :post
-                                                  :accept "application/json"
-                                                  :parameters `(("client_id" . ,client_id)
-                                                                ("client_secret" . ,client_secret)
-                                                                ("code" . ,code)
-                                                                ("grant_type" . "authorization_code")
-                                                                ("redirect_uri" . ,redirect_uri))))
-    (let ((resp
-            (json:decode-json stream)))
-      (log:info "Got response ~s" resp)
-      (when (assoc-value resp :error)
-        (error "oauth error: ~s" (assoc-value resp :error--description)))
-      (flet ((v (x) (assoc-value resp x)))
-        (let ((access-token (make-instance token-type
-                                           :access-token (v :access--token)
-                                           :expires-in (v :expires--in)
-                                           :refresh-token (v :refresh--token)
-                                           :refresh-token-expires-in (v :refresh--token--expires--in)
-                                           :scope (v :scope)
-                                           :token-type (v :token--type))))
-          access-token)))))
-
 (defhandler (nil :uri "/gh-oauth-callback") (code state)
   (error "DEPRECATED callback"))
 

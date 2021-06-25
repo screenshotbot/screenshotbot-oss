@@ -35,8 +35,10 @@
    (issuer :initform "https://accounts.google.com")
    (scope :initform "openid email profile")))
 
+
 (defclass google-access-token (oauth-access-token)
   ()
+  (:documentation "DEPRECATED: do not use")
   (:metaclass persistent-class))
 
 (defclass google-user (store-object)
@@ -57,52 +59,15 @@
   (:metaclass persistent-class))
 
 
-(defun make-json-request (url &rest args)
-  (multiple-value-bind (stream status-code)
-      (apply 'drakma:http-request url
-             :want-stream t
-             args)
-    (with-open-stream (stream stream)
-     (case status-code
-       (200
-        (values
-         (json:decode-json stream)
-         status-code))
-       (otherwise
-        (error "Failed to make json request, status code ~a" status-code))))))
-
-(defun prepare-google-user (&rest all &key user-id email full-name avatar)
-  (declare (ignore email full-name avatar))
+(defmethod prepare-oidc-user ((auth google-oauth-provider)
+                               &rest all &key user-id email full-name avatar)
+  (declare (ignore email full-name avatar auth))
   (let ((google-user (or
                       (%find-google-user-by-id user-id)
                       (make-instance 'google-user
                                      :user-id user-id))))
     (apply 'prepare-oauth-user
            google-user all)))
-
-(defmethod oidc-callback (auth code redirect)
-  (let ((token (oauth-get-access-token
-                (token-endpoint auth)
-                'google-access-token
-                 :client_id (client-id auth)
-                 :client_secret (client-secret auth)
-                 :code code
-                 :redirect_uri (hex:make-full-url
-                                hunchentoot:*request*
-                                'oauth-callback))))
-    (let ((user-info
-            (make-json-request (userinfo-endpoint auth)
-                               :parameters `(("access_token"
-                                              .
-                                              ,(access-token-string token))
-                                             ("alt" . "json")))))
-      (let ((user (prepare-google-user
-                   :user-id (assoc-value user-info :sub)
-                   :email (assoc-value user-info :email)
-                   :full-name (assoc-value user-info :name)
-                   :avatar (assoc-value user-info :picture))))
-        (setf (current-user) user)
-        (hex:safe-redirect redirect)))))
 
 
 (defmethod oauth-logo-svg ((auth google-oauth-provider))

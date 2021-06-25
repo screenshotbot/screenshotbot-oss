@@ -127,9 +127,9 @@
    (:module "login"
     :serial t
     :components ((:file "common")
+                 (:file "oidc")
                  (:file "github-oauth")
                  (:file "github-oauth-ui")
-                 (:file "oidc")
                  (:file "google-oauth")
                  (:file "login")
                  (:file "populate")
