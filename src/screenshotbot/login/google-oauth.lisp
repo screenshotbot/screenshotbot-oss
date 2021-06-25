@@ -11,6 +11,7 @@
           #:./github-oauth
           #:./common
           #:../model/user
+          #:./oidc
           #:../user-api
           #:../model/github)
   (:import-from #:../server
@@ -29,12 +30,10 @@
 
 (markup:enable-reader)
 
-(defclass google-oauth-provider (abstract-oauth-provider)
+(defclass google-oauth-provider (oidc-provider)
   ((oauth-name :initform "Google")
-   (client-id :initarg :client-id
-              :accessor client-id)
-   (client-secret :initarg :client-secret
-                  :accessor client-secret)))
+   (issuer :initform "https://accounts.google.com")
+   (scope :initform "openid email profile")))
 
 (defclass google-access-token (oauth-access-token)
   ()
@@ -58,16 +57,17 @@
   (:metaclass persistent-class))
 
 (defun make-google-oauth-link (oauth redirect)
-  (let ((redirect (nibble (code)
-                    (%google-oauth-callback oauth code redirect))))
-   (format nil "https://accounts.google.com~a"
-           (hex:make-url
-            "/o/oauth2/v2/auth"
-            :redirect_uri (hex:make-full-url hunchentoot:*request* "/google-oauth-redirect")
-            :client_id (client-id oauth)
-            :state (nibble:nibble-id redirect)
-            :response_type "code"
-            :scope "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"))))
+  (let* ((auth-uri (quri:uri (authorization-endpoint oauth)))
+         (redirect (nibble (code)
+                     (%google-oauth-callback oauth code redirect))))
+
+    (setf (quri:uri-query-params auth-uri)
+          `(("redirect_uri" . ,(hex:make-full-url hunchentoot:*request* 'oauth-callback))
+            ("client_id" . ,(client-id oauth))
+            ("state" . ,(format nil "~d" (nibble:nibble-id redirect)))
+            ("response_type" . "code")
+            ("scope" . ,(scope oauth))))
+    (quri:render-uri auth-uri)))
 
 (defmethod oauth-signin-link ((auth google-oauth-provider) redirect)
   (make-google-oauth-link auth redirect))
@@ -111,16 +111,16 @@
 
 (defun %google-oauth-callback (auth code redirect)
   (let ((token (oauth-get-access-token
-                "https://oauth2.googleapis.com/token"
+                (token-endpoint auth)
                 'google-access-token
                  :client_id (client-id auth)
                  :client_secret (client-secret auth)
                  :code code
                  :redirect_uri (hex:make-full-url
                                 hunchentoot:*request*
-                                'google-oauth-redirect))))
+                                'oauth-callback))))
     (let ((user-info
-            (make-json-request "https://www.googleapis.com/oauth2/v3/userinfo"
+            (make-json-request (userinfo-endpoint auth)
                                :parameters `(("access_token"
                                               .
                                               ,(access-token-string token))

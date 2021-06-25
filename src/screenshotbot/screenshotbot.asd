@@ -129,6 +129,7 @@
     :components ((:file "common")
                  (:file "github-oauth")
                  (:file "github-oauth-ui")
+                 (:file "oidc")
                  (:file "google-oauth")
                  (:file "login")
                  (:file "populate")
