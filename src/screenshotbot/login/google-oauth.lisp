@@ -35,12 +35,6 @@
    (issuer :initform "https://accounts.google.com")
    (scope :initform "openid email profile")))
 
-
-(defclass google-access-token (oauth-access-token)
-  ()
-  (:documentation "DEPRECATED: do not use")
-  (:metaclass persistent-class))
-
 (defclass google-user (store-object)
   ((email :initarg :email
           :accessor oauth-user-email)
@@ -57,7 +51,6 @@
          :initform nil
          :accessor oauth-user-user))
   (:metaclass persistent-class))
-
 
 (defmethod prepare-oidc-user ((auth google-oauth-provider)
                                &rest all &key user-id email full-name avatar)
