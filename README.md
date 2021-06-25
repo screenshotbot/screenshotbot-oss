@@ -146,9 +146,9 @@ URL of your Screenshotbot installation.
 
 ## Feature Status
 
-Not all the features on [screenshotbot.io] are available in this OSS
-repository. We are in the process of moving most integrations here,
-but that will depend on community interest.
+Not all the features on [screenshotbot.io](https://screenshotbot.io)
+are available in this OSS repository. We are in the process of moving
+most integrations here, but that will depend on community interest.
 | Feature             | LispWorks | CCL       | SBCL              | screenshotbot.io  (Enterprise) |
 |:-------------------:|:---------:|:---------:|:-----------------:|:------------------------------:|
 | *SSO/OAuth*         |           |           |                   |                                |
@@ -171,8 +171,10 @@ but that will depend on community interest.
 | Jira                | Planned   | Planned   | Not supported [1] | Supported                      |
 
 Footnotes:
-[1] Not supported because SBCL doesn't support Java
-[2] Annotations allow you to create tasks directly from Screenshotbot
+
+1. Not supported because SBCL doesn't support Java
+
+2. Annotations allow you to create tasks directly from Screenshotbot
 
 ## Upgrading
 
