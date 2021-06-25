@@ -99,16 +99,6 @@
     (apply 'prepare-oauth-user
            google-user all)))
 
-(defhandler (google-oauth-redirect :uri "/google-oauth-redirect") (code scope authuser prompt state)
-  "Deprecated: this is for backward compatibility. Use
-/account/oauth-callback as your callback for any OAuth application "
-  (hex:safe-redirect 'oauth-callback
-                      :code code
-                      :scope scope
-                      :authuser authuser
-                      :prompt prompt
-                      :state state))
-
 (defun %google-oauth-callback (auth code redirect)
   (let ((token (oauth-get-access-token
                 (token-endpoint auth)
