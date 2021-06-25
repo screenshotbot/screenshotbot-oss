@@ -21,13 +21,14 @@
            #:token-endpoint
            #:userinfo-endpoint
            #:access-token-class
+           #:access-token-str
            #:oidc-callback
            #:prepare-oidc-user))
 
 (defclass oauth-access-token ()
   ((access-token :type (or null string)
                  :initarg :access-token
-                 :accessor access-token-string)
+                 :accessor access-token-str)
    (expires-in :type (or null integer)
                :initarg :expires-in)
    (refresh-token :type (or null string)
@@ -55,9 +56,7 @@
           :initform "openid"
           :documentation "The default scope used for authorization")
    (cached-discovery :initform nil
-                     :accessor cached-discovery)
-   (access-token-class :initform 'oauth-access-token
-                       :reader access-token-class)))
+                     :accessor cached-discovery)))
 
 (defmethod discover ((oidc oidc-provider))
   "Returns an alist of all the fields in the discovery document"
@@ -105,7 +104,7 @@
 (defmethod oauth-signup-link ((auth oidc-provider) redirect)
   (make-oidc-auth-link auth redirect))
 
-(defun oauth-get-access-token (token-url token-type &key client_id client_secret code
+(defun oauth-get-access-token (token-url &key client_id client_secret code
                                                       redirect_uri)
   (with-open-stream (stream (drakma:http-request  token-url
                                                   :want-stream t
@@ -122,7 +121,7 @@
       (when (assoc-value resp :error)
         (error "oauth error: ~s" (assoc-value resp :error--description)))
       (flet ((v (x) (assoc-value resp x)))
-        (let ((access-token (make-instance token-type
+        (let ((access-token (make-instance 'oauth-access-token
                                            :access-token (v :access--token)
                                            :expires-in (v :expires--in)
                                            :refresh-token (v :refresh--token)
@@ -151,8 +150,7 @@
 (defmethod oidc-callback ((auth oidc-provider) code redirect)
   (let ((token (oauth-get-access-token
                 (token-endpoint auth)
-                (access-token-class auth)
-                 :client_id (client-id auth)
+                :client_id (client-id auth)
                  :client_secret (client-secret auth)
                  :code code
                  :redirect_uri (hex:make-full-url
@@ -162,7 +160,7 @@
             (make-json-request (userinfo-endpoint auth)
                                :parameters `(("access_token"
                                               .
-                                              ,(access-token-string token))
+                                              ,(access-token-str token))
                                              ("alt" . "json")))))
       (let ((user (prepare-oidc-user
                    auth

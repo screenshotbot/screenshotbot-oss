@@ -48,7 +48,6 @@
                :initarg :token-type))
   (:metaclass persistent-class))
 
-;; For old bknr.datastore objects
 (defclass github-access-token (oauth-access-token)
   ()
   (:metaclass persistent-class))

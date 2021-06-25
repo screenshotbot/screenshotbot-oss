@@ -9,8 +9,8 @@
           #:alexandria
           #:./common
           #:../java
-          #:../user-api
           #:../model/user
+          #:../user-api
           #:../model/company
           #:../github/access-checks
           #:../model/github)
@@ -27,12 +27,14 @@
                 #:store-objects-with-class
                 #:with-transaction)
   (:import-from #:./oidc
+                #:access-token-str
                 #:oauth-get-access-token)
   (:export #:prepare-gh-user
            #:prepare-oauth-user
            #:make-gh-oauth-link
            #:oauth-get-access-token
            #:github-oauth-provider))
+
 
 (named-readtables:in-readtable java-syntax)
 
@@ -67,25 +69,17 @@
   (declare (ignore auth))
   (make-gh-oauth-link auth redirect))
 
-
-(defhandler (nil :uri "/gh-oauth-callback") (code state)
-  (error "DEPRECATED callback"))
-
 (defun %gh-oauth-callback (auth-provider code redirect)
   (restart-case
       (progn
         (let ((access-token (oauth-get-access-token
                              "https://github.com/login/oauth/access_token"
-                             'github-access-token
                              :client_id (client-id auth-provider)
                              :client_secret (client-secret auth-provider)
                              :code code
                              :redirect_uri (hex:make-full-url hunchentoot:*request*
                                                               'oauth-callback))))
           (let ((user (get-user-from-gh-access-token access-token)))
-            (with-transaction ()
-              (setf (access-token (github-user user))
-                    access-token))
             (setf (current-user) user))
           (hex:safe-redirect redirect)))
     (retry-gh-oauth-callback ()
@@ -109,7 +103,7 @@
       (get-github-emails access-token-str))))
 
 (defun get-user-from-gh-access-token (access-token)
-  (with-slots (access-token) access-token
+  (let ((access-token (access-token-str access-token)))
     (let* ((client (github-client :oauth-token access-token))
            (user-service (github-user-service client))
            (user (#_getUser user-service))
