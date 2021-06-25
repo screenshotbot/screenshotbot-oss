@@ -56,25 +56,6 @@
          :accessor oauth-user-user))
   (:metaclass persistent-class))
 
-(defun make-google-oauth-link (oauth redirect)
-  (let* ((auth-uri (quri:uri (authorization-endpoint oauth)))
-         (redirect (nibble (code)
-                     (%google-oauth-callback oauth code redirect))))
-
-    (setf (quri:uri-query-params auth-uri)
-          `(("redirect_uri" . ,(hex:make-full-url hunchentoot:*request* 'oauth-callback))
-            ("client_id" . ,(client-id oauth))
-            ("state" . ,(format nil "~d" (nibble:nibble-id redirect)))
-            ("response_type" . "code")
-            ("scope" . ,(scope oauth))))
-    (quri:render-uri auth-uri)))
-
-(defmethod oauth-signin-link ((auth google-oauth-provider) redirect)
-  (make-google-oauth-link auth redirect))
-
-(defmethod oauth-signup-link ((auth google-oauth-provider) redirect)
-  (make-google-oauth-link auth redirect))
-
 
 (defun make-json-request (url &rest args)
   (multiple-value-bind (stream status-code)
@@ -99,7 +80,7 @@
     (apply 'prepare-oauth-user
            google-user all)))
 
-(defun %google-oauth-callback (auth code redirect)
+(defmethod oidc-callback (auth code redirect)
   (let ((token (oauth-get-access-token
                 (token-endpoint auth)
                 'google-access-token

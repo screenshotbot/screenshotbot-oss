@@ -7,6 +7,7 @@
 (pkg:define-package :screenshotbot/login/oidc
     (:use #:cl
           #:alexandria
+          #:nibble
           #:./common)
   (:export #:client-id
            #:client-secret
@@ -16,7 +17,8 @@
            #:discover
            #:authorization-endpoint
            #:token-endpoint
-           #:userinfo-endpoint))
+           #:userinfo-endpoint
+           #:oidc-callback))
 
 (defclass oidc-provider (abstract-oauth-provider)
   ((oauth-name :initform "Generic OIDC")
@@ -59,4 +61,25 @@
 (defmethod userinfo-endpoint ((oidc oidc-provider))
   (assoc-value (discover oidc) :userinfo--endpoint))
 
+(defgeneric oidc-callback (auth code redirect))
+
 ;; (token-endpoint (make-instance 'oidc-provider :issuer "https://accounts.google.com"))
+
+(defun make-oidc-auth-link (oauth redirect)
+  (let* ((auth-uri (quri:uri (authorization-endpoint oauth)))
+         (redirect (nibble (code)
+                     (oidc-callback oauth code redirect))))
+
+    (setf (quri:uri-query-params auth-uri)
+          `(("redirect_uri" . ,(hex:make-full-url hunchentoot:*request* 'oauth-callback))
+            ("client_id" . ,(client-id oauth))
+            ("state" . ,(format nil "~d" (nibble:nibble-id redirect)))
+            ("response_type" . "code")
+            ("scope" . ,(scope oauth))))
+    (quri:render-uri auth-uri)))
+
+(defmethod oauth-signin-link ((auth oidc-provider) redirect)
+  (make-oidc-auth-link auth redirect))
+
+(defmethod oauth-signup-link ((auth oidc-provider) redirect)
+  (make-oidc-auth-link auth redirect))
