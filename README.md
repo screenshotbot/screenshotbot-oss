@@ -144,7 +144,35 @@ You'll also have to pass the `--hostname` argument, which will be the
 URL of your Screenshotbot installation.
 
 
-## Setting up Plugins
+## Feature Status
+
+Not all the features on [screenshotbot.io] are available in this OSS
+repository. We are in the process of moving most integrations here,
+but that will depend on community interest.
+| Feature             | LispWorks | CCL       | SBCL              | screenshotbot.io  (Enterprise) |
+|:-------------------:|:---------:|:---------:|:-----------------:|:------------------------------:|
+| *SSO/OAuth*         |           |           |                   |                                |
+| GitHub              | Supported | Supported | Supported         | Supported                      |
+| Google              | Supported | Supported | Supported         | Supported                      |
+|                     |           |           |                   |                                |
+| *VCS Integrations*  |           |           |                   |                                |
+| GitHub              | Supported | Supported | Mostly supported  | Supported                      |
+| GitLab              | Planned   | Planned   | Not supported [1] | Supported                      |
+| Phabricator         | Supported | Supported | Supported         | Supported                      |
+| BitBucket           | Planned   | Planned   | Planned           | Planned                        |
+|                     |           |           |                   |                                |
+| *Tasks Integration* |           |           |                   |                                |
+| Email               | Planned   | Planned   | Planned           | Supported                      |
+| Jira                | Planned   | Planned   | Not supported [1] | Supported                      |
+| Trello              | Planned   | Planned   | Not supported [1] | Supported                      |
+| Asana               | Planned   | Planned   | Not supported [1] | Planned                        |
+|                     |           |           |                   |                                |
+| *Annotations* [2]   | Planned   | Planned   | Planned           | Supported                      |
+| Jira                | Planned   | Planned   | Not supported [1] | Supported                      |
+
+Footnotes:
+[1] Not supported because SBCL doesn't support Java
+[2] Annotations allow you to create tasks directly from Screenshotbot
 
 ## Upgrading
 
