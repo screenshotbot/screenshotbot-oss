@@ -27,10 +27,9 @@
                    ,@params)))
     (log:info "using params: ~S" params)
    (with-open-stream (s
-                      (drakma:http-request (format nil "~a/api/~a" (url phab) name)
-                                           :method :post
-                                           :want-stream t
-                                           :parameters params))
+                      (dex:post (format nil "~a/api/~a" (url phab) name)
+                                :want-stream t
+                                :content params))
      (json:decode-json s))))
 
 (defmethod diff-to-revision ((phab phab-instance) diff-id)
