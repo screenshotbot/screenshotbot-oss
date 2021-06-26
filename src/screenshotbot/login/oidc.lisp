@@ -63,16 +63,27 @@
   (or
    (cached-discovery oidc)
    (setf (cached-discovery oidc)
-    (let ((url (format nil "~a/.well-known/openid-configuration"
-                       (issuer oidc))))
+         (let ((url (format nil "~a/.well-known/openid-configuration"
+                            (check-https
+                             (issuer oidc)))))
       (json:decode-json-from-string (dex:get url))))))
 
 
+(defun check-https (url)
+  "Our OpenID Connect implementation does not do id-token
+  verification. But to still ensure security we have to make sure all
+  our calls to the Auth server go ever HTTPS"
+  (unless (equal "https" (quri:uri-scheme (quri:uri url)))
+    (error "Using non https endpoint ~a for authentication" url))
+  url)
+
 (defmethod authorization-endpoint ((oidc oidc-provider))
-  (assoc-value (discover oidc) :authorization--endpoint))
+  (check-https
+   (assoc-value (discover oidc) :authorization--endpoint)))
 
 (defmethod token-endpoint ((oidc oidc-provider))
-  (assoc-value (discover oidc) :token--endpoint))
+  (check-https
+   (assoc-value (discover oidc) :token--endpoint)))
 
 (defmethod userinfo-endpoint ((oidc oidc-provider))
   (assoc-value (discover oidc) :userinfo--endpoint))
