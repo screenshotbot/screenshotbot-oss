@@ -277,3 +277,7 @@ user as used in Screenshotbot)"
                                      :identifier (oidc-provider-identifier auth)))))
     (apply 'update-oidc-user
            oidc-user all)))
+
+(defmethod oauth-logo-svg ((auth oidc-provider))
+  (declare (ignore auth))
+  nil)
