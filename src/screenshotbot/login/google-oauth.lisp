@@ -14,6 +14,14 @@
           #:./oidc
           #:../user-api
           #:../model/github)
+
+  ;; slots for datastore migration
+  (:import-from #:./oidc
+                #:email
+                #:full-name
+                #:avatar
+                #:user-id
+                #:user)
   (:import-from #:../server
                 #:defhandler)
   (:import-from #:../secret
@@ -35,22 +43,15 @@
    (issuer :initform "https://accounts.google.com")
    (scope :initform "openid email profile")))
 
-(defclass google-user (store-object)
-  ((email :initarg :email
-          :accessor oauth-user-email)
-   (full-name :initarg :full-name
-              :accessor oauth-user-full-name)
-   (avatar :initarg :avatar
-           :accessor oauth-user-avatar)
-   (user-id :initarg :user-id
-            :index-type unique-index
-            :initform nil
-            :index-initargs (:test 'equal)
-            :index-reader %find-google-user-by-id)
-   (user :initarg :user
-         :initform nil
-         :accessor oauth-user-user))
+;; datastore backward compatibility
+(defclass google-user (oidc-user)
+  ((identifier :initform 'google))
   (:metaclass persistent-class))
+
+(defun %find-google-user-by-id (user-id)
+  (loop for user in (find-oidc-users-by-user-id user-id)
+        if (typep user 'google-user)
+          return user))
 
 (defmethod prepare-oidc-user ((auth google-oauth-provider)
                                &rest all &key user-id email full-name avatar)

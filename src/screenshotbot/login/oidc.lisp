@@ -8,9 +8,20 @@
     (:use #:cl
           #:alexandria
           #:nibble
+          #:../model/user
           #:./common)
   (:import-from #:../user-api
+                #:user
                 #:current-user)
+  (:import-from #:bknr.datastore
+                #:store-object
+                #:persistent-class
+                #:hash-index)
+  (:import-from #:../model/user
+                #:oauth-user-user
+                #:oauth-user-full-name
+                #:oauth-user-avatar
+                #:oauth-user-email)
   (:export #:client-id
            #:client-secret
            #:oidc-provider
@@ -23,7 +34,15 @@
            #:access-token-class
            #:access-token-str
            #:oidc-callback
-           #:prepare-oidc-user))
+           #:prepare-oidc-user
+           #:oidc-user
+           #:oauth-user-email
+           #:oauth-user-full-name
+           #:oauth-user-avatar
+           #:find-oidc-user-by-id
+           #:find-oidc-users-by-user-id
+           #:oauth-user-user
+           #:identifier))
 
 (defclass oauth-access-token ()
   ((access-token :type (or null string)
@@ -57,6 +76,25 @@
           :documentation "The default scope used for authorization")
    (cached-discovery :initform nil
                      :accessor cached-discovery)))
+
+(defclass oidc-user (store-object)
+  ((email :initarg :email
+          :accessor oauth-user-email)
+   (full-name :initarg :full-name
+              :accessor oauth-user-full-name)
+   (avatar :initarg :avatar
+           :accessor oauth-user-avatar)
+   (user-id :initarg :user-id
+            :index-type hash-index
+            :initform nil
+            :index-initargs (:test 'equal)
+            :index-reader find-oidc-users-by-user-id)
+   (user :initarg :user
+         :initform nil
+         :accessor oauth-user-user)
+   (identifier :initarg :identitifer
+               :accessor oidc-user-identifier))
+  (:metaclass persistent-class))
 
 (defmethod discover ((oidc oidc-provider))
   "Returns an alist of all the fields in the discovery document"
@@ -177,6 +215,8 @@
                    :avatar (assoc-value user-info :picture))))
         (setf (current-user) user)
         (hex:safe-redirect redirect)))))
+
+
 
 (defgeneric prepare-oidc-user (auth &key user-id email full-name avatar)
   (:documentation "Once we have all the information about the user

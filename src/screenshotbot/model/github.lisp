@@ -17,7 +17,8 @@
                 #:github-user
                 #:oauth-user-full-name
                 #:oauth-user-user
-                #:oauth-user-avatar)
+                #:oauth-user-avatar
+                #:oauth-user-email)
   ;; classes
   (:export #:oauth-access-token
            #:github-access-token
