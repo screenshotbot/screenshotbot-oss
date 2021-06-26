@@ -40,31 +40,32 @@
 
 ;; (github-create-jwt-token)
 
-(defun github-request (url &key
-                             parameters
-                             installation-token
-                             jwt-token
-                             json-parameters
-                             method)
+(defun github-request (url
+                       &key parameters installation-token
+                         jwt-token
+                         (json-parameters nil) ;; boolean
+                         (method :get))
+  (when (and parameters (eql method :get))
+    (error "parameters not supported with :GET"))
   (multiple-value-bind (s res)
-      (drakma:http-request
-                        (format nil "https://api.github.com~a" url)
-                        :want-stream t
-                        :method method
-                        :accept "application/vnd.github.v3+json"
-                        :additional-headers
-                        `(("Authorization"
-                           .
-                           ,(cond
-                              (installation-token
-                               (format nil "token ~a" installation-token))
-                              (jwt-token
-                               (format nil "Bearer ~a" jwt-token))
-                              (t
-                               (error "specify either :jwt-token or :installation-token")))))
-                        :parameters (unless json-parameters`(,@parameters))
-                        :content (when json-parameters
-                                   (json:encode-json-to-string parameters)) )
+      (dex:request
+       (format nil "https://api.github.com~a" url)
+       :want-stream t
+       :method method
+       :headers
+       `(("Accept" . "application/vnd.github.v3+json")
+         ("Authorization"
+          .
+          ,(cond
+             (installation-token
+              (format nil "token ~a" installation-token))
+             (jwt-token
+              (format nil "Bearer ~a" jwt-token))
+             (t
+              (error "specify either :jwt-token or :installation-token")))))
+       :content (if json-parameters
+                    (json:encode-json-to-string parameters)
+                    parameters))
     (with-open-stream (s s)
       (unless (or (eql res 200) (eql res 201))
         (error "Got bad github error code: ~a (~S)" res
