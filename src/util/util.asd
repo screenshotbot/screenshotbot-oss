@@ -61,7 +61,8 @@
                "log4cl"
                "cl-cron")
   :serial t
-  :components ((:file "package")
+  :components ((:file "random-port")
+               (:file "package")
                (:file "mockable")
                (:file "object-id")
                (:file "asdf")

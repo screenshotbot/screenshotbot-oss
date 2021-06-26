@@ -4,7 +4,7 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage #:util
+(uiop:define-package #:util
   (:use #:cl
         #:bknr.datastore
         #:hex)
@@ -16,6 +16,7 @@
                 #:make-prefix-matcher
                 #:acceptor-plugins
                 #:make-full-url)
+  (:use-reexport #:util/random-port)
   (:export #:head
            #:google-analytics
            #:safe-redirect
