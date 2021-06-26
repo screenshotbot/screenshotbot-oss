@@ -24,6 +24,7 @@
                 #:screenshot-get-canonical
                 #:recorder-run-screenshots)
   (:import-from #:./image
+                #:%with-local-image
                 #:rect-as-list)
   (:export #:constant-string
            #:get-constant
