@@ -48,16 +48,11 @@
   ((identifier :initform 'google))
   (:metaclass persistent-class))
 
-(defun %find-google-user-by-id (user-id)
-  (loop for user in (find-oidc-users-by-user-id user-id)
-        if (typep user 'google-user)
-          return user))
-
 (defmethod prepare-oidc-user ((auth google-oauth-provider)
                                &rest all &key user-id email full-name avatar)
   (declare (ignore email full-name avatar auth))
   (let ((google-user (or
-                      (%find-google-user-by-id user-id)
+                      (find-existing-oidc-user auth 'google)
                       (make-instance 'google-user
                                      :user-id user-id))))
     (apply 'prepare-oauth-user

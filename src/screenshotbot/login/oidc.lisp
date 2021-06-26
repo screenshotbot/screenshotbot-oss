@@ -43,7 +43,8 @@
            #:find-oidc-users-by-user-id
            #:oauth-user-user
            #:identifier
-           #:oidc-provider-identifier))
+           #:oidc-provider-identifier
+           #:find-existing-oidc-user))
 
 (defclass oauth-access-token ()
   ((access-token :type (or null string)
@@ -75,6 +76,8 @@
           :accessor scope
           :initform "openid"
           :documentation "The default scope used for authorization")
+   (identifier :initarg :identifier
+               :accessor oidc-provider-identifier)
    (cached-discovery :initform nil
                      :accessor cached-discovery)))
 
@@ -224,6 +227,12 @@
   that just logged in, convert this into a user in Screenshotbot. You
   may have to look up existing users to figure out which user this is
   mapped to."))
+
+(defmethod find-existing-oidc-user ((auth oidc-provider) user-id)
+  (loop for x in (find-oidc-users-by-user-id user-id)
+        if (eql (oidc-provider-identifier auth)
+                (oidc-provider-identifier x))
+          return x))
 
 (defmethod prepare-oidc-user ((auth oidc-provider) &key user-id email full-name avatar)
   (declare (ignore user-id email full-name avatar))
