@@ -75,6 +75,7 @@
          (acceptor (make-instance 'hunchentoot:easy-acceptor
                                   :port port
                                   :name 'test-acceptor)))
+    (log:info "Using port: ~a" (hunchentoot:acceptor-port acceptor))
     (with-acceptor (acceptor)
      (with-open-file (s (asdf:system-relative-pathname
                          :screenshotbot.sdk
@@ -84,5 +85,5 @@
        (is
         (equal
          "4249fe0e72f21fd54dbb2f3325bec263"
-         (put-file (format nil "http://localhost:~a/put" port)
+         (put-file (format nil "http://127.0.0.1:~a/put" port)
                    s)))))))

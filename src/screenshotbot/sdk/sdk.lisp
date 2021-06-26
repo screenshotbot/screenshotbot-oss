@@ -35,14 +35,16 @@
 (defun request (api &key (method :post)
                       parameters)
   (log:debug "Making API request: ~S, with parameters ~S" api parameters)
+  (when (and (eql method :get) parameters)
+    (error "Can't use :get with parameters"))
   (with-open-stream (stream
-                (drakma:http-request (format nil "~a~a" *hostname* api)
-                       :want-stream t
-                       :method method
-                       :parameters (apply 'list
-                                          (cons "api-key" *api-key*)
-                                          (cons "api-secret-key" *api-secret*)
-                                          parameters)))
+                (dex:request (format nil "~a~a" *hostname* api)
+                             :want-stream t
+                             :method method
+                             :content (apply 'list
+                                             (cons "api-key" *api-key*)
+                                             (cons "api-secret-key" *api-secret*)
+                                             parameters)))
     (let ((result (json:decode-json stream)))
       (awhen (assoc-value result :error)
         (error 'api-error :message it))
@@ -50,18 +52,22 @@
 
 
 (defun put-file (upload-url stream)
-  (multiple-value-bind (result code)
-      (drakma:http-request upload-url
-                           :method :put
-                           :preserve-uri t
-                           :decode-content t
-                           :content-type "application/octet-stream"
-                           :content-length (file-length stream)
-                           :content stream)
-    (log:debug "Got image upload response: ~s" (flexi-streams:octets-to-string result))
-    (unless (eql 200 code)
-      (error "Failed to upload image: code ~a" code))
-    result))
+  (restart-case
+   (multiple-value-bind (result code)
+       (drakma:http-request upload-url
+                            :method :put
+                            :preserve-uri t
+                            :decode-content t
+                            :content-type "application/octet-stream"
+                            :content-length (file-length stream)
+                            :content stream)
+     (log:debug "Got image upload response: ~s" (flexi-streams:octets-to-string result))
+     (unless (eql 200 code)
+       (error "Failed to upload image: code ~a" code))
+     result)
+    (re-attempt-put-file ()
+      (file-position stream 0)
+      (put-file upload-url stream))))
 
 (defun upload-image (key stream hash response)
   (Assert hash)

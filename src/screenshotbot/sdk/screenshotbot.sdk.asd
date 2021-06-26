@@ -8,7 +8,8 @@
   :author "Arnold Noronha <arnold@screenshotbot.io>"
   :license "Mozilla Public License, v 2.0"
   :serial t
-  :depends-on (:drakma
+  :depends-on (:dexador
+               :drakma ;; needs to go
                :com.google.flag
                :pkg
                :ironclad
