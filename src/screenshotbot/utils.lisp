@@ -3,7 +3,8 @@
   (:use #:cl
         #:alexandria)
   (:export #:upload-fasl
-           #:md5-hex))
+           #:md5-hex
+           #:upload-sdk))
 (in-package :screenshotbot-utils)
 
 (defun md5-hex (f)
