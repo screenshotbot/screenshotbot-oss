@@ -42,7 +42,8 @@
            #:find-oidc-user-by-id
            #:find-oidc-users-by-user-id
            #:oauth-user-user
-           #:identifier))
+           #:identifier
+           #:oidc-provider-identifier))
 
 (defclass oauth-access-token ()
   ((access-token :type (or null string)
@@ -93,7 +94,7 @@
          :initform nil
          :accessor oauth-user-user)
    (identifier :initarg :identitifer
-               :accessor oidc-user-identifier))
+               :accessor oidc-provider-identifier))
   (:metaclass persistent-class))
 
 (defmethod discover ((oidc oidc-provider))
