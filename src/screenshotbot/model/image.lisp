@@ -273,9 +273,9 @@
     (t
      (let ((url (image-public-url image)))
        (log:info "Fetching image: ~a" url)
-       (drakma:http-request url
-                            :force-binary t
-                            :want-stream t)))))
+       (dex:get url
+                :force-binary t
+                :want-stream t)))))
 
 (defmethod open-image-stream ((image local-image))
   (open (path:catfile (document-root) (str:substring 1 nil (local-image-url image)))
