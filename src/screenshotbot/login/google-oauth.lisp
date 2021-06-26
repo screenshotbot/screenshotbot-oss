@@ -41,23 +41,14 @@
 (defclass google-oauth-provider (oidc-provider)
   ((oauth-name :initform "Google")
    (issuer :initform "https://accounts.google.com")
-   (scope :initform "openid email profile")))
+   (scope :initform "openid email profile")
+   (identifier :initform 'google)))
+
 
 ;; datastore backward compatibility
 (defclass google-user (oidc-user)
   ((identifier :initform 'google))
   (:metaclass persistent-class))
-
-(defmethod prepare-oidc-user ((auth google-oauth-provider)
-                               &rest all &key user-id email full-name avatar)
-  (declare (ignore email full-name avatar auth))
-  (let ((google-user (or
-                      (find-existing-oidc-user auth 'google)
-                      (make-instance 'google-user
-                                     :user-id user-id))))
-    (apply 'update-oidc-user
-           google-user all)))
-
 
 (defmethod oauth-logo-svg ((auth google-oauth-provider))
   (declare (ignore auth))

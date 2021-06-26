@@ -98,7 +98,7 @@
    (user :initarg :user
          :initform nil
          :accessor oauth-user-user)
-   (identifier :initarg :identitifer
+   (identifier :initarg :identifier
                :accessor oidc-provider-identifier))
   (:metaclass persistent-class))
 
@@ -266,6 +266,14 @@ user as used in Screenshotbot)"
                 (oidc-provider-identifier x))
           return x))
 
-(defmethod prepare-oidc-user ((auth oidc-provider) &key user-id email full-name avatar)
-  (declare (ignore user-id email full-name avatar))
-  (error "unimplemented"))
+(defmethod prepare-oidc-user ((auth oidc-provider)
+                              &rest all
+                              &key user-id email full-name avatar)
+  (declare (ignore email full-name avatar))
+    (let ((oidc-user (or
+                      (find-existing-oidc-user auth (oidc-provider-identifier auth))
+                      (make-instance 'oidc-user
+                                     :user-id user-id
+                                     :identifier (oidc-provider-identifier auth)))))
+    (apply 'update-oidc-user
+           oidc-user all)))
