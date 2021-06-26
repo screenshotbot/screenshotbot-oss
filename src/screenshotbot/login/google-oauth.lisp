@@ -55,7 +55,7 @@
                       (find-existing-oidc-user auth 'google)
                       (make-instance 'google-user
                                      :user-id user-id))))
-    (apply 'prepare-oauth-user
+    (apply 'update-oidc-user
            google-user all)))
 
 

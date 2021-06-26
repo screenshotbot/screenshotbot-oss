@@ -15,6 +15,7 @@
                 #:current-user)
   (:import-from #:bknr.datastore
                 #:store-object
+                #:with-transaction
                 #:persistent-class
                 #:hash-index)
   (:import-from #:../model/user
@@ -44,7 +45,8 @@
            #:oauth-user-user
            #:identifier
            #:oidc-provider-identifier
-           #:find-existing-oidc-user))
+           #:find-existing-oidc-user
+           #:update-oidc-user))
 
 (defclass oauth-access-token ()
   ((access-token :type (or null string)
@@ -219,6 +221,36 @@
                    :avatar (assoc-value user-info :picture))))
         (setf (current-user) user)
         (hex:safe-redirect redirect)))))
+
+
+(defun update-oidc-user (oauth-user &key
+                                      (email (error "required"))
+                                      (user-id (error "required"))
+                                      (full-name (error "required"))
+                                      (avatar (error "required")))
+  "Update the OIDC user, and return the corresponding USER (i.e. the
+user as used in Screenshotbot)"
+  (declare (ignore user-id))
+  (with-transaction (:initial-setup)
+    (setf (oauth-user-email oauth-user) email)
+    (setf (oauth-user-full-name oauth-user) full-name)
+    (setf (oauth-user-avatar oauth-user) avatar))
+  (let ((user (or
+               (oauth-user-user oauth-user)
+               (user-with-email email)
+               (make-instance 'user
+                              :email email))))
+    (with-transaction (:ensure-two-way-mapping)
+      ;; ensure two way mapping.
+      (pushnew oauth-user (oauth-users user))
+      (setf (oauth-user-user oauth-user) user))
+    ;; what happens if there's another user with the current email?
+    ;; For instance, if the Oauth session changed their email address?
+    ;; In that case, we ignore and don't make the email change.
+    (ignore-errors
+     (with-transaction (:set-user-email)
+       (setf (user-email user) email)))
+    user))
 
 
 

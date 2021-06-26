@@ -28,9 +28,9 @@
                 #:with-transaction)
   (:import-from #:./oidc
                 #:access-token-str
+                #:update-oidc-user
                 #:oauth-get-access-token)
   (:export #:prepare-gh-user
-           #:prepare-oauth-user
            #:make-gh-oauth-link
            #:oauth-get-access-token
            #:github-oauth-provider))
@@ -119,33 +119,6 @@
        :avatar (#_getAvatarUrl user)))))
 
 
-(defun prepare-oauth-user (oauth-user &key
-                                        (email (error "required"))
-                                        (user-id (error "required"))
-                                        (full-name (error "required"))
-                                        (avatar (error "required")))
-  (declare (ignore user-id))
-  (with-transaction (:initial-setup)
-    (setf (oauth-user-email oauth-user) email)
-    (setf (oauth-user-full-name oauth-user) full-name)
-    (setf (oauth-user-avatar oauth-user) avatar))
-  (let ((user (or
-               (oauth-user-user oauth-user)
-               (user-with-email email)
-               (make-instance 'user
-                              :email email))))
-    (with-transaction (:ensure-two-way-mapping)
-      ;; ensure two way mapping.
-      (pushnew oauth-user (oauth-users user))
-      (setf (oauth-user-user oauth-user) user))
-    ;; what happens if there's another user with the current email?
-    ;; For instance, if the Oauth session changed their email address?
-    ;; In that case, we ignore and don't make the email change.
-    (ignore-errors
-     (with-transaction (:set-user-email)
-       (setf (user-email user) email)))
-    user))
-
 (defun prepare-gh-user (&key emails user-id full-name avatar
                                     github-login)
   (assert user-id)
@@ -154,11 +127,11 @@
                   (make-instance 'github-user
                                  :gh-user-id user-id))))
 
-    (let ((ret (prepare-oauth-user gh-user
-                                   :email (car emails)
-                                   :user-id user-id
-                                   :full-name full-name
-                                   :avatar avatar)))
+    (let ((ret (update-oidc-user gh-user
+                                 :email (car emails)
+                                 :user-id user-id
+                                 :full-name full-name
+                                 :avatar avatar)))
       (with-transaction ()
         (setf (github-login gh-user)
               github-login))
