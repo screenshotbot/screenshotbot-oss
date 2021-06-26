@@ -143,29 +143,44 @@ https://github.com/tdrhq/fast-example/blob/master/.circleci/config.yml.
 You'll also have to pass the `--hostname` argument, which will be the
 URL of your Screenshotbot installation.
 
+## Setting up SSO
+
+Screenshotbot comes with an in-built email/password authentication
+system, and also supports OpenID Connect out of the box. For more
+complex setups, or for fine-grained user management tools or access
+logs, we recommend using [Keycloak](www.keycloak.org) (open source) as
+an intermediate identity management solution, and connect to Keycloak
+with OpenID Connect. You could also use commercial services such as
+Amazon Cognito, but we test our solutions against Keycloak.
+
+See [Configuring
+SSO](https://github.com/screenshotbot/screenshotbot-oss/wiki/Configuring-SSO)
+for a thorough discussion.
+
 
 ## Feature Status
 
 Not all the features on [screenshotbot.io](https://screenshotbot.io)
 are available in this OSS repository. We are in the process of moving
 most integrations here, but that will depend on community interest.
-| Feature               | LispWorks | CCL       | SBCL              | screenshotbot.io  (Enterprise) |
-|:---------------------:|:---------:|:---------:|:-----------------:|:------------------------------:|
-| **SSO/OAuth**         |           |           |                   |                                |
-| GitHub                | Supported | Supported | Supported         | Supported                      |
-| Google                | Supported | Supported | Supported         | Supported                      |
-| **VCS Integrations**  |           |           |                   |                                |
-| GitHub                | Supported | Supported | Mostly supported  | Supported                      |
-| GitLab                | Planned   | Planned   | Not supported [1] | Supported                      |
-| Phabricator           | Supported | Supported | Supported         | Supported                      |
-| BitBucket             | Planned   | Planned   | Planned           | Planned                        |
-| **Tasks Integration** |           |           |                   |                                |
-| Email                 | Planned   | Planned   | Planned           | Supported                      |
-| Jira                  | Planned   | Planned   | Not supported [1] | Supported                      |
-| Trello                | Planned   | Planned   | Not supported [1] | Supported                      |
-| Asana                 | Planned   | Planned   | Not supported [1] | Planned                        |
-| **Annotations** [2]   | Planned   | Planned   | Planned           | Supported                      |
-| Jira                  | Planned   | Planned   | Not supported [1] | Supported                      |
+| Feature               | LispWorks    | CCL          | SBCL              | screenshotbot.io  (Enterprise) |
+|:---------------------:|:------------:|:------------:|:-----------------:|:------------------------------:|
+| **SSO/OAuth**         |              |              |                   |                                |
+| User / Email          | Supported    | Supported    | Supported         | Supported                      |
+| OpenID Connect        | Supported    | Supported    | Supported         | Supported                      |
+| SAML                  | Via Keycloak | Via Keycloak | Via Keycloak      | Supported                      |
+| **VCS Integrations**  |              |              |                   |                                |
+| GitHub                | Supported    | Supported    | Mostly supported  | Supported                      |
+| GitLab                | Planned      | Planned      | Not supported [1] | Supported                      |
+| Phabricator           | Supported    | Supported    | Supported         | Supported                      |
+| BitBucket             | Planned      | Planned      | Planned           | Planned                        |
+| **Tasks Integration** |              |              |                   |                                |
+| Email                 | Planned      | Planned      | Planned           | Supported                      |
+| Jira                  | Planned      | Planned      | Not supported [1] | Supported                      |
+| Trello                | Planned      | Planned      | Not supported [1] | Supported                      |
+| Asana                 | Planned      | Planned      | Not supported [1] | Planned                        |
+| **Annotations** [2]   | Planned      | Planned      | Planned           | Supported                      |
+| Jira                  | Planned      | Planned      | Not supported [1] | Supported                      |
 
 Footnotes:
 
