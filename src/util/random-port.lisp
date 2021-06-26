@@ -1,4 +1,4 @@
-(defpackage :util/random-port
+(uiop:define-package :util/random-port
   (:use #:cl
         #:alexandria)
   (:export #:random-port))

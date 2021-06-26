@@ -49,6 +49,20 @@
       (assoc-value result :response))))
 
 
+(defun put-file (upload-url stream)
+  (multiple-value-bind (result code)
+      (drakma:http-request upload-url
+                           :method :put
+                           :preserve-uri t
+                           :decode-content t
+                           :content-type "application/octet-stream"
+                           :content-length (file-length stream)
+                           :content stream)
+    (log:debug "Got image upload response: ~s" (flexi-streams:octets-to-string result))
+    (unless (eql 200 code)
+      (error "Failed to upload image: code ~a" code))
+    result))
+
 (defun upload-image (key stream hash response)
   (Assert hash)
   (log:debug "Checking to see if we need to re-upload ~a, ~a" key hash)
@@ -56,18 +70,7 @@
   (let ((upload-url (assoc-value response :upload-url)))
     (when upload-url
       (log:debug "Uploading ~a" key)
-      (multiple-value-bind (result code)
-          (drakma:http-request upload-url
-                               :method :put
-                               :preserve-uri t
-                               :decode-content t
-                               :content-type "application/octet-stream"
-                               :force-binary t
-                               :content-length (file-length stream)
-                               :content stream)
-        (log:debug "Got image upload response: ~s" (flexi-streams:octets-to-string result))
-        (unless (eql 200 code)
-          (error "Failed to upload image: code ~a" code)))))
+      (put-file upload-url stream)))
   (setf (assoc-value response :name) key)
   response)
 

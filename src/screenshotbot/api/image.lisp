@@ -21,7 +21,8 @@
                 #:find-image)
   (:import-from #:../user-api
                 #:current-company)
-  (:export #:verify-image))
+  (:export #:verify-image
+           #:with-raw-post-data-as-tmp-file))
 
 (defvar *bucket* "screenshotbot")
 
@@ -120,19 +121,26 @@
   (prepare-upload-api :hash hash :content-type content-type))
 
 
+(defun %with-raw-post-data-as-tmp-file (fn)
+  (uiop:with-temporary-file (:stream s :pathname p :direction :output
+                             :element-type 'flexi-streams:octet)
+    (let* (;;(content-length (parse-integer (hunchentoot:header-in* :content-length)))
+           (in-stream (hunchentoot:raw-post-data :force-binary t
+                                                 :want-stream t)))
+      (fad:copy-stream in-stream (flexi-streams:make-flexi-stream s)))
+    (finish-output s)
+    (funcall fn p)))
+
+(defmacro with-raw-post-data-as-tmp-file ((tmpfile) &body body)
+  `(%with-raw-post-data-as-tmp-file (lambda (,tmpfile) ,@body)))
+
 (defhandler (api-upload-image-blob :uri "/api/image/blob" :method :put) (oid)
   (let ((image (find-by-oid oid)))
-    (uiop:with-temporary-file (:stream s :pathname p :direction :output
-                               :element-type 'flexi-streams:octet)
-      (let* (;;(content-length (parse-integer (hunchentoot:header-in* :content-length)))
-             (in-stream (hunchentoot:raw-post-data :force-binary t
-                                                   :want-stream t)))
-        (fad:copy-stream in-stream (flexi-streams:make-flexi-stream s)))
-      (finish-output s)
+    (with-raw-post-data-as-tmp-file (p)
       (with-transaction ()
-       (setf (image-blob image)
-             (bknr.datastore:make-blob-from-file
-              p 'image-blob :type :png)))
+        (setf (image-blob image)
+              (bknr.datastore:make-blob-from-file
+               p 'image-blob :type :png)))
       (verify-image image)
       "0")))
 

@@ -8,17 +8,18 @@
   (:use :cl
    :alexandria
         :fiveam)
-  (:import-from :screenshotbot-sdk
-   :%read-directory-from-args
-                :*directory*
-   :directory-image-bundle
-                :*metadata*
-                :get-relative-path
-                :*ios-diff-dir*
-                :image-directory
-                :image-directory-with-diff-dir
-   :*metadata*
-   :*ios-diff-dir*))
+  (:import-from #:screenshotbot-sdk
+                #:%read-directory-from-args
+                #:*directory*
+                #:directory-image-bundle
+                #:*metadata*
+                #:get-relative-path
+                #:*ios-diff-dir*
+                #:image-directory
+                #:image-directory-with-diff-dir
+                #:*metadata*
+                #:*ios-diff-dir*
+                #:put-file))
 (in-package :screenshotbot.sdk.test-sdk)
 
 (def-suite* :screenshotbot.sdk.test-sdk)
@@ -50,3 +51,38 @@
              (get-relative-path #P "/bar/car/foo/" "/bar/car/")))
   (is (equal #P "foo/dar/"
              (get-relative-path #P "/bar/car/foo/dar/" "/bar/car/"))))
+
+
+(hunchentoot:define-easy-handler (get-md5-sum :uri "/put" :acceptor-names '(test-acceptor)) ()
+  (declare (optimize (speed 0) (debug 3)))
+  (screenshotbot/api/image:with-raw-post-data-as-tmp-file (p)
+    (ironclad:byte-array-to-hex-string (md5:md5sum-file p))))
+
+(defmacro with-acceptor ((acceptor) &body body)
+  `(let ((acceptor ,acceptor)
+         (fn (lambda () ,@body)))
+     (unwind-protect
+          (progn
+            (hunchentoot:start acceptor)
+            (setf hunchentoot:*catch-errors-p* nil)
+            (funcall fn))
+       (progn
+         (setf hunchentoot:*catch-errors-p* t)
+         (hunchentoot:stop acceptor)))))
+
+(test simple-put-image
+  (let* ((port (util:random-port))
+         (acceptor (make-instance 'hunchentoot:easy-acceptor
+                                  :port port
+                                  :name 'test-acceptor)))
+    (with-acceptor (acceptor)
+     (with-open-file (s (asdf:system-relative-pathname
+                         :screenshotbot.sdk
+                         "file-for-test.bin")
+                        :direction :input
+                        :element-type 'flexi-streams:octet)
+       (is
+        (equal
+         "4249fe0e72f21fd54dbb2f3325bec263"
+         (put-file (format nil "http://localhost:~a/put" port)
+                   s)))))))
