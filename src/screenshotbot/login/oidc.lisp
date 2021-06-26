@@ -46,6 +46,7 @@
            #:identifier
            #:oidc-provider-identifier
            #:find-existing-oidc-user
+           #:end-session-endpoint
            #:update-oidc-user))
 
 (defclass oauth-access-token ()
@@ -130,7 +131,12 @@
    (assoc-value (discover oidc) :token--endpoint)))
 
 (defmethod userinfo-endpoint ((oidc oidc-provider))
-  (assoc-value (discover oidc) :userinfo--endpoint))
+  (check-https
+   (assoc-value (discover oidc) :userinfo--endpoint)))
+
+(defmethod end-session-endpoint ((oidc oidc-provider))
+  (check-https
+   (assoc-value (discover oidc) :end--session--endpoint)))
 
 (defgeneric oidc-callback (auth code redirect))
 
