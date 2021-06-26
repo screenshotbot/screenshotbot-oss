@@ -56,7 +56,6 @@
       (multiple-value-bind (result code)
           (uiop:with-temporary-file (:stream tmp-stream :pathname tmpfile :direction :io
                                      :element-type 'flexi-streams:octet)
-            (declare (ignore tmpfile))
             (uiop:copy-stream-to-stream stream tmp-stream
                                         :element-type 'flexi-streams:octet)
             (finish-output tmp-stream)
