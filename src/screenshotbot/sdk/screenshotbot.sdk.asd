@@ -9,7 +9,6 @@
   :license "Mozilla Public License, v 2.0"
   :serial t
   :depends-on (:dexador
-               :drakma ;; needs to go
                :com.google.flag
                :pkg
                :ironclad

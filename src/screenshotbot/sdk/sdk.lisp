@@ -53,14 +53,22 @@
 
 (defun put-file (upload-url stream)
   (restart-case
-   (multiple-value-bind (result code)
-       (drakma:http-request upload-url
-                            :method :put
-                            :preserve-uri t
-                            :decode-content t
-                            :content-type "application/octet-stream"
-                            :content-length (file-length stream)
-                            :content stream)
+      (multiple-value-bind (result code)
+          (uiop:with-temporary-file (:stream tmp-stream :pathname tmpfile :direction :io
+                                     :element-type 'flexi-streams:octet)
+            (declare (ignore tmpfile))
+            (uiop:copy-stream-to-stream stream tmp-stream
+                                        :element-type 'flexi-streams:octet)
+            (finish-output tmp-stream)
+            (file-position tmp-stream 0)
+            (log:info "Got file length: ~d" (file-length tmp-stream))
+            (dex:put upload-url
+                     :headers `((:content-type . "application/octet-stream")
+                                ;; There a bug in dexador that prevents the
+                                ;; file-length logic to work correctly in
+                                ;; delivered LW images
+                                (:content-length . ,(file-length tmp-stream)))
+                     :content tmpfile))
      (log:debug "Got image upload response: ~s" (flexi-streams:octets-to-string result))
      (unless (eql 200 code)
        (error "Failed to upload image: code ~a" code))
