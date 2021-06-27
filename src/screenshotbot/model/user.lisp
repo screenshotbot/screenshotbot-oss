@@ -112,11 +112,7 @@
    (companies
     :initform (list (make-instance 'company :personalp t))
     :initarg :companies
-    :accessor user-companies)
-   ;; legacy from non-OSS code. Keep for now.
-   (stripe-customer
-    :initform nil
-    :accessor stripe-customer))
+    :accessor user-companies))
   (:metaclass persistent-class))
 
 (defclass user-notice (util:object-with-unindexed-oid)
