@@ -220,6 +220,7 @@
                                            .
                                            ,(access-token-str token))
                                           ("alt" . "json")))))
+      (log:debug "Got user info ~S" user-info)
       (let ((user (prepare-oidc-user
                    auth
                    :user-id (assoc-value user-info :sub)
