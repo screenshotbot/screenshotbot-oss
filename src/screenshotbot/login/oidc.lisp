@@ -118,8 +118,9 @@
   "Our OpenID Connect implementation does not do id-token
   verification. But to still ensure security we have to make sure all
   our calls to the Auth server go ever HTTPS"
-  (unless (equal "https" (quri:uri-scheme (quri:uri url)))
-    (error "Using non https endpoint ~a for authentication" url))
+  (when url
+   (unless (equal "https" (quri:uri-scheme (quri:uri url)))
+     (error "Using non https endpoint ~a for authentication" url)))
   url)
 
 (defmethod authorization-endpoint ((oidc oidc-provider))

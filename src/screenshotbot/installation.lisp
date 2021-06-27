@@ -22,7 +22,8 @@
            #:mailer*
            #:auth-provider-signin-form
            #:auth-provider-signup-form
-           #:standard-auth-provider))
+           #:standard-auth-provider
+           #:default-oidc-provider))
 
 (defclass installation ()
   ((plugins :initform nil
@@ -34,7 +35,10 @@
    (auth-providers :initform (list
                               (make-instance 'standard-auth-provider))
                    :initarg :auth-providers
-                   :accessor auth-providers)))
+                   :accessor auth-providers)
+   (default-oidc-provider :initform :nil
+                          :initarg :default-oidc-provider
+                          :accessor default-oidc-provider)))
 
 (defun mailer* (&optional (installation (installation)))
   (mailer installation))

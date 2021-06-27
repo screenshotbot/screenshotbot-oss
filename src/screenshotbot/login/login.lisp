@@ -19,8 +19,13 @@
           #:../form-errors)
   (:import-from #:../server
                 #:defhandler)
+  (:import-from #:./oidc
+                #:end-session-endpoint)
+  (:import-from #:./common
+                #:oauth-signin-link)
   (:import-from #:../installation
                 #:standard-auth-provider
+                #:default-oidc-provider
                 #:installation
                 #:auth-provider-signin-form
                 #:auth-providers)
@@ -122,7 +127,10 @@
 
 (defhandler (nil :uri "/signin" :method :get) (after-logout redirect)
   (declare (ignore after-logout))
-  (signin-get :redirect (or redirect "/")))
+  (let ((redirect (or redirect "/")))
+   (if-let ((provider (default-oidc-provider (installation))))
+     (hunchentoot:redirect (oauth-signin-link provider redirect))
+     (signin-get :redirect redirect))))
 
 (defun signin-post (&key email password redirect)
   (let (errors
@@ -153,6 +161,26 @@
        (hex:safe-redirect redirect)))))
 
 
-(defhandler (nil :uri "/signout") ()
+(defun hard-signout ()
   (setf (current-user) nil)
   (hex:safe-redirect "/"))
+
+(defhandler (nil :uri "/account/oauth-signout-callback") ()
+  (hard-signout))
+
+(defun signout-from-oidc (auth-provider)
+  (let ((endpoint (end-session-endpoint auth-provider)))
+    (cond
+      (endpoint
+       (hunchentoot:redirect
+        (quri:render-uri
+         (quri:copy-uri
+          (quri:uri endpoint)
+          :query `(("post_logout_redirect_uri" . ,(hex:make-full-url hunchentoot:*request* "/account/oauth-signout-callback")))))))
+      (t
+       (hard-signout)))))
+
+(defhandler (nil :uri "/signout") ()
+  (if-let ((default-auth-provider (default-oidc-provider (installation))))
+    (signout-from-oidc default-auth-provider)
+    (hard-signout)))
