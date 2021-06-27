@@ -36,7 +36,7 @@
                               (make-instance 'standard-auth-provider))
                    :initarg :auth-providers
                    :accessor auth-providers)
-   (default-oidc-provider :initform :nil
+   (default-oidc-provider :initform nil
                           :initarg :default-oidc-provider
                           :accessor default-oidc-provider)))
 
