@@ -47,6 +47,8 @@
            #:all-companies
            #:slack-config
            #:phabricator-config-for-company
+           #:company-with-singletonp
+           #:singletonp
            #:phabricator-url
            #:conduit-api-key
            #:default-slack-config
@@ -98,6 +100,10 @@
     :accessor jira-config)
    (demo-filled-p
     :initform nil)
+   (singletonp
+    :initarg :singletonp
+    :index-type unique-index
+    :index-reader company-with-singletonp)
    (images
     :initarg :company-images
     :initform nil
@@ -108,6 +114,9 @@
     :transient t
     :documentation "Cache from image hash to list of all images"))
   (:metaclass persistent-class))
+
+(defmethod singletonp ((company company))
+  (slot-boundp company 'singletonp))
 
 (defun migrate-images-to-image-cache (company)
   (with-slots (images) company
@@ -203,7 +212,9 @@
     ((personalp company)
      ;; there should be just one admin
      (anaphora:awhen (car (company-admins company))
-      (user-full-name anaphora:it)))
+       (user-full-name anaphora:it)))
+    ((singletonp company)
+     "Singleton Company")
     (t
      (slot-value company 'name))))
 
@@ -244,3 +255,15 @@
 
 (defgeneric company (obj)
   (:documentation "For a given obj, figure out which company it belongs to"))
+
+(let ((lock (bt:make-lock)))
+  (defun get-singleton-company ()
+    "Get a singleton persistent company. If no singleton company exists,
+  it is created. Otherwise the existing singleton company is
+  returned."
+    (or
+     (company-with-singletonp t)
+     (bt:with-lock-held (lock)
+       (or
+        (company-with-singletonp t)
+        (make-instance 'company :singletonp t))))))

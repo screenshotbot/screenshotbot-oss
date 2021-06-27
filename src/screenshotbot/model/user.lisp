@@ -14,12 +14,16 @@
                 #:store-object-id
                 #:with-transaction
                 #:persistent-class)
+  (:import-from #:../installation
+                #:multi-org-feature
+                #:installation)
   (:import-from #:bknr.indices
                 #:unique-index)
   (:import-from #:util
                 #:make-secret-code
                 #:object-with-oid)
   (:import-from #:./company
+                #:get-singleton-company
                 #:company)
   (:import-from #:auth
                 #:password-hash)
@@ -110,7 +114,10 @@
     :accessor oauth-users)
    (companies
     :initarg :companies
-    :accessor user-companies))
+    :accessor %user-companies
+    :documentation "This companies slot is only use in a multi-org
+    set-up. A default installation of Screenshotbot OSS, would be a
+    single org set up."))
   (:metaclass persistent-class))
 
 (defmethod initialize-instance :around ((obj user) &rest args
@@ -120,6 +127,28 @@
            :companies (or companies
                           (list (make-instance 'company :personalp t)))
            args))
+
+(defmethod user-companies ((user user))
+  (user-companies-for-installation user (installation)))
+
+(defmethod (setf user-companies) (companies (user user))
+  (setf (user-companies-for-installation user (installation))
+        companies))
+
+(defmethod user-companies-for-installation ((user user) (installation multi-org-feature))
+  (%user-companies user))
+
+(defmethod (setf user-companies-for-installation) (companies (user user) (installation multi-org-feature))
+  (setf (%user-companies user) companies))
+
+
+(defmethod user-companies-for-installation ((user user) installation)
+  (list
+   (get-singleton-company)))
+
+(defmethod (setf user-companies-for-installation) (companies (user user) installation)
+  (declare (ignore companies user installation))
+  (error "Can't set user-companies with multi-org-feature"))
 
 (defclass user-notice (util:object-with-unindexed-oid)
   ((title :initarg :title

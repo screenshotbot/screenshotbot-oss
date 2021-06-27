@@ -23,6 +23,7 @@
            #:auth-provider-signin-form
            #:auth-provider-signup-form
            #:standard-auth-provider
+           #:multi-org-feature
            #:default-oidc-provider))
 
 (defclass installation ()
@@ -39,6 +40,13 @@
    (default-oidc-provider :initform nil
                           :initarg :default-oidc-provider
                           :accessor default-oidc-provider)))
+
+(defclass multi-org-feature ()
+  ()
+  (:documentation "subclassing multi-org-feature, turns on the ability
+  for each user to create their own organizations. Most installations
+  don't really want that s so it's turned off by default. It's used on
+  screenshotbot.io"))
 
 (defun mailer* (&optional (installation (installation)))
   (mailer installation))

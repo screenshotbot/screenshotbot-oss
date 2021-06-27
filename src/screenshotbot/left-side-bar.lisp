@@ -8,6 +8,9 @@
     (:use #:cl
           #:alexandria
           #:./user-api)
+  (:import-from #:./installation
+                #:installation
+                #:multi-org-feature)
   (:import-from #:./template
                 #:left-side-bar
                 #:mdi)
@@ -34,7 +37,24 @@
 (deftag bs-icon (&key name)
   <img src= (format nil "/assets/images/icons/~a.svg" name) alt=name />)
 
+(defmethod company-switcher ((installation multi-org-feature) &key user)
+  <markup:merge-tag>
+  ,@ (loop for company in (user-companies user)
+           collect
+           (let ((company company))
+             <li><a href= (nibble () (company-switch-page company)) class="dropdown-item">
+                 ,(company-name company)
+             </a></li>))
+     <li><a class="dropdown-item" href="/organization/new">New Organization...</a></li>
 
+     <li>
+       <hr class="dropdown-divider" />
+     </li>
+  </markup:merge-tag>)
+
+(defmethod company-switcher (installation &key user)
+  (declare (ignore user))
+  nil)
 (deftag left-side-bar (&key user company script-name)
   (declare (optimize (speed 0) (debug 3)))
   <div class="d-flex flex-column p-3 text-white bg-dark leftside-menu" >
@@ -75,10 +95,11 @@
         Documentation
   </left-nav-item>
 
-      <left-nav-item href= "/invite" image-class= "person_add" target= "_blank"
-                     script-name=script-name >
-        Invite Members
-      </left-nav-item>
+      ,(unless (singletonp company)
+         <left-nav-item href= "/invite" image-class= "person_add" target= "_blank"
+                        script-name=script-name >
+           Invite Members
+         </left-nav-item>)
 
 
       <left-nav-item href= "/api-keys" image-class= "vpn_key"
@@ -93,21 +114,13 @@
       <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
         <img src= (user-image-url user) alt="mdo" width="32" height="32" class="rounded-circle me-2">
           <strong class= "user-full-name" > ,(cond
-                      ((personalp company)
+                      ((or (singletonp company) (personalp company))
                        (user-full-name user))
                       (t
                        (company-name company))) </strong>
       </a>
       <ul class="dropdown-menu dropdown-menu-dark text-small shadow multi-level" aria-labelledby="dropdownUser1">
-        ,@ (loop for company in (user-companies user)
-                 collect
-                 (let ((company company))
-                   <li><a href= (nibble () (company-switch-page company)) class="dropdown-item">
-                       ,(company-name company)
-                   </a></li>))
-        <li><a class="dropdown-item" href="/organization/new">New Organization...</a></li>
-
-        <li><hr class="dropdown-divider"></li>
+        ,(company-switcher (installation) :user user)
 
         <li>
           <a class= "dropdown-item" href= "/plan" >

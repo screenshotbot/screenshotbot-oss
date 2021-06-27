@@ -11,6 +11,7 @@
            #:user
            #:signup-get
            #:user-full-name
+           #:singletonp
            #:user-companies
            #:user-image-url
            #:channel-name

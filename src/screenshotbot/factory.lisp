@@ -32,7 +32,9 @@
 
 (defclass test-company ()
   ((runs :initarg :runs
-         :accessor company-runs)))
+         :accessor company-runs)
+   (singletonp :initform nil
+               :accessor singletonp)))
 
 (defclass test-channel ()
   ((name :initform "dummy-channel"
