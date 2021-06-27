@@ -50,7 +50,6 @@
            #:user-companies
            #:with-user-lock
            #:user-email
-           #:stripe-customer
            #:finish-confirmation)
   ;; slots, only for migrations
   (:export #:companies
