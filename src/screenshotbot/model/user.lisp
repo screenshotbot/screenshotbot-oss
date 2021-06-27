@@ -109,10 +109,17 @@
     :initform nil
     :accessor oauth-users)
    (companies
-    :initform (list (make-instance 'company :personalp t))
     :initarg :companies
     :accessor user-companies))
   (:metaclass persistent-class))
+
+(defmethod initialize-instance :around ((obj user) &rest args
+                                        &key companies
+                                        &allow-other-keys)
+  (apply #'call-next-method obj
+           :companies (or companies
+                          (list (make-instance 'company :personalp t)))
+           args))
 
 (defclass user-notice (util:object-with-unindexed-oid)
   ((title :initarg :title
