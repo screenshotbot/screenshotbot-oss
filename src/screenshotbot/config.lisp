@@ -6,7 +6,8 @@
 
 (pkg:define-package :screenshotbot/config
     (:use #:cl
-          #:alexandria)
+          #:alexandria
+          #:screenshotbot/mailer)
   (:import-from #:./installation
                 #:installation)
   (:import-from #:./github
@@ -23,6 +24,8 @@
                 #:github-oauth-provider)
   (:import-from #:screenshotbot/login/google-oauth
                 #:google-oauth-provider)
+  (:import-from #:screenshotbot/login/oidc
+                #:oidc-provider)
   (:export #:load-config))
 
 (defun find-config.lisp ()
