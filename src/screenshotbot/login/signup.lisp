@@ -193,8 +193,16 @@
              (send-signup-confirmation (user-email user)
                                        (user-first-name user)
                                        confirmation))
-           (ignore-and-log-errors ()
-                                  (populate-company (user-personal-company user))))
+
+           ;; With multi-org-mode, each user will have an associated
+           ;; personal company, in that case this might be a good time
+           ;; to populate it with dummy data.
+           ;;
+           ;; TODO: move this logic to somewhere where it can be
+           ;; called by OAuth flows
+           (if-let ((company (user-personal-company user)))
+             (ignore-and-log-errors ()
+               (populate-company company))))
          (cond
            ((string= (string-upcase plan) (string :professional))
             (hex:safe-redirect "/upgrade"))
