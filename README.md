@@ -237,7 +237,9 @@ maintenance overhead for us. Bug-fixes are always welcome.
 ## Authors
 
 Screenshotbot is built and maintained by Arnold Noronha
-(arnold@screenshotbot.io).
+(arnold@screenshotbot.io). I also wrote
+[screenshot-tests-for-android](https://github.com/facebook/screenshot-tests-for-android),
+the de-facto screenshot testing library for Android.
 
 ## License
 
