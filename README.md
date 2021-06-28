@@ -26,13 +26,14 @@ any compliant Common Lisp.
 
 Certain features, such as the Slack integration, use third-party Java
 libraries. Java is not supported in SBCL, so if you need these
-integrations you should use either CCL or LispWorks.
+integrations you should use either CCL or LispWorks. The integrations
+that we're still porting to OSS, mostly rely on Java, so if you want
+to be safe pick CCL.
 
 LispWorks is a commercial platform, and can get expensive. Contact us
 if you need pre-built binaries on LispWorks, but it'll come with
-additional licensing restrictions. SBCL is more performant that CCL
-especially with multi-threading, but we think CCL should satisfy your
-needs if you do need Java
+additional licensing restrictions. SBCL is more performant that CCL,
+but we think CCL should satisfy your needs if you do need Java
 support. [screenshotbot.io](https://screenshotbot.io) is powered by
 LispWorks.
 
@@ -55,7 +56,14 @@ Quicklisp.
 ### Launch
 
 Once you've picked your implementation, you can use the implementation
-to load launch.lisp. For example, with SBCL that looks like:
+to load launch.lisp. For example, with CCL that looks like:
+
+```
+ $ path/to/ccl/lx86cl64 -l launch.lisp
+```
+
+On SBCL:
+
 
 ```
 $ sbcl --script launch.lisp
