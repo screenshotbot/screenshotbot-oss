@@ -87,7 +87,7 @@ public class SimpleNativeLibrary implements Serializable {
     }
 
 
-    public static Object send_method(Object o, String methodName, Object[] args) throws Exception {
+    public static Object send_method(Object o, String methodName, Object[] args) throws Throwable {
         try {
             return Whitebox.invokeMethod(o, methodName, args);
         } catch (NoSuchMethodException e) {
@@ -95,10 +95,7 @@ public class SimpleNativeLibrary implements Serializable {
             throw new RuntimeException(e);
         } catch (InvocationTargetException e) {
             e.printStackTrace();
-            if (e.getTargetException() instanceof Exception ) {
-                throw (Exception) e.getTargetException();
-            }
-            throw new RuntimeException(e.getMessage(), e);
+            throw e.getCause();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -106,7 +103,7 @@ public class SimpleNativeLibrary implements Serializable {
     }
 
 
-    public static Object send_method_wrapped(Object o, String methodName, Object[] args) throws Exception {
+    public static Object send_method_wrapped(Object o, String methodName, Object[] args) throws Throwable {
         return wrapPrimitives(send_method(o, methodName, args));
     }
 
