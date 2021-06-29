@@ -15,7 +15,7 @@
           #:screenshotbot/model/recorder-run
           #:./repo
           #:bknr.datastore)
-  (:nicknames :screenshotbot/gitlab/merge-request-promoter) ;; for datastore
+  (:nicknames :screenshotbot/pro/gitlab/merge-request-promoter) ;; for datastore
   (:import-from #:screenshotbot/model/report
                 #:base-acceptable)
   (:import-from #:screenshotbot/server
