@@ -53,4 +53,11 @@
   ($ (git-command repo) "merge-base" master-sha commit-sha))
 
 (defmethod rev-parse ((repo git-repo) branch)
-  ($ (git-command repo) "rev-parse" (format nil "origin/~a" branch)))
+  (handler-case ((error (lambda (e)
+                          (declare (ignore e))
+                          (log:info "Error while trying to check"
+                                    "origin/master. On some CI systems (e.g. GitLab)"
+                                    "this might not be fetched during the build for"
+                                    "merge-requests. You can work around this by running"
+                                    "`git fetch origin master` as a step in the build"))))
+    ($ (git-command repo) "rev-parse" (format nil "origin/~a" branch))))
