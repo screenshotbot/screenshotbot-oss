@@ -7,7 +7,6 @@
 (pkg:define-package :screenshotbot/gitlab/repo
     (:use #:cl
           #:alexandria
-          #:screenshotbot/java
           #:screenshotbot/model/channel)
   (:import-from #:screenshotbot/model
                 #:make-gitlab-repo)
@@ -15,15 +14,15 @@
                 #:secret
                 #:defsecret)
   (:import-from #:../git-repo
+                #:public-repo-p
                 #:generic-git-repo)
   (:export #:gitlab-repo
-           #:project-id
-           #:gitlab-api
            #:project-path
-           #:make-gitlab-repo))
+           #:make-gitlab-repo
+           #:*gitlab-url*))
 
-
-(named-readtables:in-readtable java-syntax)
+;; TODO: move this into a config
+(defvar *gitlab-url* "https://gitlab.com/api/v4")
 
 (defclass gitlab-repo (generic-git-repo)
   ((link :initarg :link
@@ -42,28 +41,17 @@
 (defmethod project-path ((repo gitlab-repo))
   (str:substring 1 nil (elt (multiple-value-list (quri:parse-uri (repo-link repo))) 4)))
 
-(defmethod project-project ((repo gitlab-repo))
-  (destructuring-bind (namespace project)
-      (str:split "/" (project-path repo))
-    (#_getProject (#_getProjectApi (gitlab-api repo))
-                  (pp namespace)
-                  (pp project))))
-
-(defmethod project-id ((repo gitlab-repo))
-  (#_getId (project-project repo)))
 
 (defsecret :gitlab-repo-access-token
   "Access token for GitLab API")
 
-(defmethod gitlab-api ((repo gitlab-repo))
-  (new-instance #,org.gitlab4j.api.GitLabApi
-                (format nil
-                        "https://~a"
-                        (elt (multiple-value-list (quri:parse-uri (repo-link repo))) 2))
-                (repo-access-token repo)))
-
 (defmethod public-repo-p ((repo gitlab-repo))
   (restart-case
-      (#_getPublic (project-project repo))
+    (handler-case
+        (let ((api (format nil "~a/projects/~a" *gitlab-url*
+                           (urlencode:urlencode (project-path repo)))))
+          (dex:get api))
+      (dexador.error:http-request-not-found ()
+        nil))
     (retry-public-repo-p ()
       (public-repo-p repo))))

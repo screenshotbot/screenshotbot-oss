@@ -21,6 +21,7 @@
   (:import-from #:screenshotbot/server
                 #:*domain*)
   (:import-from #:./repo
+                #:*gitlab-url*
                 #:repo-access-token)
   (:export #:merge-request-promoter
            #:gitlab-acceptable))
@@ -38,9 +39,6 @@
   (let ((mr-id (gitlab-merge-request-iid run)))
     (unless (str:emptyp mr-id)
       (parse-integer mr-id))))
-
-;; TODO: move this into a config
-(defvar *gitlab-url* "https://gitlab.com/api/v4")
 
 (defun gitlab-request (repo url &key (method :get) content)
   (dex:request (format nil "~a~a" *gitlab-url* url)
