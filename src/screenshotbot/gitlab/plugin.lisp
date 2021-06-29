@@ -26,4 +26,5 @@
   (when (str:containsp "gitlab" repo-str)
     (make-instance 'gitlab-repo
                     :link repo-str
+                    :company company
                     :access-token (gitlab-access-token plugin))))
