@@ -118,6 +118,13 @@
                  (:file "diff-promoter")
                  (:file "settings")
                  (:file "all")))
+   #+(or ccl lispworks)
+   (:module "gitlab"
+    :serial t
+    :components ((:file "repo")
+                 (:file "plugin")
+                 (:file "merge-request-promoter")
+                 (:file "all")))
    (:module "api"
     :serial t
     :components ((:file "core")
@@ -197,13 +204,6 @@
                              (:file "test-access-checks")
                              (:file "test-pull-request-promoter")
                              (:file "test-webhook")))
-               #+ (or ccl lispworks)
-               (:module "gitlab"
-                :serial t
-                :components ((:file "repo")
-                             (:file "plugin")
-                             (:file "merge-request-promoter")
-                             (:file "all")))
                #+lispworks
                (:module "slack"
                 :components ((:file "test-settings")))

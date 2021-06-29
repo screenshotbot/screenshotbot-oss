@@ -6,9 +6,6 @@
 
 (pkg:define-package :screenshotbot/gitlab
     (:use #:cl)
-  (:nicknames :screenshotbot.gitlab)
   (:use-reexport #:./gitlab/repo
                  #:./gitlab/merge-request-promoter
                  #:./gitlab/plugin))
-
-(import 'discussion-id)
