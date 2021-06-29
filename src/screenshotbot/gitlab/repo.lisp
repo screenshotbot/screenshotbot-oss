@@ -14,6 +14,8 @@
   (:import-from #:screenshotbot/secret
                 #:secret
                 #:defsecret)
+  (:import-from #:../git-repo
+                #:generic-git-repo)
   (:export #:gitlab-repo
            #:project-id
            #:gitlab-api
@@ -23,7 +25,7 @@
 
 (named-readtables:in-readtable java-syntax)
 
-(defclass gitlab-repo ()
+(defclass gitlab-repo (generic-git-repo)
   ((link :initarg :link
          :accessor repo-link)
    (access-token :initarg :access-token

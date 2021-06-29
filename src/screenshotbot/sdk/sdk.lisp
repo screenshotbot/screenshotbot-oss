@@ -60,7 +60,7 @@
                                         :element-type 'flexi-streams:octet)
             (finish-output tmp-stream)
             (file-position tmp-stream 0)
-            (log:info "Got file length: ~d" (file-length tmp-stream))
+            (log:info "Got file length: ~a" (file-length tmp-stream))
             (dex:put upload-url
                      :headers `((:content-type . "application/octet-stream")
                                 ;; There a bug in dexador that prevents the
@@ -68,7 +68,8 @@
                                 ;; delivered LW images
                                 (:content-length . ,(file-length tmp-stream)))
                      :content tmpfile))
-     (log:debug "Got image upload response: ~s" (flexi-streams:octets-to-string result))
+
+     (log:debug "Got image upload response: ~s" result)
      (unless (eql 200 code)
        (error "Failed to upload image: code ~a" code))
      result)
