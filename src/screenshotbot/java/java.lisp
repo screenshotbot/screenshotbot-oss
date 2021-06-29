@@ -15,6 +15,7 @@
            #:jclass-of
            #:read-java-field
            #:new-instance
+           #:define-java-callers
            #:jclass-of!
            #:array->list)
   #+lispworks

@@ -197,6 +197,13 @@
                              (:file "test-access-checks")
                              (:file "test-pull-request-promoter")
                              (:file "test-webhook")))
+               #+ (or ccl lispworks)
+               (:module "gitlab"
+                :serial t
+                :components ((:file "repo")
+                             (:file "plugin")
+                             (:file "merge-request-promoter")
+                             (:file "all")))
                #+lispworks
                (:module "slack"
                 :components ((:file "test-settings")))

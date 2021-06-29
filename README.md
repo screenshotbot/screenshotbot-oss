@@ -179,7 +179,7 @@ most integrations here, but that will depend on community interest.
 | SAML                  | Via Keycloak | Via Keycloak | Via Keycloak      | Supported                      |
 | **VCS Integrations**  |              |              |                   |                                |
 | GitHub                | Supported    | Supported    | Mostly supported  | Supported                      |
-| GitLab                | Planned      | Planned      | Not supported [1] | Supported                      |
+| GitLab                | Supported    | Supporte     | Not supported [1] | Supported                      |
 | Phabricator           | Supported    | Supported    | Supported         | Supported                      |
 | BitBucket             | Planned      | Planned      | Planned           | Planned                        |
 | **Tasks Integration** |              |              |                   |                                |
