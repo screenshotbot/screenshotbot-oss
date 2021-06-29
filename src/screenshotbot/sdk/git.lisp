@@ -33,9 +33,9 @@
 (defun $ (&rest args)
   (let ((out
          (uiop:run-program (flatten args)
-                           :output 'string)))
+                           :output 'string
+                           :error-output *error-output*)))
     (str:trim out)))
-
 
 (defmethod read-graph ((repo git-repo))
   (let ((lines (nreverse (str:lines
