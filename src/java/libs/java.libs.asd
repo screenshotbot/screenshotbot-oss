@@ -26,7 +26,7 @@
 (build-utils:jar-file "jira-rest-java-client-api-5.2.2")
 (build-utils:jar-file "asana-0.10.3")
 (build-utils:jar-file "bcprov-jdk15on-1.68")
-(build-utils:jar-file "gitlab4j-api-4.15.7")
+(build-utils:jar-file "gitlab4j-api-4.16.0")
 (build-utils:jar-file "selenium-java-3.141.59")
 (build-utils:jar-file "json-20210307")
 (build-utils:jar-file "aws-java-sdk-kms-1.11.875")
