@@ -36,6 +36,8 @@
      :utf-8)
     (t ext-format-spec)))
 
+(compile 'use-utf-8-for-all-lisp-files)
+
 #+lispworks
 (push 'use-utf-8-for-all-lisp-files system:*file-encoding-detection-algorithm*)
 
