@@ -183,6 +183,7 @@ most integrations here, but that will depend on community interest.
 | Phabricator           | Supported    | Supported    | Supported         | Supported                      |
 | BitBucket             | Planned      | Planned      | Planned           | Planned                        |
 | **Tasks Integration** |              |              |                   |                                |
+| Slack                 | Supported    | Supported    | Not Supported [1] | Supported                      |
 | Email                 | Planned      | Planned      | Planned           | Supported                      |
 | Jira                  | Planned      | Planned      | Not supported [1] | Supported                      |
 | Trello                | Planned      | Planned      | Not supported [1] | Supported                      |
