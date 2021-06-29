@@ -20,6 +20,8 @@
                 #:base-acceptable)
   (:import-from #:screenshotbot/server
                 #:*domain*)
+  (:import-from #:./repo
+                #:repo-access-token)
   (:export #:merge-request-promoter
            #:gitlab-acceptable))
 
@@ -35,21 +37,36 @@
 (defun safe-get-mr-id (run)
   (let ((mr-id (gitlab-merge-request-iid run)))
     (unless (str:emptyp mr-id)
-     (parse-integer mr-id))))
+      (parse-integer mr-id))))
+
+;; TODO: move this into a config
+(defvar *gitlab-url* "https://gitlab.com/api/v4")
+
+(defun gitlab-request (repo url &key (method :get) content)
+  (dex:request (format nil "~a~a" *gitlab-url* url)
+               :method method
+               :headers `(("PRIVATE-TOKEN" . ,(repo-access-token repo)))
+               :content content))
+
+(defclass merge-request ()
+  ((base-sha :initarg :base-sha
+             :accessor base-sha)))
 
 (defun get-merge-request (run)
   (let ((mr-id (gitlab-merge-request-iid run)))
     (when mr-id
-      (let* ((repo (channel-repo (recorder-run-channel run)))
-             (api (#_getMergeRequestApi
-                   (gitlab-api
-                    repo))))
+      (let* ((repo (channel-repo (recorder-run-channel run))))
         (let ((project-path (project-path repo))
               (mr-id (safe-get-mr-id run)))
           (when mr-id
-           (#_getMergeRequest
-            api
-            project-path mr-id)))))))
+            (let ((res (json:decode-json-from-string
+                        (gitlab-request repo
+                                        (format nil "/projects/~a/merge_requests/~a"
+                                                (urlencode:urlencode project-path)
+                                                mr-id)))))
+              (make-instance 'merge-request
+                              :base-sha (assoc-value (assoc-value res :diff--refs) :base--sha )))))))))
+
 
 (defmethod maybe-promote ((promoter merge-request-promoter) run)
   (restart-case
@@ -76,22 +93,23 @@
 (defmethod (setf acceptable-state) :before (state (acceptable gitlab-acceptable))
   (flet ((not-null! (x) (assert x) x))
    (let* ((run (report-run (acceptable-report acceptable)))
-          (repo (channel-repo (recorder-run-channel run)))
-          (api (gitlab-api repo)))
-     (%resolve-merge-request-discussion
-      (#_getDiscussionsApi api)
-      (not-null! (project-path repo))
-      (not-null! (safe-get-mr-id run))
-      (not-null! (discussion-id acceptable))
-      (ecase state
-        (:accepted
-         t)
-        (:rejected
-         nil))))))
+          (repo (channel-repo (recorder-run-channel run))))
+    (let ((res (gitlab-request repo
+                               (format nil "/projects/~a/merge_requests/~a/discussions/~a"
+                                       (urlencode:urlencode (project-path repo))
+                                       (safe-get-mr-id run)
+                                       (discussion-id acceptable))
+                               :method :put
+                               :content `(("resolved" . ,(ecase state
+                                                           (:accepted
+                                                            "true")
+                                                           (:rejected
+                                                            "false")))))))
+      state))))
 
 (defun maybe-promote-mr (promoter run mr)
   (let* ((channel (recorder-run-channel run))
-         (base-sha (#_getBaseSha (#_getDiffRefs mr)))
+         (base-sha (base-sha mr))
          (base-run (production-run-for channel
                                        :commit base-sha)))
     (cond
@@ -129,28 +147,24 @@
 (defun comment-now (promoter run comment)
   (let* ((channel (recorder-run-channel run))
          (repo (channel-repo channel))
-         (api (gitlab-api repo))
          (mr-id (safe-get-mr-id run)))
-    (let ((disc (%create-merge-request-discussion
-                 (#_getDiscussionsApi api)
-                 (project-id repo)
-                 mr-id
-                 comment ;; body
-                 nil     ;; Date
-                 nil     ;; positionHash
-                 nil     ;; Position
-                 )))
-      disc)))
+    (let ((res (gitlab-request repo
+                               (format nil "/projects/~a/merge_requests/~a/discussions"
+                                       (urlencode:urlencode (project-path repo))
+                                       mr-id)
+                               :method :post
+                               :content `(("body" . ,comment)))))
+      (assoc-value (json:decode-json-from-string res) :id))))
 
 (defmethod maybe-send-tasks ((promoter merge-request-promoter) run)
   (restart-case
       (let ((report (promoter-report promoter )))
         (loop for comment in (comments promoter)
               do
-                 (let ((disc (comment-now promoter run comment)))
+                 (let ((disc-id (comment-now promoter run comment)))
                    (with-transaction ()
                      (setf (discussion-id (report-acceptable report))
-                           (#_getId disc))))))
+                           disc-id)))))
     (retry-maybe-send-tasks ()
       (maybe-send-tasks promoter run))))
 
