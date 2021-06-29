@@ -53,7 +53,7 @@
   ($ (git-command repo) "merge-base" master-sha commit-sha))
 
 (defmethod rev-parse ((repo git-repo) branch)
-  (handler-case ((error (lambda (e)
+  (handler-bind ((error (lambda (e)
                           (declare (ignore e))
                           (log:info "Error while trying to check"
                                     "origin/master. On some CI systems (e.g. GitLab)"
