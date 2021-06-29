@@ -15,7 +15,6 @@
             :keep-function-name t
             :keep-pretty-printer t
             :keep-lisp-reader t
-            :keep-eval t
             :keep-symbols `(system:pipe-exit-status)
             :packages-to-keep-symbol-names :all
             :multiprocessing t)))
