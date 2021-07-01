@@ -11,8 +11,13 @@
                 #:plugin
                 #:plugin-parse-repo)
   (:import-from #:../git-repo
+                #:company
                 #:repo-link
                 #:generic-git-repo)
+  (:import-from #:screenshotbot/model/company
+                #:phabricator-config
+                #:phabricator-url
+                #:conduit-api-key)
   (:export #:phabricator-plugin))
 
 (defclass phabricator-plugin (plugin)
@@ -30,11 +35,13 @@
 
 
 (defmethod commit-link ((repo phabricator-git-repo) hash)
-  (multiple-value-bind (res parts)
-      (cl-ppcre:scan-to-strings "/([^/]*)[.]git$" (repo-link repo))
-    (declare (ignore res parts))
-    (cond
-      (res
-       ;; todo: lots.
-       (format nil "https://phabricator.tdrhq.com/rW~a"  hash))
-      (t "#"))))
+  (let* ((company (company repo))
+         (phabricator-url (phabricator-url company)))
+    (multiple-value-bind (res parts)
+        (cl-ppcre:scan-to-strings "/([^/]*)[.]git$" (repo-link repo))
+      (declare (ignore res parts))
+      (cond
+        (res
+         ;; todo: figure out the repo name
+         (format nil "~a/rW~a" phabricator-url hash))
+        (t "#")))))
