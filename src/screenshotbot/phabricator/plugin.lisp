@@ -56,7 +56,8 @@ diffusion.repository.search."
            :data)))))
 
 (cl-cron:make-cron-job (lambda ()
-                         (setf *cache* nil))
+                         (bt:with-lock-held (*lock*)
+                          (setf *cache* nil)))
                        :step-min 30
                        :hash-key 'clean-phabricator-cache)
 
