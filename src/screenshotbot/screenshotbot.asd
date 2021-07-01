@@ -113,7 +113,8 @@
                  (:file "all")))
    (:module "phabricator"
     :serial t
-    :components ((:file "plugin")
+    :components ((:file "conduit")
+                 (:file "plugin")
                  (:file "commenting-promoter")
                  (:file "diff-promoter")
                  (:file "settings")
