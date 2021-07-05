@@ -21,3 +21,9 @@
    :company *company*
    :script-name "/runs")
   (pass))
+
+
+(test landing-template
+  (landing-template
+   "foo")
+  (pass))
