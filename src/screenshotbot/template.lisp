@@ -237,7 +237,7 @@
 
 
 (deftag landing-template (body)
-  (render-landing-template (installation)))
+  (render-landing-template body))
 
 (defmethod render-landing-template (body)
   <html>
