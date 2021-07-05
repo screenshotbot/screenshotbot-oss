@@ -27,7 +27,6 @@
                :random-sample
                :pem
                ;;:cljwt-custom ;; custom comes from clath, for rs-256
-               :screenshotbot/utils
                :do-urlencode
                :nibble
                :cl-json)
@@ -175,6 +174,7 @@
   :serial t
   :depends-on (:fiveam
                :util
+               :screenshotbot/utils
                :tmpdir
                :screenshotbot)
   :components ((:file "testing")
@@ -227,6 +227,7 @@
   :depends-on (:drakma
                :flexi-streams
                :ironclad
+               :screenshotbot
                :md5
                :log4cl
                :cl-fad

@@ -10,6 +10,9 @@
   (:import-from #:./server
                 #:*domain*
                 #:defhandler)
+  (:import-from #:./secret
+                #:defsecret
+                #:secret)
   (:import-from #:util
                 #:make-url
                 #:*delivered-image*)
@@ -19,6 +22,7 @@
                 #:blob)
   (:export #:artifact-with-name
            #:artifact-link
+           #:md5-hex
            #:artifact))
 
 (defclass artifact (blob)
@@ -29,10 +33,19 @@
          :accessor artifact-name))
   (:metaclass persistent-class))
 
+
+(defun md5-hex (f)
+  (ironclad:byte-array-to-hex-string (md5:md5sum-file f)))
+
+(defsecret :artifact-upload-key
+  "Key used to authenticate that the artifact upload is coming from a
+  trusted source")
+
 (let ((lock (bt:make-lock)))
-  (defhandler (nil :uri "/intern/artifact/upload" :method :put) (name hash)
+  (defhandler (nil :uri "/intern/artifact/upload" :method :put) (name hash upload-key)
     (assert name)
     (assert (equal "73.15.166.71" (hunchentoot:real-remote-addr)))
+    (assert (equal upload-key (secret :artifact-upload-key)))
     (let ((artifact (bt:with-lock-held (lock)
                       (or
                        (artifact-with-name name)
@@ -41,12 +54,12 @@
       (let ((input-file (pathname "~/tmp-upload")))
        (let ((blob-pathname (bknr.datastore:blob-pathname artifact)))
          (assert (equal
-                  (screenshotbot-utils:md5-hex input-file)
+                  (md5-hex input-file)
                   hash))
          (uiop:rename-file-overwriting-target
           input-file blob-pathname)
          (assert (equal
-                  (screenshotbot-utils:md5-hex blob-pathname)
+                  (md5-hex blob-pathname)
                   hash))))
       "OK")))
 
