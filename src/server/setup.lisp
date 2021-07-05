@@ -56,7 +56,12 @@ ways."
 (defclass my-acceptor (hunchentoot-multi-acceptor:multi-acceptor)
   ())
 
-#+lispworks
+;; When using socketmaster to restart the server without downtime, we
+;; don't open a brand new socket, instead using the socket on file
+;; descriptor 3. Currently this is only tested on Lispworks, and we
+;; only use this for the non-OSS port. If you want to try this out,
+;; try remove this feature check and see if it works.
+#+(and lispworks (not screenshotbot-oss))
 (defmethod hunchentoot:start-listening ((acceptor my-acceptor))
   ;; always listen on the PORT setup on fd 3. Assuming we'll be
   ;; started by socketmaster
