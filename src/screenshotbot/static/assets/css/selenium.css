@@ -30,3 +30,9 @@ body {
 html {
     scroll-behavior: auto !important;
 }
+
+.github-star-notice {
+    /* rendering the github star SVG doesn't seem to be deterministic on
+   Selenium, so we're getting rid of it. */
+    display: none;
+}
