@@ -3,7 +3,8 @@
           #:alexandria)
   (:export #:noop-mailer
            #:smtp-mailer
-           #:local-smtp-mailer))
+           #:local-smtp-mailer
+           #:send-mail))
 
 (defclass mailer ()
   ((from :initarg :from
