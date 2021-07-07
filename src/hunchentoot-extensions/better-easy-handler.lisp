@@ -208,23 +208,32 @@
   #+sbcl (typep condition 'sb-int:broken-pipe)
   #-sbcl nil)
 
+(defmethod log-crash-extras ((acceptor base-acceptor) condition)
+  `(("url" .
+           ,(hunchentoot:request-uri*))
+    ("hostname" . ,(uiop:hostname))))
+
+(defmethod log-crash-extras :around ((acceptor base-acceptor) condition)
+  (loop for (k . v) in (call-next-method)
+        collect (cons k (format nil "~a" v))))
+
 #-screenshotbot-oss
 (defmethod hunchentoot:maybe-invoke-debugger :after (condition)
-           (when (and hunchentoot:*catch-errors-p*
-                      (not *disable-sentry*)
-                      #+lispworks
-                      (not (typep condition 'comm:socket-error))
-                      (prod-request?))
-             ;; There's an error in trivial-backtrace:map-backtrace in SBCL
-             ;; if we don't set sb-debug:*stack-top-hint* to NIL
-             (let (#+sbcl (sb-debug:*stack-top-hint* nil))
-               (unless (discard-condition-p condition)
-                 (when (find-package :sentry-client)
-                  (let ((capture-exception (find-symbol "CAPTURE-EXCEPTION" :sentry-client)))
-                    (funcall capture-exception condition
-                             :extras `(("url" .
-                                              ,(hunchentoot:request-uri*))
-                                       ("hostname" . ,(uiop:hostname))))))))))
+  (when (and hunchentoot:*catch-errors-p*
+             (not *disable-sentry*)
+             #+lispworks
+             (not (typep condition 'comm:socket-error))
+             (prod-request?))
+    ;; There's an error in trivial-backtrace:map-backtrace in SBCL
+    ;; if we don't set sb-debug:*stack-top-hint* to NIL
+    (let (#+sbcl (sb-debug:*stack-top-hint* nil))
+      (unless (discard-condition-p condition)
+        (when (find-package :sentry-client)
+          (let ((capture-exception (find-symbol "CAPTURE-EXCEPTION" :sentry-client)))
+            (funcall capture-exception condition
+                     :extras
+                     (when (boundp 'hunchentoot:*acceptor*)
+                       (log-crash-extras hunchentoot:*acceptor* condition)))))))))
 
 (defmethod hunchentoot:acceptor-log-access ((acceptor base-acceptor) &key return-code)
   "Default method for access logging.  It logs the information to the
