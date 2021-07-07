@@ -69,6 +69,7 @@
      (staging-p)))))
 
 (markup:deftag google-analytics ()
+  #-screenshotbot-oss
   (when (analyticsp)
    <util:google-analytics tracking= "UA-179653755-1" />))
 
