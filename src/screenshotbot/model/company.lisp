@@ -96,8 +96,9 @@
    (github-config
     :initform nil)
    (jira-config
-    :initform (make-instance 'jira-config :enabledp nil)
-    :accessor jira-config)
+    :initform nil
+    :reader %jira-config
+    :writer (setf jira-config))
    (demo-filled-p
     :initform nil)
    (singletonp
@@ -114,6 +115,16 @@
     :transient t
     :documentation "Cache from image hash to list of all images"))
   (:metaclass persistent-class))
+
+(let ((lock (bt:make-lock "jira-config")))
+  (defmethod jira-config ((company company))
+    "For historical reasons, our company links to the jira config. We'll get rid of this in a future version"
+    (bt:with-lock-held (lock)
+      (or
+       (%jira-config company)
+       (setf
+        (jira-config company)
+        (make-instance 'jira-config :enabledp nil))))))
 
 (defmethod singletonp ((company company))
   (slot-boundp company 'singletonp))
