@@ -17,7 +17,22 @@ Selenium or Cypress tests and generate screenshots. Screenshotbot just
 expects you to use these tools to generate a directory of screenshots,
 and we'll handle the rest.
 
-## Installation
+## Quick installation with Docker
+
+```
+$ docker build -t screenshotbot .
+$ docker volume create screenshotbot-data
+$ docker volume create screenshotbot-build-cache
+$ docker run -p 4091:4091 -v screenshotbot-data:/data -v screenshotbot-build-cache:/app/build screenshotbot
+```
+
+I'm not an expert in Docker, so if I'm suggesting something super
+wrong here, please let me know. But it seems to work. The
+`screenshotbot-data` volume is the one that's important here, the
+build-cache volume can be ephemeral, it just helps with starting up
+faster.
+
+## More complicated Installation
 
 Screenshotbot is written in Common Lisp. Common Lisp has several
 commercial and open source implementations. We officially support
