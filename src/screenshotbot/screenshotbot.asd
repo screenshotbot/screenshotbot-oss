@@ -60,8 +60,6 @@
    (:file "artifacts")
    (:file "assets")
    (:file "git-repo")
-
-   ;; single package from here onwards
    (:module "model"
     :serial t
     :components ((:file "core")
