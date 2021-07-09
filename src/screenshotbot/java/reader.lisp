@@ -6,6 +6,7 @@
 
 (pkg:define-package :screenshotbot/java/reader
   (:use #:cl)
+  #+ (or ccl lispworks)
   (:import-from ./java
                 #:invoke
                 #:%%read-java-field
