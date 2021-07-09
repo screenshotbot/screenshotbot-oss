@@ -1,0 +1,23 @@
+bazel-*
+*.pyc
+.#*
+log/*
+supervise
+jipr/static/binary/
+jipr/static/releases/
+pictures for sam
+gallery-uploads
+web-bin
+.web-bin-copy
+*ansi-term*
+system-index.txt
+.sass-cache
+repl.lisp-repl
+*.64ufasl
+*.fasl
+config.lisp
+build
+/assets
+screenshotbot-installer.sh
+analytics-log-file.log
+*.lx64fsl

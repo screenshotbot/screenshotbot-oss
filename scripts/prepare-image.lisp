@@ -47,7 +47,6 @@
 
 (load "quicklisp/setup.lisp")
 
-
 #+nil
 (ql:update-all-dists :prompt nil)
 

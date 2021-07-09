@@ -4,8 +4,21 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(load "scripts/prepare-image")
+(defun debug-log (e h)
+  (declare (ignorable e h))
+  (format t "Error somewhere deep in: ~S~%" e)
+  (finish-output t)
+  #+ccl
+  (progn
+    (ccl:print-call-history :detailed-p t)
+    (ccl:quit)))
 
+#+ (or ccl)
+(setf *debugger-hook*
+      #'debug-log)
+
+
+(load "scripts/prepare-image")
 #+ccl
 (ql:quickload "jvm")
 
@@ -17,4 +30,7 @@
 
 (screenshotbot/config:load-config)
 
-(server:main)
+(unless (member "compile" (uiop:command-line-arguments) :test 'string=)
+  (server:main))
+
+(uiop:quit)

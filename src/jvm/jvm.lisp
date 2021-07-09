@@ -35,7 +35,7 @@
   (setf cl-user::*jvm-options*
         (list "-Xrs"
               (format nil "-Djava.class.path=~a"
-                      (str:join ":" (jvm-get-classpath))))))
+                      (str:join ":" (mapcar 'namestring (jvm-get-classpath)))))))
 
 (defun jvm-init ()
   #+lispworks
