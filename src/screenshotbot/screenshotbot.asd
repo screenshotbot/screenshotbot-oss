@@ -210,9 +210,9 @@
                 :components ((:file "test-settings")))
                (:module "api"
                 :components (#+ (or lispworks) (:file "test-image")
-                             #+ (or ccl lispworks) (:file "test-promote")
-                             #+ (or ccl lispworks) (:file "test-send-tasks")
-                             #+ (or ccl lispworks) (:file "test-recorder-runs")))))
+                             (:file "test-promote")
+                             (:file "test-send-tasks")
+                             (:file "test-recorder-runs")))))
 
 
 (defsystem :screenshotbot/store-tests

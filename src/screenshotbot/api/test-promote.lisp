@@ -143,7 +143,7 @@
     (is-true (activep run2))
     (is-false (activep run1))))
 
-#-ccl
+#+lispworks
 (test promotion-log-is-set-up
   (with-fixture state ()
     (with-promotion-log (run1)
