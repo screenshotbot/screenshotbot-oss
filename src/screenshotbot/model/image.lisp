@@ -60,8 +60,7 @@
 
 (defclass s3-blob (store-object)
   ((s3-key :accessor %s3-key
-           :initarg :s3-key
-           :type (or null string)))
+           :initarg :s3-key))
   (:metaclass persistent-class))
 
 (defmethod initialize-instance :around ((s3-blob s3-blob) &rest args)
@@ -71,10 +70,8 @@
             args)))
 
 (defclass image (object-with-oid)
-  ((link :type (or null string)
-     :initarg :link)
-   (hash :type (or null string)
-         :initarg :hash
+  ((link :initarg :link)
+   (hash :initarg :hash
          :reader image-hash)
    (blob
     :initarg :blob
@@ -85,13 +82,11 @@
     :accessor company
     :initform nil)
    (verified-p
-    :type boolean
     :accessor verified-p
     :initform nil
     :initarg :verified-p
     :documentation "If we have verified that this image was uploaded")
-   (content-type :type (or null string)
-                 :initarg :content-type
+   (content-type :initarg :content-type
                  :reader image-content-type))
   (:metaclass persistent-class))
 
