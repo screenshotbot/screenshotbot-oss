@@ -146,7 +146,7 @@
    (:module "company"
     :serial t
     :components ((:file "new")))
-   #+lispworks
+   #+ (or ccl lispworks)
    (:module "slack"
     :serial t
     :components ((:file "plugin")
@@ -199,20 +199,20 @@
                              (:file "test-image")
                              (:file "test-commit-graph")
                              (:file "test-acceptable")))
-               #+lispworks
+               #+ (or ccl lispworks)
                (:module "github"
                 :components ((:file "test-jwt-token")
-                             (:file "test-access-checks")
+                             #+lispworks (:file "test-access-checks")
                              (:file "test-pull-request-promoter")
                              (:file "test-webhook")))
-               #+lispworks
+               #+ (or ccl lispworks)
                (:module "slack"
                 :components ((:file "test-settings")))
                (:module "api"
-                :components (#+lispworks (:file "test-image")
-                             #+lispworks (:file "test-promote")
-                             #+lispworks (:file "test-send-tasks")
-                             #+lispworks (:file "test-recorder-runs")))))
+                :components (#+ (or lispworks) (:file "test-image")
+                             #+ (or lispworks) (:file "test-promote")
+                             #+ (or ccl lispworks) (:file "test-send-tasks")
+                             #+ (or ccl lispworks) (:file "test-recorder-runs")))))
 
 
 (defsystem :screenshotbot/store-tests

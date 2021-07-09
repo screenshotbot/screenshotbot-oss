@@ -39,16 +39,14 @@
        (&body)))))
 
 (test simple-upload
-  (handler-bind ((error (lambda (e)
-                          (dbg:output-backtrace :full))))
-   (with-fixture state ()
-     (let ((resp (json:decode-json-from-string
-                  (prepare-upload-api
-                   :hash "foo"
-                   :content-type "image/png"))))
-       (let ((response (assoc-value resp :response)))
-         (is (not (str:emptyp (assoc-value response :id))))
-         (is-true (assoc-value response :upload-url)))))))
+  (with-fixture state ()
+    (let ((resp (json:decode-json-from-string
+                 (prepare-upload-api
+                  :hash "foo"
+                  :content-type "image/png"))))
+      (let ((response (assoc-value resp :response)))
+        (is (not (str:emptyp (assoc-value response :id))))
+        (is-true (assoc-value response :upload-url))))))
 
 (test reupload-same-url
   (with-fixture state ()

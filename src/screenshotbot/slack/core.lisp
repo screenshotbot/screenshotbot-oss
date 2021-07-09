@@ -74,7 +74,7 @@
   (#_methods (slack-instance) token))
 
 (defun check-slack-ok (response)
-  (unless (equal "true" (#_toString (lw-ji:jobject-ensure-global (#_isOk response))))
+  (unless (equal "true" (#_toString (#_isOk response)))
     (error "Slack API error: ~a" (#_getError response))))
 
 (defun slack-post-on-channel (&key channel text methods)

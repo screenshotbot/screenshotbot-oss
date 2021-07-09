@@ -69,7 +69,7 @@
   (user-with-email "arnold@tdrhq.com"))
 
 (defclass user (util:object-with-oid)
-  ((full-name :type string
+  ((full-name :type (or null string)
               :initarg :full-name
               :initform nil
               :reader %user-full-name
