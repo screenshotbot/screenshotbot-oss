@@ -58,7 +58,7 @@
             (return-from process-request
               (let* ((*acceptor* acceptor)
                      (*request* (copy-request request *acceptor*)))
-                (call-next-method *request*)))))
+                (process-request *request*)))))
 
    (let ((acceptor (request-acceptor request)))
      (let ((host (car (str:split ":" (host request)))))
