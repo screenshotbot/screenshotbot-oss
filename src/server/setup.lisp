@@ -120,9 +120,7 @@ ways."
 (defun main (&optional #+sbcl listen-fd)
   "Called from launch scripts, either web-bin or launch.lisp"
   (bt:with-lock-held (*server-lock*)
-   (let ((args (progn
-                 #+lispworks system:*line-arguments-list*
-                 #+sbcl sb-ext:*posix-argv*)))
+   (let ((args (uiop:command-line-arguments)))
      (log:info "args is: ~s" args)
 
      (multiple-value-bind (vars vals matched dispatch rest)
