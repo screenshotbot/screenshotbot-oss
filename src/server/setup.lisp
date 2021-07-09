@@ -119,8 +119,10 @@ ways."
 
 (defun main (&optional #+sbcl listen-fd)
   "Called from launch scripts, either web-bin or launch.lisp"
+
   (bt:with-lock-held (*server-lock*)
-   (let ((args (cons "<arg0>"(uiop:command-line-arguments))))
+    (let ((args #-lispworks (cons "<arg0>"(uiop:command-line-arguments))
+                #+lispworks sys:*line-arguments-list*))
      (log:info "args is: ~s" args)
 
      (multiple-value-bind (vars vals matched dispatch rest)
@@ -132,7 +134,9 @@ ways."
              do (setf (symbol-value var) val))
 
        (when *verify-store*
+         (log:config :info)
          (util:verify-store)
+         (log:info "Done verifying store")
          (uiop:quit 0))
 
        (log:info "The port is now ~a" *port*)
