@@ -56,7 +56,7 @@
   ((type :initform "image")
    (id :type string
        :initarg :id)
-   (upload-url :type string
+   (upload-url :type (or null string)
                :initarg :upload-url)))
 
 #+lispworks
@@ -96,8 +96,8 @@
                            :oid (oid image)))
                          (t
                           (with-transaction ()
-                           (setf (image-blob image)
-                                 (make-instance 's3-blob)))
+                            (setf (image-blob image)
+                                  (make-instance 's3-blob)))
                           (funcall *build-presigned-put*
                                    *bucket*
                                    (s3-key image)))))))

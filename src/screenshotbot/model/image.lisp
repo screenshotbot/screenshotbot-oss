@@ -61,25 +61,25 @@
 (defclass s3-blob (store-object)
   ((s3-key :accessor %s3-key
            :initarg :s3-key
-           :type string))
+           :type (or null string)))
   (:metaclass persistent-class))
 
 (defmethod initialize-instance :around ((s3-blob s3-blob) &rest args)
-  (apply #'call-next-method s3-blob
-           :s3-key (generate-api-secret)
-           args))
+  (let ((key (generate-api-secret)))
+    (apply #'call-next-method s3-blob
+             :s3-key key
+            args)))
 
 (defclass image (object-with-oid)
-  ((link :type string
+  ((link :type (or null string)
      :initarg :link)
-   (hash :type string
+   (hash :type (or null string)
          :initarg :hash
          :reader image-hash)
    (blob
     :initarg :blob
     :accessor image-blob
-    :initform nil
-    :type (or null string))
+    :initform nil)
    (company
     :initarg :company
     :accessor company

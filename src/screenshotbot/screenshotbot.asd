@@ -209,7 +209,7 @@
                (:module "slack"
                 :components ((:file "test-settings")))
                (:module "api"
-                :components (#+ (or sbcl lispworks) (:file "test-image")
+                :components ((:file "test-image")
                              (:file "test-promote")
                              (:file "test-send-tasks")
                              (:file "test-recorder-runs")))))
