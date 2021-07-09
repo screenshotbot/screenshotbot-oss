@@ -11,7 +11,7 @@
 (defclass safe-mp-store (bknr.datastore:mp-store)
   (lock))
 
-(defmethod initialize-instance :after ((store safe-mp-store) &key directory &allow-other-keys)
+(defmethod initialize-instance :before ((store safe-mp-store) &key directory &allow-other-keys)
   (with-slots (lock) store
     (setf lock
           (make-instance 'file-lock
