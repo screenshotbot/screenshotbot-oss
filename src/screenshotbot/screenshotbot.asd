@@ -202,7 +202,7 @@
                #+ (or ccl lispworks)
                (:module "github"
                 :components ((:file "test-jwt-token")
-                             #+lispworks (:file "test-access-checks")
+                             (:file "test-access-checks")
                              (:file "test-pull-request-promoter")
                              (:file "test-webhook")))
                #+ (or ccl lispworks)
