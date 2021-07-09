@@ -44,6 +44,9 @@
 (defmethod authentication ((mailer smtp-mailer))
   `(:plain ,(user mailer) ,(password mailer)))
 
+(defmethod send-mail ((mailer noop-mailer) &key &allow-other-keys)
+  (declare (ignore mailer)))
+
 (defmethod send-mail ((mailer smtp-mailer)
                       &key from subject to html-message)
   (restart-case
