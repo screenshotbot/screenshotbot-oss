@@ -189,9 +189,8 @@
                              (:file "test-api-keys")
                              (:file "test-channels")
                              (:file "test-history")))
-               #+ (or ccl lispworks)
                (:module "login"
-                :components (#+lispworks (:file "test-github-oauth")
+                :components ((:file "test-github-oauth")
                              (:file "test-signup")))
                (:module "model"
                 :components ((:file "test-screenshot")
