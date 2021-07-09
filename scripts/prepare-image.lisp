@@ -7,12 +7,13 @@
 #+lispworks
 (require "java-interface" )
 
-(let ((output (compile-file "scripts/asdf.lisp" :verbose nil :print nil)))
-  (load output))
+(when (probe-file "scripts/asdf.lisp")
+  (let ((output (compile-file "scripts/asdf.lisp" :verbose nil :print nil)))
+    (load output))
+  (provide "asdf"))
 
 (require "asdf")
 
-(provide "asdf")
 
 #+nil
 (push (pathname (format nil "~a/local-projects/poiu/" (namestring (uiop:getcwd))))
