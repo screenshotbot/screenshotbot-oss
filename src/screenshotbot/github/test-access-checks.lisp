@@ -12,6 +12,7 @@
 
 (def-suite* :screenshotbot/github/test-access-checks)
 
+#-sbcl ;; java
 (test simple-creation
   (finishes
     (github-client)))

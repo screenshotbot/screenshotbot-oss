@@ -199,7 +199,6 @@
                              (:file "test-image")
                              (:file "test-commit-graph")
                              (:file "test-acceptable")))
-               #+ (or ccl lispworks)
                (:module "github"
                 :components ((:file "test-jwt-token")
                              (:file "test-access-checks")
