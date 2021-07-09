@@ -118,7 +118,6 @@
                  (:file "diff-promoter")
                  (:file "settings")
                  (:file "all")))
-   #+(or ccl lispworks)
    (:module "gitlab"
     :serial t
     :components ((:file "repo")

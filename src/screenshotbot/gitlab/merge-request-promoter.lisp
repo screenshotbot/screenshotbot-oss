@@ -138,10 +138,6 @@
                  *domain*
                  (util:oid report)))))))))))
 
-(screenshotbot/java:define-java-callers "org.gitlab4j.api.DiscussionsApi"
-  (%create-merge-request-discussion "createMergeRequestDiscussion")
-  (%resolve-merge-request-discussion "resolveMergeRequestDiscussion"))
-
 (defun comment-now (promoter run comment)
   (let* ((channel (recorder-run-channel run))
          (repo (channel-repo channel))
