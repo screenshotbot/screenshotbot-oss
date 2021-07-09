@@ -9,5 +9,4 @@ RUN mkdir /data
 WORKDIR /app
 COPY . .
 RUN if ! [ -e launch.lisp ] ; then cp src/screenshotbot/oss/launch.lisp ./ ; fi
-RUN cd /app && /opt/software/ccl/lx86cl64 -l launch.lisp -- compile
 CMD /opt/software/ccl/lx86cl64 -l launch.lisp -- --object-store /data/
