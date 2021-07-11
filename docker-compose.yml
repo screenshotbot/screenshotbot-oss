@@ -2,9 +2,6 @@ version: "3.9"
 services:
   web:
     build: .
-    args:
-      USER_ID: ${USER_ID:-0}
-      GROUP_ID: ${GROUP_ID:-0}
     ports:
       - "4091:4091"
     volumes:
