@@ -196,6 +196,7 @@
                (:module "model"
                 :components ((:file "test-screenshot")
                              (:file "test-channel")
+                             (:file "test-company")
                              (:file "test-image")
                              (:file "test-commit-graph")
                              (:file "test-acceptable")))

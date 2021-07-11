@@ -122,9 +122,10 @@
     (bt:with-lock-held (lock)
       (or
        (%jira-config company)
-       (setf
-        (jira-config company)
-        (make-instance 'jira-config :enabledp nil))))))
+       (with-transaction ()
+        (setf
+         (jira-config company)
+         (make-instance 'jira-config :enabledp nil)))))))
 
 (defmethod singletonp ((company company))
   (slot-boundp company 'singletonp))
