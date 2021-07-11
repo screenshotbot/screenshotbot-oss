@@ -20,10 +20,17 @@ and we'll handle the rest.
 ## Quick installation with Docker
 
 ```
-$ docker-compose up
+$ docker build -t screenshotbot .
+$ docker volume create screenshotbot-data
+$ docker volume create screenshotbot-build-cache
+$ docker run -p 4091:4091 -v screenshotbot-data:/data -v screenshotbot-build-cache:/app/build screenshotbot
 ```
 
-Your data will be stored in screenshotbot-oss volume.
+I'm not an expert in Docker, so if I'm suggesting something super
+wrong here, please let me know. But it seems to work. The
+`screenshotbot-data` volume is the one that's important here, the
+build-cache volume doesn't need to be backed-up or on the network, it
+just helps with starting up faster. [TODO: best practices for config.lisp?]
 
 ## More complicated Installation
 
