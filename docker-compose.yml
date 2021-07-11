@@ -6,6 +6,6 @@ services:
       - "4091:4091"
     volumes:
       - screenshotbot-oss:/data
-      - ./build/docker-build:/app/build
+      - ./:/app
 volumes:
   screenshotbot-oss:
