@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    ports:
+      - "4091:4091"
+    volumes:
+      - screenshotbot-oss:/data
+      - ./build/docker-build:/app/build
+volumes:
+  screenshotbot-oss:
