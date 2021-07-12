@@ -41,11 +41,13 @@ ways."
 (defparameter *options*
   `((*port* #+screenshotbot-oss "4091"
             #-screenshotbot-oss "4001" "" :params ("PORT"))
-    (*socketmaster* t "" :params ("SOCKETMASTER"))
+    (*socketmaster* nil "")
     (*shell* nil "")
     (*swank-port* #+screenshotbot-oss "4095"
                   #-screenshotbot-oss "4005"
                   "" :params ("SWANK-PORT"))
+    (*swank-loopback-interface* "localhost" "The interface on which we bind the swank port"
+                                :params ("SWANK-LOOPBACK-INTERFACE"))
     (*start-swank* #+screenshotbot-oss nil
                    #-screenshotbot-oss t
                    "")
@@ -231,6 +233,7 @@ ways."
 
 (defun swank-loop ()
   (log:info "Using port for swank: ~a" *swank-port*)
+  (setf swank::*loopback-interface* *swank-loopback-interface*)
   (swank:create-server :port (parse-integer *swank-port*)
                        ;; if non-nil the connection won't be closed
                        ;; after connecting
