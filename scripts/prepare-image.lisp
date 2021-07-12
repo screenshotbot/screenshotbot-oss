@@ -29,14 +29,14 @@
                                          ,(format nil "~abuild/asdf-cache/~a/" *cwd*
                                                   (uiop:implementation-identifier)))))
 
-
-
+#+lispworks
 (defun use-utf-8-for-all-lisp-files (pathname ext-format-spec first-byte max-extent)
   (cond
     ((equal "lisp" (pathname-type pathname))
      :utf-8)
     (t ext-format-spec)))
 
+#+lispworks
 (compile 'use-utf-8-for-all-lisp-files)
 
 #+lispworks
@@ -56,6 +56,7 @@
 (push (pathname (format nil "~alocal-projects/" *cwd*)) ql:*local-project-directories*)
 (push (pathname (format nil "~asrc/" *cwd*)) ql:*local-project-directories*)
 (push (pathname (format nil "~athird-party/" *cwd*)) ql:*local-project-directories*)
+
 
 (ql:quickload "log4cl")
 (ql:quickload :documentation-utils)
