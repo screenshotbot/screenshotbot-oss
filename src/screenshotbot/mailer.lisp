@@ -4,6 +4,7 @@
   (:export #:noop-mailer
            #:smtp-mailer
            #:local-smtp-mailer
+           #:background-mailer
            #:send-mail))
 
 (defclass mailer ()
@@ -28,8 +29,13 @@
    (password :initarg :password
              :accessor password)))
 
+(defclass background-mailer (mailer)
+  ((delegate :initarg :delegate
+             :accessor delegate)))
+
 (defclass local-smtp-mailer (smtp-mailer)
-  ((host :initform "localhost")
+  ((host :initform "localhost"
+         :initarg :hostname)
    (ssl :initform nil)
    (port :initarg :port
          :initform 25))
@@ -52,7 +58,7 @@
   (restart-case
       (unless util:*disable-emails*
        (cl-smtp:send-email
-        "localhost"
+        (host mailer)
         (or from (from mailer))
         to
         subject
@@ -64,3 +70,8 @@
         :html-message (markup:write-html html-message)))
     (dont-send-the-mail ()
       nil)))
+
+(defmethod send-mail ((mailer background-mailer) &rest args)
+  (bt:make-thread
+   (lambda ()
+     (apply #'send-mail (delegate mailer) args))))
