@@ -2,7 +2,7 @@
 FROM debian:stable AS builder
 
 # Update copybara config if you change this line
-ENV PROJECT_ROOT=.//
+ENV PROJECT_ROOT=../../../
 
 RUN mkdir -p /opt/software
 WORKDIR /opt/software
