@@ -20,7 +20,7 @@ and we'll handle the rest.
 ## Quick installation with Docker
 
 ```
-$ docker-compose up --build .
+$ docker-compose up --build
 ```
 ```
 
