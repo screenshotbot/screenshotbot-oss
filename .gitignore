@@ -21,4 +21,3 @@ build
 screenshotbot-installer.sh
 analytics-log-file.log
 *.lx64fsl
-.env

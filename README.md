@@ -20,10 +20,8 @@ and we'll handle the rest.
 ## Quick installation with Docker
 
 ```
-$ docker build -t screenshotbot .
-$ docker volume create screenshotbot-data
-$ docker volume create screenshotbot-build-cache
-$ docker run -p 4091:4091 -v screenshotbot-data:/data -v screenshotbot-build-cache:/app/build screenshotbot
+$ docker-compose up --build .
+```
 ```
 
 I'm not an expert in Docker, so if I'm suggesting something super
