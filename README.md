@@ -22,13 +22,10 @@ and we'll handle the rest.
 ```
 $ docker-compose up --build
 ```
-```
 
-I'm not an expert in Docker, so if I'm suggesting something super
-wrong here, please let me know. But it seems to work. The
-`screenshotbot-data` volume is the one that's important here, the
-build-cache volume doesn't need to be backed-up or on the network, it
-just helps with starting up faster. [TODO: best practices for config.lisp?]
+If you need to modify the `config.lisp`, modify it before running this
+command. In the future we'll provide live reloading of config.lisp for
+docker, but at the moment that's only available when not using docker.
 
 ## More complicated Installation
 
