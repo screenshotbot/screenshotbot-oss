@@ -7,7 +7,5 @@ services:
     volumes:
       - screenshotbot-oss:/data
       - ./:/app
-      - screenshotbot-build-cache:/app/build
 volumes:
   screenshotbot-oss:
-  screenshotbot-build-cache:
