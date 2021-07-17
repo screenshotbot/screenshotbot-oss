@@ -84,7 +84,10 @@ ways."
      (push
       (lambda ()
         (hunchentoot-multi-acceptor:add-acceptor *multi-acceptor* host acceptor))
-      *init-hooks*))))
+      *init-hooks*)
+      ;; Immediately register the acceptor if we're executing this live
+      (when (boundp '*multi-acceptor*)
+        (init-sub-acceptors)))))
 
 (defun init-multi-acceptor ()
   (setf *multi-acceptor* (make-instance 'my-acceptor :port (parse-integer *port*) :name 'multi-acceptor))

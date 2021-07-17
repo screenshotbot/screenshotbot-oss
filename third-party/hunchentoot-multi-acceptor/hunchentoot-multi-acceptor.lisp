@@ -20,7 +20,7 @@
                  :name 'default-acceptor))
 
 (hunchentoot:define-easy-handler (default-route :uri "/" :acceptor-names (list 'default-acceptor)) ()
-  "Default Acceptor")
+  (format nil "Default Acceptor (for: ~a)" (hunchentoot:host)))
 
 ;; (define-easy-handler (s-default-message :uri "/foo" :acceptor-names '(default-acceptor)) ()
 ;;   (format nil "error, hostname not set up for: ~a" (host *request*)))

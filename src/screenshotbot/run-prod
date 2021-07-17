@@ -1,2 +1,1 @@
 #!/bin/sh
-./scripts/socketmaster -command ./assets/screenshotbot -listen tcp4://:4001 -start 200 -- --object-store /home/web/object-store/
