@@ -154,4 +154,3 @@
       (fix-oauth-user-user ()
         (with-transaction ()
           (setf (oauth-user-user y) x)))))))
-;;(with-db (get-user-from-gh-access-token (find-by-id 'github-access-token 4)))

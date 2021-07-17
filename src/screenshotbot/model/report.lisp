@@ -73,8 +73,6 @@
   ;; repo
   (publicp (recorder-run-channel (report-run report))))
 
-;; (with-db (models:update-view-add-columns 'report))
-
 (defclass base-acceptable (store-object)
   ((state :initform nil
           :initarg :state

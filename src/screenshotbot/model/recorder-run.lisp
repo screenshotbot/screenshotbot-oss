@@ -223,6 +223,3 @@
 
 (defmethod (setf activep) (val (run recorder-run))
   (error "Old method, set active-run on channel directly"))
-
-
-;; (with-db (models:update-view-add-columns 'recorder-run))
