@@ -27,3 +27,22 @@
 
 (defun validate-schemas ()
   (setf *validatedp* t))
+
+
+(defun slot-schema (class)
+  (loop for slot in (closer-mop:class-slots class)
+        collect
+        (let ((sym (closer-mop:slot-definition-name slot)))
+          `(("name" . ,(string sym))
+            ("package" . ,(package-name (symbol-package sym)))))))
+
+(defun schema-of-class (class)
+  `(("name" . ,(string (class-name class)))
+    ("package" . ,(string (package-name (symbol-package (class-name class)))))
+    ("slots" . ,(slot-schema class))))
+
+(defun full-schema ()
+  (loop for parent in '(bknr.datastore:store-object util:object-with-oid)
+        appending
+        (loop for class in (closer-mop:class-direct-subclasses (find-class parent))
+              collect (schema-of-class class))))
