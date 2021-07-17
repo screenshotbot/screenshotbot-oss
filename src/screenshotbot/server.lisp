@@ -89,7 +89,6 @@
   (make-instance 'acceptor
                  :port 3015
                  :name 'screenshotbot-acceptor
-                 :db-config '(:mysqladmin "screenshotbot")
                  :document-root (document-root)))
 
 (defun init-for-delivered-image ()
