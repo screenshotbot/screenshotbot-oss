@@ -203,6 +203,7 @@ update-ip: $(sbcl)
 copybara: .PHONY
 	# This is on arnold's jenkins server. Disregard for OSS use.
 	ssh-add ~/.ssh/id_rsa_screenshotbot_oss
+	ssh-add ~/.ssh/id_rsa_slite
 	$(COPYBARA) copy.bara.sky || true # avoid the no-op issue
 	$(COPYBARA) copy.bara.sky slite || true
 
