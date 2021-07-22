@@ -7,7 +7,6 @@
 (defsystem :hunchentoot-extensions
   :serial t
   :depends-on (:hunchentoot
-               :parse-declarations-1.0
                :str
                :markup
                :do-urlencode

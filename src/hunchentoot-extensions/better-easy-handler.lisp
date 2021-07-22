@@ -152,7 +152,7 @@
         (regex (gensym "REGEX"))
         (vars (gensym "VARS"))
         (parse-tree (gensym "PARSE-TREE")))
-    (multiple-value-bind (body decls) (tcr.parse-declarations-1.0::parse-body body)
+    (multiple-value-bind (body decls) (uiop:parse-body body)
      (multiple-value-bind (full-regex full-var-list) (when (stringp uri) (make-uri-regex uri))
        (declare (ignore full-regex))
        ;; we call make-uri-regex twice, once for getting the variables
