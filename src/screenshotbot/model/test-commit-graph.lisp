@@ -10,6 +10,7 @@
         #:./commit-graph
         #:./company))
 
+(util/fiveam:def-suite)
 
 (def-fixture state ()
   (let ((company (make-instance 'company)))

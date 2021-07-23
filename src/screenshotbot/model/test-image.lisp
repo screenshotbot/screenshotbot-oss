@@ -19,6 +19,8 @@
                 #:oid)
   (:export))
 
+(util/fiveam:def-suite)
+
 (def-fixture state ()
   (let* ((img (make-instance 'local-image :url "/assets/images/old-example-view-right.png"))
          (img2 (make-instance 'local-image :url "/assets/images/old-example-view-left.png"))

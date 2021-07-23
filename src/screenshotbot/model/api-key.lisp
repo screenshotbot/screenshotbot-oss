@@ -25,6 +25,7 @@
            #:api-key-company
            #:delete-api-key))
 
+(util/fiveam:def-suite)
 
 (defclass api-key (store-object)
   ((user

@@ -11,6 +11,8 @@
   (:import-from #:./assets
                 #:prepare-delivered-asset-map))
 
+(util/fiveam:def-suite)
+
 ;; this is an expensive test!
 (test delivered-asset-map
   (let ((res (prepare-delivered-asset-map :screenshotbot :copy nil)))

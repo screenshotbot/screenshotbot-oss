@@ -175,6 +175,7 @@
   :serial t
   :depends-on (:fiveam
                :util
+               :util/fiveam
                :screenshotbot/utils
                :tmpdir
                :screenshotbot)

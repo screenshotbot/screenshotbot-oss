@@ -13,6 +13,7 @@
 (test def-suite-recursive ()
   (let ((fiveam::*toplevel-suites* nil)
         (fiveam::*test* (make-hash-table :test #'eql)))
+    (setf (fiveam::get-test 'nil) (make-suite 'nil :description "Global suite"))
     (def-suite-recursive :foo/bar/car)
     (let ((test (get-test :foo/bar/car)))
       (is (typep test 'fiveam::test-suite))
