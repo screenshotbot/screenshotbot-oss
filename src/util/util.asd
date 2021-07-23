@@ -85,17 +85,26 @@
                (:file "acceptor")
                (:file "mquery")))
 
+(defsystem :util/fiveam
+  :depends-on (:util
+               :fiveam
+               :str)
+  :serial t
+  :components ((:file "fiveam")))
+
 (defsystem :util/tests
-  :depends-on (:util)
+  :depends-on (:util
+               :util/fiveam)
   :serial t
   :components ((:module "tests"
-                        :components ((:file "test-package")
-                                     (:file "test-lists")
-                                     (:file "test-models")
-                                     (:file "test-cdn")
-                                     (:file "test-bind-form")
-                                     (:file "test-objectid")
-                                     (:file "test-file-lock")
-                                     (:file "test-html2text")
-                                     (:file "test-mockable")
-                                     (:file "test-mquery")))))
+                :components ((:file "test-package")
+                             (:file "test-fiveam")
+                             (:file "test-lists")
+                             (:file "test-models")
+                             (:file "test-cdn")
+                             (:file "test-bind-form")
+                             (:file "test-objectid")
+                             (:file "test-file-lock")
+                             (:file "test-html2text")
+                             (:file "test-mockable")
+                             (:file "test-mquery")))))
