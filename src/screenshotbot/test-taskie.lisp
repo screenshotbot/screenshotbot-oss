@@ -12,7 +12,7 @@
   (:import-from #:./taskie
                 #:with-pagination))
 
-(def-suite* :screeshotbot/test-taskie)
+(util/fiveam:def-suite)
 
 (defclass my-object ()
   ((val :initarg :val)))

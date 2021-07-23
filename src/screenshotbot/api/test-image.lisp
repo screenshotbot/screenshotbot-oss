@@ -26,7 +26,7 @@
   (:import-from #:../testing
                 #:with-test-user))
 
-(def-suite* :screenshotbot/api/test-image)
+(util/fiveam:def-suite)
 
 (def-fixture state ()
   (util:with-fake-request ()

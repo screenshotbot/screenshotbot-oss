@@ -22,7 +22,7 @@
                 #:*company*
                 #:test-company))
 
-(def-suite* :screenshotbot/dashboard/test-recent-runs)
+(util/fiveam:def-suite)
 
 (defclass test-run ()
   ())

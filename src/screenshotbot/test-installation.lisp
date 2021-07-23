@@ -10,7 +10,7 @@
           #:fiveam
           #:./installation))
 
-(def-suite* :screenshotbot/test-installation)
+(util/fiveam:def-suite)
 
 (defclass my-plugin () ())
 

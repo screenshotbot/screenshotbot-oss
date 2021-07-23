@@ -13,7 +13,7 @@
                 #:*user*
                 #:*company*))
 
-(def-suite* :screenshotbot/test-template)
+(util/fiveam:def-suite)
 
 (test simple-template
   (screenshotbot/template:dashboard-template

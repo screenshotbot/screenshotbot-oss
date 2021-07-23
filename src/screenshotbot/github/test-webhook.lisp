@@ -19,7 +19,7 @@
                 #:pull-request-with-url
                 #:github-maybe-update-pull-request))
 
-(def-suite* :screenshotbot/github/test-webhook)
+(util/fiveam:def-suite)
 
 (test github-maybe-update-pull-request ()
   (with-open-file (s (path:catfile

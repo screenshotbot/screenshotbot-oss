@@ -29,7 +29,7 @@
   (:import-from #:../testing
                 #:with-test-user))
 
-(def-suite* :screenshotbot/api/test-send-tasks)
+(util/fiveam:def-suite)
 
 (defclass test-company (company)
   ()

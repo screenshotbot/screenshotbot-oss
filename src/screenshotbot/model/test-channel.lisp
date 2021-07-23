@@ -14,7 +14,7 @@
   (:import-from #:./channel
                 #:get-full-repo-from-repo))
 
-(def-suite* :screenshotbot/model/test-channel)
+(util/fiveam:def-suite)
 
 (defclass unserializable () ())
 

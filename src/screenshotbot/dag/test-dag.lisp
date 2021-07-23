@@ -19,7 +19,7 @@
 
 (in-package :screenshotbot.dag.test-dag)
 
-(def-suite* :screenshotbot.dag.test-dag)
+(util/fiveam:def-suite)
 
 (def-fixture state ()
   (let ((dag (make-instance 'dag)))

@@ -3,7 +3,7 @@
           #:fiveam
           #:./company))
 
-(def-suite* :screenshotbot/model/test-company)
+(util/fiveam:def-suite)
 
 (test jira-config
   (let ((company (make-instance 'company)))

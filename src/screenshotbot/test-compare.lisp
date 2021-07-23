@@ -21,7 +21,7 @@
                 #:diff-report-title))
 (in-package :screenshotbot/test-compare)
 
-(def-suite* :screenshotbot/test-compare)
+(util/fiveam:def-suite)
 
 (test 2-changed
   (is (equal "3 changes"

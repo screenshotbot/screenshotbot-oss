@@ -13,7 +13,7 @@
   (:import-from #:./signup
                 #:signup-post))
 
-(def-suite* :screenshotbot/login/test-signup)
+(util/fiveam:def-suite)
 
 (test happy-path
   (util:with-fake-request (:host "localhost:80")

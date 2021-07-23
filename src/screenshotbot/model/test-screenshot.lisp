@@ -15,7 +15,7 @@
         #:../model/company
         #:fiveam))
 
-(def-suite* :screenshotbot/model/test-screenshot)
+(util/fiveam:def-suite)
 
 (def-fixture state ()
   (let* ((channel (make-instance 'channel)))

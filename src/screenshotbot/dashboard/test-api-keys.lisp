@@ -16,7 +16,7 @@
                 #:test-api-key
                 #:*company*))
 
-(def-suite* :screenshotbot/dashboard/test-api-keys)
+(util/fiveam:def-suite)
 
 (test simple-page-test
   (%api-key-page :user (make-instance 'test-user

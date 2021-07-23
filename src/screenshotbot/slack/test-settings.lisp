@@ -14,7 +14,7 @@
         #:./settings
         #:../login/common))
 
-(def-suite* :screenshotbot/slack/test-settings)
+(util/fiveam:def-suite)
 
 (def-fixture state ()
   (util:with-fake-request ()

@@ -17,7 +17,7 @@
   (:import-from #:bknr.datastore
                 #:store-object-id))
 
-(def-suite* :screenshotbot/login/test-github-oauth)
+(util/fiveam:def-suite)
 
 (defun %prepare-test-user ()
   (declare (optimize (debug 3)

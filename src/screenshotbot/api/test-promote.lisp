@@ -23,7 +23,7 @@
   (:import-from #:../testing
                 #:with-test-user))
 
-(def-suite* :screenshotbot.api.test-promote)
+(util/fiveam:def-suite)
 
 (defclass dummy-repo ()
   ((commits :initform (list "car" "car2" "master"))))

@@ -10,7 +10,7 @@
         #:fiveam
         #:./report))
 
-(def-suite* :screenshotbot/model/test-acceptable)
+(util/fiveam:def-suite)
 
 (test simple-acceptable-set-get
   (let ((a (make-instance 'base-acceptable)))

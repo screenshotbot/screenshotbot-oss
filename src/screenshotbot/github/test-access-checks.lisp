@@ -10,7 +10,7 @@
         #:./access-checks
         #:../user-api))
 
-(def-suite* :screenshotbot/github/test-access-checks)
+(util/fiveam:def-suite)
 
 #-sbcl ;; java
 (test simple-creation

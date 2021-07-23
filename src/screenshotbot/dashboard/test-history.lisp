@@ -13,7 +13,7 @@
   (:import-from #:./history
                 #:render-history))
 
-(def-suite* :screenshotbot/dashboard/test-history)
+(util/fiveam:def-suite)
 
 (defclass my-screenshot (test-screenshot)
   ())

@@ -29,7 +29,7 @@
                 #:make-check-result-from-diff-report
                 #:report))
 
-(def-suite* :screenshotbot/github/test-pull-request-promoter)
+(util/fiveam:def-suite)
 
 (defvar *base-run*)
 

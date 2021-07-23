@@ -11,7 +11,7 @@
   (:import-from #:./jwt-token
                 #:github-create-jwt-token))
 
-(def-suite* :screenshotbot/github/test-jwt-token)
+(util/fiveam:def-suite)
 
 ;; this is a dummy PEM file. I would put it in the repo, but then bots
 ;; like GitGuardian will start pinging me. I do like their pings, so

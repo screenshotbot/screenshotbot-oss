@@ -16,7 +16,7 @@
    :list-images))
 (in-package :screenshotbot.sdk.test-bundle)
 
-(def-suite* :screenshotbot.sdk.test-bundle)
+(util/fiveam:def-suite)
 
 (defun %set-equal (x y)
   (set-equal x y :test 'equalp))

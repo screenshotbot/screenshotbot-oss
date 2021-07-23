@@ -28,7 +28,7 @@
   (:import-from #:../testing
                 #:with-test-user))
 
-(def-suite* :screenshotbot.api.test-recorder-runs)
+(util/fiveam:def-suite)
 
 (def-fixture state ()
   (util:with-fake-request ()

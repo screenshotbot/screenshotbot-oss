@@ -16,7 +16,7 @@
                 #:test-channel
                 #:test-company))
 
-(def-suite* :screenshotbot/dashboard/test-channels)
+(util/fiveam:def-suite)
 
 (defclass company-with-channels (test-company)
   ())

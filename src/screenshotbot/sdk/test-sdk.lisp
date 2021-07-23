@@ -22,7 +22,7 @@
                 #:put-file))
 (in-package :screenshotbot.sdk.test-sdk)
 
-(def-suite* :screenshotbot.sdk.test-sdk)
+(util/fiveam:def-suite)
 
 (test read-directory-for-ios
   (tmpdir:with-tmpdir (s)
