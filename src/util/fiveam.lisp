@@ -8,12 +8,18 @@
   (cond
     (parts
      (%def (butlast parts))
-     (fiveam:make-suite (intern (str:join "/" parts)
-                               (symbol-package :foo))
-                        :in
-                        (when (butlast parts)
-                         (intern (str:join "/" (butlast parts))
-                                 (symbol-package :foo)))))))
+     (let ((name (intern (str:join "/" parts)
+                         (symbol-package :foo))))
+      (or
+       (let ((suite (fiveam::get-test name)))
+         (when suite
+           (check-type suite fiveam::test-suite)
+           suite))
+       (fiveam:make-suite name
+                          :in
+                          (when (butlast parts)
+                            (intern (str:join "/" (butlast parts))
+                                    (symbol-package :foo)))))))))
 
 (defun def-suite-recursive (name)
   (let ((parts (str:split "/" (string name))))
