@@ -8,6 +8,6 @@
        (when (or (re-search-backward regexp nil t)
                  (re-search-forward regexp nil t))
          (match-string-no-properties 2))))
-   (slime-search-buffer-package)))
+   (sly-search-buffer-package)))
 
-(setf slime-find-buffer-package-function 'cl-pkg-search-buffer-package)
+(setf sly-find-buffer-package-function 'cl-pkg-search-buffer-package)
