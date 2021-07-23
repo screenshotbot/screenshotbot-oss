@@ -27,3 +27,8 @@
   (let ((*package* (find-package :util/tests/test-fiveam)))
     (is (eql :util/tests/test-fiveam
              (guess-suite-name)))))
+
+(test def-suite-sets-*suite*
+  (let ((fiveam::*toplevel-suites* nil)
+        (fiveam::*suite* nil))
+    (util/fiveam:def-suite)))

@@ -19,11 +19,11 @@
   (let ((parts (str:split "/" (string name))))
     (%def parts)))
 
-(defun def-suite ()
+(defmacro def-suite ()
   `(eval-when (:compile-toplevel :load-toplevel :execute)
-     (let ((suite-name (guess-suite-name)))
+     (let ((suite-name ,(guess-suite-name)))
        (def-suite-recursive suite-name)
-       (fiveam::%in-suite suite-name))))
+       (eval `(fiveam::%in-suite ,suite-name)))))
 
 (defun guess-suite-name ()
   (intern (string (package-name *package*))
