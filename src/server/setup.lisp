@@ -9,7 +9,7 @@
         #:bknr.datastore)
   (:export #:main
            #:register-acceptor
-           #:swank-loop))
+           #:slynk-loop))
 (in-package #:server)
 
 (defvar *shutdown-cv* (bt:make-condition-variable))
@@ -32,23 +32,23 @@ ways."
                (sleep 3))))))
 
 (defvar *port*)
-(defvar *swank-port*)
+(defvar *slynk-port*)
 (defvar *verify-store*)
 (defvar *socketmaster*)
 (defvar *shell*)
-(defvar *start-swank*)
+(defvar *start-slynk*)
 
 (defparameter *options*
   `((*port* #+screenshotbot-oss "4091"
             #-screenshotbot-oss "4001" "" :params ("PORT"))
     (*socketmaster* nil "")
     (*shell* nil "")
-    (*swank-port* #+screenshotbot-oss "4095"
+    (*slynk-port* #+screenshotbot-oss "4095"
                   #-screenshotbot-oss "4005"
-                  "" :params ("SWANK-PORT"))
-    (*swank-loopback-interface* "localhost" "The interface on which we bind the swank port"
-                                :params ("SWANK-LOOPBACK-INTERFACE"))
-    (*start-swank* #+screenshotbot-oss nil
+                  "" :params ("SLYNK-PORT"))
+    (*slynk-loopback-interface* "localhost" "The interface on which we bind the slynk port"
+                                :params ("SLYNK-LOOPBACK-INTERFACE"))
+    (*start-slynk* #+screenshotbot-oss nil
                    #-screenshotbot-oss t
                    "")
     (util:*object-store* #+screenshotbot-oss "~/.config/screenshotbot/object-store/"
@@ -177,13 +177,13 @@ ways."
 
        (cl-cron:start-cron)
 
-       (when *start-swank*
-         (log:info "starting up swank")
-         (Server:swank-loop))
+       (when *start-slynk*
+         (log:info "starting up slynk")
+         (Server:slynk-loop))
 
        (cond
          (*shell*
-          (log:info "Swank has started up, but we're not going to start hunchentoot. Call (QUIT) from swank when done."))
+          (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
          (t
           (hunchentoot:start *multi-acceptor*)))
 
@@ -198,8 +198,8 @@ ways."
   (hunchentoot:stop *multi-acceptor*)
   (bknr.datastore:snapshot)
   (bknr.datastore:close-store)
-  (log:info "Shutting down swank")
-  (slynk:stop-server (parse-integer *swank-port*))
+  (log:info "Shutting down slynk")
+  (slynk:stop-server (parse-integer *slynk-port*))
   (log:info "All services down")
   #+lispworks
   (wait-for-processes)
@@ -234,10 +234,10 @@ ways."
   (log4cl:flush-all-appenders)
   (uiop:quit))
 
-(defun swank-loop ()
-  (log:info "Using port for swank: ~a" *swank-port*)
-  (setf slynk:*loopback-interface* *swank-loopback-interface*)
-  (slynk:create-server :port (parse-integer *swank-port*)
+(defun slynk-loop ()
+  (log:info "Using port for slynk: ~a" *slynk-port*)
+  (setf slynk:*loopback-interface* *slynk-loopback-interface*)
+  (slynk:create-server :port (parse-integer *slynk-port*)
                        ;; if non-nil the connection won't be closed
                        ;; after connecting
                        :dont-close t))
