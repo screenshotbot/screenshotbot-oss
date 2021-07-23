@@ -121,11 +121,6 @@
          (str:starts-with-p "localhost" host)
          (str:starts-with-p "staging." host)))))))
 
-(defun reuben-init ()
-  (jvm:jvm-init)
-  (util:prepare-store-for-test)
-  (hunchentoot:start *acceptor*))
-
 (defun pp (x)
   (log:info "~S" x)
   x)
