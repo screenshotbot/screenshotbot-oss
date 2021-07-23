@@ -199,7 +199,7 @@ ways."
   (bknr.datastore:snapshot)
   (bknr.datastore:close-store)
   (log:info "Shutting down swank")
-  (swank:stop-server (parse-integer *swank-port*))
+  (slynk:stop-server (parse-integer *swank-port*))
   (log:info "All services down")
   #+lispworks
   (wait-for-processes)
@@ -236,8 +236,8 @@ ways."
 
 (defun swank-loop ()
   (log:info "Using port for swank: ~a" *swank-port*)
-  (setf swank::*loopback-interface* *swank-loopback-interface*)
-  (swank:create-server :port (parse-integer *swank-port*)
+  (setf slynk:*loopback-interface* *swank-loopback-interface*)
+  (slynk:create-server :port (parse-integer *swank-port*)
                        ;; if non-nil the connection won't be closed
                        ;; after connecting
                        :dont-close t))

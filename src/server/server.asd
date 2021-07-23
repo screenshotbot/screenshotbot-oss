@@ -10,6 +10,7 @@
                "cl-cron"
                "jvm"
                "trivial-shell"
+               "slynk"
                "bordeaux-threads"
                "bknr.datastore"
                "hunchentoot-multi-acceptor")

@@ -23,6 +23,9 @@
 
 
 #+lispworks
+(ql:quickload "slynk")
+
+#+lispworks
 (ql:quickload :osicat :silent t)
 
 #+lispworks
