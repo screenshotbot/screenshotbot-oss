@@ -64,12 +64,6 @@
 
 (log:info "*local-project-directories: ~S" ql:*local-project-directories*)
 
-(load "third-party/slime/swank-loader.lisp")
-(setf swank-loader:*fasl-directory* (format nil "~abuild/slime-fasls/~a/" *cwd*
-                                            (uiop:implementation-identifier)))
-(push 'swank-indentation swank-loader::*contribs*)
-(swank-loader:init :load-contribs t)
-
 #+lispworks
 (require "java-interface")
 
