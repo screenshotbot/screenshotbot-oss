@@ -28,8 +28,8 @@
 #+lispworks
 (ql:quickload :osicat :silent t)
 
-#+lispworks
-(setf dspec:*redefinition-action* :error)
+;; #+lispworks
+;; (setf dspec:*redefinition-action* :error)
 
 (ql:quickload :jvm)
 
