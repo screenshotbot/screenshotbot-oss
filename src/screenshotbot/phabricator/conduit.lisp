@@ -29,4 +29,8 @@
                       (dex:post (format nil "~a/api/~a" (url phab) name)
                                 :want-stream t
                                 :content params))
-     (json:decode-json s))))
+     (let ((res
+             (json:decode-json s)))
+       (unless (assoc-value res :result)
+         (error "Got conduit error: ~A "(assoc-value res :error--info)))
+       res))))

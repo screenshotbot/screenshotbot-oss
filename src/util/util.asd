@@ -88,9 +88,11 @@
 (defsystem :util/fiveam
   :depends-on (:util
                :fiveam
+               :cl-mock
                :str)
   :serial t
-  :components ((:file "fiveam")))
+  :components ((:file "fiveam")
+               (:file "mock-recording")))
 
 (defsystem :util/tests
   :depends-on (:util
