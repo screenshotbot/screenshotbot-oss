@@ -39,7 +39,7 @@
 (test def-suite-sets-*suite*
   (let ((fiveam::*toplevel-suites* nil)
         (fiveam::*suite* nil)
-        (fiveam::*tests* nil))
+        (fiveam::*test* (make-hash-table)))
     (util/fiveam:def-suite)
     (is (eql (fiveam::get-test :util/tests/test-fiveam)
              fiveam::*suite*))
