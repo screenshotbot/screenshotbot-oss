@@ -9,6 +9,7 @@
    #:with-recording))
 
 (defun call-with-recording (mocked-function file fn &key record skip-args)
+  (ensure-directories-exist file)
   (flet ((remove-skip-args (args)
            (loop for x in args
                  for i from 0 to 10000000
