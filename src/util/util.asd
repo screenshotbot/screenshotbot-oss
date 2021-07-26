@@ -88,6 +88,7 @@
 (defsystem :util/fiveam
   :depends-on (:util
                :fiveam
+               :pkg
                :cl-mock
                :str)
   :serial t
