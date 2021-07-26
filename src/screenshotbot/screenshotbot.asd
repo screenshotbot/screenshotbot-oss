@@ -16,6 +16,7 @@
                :screenshotbot.js-assets
                :screenshotbot.css-assets
                :screenshotbot.java
+               :util/phabricator
                :dexador
                :opticl
                :anaphora
@@ -114,8 +115,7 @@
                  (:file "all")))
    (:module "phabricator"
     :serial t
-    :components ((:file "conduit")
-                 (:file "plugin")
+    :components ((:file "plugin")
                  (:file "commenting-promoter")
                  (:file "diff-promoter")
                  (:file "settings")

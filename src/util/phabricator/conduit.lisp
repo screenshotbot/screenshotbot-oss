@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/phabricator/conduit
+(pkg:define-package :util/phabricator/conduit
   (:use #:cl
         #:alexandria)
   (:export #:phab-instance

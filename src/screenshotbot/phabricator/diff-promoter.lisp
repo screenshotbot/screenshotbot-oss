@@ -7,7 +7,7 @@
 (pkg:define-package :screenshotbot/phabricator/diff-promoter
   (:use #:cl
         #:alexandria
-        #:./conduit
+        #:util/phabricator/conduit
         #:../model/company
         #:../model/recorder-run
         #:../promote-api

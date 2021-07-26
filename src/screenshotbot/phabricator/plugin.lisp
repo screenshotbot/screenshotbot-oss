@@ -7,7 +7,7 @@
 (pkg:define-package :screenshotbot/phabricator/plugin
     (:use #:cl
           #:alexandria
-          #:./conduit)
+          #:util/phabricator/conduit)
   (:import-from #:../plugin
                 #:plugin
                 #:plugin-parse-repo)

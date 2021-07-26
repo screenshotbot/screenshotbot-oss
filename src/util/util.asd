@@ -94,6 +94,12 @@
   :components ((:file "fiveam")
                (:file "mock-recording")))
 
+(defsystem :util/phabricator
+  :depends-on (:dexador
+               :alexandria)
+  :components ((:module "phabricator"
+                :components ((:file "conduit")))))
+
 (defsystem :util/tests
   :depends-on (:util
                :util/fiveam)
