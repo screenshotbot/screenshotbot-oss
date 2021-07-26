@@ -20,6 +20,7 @@
         (with-mocks ()
           (if-called mocked-function
                      (lambda (&rest args)
+                       (log:debug "Bypassing any recorded values")
                        (let ((res
                                (call-previous)))
                          (push (cons (remove-skip-args args) res)
@@ -35,6 +36,7 @@
         (with-mocks ()
           (if-called mocked-function
                      (lambda (&rest args)
+                       (log:debug "Running recorded value")
                        (let ((next (pop recording)))
                          (unless (equal (car next) (remove-skip-args args))
                            (error "Next args in recording is ~S but got ~S"
