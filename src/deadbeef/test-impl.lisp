@@ -3,6 +3,7 @@
           #:fiveam
           #:alexandria)
   (:import-from #:deadbeef/impl
+                #:catdir
                 #:name-from-repo-name
                 #:run-program-with-errors
                 #:prepare-git-repo
@@ -22,6 +23,9 @@
 
 (test name-from-repo-name
   (is (equal "foo" (name-from-repo-name "https://github.com/xyz/foo"))))
+
+(test catdir
+  (is (equal #P "/foo/bar/" (catdir "/foo/" "bar/"))))
 
 (test test-registry
   (let ((*externals* nil))
