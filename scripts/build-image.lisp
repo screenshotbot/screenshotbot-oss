@@ -11,15 +11,10 @@
 #+lispworks
 (load-all-patches)
 
+(defvar *image-load-hook-contents* (uiop:read-file-string "scripts/init.lisp"))
+
 (defun image-load-hook ()
-  (format t "Running image load hooks~%")
-  (ql:quickload :deadbeef)
-  (funcall (find-symbol "REGISTER-EXTERNAL" "DEADBEEF")
-           "https://github.com/tdrhq/stripe"
-           "6b91ee9bcbffe81f887a0edddd1b182951cd02cf")
-  (funcall (find-symbol "PREPARE-EXTERNALS" "DEADBEEF")
-           "build/deadbeef/")
-  (format t "Ran image load hooks~%"))
+  (load (make-string-input-stream *image-load-hook-contents*)))
 
 (compile 'image-load-hook)
 
@@ -36,7 +31,9 @@
                          (dbg:output-backtrace :verbose)
                          (format t "Could not load init~%")
                          (uiop:quit 1))))
-        (image-load-hook))))
+        (format t "Running image load hooks~%")
+        (image-load-hook)
+        (format t "Completed image load hooks~%"))))
 
 
 #+lispworks

@@ -33,7 +33,7 @@ UNAME=$(shell uname -s)
 DISTINFO=quicklisp/dists/quicklisp/distinfo.txt
 
 REVISION_ID=$(shell echo '{"ids":["$(DIFF_ID)"]}' | arc call-conduit differential.querydiffs | jq -r '.["response"]["$(DIFF_ID)"]["revisionID"]')
-IMAGE_DEPS=scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO) scripts/prepare-image.lisp
+IMAGE_DEPS=scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO) scripts/prepare-image.lisp scripts/init.lisp
 
 ifeq ($(UNAME),Linux)
 	LW_CORE=/opt/software/lispworks/lispworks-7-1-*
