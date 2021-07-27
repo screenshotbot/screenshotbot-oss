@@ -12,7 +12,14 @@
 (load-all-patches)
 
 (defun image-load-hook ()
-  (ql:quickload :deadbeef))
+  (format t "Running image load hooks~%")
+  (ql:quickload :deadbeef)
+  (funcall (find-symbol "REGISTER-EXTERNAL" "DEADBEEF")
+           "https://github.com/tdrhq/stripe"
+           "6b91ee9bcbffe81f887a0edddd1b182951cd02cf")
+  (funcall (find-symbol "PREPARE-EXTERNALS" "DEADBEEF")
+           "build/deadbeef/")
+  (format t "Ran image load hooks~%"))
 
 (compile 'image-load-hook)
 
@@ -23,14 +30,22 @@
 #+lispworks
 (lw:define-action "When starting image" "Call image load hook"
   #'(lambda ()
-      (image-load-hook)))
+      (handler-bind ((error
+                       (lambda (e)
+                         (declare (ignore e))
+                         (dbg:output-backtrace :verbose)
+                         (format t "Could not load init~%")
+                         (uiop:quit 1))))
+        (image-load-hook))))
 
 
 #+lispworks
-(save-image "build/lw-console"
-            :console t
-            :multiprocessing t
-            :environment nil)
+(let ((output "build/lw-console"))
+  (delete-file output)
+  (save-image output
+              :console t
+             :multiprocessing t
+             :environment nil))
 
 #+sbcl
 (sb-ext:save-lisp-and-die "build/sbcl-console"

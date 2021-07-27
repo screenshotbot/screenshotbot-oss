@@ -48,7 +48,8 @@
                               "checkout"
                               commit))))
 
-(defun prepare-externals ()
+(defun prepare-externals (cache-dir)
+  (setf *cache-dir* cache-dir)
   (loop for (repo . commit) in *externals*
         do
            (let* ((name (car (last (str:split "/" repo))))

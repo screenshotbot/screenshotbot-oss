@@ -20,21 +20,23 @@
                      "019ecb3"))
 
 (test test-registry
-  (add-external-repo)
-  (is (equal *externals*
-             (list (cons
-                    "https://github.com/m0cchi/cl-slack"
-                    "019ecb3")))))
+  (let ((*externals* nil))
+    (add-external-repo)
+    (is (equal *externals*
+               (list (cons
+                      "https://github.com/m0cchi/cl-slack"
+                      "019ecb3"))))))
 
 (test load-externals
   (cl-mock:with-mocks ()
     (tmpdir:with-tmpdir (dir)
-      (let ((*cache-dir* dir)
+      (let ((*cache-dir* nil)
+            (*externals* nil)
             (*central-registry* *central-registry*))
         (add-external-repo)
         (let ((expected-dir (path:catdir dir "cl-slack/")))
           (cl-mock:answer prepare-git-repo)
-          (prepare-externals)
+          (prepare-externals dir)
           (is (member expected-dir
                       *central-registry*
                       :test 'equal)))
