@@ -9,4 +9,10 @@
 (ql:quickload :deadbeef)
 (deadbeef:register-external "https://github.com/tdrhq/stripe"
                             "6b91ee9bcbffe81f887a0edddd1b182951cd02cf")
+(deadbeef:register-external "https://github.com/moderninterpreters/markup"
+                            "master")
+(deadbeef:register-external "https://github.com/tdrhq/hunchentoot"
+                            "master")
+(deadbeef:register-external "https://github.com/tdrhq/fiveam"
+                            "master")
 (deadbeef:prepare-externals "build/deadbeef/")
