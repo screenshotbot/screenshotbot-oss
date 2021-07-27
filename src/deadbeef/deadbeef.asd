@@ -1,6 +1,10 @@
 (defsystem :deadbeef
   :serial t
-  :components ((:file "impl")))
+  :depends-on (:str
+               :cl-fad
+               :pkg)
+  :components ((:file "impl")
+               (:file "all")))
 
 (defsystem :deadbeef/tests
   :serial t

@@ -2,7 +2,8 @@
     (:use #:cl)
   (:export
    #:*cache-dir*
-   #:register-external))
+   #:register-external
+   #:prepare-externals))
 
 (defvar *externals* nil)
 
@@ -48,7 +49,6 @@
                               commit))))
 
 (defun prepare-externals ()
-  (assert *cache-dir*)
   (loop for (repo . commit) in *externals*
         do
            (let* ((name (car (last (str:split "/" repo))))

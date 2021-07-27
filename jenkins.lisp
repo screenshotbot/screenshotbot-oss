@@ -15,6 +15,8 @@
 (ql:quickload "colorize" :silent t)
 (ql:quickload "tmpdir" :silent t)
 
+(deadbeef:prepare-externals)
+
 #+screenshotbot-oss
 (ql:quickload "bknr.datastore")
 

@@ -11,6 +11,21 @@
 #+lispworks
 (load-all-patches)
 
+(defun image-load-hook ()
+  (ql:quickload :deadbeef))
+
+(compile 'image-load-hook)
+
+#+sbcl
+(pushnew 'image-load-hook sb-ext:*init-hooks*)
+
+
+#+lispworks
+(lw:define-action "When starting image" "Call image load hook"
+  #'(lambda ()
+      (image-load-hook)))
+
+
 #+lispworks
 (save-image "build/lw-console"
             :console t
@@ -23,11 +38,13 @@
 
 #+ccl
 (defun ccl-toplevel-function ()
+  (image-load-hook)
   (let ((file (cadr ccl:*command-line-argument-list*)))
-    (if
+    (if file
      (load file :verbose t)
      (loop
            (print (eval (read)))))))
+
 
 #+ccl
 (ccl:save-application "build/ccl-console"
