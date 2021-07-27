@@ -19,7 +19,7 @@
   ;; want to load the same hook twice
   (unless *hook-loaded-p*
     (load (make-string-input-stream *image-load-hook-contents*))
-    (setf *hook-loaed-p* t)))
+    (setf *hook-loaded-p* t)))
 
 (compile 'image-load-hook)
 
