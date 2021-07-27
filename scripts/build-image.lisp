@@ -12,9 +12,14 @@
 (load-all-patches)
 
 (defvar *image-load-hook-contents* (uiop:read-file-string "scripts/init.lisp"))
+(defvar *hook-loaded-p* nil)
 
 (defun image-load-hook ()
-  (load (make-string-input-stream *image-load-hook-contents*)))
+  ;; If we used this image to deliver another image, we don't
+  ;; want to load the same hook twice
+  (unless *hook-loaded-p*
+    (load (make-string-input-stream *image-load-hook-contents*))
+    (setf *hook-loaed-p* t)))
 
 (compile 'image-load-hook)
 
