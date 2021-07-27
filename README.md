@@ -1,3 +1,5 @@
+[![Build Status](http://jenkins.tdrhq.com/buildStatus/icon?job=screenshotbot-oss)](http://jenkins.tdrhq.com/job/screenshotbot-oss/)
+
 # Screenshotbot: Screenshot Testing Service
 
 Screenshotbot is a Screenshot Testing service. Screenshotbot will

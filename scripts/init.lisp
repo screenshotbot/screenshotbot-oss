@@ -37,5 +37,4 @@
 (deadbeef:register-external "https://github.com/moderninterpreters/clsql-local-time"
                             "master")
 
-
 (deadbeef:prepare-externals "build/deadbeef/")
