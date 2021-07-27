@@ -3,6 +3,7 @@
           #:fiveam
           #:alexandria)
   (:import-from #:deadbeef/impl
+                #:name-from-repo-name
                 #:run-program-with-errors
                 #:prepare-git-repo
                 #:prepare-externals
@@ -18,6 +19,9 @@
 (defun add-external-repo ()
   (register-external "https://github.com/m0cchi/cl-slack"
                      "019ecb3"))
+
+(test name-from-repo-name
+  (is (equal "foo" (name-from-repo-name "https://github.com/xyz/foo"))))
 
 (test test-registry
   (let ((*externals* nil))

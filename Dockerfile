@@ -1,4 +1,3 @@
-
 FROM debian:stable AS builder
 
 # Update copybara config if you change this line

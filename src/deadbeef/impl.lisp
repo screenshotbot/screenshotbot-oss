@@ -9,6 +9,12 @@
 
 (defvar *cache-dir* nil)
 
+(defvar *whitespaces* '(#\Space #\Newline #\Backspace #\Tab
+                        #\Linefeed #\Page #\Return #\Rubout))
+
+(defun trim (value)
+  (string-trim *whitespaces* value))
+
 (defun register-external (repo commit)
   (pushnew (cons repo commit)
            *externals*
@@ -24,7 +30,7 @@
       (error "Bash command `~a` failed: ~%stdout: ~a~%~% stderr:~%~A~%"
              cmd
              out err))
-    (str:trim out)))
+    (trim out)))
 
 (defun prepare-git-repo (repo commit cache-dir)
   (let ((git-dir (path:catdir cache-dir ".git/")))
@@ -48,11 +54,15 @@
                               "checkout"
                               commit))))
 
+(defun name-from-repo-name (repo-name)
+  (let ((pos (position #\/ repo-name :from-end t)))
+    (subseq repo-name (+ 1 pos))))
+
 (defun prepare-externals (cache-dir)
   (setf *cache-dir* cache-dir)
   (loop for (repo . commit) in *externals*
         do
-           (let* ((name (car (last (str:split "/" repo))))
+           (let* ((name (name-from-repo-name repo))
                   (cache-dir (path:catdir *cache-dir* (format nil "~a/" name))))
              (pushnew cache-dir
                       asdf:*central-registry*
