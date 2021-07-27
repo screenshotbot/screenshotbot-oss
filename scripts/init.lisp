@@ -6,13 +6,36 @@
 
 ;; This file is loaded after the image is restarted
 
+(defpackage #:tdrhq-init
+  (:use #:cl
+        #:cl-user))
+
+(in-package #:tdrhq-init)
+
 (ql:quickload :deadbeef)
-(deadbeef:register-external "https://github.com/tdrhq/stripe"
-                            "6b91ee9bcbffe81f887a0edddd1b182951cd02cf")
+
+(defun register-tdrhq (name)
+  (deadbeef:register-external (format nil "https://github.com/tdrhq/~a" name)
+                              "master"))
+
 (deadbeef:register-external "https://github.com/moderninterpreters/markup"
                             "master")
-(deadbeef:register-external "https://github.com/tdrhq/hunchentoot"
+
+(register-tdrhq "hunchentoot")
+(register-tdrhq "stripe")
+(register-tdrhq "fiveam")
+(register-tdrhq "cl-mongo-id")
+(register-tdrhq "named-readtables")
+(register-tdrhq "cmd")
+
+(deadbeef:register-external "https://github.com/cl-plus-ssl/cl-plus-ssl"
                             "master")
-(deadbeef:register-external "https://github.com/tdrhq/fiveam"
+
+(deadbeef:register-external "https://github.com/gschjetne/cljwt"
                             "master")
+
+(deadbeef:register-external "https://github.com/moderninterpreters/clsql-local-time"
+                            "master")
+
+
 (deadbeef:prepare-externals "build/deadbeef/")
