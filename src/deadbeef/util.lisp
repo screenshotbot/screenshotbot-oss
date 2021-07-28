@@ -5,8 +5,7 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (uiop:define-package :deadbeef/util
-    (:use #:cl
-          #:alexandria))
+    (:use #:cl))
 (in-package :deadbeef/util)
 
 (defvar *whitespaces* '(#\Space #\Newline #\Backspace #\Tab
