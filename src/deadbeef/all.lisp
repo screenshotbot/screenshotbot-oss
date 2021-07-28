@@ -5,6 +5,5 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (uiop:define-package :deadbeef
-    (:use #:cl
-          #:alexandria)
+    (:use #:cl)
   (:use-reexport #:deadbeef/impl))
