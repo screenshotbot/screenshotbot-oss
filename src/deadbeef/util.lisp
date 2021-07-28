@@ -38,6 +38,6 @@ by PATHNAME-AS-DIRECTORY."
   (and (lw:file-directory-p pathspec)
        (truename pathspec))
   #-(or :allegro :lispworks)
-  (let ((result (file-exists-p pathspec)))
+  (let ((result (probe-file pathspec)))
     (and result
-         (directory-pathname-p result))))
+         (not (pathname-name result)))))
