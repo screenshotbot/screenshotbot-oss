@@ -1,9 +1,10 @@
-(pkg:define-package :deadbeef/impl
+(uiop:define-package :deadbeef/impl
     (:use #:cl)
   (:export
    #:*cache-dir*
    #:register-external
    #:prepare-externals))
+(in-package :deadbeef/impl)
 
 (defvar *externals* nil)
 

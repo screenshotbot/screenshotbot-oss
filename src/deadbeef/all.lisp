@@ -1,4 +1,4 @@
-(pkg:define-package :deadbeef
+(uiop:define-package :deadbeef
     (:use #:cl
           #:alexandria)
-  (:use-reexport :deadbeef/impl))
+  (:use-reexport #:deadbeef/impl))
