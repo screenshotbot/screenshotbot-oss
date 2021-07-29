@@ -42,7 +42,7 @@
   *channel*)
 
 (defmethod recorder-run-commit ((run test-run))
-  "deadbeef")
+  "quick-patch")
 
 (defmethod created-at ((run test-run))
   (local-time:now))

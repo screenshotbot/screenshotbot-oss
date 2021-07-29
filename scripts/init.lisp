@@ -12,13 +12,13 @@
 
 (in-package #:tdrhq-init)
 
-(ql:quickload :deadbeef)
+(ql:quickload :quick-patch)
 
 (defun register-tdrhq (name)
-  (deadbeef:register-external (format nil "https://github.com/tdrhq/~a" name)
+  (quick-patch:register-external (format nil "https://github.com/tdrhq/~a" name)
                               "master"))
 
-(deadbeef:register-external "https://github.com/moderninterpreters/markup"
+(quick-patch:register-external "https://github.com/moderninterpreters/markup"
                             "master")
 
 (register-tdrhq "hunchentoot")
@@ -28,13 +28,13 @@
 (register-tdrhq "named-readtables")
 (register-tdrhq "cmd")
 
-(deadbeef:register-external "https://github.com/cl-plus-ssl/cl-plus-ssl"
+(quick-patch:register-external "https://github.com/cl-plus-ssl/cl-plus-ssl"
                             "master")
 
-(deadbeef:register-external "https://github.com/gschjetne/cljwt"
+(quick-patch:register-external "https://github.com/gschjetne/cljwt"
                             "master")
 
-(deadbeef:register-external "https://github.com/moderninterpreters/clsql-local-time"
+(quick-patch:register-external "https://github.com/moderninterpreters/clsql-local-time"
                             "master")
 
-(deadbeef:prepare-externals "build/deadbeef/")
+(quick-patch:prepare-externals "build/quick-patch/")

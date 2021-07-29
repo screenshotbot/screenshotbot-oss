@@ -53,10 +53,6 @@
    (:file "template")
    (:file "left-side-bar")
    (:file "taskie")
-   (:module "schema"
-    :serial t
-    :components ((:file "core")
-                 (:file "history")))
    (:module "ui"
     :components ((:file "core")
                  (:file "simple-card-page")
