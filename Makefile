@@ -203,13 +203,16 @@ update-ip: $(sbcl)
 copybara: .PHONY
 	# This is on arnold's jenkins server. Disregard for OSS use.
 	ssh-add ~/.ssh/id_rsa_screenshotbot_oss
-	ssh-add ~/.ssh/id_rsa_slite
 	$(COPYBARA) copy.bara.sky || true # avoid the no-op issue
+
+copybara-slite: .PHONY
+	ssh-add ~/.ssh/id_rsa_slite
 	$(COPYBARA) copy.bara.sky slite || true
 
 conditional-copybara: validate-copybara
 	if [ x$$DIFF_ID = x ] ; then \
 		ssh-agent $(MAKE) copybara ; \
+		ssh-agent $(MAKE) copybara-slite ; \
 	fi
 
 validate-copybara: .PHONY
