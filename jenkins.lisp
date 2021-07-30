@@ -95,7 +95,6 @@
         (uiop:quit 1)))
   (uiop:quit 0))
 
-
 #+lispworks
 (mp:initialize-multiprocessing :main nil #'main)
 

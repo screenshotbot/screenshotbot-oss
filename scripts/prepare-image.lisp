@@ -7,13 +7,16 @@
 #+lispworks
 (require "java-interface" )
 
+#+lispworks
+(progn
+  (lw:set-default-character-element-type 'character))
+
 (when (probe-file "scripts/asdf.lisp")
   (let ((output (compile-file "scripts/asdf.lisp" :verbose nil :print nil)))
     (load output))
   (provide "asdf"))
 
 (require "asdf")
-
 
 #+nil
 (push (pathname (format nil "~a/local-projects/poiu/" (namestring (uiop:getcwd))))
@@ -41,10 +44,6 @@
 
 #+lispworks
 (push 'use-utf-8-for-all-lisp-files system:*file-encoding-detection-algorithm*)
-
-#+lispworks
-(progn
-  (lw:set-default-character-element-type 'character))
 
 (load "quicklisp/setup.lisp")
 
