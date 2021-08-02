@@ -3,6 +3,8 @@
           #:fiveam
           #:alexandria)
   (:import-from #:fiveam-matchers/core
+                #:has-any
+                #:has-all
                 #:format-description
                 #:assert-that
                 #:is-not
@@ -38,9 +40,24 @@
                (fmt-desc
                 (describe-mismatch matcher "foobar"))))))
 
+(test has-all
+  (let ((matcher (has-all (equal-to "foobar")
+                          (is-not (equal-to "zoidberg")))))
+    (is-true (matchesp matcher "foobar"))
+    (is-false (matchesp matcher "zoidberg"))
+    (is-false (matchesp matcher "arnold"))))
+
+(test has-any
+  (let ((matcher (has-any (equal-to "foobar")
+                          (is-not (equal-to "zoidberg")))))
+    (is-true (matchesp matcher "foobar"))
+    (is-false (matchesp matcher "zoidberg"))
+    (is-true (matchesp matcher "arnold"))))
+
 (test assert-that
   (assert-that "foobar"
-               (equal-to "foobar"))
+               (equal-to "foobar")
+               (is-not (equal-to "zoik")))
   ;; There's probably a way to test this next line, but it's not worth
   ;; the trouble for right now
   #+nil

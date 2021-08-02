@@ -7,7 +7,9 @@
    #:assert-that
    #:describe-self
    #:single-value-matcher
-   #:self-describing-list))
+   #:self-describing-list
+   #:has-all
+   #:has-any))
 
 (defclass matcher ()
   ())
@@ -121,6 +123,37 @@
     (t
      (format stream "~a" description))))
 
+(defclass has-all (matcher)
+  ((matchers :initarg :matchers
+             :reader matchers)))
+
+(defclass has-any (matcher)
+  ((matchers :initarg :matchers
+             :reader matchers)))
+
+(defmethod matchesp ((has-all has-all) value)
+  (not
+   (loop for matcher in (matchers has-all)
+         unless (matchesp matcher value)
+           return t)))
+
+(defmethod matchesp ((has-any has-any) value)
+  (loop for matcher in (matchers has-any)
+        if (matchesp matcher value)
+          return t))
+
+(defun check-matcher-list (matchers)
+  (dolist (x matchers)
+    (check-type x matcher)))
+
+(defun has-all (&rest matchers)
+  (check-matcher-list matchers)
+  (make-instance 'has-all :matchers matchers))
+
+(defun has-any (&rest matchers)
+  (check-matcher-list matchers)
+  (make-instance 'has-any :matchers matchers))
+
 (defmethod describe-mismatch-to-string (matcher value)
   (format
    nil
@@ -146,9 +179,12 @@
                          :reason (describe-mismatch-to-string
                                   matcher value)))))
 
-(defmacro assert-that (value matcher)
-  `(call-assert-that
-    ,value
-    ,matcher
-    ',value
-    ',matcher))
+(defmacro assert-that (value &rest matchers)
+  (alexandria:with-gensyms (value-sym)
+   `(let ((,value-sym ,value))
+      ,@(loop for matcher in matchers collect
+            `(call-assert-that
+              ,value-sym
+              ,matcher
+              ',value
+              ',matcher)))))
