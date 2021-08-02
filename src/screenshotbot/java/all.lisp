@@ -8,4 +8,5 @@
     (:use-reexport
      #+ (or ccl lispworks)
      :./java/java
-     :./java/reader))
+     :./java/reader
+     :./java/binding))

@@ -1,5 +1,5 @@
-(pkg:define-package :fiveam-matchers/all
+(pkg:define-package :fiveam-matchers
     (:use #:cl
           #:alexandria)
-  (:reexport :fiveam-matchers/core
-             :fiveam-matchers/lists))
+  (:use-reexport #:fiveam-matchers/core
+                 #:fiveam-matchers/lists))

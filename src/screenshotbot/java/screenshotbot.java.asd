@@ -10,6 +10,7 @@
   :serial t
   :depends-on (:str
                :pkg
+               :closer-mop
                ;; We never want to load cl+j through quicklisp, always
                ;; call jvm:jvm-init instead.
                ;; :cl+j
@@ -24,4 +25,5 @@
     :depends-on (:fiveam
                  :screenshotbot.java)
   :components (#+ (or ccl lispworks)
+               (:file "test-binding")
                (:file "test-java")))

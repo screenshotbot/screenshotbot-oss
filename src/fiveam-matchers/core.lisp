@@ -9,7 +9,8 @@
    #:single-value-matcher
    #:self-describing-list
    #:has-all
-   #:has-any))
+   #:has-any
+   #:has-typep))
 
 (defclass matcher ()
   ())
@@ -153,6 +154,21 @@
 (defun has-any (&rest matchers)
   (check-matcher-list matchers)
   (make-instance 'has-any :matchers matchers))
+
+(defclass has-typep (single-value-matcher)
+  ())
+
+(defun has-typep (type)
+  (make-instance 'has-typep :value type))
+
+(defmethod matchesp ((matcher has-typep) value)
+  (typep value (value matcher)))
+
+(defmethod describe-self ((matcher has-typep))
+  `("has type " ,(value matcher)))
+
+(Defmethod describe-mismatch ((matcher has-typep) value)
+  `("has type " ,(type-of value)))
 
 (defmethod describe-mismatch-to-string (matcher value)
   (format
