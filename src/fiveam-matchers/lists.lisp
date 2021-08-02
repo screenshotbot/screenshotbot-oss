@@ -18,8 +18,9 @@
              :accessor expected)))
 
 (defun contains (&rest expected)
-  (make-instance 'contains
-                 :expected expected))
+  (let ((expected (mapcar 'ensure-matcher expected)))
+   (make-instance 'contains
+                  :expected expected)))
 
 (defmethod matchesp ((matcher contains) (actual list))
   (when (eql (length actual)
