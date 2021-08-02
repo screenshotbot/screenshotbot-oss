@@ -9,4 +9,5 @@
      #+ (or ccl lispworks)
      :./java/java
      :./java/reader
+     #+ (or ccl lispworks)
      :./java/binding))

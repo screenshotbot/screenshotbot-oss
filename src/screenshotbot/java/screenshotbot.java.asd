@@ -18,12 +18,16 @@
   :components (#+ (or ccl lispworks)
                (:file "java")
                (:file "reader")
+               #+ (or ccl lispworks)
+               (:file "binding")
                (:file "all")))
 
 (defsystem :screenshotbot.java/tests
     :serial t
-    :depends-on (:fiveam
-                 :screenshotbot.java)
+  :depends-on (:fiveam
+               :fiveam-matchers
+               :screenshotbot.java)
   :components (#+ (or ccl lispworks)
                (:file "test-binding")
+               #+ (or ccl lispworks)
                (:file "test-java")))
