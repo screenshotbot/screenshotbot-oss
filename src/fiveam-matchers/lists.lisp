@@ -2,6 +2,7 @@
     (:use #:cl
           #:alexandria)
   (:import-from #:fiveam-matchers/core
+                #:ensure-matcher
                 #:self-describing-list
                 #:describe-self
                 #:esc
@@ -9,7 +10,8 @@
                 #:matchesp
                 #:matcher)
   (:export
-   #:contains))
+   #:contains
+   #:has-item))
 
 (defclass contains (matcher)
   ((expected :initarg :expected
@@ -32,6 +34,25 @@
   `("a list with values: "
     ,(self-describing-list
       (expected matcher))))
+
+(defclass has-item (matcher)
+  ((expected :initarg :expected
+             :accessor expected)))
+
+(defun has-item (expected)
+  (let ((expected (ensure-matcher expected)))
+    (make-instance 'has-item :expected expected)))
+
+(defmethod matchesp ((matcher has-item) (actual list))
+  (some (lambda (x)
+         (matchesp (expected matcher) x))
+        actual))
+
+(defmethod describe-self ((matcher has-item))
+  `("a sequence that contains: " ,(describe-self (expected matcher)) ))
+
+(defmethod describe-mismatch ((matcher has-item) (actual list))
+  `("none of the elements matched"))
 
 (defmethod describe-mismatch ((matcher contains) (actual list))
   (cond

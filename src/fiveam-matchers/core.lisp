@@ -10,7 +10,8 @@
    #:self-describing-list
    #:has-all
    #:has-any
-   #:has-typep))
+   #:has-typep
+   #:ensure-matcher))
 
 (defclass matcher ()
   ())
@@ -43,6 +44,11 @@
 
 (defun equal-to (val)
   (make-instance 'equal-to :value val))
+
+(defun ensure-matcher (val)
+  (typecase val
+    (matcher val)
+    (t (equal-to val))))
 
 (defmethod matchesp ((matcher equal-to) value)
   (equal (value matcher) value))
