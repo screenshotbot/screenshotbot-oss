@@ -42,7 +42,7 @@
   (:documentation "A mailer that uses the local SMTP port. We expect
   that this SMTP server shouldn't require authentication."))
 
-(defgeneric send-mail (mailer &key from subject to html-message))
+(defgeneric send-mail (mailer &key from subject to html-message bcc))
 
 (defmethod authentication ((mailer local-smtp-mailer))
   nil)
@@ -54,7 +54,8 @@
   (declare (ignore mailer)))
 
 (defmethod send-mail ((mailer smtp-mailer)
-                      &key from subject to html-message)
+                      &key from subject to html-message
+                        bcc)
   (restart-case
       (unless util:*disable-emails*
        (cl-smtp:send-email
@@ -64,6 +65,7 @@
         subject
         (util:html2text html-message)
         :ssl (ssl mailer)
+        :bcc bcc
         :port (port mailer)
         :authentication (authentication mailer)
         :port (port mailer)
