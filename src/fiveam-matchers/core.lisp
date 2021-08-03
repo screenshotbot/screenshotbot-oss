@@ -194,12 +194,13 @@
                                       ,expression
                                       ,match-expression)))
     (t
-     (fiveam::add-result 'fiveam::test-failure
-                         :test-expr `(assert-that
-                                      ,expression
-                                      ,match-expression)
-                         :reason (describe-mismatch-to-string
-                                  matcher value)))))
+     (fiveam::process-failure
+      `(assert-that
+        ,expression
+        ,match-expression)
+      "~a"
+      (describe-mismatch-to-string
+       matcher value)))))
 
 (defmacro assert-that (value &rest matchers)
   (alexandria:with-gensyms (value-sym)

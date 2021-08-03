@@ -63,3 +63,9 @@
   #+nil
   (assert-that "foobar3"
                (equal-to "foobar")))
+
+(test debugger-works
+  (let ((fiveam::*on-failure* :debug))
+    (signals fiveam::check-failure
+      (assert-that "foobar"
+                   (equal-to "zoidberg")))))
