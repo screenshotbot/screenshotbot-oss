@@ -8,6 +8,7 @@
   :depends-on ("cl-cli"
                "util"
                "cl-cron"
+               #+ (or ccl lispworks)
                "jvm"
                "trivial-shell"
                "slynk"
