@@ -3,7 +3,7 @@
   (:use #:cl
         #:alexandria
         #:documentation-plugin
-        #:screenshotbot/java
+        #:util/java
         #:screenshotbot/server
         #:screenshotbot/secrets
         #:screenshotbot/cdn

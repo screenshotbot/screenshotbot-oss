@@ -1,7 +1,7 @@
-(pkg:define-package :screenshotbot/java/binding
+(pkg:define-package :util/java/binding
     (:use #:cl
           #:alexandria)
-  (:import-from #:screenshotbot/java/java
+  (:import-from #:util/java/java
                 #:invoke)
   (:export
    #:bind-instance))

@@ -4,7 +4,7 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defsystem :screenshotbot.java
+(defsystem :util.java
   :author "Arnold Noronha <arnold@screenshotbot.io>"
   :license "Mozilla Public License, v 2.0"
   :serial t
@@ -22,11 +22,11 @@
                (:file "binding")
                (:file "all")))
 
-(defsystem :screenshotbot.java/tests
+(defsystem :util.java/tests
     :serial t
   :depends-on (:fiveam
                :fiveam-matchers
-               :screenshotbot.java)
+               :util.java)
   :components (#+ (or ccl lispworks)
                (:file "test-binding")
                #+ (or ccl lispworks)

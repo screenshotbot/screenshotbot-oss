@@ -2,7 +2,7 @@
     (:use #:cl
           #:alexandria
           #:./github-installation)
-  (:import-from #:../java
+  (:import-from #:util/java
                 #:java-syntax
                 #:read-java-field
                 #:java-list->list

@@ -8,7 +8,7 @@
     (:use #:cl
           #:alexandria
           #:./common
-          #:../java
+          #:util/java
           #:../model/user
           #:../user-api
           #:../model/company

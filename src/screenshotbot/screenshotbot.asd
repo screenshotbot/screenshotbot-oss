@@ -15,7 +15,7 @@
                :jose
                :screenshotbot.js-assets
                :screenshotbot.css-assets
-               :screenshotbot.java
+               :util.java
                :util/phabricator
                :dexador
                :opticl

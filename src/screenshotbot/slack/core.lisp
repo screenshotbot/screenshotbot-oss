@@ -7,7 +7,7 @@
 (pkg:define-package :screenshotbot/slack/core
     (:use #:cl
           #:alexandria
-          #:../java
+          #:util/java
           #:../user-api
           #:../model/company)
   (:import-from #:./plugin

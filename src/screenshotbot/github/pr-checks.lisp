@@ -7,7 +7,7 @@
 (pkg:define-package :screenshotbot/github/pr-checks
     (:use #:cl
           #:alexandria)
-  (:import-from #:../java
+  (:import-from #:util/java
                 #:java-syntax
                 #:read-java-field
                 #:new-instance)

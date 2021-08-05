@@ -8,7 +8,7 @@
     (:use #:cl
           #:alexandria
           #:screenshotbot/promote-api
-          #:screenshotbot/java
+          #:util/java
           #:screenshotbot/model/channel
           #:screenshotbot/compare
           #:screenshotbot/model/report

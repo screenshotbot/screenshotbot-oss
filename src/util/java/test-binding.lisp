@@ -1,12 +1,12 @@
-(pkg:define-package :screenshotbot/java/test-binding
+(pkg:define-package :util/java/test-binding
     (:use #:cl
           #:fiveam
           #:fiveam-matchers
           #:alexandria)
-  (:import-from #:screenshotbot/java
+  (:import-from #:util/java
                 #:java-syntax
                 #:new-instance)
-  (:import-from #:screenshotbot/java/binding
+  (:import-from #:util/java/binding
                 #:javafy-name
                 #:bind-instance))
 

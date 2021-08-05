@@ -4,7 +4,7 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package screenshotbot/java/test-java
+(pkg:define-package util/java/test-java
   (:use #:cl
         #:fiveam)
   (:import-from ./java
@@ -105,8 +105,8 @@
 ;; todo: finish before landing
 (test read-field
   (let ((*type-locator* *jippo-locator*))
-    (is (equal 64 (screenshotbot/java:read-java-field '|java.lang.Long| '|SIZE|)))
-    (assert-jequal (new-instance '|java.lang.Boolean| "true") (screenshotbot/java:read-java-field '|java.lang.Boolean| '|TRUE|))))
+    (is (equal 64 (util/java:read-java-field '|java.lang.Long| '|SIZE|)))
+    (assert-jequal (new-instance '|java.lang.Boolean| "true") (util/java:read-java-field '|java.lang.Boolean| '|TRUE|))))
 
 (test make-hash-table
   (let ((ht (make-hash-table)))
