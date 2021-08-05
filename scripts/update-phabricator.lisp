@@ -12,5 +12,5 @@
                                          :test 'string=)
                                  "pass"
                                  "fail")))))
-     (uiop:run-program (list "build/arc/bin/arc" "call-conduit" "harbormaster.sendmessage")
+     (uiop:run-program (list "build/arc/bin/arc" "call-conduit" "harbormaster.sendmessage" "--")
                        :input (make-string-input-stream (cl-json:encode-json-to-string args))))))
