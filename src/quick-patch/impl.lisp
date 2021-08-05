@@ -39,26 +39,40 @@
 
 
 (defun prepare-git-repo (repo commit cache-dir)
+  (format t "quick-patch: preparing ~a~%" repo)
   (let ((git-dir (catdir cache-dir ".git/")))
-   (cond
-     ((directory-exists-p git-dir)
-      (run-program-with-errors (list
-                                "git" "--work-tree" (namestring cache-dir)
-                                "--git-dir" (namestring git-dir)
-                                "fetch"
-                                repo)))
-     (t
-      (run-program-with-errors (list
-                                "git" "clone"
-                                repo
-                                (namestring  cache-dir)))))
-
-    ;; checkout the right commit
-    (run-program-with-errors (list
-                              "git" "--work-tree" (namestring cache-dir)
-                              "--git-dir" (namestring git-dir)
-                              "checkout"
-                              commit))))
+    (labels ((git (&rest args)
+               (apply #'list
+                        "git" "--work-tree" (namestring cache-dir)
+                        "--git-dir" (namestring git-dir)
+                        args))
+             (rev-parse (commit)
+               (run-program-with-errors (git
+                                         "rev-parse"
+                                         commit)))
+             (checkout ()
+               (let ((rev (rev-parse commit)))
+                 (format t "For ~a, Checking out: ~a~%" repo rev)
+                 (run-program-with-errors (git
+                                           "checkout"
+                                           rev)))))
+      (cond
+        ((directory-exists-p git-dir)
+         (cond
+           ((equal commit (rev-parse "HEAD"))
+            ;; The most common situation, do nothing
+            (values))
+           (t
+            (run-program-with-errors (git
+                                      "fetch"
+                                      repo))
+            (checkout))))
+        (t
+         (run-program-with-errors (list
+                                   "git" "clone"
+                                   repo
+                                   (namestring  cache-dir)))
+         (checkout))))))
 
 (defun name-from-repo-name (repo-name)
   (let ((pos (position #\/ repo-name :from-end t)))

@@ -14,27 +14,27 @@
 
 (ql:quickload :quick-patch)
 
-(defun register-tdrhq (name)
+(defun register-tdrhq (name commit)
   (quick-patch:register-external (format nil "https://github.com/tdrhq/~a" name)
-                              "master"))
+                              commit))
 
 (quick-patch:register-external "https://github.com/moderninterpreters/markup"
-                            "master")
+                            "5357f8a980cd5d884468734d7511323d00844175")
 
-(register-tdrhq "hunchentoot")
-(register-tdrhq "stripe")
-(register-tdrhq "fiveam")
-(register-tdrhq "cl-mongo-id")
-(register-tdrhq "named-readtables")
-(register-tdrhq "cmd")
+(register-tdrhq "hunchentoot" "ade1b9bb1c110a180cb883aed105536cbb0ea5e7")
+(register-tdrhq "stripe" "6b91ee9bcbffe81f887a0edddd1b182951cd02cf")
+(register-tdrhq "fiveam" "162bd30e6179fc787ee94e96104c8ce059d610ff")
+(register-tdrhq "cl-mongo-id" "5313c5f8b5cc035818372681297d75966ecf1d93")
+(register-tdrhq "named-readtables" "6ae08604e907959e33d3a19f1f1ae0733adc0dcd")
+(register-tdrhq "cmd"  "29f1267d141b5117dc742bce74340711c99076f3")
 
 (quick-patch:register-external "https://github.com/cl-plus-ssl/cl-plus-ssl"
-                            "master")
+                            "b2caafe487fc258f2b26cd1271e0b817f27cbb0a")
 
 (quick-patch:register-external "https://github.com/gschjetne/cljwt"
-                            "master")
+                            "bd3e567097cd9d48eb811be601590afa167e6667")
 
 (quick-patch:register-external "https://github.com/moderninterpreters/clsql-local-time"
-                            "master")
+                            "3a6d1f93cbe1549edc3ece63ed473d1dbd31c241")
 
 (quick-patch:prepare-externals "build/quick-patch/")
