@@ -31,8 +31,9 @@ COPYBARA=java -jar scripts/copybara_deploy.jar
 
 UNAME=$(shell uname -s)
 DISTINFO=quicklisp/dists/quicklisp/distinfo.txt
+ARC=build/arc/bin/arc
 
-REVISION_ID=$(shell echo '{"ids":["$(DIFF_ID)"]}' | arc call-conduit differential.querydiffs | jq -r '.["response"]["$(DIFF_ID)"]["revisionID"]')
+REVISION_ID=$(shell echo '{"ids":["$(DIFF_ID)"]}' | $(ARC) call-conduit differential.querydiffs -- | jq -r '.["response"]["$(DIFF_ID)"]["revisionID"]')
 IMAGE_DEPS=scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO) scripts/prepare-image.lisp scripts/init.lisp
 
 ifeq ($(UNAME),Linux)
@@ -226,14 +227,14 @@ update-harbormaster-fail: $(sbcl)
 
 
 autoland:
-	if ( echo "{\"revision_id\":\"$(REVISION_ID)\"}" | arc call-conduit differential.getcommitmessage | grep "#autoland" ) ; then \
+	if ( echo "{\"revision_id\":\"$(REVISION_ID)\"}" | $(ARC) call-conduit differential.getcommitmessage -- | grep "#autoland" ) ; then \
 	 	$(MAKE) -s actually-land ; \
 	fi
 
 actually-land:
 	git status
 	echo "Landing..."
-	arc land  --keep-branch
+	$(ARC) land  --
 
 src/java/libs: .PHONY
 	# This is manually run, not meant to run during build
