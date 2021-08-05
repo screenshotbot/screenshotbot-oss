@@ -231,7 +231,6 @@ autoland:
 	fi
 
 actually-land:
-	rm .buckconfig.local
 	git status
 	echo "Landing..."
 	arc land  --keep-branch
