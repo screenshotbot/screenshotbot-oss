@@ -219,7 +219,7 @@ copybara-quick-patch: .PHONY
 
 conditional-copybara: validate-copybara
 	if [ x$$DIFF_ID = x ] ; then \
-	   make all-copybara
+	   make all-copybara ; \
 	fi
 
 all-copybara:
