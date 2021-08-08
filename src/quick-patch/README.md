@@ -43,8 +43,8 @@ request to `cl+ssl`. At this point, I needed to use my own patched
 version, so I added this to my loading script:
 
 ```
-(quick-patch:register-external "https://github.com/tdrhq/cl-plus-ssl"
-                            "4c614fc3f28017f5c5f4c72a8ce413dd042bfb09")
+(quick-patch:register "https://github.com/tdrhq/cl-plus-ssl"
+                      "4c614fc3f28017f5c5f4c72a8ce413dd042bfb09")
 ```
 
 Notice I used the full git commit hash. A partial hash or a tag/branch
@@ -58,10 +58,10 @@ Finally, we need to tell quick-patch to do all the work required to
 fetch stuff.
 
 ```
-(quick-patch:prepare-externals "build/quick-patch/")
+(quick-patch:checkout-all "build/quick-patch/")
 ```
 
-`prepare-externals` takes one argument which is going to be your cache
+`checkout-all` takes one argument which is going to be your cache
 directory. If this is under a git repository, make sure your cache
 directory is in your `.gitignore`.
 

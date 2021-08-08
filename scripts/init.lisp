@@ -15,10 +15,10 @@
 (ql:quickload :quick-patch)
 
 (defun register-tdrhq (name commit)
-  (quick-patch:register-external (format nil "https://github.com/tdrhq/~a" name)
+  (quick-patch:register (format nil "https://github.com/tdrhq/~a" name)
                               commit))
 
-(quick-patch:register-external "https://github.com/moderninterpreters/markup"
+(quick-patch:register "https://github.com/moderninterpreters/markup"
                             "5357f8a980cd5d884468734d7511323d00844175")
 
 (register-tdrhq "hunchentoot" "ade1b9bb1c110a180cb883aed105536cbb0ea5e7")
@@ -28,13 +28,13 @@
 (register-tdrhq "named-readtables" "6ae08604e907959e33d3a19f1f1ae0733adc0dcd")
 (register-tdrhq "cmd"  "29f1267d141b5117dc742bce74340711c99076f3")
 
-(quick-patch:register-external "https://github.com/tdrhq/cl-plus-ssl"
+(quick-patch:register "https://github.com/tdrhq/cl-plus-ssl"
                             "4c614fc3f28017f5c5f4c72a8ce413dd042bfb09")
 
-(quick-patch:register-external "https://github.com/gschjetne/cljwt"
+(quick-patch:register "https://github.com/gschjetne/cljwt"
                             "bd3e567097cd9d48eb811be601590afa167e6667")
 
-(quick-patch:register-external "https://github.com/moderninterpreters/clsql-local-time"
+(quick-patch:register "https://github.com/moderninterpreters/clsql-local-time"
                             "3a6d1f93cbe1549edc3ece63ed473d1dbd31c241")
 
-(quick-patch:prepare-externals "build/quick-patch/")
+(quick-patch:checkout-all "build/quick-patch/")

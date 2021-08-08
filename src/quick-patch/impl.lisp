@@ -11,19 +11,26 @@
                 #:catdir
                 #:directory-exists-p)
   (:export
-   #:*cache-dir*
+   ;; Deprecated exports
    #:register-external
-   #:prepare-externals))
+   #:prepare-externals)
+  (:export
+   #:*cache-dir*
+   #:checkout-all
+   #:register))
 (in-package :quick-patch/impl)
 
 (defvar *externals* nil)
 
 (defvar *cache-dir* nil)
 
-(defun register-external (repo commit)
+(defun register (repo commit)
   (pushnew (cons repo commit)
            *externals*
            :test #'equal))
+
+(defun register-external (&rest args)
+  (apply #'register args))
 
 (defun run-program-with-errors (cmd)
   (multiple-value-bind (out err ret)
@@ -80,7 +87,7 @@
   (let ((pos (position #\/ repo-name :from-end t)))
     (subseq repo-name (+ 1 pos))))
 
-(defun prepare-externals (cache-dir)
+(defun checkout-all (cache-dir)
   (setf *cache-dir* cache-dir)
   (loop for (repo . commit) in *externals*
         do
@@ -90,3 +97,6 @@
                       asdf:*central-registry*
                       :test 'equal)
              (prepare-git-repo repo commit cache-dir))))
+
+(defun prepare-externals (&rest args)
+  (apply #'checkout-all args))

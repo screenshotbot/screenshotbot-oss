@@ -13,10 +13,10 @@
                 #:name-from-repo-name
                 #:run-program-with-errors
                 #:prepare-git-repo
-                #:prepare-externals
+                #:checkout-all
                 #:*cache-dir*
                 #:*externals*
-                #:register-external)
+                #:register)
   (:import-from #:asdf
                 #:*central-registry*))
 (in-package :quick-patch/test-impl)
@@ -24,7 +24,7 @@
 (def-suite* :quick-patch/test-impl)
 
 (defun add-external-repo ()
-  (register-external "https://github.com/m0cchi/cl-slack"
+  (register "https://github.com/m0cchi/cl-slack"
                      "019ecb3"))
 
 (test name-from-repo-name
@@ -50,7 +50,7 @@
         (add-external-repo)
         (let ((expected-dir (path:catdir dir "cl-slack/")))
           (cl-mock:answer prepare-git-repo)
-          (prepare-externals dir)
+          (checkout-all dir)
           (is (member expected-dir
                       *central-registry*
                       :test 'equal)))
