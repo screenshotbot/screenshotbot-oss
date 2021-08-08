@@ -21,8 +21,7 @@
                 #:*central-registry*))
 (in-package :quick-patch/test-impl)
 
-
-(util/fiveam:def-suite)
+(def-suite* :quick-patch/test-impl)
 
 (defun add-external-repo ()
   (register-external "https://github.com/m0cchi/cl-slack"
