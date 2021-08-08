@@ -33,9 +33,9 @@ loading other quicklisp projects, you want to do:
 Currently we don't have any dependencies, so you can override just
 about any system in quicklisp.
 
-Set up an override. For example, I recently sent a pull request to
-`cl-plus-ssl`. At this point, I needed to use my own patched version,
-so I added this to my loading script:
+Now you can set up an override. For example, I recently sent a pull
+request to `cl-plus-ssl`. At this point, I needed to use my own
+patched version, so I added this to my loading script:
 
 ```
 (quick-patch:register-external "https://github.com/tdrhq/cl-plus-ssl"
