@@ -37,9 +37,6 @@
 (defun md5-hex (f)
   (ironclad:byte-array-to-hex-string (md5:md5sum-file f)))
 
-(defsecret :artifact-upload-key
-  "Key used to authenticate that the artifact upload is coming from a
-  trusted source")
 
 (let ((lock (bt:make-lock)))
   (defhandler (nil :uri "/intern/artifact/upload" :method :put) (name hash upload-key)

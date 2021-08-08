@@ -4,11 +4,12 @@
         #:alexandria)
   (:import-from #:screenshotbot/secret
                 #:secret)
-  (:import-from #:screenshotbot/artifacts
-                #:md5-hex)
   (:export #:upload-fasl
            #:upload-sdk))
 (in-package :screenshotbot-utils)
+
+(defun md5-hex (f)
+  (ironclad:byte-array-to-hex-string (md5:md5sum-file f)))
 
 (defun upload-artifact (name filename)
   (log:info "Uploading via scp")

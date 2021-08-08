@@ -214,7 +214,8 @@
 (defsystem :screenshotbot/secrets
   :serial t
   :depends-on (:alexandria)
-  :components ((:file "secret")))
+  :components ((:file "secret")
+               (:file "artifacts-secrets")))
 
 
 (defsystem :screenshotbot/store-tests
@@ -229,7 +230,7 @@
   :depends-on (:drakma
                :flexi-streams
                :ironclad
-               :screenshotbot
+               :screenshotbot/secrets
                :md5
                :log4cl
                :cl-fad
