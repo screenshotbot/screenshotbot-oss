@@ -17,7 +17,7 @@
   (:import-from #:./mailer
                 #:local-smtp-mailer
                 #:noop-mailer)
-  #+lispworks
+  #+ (or ccl lispworks)
   (:import-from #:./slack
                 #:slack-plugin)
   (:import-from #:screenshotbot/login/github-oauth
