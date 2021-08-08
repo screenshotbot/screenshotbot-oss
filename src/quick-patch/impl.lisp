@@ -55,6 +55,7 @@
                  (format t "For ~a, Checking out: ~a~%" repo rev)
                  (run-program-with-errors (git
                                            "checkout"
+                                           "-f"
                                            rev)))))
       (cond
         ((directory-exists-p git-dir)
