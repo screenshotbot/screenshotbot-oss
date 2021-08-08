@@ -213,7 +213,8 @@
 
 (defsystem :screenshotbot/secrets
   :serial t
-  :depends-on (:alexandria)
+  :depends-on (:alexandria
+               :pkg)
   :components ((:file "secret")
                (:file "artifacts-secrets")))
 
