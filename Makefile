@@ -251,3 +251,7 @@ src/java/libs: .PHONY
 	done
 
 	echo "))" >> $@/java.libs.asd
+
+
+upload-sdk: .PHONY $(LW)
+	$(LW_SCRIPT) scripts/upload-sdk.lisp
