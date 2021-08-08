@@ -157,7 +157,8 @@ build/deploy.tar.gz: web-bin .PHONY
 bknr-tests-lw:
 
 screenshotbot-tests: $(LW) .PHONY
-	$(LW_SCRIPT) ./jenkins.lisp -system screenshotbot/tests,screenshotbot.pro/tests
+	$(LW_SCRIPT) ./jenkins.lisp -system screenshotbot/tests,screenshotbot.pro/
+tests
 
 sdk-tests: $(LW) .PHONY
 	$(LW_SCRIPT) ./jenkins.lisp -system screenshotbot.sdk/tests -no-jvm
@@ -213,11 +214,19 @@ copybara-slite: .PHONY
 	ssh-add ~/.ssh/id_rsa_slite
 	$(COPYBARA) copy.bara.sky slite || true
 
+copybara-quick-patch: .PHONY
+	ssh-add ~/.ssh/id_rsa_quick_patch
+	$(COPYBARA) copy.bara.sky quick-patch || true
+
 conditional-copybara: validate-copybara
 	if [ x$$DIFF_ID = x ] ; then \
-		ssh-agent $(MAKE) copybara ; \
-		ssh-agent $(MAKE) copybara-slite ; \
+	   make all-copybara
 	fi
+
+all-copybara:
+	ssh-agent $(MAKE) copybara
+	ssh-agent $(MAKE) copybara-slite
+	ssh-agent $(MAKE) copybara-quick-patch
 
 validate-copybara: .PHONY
 	$(COPYBARA) validate copy.bara.sky
