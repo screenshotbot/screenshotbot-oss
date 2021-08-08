@@ -15,6 +15,7 @@
                :jose
                :screenshotbot.js-assets
                :screenshotbot.css-assets
+               :screenshotbot/secrets
                :util.java
                :util/phabricator
                :dexador
@@ -37,7 +38,6 @@
    (:file "plugin")
    (:file "mailer")
    (:file "installation")
-   (:file "secret")
    (:file "server" :depends-on ("analytics"))
    (:file "cdn")
    (:file "form-errors")
@@ -210,6 +210,11 @@
                              (:file "test-promote")
                              (:file "test-send-tasks")
                              (:file "test-recorder-runs")))))
+
+(defsystem :screenshotbot/secrets
+  :serial t
+  :depends-on (:alexandria)
+  :components ((:file "secret")))
 
 
 (defsystem :screenshotbot/store-tests
