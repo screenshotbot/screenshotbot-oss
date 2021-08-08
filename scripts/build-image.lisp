@@ -26,19 +26,24 @@
 #+sbcl
 (pushnew 'image-load-hook sb-ext:*init-hooks*)
 
+#+lispworks
+(defun lw-image-load-hook ()
+  (handler-bind ((error
+                   (lambda (e)
+                     (declare (ignore e))
+                     (dbg:output-backtrace :verbose)
+                     (format t "Could not load init~%")
+                     (uiop:quit 1))))
+    (format t "Running image load hooks~%")
+    (image-load-hook)
+    (format t "Completed image load hooks~%")))
+
+#+lispworks
+(compile 'lw-image-load-hook)
 
 #+lispworks
 (lw:define-action "When starting image" "Call image load hook"
-  #'(lambda ()
-      (handler-bind ((error
-                       (lambda (e)
-                         (declare (ignore e))
-                         (dbg:output-backtrace :verbose)
-                         (format t "Could not load init~%")
-                         (uiop:quit 1))))
-        (format t "Running image load hooks~%")
-        (image-load-hook)
-        (format t "Completed image load hooks~%"))))
+  #'lw-image-load-hook)
 
 
 #+lispworks

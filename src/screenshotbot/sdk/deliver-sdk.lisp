@@ -19,5 +19,7 @@
             :packages-to-keep-symbol-names :all
             :multiprocessing t)))
 
+(compile 'deliver-main)
+
 (deliver-main)
 (uiop:quit)
