@@ -8,11 +8,17 @@
     (:use #:cl))
 (in-package :quick-patch/util)
 
+;;;; from cl-str
+
 (defvar *whitespaces* '(#\Space #\Newline #\Backspace #\Tab
                         #\Linefeed #\Page #\Return #\Rubout))
 
 (defun trim (value)
   (string-trim *whitespaces* value))
+
+;;;; end: from cl-str
+
+;;;; from cl-fad (with slight modifications)
 
 (defun catdir (x y)
   (let ((x (pathname x))
@@ -24,7 +30,6 @@
                  (append (cdr (pathname-directory x)) (cdr (pathname-directory y))))
      :defaults x)))
 
-;; taken from cl-fad, with slight modifications
 (defun directory-exists-p (pathspec)
   "Checks whether the file named by the pathname designator PATHSPEC
 exists and if it is a directory.  Returns its truename if this is the
@@ -40,3 +45,5 @@ by PATHNAME-AS-DIRECTORY."
   (let ((result (probe-file pathspec)))
     (and result
          (not (pathname-name result)))))
+
+;;;; end: from cl-fad
