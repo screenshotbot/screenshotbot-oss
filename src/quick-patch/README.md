@@ -82,3 +82,13 @@ but this is what it is at the moment.)
 
 Arnold Noronha <arnold@tdrhq.com>. While you're here, may I recommend
 [Screenshotbot](https://github.com/screenshotbot/screenshotbot-oss)?
+
+## wait wait, a real world example
+
+Speaking of Screenshotbot, you can see how we use it
+quick-patch in the real-world:
+https://github.com/screenshotbot/screenshotbot-oss/blob/main/scripts/init.lisp
+
+Roughly speaking, we build an image that we always work with, and the
+image has a hook that runs every time the image starts, and that hooks
+sets up quick-patch.
