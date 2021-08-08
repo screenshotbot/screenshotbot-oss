@@ -70,6 +70,7 @@
          (setf hunchentoot:*catch-errors-p* t)
          (hunchentoot:stop acceptor)))))
 
+#-darwin
 (test simple-put-image
   (let* ((port (util:random-port))
          (acceptor (make-instance 'hunchentoot:easy-acceptor

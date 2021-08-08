@@ -88,7 +88,8 @@
                                       'bknr.datastore:blob-subsystem)))
     ;; on CCL, the JVM is already loaded before the main systems
     #+lispworks
-    (jvm:jvm-init)
+    (unless (position "-no-jvm" system:*line-arguments-list* :test #'equal) 
+      (jvm:jvm-init))
     (fiveam:test foo-bar
       (fiveam:is-true (equal "foo" "foo")))
     (if (not (fiveam:run-all-tests))
