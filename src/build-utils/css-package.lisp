@@ -84,6 +84,13 @@
                                                                   0 (length prefix)))))))
   (call-next-method))
 
+(defun sass ()
+  #+linux
+  (namestring
+        (asdf:system-relative-pathname :build-utils "dart-sass/sass"))
+  #+darwin
+  "sass")
+
 (defmethod asdf:perform ((o compile-op) (c css-system))
   (destructuring-bind
       (output-file copy-dir source-map)
@@ -93,8 +100,7 @@
     (let ((tmp-output (make-pathname :type "css-tmp" :defaults output-file)))
      (uiop:run-program
       (list
-       (namestring
-        (asdf:system-relative-pathname :build-utils "dart-sass/sass"))
+       (sass)
        "-I" (namestring copy-dir)
        (let ((child (car (component-children c))))
          (namestring
