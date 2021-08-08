@@ -15,6 +15,9 @@
 (defvar *hook-loaded-p* nil)
 
 (defun image-load-hook ()
+  ;; On MacOS, the TMPDIR variable can change between sessions.
+  (uiop:setup-temporary-directory)
+
   ;; If we used this image to deliver another image, we don't
   ;; want to load the same hook twice
   (unless *hook-loaded-p*
@@ -34,9 +37,7 @@
                      (dbg:output-backtrace :verbose)
                      (format t "Could not load init~%")
                      (uiop:quit 1))))
-    (format t "Running image load hooks~%")
-    (image-load-hook)
-    (format t "Completed image load hooks~%")))
+    (image-load-hook)))
 
 #+lispworks
 (compile 'lw-image-load-hook)
