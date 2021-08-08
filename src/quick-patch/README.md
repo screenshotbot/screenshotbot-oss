@@ -34,8 +34,8 @@ Currently we don't have any dependencies, so you can override just
 about any system in quicklisp.
 
 Now you can set up an override. For example, I recently sent a pull
-request to `cl-plus-ssl`. At this point, I needed to use my own
-patched version, so I added this to my loading script:
+request to `cl+ssl`. At this point, I needed to use my own patched
+version, so I added this to my loading script:
 
 ```
 (quick-patch:register-external "https://github.com/tdrhq/cl-plus-ssl"
@@ -59,6 +59,10 @@ fetch stuff.
 `prepare-externals` takes one argument which is going to be your cache
 directory. If this is under a git repository, make sure your cache
 directory is in your `.gitignore`.
+
+Now I can go ahead and `(ql:quickload ...)` or `(asdf:load-system
+...)` any other project that depends on `cl+ssl`, and it'll correctly
+pick out my patched version.
 
 Happy hacking!
 
