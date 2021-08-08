@@ -78,6 +78,16 @@ Mozilla Public License, v2.
 (No specific reason for the license, it's mostly arbitrarily chosen,
 but this is what it is at the moment.)
 
+We have copy-pasted some code in `quickpatch/util` from other
+libraries to keep our dependencies minimal, and this code might be
+under a difference license:
+
+`directory-exists-p` and `catdir` are taken from `cl-fad` which is
+Copyright Edmund Weitz and released under BSD 2 Clause.
+
+`trim` is taken from `cl-str` which is Copyright @vindarel, and under
+the MIT License.
+
 # Authors
 
 Arnold Noronha <arnold@tdrhq.com>. While you're here, may I recommend
