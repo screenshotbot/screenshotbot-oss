@@ -29,7 +29,7 @@
 (register-tdrhq "cmd"  "29f1267d141b5117dc742bce74340711c99076f3")
 
 (quick-patch:register-external "https://github.com/tdrhq/cl-plus-ssl"
-                            "6ed1f7e916346d96c98dbcd25493c1b206b4e44e")
+                            "4c614fc3f28017f5c5f4c72a8ce413dd042bfb09")
 
 (quick-patch:register-external "https://github.com/gschjetne/cljwt"
                             "bd3e567097cd9d48eb811be601590afa167e6667")
