@@ -344,7 +344,7 @@
 
 (defun %main (&optional (argv #+lispworks system:*line-arguments-list*
                               #-lispworks nil))
-  (log:info "Screenshotbot SDK v2.1")
+  (log:info "Screenshotbot SDK v2.2")
   (let ((unrecognized   (parse-command-line (cdr (command-line)))))
     (when *verbose*
       (log:config :debug))
