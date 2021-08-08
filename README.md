@@ -1,6 +1,6 @@
-[![Build Status](http://jenkins.tdrhq.com/buildStatus/icon?job=screenshotbot-oss)](http://jenkins.tdrhq.com/job/screenshotbot-oss/)
-
 # Screenshotbot: Screenshot Testing Service
+
+[![Build Status](http://jenkins.tdrhq.com/buildStatus/icon?job=screenshotbot-oss)](http://jenkins.tdrhq.com/job/screenshotbot-oss/)
 
 Screenshotbot is a Screenshot Testing service. Screenshotbot will
 connect your existing Android, iOS or Selenium tests to track how
