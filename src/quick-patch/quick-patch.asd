@@ -19,5 +19,7 @@
   :serial t
   :depends-on (:quick-patch
                :cl-mock
+               :tmpdir
+               :str
                :fiveam)
   :components ((:file "test-impl")))
