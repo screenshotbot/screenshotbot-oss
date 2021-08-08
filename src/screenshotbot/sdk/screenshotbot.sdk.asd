@@ -37,6 +37,8 @@
 (defsystem :screenshotbot.sdk/tests
   :serial t
   :depends-on (:screenshotbot.sdk
-               :fiveam)
+               :fiveam
+               :screenshotbot
+               :util/fiveam)
   :components ((:file "test-bundle")
                (:file "test-sdk")))
