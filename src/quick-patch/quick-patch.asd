@@ -6,6 +6,10 @@
 
 (defsystem :quick-patch
   :serial t
+  :author "Arnold Noronha <arnold@jipr.io>"
+  :license  "Mozilla Public License 2.0"
+  :version "0.0.1"
+  :description "Easily override quicklisp projects without using git submodules"
   :depends-on ()
   :components ((:file "util")
                (:file "impl")
