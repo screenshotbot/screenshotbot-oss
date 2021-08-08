@@ -65,7 +65,8 @@
            (t
             (run-program-with-errors (git
                                       "fetch"
-                                      repo))
+                                      repo
+                                      commit))
             (checkout))))
         (t
          (run-program-with-errors (list

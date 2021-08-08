@@ -28,8 +28,8 @@
 (register-tdrhq "named-readtables" "6ae08604e907959e33d3a19f1f1ae0733adc0dcd")
 (register-tdrhq "cmd"  "29f1267d141b5117dc742bce74340711c99076f3")
 
-(quick-patch:register-external "https://github.com/cl-plus-ssl/cl-plus-ssl"
-                            "b2caafe487fc258f2b26cd1271e0b817f27cbb0a")
+(quick-patch:register-external "https://github.com/tdrhq/cl-plus-ssl"
+                            "6ed1f7e916346d96c98dbcd25493c1b206b4e44e")
 
 (quick-patch:register-external "https://github.com/gschjetne/cljwt"
                             "bd3e567097cd9d48eb811be601590afa167e6667")
