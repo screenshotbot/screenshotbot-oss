@@ -1,6 +1,8 @@
 
 # Quick-Patch
 
+[![tdrhq](https://circleci.com/gh/tdrhq/quick-patch.svg?style=shield)](https://app.circleci.com/pipelines/github/tdrhq/quick-patch?branch=main)
+
 This is a really simply library to override sytems in Quicklisp, or to
 add libraries that are not available in Quicklisp.
 
