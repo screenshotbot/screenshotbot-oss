@@ -18,6 +18,5 @@
 (defsystem :quick-patch/tests
   :serial t
   :depends-on (:quick-patch
-               :pkg
                :fiveam)
   :components ((:file "test-impl")))
