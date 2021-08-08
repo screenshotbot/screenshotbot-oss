@@ -157,8 +157,7 @@ build/deploy.tar.gz: web-bin .PHONY
 bknr-tests-lw:
 
 screenshotbot-tests: $(LW) .PHONY
-	$(LW_SCRIPT) ./jenkins.lisp -system screenshotbot/tests,screenshotbot.pro/
-tests
+	$(LW_SCRIPT) ./jenkins.lisp -system screenshotbot/tests,screenshotbot.pro/tests
 
 sdk-tests: $(LW) .PHONY
 	$(LW_SCRIPT) ./jenkins.lisp -system screenshotbot.sdk/tests -no-jvm
