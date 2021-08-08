@@ -12,7 +12,7 @@ patches. Submodules are super hard to maintain, especially across
 multiple developers or CI machines.
 
 Quick-patch does one thing, and does it really simply: it checks out a
-repo for a commit you're asking, and adds it to
+repository at a commit that you specify, and adds it to
 `asdf:*central-registry*`. That's it. On subsequent runs if you set it
 up correctly it won't hit the network.
 
