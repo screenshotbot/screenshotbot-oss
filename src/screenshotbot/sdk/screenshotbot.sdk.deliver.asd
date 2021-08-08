@@ -59,6 +59,7 @@
                  (uiop:run-program (list "chmod" "a+x" (namestring to))))))
     (uiop:run-program (list #-darwin "makeself"
                             #+darwin "/opt/homebrew/bin/makeself"
+                            "--nox11"
                             (namestring tmpdir)
                             (namestring (output-file o m))
                             label
