@@ -20,6 +20,8 @@
   (:import-from #:util
                 #:find-by-oid
                 #:object-with-oid)
+  (:import-from #:bknr.datastore
+                #:deftransaction)
   (:export #:company
            #:company-reports
            #:github-config
@@ -52,7 +54,8 @@
            #:phabricator-url
            #:conduit-api-key
            #:default-slack-config
-           #:jira-config))
+           #:jira-config
+           #:add-company-run))
 
 (defclass company (object-with-oid)
   ((name
@@ -279,3 +282,9 @@
        (or
         (company-with-singletonp t)
         (make-instance 'company :singletonp t))))))
+
+(deftransaction
+    add-company-run (company run)
+    (check-type company company)
+    (check-type run store-object)
+    (push run (company-runs company)))

@@ -30,6 +30,8 @@
   (:import-from #:bknr.datastore
                 #:store-object-id
                 #:with-transaction)
+  (:import-from #:screenshotbot/model/company
+                #:add-company-run)
   (:export #:%recorder-run-post
            #:run-response-id
            #:start-promotion-thread))
@@ -129,8 +131,8 @@
                                       (list field-name
                                             (funcall fn (getf args arg))))))))
 
+      (add-company-run company run)
       (with-transaction ()
-        (push run (company-runs company))
         (setf (channel-branch channel) branch))
 
       (with-transaction ()
