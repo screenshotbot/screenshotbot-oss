@@ -37,8 +37,4 @@
 (quick-patch:register "https://github.com/moderninterpreters/clsql-local-time"
                       "3a6d1f93cbe1549edc3ece63ed473d1dbd31c241")
 
-(quick-patch:register "https://github.com/dbmcclain/Lisp-Actors"
-                      "f293326c52bf658fc613237cbb4f740f1ae3b0c1"
-                      :subdirs (list "TActors/"))
-
 (quick-patch:checkout-all "build/quick-patch/")
