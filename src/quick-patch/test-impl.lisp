@@ -39,7 +39,8 @@
     (is (equal *externals*
                (list (list
                       "https://github.com/m0cchi/cl-slack"
-                      "019ecb3"))))))
+                      "019ecb3"
+                      (list (make-pathname :directory `(:relative)))))))))
 
 (test load-externals
   (cl-mock:with-mocks ()

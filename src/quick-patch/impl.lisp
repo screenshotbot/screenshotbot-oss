@@ -24,8 +24,10 @@
 
 (defvar *cache-dir* nil)
 
-(defun register (repo commit)
-  (pushnew (list repo commit)
+(defun register (repo commit &key (subdirs  (list (make-pathname :directory '(:relative)))))
+  "Clone the repo specified by REPO, and checkout COMMIT. If SUBDIRS
+is provided, add each of the directories to asdf:*central-registry*"
+  (pushnew (list repo commit subdirs)
            *externals*
            :test #'equal))
 
@@ -89,13 +91,15 @@
 
 (defun checkout-all (cache-dir)
   (setf *cache-dir* cache-dir)
-  (loop for (repo commit) in *externals*
+  (loop for (repo commit subdirs) in *externals*
         do
            (let* ((name (name-from-repo-name repo))
                   (cache-dir (catdir *cache-dir* (format nil "~a/" name))))
-             (pushnew cache-dir
-                      asdf:*central-registry*
-                      :test 'equal)
+             (dolist (subdir subdirs)
+               (assert subdir)
+               (pushnew (catdir cache-dir subdir)
+                        asdf:*central-registry*
+                        :test 'equal))
              (prepare-git-repo repo commit cache-dir))))
 
 (defun prepare-externals (&rest args)
