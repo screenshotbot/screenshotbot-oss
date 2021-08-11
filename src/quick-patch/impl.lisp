@@ -25,7 +25,7 @@
 (defvar *cache-dir* nil)
 
 (defun register (repo commit)
-  (pushnew (cons repo commit)
+  (pushnew (list repo commit)
            *externals*
            :test #'equal))
 
@@ -89,7 +89,7 @@
 
 (defun checkout-all (cache-dir)
   (setf *cache-dir* cache-dir)
-  (loop for (repo . commit) in *externals*
+  (loop for (repo commit) in *externals*
         do
            (let* ((name (name-from-repo-name repo))
                   (cache-dir (catdir *cache-dir* (format nil "~a/" name))))

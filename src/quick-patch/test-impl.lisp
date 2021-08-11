@@ -37,7 +37,7 @@
   (let ((*externals* nil))
     (add-external-repo)
     (is (equal *externals*
-               (list (cons
+               (list (list
                       "https://github.com/m0cchi/cl-slack"
                       "019ecb3"))))))
 
@@ -49,7 +49,10 @@
             (*central-registry* *central-registry*))
         (add-external-repo)
         (let ((expected-dir (path:catdir dir "cl-slack/")))
-          (cl-mock:answer prepare-git-repo)
+          (cl-mock:if-called 'prepare-git-repo
+                              (lambda (repo commit cache-dir)
+                                (is (equal repo "https://github.com/m0cchi/cl-slack"))
+                                (is (equal commit "019ecb3"))))
           (checkout-all dir)
           (is (member expected-dir
                       *central-registry*
