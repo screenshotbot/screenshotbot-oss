@@ -27,7 +27,12 @@ SBCL_SCRIPT=timeout 5m $(sbcl) --script
 CCL_SCRIPT=CCL_DEFAULT_DIRECTORY=$(CCL_DEFAULT_DIRECTORY) $(CCL_CORE) -b -I $(CCL_IMAGE)
 
 QUICKLISP=quicklisp/dists/quicklisp/
-COPYBARA=java -jar scripts/copybara_deploy.jar
+COPYBARA_CMD=java -jar scripts/copybara_deploy.jar
+
+define COPYBARA
+( $(COPYBARA_CMD) copy.bara.sky $1 | tee build/cb-output ) || grep "No new changes to import" build/cb-output
+endef
+
 
 UNAME=$(shell uname -s)
 DISTINFO=quicklisp/dists/quicklisp/distinfo.txt
@@ -204,18 +209,19 @@ $(CCL_IMAGE): build $(IMAGE_DEPS)
 update-ip: $(sbcl)
 	$(SBCL_SCRIPT) update-ip.lisp
 
-copybara: .PHONY
+copybara: .PHONY build
 	# This is on arnold's jenkins server. Disregard for OSS use.
 	ssh-add ~/.ssh/id_rsa_screenshotbot_oss
-	$(COPYBARA) copy.bara.sky || true # avoid the no-op issue
+	$(call COPYBARA)
 
-copybara-slite: .PHONY
+copybara-slite: .PHONY build
 	ssh-add ~/.ssh/id_rsa_slite
-	$(COPYBARA) copy.bara.sky slite || true
+	$(call COPYBARA,slite)
 
-copybara-quick-patch: .PHONY
+
+copybara-quick-patch: .PHONY build
 	ssh-add ~/.ssh/id_rsa_quick_patch
-	$(COPYBARA) copy.bara.sky quick-patch || true
+	$(call COPYBARA,quick-patch)
 
 conditional-copybara: validate-copybara
 	if [ x$$DIFF_ID = x ] ; then \
@@ -228,7 +234,7 @@ all-copybara:
 	ssh-agent $(MAKE) copybara-quick-patch
 
 validate-copybara: .PHONY
-	$(COPYBARA) validate copy.bara.sky
+	$(COPYBARA_CMD) validate copy.bara.sky
 
 update-harbormaster-pass: $(sbcl)
 	$(SBCL_SCRIPT) ./scripts/update-phabricator.lisp pass
