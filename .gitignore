@@ -24,3 +24,4 @@ analytics-log-file.log
 .moma.yml
 *.64xfasl
 nohup.out
+sandbox

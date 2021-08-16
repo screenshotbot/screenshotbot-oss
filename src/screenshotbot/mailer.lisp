@@ -5,7 +5,8 @@
            #:smtp-mailer
            #:local-smtp-mailer
            #:background-mailer
-           #:send-mail))
+           #:send-mail
+           #:host))
 
 (defclass mailer ()
   ((from :initarg :from
