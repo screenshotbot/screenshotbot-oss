@@ -38,7 +38,11 @@
                 #:*reuben-ip*
                 #:logged-in-p)
   (:import-from #:./google-fonts
-                #:google-fonts))
+                #:google-fonts)
+  (:import-from #:screenshotbot/user-api
+                #:user-email)
+  (:import-from #:util
+                #:oid))
 
 (markup:enable-reader)
 
@@ -102,7 +106,10 @@
   <selenium-css />
     </head>
 
-    <body class= body-class >
+    <body class= body-class
+          data-user-id= (when user (oid user))
+          data-user-email= (when user (user-email user))
+          data-user-name= (when user (user-full-name user)) >
       <!-- Begin page -->
       <left-side-bar user=user company=company script-name=script-name />
         <div class="content-page bg-light-lighten">

@@ -39,4 +39,6 @@
                (build-utils:js-file "jquery.timeago")
                (build-utils:js-file "default")
                (build-utils:js-file "common")
-               (build-utils:js-file "mask-editor")))
+               (build-utils:js-file "mask-editor")
+               #-screenshotbot-oss
+               (build-utils:js-file "chatwoot")))

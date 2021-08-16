@@ -13,6 +13,7 @@
            #:user-full-name
            #:singletonp
            #:user-companies
+           #:user-email
            #:user-image-url
            #:channel-name
            #:activep

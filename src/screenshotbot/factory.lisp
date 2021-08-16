@@ -30,6 +30,12 @@
   ((api-keys :initarg :api-keys
              :initform nil)))
 
+(defmethod util:oid ((u test-user))
+  "2sfsfsfsdfdsf")
+
+(defmethod user-email ((u test-user))
+  "dummy@example.com")
+
 (defclass test-company ()
   ((runs :initarg :runs
          :accessor company-runs)
