@@ -11,7 +11,13 @@
           #:fiveam)
   (:import-from #:./factory
                 #:*user*
-                #:*company*))
+                #:*company*)
+  (:import-from #:screenshotbot/template
+                #:something-went-wrong)
+  (:import-from #:fiveam-matchers
+                #:is-string
+                #:has-typep
+                #:assert-that))
 
 (util/fiveam:def-suite)
 
@@ -27,3 +33,8 @@
   (landing-template
    "foo")
   (pass))
+
+(test something-went-wrong
+  (assert-that
+   (something-went-wrong)
+   (is-string)))

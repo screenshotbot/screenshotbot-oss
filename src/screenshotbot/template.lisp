@@ -180,18 +180,30 @@
   ;; so we don't get into a secondary crash
   (cond
     ((staging-p)
-     (log:info "going to call next method")
      (call-next-method))
     (t
-     "<html><head><title>500 Internal Server Error</title></head>
-<script async='' src='https://www.googletagmanager.com/gtag/js?id=UA-179653755-1'></script><script>
-   window.dataLayer = window.dataLayer || [];
-   function gtag(){dataLayer.push(arguments);}
-   gtag('js', new Date());
+     (something-went-wrong))))
 
-   gtag('config', 'UA-179653755-1', {'site_speed_sample_rate':100 });
-   </script>
-      <body><h1>Internal Server Error</h1>An error has occurred<p>If this is blocking you please mail support@screenshotbot.io<p><hr><addbress><a href='http://weitz.de/hunchentoot/'>Hunchentoot 1.3.0</a> <a href='http://www.lispworks.com/'>(LispWorks 7.1.2)</a> at screenshotbot.io:443</addbress></p></body></html>")))
+(defun something-went-wrong ()
+  (markup:write-html
+   <html>
+   <landing-head />
+   <body>
+   <section class= "error-500" >
+   <div class= "container full-height">
+
+   <h1>Oh no! Something went wrong!</h1>
+   <p>We've been notified of this issue and will look into it as soon as we can.</p>
+
+   <p>If this is blocking you, please reach out to <a href= "mailto:support@screenshotbot.io">support@screenshotbot.io</a>.</p>
+
+   <p><a href= "/">Home</a>  ,(progn "|")
+   <a href= "javascript:history.back()">Back to previous page</a></p>
+
+        </div>
+   </section>
+   </body>
+   </html>))
 
 (Defhandler (get-started :uri "/get-started") ()
   (hex:safe-redirect "/documentation/getting-started"))

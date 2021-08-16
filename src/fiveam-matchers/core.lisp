@@ -11,7 +11,8 @@
    #:has-all
    #:has-any
    #:has-typep
-   #:ensure-matcher))
+   #:ensure-matcher
+   #:is-string))
 
 (defclass matcher ()
   ())
@@ -166,6 +167,9 @@
 
 (defun has-typep (type)
   (make-instance 'has-typep :value type))
+
+(defun is-string ()
+  (has-typep 'string))
 
 (defmethod matchesp ((matcher has-typep) value)
   (typep value (value matcher)))

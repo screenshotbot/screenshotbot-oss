@@ -172,6 +172,7 @@
   :depends-on (:fiveam
                :util
                :util/fiveam
+               :fiveam-matchers
                :screenshotbot/utils
                :tmpdir
                :screenshotbot)
