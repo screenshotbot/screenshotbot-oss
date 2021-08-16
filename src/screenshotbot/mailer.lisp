@@ -35,11 +35,11 @@
              :accessor delegate)))
 
 (defclass local-smtp-mailer (smtp-mailer)
-  ((host :initform "localhost"
-         :initarg :hostname)
-   (ssl :initform nil)
-   (port :initarg :port
-         :initform 25))
+  ()
+  (:default-initargs
+   :hostname "localhost"
+   :port 25
+   :ssl nil)
   (:documentation "A mailer that uses the local SMTP port. We expect
   that this SMTP server shouldn't require authentication."))
 

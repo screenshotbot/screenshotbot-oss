@@ -179,6 +179,7 @@
   :components ((:file "testing")
                (:file "factory")
                (:file "test-compare")
+               (:file "test-mailer")
                (:file "test-installation")
                (:file "test-assets")
                (:file "test-template")
