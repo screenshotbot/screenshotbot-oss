@@ -27,6 +27,7 @@
 (register-tdrhq "cl-mongo-id" "5313c5f8b5cc035818372681297d75966ecf1d93")
 (register-tdrhq "named-readtables" "6ae08604e907959e33d3a19f1f1ae0733adc0dcd")
 (register-tdrhq "cmd"  "29f1267d141b5117dc742bce74340711c99076f3")
+(register-tdrhq "cl-elastic" "0607087887da76919219b01d0601027bb198b444")
 
 (quick-patch:register "https://github.com/tdrhq/cl-plus-ssl"
                             "4c614fc3f28017f5c5f4c72a8ce413dd042bfb09")
