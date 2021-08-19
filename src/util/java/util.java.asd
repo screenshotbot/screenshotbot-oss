@@ -21,6 +21,7 @@
                (:file "reader")
                #+ (or ccl lispworks)
                (:file "binding")
+               #+ (or ccl lispworks)
                (:file "iterate")
                (:file "all")))
 

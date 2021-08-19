@@ -18,7 +18,7 @@
   x)
 
 (define-java-callers "java.util.Iterator"
-  (has-next-p "hasNext")
+  (has-next-p "hasNext" :return-type :boolean)
   (jnext "next"))
 
 (defmacro-driver (for var in-java x)
