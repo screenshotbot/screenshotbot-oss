@@ -10,6 +10,7 @@
   :serial t
   :depends-on (:str
                :pkg
+               :iterate
                :closer-mop
                ;; We never want to load cl+j through quicklisp, always
                ;; call jvm:jvm-init instead.
@@ -20,6 +21,7 @@
                (:file "reader")
                #+ (or ccl lispworks)
                (:file "binding")
+               (:file "iterate")
                (:file "all")))
 
 (defsystem :util.java/tests
@@ -30,4 +32,6 @@
   :components (#+ (or ccl lispworks)
                (:file "test-binding")
                #+ (or ccl lispworks)
-               (:file "test-java")))
+               (:file "test-java")
+               #+ (or ccl lispworks)
+               (:file "test-iterate")))
