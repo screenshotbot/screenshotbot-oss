@@ -62,6 +62,7 @@
                "cl-cron")
   :serial t
   :components ((:file "random-port")
+               (:file "ret-let")
                (:file "package")
                (:file "mockable")
                (:file "object-id")
@@ -107,6 +108,7 @@
   :serial t
   :components ((:module "tests"
                 :components ((:file "test-package")
+                             (:file "test-ret-let")
                              (:file "test-fiveam")
                              (:file "test-lists")
                              (:file "test-models")

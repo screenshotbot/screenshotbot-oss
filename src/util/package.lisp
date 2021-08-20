@@ -17,6 +17,7 @@
                 #:acceptor-plugins
                 #:make-full-url)
   (:use-reexport #:util/random-port)
+  (:use-reexport #:util/ret-let)
   (:export #:head
            #:google-analytics
            #:safe-redirect
