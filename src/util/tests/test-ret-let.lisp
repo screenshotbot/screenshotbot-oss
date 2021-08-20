@@ -12,5 +12,5 @@
   (is (eql 3 (ret-let (x (+  1 2))
                "two")))
   (is (equal "arn0ld"
-             (ret-let (x "arnold")
+             (ret-let (x (format nil "~a~a" "arn" "old"))
                (setf (elt x 3) #\0)))))
