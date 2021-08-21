@@ -65,8 +65,7 @@
                :initarg :token-type)))
 
 (defclass oidc-provider (abstract-oauth-provider)
-  ((oauth-name :initform "Generic OIDC")
-   (client-id :initarg :client-id
+  ((client-id :initarg :client-id
               :accessor client-id)
    (client-secret :initarg :client-secret
                   :accessor client-secret)
@@ -82,7 +81,9 @@
    (identifier :initarg :identifier
                :accessor oidc-provider-identifier)
    (cached-discovery :initform nil
-                     :accessor cached-discovery)))
+                     :accessor cached-discovery))
+  (:default-initargs
+   :oauth-name "Generic OIDC"))
 
 (defclass oidc-user (store-object)
   ((email :initarg :email

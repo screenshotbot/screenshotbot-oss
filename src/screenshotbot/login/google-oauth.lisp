@@ -39,11 +39,12 @@
 (markup:enable-reader)
 
 (defclass google-oauth-provider (oidc-provider)
-  ((oauth-name :initform "Google")
-   (issuer :initform "https://accounts.google.com")
-   (scope :initform "openid email profile")
-   (identifier :initform 'google)))
-
+  ()
+  (:default-initargs
+   :issuer "https://accounts.google.com"
+   :scope  "openid email profile"
+   :identifier  'google
+   :oauth-name "Google"))
 
 ;; datastore backward compatibility
 (defclass google-user (oidc-user)

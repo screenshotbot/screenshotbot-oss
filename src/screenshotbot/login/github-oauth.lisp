@@ -40,11 +40,12 @@
 
 
 (defclass github-oauth-provider (abstract-oauth-provider)
-  ((oauth-name :initform "GitHub")
-   (client-id :initarg :client-id
+  ((client-id :initarg :client-id
               :accessor client-id)
    (client-secret :initarg :client-secret
-                  :accessor client-secret)))
+                  :accessor client-secret))
+  (:default-initargs
+   :oauth-name "GitHub"))
 
 (defun make-gh-oauth-link (github-oauth redirect &key authorize-link)
   (declare (ignore authorize-link)) ;; too lazy to figure out what this was
