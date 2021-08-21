@@ -14,6 +14,7 @@
                :java.libs
                :jose
                :screenshotbot.js-assets
+               :oidc
                :screenshotbot.css-assets
                :screenshotbot/secrets
                :util.java

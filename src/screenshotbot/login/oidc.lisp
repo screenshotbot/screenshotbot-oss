@@ -8,6 +8,7 @@
     (:use #:cl
           #:alexandria
           #:nibble
+          #:oidc
           #:../model/user
           #:./common)
   (:import-from #:../user-api
@@ -49,41 +50,14 @@
            #:end-session-endpoint
            #:update-oidc-user))
 
-(defclass oauth-access-token ()
-  ((access-token :type (or null string)
-                 :initarg :access-token
-                 :accessor access-token-str)
-   (expires-in :type (or null integer)
-               :initarg :expires-in)
-   (refresh-token :type (or null string)
-                  :initarg :refresh-token)
-   (refresh-token-expires-in :type (or null integer)
-                             :initarg :refresh-token-expires-in)
-   (scope :type (or null string)
-          :initarg :scope)
-   (token-type :type (or null string)
-               :initarg :token-type)))
-
-(defclass oidc-provider (abstract-oauth-provider)
-  ((client-id :initarg :client-id
-              :accessor client-id)
-   (client-secret :initarg :client-secret
-                  :accessor client-secret)
-   (issuer :initarg :issuer
-           :accessor issuer
-           :documentation "The issuer URL, such as
-           https://accounts.google.com. We'll use OpenID discovery to
-           discover the rest.")
-   (scope :initarg :scope
-          :accessor scope
-          :initform "openid"
-          :documentation "The default scope used for authorization")
-   (identifier :initarg :identifier
-               :accessor oidc-provider-identifier)
-   (cached-discovery :initform nil
-                     :accessor cached-discovery))
+(defclass oidc-provider (abstract-oauth-provider
+                         oidc)
+  ((identifier :initarg :identifier
+               :accessor oidc-provider-identifier))
   (:default-initargs
-   :oauth-name "Generic OIDC"))
+   :oauth-name "Generic OIDC"
+   :callback-endpoint 'oauth-callback))
+
 
 (defclass oidc-user (store-object)
   ((email :initarg :email
@@ -104,58 +78,7 @@
                :accessor oidc-provider-identifier))
   (:metaclass persistent-class))
 
-(defmethod discover ((oidc oidc-provider))
-  "Returns an alist of all the fields in the discovery document"
-  (or
-   (cached-discovery oidc)
-   (setf (cached-discovery oidc)
-         (let ((url (format nil "~a/.well-known/openid-configuration"
-                            (check-https
-                             (issuer oidc)))))
-      (json:decode-json-from-string (dex:get url))))))
-
-
-(defun check-https (url)
-  "Our OpenID Connect implementation does not do id-token
-  verification. But to still ensure security we have to make sure all
-  our calls to the Auth server go ever HTTPS"
-  (when url
-   (unless (equal "https" (quri:uri-scheme (quri:uri url)))
-     (error "Using non https endpoint ~a for authentication" url)))
-  url)
-
-(defmethod authorization-endpoint ((oidc oidc-provider))
-  (check-https
-   (assoc-value (discover oidc) :authorization--endpoint)))
-
-(defmethod token-endpoint ((oidc oidc-provider))
-  (check-https
-   (assoc-value (discover oidc) :token--endpoint)))
-
-(defmethod userinfo-endpoint ((oidc oidc-provider))
-  (check-https
-   (assoc-value (discover oidc) :userinfo--endpoint)))
-
-(defmethod end-session-endpoint ((oidc oidc-provider))
-  (check-https
-   (assoc-value (discover oidc) :end--session--endpoint)))
-
-(defgeneric oidc-callback (auth code redirect))
-
 ;; (token-endpoint (make-instance 'oidc-provider :issuer "https://accounts.google.com"))
-
-(defun make-oidc-auth-link (oauth redirect)
-  (let* ((auth-uri (quri:uri (authorization-endpoint oauth)))
-         (redirect (nibble (code)
-                     (oidc-callback oauth code redirect))))
-
-    (setf (quri:uri-query-params auth-uri)
-          `(("redirect_uri" . ,(hex:make-full-url hunchentoot:*request* 'oauth-callback))
-            ("client_id" . ,(client-id oauth))
-            ("state" . ,(format nil "~d" (nibble:nibble-id redirect)))
-            ("response_type" . "code")
-            ("scope" . ,(scope oauth))))
-    (quri:render-uri auth-uri)))
 
 (defmethod oauth-signin-link ((auth oidc-provider) redirect)
   (make-oidc-auth-link auth redirect))
@@ -163,74 +86,20 @@
 (defmethod oauth-signup-link ((auth oidc-provider) redirect)
   (make-oidc-auth-link auth redirect))
 
-(defun oauth-get-access-token (token-url &key client_id client_secret code
-                                                      redirect_uri)
-  (with-open-stream (stream (dex:post token-url
-                                      :want-stream t
-                                      :headers `(("Accept" . "application/json"))
-                                      :content `(("client_id" . ,client_id)
-                                                 ("client_secret" . ,client_secret)
-                                                 ("code" . ,code)
-                                                 ("grant_type" . "authorization_code")
-                                                 ("redirect_uri" . ,redirect_uri))))
-    (let ((resp
-            (json:decode-json stream)))
-      (log:info "Got response ~s" resp)
-      (when (assoc-value resp :error)
-        (error "oauth error: ~s" (assoc-value resp :error--description)))
-      (flet ((v (x) (assoc-value resp x)))
-        (let ((access-token (make-instance 'oauth-access-token
-                                           :access-token (v :access--token)
-                                           :expires-in (v :expires--in)
-                                           :refresh-token (v :refresh--token)
-                                           :refresh-token-expires-in (v :refresh--token--expires--in)
-                                           :scope (v :scope)
-                                           :token-type (v :token--type))))
-          access-token)))))
 
-
-
-(defun make-json-request (url &rest args)
-  (multiple-value-bind (stream status-code)
-      (apply 'dex:request url
-             :want-stream t
-             args)
-    (with-open-stream (stream stream)
-     (case status-code
-       (200
-        (values
-         (json:decode-json stream)
-         status-code))
-       (otherwise
-        (error "Failed to make json request, status code ~a" status-code))))))
-
-
-(defmethod oidc-callback ((auth oidc-provider) code redirect)
-  (let ((token (oauth-get-access-token
-                (token-endpoint auth)
-                :client_id (client-id auth)
-                 :client_secret (client-secret auth)
-                 :code code
-                 :redirect_uri (hex:make-full-url
-                                hunchentoot:*request*
-                                'oauth-callback))))
-    (let ((user-info
-            (make-json-request (userinfo-endpoint auth)
-                               :method :post
-                               :content `(("access_token"
-                                           .
-                                           ,(access-token-str token))
-                                          ("alt" . "json")))))
-      (log:debug "Got user info ~S" user-info)
-      (let ((user (prepare-oidc-user
-                   auth
-                   :user-id (assoc-value user-info :sub)
-                   :email (assoc-value user-info :email)
-                   :full-name (assoc-value user-info :name)
-                   :avatar (assoc-value user-info :picture))))
-        (setf (current-user) user)
-        (hex:safe-redirect redirect)))))
-
+(defmethod after-authentication ((auth oidc-provider) &key
+                                                       user-id
+                                                       email
+                                                       full-name
+                                                       avatar)
+  (log:debug "Got user info ~S" user-id)
+  (let ((user (prepare-oidc-user
+               auth
+               :user-id user-id
+               :email email
+               :full-name full-name
+               :avatar avatar)))
+    (setf (current-user) user)))
 
 (defun update-oidc-user (oauth-user &key
                                       (email (error "required"))
