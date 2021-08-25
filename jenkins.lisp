@@ -75,6 +75,9 @@
 #-screenshotbot-oss
 (ql:quickload "markup.test")
 
+(eval `(setf ,(find-symbol "*IN-TEST-P*" "UTIL")
+             t))
+
 (defun main ()
   (tmpdir:with-tmpdir (tmpdir)
     (make-instance #-screenshotbot-oss
@@ -88,7 +91,7 @@
                                       'bknr.datastore:blob-subsystem)))
     ;; on CCL, the JVM is already loaded before the main systems
     #+lispworks
-    (unless (position "-no-jvm" system:*line-arguments-list* :test #'equal) 
+    (unless (position "-no-jvm" system:*line-arguments-list* :test #'equal)
       (jvm:jvm-init))
     (fiveam:test foo-bar
       (fiveam:is-true (equal "foo" "foo")))

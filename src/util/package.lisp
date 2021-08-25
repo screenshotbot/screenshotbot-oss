@@ -80,7 +80,9 @@
            #:jvm-init
            #:safe-uuid
            #:better-easy-handler
-           #:tail))
+           #:tail
+           #:*in-test-p*
+           #:in-test-p))
 
 (defpackage :mquery
   (:use #:cl

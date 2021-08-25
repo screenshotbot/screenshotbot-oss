@@ -6,6 +6,11 @@
 
 (in-package :util)
 
+(defvar *in-test-p* nil)
+
+(defun in-test-p ()
+  *in-test-p*)
+
 (defclass custom-request (hunchentoot:request)
   ((additional-post-params :initform nil)))
 
