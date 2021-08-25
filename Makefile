@@ -5,7 +5,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 sbcl=build/sbcl-console
-CACHE_KEY=4
+CACHE_KEY=5
 SBCL_CORE=sbcl
 CCL_DEFAULT_DIRECTORY=/opt/software/ccl
 CCL_CORE=$(CCL_DEFAULT_DIRECTORY)/lx86cl64
@@ -76,8 +76,10 @@ build/cache-key: .PHONY
 
 .PHONY:
 
-update-quicklisp: .PHONY
-	$(SBCL_CORE) --eval '(load "~/quicklisp/setup.lisp")' --eval '(ql:update-all-dists :prompt nil)' --quit
+update-quicklisp: .PHONY $(sbcl)
+	# $(sbcl) --eval '(load "quicklisp/setup.lisp")' --eval '(ql:update-client :prompt nil)'  --quit
+	$(MAKE) $(sbcl)
+	$(sbcl) --eval '(load "quicklisp/setup.lisp")' --eval '(ql:update-all-dists :prompt nil)' --quit
 
 start-dev: $(sbcl)
 	$(sbcl) --script ./start-dev.lisp
@@ -130,7 +132,8 @@ clean-fasl: .PHONY
 
 clean: clean-fasl
 	rm -f web-bin
-	cd shhhift/static && $(MAKE) clean
+	rm -rf buil
+	rm -rf assets
 
 clsql-tests-sbcl: $(sbcl)
 	$(call clsql_check_tests,$(SBCL_SCRIPT) scripts/run-clsql-tests.lisp)
