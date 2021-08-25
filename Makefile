@@ -14,7 +14,8 @@ tests= \
 	./test-stuff.lisp \
 	./test-stuff2.lisp
 
-LW_VERSION=7-1-0
+
+LW_VERSION=8-0-0
 LW_PREFIX=/opt/software/lispworks
 
 JIPR=../jippo
@@ -192,7 +193,8 @@ selenium-tests-without-x: $(LW)
 
 assets: $(LW) .PHONY
 	mkdir -p assets
-	cp $(LW_PREFIX)/lib/$(LW_VERSION)-0/etc/lispcalls.jar assets/lispcalls.jar
+	rm -f assets/lispcalls.jar
+	cp $(LW_PREFIX)/lib/$(LW_VERSION)-0/etc/lispcalls.jar assets/
 	$(LW_SCRIPT) scripts/deliver-screenshotbot.lisp
 
 deploy-assets: | deploy-assets-excl-bin deploy-bin deploy-pull
