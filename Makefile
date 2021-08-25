@@ -14,8 +14,11 @@ tests= \
 	./test-stuff.lisp \
 	./test-stuff2.lisp
 
+LW_VERSION=7-1-0
+LW_PREFIX=/opt/software/lispworks
+
 JIPR=../jippo
-LW=build/lw-console
+LW=build/lw-console-$(LW_VERSION)
 LW_CORE=lispworks-unknown-location
 SRC_DIRS=src local-projects third-party
 LISP_FILES=$(shell find $(SRC_DIRS) -name '*.lisp') $(shell find $(SRC_DIRS) -name '*.asd')
@@ -42,7 +45,7 @@ REVISION_ID=$(shell echo '{"ids":["$(DIFF_ID)"]}' | $(ARC) call-conduit differen
 IMAGE_DEPS=scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO) scripts/prepare-image.lisp scripts/init.lisp
 
 ifeq ($(UNAME),Linux)
-	LW_CORE=/opt/software/lispworks/lispworks-7-1-*
+	LW_CORE=$(LW_PREFIX)/lispworks-$(LW_VERSION)-amd64-linux
 endif
 
 ifeq ($(UNAME),Darwin)
@@ -174,8 +177,8 @@ deploy-rsync: .PHONY web-bin
 	rsync -aPz --exclude .git --exclude .web-bin-copy --exclude web-bin ./ ubuntu@mx.tdrhq.com:~/web/
 
 
-build/lw-console: build $(IMAGE_DEPS)
-	$(LW_CORE) -build scripts/build-image.lisp
+$(LW): build $(IMAGE_DEPS)
+	$(LW_CORE) -build scripts/build-image.lisp -- $@
 
 $(sbcl): build $(IMAGE_DEPS)
 	$(SBCL_CORE) --script scripts/build-image.lisp
@@ -189,6 +192,7 @@ selenium-tests-without-x: $(LW)
 
 assets: $(LW) .PHONY
 	mkdir -p assets
+	cp $(LW_PREFIX)/lib/$(LW_VERSION)-0/etc/lispcalls.jar assets/lispcalls.jar
 	$(LW_SCRIPT) scripts/deliver-screenshotbot.lisp
 
 deploy-assets: | deploy-assets-excl-bin deploy-bin deploy-pull

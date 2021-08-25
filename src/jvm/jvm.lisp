@@ -24,6 +24,16 @@
     #+ccl
     (pushnew (asdf:system-relative-pathname :cl+j "cl_j.jar")
              class-path)
+
+    #+lispworks
+    (pushnew
+     (cond
+       (util:*delivered-image*
+        "assets/lispcalls.jar")
+       (t
+        (sys:lispworks-file "etc/lispcalls.jar")))
+     class-path)
+
     class-path))
 
 (defun libjvm.so ()

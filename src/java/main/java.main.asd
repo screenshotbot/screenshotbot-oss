@@ -17,8 +17,7 @@
   :class build-utils:java-library
   :defsystem-depends-on (:build-utils)
   :depends-on (:java.libs)
-  :components ((build-utils:jar-file "lispcalls")
-               (:module "com/atlassian/oauth/client/example"
+  :components ((:module "com/atlassian/oauth/client/example"
                 :components ((build-utils:java-file "ClientMain")
                              (build-utils:java-file "JiraOAuthClient")
                              (build-utils:java-file "JiraOAuthGetTemporaryToken")

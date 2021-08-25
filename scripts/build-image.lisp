@@ -46,9 +46,10 @@
 (lw:define-action "When starting image" "Call image load hook"
   #'lw-image-load-hook)
 
+(format t "Got command line arguments: ~S" (uiop:raw-command-line-arguments))
 
 #+lispworks
-(let ((output "build/lw-console"))
+(let ((output (car (last (uiop:raw-command-line-arguments)))))
   (delete-file output)
   (save-image output
               :console t
