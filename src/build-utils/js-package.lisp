@@ -27,7 +27,8 @@
   ())
 
 (defclass js-file (asdf:static-file)
-  ((asdf::type :initform "js")))
+  ()
+  (:default-initargs :type "js"))
 
 (defmethod js-lib-input-files ((o compile-op) (m module))
   (loop for x in (component-children m) appending

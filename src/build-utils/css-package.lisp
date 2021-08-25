@@ -25,10 +25,12 @@
   ())
 
 (defclass scss-file (asdf:static-file)
-  ((asdf::type :initform "scss")))
+  ()
+  (:default-initargs :type "scss"))
 
 (defclass css-file (asdf:static-file)
-  ((asdf::type :initform "css")))
+  ()
+  (:default-initargs :type "css"))
 
 
 (defmethod output-files ((o compile-op) (c css-system))

@@ -18,10 +18,12 @@
   ())
 
 (defclass jar-file (asdf:static-file)
-  ((asdf::type :initform "jar")))
+  ()
+  (:default-initargs :type "jar"))
 
 (defclass java-file (asdf:source-file)
-  ((asdf::type :initform "java")))
+  ()
+  (:default-initargs :type "java"))
 
 (defun java-class-path (system)
   (append
