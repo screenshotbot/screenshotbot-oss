@@ -22,7 +22,11 @@
                             "5357f8a980cd5d884468734d7511323d00844175")
 
 (register-tdrhq "hunchentoot" "ade1b9bb1c110a180cb883aed105536cbb0ea5e7")
+
+;; I *think* I don't need this anymore
+#+nil
 (register-tdrhq "stripe" "673d4b9600eb7c2dd21b4701a1b18e348dca7267")
+
 (register-tdrhq "fiveam" "162bd30e6179fc787ee94e96104c8ce059d610ff")
 (register-tdrhq "cl-mongo-id" "5313c5f8b5cc035818372681297d75966ecf1d93")
 (register-tdrhq "named-readtables" "6ae08604e907959e33d3a19f1f1ae0733adc0dcd")
