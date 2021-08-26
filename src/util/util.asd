@@ -57,7 +57,7 @@
                "cl-json"
                "hunchentoot-extensions"
                #-screenshotbot-oss
-               "net.mfiano.lisp.stripe"
+               "stripe"
                "log4cl"
                "cl-cron")
   :serial t
