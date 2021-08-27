@@ -27,6 +27,8 @@
                 #:company)
   (:import-from #:auth
                 #:password-hash)
+  (:import-from #:bknr.datastore
+                #:store-objects-with-class)
   ;; classes
   (:export #:user
            #:email-confirmation-code
@@ -81,7 +83,6 @@
           :index-initargs (:test #'equal)
           :index-type unique-index
           :index-reader user-with-email
-          :index-values all-users
           :writer (setf user-email))
    (password-hash :type (or null string)
                   :initform nil
@@ -119,6 +120,9 @@
     set-up. A default installation of Screenshotbot OSS, would be a
     single org set up."))
   (:metaclass persistent-class))
+
+(defun all-users ()
+  (store-objects-with-class 'user))
 
 (defmethod initialize-instance :around ((obj user) &rest args
                                         &key companies
