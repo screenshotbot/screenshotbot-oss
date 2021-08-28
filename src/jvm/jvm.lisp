@@ -43,7 +43,14 @@
 (defun libjvm.so ()
   (or
    *libjvm*
-   "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so"))
+   (let ((guesses (list
+                   "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so"
+                   "/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so")))
+     (loop for guess in guesses
+           if (path:-e guess)
+             do (return guess)
+           finally
+           (error "Could not find java or libjvm.so, pass --libjvm argument")))))
 
 #+ccl
 (defun jvm-init-for-ccl ()
