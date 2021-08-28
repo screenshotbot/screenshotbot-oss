@@ -53,7 +53,8 @@ ways."
                    "")
     (util:*object-store* #+screenshotbot-oss "~/.config/screenshotbot/object-store/"
                          #-screenshotbot-oss "/data/arnold/object-store/" "" :params ("OBJECT-STORE"))
-    (*verify-store* nil "")))
+    (*verify-store* nil "")
+    (jvm:*libjvm* nil "Location of libjvm.so" :params ("LIBJVM"))))
 
 (defclass my-acceptor (hunchentoot-multi-acceptor:multi-acceptor)
   ())

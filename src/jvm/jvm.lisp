@@ -7,7 +7,8 @@
 (defpackage :jvm
   (:use :cl
    :alexandria)
-  (:export :jvm-init))
+  (:export :jvm-init
+           :*libjvm*))
 (in-package :jvm)
 
 #+lispworks
@@ -36,8 +37,13 @@
 
     class-path))
 
+(defvar *libjvm* nil
+  "Configure with --libjvm")
+
 (defun libjvm.so ()
-  "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so")
+  (or
+   *libjvm*
+   "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so"))
 
 #+ccl
 (defun jvm-init-for-ccl ()
