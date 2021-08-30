@@ -122,6 +122,19 @@ ways."
            :external-format :utf-8
            :element-type 'character))))
 
+(defun setup-appenders (&key clear)
+  (let ((log-file (path:catfile "log/logs")))
+    (when clear
+     (log4cl:clear-logging-configuration))
+    (log:config :info)
+    (log4cl:add-appender log4cl:*root-logger*
+                         (make-instance 'utf-8-daily-file-appender
+                                         :name-format log-file
+                                         :backup-name-format
+                                         "logs.%Y%m%d"
+                                         :filter 4
+                                         :layout (make-instance 'log4cl:simple-layout)))))
+
 
 (defun main (&optional #+sbcl listen-fd)
   "Called from launch scripts, either web-bin or launch.lisp"
@@ -149,16 +162,7 @@ ways."
        (init-multi-acceptor)
        #+lispworks
        (jvm:jvm-init)
-       (let ((log-file (path:catfile "log/logs")))
-         (log4cl:clear-logging-configuration)
-         (log:config :info)
-         (log4cl:add-appender log4cl:*root-logger*
-                              (make-instance 'utf-8-daily-file-appender
-                                              :name-format log-file
-                                              :backup-name-format
-                                              "logs.%Y%m%d"
-                                              :filter 4
-                                              :layout (make-instance 'log4cl:simple-layout))))
+       (setup-appenders)
 
        #-screenshotbot-oss
        (unless util:*delivered-image*
@@ -188,8 +192,10 @@ ways."
          (t
           (hunchentoot:start *multi-acceptor*)))
 
-       (format t "The web server is live at port ~a. See logs/logs for more logs~%"
-               *port*)
+       (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
+                 *port*)
+
+       (setup-appenders :clear t)
 
        (log:info "Now we wait indefinitely for shutdown notifications")
        (bt:condition-wait *shutdown-cv* *server-lock*))))
