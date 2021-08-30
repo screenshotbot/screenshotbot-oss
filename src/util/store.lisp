@@ -8,6 +8,13 @@
 
 (defvar *object-store*)
 
+(defun object-store ()
+  (let* ((dir *object-store*)
+         (dir (if (str:ends-with-p "/" dir) dir (format nil "~a/" dir))))
+   (let ((path (pathname dir)))
+     (ensure-directories-exist path)
+     path)))
+
 (defclass safe-mp-store (bknr.datastore:mp-store)
   (lock))
 
@@ -34,11 +41,11 @@
 (defun prepare-store ()
   (setf bknr.datastore:*store-debug* t)
   (make-instance 'util:safe-mp-store
-                 :directory *object-store*
+                 :directory (object-store)
                  :subsystems (store-subsystems)))
 
 (defun verify-store ()
-  (let ((store-dir *object-store*))
+  (let ((store-dir (object-store)))
     (tmpdir:with-tmpdir (dir)
       (let ((out-current (path:catdir dir "current/")))
         (log:info "Copyin file ~a to ~a" store-dir dir)

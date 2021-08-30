@@ -109,6 +109,7 @@
   :components ((:module "tests"
                 :components ((:file "test-package")
                              (:file "test-ret-let")
+                             (:file "test-store")
                              (:file "test-fiveam")
                              (:file "test-lists")
                              (:file "test-models")
