@@ -29,11 +29,13 @@
 (defvar *logger* (log4cl:make-logger))
 
 (defun trim-output (output)
-  (let ((size 800))
+  (let ((size 400))
    (cond
      ((< (length output) size)
       output)
-     (str:substring 0 size output))))
+     (t
+      (format nil "~A <...trimmed...>"
+       (str:substring 0 size output))))))
 
 (defmethod hunchentoot:acceptor-log-message ((acceptor base-acceptor) log-level format-string &rest format-arguments)
   (let* ((output (apply 'format nil format-string format-arguments))
