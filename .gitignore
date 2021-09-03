@@ -25,3 +25,5 @@ analytics-log-file.log
 *.64xfasl
 nohup.out
 sandbox
+*~
+*.64yfasl

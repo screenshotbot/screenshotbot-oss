@@ -16,11 +16,15 @@
   ((type :initform "lisp")))
 
 (defmethod output-files ((o compile-op) (s deliver-script))
-  (list
-   (make-pathname :name (funcall (find-symbol "REGEX-REPLACE-ALL" "CL-PPCRE")
+  (let ((output (make-pathname :name (funcall (find-symbol "REGEX-REPLACE-ALL" "CL-PPCRE")
                                  "^deliver-" (component-name s) "")
                   :type nil
                   :defaults *library-file-dir*)))
+    (list
+     output
+     #+darwin
+     (make-pathname :type "lwheap"
+                    :defaults output))))
 
 (defmethod perform ((o load-op) (s deliver-script))
   t)
@@ -49,14 +53,16 @@
              (let ((component (find-component
                                (component-parent m)
                                component)))
-               (let* ((from (if (or (typep component 'static-file)
+               (let* ((froms (if (or (typep component 'static-file)
                                     (eq m component))
-                                (car (input-files 'compile-op component))
-                                (output-file 'compile-op component)))
-                      (to (make-pathname :defaults  from
-                                         :directory (pathname-directory tmpdir))))
-                 (uiop:copy-file from to)
-                 (uiop:run-program (list "chmod" "a+x" (namestring to))))))
+                                (input-files 'compile-op component)
+                                (output-files 'compile-op component))))
+                 (dolist (from froms)
+                   (let ((to (make-pathname :defaults  from
+                                            :directory (pathname-directory tmpdir))))
+                     (uiop:copy-file from to)
+                     (uiop:run-program (list "chmod" "a+x" (namestring to))))))))
+
     (uiop:run-program (list #-darwin "makeself"
                             #+darwin "/opt/homebrew/bin/makeself"
                             "--nox11"
@@ -82,7 +88,12 @@
   (call-next-method))
 
 (defun lw ()
-  "build/lw-console")
+  (or
+   #+(and :x86-64 darwin)
+   "build/lw-console-8-0-0x86_64"
+   #+(or :linux (and :arm :darwin))
+   "build/lw-console-8-0-0"
+   (error "unsupported platform image")))
 
 (defmethod perform ((o compile-op) (s deliver-script))
   (uiop:run-program (list (lw)

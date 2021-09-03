@@ -14,12 +14,18 @@ tests= \
 	./test-stuff.lisp \
 	./test-stuff2.lisp
 
+ARCH?=
+ARCH_CMD=
+
+ifeq ($(ARCH),x86_64)
+	ARCH_CMD=arch -$(ARCH)
+endif
 
 LW_VERSION=8-0-0
 LW_PREFIX=/opt/software/lispworks
 
 JIPR=../jippo
-LW=build/lw-console-$(LW_VERSION)
+LW=build/lw-console-$(LW_VERSION)$(ARCH)
 LW_CORE=lispworks-unknown-location
 SRC_DIRS=src local-projects third-party
 LISP_FILES=$(shell find $(SRC_DIRS) -name '*.lisp') $(shell find $(SRC_DIRS) -name '*.asd')
@@ -50,7 +56,7 @@ ifeq ($(UNAME),Linux)
 endif
 
 ifeq ($(UNAME),Darwin)
-	LW_CORE=/Applications/LispWorks\ 7.1\ \(64-bit\)/LispWorks\ \(64-bit\).app/Contents/MacOS/lispworks-7-1-0-amd64-darwin
+	LW_CORE=/Applications/LispWorks\ 8.0\ \(64-bit\)/LispWorks\ \(64-bit\).app/Contents/MacOS/lispworks-8-0-0-macos64-universal
 endif
 
 
@@ -127,6 +133,8 @@ restart: | test-lw  web-bin
 	kill -9 `curl https://tdrhq.com/deploy/getpid`
 
 build: | build/cache-key $(DISTINFO)
+	# build/build? Temporary fix for LW8-darwin
+	mkdir -p build
 
 web-bin: $(LISP_FILES) $(LW)
 	$(LW_SCRIPT) build-web-bin.lisp
@@ -179,7 +187,8 @@ deploy-rsync: .PHONY web-bin
 
 
 $(LW): build $(IMAGE_DEPS)
-	$(LW_CORE) -build scripts/build-image.lisp -- $@
+	# $$PWD is workaround over LW issue #42471
+	$(ARCH_CMD) $(LW_CORE) -build scripts/build-image.lisp -- $$PWD/$@
 
 $(sbcl): build $(IMAGE_DEPS)
 	$(SBCL_CORE) --script scripts/build-image.lisp
@@ -281,3 +290,6 @@ src/java/libs: .PHONY
 
 upload-sdk: .PHONY $(LW)
 	$(LW_SCRIPT) scripts/upload-sdk.lisp
+
+upload-mac-intel-sdk:
+	ARCH="x86_64" make upload-sdk
