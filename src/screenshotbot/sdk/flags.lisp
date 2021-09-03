@@ -98,7 +98,7 @@
 
 (define-flag *production*
   :selector "production"
-  :default-value nil
+  :default-value t
   :type boolean)
 
 (define-flag *help*
