@@ -222,7 +222,10 @@
   (when (and hunchentoot:*catch-errors-p*
              (not *disable-sentry*)
              #+lispworks
-             (not (typep condition 'comm:socket-error))
+             (not
+              (or
+               (typep condition 'comm:socket-error)
+               (typep condition 'comm:socket-io-error)))
              (prod-request?))
     ;; There's an error in trivial-backtrace:map-backtrace in SBCL
     ;; if we don't set sb-debug:*stack-top-hint* to NIL
