@@ -95,8 +95,8 @@
     <app-template>
       <h2>Debug Run Information</h2>
       <ul>
-        <li>Commit ,(commit :repo repo :hash (recorder-run-commit run)) </li>
-        <li>Main Branch ,(recorder-run-branch run)</li>
+        <li>Commit: ,(commit :repo repo :hash (recorder-run-commit run)) </li>
+        <li>Main Branch: ,(recorder-run-branch run)</li>
         <li>Commit on branch: ,(commit :repo repo :hash (recorder-run-branch-hash run))</li>
         <li>Merge base: ,(commit :repo repo :hash (recorder-run-merge-base run))</li>
         <li>Pull request: ,(or (pull-request-url run) "NA")</li>
