@@ -114,9 +114,9 @@
                                (log:info "Starting re-run promotion thread")
                                (start-promotion-thread
                                 (recorder-run-channel run)
-                                run))
-                             (hex:safe-redirect 'run-page
-                                                  :id (oid run)))))
+                                run)))
+                            (hex:safe-redirect 'run-page
+                                                :id (oid run))))
         (debug-info (nibble ()
                       (advanced-run-page :run run))))
     <page-nav-dropdown title= "Advanced">
