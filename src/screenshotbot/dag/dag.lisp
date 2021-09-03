@@ -53,10 +53,15 @@
         (when (equal (commit-node-id end)
                      (commit-node-id next))
           (return-from bfs-search t))
-        (loop for parent in (parents (get-commit dag next)) do
-          (unless (gethash parent seen)
-            (setf (gethash parent seen) t)
-            (push parent queue)))))
+        (loop for parent in (alexandria:if-let (commit (get-commit dag next))
+                              (parents commit)
+                              (progn
+                                (log:info "Commit ~a not in graph" next)
+                                nil))
+              do
+                 (unless (gethash parent seen)
+                   (setf (gethash parent seen) t)
+                   (push parent queue)))))
     nil))
 
 (defmethod ancestorp ((dag dag) (sha-old string) (sha-new string))
