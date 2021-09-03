@@ -27,7 +27,9 @@
                 #:check-title
                 #:retrieve-run
                 #:make-check-result-from-diff-report
-                #:report))
+                #:report)
+  (:import-from #:screenshotbot/model/company
+                #:installation-id))
 
 (util/fiveam:def-suite)
 
@@ -62,13 +64,20 @@
 
 
 (def-fixture state (&key (run-retriever 'my-run-retriever))
-  (let ((company (make-instance 'company))
-        (promoter (make-instance 'pull-request-promoter
-                                 :pull-request-info
-                                 (make-instance 'pull-request-info)
-                                 :run-retriever
-                                 (make-instance run-retriever))))
-    (&body)))
+  (cl-mock:with-mocks ()
+    (cl-mock:if-called 'installation-id
+                        (lambda (&rest args)
+                          (declare (ignore args))
+                          "mocked-installation-id"))
+    (let ((company (make-instance 'company))
+          (promoter (make-instance 'pull-request-promoter
+                                    :app-id "dummy-app-id"
+                                    :private-key "dummy-private-key"
+                                    :pull-request-info
+                                    (make-instance 'pull-request-info)
+                                    :run-retriever
+                                    (make-instance run-retriever))))
+      (&body))))
 
 (test run-without-pr-does-not-create-report
   (with-fixture state ()
