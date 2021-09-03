@@ -114,8 +114,13 @@
 
 (defmethod maybe-promote ((promoter pull-request-promoter)
                           run)
-  (let ((repo (channel-repo (recorder-run-channel run))))
+  (let ((repo (channel-repo (recorder-run-channel run)))
+        (installation-id (installation-id (github-config
+                                           (recorder-run-company run)))))
+    (unless installation-id
+      (log:error :promote "No github installation id avaialble"))
     (when (and
+           installation-id
            (typep repo 'github-repo)
            (not (equal (recorder-run-merge-base run)
                        (recorder-run-commit run))))
@@ -160,8 +165,7 @@
                                     ("summary" . ,(check-summary check)))
                           :status :completed
                           :details-url (details-url check)
-                          :installation-id (installation-id (github-config
-                                                             (recorder-run-company run)))
+                          :installation-id installation-id
                           :conclusion (str:downcase (check-status (promoter-result promoter)))
                           :head-sha (recorder-run-commit run))))
             (when (report promoter)
