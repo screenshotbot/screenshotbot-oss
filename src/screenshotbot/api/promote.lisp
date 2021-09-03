@@ -18,6 +18,8 @@
                 #:store-object-id)
   (:import-from #:../github/access-checks
                 #:fix-github-link)
+  (:import-from #:screenshotbot/server
+                #:*init-hooks*)
   (:export #:with-promotion-log
            #:default-promoter)
 
@@ -51,6 +53,8 @@
 
 
 (defvar *promotion-appender* (setup-promotion-logger))
+
+(pushnew 'setup-promotion-logger *init-hooks*)
 
 (defun %with-promotion-log (run fn)
   (with-open-file (s

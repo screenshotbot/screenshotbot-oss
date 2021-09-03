@@ -39,7 +39,8 @@
            #:error-obj
            #:error-user
            #:*seleniump*
-           #:no-access-error-page))
+           #:no-access-error-page
+           #:*init-hooks*))
 
 (defparameter *domain* "https://screenshotbot.io")
 (defvar *root* (util:system-source-directory :screenshotbot))
@@ -91,11 +92,14 @@
                  :name 'screenshotbot-acceptor
                  :document-root (document-root)))
 
+(defvar *init-hooks* nil)
+
 (defun init-for-delivered-image ()
   (setf *root* (pathname "~/web/src/screenshotbot/"))
   (setf (hunchentoot:acceptor-document-root
          *acceptor*)
-        (document-root)))
+        (document-root))
+  (mapc #'funcall *init-hooks*))
 
 (defvar *nibble-plugin* (make-instance 'nibble:nibble-plugin
                                         :prefix "/n/"
