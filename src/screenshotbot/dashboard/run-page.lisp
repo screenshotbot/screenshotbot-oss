@@ -111,6 +111,7 @@
         (rerun-promotions (nibble ()
                             (make-thread
                              (lambda ()
+                               (log:info "Starting re-run promotion thread")
                                (start-promotion-thread
                                 (recorder-run-channel run)
                                 run))

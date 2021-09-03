@@ -28,8 +28,16 @@
 
 (defvar *logger* (log4cl:make-logger))
 
+(defun trim-output (output)
+  (let ((size 800))
+   (cond
+     ((< (length output) size)
+      output)
+     (str:substring 0 size output))))
+
 (defmethod hunchentoot:acceptor-log-message ((acceptor base-acceptor) log-level format-string &rest format-arguments)
-  (let ((output (apply 'format nil format-string format-arguments)))
+  (let* ((output (apply 'format nil format-string format-arguments))
+         (output (trim-output output)))
     (case log-level
       (:info (log:info output))
       (:error (log:error output))
