@@ -143,7 +143,7 @@
 	      </a>
            </li>)
 
-        <li><a class="dropdown-item" href="/signout">Sign out</a></li>
+        <li><a class="dropdown-item signout-link" href="/signout">Sign out</a></li>
       </ul>
     </div>
     )
