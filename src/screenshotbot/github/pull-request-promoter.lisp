@@ -158,7 +158,9 @@
                       base-run))))
             (setf (send-task-args promoter)
                   (let ((check (promoter-result promoter)))
-                    (list :full-name full-name
+                    (list :app-id (app-id promoter)
+                          :private-key (private-key promoter)
+                          :full-name full-name
                           :check-name (format nil "Screenshotbot Changes: ~a "
                                               (channel-name (recorder-run-channel run)))
                           :output `(("title" . ,(check-title check))
@@ -217,8 +219,6 @@
   (restart-case
       (when (send-task-args promoter)
         (apply 'github-update-pull-request
-                :app-id (app-id promoter)
-                :private-key (private-key promoter)
                (send-task-args promoter)))
     (retry-pull-request-code ()
       (maybe-send-tasks promoter run))))
