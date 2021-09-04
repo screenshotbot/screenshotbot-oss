@@ -88,8 +88,9 @@ state, you can just delete that directory and start over. But you must
 treat this directory as your database. We recommend keeping this on a
 device with high redundancy, such as RAID or Amazon EBS.
 
-This might be a good time to put Screenshotbot behind an Nginx or
-Apache reverse-proxy, and enable HTTPS. (We highly recommend using
+This might be a good time to put Screenshotbot [behind an
+Nginx](https://github.com/screenshotbot/screenshotbot-oss/wiki/Configuring-Nginx)
+or Apache reverse-proxy, and enable HTTPS. (We highly recommend using
 Certbot for free certificates).
 
 ### Setting up java location
