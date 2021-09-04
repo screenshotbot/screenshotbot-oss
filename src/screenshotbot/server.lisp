@@ -121,6 +121,8 @@
       (not (boundp 'hunchentoot:*request*))
       (let ((host (hunchentoot:host)))
         (or
+         #+screenshotbot-oss
+         t
          (str:starts-with-p "192.168.1.119" host)
          (str:starts-with-p "localhost" host)
          (str:starts-with-p "staging." host)))))))
