@@ -68,7 +68,9 @@
      (set-cookie "s" :value token :domain domain :expires (+ (get-universal-time) 1000000)
 		             :path "/" :secure (and
                                         *secure-cookie-p*
-                                        (not (ip-address-p domain)))))))
+                                        (string=
+                                         "https"
+                                         (hunchentoot:header-in* :x-forwarded-proto)))))))
 
 (defun has-session? ()
   (let ((s (cookie-in "s")))
