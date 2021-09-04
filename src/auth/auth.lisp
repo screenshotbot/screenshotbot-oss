@@ -44,15 +44,16 @@
 
 (defvar *secure-cookie-p* t)
 
+(defun ip-address-p (domain)
+  (or
+   (search "localhost" domain)
+   (cl-ppcre:scan "\\.\\d*$" domain)))
+
 (let ((regex (cl-ppcre:create-scanner "\\.[^.]*\\.[^.]*$")))
  (defun fix-cookie-domain (domain)
    (cond
-     ((search "localhost" domain)
-      "localhost")
-     ((search "192.168.1.119" domain)
-      "192.168.1.119")
-     ((search "127.0.0.1" domain)
-      "127.0.0.1")
+     ((ip-address-p domain)
+      domain)
      ((cl-ppcre:scan regex domain)
       (str:substring 1 nil (cl-ppcre:scan-to-strings regex domain)))
      (t
@@ -67,8 +68,7 @@
      (set-cookie "s" :value token :domain domain :expires (+ (get-universal-time) 1000000)
 		             :path "/" :secure (and
                                         *secure-cookie-p*
-                                        (not (equal "localhost" domain))
-                                        (not (equal "192.168.1.119" domain)))))))
+                                        (not (ip-address-p domain)))))))
 
 (defun has-session? ()
   (let ((s (cookie-in "s")))

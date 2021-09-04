@@ -39,4 +39,5 @@
   (is (equal "foo.com" (fix-cookie-domain "foo.com")))
   (is (equal "localhost" (fix-cookie-domain "localhost")))
   (is (equal "192.168.1.119" (fix-cookie-domain "192.168.1.119")))
-  (is (equal "foo.com" (fix-cookie-domain "www.foo.com"))))
+  (is (equal "foo.com" (fix-cookie-domain "www.foo.com")))
+  (is (equal "192.168.1.120" (fix-cookie-domain "192.168.1.120"))))
