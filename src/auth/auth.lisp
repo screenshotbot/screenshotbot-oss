@@ -49,15 +49,12 @@
    (search "localhost" domain)
    (cl-ppcre:scan "\\.\\d*$" domain)))
 
-(let ((regex (cl-ppcre:create-scanner "\\.[^.]*\\.[^.]*$")))
- (defun fix-cookie-domain (domain)
-   (cond
-     ((ip-address-p domain)
-      domain)
-     ((cl-ppcre:scan regex domain)
-      (str:substring 1 nil (cl-ppcre:scan-to-strings regex domain)))
-     (t
-      domain))))
+(defun fix-cookie-domain (domain)
+  (cond
+    ((ip-address-p domain)
+     domain)
+    (t
+     domain)))
 
 (defun host-without-port ()
   (car (str:split ":" (host))))

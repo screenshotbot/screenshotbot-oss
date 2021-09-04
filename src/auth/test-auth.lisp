@@ -39,5 +39,7 @@
   (is (equal "foo.com" (fix-cookie-domain "foo.com")))
   (is (equal "localhost" (fix-cookie-domain "localhost")))
   (is (equal "192.168.1.119" (fix-cookie-domain "192.168.1.119")))
-  (is (equal "foo.com" (fix-cookie-domain "www.foo.com")))
+  ;; We used to map www.foo.com to foo.com, but that logic is hard to
+  ;; maintain
+  (is (equal "www.foo.com" (fix-cookie-domain "www.foo.com")))
   (is (equal "192.168.1.120" (fix-cookie-domain "192.168.1.120"))))
