@@ -4,13 +4,15 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :screenshotbot-sdk)
-
-(define-flag *metadata*
-  :selector "metadata"
-  :default-value nil
-  :type (or null string)
-  :help "A metadata.xml file (Android only)")
+(uiop:define-package :screenshotbot/sdk/android
+  (:use #:cl
+        #:screenshotbot/sdk/flags
+        #:alexandria)
+  (:import-from #:screenshotbot/sdk/bundle
+                #:list-images)
+  (:export
+   #:directory-image-bundle))
+(in-package :screenshotbot/sdk/android)
 
 (defun child-by-name (item name)
   (loop for child across (dom:child-nodes item)

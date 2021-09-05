@@ -4,7 +4,13 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :screenshotbot-sdk)
+(uiop:define-package :screenshotbot/sdk/help
+  (:use #:cl
+        #:alexandria)
+  (:export
+   #:help))
+(in-package :screenshotbot/sdk/help)
+
 
 (defun help ()
   (format t "Screenshotbot Recorder script~%~%")

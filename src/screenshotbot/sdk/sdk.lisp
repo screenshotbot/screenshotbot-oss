@@ -4,7 +4,45 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :screenshotbot-sdk)
+(uiop:define-package :screenshotbot/sdk/sdk
+    (:nicknames :screenshotbot-sdk)
+    (:use #:cl
+          #:com.google.flag
+          #:alexandria
+          #:anaphora
+          #:screenshotbot/sdk/flags)
+  (:import-from #:dag
+                #:add-commit
+                #:commit
+                #:merge-dag
+                #:get-commit
+                #:write-to-stream
+                #:read-from-stream)
+  (:import-from #:screenshotbot/sdk/help
+                #:help)
+  (:import-from #:screenshotbot/sdk/bundle
+                #:image-stream
+                #:md5-sum
+                #:list-images
+                #:close-image
+                #:image-name
+                #:image-directory
+                #:image-directory-with-diff-dir)
+  (:import-from #:screenshotbot/sdk/android
+                #:make-image-bundle
+                #:android-run-p)
+  (:import-from #:screenshotbot/sdk/git
+                #:git-repo
+                #:current-commit
+                #:rev-parse
+                #:read-graph
+                #:cleanp
+                #:repo-link
+                #:merge-base)
+  (:export
+   #:main))
+
+(in-package :screenshotbot/sdk/sdk)
 
 (defmacro defopt (var &key params
                         default

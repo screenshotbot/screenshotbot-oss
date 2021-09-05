@@ -4,7 +4,35 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :screenshotbot-sdk)
+(uiop:define-package :screenshotbot/sdk/flags
+  (:use #:cl
+        #:com.google.flag
+        #:alexandria)
+  (:export
+   #:*directory*
+   #:*verbose*
+   #:*org-defaults*
+   #:*api-key*
+   #:*create-github-issue*
+   #:*api-secret*
+   #:*gitlab-merge-request-iid*
+   #:*hostname*
+   #:*channel*
+   #:*pull-request*
+   #:*branch*
+   #:*main-branch*
+   #:*repo-url*
+   #:*phabricator-diff-id*
+   #:*build-url*
+   #:*production*
+   #:*help*
+   #:*lang-regex*
+   #:*device-regex*
+   #:*ios-multi-dir*
+   #:*ios-diff-dir*
+   #:*metadata*))
+
+(in-package :screenshotbot/sdk/flags)
 
 (define-flag *directory*
   :default-value "./"
@@ -130,3 +158,9 @@
   IMAGE_DIFF_DIR. In most cases this isn't required, but it can be
   useful for backward compatibility if you don't want to update the
   tests to always work in recorde mode.")
+
+(define-flag *metadata*
+  :selector "metadata"
+  :default-value nil
+  :type (or null string)
+  :help "A metadata.xml file (Android only)")

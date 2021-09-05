@@ -4,17 +4,17 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot.sdk.test-bundle
+(defpackage :screenshotbot/sdk/test-bundle
   (:use :cl
    :alexandria
         :fiveam)
-  (:import-from :screenshotbot-sdk
+  (:import-from :screenshotbot/sdk/bundle
    :image-directory
    :image-directory-with-diff-dir
    :image-name
    :image-pathname
    :list-images))
-(in-package :screenshotbot.sdk.test-bundle)
+(in-package :screenshotbot/sdk/test-bundle)
 
 (util/fiveam:def-suite)
 

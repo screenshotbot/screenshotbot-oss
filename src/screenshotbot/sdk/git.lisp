@@ -4,7 +4,10 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :screenshotbot-sdk)
+(uiop:define-package :screenshotbot/sdk/git
+  (:use #:cl
+        #:alexandria))
+(in-package :screenshotbot/sdk/git)
 
 (defun git-root ()
   (pathname (format nil "~a/"
