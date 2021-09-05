@@ -12,6 +12,9 @@
 (defclass commit ()
   ((sha :initarg :sha
         :accessor sha)
+   (author :initarg :author
+           :initform nil
+           :accessor author)
    (parents :initarg :parents
             :initform nil
             :accessor parents
@@ -125,6 +128,7 @@ tree. This version uses the Kahn's algorithm instead of DFS"
                        collect
                        (let ((commit (gethash node-id (commit-map dag))))
                          `((:sha . ,(sha commit))
+                           (:author . ,(author commit))
                            (:parents . ,(parents commit)))))))
      (:dummy . "0"))
    stream)
