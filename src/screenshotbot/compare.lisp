@@ -219,8 +219,7 @@
     <a href= "javascript:window.history.back()">Back to Report</a>
     ,@ (with-slots (changes) report
          (loop for (before . after) in changes
-               for comparison-image = (let ((before before)
-                                            (after after))
+               for comparison-image = (util:copying (before after)
                                         (nibble ()
                                           (image-comparison-nibble before after)))
                collect

@@ -63,6 +63,7 @@
   :serial t
   :components ((:file "random-port")
                (:file "ret-let")
+               (:file "copying")
                (:file "package")
                (:file "mockable")
                (:file "object-id")
