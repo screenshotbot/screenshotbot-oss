@@ -27,6 +27,7 @@
                 #:render-diff-report)
   (:import-from #:./dashboard/run-page
                 #:run-row-filter
+                #:page-nav-dropdown
                 #:row-filter
                 #:mask-editor
                 #:filter-selector
@@ -213,6 +214,21 @@
                             (setf data (apply 'render-diff-report args)))))))
     <div class= "async-fetch spinner-border" role= "status" data-check-nibble=data-check-nibble />))
 
+(defun all-comparisons-page (report)
+  <app-template>
+    <a href= "javascript:window.history.back()">Back to Report</a>
+    ,@ (with-slots (changes) report
+         (loop for (before . after) in changes
+               for comparison-image = (nibble ()
+                                         (image-comparison-nibble before after))
+               collect
+               <div>
+                 <h3>,(screenshot-name before)</h3>
+                 <:img src= comparison-image class= "mb-3" />
+                 <hr />
+               </div>))
+  </app-template>)
+
 (deftag render-diff-report (&key run to
                             (lang-filter (make-instance 'row-filter :value t))
                             (device-filter (make-instance 'row-filter :value t))
@@ -221,10 +237,12 @@
                             (re-run nil))
   (flet ((filteredp (x) (and (run-row-filter lang-filter x)
                              (run-row-filter device-filter x))))
-   (let ((report (make-diff-report run to))
-         (next-id 0)
-         (script-name (hunchentoot:script-name*))
-         (github-repo (github-repo (recorder-run-channel run))))
+   (let* ((report (make-diff-report run to))
+          (next-id 0)
+          (script-name (hunchentoot:script-name*))
+          (github-repo (github-repo (recorder-run-channel run)))
+          (all-comparisons (nibble ()
+                            (all-comparisons-page report))))
      (with-slots (added deleted changes) report
        <markup:merge-tag>
        <div class= "page-title-box">
@@ -245,8 +263,11 @@
                                    filter-renderer= (lambda (x) (funcall re-run :device-filter x))
                                    data= all-runs
                                    />
-
                 </markup:merge-tag>))
+
+           <page-nav-dropdown title= "Views" >
+               <a href=all-comparisons >All Pixel Comparisons</a>
+           </page-nav-dropdown>
          </div>
          <p class= "mt-2" >
            This commit: <commit repo= (Channel-repo (recorder-run-channel run)) hash=(recorder-run-commit run) /> <br />
