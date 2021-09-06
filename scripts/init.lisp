@@ -34,7 +34,7 @@
 (register-tdrhq "cl-elastic" "0607087887da76919219b01d0601027bb198b444")
 
 (quick-patch:register "https://github.com/tdrhq/cl-plus-ssl"
-                            "4c614fc3f28017f5c5f4c72a8ce413dd042bfb09")
+                            "306b17bbae07a01fb32ecb50f83ed1bd9cbed04e")
 
 (quick-patch:register "https://github.com/gschjetne/cljwt"
                             "bd3e567097cd9d48eb811be601590afa167e6667")
