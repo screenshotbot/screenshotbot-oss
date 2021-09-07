@@ -50,6 +50,5 @@
        (eval `(fiveam::%in-suite ,suite-name)))))
 
 (defun guess-suite-name ()
-  (format t "Guessing suite name for ~a~%" *package*)
   (intern (string (package-name *package*))
           (symbol-package :foo)))
