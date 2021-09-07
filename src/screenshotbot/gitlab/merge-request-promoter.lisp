@@ -4,27 +4,30 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/gitlab/merge-request-promoter
-    (:use #:cl
-          #:alexandria
-          #:screenshotbot/promote-api
-          #:util/java
-          #:screenshotbot/model/channel
-          #:screenshotbot/compare
-          #:screenshotbot/model/report
-          #:screenshotbot/model/recorder-run
-          #:./repo
-          #:bknr.datastore)
-  (:nicknames :screenshotbot/pro/gitlab/merge-request-promoter) ;; for datastore
+(uiop:define-package :screenshotbot/gitlab/merge-request-promoter
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/promote-api
+        #:util/java
+        #:screenshotbot/model/channel
+        #:screenshotbot/compare
+        #:screenshotbot/model/report
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/gitlab/repo
+        #:bknr.datastore)
+  (:nicknames
+   :screenshotbot/pro/gitlab/merge-request-promoter) ;; for bknr
   (:import-from #:screenshotbot/model/report
                 #:base-acceptable)
   (:import-from #:screenshotbot/server
                 #:*domain*)
-  (:import-from #:./repo
+  (:import-from #:screenshotbot/gitlab/repo
                 #:*gitlab-url*
                 #:repo-access-token)
-  (:export #:merge-request-promoter
-           #:gitlab-acceptable))
+  (:export
+   #:merge-request-promoter
+   #:gitlab-acceptable))
+(in-package :screenshotbot/gitlab/merge-request-promoter)
 
 
 (named-readtables:in-readtable java-syntax)

@@ -1,7 +1,13 @@
-(pkg:define-package :screenshotbot/github/access-checks
-    (:use #:cl
-          #:alexandria
-          #:./github-installation)
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+(uiop:define-package :screenshotbot/github/access-checks
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/github/github-installation)
   (:import-from #:util/java
                 #:java-syntax
                 #:read-java-field
@@ -11,34 +17,34 @@
                 #:persistent-class
                 #:store-object
                 #:unique-index)
-  (:import-from #:../secret
+  (:import-from #:screenshotbot/secret
                 #:defsecret
                 #:secret)
-  (:import-from #:../model
+  (:import-from #:screenshotbot/model
                 #:github-repo
                 #:repo-left-ancestor-p)
-  (:import-from #:../git-repo
+  (:import-from #:screenshotbot/git-repo
                 #:get-parent-commit
                 #:repo-link
                 #:commit-link
                 #:generic-git-repo)
-  (:import-from #:./webhook
+  (:import-from #:screenshotbot/github/webhook
                 #:github-installation-with-repo-name
                 #:installation-id)
-  (:export #:github-repo
-           #:github-user-service
-           #:github-repos-for-user
-           #:github-org-service
-           #:github-repo-id
-           #:github-star-service
-           #:github-client
-           #:get-repo-id
-           #:with-throttler
-           #:throttler
-           #:with-cache)
-
-  ;; forward decls
+  (:export
+   #:github-repo
+   #:github-user-service
+   #:github-repos-for-user
+   #:github-org-service
+   #:github-repo-id
+   #:github-star-service
+   #:github-client
+   #:get-repo-id
+   #:with-throttler
+   #:throttler
+   #:with-cache)
   (:export #:fix-github-link))
+(in-package :screenshotbot/github/access-checks)
 
 (import 'repo-name)
 

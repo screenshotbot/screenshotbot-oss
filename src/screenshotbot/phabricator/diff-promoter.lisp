@@ -4,15 +4,16 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/phabricator/diff-promoter
+(uiop:define-package :screenshotbot/phabricator/diff-promoter
   (:use #:cl
         #:alexandria
         #:util/phabricator/conduit
-        #:../model/company
-        #:../model/recorder-run
-        #:../promote-api
-        #:./commenting-promoter)
+        #:screenshotbot/model/company
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/promote-api
+        #:screenshotbot/phabricator/commenting-promoter)
   (:export #:phabricator-promoter))
+(in-package :screenshotbot/phabricator/diff-promoter)
 
 (defmethod diff-to-revision ((phab phab-instance) diff-id)
   (parse-integer

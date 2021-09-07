@@ -4,22 +4,24 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/gitlab/repo
-    (:use #:cl
-          #:alexandria
-          #:screenshotbot/model/channel)
+(uiop:define-package :screenshotbot/gitlab/repo
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/model/channel)
   (:import-from #:screenshotbot/model
                 #:make-gitlab-repo)
   (:import-from #:screenshotbot/secret
                 #:secret
                 #:defsecret)
-  (:import-from #:../git-repo
+  (:import-from #:screenshotbot/git-repo
                 #:public-repo-p
                 #:generic-git-repo)
-  (:export #:gitlab-repo
-           #:project-path
-           #:make-gitlab-repo
-           #:*gitlab-url*))
+  (:export
+   #:gitlab-repo
+   #:project-path
+   #:make-gitlab-repo
+   #:*gitlab-url*))
+(in-package :screenshotbot/gitlab/repo)
 
 ;; TODO: move this into a config
 (defvar *gitlab-url* "https://gitlab.com/api/v4")

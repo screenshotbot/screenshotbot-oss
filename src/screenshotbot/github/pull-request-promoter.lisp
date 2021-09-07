@@ -4,31 +4,32 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/github/pull-request-promoter
+(uiop:define-package :screenshotbot/github/pull-request-promoter
   (:use #:cl
         #:alexandria
-        #:../promote-api
-        #:../dashboard/reports
-        #:../model/report
-        #:../model/recorder-run
-        #:./plugin
-        #:../model/channel
-        #:../compare
-        #:./pr-checks
-        #:../git-repo
-        #:../user-api
-        #:./access-checks
-        #:./github-installation
-        #:../model/user
-        #:../model/company)
+        #:screenshotbot/promote-api
+        #:screenshotbot/dashboard/reports
+        #:screenshotbot/model/report
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/github/plugin
+        #:screenshotbot/model/channel
+        #:screenshotbot/compare
+        #:screenshotbot/github/pr-checks
+        #:screenshotbot/git-repo
+        #:screenshotbot/user-api
+        #:screenshotbot/github/access-checks
+        #:screenshotbot/github/github-installation
+        #:screenshotbot/model/user
+        #:screenshotbot/model/company)
   (:nicknames #:sb.pr #:screenshotbot.pr)
-  (:import-from #:util
-                #:oid)
+  (:import-from #:util #:oid)
   (:import-from #:bknr.datastore
                 #:with-transaction
                 #:persistent-class)
-  (:export #:pull-request-promoter
-           #:pr-acceptable))
+  (:export
+   #:pull-request-promoter
+   #:pr-acceptable))
+(in-package :screenshotbot/github/pull-request-promoter)
 (in-package :screenshotbot.pr)
 
 (defclass pull-request-info ()

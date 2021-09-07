@@ -4,19 +4,20 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/phabricator/settings
-    (:use #:cl
-          #:alexandria
-          #:markup
-          #:nibble
-          #:../form-errors
-          #:../model/company
-          #:../user-api
-          #:../settings-api)
-  (:import-from #:./plugin
+(uiop:define-package :screenshotbot/phabricator/settings
+  (:use #:cl
+        #:alexandria
+        #:markup
+        #:nibble
+        #:screenshotbot/form-errors
+        #:screenshotbot/model/company
+        #:screenshotbot/user-api
+        #:screenshotbot/settings-api)
+  (:import-from #:screenshotbot/phabricator/plugin
                 #:phabricator-plugin)
   (:import-from #:bknr.datastore
                 #:with-transaction))
+(in-package :screenshotbot/phabricator/settings)
 
 (markup:enable-reader)
 

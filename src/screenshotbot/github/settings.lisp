@@ -4,21 +4,23 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/github/settings
-    (:use #:cl
-          #:alexandria
-          #:markup
-          #:../model/company
-          #:../model/github
-          #:../user-api
-          #:../settings-api)
-  (:import-from #:./plugin
+(uiop:define-package :screenshotbot/github/settings
+  (:use #:cl
+        #:alexandria
+        #:markup
+        #:screenshotbot/model/company
+        #:screenshotbot/model/github
+        #:screenshotbot/user-api
+        #:screenshotbot/settings-api)
+  (:import-from #:screenshotbot/github/plugin
                 #:github-plugin)
-  (:import-from #:../server
+  (:import-from #:screenshotbot/server
                 #:defhandler
                 #:with-login)
-  (:import-from #:bknr.datastore
-                #:with-transaction))
+  (:import-from
+   #:bknr.datastore
+   #:with-transaction))
+(in-package :screenshotbot/github/settings)
 
 (markup:enable-reader)
 

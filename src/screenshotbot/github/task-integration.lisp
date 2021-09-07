@@ -4,17 +4,18 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/github/task-integration
-    (:use #:cl
-          #:alexandria
-          #:../model/report
-          #:../model/recorder-run
-          #:../task-integration-api)
+(uiop:define-package :screenshotbot/github/task-integration
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/model/report
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/task-integration-api)
   (:import-from #:bknr.datastore
                 #:with-transaction
                 #:*create-issue-fn*)
-  (:import-from #:./access-checks
+  (:import-from #:screenshotbot/github/access-checks
                 #:fix-github-link))
+(in-package :screenshotbot/github/task-integration)
 
 (defvar *create-issue-fn* 'github-create-issue)
 

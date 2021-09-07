@@ -4,23 +4,24 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/github/pr-checks
-    (:use #:cl
-          #:alexandria)
+(uiop:define-package :screenshotbot/github/pr-checks
+  (:use #:cl #:alexandria)
   (:import-from #:util/java
                 #:java-syntax
                 #:read-java-field
                 #:new-instance)
-  (:import-from #:../server
+  (:import-from #:screenshotbot/server
                 #:*root*)
-  (:import-from #:./access-checks
+  (:import-from #:screenshotbot/github/access-checks
                 #:with-throttler
                 #:*github-throttler*)
-  (:import-from #:./jwt-token
+  (:import-from #:screenshotbot/github/jwt-token
                 #:github-create-jwt-token
                 #:github-request)
-  (:export #:github-service
-           #:github-update-pull-request))
+  (:export
+   #:github-service
+   #:github-update-pull-request))
+(in-package :screenshotbot/github/pr-checks)
 
 
 (named-readtables:in-readtable java-syntax)

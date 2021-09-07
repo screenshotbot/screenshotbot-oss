@@ -1,15 +1,23 @@
-(pkg:define-package :screenshotbot/phabricator/commenting-promoter
-    (:use #:cl
-          #:alexandria
-          #:../promote-api
-          #:../model/recorder-run
-          #:../model/report
-          #:../model/channel
-          #:../compare)
-  (:import-from #:../server
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+(uiop:define-package :screenshotbot/phabricator/commenting-promoter
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/promote-api
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/model/report
+        #:screenshotbot/model/channel
+        #:screenshotbot/compare)
+  (:import-from #:screenshotbot/server
                 #:*domain*)
-  (:export #:commenting-promoter
-           #:add-comment))
+  (:export
+   #:commenting-promoter
+   #:add-comment))
+(in-package :screenshotbot/phabricator/commenting-promoter)
 
 (defclass commenting-promoter (promoter)
   ((comment :initform nil

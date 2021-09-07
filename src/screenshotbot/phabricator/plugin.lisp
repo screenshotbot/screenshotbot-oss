@@ -4,14 +4,14 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/phabricator/plugin
-    (:use #:cl
-          #:alexandria
-          #:util/phabricator/conduit)
-  (:import-from #:../plugin
+(uiop:define-package :screenshotbot/phabricator/plugin
+  (:use #:cl
+        #:alexandria
+        #:util/phabricator/conduit)
+  (:import-from #:screenshotbot/plugin
                 #:plugin
                 #:plugin-parse-repo)
-  (:import-from #:../git-repo
+  (:import-from #:screenshotbot/git-repo
                 #:company
                 #:repo-link
                 #:commit-link
@@ -21,6 +21,7 @@
                 #:phabricator-url
                 #:conduit-api-key)
   (:export #:phabricator-plugin))
+(in-package :screenshotbot/phabricator/plugin)
 
 (defclass phabricator-plugin (plugin)
   ())
