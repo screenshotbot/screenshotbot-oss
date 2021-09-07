@@ -4,24 +4,25 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/slack/settings
-    (:use #:cl
-          #:alexandria
-          #:nibble
-          #:../ui
-          #:../user-api
-          #:../form-errors
-          #:../installation
-          #:../model/company
-          #:markup
-          #:./core
-          #:../settings-api)
+(uiop:define-package :screenshotbot/slack/settings
+  (:use #:cl
+        #:alexandria
+        #:nibble
+        #:screenshotbot/ui
+        #:screenshotbot/user-api
+        #:screenshotbot/form-errors
+        #:screenshotbot/installation
+        #:screenshotbot/model/company
+        #:markup
+        #:screenshotbot/slack/core
+        #:screenshotbot/settings-api)
   (:import-from #:bknr.datastore
                 #:with-transaction)
-  (:import-from #:./plugin
+  (:import-from #:screenshotbot/slack/plugin
                 #:client-id
                 #:slack-plugin)
   (:export #:post-settings-slack))
+(in-package :screenshotbot/slack/settings)
 
 (markup:enable-reader)
 

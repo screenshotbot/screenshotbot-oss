@@ -4,25 +4,29 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/admin/core
-    (:use #:cl
-          #:alexandria
-          #:screenshotbot/model/user
-          #:screenshotbot/user-api
-          #:screenshotbot/template)
-  (:export #:defadminhandler
-           #:register-admin-menu
-           #:*index*
-           #:admin-app-template)
-  (:import-from #:screenshotbot/server
-                #:defhandler
-                #:with-login)
-  (:use-reexport #:nibble
-                 #:markup
-                 #:screenshotbot/template
-                 #:screenshotbot/server
-                 #:bknr.datastore
-                 #:screenshotbot/ui))
+(uiop:define-package :screenshotbot/admin/core
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/model/user
+        #:screenshotbot/user-api
+        #:screenshotbot/template)
+  (:export
+   #:defadminhandler
+   #:register-admin-menu
+   #:*index*
+   #:admin-app-template)
+  (:import-from
+   #:screenshotbot/server
+   #:defhandler
+   #:with-login)
+  (:use-reexport
+   #:nibble
+   #:markup
+   #:screenshotbot/template
+   #:screenshotbot/server
+   #:bknr.datastore
+   #:screenshotbot/ui))
+(in-package :screenshotbot/admin/core)
 
 (markup:enable-reader)
 

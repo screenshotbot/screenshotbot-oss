@@ -4,35 +4,37 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/slack/core
-    (:use #:cl
-          #:alexandria
-          #:util/java
-          #:../user-api
-          #:../model/company)
-  (:import-from #:./plugin
+(uiop:define-package :screenshotbot/slack/core
+  (:use #:cl
+        #:alexandria
+        #:util/java
+        #:screenshotbot/user-api
+        #:screenshotbot/model/company)
+  (:import-from #:screenshotbot/slack/plugin
                 #:slack-plugin
                 #:client-id
                 #:client-secret)
-  (:import-from #:../installation
+  (:import-from #:screenshotbot/installation
                 #:with-plugin)
   (:import-from #:bknr.datastore
                 #:store-object
                 #:hash-index
                 #:with-transaction
                 #:persistent-class)
-  (:import-from #:../server
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:../secret
+  (:import-from #:screenshotbot/secret
                 #:secret)
-  (:export #:slack-token
-           #:latest-slack-token
-           #:slack-error-code
-           #:slack-message-failed
-           #:slack-post-on-channel
-           #:slack-methods)
-  ;; forward decl
+  (:export
+   #:slack-token
+   #:latest-slack-token
+   #:slack-error-code
+   #:slack-message-failed
+   #:slack-post-on-channel
+   #:slack-methods)
+  ;; forward decls
   (:export #:find-or-create-slack-config))
+(in-package :screenshotbot/slack/core)
 
 (named-readtables:in-readtable java-syntax)
 

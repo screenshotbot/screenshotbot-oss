@@ -4,20 +4,21 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/tasks/common
-    (:use #:cl
-          #:alexandria
-          #:../task-integration-api
-          #:../promote-api
-          #:../model/company
-          #:../api/promote
-          #:../model/recorder-run
-          #:../model/report
-          #:../model/screenshot
-          #:../dashboard/reports
-          #:../compare)
+(uiop:define-package :screenshotbot/tasks/common
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/task-integration-api
+        #:screenshotbot/promote-api
+        #:screenshotbot/model/company
+        #:screenshotbot/api/promote
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/model/report
+        #:screenshotbot/model/screenshot
+        #:screenshotbot/dashboard/reports
+        #:screenshotbot/compare)
   (:import-from #:bknr.datastore
                 #:with-transaction))
+(in-package :screenshotbot/tasks/common)
 
 (defclass noop-task-integration (task-integration)
   ())

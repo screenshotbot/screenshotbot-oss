@@ -4,21 +4,20 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/settings/settings-template
-    (:use #:cl
-          #:alexandria
-          #:markup)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/settings/settings-template
+  (:use #:cl #:alexandria #:markup)
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:../template
+  (:import-from #:screenshotbot/template
                 #:dashboard-template)
-  (:import-from #:../installation
+  (:import-from #:screenshotbot/installation
                 #:installation)
-  (:import-from #:../api/core
+  (:import-from #:screenshotbot/api/core
                 #:defapi)
-  (:export #:settings-template
-           #:defapi)
-  (:use-reexport #:../settings-api))
+  (:export #:settings-template #:defapi)
+  (:use-reexport
+   #:screenshotbot/settings-api))
+(in-package :screenshotbot/settings/settings-template)
 
 (markup:enable-reader)
 

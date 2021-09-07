@@ -27,6 +27,7 @@
   (:import-from #:screenshotbot/login/oidc
                 #:oidc-provider)
   (:export #:load-config))
+(in-package :screenshotbot/config)
 
 (defun find-config.lisp ()
   "Search for an appropriate config.lisp file that is created by site-admin"

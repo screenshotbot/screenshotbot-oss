@@ -4,26 +4,26 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/company/new
-    (:use #:cl
-          #:alexandria
-          #:markup
-          #:../user-api
-          #:../model/company
-          #:../model/user
-          #:../invite)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/company/new
+  (:use #:cl
+        #:alexandria
+        #:markup
+        #:screenshotbot/user-api
+        #:screenshotbot/model/company
+        #:screenshotbot/model/user
+        #:screenshotbot/invite)
+  (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:bknr.datastore
                 #:with-transaction)
-  (:import-from #:../login/populate
+  (:import-from #:screenshotbot/login/populate
                 #:populate-company)
-  (:import-from #:hex
-                #:make-url)
-  (:import-from #:../form-errors
+  (:import-from #:hex #:make-url)
+  (:import-from #:screenshotbot/form-errors
                 #:with-form-errors)
-  (:import-from #:../ui
+  (:import-from #:screenshotbot/ui
                 #:simple-card-page))
+(in-package :screenshotbot/company/new)
 
 (markup:enable-reader)
 

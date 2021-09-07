@@ -4,19 +4,20 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/slack/task-integration
-    (:use #:cl
-          #:alexandria
-          #:../task-integration-api
-          #:../model/channel
-          #:../model/report
-          #:../model/company
-          #:../model/recorder-run
-          #:../model/report
-          #:anaphora
-          #:./core)
-  (:import-from #:../dashboard/reports
+(uiop:define-package :screenshotbot/slack/task-integration
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/task-integration-api
+        #:screenshotbot/model/channel
+        #:screenshotbot/model/report
+        #:screenshotbot/model/company
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/model/report
+        #:anaphora
+        #:screenshotbot/slack/core)
+  (:import-from #:screenshotbot/dashboard/reports
                 #:report-link))
+(in-package :screenshotbot/slack/task-integration)
 
 (defclass slack-task-integration (task-integration)
   ())
