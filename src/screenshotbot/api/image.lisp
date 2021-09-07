@@ -4,25 +4,27 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/api/image
-    (:use #:cl
-          #:alexandria
-          #:./core
-          #:../model/image
-          #:../model/screenshot)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/api/image
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/api/core
+        #:screenshotbot/model/image
+        #:screenshotbot/model/screenshot)
+  (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:util
                 #:find-by-oid
                 #:oid)
   (:import-from #:bknr.datastore
                 #:with-transaction)
-  (:import-from #:../model/company
+  (:import-from #:screenshotbot/model/company
                 #:find-image)
-  (:import-from #:../user-api
+  (:import-from #:screenshotbot/user-api
                 #:current-company)
-  (:export #:verify-image
-           #:with-raw-post-data-as-tmp-file))
+  (:export
+   #:verify-image
+   #:with-raw-post-data-as-tmp-file))
+(in-package :screenshotbot/api/image)
 
 (defvar *bucket* "screenshotbot")
 

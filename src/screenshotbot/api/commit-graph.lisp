@@ -4,12 +4,13 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/api/commit-graph
-    (:use #:cl
-          #:alexandria
-          #:./core
-          #:../model/commit-graph
-          #:../user-api))
+(uiop:define-package :screenshotbot/api/commit-graph
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/api/core
+        #:screenshotbot/model/commit-graph
+        #:screenshotbot/user-api))
+(in-package :screenshotbot/api/commit-graph)
 
 (defapi (update-commit-graph :uri "/api/commit-graph" :method :post) (repo-url branch graph-json)
   ;; do nothing with this for the moment

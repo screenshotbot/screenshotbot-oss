@@ -4,25 +4,26 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/api/core
-    (:use #:cl
-          #:alexandria)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/api/core
+  (:use #:cl #:alexandria)
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:../model/api-key
+  (:import-from #:screenshotbot/model/api-key
                 #:%find-api-key
                 #:api-key-secret-key)
-  (:import-from #:../user-api
+  (:import-from #:screenshotbot/user-api
                 #:*current-api-key*
                 #:current-user)
-  (:export #:defapi
-           #:result
-           #:error-result
-           #:api-error
-           #:id
-           #:type
-           #:api-result
-           #:api-response))
+  (:export
+   #:defapi
+   #:result
+   #:error-result
+   #:api-error
+   #:id
+   #:type
+   #:api-result
+   #:api-response))
+(in-package :screenshotbot/api/core)
 
 (defun %funcall-with-api-handling (fn)
   (log:trace "Got parameters: ~s" (hunchentoot:post-parameters hunchentoot:*request*))

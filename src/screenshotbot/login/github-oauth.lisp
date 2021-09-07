@@ -4,36 +4,37 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/login/github-oauth
-    (:use #:cl
-          #:alexandria
-          #:./common
-          #:util/java
-          #:../model/user
-          #:../user-api
-          #:../model/company
-          #:../github/access-checks
-          #:../model/github)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/login/github-oauth
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/login/common
+        #:util/java
+        #:screenshotbot/model/user
+        #:screenshotbot/user-api
+        #:screenshotbot/model/company
+        #:screenshotbot/github/access-checks
+        #:screenshotbot/model/github)
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:../installation
+  (:import-from #:screenshotbot/installation
                 #:installation
                 #:auth-providers)
-  (:import-from #:../github/jwt-token
+  (:import-from #:screenshotbot/github/jwt-token
                 #:github-request)
-  (:import-from #:util
-                #:make-url)
+  (:import-from #:util #:make-url)
   (:import-from #:bknr.datastore
                 #:store-objects-with-class
                 #:with-transaction)
-  (:import-from #:./oidc
+  (:import-from #:screenshotbot/login/oidc
                 #:access-token-str
                 #:update-oidc-user
                 #:oauth-get-access-token)
-  (:export #:prepare-gh-user
-           #:make-gh-oauth-link
-           #:oauth-get-access-token
-           #:github-oauth-provider))
+  (:export
+   #:prepare-gh-user
+   #:make-gh-oauth-link
+   #:oauth-get-access-token
+   #:github-oauth-provider))
+(in-package :screenshotbot/login/github-oauth)
 
 
 (named-readtables:in-readtable java-syntax)

@@ -4,37 +4,38 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/login/google-oauth
-    (:use #:cl
-          #:alexandria
-          #:nibble
-          #:./github-oauth
-          #:./common
-          #:../model/user
-          #:./oidc
-          #:../user-api
-          #:../model/github)
-
+(uiop:define-package :screenshotbot/login/google-oauth
+  (:use #:cl
+        #:alexandria
+        #:nibble
+        #:screenshotbot/login/github-oauth
+        #:screenshotbot/login/common
+        #:screenshotbot/model/user
+        #:screenshotbot/login/oidc
+        #:screenshotbot/user-api
+        #:screenshotbot/model/github)
   ;; slots for datastore migration
-  (:import-from #:./oidc
+  (:import-from #:screenshotbot/login/oidc
                 #:email
                 #:full-name
                 #:avatar
                 #:user-id
                 #:user)
-  (:import-from #:../server
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:../secret
+  (:import-from #:screenshotbot/secret
                 #:secret)
   (:import-from #:bknr.datastore
                 #:unique-index
                 #:store-object
                 #:persistent-class)
-  (:export #:google-user
-           #:google-access-token
-           #:google-oauth-provider
-           #:make-google-oauth-link
-           #:google-oauth-redirect))
+  (:export
+   #:google-user
+   #:google-access-token
+   #:google-oauth-provider
+   #:make-google-oauth-link
+   #:google-oauth-redirect))
+(in-package :screenshotbot/login/google-oauth)
 
 (markup:enable-reader)
 

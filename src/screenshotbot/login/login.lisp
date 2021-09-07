@@ -5,31 +5,32 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/login/login
-    (:use #:cl
-          #:alexandria
-          #:markup
-          #:nibble
-          #:./common
-          #:./github-oauth
-          #:./google-oauth
-          #:../model/github
-          #:../model/user
-          #:../user-api
-          #:../form-errors)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/login/login
+  (:use #:cl
+        #:alexandria
+        #:markup
+        #:nibble
+        #:screenshotbot/login/common
+        #:screenshotbot/login/github-oauth
+        #:screenshotbot/login/google-oauth
+        #:screenshotbot/model/github
+        #:screenshotbot/model/user
+        #:screenshotbot/user-api
+        #:screenshotbot/form-errors)
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:./oidc
+  (:import-from #:screenshotbot/login/oidc
                 #:end-session-endpoint)
-  (:import-from #:./common
+  (:import-from #:screenshotbot/login/common
                 #:oauth-signin-link)
-  (:import-from #:../installation
+  (:import-from #:screenshotbot/installation
                 #:standard-auth-provider
                 #:default-oidc-provider
                 #:installation
                 #:auth-provider-signin-form
                 #:auth-providers)
   (:export #:auth-header-logo))
+(in-package :screenshotbot/login/login)
 
 (markup:enable-reader)
 

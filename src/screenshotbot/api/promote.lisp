@@ -4,30 +4,32 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/api/promote
-    (:use #:cl
-          #:alexandria
-          #:anaphora
-          #:../promote-api
-          #:./core
-          #:../model/recorder-run
-          #:../model/channel
-          #:../git-repo)
+(uiop:define-package :screenshotbot/api/promote
+  (:use #:cl
+        #:alexandria
+        #:anaphora
+        #:screenshotbot/promote-api
+        #:screenshotbot/api/core
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/model/channel
+        #:screenshotbot/git-repo)
   (:import-from #:bknr.datastore
                 #:with-transaction
                 #:store-object-id)
-  (:import-from #:../github/access-checks
+  (:import-from #:screenshotbot/github/access-checks
                 #:fix-github-link)
   (:import-from #:screenshotbot/server
                 #:*init-hooks*)
-  (:export #:with-promotion-log
-           #:default-promoter)
-
-  ;; forward decl
-  (:export #:recorder-run-verify
-           #:maybe-promote-run
-           #:master-promoter
-           #:%maybe-send-tasks))
+  (:export
+   #:with-promotion-log
+   #:default-promoter)
+  ;; forward decls
+  (:export
+   #:recorder-run-verify
+   #:maybe-promote-run
+   #:master-promoter
+   #:%maybe-send-tasks))
+(in-package :screenshotbot/api/promote)
 
 #+lispworks
 (lw-ji:define-java-callers "com.tdrhq.Github"

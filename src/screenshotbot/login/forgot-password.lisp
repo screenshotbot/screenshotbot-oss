@@ -4,23 +4,24 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/login/forgot-password
-    (:use #:cl
-          #:alexandria
-          #:markup
-          #:nibble
-          #:../model/user
-          #:../form-errors)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/login/forgot-password
+  (:use #:cl
+        #:alexandria
+        #:markup
+        #:nibble
+        #:screenshotbot/model/user
+        #:screenshotbot/form-errors)
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:../installation
+  (:import-from #:screenshotbot/installation
                 #:mailer*)
-  (:import-from #:../mailer
+  (:import-from #:screenshotbot/mailer
                 #:send-mail)
-  (:import-from #:./common
+  (:import-from #:screenshotbot/login/common
                 #:auth-template)
   (:import-from #:bknr.datastore
                 #:with-transaction))
+(in-package :screenshotbot/login/forgot-password)
 
 
 (markup:enable-reader)

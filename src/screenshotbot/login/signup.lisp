@@ -4,41 +4,43 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/login/signup
-    (:use #:cl
-          #:alexandria
-          #:markup
-          #:nibble
-          #:./login
-          #:./common
-          #:./google-oauth
-          #:../user-api
-          #:../form-errors
-          #:../model/user
-          #:../model/invite
-          #:../model/company
-          #:../ignore-and-log-errors
-          #:./github-oauth
-          #:./populate)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/login/signup
+  (:use #:cl
+        #:alexandria
+        #:markup
+        #:nibble
+        #:screenshotbot/login/login
+        #:screenshotbot/login/common
+        #:screenshotbot/login/google-oauth
+        #:screenshotbot/user-api
+        #:screenshotbot/form-errors
+        #:screenshotbot/model/user
+        #:screenshotbot/model/invite
+        #:screenshotbot/model/company
+        #:screenshotbot/ignore-and-log-errors
+        #:screenshotbot/login/github-oauth
+        #:screenshotbot/login/populate)
+  (:import-from #:screenshotbot/server
                 #:*disable-mail*
                 #:defhandler)
-  (:import-from #:../installation
+  (:import-from #:screenshotbot/installation
                 #:auth-providers
                 #:mailer*
                 #:installation
                 #:auth-provider-signup-form
                 #:standard-auth-provider)
-  (:import-from #:../mailer
+  (:import-from #:screenshotbot/mailer
                 #:send-mail)
   (:import-from #:util
                 #:oid
                 #:find-by-oid)
   (:import-from #:bknr.datastore
                 #:with-transaction)
-  (:export #:signup-get
-           #:signup-get-page
-           #:signup-post))
+  (:export
+   #:signup-get
+   #:signup-get-page
+   #:signup-post))
+(in-package :screenshotbot/login/signup)
 
 
 (markup:enable-reader)

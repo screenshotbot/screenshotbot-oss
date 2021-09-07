@@ -4,37 +4,38 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/api/recorder-run
-    (:use #:cl
-          #:alexandria
-          #:./core
-          #:./promote
-          #:../model/screenshot
-          #:../model/image
-          #:../model/channel
-          #:../promote-api
-          #:./image
-          #:../model/recorder-run)
-  (:import-from #:./promote
+(uiop:define-package :screenshotbot/api/recorder-run
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/api/core
+        #:screenshotbot/api/promote
+        #:screenshotbot/model/screenshot
+        #:screenshotbot/model/image
+        #:screenshotbot/model/channel
+        #:screenshotbot/promote-api
+        #:screenshotbot/api/image
+        #:screenshotbot/model/recorder-run)
+  (:import-from #:screenshotbot/api/promote
                 #:default-promo)
-  (:import-from #:../model/company
+  (:import-from #:screenshotbot/model/company
                 #:find-or-create-channel
                 #:find-image-by-id
                 #:company-runs)
-  (:import-from #:../server
+  (:import-from #:screenshotbot/server
                 #:make-thread)
-  (:import-from #:../user-api
+  (:import-from #:screenshotbot/user-api
                 #:current-company)
-  (:import-from #:util
-                #:oid)
+  (:import-from #:util #:oid)
   (:import-from #:bknr.datastore
                 #:store-object-id
                 #:with-transaction)
   (:import-from #:screenshotbot/model/company
                 #:add-company-run)
-  (:export #:%recorder-run-post
-           #:run-response-id
-           #:start-promotion-thread))
+  (:export
+   #:%recorder-run-post
+   #:run-response-id
+   #:start-promotion-thread))
+(in-package :screenshotbot/api/recorder-run)
 
 
 (defclass create-run-response (api-response)

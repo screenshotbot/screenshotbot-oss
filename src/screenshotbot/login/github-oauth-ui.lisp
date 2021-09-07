@@ -4,11 +4,12 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/login/github-oauth-ui
-    (:use #:cl
-          #:alexandria
-          #:./common
-          #:./github-oauth))
+(uiop:define-package :screenshotbot/login/github-oauth-ui
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/login/common
+        #:screenshotbot/login/github-oauth))
+(in-package :screenshotbot/login/github-oauth-ui)
 
 (markup:enable-reader)
 

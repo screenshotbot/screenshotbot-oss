@@ -4,14 +4,14 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/login/oidc
-    (:use #:cl
-          #:alexandria
-          #:nibble
-          #:oidc
-          #:../model/user
-          #:./common)
-  (:import-from #:../user-api
+(uiop:define-package :screenshotbot/login/oidc
+  (:use #:cl
+        #:alexandria
+        #:nibble
+        #:oidc
+        #:screenshotbot/model/user
+        #:screenshotbot/login/common)
+  (:import-from #:screenshotbot/user-api
                 #:user
                 #:current-user)
   (:import-from #:bknr.datastore
@@ -19,36 +19,38 @@
                 #:with-transaction
                 #:persistent-class
                 #:hash-index)
-  (:import-from #:../model/user
+  (:import-from #:screenshotbot/model/user
                 #:oauth-user-user
                 #:oauth-user-full-name
                 #:oauth-user-avatar
                 #:oauth-user-email)
-  (:export #:client-id
-           #:client-secret
-           #:oidc-provider
-           #:issuer
-           #:scope
-           #:discover
-           #:authorization-endpoint
-           #:token-endpoint
-           #:userinfo-endpoint
-           #:access-token-class
-           #:access-token-str
-           #:oidc-callback
-           #:prepare-oidc-user
-           #:oidc-user
-           #:oauth-user-email
-           #:oauth-user-full-name
-           #:oauth-user-avatar
-           #:find-oidc-user-by-id
-           #:find-oidc-users-by-user-id
-           #:oauth-user-user
-           #:identifier
-           #:oidc-provider-identifier
-           #:find-existing-oidc-user
-           #:end-session-endpoint
-           #:update-oidc-user))
+  (:export
+   #:client-id
+   #:client-secret
+   #:oidc-provider
+   #:issuer
+   #:scope
+   #:discover
+   #:authorization-endpoint
+   #:token-endpoint
+   #:userinfo-endpoint
+   #:access-token-class
+   #:access-token-str
+   #:oidc-callback
+   #:prepare-oidc-user
+   #:oidc-user
+   #:oauth-user-email
+   #:oauth-user-full-name
+   #:oauth-user-avatar
+   #:find-oidc-user-by-id
+   #:find-oidc-users-by-user-id
+   #:oauth-user-user
+   #:identifier
+   #:oidc-provider-identifier
+   #:find-existing-oidc-user
+   #:end-session-endpoint
+   #:update-oidc-user))
+(in-package :screenshotbot/login/oidc)
 
 (defclass oidc-provider (abstract-oauth-provider
                          oidc)

@@ -4,36 +4,38 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/login/common
-    (:use #:cl
-          #:alexandria
-          #:../user-api
-          #:../model/user
-          #:nibble
-          #:../model/company)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/login/common
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/user-api
+        #:screenshotbot/model/user
+        #:nibble
+        #:screenshotbot/model/company)
+  (:import-from #:screenshotbot/server
                 #:logged-in-p
                 #:defhandler
                 #:*nibble-plugin*
                 #:server-with-login)
-  (:import-from #:../template
+  (:import-from #:screenshotbot/template
                 #:landing-head)
-  (:import-from #:../installation
+  (:import-from #:screenshotbot/installation
                 #:auth-provider-signin-form
                 #:auth-provider-signup-form
                 #:auth-provider)
-  (:use-reexport #:../cdn)
-  (:export #:*current-company-override*
-           #:with-oauth-state-and-redirect
-           #:make-redirect-nibble
-           #:signin-get
-           #:auth-template
-           #:oauth-name
-           #:oauth-callback
-           #:oauth-logo-svg
-           #:oauth-signin-link
-           #:oauth-signup-link
-           #:abstract-oauth-provider))
+  (:use-reexport #:screenshotbot/cdn)
+  (:export
+   #:*current-company-override*
+   #:with-oauth-state-and-redirect
+   #:make-redirect-nibble
+   #:signin-get
+   #:auth-template
+   #:oauth-name
+   #:oauth-callback
+   #:oauth-logo-svg
+   #:oauth-signin-link
+   #:oauth-signup-link
+   #:abstract-oauth-provider))
+(in-package :screenshotbot/login/common)
 
 (markup:enable-reader)
 
