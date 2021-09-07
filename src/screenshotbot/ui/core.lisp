@@ -4,14 +4,11 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/ui/core
-    (:use #:cl
-          #:alexandria)
-  (:import-from #:markup
-                #:deftag)
-  (:export #:ui/a
-           #:ui/div
-           #:ui/span))
+(uiop:define-package :screenshotbot/ui/core
+  (:use #:cl #:alexandria)
+  (:import-from #:markup #:deftag)
+  (:export #:ui/a #:ui/div #:ui/span))
+(in-package :screenshotbot/ui/core)
 
 (markup:enable-reader)
 

@@ -4,12 +4,12 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/ui/confirmation-page
-    (:use :cl
-     :alexandria)
+(uiop:define-package :screenshotbot/ui/confirmation-page
+  (:use #:cl #:alexandria)
   (:export #:confirmation-page)
-  (:import-from ./simple-card-page
+  (:import-from #:screenshotbot/ui/simple-card-page
                 #:simple-card-page))
+(in-package :screenshotbot/ui/confirmation-page)
 
 (markup:enable-reader)
 

@@ -4,24 +4,23 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/settings-api
-    (:use #:cl
-          #:alexandria)
-  (:import-from #:./installation
+(uiop:define-package :screenshotbot/settings-api
+    (:use #:cl #:alexandria)
+  (:import-from #:screenshotbot/installation
                 #:plugin
                 #:installation
                 #:plugins)
-  (:export #:defsettings
-           #:settings
-           #:all-settings
-           #:settings-name
-           #:settings-handler
-           #:plugin-settings
-           #:settings-title
-           #:settings-section)
-
-  ;; forward declaration
+  (:export
+   #:defsettings
+   #:settings
+   #:all-settings
+   #:settings-name
+   #:settings-handler
+   #:plugin-settings
+   #:settings-title
+   #:settings-section)
   (:export #:settings-template))
+(in-package :screenshotbot/settings-api)
 
 (defclass settings ()
   ((name :type string

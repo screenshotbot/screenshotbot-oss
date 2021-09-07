@@ -4,14 +4,14 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/left-side-bar
-    (:use #:cl
-          #:alexandria
-          #:./user-api)
-  (:import-from #:./installation
+(uiop:define-package :screenshotbot/left-side-bar
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/user-api)
+  (:import-from #:screenshotbot/installation
                 #:installation
                 #:multi-org-feature)
-  (:import-from #:./template
+  (:import-from #:screenshotbot/template
                 #:left-side-bar
                 #:mdi)
   (:import-from #:markup
@@ -20,6 +20,7 @@
                 #:make-url)
   (:import-from #:nibble
                 #:nibble))
+(in-package :screenshotbot/left-side-bar)
 
 (markup:enable-reader)
 

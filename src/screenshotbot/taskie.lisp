@@ -4,27 +4,27 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/taskie
-    (:use #:cl
-          #:alexandria)
+(uiop:define-package :screenshotbot/taskie
+  (:use #:cl #:alexandria)
   (:import-from #:markup
                 #:deftag)
-  (:import-from #:./template
+  (:import-from #:screenshotbot/template
                 #:mdi)
   (:import-from #:util
                 #:oid
                 #:object-with-oid)
   (:import-from #:bknr.datastore
                 #:store-object-id)
-  (:import-from #:nibble
-                #:nibble)
-  (:export #:taskie-list
-           #:taskie-row
-           #:taskie-page-title
-           #:taskie-timestamp
-           #:taskie-page-item
-           #:timeago
-           #:with-pagination))
+  (:import-from #:nibble #:nibble)
+  (:export
+   #:taskie-list
+   #:taskie-row
+   #:taskie-page-title
+   #:taskie-timestamp
+   #:taskie-page-item
+   #:timeago
+   #:with-pagination))
+(in-package :screenshotbot/taskie)
 
 (markup:enable-reader)
 
