@@ -4,10 +4,10 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/google-fonts
-    (:use #:cl
-          #:alexandria)
+(uiop/package:define-package :screenshotbot/google-fonts
+    (:use #:cl #:alexandria)
   (:export #:google-fonts))
+(in-package :screenshotbot/google-fonts)
 
 (markup:enable-reader)
 

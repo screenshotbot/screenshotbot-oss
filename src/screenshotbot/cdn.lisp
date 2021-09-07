@@ -4,11 +4,10 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/cdn
+(uiop/package:define-package :screenshotbot/cdn
     (:use #:cl)
-  (:export #:script
-           #:link
-           #:img))
+  (:export #:script #:link #:img))
+(in-package :screenshotbot/cdn)
 
 (markup:enable-reader)
 

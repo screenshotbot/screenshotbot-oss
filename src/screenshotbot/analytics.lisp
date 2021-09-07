@@ -4,12 +4,13 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/analytics
+(uiop/package:define-package :screenshotbot/analytics
     (:use #:cl
           #:alexandria)
-  (:import-from ./ignore-and-log-errors
+  (:import-from #:screenshotbot/ignore-and-log-errors
                 #:ignore-and-log-errors)
   (:export #:push-analytics-event))
+(in-package :screenshotbot/analytics)
 
 (defvar *events-lock* (bt:make-lock))
 (defvar *events* nil)

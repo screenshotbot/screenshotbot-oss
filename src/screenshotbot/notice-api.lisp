@@ -4,9 +4,10 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/notice-api
-    (:use #:cl
-          #:alexandria)
-  (:export #:invite-company
-           #:notice-title
-           #:notice-summary))
+(uiop/package:define-package :screenshotbot/notice-api
+    (:use #:cl #:alexandria)
+  (:export
+   #:invite-company
+   #:notice-title
+   #:notice-summary))
+(in-package :screenshotbot/notice-api)

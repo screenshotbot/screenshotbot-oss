@@ -4,43 +4,44 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/server
-    (:use #:cl
-          #:alexandria)
-  (:import-from ./analytics
+(uiop:define-package :screenshotbot/server
+    (:use :cl :alexandria)
+  (:import-from #:screenshotbot/analytics
                 #:push-analytics-event)
-  (:import-from #:./secret
+  (:import-from #:screenshotbot/secret
                 #:defsecret)
-  (:export #:defhandler
-           #:with-login
-           #:acceptor
-           #:%handler-wrap
-           #:staging-p
-           #:server-with-login
-           #:*root*
-           #:*is-localhost*
-           #:init-for-delivered-image
-           #:document-root
-           #:*reuben-ip*
-           #:*disable-mail*
-           #:*seleniump*
-           #:*nibble-plugin*
-           #:*cdn-domain*
-           #:*domain*
-           #:logged-in-p
-           #:dashboard
-           #:error-user
-           #:make-thread
-           #:error-obj
-           #:*landing-page*
-           #:*acceptor*
-           #:no-access-error
-           #:prepare-acceptor-plugins
-           #:error-obj
-           #:error-user
-           #:*seleniump*
-           #:no-access-error-page
-           #:*init-hooks*))
+  (:export
+   #:defhandler
+   #:with-login
+   #:acceptor
+   #:%handler-wrap
+   #:staging-p
+   #:server-with-login
+   #:*root*
+   #:*is-localhost*
+   #:init-for-delivered-image
+   #:document-root
+   #:*reuben-ip*
+   #:*disable-mail*
+   #:*seleniump*
+   #:*nibble-plugin*
+   #:*cdn-domain*
+   #:*domain*
+   #:logged-in-p
+   #:dashboard
+   #:error-user
+   #:make-thread
+   #:error-obj
+   #:*landing-page*
+   #:*acceptor*
+   #:no-access-error
+   #:prepare-acceptor-plugins
+   #:error-obj
+   #:error-user
+   #:*seleniump*
+   #:no-access-error-page
+   #:*init-hooks*))
+(in-package :screenshotbot/server)
 
 (defparameter *domain* "https://screenshotbot.io")
 (defvar *root* (util:system-source-directory :screenshotbot))

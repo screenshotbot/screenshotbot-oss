@@ -4,11 +4,11 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/plugin
-    (:use #:cl
-          #:alexandria)
+(uiop/package:define-package :screenshotbot/plugin
+    (:use #:cl #:alexandria)
   (:export #:plugin
            #:plugin-parse-repo))
+(in-package :screenshotbot/plugin)
 
 (defclass plugin ()
   ())

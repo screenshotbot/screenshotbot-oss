@@ -1,12 +1,13 @@
-(pkg:define-package :screenshotbot/mailer
-    (:use #:cl
-          #:alexandria)
-  (:export #:noop-mailer
-           #:smtp-mailer
-           #:local-smtp-mailer
-           #:background-mailer
-           #:send-mail
-           #:host))
+(uiop/package:define-package :screenshotbot/mailer
+    (:use #:cl #:alexandria)
+  (:export
+   #:noop-mailer
+   #:smtp-mailer
+   #:local-smtp-mailer
+   #:background-mailer
+   #:send-mail
+   #:host))
+(in-package :screenshotbot/mailer)
 
 (defclass mailer ()
   ((from :initarg :from

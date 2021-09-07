@@ -6,7 +6,8 @@
                 #:secret)
   (:export #:upload-fasl
            #:upload-sdk
-           #:deploy-fasls-main))
+           #:deploy-fasls-main
+           #:load-tmp-fasl))
 (in-package :screenshotbot-utils)
 
 (defun md5-hex (f)
@@ -52,6 +53,9 @@
                         :error-output :interactive))))
 
 ;; (upload-fasl 'asdf:compile-bundle-op :screenshotbot)
+
+(defun load-tmp-fasl ()
+  (load "../tmp.64ufasl"))
 
 
 (defun deploy-fasls-main (system)

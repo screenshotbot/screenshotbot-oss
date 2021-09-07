@@ -6,25 +6,26 @@
 
 ;;;; Singleton state representing the current installation
 
-(pkg:define-package :screenshotbot/installation
-    (:use #:cl
-          #:./plugin)
-  (:import-from #:./mailer
+(uiop/package:define-package :screenshotbot/installation
+    (:use #:cl #:screenshotbot/plugin)
+  (:import-from #:screenshotbot/mailer
                 #:noop-mailer)
-  (:export #:installation
-           #:plugin
-           #:find-plugin
-           #:with-plugin
-           #:plugins
-           #:mailer
-           #:auth-provider
-           #:auth-providers
-           #:mailer*
-           #:auth-provider-signin-form
-           #:auth-provider-signup-form
-           #:standard-auth-provider
-           #:multi-org-feature
-           #:default-oidc-provider))
+  (:export
+   #:installation
+   #:plugin
+   #:find-plugin
+   #:with-plugin
+   #:plugins
+   #:mailer
+   #:auth-provider
+   #:auth-providers
+   #:mailer*
+   #:auth-provider-signin-form
+   #:auth-provider-signup-form
+   #:standard-auth-provider
+   #:multi-org-feature
+   #:default-oidc-provider))
+(in-package :screenshotbot/installation)
 
 (defclass installation ()
   ((plugins :initform nil

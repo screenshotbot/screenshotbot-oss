@@ -4,21 +4,22 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/promote-api
-    (:use #:cl
-          #:alexandria)
-  (:import-from #:./installation
+(uiop/package:define-package :screenshotbot/promote-api
+    (:use #:cl #:alexandria)
+  (:import-from #:screenshotbot/installation
                 #:installation
                 #:plugin
                 #:plugins
                 #:promoters)
-  (:export #:maybe-send-tasks
-           #:maybe-promote
-           #:promoter
-           #:register-promoter
-           #:plugin-promoter
-           #:list-promoters
-           #:start-promotion-thread))
+  (:export
+   #:maybe-send-tasks
+   #:maybe-promote
+   #:promoter
+   #:register-promoter
+   #:plugin-promoter
+   #:list-promoters
+   #:start-promotion-thread))
+(in-package :screenshotbot/promote-api)
 
 (defclass promoter ()
   ())

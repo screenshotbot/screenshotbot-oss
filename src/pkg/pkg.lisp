@@ -6,7 +6,7 @@
 (defun fix-name (to from)
   (let ((to (str:split "/" (string to)))
         (from (str:split "/" (string from))))
-    (intern
+    (make-symbol
      (str:join
       "/"
       (cond
@@ -16,8 +16,7 @@
         ((equal "." (car from))
          (append (butlast to) (cdr from)))
         (t
-         from)))
-     (symbol-package :foo))))
+         from))))))
 
 (defun fix-clause (name clause)
   (labels ((fix-rel (other)
