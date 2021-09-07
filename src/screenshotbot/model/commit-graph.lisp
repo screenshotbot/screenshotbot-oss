@@ -4,25 +4,26 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/model/commit-graph
-    (:use #:cl
-          #:alexandria)
+(uiop:define-package :screenshotbot/model/commit-graph
+  (:use #:cl #:alexandria)
   (:import-from #:bknr.datastore
                 #:store-objects-with-class
                 #:blob-pathname
                 #:persistent-class)
-  (:import-from #:../git-repo
+  (:import-from #:screenshotbot/git-repo
                 #:commit-graph-dag
                 #:find-or-create-commit-graph
                 #:commit-graph)
-  (:import-from #:./company
+  (:import-from #:screenshotbot/model/company
                 #:company)
-  (:export #:commit-graph
-           #:repo-url
-           #:lock
-           #:find-commit-graph
-           #:find-or-create-commit-graph
-           #:commit-graph-dag))
+  (:export
+   #:commit-graph
+   #:repo-url
+   #:lock
+   #:find-commit-graph
+   #:find-or-create-commit-graph
+   #:commit-graph-dag))
+(in-package :screenshotbot/model/commit-graph)
 
 (defclass commit-graph (bknr.datastore:blob)
   ((url :type string

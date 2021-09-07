@@ -4,21 +4,22 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/dashboard/api-keys
-    (:use #:cl
-          #:alexandria
-          #:nibble
-          #:../user-api
-          #:../api-key-api)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/dashboard/api-keys
+  (:use #:cl
+        #:alexandria
+        #:nibble
+        #:screenshotbot/user-api
+        #:screenshotbot/api-key-api)
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:../template
+  (:import-from #:screenshotbot/template
                 #:dashboard-template)
-  (:import-from #:../ui
+  (:import-from #:screenshotbot/ui
                 #:confirmation-page
                 #:simple-card-page)
-  (:import-from #:../server
+  (:import-from #:screenshotbot/server
                 #:with-login))
+(in-package :screenshotbot/dashboard/api-keys)
 
 (markup:enable-reader)
 

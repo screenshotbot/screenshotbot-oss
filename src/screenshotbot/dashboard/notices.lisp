@@ -4,21 +4,19 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/dashboard/notices
-    (:use #:cl
-          #:alexandria
-          #:../user-api
-          #:../template
-          #:../notice-api
-          #:bknr.datastore)
-  (:import-from #:markup
-                #:deftag)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/dashboard/notices
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/user-api
+        #:screenshotbot/template
+        #:screenshotbot/notice-api
+        #:bknr.datastore)
+  (:import-from #:markup #:deftag)
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:util
-                #:oid
-                #:make-url)
+  (:import-from #:util #:oid #:make-url)
   (:export #:invite-accept))
+(in-package :screenshotbot/dashboard/notices)
 
 (markup:enable-reader)
 

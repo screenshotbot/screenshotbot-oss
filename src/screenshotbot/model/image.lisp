@@ -4,23 +4,23 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/model/image
-    (:use #:cl
-          #:alexandria
-          #:./view
-          #:./core
-          #:../screenshot-api)
+(uiop:define-package :screenshotbot/model/image
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/model/view
+        #:screenshotbot/model/core
+        #:screenshotbot/screenshot-api)
   (:import-from #:util
                 #:make-url
                 #:oid-bytes
                 #:oid
                 #:object-with-oid)
-  (:import-from #:../server
+  (:import-from #:screenshotbot/server
                 #:document-root
                 #:*root*)
-  (:import-from #:../screenshot-api
+  (:import-from #:screenshotbot/screenshot-api
                 #:local-image)
-  (:import-from #:./company
+  (:import-from #:screenshotbot/model/company
                 #:company
                 #:verified-p ;; todo: remove, will cause conflict
                 #:image-oid-cache
@@ -30,27 +30,29 @@
                 #:store-object
                 #:persistent-class)
   ;; classes
-  (:export #:image
-           #:image-blob
-           #:mask-rect
-           #:local-image)
-
-  ;; methods
-  (:export #:with-local-image
-           #:open-image-stream
-           #:image=
-           #:image-public-url
-           #:image-hash
-           #:image-blob-get
-           #:s3-key
-           #:s3-blob
-           #:image-blob
-           #:verified-p
-           #:mask-rect-left
-           #:rect-as-list
-           #:mask-rect-width
-           #:mask-rect-top
-           #:mask-rect-height))
+  (:export
+   #:image
+   #:image-blob
+   #:mask-rect
+   #:local-image)
+  ;;methods
+  (:export
+   #:with-local-image
+   #:open-image-stream
+   #:image=
+   #:image-public-url
+   #:image-hash
+   #:image-blob-get
+   #:s3-key
+   #:s3-blob
+   #:image-blob
+   #:verified-p
+   #:mask-rect-left
+   #:rect-as-list
+   #:mask-rect-width
+   #:mask-rect-top
+   #:mask-rect-height))
+(in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
 

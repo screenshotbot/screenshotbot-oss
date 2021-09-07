@@ -4,44 +4,44 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/dashboard/run-page
-    (:use #:cl
-          #:alexandria
-          #:markup
-          #:nibble
-          #:../promote-api
-          #:../report-api
-          #:../user-api
-          #:../git-repo
-          #:../screenshot-api
-          #:../model/recorder-run
-          #:../model/view
-          #:../model/screenshot
-          #:../template
-          #:../model/image
-          #:../model/channel
-          #:../model/company)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/dashboard/run-page
+  (:use #:cl
+        #:alexandria
+        #:markup
+        #:nibble
+        #:screenshotbot/promote-api
+        #:screenshotbot/report-api
+        #:screenshotbot/user-api
+        #:screenshotbot/git-repo
+        #:screenshotbot/screenshot-api
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/model/view
+        #:screenshotbot/model/screenshot
+        #:screenshotbot/template
+        #:screenshotbot/model/image
+        #:screenshotbot/model/channel
+        #:screenshotbot/model/company)
+  (:import-from #:screenshotbot/server
                 #:make-thread
                 #:defhandler)
   (:import-from #:util
                 #:oid
                 #:find-by-oid)
-  (:import-from #:hex
-                #:make-url)
-  (:import-from #:../ui
+  (:import-from #:hex #:make-url)
+  (:import-from #:screenshotbot/ui
                 #:ui/a
                 #:ui/div)
   (:import-from #:bknr.datastore
                 #:store-object-id)
-  (:export #:*create-issue-popup*
-           #:run-page
-           #:run-row-filter
-           #:row-filter
-           #:filter-selector
-           #:commit)
-  ;;forward decls
+  (:export
+   #:*create-issue-popup*
+   #:run-page
+   #:run-row-filter
+   #:row-filter
+   #:filter-selector
+   #:commit)
   (:export #:mask-editor))
+(in-package :screenshotbot/dashboard/run-page)
 
 (markup:enable-reader)
 

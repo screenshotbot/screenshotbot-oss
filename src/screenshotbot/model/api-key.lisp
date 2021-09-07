@@ -4,26 +4,28 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/model/api-key
-    (:use #:cl
-          #:alexandria
-          #:./core
-          #:../user-api
-          #:../api-key-api)
+(uiop:define-package :screenshotbot/model/api-key
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/model/core
+        #:screenshotbot/user-api
+        #:screenshotbot/api-key-api)
   (:import-from #:bknr.datastore
                 #:store-object
                 #:store-object-id
                 #:with-transaction
                 #:unique-index
                 #:persistent-class)
-  (:import-from #:./company
+  (:import-from #:screenshotbot/model/company
                 #:company)
-  (:export #:api-key
-           #:%find-api-key
-           #:api-key-user
-           #:all-api-keys
-           #:api-key-company
-           #:delete-api-key))
+  (:export
+   #:api-key
+   #:%find-api-key
+   #:api-key-user
+   #:all-api-keys
+   #:api-key-company
+   #:delete-api-key))
+(in-package :screenshotbot/model/api-key)
 
 (defclass api-key (store-object)
   ((user

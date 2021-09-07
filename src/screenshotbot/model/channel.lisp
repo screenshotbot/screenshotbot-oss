@@ -4,17 +4,17 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/model/channel
-    (:use #:cl
-          #:alexandria
-          #:./core
-          #:../user-api
-          #:./view)
-  (:import-from #:../git-repo
+(uiop:define-package :screenshotbot/model/channel
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/model/core
+        #:screenshotbot/user-api
+        #:screenshotbot/model/view)
+  (:import-from #:screenshotbot/git-repo
                 #:generic-git-repo)
-  (:import-from #:../plugin
+  (:import-from #:screenshotbot/plugin
                 #:plugin-parse-repo)
-  (:import-from #:../installation
+  (:import-from #:screenshotbot/installation
                 #:plugins
                 #:installation)
   (:import-from #:bknr.datastore
@@ -24,9 +24,9 @@
                 #:store-object-id
                 #:hash-index
                 #:deftransaction)
-  (:import-from #:./image
+  (:import-from #:screenshotbot/model/image
                 #:masks)
-  (:import-from #:./recorder-run
+  (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run
                 #:recorder-run-commit
                 #:master-branch
@@ -37,27 +37,30 @@
                 #:activep
                 #:publicp
                 #:recorder-run-channel)
-  (:import-from #:./company
+  (:import-from #:screenshotbot/model/company
                 #:company
                 #:company-runs)
-  (:export #:channel
-           #:set-channel-screenshot-mask
-           #:channel-branch
-           #:channel-promoted-runs
-           #:channel-name
-           #:channel-runs
-           #:channel-repo
-           #:channel-promotion-lock
-           #:production-run-for
-           #:*channel-repo-overrides*
-           #:masks
-           #:channel-cv
-           #:channel-lock)
+  (:export
+   #:channel
+   #:set-channel-screenshot-mask
+   #:channel-branch
+   #:channel-promoted-runs
+   #:channel-name
+   #:channel-runs
+   #:channel-repo
+   #:channel-promotion-lock
+   #:production-run-for
+   #:*channel-repo-overrides*
+   #:masks
+   #:channel-cv
+   #:channel-lock)
 
   ;; forward decls
-  (:export #:repo-left-ancestor-p
-           #:make-gitlab-repo
-           #:github-get-canonical-repo))
+  (:export
+   #:repo-left-ancestor-p
+   #:make-gitlab-repo
+   #:github-get-canonical-repo))
+(in-package :screenshotbot/model/channel)
 
 
 ;; hack. While promoting we want to temporarily give the channel a new

@@ -4,15 +4,15 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/dashboard/numbers
-    (:use #:cl
-          #:alexandria
-          #:../user-api)
-  (:import-from #:markup
-                #:deftag)
-  (:import-from #:../template
+(uiop:define-package :screenshotbot/dashboard/numbers
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/user-api)
+  (:import-from #:markup #:deftag)
+  (:import-from #:screenshotbot/template
                 #:mdi)
   (:export #:numbers-section))
+(in-package :screenshotbot/dashboard/numbers)
 
 (markup:enable-reader)
 

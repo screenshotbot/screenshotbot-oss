@@ -4,27 +4,26 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/dashboard/recent-runs
-    (:use #:cl
-          #:alexandria
-          #:../user-api
-          #:./numbers
-          #:../template
-          #:../taskie
-          #:markup)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/dashboard/recent-runs
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/user-api
+        #:screenshotbot/dashboard/numbers
+        #:screenshotbot/template
+        #:screenshotbot/taskie
+        #:markup)
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:util
-                #:make-url
-                #:oid)
-  (:import-from #:../ui
+  (:import-from #:util #:make-url #:oid)
+  (:import-from #:screenshotbot/ui
                 #:ui/a
                 #:ui/div)
-  (:import-from #:./run-page
+  (:import-from #:screenshotbot/dashboard/run-page
                 #:commit)
-  (:import-from #:./run-page
+  (:import-from #:screenshotbot/dashboard/run-page
                 #:run-page)
   (:export #:recent-runs))
+(in-package :screenshotbot/dashboard/recent-runs)
 
 (markup:enable-reader)
 

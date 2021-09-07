@@ -4,33 +4,34 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/model/report
-    (:use #:cl
-          #:alexandria
-          #:./core
-          #:../report-api
-          #:./view)
-  (:import-from #:../user-api
+(uiop:define-package :screenshotbot/model/report
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/model/core
+        #:screenshotbot/report-api
+        #:screenshotbot/model/view)
+  (:import-from #:screenshotbot/user-api
                 #:report-num-changes)
-  (:import-from #:util
-                #:object-with-oid)
-  (:import-from #:./recorder-run
+  (:import-from #:util #:object-with-oid)
+  (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run-channel
                 #:publicp)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:store-object
                 #:with-transaction)
-  (:export #:report
-           #:report-run
-           #:report-title
-           #:base-acceptable
-           #:acceptable-state
-           #:report-previous-run
-           #:report-channel
-           #:report-acceptable
-           #:github-task
-           #:report-num-changes))
+  (:export
+   #:report
+   #:report-run
+   #:report-title
+   #:base-acceptable
+   #:acceptable-state
+   #:report-previous-run
+   #:report-channel
+   #:report-acceptable
+   #:github-task
+   #:report-num-changes))
+(in-package :screenshotbot/model/report)
 
 (defclass report (object-with-oid)
   ((run

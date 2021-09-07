@@ -4,38 +4,40 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/model/screenshot
-    (:use #:cl
-          #:alexandria
-          #:../screenshot-api)
+(uiop:define-package :screenshotbot/model/screenshot
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/screenshot-api)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:store-object
                 #:delete-object
                 #:unique-index)
-  (:import-from #:../user-api
+  (:import-from #:screenshotbot/user-api
                 #:screenshot-name)
-  (:import-from #:../report-api
+  (:import-from #:screenshotbot/report-api
                 #:screenshot-lang
                 #:screenshot-device)
-  (:import-from #:./channel
+  (:import-from #:screenshotbot/model/channel
                 #:channel-promoted-runs)
-  (:import-from #:./recorder-run
+  (:import-from #:screenshotbot/model/recorder-run
                 #:screenshot-get-canonical
                 #:recorder-run-screenshots)
-  (:import-from #:./image
+  (:import-from #:screenshotbot/model/image
                 #:%with-local-image
                 #:rect-as-list)
-  (:export #:constant-string
-           #:get-constant
-           #:screenshot-masks
-           #:screenshot-name
-           #:screenshot-device
-           #:screenshot-image
-           #:screenshot-lang
-           #:make-screenshot
-           #:screenshot
-           #:get-screenshot-history))
+  (:export
+   #:constant-string
+   #:get-constant
+   #:screenshot-masks
+   #:screenshot-name
+   #:screenshot-device
+   #:screenshot-image
+   #:screenshot-lang
+   #:make-screenshot
+   #:screenshot
+   #:get-screenshot-history))
+(in-package :screenshotbot/model/screenshot)
 
 
 ;; after implementing this, I realized, it's probably not really
