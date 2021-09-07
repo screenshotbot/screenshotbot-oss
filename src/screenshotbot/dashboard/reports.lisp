@@ -4,14 +4,14 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/dashboard/reports
-    (:use #:cl
-          #:alexandria
-          #:../template
-          #:../user-api
-          #:../report-api
-          #:../taskie)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/dashboard/reports
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/template
+        #:screenshotbot/user-api
+        #:screenshotbot/report-api
+        #:screenshotbot/taskie)
+  (:import-from #:screenshotbot/server
                 #:with-login
                 #:*domain*
                 #:defhandler)
@@ -21,8 +21,8 @@
                 #:oid)
   (:import-from #:bknr.datastore
                 #:store-object-with-id)
-  (:export #:report-page
-           #:report-link))
+  (:export #:report-page #:report-link))
+(in-package :screenshotbot/dashboard/reports)
 
 (markup:enable-reader)
 

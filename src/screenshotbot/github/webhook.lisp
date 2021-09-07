@@ -1,30 +1,37 @@
-(pkg:define-package :screenshotbot/github/webhook
-    (:use #:cl
-          #:alexandria)
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+(uiop:define-package :screenshotbot/github/webhook
+  (:use #:cl #:alexandria)
   (:import-from #:bknr.datastore
                 #:store-object
                 #:persistent-class
                 #:hash-index
                 #:with-transaction)
-  (:import-from #:../model
+  (:import-from #:screenshotbot/model
                 #:github-get-canonical-repo)
-  (:import-from #:../server
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:../model/company
+  (:import-from #:screenshotbot/model/company
                 #:installation-id)
-  (:import-from #:./github-installation
+  (:import-from #:screenshotbot/github/github-installation
                 #:github-installation-with-repo-name
                 #:installation-id
                 #:github-installation)
-  (:export #:pull-request
-           #:github-get-canonical-repo
-           #:repo-full-name
-           #:pull-request-id
-           #:pull-request-head
-           #:pull-request-base
-           #:all-pull-requests
-           #:pull-request-with-url
-           #:github-maybe-update-pull-request))
+  (:export
+   #:pull-request
+   #:github-get-canonical-repo
+   #:repo-full-name
+   #:pull-request-id
+   #:pull-request-head
+   #:pull-request-base
+   #:all-pull-requests
+   #:pull-request-with-url
+   #:github-maybe-update-pull-request))
+(in-package :screenshotbot/github/webhook)
 
 (defun github-get-canonical-repo (repo)
   (cl-ppcre:regex-replace-all

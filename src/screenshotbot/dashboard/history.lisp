@@ -4,21 +4,22 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/dashboard/history
-    (:use #:cl
-          #:alexandria
-          #:../user-api
-          #:../report-api
-          #:../template
-          #:../screenshot-api)
-   (:import-from #:./run-page
-                 #:commit)
-   (:import-from #:bknr.datastore
-                 #:store-object-with-id)
-   (:import-from #:../server
+(uiop:define-package :screenshotbot/dashboard/history
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/user-api
+        #:screenshotbot/report-api
+        #:screenshotbot/template
+        #:screenshotbot/screenshot-api)
+  (:import-from #:screenshotbot/dashboard/run-page
+                #:commit)
+  (:import-from #:bknr.datastore
+                #:store-object-with-id)
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-   (:import-from #:./run-page
-                 #:history-page))
+  (:import-from #:screenshotbot/dashboard/run-page
+                #:history-page))
+(in-package :screenshotbot/dashboard/history)
 
 
 (markup:enable-reader)

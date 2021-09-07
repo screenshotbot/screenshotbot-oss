@@ -4,19 +4,20 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/dashboard/mask-builder
-    (:use #:cl
-          #:alexandria
-          #:markup
-          #:../model/screenshot
-          #:nibble
-          #:../model/image
-          #:../model/channel
-          #:../template)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/dashboard/mask-builder
+  (:use #:cl
+        #:alexandria
+        #:markup
+        #:screenshotbot/model/screenshot
+        #:nibble
+        #:screenshotbot/model/image
+        #:screenshotbot/model/channel
+        #:screenshotbot/template)
+  (:import-from #:screenshotbot/server
                 #:with-login)
-  (:import-from #:./run-page
+  (:import-from #:screenshotbot/dashboard/run-page
                 #:mask-editor))
+(in-package :screenshotbot/dashboard/mask-builder)
 
 
 (markup:enable-reader)

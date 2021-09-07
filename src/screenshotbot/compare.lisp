@@ -4,45 +4,45 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/compare
-    (:use #:cl
-          #:alexandria
-          #:nibble
-          #:./template
-          #:./model/screenshot
-          #:./model/image
-          #:./model/view
-          #:./model/report
-          #:./model/channel
-          #:./ignore-and-log-errors
-          #:./model/recorder-run)
+(uiop:define-package :screenshotbot/compare
+  (:use #:cl
+        #:alexandria
+        #:nibble
+        #:screenshotbot/template
+        #:screenshotbot/model/screenshot
+        #:screenshotbot/model/image
+        #:screenshotbot/model/view
+        #:screenshotbot/model/report
+        #:screenshotbot/model/channel
+        #:screenshotbot/ignore-and-log-errors
+        #:screenshotbot/model/recorder-run)
   (:import-from #:util
                 #:find-by-oid
                 #:oid)
-  (:import-from #:markup
-                #:deftag)
-  (:import-from #:./server
+  (:import-from #:markup #:deftag)
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:./report-api
+  (:import-from #:screenshotbot/report-api
                 #:render-diff-report)
-  (:import-from #:./dashboard/run-page
+  (:import-from #:screenshotbot/dashboard/run-page
                 #:run-row-filter
                 #:page-nav-dropdown
                 #:row-filter
                 #:mask-editor
                 #:filter-selector
                 #:commit)
-  (:export #:diff-report
-           #:render-acceptable
-           #:diff-report-title
-           #:make-diff-report
-           #:diff-report-empty-p
-           #:image-comparison-nibble
-           #:render-diff-report
-           #:diff-report-changes)
-
+  (:export
+   #:diff-report
+   #:render-acceptable
+   #:diff-report-title
+   #:make-diff-report
+   #:diff-report-empty-p
+   #:image-comparison-nibble
+   #:render-diff-report
+   #:diff-report-changes)
   ;; forward decls
   (:export #:filter-selector))
+(in-package :screenshotbot/compare)
 
 
 (markup:enable-reader)

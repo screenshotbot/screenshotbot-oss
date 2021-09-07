@@ -4,13 +4,12 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/invite
-    (:use #:cl
-          #:alexandria)
-  (:import-from #:./server
+(uiop:define-package :screenshotbot/invite
+  (:use #:cl #:alexandria)
+  (:import-from #:screenshotbot/server
                 #:defhandler
                 #:*disable-mail*)
-  (:import-from #:./model/invite
+  (:import-from #:screenshotbot/model/invite
                 #:invite
                 #:email-count
                 #:invite-code
@@ -18,7 +17,7 @@
                 #:invite-email
                 #:inviter
                 #:invites-with-email)
-  (:import-from #:./model/user
+  (:import-from #:screenshotbot/model/user
                 #:user-with-email
                 #:personalp
                 #:professionalp
@@ -28,25 +27,26 @@
   (:import-from #:bknr.datastore
                 #:with-transaction
                 #:store-object-with-id)
-  (:import-from #:./model/company
+  (:import-from #:screenshotbot/model/company
                 #:company-name
                 #:company-invites)
-  (:import-from #:./user-api
+  (:import-from #:screenshotbot/user-api
                 #:current-company
                 #:current-user)
-  (:import-from #:./form-errors
+  (:import-from #:screenshotbot/form-errors
                 #:with-form-errors)
-  (:import-from #:./ui/simple-card-page
+  (:import-from #:screenshotbot/ui/simple-card-page
                 #:simple-card-page)
-  (:import-from #:util
-                #:make-url)
-  (:import-from #:./installation
+  (:import-from #:util #:make-url)
+  (:import-from #:screenshotbot/installation
                 #:mailer
                 #:installation)
-  (:import-from #:./mailer
+  (:import-from #:screenshotbot/mailer
                 #:send-mail)
-  (:export #:invite-page
-           #:render-invite-page))
+  (:export
+   #:invite-page
+   #:render-invite-page))
+(in-package :screenshotbot/invite)
 
 (markup:enable-reader)
 

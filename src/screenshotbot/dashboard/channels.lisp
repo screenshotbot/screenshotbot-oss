@@ -4,19 +4,19 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/dashboard/channels
-    (:use #:cl
-          #:alexandria
-          #:../template
-          #:../user-api
-          #:../taskie
-          #:nibble
-          #:../ui)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/dashboard/channels
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/template
+        #:screenshotbot/user-api
+        #:screenshotbot/taskie
+        #:nibble
+        #:screenshotbot/ui)
+  (:import-from #:screenshotbot/server
                 #:with-login
                 #:defhandler)
-  (:import-from #:markup
-                #:deftag))
+  (:import-from #:markup #:deftag))
+(in-package :screenshotbot/dashboard/channels)
 
 (markup:enable-reader)
 

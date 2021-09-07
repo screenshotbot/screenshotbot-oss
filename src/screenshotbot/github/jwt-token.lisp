@@ -4,13 +4,14 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/github/jwt-token
-    (:use #:cl
-          #:alexandria)
-  (:import-from #:../server
+(uiop/package:define-package :screenshotbot/github/jwt-token
+    (:use #:cl #:alexandria)
+  (:import-from #:screenshotbot/server
                 #:*root*)
-  (:export #:github-request
-           #:github-create-jwt-token))
+  (:export
+   #:github-request
+   #:github-create-jwt-token))
+(in-package :screenshotbot/github/jwt-token)
 
 
 (defun to-unix-time (time)

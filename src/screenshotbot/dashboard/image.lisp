@@ -4,14 +4,14 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/dashboard/image
-    (:use #:cl
-          #:alexandria
-          #:../model/image)
-  (:import-from #:../server
+(uiop:define-package :screenshotbot/dashboard/image
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/model/image)
+  (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:util
-                #:find-by-oid))
+  (:import-from #:util #:find-by-oid))
+(in-package :screenshotbot/dashboard/image)
 
 
 (defhandler (image-blob-get :uri "/image/blob/:oid/default.png") (oid)

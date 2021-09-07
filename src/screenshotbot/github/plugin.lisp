@@ -4,19 +4,20 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/github/plugin
-    (:use #:cl
-          #:alexandria)
-  (:import-from #:../plugin
+(uiop:define-package :screenshotbot/github/plugin
+  (:use #:cl #:alexandria)
+  (:import-from #:screenshotbot/plugin
                 #:plugin
                 #:plugin-parse-repo)
-  (:import-from #:../model/recorder-run
-                ;; todo: separate these two
+  (:import-from #:screenshotbot/model/recorder-run
                 #:github-repo)
-  (:export #:github-plugin
-           #:github-repo
-           #:app-id
-           #:private-key))
+  (:export
+   #:github-plugin
+   ;; todo: separate these to
+   #:github-repo
+   #:app-id
+   #:private-key))
+(in-package :screenshotbot/github/plugin)
 
 (defclass github-plugin (plugin)
   ((app-id :initarg :app-id

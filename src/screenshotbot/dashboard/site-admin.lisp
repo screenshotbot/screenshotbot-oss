@@ -1,22 +1,27 @@
-(pkg:define-package :screenshotbot/dashboard/site-admin
-    (:use #:cl
-          #:alexandria
-          #:nibble)
-  (:import-from #:../template
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+(uiop:define-package :screenshotbot/dashboard/site-admin
+  (:use #:cl #:alexandria #:nibble)
+  (:import-from #:screenshotbot/template
                 #:app-template)
-  (:import-from #:../model/user
+  (:import-from #:screenshotbot/model/user
                 #:adminp)
-  (:import-from #:../user-api
+  (:import-from #:screenshotbot/user-api
                 #:current-user)
-  (:import-from #:../server
+  (:import-from #:screenshotbot/server
                 #:defhandler
                 #:with-login)
   (:import-from #:bknr.datastore
                 #:with-transaction)
-  (:import-from #:../model/core
+  (:import-from #:screenshotbot/model/core
                 #:generate-api-secret)
-  (:import-from #:../ui
+  (:import-from #:screenshotbot/ui
                 #:simple-card-page))
+(in-package :screenshotbot/dashboard/site-admin)
 
 (markup:enable-reader)
 

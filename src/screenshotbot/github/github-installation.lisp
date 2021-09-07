@@ -4,18 +4,19 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/github/github-installation
-    (:use #:cl
-          #:alexandria)
+(uiop:define-package :screenshotbot/github/github-installation
+  (:use #:cl #:alexandria)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:unique-index
                 #:store-object)
-  (:import-from #:../model/company
+  (:import-from #:screenshotbot/model/company
                 #:installation-id)
-  (:export #:github-installation
-           #:github-installation-with-repo-name
-           #:installation-id))
+  (:export
+   #:github-installation
+   #:github-installation-with-repo-name
+   #:installation-id))
+(in-package :screenshotbot/github/github-installation)
 
 (defclass github-installation (store-object)
   ((repo-name

@@ -4,17 +4,17 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/github/marketplace
-    (:use #:cl
-          #:alexandria)
+(uiop:define-package :screenshotbot/github/marketplace
+  (:use #:cl #:alexandria)
   (:import-from #:bknr.datastore
                 #:persistent-class)
   (:import-from #:util
                 #:object-with-oid
                 #:oid)
-  (:import-from #:../server
+  (:import-from #:screenshotbot/server
                 #:defhandler)
   (:export #:github-marketplace-event))
+(in-package :screenshotbot/github/marketplace)
 
 
 
