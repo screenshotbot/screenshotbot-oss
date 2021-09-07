@@ -5,7 +5,8 @@
   (:import-from #:screenshotbot/secret
                 #:secret)
   (:export #:upload-fasl
-           #:upload-sdk))
+           #:upload-sdk
+           #:deploy-fasls-main))
 (in-package :screenshotbot-utils)
 
 (defun md5-hex (f)
@@ -51,3 +52,8 @@
                         :error-output :interactive))))
 
 ;; (upload-fasl 'asdf:compile-bundle-op :screenshotbot)
+
+
+(defun deploy-fasls-main (system)
+  (log:info "Uploading system: ~A" system)
+  (upload-fasl nil system))
