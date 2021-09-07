@@ -4,13 +4,12 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/artifacts
-    (:use #:cl
-          #:alexandria)
-  (:import-from #:./server
+(uiop:define-package :screenshotbot/artifacts
+  (:use #:cl #:alexandria)
+  (:import-from #:screenshotbot/server
                 #:*domain*
                 #:defhandler)
-  (:import-from #:./secret
+  (:import-from #:screenshotbot/secret
                 #:defsecret
                 #:secret)
   (:import-from #:util
@@ -24,6 +23,7 @@
            #:artifact-link
            #:md5-hex
            #:artifact))
+(in-package :screenshotbot/artifacts)
 
 (defclass artifact (blob)
   ((name :initarg :name

@@ -4,58 +4,59 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/model/company
-    (:use #:cl
-          #:alexandria
-          #:../user-api
-          #:../screenshot-api)
+(uiop:define-package :screenshotbot/model/company
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/user-api
+        #:screenshotbot/screenshot-api)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:unique-index
                 #:with-transaction
                 #:store-object)
-  ;; temporary hack, remove it: it should not be needed
-  (:import-from #:../task-integration-api
+  (:import-from #:screenshotbot/task-integration-api
                 #:enabledp)
   (:import-from #:util
                 #:find-by-oid
                 #:object-with-oid)
   (:import-from #:bknr.datastore
                 #:deftransaction)
-  (:export #:company
-           #:company-reports
-           #:github-config
-           #:find-image
-           #:access-token
-           #:image-cache
-           #:company-invites
-           #:company-channels
-           #:jira-config-url
-           #:jira-config-username
-           #:slack-config-channel
-           #:jira-config-password
-           #:enabledp
-           #:company
-           #:find-image-by-id
-           #:company-with-name
-           #:find-or-create-channel
-           #:verified-p
-           #:jira-config-project-id
-           #:github-config
-           #:installation-id
-           #:company-admins
-           #:jira-config
-           #:phabricator-config
-           #:all-companies
-           #:slack-config
-           #:phabricator-config-for-company
-           #:company-with-singletonp
-           #:singletonp
-           #:phabricator-url
-           #:conduit-api-key
-           #:default-slack-config
-           #:jira-config
-           #:add-company-run))
+  (:export
+   #:company
+   #:company-reports
+   #:github-config
+   #:find-image
+   #:access-token
+   #:image-cache
+   #:company-invites
+   #:company-channels
+   #:jira-config-url
+   #:jira-config-username
+   #:slack-config-channel
+   #:jira-config-password
+   #:enabledp
+   #:company
+   #:find-image-by-id
+   #:company-with-name
+   #:find-or-create-channel
+   #:verified-p
+   #:jira-config-project-id
+   #:github-config
+   #:installation-id
+   #:company-admins
+   #:jira-config
+   #:phabricator-config
+   #:all-companies
+   #:slack-config
+   #:phabricator-config-for-company
+   #:company-with-singletonp
+   #:singletonp
+   #:phabricator-url
+   #:conduit-api-key
+   #:default-slack-config
+   #:jira-config
+   #:add-company-run))
+(in-package :screenshotbot/model/company)
 
 (defclass company (object-with-oid)
   ((name

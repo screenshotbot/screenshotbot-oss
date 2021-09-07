@@ -4,17 +4,17 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/model/user
-    (:use #:cl
-          #:alexandria
-          #:../user-api
-          #:../notice-api
-          #:../api-key-api)
+(uiop:define-package :screenshotbot/model/user
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/user-api
+        #:screenshotbot/notice-api
+        #:screenshotbot/api-key-api)
   (:import-from #:bknr.datastore
                 #:store-object-id
                 #:with-transaction
                 #:persistent-class)
-  (:import-from #:../installation
+  (:import-from #:screenshotbot/installation
                 #:multi-org-feature
                 #:installation)
   (:import-from #:bknr.indices
@@ -22,48 +22,47 @@
   (:import-from #:util
                 #:make-secret-code
                 #:object-with-oid)
-  (:import-from #:./company
+  (:import-from #:screenshotbot/model/company
                 #:get-singleton-company
                 #:company)
-  (:import-from #:auth
-                #:password-hash)
+  (:import-from #:auth #:password-hash)
   (:import-from #:bknr.datastore
                 #:store-objects-with-class)
-  ;; classes
-  (:export #:user
-           #:email-confirmation-code
-           #:user-notice)
-  ;; Variables
+  (:export
+   #:user
+   #:email-confirmation-code
+   #:user-notice)
   (:export #:*current-api-key*)
-  ;;methods
-  (:export #:arnold
-           #:user-with-email
-           #:user-full-name
-           #:user-image-url
-           #:github-user
-           #:secret-code
-           #:professionalp
-           #:oauth-user-avatar
-           #:user-first-name
-           #:oauth-users
-           #:confirmation-confirmed-p
-           #:user-personal-company
-           #:oauth-user-full-name
-           #:user-notices
-           #:personalp
-           #:adminp
-           #:unaccepted-invites
-           #:user-companies
-           #:with-user-lock
-           #:user-email
-           #:finish-confirmation)
-  ;; slots, only for migrations
-  (:export #:companies
-           #:confirmed-p
-           #:email
-           #:email-confirmations
-           #:password-hash
-           #:notices))
+  (:export
+   #:arnold
+   #:user-with-email
+   #:user-full-name
+   #:user-image-url
+   #:github-user
+   #:secret-code
+   #:professionalp
+   #:oauth-user-avatar
+   #:user-first-name
+   #:oauth-users
+   #:confirmation-confirmed-p
+   #:user-personal-company
+   #:oauth-user-full-name
+   #:user-notices
+   #:personalp
+   #:adminp
+   #:unaccepted-invites
+   #:user-companies
+   #:with-user-lock
+   #:user-email
+   #:finish-confirmation)
+  (:export
+   #:companies
+   #:confirmed-p
+   #:email
+   #:email-confirmations
+   #:password-hash
+   #:notices))
+(in-package :screenshotbot/model/user)
 
 (defvar *current-api-key*)
 

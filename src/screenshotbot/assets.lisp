@@ -4,17 +4,19 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/assets
-    (:use #:cl
-          #:alexandria
-          #:./artifacts)
-  (:import-from #:./server
+(uiop:define-package :screenshotbot/assets
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/artifacts)
+  (:import-from #:screenshotbot/server
                 #:staging-p
                 #:defhandler)
-  (:export #:prepare-delivered-asset-map
-           #:define-css
-           #:define-js
-           #:append-asset-map))
+  (:export
+   #:prepare-delivered-asset-map
+   #:define-css
+   #:define-js
+   #:append-asset-map))
+(in-package :screenshotbot/assets)
 
 (named-readtables:in-readtable :interpol-syntax)
 

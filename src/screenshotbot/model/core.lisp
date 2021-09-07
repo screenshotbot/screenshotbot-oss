@@ -4,22 +4,22 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/model/core
-    (:use #:cl
-          #:alexandria
-          #:util)
-  (:import-from #:../user-api
+(uiop:define-package :screenshotbot/model/core
+  (:use #:cl #:alexandria #:util)
+  (:import-from #:screenshotbot/user-api
                 #:%created-at)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:with-transaction
                 #:store-object
                 #:deftransaction)
-  (:export #:has-created-at
-           #:ensure-slot-boundp
-           #:generate-api-key
-           #:generate-api-secret
-           #:%created-at))
+  (:export
+   #:has-created-at
+   #:ensure-slot-boundp
+   #:generate-api-key
+   #:generate-api-secret
+   #:%created-at))
+(in-package :screenshotbot/model/core)
 
 (defclass has-created-at (persistent-class)
   ())

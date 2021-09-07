@@ -4,11 +4,11 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/model/recorder-run
-    (:use #:cl
-          #:alexandria
-          #:./core
-          #:./view)
+(uiop:define-package :screenshotbot/model/recorder-run
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/model/core
+        #:screenshotbot/model/view)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:with-transaction
@@ -17,7 +17,7 @@
                 #:store-objects-with-class)
   (:import-from #:util
                 #:object-with-oid)
-  (:import-from #:../user-api
+  (:import-from #:screenshotbot/user-api
                 #:model-id
                 #:recorder-run-screenshots
                 #:recorder-run-channel
@@ -25,7 +25,7 @@
                 #:pull-request-url
                 #:recorder-run-commit
                 #:activep)
-  (:import-from #:./company
+  (:import-from #:screenshotbot/model/company
                 #:ensureslo)
   ;; classes
   (:export #:promotion-log
@@ -58,6 +58,7 @@
            #:create-github-issue-p
            #:recorder-run-screenshots
            #:master-branch))
+(in-package :screenshotbot/model/recorder-run)
 
 (defclass promotion-log (bknr.datastore:blob)
   ()

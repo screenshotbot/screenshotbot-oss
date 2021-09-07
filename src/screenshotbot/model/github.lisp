@@ -4,34 +4,35 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/model/github
-    (:use #:cl
-          #:../user-api
-          #:alexandria)
+(uiop:define-package :screenshotbot/model/github
+  (:use #:cl
+        #:screenshotbot/user-api
+        #:alexandria)
   (:import-from #:bknr.datastore
                 #:store-object
                 #:unique-index
                 #:store-object-id
                 #:persistent-class)
-  (:import-from #:./user
+  (:import-from #:screenshotbot/model/user
                 #:github-user
                 #:oauth-user-full-name
                 #:oauth-user-user
                 #:oauth-user-avatar
                 #:oauth-user-email)
-  ;; classes
-  (:export #:oauth-access-token
-           #:github-access-token
-           #:github-user)
-  ;; methods
-  (:export #:%find-github-user-by-id
-           #:oauth-user-email
-           #:oauth-user-full-name
-           #:oauth-user-avatar
-           #:oauth-user-user
-           #:github-login
-           #:known-emails
-           #:access-token-string))
+  (:export
+   #:oauth-access-token
+   #:github-access-token
+   #:github-user)
+  (:export
+   #:%find-github-user-by-id
+   #:oauth-user-email
+   #:oauth-user-full-name
+   #:oauth-user-avatar
+   #:oauth-user-user
+   #:github-login
+   #:known-emails
+   #:access-token-string))
+(in-package :screenshotbot/model/github)
 
 (defclass github-user (store-object)
   ((gh-user-id :type integer

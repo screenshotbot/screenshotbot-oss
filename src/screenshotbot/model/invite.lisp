@@ -4,27 +4,28 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/model/invite
-    (:use #:cl
-          #:alexandria
-          #:../notice-api)
-  (:import-from #:./company
+(uiop:define-package :screenshotbot/model/invite
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/notice-api)
+  (:import-from #:screenshotbot/model/company
                 #:company-invites
                 #:all-companies)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:store-object)
-  (:import-from #:util
-                #:make-secret-code)
-  (:export #:invite
-           #:all-invites
-           #:invites-with-email
-           #:invite-with-code
-           #:invite-company
-           #:invite-email
-           #:inviter
-           #:invite-code
-           #:email-count))
+  (:import-from #:util #:make-secret-code)
+  (:export
+   #:invite
+   #:all-invites
+   #:invites-with-email
+   #:invite-with-code
+   #:invite-company
+   #:invite-email
+   #:inviter
+   #:invite-code
+   #:email-count))
+(in-package :screenshotbot/model/invite)
 
 (defclass invite (store-object)
   ((code :initform (make-secret-code)
