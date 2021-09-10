@@ -202,6 +202,7 @@
                              (:file "test-acceptable")))
                (:module "github"
                 :components ((:file "test-jwt-token")
+                             (:file "test-plugin")
                              (:file "test-access-checks")
                              (:file "test-pull-request-promoter")
                              (:file "test-webhook")))

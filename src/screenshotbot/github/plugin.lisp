@@ -35,7 +35,7 @@
       (lock (bt:make-lock)))
   (defun make-github-repo (&key link company)
     (bt:with-lock-held (lock)
-      (symbol-macrolet ((place (assoc-value cache link :test 'equal)))
+      (symbol-macrolet ((place (assoc-value cache (cons link company) :test 'equal)))
         (or place
             (setf place (make-instance 'github-repo :link link
                                                     :company company)))))))
