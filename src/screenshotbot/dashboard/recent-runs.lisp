@@ -56,7 +56,16 @@
          Run on <a href= (pull-request-url run)>Pull Request</a>
          </span>)
         (t
-         "Unpromoted run")))
+         <span>
+           Unpromoted run
+           ,(when-let ((repo (channel-repo (recorder-run-channel run)))
+                       (hash (recorder-run-commit run)))
+              <span>
+                on
+                <commit repo= repo hash=hash />
+              </span>)
+         </span>
+)))
 
     (taskie-timestamp :prefix "" :timestamp (created-at run))))
 
