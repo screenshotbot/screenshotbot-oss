@@ -39,6 +39,7 @@
   (:metaclass persistent-class))
 
 (defmethod find-commit-graph ((company company) (url string))
+  (log:info "Finding commit graph for company ~a and repo ~a" company url)
   (loop for commit-graph in (store-objects-with-class 'commit-graph)
         if (and
             (eql (company commit-graph) company)

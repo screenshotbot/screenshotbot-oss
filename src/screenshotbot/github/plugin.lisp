@@ -43,6 +43,7 @@
 (defmethod plugin-parse-repo ((plugin github-plugin)
                               company
                               repo-str)
+  (log:debug "Parsing repo for company ~a" company)
   (when (str:containsp "github" repo-str)
     (make-github-repo :link repo-str
                       :company company)))

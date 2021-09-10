@@ -262,7 +262,7 @@
                       (return t))
                      (t
                       ;; nothing to do. wait on the CV and try again
-                      (log:info :promote "Waiting for commit `~a` to be available" commit)
+                      (log:info :promote "Waiting for commit `~a` to be available (best effort, will not fail if it's unavailable)" commit)
                       (bt:condition-wait (channel-cv channel)
                                          (channel-lock channel)
                                          :timeout 15))))))

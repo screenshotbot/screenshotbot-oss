@@ -41,10 +41,14 @@
   ((digraph :initform (make-instance 'graph:digraph)
             :accessor digraph)
    (commits :initform (make-hash-table :test 'equal)
-            :accessor commit-map)))
+            :accessor commit-map)
+   (pathname :initarg :pathname
+             :documentation "For debugging only")))
 
 (defmethod get-commit ((dag dag) (sha string))
-  (gethash (commit-node-id sha) (commit-map dag)))
+  (let ((id (commit-node-id sha)))
+    (log:info "Commit id for ~a is ~a" sha id)
+    (gethash id (commit-map dag))))
 
 (defmethod bfs-search ((dag dag) start end)
   (let ((seen (make-hash-table :test 'equal))
@@ -135,7 +139,10 @@ tree. This version uses the Kahn's algorithm instead of DFS"
   (finish-output stream))
 
 (defun read-from-stream (stream)
-  (let ((dag (make-instance 'dag)))
+  (let ((dag (make-instance 'dag :pathname (or
+                                            (ignore-errors
+                                             (pathname stream))
+                                            "Stream not pointing to file"))))
     (let ((data (json:decode-json stream)))
       (loop for commit in (assoc-value data :commits) do
         (add-commit dag
