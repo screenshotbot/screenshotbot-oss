@@ -31,6 +31,11 @@
    #:%maybe-send-tasks))
 (in-package :screenshotbot/api/promote)
 
+(defvar *disable-ancestor-checks-p* nil
+  "If the previous commit is not in the current master branch, future
+  promotions will fail. Setting this to true will temporarily let you
+  fix the promotion.")
+
 #+lispworks
 (lw-ji:define-java-callers "com.tdrhq.Github"
   (%gh-get-user "getUsername"))
@@ -158,7 +163,9 @@
       (%channel-publicp channel))))
 
 (defun maybe-promote-run (run &rest args &key channel
-                                           (wait-timeout 2))
+                                           (wait-timeout (if *disable-ancestor-checks-p*
+                                                             0
+                                                             1)))
   (declare (type recorder-run run)
            (optimize (debug 3) (speed 0)))
   (unless channel
@@ -190,9 +197,9 @@
                                          previous-run
                                          (channel channel)
                                          branch)
-  (declare (debug 3))
+  (declare (optimize debug))
   (flet ((in-branch-p (commit sbranch)
-           (declare (debug 3))
+           (declare (optimize debug))
            (let ((branch-commit
                    (cond
                      ((equal branch sbranch)
@@ -213,7 +220,8 @@
        (log:info :promote "not promoting run because it's not production run"))
       ((not (recorder-run-branch-hash run))
        (log:error :promote "branch-hash not present in run"))
-      ((and previous-run
+      ((and (not *disable-ancestor-checks-p*)
+            previous-run
             (not (in-branch-p (recorder-run-commit previous-run)
                               branch)))
        (log:error :promote "The previous commit ~a is no longer in branch ~a"
@@ -231,7 +239,8 @@
             (string= (recorder-run-commit previous-run)
                      (recorder-run-commit run)))
        (log:info :promote "The current promoted run is already on the same commit"))
-      ((and previous-run
+      ((and (not *disable-ancestor-checks-p*)
+            previous-run
             (not (channel-ancestorp
                   channel
                   (recorder-run-commit previous-run)
