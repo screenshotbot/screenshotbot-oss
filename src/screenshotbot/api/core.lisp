@@ -34,6 +34,9 @@
            (if testp
                *current-api-key* ;; only for tests
                (%find-api-key  api-key))))
+      (unless *current-api-key*
+        (error 'api-error
+                :message "No such API key"))
       (unless (current-user)
        (error 'api-error
               :message (format nil "API key appears to be invalid or non-existant, got: ~a" api-key)))
