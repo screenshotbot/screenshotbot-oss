@@ -380,6 +380,8 @@
   (uiop:chdir path)
   (setf *default-pathname-defaults* (pathname path)))
 
+
+
 (defun %main (&optional (argv #+lispworks system:*line-arguments-list*
                               #-lispworks nil))
   (log:info "Screenshotbot SDK v2.3.3")
@@ -391,23 +393,30 @@
                   (chdir-for-bin ,(uiop:getcwd))
                   (main ',argv)))
     (cond
-     (unrecognized
-      (format t "Unrecognized arguments: ~a~%" (Str:join " " unrecognized))
-      (help)
-      (uiop:quit 1))
-     (*help*
-      (help))
-     (*ios-multi-dir*
-      (parse-org-defaults)
-      (let ((*directory* (namestring (absolute-pathname *directory*))))
-        (loop for directory in (recursive-directories *directory*)
-              do
-              (upload-ios-subdirectory directory))))
-     (t
-      (parse-org-defaults)
-      (prepare-directory
-       (lambda (directory)
-         (single-directory-run directory :channel *channel*)))))))
+      (unrecognized
+       (format t "Unrecognized arguments: ~a~%" (Str:join " " unrecognized))
+       (help)
+       (uiop:quit 1))
+      (*help*
+       (help))
+      (*ios-multi-dir*
+       (parse-org-defaults)
+       (let ((*directory* (namestring (absolute-pathname *directory*))))
+         (loop for directory in (recursive-directories *directory*)
+               do
+                  (upload-ios-subdirectory directory))))
+      (t
+       (parse-org-defaults)
+       (prepare-directory
+        (lambda (directory)
+          (single-directory-run directory :channel *channel*)))))))
 
 (defun main (&rest args)
-    (apply '%main args))
+  (handler-bind ((warning (lambda (warning)
+                            (let ((msg (princ-to-string warning)))
+                              ;; This warning is not very actionable
+                              ;; for end-users, so let's muffle it
+                              #+lispworks
+                              (when (str:containsp "output-wait is not implemented" msg)
+                                (muffle-warning warning))))))
+    (apply '%main args)))
