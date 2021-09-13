@@ -290,7 +290,7 @@
                                                    (image-comparison-nibble x s)))
                               (toggle-id (format nil "toggle-id-~a" (incf next-id)))
                               (modal-label (format nil "~a-modal-label" toggle-id)))
-                         <div>
+                         <div class= "mt-4" >
                            <h4 class= "d-inline-block" >
                              ,(screenshot-name s)
                            </h4> ,(progn "|")
