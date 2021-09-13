@@ -397,7 +397,7 @@
                               #-lispworks nil))
   (log4cl:reset-logging-configuration)
   (log:config :info)
-  (log:info "Screenshotbot SDK v2.3.3")
+  (log:info "Screenshotbot SDK v2.3.4")
   (let ((unrecognized   (parse-command-line (cdr (command-line)))))
     (when *verbose*
       (log:config :debug))
