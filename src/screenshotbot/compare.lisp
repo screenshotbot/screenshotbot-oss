@@ -331,7 +331,7 @@
          </div>
        </div>
 
-       <div class= "row">
+       <div class= "row mt-4">
          <div class= "col-md-6">
 
            <div class= "card">
