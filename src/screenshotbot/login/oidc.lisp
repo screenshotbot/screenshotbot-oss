@@ -24,6 +24,10 @@
                 #:oauth-user-full-name
                 #:oauth-user-avatar
                 #:oauth-user-email)
+  (:import-from #:screenshotbot/login/common
+                #:after-create-user)
+  (:import-from #:screenshotbot/installation
+                #:installation)
   (:export
    #:client-id
    #:client-secret
@@ -130,6 +134,8 @@ user as used in Screenshotbot)"
     (ignore-errors
      (with-transaction (:set-user-email)
        (setf (user-email user) email)))
+
+    (after-create-user (installation) user)
     user))
 
 

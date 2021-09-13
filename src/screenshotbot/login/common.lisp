@@ -34,7 +34,8 @@
    #:oauth-logo-svg
    #:oauth-signin-link
    #:oauth-signup-link
-   #:abstract-oauth-provider))
+   #:abstract-oauth-provider
+   #:after-create-user))
 (in-package :screenshotbot/login/common)
 
 (markup:enable-reader)
@@ -55,6 +56,11 @@
         <span class= "ms-1">Sign In with ,(oauth-name auth-provider) </span>
       </a>
     </div>)
+
+(defgeneric after-create-user (installation user)
+  (:method (installation user)
+    (declare (ignore installation user))
+    (values)))
 
 (defmethod auth-provider-signup-form ((auth-provider abstract-oauth-provider)
                                       invite-code

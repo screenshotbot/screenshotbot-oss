@@ -36,6 +36,8 @@
                 #:find-by-oid)
   (:import-from #:bknr.datastore
                 #:with-transaction)
+  (:import-from #:screenshotbot/login/common
+                #:after-create-user)
   (:export
    #:signup-get
    #:signup-get-page
@@ -204,7 +206,9 @@
            ;; called by OAuth flows
            (if-let ((company (user-personal-company user)))
              (ignore-and-log-errors ()
-               (populate-company company))))
+               (populate-company company)))
+           (after-create-user (installation) user))
+
          (cond
            ((string= (string-upcase plan) (string :professional))
             (hex:safe-redirect "/upgrade"))
