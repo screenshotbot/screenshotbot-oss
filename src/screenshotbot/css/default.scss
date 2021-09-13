@@ -25,6 +25,7 @@ $section-blue: #3C42A7;
 
 .change-image {
     max-width: 40%;
+    max-height: 90vh;
 }
 
 .change-arrow {
@@ -55,7 +56,6 @@ $section-blue: #3C42A7;
     // make change image look downwards
     .change-image {
         display: inline-block;
-        width: 95%;
         max-width: 95%;
     }
 
