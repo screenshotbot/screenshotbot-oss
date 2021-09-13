@@ -39,6 +39,8 @@
                 #:cleanp
                 #:repo-link
                 #:merge-base)
+  (:import-from #:uiop
+                #:getenv)
   (:export
    #:main))
 
@@ -283,7 +285,14 @@
   (setf *branch* (or *main-branch* *branch*))
   (unless *pull-request*
     (setf *pull-request*
-          (uiop:getenv "CIRCLE_PULL_REQUEST")))
+          (or
+           (uiop:getenv "CIRCLE_PULL_REQUEST")
+           (ignore-errors ;; temporary, until we're sure this works correctly
+            (if-let ((repo-url (getenv "BITRISEIO_PULL_REQUEST_REPOSITORY_URL"))
+                     (pull-id (getenv "BITRISE_PULL_REQUEST")))
+              (format nil "~a/pulls/~a"
+                      repo-url
+                      pull-id))))))
   (unless *branch*
     (setf *branch*
           (or
@@ -294,7 +303,8 @@
   (setf *build-url*
         (or *build-url*
             (uiop:getenv "BUILD_URL") ;; jenkins
-            (uiop:getenv "CIRCLE_BUILD_URL"))))
+            (uiop:getenv "CIRCLE_BUILD_URL")
+            (uiop:getenv "BITRISE_BUILD_URL"))))
 
 (defun parse-org-defaults ()
   (parse-build-url)
