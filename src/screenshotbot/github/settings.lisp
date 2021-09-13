@@ -48,9 +48,11 @@
       </div>
 
       <div class= "card-body">
-        <p>In order to enable Build Statuses (called GitHub Checks) we need you to install the Screenshotbot Checks app to your GitHub organization.</p>
+        <p>In order to enable Build Statuses (called GitHub Checks) you will need to install the Screenshotbot Checks app to your GitHub organization.</p>
 
-        <p>Please contact us if you are using an Enterprise on-prem GitHub, and we can enable this for you.</p>
+        <p>
+          This app does <b>not</b> get permissions to access to your repositories, it only needs write access to the Checks API.
+        </p>
       </div>
 
       <div class= "card-footer">
