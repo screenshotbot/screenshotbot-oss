@@ -432,4 +432,7 @@
                               #+lispworks
                               (when (str:containsp "output-wait is not implemented" msg)
                                 (muffle-warning warning))))))
-    (apply '%main args)))
+    (apply '%main args))
+  #-sbcl
+  (log4cl::exit-hook)
+  (uiop:quit 0))
