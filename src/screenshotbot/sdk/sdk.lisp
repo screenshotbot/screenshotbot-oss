@@ -101,7 +101,7 @@
                                         :element-type 'flexi-streams:octet)
             (finish-output tmp-stream)
             (file-position tmp-stream 0)
-            (log:info "Got file length: ~a" (file-length tmp-stream))
+            (log:debug "Got file length: ~a" (file-length tmp-stream))
             (dex:put upload-url
                      :headers `((:content-type . "application/octet-stream")
                                 ;; There a bug in dexador that prevents the
