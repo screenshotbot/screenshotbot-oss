@@ -24,7 +24,7 @@ $section-blue: #3C42A7;
 @import "bootstrap-icons";
 
 .change-image {
-    max-width: 40%;
+    max-width: 40vw;
     max-height: 90vh;
 }
 
@@ -56,7 +56,7 @@ $section-blue: #3C42A7;
     // make change image look downwards
     .change-image {
         display: inline-block;
-        max-width: 95%;
+        max-width: 95vw;
     }
 
     .change-arrow {

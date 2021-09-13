@@ -363,7 +363,7 @@
        </markup:merge-tag>))))
 
 (Deftag screenshot-box (&key screenshot)
-  <div>
+  <div class= "mt-4" >
     <h4>,(screenshot-name screenshot)</h4>
-    <img class= "screenshot-box-image" src= (image-public-url (screenshot-image screenshot)) />
+    <img class= "change-image" src= (image-public-url (screenshot-image screenshot)) />
   </div>)
