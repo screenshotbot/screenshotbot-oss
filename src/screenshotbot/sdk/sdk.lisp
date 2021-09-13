@@ -87,6 +87,7 @@
                                              parameters)))
     (let ((result (json:decode-json stream)))
       (awhen (assoc-value result :error)
+        (log:error "API error: ~a" it)
         (error 'api-error :message it))
       (assoc-value result :response))))
 
