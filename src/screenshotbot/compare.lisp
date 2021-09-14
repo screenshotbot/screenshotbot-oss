@@ -269,6 +269,7 @@
            <page-nav-dropdown title= "Views" >
                <a href=all-comparisons >All Pixel Comparisons</a>
            </page-nav-dropdown>
+
          </div>
          <p class= "mt-2" >
            This commit: <commit repo= (Channel-repo (recorder-run-channel run)) hash=(recorder-run-commit run) /> <br />
@@ -290,15 +291,23 @@
                                                    (image-comparison-nibble x s)))
                               (toggle-id (format nil "toggle-id-~a" (incf next-id)))
                               (modal-label (format nil "~a-modal-label" toggle-id)))
+
                          <div class= "mt-4" >
-                           <h4 class= "d-inline-block" >
-                             ,(screenshot-name s)
-                           </h4> ,(progn "|")
-                         <a href= "#" data-bs-toggle= "modal" data-bs-target= (format nil "#~a" toggle-id) >Compare</a>
-                         ,(progn "|")
+                           <ul class= "compare-image-header" >
+                             <li>
+                               <h4 class= "d-inline-block" >
+                                 ,(screenshot-name s)
+                               </h4>
+                             </li>
+                             <li>
+                               <a href= "#" data-bs-toggle= "modal" data-bs-target= (format nil "#~a" toggle-id) >Compare</a>
+                             </li>
+                             <li>
                          <a href= (nibble () (mask-editor (recorder-run-channel run) s
                             :redirect script-name))
                             >Edit Masks</a>
+                             </li>
+                           </ul>
                            <change-image-row before-image=(image-public-url (screenshot-image x))
                                              after-image=(image-public-url (screenshot-image s))
                                              />

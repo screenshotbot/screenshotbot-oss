@@ -23,6 +23,30 @@ $section-blue: #3C42A7;
 @import "sidebar";
 @import "bootstrap-icons";
 
+ul.compare-image-header {
+    list-style:none;
+    padding-left: 0;
+    li {
+        display: inline-block;
+
+        &::after {
+            content: "|";
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        &:first-child::after {
+            /* right after the name of the image */
+            display:none;
+        }
+
+        &:last-child::after {
+            display:none;
+        }
+    }
+
+}
+
 .change-image {
     max-width: 30vw;
     max-height: 90vh;
