@@ -51,7 +51,9 @@
    #:rect-as-list
    #:mask-rect-width
    #:mask-rect-top
-   #:mask-rect-height))
+   #:mask-rect-height)
+  (:export
+   #:find-unequal-pixels))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -178,7 +180,30 @@
 
 (defun read-image-with-opticl (img)
   (with-open-stream (remote (open-image-stream img))
-   (opticl:read-png-stream remote)))
+    (opticl:read-png-stream remote)))
+
+(defun find-unequal-pixels (img1 img2)
+  (let ((arr1 (read-image-with-opticl img1))
+        (arr2 (read-image-with-opticl img2))
+        (res nil))
+    (map-unequal-pixels arr1 arr2
+                        (lambda (i j)
+                          (push (cons i j) res)))
+    res))
+
+(defun map-unequal-pixels (arr1 arr2 fn)
+  (let ((dim (array-dimensions arr1)))
+    (dotimes (i (elt dim 0))
+      (dotimes (j (elt dim 1))
+        (dotimes (k (elt dim 2))
+          (unless (equalp (aref arr1 i j k)
+                          (aref arr2 i j k))
+            #+nil
+            (log:info "Pixel (~a,~a, ~a) doesn't match, got ~s and ~s"
+                      i j k
+                      (aref arr1 i j k)
+                      (aref arr2 i j k))
+            (funcall fn i j)))))))
 
 
 (defun images-equal-by-content-p (img1 img2 &key (slow nil)
@@ -195,18 +220,11 @@
          (t
           (block check
             (let ((resp t))
-             (let ((dim (array-dimensions arr1)))
-               (dotimes (i (elt dim 0))
-                 (dotimes (j (elt dim 1))
-                   (dotimes (k (elt dim 2))
-                     (unless (equalp (aref arr1 i j k)
-                                     (aref arr2 i j k))
-                       (log:info "Pixel (~a,~a, ~a) doesn't match, got ~s and ~s"
-                                 i j k
-                                 (aref arr1 i j k)
-                                 (aref arr2 i j k))
-                       (Setf resp nil)))))
-               resp)))))))
+              (map-unequal-pixels arr1 arr2
+                                  (lambda (i j)
+                                    (declare (ignore i j))
+                                    (Setf resp nil)))
+              resp))))))
     (t
      (let ((hash1 (perceptual-hash img1 :masks masks))
            (hash2 (perceptual-hash img2 :masks masks)))

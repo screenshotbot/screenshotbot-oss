@@ -31,6 +31,8 @@
                 #:mask-editor
                 #:filter-selector
                 #:commit)
+  (:import-from #:screenshotbot/model/image
+                #:find-unequal-pixels)
   (:export
    #:diff-report
    #:render-acceptable
@@ -214,6 +216,23 @@
                             (setf data (apply 'render-diff-report args)))))))
     <div class= "async-fetch spinner-border" role= "status" data-check-nibble=data-check-nibble />))
 
+
+(defun random-zoom-to (left right)
+  (setf (hunchentoot:header-out :content-type)  "application/json")
+  (json:encode-json-to-string
+
+   (let ((bad-pixels (find-unequal-pixels
+                      (screenshot-image left)
+                      (screenshot-image right))))
+     ;; Technically this can happen in real life, so we should handle
+     ;; it more gracefully, but for now:
+     (assert bad-pixels)
+
+     (let ((px
+             (car (random-sample:random-sample bad-pixels 1))))
+      `((:y . ,(car px))
+        (:x . ,(cdr px)))))))
+
 (defun all-comparisons-page (report)
   <app-template>
     <a href= "javascript:window.history.back()">Back to Report</a>
@@ -288,7 +307,9 @@
                               (x X)
                               (compare-nibble (nibble ()
                                                 (log:info "Comparing: ~s, ~s" x s)
-                                                   (image-comparison-nibble x s)))
+                                                (image-comparison-nibble x s)))
+                              (zoom-to-nibble (nibble ()
+                                                (random-zoom-to x s)))
                               (toggle-id (format nil "toggle-id-~a" (incf next-id)))
                               (modal-label (format nil "~a-modal-label" toggle-id)))
 
@@ -326,10 +347,14 @@
                                    </button>
                                  </div>
                                  <div class="modal-body">
-                                   <:img data-src= compare-nibble class= "bg-primary image-comparison-modal-image" alt= "Image Difference" />
+                                   <:img data-src= compare-nibble
+                                         data-zoom-to=zoom-to-nibble
+                                         class= "bg-primary image-comparison-modal-image" alt= "Image Difference" />
                                  </div>
                                  <div class="modal-footer">
-                                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                   <button type="button" class="btn btn-secondary zoom-to-change">Zoom to change</button>
+
+                                   <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
                                  </div>
                                </div>
                              </div>
