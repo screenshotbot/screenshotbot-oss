@@ -49,20 +49,31 @@ function prepareReportJs () {
         });
     });
 
+    function resetImageZoom(img) {
+        img.stop();
+        img.css("background-image", "none");
+        img.css("object-position", "0px 0px");
+        img.css("background-size", "100%");
+        img.css("background-position", "0 0");
+    }
+
     $(".image-comparison-modal").on('show.bs.modal', function () {
         var img = $(".image-comparison-modal-image", this);
         var zoomToChange = $(".zoom-to-change", this);
 
         var src = img.data("src");
+
+        resetImageZoom(img);
+
         img.attr("src", src);
         img.css("background-image", "url(\"" + src + '")');
         img.css("background-repeat", "no-repeat");
+
 
         zoomToChange.click(function () {
             // move the image out of the way
             img.css("object-position", "10000px 10000px");
             img.css("background-size", "100%");
-
 
             $.ajax({
                 url: img.data("zoom-to"),
