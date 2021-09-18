@@ -185,10 +185,12 @@
 (defun find-unequal-pixels (img1 img2)
   (let ((arr1 (read-image-with-opticl img1))
         (arr2 (read-image-with-opticl img2))
-        (res nil))
+        (res (make-array 0 :adjustable t
+                         :fill-pointer t)))
     (map-unequal-pixels arr1 arr2
                         (lambda (i j)
-                          (push (cons i j) res)))
+                          (vector-push-extend (cons i j)
+                                              res)))
     res))
 
 (defun map-unequal-pixels (arr1 arr2 fn)
