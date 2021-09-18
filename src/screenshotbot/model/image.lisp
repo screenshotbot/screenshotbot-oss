@@ -189,17 +189,23 @@
                          :fill-pointer t)))
     (map-unequal-pixels arr1 arr2
                         (lambda (i j)
+                          (declare (type integer i j)
+                                   (optimize (speed 3) (debug 0)))
                           (vector-push-extend (cons i j)
                                               res)))
     res))
 
 (defun map-unequal-pixels (arr1 arr2 fn)
+  (declare (type (function (integer integer) nil)
+                 fn)
+           (type (array integer 3) arr1 arr2)
+           (optimize (speed 3) (debug 0)))
   (let ((dim (array-dimensions arr1)))
     (dotimes (i (elt dim 0))
       (dotimes (j (elt dim 1))
         (dotimes (k (elt dim 2))
-          (unless (equalp (aref arr1 i j k)
-                          (aref arr2 i j k))
+          (unless (= (aref arr1 i j k)
+                     (aref arr2 i j k))
             #+nil
             (log:info "Pixel (~a,~a, ~a) doesn't match, got ~s and ~s"
                       i j k
