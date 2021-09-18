@@ -75,6 +75,8 @@ function prepareReportJs () {
             img.css("object-position", "10000px 10000px");
             img.css("background-size", "100%");
 
+            zoomToChange.prop("disabled", true);
+
             $.ajax({
                 url: img.data("zoom-to"),
                 success: function(data) {
@@ -128,8 +130,15 @@ function prepareReportJs () {
                         },
                         {
                             duration: 2000,
+                            complete: function() {
+                                zoomToChange.prop("disabled", false);
+                            }
                         }
                     );
+                },
+                error: function () {
+                    alert("Something went wrong");
+                    zoomToChange.prop("disabled", false);
                 }
             });
         });
