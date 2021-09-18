@@ -224,12 +224,8 @@
    (let ((bad-pixels (find-unequal-pixels
                       (screenshot-image left)
                       (screenshot-image right))))
-     ;; Technically this can happen in real life, so we should handle
-     ;; it more gracefully, but for now:
-     (assert bad-pixels)
-
      (let ((px
-             (car (random-sample:random-sample bad-pixels 1))))
+             (elt bad-pixels (random (length bad-pixels)))))
       `((:y . ,(car px))
         (:x . ,(cdr px)))))))
 
