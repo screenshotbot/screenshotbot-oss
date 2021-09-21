@@ -119,11 +119,11 @@ user as used in Screenshotbot)"
     (setf (oauth-user-email oauth-user) email)
     (setf (oauth-user-full-name oauth-user) full-name)
     (setf (oauth-user-avatar oauth-user) avatar))
-  (let ((user (or
-               (oauth-user-user oauth-user)
-               (user-with-email email)
-               (make-instance 'user
-                              :email email))))
+  (multiple-value-bind (user first-time-p)
+    (or
+     (oauth-user-user oauth-user)
+     (user-with-email email)
+     (values (make-instance 'user :email email) t))
     (with-transaction (:ensure-two-way-mapping)
       ;; ensure two way mapping.
       (pushnew oauth-user (oauth-users user))
@@ -135,7 +135,8 @@ user as used in Screenshotbot)"
      (with-transaction (:set-user-email)
        (setf (user-email user) email)))
 
-    (after-create-user (installation) user)
+    (when first-time-p
+     (after-create-user (installation) user))
     user))
 
 
