@@ -45,16 +45,21 @@ diffusion.repository.search."
   ;; todo: paging. Currently this is limited to phabricator instances
   ;; with less than 100 repos.
   (bt:with-lock-held (*lock*)
-   (or
-    (assoc-value *cache* company)
-    (setf (assoc-value *cache* company)
-          (assoc-value
-           (assoc-value
-            (call-conduit  phab
-                           "diffusion.repository.search"
-                           `())
-            :result)
-           :data)))))
+    (let ((assoc (assoc company *cache*)))
+      (if assoc
+          (cdr assoc)
+          (setf (assoc-value *cache* company)
+                ;; Ignore errors, because the Phabricator instance
+                ;; might be down. TODO: if this happens we should
+                ;; reset the cache at some point
+                (ignore-errors
+                 (assoc-value
+                  (assoc-value
+                   (call-conduit  phab
+                                  "diffusion.repository.search"
+                                  `())
+                   :result)
+                  :data)))))))
 
 (cl-cron:make-cron-job (lambda ()
                          (bt:with-lock-held (*lock*)
@@ -88,17 +93,17 @@ out the callsign of the repo."
          (conduit-api-key (conduit-api-key config)))
     (when (and phabricator-url
                conduit-api-key)
-     (let* ((phab-instance (make-instance 'phab-instance
+      (let* ((phab-instance (make-instance 'phab-instance
                                            :url phabricator-url
                                            :api-key conduit-api-key))
-            (repos (get-repos company phab-instance)))
-       (multiple-value-bind (res parts)
-           (cl-ppcre:scan-to-strings "/([^/]*)[.]git$" (repo-link repo))
-         (declare (ignore res))
-         (cond
-           (res
-            (let ((callsign (get-callsign repos (elt parts 0))))
-              (if callsign
-                  (format nil "~a/r~a~a" phabricator-url callsign hash)
-                  "#")))
-           (t "#")))))))
+             (repos (get-repos company phab-instance)))
+        (multiple-value-bind (res parts)
+            (cl-ppcre:scan-to-strings "/([^/]*)[.]git$" (repo-link repo))
+          (declare (ignore res))
+          (cond
+            (res
+             (let ((callsign (get-callsign repos (elt parts 0))))
+               (if callsign
+                   (format nil "~a/r~a~a" phabricator-url callsign hash)
+                   "#")))
+            (t "#")))))))
