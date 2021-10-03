@@ -49,6 +49,12 @@
 
 (markup:enable-reader)
 
+(defclass change ()
+  ((before :initarg :before
+           :reader before)
+   (after :initarg :after
+          :reader after)))
+
 (defclass diff-report ()
   ((added :initarg :added
           :reader diff-report-added
@@ -59,8 +65,7 @@
    (changes :initarg :changes
             :initform nil
             :accessor diff-report-changes
-            :documentation "alist of all the SCREENSHOT of old to new "
-            )))
+            :documentation "List of all CHANGEs")))
 
 (deftag render-acceptable (&key acceptable)
   (let ((accept (nibble (redirect)
@@ -148,7 +153,10 @@
                                                                  (Screenshot-image x)
                                                                  ;; always use the new mask
                                                                  (screenshot-masks x))))
-                                                  collect (cons s1 x))))))
+                                                  collect
+                                                  (make-instance 'change
+                                                                 :before s1
+                                                                 :after x))))))
     (retry-make-diff-report ()
       (make-diff-report run to))))
 
@@ -271,7 +279,7 @@
        ,(when acceptable
           <render-acceptable acceptable=acceptable />)
            ,(unless disable-filters
-              (let ((all-runs (append added deleted (mapcar 'car changes) (mapcar 'cdr changes))))
+              (let ((all-runs (append added deleted (mapcar 'before changes) (mapcar 'after changes))))
                 <markup:merge-tag>
                   <filter-selector default-title= "All Languages"
                                    prefix= "Language"
@@ -302,7 +310,9 @@
          <div class= "card-body">
            <p>
              <h1>Changes</h1>
-             ,@(loop for (s . x) in changes
+       ,@(loop for change in changes
+               for s = (before change)
+               for x = (after change)
                      if (or (filteredp s) (filteredp x))
                        collect
                        (let* ((s s)
