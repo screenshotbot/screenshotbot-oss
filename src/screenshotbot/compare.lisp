@@ -51,8 +51,10 @@
 
 (defclass diff-report ()
   ((added :initarg :added
+          :reader diff-report-added
           :initform nil)
    (deleted :initarg :deleted
+            :reader diff-report-deleted
             :initform nil)
    (changes :initarg :changes
             :initform nil
@@ -109,7 +111,9 @@
   </div>))
 
 (defun diff-report-title (diff-report)
-  (with-slots (added deleted changes) diff-report
+  (let ((added (diff-report-added diff-report))
+        (deleted (diff-report-deleted diff-report))
+        (changes (diff-report-changes diff-report)))
     (str:join ", "
               (remove-if 'null
                (list
@@ -121,9 +125,10 @@
                   (format nil "~d added" (length added))))))))
 
 (defun diff-report-empty-p (diff-report)
-  (with-slots (added deleted changes) diff-report
-    (not
-     (or added deleted changes))))
+  (not
+   (or (diff-report-added diff-report)
+       (diff-report-deleted diff-report)
+       (diff-report-changes diff-report))))
 
 (defun make-diff-report (run to)
   (restart-case
@@ -232,7 +237,7 @@
 (defun all-comparisons-page (report)
   <app-template>
     <a href= "javascript:window.history.back()">Back to Report</a>
-    ,@ (with-slots (changes) report
+    ,@ (let ((changes (diff-report-changes report)))
          (loop for (before . after) in changes
                for comparison-image = (util:copying (before after)
                                         (nibble ()
@@ -256,10 +261,11 @@
    (let* ((report (make-diff-report run to))
           (next-id 0)
           (script-name (hunchentoot:script-name*))
-          (github-repo (github-repo (recorder-run-channel run)))
           (all-comparisons (nibble ()
                             (all-comparisons-page report))))
-     (with-slots (added deleted changes) report
+     (let ((added (diff-report-added report))
+           (deleted (diff-report-deleted report))
+           (changes (diff-report-changes report)))
        <markup:merge-tag>
        <div class= "page-title-box">
        ,(when acceptable
