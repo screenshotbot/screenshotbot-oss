@@ -53,7 +53,9 @@
   ((before :initarg :before
            :reader before)
    (after :initarg :after
-          :reader after)))
+          :reader after)
+   (masks :initarg :masks
+          :reader change-masks)))
 
 (defclass diff-report ()
   ((added :initarg :added
@@ -156,6 +158,7 @@
                                                   collect
                                                   (make-instance 'change
                                                                  :before s1
+                                                                 :masks (screenshot-masks x)
                                                                  :after x))))))
     (retry-make-diff-report ()
       (make-diff-report run to))))
