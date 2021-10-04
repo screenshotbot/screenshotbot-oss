@@ -103,8 +103,8 @@ show-info:
 
 clean-sys-index:
 	rm -f system-index.txt
-	rm -rf local-projects/quicklisp
-	rm -rf */system-index.txt
+	rm -rfv local-projects/quicklisp
+	rm -rfv */system-index.txt
 
 tests:| show-info clean-sys-index test-parts selenium-tests conditional-copybara
 
