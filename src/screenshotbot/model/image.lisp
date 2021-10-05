@@ -53,7 +53,8 @@
    #:mask-rect-top
    #:mask-rect-height)
   (:export
-   #:find-unequal-pixels))
+   #:find-unequal-pixels
+   #:random-unequal-pixel))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -193,13 +194,27 @@
                                               res)))
     res))
 
-(defun random-unequal-pixel (left right)
-  (let ((bad-pixels (find-unequal-pixels
-                      (screenshot-image left)
-                      (screenshot-image right))))
-     (let ((px
-             (elt bad-pixels (random (length bad-pixels)))))
-       px)))
+(defun random-unequal-pixel (img1 img2 &key masks)
+  (declare (ignore masks)
+           (optimize (speed 3) (safety 0)))
+  (let ((arr1 (read-image-with-opticl img1))
+        (arr2 (read-image-with-opticl img2)))
+    (let ((num-bad 0))
+      (declare (type fixnum num-bad))
+      (map-unequal-pixels arr1 arr2
+                          (lambda (i j)
+                            (declare (ignore i j))
+                            (incf num-bad)))
+      (let ((ctr (random num-bad)))
+        (declare (type fixnum ctr))
+        (map-unequal-pixels arr1 arr2
+                            (lambda (i j)
+                              (declare (fixnum i j))
+                              (when (= ctr 0)
+                                (return-from random-unequal-pixel
+                                  (cons i j)))
+                              (decf ctr)))))
+    (error "Should not get here, probably our CTR is off by one")))
 
 (defun map-unequal-pixels (arr1 arr2 fn)
   (let ((dim (array-dimensions arr1)))

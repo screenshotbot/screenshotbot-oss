@@ -238,7 +238,10 @@
   (setf (hunchentoot:header-out :content-type)  "application/json")
   (json:encode-json-to-string
 
-   (let ((px (random-unequal-pixel left right)))
+   (let ((px (random-unequal-pixel
+              (screenshot-image left)
+              (screenshot-image right)
+              :masks (screenshot-masks right))))
      `((:y . ,(car px))
        (:x . ,(cdr px))))))
 
