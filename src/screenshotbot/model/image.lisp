@@ -204,7 +204,8 @@
       (map-unequal-pixels arr1 arr2
                           (lambda (i j)
                             (declare (ignore i j))
-                            (incf num-bad)))
+                            (incf num-bad))
+                          :masks masks)
       (let ((ctr (random num-bad)))
         (declare (type fixnum ctr))
         (map-unequal-pixels arr1 arr2
@@ -213,22 +214,25 @@
                               (when (= ctr 0)
                                 (return-from random-unequal-pixel
                                   (cons i j)))
-                              (decf ctr)))))
+                              (decf ctr)))
+        :masks masks))
     (error "Should not get here, probably our CTR is off by one")))
 
-(defun map-unequal-pixels (arr1 arr2 fn)
+(defun map-unequal-pixels (arr1 arr2 fn &key masks)
   (let ((dim (array-dimensions arr1)))
     (dotimes (i (elt dim 0))
       (dotimes (j (elt dim 1))
-        (dotimes (k (elt dim 2))
-          (unless (equalp (aref arr1 i j k)
-                          (aref arr2 i j k))
-            #+nil
-            (log:info "Pixel (~a,~a, ~a) doesn't match, got ~s and ~s"
-                      i j k
-                      (aref arr1 i j k)
+        (block inner-loop
+         (dotimes (k (elt dim 2))
+           (unless (= (aref arr1 i j k)
                       (aref arr2 i j k))
-            (funcall fn i j)))))))
+             #+nil
+             (log:info "Pixel (~a,~a, ~a) doesn't match, got ~s and ~s"
+                       i j k
+                       (aref arr1 i j k)
+                       (aref arr2 i j k))
+             (funcall fn i j)
+             (return-from inner-loop))))))))
 
 
 (defun images-equal-by-content-p (img1 img2 &key (slow nil)
