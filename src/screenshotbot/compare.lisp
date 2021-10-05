@@ -32,6 +32,7 @@
                 #:filter-selector
                 #:commit)
   (:import-from #:screenshotbot/model/image
+                #:random-unequal-pixel
                 #:find-unequal-pixels)
   (:export
    #:diff-report
@@ -237,13 +238,9 @@
   (setf (hunchentoot:header-out :content-type)  "application/json")
   (json:encode-json-to-string
 
-   (let ((bad-pixels (find-unequal-pixels
-                      (screenshot-image left)
-                      (screenshot-image right))))
-     (let ((px
-             (elt bad-pixels (random (length bad-pixels)))))
-      `((:y . ,(car px))
-        (:x . ,(cdr px)))))))
+   (let ((px (random-unequal-pixel left right)))
+     `((:y . ,(car px))
+       (:x . ,(cdr px))))))
 
 (defun all-comparisons-page (report)
   <app-template>

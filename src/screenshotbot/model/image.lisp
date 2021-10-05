@@ -193,6 +193,14 @@
                                               res)))
     res))
 
+(defun random-unequal-pixel (left right)
+  (let ((bad-pixels (find-unequal-pixels
+                      (screenshot-image left)
+                      (screenshot-image right))))
+     (let ((px
+             (elt bad-pixels (random (length bad-pixels)))))
+       px)))
+
 (defun map-unequal-pixels (arr1 arr2 fn)
   (let ((dim (array-dimensions arr1)))
     (dotimes (i (elt dim 0))
