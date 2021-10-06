@@ -113,6 +113,17 @@
           :accessor mask-rect-width))
   (:metaclass persistent-class))
 
+(defclass fake-mask-rect ()
+  ((top :initarg :top
+        :accessor mask-rect-top)
+   (left :initarg :left
+         :accessor mask-rect-left)
+   (height :initarg :height
+           :accessor mask-rect-height)
+   (width :initarg :width
+          :accessor mask-rect-width))
+  (:documentation "MASK-RECT for testing"))
+
 (defmethod rect-as-list ((rect mask-rect))
   (with-slots (top left height width) rect
     (list top left height width)))
@@ -218,6 +229,17 @@
         :masks masks))
     (error "Should not get here, probably our CTR is off by one")))
 
+(defun px-in-mask-p (i j mask)
+  (declare (optimize (speed 3) (safety 0))
+           (type fixnum i j))
+  (and
+   (<= (mask-rect-top mask)
+       i
+       (+ (mask-rect-top mask) (mask-rect-height mask) -1))
+   (<= (mask-rect-left mask)
+       j
+       (+ (mask-rect-left mask) (mask-rect-width mask) -1))))
+
 (defun map-unequal-pixels (arr1 arr2 fn &key masks)
   (let ((dim (array-dimensions arr1)))
     (dotimes (i (elt dim 0))
@@ -226,11 +248,9 @@
          (dotimes (k (elt dim 2))
            (unless (= (aref arr1 i j k)
                       (aref arr2 i j k))
-             #+nil
-             (log:info "Pixel (~a,~a, ~a) doesn't match, got ~s and ~s"
-                       i j k
-                       (aref arr1 i j k)
-                       (aref arr2 i j k))
+             (loop for mask in masks
+                   if (px-in-mask-p i j mask)
+                     do (return-from inner-loop))
              (funcall fn i j)
              (return-from inner-loop))))))))
 

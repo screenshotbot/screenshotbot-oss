@@ -18,6 +18,7 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:screenshotbot/model/image
+                #:fake-mask-rect
                 #:map-unequal-pixels)
   (:export))
 
@@ -47,11 +48,12 @@
   (is (equal "/image/blob/bar/default.png" (util:make-url 'image-blob-get :oid "bar"))))
 
 (test map-unequal-pixels
-  (flet ((unequal-pixels (im1 im2)
+  (flet ((unequal-pixels (im1 im2 &key masks)
            (let ((ret nil))
              (map-unequal-pixels im1 im2
                                  (lambda (i j)
-                                   (push (cons i j) ret)))
+                                   (push (cons i j) ret))
+                                 :masks masks)
              ret)))
    (let ((arr1
            (make-array '(2 2 3) :element-type 'fixnum
@@ -62,4 +64,18 @@
                                 :initial-contents `(((1 2 3) (1 2 3))
                                                     ((1 2 3) (1 5 3))))))
      (is (equal `((1 . 1))
-                (unequal-pixels arr1 arr2))))))
+                (unequal-pixels arr1 arr2)))
+     (is (equal nil
+                (unequal-pixels arr1 arr2
+                                :masks (list (make-instance 'fake-mask-rect
+                                                            :top 1
+                                                            :left 1
+                                                            :height 1
+                                                            :width 1)))))
+     (is (equal `((1 . 1))
+                (unequal-pixels arr1 arr2
+                                :masks (list (make-instance 'fake-mask-rect
+                                                            :top 0
+                                                            :left 0
+                                                            :height 1
+                                                            :width 1)))))     )))
