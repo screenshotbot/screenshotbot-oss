@@ -249,7 +249,9 @@
   <app-template>
     <a href= "javascript:window.history.back()">Back to Report</a>
     ,@ (let ((changes (diff-report-changes report)))
-         (loop for (before . after) in changes
+         (loop for change in changes
+               for before = (before change)
+               for after = (after change)
                for comparison-image = (util:copying (before after)
                                         (nibble ()
                                           (image-comparison-nibble before after)))
