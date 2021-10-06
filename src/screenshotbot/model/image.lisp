@@ -223,27 +223,27 @@
     res))
 
 (defun random-unequal-pixel (img1 img2 &key masks)
-  (declare (ignore masks)
-           (optimize (speed 3) (safety 0)))
+  (declare (optimize (speed 3) (safety 0)))
   (let ((arr1 (read-image-with-opticl img1))
         (arr2 (read-image-with-opticl img2)))
-    (let ((num-bad 0))
-      (declare (type fixnum num-bad))
-      (map-unequal-pixels arr1 arr2
-                          (lambda (i j)
-                            (declare (ignore i j))
-                            (incf num-bad))
-                          :masks masks)
-      (let ((ctr (random num-bad)))
-        (declare (type fixnum ctr))
-        (map-unequal-pixels arr1 arr2
-                            (lambda (i j)
-                              (declare (fixnum i j))
-                              (when (= ctr 0)
-                                (return-from random-unequal-pixel
-                                  (cons i j)))
-                              (decf ctr)))
-        :masks masks))
+    (flet ((%map-unequal-pixels (fn)
+             (map-unequal-pixels
+              arr1 arr2 fn :masks masks)))
+      (let ((num-bad 0))
+        (declare (type fixnum num-bad))
+        (%map-unequal-pixels
+         (lambda (i j)
+           (declare (ignore i j))
+           (incf num-bad)))
+        (let ((ctr (random num-bad)))
+          (declare (type fixnum ctr))
+          (%map-unequal-pixels
+           (lambda (i j)
+             (declare (fixnum i j))
+             (when (= ctr 0)
+               (return-from random-unequal-pixel
+                 (cons i j)))
+             (decf ctr))))))
     (error "Should not get here, probably our CTR is off by one")))
 
 (defun px-in-mask-p (i j mask)

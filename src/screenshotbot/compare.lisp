@@ -32,6 +32,7 @@
                 #:filter-selector
                 #:commit)
   (:import-from #:screenshotbot/model/image
+                #:rect-as-list
                 #:draw-masks-in-place
                 #:random-unequal-pixel
                 #:find-unequal-pixels)
@@ -246,7 +247,11 @@
               (screenshot-image right)
               :masks (screenshot-masks right))))
      `((:y . ,(car px))
-       (:x . ,(cdr px))))))
+       (:x . ,(cdr px))
+       ;; for debugging:
+       (:masks
+        ,(mapcar 'rect-as-list
+                 (screenshot-masks right)))))))
 
 (defun all-comparisons-page (report)
   <app-template>
