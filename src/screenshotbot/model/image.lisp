@@ -54,7 +54,9 @@
    #:mask-rect-height)
   (:export
    #:find-unequal-pixels
-   #:random-unequal-pixel))
+   #:random-unequal-pixel
+   #:draw-rects-in-place
+   #:draw-masks-in-place))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -160,6 +162,17 @@
                                    (+
                                     (mask-rect-top mask)
                                     (mask-rect-height mask)))))))
+
+(defun draw-masks-in-place (image-file masks &key color)
+  (when masks
+    (uiop:with-temporary-file (:pathname tmp
+                               :directory (cl-fad:pathname-directory-pathname image-file))
+      (uiop:run-program `("convert"
+                          ,(namestring image-file)
+                          ,@(%draw-mask-rect-commands masks :color color)
+                          ,(namestring tmp)))
+      (uiop:rename-file-overwriting-target
+       tmp image-file))))
 
 (defun %perceptual-hash (img masks)
   (log:info "Computing perceptual hash: ~s, ~s" img masks)

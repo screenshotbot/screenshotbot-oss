@@ -32,6 +32,7 @@
                 #:filter-selector
                 #:commit)
   (:import-from #:screenshotbot/model/image
+                #:draw-masks-in-place
                 #:random-unequal-pixel
                 #:find-unequal-pixels)
   (:export
@@ -202,10 +203,12 @@
                                 :output :interactive
                                 :error-output :interactive))
           (declare (ignore out err))
+
           (unless (member ret '(0 1))
             (error "Got surprising error output from imagemagic compare: ~S" ret)))
         (setf (hunchentoot:header-out :content-type)
               "image/png")
+        (draw-masks-in-place p (screenshot-masks after-image) :color "rgba(255, 255, 0, 0.8)")
         (hunchentoot:handle-static-file p)))))
 
 (defun async-diff-report (&rest args &key &allow-other-keys)
@@ -324,7 +327,8 @@
                               (x X)
                               (compare-nibble (nibble ()
                                                 (log:info "Comparing: ~s, ~s" x s)
-                                                (image-comparison-nibble x s)))
+                                                (image-comparison-nibble
+                                                 x s)))
                               (zoom-to-nibble (nibble ()
                                                 (random-zoom-to x s)))
                               (toggle-id (format nil "toggle-id-~a" (incf next-id)))
