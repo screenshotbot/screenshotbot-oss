@@ -145,6 +145,21 @@
   `(flet ((body (,file) ,@body))
      (%with-local-image ,screenshot #'body)))
 
+(defun %draw-mask-rect-commands (masks &key color)
+  "Imagemagick commands to draw rectangles for the given masks"
+  `("-fill" ,color
+    "-stroke" ,color
+    ,@ (loop for mask in masks
+             appending
+             (list "-draw" (format nil "rectangle ~d,~d ~d,~d"
+                                   (mask-rect-left mask)
+                                   (mask-rect-top mask)
+                                   (+
+                                    (mask-rect-left mask)
+                                    (mask-rect-width mask))
+                                   (+
+                                    (mask-rect-top mask)
+                                    (mask-rect-height mask)))))))
 
 (defun %perceptual-hash (img masks)
   (log:info "Computing perceptual hash: ~s, ~s" img masks)
@@ -155,19 +170,8 @@
        (multiple-value-bind (out err ret)
            (uiop:run-program `("convert"
                                ,(namestring file)
-                               "-fill" "black"
-                               "-stroke" "black"
-                               ,@ (loop for mask in masks
-                                        appending
-                                        (list "-draw" (format nil "rectangle ~d,~d ~d,~d"
-                                                              (mask-rect-left mask)
-                                                              (mask-rect-top mask)
-                                                              (+
-                                                               (mask-rect-left mask)
-                                                               (mask-rect-width mask))
-                                                              (+
-                                                               (mask-rect-top mask)
-                                                               (mask-rect-height mask)))))
+                               ,@(%draw-mask-rect-commands masks
+                                                           :color "black")
                                "-format" "%#"
                                "+write" "info:"
                                ,(namestring unused-output))
