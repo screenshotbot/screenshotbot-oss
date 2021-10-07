@@ -57,8 +57,10 @@ function prepareReportJs () {
         img.css("background-position", "0 0");
     }
 
-    $(".image-comparison-modal").on('show.bs.modal', function () {
+
+    function setupImageComparison() {
         var img = $(".image-comparison-modal-image", this);
+
         var zoomToChange = $(".zoom-to-change", this);
 
         var src = img.data("src");
@@ -143,6 +145,13 @@ function prepareReportJs () {
             });
         });
 
+    }
+
+
+    $(".image-comparison-modal").on('show.bs.modal', setupImageComparison);
+    $(".image-comparison-wrapper").map(function (idx, img) {
+        console.log("Setting up image comparison on: ", img);
+        setupImageComparison.call(img);
     });
 }
 

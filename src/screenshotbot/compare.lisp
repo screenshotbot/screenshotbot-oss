@@ -264,10 +264,18 @@
                                         (nibble ()
                                           (image-comparison-nibble before after)))
                collect
-               <div>
+               <div class= "image-comparison-wrapper" >
                  <h3>,(screenshot-name before)</h3>
-                 <:img src= comparison-image class= "mb-3" />
-                 <hr />
+               <:img data-src= comparison-image class= "mb-3 image-comparison-modal-image"
+               data-zoom-to= (nibble ()
+                               (random-zoom-to before after))
+               />
+
+               <div>
+               <button type= "button" class= "btn btn-secondary zoom-to-change">Zoom to Change</button>
+               </div>
+               <hr />
+
                </div>))
   </app-template>)
 
