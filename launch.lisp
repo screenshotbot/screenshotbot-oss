@@ -14,8 +14,9 @@
     (ccl:quit)))
 
 #+ (or ccl)
-(setf *debugger-hook*
-      #'debug-log)
+(unless (uiop:getenv "SCREENSHOTBOT_DEBUG")
+ (setf *debugger-hook*
+       #'debug-log))
 
 
 (load "scripts/prepare-image")
