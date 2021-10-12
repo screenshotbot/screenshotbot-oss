@@ -34,6 +34,7 @@ ways."
 (defvar *port*)
 (defvar *slynk-port*)
 (defvar *verify-store*)
+(defvar *verify-snapshots*)
 (defvar *socketmaster*)
 (defvar *shell*)
 (defvar *start-slynk*)
@@ -54,6 +55,7 @@ ways."
     (util:*object-store* #+screenshotbot-oss "~/.config/screenshotbot/object-store/"
                          #-screenshotbot-oss "/data/arnold/object-store/" "" :params ("OBJECT-STORE"))
     (*verify-store* nil "")
+    (*verify-snapshots* nil "")
     (jvm:*libjvm* nil "Location of libjvm.so" :params ("LIBJVM"))))
 
 (defclass my-acceptor (hunchentoot-multi-acceptor:multi-acceptor)
@@ -156,6 +158,12 @@ ways."
          (log:config :info)
          (util:verify-store)
          (log:info "Done verifying store")
+         (uiop:quit 0))
+
+       #+nil
+       (when *verify-snapshots*
+         (log:config :info)
+         (util:verify-snapshots)
          (uiop:quit 0))
 
        (log:info "The port is now ~a" *port*)

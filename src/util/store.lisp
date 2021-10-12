@@ -72,6 +72,48 @@
         (log:info "Got ~d objects" (length (bknr.datastore:all-store-objects)))
         (log:info "Success!")))))
 
+(defun parse-timetag (timetag)
+  "timetag is what bknr.datastore calls it. See utils.lisp in
+  bknr. This function converts the timetag into a valid timestamp."
+  (multiple-value-bind (full parts)
+      (cl-ppcre:scan-to-strings
+       "(\\d\\d\\d\\d)(\\d\\d)(\\d\\d)T(\\d\\d)(\\d\\d)(\\d\\d)"
+       timetag)
+    (when full
+     (apply #'local-time:encode-timestamp
+            0 ;; nsec
+            (reverse
+             (loop for x across parts
+                   collect (parse-integer x)))))))
+
+(defun all-snapshots-sorted (dir)
+  (let ((list (directory "/data/arnold/object-store/")))
+    ;; remove any directories that don't look like timestamps
+    (let ((list
+            (loop for x in list
+                  for dir-name = (car (last (pathname-directory x)))
+                  for ts = (parse-timetag dir-name)
+                  if ts
+                    collect (cons ts x))))
+      (sort
+       list
+       #'local-time:timestamp>
+       :key 'car))))
+
+
+(defun delete-snapshot-dir (dir)
+  (assert (path:-d dir))
+  (log:info "Deleting snapshot dir: ~a" dir)
+  (fad:delete-directory-and-files dir))
+
+(defun delete-old-snapshots ()
+  ;; always keep at least 7 snapshots even if they are old
+  (loop for (ts . dir) in (nthcdr 7 (all-snapshots-sorted (object-store)))
+        if (local-time:timestamp< ts (local-time:timestamp- (local-time:now)
+                                                            1 :month))
+          do
+             (delete-snapshot-dir dir)))
+
 
 (defun cron-snapshot ()
   (log:info "Snapshotting bknr.datastore")
@@ -81,3 +123,8 @@
                         :minute 0
                         :hour 6
                         :hash-key 'cron-snapshot)
+
+(cl-cron:make-cron-job 'delete-old-snapshots
+                       :minute 0
+                       :hour 4
+                       :hash-key 'delete-old-snapshots)

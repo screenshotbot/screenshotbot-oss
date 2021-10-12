@@ -9,8 +9,11 @@
           #:fiveam
           #:alexandria)
   (:import-from #:util
+                #:parse-timetag
                 #:*object-store*
-                #:object-store))
+                #:object-store)
+  (:import-from #:local-time
+                #:timestamp=))
 
 
 (util/fiveam:def-suite)
@@ -29,3 +32,10 @@
   (let ((*object-store* "~/zoidberg/bar/"))
     (is (equal #P "~/zoidberg/bar/" (object-store)))
     (is (path:-d (object-store)))))
+
+
+(test parse-timetag
+  (is
+   (timestamp=
+    (local-time:parse-timestring "2021-10-09T06:00:00")
+    (parse-timetag "20211009T060000"))))
