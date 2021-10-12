@@ -83,7 +83,8 @@
            #:better-easy-handler
            #:tail
            #:*in-test-p*
-           #:in-test-p))
+           #:in-test-p
+           #:add-datastore-hook))
 
 (defpackage :mquery
   (:use #:cl

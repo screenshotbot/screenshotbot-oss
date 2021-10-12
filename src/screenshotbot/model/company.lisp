@@ -272,17 +272,24 @@
 (defgeneric company (obj)
   (:documentation "For a given obj, figure out which company it belongs to"))
 
-(let ((lock (bt:make-lock)))
-  (defun get-singleton-company ()
-    "Get a singleton persistent company. If no singleton company exists,
+;; See documentation for prepare-singleton-company
+(defvar *singleton-company*)
+
+(defun prepare-singleton-company ()
+  "Get a singleton persistent company. If no singleton company exists,
   it is created. Otherwise the existing singleton company is
-  returned."
-    (or
-     (company-with-singletonp t)
-     (bt:with-lock-held (lock)
-       (or
-        (company-with-singletonp t)
-        (make-instance 'company :singletonp t))))))
+  returned. Singleton companies are mostly used in the OSS version,
+  even though you can customize it to use multiple companies."
+  #+screenshotbot-oss
+  (setf *singleton-company*
+   (or
+    (company-with-singletonp t)
+    (make-instance 'company :singletonp t))))
+
+(defun get-singleton-company ()
+  *singleton-company*)
+
+(util:add-datastore-hook 'prepare-singleton-company)
 
 (deftransaction
     add-company-run (company run)

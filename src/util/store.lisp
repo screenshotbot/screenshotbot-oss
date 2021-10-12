@@ -8,6 +8,17 @@
 
 (defvar *object-store*)
 
+(defvar *datastore-hooks* nil)
+(defvar *calledp* nil)
+
+(defun add-datastore-hook (fn)
+  (assert (not *calledp*))
+  (pushnew fn *datastore-hooks*))
+
+(defun dispatch-datastore-hooks ()
+  (mapc 'funcall *datastore-hooks*)
+  (setf *calledp* t))
+
 (defun object-store ()
   (let* ((dir *object-store*)
          (dir (if (str:ends-with-p "/" dir) dir (format nil "~a/" dir))))
@@ -42,7 +53,8 @@
   (setf bknr.datastore:*store-debug* t)
   (make-instance 'util:safe-mp-store
                  :directory (object-store)
-                 :subsystems (store-subsystems)))
+                 :subsystems (store-subsystems))
+  (dispatch-datastore-hooks))
 
 (defun verify-store ()
   (let ((store-dir (object-store)))
