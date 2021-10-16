@@ -86,6 +86,7 @@ ways."
     (let ((host host))
      (push
       (lambda ()
+        (log:info "Adding acceptor ~a" acceptor)
         (hunchentoot-multi-acceptor:add-acceptor *multi-acceptor* host acceptor))
       *init-hooks*)
       ;; Immediately register the acceptor if we're executing this live
@@ -97,7 +98,8 @@ ways."
   (init-sub-acceptors))
 
 (defun init-sub-acceptors ()
-  (mapcar 'funcall *init-hooks*))
+  (mapc 'funcall *init-hooks*)
+  (setf *init-hooks* nil))
 
 
 (defvar *multi-server*)
