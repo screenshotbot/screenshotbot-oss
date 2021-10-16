@@ -47,6 +47,7 @@
 
 (defclass acceptor-with-plugins (hunchentoot:easy-acceptor)
   ((acceptor-plugins :accessor acceptor-plugins
+                     :initarg :acceptor-plugins
                      :initform nil)))
 
 (defmacro declare-handler (name)
