@@ -76,6 +76,12 @@ to decide how to attach the new parameter to the end of the string."
 
 (defun make-url (path &rest rest &key &allow-other-keys)
   (cond
+    ((and
+      (stringp path)
+      (or
+       (str:starts-with-p "http:" path)
+       (str:starts-with-p "https:" path)))
+     path)
     ((string= "/" path)
      "/")
     (t
