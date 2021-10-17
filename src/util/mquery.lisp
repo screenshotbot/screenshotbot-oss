@@ -64,6 +64,14 @@
            (funcall next-matcher x)
            (funcall rest-matcher x))))))))
 
+(defun mqappend (parent child)
+  (let ((parent (only parent))
+        (child (only child)))
+    (check-type child xml-tag)
+    (push child
+          (xml-tag-children parent))
+    parent))
+
 (defun namequery (name)
   (let ((name (string-downcase name)))
    (lambda (x)
