@@ -13,33 +13,98 @@
   (:export :css-library
    :css-system
            :css-file
-           :scss-file))
+   :scss-file))
 (in-package :build-utils/css-package)
+
+(defun sanitize-name (x)
+  (substitute #\~ #\/ x))
+
+(defclass copy-sources-op (asdf:operation)
+  ()
+  (:documentation "Copy all the source files to a given output directory"))
 
 (defclass css-library (asdf:system)
   ((import-path :initarg :import-path
                 :initform #P ""
-                :accessor import-path)))
+                         :accessor import-path)))
 
 (defclass css-system (css-library web-asset)
   ())
 
-(defclass scss-file (asdf:static-file)
+(defclass base-css-file (asdf:static-file)
+  ())
+
+(defclass scss-file (base-css-file)
   ()
   (:default-initargs :type "scss"))
 
-(defclass css-file (asdf:static-file)
+(defclass css-file (base-css-file)
   ()
   (:default-initargs :type "css"))
 
+(defmethod asdf:input-files ((o copy-sources-op) (c css-library))
+  (mapcar
+   'asdf:component-pathname
+    (asdf:required-components c
+                              :keep-component 'base-css-file)))
+
+(defmethod asdf:output-files ((o copy-sources-op) (c css-library))
+  (list
+   (make-pathname
+    :directory `(:relative ,(format nil "~a--sources-copy" (sanitize-name (component-name c)))))))
+
+(defun rel-path (child root)
+  (assert child)
+  (assert root)
+  (cond
+    ((eql child root)
+     (make-pathname :directory '(:relative)))
+    (t
+     (let ((parent (asdf:component-parent child)))
+       (let ((final
+               (merge-pathnames
+                (etypecase child
+                  (module
+                   (asdf:component-relative-pathname child))
+                  (t
+                   (asdf:component-relative-pathname child)))
+                (rel-path parent root))))
+         final)))))
+
+
+
+(defmethod asdf:perform ((o copy-sources-op) (c css-library))
+  #+nil(log:info "performing: ~a, ~a" o c)
+  (let ((output-dir (asdf:output-file o c)))
+    (uiop:delete-directory-tree output-dir
+                                :validate
+                                (lambda (x)
+                                  (validate-dir-p output-dir x)))
+    (loop for component in (asdf:required-components c :keep-component 'base-css-file)
+          for rel-path = (rel-path component c)
+          if (not (typep component 'asdf:module))
+            do
+               (let ((output (merge-pathnames
+                              (merge-pathnames
+                               rel-path
+                               (import-path c))
+                              output-dir))
+                     (input (asdf:component-pathname component)))
+                 (assert (pathname-name output))
+                 (ensure-directories-exist output)
+                 (uiop:copy-file input output)))))
+
+
+(defmethod asdf:input-files ((o compile-op) (c css-system))
+  (call-next-method))
+
+
 
 (defmethod output-files ((o compile-op) (c css-system))
-  (let ((name (string-downcase (component-name c))))
+  (let ((name (string-downcase (sanitize-name (component-name c)))))
     (list
      (pathname
       (format nil "~a.css" name))
-     (pathname
-      (format nil "~a.tmp/" name))
      (pathname
       (format nil "~a.css.map" name)))))
 
@@ -57,34 +122,22 @@
               (let* ((pathname (component-pathname x))
                      (rel-dir (subseq (pathname-directory pathname)
                                       (length (pathname-directory root-dir))))
-                     (output-file (make-pathname :name (pathname-name (component-pathname x))
-                                              :type (asdf:file-type x)
-                                              :directory (append (pathname-directory output-dir) rel-dir)
-                                                 :defaults output-dir)))
-                #+nil
-                (format t "copying: ~a to ~a~%" (component-pathname x)
-                        output-file)
+                     (output-file (make-pathname
+                                   :name (pathname-name (component-pathname x))
+                                   :type (asdf:file-type x)
+                                   :directory (append (pathname-directory output-dir) rel-dir)
+                                   :defaults output-dir)))
                 (ensure-directories-exist output-file)
                 (uiop:copy-file (component-pathname x)
                                 output-file))))))
 
-(defmethod copy-css-libraries ((c css-library) output-dir)
-  (let ((output-dir (path:catdir output-dir (import-path c))))
-    (ensure-directories-exist output-dir)
-    (loop for x in (system-depends-on c) do
-      (copy-css-libraries (find-component x nil) output-dir))
-    (copy-component-children c output-dir (component-pathname c))))
 
-(defmethod copy-css-libraries ((c css-system) output-dir)
-  (when (probe-file output-dir)
-    ;; ideally I should do better than this.
-    (uiop:delete-directory-tree output-dir :validate (lambda (x)
-                                                       (let ((prefix (pathname-directory output-dir)))
-                                                         (equal
-                                                          prefix
-                                                          (subseq (pathname-directory x)
-                                                                  0 (length prefix)))))))
-  (call-next-method))
+(defun validate-dir-p (output-dir x)
+  (let ((prefix (pathname-directory output-dir)))
+    (equal
+     prefix
+     (subseq (pathname-directory x)
+             0 (length prefix)))))
 
 (defun sass ()
   #+linux
@@ -93,29 +146,34 @@
   #+darwin
   "sass")
 
+(defmethod asdf:component-depends-on ((o copy-sources-op) (c css-library))
+  (loop for x in (asdf:system-depends-on c)
+        collect `(copy-sources-op ,x)))
+
+(defmethod asdf:component-depends-on ((o compile-op) (c css-system))
+  `((copy-sources-op ,(asdf:component-name c))))
+
 (defmethod asdf:perform ((o compile-op) (c css-system))
   (destructuring-bind
-      (output-file copy-dir source-map)
+      (output-file source-map)
       (output-files o c)
-    (declare (ignore source-map))
-    (copy-css-libraries c copy-dir)
     (let ((tmp-output (make-pathname :type "css-tmp" :defaults output-file)))
-     (uiop:run-program
-      (list
-       (sass)
-       "-I" (namestring copy-dir)
-       (let ((child (car (component-children c))))
-         (namestring
-          (make-pathname
-           :name (component-name
-                  child)
-           :type (asdf:file-type child)
-           :defaults copy-dir)))
-       (namestring tmp-output))
-      :element-type 'character
-      :external-format :latin-1
-      :output *standard-output*
-      :error-output *error-output*)
+      (uiop:run-program
+       `(,(sass)
+         ,@ (loop for dep in (required-components c
+                                                  :other-systems t
+                                                  :keep-component 'css-library)
+                  append (list "-I" (namestring (car (output-files
+                                                      'copy-sources-op
+                                                       dep)))))
+         ,(let ((child (car (input-files 'copy-sources-op c))))
+            (namestring
+             child))
+         ,(namestring tmp-output))
+       :element-type 'character
+       :external-format :latin-1
+       :output *standard-output*
+       :error-output *error-output*)
       (uiop:rename-file-overwriting-target tmp-output output-file)
       (uiop:rename-file-overwriting-target (format nil "~a.map" (namestring tmp-output))
                                            source-map))))

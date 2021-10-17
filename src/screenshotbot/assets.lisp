@@ -104,9 +104,9 @@
    `(progn
       (defhandler (nil :uri ,uri :html nil) ()
         (setf (hunchentoot:content-type*)  "text/css; charset=utf-8")
-        (handle-asdf-output ,asdf-target))
+        (handle-asdf-output 'asdf:compile-op  ,asdf-target))
       (defhandler (nil :uri ,map-uri :html nil) ()
-        (handle-asdf-output ,asdf-target 2)))))
+        (handle-asdf-output 'asdf:compile-op ,asdf-target 1)))))
 
 (define-css "/assets/css/default.css" :screenshotbot.css-assets)
 
@@ -136,7 +136,7 @@ rm -f $INSTALLER
 
 
 (let ((lock (bt:make-lock)))
-  (defun handle-asdf-output (component &optional (output-num 0))
+  (defun handle-asdf-output (op component &optional (output-num 0) )
     (cond
       (util:*delivered-image*
        (assert (symbolp component))
@@ -146,14 +146,14 @@ rm -f $INSTALLER
        (bt:with-lock-held (lock)
          (let ((output (elt
                         (asdf:output-files
-                         'asdf:compile-op
+                         op
                          (asdf:find-system component nil))
                         output-num)))
            (when (or
                   (staging-p)
                   ;; in case we delete ~/.cache
                   (not (path:-e output)))
-             (asdf:compile-system component))
+             (asdf:operate op component))
            (assert (path:-e output))
            (hunchentoot:handle-static-file output)))))))
 
@@ -163,7 +163,7 @@ rm -f $INSTALLER
       (defhandler (nil :uri ,url :html nil) ()
         (setf (hunchentoot:content-type*) "application/javascript")
         (setf (hunchentoot:header-out :x-sourcemap) ,map-url)
-        (handle-asdf-output ,system))
+        (handle-asdf-output 'asdf:compile-op ,system))
       (defhandler (nil :uri ,map-url :html nil) ()
         (handle-asdf-output ,system 1)))))
 
