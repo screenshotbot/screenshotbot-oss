@@ -100,4 +100,6 @@
            #:parent
            #:after
            #:val
-           #:with-document))
+           #:with-document
+           #:mappend
+           #:mqappend))
