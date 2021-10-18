@@ -8,3 +8,9 @@
                :secure-random)
   :components ((:file "package")
                (:file "nibble")))
+
+(defsystem :nibble/tests
+  :serial t
+  :depends-on (:nibble
+                  :fiveam)
+  :components ((:file "test-nibble")))

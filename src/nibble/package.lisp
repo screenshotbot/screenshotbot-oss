@@ -13,4 +13,5 @@
            #:get-nibble
            #:render-nibble
            #:nibble-id
-           #:nibble-plugin))
+           #:nibble-plugin
+           #:defnibble))

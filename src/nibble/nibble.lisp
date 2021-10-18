@@ -9,6 +9,8 @@
 (markup:enable-reader)
 
 (defvar *nibbles* (make-hash-table))
+(defvar *named-nibbles* nil)
+
 (defvar *lock* (bt:make-lock))
 (defparameter *last-gc* 0)
 
@@ -68,22 +70,35 @@
    (auth:current-session)))
 
 (defmacro nibble (args-and-options &body body)
-  (let* ((position (position-if 'keywordp args-and-options))
-         (args (subseq args-and-options 0 position))
-         (options (when position (subseq args-and-options position))))
-    (destructuring-bind (&key once method (check-session-p t)) options
-     `(let* ((id (make-id))
-             (nibble (make-instance 'nibble
-                                     :impl (lambda ,args ,@body)
-                                     :session (current-session)
-                                     :check-session-p ,check-session-p
-                                     :once ,once
-                                     :args ',args
-                                     :id id)))
-        (push-nibble id nibble)))))
+  (cond
+    ((and
+      args-and-options
+      (symbolp args-and-options))
+     ;; this is a named-nibble
+     (let ((args (assoc-value *named-nibbles* args-and-options)))
+       `(nibble ,args
+          (funcall ',args-and-options ,@args)))
+     )
+    (t
+     (let* ((position (position-if 'keywordp args-and-options))
+            (args (subseq args-and-options 0 position))
+            (options (when position (subseq args-and-options position))))
+       (destructuring-bind (&key once method (check-session-p t)) options
+         `(let* ((id (make-id))
+                 (nibble (make-instance 'nibble
+                                         :impl (lambda ,args ,@body)
+                                         :session (current-session)
+                                         :check-session-p ,check-session-p
+                                         :once ,once
+                                         :args ',args
+                                         :id id)))
+            (push-nibble id nibble)))))))
 
 (hex:define-plugin-handler (run-nibble :uri "/:id" :plugin-name 'nibble-plugin) (id)
   (render-nibble hex:*acceptor-plugin* id))
+
+(defmethod render-nibble ((plugin nibble-plugin) (nibble nibble))
+  (render-nibble plugin (nibble-id nibble)))
 
 (defmethod render-nibble ((plugin nibble-plugin) id)
   (funcall
@@ -140,3 +155,10 @@
 (defmethod hex:safe-redirect ((nibble nibble) &rest args)
   (apply 'hex:safe-redirect (nibble-url nibble)
           args))
+
+(defmacro defnibble (name args &body body)
+  `(progn
+     (defun ,name ,args
+       ,@body)
+     (setf (assoc-value *named-nibbles* ',name)
+           ',args)))
