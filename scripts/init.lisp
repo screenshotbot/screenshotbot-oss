@@ -19,7 +19,7 @@
                               commit))
 
 (quick-patch:register "https://github.com/moderninterpreters/markup"
-                            "5357f8a980cd5d884468734d7511323d00844175")
+                            "4dd66b0a0223f58e581697a1713ffbf77c0ab798")
 
 (register-tdrhq "hunchentoot" "ade1b9bb1c110a180cb883aed105536cbb0ea5e7")
 
