@@ -12,8 +12,8 @@
 (defvar *calledp* nil)
 
 (defun add-datastore-hook (fn)
-  (assert (not *calledp*))
-  (pushnew fn *datastore-hooks*))
+  (unless *calledp*
+   (pushnew fn *datastore-hooks*)))
 
 (defun dispatch-datastore-hooks ()
   (mapc 'funcall *datastore-hooks*)
