@@ -193,6 +193,7 @@ ways."
 
        (cl-cron:start-cron)
 
+       #-sbcl
        (when *start-slynk*
          (log:info "starting up slynk")
          (Server:slynk-loop))
@@ -217,6 +218,7 @@ ways."
   (bknr.datastore:snapshot)
   (bknr.datastore:close-store)
   (log:info "Shutting down slynk")
+  #-sbcl
   (slynk:stop-server (parse-integer *slynk-port*))
   (log:info "All services down")
   #+lispworks
@@ -252,6 +254,7 @@ ways."
   (log4cl:flush-all-appenders)
   (uiop:quit))
 
+#-sbcl
 (defun slynk-loop ()
   (log:info "Using port for slynk: ~a" *slynk-port*)
   (setf slynk:*loopback-interface* *slynk-loopback-interface*)
