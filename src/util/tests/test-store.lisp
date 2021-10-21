@@ -34,6 +34,7 @@
     (is (path:-d (object-store)))))
 
 
+#-sbcl
 (test parse-timetag
   (is
    (timestamp=
