@@ -11,19 +11,26 @@
   (:Import-from #:../server
                 #:*disable-mail*)
   (:import-from #:./signup
-                #:signup-post))
+                #:signup-post)
+  (:import-from #:screenshotbot/model/company
+                #:*singleton-company*))
 
 (util/fiveam:def-suite)
+
+(defclass dummy-company ()
+  ())
 
 (test happy-path
   (util:with-fake-request (:host "localhost:80")
     (catch 'hunchentoot::handler-done
-      (auth:with-sessions ()
-        (let ((*disable-mail* t))
-         (signup-post  :email "arnold@tdrhq.com"
-                       :password "foobar23"
-                       :full-name "Arnold Noronha"
-                       :accept-terms-p t
-                       :plan :professional))
-        (error "should not get here")))
+      (let ((*singleton-company*
+              (make-instance 'dummy-company)))
+       (auth:with-sessions ()
+         (let ((*disable-mail* t))
+           (signup-post  :email "arnold@tdrhq.com"
+                         :password "foobar23"
+                         :full-name "Arnold Noronha"
+                         :accept-terms-p t
+                         :plan :professional))
+         (error "should not get here"))))
     (pass)))
