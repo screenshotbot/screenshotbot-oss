@@ -13,24 +13,25 @@
   (:import-from #:./signup
                 #:signup-post)
   (:import-from #:screenshotbot/model/company
+                #:company
                 #:*singleton-company*))
 
 (util/fiveam:def-suite)
 
-(defclass dummy-company ()
-  ())
-
 (test happy-path
   (util:with-fake-request (:host "localhost:80")
     (catch 'hunchentoot::handler-done
-      (let ((*singleton-company*
-              (make-instance 'dummy-company)))
-       (auth:with-sessions ()
-         (let ((*disable-mail* t))
-           (signup-post  :email "arnold@tdrhq.com"
-                         :password "foobar23"
-                         :full-name "Arnold Noronha"
-                         :accept-terms-p t
-                         :plan :professional))
-         (error "should not get here"))))
+      (let* ((company
+              (make-instance 'company))
+            (*singleton-company* company))
+        (unwind-protect
+             (auth:with-sessions ()
+               (let ((*disable-mail* t))
+                 (signup-post  :email "arnold@tdrhq.com"
+                               :password "foobar23"
+                               :full-name "Arnold Noronha"
+                               :accept-terms-p t
+                               :plan :professional))
+               (error "should not get here"))
+          (bknr.datastore:delete-object company))))
     (pass)))
