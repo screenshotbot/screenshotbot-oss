@@ -34,7 +34,7 @@
     (is (path:-d (object-store)))))
 
 
-#-sbcl
+#+lispworks
 (test parse-timetag
   (is
    (timestamp=
