@@ -10,7 +10,7 @@
         #:markup
         #:nibble
         #:screenshotbot/model/user
-        #:screenshotbot/form-errors)
+        #:util/form-errors)
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/installation

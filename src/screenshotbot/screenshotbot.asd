@@ -41,7 +41,6 @@
    (:file "installation")
    (:file "server" :depends-on ("analytics"))
    (:file "cdn")
-   (:file "form-errors")
    (:file "google-fonts")
    (:file "user-api")
    (:file "notice-api")

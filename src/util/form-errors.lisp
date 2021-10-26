@@ -4,10 +4,10 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop/package:define-package :screenshotbot/form-errors
+(uiop/package:define-package :util/form-errors
     (:use #:cl #:alexandria #:mquery)
   (:export #:with-form-errors))
-(in-package :screenshotbot/form-errors)
+(in-package :util/form-errors)
 
 (markup:enable-reader)
 

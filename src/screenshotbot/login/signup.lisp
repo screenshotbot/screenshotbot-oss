@@ -13,7 +13,7 @@
         #:screenshotbot/login/common
         #:screenshotbot/login/google-oauth
         #:screenshotbot/user-api
-        #:screenshotbot/form-errors
+        #:util/form-errors
         #:screenshotbot/model/user
         #:screenshotbot/model/invite
         #:screenshotbot/model/company

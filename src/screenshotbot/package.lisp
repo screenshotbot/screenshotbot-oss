@@ -7,7 +7,7 @@
         #:screenshotbot/server
         #:screenshotbot/secrets
         #:screenshotbot/cdn
-        #:screenshotbot/form-errors
+        #:util/form-errors
         #:screenshotbot/chatwoot
         #:screenshotbot/template
         #:screenshotbot/google-fonts

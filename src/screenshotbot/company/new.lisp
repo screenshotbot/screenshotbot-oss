@@ -19,7 +19,7 @@
   (:import-from #:screenshotbot/login/populate
                 #:populate-company)
   (:import-from #:hex #:make-url)
-  (:import-from #:screenshotbot/form-errors
+  (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:screenshotbot/ui
                 #:simple-card-page))

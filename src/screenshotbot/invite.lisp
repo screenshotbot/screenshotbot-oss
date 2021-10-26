@@ -33,7 +33,7 @@
   (:import-from #:screenshotbot/user-api
                 #:current-company
                 #:current-user)
-  (:import-from #:screenshotbot/form-errors
+  (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:screenshotbot/ui/simple-card-page
                 #:simple-card-page)

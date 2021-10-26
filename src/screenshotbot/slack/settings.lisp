@@ -10,7 +10,7 @@
         #:nibble
         #:screenshotbot/ui
         #:screenshotbot/user-api
-        #:screenshotbot/form-errors
+        #:util/form-errors
         #:screenshotbot/installation
         #:screenshotbot/model/company
         #:markup

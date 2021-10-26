@@ -9,7 +9,7 @@
         #:alexandria
         #:markup
         #:nibble
-        #:screenshotbot/form-errors
+        #:util/form-errors
         #:screenshotbot/model/company
         #:screenshotbot/user-api
         #:screenshotbot/settings-api)

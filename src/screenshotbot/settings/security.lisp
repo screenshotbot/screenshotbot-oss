@@ -10,7 +10,7 @@
         #:markup
         #:screenshotbot/model/user
         #:nibble
-        #:screenshotbot/form-errors
+        #:util/form-errors
         #:screenshotbot/user-api
         #:screenshotbot/settings/settings-template)
   (:import-from #:bknr.datastore

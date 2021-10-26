@@ -16,7 +16,7 @@
         #:screenshotbot/model/github
         #:screenshotbot/model/user
         #:screenshotbot/user-api
-        #:screenshotbot/form-errors)
+        #:util/form-errors)
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/login/oidc

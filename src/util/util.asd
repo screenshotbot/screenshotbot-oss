@@ -85,7 +85,8 @@
                (:file "testing")
                (:file "uuid")
                (:file "acceptor")
-               (:file "mquery")))
+               (:file "mquery")
+               (:file "form-errors")))
 
 (defsystem :util/fiveam
   :depends-on (:util
