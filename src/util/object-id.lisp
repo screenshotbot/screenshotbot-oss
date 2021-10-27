@@ -9,6 +9,8 @@
 (defun %make-oid ()
   (mongoid:oid))
 
+;;;; reloading this object is bad. I thought I had fixed this, but
+;;;; it's still buggy inside of my patched version of bknr.datastore
 (defclass object-with-oid (store-object)
   ((oid
     :initarg :oid
