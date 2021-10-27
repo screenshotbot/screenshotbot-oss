@@ -128,3 +128,55 @@
                        :minute 0
                        :hour 4
                        :hash-key 'delete-old-snapshots)
+
+(defun build-hash-table (objects slot &key test)
+  (let ((hash-table (make-hash-table :test test)))
+    (loop for obj in objects
+          if (slot-boundp obj slot)
+          do
+             (setf (gethash (slot-value obj slot) hash-table)
+                   obj))
+    hash-table))
+
+(defun validate-class-index (class-name slot-name)
+  (declare (optimize (debug 3)))
+  (let* ((class (find-class class-name))
+         (slot (loop for slot in (closer-mop:class-slots class)
+                    if (eql slot-name (closer-mop:slot-definition-name slot))
+                      return slot
+                     finally (error "could not find slot")))
+         (indices (bknr.indices::index-effective-slot-definition-indices slot)))
+    (unless (= 1 (length indices))
+      (cerror "Continue using the first index"
+              "There are multiple indices for this slot (~a, ~a), probably an error: ~a"
+              class-name
+              slot-name
+              indices))
+    (let ((index (car indices)))
+      (when (typep index 'bknr.indices:unique-index)
+       (let* ((hash-table (bknr.indices::slot-index-hash-table index))
+              (test (hash-table-test hash-table))
+              (new-hash-table (build-hash-table (store-objects-with-class class-name)
+                                                slot-name
+                                           :test test)))
+         (unless
+             (equalp hash-table
+                     new-hash-table)
+           (cerror "Continue testing other indices" "The index is invalid for ~a, ~a"  class-name slot-name)))))))
+
+
+(defun validate-indices ()
+  (let* ((objects (bknr.datastore:all-store-objects))
+         (classes (remove-duplicates (mapcar 'class-of objects))))
+    (loop for class in classes
+          collect
+          (loop for slot in (closer-mop:class-slots class)
+                for slot-name = (closer-mop:slot-definition-name slot)
+                for indices = (cdr (bknr.indices::index-effective-slot-definition-indices slot))
+                if (and indices
+                        (not (eql 'bknr.datastore::id slot-name)))
+                  do
+                     (validate-class-index (class-name class)
+                                           slot-name)))))
+
+;; (validate-indices)
