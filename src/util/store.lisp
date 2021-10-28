@@ -129,13 +129,17 @@
                        :hour 4
                        :hash-key 'delete-old-snapshots)
 
-(defun build-hash-table (objects slot &key test)
+(defun build-hash-table (objects slot &key test unique-index-p)
   (let ((hash-table (make-hash-table :test test)))
     (loop for obj in objects
           if (slot-boundp obj slot)
-          do
-             (setf (gethash (slot-value obj slot) hash-table)
-                   obj))
+            do
+               (cond
+                 (unique-index-p
+                  (setf (gethash (slot-value obj slot) hash-table)
+                        obj))
+                 (t
+                  (push obj (gethash (slot-value obj slot) hash-table)))))
     hash-table))
 
 (defun validate-class-index (class-name slot-name)
@@ -152,17 +156,18 @@
               class-name
               slot-name
               indices))
-    (let ((index (car indices)))
-      (when (typep index 'bknr.indices:unique-index)
-       (let* ((hash-table (bknr.indices::slot-index-hash-table index))
-              (test (hash-table-test hash-table))
-              (new-hash-table (build-hash-table (store-objects-with-class class-name)
-                                                slot-name
-                                           :test test)))
-         (unless
-             (equalp hash-table
-                     new-hash-table)
-           (cerror "Continue testing other indices" "The index is invalid for ~a, ~a"  class-name slot-name)))))))
+    (let*  ((index (car indices))
+            (unique-index-p (typep index 'bknr.indices:unique-index)))
+      (let* ((hash-table (bknr.indices::slot-index-hash-table index))
+             (test (hash-table-test hash-table))
+             (new-hash-table (build-hash-table (store-objects-with-class class-name)
+                                               slot-name
+                                               :test test
+                                               :unique-index-p unique-index-p)))
+        (unless
+            (equalp hash-table
+                    new-hash-table)
+          (cerror "Continue testing other indices" "The index is invalid for ~a, ~a"  class-name slot-name))))))
 
 
 (defun validate-indices ()
@@ -177,6 +182,7 @@
                         (not (eql 'bknr.datastore::id slot-name)))
                   do
                      (validate-class-index (class-name class)
-                                           slot-name)))))
+                                           slot-name)))
+    t))
 
 ;; (validate-indices)
