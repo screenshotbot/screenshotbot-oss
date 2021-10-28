@@ -10,13 +10,30 @@
   (:export #:phab-instance
            #:call-conduit
            #:url
-           #:api-key))
+           #:api-key
+           #:make-phab-instance-from-arcrc))
 
 (defclass phab-instance ()
   ((url :initarg :url
         :accessor url)
    (api-key :initarg :api-key
             :accessor api-key)))
+
+(defun make-phab-instance-from-arcrc (url)
+  (let* ((api-url (quri:render-uri (quri:merge-uris "/api/" url))))
+   (with-open-file (file "~/.arcrc")
+     (let* ((json:*json-identifier-name-to-lisp* #'string)
+            (arcrc (json:decode-json file))
+            (hosts (assoc-value arcrc :|hosts|))
+            (host
+              ;; Surely there's a better way to do this.
+              (assoc-value hosts (intern api-url "KEYWORD")))
+            (token
+              (assoc-value host :|token|)))
+       (assert token)
+       (make-instance 'phab-instance
+                       :url url
+                       :api-key token)))))
 
 
 (defmethod call-conduit ((phab phab-instance) name params)

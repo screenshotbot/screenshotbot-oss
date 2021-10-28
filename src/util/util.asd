@@ -101,7 +101,10 @@
 
 (defsystem :util/phabricator
   :depends-on (:dexador
-               :alexandria)
+               :alexandria
+               :cl-json
+               :pkg
+               :quri)
   :components ((:module "phabricator"
                 :components ((:file "conduit")))))
 

@@ -22,9 +22,9 @@
 (push (pathname (format nil "~a/local-projects/poiu/" (namestring (uiop:getcwd))))
       asdf:*central-registry*)
 
-;; if you're loading this from an interactive shell, it might be
-;; convenient to use *default-pathname-defaults* here instead
-(defvar *cwd* (uiop:getcwd))
+(defvar *cwd* (merge-pathnames
+               *default-pathname-defaults*
+               (uiop:getcwd)))
 
 (asdf:initialize-output-translations `(:output-translations
                                        :inherit-configuration
