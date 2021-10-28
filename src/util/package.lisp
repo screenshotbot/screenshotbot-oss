@@ -84,7 +84,8 @@
            #:tail
            #:*in-test-p*
            #:in-test-p
-           #:add-datastore-hook))
+           #:add-datastore-hook
+           #:validate-indices))
 
 (defpackage :mquery
   (:use #:cl

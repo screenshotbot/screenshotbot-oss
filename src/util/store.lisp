@@ -134,55 +134,108 @@
     (loop for obj in objects
           if (slot-boundp obj slot)
             do
-               (cond
-                 (unique-index-p
-                  (setf (gethash (slot-value obj slot) hash-table)
-                        obj))
-                 (t
-                  (push obj (gethash (slot-value obj slot) hash-table)))))
+               (let ((slot-value (slot-value obj slot)))
+                 (assert (not (eql :png slot-value)))
+                 (cond
+                   (unique-index-p
+                    (when slot-value
+                      (setf (gethash slot-value hash-table)
+                            obj)))
+                   (t
+                    (when slot-value
+                     (push obj (gethash slot-value hash-table)))))))
     hash-table))
+
+(defun find-effective-slot (class slot-name)
+  (loop for slot in (closer-mop:class-slots class)
+        if (eql slot-name (closer-mop:slot-definition-name slot))
+          return slot
+        finally (error "could not find slot")))
+
+(defun atomp (x)
+  (or
+   (null x)
+   (not (listp x))))
+
+(defun unordered-equalp (list1 list2 &key (test #'eql))
+  (declare (optimize (debug 3)))
+  (cond
+    ((and (atomp list1)
+          (atomp list2))
+     (equal list1 list2))
+    ((or (atomp list1)
+         (atomp list2))
+     ;; this could also be the case that one of the lists are nil, but
+     ;; it's correct to send false in that case.
+     nil)
+    (t
+     (and
+      (eql nil (set-difference list1 list2 :test test))
+      (eql nil (set-difference list2 list1 :test test))))))
+
+(defun assert-hash-tables= (h1 h2)
+  (unless (eql (hash-table-test h1)
+               (hash-table-test h2))
+    (error "the two hash tables have different test functions"))
+  (unless (unordered-equalp
+           (alexandria:hash-table-keys h1)
+           (alexandria:hash-table-keys h2)
+           :test (hash-table-test h1))
+    (error "The two hash tables have different keys")
+    (loop for k being the hash-keys of h1
+          for value1 = (gethash k h1)
+          for value2 = (gethash k h2)
+          unless (unordered-equalp  value1 value2)
+            do (error "the two hash tables have different values for key ~a" k))))
 
 (defun validate-class-index (class-name slot-name)
   (declare (optimize (debug 3)))
-  (let* ((class (find-class class-name))
-         (slot (loop for slot in (closer-mop:class-slots class)
-                    if (eql slot-name (closer-mop:slot-definition-name slot))
-                      return slot
-                     finally (error "could not find slot")))
-         (indices (bknr.indices::index-effective-slot-definition-indices slot)))
-    (unless (= 1 (length indices))
-      (cerror "Continue using the first index"
-              "There are multiple indices for this slot (~a, ~a), probably an error: ~a"
-              class-name
-              slot-name
-              indices))
-    (let*  ((index (car indices))
-            (unique-index-p (typep index 'bknr.indices:unique-index)))
-      (let* ((hash-table (bknr.indices::slot-index-hash-table index))
-             (test (hash-table-test hash-table))
-             (new-hash-table (build-hash-table (store-objects-with-class class-name)
-                                               slot-name
-                                               :test test
-                                               :unique-index-p unique-index-p)))
-        (unless
-            (equalp hash-table
-                    new-hash-table)
-          (cerror "Continue testing other indices" "The index is invalid for ~a, ~a"  class-name slot-name))))))
+  (log:info "Testing ~a, ~a" class-name slot-name)
+  (restart-case
+      (let* ((class (find-class class-name))
+             (slot (find-effective-slot class slot-name))
+             (indices (bknr.indices::index-effective-slot-definition-indices slot)))
+        (unless (= 1 (length indices))
+          (cerror "Continue using the first index"
+                  "There are multiple indices for this slot (~a, ~a), probably an error: ~a"
+                  class-name
+                  slot-name
+                  indices))
+        (let*  ((index (car indices))
+                (unique-index-p (typep index 'bknr.indices:unique-index)))
+          (let* ((hash-table (bknr.indices::slot-index-hash-table index))
+                 (test (hash-table-test hash-table))
+                 (new-hash-table (build-hash-table (store-objects-with-class class-name)
+                                                   slot-name
+                                                   :test test
+                                                   :unique-index-p unique-index-p)))
+            (restart-case
+                (assert-hash-tables= hash-table
+                                     new-hash-table)
+              ("Continue testing other indices" ()
+                (values))))))
+    ("Retry validate-class-index" ()
+      (validate-class-index class-name slot-name))))
 
 
 (defun validate-indices ()
   (let* ((objects (bknr.datastore:all-store-objects))
          (classes (remove-duplicates (mapcar 'class-of objects))))
+    (log:info "Got ~a objects and ~a classes"
+              (length objects)
+              (length classes))
     (loop for class in classes
-          collect
-          (loop for slot in (closer-mop:class-slots class)
-                for slot-name = (closer-mop:slot-definition-name slot)
-                for indices = (cdr (bknr.indices::index-effective-slot-definition-indices slot))
-                if (and indices
-                        (not (eql 'bknr.datastore::id slot-name)))
+          do
+          (loop for direct-slot in (closer-mop:class-direct-slots class)
+                for slot-name = (closer-mop:slot-definition-name direct-slot)
+                for slot = (find-effective-slot class slot-name)
+                if (bknr.indices::index-direct-slot-definition-index-type direct-slot)
+                if (not (eql 'bknr.datastore::id slot-name))
                   do
-                     (validate-class-index (class-name class)
-                                           slot-name)))
+                     (let ((indices (bknr.indices::index-effective-slot-definition-indices slot)))
+                       (assert indices)
+                       (validate-class-index (class-name class)
+                                            slot-name))))
     t))
 
 ;; (validate-indices)
