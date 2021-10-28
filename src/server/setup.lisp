@@ -140,6 +140,13 @@ ways."
                                          :filter 4
                                          :layout (make-instance 'log4cl:simple-layout)))))
 
+(defun setup-log4cl-debugger-hook ()
+  (when util:*delivered-image*
+    ;; assume this is production: Lispworks by default uses a shitty
+    ;; cl:*debugger-hook* in delivered images. It's actually pretty
+    ;; buggy and doesn't work very well in low-disk situations.
+    (setf cl:*debugger-hook* #'util/debugger-hook:log4cl-debugger-hook)))
+
 
 (defun main (&optional #+sbcl listen-fd)
   "Called from launch scripts, either web-bin or launch.lisp"
@@ -174,6 +181,8 @@ ways."
        #+lispworks
        (jvm:jvm-init)
        (setup-appenders)
+
+       (setup-log4cl-debugger-hook)
 
        #-screenshotbot-oss
        (unless util:*delivered-image*
