@@ -77,7 +77,10 @@
      ;; this is a named-nibble
      (let ((args (assoc-value *named-nibbles* args-and-options)))
        `(nibble ,args
-          (funcall ',args-and-options ,@args)))
+          (funcall ',args-and-options ,@ (loop for arg in args
+                                               appending
+                                               (list (intern (string arg) "KEYWORD")
+                                                     arg)))))
      )
     (t
      (let* ((position (position-if 'keywordp args-and-options))
@@ -158,7 +161,7 @@
 
 (defmacro defnibble (name args &body body)
   `(progn
-     (defun ,name ,args
+     (defun ,name (&key ,@args)
        ,@body)
      (setf (assoc-value *named-nibbles* ',name)
            ',args)))
