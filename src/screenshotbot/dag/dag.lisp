@@ -47,7 +47,7 @@
 
 (defmethod get-commit ((dag dag) (sha string))
   (let ((id (commit-node-id sha)))
-    (log:info "Commit id for ~a is ~a" sha id)
+    (log:debug "Commit id for ~a is ~a" sha id)
     (gethash id (commit-map dag))))
 
 (defmethod bfs-search ((dag dag) start end)
