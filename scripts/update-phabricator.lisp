@@ -17,5 +17,5 @@
                                     "fail")))))
         (call-conduit
          phab
-         "harbordmaster.sendmessage"
+         "harbormaster.sendmessage"
          args)))))
