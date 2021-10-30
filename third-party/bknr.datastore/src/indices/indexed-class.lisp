@@ -260,7 +260,8 @@ also index subclasses of the class to which the slot belongs, default is T")
   (compute-class-indices class (indexed-class-index-definitions class))
   (reinitialize-class-indices class))
 
-(defmethod reinitialize-class-indices ((class indexed-class))
+(defmethod reinitialize-class-indices
+    ((class indexed-class))
   (let ((old-indices (remove class (indexed-class-old-indices class)
 			     :test-not #'eql :key #'index-holder-class))
 	(indices (remove class (indexed-class-indices class)
