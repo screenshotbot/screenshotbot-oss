@@ -196,11 +196,17 @@
              (slot (find-effective-slot class slot-name))
              (indices (bknr.indices::index-effective-slot-definition-indices slot)))
         (unless (= 1 (length indices))
-          (cerror "Continue using the first index"
-                  "There are multiple indices for this slot (~a, ~a), probably an error: ~a"
-                  class-name
-                  slot-name
-                  indices))
+          (restart-case
+              (error
+                      "There are multiple indices for this slot (~a, ~a), probably an error: ~a"
+                      class-name
+                      slot-name
+                      indices)
+            ("Set the index to the first index" ()
+              (setf (bknr.indices::index-effective-slot-definition-indices slot)
+                    (list (car indices))))
+            ("Continue using the first index"
+              (values))))
         (let*  ((index (car indices))
                 (unique-index-p (typep index 'bknr.indices:unique-index)))
           (let* ((hash-table (bknr.indices::slot-index-hash-table index))
@@ -212,8 +218,12 @@
             (restart-case
                 (assert-hash-tables= hash-table
                                      new-hash-table)
+              ("Fix the index" ()
+                (setf (bknr.indices::slot-index-hash-table index)
+                      new-hash-table))
               ("Continue testing other indices" ()
-                (values))))))
+                (values))
+))))
     ("Retry validate-class-index" ()
       (validate-class-index class-name slot-name))))
 
