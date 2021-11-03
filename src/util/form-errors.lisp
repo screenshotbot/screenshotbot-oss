@@ -6,19 +6,24 @@
 
 (uiop/package:define-package :util/form-errors
     (:use #:cl #:alexandria #:mquery)
-  (:export #:with-form-errors))
+  (:export #:with-form-errors
+           #:update-form-values))
 (in-package :util/form-errors)
 
 (markup:enable-reader)
+
+(defun update-form-values (html args)
+  (dolist (arg args)
+    (destructuring-bind (name . val) arg
+      (setf (mquery:val ($ (mquery:namequery name)))
+            val))))
 
 (defun %with-form-errors (html &key errors args was-validated)
   (mquery:with-document (html)
     (when was-validated
       (mquery:add-class ($ "input") "is-valid")
-      (dolist (arg args)
-        (destructuring-bind (name . val) arg
-          (setf (mquery:val ($ (mquery:namequery name)))
-                val)))
+      (update-form-values
+       html args)
       (dolist (err errors)
         (when (consp err)
          (destructuring-bind (name . msg) err
