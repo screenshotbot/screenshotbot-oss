@@ -105,6 +105,7 @@ clean-sys-index:
 	rm -f system-index.txt
 	rm -rfv local-projects/quicklisp
 	rm -rfv */system-index.txt
+	rm -f quicklisp/local-projects/system-index.txt
 
 tests:| show-info clean-sys-index test-parts selenium-tests conditional-copybara
 

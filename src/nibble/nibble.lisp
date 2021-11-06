@@ -76,17 +76,19 @@
       (symbolp args-and-options))
      ;; this is a named-nibble
      (let ((args (assoc-value *named-nibbles* args-and-options)))
-       `(nibble ,args
+       `(nibble ()
           (funcall ',args-and-options ,@ (loop for arg in args
                                                appending
                                                (list (intern (string arg) "KEYWORD")
-                                                     arg)))))
+                                                     (safe-parameter arg))))))
      )
     (t
      (let* ((position (position-if 'keywordp args-and-options))
             (args (subseq args-and-options 0 position))
             (options (when position (subseq args-and-options position))))
        (destructuring-bind (&key once method (check-session-p t)) options
+         (declare (ignore method)) ;; I don't remember why we introduced this
+                                   ;; in the first place
          `(let* ((id (make-id))
                  (nibble (make-instance 'nibble
                                          :impl (lambda ,args ,@body)
@@ -102,6 +104,9 @@
 
 (defmethod render-nibble ((plugin nibble-plugin) (nibble nibble))
   (render-nibble plugin (nibble-id nibble)))
+
+(defun safe-parameter (arg)
+  (hunchentoot:parameter (str:downcase arg)))
 
 (defmethod render-nibble ((plugin nibble-plugin) id)
   (funcall
@@ -122,7 +127,7 @@
            (t
             (with-slots (impl args session once check-session-p) nibble
               (let ((args (loop for arg in args
-                                collect (hunchentoot:parameter (str:downcase arg)))))
+                                collect (safe-parameter arg))))
                 (when (and (boundp 'hunchentoot:*request*) check-session-p)
                   (let ((current-session (current-session)))
                     (unless (auth:session= session current-session)
