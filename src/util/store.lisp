@@ -202,10 +202,10 @@
                       class-name
                       slot-name
                       indices)
-            ("Set the index to the first index" ()
+            (set-the-index-to-the-first-index ()
               (setf (bknr.indices::index-effective-slot-definition-indices slot)
                     (list (car indices))))
-            ("Continue using the first index"
+            (Continue-using-the-first-index
               (values))))
         (let*  ((index (car indices))
                 (unique-index-p (typep index 'bknr.indices:unique-index)))
@@ -218,13 +218,13 @@
             (restart-case
                 (assert-hash-tables= hash-table
                                      new-hash-table)
-              ("Fix the index" ()
+              (fix-the-index ()
                 (setf (bknr.indices::slot-index-hash-table index)
                       new-hash-table))
-              ("Continue testing other indices" ()
+              (continue-testing-other-indices ()
                 (values))
 ))))
-    ("Retry validate-class-index" ()
+    (retry--validate-class-index ()
       (validate-class-index class-name slot-name))))
 
 
