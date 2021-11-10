@@ -19,6 +19,7 @@
   (:use-reexport #:util/random-port)
   (:use-reexport #:util/ret-let
                  #:util/copying)
+  (:use-reexport #:util/make-instance-with-accessors)
   (:export #:head
            #:google-analytics
            #:safe-redirect
