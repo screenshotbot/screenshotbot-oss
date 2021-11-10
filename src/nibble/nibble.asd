@@ -12,5 +12,6 @@
 (defsystem :nibble/tests
   :serial t
   :depends-on (:nibble
+                  :util/fiveam
                   :fiveam)
   :components ((:file "test-nibble")))

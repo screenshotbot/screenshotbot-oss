@@ -80,7 +80,7 @@
           (funcall ',args-and-options ,@ (loop for arg in args
                                                appending
                                                (list (intern (string arg) "KEYWORD")
-                                                     (safe-parameter arg))))))
+                                                     `(safe-parameter ',arg))))))
      )
     (t
      (let* ((position (position-if 'keywordp args-and-options))
