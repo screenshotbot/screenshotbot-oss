@@ -49,7 +49,8 @@
 (defclass nibble-plugin (hex:acceptor-plugin)
   ((wrapper :initarg :wrapper
             :initform 'funcall
-            :accessor nibble-plugin-wrapper)))
+            :accessor nibble-plugin-wrapper))
+  (:default-initargs :prefix "/n/"))
 
 (defun make-id ()
   (secure-random:number (ash 1 120)))

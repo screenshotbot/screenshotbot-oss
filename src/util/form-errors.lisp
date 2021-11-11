@@ -12,7 +12,7 @@
 
 (markup:enable-reader)
 
-(defun update-form-values (html args)
+(defun update-form-values (args)
   (dolist (arg args)
     (destructuring-bind (name . val) arg
       (setf (mquery:val ($ (mquery:namequery name)))
@@ -24,7 +24,7 @@
      (when was-validated
        (mquery:add-class ($ "input") "is-valid")
        (update-form-values
-        html args)
+        args)
        (dolist (err errors)
          (when (consp err)
            (destructuring-bind (name . msg) err

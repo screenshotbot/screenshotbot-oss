@@ -133,7 +133,8 @@
 
 (defmacro with-document ((doc) &body body)
   `(let ((*document* ,doc))
-     ,@body))
+     ,@body
+     *document*))
 
 (defun only (x)
   (if (listp x)
