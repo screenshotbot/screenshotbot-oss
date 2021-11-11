@@ -18,33 +18,35 @@
       (setf (mquery:val ($ (mquery:namequery name)))
             val))))
 
-(defun %with-form-errors (html &key errors args was-validated)
-  (mquery:with-document (html)
-    (when was-validated
-      (mquery:add-class ($ "input") "is-valid")
-      (update-form-values
-       html args)
-      (dolist (err errors)
-        (when (consp err)
-         (destructuring-bind (name . msg) err
-           (let ((input ($ (mquery:namequery name))))
-             (assert input)
-             (mquery:remove-class input "is-valid")
-             (mquery:add-class input "is-invalid")
-             (setf (mquery:after
-                    (cond
-                      ((equal "checkbox" (mquery:attr input "type"))
-                       ;; for checkbox there's a label after the input form
-                       (mquery:after input))
-                      (t
-                       input)))
-                   <div class= "invalid-feedback">,(progn msg)</div>)))))))
+(defun %with-form-errors (html &key errors args args-list was-validated)
+  (let ((args (append args args-list)))
+   (mquery:with-document (html)
+     (when was-validated
+       (mquery:add-class ($ "input") "is-valid")
+       (update-form-values
+        html args)
+       (dolist (err errors)
+         (when (consp err)
+           (destructuring-bind (name . msg) err
+             (let ((input ($ (mquery:namequery name))))
+               (assert input)
+               (mquery:remove-class input "is-valid")
+               (mquery:add-class input "is-invalid")
+               (setf (mquery:after
+                      (cond
+                        ((equal "checkbox" (mquery:attr input "type"))
+                         ;; for checkbox there's a label after the input form
+                         (mquery:after input))
+                        (t
+                         input)))
+                     <div class= "invalid-feedback">,(progn msg)</div>))))))))
   (values html errors))
 
-(defmacro with-form-errors ((&rest args &key errors was-validated &allow-other-keys) &body body)
+(defmacro with-form-errors ((&rest args &key errors args-list was-validated &allow-other-keys) &body body)
   (let* ((args (plist-alist args)))
     `(%with-form-errors (progn ,@body)
                         :errors ,errors
                         :was-validated ,was-validated
                         :args (list ,@(loop for x in args collect
-                                          `(cons ,(car x) ,(cdr x)))))))
+                                            `(cons ,(car x) ,(cdr x))))
+                        :args-list ,args-list)))
