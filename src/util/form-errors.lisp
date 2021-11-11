@@ -39,7 +39,7 @@
                       (t
                        input)))
                    <div class= "invalid-feedback">,(progn msg)</div>)))))))
-  html)
+  (values html errors))
 
 (defmacro with-form-errors ((&rest args &key errors was-validated &allow-other-keys) &body body)
   (let* ((args (plist-alist args)))
