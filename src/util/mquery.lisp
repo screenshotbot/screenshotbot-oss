@@ -216,8 +216,19 @@
        (setf (attr x "value") value))
       ((val-is-inner-html x)
        (setf (text x) value))
+      ((eql :select (xml-tag-name x))
+       (setf (select-option-val x) value))
       (t
        (error "unsupport (Setf val) type: ~s" x)))))
+
+(defun (setf select-option-val) (value x)
+  (when value
+    (loop for child in (xml-tag-children x)
+          if (and
+              (typep child 'xml-tag)
+              (string= value (attr child "value")))
+            do
+               (setf (attr child "selected") ""))))
 
 (defun text (x)
   (let ((stream (make-string-output-stream)))
