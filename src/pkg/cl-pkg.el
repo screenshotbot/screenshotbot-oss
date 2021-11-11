@@ -21,7 +21,7 @@
 
 (defun cl-pkg--jump-to-import-from (import-from)
   (interactive)
-  (flet ((start-of-next-sexp
+  (cl-flet ((start-of-next-sexp
           ()
           (ignore-errors
             (forward-sexp 2)
@@ -43,7 +43,7 @@
                     (forward-sexp 2)
                     (when (equal import-from (thing-at-point 'sexp))
                       ;; we're here
-                      (return nil)))))
+                      (cl-return nil)))))
               finally
               (progn
                 ;; if we're here, we didn't find the appropriate import from :/
