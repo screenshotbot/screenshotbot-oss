@@ -233,10 +233,8 @@
           collect child))
 
 (defun (setf select-option-val) (value x)
-  (log:info "Setting option val")
   (when value
     (loop for child in (%expand-children (xml-tag-children x))
-          do (log:info "looking at ~s" (type-of child))
           if (and
               (typep child 'xml-tag)
               (string= value (attr child "value")))
