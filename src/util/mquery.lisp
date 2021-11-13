@@ -222,9 +222,21 @@
       (t
        (error "unsupport (Setf val) type: ~s" x)))))
 
+(defun %expand-children (children)
+  "Sometimes a child might be a merge tag. It's annoying to deal with,
+  so let's expand it before processing it. Only expands the first
+  level."
+  (loop for child in children
+        if (typep child 'xml-merge-tag)
+          appending (xml-merge-tag-children child)
+        else
+          collect child))
+
 (defun (setf select-option-val) (value x)
+  (log:info "Setting option val")
   (when value
-    (loop for child in (xml-tag-children x)
+    (loop for child in (%expand-children (xml-tag-children x))
+          do (log:info "looking at ~s" (type-of child))
           if (and
               (typep child 'xml-tag)
               (string= value (attr child "value")))

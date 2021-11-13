@@ -15,6 +15,7 @@
 (defun update-form-values (args)
   (dolist (arg args)
     (destructuring-bind (name . val) arg
+      (log:info "Setting ~S" arg)
       (setf (mquery:val ($ (mquery:namequery name)))
             val))))
 
