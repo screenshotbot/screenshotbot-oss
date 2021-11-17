@@ -65,6 +65,7 @@
                (:file "ret-let")
                (:file "copying")
                (:file "make-instance-with-accessors")
+               (:file "emacs")
                (:file "package")
                (:file "mockable")
                (:file "object-id")
