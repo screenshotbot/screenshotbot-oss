@@ -19,3 +19,15 @@
                       (cdr parts)))))
     (t
      url)))
+
+(defun funcall-if (fn arg &rest rest)
+  "If arg is not nil, then call the function fn with the args (cons arg rest)"
+  (when arg
+    (apply fn arg rest)))
+
+(defmacro ?. (fn arg &rest rest)
+  (alexandria:with-gensyms (arg-val)
+    `(let ((,arg-val ,arg))
+       (funcall-if (function ,fn)
+                   ,arg-val
+                   ,@rest))))
