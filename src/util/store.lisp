@@ -157,6 +157,15 @@
    (null x)
    (not (listp x))))
 
+(defun hash-set-difference (left right &key test)
+  "Similar to set-"
+  (let ((table (make-hash-table :test test)))
+    (dolist (x left)
+      (setf (gethash x table) t))
+    (dolist (x right)
+      (remhash x table))
+    (alexandria:hash-table-keys table)))
+
 (defun unordered-equalp (list1 list2 &key (test #'eql))
   (declare (optimize (debug 3)))
   (cond
@@ -170,8 +179,8 @@
      nil)
     (t
      (and
-      (eql nil (set-difference list1 list2 :test test))
-      (eql nil (set-difference list2 list1 :test test))))))
+      (eql nil (hash-set-difference list1 list2 :test test))
+      (eql nil (hash-set-difference list2 list1 :test test))))))
 
 (defun assert-hash-tables= (h1 h2)
   (unless (eql (hash-table-test h1)
