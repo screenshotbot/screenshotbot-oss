@@ -1,7 +1,7 @@
 name: quicklisp
-version: 2021-08-07
-system-index-url: http://beta.quicklisp.org/dist/quicklisp/2021-08-07/systems.txt
-release-index-url: http://beta.quicklisp.org/dist/quicklisp/2021-08-07/releases.txt
+version: 2021-10-21
+system-index-url: http://beta.quicklisp.org/dist/quicklisp/2021-10-21/systems.txt
+release-index-url: http://beta.quicklisp.org/dist/quicklisp/2021-10-21/releases.txt
 archive-base-url: http://beta.quicklisp.org/
-canonical-distinfo-url: http://beta.quicklisp.org/dist/quicklisp/2021-08-07/distinfo.txt
+canonical-distinfo-url: http://beta.quicklisp.org/dist/quicklisp/2021-10-21/distinfo.txt
 distinfo-subscription-url: http://beta.quicklisp.org/dist/quicklisp.txt
