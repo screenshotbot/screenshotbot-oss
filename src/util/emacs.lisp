@@ -14,9 +14,10 @@
     #'package-name
     (sort
      (loop for package in (list-all-packages)
-           if (a:when-let (sym (find-symbol (string-upcase name)
-                                            package))
-                (eql package (symbol-package sym)))
+           if (unless (string-equal current-package (package-name package))
+               (a:when-let (sym (find-symbol (string-upcase name)
+                                             package))
+                 (eql package (symbol-package sym))))
              collect package)
      #'> :key (lambda (package)
                 (let ((package-name (package-name package)))
