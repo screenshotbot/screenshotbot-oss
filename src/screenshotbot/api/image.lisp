@@ -152,7 +152,11 @@
     (retry ()
       (get-etag bucket key))))
 
-(defun verify-image (image)
+(defmethod verify-image ((image local-image))
+  "local-images don't need verification"
+  t)
+
+(defmethod verify-image (image)
   (unless (screenshotbot/model/image:verified-p image)
     ;; check again! could've been verified by now
     (let ((etag
