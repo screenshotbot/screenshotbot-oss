@@ -14,7 +14,7 @@
     (ccl:quit)))
 
 #+ (or ccl)
-(unless (uiop:getenv "SCREENSHOTBOT_DEBUG")
+(unless (ccl:getenv "SCREENSHOTBOT_DEBUG")
  (setf *debugger-hook*
        #'debug-log))
 
