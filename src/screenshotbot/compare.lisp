@@ -157,11 +157,11 @@
                                                     (not (image= (screenshot-image s1)
                                                                  (Screenshot-image x)
                                                                  ;; always use the new mask
-                                                                 (screenshot-masks x))))
+                                                                 (screenshot-masks s1))))
                                                   collect
                                                   (make-instance 'change
                                                                  :before s1
-                                                                 :masks (screenshot-masks x)
+                                                                 :masks (screenshot-masks s1)
                                                                  :after x))))))
     (retry-make-diff-report ()
       (make-diff-report run to))))
@@ -330,7 +330,7 @@
        <div class= "card mt-3">
          <div class= "card-body">
            <p>
-             <h1>Changes</h1>
+             <h1>,(length changes) changes</h1>
        ,@(loop for change in changes
                for s = (before change)
                for x = (after change)
