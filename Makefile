@@ -68,6 +68,10 @@ define ht_check_tests
 	TMP=$(TMPFILE) && $1 | tee  $$TMP &&  grep "all tests PASSED" $$TMP && rm $$TMP
 endef
 
+ifneq ("$(wildcard scripts/common.mk)", "")
+	include scripts/common.mk
+endif
+
 all:
 	true
 
