@@ -31,3 +31,5 @@
        (funcall-if (function ,fn)
                    ,arg-val
                    ,@rest))))
+
+(local-time:reread-timezone-repository)
