@@ -115,7 +115,7 @@ tests:| show-info clean-sys-index test-parts selenium-tests conditional-copybara
 
 test-parts: test-sb test-lw test-ccl test-store web-bin
 
-test-sb: submodule $(sbcl)
+test-sb: submodule $(sbcl) build/affected-files.txt
 	pwd
 	$(sbcl) --script ./jenkins.lisp
 
@@ -123,7 +123,7 @@ test-ccl: submodule $(CCL_IMAGE)
 	pwd
 	$(CCL_SCRIPT) ./jenkins.lisp
 
-test-lw: submodule $(LW)
+test-lw: submodule $(LW) build/affected-files.txt
 	pwd
 	$(LW_SCRIPT) ./jenkins.lisp
 

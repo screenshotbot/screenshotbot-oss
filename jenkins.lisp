@@ -6,12 +6,19 @@
 
 ;; these quickloads are required because we need to load them before
 ;; we set dspec:*redefinition-action* to :error
+
 (ql:quickload "babel" :silent t)
 
 #-screenshotbot-oss
 (ql:quickload "clsql" :silent t)
 #-screenshotbot-oss
 (ql:quickload "clsql-helper" :silent t)
+
+#-screenshotbot-oss
+(ql:quickload "testing")
+
+(ql:quickload "fiveam")
+
 (ql:quickload "colorize" :silent t)
 (ql:quickload "tmpdir" :silent t)
 
@@ -64,16 +71,29 @@
                   (when pos
                     (str:split "," (elt system:*line-arguments-list* (1+ pos)))))
                 (find-tests))))
-  (ql:quickload systems))
+  #-screenshotbot-oss
+  (progn
+    (push "markup.test" systems)
+    #-ccl
+    (when (uiop:getenv "JENKINS_URL")
+      (let ((files (uiop:read-file-lines "build/affected-files.txt")))
+        (log:info "Got affected files ~S" files)
+        (setf systems (testing/affected-systems:filter-affected-systems
+                       systems
+                      files)))))
+  (log:info "Running the following tests: ~S" systems)
+
+  (ql:quickload
+   systems))
 
 ;;(ql:quickload "auth")
 ;;(asdf:load-system "auth")
 
-#-screenshotbot-oss
-(ql:quickload "markup.test")
+
 
 (eval `(setf ,(find-symbol "*IN-TEST-P*" "UTIL")
              t))
+
 
 (defun main ()
   (tmpdir:with-tmpdir (tmpdir)
