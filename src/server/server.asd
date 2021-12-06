@@ -11,6 +11,17 @@
                #+ (or ccl lispworks)
                "jvm"
                "trivial-shell"
+               "bordeaux-threads"
+               "bknr.datastore"
+               "hunchentoot-multi-acceptor")
+  :serial t
+  :components ((:file "setup")))
+
+;; For slynk support, load this before calling server:main. The reason
+;; we separate this into a separate system is for support with SLIME,
+;; which is needed if you're using Atom's SLIMA.
+(defsystem "server/slynk"
+  :depends-on ("server"
                "slynk"
                "slynk/arglists"
                "slynk/fancy-inspector"
@@ -20,12 +31,8 @@
                "slynk/profiler"
                "slynk/stickers"
                "slynk/indentation"
-               "slynk/retro"
-               "bordeaux-threads"
-               "bknr.datastore"
-               "hunchentoot-multi-acceptor")
-  :serial t
-  :components ((:file "setup")))
+               "slynk/retro")
+  :components ((:file "slynk-preparer")))
 
 (defsystem :server/tests
     :depends-on (:server))

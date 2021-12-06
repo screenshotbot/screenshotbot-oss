@@ -9,7 +9,12 @@
         #:bknr.datastore)
   (:export #:main
            #:register-acceptor
-           #:slynk-loop))
+           #:slynk-loop
+           #:*slynk-preparer*
+           #:slynk-prepare
+           #:*slynk-loopback-interface*
+           #:*slynk-port*
+           #:slynk-teardown))
 (in-package #:server)
 
 (defvar *shutdown-cv* (bt:make-condition-variable))
@@ -38,6 +43,7 @@ ways."
 (defvar *socketmaster*)
 (defvar *shell*)
 (defvar *start-slynk*)
+(defvar *slynk-loopback-interface*)
 
 (defparameter *options*
   `((*port* #+screenshotbot-oss "4091"
@@ -102,6 +108,13 @@ ways."
   (mapc 'funcall *init-hooks*)
   (setf *init-hooks* nil))
 
+(defvar *slynk-preparer* nil)
+
+(defmethod slynk-prepare (preparer)
+  (values))
+
+(defmethod slynk-teardown (preparer)
+  (values))
 
 (defvar *multi-server*)
 
@@ -203,8 +216,7 @@ ways."
        (cl-cron:start-cron)
 
        (when *start-slynk*
-         (log:info "starting up slynk")
-         (Server:slynk-loop))
+         (slynk-prepare *slynk-preparer*))
 
        (cond
          (*shell*
@@ -226,7 +238,7 @@ ways."
   (bknr.datastore:snapshot)
   (bknr.datastore:close-store)
   (log:info "Shutting down slynk")
-  (slynk:stop-server (parse-integer *slynk-port*))
+  (slynk-teardown *slynk-preparer*)
   (log:info "All services down")
   #+lispworks
   (wait-for-processes)
@@ -260,11 +272,3 @@ ways."
   (log:info "We waited for threads to cleanup but nothing happened, so we're going for a force uiop:quit")
   (log4cl:flush-all-appenders)
   (uiop:quit))
-
-(defun slynk-loop ()
-  (log:info "Using port for slynk: ~a" *slynk-port*)
-  (setf slynk:*loopback-interface* *slynk-loopback-interface*)
-  (slynk:create-server :port (parse-integer *slynk-port*)
-                       ;; if non-nil the connection won't be closed
-                       ;; after connecting
-                       :dont-close t))
