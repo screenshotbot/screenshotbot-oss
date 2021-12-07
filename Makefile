@@ -200,7 +200,7 @@ $(sbcl): build $(IMAGE_DEPS)
 
 
 selenium-tests: $(LW)
-	xvfb-run -a $(LW_SCRIPT) scripts/run-selenium-tests.lisp
+	$(LW_SCRIPT) scripts/run-selenium-tests.lisp
 
 selenium-tests-without-x: $(LW)
 	$(LW_SCRIPT) scripts/run-selenium-tests.lisp
