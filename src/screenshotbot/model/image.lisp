@@ -207,44 +207,55 @@
       (setf (gethash cache-key cache)
             (%perceptual-hash img masks))))))
 
-(defun read-image-with-opticl (img)
+(defun %read-image-with-opticl (img)
+  "Don't use directly, use with-opticl-image instead"
   (with-open-stream (remote (open-image-stream img))
     (opticl:read-png-stream remote)))
 
+(defun call-with-opticl-image (img body)
+  ;; todo: can we clean up the image immediately? In theory, if we use
+  ;; static vectors and call pngload:wit-png-in-static-vector, this
+  ;; will free the memory immediately, but only on SBCL and CCL.
+  (funcall body (%read-image-with-opticl img)))
+
+(defmacro with-opticl-image ((output img) &body body)
+  `(let ((body (lambda (,output) ,@body)))
+     (call-with-opticl-image ,img body)))
+
 (defun find-unequal-pixels (img1 img2)
-  (let ((arr1 (read-image-with-opticl img1))
-        (arr2 (read-image-with-opticl img2))
-        (res (make-array 0 :adjustable t
-                         :fill-pointer t)))
-    (map-unequal-pixels arr1 arr2
-                        (lambda (i j)
-                          (vector-push-extend (cons i j)
-                                              res)))
-    res))
+  (with-opticl-image (arr1 img1)
+    (with-opticl-image (arr2 img2)
+     (let ((res (make-array 0 :adjustable t
+                              :fill-pointer t)))
+       (map-unequal-pixels arr1 arr2
+                           (lambda (i j)
+                             (vector-push-extend (cons i j)
+                                                 res)))
+       res))))
 
 (defun random-unequal-pixel (img1 img2 &key masks)
   (declare (optimize (speed 3) (safety 0)))
-  (let ((arr1 (read-image-with-opticl img1))
-        (arr2 (read-image-with-opticl img2)))
-    (flet ((%map-unequal-pixels (fn)
-             (map-unequal-pixels
-              arr1 arr2 fn :masks masks)))
-      (let ((num-bad 0))
-        (declare (type fixnum num-bad))
-        (%map-unequal-pixels
-         (lambda (i j)
-           (declare (ignore i j))
-           (incf num-bad)))
-        (let ((ctr (random num-bad)))
-          (declare (type fixnum ctr))
-          (%map-unequal-pixels
-           (lambda (i j)
-             (declare (fixnum i j))
-             (when (= ctr 0)
-               (return-from random-unequal-pixel
-                 (cons i j)))
-             (decf ctr))))))
-    (error "Should not get here, probably our CTR is off by one")))
+  (with-opticl-image (arr1 img1)
+    (with-opticl-image (arr2 img2)
+     (flet ((%map-unequal-pixels (fn)
+              (map-unequal-pixels
+               arr1 arr2 fn :masks masks)))
+       (let ((num-bad 0))
+         (declare (type fixnum num-bad))
+         (%map-unequal-pixels
+          (lambda (i j)
+            (declare (ignore i j))
+            (incf num-bad)))
+         (let ((ctr (random num-bad)))
+           (declare (type fixnum ctr))
+           (%map-unequal-pixels
+            (lambda (i j)
+              (declare (fixnum i j))
+              (when (= ctr 0)
+                (return-from random-unequal-pixel
+                  (cons i j)))
+              (decf ctr))))))
+      (error "Should not get here, probably our CTR is off by one"))))
 
 (defun px-in-mask-p (i j mask)
   (declare (optimize (speed 3) (safety 0))
@@ -277,20 +288,20 @@
   (log:info :image "checking images by content: ~s, ~s" img1 img2)
   (cond
     (slow
-     (let ((arr1 (read-image-with-opticl img1))
-           (arr2 (read-image-with-opticl img2)))
-       (cond
-         ((not (equalp (array-dimensions arr1) (array-dimensions arr2)))
-          (log:info :image "Array dimension don't match: ~s, ~s" arr1 arr2)
-          nil)
-         (t
-          (block check
-            (let ((resp t))
-              (map-unequal-pixels arr1 arr2
-                                  (lambda (i j)
-                                    (declare (ignore i j))
-                                    (Setf resp nil)))
-              resp))))))
+     (with-opticl-image (arr1 img1)
+       (with-opticl-image (arr2 img2)
+        (cond
+          ((not (equalp (array-dimensions arr1) (array-dimensions arr2)))
+           (log:info :image "Array dimension don't match: ~s, ~s" arr1 arr2)
+           nil)
+          (t
+           (block check
+             (let ((resp t))
+               (map-unequal-pixels arr1 arr2
+                                   (lambda (i j)
+                                     (declare (ignore i j))
+                                     (Setf resp nil)))
+               resp)))))))
     (t
      (let ((hash1 (perceptual-hash img1 :masks masks))
            (hash2 (perceptual-hash img2 :masks masks)))
