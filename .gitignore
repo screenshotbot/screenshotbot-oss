@@ -27,3 +27,7 @@ nohup.out
 sandbox
 *~
 *.64yfasl
+
+# competitive programming
+input
+dummy-input
