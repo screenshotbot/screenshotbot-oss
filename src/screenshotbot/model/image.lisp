@@ -207,16 +207,13 @@
       (setf (gethash cache-key cache)
             (%perceptual-hash img masks))))))
 
-(defun %read-image-with-opticl (img)
-  "Don't use directly, use with-opticl-image instead"
-  (with-open-stream (remote (open-image-stream img))
-    (opticl:read-png-stream remote)))
-
 (defun call-with-opticl-image (img body)
   ;; todo: can we clean up the image immediately? In theory, if we use
   ;; static vectors and call pngload:wit-png-in-static-vector, this
   ;; will free the memory immediately, but only on SBCL and CCL.
-  (funcall body (%read-image-with-opticl img)))
+  (with-local-image (file img)
+    (let ((png (pngload:load-file file)))
+     (funcall body (pngload:data png)))))
 
 (defmacro with-opticl-image ((output img) &body body)
   `(let ((body (lambda (,output) ,@body)))
