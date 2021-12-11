@@ -269,17 +269,22 @@
        (+ (mask-rect-left mask) (mask-rect-width mask) -1))))
 
 (defun map-unequal-pixels (arr1 arr2 fn &key masks)
-  (let ((dim (array-dimensions arr1)))
+  (let* ((dim (array-dimensions arr1))
+         (max-k (elt dim 2)))
+    (declare (type fixnum max-k))
     (dotimes (i (elt dim 0))
+      (declare (type fixnum i))
       (dotimes (j (elt dim 1))
+        (declare (type fixnum j))
         (block inner-loop
-         (dotimes (k (elt dim 2))
-           (unless (= (aref arr1 i j k)
-                      (aref arr2 i j k))
-             (loop for mask in masks
-                   if (px-in-mask-p i j mask)
-                     do (return-from inner-loop))
-             (funcall fn i j)
+          (dotimes (k max-k)
+            (declare (type fixnum k))
+            (unless (= (aref arr1 i j k)
+                       (aref arr2 i j k))
+              (loop for mask in masks
+                    if (px-in-mask-p i j mask)
+                      do (return-from inner-loop))
+              (funcall fn i j)
              (return-from inner-loop))))))))
 
 
