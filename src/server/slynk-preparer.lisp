@@ -2,6 +2,8 @@
   (:use #:cl)
   (:import-from #:server
                 #:defmethod
+                #:slynk-prepare
+                #:slynk-teardown
                 #:*slynk-port*
                 #:*slynk-loopback-interface*)
   (:local-nicknames (#:a #:alexandria)))

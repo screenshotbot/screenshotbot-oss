@@ -200,6 +200,7 @@ $(sbcl): build $(IMAGE_DEPS)
 
 
 selenium-tests: $(LW)
+	rm -rf src/screenshotbot/selenium-output
 	$(LW_SCRIPT) scripts/run-selenium-tests.lisp
 
 selenium-tests-without-x: $(LW)
