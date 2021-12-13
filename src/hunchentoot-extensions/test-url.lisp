@@ -52,3 +52,7 @@
 
 (test use-integer-in-name
   (is (equal "/foo/23" (make-url "/foo/:bar" :bar 23))))
+
+(test make-url-with-http
+  (is (equal "https://example.com" (make-url "https://example.com")))
+  (is (equal "https://example.com?foo=bar" (make-url "https://example.com" :foo "bar"))))

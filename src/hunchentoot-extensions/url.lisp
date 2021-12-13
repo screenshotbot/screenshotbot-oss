@@ -81,7 +81,13 @@ to decide how to attach the new parameter to the end of the string."
       (or
        (str:starts-with-p "http:" path)
        (str:starts-with-p "https:" path)))
-     path)
+     ;; note that this path of addint params is very different from
+     ;; the when we're dealint giwht url handlers since, in that case
+     ;; you might have things like /foo/:bar.
+     (let ((url (quri:uri path)))
+       (loop for (key value)  on rest by #'cddr do
+         (push (cons (string-downcase key) value) (quri:uri-query-params url)))
+       (quri:render-uri url)))
     ((string= "/" path)
      "/")
     (t

@@ -318,6 +318,7 @@ Apache log analysis tools.)"
                 host
                 (hunchentoot:host)))))
 
+
 (defmethod safe-redirect (target &rest args)
   (let ((target (if (and target (not (equal "" target)))
                     target
