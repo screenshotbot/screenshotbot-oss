@@ -6,7 +6,7 @@
 
 sbcl=build/sbcl-console
 CACHE_KEY=5
-SBCL_CORE=sbcl
+SBCL_CORE=/usr/bin/sbcl
 CCL_DEFAULT_DIRECTORY=/opt/software/ccl
 CCL_CORE=$(CCL_DEFAULT_DIRECTORY)/lx86cl64
 CCL_IMAGE=build/ccl-console
