@@ -2,4 +2,5 @@
     (:use #:cl
           #:alexandria)
   (:use-reexport #:fiveam-matchers/core
-                 #:fiveam-matchers/lists))
+                 #:fiveam-matchers/lists
+                 #:fiveam-matchers/has-length))

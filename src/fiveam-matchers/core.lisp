@@ -4,15 +4,18 @@
   (:export
    #:equal-to
    #:is-not
+   #:matcher
    #:assert-that
    #:describe-self
+   #:describe-mismatch
    #:single-value-matcher
    #:self-describing-list
    #:has-all
    #:has-any
    #:has-typep
    #:ensure-matcher
-   #:is-string))
+   #:is-string
+   #:matchesp))
 
 (defclass matcher ()
   ())

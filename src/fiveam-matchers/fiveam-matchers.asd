@@ -4,6 +4,7 @@
                :pkg)
   :components ((:file "core")
                (:file "lists")
+               (:file "has-length")
                (:file "all")))
 
 (defsystem :fiveam-matchers/tests
