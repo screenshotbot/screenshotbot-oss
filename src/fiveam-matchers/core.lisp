@@ -35,7 +35,7 @@
 (defgeneric describe-mismatch (matcher value))
 
 (defmethod describe-self ((matcher matcher))
-  `(" matches a matcher of type" ,(type-of matcher)))
+  `(" matches a matcher of type " ,(type-of matcher)))
 
 ;; core matchers
 
