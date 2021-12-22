@@ -59,6 +59,10 @@
 
 
 (ql:quickload "log4cl")
+
+#+sbcl ;; not sure why I need this, I didn't debug in detail
+(ql:quickload "prove-asdf")
+
 (ql:quickload :documentation-utils)
 
 (log:info "*local-project-directories: ~S" ql:*local-project-directories*)
