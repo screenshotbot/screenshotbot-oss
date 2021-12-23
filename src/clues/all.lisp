@@ -1,2 +1,2 @@
 (uiop:define-package :clues
-  (:use-reexport))
+  (:use-reexport #:clues/injector))

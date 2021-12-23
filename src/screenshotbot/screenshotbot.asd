@@ -34,7 +34,8 @@
                :nibble
                :cl-json)
   :components
-  ((:file "ignore-and-log-errors")
+  ((:file "injector")
+   (:file "ignore-and-log-errors")
    (:file "analytics" :depends-on ("ignore-and-log-errors"))
    (:file "plugin")
    (:file "mailer")
