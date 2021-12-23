@@ -24,8 +24,6 @@
 #-sbcl
 (register-tdrhq "hunchentoot" "ade1b9bb1c110a180cb883aed105536cbb0ea5e7")
 
-;; I *think* I don't need this anymore
-#+nil
 (register-tdrhq "stripe" "673d4b9600eb7c2dd21b4701a1b18e348dca7267")
 
 (register-tdrhq "fiveam" "162bd30e6179fc787ee94e96104c8ce059d610ff")
