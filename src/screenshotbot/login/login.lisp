@@ -29,6 +29,10 @@
                 #:installation
                 #:auth-provider-signin-form
                 #:auth-providers)
+  (:import-from #:screenshotbot/injector
+                #:with-injection)
+  (:import-from #:screenshotbot/impersonation
+                #:impersonation)
   (:export #:auth-header-logo))
 (in-package :screenshotbot/login/login)
 
@@ -182,6 +186,8 @@
        (hard-signout)))))
 
 (defhandler (nil :uri "/signout") ()
-  (if-let ((default-auth-provider (default-oidc-provider (installation))))
-    (signout-from-oidc default-auth-provider)
-    (hard-signout)))
+  (with-injection (impersonation)
+    (screenshotbot/impersonation:logout impersonation)
+    (if-let ((default-auth-provider (default-oidc-provider (installation))))
+      (signout-from-oidc default-auth-provider)
+      (hard-signout))))

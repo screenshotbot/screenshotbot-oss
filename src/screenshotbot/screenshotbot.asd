@@ -79,6 +79,7 @@
                  (:file "commit-graph")
                  (:file "test-object")
                  (:file "all")))
+   (:file "impersonation")
    (:module "dashboard"
     :serial t
     :components ((:file "home")

@@ -7,6 +7,8 @@
 
 (defpackage :screenshotbot/injector
   (:use #:cl)
+  (:import-from #:clues/injector
+                #:get-instance)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-injection
@@ -20,6 +22,8 @@
 
 (defclass screenshotbot-injector (clues:injector)
   ())
+
+(defvar *injector* (make-instance 'screenshotbot-injector))
 
 (defmacro with-injection ((&rest args) &body body)
   (let ((args (loop for x in args

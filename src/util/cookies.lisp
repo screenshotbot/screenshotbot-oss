@@ -39,8 +39,8 @@
 (defmethod set-cookie ((self cookies) name value &key)
   (let ((domain (host-without-port self)))
     (hunchentoot:set-cookie
-     "s" :value value :domain domain :expires (+ (get-universal-time) 1000000)
-         :path "/" :secure (string=
-                            "https"
-                            (proto self))
-         :reply (reply self))))
+     name :value value :domain domain :expires (+ (get-universal-time) 1000000)
+          :path "/" :secure (string=
+                             "https"
+                             (proto self))
+          :reply (reply self))))
