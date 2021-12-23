@@ -44,6 +44,7 @@
                "markup"
                "alexandria"
                "uuid"
+               "clues"
                "tmpdir"
                "cl-mop"
                "secure-random"
@@ -66,6 +67,7 @@
                (:file "copying")
                (:file "make-instance-with-accessors")
                (:file "emacs")
+               (:file "cookies")
                (:file "package")
                (:file "mockable")
                (:file "object-id")
@@ -118,6 +120,7 @@
                 :components ((:file "test-package")
                              (:file "test-ret-let")
                              (:file "test-store")
+                             (:file "test-cookies")
                              (:file "test-fiveam")
                              (:file "test-lists")
                              (:file "test-models")
