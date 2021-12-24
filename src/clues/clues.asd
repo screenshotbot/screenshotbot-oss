@@ -1,6 +1,7 @@
 (defsystem :clues
   :serial t
-  :depends-on (:alexandria)
+  :depends-on (:alexandria
+               :closer-mop)
   :components ((:file "injector")
                (:file "module")
                (:file "injectable")
