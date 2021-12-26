@@ -12,7 +12,8 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-injection
-   #:screenshotbot-injector))
+   #:screenshotbot-injector
+   #:*injector*))
 (in-package :screenshotbot/injector)
 
 ;;;; As of writing, the CLUES injection library is experimental, and
