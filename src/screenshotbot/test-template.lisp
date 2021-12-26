@@ -17,24 +17,34 @@
   (:import-from #:fiveam-matchers
                 #:is-string
                 #:has-typep
-                #:assert-that))
+                #:assert-that)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:*installation*))
 
 (util/fiveam:def-suite)
 
+(def-fixture state ()
+  (let ((*installation* (make-instance 'installation)))
+    (&body)))
+
 (test simple-template
-  (screenshotbot/template:dashboard-template
-   :user *user*
-   :company *company*
-   :script-name "/runs")
+  (with-fixture state ()
+   (screenshotbot/template:dashboard-template
+    :user *user*
+    :company *company*
+    :script-name "/runs"))
   (pass))
 
 
 (test landing-template
-  (landing-template
-   "foo")
+  (with-fixture state ()
+   (landing-template
+    "foo"))
   (pass))
 
 (test something-went-wrong
-  (assert-that
-   (something-went-wrong)
-   (is-string)))
+  (with-fixture state ()
+   (assert-that
+    (something-went-wrong)
+    (is-string))))

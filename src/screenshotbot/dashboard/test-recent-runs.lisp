@@ -20,7 +20,10 @@
   (:import-from #:../factory
                 #:*user*
                 #:*company*
-                #:test-company))
+                #:test-company)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:*installation*))
 
 (util/fiveam:def-suite)
 
@@ -64,13 +67,14 @@
     (pass)))
 
 (test recent-runs
-  (let ((runs (loop for i from 1 to 100 collect
-                                        (make-instance 'test-run))))
-    (let ((company (make-instance 'test-company :runs runs)))
-     (render-recent-runs runs
-                         :user *user*
-                         :check-access-p nil
-                         :script-name "/runs"
-                         :numbersp nil
-                         :company company)
-      (pass))))
+  (let ((*installation* (make-instance 'installation)))
+   (let ((runs (loop for i from 1 to 100 collect
+                                         (make-instance 'test-run))))
+     (let ((company (make-instance 'test-company :runs runs)))
+       (render-recent-runs runs
+                           :user *user*
+                           :check-access-p nil
+                           :script-name "/runs"
+                           :numbersp nil
+                           :company company)
+       (pass)))))

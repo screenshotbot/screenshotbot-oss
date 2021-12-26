@@ -14,7 +14,10 @@
   (:import-from #:../factory
                 #:test-user
                 #:test-channel
-                #:test-company))
+                #:test-company)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:*installation*))
 
 (util/fiveam:def-suite)
 
@@ -25,7 +28,8 @@
   (list (make-instance 'test-channel)))
 
 (test simple-view
-  (let ((user (make-instance 'test-user))
-        (company (make-instance 'company-with-channels)))
-    (%list-projects :user user
-                    :company company)))
+  (let ((*installation* (make-instance 'installation)))
+   (let ((user (make-instance 'test-user))
+         (company (make-instance 'company-with-channels)))
+     (%list-projects :user user
+                     :company company))))

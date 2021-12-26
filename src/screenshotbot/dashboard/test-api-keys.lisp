@@ -14,13 +14,17 @@
   (:import-from #:../factory
                 #:test-user
                 #:test-api-key
-                #:*company*))
+                #:*company*)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:*installation*))
 
 (util/fiveam:def-suite)
 
 (test simple-page-test
-  (%api-key-page :user (make-instance 'test-user
+  (let ((*installation* (make-instance 'installation)))
+   (%api-key-page :user (make-instance 'test-user
                                        :api-keys (list (make-instance 'test-api-key
-                                                                       :key "foo"
-                                                                       :secret "sdfsdfdfdfs")))
-                 :company *company*))
+                                                                      :key "foo"
+                                                                      :secret "sdfsdfdfdfs")))
+                  :company *company*)))
