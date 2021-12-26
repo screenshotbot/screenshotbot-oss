@@ -21,8 +21,6 @@
 (quick-patch:register "https://github.com/moderninterpreters/markup"
                             "4dd66b0a0223f58e581697a1713ffbf77c0ab798")
 
-#-sbcl
-(register-tdrhq "hunchentoot" "ade1b9bb1c110a180cb883aed105536cbb0ea5e7")
 
 (register-tdrhq "stripe" "673d4b9600eb7c2dd21b4701a1b18e348dca7267")
 
