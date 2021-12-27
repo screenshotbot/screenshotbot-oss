@@ -15,7 +15,8 @@
                "bknr.datastore"
                "hunchentoot-multi-acceptor")
   :serial t
-  :components ((:file "setup")))
+  :components ((:file "interrupts")
+               (:file "setup")))
 
 ;; For slynk support, load this before calling server:main. The reason
 ;; we separate this into a separate system is for support with SLIME,
