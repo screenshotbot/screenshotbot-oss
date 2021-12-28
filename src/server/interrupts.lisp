@@ -9,7 +9,9 @@
   #+lispworks
   (:import-from #:system
                 #:set-signal-handler)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:unwind-on-interrupt))
 (in-package :server/interrupts)
 
 (defclass interrupt-handler ()
@@ -40,9 +42,9 @@
 
   (bt:make-thread
    (lambda ()
-    (bt:with-lock-held ((lock handler))
-      (setf (interruptedp handler) t)
-      (bt:condition-notify (cv handler))))))
+     (bt:with-lock-held ((lock handler))
+       (setf (interruptedp handler) t)
+       (bt:condition-notify (cv handler))))))
 
 (defun wait-for-interrupt (handler)
   (bt:with-lock-held ((lock handler))
@@ -50,22 +52,33 @@
           do (bt:condition-wait (cv handler) (lock handler)))))
 
 (defun call-unwind-on-interrupt (expr unwind)
-  (let ((interrupt-handler (make-instance 'interrupt-handler)))
-    (unwind-protect
-         (progn
-           (set-signal-handler 15 (lambda (&rest args)
-                                    (declare (ignore args))
-                                    (on-interrupt interrupt-handler)))
-           (funcall expr)
-           (wait-for-interrupt interrupt-handler)
+  (let ((interrupt-handler (make-instance 'interrupt-handler))
+        (signals (list 15 #|SIGTERM|#
+                       2 #|SIGINT|#)))
+    (flet ((prepare-interrupts ()
+             (dolist (sig signals)
+              (set-signal-handler sig (lambda (&rest args)
+                                       (declare (ignore args))
+                                       (on-interrupt interrupt-handler))))))
+     (unwind-protect
+          (progn
+            (prepare-interrupts)
+            ;; Notice that expr won't be interrupted midway, we'll only
+            ;; interrupt at the end of this call.
+            (funcall expr)
+            (log:info "Waiting for interrupts")
 
-           ;; Should we call unwind in the unwind-protect?  Maybe. The
-           ;; concern is if the initializers failed for some reason,
-           ;; we probably don't want to run the unwind code. So
-           ;; there's some trickiness here in the API we want to
-           ;; expose.
-           (funcall unwind))
-      (set-signal-handler 15 t))))
+            (prepare-interrupts)
+            (wait-for-interrupt interrupt-handler)
+
+            ;; Should we call unwind in the unwind-protect?  Maybe. The
+            ;; concern is if the initializers failed for some reason,
+            ;; we probably don't want to run the unwind code. So
+            ;; there's some trickiness here in the API we want to
+            ;; expose.
+            (funcall unwind))
+       (dolist (sig signals)
+         (set-signal-handler sig t))))))
 
 (defmacro unwind-on-interrupt (() expr &body unwind)
   `(call-unwind-on-interrupt

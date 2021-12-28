@@ -6,7 +6,8 @@
 
 (defpackage #:server
   (:use #:cl
-        #:bknr.datastore)
+        #:bknr.datastore
+        #:server/interrupts)
   (:export #:main
            #:register-acceptor
            #:slynk-loop
@@ -16,9 +17,6 @@
            #:*slynk-port*
            #:slynk-teardown))
 (in-package #:server)
-
-(defvar *shutdown-cv* (bt:make-condition-variable))
-(defvar *server-lock* (bt:make-lock))
 
 (defun wait-for-network ()
   "If you start Screenshotbot with cron @reboot, you might encounter a
@@ -164,87 +162,96 @@ ways."
 (defun main (&optional #+sbcl listen-fd)
   "Called from launch scripts, either web-bin or launch.lisp"
 
-  (bt:with-lock-held (*server-lock*)
-    (let ((args #-lispworks (cons "<arg0>"(uiop:command-line-arguments))
-                #+lispworks sys:*line-arguments-list*))
-     (log:info "args is: ~s" args)
+  #+nil
+  (unwind-on-interrupt ()
+      (log:info "in here")
+    (log:info "out here"))
 
-     (multiple-value-bind (vars vals matched dispatch rest)
-         (cl-cli:parse-cli args
-                           *options*)
+  (unwind-on-interrupt ()
+      (progn
+        (let ((args #-lispworks (cons "<arg0>"(uiop:command-line-arguments))
+                    #+lispworks sys:*line-arguments-list*))
+          (log:info "args2 is: ~s" args)
 
-       (loop for var in vars
-          for val in vals
-             do (setf (symbol-value var) val))
+          (multiple-value-bind (vars vals matched dispatch rest)
+              (cl-cli:parse-cli args
+                                *options*)
 
-       (when *verify-store*
-         (log:config :info)
-         (util:verify-store)
-         (log:info "Done verifying store")
-         (uiop:quit 0))
+            (loop for var in vars
+                  for val in vals
+                  do (setf (symbol-value var) val))
 
-       #+nil
-       (when *verify-snapshots*
-         (log:config :info)
-         (util:verify-snapshots)
-         (uiop:quit 0))
+            (when *verify-store*
+              (log:config :info)
+              (util:verify-store)
+              (log:info "Done verifying store")
+              (uiop:quit 0))
 
-       (log:info "The port is now ~a" *port*)
-       (init-multi-acceptor)
-       #+lispworks
-       (jvm:jvm-init)
-       (setup-appenders)
+            #+nil
+            (when *verify-snapshots*
+              (log:config :info)
+              (util:verify-snapshots)
+              (uiop:quit 0))
 
-       (setup-log4cl-debugger-hook)
+            (log:info "The port is now ~a" *port*)
+            (init-multi-acceptor)
+            #+lispworks
+            (jvm:jvm-init)
+            (setup-appenders)
 
-       #-screenshotbot-oss
-       (unless util:*delivered-image*
-        (wait-for-network))
+            (setup-log4cl-debugger-hook)
 
-       #+sbcl
-       (progn
-         (format t "Using file descriptor ~A~%" listen-fd)
-         (setf (hunchentoot-multi-acceptor:listen-fd *multi-acceptor*) listen-fd))
+            #-screenshotbot-oss
+            (unless util:*delivered-image*
+              (wait-for-network))
 
-       ;; set this to t for 404 page. :/
-       (setf hunchentoot:*show-lisp-errors-p* t)
+            #+sbcl
+            (progn
+              (format t "Using file descriptor ~A~%" listen-fd)
+              (setf (hunchentoot-multi-acceptor:listen-fd *multi-acceptor*) listen-fd))
 
-       (setf hunchentoot:*rewrite-for-session-urls* nil)
+            ;; set this to t for 404 page. :/
+            (setf hunchentoot:*show-lisp-errors-p* t)
 
-       (util:prepare-store)
+            (setf hunchentoot:*rewrite-for-session-urls* nil)
 
-       (cl-cron:start-cron)
+            (util:prepare-store)
 
-       (when *start-slynk*
-         (slynk-prepare *slynk-preparer*))
+            (cl-cron:start-cron)
 
-       (cond
-         (*shell*
-          (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
-         (t
-          (hunchentoot:start *multi-acceptor*)))
+            (when *start-slynk*
+              (slynk-prepare *slynk-preparer*))
 
-       (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
-                 *port*)
+            (cond
+              (*shell*
+               (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
+              (t
+               (hunchentoot:start *multi-acceptor*)))
 
-       (setup-appenders :clear t)
+            (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
+                      *port*)
 
-       (log:info "Now we wait indefinitely for shutdown notifications")
-       (bt:condition-wait *shutdown-cv* *server-lock*))))
-  (log:info "Shutting down cron")
-  (cl-cron:stop-cron)
-  (log:info "Shutting down hunchentoot")
-  (hunchentoot:stop *multi-acceptor*)
-  (bknr.datastore:snapshot)
-  (bknr.datastore:close-store)
-  (log:info "Shutting down slynk")
-  (slynk-teardown *slynk-preparer*)
-  (log:info "All services down")
-  #+lispworks
-  (wait-for-processes)
-  (log:info "All threads before exiting: ~s" (bt:all-threads))
-  (log4cl:flush-all-appenders)
-  (log4cl:stop-hierarchy-watcher-thread))
+            (setup-appenders :clear t)
+
+            (log:info "Now we wait indefinitely for shutdown notifications"))))
+
+    ;; unwind if an interrupt happens
+    (format t "SHUTTING DOWN~%")
+    (finish-output t)
+    (log:info "Shutting down cron")
+    (cl-cron:stop-cron)
+    (log:info "Shutting down hunchentoot")
+    (hunchentoot:stop *multi-acceptor*)
+    (bknr.datastore:snapshot)
+    (bknr.datastore:close-store)
+    (log:info "Shutting down slynk")
+    (slynk-teardown *slynk-preparer*)
+    (log:info "All services down")
+    #+lispworks
+    (wait-for-processes)
+    (log:info "All threads before exiting: ~s" (bt:all-threads))
+    (log4cl:flush-all-appenders)
+    (log4cl:stop-hierarchy-watcher-thread)))
 
 #+lispworks
 (defun wait-for-processes ()
