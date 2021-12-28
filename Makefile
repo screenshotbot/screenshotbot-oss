@@ -130,13 +130,6 @@ test-lw: submodule $(LW) build/affected-files.txt
 test-store: submodule $(LW)
 	$(LW_SCRIPT) ./run-store-tests.lisp
 
-deploy-jipr:
-	cd $(JIPR) && buck build jipr
-	cd $(JIPR) && cp `buck targets --show-output jipr | cut -d ' ' -f 2`  $(PWD)/jipr/static/binary/jipr.jar
-
-restart: | test-lw
-	kill -9 `curl https://tdrhq.com/deploy/getpid`
-
 build: | build/cache-key $(DISTINFO)
 	# build/build? Temporary fix for LW8-darwin
 	mkdir -p build
@@ -171,10 +164,6 @@ screenshotbot-flow:
 	#	cd ~/builds/screenshotbot-example && ./gradlew :connectedDebugAndroidTest
 	cd ~/builds/screenshotbot-example && ./gradlew -i :debugAndroidTestScreenshotbot
 
-build/deploy.tar.gz: .PHONY
-	rm -f $@
-	tar cvzf $@ build/web-bin-delivered screenshotbot java/build/libs/
-
 bknr-tests-lw:
 
 screenshotbot-tests: $(LW) .PHONY
@@ -182,10 +171,6 @@ screenshotbot-tests: $(LW) .PHONY
 
 sdk-tests: $(LW) .PHONY
 	$(LW_SCRIPT) ./jenkins.lisp -system screenshotbot.sdk/tests -no-jvm
-
-deploy-rsync: .PHONY
-	rsync -aPz --exclude .git --exclude .web-bin-copy --exclude web-bin ./ ubuntu@mx.tdrhq.com:~/web/
-
 
 $(LW): build $(IMAGE_DEPS)
 	# $$PWD is workaround over LW issue #42471
@@ -208,17 +193,6 @@ assets: $(LW) .PHONY
 	cp $(LW_PREFIX)/lib/$(LW_VERSION)-0/etc/lispcalls.jar assets/
 	$(LW_SCRIPT) scripts/deliver-screenshotbot.lisp
 
-deploy-assets: | deploy-assets-excl-bin deploy-bin deploy-pull
-
-deploy-assets-excl-bin: assets
-	rsync --checksum -aPz --exclude screenshotbot assets web@screenshotbot.io:~/web/
-
-deploy-bin: assets
-	rsync -aPz assets/screenshotbot web@screenshotbot.io:~/web/assets/screenshotbot-copy
-	ssh web@screenshotbot.io mv '~/web/assets/screenshotbot-copy' '~/web/assets/screenshotbot'
-
-deploy-pull:
-	ssh web@screenshotbot.io 'cd web && git pull'
 
 $(CCL_IMAGE): build $(IMAGE_DEPS)
 	rm -f $@
