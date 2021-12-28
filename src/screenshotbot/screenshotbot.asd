@@ -144,7 +144,8 @@
                  (:file "forgot-password")))
    (:module "company"
     :serial t
-    :components ((:file "new")))
+    :components ((:file "new")
+                 (:file "members")))
    #+ (or ccl lispworks)
    (:module "slack"
     :serial t

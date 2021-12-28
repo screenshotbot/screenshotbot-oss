@@ -61,7 +61,8 @@
    #:email
    #:email-confirmations
    #:password-hash
-   #:notices))
+   #:notices
+   #:users-for-company))
 (in-package :screenshotbot/model/user)
 
 (defvar *current-api-key*)
@@ -130,6 +131,13 @@
            :companies (or companies
                           (list (make-instance 'company :personalp t)))
            args))
+
+(defmethod users-for-company ((company company))
+  ;; this is inefficient, but.. it gets the job done and isn't called
+  ;; very often.
+  (loop for user in (all-users)
+        if (member company (user-companies user))
+          collect user))
 
 (defmethod user-companies ((user user))
   (user-companies-for-installation user (installation)))
