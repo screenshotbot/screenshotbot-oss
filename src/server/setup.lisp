@@ -237,7 +237,11 @@ ways."
     (cl-cron:stop-cron)
     (log:info "Shutting down hunchentoot")
     (hunchentoot:stop *multi-acceptor*)
-    (bknr.datastore:snapshot)
+
+    ;;;; Don't snapshot the store, if the process is killed while the
+    ;;;; snapshot is happening, we have to manually recover the store
+    ;; (bknr.datastore:snapshot)
+
     (bknr.datastore:close-store)
     (log:info "Shutting down slynk")
     (slynk-teardown *slynk-preparer*)

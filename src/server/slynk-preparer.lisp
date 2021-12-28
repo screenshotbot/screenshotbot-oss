@@ -19,7 +19,7 @@
   (slynk-loop))
 
 (defun slynk-loop ()
-  (log:info "Using port for slynk: ~a" *slynk-port*)
+  (log:info "Using port for slynk: ~a on ~a" *slynk-port* *slynk-loopback-interface*)
   (setf slynk:*loopback-interface* *slynk-loopback-interface*)
   (slynk:create-server :port (parse-integer *slynk-port*)
                        ;; if non-nil the connection won't be closed
