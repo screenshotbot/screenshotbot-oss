@@ -113,7 +113,7 @@ clean-sys-index:
 
 tests:| show-info clean-sys-index test-parts selenium-tests conditional-copybara
 
-test-parts: test-sb test-lw test-ccl test-store web-bin
+test-parts: test-sb test-lw test-ccl test-store
 
 test-sb: submodule $(sbcl) build/affected-files.txt
 	pwd
@@ -134,21 +134,17 @@ deploy-jipr:
 	cd $(JIPR) && buck build jipr
 	cd $(JIPR) && cp `buck targets --show-output jipr | cut -d ' ' -f 2`  $(PWD)/jipr/static/binary/jipr.jar
 
-restart: | test-lw  web-bin
+restart: | test-lw
 	kill -9 `curl https://tdrhq.com/deploy/getpid`
 
 build: | build/cache-key $(DISTINFO)
 	# build/build? Temporary fix for LW8-darwin
 	mkdir -p build
 
-web-bin: $(LISP_FILES) $(LW)
-	$(LW_SCRIPT) build-web-bin.lisp
-
 clean-fasl: .PHONY
 	find src -name *.64ufasl -delete
 
 clean: clean-fasl
-	rm -f web-bin
 	rm -rf buil
 	rm -rf assets
 
@@ -175,7 +171,7 @@ screenshotbot-flow:
 	#	cd ~/builds/screenshotbot-example && ./gradlew :connectedDebugAndroidTest
 	cd ~/builds/screenshotbot-example && ./gradlew -i :debugAndroidTestScreenshotbot
 
-build/deploy.tar.gz: web-bin .PHONY
+build/deploy.tar.gz: .PHONY
 	rm -f $@
 	tar cvzf $@ build/web-bin-delivered screenshotbot java/build/libs/
 
@@ -187,7 +183,7 @@ screenshotbot-tests: $(LW) .PHONY
 sdk-tests: $(LW) .PHONY
 	$(LW_SCRIPT) ./jenkins.lisp -system screenshotbot.sdk/tests -no-jvm
 
-deploy-rsync: .PHONY web-bin
+deploy-rsync: .PHONY
 	rsync -aPz --exclude .git --exclude .web-bin-copy --exclude web-bin ./ ubuntu@mx.tdrhq.com:~/web/
 
 
