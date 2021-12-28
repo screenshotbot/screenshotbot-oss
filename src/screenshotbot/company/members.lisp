@@ -15,6 +15,12 @@
                 #:users-for-company)
   (:import-from #:nibble
                 #:nibble)
+  (:import-from #:screenshotbot/model/invite
+                #:invite-email)
+  (:import-from #:bknr.datastore
+                #:with-transaction)
+  (:import-from #:screenshotbot/ui/confirmation-page
+                #:confirmation-page)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/company/members)
 
@@ -41,14 +47,43 @@
     <tr class= "align-middle" >
       <td >,(user-full-name user)</td>
       <td>,(mailto (user-email user)) </td>
-      <td> ,(cond
-              (adminp
-               "Admin")
-              (t
-               "Member")) </td>
+      <td>
+        ,(cond
+           (adminp
+            "Admin")
+           (t
+            "Member"))
+      </td>
       <td>
         <form>
           <input type= "submit" class="btn btn-danger" value= "Delete" formaction=delete disabled= (when adminp "disabled") />
+        </form>
+      </td>
+    </tr>))
+
+(defun delete-invite (invite company)
+  (confirmation-page
+   :yes (nibble ()
+          (with-transaction ()
+            (a:deletef (company-invites company)
+                     invite))
+          (hex:safe-redirect "/settings/members"))
+   :no "/settings/members"
+   <span>Delete invitation to ,(invite-email invite)?</span>))
+
+(defun render-invite-row (invite company)
+  (declare (ignore company))
+  (let* ((delete (nibble ()
+                   (delete-invite invite company))))
+    <tr class= "align-middle" >
+      <td><em>Unknown</em></td>
+      <td>,(mailto (invite-email invite)) </td>
+      <td>
+        Invited
+      </td>
+      <td>
+        <form>
+          <input type= "submit" class="btn btn-danger" value= "Delete" formaction=delete  />
         </form>
       </td>
     </tr>))
@@ -69,6 +104,8 @@
          </thead>
 
          <tbody>
+           ,@ (loop for invite in (company-invites company)
+                    collect (render-invite-row invite company))
           ,@ (loop for user in (users-for-company company)
                    collect (render-user-row user company))
          </tbody>
