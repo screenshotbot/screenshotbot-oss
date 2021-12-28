@@ -162,11 +162,6 @@ ways."
 (defun main (&optional #+sbcl listen-fd)
   "Called from launch scripts, either web-bin or launch.lisp"
 
-  #+nil
-  (unwind-on-interrupt ()
-      (log:info "in here")
-    (log:info "out here"))
-
   (unwind-on-interrupt ()
       (progn
         (let ((args #-lispworks (cons "<arg0>"(uiop:command-line-arguments))
