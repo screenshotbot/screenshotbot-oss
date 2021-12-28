@@ -17,6 +17,8 @@
                 #:invite-email
                 #:inviter
                 #:invites-with-email)
+  (:import-from #:screenshotbot/dashboard/notices
+                #:invite-accept)
   (:import-from #:screenshotbot/model/user
                 #:user-with-email
                 #:personalp

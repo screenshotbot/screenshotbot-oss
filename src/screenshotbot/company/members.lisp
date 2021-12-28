@@ -4,6 +4,8 @@
                 #:settings-template
                 #:defsettings)
   (:import-from #:screenshotbot/user-api
+                #:user-companies
+                #:current-user
                 #:user-email
                 #:user-full-name
                 #:current-company)
@@ -36,13 +38,26 @@
 (defun mailto (x)
   <a href= (format nil "mailto:~a" x)>,(progn x)</a>)
 
-(defun delete-user (user company)
-  "unimplemented")
+(defun delete-user (user company &aux (back "/settings/members"))
+  (assert (not (member user (company-admins company))))
+  (confirmation-page
+   :yes (nibble ()
+          (with-transaction ()
+            (a:deletef
+             (user-companies user)
+             company)
+            (hex:safe-redirect back)))
+   :no back
+   <p>Remove ,(user-full-name user) from this Organization?</p>))
 
 (defun render-user-row (user company)
   (let* ((adminp (member user (company-admins company)))
+         (can-delete-p
+           (and
+            (not adminp)
+            (member (current-user) (company-admins company))))
          (delete (nibble ()
-                   (assert (not adminp))
+                   (assert can-delete-p)
                    (delete-user user company))))
     <tr class= "align-middle" >
       <td >,(user-full-name user)</td>
@@ -56,7 +71,7 @@
       </td>
       <td>
         <form>
-          <input type= "submit" class="btn btn-danger" value= "Delete" formaction=delete disabled= (when adminp "disabled") />
+          <input type= "submit" class="btn btn-danger" value= "Delete" formaction=delete disabled= (unless can-delete-p "disabled") />
         </form>
       </td>
     </tr>))
