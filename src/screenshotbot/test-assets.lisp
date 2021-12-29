@@ -8,15 +8,6 @@
   (:use #:cl
         #:alexandria
         #:fiveam)
-  (:import-from #:./assets
-                #:prepare-delivered-asset-map))
+  (:import-from #:./assets))
 
 (util/fiveam:def-suite)
-
-;; this is an expensive test!
-(test delivered-asset-map
-  (let ((res (prepare-delivered-asset-map :screenshotbot :copy nil)))
-    (is (equal (list "assets/screenshotbot.js-assets/screenshotbot.js-assets.js"
-                     "assets/screenshotbot.js-assets/screenshotbot.js-assets.js.map")
-               (assoc-value res :screenshotbot.js-assets)))
-    (is (equal nil (assoc-value res :screenshotbot)))))

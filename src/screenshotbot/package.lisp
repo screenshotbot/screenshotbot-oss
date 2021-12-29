@@ -100,7 +100,6 @@
   (:export #:*acceptor*
            #:*thread-pool*
            #:pull-request-promoter
-           #:prepare-delivered-asset-map
            #:*delivered-asset-compile-map*
            #:maybe-promote
            #:current-user
