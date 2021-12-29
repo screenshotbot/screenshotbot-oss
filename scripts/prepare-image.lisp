@@ -17,6 +17,7 @@
 (push (pathname (format nil "~a/local-projects/poiu/" (namestring (uiop:getcwd))))
       asdf:*central-registry*)
 
+
 (defvar *cwd* (merge-pathnames
                *default-pathname-defaults*
                (uiop:getcwd)))
@@ -26,6 +27,7 @@
                                        (,(namestring *cwd*)
                                          ,(format nil "~abuild/asdf-cache/~a/" *cwd*
                                                   (uiop:implementation-identifier)))))
+
 
 #+lispworks
 (defun use-utf-8-for-all-lisp-files (pathname ext-format-spec first-byte max-extent)
@@ -48,9 +50,9 @@
 (pushnew :screenshotbot-oss *features*)
 
 #-screenshotbot-oss
-(push (pathname (format nil "~alocal-projects/" *cwd*)) ql:*local-project-directories*)
-(push (pathname (format nil "~asrc/" *cwd*)) ql:*local-project-directories*)
-(push (pathname (format nil "~athird-party/" *cwd*)) ql:*local-project-directories*)
+(push (pathname "local-projects/" ) ql:*local-project-directories*)
+(push (pathname (format nil "~asrc/" "")) ql:*local-project-directories*)
+(push (pathname (format nil "~athird-party/" "")) ql:*local-project-directories*)
 
 
 (ql:quickload "log4cl")
@@ -68,6 +70,7 @@
 (ql:quickload :cl-ppcre) ;; used by sdk.deliver
 
 ;; make sure we have build asd
+#+nil
 (push (pathname (format nil "~a/build-utils/" *cwd*))
       asdf:*central-registry*)
 
