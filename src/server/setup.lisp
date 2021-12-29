@@ -18,22 +18,6 @@
            #:slynk-teardown))
 (in-package #:server)
 
-(defun wait-for-network ()
-  "If you start Screenshotbot with cron @reboot, you might encounter a
-situation where the Screenshotbot starts before the network is
-ready. This is a quick hack around it. I'm sure there are better
-ways."
-  (loop while t
-       do
-       (format t "Waiting for network...~%")
-       (multiple-value-bind (output error ret-code) (trivial-shell:shell-command "ping -c1 192.168.1.1")
-         (if (eq 0 ret-code)
-             (return ret-code)
-             (progn
-               (format t "Got return code ~a~%" ret-code)
-               (format t "~a" output)
-               (sleep 3))))))
-
 (defvar *port*)
 (defvar *slynk-port*)
 (defvar *verify-store*)
@@ -196,9 +180,6 @@ ways."
 
             (setup-log4cl-debugger-hook)
 
-            #-screenshotbot-oss
-            (unless util:*delivered-image*
-              (wait-for-network))
 
             #+sbcl
             (progn
