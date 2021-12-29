@@ -15,22 +15,28 @@
   (:import-from #:./github-oauth
                 #:prepare-gh-user)
   (:import-from #:bknr.datastore
-                #:store-object-id))
+                #:store-object-id)
+  (:import-from #:screenshotbot/installation
+                #:*installation*
+                #:installation))
 
 (util/fiveam:def-suite)
+
+(defvar *test-email* "arnold+test_github_oauth@example.com")
 
 (defun %prepare-test-user ()
   (declare (optimize (debug 3)
                      (speed 0)))
   (let ((user (prepare-gh-user
-               :emails (list "arnold@example.com")
+               :emails (list *test-email*)
                :user-id 22
                :full-name "Arnold Noronha"
                :avatar "https://example.com/doofus.png")))
     user))
 
 (def-fixture state ()
-  (&body))
+  (let ((*installation* (make-instance 'installation)))
+   (&body)))
 
 (defmacro dlet (((k v)) &body body)
   `(progn
@@ -46,7 +52,7 @@
     (dlet ((user (%prepare-test-user)))
       (is (typep user 'user))
       (is-false (null (github-user user)))
-      (is (equal "arnold@example.com" (user-email user)))
+      (is (equal *test-email* (user-email user)))
       (is (equal "Arnold Noronha" (user-full-name user)))
       (is (equal "https://example.com/doofus.png"
                  (user-image-url user))))))
