@@ -50,9 +50,9 @@
 (pushnew :screenshotbot-oss *features*)
 
 #-screenshotbot-oss
-(push (pathname "local-projects/" ) ql:*local-project-directories*)
-(push (pathname (format nil "~asrc/" "")) ql:*local-project-directories*)
-(push (pathname (format nil "~athird-party/" "")) ql:*local-project-directories*)
+(push (pathname (format nil "~alocal-projects/" *cwd*) ) ql:*local-project-directories*)
+(push (pathname (format nil "~asrc/" *cwd*)) ql:*local-project-directories*)
+(push (pathname (format nil "~athird-party/" *cwd*)) ql:*local-project-directories*)
 
 
 (ql:quickload "log4cl")
