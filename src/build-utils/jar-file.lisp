@@ -16,14 +16,18 @@
            #:remote-jar-file))
 (in-package :build-utils/jar-file)
 
+(defclass provides-jar ()
+  ()
+  (:documentation "A component that can provide a jar file"))
+
 (defclass java-library (asdf:system)
   ())
 
-(defclass jar-file (asdf:static-file)
+(defclass jar-file (asdf:static-file provides-jar)
   ()
   (:default-initargs :type "jar"))
 
-(defclass remote-jar-file (asdf:system)
+(defclass remote-jar-file (asdf:system provides-jar)
   ((url :initarg :url
         :reader url)
    (version :initarg :version
@@ -41,7 +45,7 @@
     (unless (uiop:file-exists-p output)
       (uiop:with-staging-pathname (output)
        (uiop:run-program
-        (list "curl" (url s)
+        (list "curl" "-L" (url s)
               "-o"
               (namestring output)))))))
 
@@ -53,6 +57,9 @@
   ()
   (:default-initargs :type "java"))
 
+(defmethod jar ((x jar-file))
+  (component-pathname x))
+
 (defun java-class-path (system)
   (append
    (typecase system
@@ -60,8 +67,10 @@
       (cons
        (car (output-files 'compile-op system))
        (loop for x in (component-children system)
-             if (typep x 'jar-file)
-               collect (component-pathname x)))))
+             if (typep x 'provides-jar)
+               collect (jar x))))
+     (remote-jar-file
+      (output-files 'compile-op system)))
    (compile-class-path system)))
 
 (defun compile-class-path (system)
@@ -117,12 +126,14 @@
     (cond
       ((all-java-files s)
        (multiple-value-bind (output err ret)
-           (uiop:run-program `("javac" "-d" ,(namestring dir)
-                                       "-cp" ,(join ":" (mapcar 'namestring (compile-class-path s)))
-                                       ,@(mapcar 'namestring (all-java-files s)))
-                             :ignore-error-status t
-                             :output 'string
-                             :error-output 'string)
+           (let ((cmd `("javac"
+                        "-d" ,(namestring dir)
+                        "-cp" ,(join ":" (mapcar 'namestring (compile-class-path s)))
+                        ,@(mapcar 'namestring (all-java-files s)))))
+             (uiop:run-program cmd
+                               :ignore-error-status t
+                               :output 'string
+                               :error-output 'string))
          (unless (eql ret 0)
            (error "Failed to compile java code: ~%stderr: ~%~a~%stdout: ~%~a" err output)))))
 
@@ -160,4 +171,4 @@
 
 ;; (all-java-files (find-system :java.main))
 ;; (compile-system :java.main)
-;; (compile-class-path (find-system :java.main))
+;; (compile-class-path (find-system :clinjy/java))
