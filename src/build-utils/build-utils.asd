@@ -9,6 +9,7 @@
   :depends-on (:tmpdir)
   :components ((:file "wild-module")
                (:file "common")
+               (:file "remote-file")
                (:file "jar-file")
                (:file "js-package")
                (:file "css-package")

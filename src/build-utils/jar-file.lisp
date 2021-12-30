@@ -8,6 +8,8 @@
   (:use #:cl
         #:alexandria
         #:asdf)
+  (:import-from #:build-utils/remote-file
+                #:remote-file)
   (:export #:java-library
            #:jar-file
            #:java-class-path
@@ -27,27 +29,9 @@
   ()
   (:default-initargs :type "jar"))
 
-(defclass remote-jar-file (asdf:system provides-jar)
-  ((url :initarg :url
-        :reader url)
-   (version :initarg :version
-            :reader version)))
-
-(defmethod output-files ((o compile-op) (s remote-jar-file))
-  (list
-   (format nil "~a-~a.jar" (component-name s)
-           (version s))))
-
-(defmethod perform ((o compile-op) (s remote-jar-file))
-  (unless (version s)
-    (error "Provide a version for remote-jar-file for caching purposes"))
-  (let ((output (output-file o s)))
-    (unless (uiop:file-exists-p output)
-      (uiop:with-staging-pathname (output)
-       (uiop:run-program
-        (list "curl" "-L" (url s)
-              "-o"
-              (namestring output)))))))
+(defclass remote-jar-file (remote-file provides-jar)
+  ()
+  (:default-initargs :type "jar"))
 
 (defclass jar-resource (asdf:static-file)
   ()
