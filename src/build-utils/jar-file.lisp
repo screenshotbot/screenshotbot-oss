@@ -11,7 +11,8 @@
   (:export :java-library
    :jar-file
    :java-class-path
-   :java-file))
+   :java-file
+   :jar-resource))
 (in-package :build-utils/jar-file)
 
 (defclass java-library (asdf:system)
@@ -20,6 +21,10 @@
 (defclass jar-file (asdf:static-file)
   ()
   (:default-initargs :type "jar"))
+
+(defclass jar-resource (asdf:static-file)
+  ()
+  (:default-initargs :type nil))
 
 (defclass java-file (asdf:source-file)
   ()
@@ -55,6 +60,13 @@
         if (typep x 'java-file)
           collect (component-pathname x)))
 
+(defun all-resource-files (component)
+  (loop for x in (component-children component)
+        if (typep x 'parent-component)
+          append (all-resource-files x)
+        if (typep x 'java-resource)
+          collect (component-pathname x)))
+
 (defun join (sep list)
   (let ((firstp t))
    (let ((output (make-string-output-stream)))
@@ -86,12 +98,32 @@
                              :error-output 'string)
          (unless (eql ret 0)
            (error "Failed to compile java code: ~%stderr: ~%~a~%stdout: ~%~a" err output)))))
+
+    (copy-resources s dir)
     (when (path:-e jar)
      (delete-file jar))
     (uiop:run-program (list "jar"
                             "cf" (namestring jar)
                             "-C" (namestring dir)
                             "."))))
+
+(defmethod copy-resources ((s java-library) directory)
+  (loop for x in (component-children s) do
+    (etypecase x
+      (parent-component
+       ;; not implemented at the moment
+       (copy-resources x  (uiop:merge-pathnames*
+                           (make-pathname :directory (list (component-name directory)))
+                           directory)))
+      (jar-resource
+       (let ((dest (uiop:merge-pathnames*
+                    (component-relative-pathname x)
+                    directory)))
+         (ensure-directories-exist dest)
+         (copy-file (component-pathname x)
+                    dest)))
+      (t
+       (values)))))
 
 (defmethod asdf:perform ((o compile-op) (s java-file))
   ;; do nothing! All compilation is on the system level
