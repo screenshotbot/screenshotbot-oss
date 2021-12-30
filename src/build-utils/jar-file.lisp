@@ -23,7 +23,8 @@
   (:documentation "A component that can provide a jar file"))
 
 (defclass java-library (asdf:system)
-  ())
+  ((compile-depends-on :initarg :compile-depends-on
+                       :reader compile-depends-on)))
 
 (defclass jar-file (asdf:static-file provides-jar)
   ()
