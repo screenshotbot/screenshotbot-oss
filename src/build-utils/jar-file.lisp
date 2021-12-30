@@ -5,14 +5,15 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :build-utils/jar-file
-  (:use :cl
-   :alexandria
-   :asdf)
-  (:export :java-library
-   :jar-file
-   :java-class-path
-   :java-file
-   :jar-resource))
+  (:use #:cl
+        #:alexandria
+        #:asdf)
+  (:export #:java-library
+           #:jar-file
+           #:java-class-path
+           #:java-file
+           #:jar-resource
+           #:remote-jar-file))
 (in-package :build-utils/jar-file)
 
 (defclass java-library (asdf:system)
@@ -21,6 +22,28 @@
 (defclass jar-file (asdf:static-file)
   ()
   (:default-initargs :type "jar"))
+
+(defclass remote-jar-file (asdf:system)
+  ((url :initarg :url
+        :reader url)
+   (version :initarg :version
+            :reader version)))
+
+(defmethod output-files ((o compile-op) (s remote-jar-file))
+  (list
+   (format nil "~a-~a.jar" (component-name s)
+           (version s))))
+
+(defmethod perform ((o compile-op) (s remote-jar-file))
+  (unless (version s)
+    (error "Provide a version for remote-jar-file for caching purposes"))
+  (let ((output (output-file o s)))
+    (unless (uiop:file-exists-p output)
+      (uiop:with-staging-pathname (output)
+       (uiop:run-program
+        (list "curl" (url s)
+              "-o"
+              (namestring output)))))))
 
 (defclass jar-resource (asdf:static-file)
   ()
@@ -62,10 +85,14 @@
 
 (defun all-resource-files (component)
   (loop for x in (component-children component)
-        if (typep x 'parent-component)
-          append (all-resource-files x)
-        if (typep x 'java-resource)
-          collect (component-pathname x)))
+        appending
+        (etypecase x
+          (remote-jar-component
+           (output-file 'compile-op x))
+          (parent-component
+           (all-resource-files x))
+          (java-resource
+           (component-pathname x)))))
 
 (defun join (sep list)
   (let ((firstp t))
@@ -107,13 +134,12 @@
                             "-C" (namestring dir)
                             "."))))
 
-(defmethod copy-resources ((s java-library) directory)
+(defmethod copy-resources ((s asdf:component) directory)
   (loop for x in (component-children s) do
     (etypecase x
       (parent-component
-       ;; not implemented at the moment
        (copy-resources x  (uiop:merge-pathnames*
-                           (make-pathname :directory (list (component-name directory)))
+                           (make-pathname :directory (list :relative (component-name s)))
                            directory)))
       (jar-resource
        (let ((dest (uiop:merge-pathnames*
