@@ -37,7 +37,7 @@
 
 (defclass remote-jar-file (remote-file provides-jar)
   ()
-  (:default-initargs :type "jar"))
+  (:default-initargs :remote-file-type "jar"))
 
 (defmethod jar ((s remote-jar-file))
   (car (output-files 'compile-op s)))

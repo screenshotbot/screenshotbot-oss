@@ -11,8 +11,9 @@
         :reader url)
    (version :initarg :version
             :reader version)
-   (type :initarg :type
-         :reader remote-file-type)))
+   (remote-file-type :initarg :remote-file-type
+		     :initform nil
+		     :reader remote-file-type)))
 
 (defmethod perform ((o compile-op) (s remote-file))
   (unless (version s)
