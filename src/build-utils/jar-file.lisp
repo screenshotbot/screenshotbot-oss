@@ -182,14 +182,26 @@
   (system-depends-on lib))
 
 (defmethod collect-runtime-jars ((lib provides-jar))
-  (cons
-   (jar lib)
-   (loop for dep in (runtime-depends-on lib)
-         appending
-         (collect-runtime-jars (find-system dep)))))
+  (list
+   (jar lib)))
 
 (defmethod collect-runtime-jars ((lib java-library))
-  (call-next-method))
+  (log:info "Collect jars for: ~s" lib)
+  (append
+   (loop for dep in (runtime-depends-on lib)
+      appending
+        (collect-runtime-jars (find-system dep)))
+   (loop for dep in (component-children lib)
+      appending
+	(collect-runtime-jars dep))
+   (call-next-method)))
+
+(defmethod collect-runtime-jars (lib)
+  nil)
+
+(defmethod collect-runtime-jars :around (lib)
+  (remove-duplicates (call-next-method) :test 'equal))
+
 
 (defun safe-run-program (x)
   #+nil(log:info "Running: ~s" x)
