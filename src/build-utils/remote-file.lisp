@@ -20,6 +20,7 @@
   (let ((output (output-file o s)))
     (unless (uiop:file-exists-p output)
       (uiop:with-staging-pathname (output)
+        (format t "Downloading asset: ~a~%" (url s))
        (uiop:run-program
         (list "curl" "-L" (url s)
               "-o"

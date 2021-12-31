@@ -7,6 +7,7 @@
 (defpackage :build-utils/jar-file
   (:use #:cl
         #:alexandria
+        #:tmpdir
         #:asdf)
   (:import-from #:build-utils/remote-file
                 #:remote-file)
@@ -15,16 +16,20 @@
            #:java-class-path
            #:java-file
            #:jar-resource
-           #:remote-jar-file))
+           #:remote-jar-file
+           #:jar-bundle-op))
 (in-package :build-utils/jar-file)
 
 (defclass provides-jar ()
   ()
   (:documentation "A component that can provide a jar file"))
 
-(defclass java-library (asdf:system)
+(defclass java-library (asdf:system provides-jar)
   ((compile-depends-on :initarg :compile-depends-on
                        :reader compile-depends-on)))
+
+(defmethod jar ((lib java-library))
+  (car (output-files 'compile-op lib)))
 
 (defclass jar-file (asdf:static-file provides-jar)
   ()
@@ -33,6 +38,9 @@
 (defclass remote-jar-file (remote-file provides-jar)
   ()
   (:default-initargs :type "jar"))
+
+(defmethod jar ((s remote-jar-file))
+  (car (output-files 'compile-op s)))
 
 (defclass jar-resource (asdf:static-file)
   ()
@@ -101,6 +109,7 @@
      (get-output-stream-string output))))
 
 (defmethod asdf:perform ((o compile-op) (s java-library))
+  #+nil(log:info "compiling: ~s" s)
   (destructuring-bind (jar dir) (output-files o s)
     (when (uiop:directory-exists-p dir)
       (uiop:delete-directory-tree dir :validate (lambda (x)
@@ -110,6 +119,9 @@
     (ensure-directories-exist dir)
     (cond
       ((all-java-files s)
+       (loop for x in (compile-class-path s)
+             do
+                (assert (uiop:file-exists-p x)))
        (multiple-value-bind (output err ret)
            (let ((cmd `("javac"
                         "-d" ,(namestring dir)
@@ -130,6 +142,11 @@
                             "-C" (namestring dir)
                             "."))))
 
+
+(defmethod component-depends-on ((o compile-op) (s java-library))
+  `((load-op ,@(system-depends-on s))
+    ,@ (call-next-method)))
+
 (defmethod copy-resources ((s asdf:component) directory)
   (loop for x in (component-children s) do
     (etypecase x
@@ -146,6 +163,67 @@
                     dest)))
       (t
        (values)))))
+
+(defclass jar-bundle-op (selfward-operation)
+  ((asdf:selfward-operation :initform '(compile-op)
+                            :allocation :class))
+  (:documentation "Creates a bundled jar with all the runtime dependencies"))
+
+(defmethod output-files ((o jar-bundle-op) (lib java-library))
+  (list
+   (format nil "~a.bundle.jar" (component-name lib))))
+
+(defmethod runtime-depends-on ((lib java-library))
+  (let ((compile-deps (mapcar #'asdf:coerce-name (compile-depends-on lib)))
+        (all-deps (mapcar #'asdf:coerce-name (system-depends-on lib))))
+    (set-difference all-deps compile-deps :test 'string-equal)))
+
+(defmethod runtime-depends-on (lib)
+  (system-depends-on lib))
+
+(defmethod collect-runtime-jars ((lib provides-jar))
+  (cons
+   (jar lib)
+   (loop for dep in (runtime-depends-on lib)
+         appending
+         (collect-runtime-jars (find-system dep)))))
+
+(defmethod collect-runtime-jars ((lib java-library))
+  (call-next-method))
+
+(defun safe-run-program (x)
+  #+nil(log:info "Running: ~s" x)
+  (uiop:run-program
+   (loop for el in x
+         if (pathnamep el)
+           collect (namestring el)
+         else
+           collect el)
+   :standard-output *standard-output*
+   :error-output *error-output*))
+
+(defun merge-jars (output input)
+  (tmpdir:with-tmpdir (x)
+    (safe-run-program
+     (list "unzip"
+           (namestring input)
+           "-d" x))
+    (safe-run-program
+     (list "ls" x))
+    (safe-run-program
+     (list "jar"
+           "-uf" output
+           "-C" x
+           "."))))
+
+(defmethod perform ((o jar-bundle-op) (lib java-library))
+  #+nil(log:info "bundling: ~s" lib)
+  (let ((output-file (output-file o lib))
+        (jars (collect-runtime-jars lib)))
+    (uiop:with-staging-pathname (output-file)
+      (uiop:copy-file (car jars) output-file)
+      (loop for x in (cdr jars) do
+        (merge-jars output-file x)))))
 
 (defmethod asdf:perform ((o compile-op) (s java-file))
   ;; do nothing! All compilation is on the system level
