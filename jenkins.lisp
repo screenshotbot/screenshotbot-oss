@@ -83,8 +83,10 @@
                       files)))))
   (log:info "Running the following tests: ~S" systems)
 
-  (ql:quickload
-   systems))
+  (dolist (system systems)
+    (log:info "Loading: ~s" system)
+    (ql:quickload
+     system)))
 
 ;;(ql:quickload "auth")
 ;;(asdf:load-system "auth")
