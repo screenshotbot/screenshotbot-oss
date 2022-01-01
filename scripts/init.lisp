@@ -41,4 +41,7 @@
 (quick-patch:register "https://github.com/moderninterpreters/clsql-local-time"
                       "3a6d1f93cbe1549edc3ece63ed473d1dbd31c241")
 
+(quick-patch:register "https://github.com/tokenrove/imago"
+                      "29f2b42b248785acae3d05d5dd97a4e9ad0d8ecb")
+
 (quick-patch:checkout-all "build/quick-patch/")
