@@ -1,6 +1,7 @@
 (defpackage :build-utils/common
   (:use #:cl)
-  (:export #:find-transitive-system-deps))
+  (:export #:find-transitive-system-deps
+           #:safe-run-program))
 (in-package :build-utils/common)
 
 (defun all-transitive-deps (system)
@@ -31,3 +32,14 @@
     (loop for x in (mapcar 'asdf:find-system all-deps)
           if (typep x type)
             collect x)))
+
+(defun safe-run-program (x)
+  #+nil(log:info "Running: ~s" x)
+  (uiop:run-program
+   (loop for el in x
+         if (pathnamep el)
+           collect (namestring el)
+         else
+           collect el)
+   :standard-output *standard-output*
+   :error-output *error-output*))

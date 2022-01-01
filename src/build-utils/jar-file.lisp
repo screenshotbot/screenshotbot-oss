@@ -7,6 +7,7 @@
 (defpackage :build-utils/jar-file
   (:use #:cl
         #:alexandria
+        #:build-utils/common
         #:tmpdir
         #:asdf)
   (:import-from #:build-utils/remote-file
@@ -198,17 +199,6 @@
 (defmethod collect-runtime-jars :around (lib)
   (remove-duplicates (call-next-method) :test 'equal))
 
-
-(defun safe-run-program (x)
-  #+nil(log:info "Running: ~s" x)
-  (uiop:run-program
-   (loop for el in x
-         if (pathnamep el)
-           collect (namestring el)
-         else
-           collect el)
-   :standard-output *standard-output*
-   :error-output *error-output*))
 
 (defun merge-jars (output input)
   (tmpdir:with-tmpdir (x)
