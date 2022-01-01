@@ -17,7 +17,9 @@
            #:java-file
            #:jar-resource
            #:remote-jar-file
-           #:jar-bundle-op))
+           #:jar-bundle-op
+           #:collect-runtime-jars
+           #:safe-run-program))
 (in-package :build-utils/jar-file)
 
 (defclass provides-jar ()
@@ -122,22 +124,16 @@
        (loop for x in (compile-class-path s)
              do
                 (assert (uiop:file-exists-p x)))
-       (multiple-value-bind (output err ret)
-           (let ((cmd `("javac"
-                        "-d" ,(namestring dir)
-                        "-cp" ,(join ":" (mapcar 'namestring (compile-class-path s)))
-                        ,@(mapcar 'namestring (all-java-files s)))))
-             (uiop:run-program cmd
-                               :ignore-error-status t
-                               :output 'string
-                               :error-output 'string))
-         (unless (eql ret 0)
-           (error "Failed to compile java code: ~%stderr: ~%~a~%stdout: ~%~a" err output)))))
+       (let ((cmd `("javac"
+                    "-d" ,(namestring dir)
+                    "-cp" ,(join ":" (mapcar 'namestring (compile-class-path s)))
+                    ,@(mapcar 'namestring (all-java-files s)))))
+         (safe-run-program cmd))))
 
     (copy-resources s dir)
     (when (path:-e jar)
      (delete-file jar))
-    (uiop:run-program (list "jar"
+    (safe-run-program (list "jar"
                             "cf" (namestring jar)
                             "-C" (namestring dir)
                             "."))))
