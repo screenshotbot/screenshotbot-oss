@@ -30,4 +30,6 @@ sandbox
 
 # competitive programming
 input
+buck-out
+.buckd
 dummy-input
