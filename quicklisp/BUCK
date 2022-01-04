@@ -3,6 +3,7 @@ remote_system(
     name = "cl-ppcre",
     url = "http://beta.quicklisp.org/archive/cl-ppcre/2019-05-21/cl-ppcre-20190521-git.tgz",
     deps = [  ],
+    subsystems = [  ],
     sha1 =  "97fff6593a846bd0aa9229ef8a5b81c197435da4",
 )
 
@@ -10,6 +11,7 @@ remote_system(
     name = "cl-base64",
     url = "http://beta.quicklisp.org/archive/cl-base64/2020-10-16/cl-base64-20201016-git.tgz",
     deps = [  ],
+    subsystems = [  ],
     sha1 =  "96ecbba726fc5ab90c880f83591f83d397f40a2c",
 )
 
@@ -17,6 +19,7 @@ remote_system(
     name = "babel",
     url = "http://beta.quicklisp.org/archive/babel/2020-09-25/babel-20200925-git.tgz",
     deps = [ ":alexandria", ":trivial-features" ],
+    subsystems = [  ],
     sha1 =  "1b1f73f82130e7873e9436586e98ca825e16841e",
 )
 
@@ -24,6 +27,7 @@ remote_system(
     name = "fast-io",
     url = "http://beta.quicklisp.org/archive/fast-io/2020-09-25/fast-io-20200925-git.tgz",
     deps = [ ":alexandria", ":static-vectors", ":trivial-gray-streams" ],
+    subsystems = [  ],
     sha1 =  "f33a7a20d9b50754a42423750938b0597efb8df5",
 )
 
@@ -31,9 +35,7 @@ remote_system(
     name = "cl-unicode",
     url = "http://beta.quicklisp.org/archive/cl-unicode/2021-02-28/cl-unicode-20210228-git.tgz",
     deps = [ ":flexi-streams", ":cl-ppcre", ":cl-ppcre" ],
-    subsystems = [
-        "base",
-    ],
+    subsystems = [ "base" ],
     sha1 =  "3f5e786cbff2bd8807dd2b15edd688e11ffe59c0",
 )
 
@@ -41,6 +43,7 @@ remote_system(
     name = "alexandria",
     url = "http://beta.quicklisp.org/archive/alexandria/2021-12-09/alexandria-20211209-git.tgz",
     deps = [  ],
+    subsystems = [  ],
     sha1 =  "2b5fa053967814ab6a51caa9f8353fc5c9e7a3c7",
 )
 
@@ -48,6 +51,7 @@ remote_system(
     name = "xsubseq",
     url = "http://beta.quicklisp.org/archive/xsubseq/2017-08-30/xsubseq-20170830-git.tgz",
     deps = [  ],
+    subsystems = [  ],
     sha1 =  "77bb4cecd8778d32faa5a44862264b5394ba1249",
 )
 
@@ -55,6 +59,7 @@ remote_system(
     name = "str",
     url = "http://beta.quicklisp.org/archive/cl-str/2021-05-31/cl-str-20210531-git.tgz",
     deps = [ ":cl-change-case", ":cl-ppcre", ":cl-ppcre-unicode" ],
+    subsystems = [  ],
     sha1 =  "cf06910517ac98d945528f86dca44ebe502e1df9",
 )
 
@@ -62,6 +67,7 @@ remote_system(
     name = "cl-utilities",
     url = "http://beta.quicklisp.org/archive/cl-utilities/2010-10-06/cl-utilities-1.2.4.tgz",
     deps = [  ],
+    subsystems = [  ],
     sha1 =  "de9c32a4da0a6510f7280882a44542c2b0523abc",
 )
 
@@ -69,6 +75,7 @@ remote_system(
     name = "usocket",
     url = "http://beta.quicklisp.org/archive/usocket/2019-12-27/usocket-0.8.3.tgz",
     deps = [ ":split-sequence" ],
+    subsystems = [  ],
     sha1 =  "e2d8989b2d205f16d4ffd259a42110375166084a",
 )
 
@@ -76,6 +83,7 @@ remote_system(
     name = "flexi-streams",
     url = "http://beta.quicklisp.org/archive/flexi-streams/2021-08-07/flexi-streams-20210807-git.tgz",
     deps = [ ":trivial-gray-streams" ],
+    subsystems = [  ],
     sha1 =  "00c9143e819394892170c2aace865b5449995847",
 )
 
@@ -83,6 +91,7 @@ remote_system(
     name = "chipz",
     url = "http://beta.quicklisp.org/archive/chipz/2021-08-07/chipz-20210807-git.tgz",
     deps = [  ],
+    subsystems = [  ],
     sha1 =  "5085e1d1cbdb6524d67cfe5ddcb00f26c2828aba",
 )
 
@@ -90,6 +99,7 @@ remote_system(
     name = "static-vectors",
     url = "http://beta.quicklisp.org/archive/static-vectors/2021-06-30/static-vectors-v1.8.9.tgz",
     deps = [ ":alexandria", ":cffi", ":cffi-grovel" ],
+    subsystems = [  ],
     sha1 =  "8f3654f991b1c8f93ead05ae0fa188b2753b5352",
 )
 
@@ -97,6 +107,7 @@ remote_system(
     name = "cl-ppcre-unicode",
     url = "http://beta.quicklisp.org/archive/cl-ppcre/2019-05-21/cl-ppcre-20190521-git.tgz",
     deps = [ ":cl-ppcre", ":cl-unicode" ],
+    subsystems = [  ],
     sha1 =  "97fff6593a846bd0aa9229ef8a5b81c197435da4",
 )
 
@@ -104,6 +115,7 @@ remote_system(
     name = "trivial-gray-streams",
     url = "http://beta.quicklisp.org/archive/trivial-gray-streams/2021-01-24/trivial-gray-streams-20210124-git.tgz",
     deps = [  ],
+    subsystems = [  ],
     sha1 =  "0d7fd58fbae2c6c7fbdd01922d5844640144d4bd",
 )
 
@@ -111,6 +123,7 @@ remote_system(
     name = "cffi-grovel",
     url = "http://beta.quicklisp.org/archive/cffi/2021-04-11/cffi_0.24.1.tgz",
     deps = [ ":alexandria", ":cffi", ":cffi-toolchain" ],
+    subsystems = [  ],
     sha1 =  "46a4669338dc60980e9d77ded9d6ea2f4c594edc",
 )
 
@@ -118,6 +131,7 @@ remote_system(
     name = "fast-http",
     url = "http://beta.quicklisp.org/archive/fast-http/2019-10-07/fast-http-20191007-git.tgz",
     deps = [ ":alexandria", ":babel", ":cl-utilities", ":proc-parse", ":smart-buffer", ":xsubseq" ],
+    subsystems = [  ],
     sha1 =  "6d3237197e404fa1136cd5cf477c87edaeb9c2df",
 )
 
@@ -125,6 +139,7 @@ remote_system(
     name = "cl-change-case",
     url = "http://beta.quicklisp.org/archive/cl-change-case/2021-04-11/cl-change-case-20210411-git.tgz",
     deps = [ ":cl-ppcre", ":cl-ppcre-unicode" ],
+    subsystems = [  ],
     sha1 =  "2eb68a0d7fe0cf4e5f6d1894f554a2c84e12c95f",
 )
 
@@ -132,6 +147,7 @@ remote_system(
     name = "split-sequence",
     url = "http://beta.quicklisp.org/archive/split-sequence/2021-05-31/split-sequence-v2.0.1.tgz",
     deps = [  ],
+    subsystems = [  ],
     sha1 =  "9a03766c5e0beb71db6a5111c3ebad727e68807b",
 )
 
@@ -139,6 +155,7 @@ remote_system(
     name = "cl+ssl",
     url = "http://beta.quicklisp.org/archive/cl+ssl/2021-12-30/cl+ssl-20211230-git.tgz",
     deps = [ ":alexandria", ":bordeaux-threads", ":cffi", ":flexi-streams", ":trivial-features", ":trivial-garbage", ":trivial-gray-streams", ":usocket" ],
+    subsystems = [ "config" ],
     sha1 =  "a2e6aa95e5408358bb6a3b008eada8819d596c4e",
 )
 
@@ -146,6 +163,7 @@ remote_system(
     name = "cffi-toolchain",
     url = "http://beta.quicklisp.org/archive/cffi/2021-04-11/cffi_0.24.1.tgz",
     deps = [ ":cffi" ],
+    subsystems = [  ],
     sha1 =  "46a4669338dc60980e9d77ded9d6ea2f4c594edc",
 )
 
@@ -153,6 +171,7 @@ remote_system(
     name = "trivial-features",
     url = "http://beta.quicklisp.org/archive/trivial-features/2021-12-09/trivial-features-20211209-git.tgz",
     deps = [  ],
+    subsystems = [  ],
     sha1 =  "8b0b945094bf87925470e05a9a5737eb7135da4c",
 )
 
@@ -160,6 +179,7 @@ remote_system(
     name = "quri",
     url = "http://beta.quicklisp.org/archive/quri/2021-06-30/quri-20210630-git.tgz",
     deps = [ ":alexandria", ":babel", ":cl-utilities", ":split-sequence" ],
+    subsystems = [  ],
     sha1 =  "90f36a7c3b24b175a20ef6ce0d5ff1c9605e164c",
 )
 
@@ -167,6 +187,7 @@ remote_system(
     name = "cl-cookie",
     url = "http://beta.quicklisp.org/archive/cl-cookie/2019-10-07/cl-cookie-20191007-git.tgz",
     deps = [ ":alexandria", ":cl-ppcre", ":local-time", ":proc-parse", ":quri" ],
+    subsystems = [  ],
     sha1 =  "f05c820a71b21cf48e6f5ece839b699f8d7a5864",
 )
 
@@ -174,6 +195,7 @@ remote_system(
     name = "bordeaux-threads",
     url = "http://beta.quicklisp.org/archive/bordeaux-threads/2020-06-10/bordeaux-threads-v0.8.8.tgz",
     deps = [ ":alexandria" ],
+    subsystems = [  ],
     sha1 =  "025d02f184ba1a6a59f40441f679648b1c3a7621",
 )
 
@@ -181,6 +203,7 @@ remote_system(
     name = "cffi",
     url = "http://beta.quicklisp.org/archive/cffi/2021-04-11/cffi_0.24.1.tgz",
     deps = [ ":alexandria", ":babel", ":trivial-features" ],
+    subsystems = [  ],
     sha1 =  "46a4669338dc60980e9d77ded9d6ea2f4c594edc",
 )
 
@@ -188,6 +211,7 @@ remote_system(
     name = "trivial-mimes",
     url = "http://beta.quicklisp.org/archive/trivial-mimes/2020-07-15/trivial-mimes-20200715-git.tgz",
     deps = [  ],
+    subsystems = [  ],
     sha1 =  "95048724ff8bb81b7c7729dc3489e94fcd852a9c",
 )
 
@@ -195,6 +219,7 @@ remote_system(
     name = "smart-buffer",
     url = "http://beta.quicklisp.org/archive/smart-buffer/2021-10-20/smart-buffer-20211020-git.tgz",
     deps = [ ":flexi-streams", ":xsubseq" ],
+    subsystems = [  ],
     sha1 =  "54bfd7feb59054a6d5c0813f2e99d8cae4e7905c",
 )
 
@@ -202,6 +227,7 @@ remote_system(
     name = "local-time",
     url = "http://beta.quicklisp.org/archive/local-time/2021-01-24/local-time-20210124-git.tgz",
     deps = [  ],
+    subsystems = [  ],
     sha1 =  "5ba89734e463dc11ed7853d847f3c7ac107bf70d",
 )
 
@@ -209,6 +235,7 @@ remote_system(
     name = "dexador",
     url = "http://beta.quicklisp.org/archive/dexador/2021-12-09/dexador-20211209-git.tgz",
     deps = [ ":alexandria", ":babel", ":bordeaux-threads", ":chipz", ":chunga", ":cl+ssl", ":cl-base64", ":cl-cookie", ":cl-ppcre", ":fast-http", ":fast-io", ":quri", ":trivial-features", ":trivial-gray-streams", ":trivial-mimes", ":usocket" ],
+    subsystems = [  ],
     sha1 =  "b3960ef62a69ec704f5a08c0679117d557e3aab6",
 )
 
@@ -216,6 +243,7 @@ remote_system(
     name = "proc-parse",
     url = "http://beta.quicklisp.org/archive/proc-parse/2019-08-13/proc-parse-20190813-git.tgz",
     deps = [ ":alexandria", ":babel" ],
+    subsystems = [  ],
     sha1 =  "b887796548ab890d0e8467afd3deaf687739d854",
 )
 
@@ -223,6 +251,7 @@ remote_system(
     name = "trivial-garbage",
     url = "http://beta.quicklisp.org/archive/trivial-garbage/2021-12-30/trivial-garbage-20211230-git.tgz",
     deps = [  ],
+    subsystems = [  ],
     sha1 =  "dce7ec341bc745e3794933518170884e8e2149b0",
 )
 
@@ -230,5 +259,7 @@ remote_system(
     name = "chunga",
     url = "http://beta.quicklisp.org/archive/chunga/2020-04-27/chunga-20200427-git.tgz",
     deps = [ ":trivial-gray-streams" ],
+    subsystems = [  ],
     sha1 =  "a1b7c6d86703a2c8c60789e150a0dfa2a9098cba",
 )
+
