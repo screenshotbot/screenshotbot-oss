@@ -208,14 +208,6 @@ remote_system(
 )
 
 remote_system(
-    name = "trivial-mimes",
-    url = "http://beta.quicklisp.org/archive/trivial-mimes/2020-07-15/trivial-mimes-20200715-git.tgz",
-    deps = [  ],
-    subsystems = [  ],
-    sha1 =  "95048724ff8bb81b7c7729dc3489e94fcd852a9c",
-)
-
-remote_system(
     name = "smart-buffer",
     url = "http://beta.quicklisp.org/archive/smart-buffer/2021-10-20/smart-buffer-20211020-git.tgz",
     deps = [ ":flexi-streams", ":xsubseq" ],
@@ -234,7 +226,7 @@ remote_system(
 remote_system(
     name = "dexador",
     url = "http://beta.quicklisp.org/archive/dexador/2021-12-09/dexador-20211209-git.tgz",
-    deps = [ ":alexandria", ":babel", ":bordeaux-threads", ":chipz", ":chunga", ":cl+ssl", ":cl-base64", ":cl-cookie", ":cl-ppcre", ":fast-http", ":fast-io", ":quri", ":trivial-features", ":trivial-gray-streams", ":trivial-mimes", ":usocket" ],
+    deps = [ ":alexandria", ":babel", ":bordeaux-threads", ":chipz", ":chunga", ":cl+ssl", ":cl-base64", ":cl-cookie", ":cl-ppcre", ":fast-http", ":fast-io", ":quri", ":trivial-features", ":trivial-gray-streams", "//tools/overrides:trivial-mimes", ":usocket" ],
     subsystems = [  ],
     sha1 =  "b3960ef62a69ec704f5a08c0679117d557e3aab6",
 )
