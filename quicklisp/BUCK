@@ -33,17 +33,6 @@ remote_system(
 )
 
 remote_system(
-    name = "cl-unicode/base",
-    url = "http://beta.quicklisp.org/archive/cl-unicode/2021-02-28/cl-unicode-20210228-git.tgz",
-    deps = [ ":cl-ppcre" ],
-    subsystems = [  ],
-    sha1 =  "3f5e786cbff2bd8807dd2b15edd688e11ffe59c0",
-    visibility = [
-        "PUBLIC",
-    ],
-)
-
-remote_system(
     name = "fast-io",
     url = "http://beta.quicklisp.org/archive/fast-io/2020-09-25/fast-io-20200925-git.tgz",
     deps = [ ":alexandria", ":static-vectors", ":trivial-gray-streams" ],
