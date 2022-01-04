@@ -31,6 +31,9 @@ remote_system(
     name = "cl-unicode",
     url = "http://beta.quicklisp.org/archive/cl-unicode/2021-02-28/cl-unicode-20210228-git.tgz",
     deps = [ ":flexi-streams", ":cl-ppcre", ":cl-ppcre" ],
+    subsystems = [
+        "base",
+    ],
     sha1 =  "3f5e786cbff2bd8807dd2b15edd688e11ffe59c0",
 )
 
@@ -229,4 +232,3 @@ remote_system(
     deps = [ ":trivial-gray-streams" ],
     sha1 =  "a1b7c6d86703a2c8c60789e150a0dfa2a9098cba",
 )
-
