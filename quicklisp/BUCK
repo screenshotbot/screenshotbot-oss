@@ -81,6 +81,7 @@ remote_system(
     url = "http://beta.quicklisp.org/archive/cl-str/2021-05-31/cl-str-20210531-git.tgz",
     deps = [ ":cl-change-case", ":cl-ppcre", ":cl-ppcre-unicode" ],
     subsystems = [  ],
+    needs_sources = True,
     sha1 =  "cf06910517ac98d945528f86dca44ebe502e1df9",
     visibility = [
         "PUBLIC",
@@ -159,6 +160,17 @@ remote_system(
     deps = [  ],
     subsystems = [  ],
     sha1 =  "0d7fd58fbae2c6c7fbdd01922d5844640144d4bd",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "log4cl",
+    url = "http://beta.quicklisp.org/archive/log4cl/2021-12-09/log4cl-20211209-git.tgz",
+    deps = [ ":bordeaux-threads" ],
+    subsystems = [  ],
+    sha1 =  "2b09219f600be629642f0b686b1ab7a2a3b966ff",
     visibility = [
         "PUBLIC",
     ],
@@ -335,6 +347,7 @@ remote_system(
     deps = [ ":alexandria", ":babel", ":bordeaux-threads", ":chipz", ":chunga", ":cl+ssl", ":cl-base64", ":cl-cookie", ":cl-ppcre", ":fast-http", ":fast-io", ":quri", ":trivial-features", ":trivial-gray-streams", "//tools/overrides:trivial-mimes", ":usocket" ],
     subsystems = [  ],
     sha1 =  "b3960ef62a69ec704f5a08c0679117d557e3aab6",
+    needs_sources = True,
     visibility = [
         "PUBLIC",
     ],
@@ -372,4 +385,3 @@ remote_system(
         "PUBLIC",
     ],
 )
-
