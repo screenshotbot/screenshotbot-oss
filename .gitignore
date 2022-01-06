@@ -33,3 +33,4 @@ input
 buck-out
 .buckd
 dummy-input
+.buckconfig.local
