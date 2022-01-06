@@ -33,6 +33,17 @@ remote_system(
 )
 
 remote_system(
+    name = "cl-yaml",
+    url = "http://beta.quicklisp.org/archive/cl-yaml/2020-12-20/cl-yaml-20201220-git.tgz",
+    deps = [ ":alexandria", ":cl-libyaml", ":cl-ppcre", ":parse-number" ],
+    subsystems = [  ],
+    sha1 =  "66b500b94c860594abb94f80a3e78c0e965fd0ae",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "chunga",
     url = "http://beta.quicklisp.org/archive/chunga/2020-04-27/chunga-20200427-git.tgz",
     deps = [ ":trivial-gray-streams" ],
@@ -243,6 +254,17 @@ remote_system(
 )
 
 remote_system(
+    name = "parse-number",
+    url = "http://beta.quicklisp.org/archive/parse-number/2018-02-28/parse-number-v1.7.tgz",
+    deps = [  ],
+    subsystems = [  ],
+    sha1 =  "02407c79fa9ee1471f6839aac57885c1f078eaac",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "trivial-features",
     url = "http://beta.quicklisp.org/archive/trivial-features/2021-12-09/trivial-features-20211209-git.tgz",
     deps = [  ],
@@ -265,22 +287,22 @@ remote_system(
 )
 
 remote_system(
-    name = "cl+ssl",
-    url = "http://beta.quicklisp.org/archive/cl+ssl/2021-12-30/cl+ssl-20211230-git.tgz",
-    deps = [ ":alexandria", ":bordeaux-threads", ":cffi", ":flexi-streams", ":trivial-features", ":trivial-garbage", ":trivial-gray-streams", ":usocket" ],
-    subsystems = [ "config" ],
-    sha1 =  "a2e6aa95e5408358bb6a3b008eada8819d596c4e",
+    name = "log4cl",
+    url = "http://beta.quicklisp.org/archive/log4cl/2021-12-09/log4cl-20211209-git.tgz",
+    deps = [ ":bordeaux-threads" ],
+    subsystems = [  ],
+    sha1 =  "2b09219f600be629642f0b686b1ab7a2a3b966ff",
     visibility = [
         "PUBLIC",
     ],
 )
 
 remote_system(
-    name = "log4cl",
-    url = "http://beta.quicklisp.org/archive/log4cl/2021-12-09/log4cl-20211209-git.tgz",
-    deps = [ ":bordeaux-threads" ],
-    subsystems = [  ],
-    sha1 =  "2b09219f600be629642f0b686b1ab7a2a3b966ff",
+    name = "cl+ssl",
+    url = "http://beta.quicklisp.org/archive/cl+ssl/2021-12-30/cl+ssl-20211230-git.tgz",
+    deps = [ ":alexandria", ":bordeaux-threads", ":cffi", ":flexi-streams", ":trivial-features", ":trivial-garbage", ":trivial-gray-streams", ":usocket" ],
+    subsystems = [ "config" ],
+    sha1 =  "a2e6aa95e5408358bb6a3b008eada8819d596c4e",
     visibility = [
         "PUBLIC",
     ],
@@ -381,6 +403,17 @@ remote_system(
     subsystems = [  ],
     needs_sources = True,
     sha1 =  "b3960ef62a69ec704f5a08c0679117d557e3aab6",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "cl-libyaml",
+    url = "http://beta.quicklisp.org/archive/cl-libyaml/2020-12-20/cl-libyaml-20201220-git.tgz",
+    deps = [ ":cffi" ],
+    subsystems = [  ],
+    sha1 =  "de9f01201b6f7f048503dbda1e1a75a6d58003ff",
     visibility = [
         "PUBLIC",
     ],
