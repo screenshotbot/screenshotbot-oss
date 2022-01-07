@@ -2,6 +2,12 @@
 
 load('//tools:asd.bzl', 'remote_system', 'remote_project')
 remote_project(
+    name = "trivial-cltl2-project",
+    url = "http://beta.quicklisp.org/archive/trivial-cltl2/2021-12-30/trivial-cltl2-20211230-git.tgz",
+    sha1 =  "f6a041ceb083aee1c56840a0b053e378949775d1",
+)
+
+remote_project(
     name = "cl-utilities-project",
     url = "http://beta.quicklisp.org/archive/cl-utilities/2010-10-06/cl-utilities-1.2.4.tgz",
     sha1 =  "de9c32a4da0a6510f7280882a44542c2b0523abc",
@@ -20,9 +26,21 @@ remote_project(
 )
 
 remote_project(
+    name = "cl-fad-project",
+    url = "http://beta.quicklisp.org/archive/cl-fad/2021-01-24/cl-fad-20210124-git.tgz",
+    sha1 =  "8e3e0ec24b3eb7b4243ab08e9c3bd2c5ae203349",
+)
+
+remote_project(
     name = "cl-yaml-project",
     url = "http://beta.quicklisp.org/archive/cl-yaml/2020-12-20/cl-yaml-20201220-git.tgz",
     sha1 =  "66b500b94c860594abb94f80a3e78c0e965fd0ae",
+)
+
+remote_project(
+    name = "introspect-environment-project",
+    url = "http://beta.quicklisp.org/archive/introspect-environment/2021-08-07/introspect-environment-20210807-git.tgz",
+    sha1 =  "b45a854461f69091744eb6703fc84f6711d78620",
 )
 
 remote_project(
@@ -56,6 +74,18 @@ remote_project(
 )
 
 remote_project(
+    name = "closer-mop-project",
+    url = "http://beta.quicklisp.org/archive/closer-mop/2021-12-30/closer-mop-20211230-git.tgz",
+    sha1 =  "feff85dc6d20f9c59470bbe1b7d186fccb86f815",
+)
+
+remote_project(
+    name = "tmpdir-project",
+    url = "http://beta.quicklisp.org/archive/tmpdir/2020-02-18/tmpdir-20200218-git.tgz",
+    sha1 =  "634fb67c23ab66974717c3c3ea1dd787680af7e1",
+)
+
+remote_project(
     name = "chipz-project",
     url = "http://beta.quicklisp.org/archive/chipz/2021-08-07/chipz-20210807-git.tgz",
     sha1 =  "5085e1d1cbdb6524d67cfe5ddcb00f26c2828aba",
@@ -86,6 +116,12 @@ remote_project(
 )
 
 remote_project(
+    name = "iterate-project",
+    url = "http://beta.quicklisp.org/archive/iterate/2021-05-31/iterate-release-b0f9a9c6-git.tgz",
+    sha1 =  "6a3c1881559da2356c1234e8296a871e0f16acd1",
+)
+
+remote_project(
     name = "kmrcl-project",
     url = "http://beta.quicklisp.org/archive/kmrcl/2020-10-16/kmrcl-20201016-git.tgz",
     sha1 =  "5b64c4f9dcdc0585693322888e734b9f6b95dcee",
@@ -95,6 +131,12 @@ remote_project(
     name = "babel-project",
     url = "http://beta.quicklisp.org/archive/babel/2020-09-25/babel-20200925-git.tgz",
     sha1 =  "1b1f73f82130e7873e9436586e98ca825e16841e",
+)
+
+remote_project(
+    name = "lisp-namespace-project",
+    url = "http://beta.quicklisp.org/archive/lisp-namespace/2021-10-20/lisp-namespace-20211020-git.tgz",
+    sha1 =  "4ad9afa02f90efa90315c4deabedf80e46fe9219",
 )
 
 remote_project(
@@ -134,6 +176,18 @@ remote_project(
 )
 
 remote_project(
+    name = "type-i-project",
+    url = "http://beta.quicklisp.org/archive/type-i/2019-12-27/type-i-20191227-git.tgz",
+    sha1 =  "01044d75717892b25f0c28880ceebb7d55e331ef",
+)
+
+remote_project(
+    name = "cl-mock-project",
+    url = "http://beta.quicklisp.org/archive/cl-mock/2021-06-30/cl-mock-20210630-git.tgz",
+    sha1 =  "6f65e137753e330a0d85a266eada28f397fcd477",
+)
+
+remote_project(
     name = "parse-number-project",
     url = "http://beta.quicklisp.org/archive/parse-number/2018-02-28/parse-number-v1.7.tgz",
     sha1 =  "02407c79fa9ee1471f6839aac57885c1f078eaac",
@@ -170,6 +224,12 @@ remote_project(
 )
 
 remote_project(
+    name = "trivia-project",
+    url = "http://beta.quicklisp.org/archive/trivia/2021-10-20/trivia-20211020-git.tgz",
+    sha1 =  "9c86e00794e54c22b1baebf97a4a4da8ec404881",
+)
+
+remote_project(
     name = "usocket-project",
     url = "http://beta.quicklisp.org/archive/usocket/2019-12-27/usocket-0.8.3.tgz",
     sha1 =  "e2d8989b2d205f16d4ffd259a42110375166084a",
@@ -194,15 +254,15 @@ remote_project(
 )
 
 remote_project(
-    name = "static-vectors-project",
-    url = "http://beta.quicklisp.org/archive/static-vectors/2021-06-30/static-vectors-v1.8.9.tgz",
-    sha1 =  "8f3654f991b1c8f93ead05ae0fa188b2753b5352",
-)
-
-remote_project(
     name = "asdf-flv-project",
     url = "http://beta.quicklisp.org/archive/asdf-flv/2016-04-21/asdf-flv-version-2.1.tgz",
     sha1 =  "63c642d7c1538929a5a5001e616f17aa3704b5f8",
+)
+
+remote_project(
+    name = "static-vectors-project",
+    url = "http://beta.quicklisp.org/archive/static-vectors/2021-06-30/static-vectors-v1.8.9.tgz",
+    sha1 =  "8f3654f991b1c8f93ead05ae0fa188b2753b5352",
 )
 
 remote_project(
@@ -236,6 +296,15 @@ remote_project(
 )
 
 remote_system(
+    name = "trivial-cltl2",
+    project = "trivial-cltl2-project",
+    deps = [  ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "cl-utilities",
     project = "cl-utilities-project",
     deps = [  ],
@@ -263,9 +332,64 @@ remote_system(
 )
 
 remote_system(
+    name = "cl-fad",
+    project = "cl-fad-project",
+    deps = [ ":alexandria", ":bordeaux-threads" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "cl-yaml",
     project = "cl-yaml-project",
     deps = [ ":alexandria", ":cl-libyaml", ":cl-ppcre", ":parse-number" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "trivia.trivial",
+    project = "trivia-project",
+    deps = [ ":trivia.level2" ],
+    needs_sources = True,
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "introspect-environment",
+    project = "introspect-environment-project",
+    deps = [  ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "trivia.level1",
+    project = "trivia-project",
+    deps = [ ":trivia.level0" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "trivia.level0",
+    project = "trivia-project",
+    deps = [ ":alexandria" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "trivia.level2",
+    project = "trivia-project",
+    deps = [ ":closer-mop", ":lisp-namespace", ":trivia.level1", ":trivial-cltl2" ],
     visibility = [
         "PUBLIC",
     ],
@@ -327,9 +451,36 @@ remote_system(
 )
 
 remote_system(
+    name = "closer-mop",
+    project = "closer-mop-project",
+    deps = [  ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "tmpdir",
+    project = "tmpdir-project",
+    deps = [ ":cl-fad" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "chipz",
     project = "chipz-project",
     deps = [  ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "cl-mock-basic",
+    project = "cl-mock-project",
+    deps = [ ":alexandria", ":closer-mop" ],
     visibility = [
         "PUBLIC",
     ],
@@ -381,6 +532,15 @@ remote_system(
 )
 
 remote_system(
+    name = "iterate",
+    project = "iterate-project",
+    deps = [  ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "kmrcl",
     project = "kmrcl-project",
     deps = [  ],
@@ -393,6 +553,15 @@ remote_system(
     name = "babel",
     project = "babel-project",
     deps = [ ":alexandria", ":trivial-features" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "lisp-namespace",
+    project = "lisp-namespace-project",
+    deps = [ ":alexandria" ],
     visibility = [
         "PUBLIC",
     ],
@@ -438,6 +607,33 @@ remote_system(
     name = "smart-buffer",
     project = "smart-buffer-project",
     deps = [ ":flexi-streams", ":xsubseq" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "trivia.balland2006",
+    project = "trivia-project",
+    deps = [ ":alexandria", ":iterate", ":trivia.trivial", ":type-i" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "type-i",
+    project = "type-i-project",
+    deps = [ ":alexandria", ":introspect-environment", ":lisp-namespace", ":trivia.trivial" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "cl-mock",
+    project = "cl-mock-project",
+    deps = [ ":cl-mock-basic", ":trivia" ],
     visibility = [
         "PUBLIC",
     ],
@@ -507,6 +703,15 @@ remote_system(
 )
 
 remote_system(
+    name = "trivia",
+    project = "trivia-project",
+    deps = [ ":trivia.balland2006" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "usocket",
     project = "usocket-project",
     deps = [ ":split-sequence" ],
@@ -543,18 +748,18 @@ remote_system(
 )
 
 remote_system(
-    name = "static-vectors",
-    project = "static-vectors-project",
-    deps = [ ":alexandria", ":cffi", ":cffi-grovel" ],
+    name = "net.didierverna.asdf-flv",
+    project = "asdf-flv-project",
+    deps = [  ],
     visibility = [
         "PUBLIC",
     ],
 )
 
 remote_system(
-    name = "net.didierverna.asdf-flv",
-    project = "asdf-flv-project",
-    deps = [  ],
+    name = "static-vectors",
+    project = "static-vectors-project",
+    deps = [ ":alexandria", ":cffi", ":cffi-grovel" ],
     visibility = [
         "PUBLIC",
     ],
