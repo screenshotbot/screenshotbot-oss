@@ -11,7 +11,7 @@
                 #:describe-mismatch
                 #:matchesp
                 #:equal-to))
-
+(in-package #:fiveam-matchers/test-core)
 
 (util/fiveam:def-suite)
 

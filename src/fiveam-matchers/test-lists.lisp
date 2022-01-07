@@ -8,7 +8,7 @@
                 #:matchesp
                 #:equal-to
                 #:assert-that))
-
+(in-package #:fiveam-matchers/test-lists)
 
 (util/fiveam:def-suite)
 

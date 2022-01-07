@@ -7,7 +7,8 @@
 (uiop:define-package :util/fiveam
     (:use #:cl
           #:alexandria)
-  (:export #:def-suite))
+    (:export #:def-suite))
+(in-package :util/fiveam)
 
 ;;(setf fiveam::*toplevel-suites* nil)
 ;; (setf fiveam::*tests* nil)

@@ -16,6 +16,7 @@
    #:ensure-matcher
    #:is-string
    #:matchesp))
+(in-package :fiveam-matchers/core)
 
 (defclass matcher ()
   ())

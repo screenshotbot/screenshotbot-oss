@@ -12,6 +12,7 @@
   (:export
    #:contains
    #:has-item))
+(in-package :fiveam-matchers/lists)
 
 (defclass contains (matcher)
   ((expected :initarg :expected
