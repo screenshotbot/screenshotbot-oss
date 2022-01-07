@@ -1,0 +1,25 @@
+load("//tools:lisp.bzl", "lisp_library", "lisp_test")
+
+lisp_library(
+    name = "clues",
+    srcs = [
+        "injector.lisp",
+        "module.lisp",
+        "injectable.lisp",
+        "all.lisp",
+    ],
+    deps = [
+        "//quicklisp:alexandria",
+        "//quicklisp:closer-mop",
+    ],
+)
+
+lisp_test(
+    name = "tests",
+    srcs = glob(["test-*.lisp"]),
+    deps = [
+        ":clues",
+        "//src/fiveam-matchers:fiveam-matchers",
+        "//src/util:fiveam",
+    ],
+)

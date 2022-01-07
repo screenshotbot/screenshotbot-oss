@@ -1,4 +1,4 @@
-(pkg:define-package :fiveam-matchers/test-lists
+(uiop:define-package :fiveam-matchers/test-lists
     (:use #:cl
           #:fiveam
           #:alexandria)

@@ -1,4 +1,4 @@
-(pkg:define-package :fiveam-matchers
+(uiop:define-package :fiveam-matchers
     (:use #:cl
           #:alexandria)
   (:use-reexport #:fiveam-matchers/core

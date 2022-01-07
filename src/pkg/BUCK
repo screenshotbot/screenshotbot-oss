@@ -1,0 +1,12 @@
+load("//tools:lisp.bzl", "lisp_library", "lisp_binary",
+     "lisp_test")
+
+lisp_library(
+    name = "pkg",
+    srcs = [
+        "pkg.lisp",
+    ],
+    deps = [
+        "//quicklisp:str",
+    ],
+)

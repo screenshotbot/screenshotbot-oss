@@ -1,0 +1,15 @@
+load("//tools:lisp.bzl", "lisp_library", "lisp_test")
+
+lisp_library(
+    name = "fiveam",
+    srcs = [
+        "fiveam.lisp",
+    ],
+    deps = [
+        "//quicklisp:fiveam",
+        "//quicklisp:str",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
