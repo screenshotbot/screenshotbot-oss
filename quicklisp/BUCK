@@ -200,6 +200,12 @@ remote_project(
 )
 
 remote_project(
+    name = "cl-cli-project",
+    url = "http://beta.quicklisp.org/archive/cl-cli/2015-12-18/cl-cli-20151218-git.tgz",
+    sha1 =  "f0575fe67ef1f3b94d7f6fe84e59df972ab0ceb7",
+)
+
+remote_project(
     name = "lisp-namespace-project",
     url = "http://beta.quicklisp.org/archive/lisp-namespace/2021-10-20/lisp-namespace-20211020-git.tgz",
     sha1 =  "4ad9afa02f90efa90315c4deabedf80e46fe9219",
@@ -308,6 +314,12 @@ remote_project(
 )
 
 remote_project(
+    name = "hunchentoot-multi-acceptor-project",
+    url = "http://beta.quicklisp.org/archive/hunchentoot-multi-acceptor/2021-06-30/hunchentoot-multi-acceptor-20210630-git.tgz",
+    sha1 =  "0346bb0f5a1f4d9353a79716786590544a6bd586",
+)
+
+remote_project(
     name = "chipz-project",
     url = "http://beta.quicklisp.org/archive/chipz/2021-08-07/chipz-20210807-git.tgz",
     sha1 =  "5085e1d1cbdb6524d67cfe5ddcb00f26c2828aba",
@@ -383,6 +395,12 @@ remote_project(
     name = "rfc2388-project",
     url = "http://beta.quicklisp.org/archive/rfc2388/2018-08-31/rfc2388-20180831-git.tgz",
     sha1 =  "e459e51d02f5e695fe32dfcbd7b3bb367912a8cf",
+)
+
+remote_project(
+    name = "trivial-shell-project",
+    url = "http://beta.quicklisp.org/archive/trivial-shell/2018-02-28/trivial-shell-20180228-git.tgz",
+    sha1 =  "2c40faf9c68b6729812975a4f50b5e9d81f02a87",
 )
 
 remote_project(
@@ -757,6 +775,15 @@ remote_system(
 )
 
 remote_system(
+    name = "cl-cli",
+    project = "cl-cli-project",
+    deps = [ ":split-sequence" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "cffi-toolchain",
     project = "cffi-project",
     deps = [ ":cffi" ],
@@ -982,6 +1009,15 @@ remote_system(
 )
 
 remote_system(
+    name = "hunchentoot-multi-acceptor",
+    project = "hunchentoot-multi-acceptor-project",
+    deps = [ ":alexandria", ":hunchentoot", ":str", ":usocket" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "chipz",
     project = "chipz-project",
     deps = [  ],
@@ -1093,6 +1129,15 @@ remote_system(
 remote_system(
     name = "rfc2388",
     project = "rfc2388-project",
+    deps = [  ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "trivial-shell",
+    project = "trivial-shell-project",
     deps = [  ],
     visibility = [
         "PUBLIC",
