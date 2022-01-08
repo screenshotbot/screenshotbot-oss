@@ -1,0 +1,12 @@
+load("//tools:lisp.bzl", "lisp_test")
+
+lisp_test(
+    name = "tests",
+    deps = [
+        "//src/util:store",
+        "//src/util:fiveam",
+    ],
+    srcs = [
+        "test-store.lisp",
+    ],
+)

@@ -4,8 +4,16 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :util)
+(defpackage :util/file-lock
+  (:use #:cl)
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:util-store-file-lock
+   #:release-file-lock
+   #:file-lock))
+(in-package :util/file-lock)
 
+#-buck
 (let ((output (asdf:output-file 'asdf:compile-op
                                  (asdf:find-component :util "store-native"))))
   #-lispworks

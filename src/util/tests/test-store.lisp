@@ -4,16 +4,17 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :util/tests/test-store
+(uiop:define-package :util/tests/test-store
     (:use #:cl
           #:fiveam
           #:alexandria)
-  (:import-from #:util
+  (:import-from #:util/store
                 #:parse-timetag
                 #:*object-store*
                 #:object-store)
   (:import-from #:local-time
                 #:timestamp=))
+(in-package :util/tests/test-store)
 
 
 (util/fiveam:def-suite)

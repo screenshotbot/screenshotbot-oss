@@ -37,3 +37,36 @@ lisp_library(
         "//quicklisp:cl-cron",
     ]
 )
+
+lisp_library(
+    name = "store",
+    srcs = [
+        "store.lisp",
+    ],
+    deps = [
+        ":file-lock",
+        "//third-party/bknr.datastore:bknr.datastore",
+        "//quicklisp:log4cl",
+        "//quicklisp:str",
+        "//quicklisp:tmpdir",
+        "//quicklisp:cl-fad",
+        "//quicklisp:local-time",
+        "//quicklisp:cl-cron",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+
+lisp_library(
+    name = "file-lock",
+    srcs = [
+        "file-lock.lisp",
+    ],
+    deps = [
+        "//quicklisp:alexandria",
+        "//quicklisp:log4cl",
+        "//quicklisp:cffi",
+    ],
+)

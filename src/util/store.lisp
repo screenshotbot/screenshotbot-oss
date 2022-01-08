@@ -4,7 +4,19 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :util)
+(defpackage :util/store
+  (:use #:cl
+        #:bknr.datastore
+        #:util/file-lock)
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:prepare-store-for-test
+   #:prepare-store
+   #:verify-store
+   #:add-datastore-hook
+   #:object-store
+   #:safe-mp-store))
+(in-package :util/store)
 
 (defvar *object-store*)
 
@@ -45,13 +57,13 @@
         (make-instance 'bknr.datastore:blob-subsystem)))
 
 (defun prepare-store-for-test ()
-  (make-instance 'util:safe-mp-store
+  (make-instance 'safe-mp-store
                  :directory "~/test-store/"
                  :subsystems (store-subsystems)))
 
 (defun prepare-store ()
   (setf bknr.datastore:*store-debug* t)
-  (make-instance 'util:safe-mp-store
+  (make-instance 'safe-mp-store
                  :directory (object-store)
                  :subsystems (store-subsystems))
   (dispatch-datastore-hooks))
@@ -66,7 +78,7 @@
                           :output :interactive
                           :error-output :interactive)
         (assert (path:-d out-current))
-        (make-instance 'util:safe-mp-store
+        (make-instance 'safe-mp-store
                         :directory dir
                         :subsystems (store-subsystems))
         (log:info "Got ~d objects" (length (bknr.datastore:all-store-objects)))
