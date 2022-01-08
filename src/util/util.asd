@@ -49,7 +49,6 @@
                "cl-mop"
                "secure-random"
                "cl-base32"
-               "parse-declarations-1.0"
                "bknr.datastore"
                "cl-csv"
                "cl-smtp"

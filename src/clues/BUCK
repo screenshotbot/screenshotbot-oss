@@ -12,6 +12,9 @@ lisp_library(
         "//quicklisp:alexandria",
         "//quicklisp:closer-mop",
     ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 lisp_test(

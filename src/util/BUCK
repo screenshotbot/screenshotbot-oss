@@ -13,3 +13,27 @@ lisp_library(
         "PUBLIC",
     ],
 )
+
+lisp_library(
+    name = "util",
+    deps = [
+        "//quicklisp:hunchentoot",
+        "//quicklisp:markup",
+        "//quicklisp:alexandria",
+        "//quicklisp:uuid",
+        "//src/clues:clues",
+        "//quicklisp:tmpdir",
+        "//quicklisp:secure-random",
+        "//quicklisp:cl-base32",
+        "//quicklisp:bknr.datastore",
+        "//quicklisp:cl-csv",
+        "//quicklisp:cl-smtp",
+        "//quicklisp:cl-mongo-id",
+        "//quicklisp:drakma",
+        "//quicklisp:cl-json",
+        #"//src/hunchentoot-extensions:hunchentoot-extensions",
+        #"//src/stripe:stripe",
+        "//quicklisp:log4cl",
+        "//quicklisp:cl-cron",
+    ]
+)
