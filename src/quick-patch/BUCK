@@ -8,7 +8,9 @@ asd_system(
 
 lisp_test(
     name = "tests",
-    srcs = glob(["test-*.lisp"]),
+    srcs = [
+        "test-impl.lisp",
+    ],
     deps = [
         ":quick-patch",
         "//quicklisp:cl-mock",
