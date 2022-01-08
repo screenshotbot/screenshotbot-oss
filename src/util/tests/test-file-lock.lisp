@@ -9,7 +9,7 @@
    :alexandria
         :fiveam)
   (:import-from
-   :util
+   :util/file-lock
    :file-lock
    :release-file-lock))
 (in-package :util.test-file-locks)

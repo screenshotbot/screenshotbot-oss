@@ -8,5 +8,6 @@ lisp_test(
     ],
     srcs = [
         "test-store.lisp",
+        "test-file-lock.lisp",
     ],
 )

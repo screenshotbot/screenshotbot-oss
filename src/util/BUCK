@@ -69,4 +69,22 @@ lisp_library(
         "//quicklisp:log4cl",
         "//quicklisp:cffi",
     ],
+    native_libraries = [
+        ":file-lock-native",
+    ]
+)
+
+cxx_library(
+    name = "file-lock-native",
+    srcs = [
+        "store-native.c",
+    ],
+    link_style = "shared",
+)
+
+cxx_binary(
+    name = "file-lock-bin",
+    deps = [
+        ":file-lock-native",
+    ],
 )
