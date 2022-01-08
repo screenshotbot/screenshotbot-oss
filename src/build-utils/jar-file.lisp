@@ -183,7 +183,6 @@
    (jar lib)))
 
 (defmethod collect-runtime-jars ((lib java-library))
-  (log:info "Collect jars for: ~s" lib)
   (append
    (loop for dep in (runtime-depends-on lib)
       appending
