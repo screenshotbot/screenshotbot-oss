@@ -1,0 +1,66 @@
+load("//tools:asd.bzl", "remote_system")
+
+filegroup(
+    name = "bknr-project",
+    srcs = glob(["src/**/*"]),
+)
+
+remote_system(
+    name = "bknr.indices",
+    project = "bknr-project",
+    deps = [
+        "//quicklisp:cl-interpol",
+        "//quicklisp:md5",
+        ":bknr.utils",
+        ":bknr.skip-list",
+        "//quicklisp:closer-mop",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    needs_sources = True,
+)
+
+remote_system(
+    name = "bknr.datastore",
+    project = "bknr-project",
+    deps = [
+        "//quicklisp:alexandria",
+        "//quicklisp:unit-test",
+        ":bknr.utils",
+        ":bknr.indices",
+        "//quicklisp:yason",
+        "//quicklisp:trivial-utf-8",
+        "//quicklisp:cffi",
+        "//quicklisp:float-features",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "bknr.utils",
+    project = "bknr-project",
+    deps = [
+        "//quicklisp:cl-interpol",
+        "//quicklisp:cl-ppcre",
+        "//quicklisp:md5",
+        "//quicklisp:flexi-streams",
+        "//quicklisp:alexandria",
+        "//quicklisp:bordeaux-threads",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "bknr.skip-list",
+    project = "bknr-project",
+    deps = [
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

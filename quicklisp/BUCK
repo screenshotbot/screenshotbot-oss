@@ -254,6 +254,12 @@ remote_project(
 )
 
 remote_project(
+    name = "float-features-project",
+    url = "http://beta.quicklisp.org/archive/float-features/2021-02-28/float-features-20210228-git.tgz",
+    sha1 =  "5713f9eeb6ed4ae113bb391896b88a52ca4a8dbf",
+)
+
+remote_project(
     name = "trivial-features-project",
     url = "http://beta.quicklisp.org/archive/trivial-features/2021-12-09/trivial-features-20211209-git.tgz",
     sha1 =  "8b0b945094bf87925470e05a9a5737eb7135da4c",
@@ -344,6 +350,12 @@ remote_project(
 )
 
 remote_project(
+    name = "documentation-utils-project",
+    url = "http://beta.quicklisp.org/archive/documentation-utils/2019-07-10/documentation-utils-20190710-git.tgz",
+    sha1 =  "4bc0a5baa19e002a701ccd89cc99d4a3145a78d2",
+)
+
+remote_project(
     name = "closer-mop-project",
     url = "http://beta.quicklisp.org/archive/closer-mop/2021-12-30/closer-mop-20211230-git.tgz",
     sha1 =  "feff85dc6d20f9c59470bbe1b7d186fccb86f815",
@@ -389,6 +401,12 @@ remote_project(
     name = "tmpdir-project",
     url = "http://beta.quicklisp.org/archive/tmpdir/2020-02-18/tmpdir-20200218-git.tgz",
     sha1 =  "634fb67c23ab66974717c3c3ea1dd787680af7e1",
+)
+
+remote_project(
+    name = "trivial-indent-project",
+    url = "http://beta.quicklisp.org/archive/trivial-indent/2021-05-31/trivial-indent-20210531-git.tgz",
+    sha1 =  "271346de51ae6bed5db0334607fc6c192ddfea1d",
 )
 
 remote_project(
@@ -558,15 +576,6 @@ remote_system(
 )
 
 remote_system(
-    name = "bknr.indices",
-    project = "bknr-datastore-project",
-    deps = [ ":bknr.skip-list", ":bknr.utils", ":cl-interpol", ":closer-mop" ],
-    visibility = [
-        "PUBLIC",
-    ],
-)
-
-remote_system(
     name = "static-vectors",
     project = "static-vectors-project",
     deps = [ ":alexandria", ":cffi", ":cffi-grovel" ],
@@ -678,15 +687,6 @@ remote_system(
     name = "parse-number",
     project = "parse-number-project",
     deps = [  ],
-    visibility = [
-        "PUBLIC",
-    ],
-)
-
-remote_system(
-    name = "bknr.utils",
-    project = "bknr-datastore-project",
-    deps = [ ":alexandria", ":bordeaux-threads", ":cl-interpol", ":cl-ppcre", ":flexi-streams", ":md5" ],
     visibility = [
         "PUBLIC",
     ],
@@ -865,15 +865,6 @@ remote_system(
 )
 
 remote_system(
-    name = "bknr.datastore",
-    project = "bknr-datastore-project",
-    deps = [ ":alexandria", ":bknr.indices", ":bknr.utils", ":cl-interpol", ":closer-mop", ":trivial-utf-8", ":unit-test", ":yason" ],
-    visibility = [
-        "PUBLIC",
-    ],
-)
-
-remote_system(
     name = "fast-http",
     project = "fast-http-project",
     deps = [ ":alexandria", ":babel", ":cl-utilities", ":proc-parse", ":smart-buffer", ":xsubseq" ],
@@ -895,6 +886,15 @@ remote_system(
     name = "trivia",
     project = "trivia-project",
     deps = [ ":trivia.balland2006" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "float-features",
+    project = "float-features-project",
+    deps = [ ":documentation-utils" ],
     visibility = [
         "PUBLIC",
     ],
@@ -1054,6 +1054,15 @@ remote_system(
 )
 
 remote_system(
+    name = "documentation-utils",
+    project = "documentation-utils-project",
+    deps = [ ":trivial-indent" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "closer-mop",
     project = "closer-mop-project",
     deps = [  ],
@@ -1100,15 +1109,6 @@ remote_system(
 )
 
 remote_system(
-    name = "bknr.skip-list",
-    project = "bknr-datastore-project",
-    deps = [  ],
-    visibility = [
-        "PUBLIC",
-    ],
-)
-
-remote_system(
     name = "hunchentoot",
     project = "hunchentoot-project",
     deps = [ ":alexandria", ":bordeaux-threads", ":chunga", ":cl+ssl", ":cl-base64", ":cl-fad", ":cl-ppcre", ":flexi-streams", ":md5", ":rfc2388", ":trivial-backtrace", ":usocket" ],
@@ -1121,6 +1121,15 @@ remote_system(
     name = "tmpdir",
     project = "tmpdir-project",
     deps = [ ":cl-fad" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "trivial-indent",
+    project = "trivial-indent-project",
+    deps = [  ],
     visibility = [
         "PUBLIC",
     ],

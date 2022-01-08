@@ -25,7 +25,7 @@ lisp_library(
         "//quicklisp:tmpdir",
         "//quicklisp:secure-random",
         "//quicklisp:cl-base32",
-        "//quicklisp:bknr.datastore",
+        "//third-party/bknr.datastore:bknr.datastore",
         "//quicklisp:cl-csv",
         "//quicklisp:cl-smtp",
         "//quicklisp:cl-mongo-id",
