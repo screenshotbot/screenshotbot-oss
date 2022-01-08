@@ -15,4 +15,7 @@ lisp_library(
         "intellij-plugin.lisp",
         "all.lisp",
     ],
+    visibility = [
+        "PUBLIC",
+    ],
 )

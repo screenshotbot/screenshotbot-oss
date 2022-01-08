@@ -17,22 +17,14 @@
 
 (defun jvm-get-classpath ()
   (let ((class-path
-          (cond
-            (util:*delivered-image*
-             (fad:list-directory "assets/java-libs/"))
-            (t
-             (build-utils:java-class-path (asdf:find-system :java.main))))))
+          (build-utils:java-class-path (asdf:find-system :java.main))))
     #+ccl
     (pushnew (asdf:system-relative-pathname :cl+j "cl_j.jar")
              class-path)
 
     #+lispworks
     (pushnew
-     (cond
-       (util:*delivered-image*
-        "assets/lispcalls.jar")
-       (t
-        (sys:lispworks-file "etc/lispcalls.jar")))
+     (sys:lispworks-file "etc/lispcalls.jar")
      class-path)
 
     class-path))
