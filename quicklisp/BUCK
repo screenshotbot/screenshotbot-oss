@@ -92,6 +92,12 @@ remote_project(
 )
 
 remote_project(
+    name = "ironclad-project",
+    url = "http://beta.quicklisp.org/archive/ironclad/2021-10-20/ironclad-v0.56.tgz",
+    sha1 =  "9a9643b8ac5f5e2ff5df9df4c09e9671cc45e1a0",
+)
+
+remote_project(
     name = "cl-unicode-project",
     url = "http://beta.quicklisp.org/archive/cl-unicode/2021-02-28/cl-unicode-20210228-git.tgz",
     sha1 =  "3f5e786cbff2bd8807dd2b15edd688e11ffe59c0",
@@ -472,6 +478,15 @@ remote_system(
     name = "chipz",
     project = "chipz-project",
     deps = [  ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "ironclad",
+    project = "ironclad-project",
+    deps = [ ":bordeaux-threads" ],
     visibility = [
         "PUBLIC",
     ],
