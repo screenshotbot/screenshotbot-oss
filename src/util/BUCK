@@ -81,10 +81,3 @@ cxx_library(
     ],
     link_style = "shared",
 )
-
-cxx_binary(
-    name = "file-lock-bin",
-    deps = [
-        ":file-lock-native",
-    ],
-)
