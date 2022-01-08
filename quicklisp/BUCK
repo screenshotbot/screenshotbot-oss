@@ -218,6 +218,12 @@ remote_project(
 )
 
 remote_project(
+    name = "do-urlencode-project",
+    url = "http://beta.quicklisp.org/archive/do-urlencode/2018-10-18/do-urlencode-20181018-git.tgz",
+    sha1 =  "58e71c250fbc3d12d0a9367ed06142c793e68abd",
+)
+
+remote_project(
     name = "secure-random-project",
     url = "http://beta.quicklisp.org/archive/secure-random/2016-02-08/secure-random-20160208-git.tgz",
     sha1 =  "08557ff512afff8581509cdcb63a623ece3469b2",
@@ -781,6 +787,15 @@ remote_system(
     name = "cl-fad",
     project = "cl-fad-project",
     deps = [ ":alexandria", ":bordeaux-threads" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "do-urlencode",
+    project = "do-urlencode-project",
+    deps = [ ":alexandria", ":babel" ],
     visibility = [
         "PUBLIC",
     ],

@@ -1,0 +1,34 @@
+load("//tools:lisp.bzl", "lisp_library", "lisp_test")
+
+lisp_library(
+    name = "hunchentoot-extensions",
+    srcs = [
+        "package.lisp",
+        "url.lisp",
+        "acceptor-with-plugins.lisp",
+        "better-easy-handler.lisp"
+    ],
+    deps = [
+        "//quicklisp:hunchentoot",
+        "//quicklisp:str",
+        "//quicklisp:markup",
+        "//quicklisp:quri",
+        "//quicklisp:do-urlencode",
+        "//quicklisp:log4cl",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+lisp_test(
+    name = "tests",
+    srcs = [
+        "test-acceptor-with-plugins.lisp",
+        "test-better-easy-handler.lisp",
+        "test-url.lisp",
+    ],
+    deps = [
+        ":hunchentoot-extensions",
+    ],
+)
