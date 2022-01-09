@@ -59,6 +59,7 @@
                #-screenshotbot-oss
                "stripe"
                "log4cl"
+               "util/store"
                "cl-cron")
   :serial t
   :components ((:file "random-port")
@@ -67,9 +68,6 @@
                (:file "make-instance-with-accessors")
                (:file "emacs")
                (:file "cookies")
-               (lib-source-file "store-native")
-               (:file "file-lock")
-               (:file "store")
                (:file "testing")
                (:file "package")
                (:file "mockable")
@@ -91,6 +89,15 @@
                (:file "mquery")
                (:file "form-errors")
                (:file "debugger-hook")))
+
+(defsystem :util/store
+  :serial t
+  :depends-on (:bknr.datastore
+               :cffi
+               :cl-cron)
+  :components ((lib-source-file "store-native")
+               (:file "file-lock")
+               (:file "store")))
 
 (defsystem :util/fiveam
   :depends-on (:util

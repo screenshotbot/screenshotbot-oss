@@ -40,8 +40,9 @@
     (*start-slynk* #+screenshotbot-oss nil
                    #-screenshotbot-oss t
                    "")
-    (util:*object-store* #+screenshotbot-oss "~/.config/screenshotbot/object-store/"
-                         #-screenshotbot-oss "/data/arnold/object-store/" "" :params ("OBJECT-STORE"))
+    (util/store:*object-store*
+     #+screenshotbot-oss "~/.config/screenshotbot/object-store/"
+     #-screenshotbot-oss "/data/arnold/object-store/" "" :params ("OBJECT-STORE"))
     (*verify-store* nil "")
     (*verify-snapshots* nil "")
     #-sbcl
@@ -136,11 +137,7 @@
                                          :layout (make-instance 'log4cl:simple-layout)))))
 
 (defun setup-log4cl-debugger-hook ()
-  (when util:*delivered-image*
-    ;; assume this is production: Lispworks by default uses a shitty
-    ;; cl:*debugger-hook* in delivered images. It's actually pretty
-    ;; buggy and doesn't work very well in low-disk situations.
-    (setf cl:*debugger-hook* #'util/debugger-hook:log4cl-debugger-hook)))
+  )
 
 
 (defun main (&optional #+sbcl listen-fd)
@@ -162,7 +159,7 @@
 
             (when *verify-store*
               (log:config :info)
-              (util:verify-store)
+              (util/store:verify-store)
               (log:info "Done verifying store")
               (uiop:quit 0))
 
@@ -191,7 +188,7 @@
 
             (setf hunchentoot:*rewrite-for-session-urls* nil)
 
-            (util:prepare-store)
+            (util/store:prepare-store)
 
             (cl-cron:start-cron)
 

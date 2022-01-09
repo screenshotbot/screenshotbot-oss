@@ -15,7 +15,7 @@
 
 #-buck
 (let ((output (asdf:output-file 'asdf:compile-op
-                                 (asdf:find-component :util "store-native"))))
+                                 (asdf:find-component :util/store "store-native"))))
   #-lispworks
   (cffi:load-foreign-library
    output)

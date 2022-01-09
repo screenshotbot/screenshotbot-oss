@@ -16,7 +16,8 @@
    #:add-datastore-hook
    #:object-store
    #:safe-mp-store
-   #:with-test-store))
+   #:with-test-store
+   #:*object-store*))
 (in-package :util/store)
 
 (defvar *object-store*)
@@ -66,8 +67,12 @@
   `(call-with-test-store (lambda () ,@body)))
 
 (defun call-with-test-store (fn)
+  #-buck
+  (funcall fn)
+  #+buck
   (when (boundp 'bknr.datastore:*store*)
     (error "Don't run this test in a live program with an existing store"))
+  #+buck
   (let ((*store* nil))
     (tmpdir:with-tmpdir (dir)
       (prepare-store-for-test :dir dir)

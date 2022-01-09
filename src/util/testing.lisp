@@ -6,7 +6,10 @@
 
 (defpackage :util/testing
   (:use #:cl)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:with-fake-request
+   #:in-test-p))
 (in-package :util/testing)
 
 (defvar *in-test-p* nil)

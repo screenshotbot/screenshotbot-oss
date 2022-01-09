@@ -6,7 +6,7 @@
 
 (defsystem "server"
   :depends-on ("cl-cli"
-               "util"
+               "util/store"
                "cl-cron"
                #+ (or ccl lispworks)
                "jvm"
