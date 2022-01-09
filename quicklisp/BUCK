@@ -26,6 +26,12 @@ remote_project(
 )
 
 remote_project(
+    name = "atomics-project",
+    url = "http://beta.quicklisp.org/archive/atomics/2021-06-30/atomics-20210630-git.tgz",
+    sha1 =  "88e6386d590d3433b88dca5373ec3030f221fd01",
+)
+
+remote_project(
     name = "uuid-project",
     url = "http://beta.quicklisp.org/archive/uuid/2020-07-15/uuid-20200715-git.tgz",
     sha1 =  "3658708e50c7800b6cd06db3558951517f8fe44a",
@@ -314,6 +320,12 @@ remote_project(
 )
 
 remote_project(
+    name = "lparallel-project",
+    url = "http://beta.quicklisp.org/archive/lparallel/2016-08-25/lparallel-20160825-git.tgz",
+    sha1 =  "2707ef712043a593eaf4a47ac1b6f691e4ec7bda",
+)
+
+remote_project(
     name = "cl-interpol-project",
     url = "http://beta.quicklisp.org/archive/cl-interpol/2020-12-20/cl-interpol-20201220-git.tgz",
     sha1 =  "265fe015eb19805483f25e7ad5a962f5e7d11d96",
@@ -404,15 +416,15 @@ remote_project(
 )
 
 remote_project(
-    name = "trivial-indent-project",
-    url = "http://beta.quicklisp.org/archive/trivial-indent/2021-05-31/trivial-indent-20210531-git.tgz",
-    sha1 =  "271346de51ae6bed5db0334607fc6c192ddfea1d",
-)
-
-remote_project(
     name = "rfc2388-project",
     url = "http://beta.quicklisp.org/archive/rfc2388/2018-08-31/rfc2388-20180831-git.tgz",
     sha1 =  "e459e51d02f5e695fe32dfcbd7b3bb367912a8cf",
+)
+
+remote_project(
+    name = "trivial-indent-project",
+    url = "http://beta.quicklisp.org/archive/trivial-indent/2021-05-31/trivial-indent-20210531-git.tgz",
+    sha1 =  "271346de51ae6bed5db0334607fc6c192ddfea1d",
 )
 
 remote_project(
@@ -457,6 +469,12 @@ remote_project(
     sha1 =  "97fff6593a846bd0aa9229ef8a5b81c197435da4",
 )
 
+remote_project(
+    name = "priority-queue-project",
+    url = "http://beta.quicklisp.org/archive/priority-queue/2015-07-09/priority-queue-20150709-git.tgz",
+    sha1 =  "f78209ab95ee1c22a6471203044c82f6526aa8d1",
+)
+
 remote_system(
     name = "cl-libyaml",
     project = "cl-libyaml-project",
@@ -489,6 +507,15 @@ remote_system(
     name = "drakma",
     project = "drakma-project",
     deps = [ ":chipz", ":chunga", ":cl+ssl", ":cl-base64", ":cl-ppcre", ":flexi-streams", ":puri", ":usocket" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "atomics",
+    project = "atomics-project",
+    deps = [ ":documentation-utils" ],
     visibility = [
         "PUBLIC",
     ],
@@ -829,18 +856,18 @@ remote_system(
 )
 
 remote_system(
-    name = "cffi-grovel",
-    project = "cffi-project",
-    deps = [ ":alexandria", ":cffi", ":cffi-toolchain" ],
+    name = "secure-random",
+    project = "secure-random-project",
+    deps = [ ":cl+ssl" ],
     visibility = [
         "PUBLIC",
     ],
 )
 
 remote_system(
-    name = "secure-random",
-    project = "secure-random-project",
-    deps = [ ":cl+ssl" ],
+    name = "cffi-grovel",
+    project = "cffi-project",
+    deps = [ ":alexandria", ":cffi", ":cffi-toolchain" ],
     visibility = [
         "PUBLIC",
     ],
@@ -1000,6 +1027,15 @@ remote_system(
 )
 
 remote_system(
+    name = "lparallel",
+    project = "lparallel-project",
+    deps = [ ":alexandria", ":bordeaux-threads" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "cl-interpol",
     project = "cl-interpol-project",
     deps = [ ":cl-unicode", ":named-readtables" ],
@@ -1127,8 +1163,8 @@ remote_system(
 )
 
 remote_system(
-    name = "trivial-indent",
-    project = "trivial-indent-project",
+    name = "rfc2388",
+    project = "rfc2388-project",
     deps = [  ],
     visibility = [
         "PUBLIC",
@@ -1136,8 +1172,8 @@ remote_system(
 )
 
 remote_system(
-    name = "rfc2388",
-    project = "rfc2388-project",
+    name = "trivial-indent",
+    project = "trivial-indent-project",
     deps = [  ],
     visibility = [
         "PUBLIC",
@@ -1207,3 +1243,11 @@ remote_system(
     ],
 )
 
+remote_system(
+    name = "priority-queue",
+    project = "priority-queue-project",
+    deps = [  ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
