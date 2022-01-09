@@ -20,7 +20,8 @@
   (:use-reexport #:util/ret-let
                  #:util/copying
                  #:util/store
-                 #:util/file-lock)
+                 #:util/file-lock
+                 #:util/testing)
   (:use-reexport #:util/make-instance-with-accessors)
   (:export #:head
            #:google-analytics

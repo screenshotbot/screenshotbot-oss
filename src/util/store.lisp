@@ -15,7 +15,8 @@
    #:verify-store
    #:add-datastore-hook
    #:object-store
-   #:safe-mp-store))
+   #:safe-mp-store
+   #:with-test-store))
 (in-package :util/store)
 
 (defvar *object-store*)
@@ -60,6 +61,16 @@
   (make-instance 'safe-mp-store
                  :directory "~/test-store/"
                  :subsystems (store-subsystems)))
+
+(defmacro with-test-store (() &body body)
+  `(call-with-test-store (lambda () ,@body)))
+
+(defun call-with-test-store (fn)
+  (when (boundp 'bknr.datastore:*store*)
+    (let ((*store* nil))
+      (prepare-store-for-test)
+      (assert bknr.datastore:*store*)
+      (funcall fn))))
 
 (defun prepare-store ()
   (setf bknr.datastore:*store-debug* t)

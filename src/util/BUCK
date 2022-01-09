@@ -36,6 +36,7 @@ lisp_library(
         "//quicklisp:log4cl",
         "//quicklisp:cl-cron",
         ":store",
+        ":testing",
     ],
     visibility = [
         "PUBLIC",
@@ -127,4 +128,19 @@ cxx_library(
         "store-native.c",
     ],
     link_style = "shared",
+)
+
+lisp_library(
+    name = "testing",
+    srcs = [
+        "testing.lisp",
+    ],
+    deps = [
+        "//quicklisp:hunchentoot",
+        "//quicklisp:alexandria",
+        "//src/hunchentoot-extensions:hunchentoot-extensions",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )

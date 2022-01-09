@@ -4,7 +4,10 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :util)
+(defpackage :util/testing
+  (:use #:cl)
+  (:local-nicknames (#:a #:alexandria)))
+(in-package :util/testing)
 
 (defvar *in-test-p* nil)
 
@@ -16,7 +19,7 @@
 
 (defmethod (setf hunchentoot:post-parameter) (val (request custom-request) key)
   (with-slots (additional-post-params) request
-    (setf (assoc-value additional-post-params key :test 'equal)
+    (setf (a:assoc-value additional-post-params key :test 'equal)
           val)))
 
 (defmethod hunchentoot:post-parameters ((request custom-request))
@@ -25,7 +28,7 @@
     additional-post-params
     (call-next-method))))
 
-(defmacro with-fake-request ((&key  (acceptor '(quote util:base-acceptor)) (host "localhost")
+(defmacro with-fake-request ((&key  (acceptor '(quote hex:base-acceptor)) (host "localhost")
                                 (script-name "/")) &body body)
  `(let* ((hunchentoot::*hunchentoot-stream*)
          (hunchentoot:*catch-errors-p* nil)

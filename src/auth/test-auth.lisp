@@ -1,20 +1,23 @@
 (defpackage :test-auth
   (:use :cl
    :fiveam)
-  (:import-from :util
+  (:import-from :util/testing
                 :with-fake-request)
   (:import-from :auth
    :fix-cookie-domain
    #+windows
    :read-windows-seed)
+  (:import-from #:util/store
+                #:with-test-store)
   (:export))
 (in-package :test-auth)
 
 (def-suite* :test-auth)
 
 (def-fixture state ()
-  (with-fake-request ()
-    (&body)))
+  (with-test-store ()
+   (with-fake-request ()
+     (&body))))
 
 (test auth-simple-test
   (with-fixture state ()

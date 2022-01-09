@@ -92,6 +92,12 @@ remote_project(
 )
 
 remote_project(
+    name = "cl-isaac-project",
+    url = "http://beta.quicklisp.org/archive/cl-isaac/2015-08-04/cl-isaac-20150804-git.tgz",
+    sha1 =  "ae77f03ce48944e8b2d301a13a5c7f279e8bcfb7",
+)
+
+remote_project(
     name = "iterate-project",
     url = "http://beta.quicklisp.org/archive/iterate/2021-05-31/iterate-release-b0f9a9c6-git.tgz",
     sha1 =  "6a3c1881559da2356c1234e8296a871e0f16acd1",
@@ -119,6 +125,12 @@ remote_project(
     name = "chunga-project",
     url = "http://beta.quicklisp.org/archive/chunga/2020-04-27/chunga-20200427-git.tgz",
     sha1 =  "a1b7c6d86703a2c8c60789e150a0dfa2a9098cba",
+)
+
+remote_project(
+    name = "cl-pass-project",
+    url = "http://beta.quicklisp.org/archive/cl-pass/2020-12-20/cl-pass-20201220-git.tgz",
+    sha1 =  "8ebd69e723f981d8860df6780e959683db7a11a3",
 )
 
 remote_project(
@@ -200,15 +212,15 @@ remote_project(
 )
 
 remote_project(
-    name = "log4cl-project",
-    url = "http://beta.quicklisp.org/archive/log4cl/2021-12-09/log4cl-20211209-git.tgz",
-    sha1 =  "2b09219f600be629642f0b686b1ab7a2a3b966ff",
-)
-
-remote_project(
     name = "cl-cli-project",
     url = "http://beta.quicklisp.org/archive/cl-cli/2015-12-18/cl-cli-20151218-git.tgz",
     sha1 =  "f0575fe67ef1f3b94d7f6fe84e59df972ab0ceb7",
+)
+
+remote_project(
+    name = "log4cl-project",
+    url = "http://beta.quicklisp.org/archive/log4cl/2021-12-09/log4cl-20211209-git.tgz",
+    sha1 =  "2b09219f600be629642f0b686b1ab7a2a3b966ff",
 )
 
 remote_project(
@@ -227,6 +239,12 @@ remote_project(
     name = "cl-fad-project",
     url = "http://beta.quicklisp.org/archive/cl-fad/2021-01-24/cl-fad-20210124-git.tgz",
     sha1 =  "8e3e0ec24b3eb7b4243ab08e9c3bd2c5ae203349",
+)
+
+remote_project(
+    name = "session-token-project",
+    url = "http://beta.quicklisp.org/archive/session-token/2014-11-06/session-token-20141106-git.tgz",
+    sha1 =  "a429a853a0d36f6ec788c4fadfdbc32914f71285",
 )
 
 remote_project(
@@ -320,6 +338,12 @@ remote_project(
 )
 
 remote_project(
+    name = "hunchentoot-multi-acceptor-project",
+    url = "http://beta.quicklisp.org/archive/hunchentoot-multi-acceptor/2021-06-30/hunchentoot-multi-acceptor-20210630-git.tgz",
+    sha1 =  "0346bb0f5a1f4d9353a79716786590544a6bd586",
+)
+
+remote_project(
     name = "lparallel-project",
     url = "http://beta.quicklisp.org/archive/lparallel/2016-08-25/lparallel-20160825-git.tgz",
     sha1 =  "2707ef712043a593eaf4a47ac1b6f691e4ec7bda",
@@ -329,12 +353,6 @@ remote_project(
     name = "cl-interpol-project",
     url = "http://beta.quicklisp.org/archive/cl-interpol/2020-12-20/cl-interpol-20201220-git.tgz",
     sha1 =  "265fe015eb19805483f25e7ad5a962f5e7d11d96",
-)
-
-remote_project(
-    name = "hunchentoot-multi-acceptor-project",
-    url = "http://beta.quicklisp.org/archive/hunchentoot-multi-acceptor/2021-06-30/hunchentoot-multi-acceptor-20210630-git.tgz",
-    sha1 =  "0346bb0f5a1f4d9353a79716786590544a6bd586",
 )
 
 remote_project(
@@ -621,6 +639,15 @@ remote_system(
 )
 
 remote_system(
+    name = "cl-isaac",
+    project = "cl-isaac-project",
+    deps = [  ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "iterate",
     project = "iterate-project",
     deps = [  ],
@@ -669,6 +696,15 @@ remote_system(
     name = "chunga",
     project = "chunga-project",
     deps = [ ":trivial-gray-streams" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "cl-pass",
+    project = "cl-pass-project",
+    deps = [ ":ironclad", ":split-sequence", ":trivial-utf-8" ],
     visibility = [
         "PUBLIC",
     ],
@@ -793,18 +829,18 @@ remote_system(
 )
 
 remote_system(
-    name = "log4cl",
-    project = "log4cl-project",
-    deps = [ ":bordeaux-threads" ],
+    name = "cl-cli",
+    project = "cl-cli-project",
+    deps = [ ":split-sequence" ],
     visibility = [
         "PUBLIC",
     ],
 )
 
 remote_system(
-    name = "cl-cli",
-    project = "cl-cli-project",
-    deps = [ ":split-sequence" ],
+    name = "log4cl",
+    project = "log4cl-project",
+    deps = [ ":bordeaux-threads" ],
     visibility = [
         "PUBLIC",
     ],
@@ -847,6 +883,15 @@ remote_system(
 )
 
 remote_system(
+    name = "session-token",
+    project = "session-token-project",
+    deps = [ ":cl-isaac" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "do-urlencode",
     project = "do-urlencode-project",
     deps = [ ":alexandria", ":babel" ],
@@ -856,18 +901,18 @@ remote_system(
 )
 
 remote_system(
-    name = "secure-random",
-    project = "secure-random-project",
-    deps = [ ":cl+ssl" ],
+    name = "cffi-grovel",
+    project = "cffi-project",
+    deps = [ ":alexandria", ":cffi", ":cffi-toolchain" ],
     visibility = [
         "PUBLIC",
     ],
 )
 
 remote_system(
-    name = "cffi-grovel",
-    project = "cffi-project",
-    deps = [ ":alexandria", ":cffi", ":cffi-toolchain" ],
+    name = "secure-random",
+    project = "secure-random-project",
+    deps = [ ":cl+ssl" ],
     visibility = [
         "PUBLIC",
     ],
@@ -1027,6 +1072,15 @@ remote_system(
 )
 
 remote_system(
+    name = "hunchentoot-multi-acceptor",
+    project = "hunchentoot-multi-acceptor-project",
+    deps = [ ":alexandria", ":hunchentoot", ":str", ":usocket" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "lparallel",
     project = "lparallel-project",
     deps = [ ":alexandria", ":bordeaux-threads" ],
@@ -1039,15 +1093,6 @@ remote_system(
     name = "cl-interpol",
     project = "cl-interpol-project",
     deps = [ ":cl-unicode", ":named-readtables" ],
-    visibility = [
-        "PUBLIC",
-    ],
-)
-
-remote_system(
-    name = "hunchentoot-multi-acceptor",
-    project = "hunchentoot-multi-acceptor-project",
-    deps = [ ":alexandria", ":hunchentoot", ":str", ":usocket" ],
     visibility = [
         "PUBLIC",
     ],
@@ -1251,3 +1296,4 @@ remote_system(
         "PUBLIC",
     ],
 )
+
