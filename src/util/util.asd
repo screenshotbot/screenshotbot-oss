@@ -116,8 +116,7 @@
                :util/fiveam)
   :serial t
   :components ((:module "tests"
-                :components ((:file "test-package")
-                             (:file "test-ret-let")
+                :components ((:file "test-ret-let")
                              (:file "test-store")
                              (:file "test-cookies")
                              (:file "test-fiveam")

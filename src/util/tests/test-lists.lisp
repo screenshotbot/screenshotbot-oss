@@ -4,7 +4,15 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package #:test-util)
+(defpackage :util/tests/test-lists
+  (:use #:cl
+        #:util
+        #:fiveam)
+  (:local-nicknames (#:a #:alexandria)))
+(in-package :util/tests/test-lists)
+
+
+(util/fiveam:def-suite)
 
 (test head
   (is (equal '(1 2) (head '(1 2 3) 2)))

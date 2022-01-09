@@ -5,7 +5,14 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :test-util)
+(defpackage :util/tests/test-html2text
+  (:use #:cl
+        #:util
+        #:fiveam)
+  (:local-nicknames (#:a #:alexandria)))
+(in-package :util/tests/test-html2text)
+
+(util/fiveam:def-suite)
 
 (markup:enable-reader)
 

@@ -31,11 +31,25 @@ lisp_library(
         "//quicklisp:cl-mongo-id",
         "//quicklisp:drakma",
         "//quicklisp:cl-json",
-        #"//src/hunchentoot-extensions:hunchentoot-extensions",
+        "//src/hunchentoot-extensions:hunchentoot-extensions",
         #"//src/stripe:stripe",
         "//quicklisp:log4cl",
         "//quicklisp:cl-cron",
-    ]
+        ":store",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    srcs = [
+        "random-port.lisp",
+        "ret-let.lisp",
+        "copying.lisp",
+        "make-instance-with-accessors.lisp",
+        "emacs.lisp",
+        "cookies.lisp",
+        "package.lisp",
+        "lists.lisp",
+    ],
 )
 
 lisp_library(

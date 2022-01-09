@@ -9,4 +9,7 @@ lisp_library(
     deps = [
         "//quicklisp:str",
     ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
