@@ -17,7 +17,8 @@
    #:object-store
    #:safe-mp-store
    #:with-test-store
-   #:*object-store*))
+   #:*object-store*
+   #:store-subsystems))
 (in-package :util/store)
 
 (defvar *object-store*)
