@@ -1,0 +1,29 @@
+load("//tools:lisp.bzl", "lisp_library", "lisp_test")
+
+lisp_library(
+    name = "nibble",
+    srcs = [
+        "package.lisp",
+        "nibble.lisp"
+    ],
+    deps = [
+        "//quicklisp:log4cl",
+        "//src/hunchentoot-extensions:hunchentoot-extensions",
+        "//src/auth:auth",
+        "//quicklisp:secure-random",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+lisp_test(
+    name = "tests",
+    srcs = [
+        "test-nibble.lisp",
+    ],
+    deps = [
+        ":nibble",
+        "//src/util:testing",
+    ],
+)

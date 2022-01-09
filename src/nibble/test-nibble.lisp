@@ -9,9 +9,7 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :nibble/test-nibble)
 
-
-(util/fiveam:def-suite)
-
+(def-suite* :test-nibble)
 
 (def-fixture state ()
   (let ((plugin (make-instance 'nibble-plugin
@@ -42,7 +40,7 @@
 
 (test named-nibble-with-args
   (with-fixture state ()
-    (util:with-fake-request (:script-name "/?name=arnold")
+    (util/testing:with-fake-request (:script-name "/?name=arnold")
       (auth:with-sessions ()
        (is (equal "hello arnold"
                   (render-nibble
