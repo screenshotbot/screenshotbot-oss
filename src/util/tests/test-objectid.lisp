@@ -17,6 +17,7 @@
 
 (def-suite* :util.model.test-object-id)
 
+#-buck
 (test simple-creation-and-finding
   (let ((obj (make-instance 'object-with-oid)))
     (is (eql obj

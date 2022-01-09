@@ -1,4 +1,4 @@
-(pkg:define-package :util/mock-recording
+(uiop:define-package :util/mock-recording
     (:use #:cl
           #:alexandria)
   (:import-from #:cl-mock
@@ -7,6 +7,7 @@
                 #:if-called)
   (:export
    #:with-recording))
+(in-package :util/mock-recording)
 
 (defun call-with-recording (mocked-function file fn &key record skip-args)
   (ensure-directories-exist file)

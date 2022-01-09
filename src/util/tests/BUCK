@@ -5,15 +5,10 @@ lisp_test(
     deps = [
         "//src/util:store",
         "//src/util:fiveam",
+        "//src/util:mock-recording",
         "//src/util:util",
         "//src/pkg:pkg",
+        "//src/util:utf-8",
     ],
-    srcs = [
-        "test-ret-let.lisp",
-        "test-store.lisp",
-        "test-cookies.lisp",
-        "test-fiveam.lisp",
-        "test-file-lock.lisp",
-        "test-lists.lisp",
-    ],
+    srcs = glob(["test-*.lisp"]),
 )

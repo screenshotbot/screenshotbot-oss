@@ -48,9 +48,32 @@ lisp_library(
         "emacs.lisp",
         "cookies.lisp",
         "package.lisp",
+        "html2text.lisp",
+        "object-id.lisp",
+        "bind-form.lisp",
+        "mockable.lisp",
+        "mquery.lisp",
         "lists.lisp",
+        "cdn.lisp",
     ],
 )
+
+lisp_library(
+    name = "mock-recording",
+    srcs = [
+        "mock-recording.lisp",
+    ],
+    deps = [
+        "//quicklisp:alexandria",
+        "//quicklisp:cl-mock",
+        "//quicklisp:log4cl",
+        "//quicklisp:str",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
 
 lisp_library(
     name = "store",
@@ -86,6 +109,16 @@ lisp_library(
     native_libraries = [
         ":file-lock-native",
     ]
+)
+
+lisp_library(
+    name = "utf-8",
+    srcs = [
+        "utf-8.lisp",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 cxx_library(
