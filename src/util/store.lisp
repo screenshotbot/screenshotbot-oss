@@ -57,9 +57,9 @@
   (list (make-instance 'bknr.datastore:store-object-subsystem)
         (make-instance 'bknr.datastore:blob-subsystem)))
 
-(defun prepare-store-for-test ()
+(defun prepare-store-for-test (&key (dir "~/test-store/"))
   (make-instance 'safe-mp-store
-                 :directory "~/test-store/"
+                 :directory dir
                  :subsystems (store-subsystems)))
 
 (defmacro with-test-store (() &body body)
@@ -67,8 +67,10 @@
 
 (defun call-with-test-store (fn)
   (when (boundp 'bknr.datastore:*store*)
-    (let ((*store* nil))
-      (prepare-store-for-test)
+    (error "Don't run this test in a live program with an existing store"))
+  (let ((*store* nil))
+    (tmpdir:with-tmpdir (dir)
+      (prepare-store-for-test :dir dir)
       (assert bknr.datastore:*store*)
       (funcall fn))))
 
