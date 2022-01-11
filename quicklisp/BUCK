@@ -128,6 +128,12 @@ remote_project(
 )
 
 remote_project(
+    name = "form-fiddle-project",
+    url = "http://beta.quicklisp.org/archive/form-fiddle/2019-07-10/form-fiddle-20190710-git.tgz",
+    sha1 =  "ee76840d0b50a68eae20c16f1e5a3c166a3f4882",
+)
+
+remote_project(
     name = "cl-pass-project",
     url = "http://beta.quicklisp.org/archive/cl-pass/2020-12-20/cl-pass-20201220-git.tgz",
     sha1 =  "8ebd69e723f981d8860df6780e959683db7a11a3",
@@ -212,15 +218,21 @@ remote_project(
 )
 
 remote_project(
-    name = "cl-cli-project",
-    url = "http://beta.quicklisp.org/archive/cl-cli/2015-12-18/cl-cli-20151218-git.tgz",
-    sha1 =  "f0575fe67ef1f3b94d7f6fe84e59df972ab0ceb7",
+    name = "parachute-project",
+    url = "http://beta.quicklisp.org/archive/parachute/2021-10-20/parachute-20211020-git.tgz",
+    sha1 =  "a0d557451e32c1922f19761f5cb3106a57f52945",
 )
 
 remote_project(
     name = "log4cl-project",
     url = "http://beta.quicklisp.org/archive/log4cl/2021-12-09/log4cl-20211209-git.tgz",
     sha1 =  "2b09219f600be629642f0b686b1ab7a2a3b966ff",
+)
+
+remote_project(
+    name = "cl-cli-project",
+    url = "http://beta.quicklisp.org/archive/cl-cli/2015-12-18/cl-cli-20151218-git.tgz",
+    sha1 =  "f0575fe67ef1f3b94d7f6fe84e59df972ab0ceb7",
 )
 
 remote_project(
@@ -702,6 +714,15 @@ remote_system(
 )
 
 remote_system(
+    name = "form-fiddle",
+    project = "form-fiddle-project",
+    deps = [ ":documentation-utils" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
     name = "cl-pass",
     project = "cl-pass-project",
     deps = [ ":ironclad", ":split-sequence", ":trivial-utf-8" ],
@@ -829,9 +850,9 @@ remote_system(
 )
 
 remote_system(
-    name = "cl-cli",
-    project = "cl-cli-project",
-    deps = [ ":split-sequence" ],
+    name = "parachute",
+    project = "parachute-project",
+    deps = [ ":documentation-utils", ":form-fiddle" ],
     visibility = [
         "PUBLIC",
     ],
@@ -841,6 +862,15 @@ remote_system(
     name = "log4cl",
     project = "log4cl-project",
     deps = [ ":bordeaux-threads" ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+remote_system(
+    name = "cl-cli",
+    project = "cl-cli-project",
+    deps = [ ":split-sequence" ],
     visibility = [
         "PUBLIC",
     ],
