@@ -4,7 +4,11 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :util)
+(defpackage :util/bind-form
+  (:use #:cl
+	#:alexandria)
+  (:export #:bind-form))
+(in-package :util/bind-form)
 
 (markup:deftag bind-form (children &key data name)
   (declare (debug 3))

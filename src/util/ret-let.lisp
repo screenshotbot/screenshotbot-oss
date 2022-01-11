@@ -1,6 +1,5 @@
 (uiop:define-package :util/ret-let
-    (:use #:cl
-          #:alexandria)
+    (:use #:cl)
   (:export
    #:ret-let))
 (in-package :util/ret-let)

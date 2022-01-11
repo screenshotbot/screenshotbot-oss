@@ -7,7 +7,7 @@
 
 (defpackage :util/tests/test-html2text
   (:use #:cl
-        #:util
+        #:util/html2text
         #:fiveam)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-html2text)

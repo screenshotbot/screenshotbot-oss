@@ -4,7 +4,14 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :util)
+(defpackage #:util/object-id
+  (:use #:cl
+	#:bknr.datastore)
+  (:export #:object-with-oid
+	   #:object-with-unindexed-oid
+	   #:find-by-oid
+	   #:oid))
+(in-package #:util/object-id)
 
 (defun %make-oid ()
   (mongoid:oid))

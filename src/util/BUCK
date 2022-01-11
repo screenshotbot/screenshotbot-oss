@@ -15,6 +15,141 @@ lisp_library(
 )
 
 lisp_library(
+    name = "bind-form",
+    srcs = [
+        "bind-form.lisp",
+    ],
+    deps = [
+        "//quicklisp:markup",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+lisp_library(
+    name = "cdn",
+    srcs = [
+        "cdn.lisp",
+    ],
+    deps = [
+        "//quicklisp:secure-random",
+        "//quicklisp:str",
+        "//src/hunchentoot-extensions:hunchentoot-extensions",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+lisp_library(
+    name = "cookies",
+    srcs = [
+        "cookies.lisp",
+    ],
+    deps = [
+        "//src/clues:clues",
+        "//quicklisp:hunchentoot",
+        "//quicklisp:str",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+lisp_library(
+    name = "html2text",
+    srcs = [
+        "html2text.lisp",
+    ],
+    deps = [
+        "//quicklisp:markup",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+lisp_library(
+    name = "lists",
+    srcs = [
+        "lists.lisp",
+    ],
+    deps = [
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+lisp_library(
+    name = "make-instance-with-accessors",
+    srcs = [
+        "make-instance-with-accessors.lisp",
+    ],
+    deps = [
+        "//quicklisp:alexandria",
+        "//quicklisp:closer-mop",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+lisp_library(
+    name = "mockable",
+    srcs = [
+        "mockable.lisp",
+    ],
+    deps = [
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+lisp_library(
+    name = "mquery",
+    srcs = [
+        "mquery.lisp",
+    ],
+    deps = [
+        "//quicklisp:markup",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+lisp_library(
+    name = "object-id",
+    srcs = [
+        "object-id.lisp",
+    ],
+    deps = [
+        "//third-party/bknr.datastore:bknr.datastore",
+        "//quicklisp:cl-mongo-id",
+        "//quicklisp:str",
+    ],
+    visibility = [
+        "PUBLIC",
+    ]
+)
+
+lisp_library(
+    name = "ret-let",
+    srcs = [
+        "ret-let.lisp",
+    ],
+    deps = [
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+
+lisp_library(
     name = "util",
     deps = [
         "//quicklisp:hunchentoot",
@@ -37,25 +172,24 @@ lisp_library(
         "//quicklisp:cl-cron",
         ":store",
         ":testing",
+        ":bind-form",
+        ":cdn",
+        ":cookies",
+        ":html2text",
+        ":lists",
+        ":make-instance-with-accessors",
+        ":mquery",
+        ":object-id",
+        ":ret-let",
     ],
     visibility = [
         "PUBLIC",
     ],
     srcs = [
         "random-port.lisp",
-        "ret-let.lisp",
         "copying.lisp",
-        "make-instance-with-accessors.lisp",
         "emacs.lisp",
-        "cookies.lisp",
         "package.lisp",
-        "html2text.lisp",
-        "object-id.lisp",
-        "bind-form.lisp",
-        "mockable.lisp",
-        "mquery.lisp",
-        "lists.lisp",
-        "cdn.lisp",
     ],
 )
 

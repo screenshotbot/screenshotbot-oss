@@ -1,4 +1,8 @@
-(in-package #:util)
+(defpackage #:util/lists
+  (:use #:cl)
+  (:export #:head
+	   #:tail))
+(in-package #:util/lists)
 
 ;; See also 'last' and 'butlast'
 

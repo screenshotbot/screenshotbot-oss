@@ -21,7 +21,10 @@
                  #:util/copying
                  #:util/store
                  #:util/file-lock
-                 #:util/testing)
+                 #:util/testing
+		 #:util/bind-form
+		 #:util/html2text
+		 #:util/object-id)
   (:use-reexport #:util/make-instance-with-accessors)
   (:export #:head
            #:google-analytics
@@ -92,21 +95,3 @@
            #:validate-indices
            #:funcall-if
            #:?.))
-
-(defpackage :mquery
-  (:use #:cl
-        #:markup
-        #:alexandria)
-  (:export #:$
-           #:attr
-           #:add-class
-           #:remove-class
-           #:has-class-p
-           #:namequery
-           #:text
-           #:parent
-           #:after
-           #:val
-           #:with-document
-           #:mappend
-           #:mqappend))

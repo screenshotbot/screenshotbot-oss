@@ -29,12 +29,12 @@
     ((and *cdn-domain*
           (str:starts-with? "/" href)
           (not (str:starts-with? "//" href)))
-     (util:add-get-param-to-url
+     (hex:add-get-param-to-url
       (format nil "~a~a" *cdn-domain* href)
       "cache-key"
       (format nil "~a" *cdn-cache-key*)))
     (t
-     (util:add-get-param-to-url
+     (hex:add-get-param-to-url
       href
       "cache-key"
       (format nil "~a" *cdn-cache-key*)))))

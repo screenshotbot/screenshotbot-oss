@@ -5,14 +5,13 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :util.model.test-object-id
-  (:use :cl
-   :alexandria
-        :fiveam)
-  (:import-from :util
-   :object-with-oid
-                :oid
-                :find-by-oid
-   ))
+  (:use #:cl
+	#:alexandria
+        #:fiveam)
+  (:import-from #:util/object-id
+		#:object-with-oid
+                #:oid
+                #:find-by-oid))
 (in-package :util.model.test-object-id)
 
 (def-suite* :util.model.test-object-id)

@@ -6,7 +6,7 @@
 
 (defpackage :util/tests/test-lists
   (:use #:cl
-        #:util
+        #:util/lists
         #:fiveam)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-lists)
