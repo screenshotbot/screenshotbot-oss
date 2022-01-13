@@ -93,6 +93,8 @@
 (defsystem :util/store
   :serial t
   :depends-on (:bknr.datastore
+               :str
+               :local-time
                :cffi
                :cl-cron)
   :components ((lib-source-file "store-native")
