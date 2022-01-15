@@ -11,8 +11,6 @@
 
 #-screenshotbot-oss
 (ql:quickload "clsql" :silent t)
-#-screenshotbot-oss
-(ql:quickload "clsql-helper" :silent t)
 
 #-screenshotbot-oss
 (ql:quickload "testing")
@@ -28,6 +26,8 @@
 #+screenshotbot-oss
 (ql:quickload "fiveam")
 
+
+(ql:quickload :cl-markdown)
 
 #+lispworks
 (ql:quickload "slynk")

@@ -28,6 +28,13 @@
                                          ,(format nil "~abuild/asdf-cache/~a/" *cwd*
                                                   (uiop:implementation-identifier)))))
 
+#+sbcl
+(progn
+  (require :sb-rotate-byte)
+  (require :sb-cltl2)
+  (asdf:register-preloaded-system :sb-rotate-byte)
+  (asdf:register-preloaded-system :sb-cltl2))
+
 
 #+lispworks
 (defun use-utf-8-for-all-lisp-files (pathname ext-format-spec first-byte max-extent)
