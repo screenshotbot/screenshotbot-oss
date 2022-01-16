@@ -215,7 +215,7 @@
       ((val-is-checkbox x)
        (not (str:empty? (attr x "checked"))))
       ((val-is-attr-p x)
-       (attr "value"))
+       (attr x "value"))
       ((val-is-inner-html x)
        (text x))
       (t
