@@ -158,7 +158,7 @@
 
 (defmacro defhandler ((name &key uri method intern (html t)
                               want-login) params &body body)
-  (multiple-value-bind (body decls) (tcr.parse-declarations-1.0::parse-body body)
+  (multiple-value-bind (body decls) (uiop:parse-body body)
     `(util:better-easy-handler (,name :uri ,uri :method ,method :acceptor-names '(screenshotbot-acceptor)
                                       :intern ,intern
                                       :html ,html)
