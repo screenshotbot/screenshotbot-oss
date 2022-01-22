@@ -56,6 +56,10 @@
                           collect
                           (let ((system (pathname-name (pathname line))))
                             (cond
+                              ((member "build" (pathname-directory line)
+                                       :test 'equal)
+                               ;; bad test, discard
+                               (values))
                               ((str:ends-with-p ".tests" system)
                                system)
                               ((str:ends-with-p ".test" system)
