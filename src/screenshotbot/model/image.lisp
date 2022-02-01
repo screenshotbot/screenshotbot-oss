@@ -247,7 +247,8 @@
          (declare (type fixnum num-bad))
          (%map-unequal-pixels
           (lambda (i j)
-            (declare (ignore i j))
+            (declare (ignore i j)
+                     (optimize (speed 3) (safety 0) (debug 0)))
             (incf num-bad)))
          (let ((ctr (random num-bad)))
            (declare (type fixnum ctr))
@@ -272,6 +273,10 @@
        (+ (mask-rect-left mask) (mask-rect-width mask) -1))))
 
 (defun map-unequal-pixels (arr1 arr2 fn &key masks)
+  (declare (optimize (speed 3) (debug 0))
+           (ftype (function (fixnum fixnum) nil) fn)
+           (type list masks)
+           (type array arr1 arr2))
   (let* ((dim (array-dimensions arr1))
          (max-k (elt dim 2)))
     (declare (type fixnum max-k))
@@ -307,6 +312,8 @@
              (let ((resp t))
                (map-unequal-pixels arr1 arr2
                                    (lambda (i j)
+                                     (declare (optimize (speed 3)
+                                                        (safety 0)))
                                      (declare (ignore i j))
                                      (Setf resp nil)))
                resp)))))))
