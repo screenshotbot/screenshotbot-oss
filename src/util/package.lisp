@@ -94,4 +94,5 @@
            #:add-datastore-hook
            #:validate-indices
            #:funcall-if
-           #:?.))
+           #:?.
+           #:or-setf))

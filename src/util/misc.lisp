@@ -33,3 +33,8 @@
                    ,@rest))))
 
 (local-time:reread-timezone-repository)
+
+(defmacro or-setf (place expr)
+  `(or
+    ,place
+    (setf ,place ,expr)))
