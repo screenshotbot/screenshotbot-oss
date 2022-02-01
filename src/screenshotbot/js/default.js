@@ -109,7 +109,7 @@ function swAlert(x) {
     alert(x);
 }
 
-$("#delete-runs").click(function () {
+$("#delete-runs").click(function (e) {
     console.log("#delete-runs clicked");
     var runs = getSelectedRuns();
     function deleteNextRun() {
@@ -130,6 +130,7 @@ $("#delete-runs").click(function () {
         });
     }
     deleteNextRun();
+    e.preventDefault()
 });
 
 $("#compare-runs").click(function () {

@@ -271,5 +271,8 @@
         ((or (activep run)
              (recorder-previous-run run))
            (log:info "Can't delete: ~s this run seems to be a master run" run))
-        (t (delete run (company-runs (current-company))))))
+        (t
+         (bknr.datastore:with-transaction ()
+           (setf (company-runs (current-company))
+            (remove run (company-runs (current-company))))))))
     (json:encode-json-to-string (make-instance 'js-api-success))))
