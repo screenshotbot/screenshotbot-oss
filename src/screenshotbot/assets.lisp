@@ -96,6 +96,6 @@ rm -f $INSTALLER
         (setf (hunchentoot:header-out :x-sourcemap) ,map-url)
         (handle-asdf-output 'asdf:compile-op ,system))
       (defhandler (nil :uri ,map-url :html nil) ()
-        (handle-asdf-output ,system 1)))))
+        (handle-asdf-output 'asdf:compile-op ,system 1)))))
 
 (define-js "/assets/js/dashboard.js" :screenshotbot.js-assets)
