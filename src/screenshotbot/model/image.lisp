@@ -136,12 +136,18 @@
   (%s3-key (image-blob image)))
 
 (defmethod %with-local-image ((image image) fn)
-  (uiop:with-temporary-file (:pathname p :stream s :direction :output :type "png"
-                             :element-type 'flexi-streams:octet)
-    (with-open-stream (remote (open-image-stream image))
-      (fad:copy-stream remote s))
-    (finish-output s)
-    (funcall fn p)))
+  (cond
+    ((typep
+      (image-blob image)
+      'image-blob)
+     (funcall fn (bknr.datastore:blob-pathname (image-blob image))))
+    (t
+     (uiop:with-temporary-file (:pathname p :stream s :direction :output :type "png"
+                                :element-type 'flexi-streams:octet)
+       (with-open-stream (remote (open-image-stream image))
+         (uiop:copy-stream-to-stream remote s :element-type 'flexi-streams:octet))
+       (finish-output s)
+       (funcall fn p)))))
 
 (defmacro with-local-image ((file screenshot) &body body)
   `(flet ((body (,file) ,@body))

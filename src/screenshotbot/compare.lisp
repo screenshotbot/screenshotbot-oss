@@ -194,19 +194,20 @@
   (with-local-image (before before-image)
     (with-local-image (after after-image)
       (uiop:with-temporary-file (:pathname p :type "png")
-        (multiple-value-bind (out err ret)
-            (let ((cmd (list "compare" (namestring before)
-                             (namestring after)
-                             (namestring p))))
-              (log:info "Running: ~S" cmd)
+        (let ((cmd (list
+                    ;; todo: make this permanent event in OSS
+                    #-screenshotbot-oss "magick"
+                    "compare" (namestring before)
+                    (namestring after)
+                    (namestring p))))
+          (multiple-value-bind (out err ret)
               (uiop:run-program cmd
                                 :ignore-error-status t
-                                :output :interactive
-                                :error-output :interactive))
-          (declare (ignore out err))
+                                :output 'string
+                                :error-output 'string)
 
-          (unless (member ret '(0 1))
-            (error "Got surprising error output from imagemagic compare: ~S" ret)))
+            (unless (member ret '(0 1))
+              (error "Got surprising error output from imagemagic compare: ~S~%args:~%~S~%stderr:~%~a~%stdout:~%~a" ret cmd err out))))
         (setf (hunchentoot:header-out :content-type)
               "image/png")
         (draw-masks-in-place p (screenshot-masks after-image) :color "rgba(255, 255, 0, 0.8)")
