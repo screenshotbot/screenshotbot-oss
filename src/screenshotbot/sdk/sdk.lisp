@@ -42,7 +42,8 @@
   (:import-from #:uiop
                 #:getenv)
   (:export
-   #:main))
+   #:main
+   #:single-directory-run))
 
 (in-package :screenshotbot/sdk/sdk)
 
@@ -133,6 +134,7 @@
                  &key repo
                    channel
                    pull-request
+                   (gitp t)
                    branch
                    create-github-issue
                    (metadata-provider  (make-instance 'metadata-provider))
@@ -227,7 +229,7 @@
    (t
     (json:camel-case-to-lisp identifier))))
 
-(defmethod upload-image-directory ((bundle image-directory))
+(defmethod upload-image-directory (bundle)
   (let ((images (list-images bundle)))
     (let ((hash-to-response
            (let ((json:*json-identifier-name-to-lisp* 'keyword-except-md5))

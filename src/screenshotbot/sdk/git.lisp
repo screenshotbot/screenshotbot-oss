@@ -6,7 +6,9 @@
 
 (uiop:define-package :screenshotbot/sdk/git
   (:use #:cl
-        #:alexandria))
+        #:alexandria)
+  (:export
+   #:null-repo))
 (in-package :screenshotbot/sdk/git)
 
 (defun git-root ()
@@ -20,6 +22,15 @@
         :accessor repo-dir
         :initform (git-root))))
 
+(defclass null-repo ()
+  ())
+
+(defmethod repo-link ((repo null-repo))
+  nil)
+
+(defmethod cleanp ((repo null-repo))
+  t)
+
 (defmethod git-command ((repo git-repo))
   (list
    "git"
@@ -32,6 +43,9 @@
 
 (defmethod current-commit ((repo git-repo))
   ($ (git-command repo) "rev-parse" "HEAD"))
+
+(defmethod current-commit ((repo null-repo))
+  nil)
 
 (defun $ (&rest args)
   (let ((out
@@ -55,6 +69,9 @@
 (defmethod merge-base ((repo git-repo) master-sha commit-sha)
   ($ (git-command repo) "merge-base" master-sha commit-sha))
 
+(defmethod merge-base ((repo null-repo) master-sha commit-sha)
+  nil)
+
 (defmethod rev-parse ((repo git-repo) branch)
   (handler-bind ((error (lambda (e)
                           (declare (ignore e))
@@ -64,3 +81,6 @@
                                     "merge-requests. You can work around this by running"
                                     "`git fetch origin master` as a step in the build"))))
     ($ (git-command repo) "rev-parse" (format nil "origin/~a" branch))))
+
+(defmethod rev-parse ((repo null-repo) branch)
+  nil)
