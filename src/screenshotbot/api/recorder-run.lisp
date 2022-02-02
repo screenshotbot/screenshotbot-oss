@@ -110,6 +110,7 @@
                              github-repo ;; also from meta-field
                              branch ;; also from meta-field
                              create-github-issue-p
+                             periodic-job-p
                              (company (current-company))
                              is-trunk is-clean
                            &allow-other-keys)
@@ -126,6 +127,7 @@
                                              company
                                              channel
                                              screenshot-records)
+                               :periodic-job-p periodic-job-p
                                :cleanp is-clean
                                :trunkp is-trunk
                                (loop for field in *run-meta-fields*
