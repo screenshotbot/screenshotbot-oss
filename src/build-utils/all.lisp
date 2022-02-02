@@ -5,7 +5,8 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (uiop:define-package :build-utils
-    (:use-reexport :build-utils/js-package
-                    :build-utils/wild-module
-     :build-utils/css-package
-           :build-utils/jar-file))
+    (:use-reexport #:build-utils/js-package
+                   #:build-utils/wild-module
+                   #:build-utils/css-package
+                   #:build-utils/remote-file
+                   #:build-utils/jar-file))
