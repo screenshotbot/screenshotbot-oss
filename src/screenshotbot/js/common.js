@@ -60,12 +60,20 @@ function prepareReportJs () {
 
     function setupImageComparison() {
         var img = $(".image-comparison-modal-image", this);
+        var wrapper = $(img).closest(".progress-image-wrapper");
+        var loading = $(wrapper).find(".loading");
 
         var zoomToChange = $(".zoom-to-change", this);
 
         var src = img.data("src");
 
         resetImageZoom(img);
+
+        zoomToChange.prop("disabled", true);
+        img.on("load", function () {
+            loading.hide();
+            zoomToChange.prop("disabled", false);
+        });
 
         img.attr("src", src);
         img.css("background-image", "url(\"" + src + '")');

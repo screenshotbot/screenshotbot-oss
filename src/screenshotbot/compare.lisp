@@ -307,9 +307,11 @@
                collect
                <div class= "image-comparison-wrapper" >
                  <h3>,(screenshot-name before)</h3>
-               <:img data-src= comparison-image class= "mb-3 image-comparison-modal-image"
-               data-zoom-to= (nibble ()
-                               (random-zoom-to before after))
+                 <progress-img
+                   src= comparison-image
+                   class= "mb-3"
+                   zoom-to= (nibble ()
+                                           (random-zoom-to before after))
                />
 
                <div>
@@ -319,6 +321,21 @@
 
                </div>))
   </app-template>)
+
+(deftag progress-img (&key alt src zoom-to class)
+  "An <img> with a progress indicator for the image loading."
+
+  <div class= (format nil  "progress-image-wrapper ~a" class) >
+    <div class= "loading">
+      <div class="spinner-border" role="status">
+        <!-- <span class="sr-only">Loading...</span> -->
+      </div>
+      Loading (this might take a while for large images)
+    </div>
+    <:img data-src= src
+          data-zoom-to=zoom-to
+          class= "bg-primary image-comparison-modal-image" alt= "Image Difference" />
+  </div>)
 
 (deftag render-diff-report (&key run to
                             (lang-filter (make-instance 'row-filter :value t))
@@ -425,9 +442,10 @@
                                    </button>
                                  </div>
                                  <div class="modal-body">
-                                   <:img data-src= compare-nibble
-                                         data-zoom-to=zoom-to-nibble
-                                         class= "bg-primary image-comparison-modal-image" alt= "Image Difference" />
+                                   <progress-img
+                                     src=compare-nibble
+                                     zoom-to=zoom-to-nibble
+                                     alt= "Image difference" />
                                  </div>
                                  <div class="modal-footer">
                                    <button type="button" class="btn btn-secondary zoom-to-change">Zoom to change</button>
