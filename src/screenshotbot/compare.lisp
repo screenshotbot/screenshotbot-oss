@@ -190,10 +190,48 @@
     <img class= "screenshot-image change-image change-image-right" src= after-image />
   </div>)
 
-(defun image-comparison-nibble (before-image after-image)
+(defclass image-comparison-job ()
+  ((donep :initform nil
+          :accessor donep)
+   (lock :initform (bt:make-lock "image-comparison")
+         :reader lock)
+   (before-image :initarg :before-image
+                 :reader before-image)
+   (after-image :initarg :after-image
+                :reader after-image)
+   (output :initform nil
+           :accessor output-file
+           :documentation "A temporary file that should be deleted when the object is garbage collected")))
+
+(defmethod prepare-image-comparison-file ((self image-comparison-job))
+  (bt:with-lock-held ((lock self))
+    (cond
+      ((donep self)
+       (output-file self))
+      (t
+       (call-with-image-comparison
+        (before-image self)
+        (after-image self)
+        (lambda (output)
+          (setf (output-file self)
+                output)
+          (trivial-garbage:finalize
+           self
+           (lambda ()
+             (delete-file output)))
+          (setf (donep self) t))
+        :keep t)
+       (output-file self)))))
+
+(defmethod prepare-image-comparison ((self image-comparison-job))
+  (let ((file (prepare-image-comparison-file self)))
+    (hunchentoot:handle-static-file file)))
+
+(defun call-with-image-comparison (before-image after-image callback
+                                   &key (keep nil))
   (with-local-image (before before-image)
     (with-local-image (after after-image)
-      (uiop:with-temporary-file (:pathname p :type "png")
+      (uiop:with-temporary-file (:pathname p :type "png" :keep keep :prefix "image-comparison")
         (let ((cmd (list
                     ;; todo: make this permanent event in OSS
                     #-screenshotbot-oss "magick"
@@ -211,7 +249,14 @@
         (setf (hunchentoot:header-out :content-type)
               "image/png")
         (draw-masks-in-place p (screenshot-masks after-image) :color "rgba(255, 255, 0, 0.8)")
-        (hunchentoot:handle-static-file p)))))
+        (funcall callback p)))))
+
+(defun image-comparison-nibble (before-image after-image)
+  (call-with-image-comparison
+   before-image
+   after-image
+   (lambda (p)
+     (hunchentoot:handle-static-file p))))
 
 (defun async-diff-report (&rest args &key &allow-other-keys)
   (let* ((data nil)
@@ -261,9 +306,12 @@
          (loop for change in changes
                for before = (before change)
                for after = (after change)
-               for comparison-image = (util:copying (before after)
+               for image-comparison-job = (make-instance 'image-comparison-job
+                                                         :before-image before
+                                                         :after-image after)
+               for comparison-image = (util:copying (image-comparison-job)
                                         (nibble ()
-                                          (image-comparison-nibble before after)))
+                                          (prepare-image-comparison image-comparison-job)))
                collect
                <div class= "image-comparison-wrapper" >
                  <h3>,(screenshot-name before)</h3>
@@ -339,10 +387,13 @@
                        collect
                        (let* ((s s)
                               (x X)
+                              (image-comparison-job
+                                (make-instance 'image-comparison-job
+                                               :before-image x
+                                               :after-image s))
                               (compare-nibble (nibble ()
-                                                (log:info "Comparing: ~s, ~s" x s)
-                                                (image-comparison-nibble
-                                                 x s)))
+                                                (prepare-image-comparison
+                                                 image-comparison-job)))
                               (zoom-to-nibble (nibble ()
                                                 (random-zoom-to x s)))
                               (toggle-id (format nil "toggle-id-~a" (incf next-id)))
