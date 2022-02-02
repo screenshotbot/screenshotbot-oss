@@ -34,6 +34,15 @@
         'local-time:timestamp>
         :key 'created-at))
 
+(deftag conditional-commit (&key repo hash)
+
+  (cond
+    ((and repo hash)
+       <span>on <commit repo= repo
+                        hash= hash /></span>)
+    (t
+     nil)))
+
 (deftag recorder-run-row (&key run)
   (taskie-row :object run
     (ui/a :href (make-url 'run-page :id (oid run))
@@ -42,14 +51,14 @@
       (cond
         ((activep run)
          <span>
-           Promoted run,
-           <commit repo= (channel-repo (recorder-run-channel run))
-                   hash= (recorder-run-commit run) />
+           Promoted run
+           <conditional-commit repo= (channel-repo (recorder-run-channel run))
+                               hash= (recorder-run-commit run) />
          </span>)
         ((recorder-previous-run run)
-         <span>Previously promoted run,
-           <commit repo= (channel-repo (recorder-run-channel run))
-                   hash= (recorder-run-commit run) />
+         <span>Previously promoted run
+           <conditional-commit repo= (channel-repo (recorder-run-channel run))
+                               hash= (recorder-run-commit run) />
          </span>)
         ((pull-request-url run)
          <span>
