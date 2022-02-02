@@ -140,7 +140,7 @@
   )
 
 
-(defun main (&optional #+sbcl listen-fd)
+(defun main (&key (enable-store t))
   "Called from launch scripts, either web-bin or launch.lisp"
 
   (unwind-on-interrupt ()
@@ -188,7 +188,8 @@
 
             (setf hunchentoot:*rewrite-for-session-urls* nil)
 
-            (util/store:prepare-store)
+            (when enable-store
+             (util/store:prepare-store))
 
             (cl-cron:start-cron)
 
@@ -220,7 +221,9 @@
     ;;;; snapshot is happening, we have to manually recover the store
     ;; (bknr.datastore:snapshot)
 
-    (bknr.datastore:close-store)
+    (when enable-store
+      (bknr.datastore:close-store))
+
     (log:info "Shutting down slynk")
     (slynk-teardown *slynk-preparer*)
     (log:info "All services down")
