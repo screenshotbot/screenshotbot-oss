@@ -140,7 +140,8 @@
   )
 
 
-(defun main (&key (enable-store t))
+(defun main (&key (enable-store t)
+               (jvm t))
   "Called from launch scripts, either web-bin or launch.lisp"
 
   (unwind-on-interrupt ()
@@ -172,7 +173,8 @@
             (log:info "The port is now ~a" *port*)
             (init-multi-acceptor)
             #+lispworks
-            (jvm:jvm-init)
+            (when jvm
+             (jvm:jvm-init))
             (setup-appenders)
 
             (setup-log4cl-debugger-hook)
