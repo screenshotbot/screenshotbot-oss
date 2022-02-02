@@ -57,7 +57,9 @@
            #:recorder-run-commit
            #:create-github-issue-p
            #:recorder-run-screenshots
-           #:master-branch))
+           #:master-branch)
+  (:export
+   #:periodic-job-p))
 (in-package :screenshotbot/model/recorder-run)
 
 (defclass promotion-log (bknr.datastore:blob)
@@ -134,6 +136,13 @@
     :accessor trunkp
     :initform nil
     :documentation "whether this is tracking a production branch (as opposed to dev)")
+   (periodic-job-p
+    :initarg :periodic-job-p
+    :initform nil
+    :accessor periodic-job-p
+    :documentation "Jobs that are done periodically, as opposed to for
+    each commit. We will attempt to promote each run. This is mostly
+    for taking screenshots of public websites.")
    (Screenshots
     :initarg :screenshots
     :initform nil

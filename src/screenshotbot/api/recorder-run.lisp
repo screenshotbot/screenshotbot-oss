@@ -72,6 +72,7 @@
                                                      commit ;; also in *run-meta-fields*
                                                      (create-github-issue :parameter-type 'js-boolean)
                                                      (is-trunk :parameter-type 'js-boolean)
+                                                     (periodic-job-p :parameter-type 'js-boolean)
                                                      (is-clean :parameter-type 'js-boolean))
   (let ((screenshot-records (json:decode-json-from-string screenshot-records)))
     (log:info "creating run for ~a" channel)
@@ -84,6 +85,7 @@
          :screenshot-records screenshot-records
          :create-github-issue-p create-github-issue
          :is-trunk is-trunk
+         :periodic-job-p periodic-job-p
          :is-clean is-clean
          (loop for field in *run-meta-fields*
                appending

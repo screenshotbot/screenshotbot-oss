@@ -183,10 +183,17 @@
          (let ((run-branch (recorder-run-branch run)))
            (log:info "Branch on run: ~a" run-branch)
            (cond
-             ((null run-branch)
-              (log:error :promote "No branch set, not promoting"))
              ((pull-request-url run)
               (log:error :promote "Looks like there's a Pull Request attached, not promoting"))
+             ((periodic-job-p run)
+              (log:info "This is a periodic job, running promotions")
+              (finalize-promotion
+               run
+               (active-run channel "master")
+               channel
+               "master"))
+             ((null run-branch)
+              (log:error :promote "No branch set, not promoting"))
              (t
               (maybe-promote-run-on-branch run channel run-branch
                                            :wait-timeout wait-timeout))))))

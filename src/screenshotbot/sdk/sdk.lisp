@@ -136,6 +136,7 @@
                    pull-request
                    (gitp t)
                    branch
+                   periodic-job-p
                    create-github-issue
                    (metadata-provider  (make-instance 'metadata-provider))
                    is-trunk)
@@ -159,6 +160,7 @@
                                               ("branch-hash" . ,branch-hash)
                                               ("github-repo" . ,(repo-link repo))
                                               ("merge-base" . ,merge-base)
+                                              ("periodic-job-p" . ,(bool periodic-job-p))
                                               ("build-url" . ,*build-url*)
                                               ("pull-request" . ,pull-request)
                                               ("commit" . ,commit)
