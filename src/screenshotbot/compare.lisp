@@ -42,7 +42,6 @@
    #:diff-report-title
    #:make-diff-report
    #:diff-report-empty-p
-   #:image-comparison-nibble
    #:render-diff-report
    #:diff-report-changes)
   ;; forward decls
@@ -250,13 +249,6 @@
               "image/png")
         (draw-masks-in-place p (screenshot-masks after-image) :color "rgba(255, 255, 0, 0.8)")
         (funcall callback p)))))
-
-(defun image-comparison-nibble (before-image after-image)
-  (call-with-image-comparison
-   before-image
-   after-image
-   (lambda (p)
-     (hunchentoot:handle-static-file p))))
 
 (defun async-diff-report (&rest args &key &allow-other-keys)
   (let* ((data nil)
