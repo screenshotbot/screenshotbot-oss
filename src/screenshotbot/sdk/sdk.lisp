@@ -43,7 +43,9 @@
                 #:getenv)
   (:export
    #:main
-   #:single-directory-run))
+   #:single-directory-run
+   #:*request*
+   #:*put*))
 
 (in-package :screenshotbot/sdk/sdk)
 
@@ -69,6 +71,11 @@
 (define-condition api-error (error)
   ((message :initarg :message)))
 
+(defvar *request* #'dex:request
+  "Ability to override the mechanism used to make the request")
+(defvar *put* #'dex:put
+  "Ability to override the mechanism used to put requests")
+
 (defmethod print-object ((e api-error) stream)
   (with-slots (message) e
    (format stream "#<API-ERROR ~a>" message)))
@@ -79,13 +86,14 @@
   (when (and (eql method :get) parameters)
     (error "Can't use :get with parameters"))
   (with-open-stream (stream
-                (dex:request (format nil "~a~a" *hostname* api)
-                             :want-stream t
-                             :method method
-                             :content (apply 'list
-                                             (cons "api-key" *api-key*)
-                                             (cons "api-secret-key" *api-secret*)
-                                             parameters)))
+                     (funcall *request*
+                              (format nil "~a~a" *hostname* api)
+                              :want-stream t
+                              :method method
+                              :content (apply 'list
+                                               (cons "api-key" *api-key*)
+                                               (cons "api-secret-key" *api-secret*)
+                                               parameters)))
     (let ((result (json:decode-json stream)))
       (awhen (assoc-value result :error)
         (log:error "API error: ~a" it)
@@ -103,7 +111,7 @@
             (finish-output tmp-stream)
             (file-position tmp-stream 0)
             (log:debug "Got file length: ~a" (file-length tmp-stream))
-            (dex:put upload-url
+            (funcall *put* upload-url
                      :headers `((:content-type . "application/octet-stream")
                                 ;; There a bug in dexador that prevents the
                                 ;; file-length logic to work correctly in
