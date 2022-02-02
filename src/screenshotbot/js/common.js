@@ -64,6 +64,7 @@ function prepareReportJs () {
         var loading = $(wrapper).find(".loading");
 
         var zoomToChange = $(".zoom-to-change", this);
+        var zoomToChangeSpinner = $(zoomToChange).find(".spinner-border");
 
         var src = img.data("src");
 
@@ -86,6 +87,7 @@ function prepareReportJs () {
             img.css("background-size", "100%");
 
             zoomToChange.prop("disabled", true);
+            zoomToChangeSpinner.show();
 
             $.ajax({
                 url: img.data("zoom-to"),
@@ -131,6 +133,7 @@ function prepareReportJs () {
                     var finalTop = - (pY * zoom / 100 - 0.5) * img.height();
 
                     console.log("finalLeft/Top", finalLeft, finalTop);
+                    zoomToChangeSpinner.hide();
 
                     img.animate(
                         {
@@ -149,6 +152,7 @@ function prepareReportJs () {
                 error: function () {
                     alert("Something went wrong");
                     zoomToChange.prop("disabled", false);
+                    zoomToChangeSpinner.hide();
                 }
             });
         });

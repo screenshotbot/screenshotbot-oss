@@ -310,12 +310,13 @@
                  <progress-img
                    src= comparison-image
                    class= "mb-3"
-                   zoom-to= (nibble ()
-                                           (random-zoom-to before after))
+                   zoom-to= (util:copying (before after)
+                              (nibble ()
+                                 (random-zoom-to before after)))
                />
 
                <div>
-               <button type= "button" class= "btn btn-secondary zoom-to-change">Zoom to Change</button>
+                 <zoom-to-change-button />
                </div>
                <hr />
 
@@ -336,6 +337,12 @@
           data-zoom-to=zoom-to
           class= "bg-primary image-comparison-modal-image" alt= "Image Difference" />
   </div>)
+
+(deftag zoom-to-change-button ()
+  <button type="button" class="btn btn-secondary zoom-to-change">
+    <div class="spinner-border" role="status" style="display:none; height: 1em; width: 1em" />
+    Zoom to change
+  </button>)
 
 (deftag render-diff-report (&key run to
                             (lang-filter (make-instance 'row-filter :value t))
@@ -448,7 +455,7 @@
                                      alt= "Image difference" />
                                  </div>
                                  <div class="modal-footer">
-                                   <button type="button" class="btn btn-secondary zoom-to-change">Zoom to change</button>
+                                   <zoom-to-change-button />
 
                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
                                  </div>
