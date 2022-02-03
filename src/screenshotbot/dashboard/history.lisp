@@ -18,7 +18,9 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/dashboard/run-page
-                #:history-page))
+                #:history-page)
+  (:import-from #:screenshotbot/taskie
+                #:timeago))
 (in-package :screenshotbot/dashboard/history)
 
 
@@ -33,8 +35,13 @@
     (s
     <div>
       <h4>,(screenshot-name s)</h4>
-      <p>First seen in <commit repo= (channel-repo channel)
-                               hash= (recorder-run-commit r) /></p>
+
+      ,(cond
+         ((recorder-run-commit r)
+          <p>First seen in <commit repo= (channel-repo channel)
+                                   hash= (recorder-run-commit r) /></p>)
+         (t
+          <p>First seen ,(timeago :timestamp (created-at r))</p>))
       <img src=(image-public-url (screenshot-image s)) />
 
     </div>)
@@ -44,7 +51,7 @@
      </div>)))
   </div>)
 
-(defhandler (history-page :uri "/channel/:channel/history/:screenshot-name")
+(defhandler (history-page :uri "/channel/:channel/history")
             (channel screenshot-name)
   (let ((channel (store-object-with-id (parse-integer channel))))
     (can-view! channel)
