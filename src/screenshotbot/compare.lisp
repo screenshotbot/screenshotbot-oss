@@ -448,7 +448,7 @@
                                <h5 class="modal-title" id=modal-label >Image Comparison</h5>
                                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                                  <span aria-hidden="true">
-                                   &times             ;
+                                   &times
                                  </span>
                                </button>
                              </div>
