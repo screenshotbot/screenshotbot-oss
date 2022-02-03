@@ -147,8 +147,9 @@
 
 
 (defun cron-snapshot ()
-  (log:info "Snapshotting bknr.datastore")
-  (snapshot))
+  (when (boundp 'bknr.datastore:*store*)
+    (log:info "Snapshotting bknr.datastore")
+    (snapshot)))
 
 (cl-cron:make-cron-job 'cron-snapshot
                         :minute 0
