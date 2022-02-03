@@ -183,7 +183,21 @@
                                            (funcall filter-renderer
                                                     device))))
                     <a href=device-selector >,(progn device)</a>)) )
-          </page-nav-dropdown>))))
+       </page-nav-dropdown>))))
+
+(defun paginated (components &optional (num 24))
+  (let* ((this-page (util/lists:head components num))
+         (rest (util/lists:tail components num))
+         (load-more (nibble ()
+                      (paginated rest))))
+    <div class= "row pb-4 load-more-container" >
+      ,@this-page
+
+      ,(when rest
+      <div class= "col-12 d-flex justify-content-center">
+        <button class= "btn btn-primary load-more-button" data-load-more=load-more >Load More</button>
+      </div>)
+  </div>))
 
 
 (defun render-run-page (run &rest filters &key lang-filter
@@ -222,8 +236,10 @@
 
       <run-advanced-menu run=run />
         </div>
-        <div class= "row baguetteBox">
-          ,@ (loop for screenshot in filtered-screenshots
+        <div class= "baguetteBox">
+
+          ,(paginated
+          (loop for screenshot in filtered-screenshots
           collect
           (let ((screenshot screenshot))
           <div class= " col-sm-12 col-md-4 col-lg-3 mb-1 mt-2">
@@ -236,26 +252,26 @@
                     </li>
                     <li>
                       <a href= (make-url 'history-page :channel (store-object-id channel)
-                                                                             :screenshot-name (screenshot-name screenshot))>
+                                                                                         :screenshot-name (screenshot-name screenshot))>
                         History
                       </a>
-                   </li>
+                    </li>
 
-                   <li>
-                   <a href= (nibble () (mask-editor (recorder-run-channel run) screenshot
-                                                    :redirect (make-url 'run-page :id (oid run))))
-                   >Edit Masks</a>
+                    <li>
+                      <a href= (nibble () (mask-editor (recorder-run-channel run) screenshot
+                         :redirect (make-url 'run-page :id (oid run))))
+                         >Edit Masks</a>
 
-                   </li>
+                    </li>
 
-                   ,(when *create-issue-popup*
-                      <li>
-                        <a target= "_blank"
-                           href= (nibble ()
-                                           (funcall *create-issue-popup* run screenshot)) >
-                          Create Issue
-                        </a>
-                   </li>)
+                    ,(when *create-issue-popup*
+                       <li>
+                         <a target= "_blank"
+                            href= (nibble ()
+                                            (funcall *create-issue-popup* run screenshot)) >
+                           Create Issue
+                         </a>
+                       </li>)
                   </ul>
                 </div>
                 <a href= (image-public-url (screenshot-image screenshot)) title= (screenshot-name screenshot) >
@@ -264,7 +280,7 @@
               </div> <!-- end card-body-->
             </div>
 
-          </div>))
+          </div>)))
         </div>
       </app-template>)))
 

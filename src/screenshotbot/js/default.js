@@ -272,3 +272,24 @@ $(".async-fetch").map(function (idx, elm) {
 
     tryNext();
 });
+
+
+$(".load-more-container").on("click", ".load-more-button", function () {
+    var button = $(this);
+    var link = $(button).data("load-more");
+
+    $.ajax({
+        method: "GET",
+        url: link,
+        success: function (data) {
+            var div = $(data);
+            var container = $(button).closest(".load-more-container");
+            div.children().appendTo(container);
+            button.parent().remove();
+        },
+        error: function(data) {
+            alert("Something went wrong");
+        }
+    });
+
+});
