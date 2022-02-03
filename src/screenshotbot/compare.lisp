@@ -435,8 +435,8 @@
                               >Edit Masks</a>
                          </li>
                        </ul>
-                       <change-image-row before-image=(image-public-url (screenshot-image x))
-                                         after-image=(image-public-url (screenshot-image s))
+                       <change-image-row before-image=(image-public-url (screenshot-image x) :size :full-page)
+                                         after-image=(image-public-url (screenshot-image s) :size :full-page)
                                          />
 
                        <div class= "modal fade image-comparison-modal" id= toggle-id tabindex= "-1" role= "dialog"
@@ -510,5 +510,5 @@
 (Deftag screenshot-box (&key screenshot)
   <div class= "mt-4" >
     <h4>,(screenshot-name screenshot)</h4>
-    <img class= "change-image" src= (image-public-url (screenshot-image screenshot)) />
+    <img class= "change-image" src= (image-public-url (screenshot-image screenshot) :size :full-page) />
   </div>)
