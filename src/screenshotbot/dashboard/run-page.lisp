@@ -33,6 +33,8 @@
                 #:ui/div)
   (:import-from #:bknr.datastore
                 #:store-object-id)
+  (:import-from #:screenshotbot/dashboard/paginated
+                #:paginated)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -184,20 +186,6 @@
                                                     device))))
                     <a href=device-selector >,(progn device)</a>)) )
        </page-nav-dropdown>))))
-
-(defun paginated (components &optional (num 24))
-  (let* ((this-page (util/lists:head components num))
-         (rest (util/lists:tail components num))
-         (load-more (nibble ()
-                      (paginated rest))))
-    <div class= "row pb-4 load-more-container" >
-      ,@this-page
-
-      ,(when rest
-      <div class= "col-12 d-flex justify-content-center">
-        <button class= "btn btn-primary load-more-button" data-load-more=load-more >Load More</button>
-      </div>)
-  </div>))
 
 
 (defun render-run-page (run &rest filters &key lang-filter

@@ -38,6 +38,8 @@
                 #:find-unequal-pixels)
   (:import-from #:screenshotbot/magick
                 #:run-magick)
+  (:import-from #:screenshotbot/dashboard/paginated
+                #:paginated)
   (:export
    #:diff-report
    #:render-acceptable
@@ -294,33 +296,35 @@
 (defun all-comparisons-page (report)
   <app-template>
     <a href= "javascript:window.history.back()">Back to Report</a>
-    ,@ (let ((changes (diff-report-changes report)))
-         (loop for change in changes
-               for before = (before change)
-               for after = (after change)
-               for image-comparison-job = (make-instance 'image-comparison-job
-                                                         :before-image before
-                                                         :after-image after)
-               for comparison-image = (util:copying (image-comparison-job)
-                                        (nibble ()
-                                          (prepare-image-comparison image-comparison-job)))
-               collect
-               <div class= "image-comparison-wrapper" >
-                 <h3>,(screenshot-name before)</h3>
-                 <progress-img
-                   src= comparison-image
-                   class= "mb-3"
-                   zoom-to= (util:copying (before after)
-                              (nibble ()
-                                 (random-zoom-to before after)))
-               />
+    ,(paginated
+        (let ((changes (diff-report-changes report)))
+          (loop for change in changes
+                for before = (before change)
+                for after = (after change)
+                for image-comparison-job = (make-instance 'image-comparison-job
+                                                           :before-image before
+                                                           :after-image after)
+                for comparison-image = (util:copying (image-comparison-job)
+                                         (nibble ()
+                                           (prepare-image-comparison image-comparison-job)))
+                collect
+                <div class= "image-comparison-wrapper" >
+                <h3>,(screenshot-name before)</h3>
+                <progress-img
+                src= comparison-image
+                class= "mb-3"
+                zoom-to= (util:copying (before after)
+                           (nibble ()
+                             (random-zoom-to before after)))
+                />
 
-               <div>
-                 <zoom-to-change-button />
-               </div>
-               <hr />
+                <div>
+                <zoom-to-change-button />
+                </div>
+                <hr />
 
-               </div>))
+                </div>))
+        10)
   </app-template>)
 
 (deftag progress-img (&key alt src zoom-to class)
@@ -396,73 +400,74 @@
          <div class= "card-body">
            <p>
              <h1>,(length changes) changes</h1>
-       ,@(loop for change in changes
-               for s = (before change)
-               for x = (after change)
-                     if (or (filteredp s) (filteredp x))
-                       collect
-                       (let* ((s s)
-                              (x X)
-                              (image-comparison-job
-                                (make-instance 'image-comparison-job
-                                               :before-image x
-                                               :after-image s))
-                              (compare-nibble (nibble ()
-                                                (prepare-image-comparison
-                                                 image-comparison-job)))
-                              (zoom-to-nibble (nibble ()
-                                                (random-zoom-to x s)))
-                              (toggle-id (format nil "toggle-id-~a" (incf next-id)))
-                              (modal-label (format nil "~a-modal-label" toggle-id)))
+       ,(paginated (loop for change in changes
+                 for s = (before change)
+                 for x = (after change)
+                 if (or (filteredp s) (filteredp x))
+                   collect
+                   (let* ((s s)
+                          (x X)
+                          (image-comparison-job
+                            (make-instance 'image-comparison-job
+                                            :before-image x
+                                            :after-image s))
+                          (compare-nibble (nibble ()
+                                            (prepare-image-comparison
+                                             image-comparison-job)))
+                          (zoom-to-nibble (nibble ()
+                                            (random-zoom-to x s)))
+                          (toggle-id (format nil "toggle-id-~a" (incf next-id)))
+                          (modal-label (format nil "~a-modal-label" toggle-id)))
 
-                         <div class= "mt-4" >
-                           <ul class= "compare-image-header" >
-                             <li>
-                               <h4 class= "d-inline-block" >
-                                 ,(screenshot-name s)
-                               </h4>
-                             </li>
-                             <li>
-                               <a href= "#" data-bs-toggle= "modal" data-bs-target= (format nil "#~a" toggle-id) >Compare</a>
-                             </li>
-                             <li>
-                         <a href= (nibble () (mask-editor (recorder-run-channel run) s
-                            :redirect script-name))
-                            >Edit Masks</a>
-                             </li>
-                           </ul>
-                           <change-image-row before-image=(image-public-url (screenshot-image x))
-                                             after-image=(image-public-url (screenshot-image s))
-                                             />
+                     <div class= "mt-4" >
+                       <ul class= "compare-image-header" >
+                         <li>
+                           <h4 class= "d-inline-block" >
+                             ,(screenshot-name s)
+                           </h4>
+                         </li>
+                         <li>
+                           <a href= "#" data-bs-toggle= "modal" data-bs-target= (format nil "#~a" toggle-id) >Compare</a>
+                         </li>
+                         <li>
+                           <a href= (nibble () (mask-editor (recorder-run-channel run) s
+                              :redirect script-name))
+                              >Edit Masks</a>
+                         </li>
+                       </ul>
+                       <change-image-row before-image=(image-public-url (screenshot-image x))
+                                         after-image=(image-public-url (screenshot-image s))
+                                         />
 
-                           <div class= "modal fade image-comparison-modal" id= toggle-id tabindex= "-1" role= "dialog"
-                                aria-labelledby=modal-label
-                                aria-hidden= "true" >
-                             <div class="modal-dialog" role="document">
-                               <div class="modal-content">
-                                 <div class="modal-header">
-                                   <h5 class="modal-title" id=modal-label >Image Comparison</h5>
-                                   <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                         <span aria-hidden="true">
-                         &times;
-                         </span>
-                                   </button>
-                                 </div>
-                                 <div class="modal-body">
-                                   <progress-img
-                                     src=compare-nibble
-                                     zoom-to=zoom-to-nibble
-                                     alt= "Image difference" />
-                                 </div>
-                                 <div class="modal-footer">
-                                   <zoom-to-change-button />
+                       <div class= "modal fade image-comparison-modal" id= toggle-id tabindex= "-1" role= "dialog"
+                            aria-labelledby=modal-label
+                            aria-hidden= "true" >
+                         <div class="modal-dialog" role="document">
+                           <div class="modal-content">
+                             <div class="modal-header">
+                               <h5 class="modal-title" id=modal-label >Image Comparison</h5>
+                               <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                 <span aria-hidden="true">
+                                   &times             ;
+                                 </span>
+                               </button>
+                             </div>
+                             <div class="modal-body">
+                               <progress-img
+                                 src=compare-nibble
+                                 zoom-to=zoom-to-nibble
+                                 alt= "Image difference" />
+                             </div>
+                             <div class="modal-footer">
+                               <zoom-to-change-button />
 
-                                   <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
-                                 </div>
-                               </div>
+                               <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
                              </div>
                            </div>
-                         </div>))
+                         </div>
+                       </div>
+                     </div>))
+                   10)
            </p>
 
          </div>
@@ -475,10 +480,11 @@
              <div class= "card-body">
                <h1>Deleted</h1>
                <p>
-                 ,@ (loop for c in deleted
-                          if (filteredp c)
-                            collect
-                          <screenshot-box screenshot=c />)
+                 ,(paginated (loop for c in deleted
+                                   if (filteredp c)
+                                     collect
+                                   <screenshot-box screenshot=c />)
+                               10)
                </p>
 
              </div>
@@ -488,10 +494,12 @@
          <div class= "card">
            <div class= "card-body">
              <h1>Added</h1>
-             ,@(loop for c in added
+             ,(paginated
+               (loop for c in added
                      if (filteredp c)
-                     collect
+                       collect
                      <screenshot-box screenshot=c />)
+               10)
 
            </div>
          </div>

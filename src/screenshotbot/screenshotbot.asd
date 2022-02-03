@@ -85,6 +85,7 @@
    (:module "dashboard"
     :serial t
     :components ((:file "home")
+                 (:file "paginated")
                  (:file "numbers")
                  (:file "run-page")
                  (:file "recent-runs")
