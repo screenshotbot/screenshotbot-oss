@@ -29,6 +29,8 @@
                 #:with-transaction
                 #:store-object
                 #:persistent-class)
+  (:import-from #:screenshotbot/magick
+                #:run-magick)
   ;; classes
   (:export
    #:image
@@ -173,7 +175,7 @@
   (when masks
     (uiop:with-temporary-file (:pathname tmp
                                :directory (cl-fad:pathname-directory-pathname image-file))
-      (uiop:run-program `("convert"
+      (run-magick `("convert"
                           ,(namestring image-file)
                           ,@(%draw-mask-rect-commands masks :color color)
                           ,(namestring tmp)))
@@ -186,6 +188,12 @@
     (with-local-image (file img)
       (log:debug "Going to run convert")
       (str:trim
+       ;; I can't use RUN-MAGICK for this because it creates a
+       ;; different perpetual hash (the tests will fail). I think we
+       ;; should modify this so that we don't need to use ImageMagick
+       ;; to generate a hash of the image contents. IIRC, using the
+       ;; perpetual hash is actually *incorrect* if we care about
+       ;; determinism.
        (multiple-value-bind (out err ret)
            (uiop:run-program `("convert"
                                ,(namestring file)
@@ -195,7 +203,7 @@
                                "+write" "info:"
                                ,(namestring unused-output))
                              :output 'string
-                             :error-outut 'string
+                             :error-output 'string
                              :ignore-error-status t)
          (let ((out (str:trim out)))
            (unless (or

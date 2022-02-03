@@ -36,6 +36,8 @@
                 #:draw-masks-in-place
                 #:random-unequal-pixel
                 #:find-unequal-pixels)
+  (:import-from #:screenshotbot/magick
+                #:run-magick)
   (:export
    #:diff-report
    #:render-acceptable
@@ -232,16 +234,14 @@
     (with-local-image (after after-image)
       (uiop:with-temporary-file (:pathname p :type "png" :keep keep :prefix "image-comparison")
         (let ((cmd (list
-                    ;; todo: make this permanent event in OSS
-                    #-screenshotbot-oss "magick"
                     "compare" (namestring before)
                     (namestring after)
                     (namestring p))))
           (multiple-value-bind (out err ret)
-              (uiop:run-program cmd
-                                :ignore-error-status t
-                                :output 'string
-                                :error-output 'string)
+              (run-magick cmd
+                          :ignore-error-status t
+                          :output 'string
+                          :error-output 'string)
 
             (unless (member ret '(0 1))
               (error "Got surprising error output from imagemagic compare: ~S~%args:~%~S~%stderr:~%~a~%stdout:~%~a" ret cmd err out))))

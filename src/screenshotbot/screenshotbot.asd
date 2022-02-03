@@ -40,6 +40,7 @@
    (:file "analytics" :depends-on ("ignore-and-log-errors"))
    (:file "plugin")
    (:file "mailer")
+   (:file "magick")
    (:file "installation")
    (:file "server" :depends-on ("analytics"))
    (:file "cdn")

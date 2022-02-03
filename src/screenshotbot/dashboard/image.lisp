@@ -16,7 +16,9 @@
   (:import-from #:screenshotbot/model/image
                 #:with-local-image)
   (:import-from #:util/object-id
-                #:oid))
+                #:oid)
+  (:import-from #:screenshotbot/magick
+                #:run-magick))
 (in-package :screenshotbot/dashboard/image)
 
 (defvar *lock* (bt:make-lock "image-resize"))
@@ -43,11 +45,11 @@
          (unless (uiop:file-exists-p output-file)
            (with-local-image (input image)
              (uiop:with-staging-pathname (output-file)
-               (uiop:run-program
-                (list "magick" (namestring input)
+               (run-magick
+                (list "convert" input
                       "-adaptive-resize"
                       size
-                      (namestring output-file)))))))
+                      output-file))))))
        (handle-static-file output-file)))))
 
 (defhandler (image-blob-get :uri "/image/blob/:oid/default.png") (oid size)
