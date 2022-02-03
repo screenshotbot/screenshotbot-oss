@@ -90,6 +90,15 @@
   </section>
   </app-template>)
 
+(defun run-size (run)
+  "Get the total size of all the screenshots associated with this run"
+  (floor
+   (loop for screenshot in (recorder-run-screenshots run)
+         summing
+         (with-local-image (file screenshot)
+           (trivial-file-size:file-size-in-octets file)))
+   1024))
+
 (deftag advanced-run-page (&key run)
   (let ((repo (channel-repo (recorder-run-channel run))))
     <app-template>
@@ -101,8 +110,9 @@
         <li>Merge base: ,(commit :repo repo :hash (recorder-run-merge-base run))</li>
         <li>Pull request: ,(or (pull-request-url run) "NA")</li>
         <li>Phabricator Diff-id: ,(or (phabricator-diff-id run) "NA")</li>
-    <li>Build URL: <a href=(run-build-url run)>,(run-build-url run)</a> </li>
-    <li>Periodic job?: ,(if (periodic-job-p run) "true" "false")</li>
+        <li>Build URL: <a href=(run-build-url run)>,(run-build-url run)</a> </li>
+        <li>Periodic job?: ,(if (periodic-job-p run) "true" "false")</li>
+        <li>Total run size: ,(run-size run)kB</li>
       </ul>
     </app-template>))
 

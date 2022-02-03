@@ -13,6 +13,7 @@
                :server
                :java.libs
                :jose
+               :trivial-file-size
                :screenshotbot.js-assets
                :oidc
                :screenshotbot.css-assets
