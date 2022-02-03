@@ -114,6 +114,7 @@
         <li>Phabricator Diff-id: ,(or (phabricator-diff-id run) "NA")</li>
         <li>Build URL: <a href=(run-build-url run)>,(run-build-url run)</a> </li>
         <li>Periodic job?: ,(if (periodic-job-p run) "true" "false")</li>
+        <li>Number of screenshots: ,(length (recorder-run-screenshots run))</li>
         <li>Total run size: ,(run-size run)kB</li>
       </ul>
     </app-template>))

@@ -235,12 +235,15 @@ function setupNoticeDismiss() {
 
 setupNoticeDismiss();
 
-
-$(function () {
+function prepareBaguetteBox() {
     if (typeof baguetteBox !== 'undefined') {
-        baguetteBox.run('.baguetteBox');
+        var name = '.baguetteBox';
+        baguetteBox.run(name);
     }
-});
+}
+
+$(prepareBaguetteBox);
+
 
 $(".async-fetch").map(function (idx, elm) {
     console.log("Element is", elm);
@@ -286,6 +289,9 @@ $(".load-more-container").on("click", ".load-more-button", function () {
             var container = $(button).closest(".load-more-container");
             div.children().appendTo(container);
             button.parent().remove();
+
+            baguetteBox.destroy(".baguetteBox");
+            prepareBaguetteBox();
         },
         error: function(data) {
             alert("Something went wrong");
