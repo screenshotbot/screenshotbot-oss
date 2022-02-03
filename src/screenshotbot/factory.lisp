@@ -63,7 +63,10 @@
 (defclass test-image ()
   ((url :initarg :url
         :initform "https://foo"
-        :accessor image-public-url)))
+        :accessor %image-public-url)))
+
+(defmethod image-public-url ((image test-image) &key &allow-other-keys)
+  (%image-public-url image))
 
 (defmethod user-api-keys ((user test-user) company)
   (slot-value user 'api-keys))

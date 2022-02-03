@@ -391,10 +391,14 @@
         :element-type 'flexi-streams:octet))
 
 
-(defmethod image-public-url ((image image))
+(defmethod image-public-url ((image image) &key size)
   (cond
     ((typep (image-blob image) 'image-blob)
-     (make-url 'image-blob-get :oid (oid image)))
+     (let ((args nil))
+       (when size
+         (setf args `(:size ,(string-downcase size))))
+       (apply #'make-url 'image-blob-get :oid (oid image)
+                args)))
     (t
      (format nil "https://screenshotbot.s3.amazonaws.com/~a"
              (s3-key image)))))
@@ -402,7 +406,7 @@
 (defmethod image-local-url ((image image))
   (image-public-url image))
 
-(defmethod image-public-url ((image local-image))
+(defmethod image-public-url ((image local-image) &key size)
   (hex:make-full-url
    hunchentoot:*request*
    (local-image-url image)))
