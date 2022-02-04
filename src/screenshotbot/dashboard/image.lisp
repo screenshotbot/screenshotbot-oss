@@ -48,6 +48,8 @@
              (uiop:with-staging-pathname (output-file)
                (run-magick
                 (list "convert" input
+                      "-limit" "memory" "3MB"
+                      "-limit" "disk" "500MB"
                       "-adaptive-resize"
                       (format nil "~a>" size)
                       output-file))))))

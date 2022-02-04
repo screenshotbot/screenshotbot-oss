@@ -237,6 +237,8 @@
       (uiop:with-temporary-file (:pathname p :type "png" :keep keep :prefix "image-comparison")
         (let ((cmd (list
                     "compare" (namestring before)
+                      "-limit" "memory" "3MB"
+                      "-limit" "disk" "500MB"
                     (namestring after)
                     (namestring p))))
           (multiple-value-bind (out err ret)

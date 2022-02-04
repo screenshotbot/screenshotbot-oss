@@ -13,7 +13,7 @@
 
 (defvar *semaphore* (bt:make-semaphore
                      :name "magick"
-                     :count 5))
+                     :count 20))
 
 (defun call-with-semaphore (sem fn)
   (unwind-protect
