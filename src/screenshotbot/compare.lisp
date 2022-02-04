@@ -206,6 +206,16 @@
     <img class= "screenshot-image change-image change-image-right" src= after-image />
   </div>)
 
+(deftag change-image-row-triple (&key before-image
+                          after-image
+                          comp-image)
+  <div class="change-image-row">
+    <img class= "screenshot-image change-image change-image-left" src= before-image />
+    <img class= "screenshot-image change-image change-image-right" src= after-image />
+    <:img data-src= comp-image
+      class= "bg-primary image-comparison-modal-image" alt= "Image Difference" />
+  </div>)
+
 (defclass image-comparison-job ()
   ((donep :initform nil
           :accessor donep)
@@ -370,19 +380,10 @@
                 collect
                 <div class= "image-comparison-wrapper" >
                 <h3>,(screenshot-name before)</h3>
-                <progress-img
-                src= comparison-image
-                class= "mb-3"
-                zoom-to= (util:copying (before after)
-                           (nibble ()
-                             (random-zoom-to before after)))
-                />
-
-                <div>
-                <zoom-to-change-button />
-                </div>
-                <hr />
-
+                <change-image-row-triple before-image=(image-public-url (screenshot-image before) :size :half-page)
+                                         after-image=(image-public-url (screenshot-image after) :size :half-page)
+                                         comp-image=comparison-image
+                                         />
                 </div>))
         5)
   </app-template>)

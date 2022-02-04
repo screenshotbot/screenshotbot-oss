@@ -42,6 +42,7 @@
 (defun handle-resized-image (image size)
   (let* ((size (cond
                  ((string-equal "small" size) "300x300")
+                 ((string-equal "half-page" size) "600x600")
                  ((string-equal "full-page" size) "2000x2000")
                 (t (error "invalid image size: ~a" size))))
          (output-file
