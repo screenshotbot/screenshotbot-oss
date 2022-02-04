@@ -11,21 +11,35 @@
    #:run-magick))
 (in-package :screenshotbot/magick)
 
+(defvar *semaphore* (bt:make-semaphore
+                     :name "magick"
+                     :count 5))
+
+(defun call-with-semaphore (sem fn)
+  (unwind-protect
+       (progn
+         (bt:wait-on-semaphore sem :timeout 60)
+         (funcall fn))
+    (bt:signal-semaphore sem)))
+
 (defun run-magick (command &rest args &key (error-output t) (output t)
                              (ignore-error-status nil))
   "Wrapper for magick commands, in the future we might run this in-process"
   (restart-case
-      (let ((command (loop for str in command
-                           if (pathnamep str)
-                             collect (namestring str)
-                           else
-                             collect str)))
+      (call-with-semaphore
+       *semaphore*
+       (lambda ()q
+        (let ((command (loop for str in command
+                             if (pathnamep str)
+                               collect (namestring str)
+                             else
+                               collect str)))
 
-        (let ((prefix #-screenshotbot-oss (list "magick")))
-          (uiop:run-program
-           (append prefix command)
-           :output output
-           :error-output error-output
-           :ignore-error-status ignore-error-status)))
+          (let ((prefix #-screenshotbot-oss (list "magick")))
+            (uiop:run-program
+             (append prefix command)
+             :output output
+             :error-output error-output
+             :ignore-error-status ignore-error-status)))))
     (retry-run-magick ()
       (apply #'run-magick command args))))
