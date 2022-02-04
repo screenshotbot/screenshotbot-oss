@@ -23,6 +23,17 @@
 
 (defvar *lock* (bt:make-lock "image-resize"))
 
+(defvar *image-resize-locks* (make-hash-table)
+  "A hash table of locks, one for each image object. Sure, they're
+  never garbage collected, but it should never be large enough to
+  cause an issue.")
+
+(defun resize-lock (image)
+  (bt:with-lock-held (*lock*)
+    (util:or-setf
+     (gethash image *image-resize-locks*)
+     (bt:make-lock "image-resize-lock"))))
+
 (defun cache-dir ()
   (let ((dir (path:catdir util/store:*object-store* "image-cache/")))
     (ensure-directories-exist dir)
@@ -42,7 +53,7 @@
       ((uiop:file-exists-p output-file)
        (handle-static-file output-file))
       (t
-       (bt:with-lock-held (*lock*)
+       (bt:with-lock-held ((resize-lock image))
          (unless (uiop:file-exists-p output-file)
            (with-local-image (input image)
              (uiop:with-staging-pathname (output-file)
