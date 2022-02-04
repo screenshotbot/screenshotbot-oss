@@ -287,7 +287,9 @@ $(".load-more-container").on("click", ".load-more-button", function () {
         success: function (data) {
             var div = $(data);
             var container = $(button).closest(".load-more-container");
-            div.children().appendTo(container);
+            var children = div.children();
+            children.appendTo(container);
+            callLiveOnAttach(children);
             button.parent().remove();
 
             baguetteBox.destroy(".baguetteBox");
@@ -297,5 +299,4 @@ $(".load-more-container").on("click", ".load-more-button", function () {
             alert("Something went wrong");
         }
     });
-
 });

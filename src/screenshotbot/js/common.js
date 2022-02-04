@@ -1,3 +1,25 @@
+var liveAttachEvents = [];
+function setupLiveOnAttach(selector, fn) {
+    liveAttachEvents.push([selector, fn])
+    $(selector).map(fn);
+}
+
+function callLiveOnAttach(nodes) {
+    console.log("calling live on attach", nodes);
+    $(nodes).map(function () {
+        var node  = this;
+        liveAttachEvents.forEach(function (ev) {
+            console.log("calling event" , ev, "on", node);
+            $(ev[0], node).map(ev[1]);
+
+            if ($(node).is(ev[0])) {
+                ev[1].call(node);
+            }
+        });
+
+    });
+}
+
 function prepareReportJs () {
     $(".change-image-left").map(function () {
         console.log("Setting up mouseover");
@@ -161,10 +183,13 @@ function prepareReportJs () {
 
 
     $(".image-comparison-modal").on('show.bs.modal', setupImageComparison);
-    $(".image-comparison-wrapper").map(function (idx, img) {
-        console.log("Setting up image comparison on: ", img);
-        setupImageComparison.call(img);
-    });
+    setupLiveOnAttach(
+        ".image-comparison-wrapper",
+        function () {
+            var img = $(this);
+            console.log("Setting up image comparison on: ", img);
+            setupImageComparison.call(img);
+        });
 }
 
 prepareReportJs();
