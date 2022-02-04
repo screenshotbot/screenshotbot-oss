@@ -284,9 +284,9 @@
                    (after-image self)
                    output-file)))))))))
 
-(defmethod prepare-image-comparison ((self image-comparison-job))
+(defmethod prepare-image-comparison ((self image-comparison-job) &key (size :full-page))
   (let ((image (prepare-image-comparison-file self)))
-    (hex:safe-redirect (image-public-url image :size :full-page))))
+    (hex:safe-redirect (image-public-url image :size size))))
 
 (defun do-image-comparison (before-screenshot
                             after-screenshot
