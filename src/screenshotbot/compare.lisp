@@ -324,7 +324,7 @@
                 <hr />
 
                 </div>))
-        10)
+        5)
   </app-template>)
 
 (deftag progress-img (&key alt src zoom-to class)
