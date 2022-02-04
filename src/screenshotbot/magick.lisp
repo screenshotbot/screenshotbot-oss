@@ -28,7 +28,7 @@
   (restart-case
       (call-with-semaphore
        *semaphore*
-       (lambda ()q
+       (lambda ()
         (let ((command (loop for str in command
                              if (pathnamep str)
                                collect (namestring str)
