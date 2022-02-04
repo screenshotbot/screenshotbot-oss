@@ -32,6 +32,7 @@
                 #:filter-selector
                 #:commit)
   (:import-from #:screenshotbot/model/image
+                #:image-blob
                 #:rect-as-list
                 #:draw-masks-in-place
                 #:random-unequal-pixel
@@ -40,6 +41,16 @@
                 #:run-magick)
   (:import-from #:screenshotbot/dashboard/paginated
                 #:paginated)
+  (:import-from #:bknr.datastore
+                #:store-object)
+  (:import-from #:bknr.datastore
+                #:persistent-class)
+  (:import-from #:bknr.indices
+                #:hash-index)
+  (:import-from #:bknr.datastore
+                #:make-blob-from-file)
+  (:import-from #:screenshotbot/user-api
+                #:current-company)
   (:export
    #:diff-report
    #:render-acceptable
@@ -54,6 +65,8 @@
 
 
 (markup:enable-reader)
+
+(defvar *lock* (bt:make-lock "image-comparison"))
 
 (defclass change ()
   ((before :initarg :before
@@ -203,56 +216,101 @@
    (after-image :initarg :after-image
                 :reader after-image)
    (output :initform nil
-           :accessor output-file
-           :documentation "A temporary file that should be deleted when the object is garbage collected")))
+           :accessor output-image
+           :documentation "An image object representing the final image")))
+
+(defclass image-comparison (store-object)
+  ((before :initarg :before
+           :reader image-comparison-before
+           :index-type hash-index
+           :index-reader %image-comparisons-for-before)
+   (after :initarg :after
+          :reader image-comparison-after)
+   (masks :initarg :masks
+          :reader image-comparison-masks)
+   (result :initarg :result
+           :accessor image-comparison-result))
+  (:metaclass persistent-class))
+
+
+(defun find-image-comparison (before after masks creator)
+  "Finds an existing image comparison for before and after, if it
+  doesn't exist calls creator with a temporary file. The creator
+  should create the image in the file provided."
+  (check-type before image)
+  (check-type after image)
+  (flet ((find ()
+           (loop for comparison in (%image-comparisons-for-before before)
+                 if (and (eql after (image-comparison-after comparison))
+                         (equal masks (image-comparison-masks comparison)))
+                   return comparison)))
+    (or
+     (bt:with-lock-held (*lock*)
+       (find))
+     (uiop:with-temporary-file (:pathname p :type "png" :prefix "comparison")
+       (funcall creator p)
+       (let* ((image-blob (make-blob-from-file p 'image-blob :type :png))
+              (image (make-instance 'image
+                                     :blob image-blob
+                                     :hash nil
+                                     :verified-p nil ;; the hash is incorrect
+                                     :content-type "image/png")))
+         (bt:with-lock-held (*lock*)
+           (or
+            (find)
+            (make-instance 'image-comparison
+                            :before before
+                            :after after
+                            :masks masks
+                            :result image))))))))
 
 (defmethod prepare-image-comparison-file ((self image-comparison-job))
   (bt:with-lock-held ((lock self))
     (cond
       ((donep self)
-       (output-file self))
+       (output-image self))
       (t
-       (call-with-image-comparison
-        (before-image self)
-        (after-image self)
-        (lambda (output)
-          (setf (output-file self)
-                output)
-          (trivial-garbage:finalize
-           self
-           (lambda ()
-             (delete-file output)))
-          (setf (donep self) t))
-        :keep t)
-       (output-file self)))))
+       ;; second level of caching, we're going to look through the
+       ;; datastore to see if there are any previous images
+       (setf (output-image self)
+             (image-comparison-result
+              (find-image-comparison
+               (screenshot-image (before-image self))
+               (screenshot-image (after-image self))
+               (screenshot-masks (after-image self))
+               (lambda (output-file)
+                 (do-image-comparison
+                     (before-image self)
+                   (after-image self)
+                   output-file)))))))))
 
 (defmethod prepare-image-comparison ((self image-comparison-job))
-  (let ((file (prepare-image-comparison-file self)))
-    (hunchentoot:handle-static-file file)))
+  (let ((image (prepare-image-comparison-file self)))
+    (hex:safe-redirect (image-public-url image :size :full-page))))
 
-(defun call-with-image-comparison (before-image after-image callback
-                                   &key (keep nil))
-  (with-local-image (before before-image)
-    (with-local-image (after after-image)
-      (uiop:with-temporary-file (:pathname p :type "png" :keep keep :prefix "image-comparison")
-        (let ((cmd (list
-                    "compare" (namestring before)
-                      "-limit" "memory" "3MB"
-                      "-limit" "disk" "500MB"
-                    (namestring after)
-                    (namestring p))))
-          (multiple-value-bind (out err ret)
-              (run-magick cmd
-                          :ignore-error-status t
-                          :output 'string
-                          :error-output 'string)
+(defun do-image-comparison (before-screenshot
+                            after-screenshot
+                            p)
+  (with-local-image (before before-screenshot)
+    (with-local-image (after after-screenshot)
+      (let ((cmd (list
+                  "compare" (namestring before)
+                  "-limit" "memory" "3MB"
+                  "-limit" "disk" "500MB"
+                  (namestring after)
+                  (namestring p))))
+        (multiple-value-bind (out err ret)
+            (run-magick cmd
+                        :ignore-error-status t
+                        :output 'string
+                        :error-output 'string)
 
-            (unless (member ret '(0 1))
-              (error "Got surprising error output from imagemagic compare: ~S~%args:~%~S~%stderr:~%~a~%stdout:~%~a" ret cmd err out))))
-        (setf (hunchentoot:header-out :content-type)
-              "image/png")
-        (draw-masks-in-place p (screenshot-masks after-image) :color "rgba(255, 255, 0, 0.8)")
-        (funcall callback p)))))
+          (unless (member ret '(0 1))
+            (error "Got surprising error output from imagemagic compare: ~S~%args:~%~S~%stderr:~%~a~%stdout:~%~a" ret cmd err out))))
+      (setf (hunchentoot:header-out :content-type)
+            "image/png")
+      (draw-masks-in-place p (screenshot-masks after-screenshot) :color "rgba(255, 255, 0, 0.8)")
+      p)))
 
 (defun async-diff-report (&rest args &key &allow-other-keys)
   (let* ((data nil)
