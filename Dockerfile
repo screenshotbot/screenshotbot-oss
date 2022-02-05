@@ -1,4 +1,4 @@
-FROM debian:stable AS builder
+FROM dpokidov/imagemagick:latest-bullseye AS builder
 
 # Update copybara config if you change this line
 
