@@ -322,6 +322,7 @@
       (draw-masks-in-place p (screenshot-masks after-screenshot) :color "rgba(255, 255, 0, 0.8)")
       p)))
 
+
 (defun async-diff-report (&rest args &key &allow-other-keys)
   (let* ((data nil)
          (session auth:*current-session*)
@@ -446,9 +447,12 @@
                                    />
                 </markup:merge-tag>))
 
-           <page-nav-dropdown title= "Views" >
-               <a href=all-comparisons >All Pixel Comparisons</a>
-           </page-nav-dropdown>
+           ,(progn
+              #+screenshotbot-oss
+              (progn
+                <page-nav-dropdown title= "Views" >
+                  <a href=all-comparisons >All Pixel Comparisons</a>
+               </page-nav-dropdown>))
 
          </div>
          <p class= "mt-2" >
