@@ -210,10 +210,10 @@
                           after-image
                           comp-image)
   <div class="change-image-row">
-    <img class= "screenshot-image change-image change-image-left" src= before-image />
-    <img class= "screenshot-image change-image change-image-right" src= after-image />
+    <img class= "screenshot-image change-image change-image-left" src= before-image width= 300 />
+    <img class= "screenshot-image change-image change-image-right" src= after-image width= 300 />
     <:img data-src= comp-image
-      class= "bg-primary image-comparison-modal-image" alt= "Image Difference" />
+      class= "bg-primary image-comparison-modal-image" alt= "Image Difference" width= 300 />
   </div>)
 
 (defclass image-comparison-job ()
@@ -322,6 +322,26 @@
       (draw-masks-in-place p (screenshot-masks after-screenshot) :color "rgba(255, 255, 0, 0.8)")
       p)))
 
+(defun is-image-similiar (before-screenshot
+                            after-screenshot)
+  (with-local-image (before before-screenshot)
+    (with-local-image (after after-screenshot)
+      (let ((cmd (list
+                  "compare" (namestring before)
+                  "-limit" "memory" "3MB"
+                  "-limit" "disk" "500MB"
+                  (namestring after)
+                  "mock.png")))
+        (multiple-value-bind (out err ret)
+            (run-magick cmd
+                        :ignore-error-status t
+                        :output 'string
+                        :error-output 'string)
+
+          (unless (member ret '(0 1))
+            (error "Got surprising error output from imagemagic compare: ~S~%args:~%~S~%stderr:~%~a~%stdout:~%~a" ret cmd err out))
+            ret)))))
+
 (defun async-diff-report (&rest args &key &allow-other-keys)
   (let* ((data nil)
          (session auth:*current-session*)
@@ -377,13 +397,17 @@
                 for comparison-image = (util:copying (image-comparison-job)
                                          (nibble ()
                                            (prepare-image-comparison image-comparison-job)))
+
+                for image-campare-ret = (is-image-similiar before after)
+
                 collect
                 <div class= "image-comparison-wrapper" >
                 <h3>,(screenshot-name before)</h3>
+                ,(when (= image-campare-ret 1)
                 <change-image-row-triple before-image=(image-public-url (screenshot-image before) :size :full-page)
                                          after-image=(image-public-url (screenshot-image after) :size :full-page)
                                          comp-image=comparison-image
-                                         />
+                                         />)
                 </div>))
         5)
   </app-template>)
