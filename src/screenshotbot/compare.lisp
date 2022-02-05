@@ -380,8 +380,8 @@
                 collect
                 <div class= "image-comparison-wrapper" >
                 <h3>,(screenshot-name before)</h3>
-                <change-image-row-triple before-image=(image-public-url (screenshot-image before) :size :half-page)
-                                         after-image=(image-public-url (screenshot-image after) :size :half-page)
+                <change-image-row-triple before-image=(image-public-url (screenshot-image before) :size :full-page)
+                                         after-image=(image-public-url (screenshot-image after) :size :full-page)
                                          comp-image=comparison-image
                                          />
                 </div>))
