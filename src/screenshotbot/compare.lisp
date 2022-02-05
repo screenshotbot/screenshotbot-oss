@@ -209,11 +209,11 @@
 (deftag change-image-row-triple (&key before-image
                           after-image
                           comp-image)
-  <div class="change-image-row">
+  <div class="change-image-row change-image-row-triple">
     <img class= "screenshot-image change-image change-image-left" src= before-image />
     <img class= "screenshot-image change-image change-image-right" src= after-image />
     <:img data-src= comp-image
-      class= "bg-primary image-comparison-modal-image" alt= "Image Difference" />
+      class= "bg-primary image-comparison-modal-image screenshot-image change-image" alt= "Image Difference" />
   </div>)
 
 (defclass image-comparison-job ()
@@ -376,7 +376,7 @@
                                                            :after-image after)
                 for comparison-image = (util:copying (image-comparison-job)
                                          (nibble ()
-                                           (prepare-image-comparison image-comparison-job)))
+                                           (prepare-image-comparison image-comparison-job :size :full-page)))
                 collect
                 <div class= "image-comparison-wrapper" >
                 <h3>,(screenshot-name before)</h3>
