@@ -348,12 +348,21 @@ body > section:nth-child(2) {
 
 .screenshot-header {
     h4 {
-        display: inline;
         max-width: 100%;
+        margin: 0;
+        font-size: 1em;
+    }
+
+    h6 {
+        color: gray;
+        font-size: 0.7em;
+        margin: 0;
     }
     ul.screenshot-options-menu {
         padding-left: 0;
         display: inline;
+        font-size: 0.7em;
+        margin-bottom: 0;
         li {
             margin-left: 0;
             list-style: none;

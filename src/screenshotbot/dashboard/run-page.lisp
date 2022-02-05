@@ -230,15 +230,16 @@
           ,(paginated
           (loop for screenshot in filtered-screenshots
           collect
-          (let ((screenshot screenshot))
+          (let* ((screenshot screenshot)
+                 (name-parts (str:rsplit "--" (screenshot-name screenshot) :limit 2)))
           <div class= " col-sm-12 col-md-4 col-lg-3 mb-1 mt-2">
             <div class="card">
               <div class="card-body">
                 <div class= "screenshot-header" >
-                  <h4 >,(screenshot-name screenshot)</h4>
+                  <h4 >,(car name-parts)</h4>
+                  ,(when (cadr name-parts)
+                     <h6>,(cadr name-parts)</h6>)
                   <ul class= "screenshot-options-menu">
-                    <li>
-                    </li>
                     <li>
                       <a href= (make-url 'history-page :channel (store-object-id channel)
                                                                                          :screenshot-name (screenshot-name screenshot))>
