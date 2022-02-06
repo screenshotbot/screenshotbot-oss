@@ -280,28 +280,109 @@
        j
        (+ (mask-rect-left mask) (mask-rect-width mask) -1))))
 
+
+(defclass image-stream ()
+  ((width :initarg :width
+          :reader width)
+   (height :initarg :height
+           :reader height)
+   (pos-x :initform 0
+          :accessor pos-x)
+   (pos-y :initform 0
+          :accessor pos-y)))
+
+(defclass image-stream-expanded-canvas (image-stream)
+  ((delegate :initarg :delegate
+             :reader delegate)))
+
+(defmethod has-more-pixels-p ((self image-stream))
+  (< (pos-y self)
+     (height self)))
+
+(defmethod next-pos ((self image-stream))
+  (unless (has-more-pixels-p self)
+    (error "Out of bounds for image"))
+  (let ((old-x (pos-x self))
+        (old-y (pos-y self)))
+    (incf (pos-x self))
+    (when (>= (pos-x self) (width self))
+      (setf (pos-x self) 0)
+      (incf (pos-y self)))
+    (values old-y old-x)))
+
+(defclass image-array-stream (image-stream)
+  ((arr :initarg :arr
+        :reader arr)
+   (buffer :initarg :buffer
+           :reader buffer)))
+
+(defmethod initialize-instance :around ((self image-array-stream) &key arr)
+  (let ((dims (array-dimensions arr)))
+    (call-next-method
+     self
+     :arr arr
+     :width (cadr dims)
+     :height (car dims)
+     :buffer (make-array (caddr dims)))))
+
+(defmethod read-next-pixel ((image image-array-stream))
+  (multiple-value-bind (pos-y pos-x) (next-pos image)
+    (let ((buffer (buffer image)))
+     (dotimes (j (length buffer))
+       (setf (aref buffer j)
+             (aref (arr image) pos-y pos-x j)))
+      buffer)))
+
+(defmethod read-next-pixel ((image image-stream-expanded-canvas))
+  (multiple-value-bind (pos-y pos-x) (next-pos image)
+    (let ((delegate (delegate image)))
+     (cond
+       ((or
+         (>= pos-x (width delegate))
+         (>= pos-y (height delegate)))
+        ;; bad pixel!
+        (dotimes (j (length (buffer delegate)))
+          (setf (aref (buffer delegate) j) 0))
+        (buffer delegate))
+       (t
+        (read-next-pixel delegate))))))
+
+(defun map-unequal-pixels-stream (stream1 stream2 fn &key masks)
+  "Map unequal pixels assuming both streams refer to images with the same dimensions"
+  (loop while (has-more-pixels-p stream1)
+        for i = (pos-y stream1)
+        for j = (pos-x stream1)
+        for pix1 = (read-next-pixel stream1)
+        for pix2 = (read-next-pixel stream2)
+        if (not (equalp pix1 pix2))
+          do
+             ;; inefficient way to check if pixel is masked
+             (loop for mask in masks
+                   if (px-in-mask-p i j mask)
+                     do (return nil)
+                   finally
+                      (funcall fn i j))))
+
 (defun map-unequal-pixels (arr1 arr2 fn &key masks)
-  (declare (optimize (speed 3) (debug 0))
-           (ftype (function (fixnum fixnum) nil) fn)
-           (type list masks)
-           (type array arr1 arr2))
-  (let* ((dim (array-dimensions arr1))
-         (max-k (elt dim 2)))
-    (declare (type fixnum max-k))
-    (dotimes (i (elt dim 0))
-      (declare (type fixnum i))
-      (dotimes (j (elt dim 1))
-        (declare (type fixnum j))
-        (block inner-loop
-          (dotimes (k max-k)
-            (declare (type fixnum k))
-            (unless (= (aref arr1 i j k)
-                       (aref arr2 i j k))
-              (loop for mask in masks
-                    if (px-in-mask-p i j mask)
-                      do (return-from inner-loop))
-              (funcall fn i j)
-             (return-from inner-loop))))))))
+  (let* ((dim1 (array-dimensions arr1))
+         (dim2 (array-dimensions arr2))
+         (height (max (car dim1) (car dim2)))
+         (width (max (cadr dim1) (cadr dim2))))
+
+    (flet ((make-expanded (x)
+             (make-instance 'image-stream-expanded-canvas
+                             :delegate x
+                             :width width
+                             :height height)))
+     (map-unequal-pixels-stream
+      (make-expanded
+       (make-instance 'image-array-stream
+                       :arr arr1))
+      (make-expanded
+       (make-instance 'image-array-stream
+                       :arr arr2))
+      fn
+      :masks masks))))
 
 
 (defun images-equal-by-content-p (img1 img2 &key (slow nil)

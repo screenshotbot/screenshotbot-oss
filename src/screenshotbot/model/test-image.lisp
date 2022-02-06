@@ -18,6 +18,7 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:screenshotbot/model/image
+                #:%map-unequal-pixels
                 #:fake-mask-rect
                 #:map-unequal-pixels)
   (:export))
