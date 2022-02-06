@@ -1,5 +1,6 @@
 @charset "UTF-8";
 
+
 $lili-purple: #4d196a;
 $lili-red:    #dd5068;
 $lili-yellow: #f9d25d;
@@ -22,6 +23,8 @@ $section-blue: #3C42A7;
 @import "vendor/baguetteBox";
 @import "sidebar";
 @import "bootstrap-icons";
+
+@import "material-icons";
 
 ul.compare-image-header {
     list-style:none;

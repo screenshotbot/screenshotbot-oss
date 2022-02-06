@@ -93,8 +93,6 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <!-- App favicon -->
         <link rel="shortcut icon" href= (util.cdn:make-cdn *favicon*) />
-          <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
-                rel="stylesheet">
         <!-- App css -->
         <google-fonts />
 

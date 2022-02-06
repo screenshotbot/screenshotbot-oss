@@ -11,6 +11,7 @@
   :class build-utils:css-library
   :depends-on (:bootstrap5-css)
   :components ((build-utils:scss-file "sidebar")
+               (build-utils:scss-file "material-icons")
                (build-utils:css-file "bootstrap-icons")
                (:MODULE "vendor"
                 :COMPONENTS ((build-utils:css-file "baguetteBox")
