@@ -280,11 +280,20 @@ $(".async-fetch").map(function (idx, elm) {
 $(".load-more-container").on("click", ".load-more-button", function () {
     var button = $(this);
     var link = $(button).data("load-more");
+    console.log("Fetching next page");
+
+    function setDisabled(val) {
+        $(button).prop("disabled", val);
+    }
+
+    setDisabled(true);
 
     $.ajax({
         method: "GET",
         url: link,
         success: function (data) {
+            setDisabled(false);
+            console.log("Got next page");
             var div = $(data);
             var container = $(button).closest(".load-more-container");
             var children = div.children();
@@ -296,6 +305,7 @@ $(".load-more-container").on("click", ".load-more-button", function () {
             prepareBaguetteBox();
         },
         error: function(data) {
+            setDisabled(false);
             alert("Something went wrong");
         }
     });
