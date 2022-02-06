@@ -16,6 +16,7 @@
         #:screenshotbot/model/channel
         #:screenshotbot/ignore-and-log-errors
         #:screenshotbot/model/recorder-run)
+  (:shadow #:find)
   (:import-from #:util
                 #:find-by-oid
                 #:oid)

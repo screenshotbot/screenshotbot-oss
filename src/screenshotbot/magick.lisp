@@ -24,12 +24,13 @@
 
 (defun magick-prefix-uncached ()
   (multiple-value-bind (out err ret)
-      (uiop:run-program (list "magick" "--help")
-                        :ignore-error-status t)
-    (declare (ignore out err))
+      (uiop:run-program (list "which" "magick")
+                        :ignore-error-status t
+                        :output 'string)
+    (declare (ignore err))
     (cond
       ((= 0 ret)
-       (list "magick")))))
+       (list (str:trim out))))))
 
 (let (cache)
  (defun magick-prefix ()
@@ -50,22 +51,45 @@
            (magick-prefix-uncached))))))
 
 (defun run-magick (command &rest args &key (error-output t) (output t)
-                             (ignore-error-status nil))
+                                        (ignore-error-status nil)
+                                        (async nil))
   "Wrapper for magick commands, in the future we might run this in-process"
   (restart-case
-      (call-with-semaphore
-       *semaphore*
-       (lambda ()
-        (let ((command (loop for str in command
-                             if (pathnamep str)
-                               collect (namestring str)
-                             else
-                               collect str)))
+      (let* ((command (loop for str in command
+                            if (pathnamep str)
+                              collect (namestring str)
+                            else
+                              collect str))
+             (command (append (magick-prefix) command)))
 
-          (uiop:run-program
-           (append (magick-prefix) command)
-           :output output
-           :error-output error-output
-           :ignore-error-status ignore-error-status))))
+        (flet ((run ()
+                 (call-with-semaphore
+                  *semaphore*
+                  (lambda ()
+                    (uiop:run-program
+                     command
+                     :output output
+                     :error-output error-output
+                     :ignore-error-status ignore-error-status)))))
+          (cond
+            (async
+             ;; this is the streaming functionality. In this case we
+             ;; return a stream that's the output. This only works on
+             ;; Lispworks
+             #+lispworks
+             (system:open-pipe command
+                               :element-type '(unsigned-byte 8)
+                               :direction :input)
+
+             ;; Outside of lispworks, let's not try to complicate
+             ;; things. Let's just save to a local temporary file, and
+             ;; return that stream.
+             #-lispworks
+             (uiop:with-temporary-file (:pathname p)
+               (setf output p)
+               (run)
+               (open run :direction :input :element-type '(unsigned-byte 8))))
+            (t
+             (run)))))
     (retry-run-magick ()
       (apply #'run-magick command args))))

@@ -234,40 +234,36 @@
      (call-with-opticl-image ,img body)))
 
 (defun find-unequal-pixels (img1 img2)
-  (with-opticl-image (arr1 img1)
-    (with-opticl-image (arr2 img2)
-     (let ((res (make-array 0 :adjustable t
-                              :fill-pointer t)))
-       (map-unequal-pixels arr1 arr2
-                           (lambda (i j)
-                             (vector-push-extend (cons i j)
-                                                 res)))
-       res))))
+  (let ((res (make-array 0 :adjustable t
+                           :fill-pointer t)))
+    (map-unequal-pixels img1 img2
+                        (lambda (i j)
+                          (vector-push-extend (cons i j)
+                                              res)))
+    res))
 
 (defun random-unequal-pixel (img1 img2 &key masks)
   (declare (optimize (speed 3) (safety 0)))
-  (with-opticl-image (arr1 img1)
-    (with-opticl-image (arr2 img2)
-     (flet ((%map-unequal-pixels (fn)
-              (map-unequal-pixels
-               arr1 arr2 fn :masks masks)))
-       (let ((num-bad 0))
-         (declare (type fixnum num-bad))
-         (%map-unequal-pixels
-          (lambda (i j)
-            (declare (ignore i j)
-                     (optimize (speed 3) (safety 0) (debug 0)))
-            (incf num-bad)))
-         (let ((ctr (random num-bad)))
-           (declare (type fixnum ctr))
-           (%map-unequal-pixels
-            (lambda (i j)
-              (declare (fixnum i j))
-              (when (= ctr 0)
-                (return-from random-unequal-pixel
-                  (cons i j)))
-              (decf ctr))))))
-      (error "Should not get here, probably our CTR is off by one"))))
+  (flet ((%map-unequal-pixels (fn)
+           (map-unequal-pixels
+            img1 img2 fn :masks masks)))
+    (let ((num-bad 0))
+      (declare (type fixnum num-bad))
+      (%map-unequal-pixels
+       (lambda (i j)
+         (declare (ignore i j)
+                  (optimize (speed 3) (safety 0) (debug 0)))
+         (incf num-bad)))
+      (let ((ctr (random num-bad)))
+        (declare (type fixnum ctr))
+        (%map-unequal-pixels
+         (lambda (i j)
+           (declare (fixnum i j))
+           (when (= ctr 0)
+             (return-from random-unequal-pixel
+               (cons i j)))
+           (decf ctr))))))
+  (error "Should not get here, probably our CTR is off by one"))
 
 (defun px-in-mask-p (i j mask)
   (declare (optimize (speed 3) (safety 0))
@@ -316,6 +312,12 @@
    (buffer :initarg :buffer
            :reader buffer)))
 
+(defclass image-magick-stream (image-stream)
+  ((%stream :accessor %stream)
+   (file :initarg :file)
+   (buffer :initform (make-array 4 :element-type '(unsigned-byte 8))
+           :reader buffer)))
+
 (defmethod initialize-instance :around ((self image-array-stream) &key arr)
   (let ((dims (array-dimensions arr)))
     (call-next-method
@@ -347,6 +349,24 @@
        (t
         (read-next-pixel delegate))))))
 
+(defmethod initialize-instance :after ((self image-magick-stream) &key file &allow-other-keys)
+  (setf (%stream self)
+        (run-magick (list
+                     "stream" "-map" "rgba"
+                     "-storage-type" "char"
+                     file
+                     "-")
+                    :async t)))
+
+(defmethod cleanup-image-stream ((self image-magick-stream))
+  (close (%stream self)))
+
+(defmethod read-next-pixel ((self image-magick-stream))
+  ;; we don't need the actual return value here
+  (next-pos self)
+  (read-sequence (buffer self) (%stream self))
+  (buffer self))
+
 (defun map-unequal-pixels-stream (stream1 stream2 fn &key masks)
   "Map unequal pixels assuming both streams refer to images with the same dimensions"
   (loop while (has-more-pixels-p stream1)
@@ -363,7 +383,7 @@
                    finally
                       (funcall fn i j))))
 
-(defun map-unequal-pixels (arr1 arr2 fn &key masks)
+(defun map-unequal-pixels-arr (arr1 arr2 fn &key masks)
   (let* ((dim1 (array-dimensions arr1))
          (dim2 (array-dimensions arr2))
          (height (max (car dim1) (car dim2)))
@@ -384,28 +404,48 @@
       fn
       :masks masks))))
 
+(defun map-unequal-pixels (img1 img2 fn &key masks)
+  (restart-case
+      (with-local-image (file1 img1)
+        (with-local-image (file2 img2)
+          (flet ((make-image-stream (file)
+                   (let ((png (pngload:load-file  file1 :decode nil)))
+                     (make-instance 'image-magick-stream
+                                     :file file
+                                     :width (pngload:width png)
+                                     :height (pngload:height png)))))
+            (let ((stream1 (make-image-stream file1))
+                  (stream2 (make-image-stream file2)))
+              (unwind-protect
+                   (map-unequal-pixels-stream
+                    stream1
+                    stream2
+                    fn :masks masks)
+                (cleanup-image-stream stream1)
+                (cleanup-image-stream stream2))))))
+    (retry-map-unequal-pixels ()
+      (map-unequal-pixels img1 img2 fn :masks masks))))
+
 
 (defun images-equal-by-content-p (img1 img2 &key (slow nil)
                                               masks)
   (log:info :image "checking images by content: ~s, ~s" img1 img2)
   (cond
     (slow
-     (with-opticl-image (arr1 img1)
-       (with-opticl-image (arr2 img2)
-        (cond
-          ((not (equalp (array-dimensions arr1) (array-dimensions arr2)))
-           (log:info :image "Array dimension don't match: ~s, ~s" arr1 arr2)
-           nil)
-          (t
-           (block check
-             (let ((resp t))
-               (map-unequal-pixels arr1 arr2
-                                   (lambda (i j)
-                                     (declare (optimize (speed 3)
-                                                        (safety 0)))
-                                     (declare (ignore i j))
-                                     (Setf resp nil)))
-               resp)))))))
+     (cond
+       ((not (equalp (array-dimensions arr1) (array-dimensions arr2)))
+        (log:info :image "Array dimension don't match: ~s, ~s" arr1 arr2)
+        nil)
+       (t
+        (block check
+          (let ((resp t))
+            (map-unequal-pixels img1 img2
+                                (lambda (i j)
+                                  (declare (optimize (speed 3)
+                                                     (safety 0)))
+                                  (declare (ignore i j))
+                                  (Setf resp nil)))
+            resp)))))
     (t
      (let ((hash1 (perceptual-hash img1 :masks masks))
            (hash2 (perceptual-hash img2 :masks masks)))
