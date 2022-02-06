@@ -1,15 +1,18 @@
-var liveAttachEvents = [];
+
 function setupLiveOnAttach(selector, fn) {
-    liveAttachEvents.push([selector, fn])
+    if (!window.liveAttachEvents) {
+        window.liveAttachEvents = [];
+    }
+
+    window.liveAttachEvents.push([selector, fn])
     $(selector).map(fn);
 }
 
 function callLiveOnAttach(nodes) {
-    console.log("calling live on attach", nodes);
+    console.log("calling live on attach", nodes, window.liveAttachEvents);
     $(nodes).map(function () {
         var node  = this;
-        liveAttachEvents.forEach(function (ev) {
-            console.log("calling event" , ev, "on", node);
+        window.liveAttachEvents.forEach(function (ev) {
             $(ev[0], node).map(ev[1]);
 
             if ($(node).is(ev[0])) {

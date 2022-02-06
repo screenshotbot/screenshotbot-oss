@@ -263,7 +263,9 @@ $(".async-fetch").map(function (idx, elm) {
                 if (data["state"] == "processing") {
                     setTimeout(tryNext, 1000);
                 } else if (data["state"] == "done") {
-                    $(elm).replaceWith(data["data"]);
+                    var newData = $(data["data"]);
+                    $(elm).replaceWith(newData);
+                    callLiveOnAttach(newData);
                     prepareReportJs();
                 } else {
                     onError();
@@ -277,35 +279,37 @@ $(".async-fetch").map(function (idx, elm) {
 });
 
 
-$(".load-more-container").on("click", ".load-more-button", function () {
-    var button = $(this);
-    var link = $(button).data("load-more");
-    console.log("Fetching next page");
+setupLiveOnAttach(".load-more-button", function () {
+    $(this).click(function () {
+        var button = $(this);
+        var link = $(button).data("load-more");
+        console.log("Fetching next page");
 
-    function setDisabled(val) {
-        $(button).prop("disabled", val);
-    }
-
-    setDisabled(true);
-
-    $.ajax({
-        method: "GET",
-        url: link,
-        success: function (data) {
-            console.log("Got next page");
-            var div = $(data);
-            var container = $(button).closest(".load-more-container");
-            var children = div.children();
-            children.appendTo(container);
-            callLiveOnAttach(children);
-            button.parent().remove();
-
-            baguetteBox.destroy(".baguetteBox");
-            prepareBaguetteBox();
-        },
-        error: function(data) {
-            setDisabled(false);
-            alert("Something went wrong");
+        function setDisabled(val) {
+            $(button).prop("disabled", val);
         }
+
+        setDisabled(true);
+
+        $.ajax({
+            method: "GET",
+            url: link,
+            success: function (data) {
+                console.log("Got next page");
+                var div = $(data);
+                var container = $(button).closest(".load-more-container");
+                var children = div.children();
+                children.appendTo(container);
+                callLiveOnAttach(children);
+                button.parent().remove();
+
+                baguetteBox.destroy(".baguetteBox");
+                prepareBaguetteBox();
+            },
+            error: function(data) {
+                setDisabled(false);
+                alert("Something went wrong");
+            }
+        });
     });
 });
