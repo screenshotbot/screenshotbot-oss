@@ -5,12 +5,12 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (uiop:define-package :screenshotbot/sdk/sdk
-    (:nicknames :screenshotbot-sdk)
-    (:use #:cl
-          #:com.google.flag
-          #:alexandria
-          #:anaphora
-          #:screenshotbot/sdk/flags)
+  (:nicknames :screenshotbot-sdk)
+  (:use #:cl
+        #:com.google.flag
+        #:alexandria
+        #:anaphora
+        #:screenshotbot/sdk/flags)
   (:import-from #:dag
                 #:add-commit
                 #:commit
