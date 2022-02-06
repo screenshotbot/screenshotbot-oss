@@ -327,7 +327,7 @@
       (draw-masks-in-place p (screenshot-masks after-screenshot) :color "rgba(255, 255, 0, 0.8)")
       p)))
 
-(defun is-image-similiar (before-screenshot
+(defun is-image-similar (before-screenshot
                             after-screenshot)
   (with-local-image (before before-screenshot)
     (with-local-image (after after-screenshot)
@@ -403,7 +403,7 @@
                                          (nibble ()
                                            (prepare-image-comparison image-comparison-job :size :full-page)))
 
-                for image-campare-ret = (is-image-similiar before after)
+                for image-campare-ret = (is-image-similar before after)
                 collect
                 <div class= "image-comparison-wrapper" >
                 <h3>,(if (= image-campare-ret 1) (screenshot-name before) (concatenate 'string (screenshot-name before) " are same"))</h3>
