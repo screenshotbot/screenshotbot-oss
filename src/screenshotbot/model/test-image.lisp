@@ -18,10 +18,13 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:screenshotbot/model/image
+                #:map-unequal-pixels-on-file
                 #:map-unequal-pixels-arr
                 #:%map-unequal-pixels
                 #:fake-mask-rect
                 #:map-unequal-pixels)
+  (:import-from #:screenshotbot/magick
+                #:run-magick)
   (:export))
 
 (util/fiveam:def-suite)
@@ -80,4 +83,22 @@
                                                             :top 0
                                                             :left 0
                                                             :height 1
-                                                            :width 1)))))     )))
+                                                            :width 1))))))))
+
+(test map-unequal-pixels-on-file
+  (uiop:with-temporary-file (:pathname f1 :type ".png")
+    (uiop:with-temporary-file (:pathname f2 :type ".png")
+      (flet ((make-image (x y color output)
+               (run-magick
+                (list "convert" "-size" "3x3" "xc:skyblue" "-fill" color
+                      "-draw" (format nil "point ~a,~a" x y) output))))
+        (make-image 2 1 "black" f1)
+        (make-image 2 1 "white" f2)
+        (let ((ret))
+          (map-unequal-pixels-on-file f1 f2
+                                      (lambda (x y)
+                                        (push (cons x y) ret)))
+          ;; y,x
+          (is (equal '((1 . 2)) ret))))
+
+      (pass))))

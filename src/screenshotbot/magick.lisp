@@ -88,7 +88,7 @@
              (uiop:with-temporary-file (:pathname p)
                (setf output p)
                (run)
-               (open run :direction :input :element-type '(unsigned-byte 8))))
+               (open p :direction :input :element-type '(unsigned-byte 8))))
             (t
              (run)))))
     (retry-run-magick ()

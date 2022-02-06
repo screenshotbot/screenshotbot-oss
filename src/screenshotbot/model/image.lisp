@@ -408,23 +408,26 @@
   (restart-case
       (with-local-image (file1 img1)
         (with-local-image (file2 img2)
-          (flet ((make-image-stream (file)
-                   (let ((png (pngload:load-file  file1 :decode nil)))
-                     (make-instance 'image-magick-stream
-                                     :file file
-                                     :width (pngload:width png)
-                                     :height (pngload:height png)))))
-            (let ((stream1 (make-image-stream file1))
-                  (stream2 (make-image-stream file2)))
-              (unwind-protect
-                   (map-unequal-pixels-stream
-                    stream1
-                    stream2
-                    fn :masks masks)
-                (cleanup-image-stream stream1)
-                (cleanup-image-stream stream2))))))
+          (map-unequal-pixels-on-file file1 file2 fn :masks masks)))
     (retry-map-unequal-pixels ()
       (map-unequal-pixels img1 img2 fn :masks masks))))
+
+(defun map-unequal-pixels-on-file (file1 file2 fn &key masks)
+  (flet ((make-image-stream (file)
+           (let ((png (pngload:load-file  file1 :decode nil)))
+             (make-instance 'image-magick-stream
+                             :file file
+                             :width (pngload:width png)
+                             :height (pngload:height png)))))
+    (let ((stream1 (make-image-stream file1))
+          (stream2 (make-image-stream file2)))
+      (unwind-protect
+           (map-unequal-pixels-stream
+            stream1
+            stream2
+            fn :masks masks)
+        (cleanup-image-stream stream1)
+        (cleanup-image-stream stream2)))))
 
 
 (defun images-equal-by-content-p (img1 img2 &key (slow nil)
