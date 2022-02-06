@@ -490,22 +490,27 @@
                           (modal-label (format nil "~a-modal-label" toggle-id)))
 
                      <div class= "mt-4" >
-                       <ul class= "compare-image-header" >
-                         <li>
-                           <h4 class= "d-inline-block" >
-                             ,(screenshot-name s)
-                           </h4>
-                         </li>
-                         <li>
-                           <a href= "#" data-bs-toggle= "modal" data-bs-target= (format nil "#~a" toggle-id) >Compare</a>
-                         </li>
-                         <li>
-                           <a href= (nibble () (mask-editor (recorder-run-channel run) s
-                              :redirect script-name))
-                              >Edit Masks</a>
-                         </li>
-                       </ul>
-                       <change-image-row before-image=(image-public-url (screenshot-image x) :size :full-page)
+                       <div class= "screenshot-header">
+                         ,@ (let ((parts (str:split "--" (screenshot-name x) :limit 2)))
+
+                              (list
+                               <h4 class= "d-inline-block" >
+                                 ,(car parts)
+                               </h4>
+                               (when (cadr parts)
+                                 <h6>,(cadr parts)</h6>)))
+                         <ul class= "screenshot-options-menu" >
+                           <li>
+                             <a href= "#" data-bs-toggle= "modal" data-bs-target= (format nil "#~a" toggle-id) >Compare</a>
+                           </li>
+                           <li>
+                             <a href= (nibble () (mask-editor (recorder-run-channel run) s
+                                :redirect script-name))
+                                >Edit Masks</a>
+                           </li>
+                         </ul>
+                       </div>
+                         <change-image-row before-image=(image-public-url (screenshot-image x) :size :full-page)
                                          after-image=(image-public-url (screenshot-image s) :size :full-page)
                                          />
 
