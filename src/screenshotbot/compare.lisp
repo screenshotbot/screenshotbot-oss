@@ -406,7 +406,7 @@
                 for image-campare-ret = (is-image-similiar before after)
                 collect
                 <div class= "image-comparison-wrapper" >
-                <h3>,(screenshot-name before)</h3>
+                <h3>,(if (= image-campare-ret 1) (screenshot-name before) (concatenate 'string (screenshot-name before) " are same"))</h3>
                 ,(when (= image-campare-ret 1)
                 <change-image-row-triple before-image=(image-public-url (screenshot-image before) :size :full-page)
                                          after-image=(image-public-url (screenshot-image after) :size :full-page)
