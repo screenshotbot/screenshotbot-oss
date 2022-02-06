@@ -396,22 +396,22 @@
           (loop for change in changes
                 for before = (before change)
                 for after = (after change)
-                for image-comparison-job = (make-instance 'image-comparison-job
-                                                           :before-image before
-                                                           :after-image after)
-                for comparison-image = (util:copying (image-comparison-job)
-                                         (nibble ()
-                                           (prepare-image-comparison image-comparison-job :size :full-page)))
 
                 for image-campare-ret = (is-image-similar before after)
                 collect
                 <div class= "image-comparison-wrapper" >
-                <h3>,(if (= image-campare-ret 1) (screenshot-name before) (concatenate 'string (screenshot-name before) " are same"))</h3>
+                <h3>,(if (= image-campare-ret 1) (screenshot-name before) (concatenate 'string (screenshot-name before) " are the same"))</h3>
                 ,(when (= image-campare-ret 1)
-                <change-image-row-triple before-image=(image-public-url (screenshot-image before) :size :full-page)
+                  (let* ((image-comparison-job (make-instance 'image-comparison-job
+                                                           :before-image before
+                                                           :after-image after))
+                        (comparison-image (util:copying (image-comparison-job)
+                                         (nibble ()
+                                           (prepare-image-comparison image-comparison-job :size :full-page)))))
+                        <change-image-row-triple before-image=(image-public-url (screenshot-image before) :size :full-page)
                                          after-image=(image-public-url (screenshot-image after) :size :full-page)
                                          comp-image=comparison-image
-                                         />)
+                                         />))
                 </div>))
         5)
   </app-template>)
