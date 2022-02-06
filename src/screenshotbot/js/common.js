@@ -185,7 +185,9 @@ function prepareReportJs () {
     }
 
 
-    $(".image-comparison-modal").on('show.bs.modal', setupImageComparison);
+    setupLiveOnAttach(".image-comparison-modal", function () {
+        $(this).on("show.bs.modal", setupImageComparison);
+    });
     setupLiveOnAttach(
         ".image-comparison-wrapper",
         function () {
