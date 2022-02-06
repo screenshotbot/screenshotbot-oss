@@ -292,7 +292,6 @@ $(".load-more-container").on("click", ".load-more-button", function () {
         method: "GET",
         url: link,
         success: function (data) {
-            setDisabled(false);
             console.log("Got next page");
             var div = $(data);
             var container = $(button).closest(".load-more-container");
