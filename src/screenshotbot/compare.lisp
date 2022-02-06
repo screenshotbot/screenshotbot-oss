@@ -16,6 +16,7 @@
         #:screenshotbot/model/channel
         #:screenshotbot/ignore-and-log-errors
         #:screenshotbot/model/recorder-run)
+  (:shadow #:find)
   (:import-from #:util
                 #:find-by-oid
                 #:oid)
@@ -294,7 +295,11 @@
                    (after-image self)
                    output-file)))))))))
 
-(defmethod prepare-image-comparison ((self image-comparison-job) &key (size :full-page))
+(defmethod prepare-image-comparison ((self image-comparison-job)
+                                     &key
+                                       ;; I can't use :full-page here because the JS isn't
+                                       ;; designed to handle that yet.
+                                       (size nil))
   (let ((image (prepare-image-comparison-file self)))
     (hex:safe-redirect (image-public-url image :size size))))
 
@@ -396,10 +401,9 @@
                                                            :after-image after)
                 for comparison-image = (util:copying (image-comparison-job)
                                          (nibble ()
-                                           (prepare-image-comparison image-comparison-job)))
+                                           (prepare-image-comparison image-comparison-job :size :full-page)))
 
                 for image-campare-ret = (is-image-similiar before after)
-
                 collect
                 <div class= "image-comparison-wrapper" >
                 <h3>,(screenshot-name before)</h3>
@@ -470,9 +474,12 @@
                                    />
                 </markup:merge-tag>))
 
-           <page-nav-dropdown title= "Views" >
-               <a href=all-comparisons >All Pixel Comparisons</a>
-           </page-nav-dropdown>
+           ,(progn
+              #+screenshotbot-oss
+              (progn
+                <page-nav-dropdown title= "Views" >
+                  <a href=all-comparisons >All Pixel Comparisons</a>
+               </page-nav-dropdown>))
 
          </div>
          <p class= "mt-2" >
