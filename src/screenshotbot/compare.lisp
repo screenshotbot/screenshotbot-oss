@@ -415,6 +415,19 @@
     Zoom to change
   </button>)
 
+(deftag screenshot-header (children &key screenshot)
+  <div class= "screenshot-header">
+    ,@ (let ((parts (str:split "--" (screenshot-name screenshot) :limit 2)))
+
+         (list
+          <h4 class= "d-inline-block" >
+            ,(car parts)
+          </h4>
+          (when (cadr parts)
+            <h6>,(cadr parts)</h6>)))
+    ,@children
+  </div>)
+
 (deftag render-diff-report (&key run to
                             (lang-filter (make-instance 'row-filter :value t))
                             (device-filter (make-instance 'row-filter :value t))
@@ -490,15 +503,7 @@
                           (modal-label (format nil "~a-modal-label" toggle-id)))
 
                      <div class= "mt-4" >
-                       <div class= "screenshot-header">
-                         ,@ (let ((parts (str:split "--" (screenshot-name x) :limit 2)))
-
-                              (list
-                               <h4 class= "d-inline-block" >
-                                 ,(car parts)
-                               </h4>
-                               (when (cadr parts)
-                                 <h6>,(cadr parts)</h6>)))
+                       <screenshot-header screenshot=x >
                          <ul class= "screenshot-options-menu" >
                            <li>
                              <a href= "#" data-bs-toggle= "modal" data-bs-target= (format nil "#~a" toggle-id) >Compare</a>
@@ -509,7 +514,7 @@
                                 >Edit Masks</a>
                            </li>
                          </ul>
-                       </div>
+                       </screenshot-header>
                          <change-image-row before-image=(image-public-url (screenshot-image x) :size :full-page)
                                          after-image=(image-public-url (screenshot-image s) :size :full-page)
                                          />
@@ -584,6 +589,6 @@
 
 (Deftag screenshot-box (&key screenshot)
   <div class= "mt-4" >
-    <h4>,(screenshot-name screenshot)</h4>
-    <img class= "change-image" src= (image-public-url (screenshot-image screenshot) :size :full-page) />
+    <screenshot-header screenshot=screenshot />
+    <img class= "mt-2 change-image" src= (image-public-url (screenshot-image screenshot) :size :full-page) />
   </div>)
