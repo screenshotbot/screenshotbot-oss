@@ -244,26 +244,23 @@
 
 (defun random-unequal-pixel (img1 img2 &key masks)
   (declare (optimize (speed 3) (safety 0)))
-  (flet ((%map-unequal-pixels (fn)
-           (map-unequal-pixels
-            img1 img2 fn :masks masks)))
-    (let ((num-bad 0))
-      (declare (type fixnum num-bad))
-      (%map-unequal-pixels
-       (lambda (i j)
-         (declare (ignore i j)
-                  (optimize (speed 3) (safety 0) (debug 0)))
-         (incf num-bad)))
-      (let ((ctr (random num-bad)))
-        (declare (type fixnum ctr))
-        (%map-unequal-pixels
-         (lambda (i j)
-           (declare (fixnum i j))
-           (when (= ctr 0)
-             (return-from random-unequal-pixel
-               (cons i j)))
-           (decf ctr))))))
-  (error "Should not get here, probably our CTR is off by one"))
+  (let ((bad-pixels)
+        (length 0)
+        (max-length 10000))
+   (flet ((%map-unequal-pixels (fn)
+            (map-unequal-pixels
+             img1 img2 fn :masks masks)))
+     (let ((num-bad 0))
+       (declare (type fixnum num-bad))
+       (%map-unequal-pixels
+        (lambda (i j)
+          (declare (ignore i j)
+                   (optimize (speed 3) (safety 0) (debug 0)))
+          (when (< length max-length)
+            (incf length)
+            (push (cons i j) bad-pixels))))))
+    (let ((index (random length)))
+      (elt bad-pixels index))))
 
 (defun px-in-mask-p (i j mask)
   (declare (optimize (speed 3) (safety 0))
