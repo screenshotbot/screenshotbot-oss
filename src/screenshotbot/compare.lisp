@@ -295,7 +295,11 @@
                    (after-image self)
                    output-file)))))))))
 
-(defmethod prepare-image-comparison ((self image-comparison-job) &key (size :full-page))
+(defmethod prepare-image-comparison ((self image-comparison-job)
+                                     &key
+                                       ;; I can't use :full-page here because the JS isn't
+                                       ;; designed to handle that yet.
+                                       (size nil))
   (let ((image (prepare-image-comparison-file self)))
     (hex:safe-redirect (image-public-url image :size size))))
 
