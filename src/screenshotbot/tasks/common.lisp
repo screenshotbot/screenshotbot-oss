@@ -17,7 +17,9 @@
         #:screenshotbot/dashboard/reports
         #:screenshotbot/compare)
   (:import-from #:bknr.datastore
-                #:with-transaction))
+                #:with-transaction)
+  (:import-from #:screenshotbot/compare
+                #:warmup-comparison-images))
 (in-package :screenshotbot/tasks/common)
 
 (defclass noop-task-integration (task-integration)
@@ -84,6 +86,10 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
                                  (push report
                                        (company-reports (recorder-run-company run))))
                                 report)))
+                 ;; This is only used by the frontend when viewed
+                 ;; by the user, it's not used in the promotion
+                 ;; flows.
+                 (warmup-comparison-images run previous-run)
                  (dolist (task-integration (get-enabled-task-integrations company channel))
                    (let ((task-integration task-integration))
                      (labels ((thread ()

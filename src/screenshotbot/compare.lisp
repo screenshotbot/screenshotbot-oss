@@ -52,6 +52,8 @@
                 #:make-blob-from-file)
   (:import-from #:screenshotbot/user-api
                 #:current-company)
+  (:import-from #:screenshotbot/dashboard/image
+                #:handle-resized-image)
   (:export
    #:diff-report
    #:render-acceptable
@@ -59,7 +61,8 @@
    #:make-diff-report
    #:diff-report-empty-p
    #:render-diff-report
-   #:diff-report-changes)
+   #:diff-report-changes
+   #:warmup-comparison-images)
   ;; forward decls
   (:export #:filter-selector))
 (in-package :screenshotbot/compare)
@@ -306,9 +309,15 @@
                                      &key
                                        ;; I can't use :full-page here because the JS isn't
                                        ;; designed to handle that yet.
-                                       (size nil))
+                                       (size nil)
+                                       (warmup nil))
   (let ((image (prepare-image-comparison-file self)))
-    (hex:safe-redirect (image-public-url image :size size))))
+    (cond
+      (warmup
+       (when size
+        (handle-resized-image image size :warmup t)))
+      (t
+       (hex:safe-redirect (image-public-url image :size size))))))
 
 (defun do-image-comparison (before-screenshot
                             after-screenshot
@@ -331,8 +340,6 @@
 
           (unless (member ret '(0 1))
             (error "Got surprising error output from imagemagic compare: ~S~%args:~%~S~%stderr:~%~a~%stdout:~%~a" ret cmd err out))
-          (setf (hunchentoot:header-out :content-type)
-                "image/png")
           (draw-masks-in-place p (screenshot-masks after-screenshot) :color "rgba(255, 255, 0, 0.8)")
           (= ret 0))))))
 
@@ -376,9 +383,31 @@
        ;; for debugging:
        (:masks
         ,(mapcar 'rect-as-list
-                 (screenshot-masks right)))))))
+                  (screenshot-masks right)))))))
+
+(defun warmup-comparison-images (run previous-run)
+  (bt:make-thread
+   (lambda ()
+     (restart-case
+         (let ((report (make-diff-report run previous-run)))
+          (let ((changes (diff-report-changes report)))
+            (loop for change in changes
+                  for i from 1
+                  for before = (before change)
+                  for after = (after change)
+                  for image-comparison-job = (make-instance 'image-comparison-job
+                                                             :before-image before
+                                                             :after-image after)
+                  do
+                     (progn
+                       (log:info "Warming up compare image ~d of ~d" i (length changes))
+                       (prepare-image-comparison image-comparison-job :size :full-page
+                                                                      :warmup t)))))
+       (retry-warmup-thread ()
+         (warmup-comparison-images run previous-run))))))
 
 (defun all-comparisons-page (report)
+  (warmup-comparison-images report)
   <app-template>
     <a href= "javascript:window.history.back()">Back to Report</a>
     ,(paginated
@@ -411,7 +440,7 @@
       <div class="spinner-border" role="status">
         <!-- <span class="sr-only">Loading...</span> -->
       </div>
-      Loading (this might take a while for large images)
+      Loading (this could take upto 30s in some cases)
     </div>
     <:img data-src= src
           data-zoom-to=zoom-to
