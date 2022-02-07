@@ -39,7 +39,9 @@ function prepareReportJs () {
             if (src === undefined) {
                 throw 'No src available';
             }
-            $(img).attr("src", src);
+            if (!$.fx.off) {
+                $(img).attr("src", src);
+            }
         }
 
         $(this).mouseover(function () {
