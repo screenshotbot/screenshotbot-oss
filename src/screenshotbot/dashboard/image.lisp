@@ -65,7 +65,7 @@
                 (list "convert" input
                       "-limit" "memory" "3MB"
                       "-limit" "disk" "500MB"
-                      "-adaptive-resize"
+                      "-resize"
                       (format nil "~a>" size)
                       output-file))))))
        (unless warmup
