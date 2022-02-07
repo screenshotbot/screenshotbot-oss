@@ -278,18 +278,24 @@
 
 (defclass js-api-success (js-api-result)
   ((success :type boolean
-            :initform t)))
+            :initform t)
+   (was-promoted :type boolean
+                 :initarg :was-promoted
+                 :initform nil)))
 
 (defhandler (run-delete-page :uri "/runs/:id" :method :delete :html nil) (id)
+  (setf (hunchentoot:content-type*) "application/json")
   (let ((run (find-by-oid id 'recorder-run)))
     (can-view! run)
     (when run
       (cond
         ((or (activep run)
              (recorder-previous-run run))
-           (log:info "Can't delete: ~s this run seems to be a master run" run))
+         (log:info "Can't delete: ~s this run seems to be a master run" run)
+         (json:encode-json-to-string (make-instance 'js-api-success
+                                                     :was-promoted t)))
         (t
          (bknr.datastore:with-transaction ()
            (setf (company-runs (current-company))
-            (remove run (company-runs (current-company))))))))
-    (json:encode-json-to-string (make-instance 'js-api-success))))
+                 (remove run (company-runs (current-company)))))
+         (json:encode-json-to-string (make-instance 'js-api-success)))))))

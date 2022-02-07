@@ -112,8 +112,12 @@ function swAlert(x) {
 $("#delete-runs").click(function (e) {
     console.log("#delete-runs clicked");
     var runs = getSelectedRuns();
+    var hadPromotedRuns = false;
     function deleteNextRun() {
         if (runs.length == 0) {
+            if (hadPromotedRuns) {
+                swAlert("Some runs could not be deleted because they were previously promoted");
+            }
             location.reload();
             return;
         }
@@ -123,7 +127,12 @@ $("#delete-runs").click(function (e) {
         $.ajax({
             url: "/runs/" + id,
             method: "DELETE",
-            success: deleteNextRun,
+            success: function (data) {
+                if (data.wasPromoted) {
+                    hadPromotedRuns = true;
+                }
+                deleteNextRun();
+            },
             error: function () {
                 swAlert("Could not delete run, maybe refresh and retry?");
             }
