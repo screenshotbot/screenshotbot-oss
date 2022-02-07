@@ -247,8 +247,6 @@
            :accessor image-comparison-result))
   (:metaclass persistent-class))
 
-(mapc #'bknr.datastore:delete-object (bknr.datastore:store-objects-with-class 'image-comparison))
-
 
 (defun find-image-comparison (before after masks creator)
   "Finds an existing image comparison for before and after, if it
