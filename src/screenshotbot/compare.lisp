@@ -316,9 +316,11 @@
   (with-local-image (before before-screenshot)
     (with-local-image (after after-screenshot)
       (let ((cmd (list
-                  "compare" (namestring before)
+                  "compare"
                   "-limit" "memory" "3MB"
+                  "-limit" "map" "3MB"
                   "-limit" "disk" "500MB"
+                  (namestring before)
                   (namestring after)
                   (namestring p))))
         (multiple-value-bind (out err ret)
