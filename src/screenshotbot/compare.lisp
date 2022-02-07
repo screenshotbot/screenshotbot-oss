@@ -239,15 +239,23 @@
           :reader image-comparison-after)
    (masks :initarg :masks
           :reader image-comparison-masks)
+   (identical-p :initform nil
+                :accessor identical-p
+                :initarg :identical-p
+                :documentation "A result inducating that the images differ only in exif data")
    (result :initarg :result
            :accessor image-comparison-result))
   (:metaclass persistent-class))
+
+(mapc #'bknr.datastore:delete-object (bknr.datastore:store-objects-with-class 'image-comparison))
 
 
 (defun find-image-comparison (before after masks creator)
   "Finds an existing image comparison for before and after, if it
   doesn't exist calls creator with a temporary file. The creator
-  should create the image in the file provided."
+  should create the image in the file provided. The creator should
+  returns true if the images are completely identical, or nil
+  otherwise"
   (check-type before image)
   (check-type after image)
   (flet ((find ()
@@ -259,21 +267,22 @@
      (bt:with-lock-held (*lock*)
        (find))
      (uiop:with-temporary-file (:pathname p :type "png" :prefix "comparison")
-       (funcall creator p)
-       (let* ((image-blob (make-blob-from-file p 'image-blob :type :png))
-              (image (make-instance 'image
-                                     :blob image-blob
-                                     :hash nil
-                                     :verified-p nil ;; the hash is incorrect
-                                     :content-type "image/png")))
-         (bt:with-lock-held (*lock*)
-           (or
-            (find)
-            (make-instance 'image-comparison
-                            :before before
-                            :after after
-                            :masks masks
-                            :result image))))))))
+       (let ((identical-p (funcall creator p)))
+         (let* ((image-blob (make-blob-from-file p 'image-blob :type :png))
+                (image (make-instance 'image
+                                       :blob image-blob
+                                       :hash nil
+                                       :verified-p nil ;; the hash is incorrect
+                                       :content-type "image/png")))
+           (bt:with-lock-held (*lock*)
+             (or
+              (find)
+              (make-instance 'image-comparison
+                              :before before
+                              :after after
+                              :masks masks
+                              :identical-p identical-p
+                              :result image)))))))))
 
 (defmethod prepare-image-comparison-file ((self image-comparison-job))
   (bt:with-lock-held ((lock self))
@@ -321,11 +330,11 @@
                         :error-output 'string)
 
           (unless (member ret '(0 1))
-            (error "Got surprising error output from imagemagic compare: ~S~%args:~%~S~%stderr:~%~a~%stdout:~%~a" ret cmd err out))))
-      (setf (hunchentoot:header-out :content-type)
-            "image/png")
-      (draw-masks-in-place p (screenshot-masks after-screenshot) :color "rgba(255, 255, 0, 0.8)")
-      p)))
+            (error "Got surprising error output from imagemagic compare: ~S~%args:~%~S~%stderr:~%~a~%stdout:~%~a" ret cmd err out))
+          (setf (hunchentoot:header-out :content-type)
+                "image/png")
+          (draw-masks-in-place p (screenshot-masks after-screenshot) :color "rgba(255, 255, 0, 0.8)")
+          (= ret 0))))))
 
 
 (defun async-diff-report (&rest args &key &allow-other-keys)
