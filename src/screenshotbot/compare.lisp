@@ -412,10 +412,11 @@
                      (progn
                        (log:info "Warming up compare image ~d of ~d (~a)" i (length changes)
                                  (screenshot-name after))
-                       (prepare-image-comparison image-comparison-job :size :full-page
+                       (prepare-image-comparison image-comparison-job :size nil
                                                                       :warmup t)))))
        (retry-warmup-thread ()
-         (warmup-comparison-images run previous-run))))))
+         (warmup-comparison-images run previous-run))))
+   :name "warmup-comparison-images"))
 
 (defun all-comparisons-page (report)
   (warmup-comparison-images report)
