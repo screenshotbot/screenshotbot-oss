@@ -22,6 +22,7 @@
                 #:oid)
   (:import-from #:markup #:deftag)
   (:import-from #:screenshotbot/server
+                #:make-thread
                 #:defhandler)
   (:import-from #:screenshotbot/report-api
                 #:render-diff-report)
@@ -369,14 +370,14 @@
                                     (:state . "done")))
                                  (t
                                   `((:state . "processing"))))))))
-    (bt:make-thread (lambda ()
-                      (ignore-and-log-errors ()
-                        (handler-bind ((error (lambda (e)
-                                                (declare (ignore e))
-                                                (setf data :error))))
-                          (let ((auth:*current-session* session)
-                                (hunchentoot:*request* request))
-                            (setf data (apply 'render-diff-report args)))))))
+    (make-thread (lambda ()
+                   (ignore-and-log-errors ()
+                     (handler-bind ((error (lambda (e)
+                                             (declare (ignore e))
+                                             (setf data :error))))
+                       (let ((auth:*current-session* session)
+                             (hunchentoot:*request* request))
+                         (setf data (apply 'render-diff-report args)))))))
     <div class= "async-fetch spinner-border" role= "status" data-check-nibble=data-check-nibble />))
 
 
@@ -396,7 +397,7 @@
                   (screenshot-masks right)))))))
 
 (defun warmup-comparison-images (run previous-run)
-  (bt:make-thread
+  (make-thread
    (lambda ()
      (restart-case
          (let ((report (make-diff-report run previous-run)))
