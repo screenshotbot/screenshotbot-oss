@@ -81,6 +81,7 @@
                             scripts
                             (body-class "dashboard")
                             (user (current-user))
+                            codemirror
                             (company (current-company))
                             (script-name (hunchentoot:script-name hunchentoot:*request*))
                             jquery-ui
@@ -97,7 +98,13 @@
         <google-fonts />
 
   ,(when jquery-ui
-      <link rel= "stylesheet" href= "https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />)
+     <link rel= "stylesheet" href= "https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />)
+
+  ,@(when codemirror
+     (list
+      <:link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.css" />
+      <:link rel= "stylesheeet"
+            href= "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/theme/blackboard.min.css" /> ))
   <link href="/assets/css/default.css" rel="stylesheet" type="text/css" id="light-style" />
   <google-analytics />
 
@@ -127,10 +134,18 @@
 
       <!-- bundle -->
 
+
       <script src= "/assets/js/dashboard.js" />
+
+      ,@(when codemirror
+          (list
+           <:script src= "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.js" />
+           <:script src= "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/mode/yaml/yaml.min.js" />))
+
 
       ,(when stripe
          <script src="https://js.stripe.com/v3/"></script>)
+
 
   ,(when admin
      <script src= "/assets/js/admin.js" />)
@@ -143,12 +158,14 @@
                       transparent
                       admin
                       jquery-ui
+                      codemirror
                       scripts
                       (script-name (hunchentoot:script-name*))
                       (nav-bar-style :dark))
   (cond
     ((logged-in-p)
      <dashboard-template admin=admin jquery-ui=jquery-ui stripe=stripe scripts=scripts
+                         codemirror=codemirror
                          script-name=script-name >,@children </dashboard-template>)
     (t
      (Assert (not admin))

@@ -313,3 +313,15 @@ setupLiveOnAttach(".load-more-button", function () {
         });
     });
 });
+
+
+$(function () {
+    $(".codemirror-textarea").map(function () {
+        var codeMirror = CodeMirror.fromTextArea(
+            this, {
+                value: "foobar:",
+                mode: "text/x-yaml",
+                lineNumbers: true,
+            });
+    });
+});
