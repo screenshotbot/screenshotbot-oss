@@ -31,6 +31,8 @@
                 #:with-transaction)
   (:import-from #:screenshotbot/model/company
                 #:add-company-run)
+  (:import-from #:screenshotbot/dashboard/image
+                #:handle-resized-image)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -94,7 +96,9 @@
       (flet ((promotion ()
                (declare (optimize (debug 3) (speed 0)))
                (log:info "Being promotion logic")
-               (start-promotion-thread channel-obj recorder-run)))
+               (start-promotion-thread channel-obj recorder-run)
+               (time
+                (warmup-image-caches recorder-run))))
         (cond
           (*synchronous-promotion*
            (promotion))
@@ -102,6 +106,20 @@
            (make-thread #'promotion
                         :name (format nil "Promotion ~a" channel)))))
       resp)))
+
+(defun warmup-image-caches (run)
+  (log:info "Warming up small screenshots for ~s" run)
+  (loop for screenshot in (recorder-run-screenshots run)
+        do
+           (progn
+             (handle-resized-image (screenshot-image screenshot)
+                                   :small :warmup t)))
+  (log:info "Warming up full-page screenshots for ~s" run)
+  (loop for screenshot in (recorder-run-screenshots run)
+        do
+           (progn
+             (handle-resized-image (screenshot-image screenshot)
+                                   :full-page :warmup t))))
 
 (defun %recorder-run-post (&rest args
                            &key channel

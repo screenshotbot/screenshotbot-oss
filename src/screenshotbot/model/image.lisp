@@ -63,6 +63,9 @@
 
 (hex:declare-handler 'image-blob-get)
 
+(defvar *image-creation-hooks*
+  nil)
+
 (defclass image-blob (bknr.datastore:blob)
   ()
   (:metaclass persistent-class))

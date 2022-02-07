@@ -18,7 +18,9 @@
   (:import-from #:util/object-id
                 #:oid)
   (:import-from #:screenshotbot/magick
-                #:run-magick))
+                #:run-magick)
+  (:export
+   #:handle-resized-image))
 (in-package :screenshotbot/dashboard/image)
 
 (defvar *lock* (bt:make-lock "image-resize"))
@@ -39,7 +41,7 @@
     (ensure-directories-exist dir)
     dir))
 
-(defun handle-resized-image (image size)
+(defun handle-resized-image (image size &key warmup)
   (let* ((size (cond
                  ((string-equal "small" size) "300x300")
                  ((string-equal "half-page" size) "600x600")
@@ -52,7 +54,8 @@
             :name (format nil "~a-~a" (oid image) size))))
     (cond
       ((uiop:file-exists-p output-file)
-       (handle-static-file output-file))
+       (unless warmup
+        (handle-static-file output-file)))
       (t
        (bt:with-lock-held ((resize-lock image))
          (unless (uiop:file-exists-p output-file)
@@ -65,7 +68,8 @@
                       "-adaptive-resize"
                       (format nil "~a>" size)
                       output-file))))))
-       (handle-static-file output-file)))))
+       (unless warmup
+        (handle-static-file output-file))))))
 
 (defhandler (image-blob-get :uri "/image/blob/:oid/default.png") (oid size)
   (let* ((image (find-by-oid oid))
