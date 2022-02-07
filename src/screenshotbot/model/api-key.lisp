@@ -65,7 +65,7 @@
     :reader api-key-key)
    (api-key-secret
     :initform (generate-api-secret)
-    :reader api-key-secret)
+    :reader api-key-secret-key)
    (user
     :initarg :user
     :reader api-key-user)
