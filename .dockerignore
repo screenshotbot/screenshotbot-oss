@@ -22,3 +22,4 @@ screenshotbot-installer.sh
 analytics-log-file.log
 *.lx64fsl
 .git
+buck-out
