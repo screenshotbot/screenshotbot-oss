@@ -54,6 +54,10 @@
                 #:current-company)
   (:import-from #:screenshotbot/dashboard/image
                 #:handle-resized-image)
+  (:import-from #:bknr.datastore
+                #:store-object-id)
+  (:import-from #:bknr.datastore
+                #:store-object-id)
   (:export
    #:diff-report
    #:render-acceptable
@@ -295,15 +299,21 @@
        ;; datastore to see if there are any previous images
        (setf (output-image self)
              (image-comparison-result
-              (find-image-comparison
-               (screenshot-image (before-image self))
-               (screenshot-image (after-image self))
-               (screenshot-masks (after-image self))
-               (lambda (output-file)
-                 (do-image-comparison
-                     (before-image self)
-                   (after-image self)
-                   output-file)))))))))
+              (let ((before (screenshot-image (before-image self)))
+                    (after (screenshot-image (after-image self))))
+                ;; Avoid computation for large reverts
+                (when (> (store-object-id before)
+                         (store-object-id after))
+                  (rotatef before after))
+                (find-image-comparison
+                 before
+                 after
+                 (screenshot-masks (after-image self))
+                 (lambda (output-file)
+                   (do-image-comparison
+                       (before-image self)
+                     (after-image self)
+                     output-file))))))))))
 
 (defmethod prepare-image-comparison ((self image-comparison-job)
                                      &key
@@ -328,7 +338,7 @@
                   "compare"
                   "-limit" "memory" "3MB"
                   "-limit" "map" "3MB"
-                  "-limit" "disk" "500MB"
+                  "-limit" "disk" "1000MB"
                   (namestring before)
                   (namestring after)
                   (namestring p))))
@@ -400,7 +410,8 @@
                                                              :after-image after)
                   do
                      (progn
-                       (log:info "Warming up compare image ~d of ~d" i (length changes))
+                       (log:info "Warming up compare image ~d of ~d (~a)" i (length changes)
+                                 (screenshot-name after))
                        (prepare-image-comparison image-comparison-job :size :full-page
                                                                       :warmup t)))))
        (retry-warmup-thread ()
