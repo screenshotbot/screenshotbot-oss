@@ -323,5 +323,6 @@ $(function () {
                 mode: "text/x-yaml",
                 lineNumbers: true,
             });
+        codeMirror.setSize("100%", "100%");
     });
 });
