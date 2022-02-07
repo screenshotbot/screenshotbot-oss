@@ -185,44 +185,6 @@
       (uiop:rename-file-overwriting-target
        tmp image-file))))
 
-(defun %perceptual-hash (img masks)
-  (log:info "Computing perceptual hash: ~s, ~s" img masks)
-  (uiop:with-temporary-file (:pathname unused-output :type "tiff")
-    (with-local-image (file img)
-      (log:debug "Going to run convert")
-      (str:trim
-       ;; I can't use RUN-MAGICK for this because it creates a
-       ;; different perpetual hash (the tests will fail). I think we
-       ;; should modify this so that we don't need to use ImageMagick
-       ;; to generate a hash of the image contents. IIRC, using the
-       ;; perpetual hash is actually *incorrect* if we care about
-       ;; determinism.
-       (multiple-value-bind (out err ret)
-           (uiop:run-program `("convert"
-                               ,(namestring file)
-                               ,@(%draw-mask-rect-commands masks
-                                                           :color "black")
-                               "-format" "%#"
-                               "+write" "info:"
-                               ,(namestring unused-output))
-                             :output 'string
-                             :error-output 'string
-                             :ignore-error-status t)
-         (let ((out (str:trim out)))
-           (unless (or
-                    (eql ret 0)
-                    (eql 64 (length out)))
-             (error "`convert` failed. ~%stdout:~%~astderr:~%~A~%" out err))
-           out)
-)))))
-
-(let ((cache (make-hash-table :test 'equal)))
-  (defun perceptual-hash (img &key masks)
-    (let ((cache-key (cons img (mapcar 'rect-as-list masks))))
-     (or
-      (gethash cache-key cache)
-      (setf (gethash cache-key cache)
-            (%perceptual-hash img masks))))))
 
 (defun call-with-opticl-image (img body)
   ;; todo: can we clean up the image immediately? In theory, if we use
@@ -430,32 +392,17 @@
         (cleanup-image-stream stream2)))))
 
 
-(defun images-equal-by-content-p (img1 img2 &key (slow nil)
-                                              masks)
+(defun images-equal-by-content-p (img1 img2 &key masks)
   (log:info :image "checking images by content: ~s, ~s" img1 img2)
-  (cond
-    (slow
-     (cond
-       ((not (equalp (array-dimensions arr1) (array-dimensions arr2)))
-        (log:info :image "Array dimension don't match: ~s, ~s" arr1 arr2)
-        nil)
-       (t
-        (block check
-          (let ((resp t))
-            (map-unequal-pixels img1 img2
-                                (lambda (i j)
-                                  (declare (optimize (speed 3)
-                                                     (safety 0)))
-                                  (declare (ignore i j))
-                                  (Setf resp nil)))
-            resp)))))
-    (t
-     (let ((hash1 (perceptual-hash img1 :masks masks))
-           (hash2 (perceptual-hash img2 :masks masks)))
-       (log:info :image "hashes: ~s, ~s" hash1 hash2)
-       (when (equalp hash1 hash2)
-         (log:info :image "Images have same perceptual hash: ~s, ~s" img1 img2)
-         t)))))
+  (let ((resp t))
+    (map-unequal-pixels img1 img2
+                        (lambda (i j)
+                          (declare (optimize (speed 3)
+                                             (safety 0)))
+                          (declare (ignore i j))
+                          (Setf resp nil))
+                        :masks masks)
+    resp))
 
 (defun image= (img1 img2 masks)
   "Check if the two images have the same contents. Looks at both file

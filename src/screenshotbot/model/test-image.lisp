@@ -45,10 +45,6 @@
     (is-true (image= img img2 (list rect)))))
 
 
-(test perceptual-hash ()
-  (with-fixture state ()
-    (is (equal "e640bc8bf7994a4f9505fc4f910c18a81eb77e03a064f8d932d1e595e57ebea6" (%perceptual-hash img (list rect))))))
-
 (test image-public-url
   (is (equal "/image/blob/bar/default.png" (util:make-url 'image-blob-get :oid "bar"))))
 
