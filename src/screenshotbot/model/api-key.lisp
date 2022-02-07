@@ -24,7 +24,8 @@
    #:api-key-user
    #:all-api-keys
    #:api-key-company
-   #:delete-api-key))
+   #:delete-api-key
+   #:make-transient-key))
 (in-package :screenshotbot/model/api-key)
 
 (defclass api-key (store-object)
@@ -43,7 +44,7 @@
     :initarg :api-key
     :index-type unique-index
     :index-initargs (:test #'equal)
-    :index-reader %find-api-key
+    :index-reader %%find-api-key
     :index-values all-api-keys
     :initform nil)
    (api-secret-key
@@ -55,6 +56,38 @@
     :type boolean
     :initform nil))
   (:metaclass persistent-class))
+
+(defvar *transient-keys* (make-hash-table :test #'equal))
+
+(defclass transient-api-key ()
+  ((api-key
+    :initform (generate-api-key)
+    :reader api-key-key)
+   (api-key-secret
+    :initform (generate-api-secret)
+    :reader api-key-secret)
+   (user
+    :initarg :user
+    :reader api-key-user)
+   (company
+    :initarg :company
+    :reader api-key-company)
+   (created-at :initform (get-universal-time)))
+  (:documentation "A transient key generated for communication between
+  the replay service and this server."))
+
+(defun %find-api-key (str)
+  (or
+   (%%find-api-key str)
+   (gethash str *transient-keys*)))
+
+(defun make-transient-key (&key user company)
+  (let ((key (make-instance 'transient-api-key
+                             :user user
+                             :company company)))
+    (setf (gethash (api-key-key key) *transient-keys*)
+          key)
+    key))
 
 (defmethod initialize-instance :around ((obj api-key)
                                         &rest args
