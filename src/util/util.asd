@@ -90,6 +90,12 @@
                (:file "form-errors")
                (:file "debugger-hook")))
 
+(defsystem :util/form-state
+  :serial t
+  :depends-on (:closer-mop
+               :alexandria)
+  :components ((:file "form-state")))
+
 (defsystem :util/store
   :serial t
   :depends-on (:bknr.datastore
