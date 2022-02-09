@@ -18,7 +18,8 @@
    #:safe-mp-store
    #:with-test-store
    #:*object-store*
-   #:store-subsystems))
+   #:store-subsystems
+   #:validate-indices))
 (in-package :util/store)
 
 (defvar *object-store*)

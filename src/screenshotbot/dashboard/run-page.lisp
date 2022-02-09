@@ -35,6 +35,10 @@
                 #:store-object-id)
   (:import-from #:screenshotbot/dashboard/paginated
                 #:paginated)
+  (:import-from #:screenshotbot/model/report
+                #:reports-for-run)
+  (:import-from #:screenshotbot/report-api
+                #:report-title)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -210,6 +214,8 @@
             </:time>
           </h4>
           <a class= "btn btn-danger btn-sm">Delete</a>
+
+
           <filter-selector default-title= "All Languages"
                            prefix= "Language"
                            row-filter=lang-filter
@@ -225,6 +231,14 @@
 
       <run-advanced-menu run=run />
         </div>
+
+          ,(when-let (reports (reports-for-run run))
+             <div class= "alert alert-info mt-2" >
+               This run created a report with
+               ,@ (loop for report in reports collect
+                          <a href= (format nil "/report/~a" (oid report)) >,(report-title report)</a>)
+             </div>)
+
         <div class= "baguetteBox">
 
           ,(paginated

@@ -20,6 +20,8 @@
                 #:persistent-class
                 #:store-object
                 #:with-transaction)
+  (:import-from #:bknr.indices
+                #:hash-index)
   (:export
    #:report
    #:report-run
@@ -30,13 +32,16 @@
    #:report-channel
    #:report-acceptable
    #:github-task
-   #:report-num-changes))
+   #:report-num-changes
+   #:reports-for-run))
 (in-package :screenshotbot/model/report)
 
 (defclass report (object-with-oid)
   ((run
     :initarg :run
-    :accessor report-run)
+    :accessor report-run
+    :index-type hash-index
+    :index-reader reports-for-run)
    (title
     :type string
     :initarg :title
