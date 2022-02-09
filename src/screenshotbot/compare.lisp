@@ -524,10 +524,14 @@
                </page-nav-dropdown>))
 
          </div>
-         <p class= "mt-2" >
-           This commit: <commit repo= (Channel-repo (recorder-run-channel run)) hash=(recorder-run-commit run) /> <br />
-           Previous commit: <commit repo= (channel-repo (recorder-run-channel run)) hash=(recorder-run-commit to) />
-         </p>
+         ,(when-let ((repo (channel-repo (recorder-run-channel run)))
+                     (this-hash (recorder-run-commit run))
+                     (prev-hash (recorder-run-commit to)))
+            <p class= "mt-2" >
+             This commit: <commit repo= repo hash=this-hash /> <br />
+             Previous commit: <commit repo= repo hash=prev-hash />
+           </p>)
+
 
 
        <div class= "card mt-3">
