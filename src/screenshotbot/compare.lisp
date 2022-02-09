@@ -609,7 +609,7 @@
 
            <div class= "card">
              <div class= "card-body">
-               <h1>Deleted</h1>
+               <h1>,(length deleted) deleted</h1>
                <p>
                  ,(paginated (loop for c in deleted
                                    if (filteredp c)
@@ -624,7 +624,7 @@
        <div class= "col-md-6">
          <div class= "card">
            <div class= "card-body">
-             <h1>Added</h1>
+             <h1>,(length added) added</h1>
              ,(paginated
                (loop for c in added
                      if (filteredp c)
