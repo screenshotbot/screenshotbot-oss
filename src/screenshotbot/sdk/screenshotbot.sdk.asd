@@ -32,7 +32,8 @@
                (:file "git")
                (:file "help")
                (:file "sdk")
-               (:file "static")))
+               (:file "static")
+               (:file "main")))
 
 
 (defsystem :screenshotbot.sdk/tests

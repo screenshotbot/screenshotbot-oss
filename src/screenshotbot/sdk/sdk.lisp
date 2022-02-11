@@ -42,12 +42,14 @@
   (:import-from #:uiop
                 #:getenv)
   (:export
-   #:main
    #:single-directory-run
    #:*request*
    #:*put*
    #:request
-   #:put-file))
+   #:put-file
+   #:parse-org-defaults
+   #:run-ios-multi-dir-toplevel
+   #:run-prepare-directory-toplevel))
 
 (in-package :screenshotbot/sdk/sdk)
 
@@ -358,9 +360,6 @@
       (log:debug "Relative path is: ~S" res)
       res)))
 
-(defun absolute-pathname (p)
-  (fad:canonical-pathname (path:catdir (uiop:getcwd) p)))
-
 (defun upload-ios-subdirectory (directory)
   (log:info "Uploading run from ~a" directory)
   (let*((relative-dir (get-relative-path directory *directory*))
@@ -406,47 +405,16 @@
   (setf *default-pathname-defaults* (pathname path)))
 
 
+(defun absolute-pathname (p)
+  (fad:canonical-pathname (path:catdir (uiop:getcwd) p)))
 
-(defun %main (&optional (argv #+lispworks system:*line-arguments-list*
-                              #-lispworks nil))
-  (log4cl:reset-logging-configuration)
-  (log:config :info)
-  (log:info "Screenshotbot SDK v2.3.4")
-  (let ((unrecognized   (parse-command-line (cdr (command-line)))))
-    (when *verbose*
-      (log:config :debug))
-    (log:debug "Run this in interactive shell: ~S"
-               `(progn
-                  (chdir-for-bin ,(uiop:getcwd))
-                  (main ',argv)))
-    (cond
-      (unrecognized
-       (format t "Unrecognized arguments: ~a~%" (Str:join " " unrecognized))
-       (help)
-       (uiop:quit 1))
-      (*help*
-       (help))
-      (*ios-multi-dir*
-       (parse-org-defaults)
-       (let ((*directory* (namestring (absolute-pathname *directory*))))
-         (loop for directory in (recursive-directories *directory*)
-               do
-                  (upload-ios-subdirectory directory))))
-      (t
-       (parse-org-defaults)
-       (prepare-directory
-        (lambda (directory)
-          (single-directory-run directory :channel *channel*)))))))
+(defun run-ios-multi-dir-toplevel ()
+  (let ((*directory* (namestring (absolute-pathname *directory*))))
+    (loop for directory in (recursive-directories *directory*)
+          do
+             (upload-ios-subdirectory directory))))
 
-(defun main (&rest args)
-  (handler-bind ((warning (lambda (warning)
-                            (let ((msg (princ-to-string warning)))
-                              ;; This warning is not very actionable
-                              ;; for end-users, so let's muffle it
-                              #+lispworks
-                              (when (str:containsp "output-wait is not implemented" msg)
-                                (muffle-warning warning))))))
-    (apply '%main args))
-  #-sbcl
-  (log4cl::exit-hook)
-  (uiop:quit 0))
+(defun run-prepare-directory-toplevel ()
+  (prepare-directory
+   (lambda (directory)
+     (single-directory-run directory :channel *channel*))))

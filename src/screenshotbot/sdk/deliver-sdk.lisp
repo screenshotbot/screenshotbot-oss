@@ -11,7 +11,7 @@
 (defun deliver-main ()
  (let ((output-file (cadddr system:*line-arguments-list*)))
    (delete-file output-file)
-   (deliver 'screenshotbot-sdk:main output-file 5
+   (deliver 'screenshotbot/sdk/main:main output-file 5
             :keep-function-name t
             :keep-pretty-printer t
             :keep-lisp-reader t
