@@ -76,9 +76,12 @@ upload blobs that haven't been uploaded before."
 (defun upload-snapshot-assets (snapshot)
   "Upload all the assets in the snapshot"
   (upload-multiple-files
-   (loop for (nil . asset) in (replay:snapshot-urls snapshot)
-         collect
-           (replay:snapshot-asset-file snapshot asset))))
+   (append
+    (loop for (nil . asset) in (replay:snapshot-urls snapshot)
+          collect
+          (replay:snapshot-asset-file snapshot asset))
+    (loop for (nil . root-asset) in (replay:root-assets snapshot)
+         collect (replay:snapshot-asset-file snapshot root-asset)))))
 
 (defun record-static-website (location)
   (restart-case
