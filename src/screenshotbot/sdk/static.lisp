@@ -13,6 +13,7 @@
   (ironclad:byte-array-to-hex-string (md5:md5sum-file file)))
 
 (defun upload-blob (file)
+  "Upload the blob, without checking if it has been previously uploaded"
   (log:info "Uploading file: ~a" file)
   (with-open-file (stream file :direction  :input
                                :element-type '(unsigned-byte 8))
@@ -28,6 +29,7 @@
 
 
 (defun blob-check (files)
+  "Check if the given list of files have already been uploaded in the paste"
   (let ((input (loop for file in files
                      collect `((:file . ,(namestring file))
                                (:hash . ,(md5-file file))
@@ -37,6 +39,8 @@
                  :parameters `(("query" . ,(json:encode-json-to-string input))))))
 
 (defun upload-multiple-files (files)
+  "Upload multiple blobs efficiently, checking to make sure we only
+upload blobs that haven't been uploaded before."
   (restart-case
       (let ((results (blob-check files)))
         (loop for result in results
@@ -70,6 +74,7 @@
   (record-static-website "~/builds/gatsby-example/public/"))
 
 (defun upload-snapshot-assets (snapshot)
+  "Upload all the assets in the snapshot"
   (upload-multiple-files
    (loop for (nil . asset) in (replay:snapshot-urls snapshot)
          collect
