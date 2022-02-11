@@ -180,6 +180,7 @@
                :util/fiveam
                :fiveam-matchers
                :screenshotbot/utils
+               :screenshotbot/replay
                :tmpdir
                :screenshotbot)
   :components ((:file "testing")
@@ -211,6 +212,8 @@
                              (:file "test-access-checks")
                              (:file "test-pull-request-promoter")
                              (:file "test-webhook")))
+               (:module "replay"
+                :components ((:file "test-core")))
                #+ (or ccl lispworks)
                (:module "slack"
                 :components ((:file "test-settings")))
@@ -246,3 +249,12 @@
                :cl-fad
                :alexandria)
   :components ((:file "utils")))
+
+(asdf:defsystem :screenshotbot/replay
+  :serial t
+  :depends-on (:plump
+               :lquery
+               :alexandria)
+  :components ((:module "replay"
+                :serial t
+                :components ((:file "core")))))

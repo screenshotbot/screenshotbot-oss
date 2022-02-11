@@ -22,8 +22,7 @@
                :imago
                :imago/pngload
                :md5
-               #-screenshotbot-oss
-               :screenshotbot.pro/replay-processor
+               :screenshotbot/replay
                :dag
                :anaphora
                :str)
