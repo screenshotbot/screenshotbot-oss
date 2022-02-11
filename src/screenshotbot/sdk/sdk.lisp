@@ -45,7 +45,9 @@
    #:main
    #:single-directory-run
    #:*request*
-   #:*put*))
+   #:*put*
+   #:request
+   #:put-file))
 
 (in-package :screenshotbot/sdk/sdk)
 
@@ -101,28 +103,28 @@
       (assoc-value result :response))))
 
 
-(defun put-file (upload-url stream)
+(defun put-file (upload-url stream &key parameters)
   (restart-case
-      (multiple-value-bind (result code)
-          (uiop:with-temporary-file (:stream tmp-stream :pathname tmpfile :direction :io
-                                     :element-type 'flexi-streams:octet)
-            (uiop:copy-stream-to-stream stream tmp-stream
-                                        :element-type 'flexi-streams:octet)
-            (finish-output tmp-stream)
-            (file-position tmp-stream 0)
-            (log:debug "Got file length: ~a" (file-length tmp-stream))
-            (funcall *put* upload-url
-                     :headers `((:content-type . "application/octet-stream")
-                                ;; There a bug in dexador that prevents the
-                                ;; file-length logic to work correctly in
-                                ;; delivered LW images
-                                (:content-length . ,(file-length tmp-stream)))
-                     :content tmpfile))
+    (multiple-value-bind (result code)
+        (uiop:with-temporary-file (:stream tmp-stream :pathname tmpfile :direction :io
+                                   :element-type 'flexi-streams:octet)
+          (uiop:copy-stream-to-stream stream tmp-stream
+                                      :element-type 'flexi-streams:octet)
+          (finish-output tmp-stream)
+          (file-position tmp-stream 0)
+          (log:debug "Got file length: ~a" (file-length tmp-stream))
+          (funcall *put* upload-url
+                   :headers `((:content-type . "application/octet-stream")
+                              ;; There a bug in dexador that prevents the
+                              ;; file-length logic to work correctly in
+                              ;; delivered LW images
+                              (:content-length . ,(file-length tmp-stream)))
+                   :content tmpfile))
 
-     (log:debug "Got image upload response: ~s" result)
-     (unless (eql 200 code)
-       (error "Failed to upload image: code ~a" code))
-     result)
+      (log:debug "Got image upload response: ~s" result)
+      (unless (eql 200 code)
+        (error "Failed to upload image: code ~a" code))
+      result)
     (re-attempt-put-file ()
       (file-position stream 0)
       (put-file upload-url stream))))

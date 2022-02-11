@@ -31,7 +31,8 @@
                (:file "android")
                (:file "git")
                (:file "help")
-               (:file "sdk")))
+               (:file "sdk")
+               (:file "static")))
 
 
 (defsystem :screenshotbot.sdk/tests
