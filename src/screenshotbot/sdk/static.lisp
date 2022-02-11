@@ -81,7 +81,15 @@ upload blobs that haven't been uploaded before."
           collect
           (replay:snapshot-asset-file snapshot asset))
     (loop for (nil . root-asset) in (replay:root-assets snapshot)
-         collect (replay:snapshot-asset-file snapshot root-asset)))))
+          collect (replay:snapshot-asset-file snapshot root-asset)))))
+
+(defun schedule-snapshot (snapshot)
+  "Schedule a Replay build with the given snapshot"
+  (setf (replay:tmpdir snapshot) nil) ;; hack for json encoding
+  (let ((json (json:encode-json-to-string snapshot)))
+    (sdk:request "/api/replay/schedule"
+                 :method :post
+                 :parameters `(("snapshot" . ,json)))))
 
 (defun record-static-website (location)
   (restart-case
@@ -98,6 +106,7 @@ upload blobs that haven't been uploaded before."
                  (replay:load-url-into snapshot (format nil "http://localhost:~a/index.html" port) tmpdir)
 
                  (upload-snapshot-assets snapshot)
+                 (schedule-snapshot snapshot)
                  (error "unimplemented beyond this point"))
             (hunchentoot:stop acceptor))))
     (retry-record-static-website ()

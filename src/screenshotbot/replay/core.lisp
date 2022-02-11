@@ -52,7 +52,7 @@
   ((urls :initform nil
          :accessor snapshot-urls)
    (tmpdir :initarg :tmpdir
-           :reader tmpdir)
+           :accessor tmpdir)
    (root-asset :accessor root-asset)
    (root-assets :accessor root-assets
                 :initform nil)))
