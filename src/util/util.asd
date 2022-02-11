@@ -60,10 +60,10 @@
                "stripe"
                "log4cl"
                "util/store"
+               "util/random-port"
                "cl-cron")
   :serial t
-  :components ((:file "random-port")
-               (:file "ret-let")
+  :components ((:file "ret-let")
                (:file "copying")
                (:file "make-instance-with-accessors")
                (:file "emacs")
@@ -89,6 +89,11 @@
                (:file "mquery")
                (:file "form-errors")
                (:file "debugger-hook")))
+
+(defsystem :util/random-port
+  :serial t
+  :depends-on (:usocket)
+  :components ((:file "random-port")))
 
 (defsystem :util/form-state
   :serial t

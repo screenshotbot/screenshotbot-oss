@@ -15,6 +15,7 @@
                :hunchentoot
                :cl-json
                :log4cl
+               :util/random-port
                :cl-fad
                :cxml
                :zip
