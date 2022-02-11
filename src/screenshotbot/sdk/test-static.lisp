@@ -1,3 +1,9 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 (defpackage :screenshotbot/sdk/test-static
   (:use #:cl
         #:fiveam)
@@ -22,12 +28,13 @@
          (acceptor (make-instance 'hunchentoot:easy-acceptor
                                   :name 'test-acceptor
                                   :port port)))
-    (unwind-protect
-         (progn
-           (hunchentoot:start acceptor)
-           (&body))
-      (hunchentoot:stop acceptor)
-      (cleanup))))
+    (let ((flags:*hostname* (format nil "http://localhost:~a" port)))
+     (unwind-protect
+          (progn
+            (hunchentoot:start acceptor)
+            (&body))
+       (hunchentoot:stop acceptor)
+       (cleanup)))))
 
 (hunchentoot:define-easy-handler (fake-blob-upload :uri "/api/blob/upload"
                                                    :acceptor-names '(test-acceptor))
@@ -37,10 +44,20 @@
 
 (test blob-upload
   (with-fixture state ()
-   (uiop:with-temporary-file (:pathname p :stream out)
-     (write "zoidberg" :stream out)
-     (finish-output out)
-     (let ((flags:*hostname* (format nil "http://localhost:~a" port)))
-       (let ((md5 (md5:md5sum-file p)))
-         (upload-blob p)
-         (is (equalp *hex* md5)))))))
+    (uiop:with-temporary-file (:pathname p :stream out)
+      (write "zoidberg" :stream out)
+      (finish-output out)
+      (let ((md5 (md5:md5sum-file p)))
+        (upload-blob p)
+        (is (equalp *hex* md5))))))
+
+(test binary-blob
+  (with-fixture state ()
+    (uiop:with-temporary-file (:pathname p :stream out
+                               :element-type '(unsigned-byte 8))
+      (loop for i from 0 to 255 do
+        (write-byte i out))
+      (finish-output out)
+      (let ((md5 (md5:md5sum-file p)))
+        (upload-blob p)
+        (is  (equalp *hex* md5))))))
