@@ -254,6 +254,7 @@
   :serial t
   :depends-on (:plump
                :lquery
+               :uuid
                :alexandria)
   :components ((:module "replay"
                 :serial t

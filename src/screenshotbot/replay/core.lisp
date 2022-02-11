@@ -21,7 +21,8 @@
    #:root-assets
    #:snapshot
    #:load-url-into
-   #:snapshot-asset-file))
+   #:snapshot-asset-file
+   #:uuid))
 (in-package :screenshotbot/replay/core)
 
 (defclass marshablable ()
@@ -51,6 +52,8 @@
 (defclass snapshot (marshablable)
   ((urls :initform nil
          :accessor snapshot-urls)
+   (uuid :initform (format nil "~a" (uuid:make-v4-uuid))
+         :reader uuid)
    (tmpdir :initarg :tmpdir
            :accessor tmpdir)
    (root-asset :accessor root-asset)
@@ -71,7 +74,8 @@
         if (string-equal "Cache-control" k)
           do (Setf (gethash k headers) "no-cache")))
 
-(defun call-with-fetch-asset (fn type tmpdir &key url)
+(defun call-with-fetch-asset (fn type tmpdir &key url
+                                               (snapshot (error "must provide snapshot")))
   (multiple-value-bind (remote-stream status response-headers)
       (funcall fn)
     ;; dex:get should handle redirects, but just in case:
@@ -89,6 +93,7 @@
       (write-asset p type
                    :tmpdir tmpdir
                    :url url
+                   :snapshot snapshot
                    :response-headers response-headers
                    :status status))))
 
@@ -97,6 +102,7 @@
 
 (defun write-asset (p type &key tmpdir
                              url
+                             (snapshot (error "must provide snapshot"))
                              response-headers
                              stylesheetp
                              status)
@@ -109,7 +115,8 @@
     (make-instance
      'asset
      :file (format nil
-                   "/assets/~a"
+                   "/snapshot/~a/assets/~a"
+                   (uuid snapshot)
                    (make-pathname :name hash :type type
                                   :directory `(:relative)))
      :url (cond
@@ -202,7 +209,7 @@
             (write-to-file (a:hash-table-alist %headers) headers))
           (read-cached)))))))
 
-(defmethod fetch-asset (url tmpdir)
+(defmethod fetch-asset (url tmpdir (snapshot snapshot))
   "Fetches the url into a file <hash>.<file-type> in the tmpdir."
   (let ((pathname (ignore-errors (quri:uri-file-pathname url))))
    (restart-case
@@ -215,9 +222,10 @@
           (t
            nil))
         tmpdir
-        :url url)
+        :url url
+        :snapshot snapshot)
      (retry-fetch-asset ()
-       (fetch-asset url tmpdir)))))
+       (fetch-asset url tmpdir snapshot)))))
 
 (defun regexs ()
   ;; taken from https://github.com/callumlocke/css-url-rewriter/blob/master/lib/css-url-rewriter.js
@@ -260,6 +268,7 @@
                     :tmpdir (tmpdir snapshot)
                     :url url
                     :status status
+                    :snapshot snapshot
                     :stylesheetp t
                     :response-headers response-headers)))))
 
@@ -274,7 +283,7 @@
                        (stylesheetp
                         (fetch-css-asset snapshot url (tmpdir snapshot)))
                        (t
-                        (fetch-asset url (tmpdir snapshot))))))
+                        (fetch-asset url (tmpdir snapshot) snapshot)))))
         (setf cache new-val))))))
 
 (defun read-srcset (srcset)
@@ -419,7 +428,8 @@
                              (values tmp 200 headers)))
                          "html"
                          tmpdir
-                         :url url)))
+                         :url url
+                         :snapshot snapshot)))
         (push (cons url root-asset)
               (root-assets snapshot))
         (setf (a:assoc-value (snapshot-urls snapshot) url)
