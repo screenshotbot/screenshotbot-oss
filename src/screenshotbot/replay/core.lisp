@@ -18,7 +18,9 @@
    #:asset-response-headers
    #:asset-status
    #:load-url
-   #:root-assets))
+   #:root-assets
+   #:snapshot
+   #:load-url-into))
 (in-package :screenshotbot/replay/core)
 
 (defclass marshablable ()
@@ -120,21 +122,32 @@
      :stylesheetp stylesheetp
      :status status)))
 
-(defun http-get-without-cache (url &key (force-binary t))
-  (multiple-value-bind (remote-stream status response-headers)
-        (handler-case
-      (progn
-        (log:info "Fetching: ~a" url)
-        (format *replay-logs* "Fetching: ~a~%" url)
-        (finish-output *replay-logs*)
-        (dex:get url :want-stream t :force-binary force-binary))
-    (dex:http-request-failed (e)
-      (values
-       (make-string-input-stream "")
-       (dex:response-status e)
-       (dex:response-headers e))))
-    (setf (gethash "X-Original-Url" response-headers) (quri:render-uri url))
-    (values remote-stream status response-headers)))
+(defun http-get-without-cache (url &key (force-binary t)
+                                     (force-string nil))
+  (let* ((url (quri:uri url))
+         (scheme (quri:uri-scheme url)))
+    (cond
+      ((equal "file" scheme)
+       (error "file:// urls are not supported"))
+      ((or (equal "https" scheme)
+           (equal "http" scheme))
+       (multiple-value-bind (remote-stream status response-headers)
+           (handler-case
+               (progn
+                 (log:info "Fetching: ~a" url)
+                 (format *replay-logs* "Fetching: ~a~%" url)
+                 (finish-output *replay-logs*)
+                 (dex:get url :want-stream t :force-binary force-binary
+                          :force-string force-string))
+             (dex:http-request-failed (e)
+               (values
+                (make-string-input-stream "")
+                (dex:response-status e)
+                (dex:response-headers e))))
+         (setf (gethash "X-Original-Url" response-headers) (quri:render-uri url))
+         (values remote-stream status response-headers)))
+      (t
+       (error "unsupported scheme: ~a" scheme)))))
 
 (let ((cache-dir))
  (defun http-cache-dir ()
@@ -218,6 +231,7 @@
        url-scanner
        css
        (lambda (match start end match-start match-end reg-starts reg-ends)
+         (declare (ignore start end match-start match-end))
          (let ((url (subseq match (elt reg-starts 0)
                             (elt reg-ends 0))))
            (cond
@@ -384,7 +398,8 @@
     (setf (plump:attribute link "rel") "stylesheet")))
 
 (defun load-url-into (snapshot url tmpdir)
-  (let* ((content (dex:get url))
+  (let* ((content (http-get-without-cache url :force-string t
+                                          :force-binary nil))
          (html (plump:parse content)))
     (process-node html snapshot url)
     (add-css html)
@@ -414,8 +429,6 @@
 
 (defun load-url (url tmpdir)
   (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
-    (error "old, unimplemented because it started breaking")
-    #+nil
-    (load-url-info snapshot url)))
+    (load-url-into snapshot url tmpdir)))
 
 ;; (render "https://www.rollins.edu/college-of-liberal-arts")

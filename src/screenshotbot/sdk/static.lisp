@@ -2,7 +2,10 @@
   (:use #:cl)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
-                    (#:flags #:screenshotbot/sdk/flags)))
+                    (#:flags #:screenshotbot/sdk/flags)
+                    (#:replay #:screenshotbot/replay/core))
+  (:export
+   #:record-static-website))
 (in-package :screenshotbot/sdk/static)
 
 
@@ -59,3 +62,27 @@
    (list
     "~/builds/web/update-ip.lisp"
     "~/builds/web/Makefile")))
+
+#+nil
+(let ((flags:*hostname* "https://staging.screenshotbot.io")
+      (flags:*api-key* *key*)
+      (flags:*api-secret* *secret*))
+  (record-static-website "~/builds/gatsby-example/public/"))
+
+(defun record-static-website (location)
+  (restart-case
+      (tmpdir:with-tmpdir (tmpdir)
+        (let* ((port (util/random-port:random-port))
+               (acceptor (make-instance 'hunchentoot:acceptor
+                                        :port port
+                                        :document-root location))
+               (snapshot (make-instance 'replay:snapshot
+                                        :tmpdir tmpdir)))
+          (unwind-protect
+               (progn
+                 (hunchentoot:start acceptor)
+                 (replay:load-url-into snapshot (format nil "http://localhost:~a/index.html" port) tmpdir)
+                 (error "unimplemented ~a" snapshot))
+            (hunchentoot:stop acceptor))))
+    (retry-record-static-website ()
+      (record-static-website location))))

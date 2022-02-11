@@ -49,7 +49,8 @@
    #:put-file
    #:parse-org-defaults
    #:run-ios-multi-dir-toplevel
-   #:run-prepare-directory-toplevel))
+   #:run-prepare-directory-toplevel
+   #:absolute-pathname))
 
 (in-package :screenshotbot/sdk/sdk)
 

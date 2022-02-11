@@ -30,7 +30,8 @@
    #:*device-regex*
    #:*ios-multi-dir*
    #:*ios-diff-dir*
-   #:*metadata*))
+   #:*metadata*
+   #:*static-website*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -165,8 +166,8 @@
   :type (or null string)
   :help "A metadata.xml file (Android only)")
 
-(define-flag *record-static-website*
-  :selector "record-static-website"
+(define-flag *static-website*
+  :selector "static-website"
   :default-value nil
   :type (or null string)
   :help "Use to generate screenshots of a static website")

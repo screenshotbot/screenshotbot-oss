@@ -11,7 +11,8 @@
                 #:help)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
-                    (#:sdk #:screenshotbot/sdk/sdk))
+                    (#:sdk #:screenshotbot/sdk/sdk)
+                    (#:static #:screenshotbot/sdk/static))
   (:export
    #:main))
 (in-package :screenshotbot/sdk/main)
@@ -38,6 +39,8 @@
       (flags:*ios-multi-dir*
        (sdk:parse-org-defaults)
        (sdk:run-ios-multi-dir-toplevel))
+      (flags:*static-website*
+       (static:record-static-website flags:*static-website*))
       (t
        (sdk:parse-org-defaults)
        (sdk:run-prepare-directory-toplevel)))))

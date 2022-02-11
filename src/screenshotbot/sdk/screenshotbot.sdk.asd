@@ -12,6 +12,7 @@
                :com.google.flag
                :pkg
                :ironclad/core
+               :hunchentoot
                :cl-json
                :log4cl
                :cl-fad
