@@ -20,7 +20,8 @@
    #:load-url
    #:root-assets
    #:snapshot
-   #:load-url-into))
+   #:load-url-into
+   #:snapshot-asset-file))
 (in-package :screenshotbot/replay/core)
 
 (defclass marshablable ()
@@ -425,7 +426,16 @@
               root-asset)
         (setf (root-asset snapshot)
               root-asset)))
-     snapshot))
+    snapshot))
+
+(defmethod snapshot-asset-file ((snapshot snapshot)
+                                (asset asset))
+  (let* ((script-name (asset-file asset))
+         (input-file (make-pathname
+                      :name (pathname-name script-name)
+                      :type (pathname-type script-name)
+                      :defaults (tmpdir snapshot))))
+    input-file))
 
 (defun load-url (url tmpdir)
   (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))

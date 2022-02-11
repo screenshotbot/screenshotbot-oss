@@ -69,6 +69,12 @@
       (flags:*api-secret* *secret*))
   (record-static-website "~/builds/gatsby-example/public/"))
 
+(defun upload-snapshot-assets (snapshot)
+  (upload-multiple-files
+   (loop for (nil . asset) in (replay:snapshot-urls snapshot)
+         collect
+           (replay:snapshot-asset-file snapshot asset))))
+
 (defun record-static-website (location)
   (restart-case
       (tmpdir:with-tmpdir (tmpdir)
@@ -82,7 +88,9 @@
                (progn
                  (hunchentoot:start acceptor)
                  (replay:load-url-into snapshot (format nil "http://localhost:~a/index.html" port) tmpdir)
-                 (error "unimplemented ~a" snapshot))
+
+                 (upload-snapshot-assets snapshot)
+                 (error "unimplemented beyond this point"))
             (hunchentoot:stop acceptor))))
     (retry-record-static-website ()
       (record-static-website location))))
