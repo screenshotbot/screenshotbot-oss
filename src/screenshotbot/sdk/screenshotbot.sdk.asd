@@ -11,7 +11,7 @@
   :depends-on (:dexador
                :com.google.flag
                :pkg
-               :ironclad
+               :ironclad/core
                :cl-json
                :log4cl
                :cl-fad
