@@ -42,4 +42,5 @@
                :screenshotbot
                :util/fiveam)
   :components ((:file "test-bundle")
-               (:file "test-sdk")))
+               (:file "test-sdk")
+               (:file "test-static")))
