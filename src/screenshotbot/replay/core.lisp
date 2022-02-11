@@ -140,18 +140,28 @@
       ((or (equal "https" scheme)
            (equal "http" scheme))
        (multiple-value-bind (remote-stream status response-headers)
-           (handler-case
-               (progn
-                 (log:info "Fetching: ~a" url)
-                 (format *replay-logs* "Fetching: ~a~%" url)
-                 (finish-output *replay-logs*)
-                 (dex:get url :want-stream t :force-binary force-binary
+           (handler-bind ((dex:http-request-failed
+                            (lambda (e)
+                              (return-from
+                               http-get-without-cache
+                                (values
+                                 (cond
+                                   (force-string
+                                    (let ((body (uiop:slurp-input-stream :string
+                                                                     (dex:response-body e))))
+                                      (make-string-input-stream
+                                       body)))
+                                   (t
+                                    (flexi-streams:make-flexi-stream
+                                     (make-string-input-stream
+                                      "<html><body>404 Not found</body></html>"))))
+                                 (dex:response-status e)
+                                 (dex:response-headers e))))))
+             (log:info "Fetching: ~a" url)
+             (format *replay-logs* "Fetching: ~a~%" url)
+             (finish-output *replay-logs*)
+             (dex:get url :want-stream t :force-binary force-binary
                           :force-string force-string))
-             (dex:http-request-failed (e)
-               (values
-                (make-string-input-stream "")
-                (dex:response-status e)
-                (dex:response-headers e))))
          (setf (gethash "X-Original-Url" response-headers) (quri:render-uri url))
          (values remote-stream status response-headers)))
       (t
@@ -401,42 +411,45 @@
 
 (defun add-css (html)
   "Add the replay css overrides to the html"
-  (let* ((head (elt (lquery:$ html "head") 0))
-         (link (plump:make-element
-                head "link")))
-    (setf (plump:attribute link "href") "/css/replay.css")
-    (setf (plump:attribute link "rel") "stylesheet")))
+  (a:when-let (head (ignore-errors (elt (lquery:$ html "head") 0)))
+    (let ((link (plump:make-element
+                        head "link")))
+      (setf (plump:attribute link "href") "/css/replay.css")
+      (setf (plump:attribute link "rel") "stylesheet"))))
 
 (defun load-url-into (snapshot url tmpdir)
-  (let* ((content (http-get-without-cache url :force-string t
-                                          :force-binary nil))
-         (html (plump:parse content)))
-    (process-node html snapshot url)
-    (add-css html)
+  (restart-case
+      (let* ((content (http-get-without-cache url :force-string t
+                                                  :force-binary nil))
+             (html (plump:parse content)))
+        (process-node html snapshot url)
+        (add-css html)
 
-    #+nil(error "got html: ~a"
-                (with-output-to-string (s)
-                  (plump:serialize html s)))
-    (uiop:with-temporary-file (:direction :io :stream tmp :element-type '(unsigned-byte 8))
-      (let ((root-asset (call-with-fetch-asset
-                         (lambda ()
-                           (plump:serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
-                           (file-position tmp 0)
-                           (let ((headers (make-hash-table)))
-                             (setf (gethash "content-type" headers)
-                                   "text/html; charset=UTF-8")
-                             (values tmp 200 headers)))
-                         "html"
-                         tmpdir
-                         :url url
-                         :snapshot snapshot)))
-        (push (cons url root-asset)
-              (root-assets snapshot))
-        (setf (a:assoc-value (snapshot-urls snapshot) url)
-              root-asset)
-        (setf (root-asset snapshot)
-              root-asset)))
-    snapshot))
+        #+nil(error "got html: ~a"
+                    (with-output-to-string (s)
+                      (plump:serialize html s)))
+        (uiop:with-temporary-file (:direction :io :stream tmp :element-type '(unsigned-byte 8))
+          (let ((root-asset (call-with-fetch-asset
+                             (lambda ()
+                               (plump:serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
+                               (file-position tmp 0)
+                               (let ((headers (make-hash-table)))
+                                 (setf (gethash "content-type" headers)
+                                       "text/html; charset=UTF-8")
+                                 (values tmp 200 headers)))
+                             "html"
+                             tmpdir
+                             :url url
+                             :snapshot snapshot)))
+            (push (cons url root-asset)
+                  (root-assets snapshot))
+            (setf (a:assoc-value (snapshot-urls snapshot) url)
+                  root-asset)
+            (setf (root-asset snapshot)
+                  root-asset)))
+        snapshot)
+    (retry-load-url-into ()
+      (load-url-into snapshot url tmpdir))))
 
 (defmethod snapshot-asset-file ((snapshot snapshot)
                                 (asset asset))
