@@ -31,7 +31,10 @@
    #:snapshot-request
    #:browser-configs
    #:channel-name
-   #:root-assets))
+   #:root-assets
+   #:pull-request
+   #:main-branch
+   #:repo-url))
 (in-package :screenshotbot/replay/core)
 
 
