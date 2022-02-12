@@ -259,4 +259,5 @@
                :alexandria)
   :components ((:module "replay"
                 :serial t
-                :components ((:file "core")))))
+                :components ((:file "core")
+                             (:file "browser-config")))))

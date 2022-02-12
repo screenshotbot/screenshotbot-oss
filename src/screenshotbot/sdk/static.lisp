@@ -1,5 +1,8 @@
 (defpackage :screenshotbot/sdk/static
   (:use #:cl)
+  (:import-from #:screenshotbot/replay/browser-config
+                #:dimensions
+                #:browser-config)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
@@ -81,11 +84,29 @@ upload blobs that haven't been uploaded before."
           collect
           (replay:snapshot-asset-file snapshot asset)))))
 
+(defun browser-configs ()
+  "Currently we're not providing a way to modify the browser
+  config. We're hardcoding this to a value that we can initially work
+  with."
+  (list
+   (make-instance 'browser-config
+                  :type "chrome"
+                  :dimensions (make-instance 'dimensions
+                                            :width 1280
+                                            :height 800)
+                  :name "Google Chrome Desktop")
+   (make-instance 'browser-config
+                  :type "chrome"
+                  :name "Nexus 5 (emulated)"
+                  ;; yes, this inconsistency is intentional for now.
+                  :mobile-emulation "Nexus 6P")))
+
 (defun schedule-snapshot (snapshot)
   "Schedule a Replay build with the given snapshot"
   (setf (replay:tmpdir snapshot) nil) ;; hack for json encoding
   (let ((request (make-instance 'replay:snapshot-request
-                                :snapshot snapshot)))
+                                :snapshot snapshot
+                                :browser-configs (browser-configs))))
    (json:with-decoder-simple-clos-semantics
      (uiop:with-temporary-file (:pathname p)
        (cl-store:store request p)

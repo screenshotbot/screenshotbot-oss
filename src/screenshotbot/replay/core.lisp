@@ -36,7 +36,9 @@
 
 (defclass snapshot-request ()
   ((snapshot :initarg :snapshot
-             :reader snapshot)))
+             :reader snapshot)
+   (browser-configs :initarg :browser-configs
+                    :reader browser-configs)))
 
 (defclass http-header ()
   ((name :initarg :name
