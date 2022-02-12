@@ -352,7 +352,10 @@
           (setf *pull-request*
                 (link-to-github-pull-request
                  *repo-url*
-                 review-id)))))))
+                 review-id)))))
+    (setf *channel*
+          (or *channel*
+              (uiop:getenv "SITE_NAME")))))
 
 (defun parse-org-defaults ()
   (parse-build-url)
