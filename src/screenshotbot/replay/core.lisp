@@ -43,7 +43,16 @@
    (browser-configs :initarg :browser-configs
                     :reader browser-configs)
    (channel-name :initarg :channel-name
-                 :reader channel-name)))
+                 :reader channel-name)
+   (pull-request :initarg :pull-request
+                 :initform nil
+                 :reader pull-request)
+   (main-branch :initarg :main-branch
+                :initform nil
+                :reader main-branch)
+   (repo-url :initarg :repo-url
+             :initform nil
+             :reader repo-url)))
 
 (defclass http-header ()
   ((name :initarg :name

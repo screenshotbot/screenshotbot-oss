@@ -338,6 +338,7 @@
 
 (defun maybe-parse-netlify-environment ()
   (when (equal "true" (uiop:getenv "NETLIFY"))
+    (log:info "Looks like we're running in Netlify")
     (setf *repo-url*
           (uiop:getenv "REPOSITORY_URL"))
     (let ((build-id (uiop:getenv "BUILD_ID"))
