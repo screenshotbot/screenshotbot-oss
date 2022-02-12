@@ -105,7 +105,7 @@ upload blobs that haven't been uploaded before."
 (defun schedule-snapshot (snapshot)
   "Schedule a Replay build with the given snapshot"
   (setf (replay:tmpdir snapshot) nil) ;; hack for json encoding
-  (let* ((repo (make-instance 'git-repo :link flags:*repo-url*))
+  (let* ((repo (make-instance 'git:git-repo :link flags:*repo-url*))
          (branch-hash (git:rev-parse repo flags:*main-branch*))
          (commit (git:current-commit repo)))
    (let ((request (make-instance 'replay:snapshot-request
