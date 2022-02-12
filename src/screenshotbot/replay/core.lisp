@@ -6,6 +6,9 @@
 
 (defpackage :screenshotbot/replay/core
   (:use #:cl)
+  (:import-from #:json-mop
+                #:json-serializable
+                #:json-serializable-class)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:rewrite-css-urls
@@ -25,40 +28,69 @@
    #:uuid))
 (in-package :screenshotbot/replay/core)
 
-(defclass marshablable ()
-  ())
 
 (defvar *replay-logs* *terminal-io*)
 
-(defclass asset (marshablable)
+(defclass asset ()
   ((file :initarg :file
-         :reader asset-file)
+         :reader asset-file
+         :json-key "file"
+         :json-type :string)
    (url :initarg :url
-        :reader url)
+        :reader url
+        :json-key "url"
+        :json-type :string)
    (status :initarg :status
-           :reader asset-status)
+           :reader asset-status
+           :json-key "assetStatus"
+           :json-type integer)
    (stylesheetp :initarg :stylesheetp
                 :initform nil
-                :reader stylesheetp)
+                :json-key "hasStylesheet"
+                :reader stylesheetp
+                :json-type :bool)
    (response-headers :initarg :response-headers
-                     :reader asset-response-headers)))
+                     :reader asset-response-headers
+                     :json-key "responseHeaders"
+                     :json-type :hash-table))
+  (:metaclass json-serializable-class))
 
-(defmethod initialize-instance :after ((self asset) &key url &allow-other-keys)
-  (assert (stringp url)))
+(defmethod initialize-instance :after ((self asset) &key &allow-other-keys)
+  )
 
 (defmethod class-persistent-slots ((self asset))
   '(file status stylesheetp response-headers))
 
-(defclass snapshot (marshablable)
+(defclass url ()
+  ((title :initarg :title
+          :reader url-title
+          :json-key "title"
+          :json-type :string)
+   (url :initarg :url
+        :reader url-url
+        :json-key "url"
+        :json-type :string))
+  (:metaclass json-serializable-class))
+
+(defclass snapshot ()
   ((urls :initform nil
+         :json-key "urls"
+         :json-type (:list url)
          :accessor snapshot-urls)
    (uuid :initform (format nil "~a" (uuid:make-v4-uuid))
-         :reader uuid)
+         :reader uuid
+         :json-key "uuid"
+         :json-type :string)
    (tmpdir :initarg :tmpdir
            :accessor tmpdir)
-   (root-asset :accessor root-asset)
+   (root-asset :accessor root-asset
+               :json-key "rootAsset"
+               :json-type asset)
    (root-assets :accessor root-assets
-                :initform nil)))
+                :json-key "rootAssets"
+                :initform nil
+                :json-type (:list asset)))
+  (:metaclass json-serializable-class))
 
 (defmethod class-persistent-slots ((self snapshot))
   '(urls tmpdir root-asset))
