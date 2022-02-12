@@ -106,6 +106,7 @@ upload blobs that haven't been uploaded before."
   (setf (replay:tmpdir snapshot) nil) ;; hack for json encoding
   (let ((request (make-instance 'replay:snapshot-request
                                 :snapshot snapshot
+                                :channel-name flags:*channel*
                                 :browser-configs (browser-configs))))
    (json:with-decoder-simple-clos-semantics
      (uiop:with-temporary-file (:pathname p)
@@ -134,7 +135,7 @@ upload blobs that haven't been uploaded before."
 
                  (upload-snapshot-assets snapshot)
                  (schedule-snapshot snapshot)
-                 (error "unimplemented beyond this point"))
+                 (log:info "Screenshot job queued"))
             (hunchentoot:stop acceptor))))
     (retry-record-static-website ()
       (record-static-website location))))

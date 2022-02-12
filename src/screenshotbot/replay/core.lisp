@@ -28,7 +28,10 @@
    #:url
    #:http-header-name
    #:http-header-value
-   #:snapshot-request))
+   #:snapshot-request
+   #:browser-configs
+   #:channel-name
+   #:root-assets))
 (in-package :screenshotbot/replay/core)
 
 
@@ -38,7 +41,9 @@
   ((snapshot :initarg :snapshot
              :reader snapshot)
    (browser-configs :initarg :browser-configs
-                    :reader browser-configs)))
+                    :reader browser-configs)
+   (channel-name :initarg :channel-name
+                 :reader channel-name)))
 
 (defclass http-header ()
   ((name :initarg :name
@@ -95,6 +100,16 @@
                :initform nil
                :json-type (:list :string)))
   (:metaclass json-serializable-class))
+
+(defun root-assets (snapshot)
+  (let ((map (make-hash-table :test 'equal)))
+    (loop for asset in (assets snapshot)
+          do
+             (setf (gethash (asset-file asset) map)
+                   asset))
+    (loop for file in (root-files snapshot)
+          collect
+          (gethash file map))))
 
 (defmethod process-node (node snapshot url)
   (values))

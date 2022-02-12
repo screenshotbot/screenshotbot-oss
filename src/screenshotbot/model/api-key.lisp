@@ -25,7 +25,9 @@
    #:all-api-keys
    #:api-key-company
    #:delete-api-key
-   #:make-transient-key))
+   #:make-transient-key
+   #:api-key-key
+   #:api-key-secret-key))
 (in-package :screenshotbot/model/api-key)
 
 (defclass api-key (store-object)
