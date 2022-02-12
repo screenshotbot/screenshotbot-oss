@@ -120,6 +120,7 @@
                                            (recorder-run-company run)))))
     (unless installation-id
       (log:error :promote "No github installation id avaialble"))
+    (log:info :promote "Repo is of type: ~S" (type-of repo))
     (when (and
            installation-id
            (typep repo 'github-repo)
