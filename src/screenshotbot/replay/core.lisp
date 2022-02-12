@@ -19,12 +19,13 @@
    #:asset-response-headers
    #:asset-status
    #:load-url
-   #:root-assets
    #:snapshot
    #:load-url-into
    #:snapshot-asset-file
    #:uuid
-   #:assets))
+   #:assets
+   #:root-files
+   #:url))
 (in-package :screenshotbot/replay/core)
 
 
@@ -71,10 +72,10 @@
          :json-type :string)
    (tmpdir :initarg :tmpdir
            :accessor tmpdir)
-   (root-assets :accessor root-assets
-                :json-key "rootAssets"
-                :initform nil
-                :json-type (:list asset)))
+   (root-files :accessor root-files
+               :json-key "rootFiles"
+               :initform nil
+               :json-type (:list :string)))
   (:metaclass json-serializable-class))
 
 (defmethod process-node (node snapshot url)
@@ -456,8 +457,8 @@
                              tmpdir
                              :url url
                              :snapshot snapshot)))
-            (push (cons url root-asset)
-                  (root-assets snapshot))
+            (push (asset-file root-asset)
+                  (root-files snapshot))
             (push root-asset
                   (assets snapshot))))
         snapshot)

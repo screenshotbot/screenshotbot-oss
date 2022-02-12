@@ -79,9 +79,7 @@ upload blobs that haven't been uploaded before."
    (append
     (loop for asset in (replay:assets snapshot)
           collect
-          (replay:snapshot-asset-file snapshot asset))
-    (loop for (nil . root-asset) in (replay:root-assets snapshot)
-          collect (replay:snapshot-asset-file snapshot root-asset)))))
+          (replay:snapshot-asset-file snapshot asset)))))
 
 (defun schedule-snapshot (snapshot)
   "Schedule a Replay build with the given snapshot"
