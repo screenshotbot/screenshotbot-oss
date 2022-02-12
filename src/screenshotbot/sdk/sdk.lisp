@@ -359,9 +359,9 @@
                 (link-to-github-pull-request
                  *repo-url*
                  review-id)))))
-    (setf *channel*
-          (or *channel*
-              (uiop:getenv "SITE_NAME")))))
+    (when (equal "unnamed-channel" *channel*)
+      (setf *channel*
+            (uiop:getenv "SITE_NAME")))))
 
 (defun parse-org-defaults ()
   (parse-build-url)
