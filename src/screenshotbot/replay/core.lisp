@@ -43,7 +43,7 @@
    (status :initarg :status
            :reader asset-status
            :json-key "assetStatus"
-           :json-type integer)
+           :json-type :number)
    (stylesheetp :initarg :stylesheetp
                 :initform nil
                 :json-key "hasStylesheet"
