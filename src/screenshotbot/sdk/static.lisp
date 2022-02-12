@@ -107,6 +107,9 @@ upload blobs that haven't been uploaded before."
   (let ((request (make-instance 'replay:snapshot-request
                                 :snapshot snapshot
                                 :channel-name flags:*channel*
+                                :pull-request flags:*pull-request*
+                                :main-branch flags:*main-branch*
+                                :repo-url flags:*repo-url*
                                 :browser-configs (browser-configs))))
    (json:with-decoder-simple-clos-semantics
      (uiop:with-temporary-file (:pathname p)
