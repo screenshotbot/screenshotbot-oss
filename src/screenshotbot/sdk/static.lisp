@@ -77,7 +77,7 @@ upload blobs that haven't been uploaded before."
   "Upload all the assets in the snapshot"
   (upload-multiple-files
    (append
-    (loop for (nil . asset) in (replay:snapshot-urls snapshot)
+    (loop for asset in (replay:assets snapshot)
           collect
           (replay:snapshot-asset-file snapshot asset))
     (loop for (nil . root-asset) in (replay:root-assets snapshot)

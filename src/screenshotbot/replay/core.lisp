@@ -15,7 +15,6 @@
    #:*replay-logs*
    #:tmpdir
    #:asset-file
-   #:snapshot-urls
    #:root-asset
    #:asset-file
    #:asset-response-headers
@@ -25,7 +24,8 @@
    #:snapshot
    #:load-url-into
    #:snapshot-asset-file
-   #:uuid))
+   #:uuid
+   #:assets))
 (in-package :screenshotbot/replay/core)
 
 
@@ -61,22 +61,11 @@
 (defmethod class-persistent-slots ((self asset))
   '(file status stylesheetp response-headers))
 
-(defclass url ()
-  ((title :initarg :title
-          :reader url-title
-          :json-key "title"
-          :json-type :string)
-   (url :initarg :url
-        :reader url-url
-        :json-key "url"
-        :json-type :string))
-  (:metaclass json-serializable-class))
-
 (defclass snapshot ()
-  ((urls :initform nil
-         :json-key "urls"
-         :json-type (:list url)
-         :accessor snapshot-urls)
+  ((assets :initform nil
+           :json-key "assets"
+           :accessor assets
+           :json-type (:list asset))
    (uuid :initform (format nil "~a" (uuid:make-v4-uuid))
          :reader uuid
          :json-key "uuid"
@@ -184,8 +173,8 @@
                                       (make-string-input-stream
                                        body)))
                                    (t
-                                    (flexi-streams:make-flexi-stream
-                                     (make-string-input-stream
+                                    (flexi-streams:make-in-memory-input-stream
+                                     (flexi-streams:string-to-octets
                                       "<html><body>404 Not found</body></html>"))))
                                  (dex:response-status e)
                                  (dex:response-headers e))))))
@@ -316,17 +305,18 @@
 
 (defmethod push-asset ((snapshot snapshot) url stylesheetp)
   (let ((stylesheetp (or stylesheetp (str:ends-with-p ".css" (quri:render-uri url)))))
-   (symbol-macrolet ((cache (a:assoc-value (snapshot-urls snapshot)
-                                           (quri:render-uri url)
-                                           :test #'string=)))
-     (or
-      cache
-      (let ((new-val (cond
-                       (stylesheetp
-                        (fetch-css-asset snapshot url (tmpdir snapshot)))
-                       (t
-                        (fetch-asset url (tmpdir snapshot) snapshot)))))
-        (setf cache new-val))))))
+    (loop for asset in (assets snapshot)
+          if (string=(url asset) (quri:render-uri url))
+            do
+             (return-from push-asset asset)
+          finally
+             (let ((asset (cond
+                            (stylesheetp
+                             (fetch-css-asset snapshot url (tmpdir snapshot)))
+                            (t
+                             (fetch-asset url (tmpdir snapshot) snapshot)))))
+               (push asset (assets snapshot))
+               (return asset)))))
 
 (defun read-srcset (srcset)
   (flet ((read-spaces (stream)
@@ -475,8 +465,8 @@
                              :snapshot snapshot)))
             (push (cons url root-asset)
                   (root-assets snapshot))
-            (setf (a:assoc-value (snapshot-urls snapshot) url)
-                  root-asset)
+            (push root-asset
+                  (assets snapshot))
             (setf (root-asset snapshot)
                   root-asset)))
         snapshot)
