@@ -9,7 +9,10 @@
         #:alexandria)
   (:export
    #:null-repo
-   #:git-repo))
+   #:git-repo
+   #:rev-parse
+   #:merge-base
+   #:current-commit))
 (in-package :screenshotbot/sdk/git)
 
 (defun git-root ()

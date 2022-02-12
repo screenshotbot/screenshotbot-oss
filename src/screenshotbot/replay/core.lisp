@@ -34,7 +34,10 @@
    #:root-assets
    #:pull-request
    #:main-branch
-   #:repo-url))
+   #:repo-url
+   #:merge-base
+   #:commit
+   #:branch-hash))
 (in-package :screenshotbot/replay/core)
 
 
@@ -55,7 +58,16 @@
                 :reader main-branch)
    (repo-url :initarg :repo-url
              :initform nil
-             :reader repo-url)))
+             :reader repo-url)
+   (branch-hash :initarg :branch-hash
+                :initform nil
+                :reader branch-hash)
+   (commit :initarg :commit
+           :initform nil
+           :reader commit)
+   (merge-base :initarg :merge-base
+               :initform nil
+               :reader merge-base)))
 
 (defclass http-header ()
   ((name :initarg :name

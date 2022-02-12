@@ -150,10 +150,14 @@
                    pull-request
                    (gitp t)
                    branch
+                   (branch-hash nil has-branch-hash-p)
+                   (commit nil has-commit-p)
+                   (merge-base nil has-merge-base-p)
                    periodic-job-p
                    create-github-issue
                    (metadata-provider  (make-instance 'metadata-provider))
                    is-trunk)
+  (declare (ignore gitp))
   (restart-case
    (flet ((bool (x) (if x "true" "false")))
      (let ((records (json:encode-json-to-string
@@ -164,9 +168,9 @@
                               ("lang" . ,(screenshot-lang metadata-provider name))
                               ("device" . ,(screenshot-device metadata-provider name))))))))
        (log:debug "records: ~s" records)
-       (let* ((branch-hash (rev-parse repo branch))
-              (commit (current-commit repo))
-              (merge-base (merge-base repo branch-hash commit))
+       (let* ((branch-hash (if has-branch-hash-p branch-hash (rev-parse repo branch)))
+              (commit (if has-commit-p commit (current-commit repo)))
+              (merge-base (if has-merge-base-p merge-base (merge-base repo branch-hash commit)))
               (response (request "/api/run"
                                 :parameters `(("channel" . ,channel)
                                               ("screenshot-records" . ,records)
