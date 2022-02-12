@@ -6,6 +6,7 @@
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
+                    (#:git #:screenshotbot/sdk/git)
                     (#:replay #:screenshotbot/replay/core))
   (:export
    #:record-static-website))
@@ -124,6 +125,9 @@ upload blobs that haven't been uploaded before."
 
 (defun record-static-website (location)
   (assert (path:-d location))
+  (when flags:*production*
+   (sdk:update-commit-graph (make-instance 'git:git-repo :link flags:*repo-url*)
+                            flags:*main-branch*))
   (restart-case
       (tmpdir:with-tmpdir (tmpdir)
         (let* ((port (util/random-port:random-port))

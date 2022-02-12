@@ -8,7 +8,8 @@
   (:use #:cl
         #:alexandria)
   (:export
-   #:null-repo))
+   #:null-repo
+   #:git-repo))
 (in-package :screenshotbot/sdk/git)
 
 (defun git-root ()

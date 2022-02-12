@@ -50,7 +50,8 @@
    #:parse-org-defaults
    #:run-ios-multi-dir-toplevel
    #:run-prepare-directory-toplevel
-   #:absolute-pathname))
+   #:absolute-pathname
+   #:update-commit-graph))
 
 (in-package :screenshotbot/sdk/sdk)
 
