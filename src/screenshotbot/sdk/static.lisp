@@ -13,7 +13,7 @@
 
 
 (defun md5-file (file)
-  (ironclad:byte-array-to-hex-string (md5:md5sum-file file)))
+  (ironclad:byte-array-to-hex-string (ironclad:digest-file :sha256 file)))
 
 (defun upload-blob (file)
   "Upload the blob, without checking if it has been previously uploaded"
@@ -120,6 +120,7 @@ upload blobs that haven't been uploaded before."
                    :content p))))))
 
 (defun record-static-website (location)
+  (assert (path:-d location))
   (restart-case
       (tmpdir:with-tmpdir (tmpdir)
         (let* ((port (util/random-port:random-port))
