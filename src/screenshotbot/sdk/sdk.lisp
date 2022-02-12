@@ -153,6 +153,7 @@
                    (branch-hash nil has-branch-hash-p)
                    (commit nil has-commit-p)
                    (merge-base nil has-merge-base-p)
+                   (github-repo nil has-github-repo-p)
                    periodic-job-p
                    create-github-issue
                    (metadata-provider  (make-instance 'metadata-provider))
@@ -171,12 +172,15 @@
        (let* ((branch-hash (if has-branch-hash-p branch-hash (rev-parse repo branch)))
               (commit (if has-commit-p commit (current-commit repo)))
               (merge-base (if has-merge-base-p merge-base (merge-base repo branch-hash commit)))
+              (github-repo (if has-github-repo-p
+                               github-repo
+                               (repo-link repo)))
               (response (request "/api/run"
                                 :parameters `(("channel" . ,channel)
                                               ("screenshot-records" . ,records)
                                               ("branch" . ,branch)
                                               ("branch-hash" . ,branch-hash)
-                                              ("github-repo" . ,(repo-link repo))
+                                              ("github-repo" . ,github-repo)
                                               ("merge-base" . ,merge-base)
                                               ("periodic-job-p" . ,(bool periodic-job-p))
                                               ("build-url" . ,*build-url*)
