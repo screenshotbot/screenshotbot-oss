@@ -40,6 +40,7 @@
        (sdk:parse-org-defaults)
        (sdk:run-ios-multi-dir-toplevel))
       (flags:*static-website*
+       (sdk:parse-org-defaults)
        (static:record-static-website flags:*static-website*))
       (t
        (sdk:parse-org-defaults)

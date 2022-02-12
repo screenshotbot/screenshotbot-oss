@@ -299,7 +299,16 @@
    fn
    (%read-directory-from-args)))
 
+(defun parse-api-key-from-environment ()
+  (setf *api-key*
+        (or *api-key*
+            (uiop:getenv "SCREENSHOTBOT_API_KEY")))
+  (setf *api-secret*
+        (or *api-secret*
+            (uiop:getenv "SCREENSHOTBOT_API_SECRET"))))
+
 (defun parse-environment ()
+  (parse-api-key-from-environment)
   (setf *branch* (or *main-branch* *branch*))
   (unless *pull-request*
     (setf *pull-request*
@@ -308,14 +317,17 @@
            (ignore-errors ;; temporary, until we're sure this works correctly
             (if-let ((repo-url (getenv "BITRISEIO_PULL_REQUEST_REPOSITORY_URL"))
                      (pull-id (getenv "BITRISE_PULL_REQUEST")))
-              (format nil "~a/pulls/~a"
-                      repo-url
-                      pull-id))))))
+              (link-to-github-pull-request repo-url pull-id))))))
   (unless *branch*
     (setf *branch*
           (or
            (uiop:getenv "CIRCLE_BRANCH")
            "master"))))
+
+(defun link-to-github-pull-request (repo-url pull-id)
+  (format nil "~a/pulls/~a"
+          repo-url
+          pull-id))
 
 (defun parse-build-url ()
   (setf *build-url*
@@ -324,13 +336,32 @@
             (uiop:getenv "CIRCLE_BUILD_URL")
             (uiop:getenv "BITRISE_BUILD_URL"))))
 
+(defun maybe-parse-netlify-environment ()
+  (when (equal "true" (uiop:getenv "NETLIFY"))
+    (setf *repo-url*
+          (uiop:getenv "REPOSITORY_URL"))
+    (let ((build-id (uiop:getenv "BUILD_ID"))
+          (site-name (uiop:getenv "SITE_NAME")))
+      (setf *build-url*
+            (format nil "https://app.netlify.com/sites/~a/deploys/~a"
+                    site-name
+                    build-id)))
+    (let ((pull-request-p (equal "true" (uiop:getenv "PULL_REQUEST"))))
+      (when pull-request-p
+        (let ((review-id (uiop:getenv "REVIEW_ID")))
+          (setf *pull-request*
+                (link-to-github-pull-request
+                 *repo-url*
+                 review-id)))))))
+
 (defun parse-org-defaults ()
   (parse-build-url)
+  (parse-environment)
   (when (str:emptyp *api-key*)
     (error "No --api-key provided"))
   (when( str:emptyp *api-secret*)
     (error "No --api-secret provided"))
-  (parse-environment)
+  (maybe-parse-netlify-environment)
   (when *org-defaults*
    (ecase (intern (str:upcase *org-defaults*) "KEYWORD")
      (nil
