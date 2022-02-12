@@ -25,11 +25,22 @@
    #:uuid
    #:assets
    #:root-files
-   #:url))
+   #:url
+   #:http-header-name
+   #:http-header-value))
 (in-package :screenshotbot/replay/core)
 
 
 (defvar *replay-logs* *terminal-io*)
+
+(defclass http-header ()
+  ((name :initarg :name
+         :reader http-header-name
+         :json-key "name")
+   (value :initarg :value
+          :reader http-header-value
+          :json-key "value"))
+  (:metaclass json-serializable-class))
 
 (defclass asset ()
   ((file :initarg :file
@@ -52,7 +63,7 @@
    (response-headers :initarg :response-headers
                      :reader asset-response-headers
                      :json-key "responseHeaders"
-                     :json-type :hash-table))
+                     :json-type (:list http-header)))
   (:metaclass json-serializable-class))
 
 (defmethod initialize-instance :after ((self asset) &key &allow-other-keys)
@@ -141,7 +152,10 @@
              (quri:render-uri url)))
      :response-headers (loop for k being the hash-keys in response-headers
                                              using (hash-value v)
-                                           collect (cons k v))
+                             collect
+                             (make-instance 'http-header
+                                            :name k
+                                            :value v))
      :stylesheetp stylesheetp
      :status status)))
 
