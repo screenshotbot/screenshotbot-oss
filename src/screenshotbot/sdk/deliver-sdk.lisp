@@ -14,6 +14,7 @@
    (deliver 'screenshotbot/sdk/main:main output-file 5
             :keep-function-name t
             :keep-pretty-printer t
+            :keep-clos-object-printing t
             :keep-lisp-reader t
             ;; temporary: get the build green
             :keep-eval t
