@@ -84,12 +84,18 @@ upload blobs that haven't been uploaded before."
 (defun schedule-snapshot (snapshot)
   "Schedule a Replay build with the given snapshot"
   (setf (replay:tmpdir snapshot) nil) ;; hack for json encoding
-  (json:with-decoder-simple-clos-semantics
-    (let ((json (with-output-to-string (s)
-                  (json-mop:encode snapshot s))))
-      (sdk:request "/api/replay/schedule"
-                   :method :post
-                   :parameters `(("snapshot" . ,json))))))
+  (let ((request (make-instance 'replay:snapshot-request
+                                :snapshot snapshot)))
+   (json:with-decoder-simple-clos-semantics
+     (uiop:with-temporary-file (:pathname p)
+       (cl-store:store request p)
+       (let ((uri (quri:make-uri
+                   :query `(("api-key" . ,flags:*api-key*)
+                            ("api-secret-key" . ,flags:*api-secret*))
+                   :defaults
+                   (quri:uri (format nil "~a/api/replay/schedule" flags:*hostname*)))))
+         (dex:post uri
+                   :content p))))))
 
 (defun record-static-website (location)
   (restart-case

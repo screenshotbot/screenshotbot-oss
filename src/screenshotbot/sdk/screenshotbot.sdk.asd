@@ -16,6 +16,7 @@
                :cl-json
                :log4cl
                :util/random-port
+               :cl-store
                :cl-fad
                :cxml
                :zip

@@ -27,11 +27,16 @@
    #:root-files
    #:url
    #:http-header-name
-   #:http-header-value))
+   #:http-header-value
+   #:snapshot-request))
 (in-package :screenshotbot/replay/core)
 
 
 (defvar *replay-logs* *terminal-io*)
+
+(defclass snapshot-request ()
+  ((snapshot :initarg :snapshot
+             :reader snapshot)))
 
 (defclass http-header ()
   ((name :initarg :name
