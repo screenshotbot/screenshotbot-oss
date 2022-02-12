@@ -41,7 +41,7 @@
 (let ((lock (bt:make-lock)))
   (defhandler (nil :uri "/intern/artifact/upload" :method :put) (name hash upload-key)
     (assert name)
-    (assert (equal "73.15.166.71" (hunchentoot:real-remote-addr)))
+    (assert (equal "72.88.238.76" (hunchentoot:real-remote-addr)))
     (assert (secret :artifact-upload-key))
     (assert (equal upload-key (secret :artifact-upload-key)))
     (let ((artifact (bt:with-lock-held (lock)

@@ -92,7 +92,7 @@
    #+(and :x86-64 darwin)
    "build/lw-console-8-0-0x86_64"
    #+(or :linux (and :arm :darwin))
-   "build/lw-console-8-0-0"
+   "/home/arnold/builds/web/build/lw-console-8-0-0"
    (error "unsupported platform image")))
 
 (defmethod perform ((o compile-op) (s deliver-script))
