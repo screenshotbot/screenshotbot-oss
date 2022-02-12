@@ -15,7 +15,6 @@
    #:*replay-logs*
    #:tmpdir
    #:asset-file
-   #:root-asset
    #:asset-file
    #:asset-response-headers
    #:asset-status
@@ -72,17 +71,11 @@
          :json-type :string)
    (tmpdir :initarg :tmpdir
            :accessor tmpdir)
-   (root-asset :accessor root-asset
-               :json-key "rootAsset"
-               :json-type asset)
    (root-assets :accessor root-assets
                 :json-key "rootAssets"
                 :initform nil
                 :json-type (:list asset)))
   (:metaclass json-serializable-class))
-
-(defmethod class-persistent-slots ((self snapshot))
-  '(urls tmpdir root-asset))
 
 (defmethod process-node (node snapshot url)
   (values))
@@ -466,9 +459,7 @@
             (push (cons url root-asset)
                   (root-assets snapshot))
             (push root-asset
-                  (assets snapshot))
-            (setf (root-asset snapshot)
-                  root-asset)))
+                  (assets snapshot))))
         snapshot)
     (retry-load-url-into ()
       (load-url-into snapshot url tmpdir))))
