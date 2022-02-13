@@ -22,7 +22,8 @@
                 #:*init-hooks*)
   (:export
    #:with-promotion-log
-   #:default-promoter)
+   #:default-promoter
+   #:do-promotion-log)
   ;; forward decls
   (:export
    #:recorder-run-verify
@@ -63,6 +64,8 @@
 
 (pushnew 'setup-promotion-logger *init-hooks*)
 
+(defvar *promotion-log-stream* nil)
+
 (defun %with-promotion-log (run fn)
   (with-open-file (s
                    (bknr.datastore:blob-pathname
@@ -70,7 +73,8 @@
                    :direction :output
                    :if-exists :append
                    :if-does-not-exist :create)
-    (let ((*current-promotion-stream* s))
+    (let ((*current-promotion-stream* s)
+          (*promotion-log-stream* s))
       (unwind-protect
            (progn
              ;;(format *current-promotion-stream* "BEGIN~%")
@@ -81,6 +85,14 @@
 
 ;; In order to this this, you need
 ;;
+
+(defun do-promotion-log (level fmt &rest args)
+  (log:info (apply #'format nil fmt args))
+  (when *promotion-log-stream*
+    (format *promotion-log-stream* "~a: " level)
+    (apply #'format *promotion-log-stream*
+             fmt args)
+    (format *promotion-log-stream* "~%")))
 
 (defmacro with-promotion-log ((run) &body body)
   `(%with-promotion-log ,run (lambda () ,@body)))

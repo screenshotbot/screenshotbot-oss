@@ -119,8 +119,9 @@
         (installation-id (installation-id (github-config
                                            (recorder-run-company run)))))
     (unless installation-id
-      (log:error :promote "No github installation id avaialble"))
-    (log:info :promote "Repo is of type: ~S" (type-of repo))
+      (do-promotion-log :error "No github installation id avaialble"))
+
+    (do-promotion-log :info "Repo is of type: ~S" (type-of repo))
     (when (and
            installation-id
            (typep repo 'github-repo)
@@ -135,7 +136,7 @@
           (setf (base-commit promoter)
                 (recorder-run-merge-base run))
 
-          (log:info :promote "Base commit is: ~S" (base-commit promoter))
+          (do-promotion-log :info "Base commit is: ~S" (base-commit promoter))
           (let ((base-run (retrieve-run
                            (run-retriever promoter)
                            (recorder-run-channel run)

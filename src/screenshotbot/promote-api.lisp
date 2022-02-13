@@ -18,6 +18,7 @@
    #:register-promoter
    #:plugin-promoter
    #:list-promoters
+   #:do-promotion-log
    #:start-promotion-thread))
 (in-package :screenshotbot/promote-api)
 

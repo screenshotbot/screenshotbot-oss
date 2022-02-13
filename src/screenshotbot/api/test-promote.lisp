@@ -21,7 +21,9 @@
                 #:persistent-class)
 
   (:import-from #:../testing
-                #:with-test-user))
+                #:with-test-user)
+  (:import-from #:screenshotbot/api/promote
+                #:*promotion-log-stream*))
 
 (util/fiveam:def-suite)
 
@@ -143,7 +145,7 @@
     (is-true (activep run2))
     (is-false (activep run1))))
 
-#+lispworks
+#+nil
 (test promotion-log-is-set-up
   (with-fixture state ()
     (with-promotion-log (run1)
@@ -153,3 +155,12 @@
                        (uiop:read-file-string
                         (bknr.datastore:blob-pathname
                          (promotion-log run1)))))))
+
+
+(test do-promotion-log
+  (finishes (do-promotion-log :info "hello world"))
+  (uiop:with-temporary-file (:stream s :pathname p :direction :io)
+    (let ((*promotion-log-stream* s))
+      (do-promotion-log :info "hello world")
+      (finish-output s)
+      (is (str:containsp "hello world" (uiop:read-file-string p))))))
