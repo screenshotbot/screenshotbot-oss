@@ -129,6 +129,22 @@ upload blobs that haven't been uploaded before."
            (dex:post uri
                      :content p)))))))
 
+(defun find-all-index.htmls (dir)
+  (declare (optimize (debug 3) (speed 0)))
+  (labels ((walk (subdir prefix)
+             (loop for item in (remove-if #'null (fad:list-directory subdir))
+                   if (and
+                       (string-equal "index" (pathname-name item))
+                       (string-equal "html" (pathname-type item)))
+                     collect (format nil "~a/~a" prefix (path:basename item))
+                   if (path:-d item)
+                     appending (progn
+                                 (assert item)
+                                 (let ((prefix (format nil "~a/~a" prefix
+                                                   (car (last (pathname-directory item))))))
+                                  (walk item prefix))))))
+    (walk dir "")))
+
 (defun record-static-website (location)
   (assert (path:-d location))
   (when flags:*production*
@@ -145,7 +161,12 @@ upload blobs that haven't been uploaded before."
           (unwind-protect
                (progn
                  (hunchentoot:start acceptor)
-                 (replay:load-url-into snapshot (format nil "http://localhost:~a/index.html" port) tmpdir)
+                 (loop for index.html in (find-all-index.htmls location)
+                       do
+                          (replay:load-url-into
+                           snapshot
+                           (format nil "http://localhost:~a~a" port index.html)
+                           tmpdir))
 
                  (upload-snapshot-assets snapshot)
                  (schedule-snapshot snapshot)

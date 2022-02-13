@@ -411,7 +411,7 @@
                             (not (str:starts-with-p "data:" val)))
                    (let* ((ref-uri val)
                           (uri (quri:merge-uris ref-uri root-url)))
-                    (setf (plump:attribute node name) (funcall fn uri))))))
+                     (setf (plump:attribute node name) (funcall fn uri))))))
              (replace-attr (name &optional stylesheetp)
                (safe-replace-attr
                 name

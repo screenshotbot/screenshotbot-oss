@@ -10,7 +10,13 @@
   (:import-from #:screenshotbot/server
                 #:acceptor)
   (:import-from #:screenshotbot/sdk/static
+                #:find-all-index.htmls
                 #:upload-blob)
+  (:import-from #:fiveam-matchers/core
+                #:is-not
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:has-item)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags :screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/test-static)
@@ -61,3 +67,24 @@
       (let ((md5 (md5:md5sum-file p)))
         (upload-blob p)
         (is  (equalp *hex* md5))))))
+
+(defun touch (file)
+  (ensure-directories-exist file)
+  (with-open-file (o file :direction :output)
+    (declare (ignore o))))
+
+(test list-all-index.html
+  (tmpdir:with-tmpdir (dir)
+    (touch (path:catfile dir "index.html"))
+    (assert-that
+     (find-all-index.htmls dir)
+     (has-item "/index.html"))
+    (touch (path:catfile dir "foo/index.html"))
+    (assert-that
+     (find-all-index.htmls dir)
+     (has-item "/index.html")
+     (has-item "/foo/index.html"))
+    (touch (path:catfile dir "bleh.png"))
+    (assert-that
+     (find-all-index.htmls dir)
+     (is-not (has-item "bleh.png")))))
