@@ -87,7 +87,8 @@
 ;;
 
 (defun do-promotion-log (level fmt &rest args)
-  (log:info (apply #'format nil fmt args))
+  (let ((msg (apply #'format nil fmt args)))
+   (log:info "~a" msg))
   (when *promotion-log-stream*
     (format *promotion-log-stream* "~a: " level)
     (apply #'format *promotion-log-stream*
