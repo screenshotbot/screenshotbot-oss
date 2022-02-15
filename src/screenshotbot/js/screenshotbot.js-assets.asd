@@ -7,6 +7,11 @@
      (asdf:operate 'asdf:load-op 'build-utils)
      (use-package :build-utils)))
 
+(defsystem :screenshotbot.js-assets/split
+  :class build-utils:js-library
+  :defsystem-depends-on (:build-utils)
+  :components ((build-utils:js-file "split")))
+
 (defsystem screenshotbot.js-assets/headroom
   :class build-utils:js-library
   :defsystem-depends-on (:build-utils)
@@ -28,7 +33,8 @@
   :depends-on (#-screenshotbot-oss
                :sentry-js
                :bootstrap5-js
-               :screenshotbot.js-assets/headroom)
+               :screenshotbot.js-assets/headroom
+               :screenshotbot.js-assets/split)
   :components ((:module "vendor"
                 :components ((build-utils:js-file "jquery-ui")
                              (build-utils:js-file "baguetteBox")
