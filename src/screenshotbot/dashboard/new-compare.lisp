@@ -19,22 +19,23 @@
 (markup:enable-reader)
 
 (defun compare-v2-page (&key report)
-  <html>
-    <dashboard-head />
-    <div class= "split-container">
-      <div class= "new-compare split">
-        <div class= "image-list" >
-          hello
+  (let ((diff-report ))
+    <html>
+      <dashboard-head />
+      <div class= "split-container">
+        <div class= "new-compare split">
+          <div class= "image-list" >
+            hello
+          </div>
+          <div class= "image-details">
+            world
+          </div>
         </div>
-        <div class= "image-details">
-          world
-        </div>
+
+        <script src= "/assets/js/dashboard.js" />
       </div>
 
-      <script src= "/assets/js/dashboard.js" />
-    </div>
-
-  </html>)
+    </html>))
 
 (defhandler (nil :uri "/new-compare") ()
   (compare-v2-page))
