@@ -82,6 +82,7 @@
                  (:file "test-object")
                  (:file "all")))
    (:file "impersonation")
+   (:file "diff-report")
    (:module "dashboard"
     :serial t
     :components ((:file "home")

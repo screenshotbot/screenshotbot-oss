@@ -9,6 +9,7 @@
         #:alexandria
         #:nibble
         #:screenshotbot/template
+        #:screenshotbot/diff-report
         #:screenshotbot/model/screenshot
         #:screenshotbot/model/image
         #:screenshotbot/model/view
@@ -77,26 +78,6 @@
 
 (defvar *lock* (bt:make-lock "image-comparison"))
 
-(defclass change ()
-  ((before :initarg :before
-           :reader before)
-   (after :initarg :after
-          :reader after)
-   (masks :initarg :masks
-          :reader change-masks)))
-
-(defclass diff-report ()
-  ((added :initarg :added
-          :reader diff-report-added
-          :initform nil)
-   (deleted :initarg :deleted
-            :reader diff-report-deleted
-            :initform nil)
-   (changes :initarg :changes
-            :initform nil
-            :accessor diff-report-changes
-            :documentation "List of all CHANGEs")))
-
 (deftag render-acceptable (&key acceptable)
   (let ((accept (nibble (redirect)
                   (setf (acceptable-state acceptable) :accepted)
@@ -164,32 +145,6 @@
    (or (diff-report-added diff-report)
        (diff-report-deleted diff-report)
        (diff-report-changes diff-report))))
-
-(defun make-diff-report (run to)
-  (restart-case
-      (flet ((screenshot-name= (x y)
-               (string= (screenshot-name x) (screenshot-name y))))
-        (let ((names (recorder-run-screenshots run))
-              (to-names (recorder-run-screenshots to)))
-          (make-instance
-           'diff-report
-           :added (set-difference names to-names :test #'screenshot-name=)
-           :deleted (set-difference to-names names :test #'screenshot-name=)
-           :changes (loop for s1 in names appending
-                                          (loop for x in to-names
-                                                if (and
-                                                    (string= (screenshot-name s1) (Screenshot-name x))
-                                                    (not (image= (screenshot-image s1)
-                                                                 (Screenshot-image x)
-                                                                 ;; always use the new mask
-                                                                 (screenshot-masks s1))))
-                                                  collect
-                                                  (make-instance 'change
-                                                                 :before s1
-                                                                 :masks (screenshot-masks s1)
-                                                                 :after x))))))
-    (retry-make-diff-report ()
-      (make-diff-report run to))))
 
 (defhandler (compare-page :uri "/runs/:id/compare/:to") (id to report)
   (when (string= "254" id)
