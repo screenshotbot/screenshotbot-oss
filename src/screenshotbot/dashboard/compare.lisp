@@ -4,7 +4,8 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/compare
+(uiop:define-package :screenshotbot/dashboard/compare
+  (:nicknames #:screenshotbot/compare #|For bknr|#)
   (:use #:cl
         #:alexandria
         #:nibble

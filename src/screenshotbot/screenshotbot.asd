@@ -89,6 +89,8 @@
                  (:file "paginated")
                  (:file "numbers")
                  (:file "run-page")
+                 (:file "image")
+                 (:file "compare")
                  (:file "recent-runs")
                  (:file "notices")
                  (:file "new-compare")
@@ -96,13 +98,11 @@
                  (:file "channels")
                  (:file "reports")
                  (:file "history")
-                 (:file "image")
                  (:file "mask-builder")
                  (:file "site-admin")))
    (:file "invite")
    (:module "documentation"
     :components ((:file "doc")))
-   (:file "compare")
    (:file "image-comparison")
    (:module "github"
     :serial t
