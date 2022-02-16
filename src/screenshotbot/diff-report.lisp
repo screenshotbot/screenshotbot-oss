@@ -7,10 +7,11 @@
 (defpackage :screenshotbot/diff-report
   (:use #:cl)
   (:import-from #:screenshotbot/user-api
-                #:Screenshot-name
-                #:recorder-run-screenshots)
+                #:Screenshot-name)
   (:import-from #:screenshotbot/model/image
                 #:image=)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-screenshots)
   (:import-from #:screenshotbot/screenshot-api
                 #:screenshot-image)
   (:import-from #:screenshotbot/model/screenshot
