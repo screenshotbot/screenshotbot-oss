@@ -103,6 +103,7 @@
    (:module "documentation"
     :components ((:file "doc")))
    (:file "compare")
+   (:file "image-comparison")
    (:module "github"
     :serial t
     :components ((:file "plugin")
