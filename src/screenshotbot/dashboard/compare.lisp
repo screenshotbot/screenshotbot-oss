@@ -71,7 +71,7 @@
    #:warmup-comparison-images)
   ;; forward decls
   (:export #:filter-selector))
-(in-package :screenshotbot/compare)
+(in-package :screenshotbot/dashboard/compare)
 
 
 (markup:enable-reader)
@@ -195,7 +195,6 @@
    (result :initarg :result
            :accessor image-comparison-result))
   (:metaclass persistent-class))
-
 
 (defun find-image-comparison (before after masks creator)
   "Finds an existing image comparison for before and after, if it
