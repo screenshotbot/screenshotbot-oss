@@ -23,7 +23,8 @@
            #:left-side-bar ;; todo: defined elsewhere
            #:user-notice-list ;; todo: defined elsewhere
            #:app-template
-           #:landing-template)
+           #:landing-template
+           #:dashboard-head)
   (:import-from #:./installation
                 #:installation)
   (:import-from #:./user-api
@@ -75,20 +76,11 @@
 (markup:deftag google-analytics ()
   #-screenshotbot-oss
   (when (analyticsp)
-   <util:google-analytics tracking= "UA-179653755-1" />))
+    <util:google-analytics tracking= "UA-179653755-1" />))
 
-(deftag dashboard-template (children &key stripe
-                            scripts
-                            (body-class "dashboard")
-                            (user (current-user))
-                            codemirror
-                            (company (current-company))
-                            (script-name (hunchentoot:script-name hunchentoot:*request*))
-                            jquery-ui
-                            admin)
-  (declare (ignore scripts))
-  <html lang="en">
-    <head>
+(deftag dashboard-head (&key jquery-ui
+                        codemirror)
+      <head>
       <meta charset="utf-8" />
       <title>Screenshotbot</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -109,7 +101,20 @@
   <google-analytics />
 
   <selenium-css />
-    </head>
+    </head>)
+
+(deftag dashboard-template (children &key stripe
+                            scripts
+                            (body-class "dashboard")
+                            (user (current-user))
+                            codemirror
+                            (company (current-company))
+                            (script-name (hunchentoot:script-name hunchentoot:*request*))
+                            jquery-ui
+                            admin)
+  (declare (ignore scripts))
+  <html lang="en">
+    <dashboard-head jquery-ui=jquery-ui codemirror=codemirror />
 
     <body class= body-class
           data-user-id= (when user (oid user))

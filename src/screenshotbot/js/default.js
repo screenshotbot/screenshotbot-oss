@@ -335,3 +335,8 @@ $(function () {
         codeMirror.setSize("100%", "100%");
     });
 });
+
+
+$(".new-compare").each(function () {
+    Split([$(this).find(".image-list").get(0), $(this).find(".image-details").get(0)]);
+});

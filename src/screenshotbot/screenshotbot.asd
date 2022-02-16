@@ -101,6 +101,7 @@
    (:module "documentation"
     :components ((:file "doc")))
    (:file "compare")
+   (:file "new-compare")
    (:module "github"
     :serial t
     :components ((:file "plugin")

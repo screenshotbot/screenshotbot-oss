@@ -13,6 +13,7 @@
   :components ((build-utils:scss-file "sidebar")
                (build-utils:scss-file "material-icons")
                (build-utils:css-file "bootstrap-icons")
+               (build-utils:scss-file "split")
                (:MODULE "vendor"
                 :COMPONENTS ((build-utils:css-file "baguetteBox")
                              (BUILD-UTILS::CSS-FILE "jquery-jvectormap-1.2.2")
