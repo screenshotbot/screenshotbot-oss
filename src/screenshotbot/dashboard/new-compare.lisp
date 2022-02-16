@@ -4,19 +4,21 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/new-compare
+(defpackage :screenshotbot/dashboard/new-compare
   (:use #:cl)
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/template
                 #:dashboard-head
                 #:app-template)
-  (:local-nicknames (#:a #:alexandria)))
-(in-package :screenshotbot/new-compare)
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:compare-v2-page))
+(in-package :screenshotbot/dashboard/new-compare)
 
 (markup:enable-reader)
 
-(defhandler (nil :uri "/new-compare") ()
+(defun compare-v2-page (&key report)
   <html>
     <dashboard-head />
     <div class= "split-container">
@@ -33,3 +35,6 @@
     </div>
 
   </html>)
+
+(defhandler (nil :uri "/new-compare") ()
+  (compare-v2-page))

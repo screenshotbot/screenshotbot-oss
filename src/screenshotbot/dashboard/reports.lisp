@@ -21,6 +21,8 @@
                 #:oid)
   (:import-from #:bknr.datastore
                 #:store-object-with-id)
+  (:import-from #:screenshotbot/dashboard/new-compare
+                #:compare-v2-page)
   (:export #:report-page #:report-link))
 (in-package :screenshotbot/dashboard/reports)
 
@@ -47,31 +49,36 @@
                                        :value device-filter)))
      (check-type report report)
      (can-view! report)
-     <app-template>
 
-     ,(when (and nil (can-public-view report))
-        <section class= "mt-3" >
-        <div class= "alert alert-danger">
-        This report can be viewed by public, because the underlying repository is public
-        </div>
-        </section>)
+     (cond
+       ((hunchentoot:parameter "v2")
+        (compare-v2-page :report report))
+       (t
+        <app-template>
 
-     ,(when nil
-     <section class= "mt-3" >
-     <div class= "alert alert-info">
-     Hover on the image on the left to visualize the difference!
-     </div>
-     </section>
+          ,(when (and nil (can-public-view report))
+             <section class= "mt-3" >
+               <div class= "alert alert-danger">
+                 This report can be viewed by public, because the underlying repository is public
+               </div>
+             </section>)
 
-        )
-     <section class= "full-height">
-     <render-diff-report run= (report-run report) to= (report-previous-run report)
-                         lang-filter=lang-filter
-     device-filter=device-filter
-     acceptable= (report-acceptable report)
-                         re-run=#'re-run />
-     </section>
-     </app-template>)))
+          ,(when nil
+             <section class= "mt-3" >
+               <div class= "alert alert-info">
+                 Hover on the image on the left to visualize the difference!
+               </div>
+             </section>
+
+             )
+          <section class= "full-height">
+            <render-diff-report run= (report-run report) to= (report-previous-run report)
+                                lang-filter=lang-filter
+                                device-filter=device-filter
+                                acceptable= (report-acceptable report)
+                                re-run=#'re-run />
+          </section>
+        </app-template>)))))
 
 (defhandler (report-list :uri "/report" :method :get
                          :want-login t) ()

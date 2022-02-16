@@ -491,7 +491,7 @@
           (next-id 0)
           (script-name (hunchentoot:script-name*))
           (all-comparisons (nibble ()
-                            (all-comparisons-page report))))
+                             (all-comparisons-page report))))
      (let ((added (diff-report-added report))
            (deleted (diff-report-deleted report))
            (changes (diff-report-changes report)))

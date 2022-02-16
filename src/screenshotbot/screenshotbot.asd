@@ -90,6 +90,7 @@
                  (:file "run-page")
                  (:file "recent-runs")
                  (:file "notices")
+                 (:file "new-compare")
                  (:file "api-keys")
                  (:file "channels")
                  (:file "reports")
@@ -101,7 +102,6 @@
    (:module "documentation"
     :components ((:file "doc")))
    (:file "compare")
-   (:file "new-compare")
    (:module "github"
     :serial t
     :components ((:file "plugin")
