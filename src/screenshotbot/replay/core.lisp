@@ -537,5 +537,3 @@
 (defun load-url (url tmpdir)
   (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
     (load-url-into snapshot url tmpdir)))
-
-;; (render "https://www.rollins.edu/college-of-liberal-arts")
