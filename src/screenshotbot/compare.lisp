@@ -63,7 +63,6 @@
   (:export
    #:diff-report
    #:render-acceptable
-   #:diff-report-title
    #:make-diff-report
    #:diff-report-empty-p
    #:render-diff-report
@@ -125,20 +124,6 @@
 
     </div>
   </div>))
-
-(defun diff-report-title (diff-report)
-  (let ((added (diff-report-added diff-report))
-        (deleted (diff-report-deleted diff-report))
-        (changes (diff-report-changes diff-report)))
-    (str:join ", "
-              (remove-if 'null
-               (list
-                (when changes
-                  (format nil "~d changes" (length changes)))
-                (when deleted
-                  (format nil "~d deleted" (length deleted)))
-                (when added
-                  (format nil "~d added" (length added))))))))
 
 (defun diff-report-empty-p (diff-report)
   (not

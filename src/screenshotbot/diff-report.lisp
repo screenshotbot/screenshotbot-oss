@@ -25,7 +25,9 @@
    #:diff-report-added
    #:diff-report-deleted
    #:diff-report-changes
-   #:make-diff-report))
+   #:make-diff-report
+   #:diff-report
+   #:diff-report-title))
 (in-package :screenshotbot/diff-report)
 
 (defclass change ()
@@ -47,6 +49,21 @@
             :initform nil
             :accessor diff-report-changes
             :documentation "List of all CHANGEs")))
+
+(defun diff-report-title (diff-report)
+  (let ((added (diff-report-added diff-report))
+        (deleted (diff-report-deleted diff-report))
+        (changes (diff-report-changes diff-report)))
+    (str:join ", "
+              (remove-if 'null
+               (list
+                (when changes
+                  (format nil "~d changes" (length changes)))
+                (when deleted
+                  (format nil "~d deleted" (length deleted)))
+                (when added
+                  (format nil "~d added" (length added))))))))
+
 
 (defun make-diff-report (run to)
   (restart-case

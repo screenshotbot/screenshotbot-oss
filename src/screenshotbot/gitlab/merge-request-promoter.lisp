@@ -24,6 +24,8 @@
   (:import-from #:screenshotbot/gitlab/repo
                 #:*gitlab-url*
                 #:repo-access-token)
+  (:import-from #:screenshotbot/diff-report
+                #:diff-report-title)
   (:export
    #:merge-request-promoter
    #:gitlab-acceptable))

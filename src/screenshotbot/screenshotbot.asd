@@ -187,7 +187,7 @@
                :screenshotbot)
   :components ((:file "testing")
                (:file "factory")
-               (:file "test-compare")
+               (:file "test-diff-report")
                (:file "test-mailer")
                (:file "test-installation")
                (:file "test-assets")

@@ -12,6 +12,7 @@
         #:../model/test-object
         #:../model/company
         #:../compare
+        #:../diff-report
         #:./access-checks
         #:../model/recorder-run
         #:../promote-api

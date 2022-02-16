@@ -14,6 +14,8 @@
         #:screenshotbot/compare)
   (:import-from #:screenshotbot/server
                 #:*domain*)
+  (:import-from #:screenshotbot/diff-report
+                #:diff-report-title)
   (:export
    #:commenting-promoter
    #:add-comment))

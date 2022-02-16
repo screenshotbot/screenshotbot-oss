@@ -19,7 +19,9 @@
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:screenshotbot/compare
-                #:warmup-comparison-images))
+                #:warmup-comparison-images)
+  (:import-from #:screenshotbot/diff-report
+                #:diff-report-title))
 (in-package :screenshotbot/tasks/common)
 
 (defclass noop-task-integration (task-integration)

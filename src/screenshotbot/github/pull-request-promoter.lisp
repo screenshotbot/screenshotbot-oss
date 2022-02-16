@@ -26,6 +26,8 @@
   (:import-from #:bknr.datastore
                 #:with-transaction
                 #:persistent-class)
+  (:import-from #:screenshotbot/diff-report
+                #:diff-report-title)
   (:export
    #:pull-request-promoter
    #:pr-acceptable))
@@ -192,7 +194,7 @@
                                   :run run
                                   :previous-run base-run
                                   :channel (when run (recorder-run-channel run))
-                                  :title (diff-report-title diff-report))))
+                                  :title  (diff-report-title diff-report))))
        (with-transaction ()
          (setf (report-acceptable report)
                (make-acceptable promoter report)))
