@@ -291,6 +291,12 @@
   (with-open-file (s file :direction :output :if-exists :supersede)
     (write form :stream s)))
 
+(defclass remote-response ()
+  ((status :initarg :status
+           :reader remote-response-status)
+   (headers :initarg :headers
+            :reader remote-response-headers)))
+
 (defun http-get (url &key (force-binary t)
                        (cache t))
   (let ((cache-key (format
@@ -298,23 +304,22 @@
                     (ironclad:byte-array-to-hex-string (ironclad:digest-sequence :sha256 (flexi-streams:string-to-octets  (quri:render-uri url))))
                     force-binary)))
     (let* ((output (make-pathname :name cache-key :type "data" :defaults (http-cache-dir)))
-           (status (make-pathname :type "status" :defaults output))
-           (headers (make-pathname :type "headers" :defaults output)))
+           (info (make-pathname :type "info" :defaults output)))
       (flet ((read-cached ()
-               (values
-                (open output :element-type (if force-binary
-                                               '(unsigned-byte 8)
-                                               'character))
-                (read-file status)
-                (a:alist-hash-table
-                 (read-file headers))))
+               (let ((info (cl-store:restore info)))
+                (values
+                 (open output :element-type (if force-binary
+                                                '(unsigned-byte 8)
+                                                'character))
+                 (remote-response-status info)
+                 (remote-response-headers info))))
              (good-cache-p (file)
                (and
                 (uiop:file-exists-p file)
                 (> (file-write-date file)
                    (- (get-universal-time) 3600)))))
         (cond
-          ((and cache (every #'good-cache-p (list output status headers)))
+          ((and cache (every #'good-cache-p (list info output)))
            (format *replay-logs* "Using cached asset for ~a~%" url)
            (read-cached))
          (t
@@ -325,8 +330,10 @@
                                            :if-exists :supersede
                                            :direction :output)
               (uiop:copy-stream-to-stream stream output :element-type '(unsigned-byte 8)))
-            (write-to-file %status status)
-            (write-to-file (a:hash-table-alist %headers) headers))
+            (cl-store:store (make-instance 'remote-response
+                                           :status %status
+                                           :headers %headers)
+                            info))
           (read-cached)))))))
 
 (defmethod fetch-asset (url tmpdir (snapshot snapshot))
