@@ -266,6 +266,7 @@
 
               (dex:get url :want-stream t :force-binary force-binary
                            :read-timeout *timeout*
+                           :keep-alive t
                            :connect-timeout *timeout*
                            :force-string force-string))
           (setf (gethash "X-Original-Url" response-headers) (quri:render-uri url))
