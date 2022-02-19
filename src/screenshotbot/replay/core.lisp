@@ -227,6 +227,7 @@
                 (dex:response-headers e))))
            (respond-500 (e)
              (declare (ignore e))
+             (log:warn "Faking 500 response code for ~a because of ~s" url e)
              (return-from http-get-without-cache
                (values
                 (flexi-streams:make-in-memory-input-stream
