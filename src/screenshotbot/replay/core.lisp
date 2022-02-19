@@ -210,7 +210,8 @@
 (defun http-get-without-cache (url &key (force-binary t)
                                      (force-string nil))
   (let* ((url (quri:uri url))
-         (scheme (quri:uri-scheme url)))
+         (scheme (quri:uri-scheme url))
+         (timeout-retries 0))
     (flet ((respond-404 (e)
              (return-from
               http-get-without-cache
@@ -228,7 +229,6 @@
                 (dex:response-status e)
                 (dex:response-headers e))))
            (respond-500 (e)
-             (declare (ignore e))
              (log:warn "Faking 500 response code for ~a because of ~a" url e)
              (return-from http-get-without-cache
                (values
@@ -245,7 +245,12 @@
         (multiple-value-bind (remote-stream status response-headers)
             (handler-bind ((dex:http-request-failed #'respond-404)
                            (usocket:timeout-error
-                             #'respond-500)
+                             (lambda (e)
+                               (declare (ignore e))
+                               (when (< (incf timeout-retries) 4)
+                                 (log:warn "connect timeout: Will retry in 5 seconds")
+                                 (sleep 5)
+                                 (dex:retry-request 3))))
                            (cl+ssl::hostname-verification-error #'respond-500)
                            (cl+ssl::ssl-error-syscall
                              #'respond-500)
@@ -257,6 +262,7 @@
               (log:info "Fetching: ~a" url)
               (format *replay-logs* "Fetching: ~a~%" url)
               (finish-output *replay-logs*)
+
               (dex:get url :want-stream t :force-binary force-binary
                            :read-timeout *timeout*
                            :connect-timeout *timeout*
