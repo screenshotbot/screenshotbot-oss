@@ -43,6 +43,8 @@
 
 (defvar *replay-logs* *terminal-io*)
 
+(defvar *timeout* 15)
+
 (defclass snapshot-request ()
   ((snapshot :initarg :snapshot
              :reader snapshot)
@@ -227,7 +229,7 @@
                 (dex:response-headers e))))
            (respond-500 (e)
              (declare (ignore e))
-             (log:warn "Faking 500 response code for ~a because of ~s" url e)
+             (log:warn "Faking 500 response code for ~a because of ~a" url e)
              (return-from http-get-without-cache
                (values
                 (flexi-streams:make-in-memory-input-stream
@@ -256,6 +258,8 @@
               (format *replay-logs* "Fetching: ~a~%" url)
               (finish-output *replay-logs*)
               (dex:get url :want-stream t :force-binary force-binary
+                           :read-timeout *timeout*
+                           :connect-timeout *timeout*
                            :force-string force-string))
           (setf (gethash "X-Original-Url" response-headers) (quri:render-uri url))
           (values remote-stream status response-headers)))
