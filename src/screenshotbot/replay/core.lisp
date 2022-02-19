@@ -144,9 +144,7 @@
   "Fix some bad headers"
   (loop for k being the hash-keys of headers
         if (string-equal "Access-Control-Allow-Origin" k)
-          do (setf (gethash k headers) "*")
-        if (string-equal "Cache-control" k)
-          do (Setf (gethash k headers) "no-cache")))
+          do (setf (gethash k headers) "*")))
 
 (defun call-with-fetch-asset (fn type tmpdir &key url
                                                (snapshot (error "must provide snapshot")))
@@ -267,9 +265,11 @@
               (format *replay-logs* "Fetching: ~a~%" url)
               (finish-output *replay-logs*)
 
+              (sleep 1)
               (dex:get url :want-stream t :force-binary force-binary
                            :read-timeout *timeout*
                            :keep-alive t
+                           :use-connection-pool t
                            :connect-timeout *timeout*
                            :force-string force-string))
           (setf (gethash "X-Original-Url" response-headers) (quri:render-uri url))
