@@ -248,9 +248,10 @@
                              (lambda (e)
                                (declare (ignore e))
                                (when (< (incf timeout-retries) 4)
-                                 (log:warn "connect timeout: Will retry in 5 seconds")
-                                 (sleep 5)
-                                 (dex:retry-request 3))))
+                                 (log:warn "connect timeout: Will retry in 10 seconds")
+                                 (sleep 10)
+                                 (log:info "Retrying now")
+                                 (dex:retry-request e))))
                            (cl+ssl::hostname-verification-error #'respond-500)
                            (cl+ssl::ssl-error-syscall
                              #'respond-500)
