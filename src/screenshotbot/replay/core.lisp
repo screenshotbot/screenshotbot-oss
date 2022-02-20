@@ -336,7 +336,8 @@
           ((and cache (every #'good-cache-p (list info output))
                 (let ((info (cl-store:restore info)))
                   (and
-                   (slot-boundp info 'request-time) #| Compatibility with old caches |#
+                   (slot-boundp info 'request-time) #| Compatibility with old cache|#
+                   (max-age info)
                    (< (get-universal-time)
                       (+ (max-age info) (request-time info))))))
            (format *replay-logs* "Using cached asset for ~a~%" url)
