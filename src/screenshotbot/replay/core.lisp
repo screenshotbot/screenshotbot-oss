@@ -265,7 +265,6 @@
               (format *replay-logs* "Fetching: ~a~%" url)
               (finish-output *replay-logs*)
 
-              (sleep 1)
               (dex:get url :want-stream t :force-binary force-binary
                            :read-timeout *timeout*
                            :keep-alive t
@@ -294,8 +293,26 @@
 (defclass remote-response ()
   ((status :initarg :status
            :reader remote-response-status)
+   (request-time :initarg :request-time
+                 :initform 0
+                 :reader request-time)
    (headers :initarg :headers
             :reader remote-response-headers)))
+
+(defmethod max-age ((self remote-response))
+  (let ((cache-control (gethash "cache-control" (remote-response-headers self))))
+    (log:info "Got cache-control: ~a" cache-control)
+    (cond
+      (cache-control
+       (let ((parts (str:split "," cache-control)))
+         (loop for part in parts
+               do
+                  (destructuring-bind (key &optional value) (str:split "=" (str:trim part))
+                    (when (string-equal "max-age" key)
+                      (return
+                        (parse-integer value)))))))
+      (t
+       -1))))
 
 (defun http-get (url &key (force-binary t)
                        (cache t))
@@ -314,12 +331,14 @@
                  (remote-response-status info)
                  (remote-response-headers info))))
              (good-cache-p (file)
-               (and
-                (uiop:file-exists-p file)
-                (> (file-write-date file)
-                   (- (get-universal-time) 3600)))))
+               (uiop:file-exists-p file)))
         (cond
-          ((and cache (every #'good-cache-p (list info output)))
+          ((and cache (every #'good-cache-p (list info output))
+                (let ((info (cl-store:restore info)))
+                  (and
+                   (slot-boundp info 'request-time) #| Compatibility with old caches |#
+                   (< (get-universal-time)
+                      (+ (max-age info) (request-time info))))))
            (format *replay-logs* "Using cached asset for ~a~%" url)
            (read-cached))
          (t
@@ -332,6 +351,7 @@
               (uiop:copy-stream-to-stream stream output :element-type '(unsigned-byte 8)))
             (cl-store:store (make-instance 'remote-response
                                            :status %status
+                                           :request-time (get-universal-time)
                                            :headers %headers)
                             info))
           (read-cached)))))))

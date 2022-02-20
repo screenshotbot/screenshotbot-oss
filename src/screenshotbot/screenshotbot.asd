@@ -258,6 +258,7 @@
   :depends-on (:plump
                :lquery
                :uuid
+               :cl-store
                :json-mop
                :alexandria)
   :components ((:module "replay"
