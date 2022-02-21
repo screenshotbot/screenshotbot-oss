@@ -107,4 +107,6 @@ background: url(shttps://google.com?f=1)
                            (make-hash-table :test #'equal))))
 
      (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
-       (load-url-into snapshot (quri:uri "https://screenshotbot.io/") tmpdir)))))
+       (load-url-into snapshot (quri:uri "https://screenshotbot.io/") tmpdir))
+          (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
+       (load-url-into snapshot "https://screenshotbot.io/" tmpdir)))))

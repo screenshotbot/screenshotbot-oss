@@ -318,10 +318,11 @@
 (defun http-get (url &key (force-binary t)
                      (force-string nil)
                        (cache t))
-  (let ((cache-key (format
-                    nil "~a-~a-v4"
-                    (ironclad:byte-array-to-hex-string (ironclad:digest-sequence :sha256 (flexi-streams:string-to-octets  (quri:render-uri url))))
-                    force-binary)))
+  (let* ((url (quri:uri url))
+         (cache-key (format
+                     nil "~a-~a-v4"
+                     (ironclad:byte-array-to-hex-string (ironclad:digest-sequence :sha256 (flexi-streams:string-to-octets  (quri:render-uri url))))
+                     force-binary)))
     (let* ((output (make-pathname :name cache-key :type "data" :defaults (http-cache-dir)))
            (info (make-pathname :type "info" :defaults output)))
       (flet ((read-cached ()
