@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:load-url-into
                 #:url
                 #:assets
                 #:snapshot
@@ -92,3 +93,18 @@ background: url(shttps://google.com?f=1)
         (is (equal 2 (length (assets snapshot))))
         (push-asset snapshot (quri:uri font)  t)
         (is (equal 2 (length (assets snapshot))))))))
+
+(test happy-path-fetch-toplevel
+  (cl-mock:with-mocks ()
+   (tmpdir:with-tmpdir (tmpdir)
+     (cl-mock:if-called 'dex:get
+                        (lambda (url &rest args)
+                          (values
+                           (flexi-streams:make-in-memory-input-stream
+                            (flexi-streams:string-to-octets
+                             "<html><body></body></html>"))
+                           200
+                           (make-hash-table :test #'equal))))
+
+     (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
+       (load-url-into snapshot (quri:uri "https://screenshotbot.io/") tmpdir)))))

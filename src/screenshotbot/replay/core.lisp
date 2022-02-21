@@ -316,6 +316,7 @@
        -1))))
 
 (defun http-get (url &key (force-binary t)
+                     (force-string nil)
                        (cache t))
   (let ((cache-key (format
                     nil "~a-~a-v4"
@@ -326,9 +327,13 @@
       (flet ((read-cached ()
                (let ((info (cl-store:restore info)))
                 (values
-                 (open output :element-type (if force-binary
-                                                '(unsigned-byte 8)
-                                                'character))
+                 (open output :element-type (cond
+                                             (force-binary
+                                              '(unsigned-byte 8))
+                                             (force-string
+                                              'character)
+                                             (t
+                                              'character)))
                  (remote-response-status info)
                  (remote-response-headers info))))
              (good-cache-p (file)
