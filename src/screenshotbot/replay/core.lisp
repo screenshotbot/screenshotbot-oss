@@ -477,7 +477,7 @@
                "Replace the attribute if it exists with the output from the function"
                (let ((val (plump:attribute node name)))
                  (when (and val
-                            (not (str:starts-with-p "data:" val)))
+                            (should-rewrite-url-p val))
                    (let* ((ref-uri val)
                           (uri (quri:merge-uris ref-uri root-url)))
                      (setf (plump:attribute node name) (funcall fn uri))))))
