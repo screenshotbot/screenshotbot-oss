@@ -8,7 +8,6 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
-                #:*fetch-context*
                 #:url
                 #:assets
                 #:snapshot
@@ -64,33 +63,32 @@ background: url(shttps://google.com?f=1)
 
 
 (test push-asset-is-correctly-cached
-  (let ((*fetch-context* nil))
-   (tmpdir:with-tmpdir (tmpdir)
-     (cl-mock:with-mocks ()
+  (tmpdir:with-tmpdir (tmpdir)
+    (cl-mock:with-mocks ()
 
-       (cl-mock:if-called 'dex:get
-                          (lambda (url &rest args)
-                            (values
-                             (flexi-streams:make-in-memory-input-stream
-                              #())
-                             200
-                             (make-hash-table :test #'equal))))
+      (cl-mock:if-called 'dex:get
+                         (lambda (url &rest args)
+                           (values
+                            (flexi-streams:make-in-memory-input-stream
+                             #())
+                            200
+                            (make-hash-table :test #'equal))))
 
-       (let* ((snapshot (make-instance 'snapshot :tmpdir tmpdir))
-              (rand (random 10000000000))
-              (font (format nil "https://screenshotbot.io/assets/fonts/metropolis/Metropolis-Bold-arnold.otf?id=~a" rand))
-              (html (format nil "https://screenshotbot.io/?id=~a" rand)))
+      (let* ((snapshot (make-instance 'snapshot :tmpdir tmpdir))
+             (rand (random 10000000000))
+             (font (format nil "https://screenshotbot.io/assets/fonts/metropolis/Metropolis-Bold-arnold.otf?id=~a" rand))
+             (html (format nil "https://screenshotbot.io/?id=~a" rand)))
 
-         (push-asset snapshot (quri:uri html) nil)
-         (is (equal 1 (length (assets snapshot))))
-         (push-asset snapshot (quri:uri font)  t)
-         (is (equal 2 (length (assets snapshot))))
-         (is (equal font
-                    (url (car (Assets snapshot)))))
-         (push-asset snapshot (quri:uri font)  t)
+        (push-asset snapshot (quri:uri html) nil)
+        (is (equal 1 (length (assets snapshot))))
+        (push-asset snapshot (quri:uri font)  t)
+        (is (equal 2 (length (assets snapshot))))
+        (is (equal font
+                   (url (car (Assets snapshot)))))
+        (push-asset snapshot (quri:uri font)  t)
 
-         (is (equal 2 (length (assets snapshot))))
-         (push-asset snapshot (quri:uri html) nil)
-         (is (equal 2 (length (assets snapshot))))
-         (push-asset snapshot (quri:uri font)  t)
-         (is (equal 2 (length (assets snapshot)))))))))
+        (is (equal 2 (length (assets snapshot))))
+        (push-asset snapshot (quri:uri html) nil)
+        (is (equal 2 (length (assets snapshot))))
+        (push-asset snapshot (quri:uri font)  t)
+        (is (equal 2 (length (assets snapshot))))))))

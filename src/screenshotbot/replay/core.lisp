@@ -43,8 +43,6 @@
 
 (defvar *replay-logs* *terminal-io*)
 
-(defvar *fetch-context*)
-
 (defvar *timeout* 15)
 
 (defclass snapshot-request ()
@@ -213,8 +211,6 @@
   (let* ((url (quri:uri url))
          (scheme (quri:uri-scheme url))
          (timeout-retries 0))
-    (assert (not (member url *fetch-context* :test 'quri:uri=)))
-    (push url *fetch-context*)
     (flet ((respond-404 (e)
              (return-from
               http-get-without-cache
@@ -574,34 +570,33 @@
 
 (defun load-url-into (snapshot url tmpdir)
   (restart-case
-      (let ((*fetch-context* nil))
-       (let* ((content (http-get url :force-string t
-                                     :force-binary nil))
-              (html (plump:parse content)))
-         (process-node html snapshot url)
-         (add-css html)
+      (let* ((content (http-get url :force-string t
+                                    :force-binary nil))
+             (html (plump:parse content)))
+        (process-node html snapshot url)
+        (add-css html)
 
-         #+nil(error "got html: ~a"
-                     (with-output-to-string (s)
-                       (plump:serialize html s)))
-         (uiop:with-temporary-file (:direction :io :stream tmp :element-type '(unsigned-byte 8))
-           (let ((root-asset (call-with-fetch-asset
-                              (lambda ()
-                                (plump:serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
-                                (file-position tmp 0)
-                                (let ((headers (make-hash-table)))
-                                  (setf (gethash "content-type" headers)
-                                        "text/html; charset=UTF-8")
-                                  (values tmp 200 headers)))
-                              "html"
-                              tmpdir
-                              :url url
-                              :snapshot snapshot)))
-             (push (asset-file root-asset)
-                   (root-files snapshot))
-             (push root-asset
-                   (assets snapshot))))
-         snapshot))
+        #+nil(error "got html: ~a"
+                    (with-output-to-string (s)
+                      (plump:serialize html s)))
+        (uiop:with-temporary-file (:direction :io :stream tmp :element-type '(unsigned-byte 8))
+          (let ((root-asset (call-with-fetch-asset
+                             (lambda ()
+                               (plump:serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
+                               (file-position tmp 0)
+                               (let ((headers (make-hash-table)))
+                                 (setf (gethash "content-type" headers)
+                                       "text/html; charset=UTF-8")
+                                 (values tmp 200 headers)))
+                             "html"
+                             tmpdir
+                             :url url
+                             :snapshot snapshot)))
+            (push (asset-file root-asset)
+                  (root-files snapshot))
+            (push root-asset
+                  (assets snapshot))))
+        snapshot)
     (retry-load-url-into ()
       (load-url-into snapshot url tmpdir))))
 
