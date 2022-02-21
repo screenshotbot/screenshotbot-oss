@@ -539,6 +539,8 @@
            ((string-equal "canonical" rel)
             ;; do nothing
             (values))
+           ((string-equal "dns-prefetch" rel)
+            (values))
            (t
             (replace-attr "href" (string-equal "stylesheet" rel))))))
        ((? "script")
