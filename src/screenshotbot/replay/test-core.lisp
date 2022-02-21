@@ -8,8 +8,12 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:url
+                #:assets
+                #:snapshot
                 #:should-rewrite-url-p
                 #:read-srcset
+                #:push-asset
                 #:rewrite-css-urls)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/replay/test-core)
@@ -56,3 +60,35 @@ background: url(shttps://google.com?f=1)
 (test should-rewrite-url-p
   (is-true (should-rewrite-url-p "https://foobar.com/foo"))
   (is-false (should-rewrite-url-p "moz-extension://foobar.com/foo")))
+
+
+(test push-asset-is-correctly-cached
+  (tmpdir:with-tmpdir (tmpdir)
+    (cl-mock:with-mocks ()
+
+      (cl-mock:if-called 'dex:get
+                         (lambda (url &rest args)
+                           (values
+                            (flexi-streams:make-in-memory-input-stream
+                             #())
+                            200
+                            (make-hash-table :test #'equal))))
+
+      (let* ((snapshot (make-instance 'snapshot :tmpdir tmpdir))
+             (rand (random 10000000000))
+             (font (format nil "https://screenshotbot.io/assets/fonts/metropolis/Metropolis-Bold-arnold.otf?id=~a" rand))
+             (html (format nil "https://screenshotbot.io/?id=~a" rand)))
+
+        (push-asset snapshot (quri:uri html) nil)
+        (is (equal 1 (length (assets snapshot))))
+        (push-asset snapshot (quri:uri font)  t)
+        (is (equal 2 (length (assets snapshot))))
+        (is (equal font
+                   (url (car (Assets snapshot)))))
+        (push-asset snapshot (quri:uri font)  t)
+
+        (is (equal 2 (length (assets snapshot))))
+        (push-asset snapshot (quri:uri html) nil)
+        (is (equal 2 (length (assets snapshot))))
+        (push-asset snapshot (quri:uri font)  t)
+        (is (equal 2 (length (assets snapshot))))))))

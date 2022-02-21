@@ -429,9 +429,9 @@
 (defmethod push-asset ((snapshot snapshot) url stylesheetp)
   (let ((stylesheetp (or stylesheetp (str:ends-with-p ".css" (quri:render-uri url)))))
     (loop for asset in (assets snapshot)
-          if (string=(url asset) (quri:render-uri url))
+          if (string= (url asset) (quri:render-uri url))
             do
-             (return-from push-asset asset)
+             (return asset)
           finally
              (let ((asset (cond
                             (stylesheetp
