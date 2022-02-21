@@ -277,11 +277,12 @@
        (t
         (error "unsupported scheme: ~a" scheme))))))
 
-(let ((cache-dir))
- (defun http-cache-dir ()
-   (util:or-setf
-    cache-dir
-    (tmpdir:mkdtemp))))
+(defvar *http-cache-dir* nil)
+
+(defun http-cache-dir ()
+  (util:or-setf
+   *http-cache-dir*
+   (tmpdir:mkdtemp)))
 
 (defun read-file (file)
   (with-open-file (s file :direction :input)
