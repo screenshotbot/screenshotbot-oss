@@ -380,6 +380,12 @@
   (uiop:read-file-lines
    (asdf:system-relative-pathname :screenshotbot.pro "replay-regex.txt")))
 
+(defun should-rewrite-url-p (url)
+  (let ((untouched-schemes (list "data:" "moz-extension:")))
+    (loop for scheme in untouched-schemes
+            always
+            (not (str:starts-with-p scheme url)))))
+
 (defun rewrite-css-urls (css fn)
   (destructuring-bind (property-matcher url-matcher) (regexs)
     (declare (ignore property-matcher))
@@ -392,7 +398,7 @@
          (let ((url (subseq match (elt reg-starts 0)
                             (elt reg-ends 0))))
            (cond
-             ((str:starts-with-p "data:" url)
+             ((not (should-rewrite-url-p url))
               ;; we never wan't to rewrite data urls
               url)
              (t

@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:should-rewrite-url-p
                 #:read-srcset
                 #:rewrite-css-urls)
   (:local-nicknames (#:a #:alexandria)))
@@ -51,3 +52,7 @@ background: url(shttps://google.com?f=1)
   (is (equal `(("foo" . "20w")
                ("bar,0" . "30w"))
              (read-srcset "  foo    20w  ,bar,0 30w "))))
+
+(test should-rewrite-url-p
+  (is-true (should-rewrite-url-p "https://foobar.com/foo"))
+  (is-false (should-rewrite-url-p "moz-extension://foobar.com/foo")))
