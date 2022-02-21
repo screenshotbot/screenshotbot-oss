@@ -350,7 +350,7 @@
          (t
           ;; we're not cached yet
           (multiple-value-bind (stream %status %headers)
-              (http-get url :force-binary t)
+              (http-get-without-cache url :force-binary t)
             (with-open-file (output output :element-type '(unsigned-byte 8)
                                            :if-exists :supersede
                                            :direction :output)
@@ -575,8 +575,8 @@
 (defun load-url-into (snapshot url tmpdir)
   (restart-case
       (let ((*fetch-context* nil))
-       (let* ((content (http-get-without-cache url :force-string t
-                                                   :force-binary nil))
+       (let* ((content (http-get url :force-string t
+                                     :force-binary nil))
               (html (plump:parse content)))
          (process-node html snapshot url)
          (add-css html)
