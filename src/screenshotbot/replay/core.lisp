@@ -335,6 +335,14 @@
       (t
        -1))))
 
+(defun remove-quotes (str)
+  (cond
+    ((member (elt str 0)
+             (list #\' #\"))
+     (str:substring 1 -1 str))
+    (t
+     str)))
+
 (defmethod guess-external-format ((info remote-response))
   (or
    (a:when-let ((content-type (gethash "content-type" (remote-response-headers info))))
@@ -342,7 +350,7 @@
            do
               (destructuring-bind (key &optional value) (str:split "=" (str:trim part))
                 (when (string-equal (str:trim key) "charset")
-                  (let* ((charset (str:downcase (str:trim value))))
+                  (let* ((charset (remove-quotes (str:downcase (str:trim value)))))
                     (return
                      (cond
                        ((or

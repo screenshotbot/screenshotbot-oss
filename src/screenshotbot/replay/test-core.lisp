@@ -9,6 +9,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:remote-response
+                #:guess-external-format
                 #:*http-cache-dir*
                 #:load-url-into
                 #:url
@@ -140,3 +142,16 @@ background: url(shttps://google.com?f=1)
      (with-open-stream (content (http-get "https://example.com" :force-string t
                                                                 :force-binary nil))
        (is (equal "<html><body>©</body></html>" (uiop:slurp-input-stream :string content)))))))
+
+(test guess-external-format
+  (flet ((make-info (content-type)
+           (let ((map (make-hash-table :test #'equal)))
+             (setf (gethash "content-type" map) content-type)
+             (make-instance 'remote-response
+                             :headers map))))
+    (is (equal :utf-8
+               (guess-external-format (make-info "text/html; charset=utf-8"))))
+    (is (equal :utf-8
+               (guess-external-format (make-info "text/html; charset=UTF-8"))))
+    (is (equal :utf-8
+               (guess-external-format (make-info "text/html; charset='utf-8' "))))))
