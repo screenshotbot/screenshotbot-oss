@@ -410,7 +410,7 @@
 (defun regexs ()
   ;; taken from https://github.com/callumlocke/css-url-rewriter/blob/master/lib/css-url-rewriter.js
   (uiop:read-file-lines
-   (asdf:system-relative-pathname :screenshotbot.pro "replay-regex.txt")))
+   (asdf:system-relative-pathname :screenshotbot "replay-regex.txt")))
 
 (defun should-rewrite-url-p (url)
   (let ((untouched-schemes (list "data:" "moz-extension:")))
