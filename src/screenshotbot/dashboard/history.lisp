@@ -20,7 +20,9 @@
   (:import-from #:screenshotbot/dashboard/run-page
                 #:history-page)
   (:import-from #:screenshotbot/taskie
-                #:timeago))
+                #:timeago)
+  (:import-from #:util
+                #:oid))
 (in-package :screenshotbot/dashboard/history)
 
 
@@ -41,7 +43,7 @@
           <p>First seen in <commit repo= (channel-repo channel)
                                    hash= (recorder-run-commit r) /></p>)
          (t
-          <p>First seen ,(timeago :timestamp (created-at r))</p>))
+          <p>First seen <a href= (hex:make-url "/runs/:id" :id (oid r))>,(timeago :timestamp (created-at r))</a></p>))
       <a href= (image-public-url (screenshot-image s) :size :full-page) title= "Full screenshot">
         <img src=(image-public-url (screenshot-image s) :size :small) />
       </a>
