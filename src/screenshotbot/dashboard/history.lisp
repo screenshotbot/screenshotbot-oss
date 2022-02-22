@@ -27,13 +27,13 @@
 (markup:enable-reader)
 
 (markup:deftag render-history (&key screenshots runs channel)
-  <div>
+  <div class= "baguetteBox" >
     ,@ (loop for s in screenshots
     for r in runs
     collect
     (cond
     (s
-    <div>
+    <div class= "mb-4" >
       <h4>,(screenshot-name s)</h4>
 
       ,(cond
@@ -42,7 +42,9 @@
                                    hash= (recorder-run-commit r) /></p>)
          (t
           <p>First seen ,(timeago :timestamp (created-at r))</p>))
-      <img src=(image-public-url (screenshot-image s)) />
+      <a href= (image-public-url (screenshot-image s) :size :full-page) title= "Full screenshot">
+        <img src=(image-public-url (screenshot-image s) :size :small) />
+      </a>
 
     </div>)
     (t
