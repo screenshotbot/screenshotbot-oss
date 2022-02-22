@@ -432,6 +432,7 @@
           (script-name (hunchentoot:script-name*))
           (all-comparisons (nibble ()
                              (all-comparisons-page report))))
+     (declare (ignorable all-comparisons))
      (let ((added (diff-report-added report))
            (deleted (diff-report-deleted report))
            (changes (diff-report-changes report)))
@@ -502,6 +503,12 @@
                          <ul class= "screenshot-options-menu" >
                            <li>
                              <a href= "#" data-bs-toggle= "modal" data-bs-target= (format nil "#~a" toggle-id) >Compare</a>
+                           </li>
+                           <li>
+                             <a href= (hex:make-url "/channel/:channel/history" :channel (store-object-id (recorder-run-channel run))
+                                                                                                :screenshot-name (screenshot-name x))>
+                               Full History
+                             </a>
                            </li>
                            <li>
                              <a href= (nibble () (mask-editor (recorder-run-channel run) s
