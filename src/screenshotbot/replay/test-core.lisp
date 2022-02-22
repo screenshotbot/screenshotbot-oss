@@ -1,3 +1,4 @@
+;;;; -*- coding: utf-8 -*-
 ;;;; Copyright 2018-Present Modern Interpreters Inc.
 ;;;;
 ;;;; This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,7 +17,8 @@
                 #:should-rewrite-url-p
                 #:read-srcset
                 #:push-asset
-                #:rewrite-css-urls)
+                #:rewrite-css-urls
+                #:http-get)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/replay/test-core)
 
@@ -115,4 +117,22 @@ background: url(shttps://google.com?f=1)
      (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
        (load-url-into snapshot (quri:uri "https://screenshotbot.io/") tmpdir))
           (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
-       (load-url-into snapshot "https://screenshotbot.io/" tmpdir)))))
+            (load-url-into snapshot "https://screenshotbot.io/" tmpdir)))))
+
+(test utf-8
+  (with-fixture state ()
+   (tmpdir:with-tmpdir (tmpdir)
+     (cl-mock:if-called 'dex:get
+                        (lambda (url &rest args)
+                          (values
+                           (flexi-streams:make-in-memory-input-stream
+                            (flexi-streams:string-to-octets
+                             "<html><body>©</body></html>"))
+                           200
+                           (a:plist-hash-table
+                            `("content-type" "text/html; charset=utf-8")
+                            :test #'equal))))
+
+     (let ((content (http-get "https://example.com" :force-string t
+                              :force-binary nil)))
+       (is (equal "<html><body>©</body></html>" (uiop:slurp-input-stream :string content)))))))
