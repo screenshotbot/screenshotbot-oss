@@ -316,6 +316,29 @@
       (t
        -1))))
 
+(defmethod guess-external-format ((info remote-response))
+  (or
+   (a:when-let ((content-type (gethash "content-type" (remote-response-headers info))))
+     (loop for part in (str:split ";" content-type)
+           do
+              (destructuring-bind (key &optional value) (str:split "=" (str:trim part))
+                (when (string-equal (str:trim key) "charset")
+                  (let ((charset (str:downcase (str:trim value))))
+                    (return
+                     (cond
+                       ((or
+                         (string= charset "utf-8")
+                         (string= charset "utf8"))
+                        :utf-8)
+                       ((or
+                         (string= charset "iso-8859-1")
+                         (string= charset "latin-1"))
+                        :latin-1)
+                       (t
+                        (error "unspported charset ~a" charset)))))))))
+
+   :latin-1))
+
 (defun http-get (url &key (force-binary t)
                      (force-string nil)
                        (cache t))
@@ -335,7 +358,8 @@
                                              (force-string
                                               'character)
                                              (t
-                                              'character)))
+                                              'character))
+                       :external-format (guess-external-format info))
                  (remote-response-status info)
                  (remote-response-headers info))))
              (good-cache-p (file)

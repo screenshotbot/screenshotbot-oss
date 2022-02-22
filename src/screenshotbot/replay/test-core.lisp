@@ -127,7 +127,8 @@ background: url(shttps://google.com?f=1)
                           (values
                            (flexi-streams:make-in-memory-input-stream
                             (flexi-streams:string-to-octets
-                             "<html><body>©</body></html>"))
+                             "<html><body>©</body></html>"
+                             :external-format :utf-8))
                            200
                            (a:plist-hash-table
                             `("content-type" "text/html; charset=utf-8")
