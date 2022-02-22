@@ -37,7 +37,9 @@
    #:repo-url
    #:merge-base
    #:commit
-   #:branch-hash))
+   #:branch-hash
+   #:request-counter
+   #:call-with-request-counter))
 (in-package :screenshotbot/replay/core)
 
 
@@ -124,8 +126,25 @@
    (root-files :accessor root-files
                :json-key "rootFiles"
                :initform nil
-               :json-type (:list :string)))
+               :json-type (:list :string))
+   (request-counter :accessor request-counter
+                    :initform 0
+                    :documentation "When the snapshot is being served,
+                    this keeps track of the total number of current
+                    requests. This allows us to wait until all assets
+                    are served before taking screenshots."))
   (:metaclass json-serializable-class))
+
+(defvar *request-counter-lock* (bt:make-lock "request-counter-lock"))
+
+(defmethod call-with-request-counter ((snapshot snapshot) fn)
+  (unwind-protect
+       (progn
+         (bt:with-lock-held (*request-counter-lock*)
+           (incf (request-counter snapshot)))
+         (funcall fn))
+    (bt:with-lock-held (*request-counter-lock*)
+      (decf (request-counter snapshot)))))
 
 (defun root-assets (snapshot)
   (let ((map (make-hash-table :test 'equal)))
@@ -323,7 +342,7 @@
            do
               (destructuring-bind (key &optional value) (str:split "=" (str:trim part))
                 (when (string-equal (str:trim key) "charset")
-                  (let ((charset (str:downcase (str:trim value))))
+                  (let* ((charset (str:downcase (str:trim value))))
                     (return
                      (cond
                        ((or
