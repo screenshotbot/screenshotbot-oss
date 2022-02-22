@@ -259,6 +259,7 @@
                :lquery
                :uuid
                :cl-store
+               :dexador
                :json-mop
                :alexandria)
   :components ((:module "replay"
