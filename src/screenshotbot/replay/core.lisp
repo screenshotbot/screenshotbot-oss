@@ -478,22 +478,23 @@
                     :response-headers response-headers)))))
 
 (defmethod push-asset ((snapshot snapshot) url stylesheetp)
-  (let ((stylesheetp (or stylesheetp (str:ends-with-p ".css" (quri:render-uri url)))))
-    (loop for asset in (assets snapshot)
-          for this-url = (url asset)
-          do (check-type this-url string))
-    (loop for asset in (assets snapshot)
-          if (string= (url asset) (quri:render-uri url))
-            do
-             (return asset)
-          finally
-             (let ((asset (cond
-                            (stylesheetp
-                             (fetch-css-asset snapshot url (tmpdir snapshot)))
-                            (t
-                             (fetch-asset url (tmpdir snapshot) snapshot)))))
-               (push asset (assets snapshot))
-               (return asset)))))
+  (let ((rendered-uri (quri:render-uri url)))
+   (let ((stylesheetp (or stylesheetp (str:ends-with-p ".css" rendered-uri))))
+     (loop for asset in (assets snapshot)
+           for this-url = (url asset)
+           do (check-type this-url string))
+     (loop for asset in (assets snapshot)
+           if (string= (url asset) rendered-uri)
+             do
+                (return asset)
+           finally
+              (let ((asset (cond
+                             (stylesheetp
+                              (fetch-css-asset snapshot url (tmpdir snapshot)))
+                             (t
+                              (fetch-asset url (tmpdir snapshot) snapshot)))))
+                (push asset (assets snapshot))
+                (return asset))))))
 
 (defun read-srcset (srcset)
   (flet ((read-spaces (stream)
