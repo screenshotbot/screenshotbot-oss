@@ -133,6 +133,9 @@ background: url(shttps://google.com?f=1)
                             `("content-type" "text/html; charset=utf-8")
                             :test #'equal))))
 
-     (let ((content (http-get "https://example.com" :force-string t
-                              :force-binary nil)))
+     (with-open-stream (content (http-get "https://example.com" :force-string t
+                                                                :force-binary nil))
+       (is (equal "<html><body>©</body></html>" (uiop:slurp-input-stream :string content))))
+     (with-open-stream (content (http-get "https://example.com" :force-string t
+                                                                :force-binary nil))
        (is (equal "<html><body>©</body></html>" (uiop:slurp-input-stream :string content)))))))
