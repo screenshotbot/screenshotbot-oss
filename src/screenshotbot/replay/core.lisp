@@ -322,7 +322,7 @@
 
 (defmethod max-age ((self remote-response))
   (let ((cache-control (gethash "cache-control" (remote-response-headers self))))
-    (log:info "Got cache-control: ~a" cache-control)
+    (log:debug "Got cache-control: ~a" cache-control)
     (cond
       (cache-control
        (let ((parts (str:split "," cache-control)))
