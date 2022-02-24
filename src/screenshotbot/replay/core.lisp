@@ -106,6 +106,9 @@
                      :json-type (:list http-header)))
   (:metaclass json-serializable-class))
 
+(defmethod print-object ((asset asset) out)
+  (format out "#<ASSET ~a ~a>" (asset-file asset) (url asset)))
+
 (defmethod initialize-instance :after ((self asset) &key &allow-other-keys)
   )
 
@@ -635,7 +638,8 @@
         (process-node html snapshot url)
         (add-css html)
 
-        #+nil(error "got html: ~a"
+        #+nil
+        (error "got html: ~a"
                     (with-output-to-string (s)
                       (plump:serialize html s)))
         (uiop:with-temporary-file (:direction :io :stream tmp :element-type '(unsigned-byte 8))
@@ -646,6 +650,8 @@
                                (let ((headers (make-hash-table)))
                                  (setf (gethash "content-type" headers)
                                        "text/html; charset=UTF-8")
+                                 (setf (gethash "cache-control" headers)
+                                       "no-cache")
                                  (values tmp 200 headers)))
                              "html"
                              tmpdir
