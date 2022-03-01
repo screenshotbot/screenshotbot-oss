@@ -150,10 +150,12 @@
 (deftag change-image-row (&key before-image
                           after-image)
   <div class="change-image-row">
-    <img class= "screenshot-image change-image change-image-left" src= before-image />
+    <img class= "screenshot-image change-image change-image-left" src= before-image
+         loading= "lazy" />
 
     <mdi name= "arrow_forward" />
-    <img class= "screenshot-image change-image change-image-right" src= after-image />
+    <img class= "screenshot-image change-image change-image-right" src= after-image
+         loading= "lazy" />
   </div>)
 
 (deftag change-image-row-triple (&key before-image
@@ -701,5 +703,5 @@
 
 (Deftag screenshot-box (&key screenshot)
   <div class= "mt-4" >
-    <img class= "mt-2 screenshot-image change-image" src= (image-public-url (screenshot-image screenshot) :size :full-page) />
+    <img class= "mt-2 screenshot-image change-image" src= (image-public-url (screenshot-image screenshot) :size :full-page) loading= "lazy" />
   </div>)

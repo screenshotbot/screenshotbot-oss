@@ -19,8 +19,9 @@
   id=id
   href= (util.cdn:make-cdn href) />)
 
-(markup:deftag img (&key src (alt "Image") srcset class style height width id)
+(markup:deftag img (&key src (alt "Image") srcset class style height width id loading)
   (let ((util.cdn:*cdn-cache-key* "images4" ))
     <:img src= (if (str:starts-with-p "/image/blob/" src) src (util.cdn:make-cdn src)) alt=alt srcset=srcset class=class style=style
-    height=height width=width id=id
+          height=height width=width id=id
+          loading=loading
     />))
