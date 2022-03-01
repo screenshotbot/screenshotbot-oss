@@ -406,17 +406,166 @@
     Zoom to change
   </button>)
 
-(deftag screenshot-header (children &key screenshot)
-  <div class= "screenshot-header">
-    ,@ (let ((parts (str:split "--" (screenshot-name screenshot) :limit 2)))
+(defun get-only-screenshot-name (screenshot)
+  (car
+   (str:split "--" (screenshot-name screenshot) :limit 2)))
 
-         (list
-          <h4 class= "d-inline-block" >
-            ,(car parts)
-          </h4>
-          (when (cadr parts)
-            <h6>,(cadr parts)</h6>)))
-    ,@children
+(defun get-tab-title (screenshot)
+  (cadr
+   (str:split "--" (screenshot-name screenshot) :limit 2)))
+
+
+(defclass tab ()
+  ((title :initarg :title
+          :reader tab-title)
+   (content :initarg :content
+            :reader tab-content)))
+
+(defun maybe-tabulate (tabs &aux (id (format nil "a~a" (random 10000000))))
+  (cond
+    ((and (eql 1 (length tabs))
+          (str:emptyp (tab-title (car tabs))))
+     ;; don't show the tabulation
+     (tab-content (car tabs)))
+    (t
+       <markup:merge-tag>
+         <ul class= "nav nav-tabs" role= "tablist" >
+           ,@ (loop for tab in tabs
+                    for ctr from 0
+                    collect
+                    <li class= "nav-item mt-3" role= "presentation" >
+                      <button class= (format nil "nav-link ~a" (if (= ctr 0) "active" ""))
+                              data-bs-toggle= "tab"
+                              data-bs-target= (format nil "#~a-~a" id ctr)
+                              role=tab
+                              aria-controls= (format nil "~a-~a" id ctr)
+                              aria-selector (if (= ctr 0) "true" "false") >
+                        ,(tab-title tab)
+                      </button>
+                    </li>)
+         </ul>
+
+         <div class= "tab-content">
+           ,@(loop for tab in tabs
+           for ctr from 0
+           collect
+           <div class= (format nil "tab-pane  ~a" (if (= ctr 0) "show active" ""))
+                id= (format nil "~a-~a" id ctr)
+                role= "tab-panel"
+                aria-labelled-by= (tab-title tab) >
+             ,(tab-content tab)
+           </div>)
+         </div>
+  </markup:merge-tag>)))
+
+(defclass group-item ()
+  ((subtitle :reader group-item-subtitle
+             :initarg :subtitle)
+   (item :initarg :actual-item
+         :reader actual-item)))
+
+(defclass group ()
+  ((title :initarg :title
+          :reader group-title)
+   (items :initarg :items
+          :reader group-items)))
+
+(defun make-groups (items &key key subtitle)
+  (let ((res (make-hash-table :test #'equal)))
+    (loop for item in items
+          do (push item
+                   (gethash (funcall key item) res nil)))
+    (loop for key being the hash-keys of res
+          collect (make-instance 'group
+                                  :title key
+                                  :items
+                                  (loop for item in (gethash key res)
+                                        collect (make-instance 'group-item
+                                                                :subtitle (funcall subtitle item)
+                                                                :actual-item item))))))
+
+(defun render-change-group (group run next-id script-name)
+  <div class= "mt-4">
+    <div class= "screenshot-header">
+      <h4>,(group-title group)</h4>
+    </div>
+    ,(maybe-tabulate
+      (loop for group-item in (group-items group)
+            for change = (actual-item group-item)
+            for s = (before change)
+            for x = (after change)
+            collect
+    (make-instance
+    'tab
+    :title (group-item-subtitle group-item)
+    :content
+    (let* ((s s)
+    (x X)
+    (image-comparison-job
+    (make-instance 'image-comparison-job
+    :before-image x
+    :after-image s))
+    (compare-nibble (nibble ()
+    (prepare-image-comparison
+    image-comparison-job)))
+    (zoom-to-nibble (nibble ()
+    (random-zoom-to x s)))
+    (toggle-id (format nil "toggle-id-~a" (incf next-id)))
+    (modal-label (format nil "~a-modal-label" toggle-id)))
+
+    <div class= "" >
+      <div class= "screenshot-header" >
+        <ul class= "screenshot-options-menu" >
+          <li>
+            <a href= "#" data-bs-toggle= "modal" data-bs-target= (format nil "#~a" toggle-id) >Compare</a>
+          </li>
+          <li>
+            <a href= (hex:make-url "/channel/:channel/history" :channel (store-object-id (recorder-run-channel run))
+                                                                                                                    :screenshot-name (screenshot-name x))>
+              Full History
+            </a>
+          </li>
+          <li>
+            <a href= (nibble () (mask-editor (recorder-run-channel run) s
+               :redirect script-name))
+               >
+              Edit Masks
+            </a>
+          </li>
+        </ul>
+      </div>
+      <change-image-row before-image=(image-public-url (screenshot-image x) :size :full-page)
+                        after-image=(image-public-url (screenshot-image s) :size :full-page)
+                        />
+
+      <div class= "modal fade image-comparison-modal" id= toggle-id tabindex= "-1" role= "dialog"
+           aria-labelledby=modal-label
+           aria-hidden= "true" >
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id=modal-label >Image Comparison</h5>
+              <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">
+                  &times
+                </span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <progress-img
+                src=compare-nibble
+                zoom-to=zoom-to-nibble
+                alt= "Image difference" />
+            </div>
+            <div class="modal-footer">
+              <zoom-to-change-button />
+
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>))))
   </div>)
 
 (deftag render-diff-report (&key run to
@@ -433,9 +582,29 @@
           (all-comparisons (nibble ()
                              (all-comparisons-page report))))
      (declare (ignorable all-comparisons))
-     (let ((added (diff-report-added report))
-           (deleted (diff-report-deleted report))
-           (changes (diff-report-changes report)))
+     (let* ((added (diff-report-added report))
+            (added (loop for s in added
+                         if (filteredp s)
+                           collect s))
+            (deleted (diff-report-deleted report))
+            (deleted (loop for s in deleted
+                           if (filteredp s)
+                             collect s))
+            (changes (diff-report-changes report))
+            (changes (loop for change in changes
+                           if (or (filteredp (before change))
+                                  (filteredp (after change)))
+                             collect change))
+            (changes-groups (make-groups changes :key (lambda (change)
+                                                        (get-only-screenshot-name (before change)))
+                                                 :subtitle (lambda (change)
+                                                             (get-tab-title (before change)))))
+            (added-groups (make-groups added
+                                       :key #'get-only-screenshot-name
+                                       :subtitle #'get-tab-title))
+            (deleted-groups (make-groups deleted
+                                         :key #'get-only-screenshot-name
+                                         :subtitle #'get-tab-title)))
        <markup:merge-tag>
        <div class= "page-title-box">
        ,(when acceptable
@@ -478,77 +647,12 @@
        <div class= "card mt-3">
          <div class= "card-body">
            <p>
-             <h1>,(length changes) changes</h1>
-       ,(paginated (loop for change in changes
-                 for s = (before change)
-                 for x = (after change)
-                 if (or (filteredp s) (filteredp x))
-                   collect
-                   (let* ((s s)
-                          (x X)
-                          (image-comparison-job
-                            (make-instance 'image-comparison-job
-                                            :before-image x
-                                            :after-image s))
-                          (compare-nibble (nibble ()
-                                            (prepare-image-comparison
-                                             image-comparison-job)))
-                          (zoom-to-nibble (nibble ()
-                                            (random-zoom-to x s)))
-                          (toggle-id (format nil "toggle-id-~a" (incf next-id)))
-                          (modal-label (format nil "~a-modal-label" toggle-id)))
+             <h1>,(length changes-groups) changes</h1>
+             ,(paginated
+                   (loop for group in changes-groups
+                         collect
+                         (render-change-group group run next-id script-name))
 
-                     <div class= "mt-4" >
-                       <screenshot-header screenshot=x >
-                         <ul class= "screenshot-options-menu" >
-                           <li>
-                             <a href= "#" data-bs-toggle= "modal" data-bs-target= (format nil "#~a" toggle-id) >Compare</a>
-                           </li>
-                           <li>
-                             <a href= (hex:make-url "/channel/:channel/history" :channel (store-object-id (recorder-run-channel run))
-                                                                                                :screenshot-name (screenshot-name x))>
-                               Full History
-                             </a>
-                           </li>
-                           <li>
-                             <a href= (nibble () (mask-editor (recorder-run-channel run) s
-                                :redirect script-name))
-                                >Edit Masks</a>
-                           </li>
-                         </ul>
-                       </screenshot-header>
-                         <change-image-row before-image=(image-public-url (screenshot-image x) :size :full-page)
-                                         after-image=(image-public-url (screenshot-image s) :size :full-page)
-                                         />
-
-                       <div class= "modal fade image-comparison-modal" id= toggle-id tabindex= "-1" role= "dialog"
-                            aria-labelledby=modal-label
-                            aria-hidden= "true" >
-                         <div class="modal-dialog" role="document">
-                           <div class="modal-content">
-                             <div class="modal-header">
-                               <h5 class="modal-title" id=modal-label >Image Comparison</h5>
-                               <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                 <span aria-hidden="true">
-                                   &times
-                                 </span>
-                               </button>
-                             </div>
-                             <div class="modal-body">
-                               <progress-img
-                                 src=compare-nibble
-                                 zoom-to=zoom-to-nibble
-                                 alt= "Image difference" />
-                             </div>
-                             <div class="modal-footer">
-                               <zoom-to-change-button />
-
-                               <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
-                             </div>
-                           </div>
-                         </div>
-                       </div>
-                     </div>))
                    10)
            </p>
 
@@ -560,13 +664,9 @@
 
            <div class= "card">
              <div class= "card-body">
-               <h1>,(length deleted) deleted</h1>
+               <h1>,(length deleted-groups) deleted</h1>
                <p>
-                 ,(paginated (loop for c in deleted
-                                   if (filteredp c)
-                                     collect
-                                   <screenshot-box screenshot=c />)
-                               10)
+                 ,(render-single-group-list deleted-groups)
                </p>
 
              </div>
@@ -575,13 +675,8 @@
        <div class= "col-md-6">
          <div class= "card">
            <div class= "card-body">
-             <h1>,(length added) added</h1>
-             ,(paginated
-               (loop for c in added
-                     if (filteredp c)
-                       collect
-                     <screenshot-box screenshot=c />)
-               10)
+             <h1>,(length added-groups) added</h1>
+             ,(render-single-group-list added-groups)
 
            </div>
          </div>
@@ -589,8 +684,22 @@
        </div>
        </markup:merge-tag>))))
 
+(defun render-single-group-list (groups)
+  (paginated
+    (loop for group in groups
+          collect
+          (maybe-tabulate
+           (loop for group-item in (group-items group)
+                 for screenshot = (actual-item group-item)
+                 collect
+                 (make-instance
+                  'tab
+                   :title (get-tab-title screenshot)
+                   :content
+                   <screenshot-box  screenshot=screenshot /> ))))
+    10))
+
 (Deftag screenshot-box (&key screenshot)
   <div class= "mt-4" >
-    <screenshot-header screenshot=screenshot />
-    <img class= "mt-2 change-image" src= (image-public-url (screenshot-image screenshot) :size :full-page) />
+    <img class= "mt-2 screenshot-image change-image" src= (image-public-url (screenshot-image screenshot) :size :full-page) />
   </div>)
