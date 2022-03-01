@@ -28,6 +28,7 @@
                :clavier
                :cl-cron
                :cl-interpol
+               :dns-client
                :random-sample
                :pem
                ;;:cljwt-custom ;; custom comes from clath, for rs-256
