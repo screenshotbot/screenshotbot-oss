@@ -34,9 +34,11 @@ function runBrowserTests() {
         success: function (){
             log("ERROR: We were able to fetch " + domain);
             logElapsedTime();
+
+            secondTest();
         },
-        error: function (){
-            log("SUCCESS: " + domain + " was inaccessible");
+        error: function (jqxhr, textStatus){
+            log("SUCCESS: " + domain + " was inaccessible because of: " + textStatus);
             logElapsedTime();
             if (getElapsedTime() > 5) {
                 log("ERROR: Took a while to result in an failed ajax request");
