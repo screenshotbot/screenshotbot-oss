@@ -591,7 +591,7 @@
         ;;(replace-attr "data-src")
         ;;(replace-srcset "data-srcset")
         (plump:remove-attribute node "decoding")
-        (plump:remove-attribute node "loading")
+        (setf (plump:attribute node "loading") "eager")
         (plump:remove-attribute node "data-gatsby-image-ssr"))
        ((? "picture")
         (replace-srcset "srcset"))
