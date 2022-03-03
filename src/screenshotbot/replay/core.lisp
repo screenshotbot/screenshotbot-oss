@@ -587,7 +587,8 @@
        ((or (? "img")
             (? "source"))
         (replace-attr "src")
-        (replace-srcset "srcset")
+        (plump:remove-attribute node "srcset")
+        ;;(replace-srcset "srcset")
         ;; webpack? Maybe?
         ;;(replace-attr "data-src")
         ;;(replace-srcset "data-srcset")
