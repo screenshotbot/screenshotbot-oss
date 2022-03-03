@@ -614,7 +614,9 @@
            (t
             (replace-attr "href" (string-equal "stylesheet" rel))))))
        ((? "script")
-        (replace-attr "src")))))
+        (replace-attr "src"))
+       ((? "input")
+        (plump:remove-attribute node "autofocus")))))
   (call-next-method))
 
 (defmethod process-node ((node plump:nesting-node) snapshot root-url)
