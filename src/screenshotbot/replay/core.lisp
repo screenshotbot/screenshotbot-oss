@@ -293,6 +293,7 @@
               (dex:get url :want-stream t :force-binary force-binary
                            :read-timeout *timeout*
                            :keep-alive t
+                           :headers `((:accept . "image/webp,*/*"))
                            :use-connection-pool t
                            :connect-timeout *timeout*
                            :force-string force-string))
@@ -380,7 +381,7 @@
                      (ironclad:byte-array-to-hex-string (ironclad:digest-sequence :sha256 (flexi-streams:string-to-octets  (quri:render-uri url))))
                      force-binary)))
     (let* ((output (make-pathname :name cache-key :type "data" :defaults (http-cache-dir)))
-           (info (make-pathname :type "info" :defaults output)))
+           (info (make-pathname :type "info-v3" :defaults output)))
       (flet ((read-cached ()
                (let ((info (cl-store:restore info)))
                 (values

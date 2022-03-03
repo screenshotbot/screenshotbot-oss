@@ -150,6 +150,7 @@
                     #+lispworks sys:*line-arguments-list*))
           (log:info "args2 is: ~s" args)
 
+
           (multiple-value-bind (vars vals matched dispatch rest)
               (cl-cli:parse-cli args
                                 *options*)
@@ -157,6 +158,9 @@
             (loop for var in vars
                   for val in vals
                   do (setf (symbol-value var) val))
+
+            (when *start-slynk*
+              (slynk-prepare *slynk-preparer*))
 
             (when *verify-store*
               (log:config :info)
@@ -194,9 +198,6 @@
              (util/store:prepare-store))
 
             (cl-cron:start-cron)
-
-            (when *start-slynk*
-              (slynk-prepare *slynk-preparer*))
 
             (cond
               (*shell*
