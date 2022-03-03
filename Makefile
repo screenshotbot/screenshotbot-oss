@@ -49,7 +49,7 @@ DISTINFO=quicklisp/dists/quicklisp/distinfo.txt
 ARC=build/arc/bin/arc
 
 REVISION_ID=$(shell echo '{"ids":["$(DIFF_ID)"]}' | $(ARC) call-conduit differential.querydiffs -- | jq -r '.["response"]["$(DIFF_ID)"]["revisionID"]')
-IMAGE_DEPS=$(DISTINFO) scripts/prepare-image.lisp scripts/init.lisp
+IMAGE_DEPS=scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO) scripts/prepare-image.lisp scripts/init.lisp scripts/asdf.lisp
 
 ifeq ($(UNAME),Linux)
 	LW_CORE=$(LW_PREFIX)/lispworks-$(LW_VERSION)-amd64-linux
