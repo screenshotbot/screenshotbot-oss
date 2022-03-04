@@ -26,9 +26,6 @@
 (defvar *shell*)
 (defvar *start-slynk*)
 (defvar *slynk-loopback-interface*)
-(defvar *ws-port*)
-
-(defvar *ws-server*)
 
 (defparameter *options*
   `((*port* #+screenshotbot-oss "4091"
@@ -38,7 +35,6 @@
     (*slynk-port* #+screenshotbot-oss "4095"
                   #-screenshotbot-oss "4005"
                   "" :params ("SLYNK-PORT"))
-    (*ws-port* "4002" "" :params ("WS-PORT"))
     (*slynk-loopback-interface* "localhost" "The interface on which we bind the slynk port"
                                 :params ("SLYNK-LOOPBACK-INTERFACE"))
     (*start-slynk* #+screenshotbot-oss nil
@@ -202,10 +198,6 @@
              (util/store:prepare-store))
 
             (cl-cron:start-cron)
-
-            (log:info "Starting up websocket server")
-            (setf *ws-server*
-                  (pws:server (parse-integer *ws-port*)))
 
             (cond
               (*shell*
