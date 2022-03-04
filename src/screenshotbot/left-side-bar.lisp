@@ -96,7 +96,7 @@
     </ul>
     <hr />
 
-    <ul class="nav nav-pills flex-column mb-auto me-auto">
+    <ul class="nav nav-pills flex-column mb-auto">
       <left-nav-item href= "/documentation" image-class= "tungsten" target= "_blank"
                      script-name=script-name >
         Documentation
