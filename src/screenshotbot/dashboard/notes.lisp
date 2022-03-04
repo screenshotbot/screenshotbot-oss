@@ -86,7 +86,7 @@
       <div>
         ,@ (loop for note in notes collect
         <div class= "alert alert-info mt-1" >
-          <h6><b>,(user-full-name (user note))</b> commented:</h6>
+          <h6><b>,(user-full-name (user note))</b> added a note:</h6>
           <div>,(message note)</div>
         </div>)
       </div>)))
