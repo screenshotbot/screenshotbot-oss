@@ -6,7 +6,8 @@
 
 (defpackage :screenshotbot/dashboard/notes
   (:use #:cl
-        #:screenshotbot/ui/simple-card-page)
+        #:screenshotbot/ui/simple-card-page
+        #:screenshotbot/template)
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:util/form-state
@@ -23,6 +24,12 @@
                 #:current-user)
   (:import-from #:util/form-errors
                 #:with-form-errors)
+  (:import-from #:screenshotbot/impersonation
+                #:admin-user
+                #:impersonatedp
+                #:impersonation)
+  (:import-from #:screenshotbot/injector
+                #:with-injection)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:create-note-page
@@ -33,16 +40,40 @@
 
 (defun create-note-page (&rest args)
   (nibble ()
-    (apply #'%create-note-page args)))
+    (apply #'%create-note-page-with-impersonation-check args)))
 
 (defclass form-state ()
   ((message :initarg :message
             :reader message))
   (:metaclass form-state-class))
 
-(defun %create-note-page (&key for redirect)
+(defun %create-note-page-with-impersonation-check (&rest args)
+  (flet ((create-with (author)
+           (apply '%create-note-page
+                   :author author
+                   args))
+         )
+   (with-injection (impersonation)
+     (cond
+       ((impersonatedp impersonation)
+        (let ((admin-user (admin-user impersonation)))
+          <app-template>
+            (internal only) Who should we create this as?
+            <ul>
+              <li>
+                <a href= (nibble () (create-with admin-user))>,(user-full-name admin-user)</a>
+              </li>
+              <li>
+                <a href= (nibble () (create-with (current-user)))>,(user-full-name (current-user))</a>
+              </li>
+            </ul>
+          </app-template>))
+       (t
+        (create-with (current-user)))))))
+
+(defun %create-note-page (&key for redirect author)
   (assert redirect)
-  <simple-card-page form-action= (nibble () (submit-create :for for :redirect redirect)) >
+  <simple-card-page form-action= (nibble () (submit-create :for for :redirect redirect :author author)) >
       <div class= "card-header">
         <h4>Add a note</h4>
       </div>
@@ -55,7 +86,7 @@
       </div>
   </simple-card-page>)
 
-(defun submit-create (&key for redirect)
+(defun submit-create (&key for redirect author)
   (assert redirect)
   (let ((form-state (read-form-state 'form-state))
         errors)
@@ -75,7 +106,7 @@
          (t
           (let ((note (apply #'make-instance 'note
                                :for for
-                               :user (current-user)
+                               :user author
                                (form-state-initargs form-state))))
             (declare (ignore note))
             (hex:safe-redirect redirect))))))))
