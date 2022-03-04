@@ -34,7 +34,7 @@
          (acceptor (make-instance 'hunchentoot:easy-acceptor
                                   :name 'test-acceptor
                                   :port port)))
-    (let ((flags:*hostname* (format nil "http://localhost:~a" port)))
+    (let ((flags:*hostname* (format nil "http://127.0.0.1:~a" port)))
      (unwind-protect
           (progn
             (hunchentoot:start acceptor)
