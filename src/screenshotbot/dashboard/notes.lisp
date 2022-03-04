@@ -57,6 +57,7 @@
      (cond
        ((impersonatedp impersonation)
         (let ((admin-user (admin-user impersonation)))
+          (assert admin-user)
           <app-template>
             (internal only) Who should we create this as?
             <ul>
