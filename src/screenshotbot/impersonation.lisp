@@ -23,12 +23,18 @@
   (:metaclass injectable))
 
 (defmethod impersonate ((self impersonation) (user user))
-  (setf (current-user) user)
-  (set-cookie (cookies self)
-              "imp" "1"))
+  (let ((admin-user (current-user)))
+    (setf (current-user) user)
+    (set-cookie (cookies self)
+                "imp" "1")
+    (setf (auth:session-value :admin-user)  admin-user)))
 
 (defmethod impersonatedp ((self impersonation))
   (equal "1" (get-cookie (cookies self) "imp")))
 
+(defmethod admin-user ((self impersonation))
+  (auth:session-value :admin-user))
+
 (defmethod logout ((self impersonation))
+  (setf (auth:session-value :admin-user)  nil)
   (set-cookie (cookies self) "imp" ""))
