@@ -20,6 +20,7 @@
                :screenshotbot/secrets
                :util.java
                :util/phabricator
+               :hunchensocket
                :dexador
                :opticl
                :anaphora

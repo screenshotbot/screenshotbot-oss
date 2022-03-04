@@ -85,7 +85,9 @@
 (defun document-root ()
   (path:catdir *root* #p"static/"))
 
-(defclass acceptor (util:base-acceptor hex:acceptor-with-plugins) ())
+(defclass acceptor (util:base-acceptor
+                    hunchensocket:websocket-acceptor
+                    hex:acceptor-with-plugins) ())
 
 (defvar *acceptor*
   (make-instance 'acceptor
