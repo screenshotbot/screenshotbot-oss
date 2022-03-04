@@ -31,5 +31,8 @@
    (for :initarg :For
         :reader note-for
         :index-type hash-index
-        :index-reader find-notes-for))
-  (:metaclass persistent-class))
+        :index-reader find-notes-for)
+   (created-at :initform 0
+               :initarg :created-at))
+  (:metaclass persistent-class)
+  (:default-initargs :created-at (get-universal-time)))
