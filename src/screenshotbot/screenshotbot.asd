@@ -12,6 +12,7 @@
                :sentry
                :server
                :java.libs
+               :util/form-state
                :jose
                :trivial-file-size
                :screenshotbot.js-assets
