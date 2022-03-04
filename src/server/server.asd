@@ -12,6 +12,7 @@
                "jvm"
                "trivial-shell"
                "bordeaux-threads"
+               "portal"
                "bknr.datastore"
                "hunchentoot-multi-acceptor")
   :serial t
