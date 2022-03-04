@@ -23,6 +23,9 @@
                 #:store-object-with-id)
   (:import-from #:screenshotbot/dashboard/new-compare
                 #:compare-v2-page)
+  (:import-from #:screenshotbot/dashboard/notes
+                #:render-notes
+                #:create-note-page)
   (:export #:report-page #:report-link))
 (in-package :screenshotbot/dashboard/reports)
 
@@ -71,7 +74,17 @@
              </section>
 
              )
+
           <section class= "full-height">
+            <a href= (create-note-page :for report :redirect (make-url 'report-page :id (oid report)))
+               class= "btn btn-secondary mt-2">
+              <span>
+                <mdi name= "add_comment" class= "ps-0" />
+              </span>
+              Add Note
+            </a>
+
+            ,(render-notes :for report)
             <render-diff-report run= (report-run report) to= (report-previous-run report)
                                 lang-filter=lang-filter
                                 device-filter=device-filter

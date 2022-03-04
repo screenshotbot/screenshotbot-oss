@@ -56,8 +56,8 @@
   nil)
 
 
-(deftag mdi (&key name)
-  <i class= "material-icons">,(progn name)</i>)
+(deftag mdi (&key name class)
+  <i class= (format nil "material-icons ~a" class) >,(progn name)</i>)
 
 (deftag selenium-css ()
   (when *seleniump*
