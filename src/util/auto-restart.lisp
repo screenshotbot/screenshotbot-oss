@@ -18,7 +18,9 @@
   (:documentation "When calling with-auto-restart, we expect the
   restart to be defined inside the body, not before it."))
 
-(defmacro with-auto-restart ((&key (retries nil)
+(defvar *attempt* 0)
+
+(defmacro with-auto-restart ((&key (retries 0)
                                 (restart-name))
                              &body body)
   (assert (= 1 (length body)))
@@ -44,11 +46,20 @@
                (assert (symbolp arg)))
 
       `(,@before-args
-        (restart-case
-            (progn
-              ,@decls-onwards)
-          (,restart-name ()
-            (apply #',fn-name ,@ (fix-args-for-funcall var-names))))))))
+        (let ((*attempt* (1+ *attempt*)))
+          (restart-case
+              (flet ((body ()
+                       ,@decls-onwards))
+                (let ((attempt *attempt*))
+                 (flet ((error-handler (e)
+                          (declare (ignore e))
+                          (when (< attempt ,retries)
+                            (invoke-restart ',restart-name))))
+                   (handler-bind ((error #'error-handler))
+                     (let ((*attempt* 0))
+                       (body))))))
+            (,restart-name ()
+             (apply #',fn-name ,@ (fix-args-for-funcall var-names)))))))))
 
 (defun fix-args-for-funcall (var-names)
   (let ((state :default))

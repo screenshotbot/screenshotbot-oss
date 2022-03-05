@@ -148,3 +148,22 @@
           res)))))
   (is (equal '((:foo nil 10) (:foo nil 10) (:foo nil 10))
               (foo :foo))))
+
+(define-condition test-error (error)
+  ())
+
+(test actually-do-automatic-retries
+  (let ((res nil))
+    (with-auto-restart (:retries 3)
+      (defun foo ()
+        (cond
+          ((not (>= (length res) 10))
+           (push t res)
+           (error 'test-error))
+          (t
+           res))))
+
+    (signals test-error
+      (foo))
+    (is (equal '(t t t)
+                res))))
