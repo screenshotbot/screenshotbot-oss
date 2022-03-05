@@ -154,7 +154,8 @@
 
 (test actually-do-automatic-retries
   (let ((res nil))
-    (with-auto-restart (:retries 3)
+    (with-auto-restart (:retries 3
+                        )
       (defun foo ()
         (cond
           ((not (>= (length res) 10))
