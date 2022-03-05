@@ -154,9 +154,10 @@
 
 (test actually-do-automatic-retries
   (let ((res nil))
-    (with-auto-restart (:retries 3
-                        )
+    (with-auto-restart (:retries 3)
       (defun foo ()
+        "dfdf"
+        (declare (inline))
         (cond
           ((not (>= (length res) 10))
            (push t res)
@@ -168,3 +169,15 @@
       (foo))
     (is (equal '(t t t)
                 res))))
+
+
+(test doc-and-declarations
+  (with-auto-restart ()
+    (defun foo (x)
+      "hello world"
+      (declare (optimize debug)
+               ;; this next declare expr ensures this is
+               ;; part of a function
+               (inline))
+      t))
+  (is (equal "hello world" (documentation #'foo 'function))))

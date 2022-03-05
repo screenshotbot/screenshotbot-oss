@@ -50,25 +50,28 @@
     (loop for arg in var-names
           do
              (assert (symbolp arg)))
-
-    `(,@before-args
-      (let ((*attempt* (1+ *attempt*)))
-        (restart-case
-            (flet ((body ()
-                     ,@decls-onwards))
-              (let ((attempt *attempt*))
-                (flet ((error-handler (e)
-                         (declare (ignore e))
-                         (when (< attempt ,retries)
-                           (let ((sleep-time (funcall ,sleep)))
-                             (unless (= 0 sleep-time)
-                               (sleep sleep-time)))
-                           (invoke-restart ',restart-name))))
-                  (handler-bind ((error #'error-handler))
-                    (let ((*attempt* 0))
-                      (body))))))
-          (,restart-name ()
-            (apply #',fn-name ,@ (fix-args-for-funcall var-names))))))))
+    (multiple-value-bind (body decls doc)
+        (uiop:parse-body decls-onwards :documentation t)
+      `(,@before-args
+        ,doc
+        ,@decls
+        (let ((*attempt* (1+ *attempt*)))
+          (restart-case
+              (flet ((body ()
+                       ,@body))
+                (let ((attempt *attempt*))
+                  (flet ((error-handler (e)
+                           (declare (ignore e))
+                           (when (< attempt ,retries)
+                             (let ((sleep-time (funcall ,sleep)))
+                               (unless (= 0 sleep-time)
+                                 (sleep sleep-time)))
+                             (invoke-restart ',restart-name))))
+                    (handler-bind ((error #'error-handler))
+                      (let ((*attempt* 0))
+                        (body))))))
+            (,restart-name ()
+              (apply #',fn-name ,@ (fix-args-for-funcall var-names)))))))))
 
 (defun fix-args-for-funcall (var-names)
   (let ((state :default))
