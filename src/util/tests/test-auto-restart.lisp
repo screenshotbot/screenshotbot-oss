@@ -108,3 +108,43 @@
           res)))))
   (is (equal '((:foo 3) (:foo 3) (:foo 3))
               (foo :foo :b 3))))
+
+
+(test rest-args
+  (let ((res nil))
+   (with-auto-restart ()
+     (defun foo (a &rest b)
+       (cond
+         ((not (>= (length res) 3))
+          (push (list a b) res)
+          (invoke-restart 'retry-foo))
+         (t
+          res)))))
+  (is (equal '((:foo (1 2)) (:foo (1 2)) (:foo (1 2)))
+              (foo :foo 1 2))))
+
+(test rest-args-and-keywords
+  (let ((res nil))
+   (with-auto-restart ()
+     (defun foo (a &rest b &key bar)
+       (cond
+         ((not (>= (length res) 3))
+          (push (list a b bar) res)
+          (invoke-restart 'retry-foo))
+         (t
+          res)))))
+  (is (equal '((:foo (:bar 2) 2) (:foo (:bar 2) 2) (:foo (:bar 2) 2))
+              (foo :foo :bar 2))))
+
+(test rest-args-and-keywords-with-default-keyword
+  (let ((res nil))
+   (with-auto-restart ()
+     (defun foo (a &rest b &key (bar 10))
+       (cond
+         ((not (>= (length res) 3))
+          (push (list a b bar) res)
+          (invoke-restart 'retry-foo))
+         (t
+          res)))))
+  (is (equal '((:foo nil 10) (:foo nil 10) (:foo nil 10))
+              (foo :foo))))

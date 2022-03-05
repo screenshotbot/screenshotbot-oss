@@ -48,27 +48,38 @@
             (progn
               ,@decls-onwards)
           (,restart-name ()
-            (,fn-name ,@ (fix-args-for-funcall var-names))))))))
+            (apply #',fn-name ,@ (fix-args-for-funcall var-names))))))))
 
 (defun fix-args-for-funcall (var-names)
   (let ((state :default))
-    (iter (for var in var-names)
+    (iter (for var in (append var-names
+                              ;; fake ending point
+                              '(&rest nil) ))
       (cond
+        ((eql :end state)
+         #| do nothing |#)
         ((eql '&optional var)
          (setf state :optional))
         ((eql '&key var)
          (setf state :key))
+        ((eql '&rest var)
+         (setf state :rest))
         ((str:starts-with-p "&" (string var))
          (error "Unsupported lambda-list specifier: ~a" var))
         ((not (symbolp var))
+         ;; TODO(arnold): this isn't hard to handle if you do need it.
          (error "Unsupported variable name: ~a, probably because of a
-         keyword arg? [TODO(arnold): this isn't hard to implement if you do
-         need this]" var))
+         keyword arg?" var))
         (t
          (case state
            (:key
             (appending `(,(intern (string var) "KEYWORD")
                          ,var)))
+           (:rest
+            ;; this one is interesting, we can stop looking at anything
+            ;; that comes after this.
+            (collect var)
+            (setf state :end))
            (otherwise
             (collect var))))))))
 
