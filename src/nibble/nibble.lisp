@@ -112,7 +112,7 @@
                                     ;; safety measure, let's set it up
                                     ;; so that we'll never be able to
                                     ;; render this nibble again.
-                                    t))
+                                    (gensym "FAKE-NIBBLE-USER")))
                                  :check-session-p check-session-p
                                  :once once
                                  :args args
