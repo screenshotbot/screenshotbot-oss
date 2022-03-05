@@ -69,3 +69,42 @@
           res)))))
   (is (equal '((:foo 1) (:foo 1) (:foo 1))
               (dummy-method :foo 1))))
+
+(test optional-args
+  (let ((res nil))
+   (with-auto-restart ()
+     (defun foo (a &optional (b :bar))
+       (cond
+         ((not (>= (length res) 3))
+          (push (list a b) res)
+          (invoke-restart 'retry-foo))
+         (t
+          res)))))
+  (is (equal '((:foo :bar) (:foo :bar) (:foo :bar))
+              (foo :foo))))
+
+(test keyword-arg
+  (let ((res nil))
+   (with-auto-restart ()
+     (defun foo (a &key (b :bar))
+       (cond
+         ((not (>= (length res) 3))
+          (push (list a b) res)
+          (invoke-restart 'retry-foo))
+         (t
+          res)))))
+  (is (equal '((:foo :bar) (:foo :bar) (:foo :bar))
+              (foo :foo))))
+
+(test keyword-arg-with-value
+  (let ((res nil))
+   (with-auto-restart ()
+     (defun foo (a &key (b :bar))
+       (cond
+         ((not (>= (length res) 3))
+          (push (list a b) res)
+          (invoke-restart 'retry-foo))
+         (t
+          res)))))
+  (is (equal '((:foo 3) (:foo 3) (:foo 3))
+              (foo :foo :b 3))))

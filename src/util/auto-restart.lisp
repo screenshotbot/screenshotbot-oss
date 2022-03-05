@@ -5,7 +5,8 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :util/auto-restart
-  (:use #:cl)
+  (:use #:cl
+        #:iterate)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-auto-restart))
@@ -40,14 +41,36 @@
       ;; quick validation
       (loop for arg in var-names
             do
-               (assert (and (symbolp arg)
-                            (not (str:starts-with-p "&" (string arg))))))
+               (assert (symbolp arg)))
+
       `(,@before-args
         (restart-case
             (progn
               ,@decls-onwards)
           (,restart-name ()
-            (,fn-name ,@var-names)))))))
+            (,fn-name ,@ (fix-args-for-funcall var-names))))))))
+
+(defun fix-args-for-funcall (var-names)
+  (let ((state :default))
+    (iter (for var in var-names)
+      (cond
+        ((eql '&optional var)
+         (setf state :optional))
+        ((eql '&key var)
+         (setf state :key))
+        ((str:starts-with-p "&" (string var))
+         (error "Unsupported lambda-list specifier: ~a" var))
+        ((not (symbolp var))
+         (error "Unsupported variable name: ~a, probably because of a
+         keyword arg? [TODO(arnold): this isn't hard to implement if you do
+         need this]" var))
+        (t
+         (case state
+           (:key
+            (appending `(,(intern (string var) "KEYWORD")
+                         ,var)))
+           (otherwise
+            (collect var))))))))
 
 (defun call-with-auto-restart (restart-name fn)
   (when (find-restart restart-name)

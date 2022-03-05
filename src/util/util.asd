@@ -97,7 +97,7 @@
 
 (defsystem :util/auto-restart
   :serial t
-  :depends-on (:usocket)
+  :depends-on (:iterate)
   :components ((:file "auto-restart")))
 
 (defsystem :util/form-state
