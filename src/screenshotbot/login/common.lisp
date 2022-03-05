@@ -105,6 +105,9 @@
          (check-type user user)
          user)))))
 
+(defmethod nibble:nibble-current-user ((acceptor screenshotbot/server:acceptor))
+  (current-user))
+
 (defun (Setf current-company) (company)
   (can-view! company)
   (setf (auth:session-value :company) company))

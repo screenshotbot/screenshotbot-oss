@@ -14,4 +14,5 @@
            #:render-nibble
            #:nibble-id
            #:nibble-plugin
-           #:defnibble))
+           #:defnibble
+           #:nibble-current-user))

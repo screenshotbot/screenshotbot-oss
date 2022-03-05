@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:nibble
+                #:nibble-current-user
                 #:defnibble
                 #:nibble-plugin
                 #:nibble
@@ -11,10 +12,17 @@
 
 (def-suite* :test-nibble)
 
+(defclass fake-acceptor ()
+  ())
+
+(defmethod nibble-current-user ((acceptor fake-acceptor))
+  :dummy-user)
+
 (def-fixture state ()
-  (let ((plugin (make-instance 'nibble-plugin
-                                :prefix "/n/")))
-    (&body)))
+  (let ((hunchentoot:*acceptor* (make-instance 'fake-acceptor)))
+   (let ((plugin (make-instance 'nibble-plugin
+                                 :prefix "/n/")))
+     (&body))))
 
 (test preconditions
   (with-fixture state ()
