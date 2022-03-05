@@ -29,7 +29,9 @@
   (let* ((body (car body))
          (sleep (cond
                   ((numberp sleep)
-                   `(lambda () ,sleep))
+                   `(lambda (attempt)
+                      (declare (ignore attempt))
+                      ,sleep))
                   (t
                    sleep)))
          (args-pos (position-if #'listp body))
@@ -63,7 +65,7 @@
                   (flet ((error-handler (e)
                            (declare (ignore e))
                            (when (< attempt ,retries)
-                             (let ((sleep-time (funcall ,sleep)))
+                             (let ((sleep-time (funcall ,sleep attempt)))
                                (unless (= 0 sleep-time)
                                  (sleep sleep-time)))
                              (invoke-restart ',restart-name))))
