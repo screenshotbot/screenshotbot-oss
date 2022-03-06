@@ -670,7 +670,7 @@
                                  :force-binary nil))
           (html (plump:parse content)))
      (process-node context html snapshot url)
-     ;;(add-css html)
+     (add-css html)
 
      #+nil
      (error "got html: ~a"
