@@ -31,6 +31,7 @@
 (register-tdrhq "cl-elastic" "0607087887da76919219b01d0601027bb198b444")
 (register-tdrhq "opticl" "a33e3411d28ebff4b29a59a3619884c0f54ff586")
 (register-tdrhq "cl-webdriver-client" "627869224aabc118ca2db8a802ef177fb24a41ec")
+(register-tdrhq "hunchensocket" "81bc9b3243210e7ea8bd29a0ebc52f5676198991")
 
 (quick-patch:register "https://github.com/tdrhq/cl-plus-ssl"
                             "306b17bbae07a01fb32ecb50f83ed1bd9cbed04e")
