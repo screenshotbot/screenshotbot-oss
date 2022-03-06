@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:context
                 #:remote-response
                 #:guess-external-format
                 #:*http-cache-dir*
@@ -29,7 +30,8 @@
 
 (def-fixture state ()
   (tmpdir:with-tmpdir (tmpdir)
-    (let ((*http-cache-dir* tmpdir))
+    (let ((*http-cache-dir* tmpdir)
+          (context (make-instance 'context)))
       (cl-mock:with-mocks ()
        (&body)))))
 
@@ -90,18 +92,18 @@ background: url(shttps://google.com?f=1)
             (font (format nil "https://screenshotbot.io/assets/fonts/metropolis/Metropolis-Bold-arnold.otf?id=~a" rand))
             (html (format nil "https://screenshotbot.io/?id=~a" rand)))
 
-       (push-asset snapshot (quri:uri html) nil)
+       (push-asset context snapshot (quri:uri html) nil)
        (is (equal 1 (length (assets snapshot))))
-       (push-asset snapshot (quri:uri font)  t)
+       (push-asset context snapshot (quri:uri font)  t)
        (is (equal 2 (length (assets snapshot))))
        (is (equal font
                   (url (car (Assets snapshot)))))
-       (push-asset snapshot (quri:uri font)  t)
+       (push-asset context snapshot (quri:uri font)  t)
 
        (is (equal 2 (length (assets snapshot))))
-       (push-asset snapshot (quri:uri html) nil)
+       (push-asset context snapshot (quri:uri html) nil)
        (is (equal 2 (length (assets snapshot))))
-       (push-asset snapshot (quri:uri font)  t)
+       (push-asset context snapshot (quri:uri font)  t)
        (is (equal 2 (length (assets snapshot))))))))
 
 (test happy-path-fetch-toplevel
@@ -117,9 +119,10 @@ background: url(shttps://google.com?f=1)
                            (make-hash-table :test #'equal))))
 
      (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
-       (load-url-into snapshot (quri:uri "https://screenshotbot.io/") tmpdir))
+       (load-url-into context snapshot (quri:uri "https://screenshotbot.io/") tmpdir))
           (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
-            (load-url-into snapshot "https://screenshotbot.io/" tmpdir)))))
+            (load-url-into context snapshot "https://screenshotbot.io/" tmpdir)
+            (pass)))))
 
 (test utf-8
   (with-fixture state ()

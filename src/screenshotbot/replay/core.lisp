@@ -9,6 +9,8 @@
   (:import-from #:json-mop
                 #:json-serializable
                 #:json-serializable-class)
+  (:import-from #:util/auto-restart
+                #:with-auto-restart)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:rewrite-css-urls
@@ -40,7 +42,8 @@
    #:branch-hash
    #:request-counter
    #:call-with-request-counter
-   #:write-replay-log))
+   #:write-replay-log
+   #:context))
 (in-package :screenshotbot/replay/core)
 
 
@@ -73,6 +76,13 @@
    (merge-base :initarg :merge-base
                :initform nil
                :reader merge-base)))
+
+(defclass context ()
+  ((seen :initform (make-hash-table :test #'equal)
+         :reader context-seen))
+  (:documentation "A crawler context. Keeps track of all DFS nodes
+  we're looking at, and also allows us to customize the node
+  processing for specific websites"))
 
 (defclass http-header ()
   ((name :initarg :name
@@ -160,7 +170,7 @@
           collect
           (gethash file map))))
 
-(defmethod process-node (node snapshot url)
+(defmethod process-node (context node snapshot url)
   (values))
 
 (defun fix-asset-headers (headers)
@@ -169,7 +179,8 @@
         if (string-equal "Access-Control-Allow-Origin" k)
           do (setf (gethash k headers) "*")))
 
-(defun call-with-fetch-asset (fn type tmpdir &key url
+(defmethod call-with-fetch-asset ((context context)
+                                  fn type tmpdir &key url
                                                (snapshot (error "must provide snapshot")))
   (multiple-value-bind (remote-stream status response-headers)
       (funcall fn)
@@ -430,23 +441,22 @@
                             info))
           (read-cached)))))))
 
-(defmethod fetch-asset (url tmpdir (snapshot snapshot))
-  "Fetches the url into a file <hash>.<file-type> in the tmpdir."
-  (let ((pathname (ignore-errors (quri:uri-file-pathname url))))
-   (restart-case
-       (call-with-fetch-asset
-        (lambda ()
-          (http-get url))
-        (cond
-          (pathname
-           (pathname-type pathname))
-          (t
-           nil))
-        tmpdir
-        :url url
-        :snapshot snapshot)
-     (retry-fetch-asset ()
-       (fetch-asset url tmpdir snapshot)))))
+(with-auto-restart ()
+ (defmethod fetch-asset ((context context) url tmpdir (snapshot snapshot))
+   "Fetches the url into a file <hash>.<file-type> in the tmpdir."
+   (let ((pathname (ignore-errors (quri:uri-file-pathname url))))
+     (call-with-fetch-asset
+      context
+      (lambda ()
+        (http-get url))
+      (cond
+        (pathname
+         (pathname-type pathname))
+        (t
+         nil))
+      tmpdir
+      :url url
+      :snapshot snapshot))))
 
 (defun regexs ()
   ;; taken from https://github.com/callumlocke/css-url-rewriter/blob/master/lib/css-url-rewriter.js
@@ -478,7 +488,7 @@
               (format nil "url(~a)" (funcall fn url))))))))))
 
 
-(defmethod fetch-css-asset ((snapshot snapshot) url tmpdir)
+(defmethod fetch-css-asset ((context context) (snapshot snapshot) url tmpdir)
   (multiple-value-bind (remote-stream status response-headers) (http-get url :force-binary nil)
     (with-open-stream (remote-stream remote-stream)
      (uiop:with-temporary-file (:stream out :pathname p :type "css"
@@ -486,7 +496,7 @@
        (flet ((rewrite-url (this-url)
                 (let ((full-url (quri:merge-uris this-url url)))
                   (asset-file
-                   (push-asset snapshot full-url nil)))))
+                   (push-asset context snapshot full-url nil)))))
          (let* ((css (uiop:slurp-stream-string remote-stream))
                 (css (rewrite-css-urls css #'rewrite-url)))
            (write-string css out)
@@ -499,7 +509,7 @@
                     :stylesheetp t
                     :response-headers response-headers)))))
 
-(defmethod push-asset ((snapshot snapshot) url stylesheetp)
+(defmethod push-asset ((context context) (snapshot snapshot) url stylesheetp)
   (let ((rendered-uri (quri:render-uri url)))
    (let ((stylesheetp (or stylesheetp (str:ends-with-p ".css" rendered-uri))))
      (loop for asset in (assets snapshot)
@@ -512,9 +522,9 @@
            finally
               (let ((asset (cond
                              (stylesheetp
-                              (fetch-css-asset snapshot url (tmpdir snapshot)))
+                              (fetch-css-asset context snapshot url (tmpdir snapshot)))
                              (t
-                              (fetch-asset url (tmpdir snapshot) snapshot)))))
+                              (fetch-asset context url (tmpdir snapshot) snapshot)))))
                 (push asset (assets snapshot))
                 (return asset))))))
 
@@ -546,7 +556,8 @@
                         (write-char ch width))
                (read-spaces stream))))))))
 
-(defmethod process-node ((node plump:element) snapshot root-url)
+(defmethod process-node ((context context)
+                         (node plump:element) snapshot root-url)
   (let ((name (plump:tag-name node)))
     (labels ((? (test-name)
                (string-equal name test-name))
@@ -562,7 +573,7 @@
                (safe-replace-attr
                 name
                 (lambda (uri)
-                  (let* ((asset (push-asset snapshot uri stylesheetp))
+                  (let* ((asset (push-asset context snapshot uri stylesheetp))
                          (res (asset-file asset)))
                     res))))
              (parse-intrinsic (x)
@@ -584,7 +595,7 @@
                                      for uri = (quri:merge-uris url root-url)
                                      if (<= (parse-intrinsic width) max-width)
                                        collect
-                                       (let ((asset (push-asset snapshot uri nil)))
+                                       (let ((asset (push-asset context snapshot uri nil)))
                                          (str:join " "
                                                    (list
                                                     (asset-file asset)
@@ -627,12 +638,12 @@
         (plump:remove-attribute node "autofocus")))))
   (call-next-method))
 
-(defmethod process-node ((node plump:nesting-node) snapshot root-url)
+(defmethod process-node ((context context) (node plump:nesting-node) snapshot root-url)
   (loop for child across (plump:children node)
-        do (process-node child snapshot root-url))
+        do (process-node context child snapshot root-url))
   (call-next-method))
 
-(defmethod process-node :before (node snapshot root-url)
+(defmethod process-node :before ((context context) node snapshot root-url)
   ;;(log:info "Looking at: ~S" node)
   )
 
@@ -644,40 +655,39 @@
       (setf (plump:attribute link "href") "/css/replay.css")
       (setf (plump:attribute link "rel") "stylesheet"))))
 
-(defun load-url-into (snapshot url tmpdir)
-  (restart-case
-      (let* ((content (http-get url :force-string t
-                                    :force-binary nil))
-             (html (plump:parse content)))
-        (process-node html snapshot url)
-        ;;(add-css html)
+(with-auto-restart ()
+ (defmethod load-url-into ((context context) snapshot url tmpdir)
+   (let* ((content (http-get url :force-string t
+                                 :force-binary nil))
+          (html (plump:parse content)))
+     (process-node context html snapshot url)
+     ;;(add-css html)
 
-        #+nil
-        (error "got html: ~a"
-                    (with-output-to-string (s)
-                      (plump:serialize html s)))
-        (uiop:with-temporary-file (:direction :io :stream tmp :element-type '(unsigned-byte 8))
-          (let ((root-asset (call-with-fetch-asset
-                             (lambda ()
-                               (plump:serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
-                               (file-position tmp 0)
-                               (let ((headers (make-hash-table)))
-                                 (setf (gethash "content-type" headers)
-                                       "text/html; charset=UTF-8")
-                                 (setf (gethash "cache-control" headers)
-                                       "no-cache")
-                                 (values tmp 200 headers)))
-                             "html"
-                             tmpdir
-                             :url url
-                             :snapshot snapshot)))
-            (push (asset-file root-asset)
-                  (root-files snapshot))
-            (push root-asset
-                  (assets snapshot))))
-        snapshot)
-    (retry-load-url-into ()
-      (load-url-into snapshot url tmpdir))))
+     #+nil
+     (error "got html: ~a"
+            (with-output-to-string (s)
+              (plump:serialize html s)))
+     (uiop:with-temporary-file (:direction :io :stream tmp :element-type '(unsigned-byte 8))
+       (let ((root-asset (call-with-fetch-asset
+                          context
+                          (lambda ()
+                            (plump:serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
+                            (file-position tmp 0)
+                            (let ((headers (make-hash-table)))
+                              (setf (gethash "content-type" headers)
+                                    "text/html; charset=UTF-8")
+                              (setf (gethash "cache-control" headers)
+                                    "no-cache")
+                              (values tmp 200 headers)))
+                          "html"
+                          tmpdir
+                          :url url
+                          :snapshot snapshot)))
+         (push (asset-file root-asset)
+               (root-files snapshot))
+         (push root-asset
+               (assets snapshot))))
+     snapshot)))
 
 (defmethod snapshot-asset-file ((snapshot snapshot)
                                 (asset asset))
@@ -690,4 +700,4 @@
 
 (defun load-url (url tmpdir)
   (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
-    (load-url-into snapshot url tmpdir)))
+    (load-url-into (make-instance 'context) snapshot url tmpdir)))
