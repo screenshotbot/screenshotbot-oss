@@ -10,8 +10,8 @@ $("[data-websocket-stream]").each(function () {
     }
 
     var socket = new WebSocket(url);
-    socket.onerror = function () {
-        console.log("Error reading socket");
+    socket.onerror = function (e) {
+        console.log("Error reading socket", e);
         append("websocket error");
     };
 
