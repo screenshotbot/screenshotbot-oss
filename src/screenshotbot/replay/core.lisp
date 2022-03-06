@@ -305,6 +305,7 @@
                            :connect-timeout *timeout*
                            :force-string force-string))
           (setf (gethash "X-Original-Url" response-headers) (quri:render-uri url))
+          (remhash "content-security-policy" response-headers)
           (values remote-stream status response-headers)))
        (t
         (error "unsupported scheme: ~a" scheme))))))
@@ -649,7 +650,7 @@
                                     :force-binary nil))
              (html (plump:parse content)))
         (process-node html snapshot url)
-        (add-css html)
+        ;;(add-css html)
 
         #+nil
         (error "got html: ~a"
