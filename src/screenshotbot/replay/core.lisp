@@ -195,7 +195,8 @@
 (defun write-replay-log (message &rest args)
   (unless (eql *terminal-io* *replay-logs*)
     (apply #'format *replay-logs* message args)
-    (format *replay-logs* "~%")))
+    (format *replay-logs* "~%")
+    (finish-output *replay-logs*)))
 
 (defun hash-file (file)
   (ironclad:digest-file :sha256 file))
