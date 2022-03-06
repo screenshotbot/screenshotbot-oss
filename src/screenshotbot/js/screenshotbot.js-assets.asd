@@ -47,4 +47,5 @@
                (build-utils:js-file "common")
                (build-utils:js-file "mask-editor")
                #-screenshotbot-oss
-               (build-utils:js-file "chatwoot")))
+               (build-utils:js-file "chatwoot")
+               (build-utils:js-file "websocket-logs")))
