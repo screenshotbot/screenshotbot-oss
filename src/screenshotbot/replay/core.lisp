@@ -39,7 +39,8 @@
    #:commit
    #:branch-hash
    #:request-counter
-   #:call-with-request-counter))
+   #:call-with-request-counter
+   #:write-replay-log))
 (in-package :screenshotbot/replay/core)
 
 
@@ -190,6 +191,11 @@
                    :snapshot snapshot
                    :response-headers response-headers
                    :status status))))
+
+(defun write-replay-log (message &rest args)
+  (unless (eql *terminal-io* *replay-logs*)
+    (apply #'format *replay-logs* message args)
+    (format *replay-logs* "~%")))
 
 (defun hash-file (file)
   (ironclad:digest-file :sha256 file))
