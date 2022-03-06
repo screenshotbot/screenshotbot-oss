@@ -51,6 +51,8 @@
 
 (defvar *timeout* 15)
 
+(defvar *stack* nil)
+
 (defclass snapshot-request ()
   ((snapshot :initarg :snapshot
              :reader snapshot)
@@ -179,29 +181,36 @@
         if (string-equal "Access-Control-Allow-Origin" k)
           do (setf (gethash k headers) "*")))
 
+(defclass recursive-asset-error (error)
+  ((url :initarg :url)))
+
 (defmethod call-with-fetch-asset ((context context)
                                   fn type tmpdir &key url
-                                               (snapshot (error "must provide snapshot")))
-  (multiple-value-bind (remote-stream status response-headers)
-      (funcall fn)
-    ;; dex:get should handle redirects, but just in case:
-    (assert (not (member status `(301 302))))
-    (fix-asset-headers response-headers)
+                                                   (snapshot (error "must provide snapshot")))
+  (when (member url *stack* :test #'equal)
+    (error 'recursive-asset-error
+            :url url))
+  (let ((*stack* (cons url *stack*)))
+   (multiple-value-bind (remote-stream status response-headers)
+       (funcall fn)
+     ;; dex:get should handle redirects, but just in case:
+     (assert (not (member status `(301 302))))
+     (fix-asset-headers response-headers)
 
-    (uiop:with-temporary-file (:pathname p :stream out :directory tmpdir :keep t
-                               :element-type '(unsigned-byte 8)
-                               :direction :io)
-      (with-open-stream (input remote-stream)
-        (uiop:copy-stream-to-stream input out :element-type '(unsigned-byte 8))
-        (file-position out 0))
-      (finish-output out)
+     (uiop:with-temporary-file (:pathname p :stream out :directory tmpdir :keep t
+                                :element-type '(unsigned-byte 8)
+                                :direction :io)
+       (with-open-stream (input remote-stream)
+         (uiop:copy-stream-to-stream input out :element-type '(unsigned-byte 8))
+         (file-position out 0))
+       (finish-output out)
 
-      (write-asset p type
-                   :tmpdir tmpdir
-                   :url url
-                   :snapshot snapshot
-                   :response-headers response-headers
-                   :status status))))
+       (write-asset p type
+                    :tmpdir tmpdir
+                    :url url
+                    :snapshot snapshot
+                    :response-headers response-headers
+                    :status status)))))
 
 (defun write-replay-log (message &rest args)
   (unless (eql *terminal-io* *replay-logs*)
