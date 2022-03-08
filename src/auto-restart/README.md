@@ -10,7 +10,7 @@ you'll use it:
     (... do stuff ...)))
 ```
 
-If something fails in-side foo, you'll be presented with a restart to
+If something fails inside foo, you'll be presented with a restart to
 RETRY-FOO. Once you've pushed this to production you might that the
 function FOO is flaky, possibly because it hits the network or some
 other unreliable resource. In that case, you can automate calling the
