@@ -33,6 +33,7 @@
                       ,sleep))
                   (t
                    sleep)))
+         (sleep-var (gensym "sleep"))
          (args-pos (position-if #'listp body))
          (before-args (subseq body 0 (1+ args-pos)))
          (fn-name (cadr before-args))
@@ -53,26 +54,27 @@
              (assert (symbolp arg)))
     (multiple-value-bind (body decls doc)
         (uiop:parse-body decls-onwards :documentation t)
-      `(,@before-args
-        ,doc
-        ,@decls
-        (let ((*attempt* (1+ *attempt*)))
-          (restart-case
-              (flet ((body ()
-                       ,@body))
-                (let ((attempt *attempt*))
-                  (flet ((error-handler (e)
-                           (declare (ignore e))
-                           (when (< attempt ,retries)
-                             (let ((sleep-time (funcall ,sleep attempt)))
-                               (unless (= 0 sleep-time)
-                                 (sleep sleep-time)))
-                             (invoke-restart ',restart-name))))
-                    (handler-bind ((error #'error-handler))
-                      (let ((*attempt* 0))
-                        (body))))))
-            (,restart-name ()
-              (apply #',fn-name ,@ (fix-args-for-funcall var-names)))))))))
+      `(let ((,sleep-var ,sleep))
+        (,@before-args
+         ,doc
+         ,@decls
+         (let ((*attempt* (1+ *attempt*)))
+           (restart-case
+               (flet ((body ()
+                        ,@body))
+                 (let ((attempt *attempt*))
+                   (flet ((error-handler (e)
+                            (declare (ignore e))
+                            (when (< attempt ,retries)
+                              (let ((sleep-time (funcall ,sleep-var attempt)))
+                                (unless (= 0 sleep-time)
+                                  (sleep sleep-time)))
+                              (invoke-restart ',restart-name))))
+                     (handler-bind ((error #'error-handler))
+                       (let ((*attempt* 0))
+                         (body))))))
+             (,restart-name ()
+               (apply #',fn-name ,@ (fix-args-for-funcall var-names))))))))))
 
 (defun fix-args-for-funcall (var-names)
   (let ((state :default))
