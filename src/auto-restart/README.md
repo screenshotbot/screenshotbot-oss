@@ -9,19 +9,19 @@ you'll use it:
 ```lisp
 (with-auto-restart ()
   (defun foo(arg1 &key other-options)
-    (... do stuff ...)))
+    (... do-stuff ...)))
 ```
 
 If something fails inside foo, you'll be presented with a restart to
 RETRY-FOO. Once you've pushed this to production you might that the
 function FOO is flaky, possibly because it hits the network or some
 other unreliable resource. In that case, you can automate calling the
-retry like so:
+restart like so:
 
 ```lisp
 (with-auto-restart (:retries 2 :sleep 1)
   (defun foo(arg1 &key other-options)
-    (... do stuff ...)))
+    (... do-stuff ...)))
 ```
 
 This is really it, but you might have some questions as to why the API
@@ -33,7 +33,7 @@ So say you write a complex, slow running function FOO:
 
 ```lisp
 (defun foo (...args ...)
-  (... do stuff ...))
+  (... do-stuff ...))
 ```
 
 It's part of a slow job, say a crawler, so if the function FOO fails,
@@ -45,7 +45,7 @@ something like this:
 (defun foo (...args...)
   (labels ((actual-foo ()
              (restart-case
-                (...do stuff...)
+                (...do-stuff...)
                (retry-foo ()
                 (actual-foo)))))
      (actual-foo)
@@ -56,10 +56,11 @@ there's a catch! If you make changes to `(...do stuff...)`, those
 changes won't show up even if you RETRY-FOO.
 
 So we'll do something like this instead:
-```
+
+```lisp
 (defun foo (...args...)
   (restart-case
-     (...do stuff...)
+     (...do-stuff...)
     (retry-foo ()
       (foo ...args...))))
 ```
