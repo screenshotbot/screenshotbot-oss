@@ -5,6 +5,10 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defsystem :auto-restart
+  :author "Arnold Noronha <arnold@jipr.io>"
+  :license  "Apache License, Version 2.0"
+  :version "0.0.1"
+  :description "automatically generate restart-cases for the most common use cases, and also use the restart for automatic retries "
   :serial t
   :depends-on (:iterate)
   :components ((:file "auto-restart"))
