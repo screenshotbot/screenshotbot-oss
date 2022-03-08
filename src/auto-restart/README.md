@@ -90,6 +90,11 @@ One thing I would like to do, but I don't know if this is possible, is
 to be able to enter the debugger, but if no action was chosen with a
 set amount of time, then automatically pick a restart.
 
+The lambda-list parsing is also very primitive. If you have some
+complex lambda-list keywords, we may or may not get it right. Do look
+at the macroexpansion to make sure it's doing the right thing. We
+should handle `&optional`, `&key` and `&rest` at a minimum.
+
 
 ## Authors
 
