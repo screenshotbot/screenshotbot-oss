@@ -405,7 +405,7 @@
                        (cache t))
   (let* ((url (quri:uri url))
          (cache-key (format
-                     nil "~a-~a-v4"
+                     nil "~a-~a-v5"
                      (ironclad:byte-array-to-hex-string (ironclad:digest-sequence :sha256 (flexi-streams:string-to-octets  (quri:render-uri url))))
                      force-binary)))
     (let* ((output (make-pathname :name cache-key :type "data" :defaults (http-cache-dir)))
