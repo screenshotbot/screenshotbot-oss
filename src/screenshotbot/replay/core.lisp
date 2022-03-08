@@ -9,7 +9,7 @@
   (:import-from #:json-mop
                 #:json-serializable
                 #:json-serializable-class)
-  (:import-from #:util/auto-restart
+  (:import-from #:auto-restart
                 #:with-auto-restart)
   (:local-nicknames (#:a #:alexandria))
   (:export

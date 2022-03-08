@@ -264,7 +264,7 @@
                :lquery
                :uuid
                :cl-store
-               :util/auto-restart
+               :auto-restart
                :dexador
                :json-mop
                :alexandria)

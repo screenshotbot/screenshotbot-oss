@@ -95,11 +95,6 @@
   :depends-on (:usocket)
   :components ((:file "random-port")))
 
-(defsystem :util/auto-restart
-  :serial t
-  :depends-on (:iterate)
-  :components ((:file "auto-restart")))
-
 (defsystem :util/form-state
   :serial t
   :depends-on (:closer-mop
@@ -138,12 +133,10 @@
 
 (defsystem :util/tests
   :depends-on (:util
-               :util/fiveam
-               :util/auto-restart)
+               :util/fiveam)
   :serial t
   :components ((:module "tests"
                 :components ((:file "test-ret-let")
-                             (:file "test-auto-restart")
                              (:file "test-store")
                              (:file "test-cookies")
                              (:file "test-fiveam")

@@ -4,14 +4,14 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :util/tests/test-auto-restart
+(defpackage :test-auto-restart
   (:use #:cl
         #:fiveam)
-  (:import-from #:util/auto-restart
+  (:import-from #:auto-restart
                 #:restart-already-defined
                 #:with-auto-restart)
   (:local-nicknames (#:a #:alexandria)))
-(in-package :util/tests/test-auto-restart)
+(in-package :test-auto-restart)
 
 
 (util/fiveam:def-suite)

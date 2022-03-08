@@ -4,13 +4,13 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :util/auto-restart
+(defpackage :auto-restart
   (:use #:cl
         #:iterate)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-auto-restart))
-(in-package :util/auto-restart)
+(in-package :auto-restart)
 
 
 (define-condition restart-already-defined (error)
