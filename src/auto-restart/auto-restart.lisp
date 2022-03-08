@@ -88,7 +88,7 @@
          (setf state :key))
         ((eql '&rest var)
          (setf state :rest))
-        ((str:starts-with-p "&" (string var))
+        ((eql #\& (elt (string var) 0))
          (error "Unsupported lambda-list specifier: ~a" var))
         ((not (symbolp var))
          ;; TODO(arnold): this isn't hard to handle if you do need it.
