@@ -1,5 +1,7 @@
 # AUTO-RESTART
 
+[![tdrhq](https://circleci.com/gh/tdrhq/auto-restart.svg?style=shield)](https://app.circleci.com/pipelines/github/tdrhq/auto-restart?branch=main)
+
 Auto-restart makes it easy to create restarts for the most common
 situation of just retrying a function. To summarize, this is how
 you'll use it:
