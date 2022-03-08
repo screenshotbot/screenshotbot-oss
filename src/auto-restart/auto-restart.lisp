@@ -7,7 +7,6 @@
 (defpackage :auto-restart
   (:use #:cl
         #:iterate)
-  (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-auto-restart))
 (in-package :auto-restart)

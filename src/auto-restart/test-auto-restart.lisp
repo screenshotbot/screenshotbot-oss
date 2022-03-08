@@ -9,12 +9,11 @@
         #:fiveam)
   (:import-from #:auto-restart
                 #:restart-already-defined
-                #:with-auto-restart)
-  (:local-nicknames (#:a #:alexandria)))
+                #:with-auto-restart))
 (in-package :test-auto-restart)
 
 
-(util/fiveam:def-suite)
+(fiveam:def-suite* :test-auto-restart)
 
 (test simple-function
   (with-auto-restart ()

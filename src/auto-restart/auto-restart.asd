@@ -7,10 +7,16 @@
 (defsystem :auto-restart
   :serial t
   :depends-on (:iterate)
-  :components ((:file "auto-restart")))
+  :components ((:file "auto-restart"))
+  :in-order-to ((test-op (test-op :auto-restart/tests))))
 
 (defsystem :auto-restart/tests
   :serial t
   :depends-on (:auto-restart
                :fiveam)
-  :components ((:file "test-auto-restart")))
+  :components ((:file "test-auto-restart"))
+  :perform (test-op (o c)
+                    (unless
+                        (symbol-call '#:fiveam '#:run!
+                                      :test-auto-restart)
+                      (error "Some tests were failed!"))))
