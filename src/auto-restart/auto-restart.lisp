@@ -34,6 +34,7 @@
                   (t
                    sleep)))
          (sleep-var (gensym "sleep"))
+         (retries-var (gensym "retries"))
          (args-pos (position-if #'listp body))
          (before-args (subseq body 0 (1+ args-pos)))
          (fn-name (cadr before-args))
@@ -54,7 +55,8 @@
              (assert (symbolp arg)))
     (multiple-value-bind (body decls doc)
         (uiop:parse-body decls-onwards :documentation t)
-      `(let ((,sleep-var ,sleep))
+      `(let ((,sleep-var ,sleep)
+             (,retries-var ,retries))
         (,@before-args
          ,doc
          ,@decls
