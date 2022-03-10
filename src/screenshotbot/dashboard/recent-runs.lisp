@@ -22,6 +22,8 @@
                 #:commit)
   (:import-from #:screenshotbot/dashboard/run-page
                 #:run-page)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:phabricator-diff-id)
   (:export #:recent-runs))
 (in-package :screenshotbot/dashboard/recent-runs)
 
@@ -62,7 +64,13 @@
          </span>)
         ((pull-request-url run)
          <span>
-         Run on <a href= (pull-request-url run)>Pull Request</a>
+           Run on <a href= (pull-request-url run)>
+             ,(cond
+                ((phabricator-diff-id run)
+                 <span>Revision</span>)
+                (t
+                 <span>Pull Request</span>))
+                  </a>
          </span>)
         (t
          <span>
