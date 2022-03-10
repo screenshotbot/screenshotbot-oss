@@ -4,7 +4,7 @@ $("[data-websocket-stream]").each(function () {
     var url = $(this).data("websocket-stream");
 
     function append(line) {
-        $host.append(line);
+        $host.append(document.createTextNode(line));
 
         $host.scrollTop($host[0].scrollHeight);
     }
