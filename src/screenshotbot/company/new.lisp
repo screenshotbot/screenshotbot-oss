@@ -92,8 +92,10 @@
          (organization-new-page )))
       (t
        (let* ((user (current-user))
-              (company (make-instance 'company :name name
-                                               :owner user)))
+              (company (make-instance 'company
+                                      :name name
+                                      :admins (list user)
+                                      :owner user)))
          (with-transaction ()
            (push
             company
