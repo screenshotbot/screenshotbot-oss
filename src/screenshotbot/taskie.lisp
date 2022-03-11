@@ -104,15 +104,22 @@
   </:time>)
 
 (deftag taskie-timestamp (&key prefix timestamp)
-        <ul class="list-inline font-13 text-end">
-        <li class="list-inline-item">
-          <mdi name= "today" />
-          ,(progn prefix)
-          <:time class= "timeago" datetime= timestamp >
-          ,(progn timestamp)
-          </:time>
-        </li>
-      </ul>)
+
+  (let ((timestamp
+          (cond
+            ((numberp timestamp)
+             (local-time:universal-to-timestamp timestamp))
+            (t
+             timestamp))))
+    <ul class="list-inline font-13 text-end">
+    <li class="list-inline-item">
+    <mdi name= "today" />
+    ,(progn prefix)
+    <:time class= "timeago" datetime= timestamp >
+    ,(progn timestamp)
+    </:time>
+    </li>
+    </ul>))
 
 (defun %with-pagination (data body &key prev)
   (let ((n 50))

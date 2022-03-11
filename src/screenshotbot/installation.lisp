@@ -24,13 +24,17 @@
    #:auth-provider-signup-form
    #:standard-auth-provider
    #:multi-org-feature
-   #:default-oidc-provider))
+   #:default-oidc-provider
+   #:installation-domain))
 (in-package :screenshotbot/installation)
 
 (defclass installation ()
   ((plugins :initform nil
             :initarg :plugins
             :accessor plugins)
+   (domain :initarg :domain
+           :initform "https://screenshotbot.example.com"
+           :accessor installation-domain)
    (mailer :initform (make-instance 'noop-mailer)
            :initarg :mailer
            :accessor mailer)
