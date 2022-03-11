@@ -227,12 +227,18 @@
   (cond
     ((personalp company)
      ;; there should be just one admin
-     (anaphora:awhen (car (company-admins company))
-       (user-full-name anaphora:it)))
+     (let ((name (anaphora:awhen (car (company-admins company))
+                   (user-full-name anaphora:it))))
+       (cond
+         ((str:emptyp name)
+          "Default")
+         (t
+          name))))
     ((singletonp company)
      "Singleton Company")
     (t
-     (slot-value company 'name))))
+     (let ((name (slot-value company 'name)))
+       name))))
 
 
 (defmethod find-image ((company company) hash)
