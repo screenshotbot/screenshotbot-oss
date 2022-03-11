@@ -44,7 +44,7 @@
            collect
            (let ((company company))
              <li><a href= (nibble () (company-switch-page company)) class="dropdown-item">
-                 ,(company-name company)
+             Switch to ,(company-name company)
              </a></li>))
      <li><a class="dropdown-item" href="/organization/new">New Organization...</a></li>
 
