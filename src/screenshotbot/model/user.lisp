@@ -135,13 +135,19 @@
      (call-next-method))
     (t
      (let ((user (call-next-method)))
-       (with-transaction ()
-        (setf (%user-companies user)
-              (list
-               (make-instance 'company
-                               :personalp t
-                               :admins (list user)
-                               :owner user))))))))
+       (initialize-companies-for-user user (installation))))))
+
+(defmethod initialize-companies-for-user (user installation)
+  (values))
+
+(defmethod initialize-companies-for-user (user (installation multi-org-feature))
+  (with-transaction ()
+    (setf (%user-companies user)
+          (list
+           (make-instance 'company
+                           :personalp t
+                           :admins (list user)
+                           :owner user)))))
 
 (defmethod destroy-object :before ((user user))
   (loop for company in (user-companies user)

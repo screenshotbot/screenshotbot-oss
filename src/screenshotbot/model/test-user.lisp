@@ -13,6 +13,8 @@
                 #:user
                 #:user-companies)
   (:import-from #:screenshotbot/model/company
+                #:get-singleton-company
+                #:prepare-singleton-company
                 #:*singleton-company*
                 #:personalp
                 #:company
@@ -69,10 +71,18 @@
               (is-false (company-owner company)))
          (delete-object company))))))
 
-#+nil
+
 (test but-with-regular-installation-singleton-company-is-not-deleted
   (let ((*installation* (make-instance 'installation)))
-    (with-fixture state ()
-      (let ((user (make-instance 'user)))
-        (delete-object user)
-        (is-false (object-destroyed-p *singleton-company*))))))
+    (prepare-singleton-company)
+    (let* ((user (make-instance 'user))
+           (companies (user-companies user)))
+      (is (equal (list
+                  (get-singleton-company *installation*))
+                 companies))
+      (loop for company in (bknr.datastore:store-objects-with-class 'company)
+            do
+               (is (not (member user (ignore-errors (company-admins company)))))
+               (is (not (eql user (ignore-errors (company-owner company))))))
+      (delete-object user)
+      (pass))))
