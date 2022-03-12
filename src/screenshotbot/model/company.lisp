@@ -59,7 +59,8 @@
    #:conduit-api-key
    #:default-slack-config
    #:jira-config
-   #:add-company-run))
+   #:add-company-run
+   #:company-owner))
 (in-package :screenshotbot/model/company)
 
 (defclass company (object-with-oid)

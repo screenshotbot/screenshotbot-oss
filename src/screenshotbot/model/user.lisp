@@ -23,11 +23,14 @@
                 #:make-secret-code
                 #:object-with-oid)
   (:import-from #:screenshotbot/model/company
+                #:company-owner
                 #:get-singleton-company
                 #:company)
   (:import-from #:auth #:password-hash)
   (:import-from #:bknr.datastore
                 #:store-objects-with-class)
+  (:import-from #:bknr.indices
+                #:destroy-object)
   (:export
    #:user
    #:email-confirmation-code
@@ -127,10 +130,24 @@
 (defmethod initialize-instance :around ((obj user) &rest args
                                         &key companies
                                         &allow-other-keys)
-  (apply #'call-next-method obj
-           :companies (or companies
-                          (list (make-instance 'company :personalp t)))
-           args))
+  (cond
+    (companies
+     (call-next-method))
+    (t
+     (let ((user (call-next-method)))
+       (with-transaction ()
+        (setf (%user-companies user)
+              (list
+               (make-instance 'company
+                               :personalp t
+                               :admins (list user)
+                               :owner user))))))))
+
+(defmethod destroy-object :before ((user user))
+  (loop for company in (user-companies user)
+        do
+           (when (eql user (company-owner company))
+             (setf (company-owner company) nil))))
 
 (defmethod users-for-company ((company company))
   ;; this is inefficient, but.. it gets the job done and isn't called
@@ -155,7 +172,7 @@
 
 (defmethod user-companies-for-installation ((user user) installation)
   (list
-   (get-singleton-company)))
+   (get-singleton-company installation)))
 
 (defmethod (setf user-companies-for-installation) (companies (user user) installation)
   (declare (ignore companies user installation))

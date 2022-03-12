@@ -18,7 +18,9 @@
                 #:store-object-id)
   (:import-from #:screenshotbot/installation
                 #:*installation*
-                #:installation))
+                #:installation)
+  (:import-from #:screenshotbot/model/company
+                #:prepare-singleton-company))
 
 (util/fiveam:def-suite)
 
@@ -36,7 +38,8 @@
 
 (def-fixture state ()
   (let ((*installation* (make-instance 'installation)))
-   (&body)))
+    (prepare-singleton-company)
+    (&body)))
 
 (defmacro dlet (((k v)) &body body)
   `(progn

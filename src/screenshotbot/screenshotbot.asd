@@ -209,6 +209,7 @@
                              (:file "test-signup")))
                (:module "model"
                 :components ((:file "test-screenshot")
+                             #+nil(:file "test-user")
                              (:file "test-channel")
                              (:file "test-company")
                              (:file "test-image")

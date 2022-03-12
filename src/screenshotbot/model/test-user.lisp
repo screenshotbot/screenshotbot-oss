@@ -1,0 +1,78 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+(defpackage :screenshotbot/model/test-user
+  (:use #:cl
+        #:fiveam)
+  (:import-from #:bknr.datastore
+                #:delete-object)
+  (:import-from #:screenshotbot/user-api
+                #:user
+                #:user-companies)
+  (:import-from #:screenshotbot/model/company
+                #:*singleton-company*
+                #:personalp
+                #:company
+                #:company-admins
+                #:company-owner)
+  (:import-from #:screenshotbot/model/company
+                )
+  (:import-from #:screenshotbot/installation
+                #:multi-org-feature
+                #:installation
+                #:*installation*)
+  (:import-from #:bknr.indices
+                #:object-destroyed-p)
+  (:local-nicknames (#:a #:alexandria)))
+(in-package :screenshotbot/model/test-user)
+
+
+(util/fiveam:def-suite)
+
+(defclass pro-installation (installation multi-org-feature)
+  ())
+
+
+(def-fixture state ()
+  (let ((*installation* (make-instance 'pro-installation)))
+    (&body)))
+
+(test make-user
+  (with-fixture state ()
+   (let ((user (make-instance 'user)))
+     (unwind-protect
+          (let ((companies (user-companies user)))
+            (is (equal 1 (length companies)))
+            (let ((company (car companies)))
+              (is-true (personalp company))
+              (is (equal (list user)
+                         (company-admins company))))
+            (pass))
+       (let ((companies (user-companies user)))
+         (delete-object user)
+         (loop for company in companies
+               do (delete-object company)))))))
+
+(test remove-reference-from-companies-for-testing
+  (with-fixture state ()
+   (let ((user (make-instance 'user)))
+     (let ((company (car (user-companies user))))
+       (unwind-protect
+            (is-true (company-owner company))
+         (delete-object user))
+
+       (unwind-protect
+            (progn
+              (is-false (company-owner company)))
+         (delete-object company))))))
+
+#+nil
+(test but-with-regular-installation-singleton-company-is-not-deleted
+  (let ((*installation* (make-instance 'installation)))
+    (with-fixture state ()
+      (let ((user (make-instance 'user)))
+        (delete-object user)
+        (is-false (object-destroyed-p *singleton-company*))))))
