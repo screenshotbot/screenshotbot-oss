@@ -98,14 +98,25 @@ function prepareReportJs () {
         resetImageZoom(img);
 
         zoomToChange.prop("disabled", true);
-        img.on("load", function () {
-            loading.hide();
-            zoomToChange.prop("disabled", false);
-        });
 
-        img.attr("src", src);
-        img.css("background-image", "url(\"" + src + '")');
-        img.css("background-repeat", "no-repeat");
+        img.hide();
+        $.ajax({
+            url: src,
+            success: function (data) {
+                loading.hide();
+                img.show();
+                img.on("load", function () {
+                    zoomToChange.prop("disabled", false);
+                });
+
+                img.attr("src", data.src);
+                img.css("background-image", "url(\"" + src + '")');
+                img.css("background-repeat", "no-repeat");
+            },
+            error: function () {
+                swAlert("Network request failed! This could be because we're still processing the image. Please try again in a minute");
+            }
+        });
 
 
         zoomToChange.click(function () {

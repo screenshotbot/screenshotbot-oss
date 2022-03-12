@@ -270,7 +270,9 @@
        (when size
         (handle-resized-image image size :warmup t)))
       (t
-       (hex:safe-redirect (image-public-url image :size size))))))
+       (setf (hunchentoot:content-type*) "application/json")
+       (json:encode-json-to-string
+        `((:src . ,(image-public-url image :size size))))))))
 
 (defun do-image-comparison (before-screenshot
                             after-screenshot
@@ -362,7 +364,6 @@
    :name "warmup-comparison-images"))
 
 (defun all-comparisons-page (report)
-  (warmup-comparison-images report)
   <app-template>
     <a href= "javascript:window.history.back()">Back to Report</a>
     ,(paginated
@@ -387,7 +388,7 @@
         5)
   </app-template>)
 
-(deftag progress-img (&key alt src zoom-to class)
+(deftag progress-img (&key (alt "Image Difference") src zoom-to class)
   "An <img> with a progress indicator for the image loading."
 
   <div class= (format nil  "progress-image-wrapper ~a" class) >
@@ -397,9 +398,10 @@
       </div>
       Loading (this could take upto 30s in some cases)
     </div>
+    <div class= "alert alert-danger d-none" />
     <:img data-src= src
           data-zoom-to=zoom-to
-          class= "bg-primary image-comparison-modal-image" alt= "Image Difference" />
+          class= "bg-primary image-comparison-modal-image" alt=alt />
   </div>)
 
 (deftag zoom-to-change-button ()
