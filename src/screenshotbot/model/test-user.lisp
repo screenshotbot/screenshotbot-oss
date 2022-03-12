@@ -15,13 +15,10 @@
   (:import-from #:screenshotbot/model/company
                 #:get-singleton-company
                 #:prepare-singleton-company
-                #:*singleton-company*
                 #:personalp
                 #:company
                 #:company-admins
                 #:company-owner)
-  (:import-from #:screenshotbot/model/company
-                )
   (:import-from #:screenshotbot/installation
                 #:multi-org-feature
                 #:installation
