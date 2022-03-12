@@ -114,10 +114,12 @@
         API Keys
       </left-nav-item>
 
-      <left-nav-item href= "/ticket/create" image-class= "bug_report"
-                     script-name=script-name >
-        Report Issue
-      </left-nav-item>
+      ,(progn
+         #-screenshotbot-oss
+         <left-nav-item href= "/ticket/create" image-class= "bug_report"
+                        script-name=script-name >
+           Report Issue
+         </left-nav-item>)
     </ul>
 
     <hr />
