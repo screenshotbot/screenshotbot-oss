@@ -21,6 +21,10 @@
                 #:object-with-oid)
   (:import-from #:bknr.datastore
                 #:deftransaction)
+  (:import-from #:screenshotbot/installation
+                #:cached-singleton-company
+                #:multi-org-feature
+                #:installation)
   (:export
    #:company
    #:company-reports
@@ -278,22 +282,28 @@
 (defgeneric company (obj)
   (:documentation "For a given obj, figure out which company it belongs to"))
 
-;; See documentation for prepare-singleton-company
-(defvar *singleton-company*)
-
-(defun prepare-singleton-company ()
+(defmethod prepare-singleton-company-for-installation ((installation installation))
   "Get a singleton persistent company. If no singleton company exists,
   it is created. Otherwise the existing singleton company is
   returned. Singleton companies are mostly used in the OSS version,
   even though you can customize it to use multiple companies."
-  #+screenshotbot-oss
-  (setf *singleton-company*
+  (setf (cached-singleton-company installation)
    (or
     (company-with-singletonp t)
     (make-instance 'company :singletonp t))))
 
-(defun get-singleton-company ()
-  *singleton-company*)
+(defmethod prepare-singleton-company-for-installation ((installation multi-org-feature))
+  "We never create a singleton company for multi-orgs"
+  (values))
+
+(defun prepare-singleton-company ()
+  (prepare-singleton-company-for-installation (installation)))
+
+(defmethod get-singleton-company ((installation installation))
+  (cached-singleton-company installation))
+
+(defmethod get-singleton-company ((installation multi-org-feature))
+  (error "singleton company doesn't make sense in a multi-org mode"))
 
 (util:add-datastore-hook 'prepare-singleton-company)
 

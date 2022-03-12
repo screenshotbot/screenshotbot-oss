@@ -25,7 +25,8 @@
    #:standard-auth-provider
    #:multi-org-feature
    #:default-oidc-provider
-   #:installation-domain))
+   #:installation-domain
+   #:cached-singleton-company))
 (in-package :screenshotbot/installation)
 
 (defclass installation ()
@@ -44,7 +45,10 @@
                    :accessor auth-providers)
    (default-oidc-provider :initform nil
                           :initarg :default-oidc-provider
-                          :accessor default-oidc-provider)))
+                          :accessor default-oidc-provider)
+   (singleton-company :initform nil
+                      :accessor cached-singleton-company)))
+
 
 (defclass multi-org-feature ()
   ()
