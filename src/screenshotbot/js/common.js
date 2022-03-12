@@ -98,7 +98,7 @@ function prepareReportJs () {
         resetImageZoom(img);
 
         zoomToChange.prop("disabled", true);
-
+        loading.show();
         img.hide();
         $.ajax({
             url: src,
@@ -108,6 +108,10 @@ function prepareReportJs () {
                 img.on("load", function () {
                     zoomToChange.prop("disabled", false);
                 });
+
+                if (data.identical) {
+                    $(".images-identical", wrapper).show();
+                }
 
                 img.attr("src", data.src);
                 img.css("background-image", "url(\"" + src + '")');

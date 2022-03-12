@@ -36,6 +36,7 @@
                 #:filter-selector
                 #:commit)
   (:import-from #:screenshotbot/model/image
+                #:map-unequal-pixels
                 #:image-blob
                 #:rect-as-list
                 #:draw-masks-in-place
@@ -177,9 +178,11 @@
                  :reader before-image)
    (after-image :initarg :after-image
                 :reader after-image)
-   (output :initform nil
-           :accessor output-image
-           :documentation "An image object representing the final image")))
+   (image-comparison
+    :initarg :image-comparison
+    :accessor image-comparison
+    :documentation "The actual image-comparison object. You can get
+    the resulting image and other context from this object")))
 
 (defclass image-comparison (store-object)
   ((before :initarg :before
@@ -236,27 +239,26 @@
   (bt:with-lock-held ((lock self))
     (cond
       ((donep self)
-       (output-image self))
+       (image-comparison self))
       (t
        ;; second level of caching, we're going to look through the
        ;; datastore to see if there are any previous images
-       (setf (output-image self)
-             (image-comparison-result
-              (let ((before (screenshot-image (before-image self)))
-                    (after (screenshot-image (after-image self))))
-                ;; Avoid computation for large reverts
-                (when (> (store-object-id before)
-                         (store-object-id after))
-                  (rotatef before after))
-                (find-image-comparison
-                 before
-                 after
-                 (screenshot-masks (after-image self))
-                 (lambda (output-file)
-                   (do-image-comparison
-                       (before-image self)
-                     (after-image self)
-                     output-file))))))))))
+       (setf (image-comparison self)
+             (let ((before (screenshot-image (before-image self)))
+                   (after (screenshot-image (after-image self))))
+               ;; Avoid computation for large reverts
+               (when (> (store-object-id before)
+                        (store-object-id after))
+                 (rotatef before after))
+               (find-image-comparison
+                before
+                after
+                (screenshot-masks (after-image self))
+                (lambda (output-file)
+                  (do-image-comparison
+                      (before-image self)
+                    (after-image self)
+                    output-file)))))))))
 
 (defmethod prepare-image-comparison ((self image-comparison-job)
                                      &key
@@ -264,19 +266,23 @@
                                        ;; designed to handle that yet.
                                        (size nil)
                                        (warmup nil))
-  (let ((image (prepare-image-comparison-file self)))
+  (let ((image-comparison (prepare-image-comparison-file self)))
     (cond
       (warmup
        (when size
-        (handle-resized-image image size :warmup t)))
+        (handle-resized-image (image-comparison-result image-comparison) size :warmup t)))
       (t
        (setf (hunchentoot:content-type*) "application/json")
        (json:encode-json-to-string
-        `((:src . ,(image-public-url image :size size))))))))
+        `((:identical . ,(identical-p image-comparison))
+          (:src . ,(image-public-url (image-comparison-result image-comparison) :size size))))))))
 
 (defun do-image-comparison (before-screenshot
                             after-screenshot
                             p)
+  "Compares before-screenshot and after-screenshot, and saves the result image to P.
+
+If the images are identical, we return t, else we return NIL."
   (with-local-image (before before-screenshot)
     (with-local-image (after after-screenshot)
       (let ((cmd (list
@@ -284,6 +290,7 @@
                   "-limit" "memory" "3MB"
                   "-limit" "map" "3MB"
                   "-limit" "disk" "1000MB"
+                  "-metric" "RMSE"
                   (namestring before)
                   (namestring after)
                   (namestring p))))
@@ -296,7 +303,20 @@
           (unless (member ret '(0 1))
             (error "Got surprising error output from imagemagic compare: ~S~%args:~%~S~%stderr:~%~a~%stdout:~%~a" ret cmd err out))
           (draw-masks-in-place p (screenshot-masks after-screenshot) :color "rgba(255, 255, 0, 0.8)")
-          (= ret 0))))))
+          (log:info "Got return code: ~a with output `~a`, `~a`" ret out err)
+          (when (= ret 0)
+            (equal "0 (0)" (str:trim err))
+
+            ;; Slow version if we ever find that imagemagick's output
+            ;; is unreliable:
+            #+nil
+            (block check
+              (map-unequal-pixels
+               before-screenshot after-screenshot
+               (lambda (x y)
+                 (declare (ignore x y))
+                 (return-from check nil)))
+              t)))))))
 
 
 (defun async-diff-report (&rest args &key &allow-other-keys)
@@ -392,13 +412,23 @@
   "An <img> with a progress indicator for the image loading."
 
   <div class= (format nil  "progress-image-wrapper ~a" class) >
+  <div class= "alert alert-danger images-identical" style= "display:none" >
+    <p>
+      <strong>The two images are identical.</strong> This is likely because the images still have their EXIF data, e.g. timestamps.
+    </p>
+
+    <p class= "mb-0" >
+      You can pre-process images to remove timestamps. One way to do this is to use: `<:tt>exiftool -all= *.png</:tt>`.
+    </p>
+
+  </div>
     <div class= "loading">
       <div class="spinner-border" role="status">
         <!-- <span class="sr-only">Loading...</span> -->
       </div>
       Loading (this could take upto 30s in some cases)
     </div>
-    <div class= "alert alert-danger d-none" />
+
     <:img data-src= src
           data-zoom-to=zoom-to
           class= "bg-primary image-comparison-modal-image" alt=alt />
