@@ -502,18 +502,18 @@
     :title (group-item-subtitle group-item)
     :content
     (let* ((s s)
-    (x X)
-    (image-comparison-job
-    (make-instance 'image-comparison-job
-    :before-image x
-    :after-image s))
-    (compare-nibble (nibble ()
-    (prepare-image-comparison
-    image-comparison-job)))
-    (zoom-to-nibble (nibble ()
-    (random-zoom-to x s)))
-    (toggle-id (format nil "toggle-id-~a" (incf next-id)))
-    (modal-label (format nil "~a-modal-label" toggle-id)))
+           (x x)
+           (image-comparison-job
+             (make-instance 'image-comparison-job
+                             :before-image x
+                             :after-image s))
+           (compare-nibble (nibble ()
+                             (prepare-image-comparison
+                              image-comparison-job)))
+           (zoom-to-nibble (nibble ()
+                             (random-zoom-to x s)))
+           (toggle-id (format nil "toggle-id-~a" next-id))
+           (modal-label (format nil "~a-modal-label" toggle-id)))
 
     <div class= "" >
       <div class= "screenshot-header" >
@@ -579,7 +579,6 @@
   (flet ((filteredp (x) (and (run-row-filter lang-filter x)
                              (run-row-filter device-filter x))))
    (let* ((report (make-diff-report run to))
-          (next-id 0)
           (script-name (hunchentoot:script-name*))
           (all-comparisons (nibble ()
                              (all-comparisons-page report))))
@@ -651,9 +650,10 @@
            <p>
              <h1>,(length changes-groups) changes</h1>
              ,(paginated
-                   (loop for group in changes-groups
-                         collect
-                         (render-change-group group run next-id script-name))
+               (loop for group in changes-groups
+                     for next-id from 0
+                     collect
+                     (render-change-group group run next-id script-name))
 
                    10)
            </p>
