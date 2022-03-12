@@ -13,25 +13,32 @@
   (:import-from #:./signup
                 #:signup-post)
   (:import-from #:screenshotbot/model/company
-                #:company
-                #:*singleton-company*))
+                #:prepare-singleton-company
+                #:get-singleton-company
+                #:company)
+  (:import-from #:screenshotbot/installation
+                #:*installation*
+                #:installation))
 
 (util/fiveam:def-suite)
 
+;; NOTE TO FUTURE SELF: This is a badly written test. This note was
+;; added later. This test doesn't run very well in the repl,
+;; AFAICT. Works fine on `make test-lw`
 (test happy-path
   (util:with-fake-request (:host "localhost:80")
-    (catch 'hunchentoot::handler-done
-      (let* ((company
-              (make-instance 'company))
-            (*singleton-company* company))
-        (unwind-protect
-             (auth:with-sessions ()
-               (let ((*disable-mail* t))
-                 (signup-post  :email "arnold@tdrhq.com"
-                               :password "foobar23"
-                               :full-name "Arnold Noronha"
-                               :accept-terms-p t
-                               :plan :professional))
-               (error "should not get here"))
-          (bknr.datastore:delete-object company))))
+    (let ((*installation* (make-instance 'installation)))
+      (prepare-singleton-company)
+      (catch 'hunchentoot::handler-done
+        (let* ((company (get-singleton-company *installation*)))
+          (unwind-protect
+               (auth:with-sessions ()
+                 (let ((*disable-mail* t))
+                   (let ((ret (signup-post  :email "arnold@tdrhq.com"
+                                            :password "foobar23"
+                                            :full-name "Arnold Noronha"
+                                            :accept-terms-p t
+                                            :plan :professional)))
+                     (error "should not get here: ~s" ret))))
+            (bknr.datastore:delete-object company)))))
     (pass)))
