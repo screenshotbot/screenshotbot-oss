@@ -64,8 +64,8 @@
       <h3>Invite Member</h3>
     </div>
 
-    <div class= "form-group">
-      <label for= "email">Email address (we'll send them an invite)</label>
+    <div class= "form-group mb-3">
+      <label class= "form-label" for= "email">Email address (we'll send them an invite)</label>
       <input type= "email" class= "form-control" name= "email" id= "email"
              placeholder= "melissa@example.com" />
     </div>
