@@ -184,8 +184,14 @@
                          (error "Incorrect session, got ~A, expected ~A"
                                 session
                                 current-session))
-                        ((not (eql (nibble-current-user hunchentoot:*acceptor*)
-                                   (nibble-user nibble)))
+                        ((let ((nibble-user (nibble-user nibble)))
+                           (and
+                            ;; if the nibble was created when they
+                            ;; weren't logged in, and they are logged
+                            ;; in now, that's always okay
+                            nibble-user
+                            (not (eql (nibble-current-user hunchentoot:*acceptor*)
+                                      nibble-user))))
                          (nibble-render-logged-out
                           hunchentoot:*acceptor*
                           nibble))
