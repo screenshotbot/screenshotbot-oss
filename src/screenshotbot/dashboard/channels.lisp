@@ -21,10 +21,10 @@
 (markup:enable-reader)
 
 (defun single-channel-view (channel)
-  <simple-card-page col-class= "col-md-12 col-lg-6" >
+  <simple-card-page max-width="60em" >
     <div class= "card-header">
       <h3>,(channel-name channel)</h3>
-
+    </div>
       <p>First seen: <timeago timestamp= (created-at channel) />
       </p>
       <p>Active run:
@@ -36,7 +36,6 @@
           Run
       </a>)))
       </p>
-    </div>
   </simple-card-page>)
 
 (deftag channel-list-row (&key channel)
