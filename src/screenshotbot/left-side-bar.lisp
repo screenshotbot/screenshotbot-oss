@@ -103,7 +103,7 @@
   </left-nav-item>
 
       ,(unless (singletonp company)
-         <left-nav-item href= "/invite" image-class= "person_add" target= "_blank"
+         <left-nav-item href= "/invite" image-class= "person_add"
                         script-name=script-name >
            Invite Members
          </left-nav-item>)
