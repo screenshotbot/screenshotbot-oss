@@ -122,6 +122,11 @@
   :components ((:file "fiveam")
                (:file "mock-recording")))
 
+(defsystem :util/hash-lock
+  :depends-on (:bordeaux-threads)
+  :serial t
+  :components ((:file "hash-lock")))
+
 (defsystem :util/phabricator
   :depends-on (:dexador
                :alexandria
@@ -133,11 +138,13 @@
 
 (defsystem :util/tests
   :depends-on (:util
+               :util/hash-lock
                :util/fiveam)
   :serial t
   :components ((:module "tests"
                 :components ((:file "test-ret-let")
                              (:file "test-store")
+                             (:file "test-hash-lock")
                              (:file "test-cookies")
                              (:file "test-fiveam")
                              (:file "test-lists")

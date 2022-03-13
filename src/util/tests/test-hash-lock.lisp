@@ -1,0 +1,60 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+(defpackage :util/tests/test-hash-lock
+  (:use #:cl
+        #:util/hash-lock
+        #:fiveam)
+  (:local-nicknames (#:a #:alexandria)))
+(in-package :util/tests/test-hash-lock)
+
+(util/fiveam:def-suite)
+
+(test happy-path
+  (let ((hash-lock (make-instance 'hash-lock)))
+    (let (ret)
+      (with-hash-lock-held (2 hash-lock)
+        (setf ret t))
+      (is (eql t ret))))
+  (pass))
+
+(test stress-test
+  (let* ((times 1000)
+         (threads 8)
+         (hash-lock (make-instance 'hash-lock))
+         (ref 0)
+         (threads (loop for x below threads
+                        collect
+                        (bt:make-thread
+                         (lambda ()
+                           (sleep 0.1)
+                           (loop for i below times
+                                 do
+                                    (with-hash-lock-held ('foo hash-lock)
+                                     (setf ref (+ 10 ref)))))))))
+    (loop for th in threads
+          do (bt:join-thread th))
+    (is (eql 80000 ref))))
+
+(defvar *dummy* "berg")
+
+(test stress-test-with-equal
+  (let* ((times 100)
+         (threads 3)
+         (hash-lock (make-instance 'hash-lock :test #'equal))
+         (ref 0)
+         (threads (loop for x below threads
+                        collect
+                        (bt:make-thread
+                         (lambda ()
+                           (sleep 0.1)
+                           (loop for i below times
+                                 do
+                                    (with-hash-lock-held ((format nil "zoid~a" *dummy*) hash-lock)
+                                     (setf ref (+ 10 ref)))))))))
+    (loop for th in threads
+          do (bt:join-thread th))
+    (is (eql 3000 ref))))
