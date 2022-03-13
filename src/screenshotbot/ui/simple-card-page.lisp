@@ -38,7 +38,7 @@
                     ,(progn footer)
                   </div>)))
     <app-template>
-      <div class= "card-page-container mt-3"
+      <div class= "card-page-container mt-3 shadow"
            style= (when max-width
                    (format nil "max-width: ~a" max-width)) >
           ,(cond
