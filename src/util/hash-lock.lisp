@@ -49,14 +49,15 @@
         ;; Whoever is in-charge of this object will notify us when
         ;; they are done.
         (bt:condition-wait (cv object-state) (%lock hash-lock))))
-    (funcall fn)
-    (bt:with-lock-held ((%lock hash-lock))
-      (decf (%count object-state))
-      (cond
-       ((> (%count object-state) 0)
-         ;; there are other threads waiting for control
-        (bt:condition-notify (cv object-state)))
-       (t
-        ;; we were the last one waiting on this, we can free up all
-        ;; the resource associated with this object
-        (remhash obj (%hash-table hash-lock)))))))
+    (unwind-protect
+         (funcall fn)
+      (bt:with-lock-held ((%lock hash-lock))
+        (decf (%count object-state))
+        (cond
+          ((> (%count object-state) 0)
+           ;; there are other threads waiting for control
+           (bt:condition-notify (cv object-state)))
+          (t
+           ;; we were the last one waiting on this, we can free up all
+           ;; the resource associated with this object
+           (remhash obj (%hash-table hash-lock))))))))

@@ -8,6 +8,8 @@
   (:use #:cl
         #:util/hash-lock
         #:fiveam)
+  (:import-from #:util/hash-lock
+                #:%hash-table)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-hash-lock)
 
@@ -37,7 +39,8 @@
                                      (setf ref (+ 10 ref)))))))))
     (loop for th in threads
           do (bt:join-thread th))
-    (is (eql 80000 ref))))
+    (is (eql 80000 ref))
+    (is (eql 0 (hash-table-count (%hash-table hash-lock))))))
 
 (defvar *dummy* "berg")
 
@@ -58,3 +61,14 @@
     (loop for th in threads
           do (bt:join-thread th))
     (is (eql 3000 ref))))
+
+(define-condition test-error (error)
+  ())
+
+(test unwind
+  (let ((hash-lock (make-instance 'hash-lock)))
+    (unwind-protect
+         (signals test-error
+          (with-hash-lock-held (t hash-lock)
+            (error 'test-error)))
+      (is (eql 0 (hash-table-count (%hash-table hash-lock)))))))
