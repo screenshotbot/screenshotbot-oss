@@ -14,7 +14,8 @@
                 #:installation)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:plan))
+   #:plan
+   #:company-plan))
 (in-package :screenshotbot/plan)
 
 (defclass plan ()

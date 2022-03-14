@@ -55,7 +55,6 @@
      (defvar ,name)
      (setf (documentation ',name 'variable) ,doc)))
 
-
 (defvar *cdn-domain* nil
   "A CDN to use with this instance. Assuming your instance is public
   facing, and your CDN is configured to look up assets from the root
