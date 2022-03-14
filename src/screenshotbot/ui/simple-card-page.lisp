@@ -30,7 +30,7 @@
                        (cdr children)
                        children))
          (inner (progn
-                  <div class= "card">
+                  <div class= "card shadow">
                     ,(progn header)
                     <div class= "card-body">
                       ,@children
@@ -38,7 +38,7 @@
                     ,(progn footer)
                   </div>)))
     <app-template>
-      <div class= "card-page-container mt-3 shadow"
+      <div class= "card-page-container mt-3"
            style= (when max-width
                    (format nil "max-width: ~a" max-width)) >
           ,(cond
