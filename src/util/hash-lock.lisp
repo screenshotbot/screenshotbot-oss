@@ -12,8 +12,8 @@
 (in-package :util/hash-lock)
 
 (defclass object-state ()
-  ((cv :initform (bt:make-condition-variable)
-       :reader cv)
+  ((item-lock :initform (bt:make-lock)
+              :reader item-lock)
    (count :initform 0
           :accessor %count)))
 
@@ -43,20 +43,15 @@
   (let (object-state)
     (bt:with-lock-held ((%lock hash-lock))
       (setf object-state (object-state obj hash-lock))
-      (incf (%count object-state)) ;; number of threads waiting on this
-      (when (> (%count object-state) 1)
-        ;; Whoever is in-charge of this object will notify us when
-        ;; they are done.
-        (bt:condition-wait (cv object-state) (%lock hash-lock))))
+      ;; number of threads waiting on this
+      (incf (%count object-state)))
     (unwind-protect
-         (funcall fn)
+         (bt:with-lock-held ((item-lock object-state))
+           (funcall fn))
       (bt:with-lock-held ((%lock hash-lock))
         (decf (%count object-state))
         (cond
-          ((> (%count object-state) 0)
-           ;; there are other threads waiting for control
-           (bt:condition-notify (cv object-state)))
-          (t
+          ((<= (%count object-state) 0)
            ;; we were the last one waiting on this, we can free up all
            ;; the resource associated with this object
            (remhash obj (%hash-table hash-lock))))))))

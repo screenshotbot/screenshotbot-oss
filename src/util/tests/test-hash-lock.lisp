@@ -37,21 +37,21 @@
   (with-mp
    (let* ((times 1000)
           (threads 8)
+          (lock (bt:make-lock))
           (hash-lock (make-instance 'hash-lock))
           (ref 0)
           (threads (loop for x below threads
                          collect
                          (bt:make-thread
                           (lambda ()
-                            (sleep 0.1)
                             (loop for i below times
                                   do
                                      (with-hash-lock-held ('foo hash-lock)
                                        (setf ref (+ 10 ref)))))))))
      (loop for th in threads
            do (bt:join-thread th))
-     (is (eql 80000 ref))
-     (is (eql 0 (hash-table-count (%hash-table hash-lock)))))))
+     (is (eql 0 (hash-table-count (%hash-table hash-lock))))
+     (is (eql 80000 ref)))))
 
 (defvar *dummy* "berg")
 
