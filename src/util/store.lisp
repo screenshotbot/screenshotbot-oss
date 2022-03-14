@@ -70,7 +70,7 @@
 (defmacro with-test-store (() &body body)
   `(call-with-test-store (lambda () ,@body)))
 
-(defun call-with-test-store (fn)
+(defun call-with-test-store (fn &key (cleanup t))
   (when (boundp 'bknr.datastore:*store*)
     (error "Don't run this test in a live program with an existing store"))
   (let ((*store* nil))
@@ -87,9 +87,12 @@
               (let ((objs (all-objects)))
                 (when objs
                   (error "At the end of the test some objects were not deleted: ~s" objs))))
-         ;; close-store doesn't really do much
-
-         (close-store))))))
+         (close-store)
+         (when cleanup
+           ;; Look at the associated test. This is the only way I know
+           ;; of to clean up the indices. I wish there were a better
+           ;; solution.
+           (call-with-test-store (lambda ()) :cleanup nil)))))))
 
 (defun prepare-store ()
   (setf bknr.datastore:*store-debug* t)
