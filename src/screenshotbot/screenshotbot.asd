@@ -57,6 +57,7 @@
    (:file "screenshot-api")
    (:file "settings-api")
    (:file "task-integration-api")
+   (:file "plan")
    (:file "template")
    (:file "left-side-bar")
    (:file "taskie")
