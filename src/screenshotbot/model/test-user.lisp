@@ -25,6 +25,8 @@
                 #:*installation*)
   (:import-from #:bknr.indices
                 #:object-destroyed-p)
+  (:import-from #:screenshotbot/model/user
+                #:default-company)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-user)
 
@@ -83,3 +85,28 @@
                (is (not (eql user (ignore-errors (company-owner company))))))
       (delete-object user)
       (pass))))
+
+(test default-company
+  (let ((*installation* (make-instance 'pro-installation)))
+    (let* ((user (make-instance 'user)))
+      (is (eql
+           (default-company user)
+           (car (user-companies user)))))))
+
+(test default-company-for-non-pro
+  (let* ((company (make-instance 'company))
+         (*installation* (make-instance 'installation
+                                         :singleton-company company)))
+    (let* ((user (make-instance 'user)))
+      (is (eql
+           (default-company user)
+           company)))))
+
+(test default-company-removed-from-user-companies
+  (let* ((company (make-instance 'company))
+         (user-company (make-instance 'company))
+         (user (make-instance 'user
+                               :default-company company
+                               :companies (list user-company))))
+    (is (eql user-company
+             (default-company user)))))

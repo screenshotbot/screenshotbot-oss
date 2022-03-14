@@ -47,6 +47,7 @@
                           :initarg :default-oidc-provider
                           :accessor default-oidc-provider)
    (singleton-company :initform nil
+                      :initarg :singleton-company
                       :accessor cached-singleton-company)))
 
 

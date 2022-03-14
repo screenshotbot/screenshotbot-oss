@@ -65,7 +65,8 @@
    #:email-confirmations
    #:password-hash
    #:notices
-   #:users-for-company))
+   #:users-for-company
+   #:default-company))
 (in-package :screenshotbot/model/user)
 
 (defvar *current-api-key*)
@@ -121,7 +122,16 @@
     :accessor %user-companies
     :documentation "This companies slot is only use in a multi-org
     set-up. A default installation of Screenshotbot OSS, would be a
-    single org set up."))
+    single org set up.")
+   (default-company
+    :initarg :default-company
+    :initform nil
+    :writer (setf default-company)
+    :reader %default-company
+    :documentation "The default company when this user logs in. We'll
+    change this when the user 'switches' companies in the UI. If no
+    default company is provided it should default to the personal
+    company."))
   (:metaclass persistent-class))
 
 (defun all-users ()
@@ -253,3 +263,10 @@
       (format nil "~a" (apply 'gravatar:image-url
                               (user-email user)
                               args))))
+
+(defmethod default-company ((user user))
+  (let ((user-companies (user-companies user)))
+   (or
+    (find (%default-company user) user-companies)
+    (user-personal-company user)
+    (car user-companies))))
