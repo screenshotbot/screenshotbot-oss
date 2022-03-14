@@ -19,22 +19,15 @@
                 #:oid)
   (:import-from #:screenshotbot/magick
                 #:run-magick)
+  (:import-from #:util/hash-lock
+                #:with-hash-lock-held
+                #:hash-lock)
   (:export
    #:handle-resized-image))
 (in-package :screenshotbot/dashboard/image)
 
-(defvar *lock* (bt:make-lock "image-resize"))
-
-(defvar *image-resize-locks* (make-hash-table)
-  "A hash table of locks, one for each image object. Sure, they're
-  never garbage collected, but it should never be large enough to
-  cause an issue.")
-
-(defun resize-lock (image)
-  (bt:with-lock-held (*lock*)
-    (util:or-setf
-     (gethash image *image-resize-locks*)
-     (bt:make-lock "image-resize-lock"))))
+(defvar *image-resize-lock* (make-instance 'hash-lock
+                                            :test 'equal))
 
 (defun cache-dir ()
   (let ((dir (path:catdir util/store:*object-store* "image-cache/")))
@@ -46,30 +39,35 @@
                  ((string-equal "small" size) "300x300")
                  ((string-equal "half-page" size) "600x600")
                  ((string-equal "full-page" size) "2000x2000")
-                (t (error "invalid image size: ~a" size))))
+                 ((string-equal "tiny" size) "5x5") ;; for testing only
+                 (t (error "invalid image size: ~a" size))))
          (output-file
            (make-pathname
             :type "png"
             :defaults (cache-dir)
             :name (format nil "~a-~a" (oid image) size))))
-    (cond
-      ((uiop:file-exists-p output-file)
-       (unless warmup
-        (handle-static-file output-file)))
-      (t
-       (bt:with-lock-held ((resize-lock image))
-         (unless (uiop:file-exists-p output-file)
-           (with-local-image (input image)
-             (uiop:with-staging-pathname (output-file)
-               (run-magick
-                (list "convert" input
-                      "-limit" "memory" "3MB"
-                      "-limit" "disk" "500MB"
-                      "-resize"
-                      (format nil "~a>" size)
-                      output-file))))))
-       (unless warmup
-        (handle-static-file output-file))))))
+    (flet ((finish ()
+             (cond
+               (warmup
+                output-file)
+               (t
+                (handle-static-file output-file)))))
+      (cond
+       ((uiop:file-exists-p output-file)
+        (finish))
+       (t
+        (with-hash-lock-held ((list image size) *image-resize-lock*)
+          (unless (uiop:file-exists-p output-file)
+            (with-local-image (input image)
+              (uiop:with-staging-pathname (output-file)
+                (run-magick
+                 (list "convert" input
+                       "-limit" "memory" "3MB"
+                       "-limit" "disk" "500MB"
+                       "-resize"
+                       (format nil "~a>" size)
+                       output-file))))))
+        (finish))))))
 
 (defhandler (image-blob-get :uri "/image/blob/:oid/default.png") (oid size)
   (let* ((image (find-by-oid oid))

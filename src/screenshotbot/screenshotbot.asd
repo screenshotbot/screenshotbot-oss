@@ -13,6 +13,7 @@
                :server
                :java.libs
                :util/form-state
+               :util/hash-lock
                :jose
                :trivial-file-size
                :screenshotbot.js-assets
@@ -202,6 +203,7 @@
                (:module "dashboard"
                 :components ((:file "test-recent-runs")
                              (:file "test-api-keys")
+                             (:file "test-image")
                              (:file "test-channels")
                              (:file "test-history")))
                (:module "login"
