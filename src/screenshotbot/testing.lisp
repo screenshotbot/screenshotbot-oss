@@ -14,14 +14,16 @@
   (:import-from #:./model/api-key
                 #:api-key)
   (:import-from #:bknr.datastore
-                #:delete-object))
+                #:delete-object)
+  (:import-from #:screenshotbot/model/user
+                #:make-user))
 
 (defmacro with-test-user ((&key (company (gensym "company"))
                                 (company-class '(quote company))
                              (user (gensym "user"))
                              (api-key (gensym "api-key"))) &body body)
   `(let* ((,company (make-instance ,company-class))
-          (,user (make-instance 'user :companies (list company)))
+          (,user (make-user :companies (list company)))
           (,api-key (make-instance 'api-key :user user
                                             :company company))
           (*events* nil))

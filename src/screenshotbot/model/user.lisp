@@ -66,7 +66,8 @@
    #:password-hash
    #:notices
    #:users-for-company
-   #:default-company))
+   #:default-company
+   #:make-user))
 (in-package :screenshotbot/model/user)
 
 (defvar *current-api-key*)
@@ -137,15 +138,11 @@
 (defun all-users ()
   (store-objects-with-class 'user))
 
-(defmethod initialize-instance :around ((obj user) &rest args
-                                        &key companies
-                                        &allow-other-keys)
-  (cond
-    (companies
-     (call-next-method))
-    (t
-     (let ((user (call-next-method)))
-       (initialize-companies-for-user user (installation))))))
+(defun make-user (&rest args &key companies &allow-other-keys)
+  (let ((user (apply #'make-instance 'user args)))
+    (unless companies
+      (initialize-companies-for-user user (installation)))
+    user))
 
 (defmethod initialize-companies-for-user (user installation)
   (values))

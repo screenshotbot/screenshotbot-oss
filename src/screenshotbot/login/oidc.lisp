@@ -20,6 +20,7 @@
                 #:persistent-class
                 #:hash-index)
   (:import-from #:screenshotbot/model/user
+                #:make-user
                 #:oauth-user-user
                 #:oauth-user-full-name
                 #:oauth-user-avatar
@@ -123,7 +124,7 @@ user as used in Screenshotbot)"
     (or
      (oauth-user-user oauth-user)
      (user-with-email email)
-     (values (make-instance 'user :email email) t))
+     (values (make-user :email email) t))
     (with-transaction (:ensure-two-way-mapping)
       ;; ensure two way mapping.
       (pushnew oauth-user (oauth-users user))

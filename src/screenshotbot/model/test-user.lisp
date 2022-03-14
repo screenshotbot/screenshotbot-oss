@@ -26,6 +26,7 @@
   (:import-from #:bknr.indices
                 #:object-destroyed-p)
   (:import-from #:screenshotbot/model/user
+                #:make-user
                 #:default-company)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-user)
@@ -43,7 +44,7 @@
 
 (test make-user
   (with-fixture state ()
-   (let ((user (make-instance 'user)))
+   (let ((user (make-user)))
      (unwind-protect
           (let ((companies (user-companies user)))
             (is (equal 1 (length companies)))
@@ -59,7 +60,7 @@
 
 (test remove-reference-from-companies-for-testing
   (with-fixture state ()
-   (let ((user (make-instance 'user)))
+   (let ((user (make-user)))
      (let ((company (car (user-companies user))))
        (unwind-protect
             (is-true (company-owner company))
@@ -74,7 +75,7 @@
 (test but-with-regular-installation-singleton-company-is-not-deleted
   (let ((*installation* (make-instance 'installation)))
     (prepare-singleton-company)
-    (let* ((user (make-instance 'user))
+    (let* ((user (make-user))
            (companies (user-companies user)))
       (is (equal (list
                   (get-singleton-company *installation*))
@@ -88,7 +89,7 @@
 
 (test default-company
   (let ((*installation* (make-instance 'pro-installation)))
-    (let* ((user (make-instance 'user)))
+    (let* ((user (make-user)))
       (is (eql
            (default-company user)
            (car (user-companies user)))))))
@@ -97,7 +98,7 @@
   (let* ((company (make-instance 'company))
          (*installation* (make-instance 'installation
                                          :singleton-company company)))
-    (let* ((user (make-instance 'user)))
+    (let* ((user (make-user)))
       (is (eql
            (default-company user)
            company)))))
@@ -105,8 +106,8 @@
 (test default-company-removed-from-user-companies
   (let* ((company (make-instance 'company))
          (user-company (make-instance 'company))
-         (user (make-instance 'user
-                               :default-company company
-                               :companies (list user-company))))
+         (user (make-user
+                :default-company company
+                :companies (list user-company))))
     (is (eql user-company
              (default-company user)))))

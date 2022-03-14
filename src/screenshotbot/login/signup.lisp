@@ -180,9 +180,9 @@
            :plan plan)))
         (t
     ;; everything looks good, let's create our user
-         (let ((user (make-instance 'user
-                                     :full-name full-name
-                                     :email email)))
+         (let ((user (make-user
+                      :full-name full-name
+                      :email email)))
            (with-transaction ()
              (setf (auth:user-password user)
                    password))
