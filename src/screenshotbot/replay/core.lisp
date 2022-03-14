@@ -181,7 +181,7 @@
         if (string-equal "Access-Control-Allow-Origin" k)
           do (setf (gethash k headers) "*")))
 
-(defclass recursive-asset-error (error)
+(define-condition recursive-asset-error (error)
   ((url :initarg :url)))
 
 (defmethod call-with-fetch-asset ((context context)
