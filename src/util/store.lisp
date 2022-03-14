@@ -74,13 +74,22 @@
   (when (boundp 'bknr.datastore:*store*)
     (error "Don't run this test in a live program with an existing store"))
   (let ((*store* nil))
-    (tmpdir:with-tmpdir (dir)
-      (prepare-store-for-test :dir dir)
-      (assert bknr.datastore:*store*)
-      (unwind-protect
-           (funcall fn)
-        ;; close-store doesn't really do much
-        (close-store)))))
+    (flet ((all-objects ()
+             (bknr.datastore:all-store-objects)))
+     (tmpdir:with-tmpdir (dir)
+       (prepare-store-for-test :dir dir)
+       (assert bknr.datastore:*store*)
+       (assert (null (all-objects)))
+       (unwind-protect
+            (progn
+              (funcall fn)
+              #+nil
+              (let ((objs (all-objects)))
+                (when objs
+                  (error "At the end of the test some objects were not deleted: ~s" objs))))
+         ;; close-store doesn't really do much
+
+         (close-store))))))
 
 (defun prepare-store ()
   (setf bknr.datastore:*store-debug* t)
