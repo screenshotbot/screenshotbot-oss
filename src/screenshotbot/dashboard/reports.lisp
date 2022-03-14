@@ -26,6 +26,9 @@
   (:import-from #:screenshotbot/dashboard/notes
                 #:render-notes
                 #:create-note-page)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:installation-domain)
   (:export #:report-page #:report-link))
 (in-package :screenshotbot/dashboard/reports)
 
@@ -131,5 +134,5 @@
 
 (defun report-link (report)
   (format nil "~a~a"
-          *domain*
+          (installation-domain (installation))
           (make-url 'report-page :id (oid report))))
