@@ -16,6 +16,9 @@
                 #:*domain*)
   (:import-from #:screenshotbot/diff-report
                 #:diff-report-title)
+  (:import-from #:screenshotbot/installation
+                #:installation-domain
+                #:installation)
   (:export
    #:commenting-promoter
    #:add-comment))
@@ -68,7 +71,7 @@
                       nil
                       "Screenshot changes: ~a ~a/report/~a"
                       (diff-report-title diff-report)
-                      *domain*
+                      (installation-domain (installation))
                       (util:oid report)))))))))))
     (restart-maybe-promote ()
       (maybe-promote promoter run))))

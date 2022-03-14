@@ -13,7 +13,6 @@
         #:screenshotbot/taskie)
   (:import-from #:screenshotbot/server
                 #:with-login
-                #:*domain*
                 #:defhandler)
   (:import-from #:util
                 #:make-url

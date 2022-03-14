@@ -19,6 +19,9 @@
                 #:persistent-class
                 #:unique-index
                 #:blob)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:installation-domain)
   (:export #:artifact-with-name
            #:artifact-link
            #:md5-hex
@@ -77,7 +80,7 @@
       (let ((url (make-url 'artifact-get :name name)))
         (cond
           (*delivered-image*
-           (format nil "~a~a" *domain* url))
+           (format nil "~a~a" (installation-domain (installation)) url))
           (cdn
            (util.cdn:make-cdn url))
           (t url))))))

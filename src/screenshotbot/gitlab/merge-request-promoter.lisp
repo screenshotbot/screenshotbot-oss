@@ -19,13 +19,14 @@
    :screenshotbot/pro/gitlab/merge-request-promoter) ;; for bknr
   (:import-from #:screenshotbot/model/report
                 #:base-acceptable)
-  (:import-from #:screenshotbot/server
-                #:*domain*)
   (:import-from #:screenshotbot/gitlab/repo
                 #:*gitlab-url*
                 #:repo-access-token)
   (:import-from #:screenshotbot/diff-report
                 #:diff-report-title)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:installation-domain)
   (:export
    #:merge-request-promoter
    #:gitlab-acceptable))
@@ -140,7 +141,7 @@
                  nil
                  "Screenshot changes: ~a ~a/report/~a"
                  (diff-report-title diff-report)
-                 *domain*
+                 (installation-domain (installation))
                  (util:oid report)))))))))))
 
 (defun comment-now (promoter run comment)
