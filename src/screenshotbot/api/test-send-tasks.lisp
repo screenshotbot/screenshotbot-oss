@@ -27,7 +27,9 @@
   (:import-from #:bknr.datastore
                 #:persistent-class)
   (:import-from #:../testing
-                #:with-test-user))
+                #:with-test-user)
+  (:import-from #:util/store
+                #:with-test-store))
 
 (util/fiveam:def-suite)
 
@@ -42,41 +44,42 @@
                   :company company)))
 
 (def-fixture state ()
-  (util:with-fake-request ()
-    (auth:with-sessions ()
-      (let ((promoter (make-instance 'master-promoter)))
-       (with-test-user (:company company
-                        :company-class 'test-company
-                        :user user
-                        :api-key api-key)
-         (let* ((channel (make-instance 'channel :name "dfdfdf"
-                                        ;; give a repo, just in case we
-                                        ;; have a bug and we're actually
-                                        ;; hitting github
-                                                 :github-repo "https://github.com/tdrhq/screenshotbot-example"
-                                                 :branch "master"))
-                (run1 (make-instance 'recorder-run
-                                      :channel channel
-                                      :company company
-                                      :commit-hash "car"
-                                      :cleanp t
-                                      :trunkp t))
-                (screenshot (make-instance 'screenshot
-                                            :run nil
-                                            :name "foo"))
-                (run2 (make-instance 'recorder-run
-                                      :channel channel
-                                      :commit-hash "car2"
-                                      :cleanp t
-                                      :screenshots (list screenshot)
-                                      :previous-run run1
-                                      :trunkp t
-                                      :company company)))
-           (is (eql 'github-create-issue *create-issue-fn*))
-           (let ((*current-api-key* api-key)
-                 (*create-issue-fn* (lambda (repo title body)
-                                                     "http://foo/1")))
-             (&body))))))))
+  (with-test-store ()
+   (util:with-fake-request ()
+     (auth:with-sessions ()
+       (let ((promoter (make-instance 'master-promoter)))
+         (with-test-user (:company company
+                          :company-class 'test-company
+                          :user user
+                          :api-key api-key)
+           (let* ((channel (make-instance 'channel :name "dfdfdf"
+                                           ;; give a repo, just in case we
+                                           ;; have a bug and we're actually
+                                           ;; hitting github
+                                           :github-repo "https://github.com/tdrhq/screenshotbot-example"
+                                           :branch "master"))
+                  (run1 (make-instance 'recorder-run
+                                        :channel channel
+                                        :company company
+                                        :commit-hash "car"
+                                        :cleanp t
+                                        :trunkp t))
+                  (screenshot (make-instance 'screenshot
+                                              :run nil
+                                              :name "foo"))
+                  (run2 (make-instance 'recorder-run
+                                        :channel channel
+                                        :commit-hash "car2"
+                                        :cleanp t
+                                        :screenshots (list screenshot)
+                                        :previous-run run1
+                                        :trunkp t
+                                        :company company)))
+             (is (eql 'github-create-issue *create-issue-fn*))
+             (let ((*current-api-key* api-key)
+                   (*create-issue-fn* (lambda (repo title body)
+                                        "http://foo/1")))
+               (&body)))))))))
 
 (test happy-path
   (with-fixture state ()

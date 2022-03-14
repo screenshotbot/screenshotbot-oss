@@ -24,19 +24,22 @@
   (:import-from #:../model/image
                 #:image)
   (:import-from #:../testing
-                #:with-test-user))
+                #:with-test-user)
+  (:import-from #:util/store
+                #:with-test-store))
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (util:with-fake-request ()
-    (with-test-user (:company company
-                     :user user
-                     :api-key api-key)
-      (let ((*current-api-key* api-key)
-            (*use-blob-store-p* nil)
-           (*build-presigned-put* (lambda (bucket key) "https://example.com")))
-       (&body)))))
+  (with-test-store ()
+   (util:with-fake-request ()
+     (with-test-user (:company company
+                      :user user
+                      :api-key api-key)
+       (let ((*current-api-key* api-key)
+             (*use-blob-store-p* nil)
+             (*build-presigned-put* (lambda (bucket key) "https://example.com")))
+         (&body))))))
 
 (test simple-upload
   (with-fixture state ()

@@ -8,14 +8,17 @@
   (:use #:cl
         #:alexandria
         #:fiveam
-        #:./report))
+        #:./report)
+  (:import-from #:util/store
+                #:with-test-store))
 
 (util/fiveam:def-suite)
 
 (test simple-acceptable-set-get
-  (let ((a (make-instance 'base-acceptable)))
-    (is (equal nil (acceptable-state a)))
-    (setf (acceptable-state a) :accepted)
-    (is (equal :accepted (acceptable-state a)))
-    (signals error
-      (setf (acceptable-state a) :foo))))
+  (with-test-store ()
+   (let ((a (make-instance 'base-acceptable)))
+     (is (equal nil (acceptable-state a)))
+     (setf (acceptable-state a) :accepted)
+     (is (equal :accepted (acceptable-state a)))
+     (signals error
+       (setf (acceptable-state a) :foo)))))

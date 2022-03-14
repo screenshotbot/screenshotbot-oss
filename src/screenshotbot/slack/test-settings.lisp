@@ -12,24 +12,27 @@
         #:../model
         #:./core
         #:./settings
-        #:../login/common))
+        #:../login/common)
+  (:import-from #:util/store
+                #:with-test-store))
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (util:with-fake-request ()
-   (let* ((company (make-instance 'company))
-          (token (make-instance 'slack-token
-                                 :access-token "foo"
-                                 :company company
-                                 :ts 34)))
-     (unwind-protect
-          (let ((*current-company-override* company))
-            (&body))
-       (when (default-slack-config company)
-         (delete-object (default-slack-config company)))
-       (delete-object company)
-       (delete-object token)))))
+  (with-test-store ()
+   (util:with-fake-request ()
+     (let* ((company (make-instance 'company))
+            (token (make-instance 'slack-token
+                                   :access-token "foo"
+                                   :company company
+                                   :ts 34)))
+       (unwind-protect
+            (let ((*current-company-override* company))
+              (&body))
+         (when (default-slack-config company)
+           (delete-object (default-slack-config company)))
+         (delete-object company)
+         (delete-object token))))))
 
 (test posting-when-nothing-is-available ()
   (with-fixture state ()

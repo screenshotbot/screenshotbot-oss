@@ -8,6 +8,8 @@
   (:use #:cl
         #:bknr.datastore
         #:util/file-lock)
+  (:import-from #:bknr.datastore
+                #:close-store)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -69,17 +71,16 @@
   `(call-with-test-store (lambda () ,@body)))
 
 (defun call-with-test-store (fn)
-  #-buck
-  (funcall fn)
-  #+buck
   (when (boundp 'bknr.datastore:*store*)
     (error "Don't run this test in a live program with an existing store"))
-  #+buck
   (let ((*store* nil))
     (tmpdir:with-tmpdir (dir)
       (prepare-store-for-test :dir dir)
       (assert bknr.datastore:*store*)
-      (funcall fn))))
+      (unwind-protect
+           (funcall fn)
+        ;; close-store doesn't really do much
+        (close-store)))))
 
 (defun prepare-store ()
   (setf bknr.datastore:*store-debug* t)

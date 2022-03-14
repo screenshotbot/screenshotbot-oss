@@ -11,13 +11,16 @@
   (:import-from #:util/object-id
 		#:object-with-oid
                 #:oid
-                #:find-by-oid))
+                #:find-by-oid)
+  (:import-from #:util/store
+                #:with-test-store))
 (in-package :util.model.test-object-id)
 
 (def-suite* :util.model.test-object-id)
 
 #-buck
 (test simple-creation-and-finding
-  (let ((obj (make-instance 'object-with-oid)))
-    (is (eql obj
-             (find-by-oid (oid obj))))))
+  (with-test-store ()
+   (let ((obj (make-instance 'object-with-oid)))
+     (is (eql obj
+              (find-by-oid (oid obj)))))))

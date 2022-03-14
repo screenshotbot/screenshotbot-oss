@@ -28,6 +28,8 @@
   (:import-from #:screenshotbot/model/user
                 #:make-user
                 #:default-company)
+  (:import-from #:util/store
+                #:with-test-store)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-user)
 
@@ -39,8 +41,9 @@
 
 
 (def-fixture state ()
-  (let ((*installation* (make-instance 'pro-installation)))
-    (&body)))
+  (with-test-store ()
+   (let ((*installation* (make-instance 'pro-installation)))
+     (&body))))
 
 (test make-user
   (with-fixture state ()
@@ -73,41 +76,45 @@
 
 
 (test but-with-regular-installation-singleton-company-is-not-deleted
-  (let ((*installation* (make-instance 'installation)))
-    (prepare-singleton-company)
-    (let* ((user (make-user))
-           (companies (user-companies user)))
-      (is (equal (list
-                  (get-singleton-company *installation*))
-                 companies))
-      (loop for company in (bknr.datastore:store-objects-with-class 'company)
-            do
-               (is (not (member user (ignore-errors (company-admins company)))))
-               (is (not (eql user (ignore-errors (company-owner company))))))
-      (delete-object user)
-      (pass))))
+  (with-test-store ()
+   (let ((*installation* (make-instance 'installation)))
+     (prepare-singleton-company)
+     (let* ((user (make-user))
+            (companies (user-companies user)))
+       (is (equal (list
+                   (get-singleton-company *installation*))
+                  companies))
+       (loop for company in (bknr.datastore:store-objects-with-class 'company)
+             do
+                (is (not (member user (ignore-errors (company-admins company)))))
+                (is (not (eql user (ignore-errors (company-owner company))))))
+       (delete-object user)
+       (pass)))))
 
 (test default-company
-  (let ((*installation* (make-instance 'pro-installation)))
-    (let* ((user (make-user)))
-      (is (eql
-           (default-company user)
-           (car (user-companies user)))))))
+  (with-test-store ()
+   (let ((*installation* (make-instance 'pro-installation)))
+     (let* ((user (make-user)))
+       (is (eql
+            (default-company user)
+            (car (user-companies user))))))))
 
 (test default-company-for-non-pro
-  (let* ((company (make-instance 'company))
-         (*installation* (make-instance 'installation
-                                         :singleton-company company)))
-    (let* ((user (make-user)))
-      (is (eql
-           (default-company user)
-           company)))))
+  (with-test-store ()
+   (let* ((company (make-instance 'company))
+          (*installation* (make-instance 'installation
+                                          :singleton-company company)))
+     (let* ((user (make-user)))
+       (is (eql
+            (default-company user)
+            company))))))
 
 (test default-company-removed-from-user-companies
-  (let* ((company (make-instance 'company))
-         (user-company (make-instance 'company))
-         (user (make-user
-                :default-company company
-                :companies (list user-company))))
-    (is (eql user-company
-             (default-company user)))))
+  (with-fixture state ()
+   (let* ((company (make-instance 'company))
+          (user-company (make-instance 'company))
+          (user (make-user
+                 :default-company company
+                 :companies (list user-company))))
+     (is (eql user-company
+              (default-company user))))))

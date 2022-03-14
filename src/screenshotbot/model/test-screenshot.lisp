@@ -13,13 +13,16 @@
         #:../model/image
         #:../model/recorder-run
         #:../model/company
-        #:fiveam))
+        #:fiveam)
+  (:import-from #:util/store
+                #:with-test-store))
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (let* ((channel (make-instance 'channel)))
-    (&body)))
+  (with-test-store ()
+   (let* ((channel (make-instance 'channel)))
+     (&body))))
 
 (test no-history
   (with-fixture state ()
@@ -54,17 +57,19 @@
                  (get-screenshot-history channel "foo"))))))
 
 (test make-screenshot-uniqueness ()
-  (let ((args (list :name "foo4" :lang "bar")))
-    (let ((screenshot (apply 'make-screenshot args)))
-      (unwind-protect
-           (is (eql screenshot (apply 'make-screenshot args)))
-        (delete-object screenshot)))))
+  (with-test-store ()
+   (let ((args (list :name "foo4" :lang "bar")))
+     (let ((screenshot (apply 'make-screenshot args)))
+       (unwind-protect
+            (is (eql screenshot (apply 'make-screenshot args)))
+         (delete-object screenshot))))))
 
 (test make-screenshot-uniqueness-with-masks ()
-  (let* ((mask1 (list (make-instance 'mask-rect :left 1 :top 2 :width 3 :height 4)))
-         (mask2 (list (make-instance 'mask-rect :left 1 :top 2 :width 3 :height 5)))
-         (mask3 (list (make-instance 'mask-rect :left 1 :top 2 :width 3 :height 4))))
-    (is (eql (make-screenshot :name "foo" :masks mask1)
-             (make-screenshot :name "foo" :masks mask3)))
-    (is (not (eql (make-screenshot :name "foo" :masks mask1)
-                  (make-screenshot :name "foo" :masks mask2))))))
+  (with-test-store ()
+   (let* ((mask1 (list (make-instance 'mask-rect :left 1 :top 2 :width 3 :height 4)))
+          (mask2 (list (make-instance 'mask-rect :left 1 :top 2 :width 3 :height 5)))
+          (mask3 (list (make-instance 'mask-rect :left 1 :top 2 :width 3 :height 4))))
+     (is (eql (make-screenshot :name "foo" :masks mask1)
+              (make-screenshot :name "foo" :masks mask3)))
+     (is (not (eql (make-screenshot :name "foo" :masks mask1)
+                   (make-screenshot :name "foo" :masks mask2)))))))

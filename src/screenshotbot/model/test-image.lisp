@@ -25,17 +25,20 @@
                 #:map-unequal-pixels)
   (:import-from #:screenshotbot/magick
                 #:run-magick)
+  (:import-from #:util/store
+                #:with-test-store)
   (:export))
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (let* ((img (make-instance 'local-image :url "/assets/images/old-example-view-right.png"))
-         (img2 (make-instance 'local-image :url "/assets/images/old-example-view-left.png"))
-         (img-copy (make-instance 'local-image :url "/assets/images/old-example-view-right.png"))
-         (rect (make-instance 'mask-rect :left 8 :top 11
-                               :height 99 :width 103)))
-    (&body)))
+  (with-test-store ()
+   (let* ((img (make-instance 'local-image :url "/assets/images/old-example-view-right.png"))
+          (img2 (make-instance 'local-image :url "/assets/images/old-example-view-left.png"))
+          (img-copy (make-instance 'local-image :url "/assets/images/old-example-view-right.png"))
+          (rect (make-instance 'mask-rect :left 8 :top 11
+                                          :height 99 :width 103)))
+     (&body))))
 
 (test simple-compare ()
   (with-fixture state ()

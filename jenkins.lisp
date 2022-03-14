@@ -103,15 +103,6 @@
 
 (defun main ()
   (tmpdir:with-tmpdir (tmpdir)
-    (make-instance #-screenshotbot-oss
-                   'util:safe-mp-store
-                   #+screenshotbot-oss
-                   'bknr.datastore:mp-store
-                   :directory tmpdir
-                   :subsystems (list (make-instance
-                                      'bknr.datastore:store-object-subsystem)
-                                     (make-instance
-                                      'bknr.datastore:blob-subsystem)))
     ;; on CCL, the JVM is already loaded before the main systems
     #+lispworks
     (unless (position "-no-jvm" system:*line-arguments-list* :test #'equal)

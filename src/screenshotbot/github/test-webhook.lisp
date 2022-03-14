@@ -17,33 +17,36 @@
                 #:repo-full-name
                 #:github-get-canonical-repo
                 #:pull-request-with-url
-                #:github-maybe-update-pull-request))
+                #:github-maybe-update-pull-request)
+  (:import-from #:util/store
+                #:with-test-store))
 
 (util/fiveam:def-suite)
 
 (test github-maybe-update-pull-request ()
-  (with-open-file (s (path:catfile
-                      (asdf:system-source-directory :screenshotbot)
-                      "github/pull-request-example-1.json"))
-    (let ((json (json:decode-json s))
-          (random-url (generate-api-secret)))
-      ;; but before we process this, let's use a random string in the
-      ;; url field.
-      (is-true random-url)
-      (setf (assoc-value (assoc-value json :pull--request) :url)
-            random-url)
-      (github-maybe-update-pull-request json)
-      (is-true (pull-request-with-url random-url))
-      (let ((obj (pull-request-with-url random-url)))
-        (is (equal
-             "d87dea9a36924ca17f054d9586737187b82a8bd6"
-             (pull-request-head obj)))
-        (is (equal
-             "458afc8769c2186d669a1cc7bbd64480172c49a5"
-             (pull-request-base obj)))
-        (is (equal
-             "tdrhq/fast-example"
-             (repo-full-name obj)))))))
+  (with-test-store ()
+   (with-open-file (s (path:catfile
+                       (asdf:system-source-directory :screenshotbot)
+                       "github/pull-request-example-1.json"))
+     (let ((json (json:decode-json s))
+           (random-url (generate-api-secret)))
+       ;; but before we process this, let's use a random string in the
+       ;; url field.
+       (is-true random-url)
+       (setf (assoc-value (assoc-value json :pull--request) :url)
+             random-url)
+       (github-maybe-update-pull-request json)
+       (is-true (pull-request-with-url random-url))
+       (let ((obj (pull-request-with-url random-url)))
+         (is (equal
+              "d87dea9a36924ca17f054d9586737187b82a8bd6"
+              (pull-request-head obj)))
+         (is (equal
+              "458afc8769c2186d669a1cc7bbd64480172c49a5"
+              (pull-request-base obj)))
+         (is (equal
+              "tdrhq/fast-example"
+              (repo-full-name obj))))))))
 
 (test github-get-cannonical-repo
   (is (equal "https://github.com/foo/bar"

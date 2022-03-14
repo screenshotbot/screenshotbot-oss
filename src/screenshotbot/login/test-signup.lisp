@@ -18,7 +18,9 @@
                 #:company)
   (:import-from #:screenshotbot/installation
                 #:*installation*
-                #:installation))
+                #:installation)
+  (:import-from #:util/store
+                #:with-test-store))
 
 (util/fiveam:def-suite)
 
@@ -26,19 +28,20 @@
 ;; added later. This test doesn't run very well in the repl,
 ;; AFAICT. Works fine on `make test-lw`
 (test happy-path
-  (util:with-fake-request (:host "localhost:80")
-    (let ((*installation* (make-instance 'installation)))
-      (prepare-singleton-company)
-      (catch 'hunchentoot::handler-done
-        (let* ((company (get-singleton-company *installation*)))
-          (unwind-protect
-               (auth:with-sessions ()
-                 (let ((*disable-mail* t))
-                   (let ((ret (signup-post  :email "arnold@tdrhq.com"
-                                            :password "foobar23"
-                                            :full-name "Arnold Noronha"
-                                            :accept-terms-p t
-                                            :plan :professional)))
-                     (error "should not get here: ~s" ret))))
-            (bknr.datastore:delete-object company)))))
-    (pass)))
+  (with-test-store ()
+   (util:with-fake-request (:host "localhost:80")
+     (let ((*installation* (make-instance 'installation)))
+       (prepare-singleton-company)
+       (catch 'hunchentoot::handler-done
+         (let* ((company (get-singleton-company *installation*)))
+           (unwind-protect
+                (auth:with-sessions ()
+                  (let ((*disable-mail* t))
+                    (let ((ret (signup-post  :email "arnold@tdrhq.com"
+                                             :password "foobar23"
+                                             :full-name "Arnold Noronha"
+                                             :accept-terms-p t
+                                             :plan :professional)))
+                      (error "should not get here: ~s" ret))))
+             (bknr.datastore:delete-object company)))))
+     (pass))))

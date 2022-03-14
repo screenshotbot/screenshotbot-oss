@@ -23,7 +23,9 @@
   (:import-from #:../testing
                 #:with-test-user)
   (:import-from #:screenshotbot/api/promote
-                #:*promotion-log-stream*))
+                #:*promotion-log-stream*)
+  (:import-from #:util/store
+                #:with-test-store))
 
 (util/fiveam:def-suite)
 
@@ -67,36 +69,37 @@
   (equal commit1 (merge-base repo commit1 commit2)))
 
 (def-fixture state ()
-  (util:with-fake-request ()
-    (auth:with-sessions ()
-      (with-test-user (:company company
-                       :user user
-                       :api-key api-key)
-       (let* ((channel (make-instance 'test-channel :name "foo"))
-              (run1 (make-instance 'recorder-run
-                                   :channel channel
-                                   :github-repo "foo"
-                                   :commit-hash "car"
-                                   :cleanp t
-                                   :branch "master"
-                                   :branch-hash "car"
-                                   :trunkp t
-                                   :company company))
-              (run2 (make-instance 'recorder-run
-                                   :channel channel
-                                   :github-repo "foo"
-                                   :commit-hash "car2"
-                                   :cleanp t
-                                   :branch "master"
-                                   :branch-hash "car2"
-                                   :trunkp t
-                                   :company company)))
-         (with-transaction ()
-           (push channel (company-channels company))
-           (push run1 (company-runs company))
-           (push run2 (company-runs company)))
-         (let ((*current-api-key* api-key))
-           (&body)))))))
+  (with-test-store ()
+   (util:with-fake-request ()
+     (auth:with-sessions ()
+       (with-test-user (:company company
+                        :user user
+                        :api-key api-key)
+         (let* ((channel (make-instance 'test-channel :name "foo"))
+                (run1 (make-instance 'recorder-run
+                                      :channel channel
+                                      :github-repo "foo"
+                                      :commit-hash "car"
+                                      :cleanp t
+                                      :branch "master"
+                                      :branch-hash "car"
+                                      :trunkp t
+                                      :company company))
+                (run2 (make-instance 'recorder-run
+                                      :channel channel
+                                      :github-repo "foo"
+                                      :commit-hash "car2"
+                                      :cleanp t
+                                      :branch "master"
+                                      :branch-hash "car2"
+                                      :trunkp t
+                                      :company company)))
+           (with-transaction ()
+             (push channel (company-channels company))
+             (push run1 (company-runs company))
+             (push run2 (company-runs company)))
+           (let ((*current-api-key* api-key))
+             (&body))))))))
 
 (defun %maybe-promote-run (run channel &key (wait-timeout 1))
   (maybe-promote-run run

@@ -26,28 +26,31 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:../testing
-                #:with-test-user))
+                #:with-test-user)
+  (:import-from #:util/store
+                #:with-test-store))
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (util:with-fake-request ()
-    (auth:with-sessions ()
-      (with-test-user (:company company
-                       :user user)
-       (let* ((*synchronous-promotion* t)
-              (api-key (make-instance 'api-key :user user :company company))
-              (img1 (make-instance 'image
-                                   :company company
-                                    :hash "foo1"))
-              (img2 (make-instance 'image
-                                   :company company
-                                    :hash "foo2")))
-         (setf (current-user) user)
-         (assert (logged-in-p))
-         (assert (current-user))
-         (let ((*current-api-key* api-key))
-           (&body)))))))
+  (with-test-store ()
+   (util:with-fake-request ()
+     (auth:with-sessions ()
+       (with-test-user (:company company
+                        :user user)
+         (let* ((*synchronous-promotion* t)
+                (api-key (make-instance 'api-key :user user :company company))
+                (img1 (make-instance 'image
+                                      :company company
+                                      :hash "foo1"))
+                (img2 (make-instance 'image
+                                      :company company
+                                      :hash "foo2")))
+           (setf (current-user) user)
+           (assert (logged-in-p))
+           (assert (current-user))
+           (let ((*current-api-key* api-key))
+             (&body))))))))
 
 (defun serial-recorder-run-post (&rest args)
   (multiple-value-bind (val verify)

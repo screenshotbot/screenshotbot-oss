@@ -16,7 +16,9 @@
                 #:diff-report-changes
                 #:diff-report-changes
                 #:make-diff-report
-                #:diff-report-title))
+                #:diff-report-title)
+  (:import-from #:util/store
+                #:with-test-store))
 (in-package :screenshotbot/test-diff-report)
 
 (util/fiveam:def-suite)
@@ -32,14 +34,15 @@
                                                             :added (list 1))))))
 
 (test make-diff-report
-  (let* ((img (make-instance 'local-image :url "/assets/images/example-view-square.svg.png"))
-         (img2 (make-instance 'local-image :url "/assets/images/example-view.svg.png"))
-         (channel (make-instance 'channel))
-         (screenshot (make-screenshot :name "foo"
-                                      :image img))
-         (screenshot2 (make-screenshot :name "foo"
+  (with-test-store ()
+   (let* ((img (make-instance 'local-image :url "/assets/images/example-view-square.svg.png"))
+          (img2 (make-instance 'local-image :url "/assets/images/example-view.svg.png"))
+          (channel (make-instance 'channel))
+          (screenshot (make-screenshot :name "foo"
+                                       :image img))
+          (screenshot2 (make-screenshot :name "foo"
                                         :image img2))
-         (run1 (make-instance 'recorder-run :screenshots (list screenshot)))
-         (run2 (make-instance 'recorder-run :screenshots (list screenshot2))))
-    (let ((diff-report (make-diff-report run1 run2)))
-      (is (eql 1 (length (diff-report-changes diff-report)))))))
+          (run1 (make-instance 'recorder-run :screenshots (list screenshot)))
+          (run2 (make-instance 'recorder-run :screenshots (list screenshot2))))
+     (let ((diff-report (make-diff-report run1 run2)))
+       (is (eql 1 (length (diff-report-changes diff-report))))))))

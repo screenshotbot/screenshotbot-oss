@@ -20,7 +20,9 @@
                 #:*installation*
                 #:installation)
   (:import-from #:screenshotbot/model/company
-                #:prepare-singleton-company))
+                #:prepare-singleton-company)
+  (:import-from #:util/store
+                #:with-test-store))
 
 (util/fiveam:def-suite)
 
@@ -37,9 +39,10 @@
     user))
 
 (def-fixture state ()
-  (let ((*installation* (make-instance 'installation)))
-    (prepare-singleton-company)
-    (&body)))
+  (with-test-store ()
+   (let ((*installation* (make-instance 'installation)))
+     (prepare-singleton-company)
+     (&body))))
 
 (defmacro dlet (((k v)) &body body)
   `(progn

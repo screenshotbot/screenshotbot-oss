@@ -8,13 +8,16 @@
   (:use #:cl
         #:fiveam
         #:./commit-graph
-        #:./company))
+        #:./company)
+  (:import-from #:util/store
+                #:with-test-store))
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (let ((company (make-instance 'company)))
-    (&body)))
+  (with-test-store ()
+   (let ((company (make-instance 'company)))
+     (&body))))
 
 (test simple-find-or-create
   (with-fixture state ()
