@@ -6,8 +6,6 @@
 
 (defpackage :util/testing
   (:use #:cl)
-  (:import-from #:bknr.datastore
-                #:*store*)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-fake-request

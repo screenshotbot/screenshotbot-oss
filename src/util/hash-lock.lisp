@@ -6,7 +6,6 @@
 
 (defpackage :util/hash-lock
   (:use #:cl)
-  (:local-nicknames (#:a #:alexandria))
   (:export
    #:hash-lock
    #:with-hash-lock-held))

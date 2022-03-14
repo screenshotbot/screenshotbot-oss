@@ -15,6 +15,16 @@
 
 (util/fiveam:def-suite)
 
+(defmacro with-mp (&body body)
+  #-buck
+  `(progn ,@body)
+  #+buck
+  `(mp:initialize-multiprocessing
+    "test-thread"
+    nil
+    (lambda ()
+      ,@body)))
+
 (test happy-path
   (let ((hash-lock (make-instance 'hash-lock)))
     (let (ret)
@@ -24,43 +34,45 @@
   (pass))
 
 (test stress-test
-  (let* ((times 1000)
-         (threads 8)
-         (hash-lock (make-instance 'hash-lock))
-         (ref 0)
-         (threads (loop for x below threads
-                        collect
-                        (bt:make-thread
-                         (lambda ()
-                           (sleep 0.1)
-                           (loop for i below times
-                                 do
-                                    (with-hash-lock-held ('foo hash-lock)
-                                     (setf ref (+ 10 ref)))))))))
-    (loop for th in threads
-          do (bt:join-thread th))
-    (is (eql 80000 ref))
-    (is (eql 0 (hash-table-count (%hash-table hash-lock))))))
+  (with-mp
+   (let* ((times 1000)
+          (threads 8)
+          (hash-lock (make-instance 'hash-lock))
+          (ref 0)
+          (threads (loop for x below threads
+                         collect
+                         (bt:make-thread
+                          (lambda ()
+                            (sleep 0.1)
+                            (loop for i below times
+                                  do
+                                     (with-hash-lock-held ('foo hash-lock)
+                                       (setf ref (+ 10 ref)))))))))
+     (loop for th in threads
+           do (bt:join-thread th))
+     (is (eql 80000 ref))
+     (is (eql 0 (hash-table-count (%hash-table hash-lock)))))))
 
 (defvar *dummy* "berg")
 
 (test stress-test-with-equal
-  (let* ((times 100)
-         (threads 3)
-         (hash-lock (make-instance 'hash-lock :test #'equal))
-         (ref 0)
-         (threads (loop for x below threads
-                        collect
-                        (bt:make-thread
-                         (lambda ()
-                           (sleep 0.1)
-                           (loop for i below times
-                                 do
-                                    (with-hash-lock-held ((format nil "zoid~a" *dummy*) hash-lock)
-                                     (setf ref (+ 10 ref)))))))))
-    (loop for th in threads
-          do (bt:join-thread th))
-    (is (eql 3000 ref))))
+  (with-mp
+   (let* ((times 100)
+          (threads 3)
+          (hash-lock (make-instance 'hash-lock :test #'equal))
+          (ref 0)
+          (threads (loop for x below threads
+                         collect
+                         (bt:make-thread
+                          (lambda ()
+                            (sleep 0.1)
+                            (loop for i below times
+                                  do
+                                     (with-hash-lock-held ((format nil "zoid~a" *dummy*) hash-lock)
+                                       (setf ref (+ 10 ref)))))))))
+     (loop for th in threads
+           do (bt:join-thread th))
+     (is (eql 3000 ref)))))
 
 (define-condition test-error (error)
   ())

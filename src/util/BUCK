@@ -256,6 +256,20 @@ lisp_library(
     ],
 )
 
+lisp_library(
+    name = "hash-lock",
+    srcs = [
+        "hash-lock.lisp",
+    ],
+    deps = [
+        "//quicklisp:bordeaux-threads",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+
 cxx_library(
     name = "file-lock-native",
     srcs = [
