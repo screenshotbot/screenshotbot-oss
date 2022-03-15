@@ -243,10 +243,8 @@
         <div class= "baguetteBox">
 
           ,(paginated
-          (loop for screenshot in filtered-screenshots
-          collect
-          (let* ((screenshot screenshot)
-                 (name-parts (str:rsplit "--" (screenshot-name screenshot) :limit 2)))
+          (lambda (screenshot)
+           (let* ((name-parts (str:rsplit "--" (screenshot-name screenshot) :limit 2)))
           <div class= " col-sm-12 col-md-4 col-lg-3 mb-1 mt-2">
             <div class="card">
               <div class="card-body">
@@ -285,7 +283,8 @@
               </div> <!-- end card-body-->
             </div>
 
-          </div>)))
+          </div>))
+          :items filtered-screenshots)
         </div>
       </app-template>)))
 

@@ -387,25 +387,24 @@ If the images are identical, we return t, else we return NIL."
   <app-template>
     <a href= "javascript:window.history.back()">Back to Report</a>
     ,(paginated
-        (let ((changes (diff-report-changes report)))
-          (loop for change in changes
-                for before = (before change)
-                for after = (after change)
-                for image-comparison-job = (make-instance 'image-comparison-job
-                                                           :before-image before
-                                                           :after-image after)
-                for comparison-image = (util:copying (image-comparison-job)
-                                         (nibble ()
-                                           (prepare-image-comparison image-comparison-job :size :full-page)))
-                collect
-                <div class= "image-comparison-wrapper" >
-                <h3>,(screenshot-name before)</h3>
-                <change-image-row-triple before-image=(image-public-url (screenshot-image before) :size :full-page)
-                                         after-image=(image-public-url (screenshot-image after) :size :full-page)
-                                         comp-image=comparison-image
-                                         />
-                </div>))
-        5)
+      (lambda (change)
+       (let* ((before (before change))
+              (after (after change))
+              (image-comparison-job (make-instance 'image-comparison-job
+                                                    :before-image before
+                                                    :after-image after))
+              (comparison-image (util:copying (image-comparison-job)
+                                    (nibble ()
+                                      (prepare-image-comparison image-comparison-job :size :full-page)))))
+         <div class= "image-comparison-wrapper" >
+           <h3>,(screenshot-name before)</h3>
+           <change-image-row-triple before-image=(image-public-url (screenshot-image before) :size :full-page)
+                                    after-image=(image-public-url (screenshot-image after) :size :full-page)
+                                    comp-image=comparison-image
+                                    />
+         </div>))
+      :num 5
+      :items (diff-report-changes report))
   </app-template>)
 
 (deftag progress-img (&key (alt "Image Difference") src zoom-to class)
@@ -682,12 +681,10 @@ If the images are identical, we return t, else we return NIL."
            <p>
              <h1>,(length changes-groups) changes</h1>
              ,(paginated
-               (loop for group in changes-groups
-                     for next-id from 0
-                     collect
-                     (render-change-group group run next-id script-name))
-
-                   10)
+               (lambda (group)
+                 (render-change-group group run (random 1000000000000000) script-name))
+               :num 10
+               :items changes-groups)
            </p>
 
          </div>
@@ -720,18 +717,18 @@ If the images are identical, we return t, else we return NIL."
 
 (defun render-single-group-list (groups)
   (paginated
-    (loop for group in groups
-          collect
-          (maybe-tabulate
-           (loop for group-item in (group-items group)
-                 for screenshot = (actual-item group-item)
-                 collect
-                 (make-instance
-                  'tab
-                   :title (get-tab-title screenshot)
-                   :content
-                   <screenshot-box  screenshot=screenshot /> ))))
-    10))
+   (lambda (group)
+    (maybe-tabulate
+     (loop for group-item in (group-items group)
+           for screenshot = (actual-item group-item)
+           collect
+           (make-instance
+            'tab
+            :title (get-tab-title screenshot)
+            :content
+            <screenshot-box  screenshot=screenshot /> ))))
+   :num 5
+   :items groups))
 
 (Deftag screenshot-box (&key screenshot)
   <div class= "mt-4" >

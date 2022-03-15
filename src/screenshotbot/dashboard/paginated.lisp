@@ -15,13 +15,16 @@
 
 (markup:enable-reader)
 
-(defun paginated (components &optional (num 24))
-  (let* ((this-page (util/lists:head components num))
-         (rest (util/lists:tail components num))
+(defun paginated (fn &key
+                       (num 24)
+                       (items nil))
+  (assert (functionp fn))
+  (let* ((this-page (util/lists:head items num))
+         (rest (util/lists:tail items num))
          (load-more (nibble ()
-                      (paginated rest))))
+                      (paginated fn :num num :items rest))))
     <div class= "row pb-4 load-more-container" >
-      ,@this-page
+      ,@ (mapcar fn this-page)
 
       ,(when rest
       <div class= "col-12 d-flex justify-content-center">
