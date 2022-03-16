@@ -54,7 +54,7 @@
                         '|STRING<| :key 'channel-name)))
     (with-pagination (channels channels :next-link next-link :prev-link prev-link)
       (dashboard-template :user user :company company :script-name "/projects"
-         (taskie-page-title :title "Project List")
+         (taskie-page-title :title "Channel List")
         (taskie-list :empty-message "No projects to show! Projects are
                                    automatically created when you start a run"
                      :items channels
@@ -63,9 +63,9 @@
                      :row-generator (lambda (channel)
                                  (channel-list-row :channel channel)))))))
 
-(defhandler (projects-page :uri "/projects") ()
+(defhandler (projects-page :uri "/channels") ()
   (with-login ()
     (%list-projects)))
 
-(defhandler (channels-page :uri "/channels") ()
+(defhandler (channels-page :uri "/projects") ()
   (hex:safe-redirect 'projects-page))
