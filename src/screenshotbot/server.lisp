@@ -139,23 +139,34 @@
    (obj :initarg :obj
         :accessor error-obj)))
 
-(defun log-sentry (condition)
+(defvar *warning-count*)
+
+(defun %log-sentry (condition)
   #-screenshotbot-oss
+  (sentry-client:capture-exception condition))
+
+(defmethod log-sentry (condition)
   (when hunchentoot:*catch-errors-p*
-   (sentry-client:capture-exception condition)))
+    (%log-sentry condition)))
+
+(defmethod log-sentry :around ((warning warning))
+  (when (<= (incf *warning-count*) 5)
+    (call-next-method)))
+
 
 (defun %handler-wrap (impl)
   (restart-case
-      (handler-bind ((warning #'log-sentry))
-       (let ((util.cdn:*cdn-domain*
-               (unless (staging-p)
-                 *cdn-domain*)))
-         (auth:with-sessions ()
-           (push-analytics-event)
-           (handler-case
-               (funcall impl)
-             (no-access-error (e)
-               (no-access-error-page))))))
+      (let ((*warning-count* 0))
+       (handler-bind ((warning #'log-sentry))
+         (let ((util.cdn:*cdn-domain*
+                 (unless (staging-p)
+                   *cdn-domain*)))
+           (auth:with-sessions ()
+             (push-analytics-event)
+             (handler-case
+                 (funcall impl)
+               (no-access-error (e)
+                 (no-access-error-page)))))))
     (retry-handler ()
       (%handler-wrap impl))))
 
@@ -235,9 +246,10 @@ Disallow: /n")
                           "api.screenshotbot.io")
 
 (defun funcall-with-sentry-logs (fn)
-  (handler-bind ((error #'log-sentry)
-                 (warning #'log-sentry))
-    (funcall fn)))
+  (let ((*warning-count* 0))
+   (handler-bind ((error #'log-sentry)
+                  (warning #'log-sentry))
+     (funcall fn))))
 
 (defun make-thread (fn &rest args)
   (apply

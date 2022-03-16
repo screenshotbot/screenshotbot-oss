@@ -18,12 +18,13 @@
 
 (def-fixture state ()
   (cl-mock:with-mocks ()
-    (let ((sentry-logs nil))
-      (cl-mock:if-called
-       'log-sentry
+    (let ((hunchentoot:*catch-errors-p* t))
+     (let ((sentry-logs nil))
+       (cl-mock:if-called
+        'sentry-client:capture-exception
         (lambda (e)
           (push e sentry-logs)))
-      (&body))))
+       (&body)))))
 
 (define-condition my-simple-warning (warning)
   ())
@@ -42,3 +43,12 @@
       (lambda ()
         (error 'my-simple-error))))
     (is (eql 2 (length sentry-logs)))))
+
+(test large-number-of-warnings
+  (with-fixture state ()
+    (funcall-with-sentry-logs
+     (lambda ()
+       (loop for i below 100 do
+         (warn
+          'my-simple-warning))))
+    (is (eql 5 (length sentry-logs)))))
