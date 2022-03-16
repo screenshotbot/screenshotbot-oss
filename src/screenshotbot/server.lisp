@@ -139,17 +139,23 @@
    (obj :initarg :obj
         :accessor error-obj)))
 
+(defun log-sentry (condition)
+  #-screenshotbot-oss
+  (when hunchentoot:*catch-errors-p*
+   (sentry-client:capture-exception condition)))
+
 (defun %handler-wrap (impl)
   (restart-case
-      (let ((util.cdn:*cdn-domain*
-              (unless (staging-p)
-                *cdn-domain*)))
-        (auth:with-sessions ()
-          (push-analytics-event)
-          (handler-case
-              (funcall impl)
-            (no-access-error (e)
-              (no-access-error-page)))))
+      (handler-bind ((warning #'log-sentry))
+       (let ((util.cdn:*cdn-domain*
+               (unless (staging-p)
+                 *cdn-domain*)))
+         (auth:with-sessions ()
+           (push-analytics-event)
+           (handler-case
+               (funcall impl)
+             (no-access-error (e)
+               (no-access-error-page))))))
     (retry-handler ()
       (%handler-wrap impl))))
 
@@ -195,7 +201,6 @@
 (defhandler (nil :uri "/force-crash") ()
   (error "ouch"))
 
-
 ;; (ignore-and-log-errors ()  (error "foo"))
 
 
@@ -229,16 +234,19 @@ Disallow: /n")
                           "mx.tdrhq.com"
                           "api.screenshotbot.io")
 
+(defun funcall-with-sentry-logs (fn)
+  (handler-bind ((error #'log-sentry)
+                 (warning #'log-sentry))
+    (funcall fn)))
+
 (defun make-thread (fn &rest args)
   (apply
    'bt:make-thread
    (lambda ()
-     (handler-bind ((error (lambda (e)
-                             #-screenshotbot-oss
-                             (when hunchentoot:*catch-errors-p*
-                              (sentry-client:capture-exception e)))))
-       (funcall fn)))
+     (funcall-with-sentry-logs fn))
    args))
+
+
 
 #+screenshotbot-oss
 (setf hunchentoot-multi-acceptor:*default-acceptor*
