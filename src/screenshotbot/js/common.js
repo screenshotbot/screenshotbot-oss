@@ -114,7 +114,7 @@ function prepareReportJs () {
                 }
 
                 img.attr("src", data.src);
-                img.css("background-image", "url(\"" + src + '")');
+                img.css("background-image", "url(\"" + data.src + '")');
                 img.css("background-repeat", "no-repeat");
             },
             error: function () {
@@ -149,8 +149,8 @@ function prepareReportJs () {
                     console.log("width/height", img.width(), img.height());
 
                     // Percent X, and percent y
-                    var pX = data.x / clientWidth;
-                    var pY = data.y / clientHeight;
+                    var pX = data.x / data.width;
+                    var pY = data.y / data.height;
 
                     console.log("pX, pY", pX, pY);
 

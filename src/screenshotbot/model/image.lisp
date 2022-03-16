@@ -58,7 +58,11 @@
    #:find-unequal-pixels
    #:random-unequal-pixel
    #:draw-rects-in-place
-   #:draw-masks-in-place))
+   #:draw-masks-in-place
+   #:image-dimensions
+   #:dimension
+   #:dimension-height
+   #:dimension-width))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -208,10 +212,16 @@
     res))
 
 (defun random-unequal-pixel (img1 img2 &key masks)
+  "Returns three values: a cons with a randomly picked pixel
+coordinate, and the width and height of the comparison (which might be
+different from the actual image sizes if the image sizes are
+different)"
   (declare (optimize (speed 3) (safety 0)))
   (let ((bad-pixels)
         (length 0)
-        (max-length 10000))
+        (max-length 10000)
+        (height 0)
+        (width 0))
    (flet ((%map-unequal-pixels (fn)
             (map-unequal-pixels
              img1 img2 fn :masks masks)))
@@ -219,8 +229,7 @@
        (declare (type fixnum num-bad))
        (%map-unequal-pixels
         (lambda (i j)
-          (declare (ignore i j)
-                   (optimize (speed 3) (safety 0) (debug 0)))
+          (declare (optimize (speed 3) (safety 0) (debug 0)))
           (when (< length max-length)
             (incf length)
             (push (cons i j) bad-pixels))))))
@@ -492,3 +501,17 @@
 
 (defmethod can-view ((image image) user)
   (is-user-id-same image user))
+
+(defclass dimension ()
+  ((height :initarg :height
+           :reader dimension-height)
+   (width :initarg :width
+          :reader dimension-width)))
+
+(defmethod image-dimensions (image)
+  (with-local-image (file image)
+    (let ((png (pngload:load-file file
+                                  :decode nil)))
+      (make-instance 'dimension
+                      :height (pngload:height png)
+                      :width (pngload:width png)))))

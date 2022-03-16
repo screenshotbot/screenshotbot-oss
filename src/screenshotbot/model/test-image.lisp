@@ -18,6 +18,10 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:screenshotbot/model/image
+                #:dimension-width
+                #:dimension-height
+                #:dimension
+                #:image-dimensions
                 #:map-unequal-pixels-on-file
                 #:map-unequal-pixels-arr
                 #:%map-unequal-pixels
@@ -27,6 +31,8 @@
                 #:run-magick)
   (:import-from #:util/store
                 #:with-test-store)
+  (:import-from #:bknr.datastore
+                #:blob-pathname)
   (:export))
 
 (util/fiveam:def-suite)
@@ -101,3 +107,14 @@
           (is (equal '((1 . 2)) ret))))
 
       (pass))))
+
+(test image-dimensions
+  (with-fixture state ()
+    (let* ((file (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
+           (blob (make-instance 'image-blob))
+           (image (make-instance 'image :blob blob)))
+      (uiop:copy-file file (blob-pathname blob))
+      (let ((dimension (image-dimensions image)))
+        (is (typep dimension 'dimension))
+        (is (eql 360 (dimension-height dimension)))
+        (is (eql 360 (dimension-width  dimension)))))))

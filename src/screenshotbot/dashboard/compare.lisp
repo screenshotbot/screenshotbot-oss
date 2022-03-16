@@ -36,6 +36,9 @@
                 #:filter-selector
                 #:commit)
   (:import-from #:screenshotbot/model/image
+                #:dimension-width
+                #:dimension-height
+                #:image-dimensions
                 #:map-unequal-pixels
                 #:image-blob
                 #:rect-as-list
@@ -348,13 +351,15 @@ If the images are identical, we return t, else we return NIL."
 (defun random-zoom-to (left right)
   (setf (hunchentoot:header-out :content-type)  "application/json")
   (json:encode-json-to-string
-
-   (let ((px (random-unequal-pixel
+   (let ((dims (list (image-dimensions left) (image-dimensions right)))
+         (px (random-unequal-pixel
               (screenshot-image left)
               (screenshot-image right)
               :masks (screenshot-masks right))))
      `((:y . ,(car px))
        (:x . ,(cdr px))
+       (:height . ,(apply #'max (mapcar #'dimension-height dims)))
+       (:width . ,(apply #'max (mapcar #'dimension-width dims)))
        ;; for debugging:
        (:masks
         ,(mapcar 'rect-as-list
