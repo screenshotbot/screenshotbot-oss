@@ -24,6 +24,8 @@
                 #:run-page)
   (:import-from #:screenshotbot/model/recorder-run
                 #:phabricator-diff-id)
+  (:import-from #:screenshotbot/dashboard/explain
+                #:explain)
   (:export #:recent-runs))
 (in-package :screenshotbot/dashboard/recent-runs)
 
@@ -46,19 +48,18 @@
      nil)))
 
 (deftag promoted-tooltip ()
-  (write-html
-   <div>
-     <p>
-       A <b>promoted</b> run is the current "golden" run on your master branch.
-     </p>
+  <div>
+    <p>
+      A <b>promoted</b> run is the current "golden" run on your master branch.
+    </p>
 
-     <p>Promotion logic is used to send notifications for changes on your master branch,
-       and to track the history of a given screenshot. For projects not associated with a
-       repository, the promoted run is usually the most recent run.</p>
+    <p>Promotion logic is used to send notifications for changes on your master branch,
+      and to track the history of a given screenshot. For projects not associated with a
+      repository, the promoted run is usually the most recent run.</p>
 
-     <p>Promoted runs are <b>not</b> used for determining changes on Pull Requests. For that we just use the first known run on the merge-base.</p>
+    <p>Promoted runs are <b>not</b> used for determining changes on Pull Requests. For that we just use the first known run on the merge-base.</p>
 
-   </div>))
+  </div>)
 
 (deftag recorder-run-row (&key run)
   (taskie-row :object run
@@ -68,9 +69,7 @@
       (cond
         ((activep run)
          <span>
-           Promoted<sup>[<a data-bs-toggle= "popover" title= "Promoted run"
-                            data-bs-html= "true"
-                            data-bs-content= (promoted-tooltip) href= "#" >?</a>]</sup>   run
+           Promoted<explain title= "Promoted run"><promoted-tooltip /></explain>  run
          <conditional-commit repo= (channel-repo (recorder-run-channel run))
          hash= (recorder-run-commit run) />
          </span>)

@@ -15,7 +15,9 @@
   (:import-from #:screenshotbot/server
                 #:with-login
                 #:defhandler)
-  (:import-from #:markup #:deftag))
+  (:import-from #:markup #:deftag)
+  (:import-from #:screenshotbot/dashboard/explain
+                #:explain))
 (in-package :screenshotbot/dashboard/channels)
 
 (markup:enable-reader)
@@ -47,6 +49,17 @@
               (taskie-timestamp :prefix "First created"
                                 :timestamp (created-at channel))))
 
+(deftag explain-channels ()
+  <div>
+    <p>A <b>channel</b> is a name used to track a collection of screenshots.</p>
+
+    <p>Channel names are arbitrary. It could refer to build targets in your repository, or maybe <code>staging</code> or <code>production</code>, or just your repository name on GitHub.</p>
+
+    <p>You don't have to explicitly create a channel before you use it. Calling the SDK with <code>--channel</code> will automatically create the channel for you.</p>
+
+    <p>Web projects will also be associated with a channel by the same name as the project.</p>
+  </div>)
+
 (defun %list-projects (&key
                          (user (current-user))
                          (company (current-company)))
@@ -54,7 +67,12 @@
                         '|STRING<| :key 'channel-name)))
     (with-pagination (channels channels :next-link next-link :prev-link prev-link)
       (dashboard-template :user user :company company :script-name "/projects"
-         (taskie-page-title :title "Channel List")
+       <div class= "page-title-box">
+         <h4 class= "page-title">
+           Channel<explain title= "Channels">,(explain-channels)</explain> List
+         </h4>
+       </div>
+
         (taskie-list :empty-message "No projects to show! Projects are
                                    automatically created when you start a run"
                      :items channels

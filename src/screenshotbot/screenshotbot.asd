@@ -91,7 +91,8 @@
    (:file "diff-report")
    (:module "dashboard"
     :serial t
-    :components ((:file "home")
+    :components ((:file "explain")
+                 (:file "home")
                  (:file "paginated")
                  (:file "numbers")
                  (:file "run-page")
