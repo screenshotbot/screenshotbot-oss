@@ -11,5 +11,6 @@
 
 (deftag explain (explanation &key title)
   <sup>[<a data-bs-toggle= "popover" title= title
+           data-bs-trigger= "focus"
            data-bs-html= "true"
            data-bs-content= (markup:write-html <div>,@ (progn explanation)</div>) href= "#" >?</a>]</sup>)
