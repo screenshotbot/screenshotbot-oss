@@ -30,8 +30,9 @@
   :class build-utils:js-system
   :serial t
   :defsystem-depends-on (:build-utils)
-  :depends-on (#-screenshotbot-oss
-               :sentry-js
+  :depends-on (
+               ;;#-screenshotbot-oss
+               ;;:sentry-js
                :bootstrap5-js
                :screenshotbot.js-assets/headroom
                :screenshotbot.js-assets/split)
