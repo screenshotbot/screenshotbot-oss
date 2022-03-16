@@ -522,7 +522,7 @@ If the images are identical, we return t, else we return NIL."
                                                                 :subtitle (funcall subtitle item)
                                                                 :actual-item item))))))
 
-(defun render-change-group (group run next-id script-name)
+(defun render-change-group (group run script-name)
   <div class= "mt-4">
     <div class= "screenshot-header">
       <h4>,(group-title group)</h4>
@@ -530,6 +530,7 @@ If the images are identical, we return t, else we return NIL."
     ,(maybe-tabulate
       (loop for group-item in (group-items group)
             for change = (actual-item group-item)
+            for next-id = (random 1000000000000000)
             for s = (before change)
             for x = (after change)
             collect
@@ -687,7 +688,7 @@ If the images are identical, we return t, else we return NIL."
              <h1>,(length changes-groups) changes</h1>
              ,(paginated
                (lambda (group)
-                 (render-change-group group run (random 1000000000000000) script-name))
+                 (render-change-group group run script-name))
                :num 10
                :items changes-groups)
            </p>
