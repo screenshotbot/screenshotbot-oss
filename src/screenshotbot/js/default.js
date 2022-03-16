@@ -340,3 +340,16 @@ $(function () {
 $(".new-compare").each(function () {
     Split([$(this).find(".image-list").get(0), $(this).find(".image-details").get(0)]);
 });
+
+
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new Tooltip(tooltipTriggerEl)
+})
+
+$(function () {
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+        return new Popover(popoverTriggerEl)
+    })
+});

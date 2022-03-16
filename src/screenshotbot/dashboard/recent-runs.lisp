@@ -45,6 +45,21 @@
     (t
      nil)))
 
+(deftag promoted-tooltip ()
+  (write-html
+   <div>
+     <p>
+       A <b>promoted</b> run is the current "golden" run on your master branch.
+     </p>
+
+     <p>Promotion logic is used to send notifications for changes on your master branch,
+       and to track the history of a given screenshot. For projects not associated with a
+       repository, the promoted run is usually the most recent run.</p>
+
+     <p>Promoted runs are <b>not</b> used for determining changes on Pull Requests. For that we just use the first known run on the merge-base.</p>
+
+   </div>))
+
 (deftag recorder-run-row (&key run)
   (taskie-row :object run
     (ui/a :href (make-url 'run-page :id (oid run))
@@ -53,9 +68,11 @@
       (cond
         ((activep run)
          <span>
-           Promoted run
-           <conditional-commit repo= (channel-repo (recorder-run-channel run))
-                               hash= (recorder-run-commit run) />
+           Promoted<sup>[<a data-bs-toggle= "popover" title= "Promoted run"
+                            data-bs-html= "true"
+                            data-bs-content= (promoted-tooltip) href= "#" >?</a>]</sup>   run
+         <conditional-commit repo= (channel-repo (recorder-run-channel run))
+         hash= (recorder-run-commit run) />
          </span>)
         ((recorder-previous-run run)
          <span>Previously promoted run
