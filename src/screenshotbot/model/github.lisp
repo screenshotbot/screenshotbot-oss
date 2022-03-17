@@ -48,7 +48,7 @@
    (full-name :type (or null string)
               :initarg :full-name
               :initform nil
-              :accessor oauth-user-full-name)
+              :accessor %oauth-user-full-name)
    (avatar :type (or null string)
            :initarg :avatar
            :initform nil
@@ -62,6 +62,13 @@
          :initform nil
          :accessor oauth-user-user))
   (:metaclass persistent-class))
+
+(defmethod oauth-user-full-name ((self github-user))
+  (cond
+    ((str:emptyp (%oauth-user-full-name self))
+     (github-login self))
+    (t
+     (%oauth-user-full-name self))))
 
 (defmethod model-id ((inst github-user))
   (store-object-id inst))
