@@ -29,6 +29,6 @@
   *plan*)
 
 (defun plan ()
-  (user-plan
+  (company-plan
    (current-company)
    (installation)))
