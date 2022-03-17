@@ -119,7 +119,7 @@
         <add-to-slack company= (current-company) />
 
       <div class= "form-group mb-3">
-        <label for= "default-channel">Slack Default Channel</label>
+        <label class= "form-label" for= "default-channel">Slack Default Channel</label>
         <input type= "text" name= "default-channel" id= "default-channel"
                class= "form-control"
                value= (slack-config-channel slack-config) />
