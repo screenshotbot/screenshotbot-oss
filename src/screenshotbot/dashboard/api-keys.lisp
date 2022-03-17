@@ -28,7 +28,7 @@
   (let ((api-key (make-instance 'api-key
                                  :user user
                                  :company company)))
-    <simple-card-page>
+    <simple-card-page max-width= "80em" >
       <div class= "card-header">
         <h3>New API Key</h3>
       </div>
@@ -57,16 +57,37 @@
 (defun %api-key-page (&key (user (current-user))
                         (company (current-company))
                         (script-name "/api-keys"))
+  (declare (ignore script-name))
   (let* ((api-keys (user-api-keys user company))
          (create-api-key (nibble ()
                            (%create-api-key user company))))
-    <dashboard-template user=user company=company script-name= script-name >
-      <h1>API Keys</h1>
+    <simple-card-page max-width= "60rem" >
+      <div class= "card-header">
+        <div class= "d-flex flex-row justify-content-between">
+          <div class= "d-flex ">
+            <h3>API Keys</h3>
+          </div>
+          <div class= "d-flex align-items-center">
+            <form method= "post">
+              <input type= "submit" formaction=create-api-key formmethod= "post"
+                     class= "btn btn-success" value= "New API Key" />
+            </form>
+          </div>
+        </div>
 
-      <form method= "post" >
-        <input type= "submit" formaction=create-api-key formmethod= "post"
-               class= "btn btn-success" value= "New API Key" />
-      </form>
+
+
+      </div>
+
+      <table class= "table table-hover">
+        <thead>
+          <tr>
+            <th>API Key</th>
+            <th>API Secret</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
       ,@ (loop for api-key in api-keys
                collect
                (let* ((api-key api-key)
@@ -76,33 +97,24 @@
                                             (str:substring  36 nil (api-key-secret-key api-key))))
                       (delete-api-key (nibble ()
                                         (%confirm-delete api-key))))
-                 <div>
-                   <table>
-                     <tr>
-                       <td><b>API Key</b></td>
-                       <td>,(api-key-key api-key)
-                       <form style="display:inline-block" class= "ml-4" method= "post" >
-                         <input type= "submit" formaction=delete-api-key
-                                formmethod= "post"
-                                class= "btn btn-danger"
-                                value= "Delete" />
-                       </form>
-                       </td>
-                     </tr>
-                     <td class= "pr-3" ><b>API Secret</b></td>
-                     <td>,(progn coded-secret)</td>
+                 <tr class= "align-middle" >
+                   <td class= "" >,(api-key-key api-key)</td>
+                   <td>,(progn coded-secret)</td>
 
-                   </table>
-                   <p>To use this from your desktop, create a file <tt>$HOME/.screenshotbot</tt> with the following contents</p>
+                   <td>
+                     <form style="display:inline-block" class= "ml-4 float-end" method= "post" >
+                       <input type= "submit" formaction=delete-api-key
+                              formmethod= "post"
+                              class= "btn btn-danger"
+                              value= "Delete" />
+                     </form>
+                   </td>
+                 </tr>))
 
-                   <pre>,(json:encode-json-to-string (list (cons :api-key (api-key-key api-key))
-                                                           (cons :api-secret-key  coded-secret)))
+        </tbody>
 
-                   </pre>
-
-                 </div>))
-
-    </dashboard-template>))
+      </table>
+    </simple-card-page>))
 
 (defhandler (api-keys :uri "/api-keys") ()
   (with-login ()
