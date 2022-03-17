@@ -35,13 +35,13 @@
                         (hex:safe-redirect "/settings/slack"))))
      (cond
        ((access-token slack-config)
-        <div class= "form-group">
+        <div class= "form-group mb-3">
           <input type= "hidden" name= "slack-token"
                  value= (access-token (access-token slack-config)) class= "form-control" />
           <a href= disconnect class= "btn btn-danger" >Disconnect from Slack</a>
         </div>)
        (t
-        <div class= "form-group">
+        <div class= "form-group mb-3">
           <a href= (format nil "https://slack.com/oauth/v2/authorize?client_id=~a&scope=chat:write.public,chat:write&user_scope=" (client-id slack-plugin)) ><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
           <input type= "hidden" name= "slack-token"
                  value= "unused" class= "form-control" />
@@ -118,7 +118,7 @@
 
         <add-to-slack company= (current-company) />
 
-      <div class= "form-group">
+      <div class= "form-group mb-3">
         <label for= "default-channel">Slack Default Channel</label>
         <input type= "text" name= "default-channel" id= "default-channel"
                class= "form-control"
