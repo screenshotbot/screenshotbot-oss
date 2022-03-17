@@ -41,7 +41,7 @@
              (> ts (+ *last-gc* 3600)))
      (setf *last-gc* ts)
      (let ((exp-time (- (get-universal-time)
-                        (* 24 3600))))
+                        (* 3 24 3600))))
        (loop for nib in (all-nibbles)
              if  (< (slot-value nib 'ts)
                     exp-time)
