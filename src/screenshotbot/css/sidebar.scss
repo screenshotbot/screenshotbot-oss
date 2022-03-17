@@ -1,7 +1,13 @@
 
 body > * {
-  flex-shrink: 0;
-  min-height: -webkit-fill-available;
+    flex-shrink: 0;
+    /*
+     I don't know why this is here. Ideally this should only effect
+     the sidebar, but this also affects the popovers. With this on the
+     popovers become full screen height on Chrome.
+    */
+
+  /* min-height: -webkit-fill-available; */
 }
 
 .b-example-divider {
