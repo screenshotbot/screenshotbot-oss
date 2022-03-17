@@ -48,7 +48,8 @@
    (full-name :type (or null string)
               :initarg :full-name
               :initform nil
-              :accessor %oauth-user-full-name)
+              :reader %oauth-user-full-name
+              :writer (setf oauth-user-full-name))
    (avatar :type (or null string)
            :initarg :avatar
            :initform nil
