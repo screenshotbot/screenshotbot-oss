@@ -24,6 +24,7 @@
                 #:*disable-mail*
                 #:defhandler)
   (:import-from #:screenshotbot/installation
+                #:multi-org-feature
                 #:auth-providers
                 #:mailer*
                 #:installation
@@ -197,16 +198,6 @@
              (send-signup-confirmation (user-email user)
                                        (user-first-name user)
                                        confirmation))
-
-           ;; With multi-org-mode, each user will have an associated
-           ;; personal company, in that case this might be a good time
-           ;; to populate it with dummy data.
-           ;;
-           ;; TODO: move this logic to somewhere where it can be
-           ;; called by OAuth flows
-           (if-let ((company (user-personal-company user)))
-             (ignore-and-log-errors ()
-               (populate-company company)))
            (after-create-user (installation) user))
 
          (cond
@@ -214,6 +205,17 @@
             (hex:safe-redirect "/upgrade"))
            (t
             (hex:safe-redirect redirect))))))))
+
+(defmethod after-create-user ((installation multi-org-feature)
+                              user)
+  ;; With multi-org-mode, each user will have an associated
+  ;; personal company, in that case this might be a good time
+  ;; to populate it with dummy data.
+  (let ((company (user-personal-company user)))
+    (unless company
+      (warn "USER-PERSONAL-COMPANY is blank, this is bad"))
+    (ignore-and-log-errors ()
+      (populate-company company))))
 
 (defhandler (confirm-email :uri "/confirm-email/:id/:code" :method :get)
             (code id)
