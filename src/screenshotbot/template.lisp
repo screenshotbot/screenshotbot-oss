@@ -24,7 +24,8 @@
            #:user-notice-list ;; todo: defined elsewhere
            #:app-template
            #:landing-template
-           #:dashboard-head)
+           #:dashboard-head
+           #:*template-override*)
   (:import-from #:./installation
                 #:installation)
   (:import-from #:./user-api
@@ -158,6 +159,7 @@
     </body>
   </html>)
 
+(defvar *template-override* nil)
 
 (deftag app-template (children &key stripe
                       transparent
@@ -165,13 +167,18 @@
                       jquery-ui
                       codemirror
                       scripts
-                      (script-name (hunchentoot:script-name*))
+                      script-name
                       (nav-bar-style :dark))
+  (declare (ignore nav-bar-style
+                   transparent))
   (cond
+    (*template-override*
+     (funcall *template-override*
+              children))
     ((logged-in-p)
      <dashboard-template admin=admin jquery-ui=jquery-ui stripe=stripe scripts=scripts
                          codemirror=codemirror
-                         script-name=script-name >,@children </dashboard-template>)
+                         script-name= (or script-name (hunchentoot:script-name*)) >,@children </dashboard-template>)
     (t
      (Assert (not admin))
      <html>

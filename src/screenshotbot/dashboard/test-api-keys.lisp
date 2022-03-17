@@ -17,14 +17,25 @@
                 #:*company*)
   (:import-from #:screenshotbot/installation
                 #:installation
-                #:*installation*))
+                #:*installation*)
+  (:import-from #:screenshotbot/template
+                #:*template-override*))
 
 (util/fiveam:def-suite)
 
+(markup:enable-reader)
+
+(defun dummy-template (children)
+  <div>
+    ,@children
+  </div>)
+
 (test simple-page-test
-  (let ((*installation* (make-instance 'installation)))
-   (%api-key-page :user (make-instance 'test-user
-                                       :api-keys (list (make-instance 'test-api-key
-                                                                      :key "foo"
-                                                                      :secret "sdfsdfdfdfs")))
-                  :company *company*)))
+  (let* ((*installation* (make-instance 'installation))
+         (*template-override* #'dummy-template))
+    (finishes
+     (%api-key-page :user (make-instance 'test-user
+                                          :api-keys (list (make-instance 'test-api-key
+                                                                          :key "foo"
+                                                                          :secret "sdfsdfdfdfs")))
+                    :company *company*))))
