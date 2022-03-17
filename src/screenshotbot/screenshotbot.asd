@@ -27,6 +27,7 @@
                :opticl
                :anaphora
                :dag
+               :sentry-client
                :quri
                :clavier
                :cl-cron
