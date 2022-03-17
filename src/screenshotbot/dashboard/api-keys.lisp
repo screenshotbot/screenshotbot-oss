@@ -61,7 +61,7 @@
   (let* ((api-keys (user-api-keys user company))
          (create-api-key (nibble ()
                            (%create-api-key user company))))
-    <simple-card-page max-width= "60rem" >
+    <simple-card-page max-width= (if api-keys "60rem" "30rem") >
       <div class= "card-header">
         <div class= "d-flex flex-row justify-content-between">
           <div class= "d-flex ">
@@ -78,8 +78,24 @@
 
 
       </div>
+      ,(cond
+         (api-keys
+          (api-keys-table api-keys))
+         (t
+          <div class= "text-center mt-3 mb-3">
 
-      <table class= "table table-hover">
+            <p>
+              You don't have any API keys.
+            </p>
+
+            <p>
+              You will use an API key to upload screenshots with the <a href= "https://docs.screenshotbot.io/docs/recorder-cli/" target= "_blank">Screenshotbot SDK</a>. You don't need an API key for web projects.
+            </p>
+          </div>))
+    </simple-card-page>))
+
+(defun api-keys-table (api-keys)
+        <table class= "table table-hover">
         <thead>
           <tr>
             <th>API Key</th>
@@ -113,8 +129,7 @@
 
         </tbody>
 
-      </table>
-    </simple-card-page>))
+      </table>)
 
 (defhandler (api-keys :uri "/api-keys") ()
   (with-login ()
