@@ -117,6 +117,13 @@
 
       ,(progn
          #-screenshotbot-oss
+         <left-nav-item href= "/billing/stripe" image-class= "payment"
+                        script-name=script-name >
+           Billing
+         </left-nav-item>)
+
+      ,(progn
+         #-screenshotbot-oss
          <left-nav-item href= "/ticket/create" image-class= "bug_report"
                         script-name=script-name >
            Report Issue
@@ -137,19 +144,6 @@
       <ul class="dropdown-menu dropdown-menu-dark text-small shadow multi-level" aria-labelledby="dropdownUser1">
         ,(company-switcher (installation) :user user)
 
-        <li>
-          <a class= "dropdown-item" href= "/plan" >
-            Change Plan</a>
-        </li>
-
-        <li>
-          <a class= "dropdown-item" href= "/payment-methods" >
-            Payment Methods
-          </a>
-        </li>
-
-
-        <hr class= "dropdown-divider" />
         <li><a class="dropdown-item" href="/settings/general">Settings</a></li>
         ,(when (adminp user)
            <li>
