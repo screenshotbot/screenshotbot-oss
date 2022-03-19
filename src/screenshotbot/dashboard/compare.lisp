@@ -278,6 +278,8 @@
        (setf (hunchentoot:content-type*) "application/json")
        (json:encode-json-to-string
         `((:identical . ,(identical-p image-comparison))
+          ;; for debugging: e.g. if we need to delete the comparison
+          (:store-object-id . ,(bknr.datastore:store-object-id image-comparison))
           (:src . ,(image-public-url (image-comparison-result image-comparison) :size size))))))))
 
 (defun do-image-comparison (before-screenshot

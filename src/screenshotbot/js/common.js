@@ -112,7 +112,7 @@ function prepareReportJs () {
                 if (data.identical) {
                     $(".images-identical", wrapper).show();
                 }
-
+                console.log("Comparison result" ,data);
                 img.attr("src", data.src);
                 img.css("background-image", "url(\"" + data.src + '")');
                 img.css("background-repeat", "no-repeat");
