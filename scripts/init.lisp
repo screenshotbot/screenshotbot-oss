@@ -16,7 +16,9 @@
 
 (defun register-tdrhq (name commit)
   (quick-patch:register (format nil "https://github.com/tdrhq/~a" name)
-                              commit))
+                        commit))
+
+(compile 'register-tdrhq)
 
 (quick-patch:register "https://github.com/moderninterpreters/markup"
                             "4dd66b0a0223f58e581697a1713ffbf77c0ab798")
