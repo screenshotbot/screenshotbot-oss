@@ -70,12 +70,12 @@
         (finish))))))
 
 (defhandler (image-blob-get :uri "/image/blob/:oid/default.png") (oid size)
-  (let* ((image (find-by-oid oid))
-         (blob (image-blob image)))
+  (let* ((image (find-by-oid oid)))
     (setf (hunchentoot:header-out :content-type) "image/png")
 
     (cond
       (size
        (handle-resized-image image size))
       (t
-       (handle-static-file (bknr.datastore:blob-pathname blob))))))
+       (with-local-image (file image)
+        (handle-static-file file))))))
