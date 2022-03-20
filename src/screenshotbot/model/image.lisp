@@ -76,14 +76,18 @@
 
 (defclass s3-blob (store-object)
   ((s3-key :accessor %s3-key
-           :initarg :s3-key))
+           :initform nil
+           :initarg :s3-key
+           :documentation "In the past we used to generate a random
+           identifier as the s3 key. These days we just use the object
+           id. Once we write a migration to move all the old objects
+           to the new ids, we can remove this. This is most likely not
+           used by any open souce users either."))
   (:metaclass persistent-class))
 
+
 (defmethod initialize-instance :around ((s3-blob s3-blob) &rest args)
-  (let ((key (generate-api-secret)))
-    (apply #'call-next-method s3-blob
-             :s3-key key
-            args)))
+  (call-next-method))
 
 (defclass image (object-with-oid)
   ((link :initarg :link)
@@ -106,13 +110,6 @@
                  :reader image-content-type))
   (:metaclass persistent-class))
 
-(defun move-s3-key-to-blob ()
-  "migration"
-  (loop for i in (bknr.datastore:store-objects-with-class 'image)
-        if (%s3-key i) do
-          (with-transaction ()
-            (setf (image-blob i) (make-instance 's3-blob
-                                                 :s3-key (%s3-key i))))))
 (defclass mask-rect (store-object)
   ((top :initarg :top
         :accessor mask-rect-top)
@@ -142,7 +139,10 @@
 (defmethod s3-key ((image image))
   (check-type (image-blob image)
               s3-blob)
-  (%s3-key (image-blob image)))
+  (let ((s3-blob (image-blob image)))
+   (or
+    (%s3-key s3-blob) ;; old objects
+    (bknr.datastore:store-object-id s3-blob))))
 
 (defmethod %with-local-image ((image image) fn)
   (cond

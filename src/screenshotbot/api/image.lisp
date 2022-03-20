@@ -97,9 +97,10 @@
                            'api-upload-image-blob
                            :oid (oid image)))
                          (t
-                          (with-transaction ()
-                            (setf (image-blob image)
-                                  (make-instance 's3-blob)))
+                          (let ((blob (make-instance 's3-blob)))
+                            (with-transaction ()
+                              (setf (image-blob image)
+                                    blob)))
                           (funcall *build-presigned-put*
                                    *bucket*
                                    (s3-key image)))))))
