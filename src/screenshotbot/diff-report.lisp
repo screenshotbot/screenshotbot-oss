@@ -87,18 +87,25 @@
                     to-names names
                     :key #'screenshot-name
                     :test #'equal)
-          :changes (loop for s1 in names appending
-                                         (loop for x in to-names
-                                               if (and
-                                                   (string= (screenshot-name s1) (Screenshot-name x))
-                                                   (not (image= (screenshot-image s1)
-                                                                (Screenshot-image x)
-                                                                ;; always use the new mask
-                                                                (screenshot-masks s1))))
-                                                 collect
-                                                 (make-instance 'change
-                                                                 :before s1
-                                                                 :masks (screenshot-masks s1)
-                                                                 :after x)))))
+          :changes (%find-changes names to-names)))
     (retry-make-diff-report ()
       (make-diff-report run to))))
+
+(defun %find-changes (names to-names)
+  (let ((hash-table (make-hash-table :test #'equal)))
+    (loop for x in to-names
+          do
+          (setf (gethash (screenshot-name x) hash-table) x))
+    (loop for s1 in names
+          for x = (gethash (screenshot-name s1) hash-table)
+          if (and
+              x
+              (not (image= (screenshot-image s1)
+                           (Screenshot-image x)
+                           ;; always use the new mask
+                           (screenshot-masks s1))))
+            collect
+            (make-instance 'change
+                            :before s1
+                            :masks (screenshot-masks s1)
+                            :after x))))
