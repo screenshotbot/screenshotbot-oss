@@ -32,7 +32,9 @@
   (:import-from #:screenshotbot/model/company
                 #:installation-id)
   (:import-from #:util/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:screenshotbot/model/screenshot
+                #:screenshot))
 
 (util/fiveam:def-suite)
 
@@ -170,7 +172,7 @@
                   :channel (make-instance 'dummy-channel)
                   :company company
                   :pull-request "https://github.com/tdrhq/fast-example/pull/2"
-                  :screenshots (list 1) ;; todo: use actual screenshot here
+                  :screenshots (list (make-instance 'screenshot :name "foobar"))
                   :merge-base "car"
                   :commit-hash "foo")))
        (maybe-promote promoter run)

@@ -64,29 +64,41 @@
                 (when added
                   (format nil "~d added" (length added))))))))
 
+(defun hash-set-difference (left right &key test (key #'identity))
+  "Similar to set-difference, but more performant"
+  (let ((table (make-hash-table :test test)))
+    (dolist (x left)
+      (setf (gethash (funcall key x) table) x))
+    (dolist (x right)
+      (remhash (funcall key x) table))
+    (alexandria:hash-table-values table)))
 
 (defun make-diff-report (run to)
   (restart-case
-      (flet ((screenshot-name= (x y)
-               (string= (screenshot-name x) (screenshot-name y))))
-        (let ((names (recorder-run-screenshots run))
-              (to-names (recorder-run-screenshots to)))
-          (make-instance
-           'diff-report
-           :added (set-difference names to-names :test #'screenshot-name=)
-           :deleted (set-difference to-names names :test #'screenshot-name=)
-           :changes (loop for s1 in names appending
-                                          (loop for x in to-names
-                                                if (and
-                                                    (string= (screenshot-name s1) (Screenshot-name x))
-                                                    (not (image= (screenshot-image s1)
-                                                                 (Screenshot-image x)
-                                                                 ;; always use the new mask
-                                                                 (screenshot-masks s1))))
-                                                  collect
-                                                  (make-instance 'change
+      (let ((names (recorder-run-screenshots run))
+            (to-names (recorder-run-screenshots to)))
+        (make-instance
+         'diff-report
+          :added (hash-set-difference
+                  names to-names
+                  :key #'screenshot-name
+                  :test #'equal)
+          :deleted (hash-set-difference
+                    to-names names
+                    :key #'screenshot-name
+                    :test #'equal)
+          :changes (loop for s1 in names appending
+                                         (loop for x in to-names
+                                               if (and
+                                                   (string= (screenshot-name s1) (Screenshot-name x))
+                                                   (not (image= (screenshot-image s1)
+                                                                (Screenshot-image x)
+                                                                ;; always use the new mask
+                                                                (screenshot-masks s1))))
+                                                 collect
+                                                 (make-instance 'change
                                                                  :before s1
                                                                  :masks (screenshot-masks s1)
-                                                                 :after x))))))
+                                                                 :after x)))))
     (retry-make-diff-report ()
       (make-diff-report run to))))
