@@ -27,6 +27,7 @@
                :opticl
                :anaphora
                :dag
+               #-screenshotbot-oss
                :sentry-client
                :quri
                :clavier
