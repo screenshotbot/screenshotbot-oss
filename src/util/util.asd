@@ -143,6 +143,7 @@
   :serial t
   :components ((:module "tests"
                 :components ((:file "test-ret-let")
+                             (:file "test-misc")
                              (:file "test-store")
                              (:file "test-hash-lock")
                              (:file "test-cookies")
