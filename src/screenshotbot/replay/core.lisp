@@ -214,6 +214,9 @@
 
 (defun write-replay-log (message &rest args)
   (unless (eql *terminal-io* *replay-logs*)
+    (local-time:format-timestring
+     *replay-logs*
+     (local-time:now) :format `("[" (:hour 2) ":" (:min 2) ":" (:sec 2) "] "))
     (apply #'format *replay-logs* message args)
     (format *replay-logs* "~%")
     (finish-output *replay-logs*)))
@@ -314,8 +317,7 @@
                                             (format nil "~a" e))
                                  (respond-500 e)))))
               (log:info "Fetching: ~a" url)
-              (format *replay-logs* "Fetching: ~a~%" url)
-              (finish-output *replay-logs*)
+              (write-replay-log "Fetching: ~a" url)
 
               (dex:get url :want-stream t :force-binary force-binary
                            :read-timeout *timeout*
@@ -433,7 +435,7 @@
                    (max-age info)
                    (< (get-universal-time)
                       (+ (max-age info) (request-time info))))))
-           (format *replay-logs* "Using cached asset for ~a~%" url)
+           (write-replay-log "Using cached asset for ~a" url)
            (read-cached))
          (t
           ;; we're not cached yet
