@@ -4,7 +4,16 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(in-package :util)
+(defpackage :util/misc
+  (:use #:cl)
+  (:export
+   #:supports-webp?
+   #:fix-for-webp
+   #:funcall-if
+   #:?.
+   #:or-setf))
+(in-package :util/misc)
+
 
 (defun supports-webp? ()
   (if (boundp 'hunchentoot:*request*)

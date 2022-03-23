@@ -7,7 +7,7 @@
 (defpackage :util/tests/test-misc
   (:use #:cl
         #:fiveam)
-  (:import-from #:util
+  (:import-from #:util/misc
                 #:or-setf)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-misc)

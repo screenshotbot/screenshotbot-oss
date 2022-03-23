@@ -20,6 +20,7 @@
   (:use-reexport #:util/ret-let
                  #:util/copying
                  #:util/store
+                 #:util/misc
                  #:util/file-lock
                  #:util/testing
 		 #:util/bind-form

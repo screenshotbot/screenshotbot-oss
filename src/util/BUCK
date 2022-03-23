@@ -28,6 +28,22 @@ lisp_library(
 )
 
 lisp_library(
+    name = "misc",
+    srcs = [
+        "misc.lisp",
+    ],
+    deps = [
+        "//quicklisp:str",
+        "//quicklisp:alexandria",
+        "//quicklisp:local-time",
+        "//quicklisp:hunchentoot",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+lisp_library(
     name = "cdn",
     srcs = [
         "cdn.lisp",

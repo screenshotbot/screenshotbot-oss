@@ -4,6 +4,7 @@ lisp_test(
     name = "tests",
     deps = [
         "//src/util:store",
+        "//src/util:misc",
         "//src/util:hash-lock",
         "//src/util:fiveam",
         "//quicklisp:markup",
