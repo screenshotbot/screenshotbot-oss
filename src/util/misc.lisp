@@ -34,7 +34,18 @@
 
 (local-time:reread-timezone-repository)
 
-(defmacro or-setf (place expr)
-  `(or
-    ,place
-    (setf ,place ,expr)))
+(defvar *lock* (bt:make-lock "or-setf"))
+
+(defmacro or-setf (place expr &key (thread-safe nil)
+                                (lock '*lock*))
+  (cond
+    (thread-safe
+     `(or
+       ,place
+       (bt:with-lock-held (,lock)
+         ,place
+         (setf ,place ,expr))))
+    (t
+     `(or
+       ,place
+       (setf ,place ,expr)))))
