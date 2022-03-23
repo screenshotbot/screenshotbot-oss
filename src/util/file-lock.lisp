@@ -55,4 +55,6 @@
 
 (defmethod release-file-lock ((file-lock file-lock))
   (with-slots (fd) file-lock
-   (util-store-file-unlock fd)))
+    (unless (eql 0
+                 (util-store-file-unlock fd))
+      (log:error "Could not unlock lock"))))

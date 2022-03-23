@@ -87,7 +87,10 @@
               (let ((objs (all-objects)))
                 (when objs
                   (error "At the end of the test some objects were not deleted: ~s" objs))))
-         (close-store)
+         (let ((store *store*))
+           (close-store)
+           (bknr.datastore::close-store-object store))
+
          (when cleanup
            ;; Look at the associated test. This is the only way I know
            ;; of to clean up the indices. I wish there were a better
