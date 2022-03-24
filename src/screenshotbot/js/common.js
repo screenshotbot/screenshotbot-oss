@@ -257,7 +257,7 @@ function prepareReportJs () {
                 };
             }
 
-            canvas.on("wheel", function (e) {
+            function onZoomWheel(e) {
                 var change = e.originalEvent.deltaY * 0.0005;
                 var zoom0 = zoom;
 
@@ -285,6 +285,13 @@ function prepareReportJs () {
 
                 draw();
                 e.preventDefault();
+
+            }
+
+            canvas.on("wheel", function (e) {
+                if (e.ctrlKey == true) {
+                    onZoomWheel(e);
+                }
             });
 
             canvas.dblclick(function (e) {
