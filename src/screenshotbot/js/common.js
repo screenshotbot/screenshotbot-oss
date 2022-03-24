@@ -195,13 +195,19 @@ function prepareReportJs () {
             }
 
             var dragStart = { x: 0, y: 0, translateX: 0, translateY: 0 };
-            var isDragging = false;
-            canvas.on("mousedown", function (e) {
-                isDragging = true;
+
+            function onMouseDown(e) {
+                var isDragging = true;
                 dragStart.x = e.clientX;
                 dragStart.y = e.clientY;
                 dragStart.translateX = translate.x;
                 dragStart.translateY = translate.y;
+
+                // Only start moving after 250ms. In the meantime, if
+                // we double-click, then we'll cancel this
+                var timer = setTimeout(function () {
+                    document.addEventListener("mousemove", onMouseMove);
+                }, 100)
 
                 function onMouseMove(e) {
                     if (isDragging) {
@@ -213,15 +219,43 @@ function prepareReportJs () {
 
                 function onMouseEnd(e) {
                     isDragging = false;
+                    clearTimeout(timer);
                     document.removeEventListener("mousemove", onMouseMove);
                     document.removeEventListener("mouseup", onMouseEnd);
                 }
 
-                document.addEventListener("mousemove", onMouseMove);
+
                 document.addEventListener("mouseup", onMouseEnd);
+            }
 
-            })
+            var mouseDownTimer;
+            canvas.on("mousedown", onMouseDown);
 
+            function getEventPositionOnCanvas(e) {
+                var rect = canvasEl.getBoundingClientRect();
+                // Since we're using `cover` as object-fit, the scale
+                // will be the higher of these two
+                var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
+
+                /*console.log("here's what we're looking at", rect.width, canvasEl.width, translate.x);
+                console.log("here's what we're looking at", rect.height, canvasEl.height, translate.y);
+                console.log("But got scale", scale);*/
+                var thisX = (e.clientX - rect.left) * scale;
+                var thisY = (e.clientY - rect.top) * scale;
+
+                return {
+                    x: thisX,
+                    y: thisY,
+                };
+            }
+
+            function getEventPositionOnImage(e) {
+                var canvasPos = getEventPositionOnCanvas(e);
+                return {
+                    x: (canvasPos.x - translate.x) / zoom,
+                    y: (canvasPos.y - translate.y) / zoom,
+                };
+            }
 
             canvas.on("wheel", function (e) {
                 var change = e.originalEvent.deltaY * 0.0005;
@@ -241,26 +275,21 @@ function prepareReportJs () {
                 // that we started with. For this we need to move translate.x
 
 
-                var rect = canvasEl.getBoundingClientRect();
-                // Since we're using `cover` as object-fit, the scale
-                // will be the higher of these two
-                var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
 
-                /*console.log("here's what we're looking at", rect.width, canvasEl.width, translate.x);
-                console.log("here's what we're looking at", rect.height, canvasEl.height, translate.y);
-                console.log("But got scale", scale);*/
-                var thisX = (e.clientX - rect.left) * scale;
-                var thisY = (e.clientY - rect.top) * scale;
-
-
-
+                var canvasPos = getEventPositionOnCanvas(e);
 
                 translate = {
-                    x: thisX - (zoom/zoom0) * ( thisX - translate.x),
-                    y: thisY - (zoom/zoom0) * (thisY - translate.y)
+                    x: canvasPos.x - (zoom/zoom0) * (canvasPos.x - translate.x),
+                    y: canvasPos.y - (zoom/zoom0) * (canvasPos.y - translate.y)
                 }
 
                 draw();
+                e.preventDefault();
+            });
+
+            canvas.dblclick(function (e) {
+                var imPos = getEventPositionOnImage(e);
+                zoomToImagePx(imPos);
                 e.preventDefault();
             });
 
@@ -273,7 +302,6 @@ function prepareReportJs () {
                         duration: 2000,
                         complete: callback,
                         progress: function (animation, progress) {
-                            console.log("got progress", progress);
                             translate = {
                                 x: (1-progress) * oldTranslate.x + progress * newTranslate.x,
                                 y: (1-progress) * oldTranslate.y + progress * newTranslate.y
@@ -285,10 +313,7 @@ function prepareReportJs () {
                 });
             }
 
-            canvas.on("zoomToChange", function (e) {
-                console.log("zoomToChange", e);
-                var data = e.originalEvent.detail;
-
+            function zoomToImagePx(data) {
                 console.log("data", data);
                 var rect = canvasEl.getBoundingClientRect();
                 var zoom = 4;
@@ -310,6 +335,13 @@ function prepareReportJs () {
                     zoomToChange.prop("disabled", false);
                 });
                 zoomToChangeSpinner.hide();
+            }
+
+            canvas.on("zoomToChange", function (e) {
+                console.log("zoomToChange", e);
+                var data = e.originalEvent.detail;
+
+                zoomToImagePx(data);
             });
         }
 
