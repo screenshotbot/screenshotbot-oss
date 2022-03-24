@@ -310,7 +310,7 @@ function prepareReportJs () {
                 canvas.animate(
                     {fake:100},
                     {
-                        duration: 2000,
+                        duration: 1000,
                         complete: callback,
                         progress: function (animation, progress) {
                             translate = {
@@ -327,8 +327,10 @@ function prepareReportJs () {
             function zoomToImagePx(data) {
                 console.log("data", data);
                 var rect = canvasEl.getBoundingClientRect();
+                var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
+
                 var zoom = 4;
-                var outputPixel = { x : rect.width / 2, y: rect.height / 2}
+                var outputPixel = { x : scale * rect.width / 2, y: scale * rect.height / 2}
                 /*
                   The final position is t + sx for image position
                   x. We want x to map to outputPixel. So we can get t
