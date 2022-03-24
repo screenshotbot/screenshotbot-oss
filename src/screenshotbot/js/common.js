@@ -179,18 +179,32 @@ function prepareReportJs () {
                 dragStart.y = e.clientY;
                 dragStart.translateX = translate.x;
                 dragStart.translateY = translate.y;
+
+                function onMouseMove(e) {
+                    if (isDragging) {
+                        translate.x = e.clientX - dragStart.x + dragStart.translateX;
+                        translate.y = e.clientY - dragStart.y + dragStart.translateY;
+                        draw();
+                    }
+                }
+
+                function onMouseEnd(e) {
+                    isDragging = false;
+                    document.removeEventListener("mousemove", onMouseMove);
+                    document.removeEventListener("mouseup", onMouseEnd);
+                }
+
+                document.addEventListener("mousemove", onMouseMove);
+                document.addEventListener("mouseup", onMouseEnd);
+
             })
 
-            canvas.on("mouseup", function () {
+
+            canvas.on("dragend", function () {
                 isDragging = false;
             });
 
             canvas.on("mousemove", function (e) {
-                if (isDragging) {
-                    translate.x = e.clientX - dragStart.x + dragStart.translateX;
-                    translate.y = e.clientY - dragStart.y + dragStart.translateY;
-                    draw();
-                }
             });
 
 
