@@ -167,8 +167,9 @@ function prepareReportJs () {
 
             canvas.on("wheel", function (e) {
                 var change = e.originalEvent.deltaY * 0.0005;
+                var zoom0 = zoom;
 
-                zoom += change;
+                zoom -= change;
                 if (zoom > 5) {
                     zoom = 5;
                 }
@@ -176,7 +177,22 @@ function prepareReportJs () {
                 if (zoom < 0.1) {
                     zoom = 0.1;
                 }
-                console.log("new zoom is", zoom);
+                //console.log("new zoom is", zoom);
+
+                // But I want the mouse to be on the same location
+                // that we started with. For this we need to move translate.x
+
+
+                var rect = canvasEl.getBoundingClientRect();
+                var thisX = (e.clientX - rect.left);
+                var thisY = (e.clientY - rect.top);
+
+                //console.log("mouse pos", thisX, thisY);
+                //console.log("client pos", e.clientX, e.clientY, rect.left, rect.top);
+
+                translate.x = ((zoom0 - zoom) * thisX + zoom * translate.x) / zoom0;
+                translate.y = ((zoom0 - zoom) * thisY + zoom * translate.y) / zoom0;
+
                 draw();
                 e.preventDefault();
             });
