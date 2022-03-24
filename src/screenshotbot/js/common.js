@@ -87,6 +87,8 @@ function prepareReportJs () {
 
     function setupImageComparison() {
         var img = $(".image-comparison-modal-image", this);
+        var canvas = $("canvas.image-comparison-modal-image",this);
+
         var wrapper = $(img).closest(".progress-image-wrapper");
         var loading = $(wrapper).find(".loading");
 
@@ -100,22 +102,44 @@ function prepareReportJs () {
         zoomToChange.prop("disabled", true);
         loading.show();
         img.hide();
+
+        function loadIntoImage(data) {
+            img.on("load", function () {
+                zoomToChange.prop("disabled", false);
+            });
+
+            if (data.identical) {
+                $(".images-identical", wrapper).show();
+            }
+            console.log("Comparison result" ,data);
+            img.attr("src", data.src);
+            img.css("background-image", "url(\"" + data.src + '")');
+            img.css("background-repeat", "no-repeat");
+        }
+
+        function loadIntoCanvas(data) {
+            var image = new Image();
+            image.src = data.src;
+            var canvasEl = canvas.get(0);
+
+            var ctx = canvasEl.getContext('2d');
+            image.onload = function () {
+                canvasEl.height = image.height;
+                canvasEl.width = image.width;
+                ctx.drawImage(image, 0, 0);
+            }
+        }
+
         $.ajax({
             url: src,
             success: function (data) {
                 loading.hide();
                 img.show();
-                img.on("load", function () {
-                    zoomToChange.prop("disabled", false);
-                });
-
-                if (data.identical) {
-                    $(".images-identical", wrapper).show();
+                if (canvas.get(0)) {
+                    loadIntoCanvas(data);
+                } else {
+                    loadIntoImage(data);
                 }
-                console.log("Comparison result" ,data);
-                img.attr("src", data.src);
-                img.css("background-image", "url(\"" + data.src + '")');
-                img.css("background-repeat", "no-repeat");
             },
             error: function () {
                 swAlert("Network request failed! This could be because we're still processing the image. Please try again in a minute");

@@ -435,9 +435,15 @@ If the images are identical, we return t, else we return NIL."
       Loading (this could take upto 30s in some cases)
     </div>
 
-    <:img data-src= src
-          data-zoom-to=zoom-to
-          class= "bg-primary image-comparison-modal-image" alt=alt />
+  ,(cond
+     ((hunchentoot:parameter "canvas")
+      <:canvas data-src=src
+               data-zoom-to=zoom-to
+               class= "image-comparison-modal-image" />)
+     (t
+      <:img data-src= src
+            data-zoom-to=zoom-to
+            class= "bg-primary image-comparison-modal-image" alt=alt />))
   </div>)
 
 (deftag zoom-to-change-button ()

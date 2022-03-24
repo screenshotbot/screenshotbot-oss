@@ -326,6 +326,12 @@ body > section:nth-child(2) {
     max-height: 75vh;
 }
 
+canvas.image-comparison-modal-image {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
+
 .change-image-row-triple {
     img {
         max-height: 75vh;
