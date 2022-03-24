@@ -128,11 +128,36 @@ function prepareReportJs () {
             var ctx = canvasEl.getContext('2d');
 
             function draw() {
+                // x* = t + sx. x = (x* - t) / s
+
+                function reverseMap(pos) {
+                    function r(x_star, t) {
+                        return (x_star - t) / zoom;
+                    }
+                    return {
+                        x: r(pos.x, translate.x),
+                        y: r(pos.y, translate.y)
+                    }
+                }
+
+                var imTopLeft = reverseMap({x: 0, y: 0});
+                var imBottomRight = reverseMap({
+                    x : canvasEl.width,
+                    y: canvasEl.height
+                });
                 ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+                /*
+                console.log("Source prop", translate, imTopLeft.x, imTopLeft.y,
+                            imBottomRight.x - imTopLeft.x,
+                            imBottomRight.y - imTopLeft.y);
+                */
+
                 ctx.drawImage(image,
-                              0, 0, canvasEl.width / zoom,
-                              canvasEl.height / zoom,
-                              translate.x, translate.y,
+                              imTopLeft.x, imTopLeft.y,
+                              imBottomRight.x - imTopLeft.x,
+                              imBottomRight.y - imTopLeft.y,
+                              0, 0,
                               canvasEl.width,
                               canvasEl.height);
             }
