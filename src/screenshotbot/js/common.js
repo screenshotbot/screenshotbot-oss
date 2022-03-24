@@ -103,6 +103,8 @@ function prepareReportJs () {
         loading.show();
         img.hide();
 
+        var translate = { x: 0, y: 0 };
+
         function loadIntoImage(data) {
             img.on("load", function () {
                 zoomToChange.prop("disabled", false);
@@ -123,11 +125,39 @@ function prepareReportJs () {
             var canvasEl = canvas.get(0);
 
             var ctx = canvasEl.getContext('2d');
+
+            function draw() {
+                ctx.drawImage(image, translate.x, translate.y);
+            }
+
+
             image.onload = function () {
                 canvasEl.height = image.height;
                 canvasEl.width = image.width;
-                ctx.drawImage(image, 0, 0);
+                draw();
             }
+            var dragStart = { x: 0, y: 0, translateX: 0, translateY: 0 };
+            var isDragging = false;
+            canvas.on("mousedown", function (e) {
+                isDragging = true;
+                dragStart.x = e.clientX;
+                dragStart.y = e.clientY;
+                dragStart.translateX = translate.x;
+                dragStart.translateY = translate.y;
+            })
+
+            canvas.on("mouseup", function () {
+                isDragging = false;
+            });
+
+            canvas.on("mousemove", function (e) {
+                if (isDragging) {
+                    translate.x = e.clientX - dragStart.x + dragStart.translateX;
+                    translate.y = e.clientY - dragStart.y + dragStart.translateY;
+                    ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+                    draw();
+                }
+            });
         }
 
         $.ajax({
