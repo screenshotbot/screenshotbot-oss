@@ -65,6 +65,10 @@
                 #:store-object-id)
   (:import-from #:bknr.datastore
                 #:store-object-id)
+  (:import-from #:auto-restart
+                #:with-auto-restart)
+  (:import-from #:bknr.datastore
+                #:delete-object)
   (:export
    #:diff-report
    #:render-acceptable
@@ -241,6 +245,30 @@
                               :masks masks
                               :identical-p identical-p
                               :result image)))))))))
+
+(with-auto-restart ()
+ (defmethod recreate-image-comparison ((self image-comparison))
+   (let* ((image (image-comparison-result self))
+          (blob (image-blob image)))
+     (check-type blob image-blob)
+     (check-type image image)
+     (let ((pathname (bknr.datastore:blob-pathname blob)))
+       (let ((before (image-comparison-before self))
+             (after (image-comparison-after self))
+             (masks (image-comparison-masks self)))
+         (delete-object self)
+         (find-image-comparison-on-images
+          before after masks))
+       (delete-object image)
+       (delete-object blob)
+       (log:info "Deleting ~a" pathname)
+       (delete-file pathname)))))
+
+(defmethod recreate-all-image-comparisons ()
+  (loop for image-comparison in (reverse
+                                 (bknr.datastore:store-objects-with-class 'image-comparison))
+        do
+        (recreate-image-comparison image-comparison)))
 
 (defmethod find-image-comparison ((before-screenshot screenshot)
                                   (after-screenshot screenshot))
