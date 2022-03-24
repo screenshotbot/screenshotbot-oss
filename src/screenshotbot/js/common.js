@@ -129,7 +129,7 @@ function prepareReportJs () {
             var ctx = canvasEl.getContext('2d');
 
             function draw() {
-                fixMaxTranslation();
+                //fixMaxTranslation();
                 // x* = t + sx. x = (x* - t) / s
                 function reverseMap(pos) {
                     function r(x_star, t) {
