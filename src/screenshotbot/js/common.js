@@ -104,6 +104,7 @@ function prepareReportJs () {
         img.hide();
 
         var translate = { x: 0, y: 0 };
+        var zoom = 1;
 
         function loadIntoImage(data) {
             img.on("load", function () {
@@ -127,7 +128,13 @@ function prepareReportJs () {
             var ctx = canvasEl.getContext('2d');
 
             function draw() {
-                ctx.drawImage(image, translate.x, translate.y);
+                ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+                ctx.drawImage(image,
+                              0, 0, canvasEl.width / zoom,
+                              canvasEl.height / zoom,
+                              translate.x, translate.y,
+                              canvasEl.width,
+                              canvasEl.height);
             }
 
 
@@ -154,9 +161,24 @@ function prepareReportJs () {
                 if (isDragging) {
                     translate.x = e.clientX - dragStart.x + dragStart.translateX;
                     translate.y = e.clientY - dragStart.y + dragStart.translateY;
-                    ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
                     draw();
                 }
+            });
+
+            canvas.on("wheel", function (e) {
+                var change = e.originalEvent.deltaY * 0.0005;
+
+                zoom += change;
+                if (zoom > 5) {
+                    zoom = 5;
+                }
+
+                if (zoom < 0.1) {
+                    zoom = 0.1;
+                }
+                console.log("new zoom is", zoom);
+                draw();
+                e.preventDefault();
             });
         }
 
