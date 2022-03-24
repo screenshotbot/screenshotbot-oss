@@ -130,6 +130,8 @@ function prepareReportJs () {
             function draw() {
                 // x* = t + sx. x = (x* - t) / s
 
+                console.log("Drawing: ", translate, zoom);
+
                 function reverseMap(pos) {
                     function r(x_star, t) {
                         return (x_star - t) / zoom;
@@ -164,6 +166,7 @@ function prepareReportJs () {
 
 
             image.onload = function () {
+                zoomToChange.prop("disabled", false);
                 canvasEl.height = image.height;
                 canvasEl.width = image.width;
                 draw();
@@ -221,6 +224,54 @@ function prepareReportJs () {
                 draw();
                 e.preventDefault();
             });
+
+            function animateTo(newTranslate, newZoom, callback) {
+                var oldTranslate = translate;
+                var oldZoom = zoom;
+                canvas.animate(
+                    {fake:100},
+                    {
+                        duration: 2000,
+                        complete: callback,
+                        progress: function (animation, progress) {
+                            console.log("got progress", progress);
+                            translate = {
+                                x: (1-progress) * oldTranslate.x + progress * newTranslate.x,
+                                y: (1-progress) * oldTranslate.y + progress * newTranslate.y
+                            }
+
+                            zoom = (1-progress)*oldZoom + progress * newZoom;
+                            draw();
+                        },
+                });
+            }
+
+            canvas.on("zoomToChange", function (e) {
+                console.log("zoomToChange", e);
+                var data = e.originalEvent.detail;
+
+                console.log("data", data);
+                var rect = canvasEl.getBoundingClientRect();
+                var zoom = 4;
+                var outputPixel = { x : rect.width / 2, y: rect.height / 2}
+                /*
+                  The final position is t + sx for image position
+                  x. We want x to map to outputPixel. So we can get t
+                  = outputPixel - sx.
+                */
+
+                var newTranslate = {
+                    x: outputPixel.x - zoom * data.x,
+                    y: outputPixel.y - zoom * data.y,
+                }
+
+                console.log("redrawing ", translate, zoom);
+                animateTo(newTranslate, zoom, function () {
+                    console.log("animation done");
+                    zoomToChange.prop("disabled", false);
+                });
+                zoomToChangeSpinner.hide();
+            });
         }
 
         $.ajax({
@@ -239,11 +290,73 @@ function prepareReportJs () {
             }
         });
 
+        function zoomToChangeForImg(data) {
+            console.log("got data", data);
+            // let's begin an animation to (data.x, data.y)
+
+            // TODO: auto calculate maxScale
+            var maxScale = 10;
+
+            var zoom = 400;
+
+            var clientWidth = img.get(0).naturalWidth;
+            var clientHeight = img.get(0).naturalHeight;
+
+            console.log("clientWidth/Height", clientWidth, clientHeight);
+            console.log("width/height", img.width(), img.height());
+
+            // Percent X, and percent y
+            var pX = data.x / data.width;
+            var pY = data.y / data.height;
+
+            console.log("pX, pY", pX, pY);
+
+
+            // what's the percentage of the image that's shown
+            // in the final position? This is straightforward:
+            var pFinalWidth = 100 / zoom;
+            var pFinalHeight = 100 / zoom;
+
+            console.log("pFinalWidth/Height", pFinalWidth, pFinalHeight);
+
+            // So we can now calculate the left and top in
+            // percentages of the image.
+            var pLeft = pX - pFinalWidth / 2;
+            var pTop = pY - pFinalHeight / 2;
+
+            console.log("pLeft/Top", pLeft, pTop);
+
+            // And we can use that to bring it back to pixel
+            // land:
+            var finalLeft = - (pX * zoom / 100 - 0.5) * img.width();
+            var finalTop = - (pY * zoom / 100 - 0.5) * img.height();
+
+            console.log("finalLeft/Top", finalLeft, finalTop);
+            zoomToChangeSpinner.hide();
+
+            img.animate(
+                {
+                    "background-size": zoom + "%",
+                    "background-position-x": finalLeft + "px",
+                    "background-position-y": finalTop + "px",
+                },
+                {
+                    duration: 2000,
+                    complete: function() {
+                        zoomToChange.prop("disabled", false);
+                    }
+                }
+            );
+
+        }
 
         zoomToChange.click(function () {
             // move the image out of the way
-            img.css("object-position", "10000px 10000px");
-            img.css("background-size", "100%");
+
+            if (!canvas.get(0)) {
+                img.css("object-position", "10000px 10000px");
+                img.css("background-size", "100%");
+            }
 
             zoomToChange.prop("disabled", true);
             zoomToChangeSpinner.show();
@@ -251,62 +364,13 @@ function prepareReportJs () {
             $.ajax({
                 url: img.data("zoom-to"),
                 success: function(data) {
-                    console.log("got data", data);
-                    // let's begin an animation to (data.x, data.y)
-
-                    // TODO: auto calculate maxScale
-                    var maxScale = 10;
-
-                    var zoom = 400;
-
-                    var clientWidth = img.get(0).naturalWidth;
-                    var clientHeight = img.get(0).naturalHeight;
-
-                    console.log("clientWidth/Height", clientWidth, clientHeight);
-                    console.log("width/height", img.width(), img.height());
-
-                    // Percent X, and percent y
-                    var pX = data.x / data.width;
-                    var pY = data.y / data.height;
-
-                    console.log("pX, pY", pX, pY);
-
-
-                    // what's the percentage of the image that's shown
-                    // in the final position? This is straightforward:
-                    var pFinalWidth = 100 / zoom;
-                    var pFinalHeight = 100 / zoom;
-
-                    console.log("pFinalWidth/Height", pFinalWidth, pFinalHeight);
-
-                    // So we can now calculate the left and top in
-                    // percentages of the image.
-                    var pLeft = pX - pFinalWidth / 2;
-                    var pTop = pY - pFinalHeight / 2;
-
-                    console.log("pLeft/Top", pLeft, pTop);
-
-                    // And we can use that to bring it back to pixel
-                    // land:
-                    var finalLeft = - (pX * zoom / 100 - 0.5) * img.width();
-                    var finalTop = - (pY * zoom / 100 - 0.5) * img.height();
-
-                    console.log("finalLeft/Top", finalLeft, finalTop);
-                    zoomToChangeSpinner.hide();
-
-                    img.animate(
-                        {
-                            "background-size": zoom + "%",
-                            "background-position-x": finalLeft + "px",
-                            "background-position-y": finalTop + "px",
-                        },
-                        {
-                            duration: 2000,
-                            complete: function() {
-                                zoomToChange.prop("disabled", false);
-                            }
-                        }
-                    );
+                    if (canvas.get(0)) {
+                        var event = new CustomEvent("zoomToChange", { detail: data });
+                        canvas.get(0).dispatchEvent(event);
+                    } else {
+                        console.log("Using legacy zoom to change");
+                        zoomToChangeForImg(data);
+                    }
                 },
                 error: function () {
                     alert("Something went wrong");
