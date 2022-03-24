@@ -204,14 +204,14 @@
            :accessor image-comparison-result))
   (:metaclass persistent-class))
 
-(defun find-image-comparison (before after masks creator)
+(defmethod find-image-comparison-on-images ((before image)
+                                            (after image)
+                                            masks)
   "Finds an existing image comparison for before and after, if it
   doesn't exist calls creator with a temporary file. The creator
   should create the image in the file provided. The creator should
   returns true if the images are completely identical, or nil
   otherwise"
-  (check-type before image)
-  (check-type after image)
   (flet ((find ()
            (loop for comparison in (%image-comparisons-for-before before)
                  if (and (eql after (image-comparison-after comparison))
@@ -221,7 +221,11 @@
      (bt:with-lock-held (*lock*)
        (find))
      (uiop:with-temporary-file (:pathname p :type "png" :prefix "comparison")
-       (let ((identical-p (funcall creator p)))
+       (let ((identical-p (do-image-comparison
+                            before
+                            after
+                            p
+                            masks)))
          (let* ((image-blob (make-blob-from-file p 'image-blob :type :png))
                 (image (make-instance 'image
                                        :blob image-blob
@@ -238,30 +242,30 @@
                               :identical-p identical-p
                               :result image)))))))))
 
+(defmethod find-image-comparison ((before-screenshot screenshot)
+                                  (after-screenshot screenshot))
+  ;; second level of caching, we're going to look through the
+  ;; datastore to see if there are any previous images
+  (let ((before (screenshot-image before-screenshot))
+        (after (screenshot-image after-screenshot)))
+    ;; Avoid computation for large reverts
+    (when (> (store-object-id before)
+             (store-object-id after))
+      (rotatef before after))
+    (find-image-comparison-on-images
+     before
+     after
+     (screenshot-masks after-screenshot))))
+
 (defmethod prepare-image-comparison-file ((self image-comparison-job))
   (bt:with-lock-held ((lock self))
     (cond
       ((donep self)
        (image-comparison self))
       (t
-       ;; second level of caching, we're going to look through the
-       ;; datastore to see if there are any previous images
        (setf (image-comparison self)
-             (let ((before (screenshot-image (before-image self)))
-                   (after (screenshot-image (after-image self))))
-               ;; Avoid computation for large reverts
-               (when (> (store-object-id before)
-                        (store-object-id after))
-                 (rotatef before after))
-               (find-image-comparison
-                before
-                after
-                (screenshot-masks (after-image self))
-                (lambda (output-file)
-                  (do-image-comparison
-                      (before-image self)
-                    (after-image self)
-                    output-file)))))))))
+             (find-image-comparison (before-image self)
+                                    (after-image self)))))))
 
 (defmethod prepare-image-comparison ((self image-comparison-job)
                                      &key
@@ -283,14 +287,15 @@
           (:src . ,(image-public-url (image-comparison-result image-comparison) :size size))
           (:background . ,(image-public-url (screenshot-image (before-image self)) :size size))))))))
 
-(defun do-image-comparison (before-screenshot
-                            after-screenshot
-                            p)
+(defun do-image-comparison (before-image
+                            after-image
+                            p
+                            masks)
   "Compares before-screenshot and after-screenshot, and saves the result image to P.
 
 If the images are identical, we return t, else we return NIL."
-  (with-local-image (before before-screenshot)
-    (with-local-image (after after-screenshot)
+  (with-local-image (before before-image)
+    (with-local-image (after after-image)
       (let ((cmd (list
                   "compare"
                   "-limit" "memory" "3MB"
@@ -311,7 +316,7 @@ If the images are identical, we return t, else we return NIL."
 
           (unless (member ret '(0 1))
             (error "Got surprising error output from imagemagic compare: ~S~%args:~%~S~%stderr:~%~a~%stdout:~%~a" ret cmd err out))
-          (draw-masks-in-place p (screenshot-masks after-screenshot) :color "rgba(255, 255, 0, 0.8)")
+          (draw-masks-in-place p masks :color "rgba(255, 255, 0, 0.8)")
           (log:info "Got return code: ~a with output `~a`, `~a`" ret out err)
           (when (= ret 0)
             (equal "0 (0)" (str:trim err))
