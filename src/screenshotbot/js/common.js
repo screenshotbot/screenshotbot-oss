@@ -96,8 +96,9 @@ function prepareReportJs () {
         var zoomToChangeSpinner = $(zoomToChange).find(".spinner-border");
 
         var src = img.data("src");
-
-        resetImageZoom(img);
+        if (!canvas.get(0)) {
+            resetImageZoom(img);
+        }
 
         zoomToChange.prop("disabled", true);
         loading.show();
@@ -129,8 +130,6 @@ function prepareReportJs () {
 
             function draw() {
                 // x* = t + sx. x = (x* - t) / s
-
-                console.log("Drawing: ", translate, zoom);
 
                 function reverseMap(pos) {
                     function r(x_star, t) {
@@ -169,6 +168,7 @@ function prepareReportJs () {
                 zoomToChange.prop("disabled", false);
                 canvasEl.height = image.height;
                 canvasEl.width = image.width;
+
                 draw();
             }
             var dragStart = { x: 0, y: 0, translateX: 0, translateY: 0 };
@@ -193,6 +193,7 @@ function prepareReportJs () {
                 }
             });
 
+
             canvas.on("wheel", function (e) {
                 var change = e.originalEvent.deltaY * 0.0005;
                 var zoom0 = zoom;
@@ -212,14 +213,23 @@ function prepareReportJs () {
 
 
                 var rect = canvasEl.getBoundingClientRect();
-                var thisX = (e.clientX - rect.left);
-                var thisY = (e.clientY - rect.top);
+                // Since we're using `cover` as object-fit, the scale
+                // will be the higher of these two
+                var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
 
-                //console.log("mouse pos", thisX, thisY);
-                //console.log("client pos", e.clientX, e.clientY, rect.left, rect.top);
+                /*console.log("here's what we're looking at", rect.width, canvasEl.width, translate.x);
+                console.log("here's what we're looking at", rect.height, canvasEl.height, translate.y);
+                console.log("But got scale", scale);*/
+                var thisX = (e.clientX - rect.left) * scale;
+                var thisY = (e.clientY - rect.top) * scale;
 
-                translate.x = ((zoom0 - zoom) * thisX + zoom * translate.x) / zoom0;
-                translate.y = ((zoom0 - zoom) * thisY + zoom * translate.y) / zoom0;
+
+
+
+                translate = {
+                    x: thisX - (zoom/zoom0) * ( thisX - translate.x),
+                    y: thisY - (zoom/zoom0) * (thisY - translate.y)
+                }
 
                 draw();
                 e.preventDefault();
