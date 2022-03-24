@@ -129,8 +129,8 @@ function prepareReportJs () {
             var ctx = canvasEl.getContext('2d');
 
             function draw() {
+                fixMaxTranslation();
                 // x* = t + sx. x = (x* - t) / s
-
                 function reverseMap(pos) {
                     function r(x_star, t) {
                         return (x_star - t) / zoom;
@@ -163,6 +163,28 @@ function prepareReportJs () {
                               canvasEl.height);
             }
 
+            function fixMaxTranslation () {
+                var rect = canvasEl.getBoundingClientRect();
+                var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
+
+                if (translate.x >  rect.width * scale / 2) {
+                    translate.x = rect.width * scale / 2;
+                }
+
+                if (translate.y > rect.height * scale / 2) {
+                    translate.y = rect.height * scale / 2;
+                }
+
+                if (translate.x + canvasEl.width < rect.width * scale / 2) {
+                    translate.x = rect.width * scale / 2 - canvasEl.width;
+                }
+
+                if (translate.y + canvasEl.height < rect.height * scale / 2) {
+                    translate.y = rect.height * scale / 2 - canvasEl.height;
+                }
+
+            }
+
 
             image.onload = function () {
                 zoomToChange.prop("disabled", false);
@@ -171,6 +193,7 @@ function prepareReportJs () {
 
                 draw();
             }
+
             var dragStart = { x: 0, y: 0, translateX: 0, translateY: 0 };
             var isDragging = false;
             canvas.on("mousedown", function (e) {
