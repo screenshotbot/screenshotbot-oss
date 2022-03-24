@@ -436,7 +436,11 @@ If the images are identical, we return t, else we return NIL."
     </div>
 
   ,(cond
-     ((hunchentoot:parameter "canvas")
+     ((hunchentoot:parameter "old-compare")
+      <:img data-src= src
+            data-zoom-to=zoom-to
+            class= "bg-primary image-comparison-modal-image" alt=alt />)
+     (t
       <div>
         <div class= "alert alert-info">
           <strong>New interactive comparisons!</strong> Use your mouse to pan through the image. Use <strong>Ctrl+Mousewheel</strong> to zoom into a location.
@@ -444,11 +448,7 @@ If the images are identical, we return t, else we return NIL."
         <:canvas data-src=src
                  data-zoom-to=zoom-to
                  class= "image-comparison-modal-image" />
-      </div>)
-     (t
-      <:img data-src= src
-            data-zoom-to=zoom-to
-            class= "bg-primary image-comparison-modal-image" alt=alt />))
+      </div>))
   </div>)
 
 (deftag zoom-to-change-button ()
