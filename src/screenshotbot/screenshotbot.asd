@@ -11,6 +11,7 @@
                #-screenshotbot-oss
                :sentry
                :server
+               :auto-restart
                :java.libs
                :util/form-state
                :util/hash-lock
