@@ -202,8 +202,7 @@ function prepareReportJs () {
                 }
 
                 var isDragging = true;
-                dragStart.x = e.clientX;
-                dragStart.y = e.clientY;
+                dragStart = getEventPositionOnCanvas(e);
                 dragStart.translateX = translate.x;
                 dragStart.translateY = translate.y;
 
@@ -214,9 +213,10 @@ function prepareReportJs () {
                 }, 100)
 
                 function onMouseMove(e) {
+                    var pos = getEventPositionOnCanvas(e);
                     if (isDragging) {
-                        translate.x = e.clientX - dragStart.x + dragStart.translateX;
-                        translate.y = e.clientY - dragStart.y + dragStart.translateY;
+                        translate.x = pos.x - dragStart.x + dragStart.translateX;
+                        translate.y = pos.y - dragStart.y + dragStart.translateY;
                         draw();
                     }
                 }
