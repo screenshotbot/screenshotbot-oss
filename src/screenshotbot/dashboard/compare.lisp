@@ -252,17 +252,20 @@
           (blob (image-blob image)))
      (check-type blob image-blob)
      (check-type image image)
-     (let ((pathname (bknr.datastore:blob-pathname blob)))
-       (let ((before (image-comparison-before self))
-             (after (image-comparison-after self))
-             (masks (image-comparison-masks self)))
-         (delete-object self)
-         (find-image-comparison-on-images
-          before after masks))
-       (delete-object image)
-       (delete-object blob)
-       (log:info "Deleting ~a" pathname)
-       (delete-file pathname)))))
+     (restart-case
+         (let ((pathname (bknr.datastore:blob-pathname blob)))
+           (let ((before (image-comparison-before self))
+                 (after (image-comparison-after self))
+                 (masks (image-comparison-masks self)))
+             (delete-object self)
+             (find-image-comparison-on-images
+              before after masks))
+           (delete-object image)
+           (delete-object blob)
+           (log:info "Deleting ~a" pathname)
+           (delete-file pathname))
+       (ignore-this-comparison ()
+         (values))))))
 
 (defmethod recreate-all-image-comparisons ()
   (loop for image-comparison in (reverse
