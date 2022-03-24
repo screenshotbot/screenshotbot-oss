@@ -200,14 +200,6 @@ function prepareReportJs () {
             })
 
 
-            canvas.on("dragend", function () {
-                isDragging = false;
-            });
-
-            canvas.on("mousemove", function (e) {
-            });
-
-
             canvas.on("wheel", function (e) {
                 var change = e.originalEvent.deltaY * 0.0005;
                 var zoom0 = zoom;
