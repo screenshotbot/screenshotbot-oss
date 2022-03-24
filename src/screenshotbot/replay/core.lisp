@@ -337,7 +337,11 @@
 (defun http-cache-dir ()
   (util:or-setf
    *http-cache-dir*
-   (tmpdir:mkdtemp)))
+   (let ((dir (path:catdir
+               util:*object-store*
+               "cache/replay-http-cache/")))
+     (ensure-directories-exist dir)
+     dir)))
 
 (defun read-file (file)
   (with-open-file (s file :direction :input)

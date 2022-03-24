@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:http-cache-dir
                 #:context
                 #:remote-response
                 #:guess-external-format
@@ -158,3 +159,9 @@ background: url(shttps://google.com?f=1)
                (guess-external-format (make-info "text/html; charset=UTF-8"))))
     (is (equal :utf-8
                (guess-external-format (make-info "text/html; charset='utf-8' "))))))
+
+(test http-cache-dir
+  (with-fixture state ()
+    (tmpdir:with-tmpdir (util:*object-store*)
+      (let ((*http-cache-dir* nil))
+        (is (path:-d (path:catdir (http-cache-dir))))))))
