@@ -280,7 +280,8 @@
         `((:identical . ,(identical-p image-comparison))
           ;; for debugging: e.g. if we need to delete the comparison
           (:store-object-id . ,(bknr.datastore:store-object-id image-comparison))
-          (:src . ,(image-public-url (image-comparison-result image-comparison) :size size))))))))
+          (:src . ,(image-public-url (image-comparison-result image-comparison) :size size))
+          (:background . ,(image-public-url (screenshot-image (before-image self)) :size size))))))))
 
 (defun do-image-comparison (before-screenshot
                             after-screenshot
@@ -298,6 +299,9 @@ If the images are identical, we return t, else we return NIL."
                   "-metric" "RMSE"
                   (namestring before)
                   (namestring after)
+                  "-highlight-color" "red"
+                  "-lowlight-color" "none"
+                  "-compose" "src"
                   (namestring p))))
         (multiple-value-bind (out err ret)
             (run-magick cmd

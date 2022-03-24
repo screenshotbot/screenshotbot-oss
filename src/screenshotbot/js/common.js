@@ -122,8 +122,13 @@ function prepareReportJs () {
         }
 
         function loadIntoCanvas(data) {
+            console.log("Loading into canvas", data);
             var image = new Image();
             image.src = data.src;
+
+            var background = new Image();
+            background.src = data.background;
+
             var canvasEl = canvas.get(0);
 
             var ctx = canvasEl.getContext('2d');
@@ -154,13 +159,19 @@ function prepareReportJs () {
                             imBottomRight.y - imTopLeft.y);
                 */
 
-                ctx.drawImage(image,
-                              imTopLeft.x, imTopLeft.y,
-                              imBottomRight.x - imTopLeft.x,
-                              imBottomRight.y - imTopLeft.y,
-                              0, 0,
-                              canvasEl.width,
-                              canvasEl.height);
+                function doDraw(image) {
+                    ctx.drawImage(image,
+                                  imTopLeft.x, imTopLeft.y,
+                                  imBottomRight.x - imTopLeft.x,
+                                  imBottomRight.y - imTopLeft.y,
+                                  0, 0,
+                                  canvasEl.width,
+                                  canvasEl.height);
+                }
+                ctx.globalAlpha = 0.2;
+                doDraw(background);
+                ctx.globalAlpha = 1;
+                doDraw(image)
             }
 
             function fixMaxTranslation () {
@@ -185,14 +196,20 @@ function prepareReportJs () {
 
             }
 
+            var imageLoadCounter = 0;
 
-            image.onload = function () {
-                zoomToChange.prop("disabled", false);
-                canvasEl.height = image.height;
-                canvasEl.width = image.width;
-
-                draw();
+            function onEitherImageLoad() {
+                imageLoadCounter ++;
+                if (imageLoadCounter == 2) {
+                    zoomToChange.prop("disabled", false);
+                    canvasEl.height = image.height;
+                    canvasEl.width = image.width;
+                    draw();
+                }
             }
+
+            image.onload = onEitherImageLoad;
+            background.onload = onEitherImageLoad;
 
             var dragStart = { x: 0, y: 0, translateX: 0, translateY: 0 };
 
