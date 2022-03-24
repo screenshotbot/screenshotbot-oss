@@ -197,6 +197,10 @@ function prepareReportJs () {
             var dragStart = { x: 0, y: 0, translateX: 0, translateY: 0 };
 
             function onMouseDown(e) {
+                if (e.which != 1) {
+                    return;
+                }
+
                 var isDragging = true;
                 dragStart.x = e.clientX;
                 dragStart.y = e.clientY;
