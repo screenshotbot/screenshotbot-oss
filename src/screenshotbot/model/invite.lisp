@@ -15,6 +15,8 @@
                 #:persistent-class
                 #:store-object)
   (:import-from #:util #:make-secret-code)
+  (:import-from #:screenshotbot/notice-api
+                #:invite-company)
   (:export
    #:invite
    #:all-invites
@@ -24,7 +26,8 @@
    #:invite-email
    #:inviter
    #:invite-code
-   #:email-count))
+   #:email-count
+   #:invite-used-p))
 (in-package :screenshotbot/model/invite)
 
 (defclass invite (store-object)
@@ -35,6 +38,8 @@
    (email :initarg :email
           :initform nil
           :reader invite-email)
+   (used-p :initform nil
+           :accessor invite-used-p)
    (email-count
     :initform 0
     :accessor email-count)

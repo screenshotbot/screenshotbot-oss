@@ -23,6 +23,8 @@
                 #:auth-provider-signup-form
                 #:auth-provider)
   (:use-reexport #:screenshotbot/cdn)
+  (:import-from #:screenshotbot/user-api
+                #:signup-get)
   (:export
    #:*current-company-override*
    #:with-oauth-state-and-redirect
@@ -85,11 +87,14 @@
     (hex:safe-redirect "/")))
 
 
-(defun server-with-login (fn &key needs-login)
+(defun server-with-login (fn &key needs-login signup alert)
   (cond
     ((and needs-login (not (current-user)))
-     (signin-get :redirect (nibble ()
-                             (funcall fn))))
+     (funcall
+      (if signup #'signup-get #'signin-get)
+      :alert alert
+      :redirect (nibble ()
+                  (funcall fn))))
     (t
      (funcall fn))))
 

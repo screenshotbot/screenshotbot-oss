@@ -81,14 +81,16 @@
     </div>
   </form>))
 
-(deftag signin-get (&key (redirect "/"))
+(deftag signin-get (&key (redirect "/") (alert nil))
   (assert redirect)
   (let ((signup (nibble ()
-                  (signup-get :redirect redirect))))
+                  (signup-get :redirect redirect
+                              :alert alert))))
     <auth-template>
 
       <div class="account-pages mt-5 mb-5">
-            <div class="container">
+        <div class="container">
+          ,(progn alert)
                 <div class="row justify-content-center">
                     <div class="col-lg-5">
                         <div class="card">

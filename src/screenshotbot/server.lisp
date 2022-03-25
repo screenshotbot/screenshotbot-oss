@@ -224,10 +224,13 @@
   "User-agent: *
 Disallow: /n")
 
-(defmacro with-login ((&key (needs-login t)) &body body)
+(defmacro with-login ((&key (needs-login t) (signup nil)
+                         (alert nil)) &body body)
   ;; server-with-login is implemented in login/common.lisp
   `(server-with-login (lambda () ,@body)
-                      :needs-login ,needs-login))
+                      :needs-login ,needs-login
+                      :signup ,signup
+                      :alert ,alert))
 
 (defhandler (nil :uri "/") ()
   (cond

@@ -7,9 +7,12 @@
 (uiop:define-package :screenshotbot/invite
   (:use #:cl #:alexandria)
   (:import-from #:screenshotbot/server
+                #:with-login
                 #:defhandler
                 #:*disable-mail*)
   (:import-from #:screenshotbot/model/invite
+                #:invite-used-p
+                #:invite-with-code
                 #:invite
                 #:email-count
                 #:invite-code
@@ -18,7 +21,7 @@
                 #:inviter
                 #:invites-with-email)
   (:import-from #:screenshotbot/dashboard/notices
-                #:invite-accept)
+                #:accept-invite)
   (:import-from #:screenshotbot/model/user
                 #:user-with-email
                 #:personalp
@@ -45,9 +48,12 @@
                 #:installation)
   (:import-from #:screenshotbot/mailer
                 #:send-mail)
+  (:import-from #:nibble
+                #:nibble)
   (:export
    #:invite-page
-   #:render-invite-page))
+   #:render-invite-page
+   #:accept-invite))
 (in-package :screenshotbot/invite)
 
 (markup:enable-reader)
@@ -115,6 +121,34 @@
            (hex:safe-redirect 'invite-successful
                                :email email)))))))
 
+(defun invite-alert (invite)
+  <div class= "alert alert-info">
+    <h4 class= "mb-3 mt-0 pt-0" >Your invitation from ,(user-full-name (inviter invite)) is pending.</h4>
+    <p class= "mb-0 pb-0" >Once you create your account you will have an option of accepting the invite.</p>
+  </div>)
+
+(defhandler (invite-signup-page :uri "/invite/signup/:invite-code") (invite-code)
+  (let ((invite (invite-with-code invite-code)))
+   (with-login (:signup t :alert (when invite (invite-alert invite)))
+     (cond
+       ((or (null invite)
+            (invite-used-p invite))
+        <simple-card-page>
+          <p>The invite link has expired. Please ask your administrator to send you a new link.</p>
+        </simple-card-page>)
+       ((member (invite-company invite)
+                (user-companies (current-user)))
+        (hex:safe-redirect
+         (nibble ()
+           <simple-card-page>
+           <p>You are already a member of this organization.</p>
+           </simple-card-page>)))
+       (t
+        (with-transaction ()
+          (push invite (unaccepted-invites (current-user)))
+          (setf (invite-used-p invite) t))
+        (hex:safe-redirect "/"))))))
+
 (defhandler (invite-successful :uri "/invite/success/:email") (email)
   <simple-card-page>
     <div class= "card-header">
@@ -135,7 +169,7 @@
 (defmethod invite-signup-link ((invite invite))
   (hex:make-full-url
                   hunchentoot:*request*
-                  "/signup"
+                  'invite-signup-page
                    :invite-code (invite-code invite)))
 
 (defun send-email-for-invite (invite)
@@ -163,17 +197,20 @@
     (with-transaction ()
       (incf (email-count invite)))))
 
+(defun accept-invite (invite)
+  (when (member invite (unaccepted-invites (current-user)))
+    ;; Let's do the accept
+    (with-transaction ()
+      (deletef (unaccepted-invites (current-user)) invite)
+      (pushnew
+       (invite-company invite)
+       (user-companies (current-user)))
+      (deletef
+       (company-invites (invite-company invite))
+       invite))
+    (Setf (current-company) (invite-company invite)))
+  (hex:safe-redirect "/"))
+
 (defhandler (invite-accept  :uri  "/invite/accept") (invite-id)
   (let ((invite (store-object-with-id (parse-integer invite-id))))
-    (when (member invite (unaccepted-invites (current-user)))
-      ;; Let's do the accept
-      (with-transaction ()
-        (deletef (unaccepted-invites (current-user)) invite)
-        (pushnew
-         (invite-company invite)
-         (user-companies (current-user)))
-        (deletef
-         (company-invites (invite-company invite))
-         invite))
-      (Setf (current-company) (invite-company invite))))
-  (hex:safe-redirect "/"))
+    (accept-invite invite)))

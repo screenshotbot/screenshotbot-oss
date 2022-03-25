@@ -99,20 +99,21 @@
       </div>
     </form>))
 
-(deftag signup-get (&key invite-code plan (redirect "/"))
+(deftag signup-get (&key invite-code plan (redirect "/")
+                    alert)
+  (when invite-code
+    (hex:safe-redirect (format nil "/invite/signup/~a" invite-code)))
   (let ((login (nibble ()
-                 (signin-get :redirect redirect)))
+                 (signin-get :redirect redirect
+                             :alert alert)))
         (invite (when invite-code
                   (invite-with-code invite-code))))
     <auth-template>
       <div class="account-pages mt-5 mb-5">
         <div class="container">
 
-          ,(when invite
-             <div class= "alert alert-info">
-               <h4 class= "mb-3 mt-0 pt-0" >Your invitation from ,(user-full-name (inviter invite)) is pending.</h4>
-               <p class= "mb-0 pb-0" >Once you create your account you will have an option of accepting the invite.</p>
-             </div>)
+          ,(progn alert)
+
           <div class="row justify-content-center">
             <div class="col-lg-5">
               <div class="card">

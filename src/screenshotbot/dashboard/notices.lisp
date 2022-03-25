@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/dashboard/notices
+(defpackage :screenshotbot/dashboard/notices
   (:use #:cl
         #:alexandria
         #:screenshotbot/user-api
@@ -15,27 +15,27 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:util #:oid #:make-url)
-  (:export #:invite-accept))
+  (:import-from #:nibble
+                #:nibble)
+  (:export #:accept-invite))
 (in-package :screenshotbot/dashboard/notices)
 
 (markup:enable-reader)
-
-(hex:declare-handler 'invite-accept)
 
 (deftag user-notice-list (&key (user (current-user)))
   <div id= "user-notice-list" class= "row">
     <!-- user notice list-->
     ,@ (loop for invite in (unaccepted-invites user) collect
     <div class= "col-md-4 mt-2">
-      <form action= (make-url 'invite-accept) method= "POST" >
+      <form action= (util:copying (invite)  (nibble () (accept-invite invite))) method= "POST" >
         <div class= "card">
-          <div class= "card-header pt-0 pb-0">
+          <div class= "card-header">
             <h3>,(company-name (invite-company invite)) </h3>
           </div>
           <input type= "hidden"
                  name= "invite-id"
                  value= (store-object-id invite) />
-          <div class= "card-body pt-0 pb-0">
+          <div class= "card-body">
             <p>You've been invited to collaborate in this Organization. </p>
           </div>
 
