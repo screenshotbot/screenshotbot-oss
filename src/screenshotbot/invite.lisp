@@ -121,8 +121,10 @@
       <h3>Invite sent</h3>
     </div>
 
-    <p>,(progn email) should've received an email with details on how to sign.
-    </p>q
+    <p>,(progn email) should have received an email with details on how to sign-up.
+    </p>
+
+    <p>After their account is created, they will be able to add themselves to your organization.</p>
 
     <div class= "card-footer">
       <a href= (make-url 'invite-page) class= "btn btn-primary" >Invite More People</a>
