@@ -147,14 +147,15 @@
              "Please enter an email")
       (check :password (not (str:emptyp password))
              "Please enter a password")
-      (check :password (auth:password-hash user)
-             "This account appears to use an OAuth (either Google or GitHub)")
-
       (check :email user
              "No account associated with that email address")
-      (when (and user (auth:password-hash user))
-       (check :password (auth:check-password user password)
-              "Password does not match the given account")))
+      (when user
+        (check :password (auth:password-hash user)
+               "This account appears to use an OAuth (either Google or GitHub)")
+
+        (when (auth:password-hash user)
+          (check :password (auth:check-password user password)
+                 "Password does not match the given account"))))
     (cond
       (errors
        (with-form-errors (:email email :errors errors
