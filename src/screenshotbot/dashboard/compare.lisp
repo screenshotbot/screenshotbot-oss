@@ -484,7 +484,7 @@ If the images are identical, we return t, else we return NIL."
      (t
       <div>
         <div class= "alert alert-info">
-          <strong>New interactive comparisons!</strong> Use your mouse to pan through the image. Use <strong>Ctrl+Mousewheel</strong> to zoom into a location.
+          <strong>New interactive comparisons!</strong> Use your mouse to pan through the image. Use the <strong>mouse wheel</strong> to zoom into a location.
         </div>
         <:canvas data-src=src
                  data-zoom-to=zoom-to

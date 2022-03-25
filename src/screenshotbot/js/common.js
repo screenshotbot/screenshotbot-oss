@@ -310,9 +310,7 @@ function prepareReportJs () {
             }
 
             canvas.on("wheel", function (e) {
-                if (e.ctrlKey == true) {
-                    onZoomWheel(e);
-                }
+                onZoomWheel(e);
             });
 
             canvas.dblclick(function (e) {
