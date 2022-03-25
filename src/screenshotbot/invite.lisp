@@ -78,7 +78,7 @@
 
     <div class= "card-footer">
       <input type= "submit" class= "btn btn-primary form-control"
-             value= "invite" />
+             value= "Invite" />
     </div>
 
   </simple-card-page>)
