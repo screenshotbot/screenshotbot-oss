@@ -25,7 +25,7 @@
                :util/phabricator
                :hunchensocket
                :dexador
-               :opticl
+               :pngload
                :anaphora
                :dag
                #-screenshotbot-oss

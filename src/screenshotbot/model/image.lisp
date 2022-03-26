@@ -190,18 +190,6 @@
        tmp image-file))))
 
 
-(defun call-with-opticl-image (img body)
-  ;; todo: can we clean up the image immediately? In theory, if we use
-  ;; static vectors and call pngload:wit-png-in-static-vector, this
-  ;; will free the memory immediately, but only on SBCL and CCL.
-  (with-local-image (file img)
-    (let ((png (pngload:load-file file)))
-     (funcall body (pngload:data png)))))
-
-(defmacro with-opticl-image ((output img) &body body)
-  `(let ((body (lambda (,output) ,@body)))
-     (call-with-opticl-image ,img body)))
-
 (defun find-unequal-pixels (img1 img2)
   (let ((res (make-array 0 :adjustable t
                            :fill-pointer t)))
