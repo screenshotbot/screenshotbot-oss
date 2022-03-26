@@ -34,42 +34,78 @@
     (ensure-directories-exist dir)
     dir))
 
-(defun handle-resized-image (image size &key warmup)
-  (let* ((size (cond
-                 ((string-equal "small" size) "300x300")
-                 ((string-equal "half-page" size) "600x600")
-                 ((string-equal "full-page" size) "2000x2000")
-                 ((string-equal "tiny" size) "5x5") ;; for testing only
-                 (t (error "invalid image size: ~a" size))))
-         (output-file
+(defun build-resized-image (image size &key (type :webp))
+  (flet ((output-file (type)
            (make-pathname
-            :type "png"
+            :type type
             :defaults (cache-dir)
             :name (format nil "~a-~a" (oid image) size))))
-    (flet ((finish ()
-             (cond
-               (warmup
-                output-file)
-               (t
-                (handle-static-file output-file)))))
-      (cond
-       ((uiop:file-exists-p output-file)
-        (finish))
-       (t
+   (ecase type
+     (:png
+      (warn "Requesting a png")
+      (log:info "whatever")
+      (let ((webp (build-resized-image
+                   image size
+                   :type :webp))
+            (png (output-file "png")))
         (with-hash-lock-held ((list image size) *image-resize-lock*)
-          (unless (uiop:file-exists-p output-file)
-            (with-local-image (input image)
-              (uiop:with-staging-pathname (output-file)
-                (run-magick
-                 (list "convert" input
-                       "-limit" "memory" "3MB"
-                       "-limit" "disk" "500MB"
-                       "-resize"
-                       (format nil "~a>" size)
-                       output-file))))))
-        (finish))))))
+          (unless (uiop:file-exists-p png)
+           (uiop:with-staging-pathname (png)
+             (run-magick
+              (list "convert"
+                    "-limit" "memory" "3MB"
+                    "-limit" "disk" "500MB"
+                    webp png)))))
+        png))
+     (:webp
+      (let* ((size (cond
+                     ((string-equal "small" size) "300x300")
+                     ((string-equal "half-page" size) "600x600")
+                     ((string-equal "full-page" size) "2000x2000")
+                     ((string-equal "tiny" size) "5x5") ;; for testing only
+                     (t (error "invalid image size: ~a" size))))
+             (output-file (output-file "webp")))
+        (log:info "output file is :~a" output-file)
+        (flet ((finish ()
+                 output-file))
+          (cond
+            ((uiop:file-exists-p output-file)
+             (finish))
+            (t
+             (with-hash-lock-held ((list image size) *image-resize-lock*)
+               (unless (uiop:file-exists-p output-file)
+                 (with-local-image (input image)
+                   (uiop:with-staging-pathname (output-file)
+                     (run-magick
+                      (list "convert" input
+                            "-limit" "memory" "3MB"
+                            "-limit" "disk" "500MB"
+                            "-resize"
+                            (format nil "~a>" size)
+                            output-file))))))
+             (finish)))))))))
 
-(defhandler (image-blob-get :uri "/image/blob/:oid/default.png") (oid size)
+(defun webp-supported-p (user-agent accept)
+  (or
+   (str:containsp "image/webp" accept)
+   (str:starts-with-p "curl" user-agent)))
+
+(defun handle-resized-image (image size &key warmup)
+  (cond
+    (warmup
+     (build-resized-image image size))
+    (t
+     (let ((output-file (build-resized-image
+                         image size
+                         (if (webp-supported-p
+                              (hunchentoot:header-in* :user-agent)
+                              (hunchentoot:header-in* :accept))
+                             :webp :png))))
+       (handle-static-file
+        output-file
+        (format nil "image/~a" (pathname-type output-file)))))))
+
+(defhandler (image-blob-get :uri "/image/blob/:oid/default.webp") (oid size)
   (let* ((image (find-by-oid oid)))
     (setf (hunchentoot:header-out :content-type) "image/png")
 

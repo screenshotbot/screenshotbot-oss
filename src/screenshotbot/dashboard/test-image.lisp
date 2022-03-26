@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/image
+                #:build-resized-image
                 #:handle-resized-image)
   (:import-from #:screenshotbot/model
                 #:image-blob)
@@ -25,27 +26,31 @@
 
 (util/fiveam:def-suite)
 
-(test handle-resized-image-warmup-happy-path
+(def-fixture state ()
   (with-test-store ()
-   (tmpdir:with-tmpdir (util/store:*object-store*)
-     (let ((objs))
-       (flet ((save (x)
-                (push x objs)
-                x))
-         (unwind-protect
-              (let* ((im1 (asdf:system-relative-pathname
-                           :screenshotbot
-                           "dashboard/fixture/image.png"))
-                     (im-blob (save (make-instance 'image-blob)))
-                     (im (save (make-instance 'image
-                                               :blob im-blob))))
-                (uiop:copy-file im1 (blob-pathname im-blob))
-                (is (uiop:file-exists-p im1))
-                (let ((output-file (handle-resized-image im :tiny :warmup t)))
-                  (unwind-protect
-                       (is (equal output-file
-                                  (handle-resized-image im :tiny :warmup t)))
-                    (uiop:file-exists-p output-file)
-                    (delete-file output-file))))
-           (loop for x in objs do
-             (delete-object x))))))))
+    (tmpdir:with-tmpdir (util/store:*object-store*)
+      (let* ((im1 (asdf:system-relative-pathname
+                :screenshotbot
+                "dashboard/fixture/image.png"))
+          (im-blob (make-instance 'image-blob))
+          (im (make-instance 'image
+                              :blob im-blob)))
+        (uiop:copy-file im1 (blob-pathname im-blob))
+        (&body)))))
+
+(test handle-resized-image-warmup-happy-path
+  (with-fixture state ()
+    (is (uiop:file-exists-p im1))
+    (let ((output-file (handle-resized-image im :tiny :warmup t)))
+      (unwind-protect
+           (progn
+             (is (equal "webp" (pathname-type output-file)))
+             (is (equal output-file
+                        (handle-resized-image im :tiny :warmup t))))
+        (uiop:file-exists-p output-file)))))
+
+(test build-resized-image-for-png
+  (with-fixture state ()
+    (let ((output-file (build-resized-image im :tiny :type :png)))
+      (is (equal "png" (pathname-type output-file)))
+      (build-resized-image im :tiny :type :png))))
