@@ -498,8 +498,10 @@ different)"
 
 (defmethod image-dimensions (image)
   (with-local-image (file image)
-    (let ((png (pngload:load-file file
-                                  :decode nil)))
-      (make-instance 'dimension
-                      :height (pngload:height png)
-                      :width (pngload:width png)))))
+    (let ((res (run-magick
+                (list "identify" "-format" "%w %h" file)
+                :output 'string)))
+      (destructuring-bind (width height) (str:split " " res)
+        (make-instance 'dimension
+                        :width (parse-integer width)
+                        :height (parse-integer height))))))
