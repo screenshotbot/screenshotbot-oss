@@ -10,7 +10,6 @@
                "cl-cron"
                #+ (or ccl lispworks)
                "jvm"
-               "trivial-shell"
                "bordeaux-threads"
                "bknr.datastore"
                "hunchentoot-multi-acceptor")
