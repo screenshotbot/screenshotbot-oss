@@ -373,11 +373,11 @@ different)"
 
 (defun map-unequal-pixels-on-file (file1 file2 fn &key masks)
   (flet ((make-image-stream (file)
-           (let ((png (pngload:load-file  file1 :decode nil)))
+           (let ((dim (image-file-dimensions  file1)))
              (make-instance 'image-magick-stream
                              :file file
-                             :width (pngload:width png)
-                             :height (pngload:height png)))))
+                             :width (dimension-width dim)
+                             :height (dimension-height dim)))))
     (let ((stream1 (make-image-stream file1))
           (stream2 (make-image-stream file2)))
       (unwind-protect
@@ -498,10 +498,13 @@ different)"
 
 (defmethod image-dimensions (image)
   (with-local-image (file image)
-    (let ((res (run-magick
-                (list "identify" "-format" "%w %h" file)
-                :output 'string)))
-      (destructuring-bind (width height) (str:split " " res)
-        (make-instance 'dimension
-                        :width (parse-integer width)
-                        :height (parse-integer height))))))
+    (image-file-dimensions file)))
+
+(defun image-file-dimensions (file)
+  (let ((res (run-magick
+              (list "identify" "-format" "%w %h" file)
+              :output 'string)))
+    (destructuring-bind (width height) (str:split " " res)
+      (make-instance 'dimension
+                      :width (parse-integer width)
+                      :height (parse-integer height)))))
