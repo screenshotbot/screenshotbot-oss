@@ -60,7 +60,9 @@
                  (list "convert"
                        "-limit" "memory" "3MB"
                        "-limit" "disk" "500MB"
-                       webp png)))))
+                       webp
+                       "-strip"
+                       png)))))
           png))
        (:webp
         (let* ((output-file (output-file "webp")))
@@ -78,6 +80,7 @@
                             "-limit" "disk" "500MB"
                             "-resize"
                             (format nil "~a>" size)
+                            "-strip"
                             output-file))))))
              output-file))))))))
 
