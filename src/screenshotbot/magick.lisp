@@ -50,6 +50,12 @@
      (cons :dummy
            (magick-prefix-uncached))))))
 
+(defun default-limits ()
+  (list
+   "-limit" "memory" "3MB"
+   "-limit" "map" "3MB"
+   "-limit" "disk" "1000MB"))
+
 (defun run-magick (command &rest args &key (error-output t) (output t)
                                         (ignore-error-status nil)
                                         (async nil))
@@ -60,6 +66,9 @@
                               collect (namestring str)
                             else
                               collect str))
+             (command `(,(car command)
+                        ,@(default-limits)
+                        ,@(cdr command)))
              (command (append (magick-prefix) command)))
 
         (flet ((run ()

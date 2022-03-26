@@ -330,9 +330,6 @@ If the images are identical, we return t, else we return NIL."
     (with-local-image (after after-image)
       (let ((cmd (list
                   "compare"
-                  "-limit" "memory" "3MB"
-                  "-limit" "map" "3MB"
-                  "-limit" "disk" "1000MB"
                   "-metric" "RMSE"
                   (namestring before)
                   (namestring after)

@@ -58,8 +58,6 @@
               (uiop:with-staging-pathname (png)
                 (run-magick
                  (list "convert"
-                       "-limit" "memory" "3MB"
-                       "-limit" "disk" "500MB"
                        webp
                        "-strip"
                        png)))))
@@ -76,8 +74,6 @@
                    (uiop:with-staging-pathname (output-file)
                      (run-magick
                       (list "convert" input
-                            "-limit" "memory" "3MB"
-                            "-limit" "disk" "500MB"
                             "-resize"
                             (format nil "~a>" size)
                             "-strip"
