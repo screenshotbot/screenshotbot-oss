@@ -55,7 +55,7 @@
 
 
 (test image-public-url
-  (is (equal "/image/blob/bar/default.png" (util:make-url 'image-blob-get :oid "bar"))))
+  (is (equal "/image/blob/bar/default.webp" (util:make-url 'image-blob-get :oid "bar"))))
 
 (test map-unequal-pixels
   (flet ((unequal-pixels (im1 im2 &key masks)
