@@ -97,10 +97,10 @@
     (t
      (let ((output-file (build-resized-image
                          image size
-                         (if (webp-supported-p
-                              (hunchentoot:header-in* :user-agent)
-                              (hunchentoot:header-in* :accept))
-                             :webp :png))))
+                         :type (if (webp-supported-p
+                                    (hunchentoot:header-in* :user-agent)
+                                    (hunchentoot:header-in* :accept))
+                                   :webp :png))))
        (handle-static-file
         output-file
         (format nil "image/~a" (pathname-type output-file)))))))
