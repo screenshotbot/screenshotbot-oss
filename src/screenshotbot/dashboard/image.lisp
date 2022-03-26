@@ -34,43 +34,39 @@
     (ensure-directories-exist dir)
     dir))
 
-(defun build-resized-image (image size &key (type :webp))
-  (flet ((output-file (type)
-           (make-pathname
-            :type type
-            :defaults (cache-dir)
-            :name (format nil "~a-~a" (oid image) size))))
-   (ecase type
-     (:png
-      (warn "Requesting a png")
-      (log:info "whatever")
-      (let ((webp (build-resized-image
-                   image size
-                   :type :webp))
-            (png (output-file "png")))
-        (with-hash-lock-held ((list image size) *image-resize-lock*)
-          (unless (uiop:file-exists-p png)
-           (uiop:with-staging-pathname (png)
-             (run-magick
-              (list "convert"
-                    "-limit" "memory" "3MB"
-                    "-limit" "disk" "500MB"
-                    webp png)))))
-        png))
-     (:webp
-      (let* ((size (cond
-                     ((string-equal "small" size) "300x300")
-                     ((string-equal "half-page" size) "600x600")
-                     ((string-equal "full-page" size) "2000x2000")
-                     ((string-equal "tiny" size) "5x5") ;; for testing only
-                     (t (error "invalid image size: ~a" size))))
-             (output-file (output-file "webp")))
-        (log:info "output file is :~a" output-file)
-        (flet ((finish ()
-                 output-file))
+(defun build-resized-image (image size-name &key (type :webp))
+  (let ((size (cond
+                ((string-equal "small" size-name) "300x300")
+                ((string-equal "half-page" size-name) "600x600")
+                ((string-equal "full-page" size-name) "2000x2000")
+                ((string-equal "tiny" size-name) "5x5") ;; for testing only
+                (t (error "invalid image size: ~a" size-name)))))
+   (flet ((output-file (type)
+            (make-pathname
+             :type type
+             :defaults (cache-dir)
+             :name (format nil "~a-~a" (oid image) size))))
+     (ecase type
+       (:png
+        (warn "Requesting a png")
+        (let ((webp (build-resized-image
+                     image size-name
+                     :type :webp))
+              (png (output-file "png")))
+          (with-hash-lock-held ((list image size) *image-resize-lock*)
+            (unless (uiop:file-exists-p png)
+              (uiop:with-staging-pathname (png)
+                (run-magick
+                 (list "convert"
+                       "-limit" "memory" "3MB"
+                       "-limit" "disk" "500MB"
+                       webp png)))))
+          png))
+       (:webp
+        (let* ((output-file (output-file "webp")))
           (cond
             ((uiop:file-exists-p output-file)
-             (finish))
+             output-file)
             (t
              (with-hash-lock-held ((list image size) *image-resize-lock*)
                (unless (uiop:file-exists-p output-file)
@@ -83,7 +79,7 @@
                             "-resize"
                             (format nil "~a>" size)
                             output-file))))))
-             (finish)))))))))
+             output-file))))))))
 
 (defun webp-supported-p (user-agent accept)
   (or
