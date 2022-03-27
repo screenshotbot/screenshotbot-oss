@@ -5,12 +5,18 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/magick-lw
-  (:use #:cl)
+  (:use #:cl
+        #:screenshotbot/magick)
+  (:import-from #:screenshotbot/magick
+                #:abstract-magick)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:compare-images
    #:compare-image-files))
 (in-package :screenshotbot/magick-lw)
+
+(defclass magick-native (abstract-magick)
+  ())
 
 (fli:register-module :magicd-wand :real-name "libMagickWand-7.Q8.so")
 
@@ -81,7 +87,9 @@
          (eql difference 0.0)
       (destroy-magick-wand output))))
 
-(defmethod compare-image-files (file1 file2)
+(defmethod compare-image-files ((magick magick-native) file1 file2)
   (with-wand (wand1 file1)
     (with-wand (wand2  file2)
       (compare-images wand1 wand2))))
+
+(setf *magick* (make-instance 'magick-native))

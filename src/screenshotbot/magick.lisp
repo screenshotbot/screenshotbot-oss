@@ -5,14 +5,25 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (uiop:define-package :screenshotbot/magick
-  (:use #:cl
-        #+lispworks
-        #:screenshotbot/magick-lw)
+  (:use #:cl)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:run-magick
-   #:compare-image-files))
+   #:compare-image-files
+   #:magick
+   #:*magick*))
 (in-package :screenshotbot/magick)
+
+(defclass abstract-magick ()
+  ())
+
+(defclass magick-cli (abstract-magick)
+  ())
+
+(defvar *magick* (make-instance 'magick-cli))
+
+(defun magick ()
+  *magick*)
 
 (defvar *semaphore* (bt:make-semaphore
                      :name "magick"
@@ -61,7 +72,8 @@
 
 (defun run-magick (command &rest args &key (error-output t) (output t)
                                         (ignore-error-status nil)
-                                        (async nil))
+                                        (async nil)
+                                        (lock t))
   "Wrapper for magick commands, in the future we might run this in-process"
   (restart-case
       (let* ((command (loop for str in command
@@ -74,15 +86,20 @@
                         ,@(cdr command)))
              (command (append (magick-prefix) command)))
 
-        (flet ((run ()
-                 (call-with-semaphore
-                  *semaphore*
-                  (lambda ()
-                    (uiop:run-program
-                     command
-                     :output output
-                     :error-output error-output
-                     :ignore-error-status ignore-error-status)))))
+        (labels ((actually-run ()
+                   (uiop:run-program
+                    command
+                    :output output
+                    :error-output error-output
+                    :ignore-error-status ignore-error-status))
+                 (run ()
+                   (cond
+                     (lock
+                      (call-with-semaphore
+                       *semaphore*
+                       #'actually-run))
+                     (t
+                      (actually-run)))))
           (cond
             (async
              ;; this is the streaming functionality. In this case we
@@ -107,8 +124,7 @@
       (apply #'run-magick command args))))
 
 
-#-lispworks
-(defun compare-image-files (file1 file2)
+(defmethod compare-image-files ((magick magick-cli) file1 file2)
   (multiple-value-bind (out err ret)
       (run-magick
        (list "compare" "-metric" "RMSE" file1 file2 "null:")
@@ -118,8 +134,7 @@
     (and (= 0 ret)
          (string= "0 (0)" (str:trim err)))))
 
-#+lispworks
-(defmethod compare-image-files :around (file1 file2)
+(defmethod compare-image-files :around ((magick abstract-magick) file1 file2)
   (call-with-semaphore
    *semaphore*
    (lambda ()

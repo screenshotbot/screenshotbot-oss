@@ -31,6 +31,7 @@
                 #:store-object
                 #:persistent-class)
   (:import-from #:screenshotbot/magick
+                #:magick
                 #:run-magick)
   (:import-from #:bknr.indices
                 #:unique-index)
@@ -219,6 +220,7 @@ coordinate, and the width and height of the comparison (which might be
 different from the actual image sizes if the image sizes are
 different)"
   (declare (optimize (speed 3) (safety 0)))
+
   (let ((bad-pixels)
         (length 0)
         (max-length 10000)
@@ -429,7 +431,7 @@ different)"
   (log:info "Comparing images with magick: ~a ~a" img1 img2)
   (with-local-image (file1 img1)
     (with-local-image (file2 img2)
-      (compare-image-files file1 file2))))
+      (compare-image-files (magick) file1 file2))))
 
 (defun images-equal-by-content-p (img1 img2 &key masks)
   (with-hash-lock-held (img1 *content-equal-hash-lock*)
