@@ -18,6 +18,7 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:screenshotbot/model/image
+                #:slow-image-comparison
                 #:image-format
                 #:dimension-width
                 #:dimension-height
@@ -53,6 +54,39 @@
     (is-true (image= img img-copy nil))
     (is-false (image= img img2 nil))
     (is-true (image= img img2 (list rect)))))
+
+(test image-comparison-is-cached ()
+  (with-fixture state ()
+    (let ((got-signal nil))
+     (handler-bind ((slow-image-comparison
+                      (lambda (e)
+                        (setf got-signal t))))
+       (is-true (image= img img2 (list rect)))
+       (is-true got-signal)))
+    (handler-bind ((slow-image-comparison
+                    (lambda (e)
+                      (fail "Should not get slow-image-comparison"))))
+      (is-true (image= img img2 (list rect))))))
+
+(test image-comparison-is-cached-for-unequal ()
+  (with-fixture state ()
+    (let ((img (make-magick-test-image "rose:"))
+          (img2 (make-magick-test-image "wizard:")))
+      (let ((got-signal nil))
+        (handler-bind ((slow-image-comparison
+                         (lambda (e)
+                           (setf got-signal t))))
+          (is-false (image= img img2 (list rect)))
+          (is-true got-signal)))
+      (handler-bind ((slow-image-comparison
+                       (lambda (e)
+                         (fail "Should not get slow-image-comparison"))))
+        (is-false (image= img img2 (list rect)))))))
+
+(defun make-magick-test-image (name)
+  (uiop:with-temporary-file (:pathname p :type "webp")
+    (run-magick (list "convert" name "-strip" p))
+    (make-test-image p)))
 
 (defun make-test-image (pathname)
   (let* ((blob (make-instance 'image-blob))

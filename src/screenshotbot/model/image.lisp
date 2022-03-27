@@ -31,6 +31,15 @@
                 #:persistent-class)
   (:import-from #:screenshotbot/magick
                 #:run-magick)
+  (:import-from #:bknr.indices
+                #:unique-index)
+  (:import-from #:bknr.indices
+                #:hash-index)
+  (:import-from #:util/hash-lock
+                #:with-hash-lock-held
+                #:hash-lock)
+  (:import-from #:bknr.datastore
+                #:store-object-id)
   ;; classes
   (:export
    #:image
@@ -110,6 +119,9 @@
    (content-type :initarg :content-type
                  :reader image-content-type))
   (:metaclass persistent-class))
+
+(defmethod print-object ((self image) stream)
+  (format stream "#<IMAGE ~a>" (store-object-id self)))
 
 (defclass mask-rect (store-object)
   ((top :initarg :top
@@ -235,7 +247,6 @@ different)"
    (<= (mask-rect-left mask)
        j
        (+ (mask-rect-left mask) (mask-rect-width mask) -1))))
-
 
 (defclass image-stream ()
   ((width :initarg :width
@@ -389,23 +400,74 @@ different)"
         (cleanup-image-stream stream1)
         (cleanup-image-stream stream2)))))
 
+(defclass content-equal-result (store-object)
+  ((image-1 :initarg :image-1
+            :index-type hash-index
+            :index-reader content-equal-results-for-image-1)
+   (image-2 :initarg :image-2
+            :reader image-2)
+   (masks :initarg :masks
+          :reader masks)
+   (result :initarg :result
+           :reader result))
+  (:metaclass persistent-class)
+  (:documentation "Comparing two images by content can be slow. This
+  caches the result of such comparisons."))
+
+(defvar *content-equal-hash-lock* (make-instance 'hash-lock))
+
+(define-condition slow-image-comparison ()
+  ())
+
+(defun images-equal-by-magick (img1 img2)
+  "Use ImageMagick to check if the two images have identical contents"
+  (log:info "Comparing images with magick: ~a ~a" img1 img2)
+  (with-local-image (file1 img1)
+    (with-local-image (file2 img2)
+     (multiple-value-bind (out err ret)
+         (run-magick (list "compare" "-metric" "RMSE"
+                           file1 file2
+                           "null:")
+                     :error-output 'string
+                     :ignore-error-status t)
+       (declare (ignore out))
+       (and (= ret 0)
+            (equal "0 (0)" (str:trim err)))))))
 
 (defun images-equal-by-content-p (img1 img2 &key masks)
-  (log:info "checking images by content: ~s, ~s" img1 img2)
-  (let ((resp t))
-    (map-unequal-pixels img1 img2
-                        (lambda (i j)
-                          (declare (optimize (speed 3)
-                                             (safety 0)))
-                          (declare (ignore i j))
-                          (Setf resp nil))
-                        :masks masks)
-    resp))
+  (with-hash-lock-held (img1 *content-equal-hash-lock*)
+    (let ((existing-results (content-equal-results-for-image-1 img1)))
+      (log:info "existing results: ~S" existing-results)
+      (loop for result in existing-results
+            if (and (eql img2 (image-2 result))
+                    (equal masks (masks result)))
+              do (return (result result))
+            finally
+               (return
+                (cond
+                  ((null masks)
+                   (images-equal-by-magick img1 img2))
+                  (t
+                   (let ((resp t))
+                     (log:info "[slow-path] checking images ~s, ~s with masks ~s" img1 img2 masks)
+                     (signal 'slow-image-comparison)
+                     (map-unequal-pixels img1 img2
+                                         (lambda (i j)
+                                           (declare (optimize (speed 3)
+                                                              (safety 0)))
+                                           (declare (ignore i j))
+                                           (Setf resp nil))
+                                         :masks masks)
+                     (make-instance 'content-equal-result
+                                     :image-1 img1
+                                     :image-2 img2
+                                     :masks masks
+                                     :result resp)
+                     resp))))))))
 
 (defun image= (img1 img2 masks)
   "Check if the two images have the same contents. Looks at both file
   hash and image contents"
-  (log:info "checking images ~s, ~s" img1 img2)
   (or
    (string= (image-hash img1)
             (image-hash img2))
