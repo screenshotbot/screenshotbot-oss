@@ -414,6 +414,10 @@ different)"
   (:documentation "Comparing two images by content can be slow. This
   caches the result of such comparisons."))
 
+(defun clear-content-equal-results ()
+  (mapc #'bknr.datastore:delete-object
+          (bknr.datastore:store-objects-with-class 'content-equal-result)))
+
 (defvar *content-equal-hash-lock* (make-instance 'hash-lock))
 
 (define-condition slow-image-comparison ()
