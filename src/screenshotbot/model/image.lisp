@@ -62,7 +62,8 @@
    #:image-dimensions
    #:dimension
    #:dimension-height
-   #:dimension-width))
+   #:dimension-width
+   #:image-format))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -508,3 +509,13 @@ different)"
       (make-instance 'dimension
                       :width (parse-integer width)
                       :height (parse-integer height)))))
+
+(defun image-format (image)
+  "Get the image format of the file. This looks at the magic in the
+file content to determine the file type, not the pathname's
+type. Example output could be either \"PNG\" or \"WEBP\"."
+  (with-local-image (file image)
+    (str:trim
+     (run-magick
+      (list "identify" "-format" "%m" file)
+      :output 'string))))

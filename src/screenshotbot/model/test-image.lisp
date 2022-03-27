@@ -18,6 +18,7 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:screenshotbot/model/image
+                #:image-format
                 #:dimension-width
                 #:dimension-height
                 #:dimension
@@ -118,3 +119,13 @@
         (is (typep dimension 'dimension))
         (is (eql 360 (dimension-height dimension)))
         (is (eql 360 (dimension-width  dimension)))))))
+
+(test image-format
+  (with-fixture state ()
+    (is (equal "PNG" (image-format img)))
+    (uiop:with-temporary-file (:pathname webp :type "webp")
+      (run-magick (list "convert" "rose:" webp))
+      (let* ((blob (make-instance 'image-blob))
+             (image (make-instance 'image :blob blob)))
+        (uiop:copy-file webp (blob-pathname blob))
+        (is (equal "WEBP" (image-format image)))))))
