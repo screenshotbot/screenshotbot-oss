@@ -521,7 +521,30 @@ different)"
 file content to determine the file type, not the pathname's
 type. Example output could be either \"PNG\" or \"WEBP\"."
   (with-local-image (file image)
-    (str:trim
-     (run-magick
-      (list "identify" "-format" "%m" file)
-      :output 'string))))
+    ;; Calling into imagemagick is slow, so we implement our own logic
+    ;; to look into the file's magick bytes
+    (with-open-file (stream file :direction :input
+                                 :element-type '(unsigned-byte 8))
+
+
+      (let ((words (loop for i below 3
+                         collect (make-array 4 :element-type '(unsigned-byte 8)))))
+        (loop for word in words do
+          (read-sequence word stream))
+        (cond
+          ((and (equalp #(#x89 #x50 #x4E #x47)
+                        (elt words 0))
+                (equalp #(#x0D #x0A #x1A #x0A)
+                        (elt words 1)))
+           "PNG")
+          ((and (equalp #(#x52 #x49 #x46 #x46)
+                        (elt words 0))
+                (equalp #(#x57 #x45 #x42 #x50)
+                        (elt words 2)))
+           "WEBP")
+          (t
+           (warning "Unidentified image format with magic: ~s" words)
+           (str:trim
+            (run-magick
+             (list "identify" "-format" "%m" file)
+             :output 'string))))))))
