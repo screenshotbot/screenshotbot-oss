@@ -54,6 +54,32 @@
     (is-false (image= img img2 nil))
     (is-true (image= img img2 (list rect)))))
 
+(defun make-test-image (pathname)
+  (let* ((blob (make-instance 'image-blob))
+         (hash (ironclad:byte-array-to-hex-string (md5:md5sum-file pathname)))
+         (image (make-instance 'image
+                                :blob blob
+                                :hash hash)))
+    (uiop:copy-file pathname (blob-pathname blob))
+    image))
+
+(test image-comparison-with-different-file-types
+  (with-fixture state ()
+    (uiop:with-temporary-file (:pathname png :type "png")
+      (run-magick (list "convert" "rose:" png))
+      (uiop:with-temporary-file (:pathname webp :type "webp")
+        (run-magick (list "convert" "rose:" "-define" "webp:lossless=true" webp))
+        (is-true (image=
+                  (make-test-image png)
+                  (make-test-image webp)
+                  nil)))
+      (uiop:with-temporary-file (:pathname webp :type "webp")
+        (run-magick (list "convert" "wizard:" "-define" "webp:lossless=true" webp))
+        (is-false (image=
+                  (make-test-image png)
+                  (make-test-image webp)
+                  nil))))))
+
 
 (test image-public-url
   (is (equal "/image/blob/bar/default.webp" (util:make-url 'image-blob-get :oid "bar"))))

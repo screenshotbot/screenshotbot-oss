@@ -391,7 +391,7 @@ different)"
 
 
 (defun images-equal-by-content-p (img1 img2 &key masks)
-  (log:info :image "checking images by content: ~s, ~s" img1 img2)
+  (log:info "checking images by content: ~s, ~s" img1 img2)
   (let ((resp t))
     (map-unequal-pixels img1 img2
                         (lambda (i j)
@@ -411,8 +411,14 @@ different)"
             (image-hash img2))
    ;; if the hash's don't match, check the perceptual hash. This is
    ;; slow, so make sure we're only doing this if absolutely required
-   (when masks
-    (images-equal-by-content-p img1 img2 :masks masks))))
+   (when (or masks
+             ;; A clever hack for allowing us to migrate from PNG to
+             ;; WEBP without the user ever noticing. As long as the
+             ;; PNG and the WEBP images are both lossless, they should
+             ;; result in identical images.
+             (not (string= (image-format img1)
+                           (image-format img2))))
+     (images-equal-by-content-p img1 img2 :masks masks))))
 
 (defun push-image-to-company-cache (image company)
   (push image (gethash (image-hash image) (image-cache company))))
