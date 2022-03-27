@@ -46,6 +46,8 @@
    (:file "analytics" :depends-on ("ignore-and-log-errors"))
    (:file "plugin")
    (:file "mailer")
+   #+lispworks
+   (:file "magick-lw")
    (:file "magick")
    (:file "installation")
    (:file "server" :depends-on ("analytics"))
@@ -202,6 +204,8 @@
                (:file "test-server")
                (:file "test-diff-report")
                (:file "test-mailer")
+               #+lispworks
+               (:file "test-magick-lw")
                (:file "test-installation")
                (:file "test-assets")
                (:file "test-template")

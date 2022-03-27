@@ -4,11 +4,14 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/magick
-  (:use #:cl)
+(uiop:define-package :screenshotbot/magick
+  (:use #:cl
+        #+lispworks
+        #:screenshotbot/magick-lw)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:run-magick))
+   #:run-magick
+   #:compare-image-files))
 (in-package :screenshotbot/magick)
 
 (defvar *semaphore* (bt:make-semaphore
@@ -102,3 +105,22 @@
              (run)))))
     (retry-run-magick ()
       (apply #'run-magick command args))))
+
+
+#-lispworks
+(defun compare-image-files (file1 file2)
+  (multiple-value-bind (out err ret)
+      (run-magick
+       (list "compare" "-metric" "RMSE" file1 file2 "null:")
+       :error-output 'string
+       :ignore-error-status t)
+    (declare (ignore out))
+    (and (= 0 ret)
+         (string= "0 (0)" (str:trim err)))))
+
+#+lispworks
+(defmethod compare-image-files :around (file1 file2)
+  (call-with-semaphore
+   *semaphore*
+   (lambda ()
+     (call-next-method))))
