@@ -63,7 +63,12 @@
      (file (:reference :ef-mb-string)))
   :result-type :boolean)
 
+(fli:define-foreign-function (magick-get-resource-limit "MagickGetResourceLimit")
+    ((op :int))
+  :result-type :uint64)
 
+
+(defvar +area-resource+ 1)
 
 (fli:define-foreign-function (magick-strip-image "MagickStripImage")
     ((wand (:pointer wand)))
