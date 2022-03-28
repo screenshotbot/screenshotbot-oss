@@ -8,6 +8,7 @@
   (:use #:cl
         #:screenshotbot/magick)
   (:import-from #:screenshotbot/magick
+                #:*magick*
                 #:abstract-magick)
   (:local-nicknames (#:a #:alexandria))
   (:export
@@ -47,6 +48,17 @@
    (output (:reference-return :double)))
   :result-type (:pointer wand))
 
+(fli:define-foreign-function (magick-set-option "MagickSetOption")
+    ((wand (:pointer wand))
+     (name (:reference :ef-mb-string))
+     (value (:reference :ef-mb-string)))
+  :result-type :boolean)
+
+(fli:define-foreign-function (magick-write-image "MagickWriteImage")
+    ((wand (:pointer wand))
+     (file (:reference :ef-mb-string)))
+  :result-type :boolean)
+
 ;; Look at compare.h in MagickCore
 (defvar +root-mean-squared-error-metric+ 10)
 
@@ -69,12 +81,21 @@
 
 (defun call-with-wand (file fn)
   (init-magick-wand)
+
+  (cond
+    ((or (stringp file)
+         (pathnamep file))
+     (call-with-wand (make-file-wand file) fn))
+    (t
+     (let ((wand file))
+      (unwind-protect
+           (funcall fn wand)
+        (destroy-magick-wand wand))))))
+
+(defun make-file-wand (file)
   (let ((wand (new-magick-wand)))
-    (unwind-protect
-         (progn
-           (magick-read-image wand (namestring file))
-           (funcall fn wand))
-      (destroy-magick-wand wand))))
+    (magick-read-image wand (namestring file))
+    wand))
 
 (defun compare-images (wand1 wand2)
   (multiple-value-bind (output difference)
@@ -85,11 +106,21 @@
        0.0)
     (unwind-protect
          (eql difference 0.0)
-      (destroy-magick-wand output))))
+      (unless (fli:null-pointer-p output)
+       (destroy-magick-wand output)))))
 
 (defmethod compare-image-files ((magick magick-native) file1 file2)
   (with-wand (wand1 file1)
     (with-wand (wand2  file2)
       (compare-images wand1 wand2))))
+
+
+(defmacro check-boolean (x)
+  `(assert ,x))
+
+(defmethod convert-to-lossless-webp ((self magick-native) input output)
+  (with-wand (wand input)
+    (check-boolean (magick-set-option wand "webp:lossless" "true"))
+    (check-boolean (magick-write-image wand (namestring output)))))
 
 (setf *magick* (make-instance 'magick-native))

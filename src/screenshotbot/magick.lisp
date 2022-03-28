@@ -11,7 +11,8 @@
    #:run-magick
    #:compare-image-files
    #:magick
-   #:*magick*))
+   #:*magick*
+   #:convert-to-lossless-webp))
 (in-package :screenshotbot/magick)
 
 (defclass abstract-magick ()
@@ -129,12 +130,27 @@
       (run-magick
        (list "compare" "-metric" "RMSE" file1 file2 "null:")
        :error-output 'string
-       :ignore-error-status t)
+       :ignore-error-status t
+       :lock nil)
     (declare (ignore out))
     (and (= 0 ret)
          (string= "0 (0)" (str:trim err)))))
 
 (defmethod compare-image-files :around ((magick abstract-magick) file1 file2)
+  (call-with-semaphore
+   *semaphore*
+   (lambda ()
+     (call-next-method))))
+
+
+(defmethod convert-to-lossless-webp ((magick magick-cli) file1 output)
+  (run-magick
+   (list
+    "convert" file1 "-strip" "-define" "webp:lossless=true" output)
+   :lock nil))
+
+(defmethod convert-to-lossless-webp ((magick abstract-magick) file1 output)
+  (assert (equal "webp" (pathname-type output)))
   (call-with-semaphore
    *semaphore*
    (lambda ()

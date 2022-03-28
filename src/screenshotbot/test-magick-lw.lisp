@@ -9,7 +9,10 @@
         #:fiveam)
   (:import-from #:screenshotbot/magick-lw
                 #:with-wand
-                #:compare-images)
+                #:compare-images
+                #:magick-native)
+  (:import-from #:screenshotbot/magick
+                #:convert-to-lossless-webp)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-magick-lw)
 
@@ -39,3 +42,13 @@
     (with-wand (wand1 rose)
       (with-wand (wand2 rose-webp)
         (is-true (compare-images wand1 wand2))))))
+
+(test convert-to-webp
+  (with-fixture state ()
+    (uiop:with-temporary-file (:pathname out :type "webp")
+      (convert-to-lossless-webp
+       (make-instance 'magick-native)
+       rose out)
+      (with-wand (rose1 rose)
+        (with-wand (out1 out)
+          (is-true (compare-images rose1 out1)))))))
