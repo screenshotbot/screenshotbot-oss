@@ -8,11 +8,18 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/magick-lw
+                #:magick-exception-message
+                #:magick-read-image
+                #:new-magick-wand
+                #:make-file-wand
+                #:magick-exception
                 #:with-wand
                 #:compare-images
                 #:magick-native)
   (:import-from #:screenshotbot/magick
                 #:convert-to-lossless-webp)
+  (:import-from #:screenshotbot/magick-lw
+                #:check-boolean)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-magick-lw)
 
@@ -63,3 +70,15 @@
                                   rose out2)
         (is (equalp (md5:md5sum-file out)
                     (md5:md5sum-file out2)))))))
+
+(test raises-magick-exception
+  (with-fixture state ()
+    (uiop:with-temporary-file (:pathname p)
+      (with-wand (wand (new-magick-wand))
+        (handler-case
+            (let ((code (magick-read-image wand (namestring p))))
+              (check-boolean code wand)
+              (fail "Excepted exception"))
+          (magick-exception (e)
+            (is (str:containsp "decode delegate for"
+                               (magick-exception-message e)))))))))

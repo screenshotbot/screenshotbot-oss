@@ -13,7 +13,9 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:compare-images
-   #:compare-image-files))
+   #:compare-image-files
+   #:magick-exception
+   #:magick-exception-message))
 (in-package :screenshotbot/magick-lw)
 
 (defclass magick-native (abstract-magick)
@@ -65,6 +67,10 @@
      (file (:reference :ef-mb-string)))
   :result-type :boolean)
 
+(fli:define-foreign-function (magick-clear-exception "MagickClearException")
+    ((wand (:pointer wand)))
+  :result-type :boolean)
+
 (fli:define-c-enum resource-type
   UndefinedResource
   AreaResource
@@ -78,6 +84,84 @@
   TimeResource
   WidthResource
   ListLengthResource)
+
+(fli:define-c-enum exception-type
+    UndefinedException
+  (  ResourceLimitWarning 300)
+  (  WarningException 300)
+  (  TypeWarning 305)
+  (  OptionWarning 310)
+  (  DelegateWarning 315)
+  (  MissingDelegateWarning 320)
+  (  CorruptImageWarning 325)
+  (  FileOpenWarning 330)
+  (  BlobWarning 335)
+  (  StreamWarning 340)
+  (  CacheWarning 345)
+  (  CoderWarning 350)
+  (  FilterWarning 352)
+  (  ModuleWarning 355)
+  (  DrawWarning 360)
+  (  ImageWarning 365)
+  (  WandWarning 370)
+  (  RandomWarning 375)
+  (  XServerWarning 380)
+  (  MonitorWarning 385)
+  (  RegistryWarning 390)
+  (  ConfigureWarning 395)
+  (  PolicyWarning 399)
+  (  ErrorException 400)
+  (  ResourceLimitError 400)
+  (  TypeError 405)
+  (  OptionError 410)
+  (  DelegateError 415)
+  (  MissingDelegateError 420)
+  (  CorruptImageError 425)
+  (  FileOpenError 430)
+  (  BlobError 435)
+  (  StreamError 440)
+  (  CacheError 445)
+  (  CoderError 450)
+  (  FilterError 452)
+  (  ModuleError 455)
+  (  DrawError 460)
+  (  ImageError 465)
+  (  WandError 470)
+  (  RandomError 475)
+  (  XServerError 480)
+  (  MonitorError 485)
+  (  RegistryError 490)
+  (  ConfigureError 495)
+  (  PolicyError 499)
+  (  FatalErrorException 700)
+  (  ResourceLimitFatalError 700)
+  (  TypeFatalError 705)
+  (  OptionFatalError 710)
+  (  DelegateFatalError 715)
+  (  MissingDelegateFatalError 720)
+  (  CorruptImageFatalError 725)
+  (  FileOpenFatalError 730)
+  (  BlobFatalError 735)
+  (  StreamFatalError 740)
+  (  CacheFatalError 745)
+  (  CoderFatalError 750)
+  (  FilterFatalError 752)
+  (  ModuleFatalError 755)
+  (  DrawFatalError 760)
+  (  ImageFatalError 765)
+  (  WandFatalError 770)
+  (  RandomFatalError 775)
+  (  XServerFatalError 780)
+  (  MonitorFatalError 785)
+  (  RegistryFatalError 790)
+  (  ConfigureFatalError 795)
+  (  PolicyFatalError 799 ))
+
+(fli:define-foreign-function (magick-get-exception "MagickGetException")
+    ((wand (:pointer wand))
+     (exception-type (:reference-return exception-type)))
+  :result-type (:pointer :char))
+
 
 (fli:define-foreign-function (magick-get-resource-limit "MagickGetResourceLimit")
     ((op resource-type))
@@ -113,11 +197,33 @@
     (update-resource-limits)
     (setf *magick-wand-inited* t)))
 
-(defmacro check-boolean (x)
-  `(assert ,x))
+(define-condition magick-exception (error)
+  ((expression :initarg :expression)
+   (message :initarg :message
+            :reader magick-exception-message)))
+
+(defmethod print-object ((self magick-exception) out)
+  (with-slots (message) self
+   (format out "Magick exception: ~a" message)))
+
+(defmacro check-boolean (x &optional wand)
+  (let ((wand-sym (gensym "wand")))
+    `(let ((,wand-sym ,wand))
+       (unless ,x
+         (when ,wand-sym
+           (raise-magick-exception ,wand-sym ',x))))))
+
+(defun raise-magick-exception (wand expression)
+  (multiple-value-bind (message type)
+      (magick-get-exception wand 'UndefinedException)
+    (declare (ignore type))
+    (error 'magick-exception
+            :expression expression
+            :message (fli:convert-from-foreign-string message)))
+  (magick-clear-exception wand))
 
 (defun update-resource-limits ()
-  (loop for (name value) in `((AreaResource 30000)
+  (loop for (name value) in `((AreaResource 3000000)
                               (DiskResource ,(* 1000 1024 1024))
                               (WidthResource 1000000)
                               (HeightResource 1000000)
@@ -141,19 +247,23 @@
   (cond
     ((or (stringp file)
          (pathnamep file))
-     (call-with-wand (make-file-wand file) fn))
+     (call-with-wand
+      (make-file-wand file) fn))
     (t
      (let ((wand file))
       (unwind-protect
            (funcall fn wand)
-        (destroy-magick-wand wand))))))
+        (unless (fli:null-pointer-p wand)
+         (destroy-magick-wand wand)))))))
 
 (defun make-file-wand (file)
   (let ((wand (new-magick-wand)))
-    (magick-read-image wand (namestring file))
+    (check-boolean (magick-read-image wand (namestring file)))
     wand))
 
 (defun compare-images (wand1 wand2)
+  (assert (not (fli:null-pointer-p wand1)))
+  (assert (not (fli:null-pointer-p wand2)))
   (multiple-value-bind (output difference)
       (magick-compare-images
        wand1
