@@ -52,3 +52,14 @@
       (with-wand (rose1 rose)
         (with-wand (out1 out)
           (is-true (compare-images rose1 out1)))))))
+
+(test ensure-convert-to-webp-is-deterministic
+  (with-fixture state ()
+    (uiop:with-temporary-file (:pathname out :type "webp")
+      (convert-to-lossless-webp (make-instance 'magick-native)
+                                rose out)
+      (uiop:with-temporary-file (:pathname out2 :type "webp")
+        (convert-to-lossless-webp (make-instance 'magick-native)
+                                  rose out2)
+        (is (equalp (md5:md5sum-file out)
+                    (md5:md5sum-file out2)))))))

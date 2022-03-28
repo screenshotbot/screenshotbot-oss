@@ -59,6 +59,10 @@
      (file (:reference :ef-mb-string)))
   :result-type :boolean)
 
+(fli:define-foreign-function (magick-strip-image "MagickStripImage")
+    ((wand (:pointer wand)))
+  :result-type :boolean)
+
 ;; Look at compare.h in MagickCore
 (defvar +root-mean-squared-error-metric+ 10)
 
@@ -121,6 +125,7 @@
 (defmethod convert-to-lossless-webp ((self magick-native) input output)
   (with-wand (wand input)
     (check-boolean (magick-set-option wand "webp:lossless" "true"))
+    (check-boolean (magick-strip-image wand))
     (check-boolean (magick-write-image wand (namestring output)))))
 
 (setf *magick* (make-instance 'magick-native))
