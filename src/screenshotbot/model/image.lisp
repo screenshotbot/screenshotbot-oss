@@ -42,6 +42,10 @@
                 #:hash-lock)
   (:import-from #:bknr.datastore
                 #:store-object-id)
+  (:import-from #:bknr.datastore
+                #:blob-pathname)
+  (:import-from #:auto-restart
+                #:with-auto-restart)
   ;; classes
   (:export
    #:image
@@ -583,7 +587,8 @@ different)"
 (defun image-format (image)
   "Get the image format of the file. This looks at the magic in the
 file content to determine the file type, not the pathname's
-type. Example output could be either \"PNG\" or \"WEBP\"."
+type. Example output could be either \"PNG\" or \"WEBP\". If we can't
+recognized the file, we'll return nil."
   (with-local-image (file image)
     ;; Calling into imagemagick is slow, so we implement our own logic
     ;; to look into the file's magick bytes
@@ -595,6 +600,7 @@ type. Example output could be either \"PNG\" or \"WEBP\"."
                          collect (make-array 4 :element-type '(unsigned-byte 8)))))
         (loop for word in words do
           (read-sequence word stream))
+
         (cond
           ((and (equalp #(#x89 #x50 #x4E #x47)
                         (elt words 0))
@@ -608,7 +614,47 @@ type. Example output could be either \"PNG\" or \"WEBP\"."
            "WEBP")
           (t
            (warn "Unidentified image format with magic: ~s" words)
-           (str:trim
-            (run-magick
-             (list "identify" "-format" "%m" file)
-             :output 'string))))))))
+           (ignore-errors
+            (str:trim
+             (run-magick
+              (list "identify" "-format" "%m" file)
+              :output 'string)))))))))
+
+
+(defun convert-all-images-to-webp ()
+  "Converts all the images to lossless webp, while maintaining the
+  original hashes. This way, any jobs referencing the old hashes will
+  still not send a new image, and we can recover a lot of disk
+  space."
+  (loop for image in (bknr.datastore:store-objects-with-class 'image)
+        for i from 0
+        do
+           (log:info "Converting image: ~a / ~a" i image)
+           (restart-case
+               (convert-image-to-webp image)
+             (ignore-image ()
+               (values)))))
+
+(with-auto-restart ()
+ (defun convert-image-to-webp (image)
+   (let ((blob (image-blob image)))
+     (typecase blob
+       (image-blob
+        (when (and
+               (uiop:file-exists-p (blob-pathname blob))
+               (string= "PNG" (image-format image)))
+          (flet ((%rename-file (from to)
+                   (log:info "Renaming file from ~a to ~a" from to)
+                   (rename-file from to)))
+            (let ((path (make-pathname :type :unspecific
+                                       :defaults (blob-pathname blob))))
+              (log:info "will switch blob: ~a" path)
+              (let ((tmp (make-pathname :type "webp"
+                                        :defaults path))
+                    (png (make-pathname :type "png"
+                                        :defaults path)))
+                (convert-to-lossless-webp
+                 (magick)
+                 path tmp)
+                (uiop:rename-file-overwriting-target tmp path)
+                (assert (uiop:file-exists-p path)))))))))))

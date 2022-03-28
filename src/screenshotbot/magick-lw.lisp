@@ -28,6 +28,10 @@
     ()
   :result-type :int)
 
+(fli:define-foreign-function (magick-wand-terminus "MagickWandTerminus")
+    ()
+  :result-type :int)
+
 (fli:define-foreign-function (new-magick-wand "NewMagickWand")
     ()
   :result-type (:pointer wand))
@@ -59,6 +63,8 @@
      (file (:reference :ef-mb-string)))
   :result-type :boolean)
 
+
+
 (fli:define-foreign-function (magick-strip-image "MagickStripImage")
     ((wand (:pointer wand)))
   :result-type :boolean)
@@ -74,10 +80,18 @@
 (defun init-magick-wand ()
   (unless *magick-wand-inited*
     (setf (uiop:getenv "MAGICK_MEMORY_LIMIT") (mb 30))
+    (setf (uiop:getenv "MAGICK_HEIGHT_LIMIT") "1000000")
+    (setf (uiop:getenv "MAGICK_WIDTH_LIMIT") "1000000")
+    (setf (uiop:getenv "MAGICK_LIST_LENGTH_LIMIT") (format nil "~a" (* 4000 40000)))
     (setf (uiop:getenv "MAGICK_MAP_LIMIT") (mb 200))
     (setf (uiop:getenv "MAGICK_DISK_LIMIT") (mb 1000))
     (setf *magick-wand-inited* t)
     (magick-wand-genesis)))
+
+(defun end-magick-wand ()
+  (progn
+    (magick-wand-terminus)
+    (setf *magick-wand-inited* nil)))
 
 (defmacro with-wand ((wand file) &body body)
   `(call-with-wand
