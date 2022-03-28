@@ -176,6 +176,9 @@
      (limit magick-size-type))
   :result-type :boolean)
 
+(fli:define-foreign-function (magick-get-image-height "MagickGetImageHeight")
+    ((wand (:pointer wand)))
+  :result-type :size-t)
 
 (defvar +area-resource+ 1)
 
@@ -206,12 +209,15 @@
   (with-slots (message) self
    (format out "Magick exception: ~a" message)))
 
-(defmacro check-boolean (x &optional wand)
+(defmacro check-boolean (x wand)
   (let ((wand-sym (gensym "wand")))
     `(let ((,wand-sym ,wand))
        (unless ,x
-         (when ,wand-sym
-           (raise-magick-exception ,wand-sym ',x))))))
+         (cond
+           (,wand-sym
+            (raise-magick-exception ,wand-sym ',x))
+           (t
+            (error "expression failed")))))))
 
 (defun raise-magick-exception (wand expression)
   (multiple-value-bind (message type)
@@ -225,12 +231,13 @@
 (defun update-resource-limits ()
   (loop for (name value) in `((AreaResource 3000000)
                               (DiskResource ,(* 1000 1024 1024))
-                              (WidthResource 1000000)
-                              (HeightResource 1000000)
-                              (ListLengthResource ,(* 1000 1024  1024))
+                              (WidthResource 10000)
+                              (HeightResource 40000)
+                              (ListLengthResource ,(* 10000 1024  1024))
                               (MemoryResource ,(* 200 1024 1024)))
         do
-           (check-boolean (magick-set-resource-limit name value))))
+           (check-boolean (magick-set-resource-limit name value)
+                          nil)))
 
 (defun end-magick-wand ()
   (progn
@@ -258,7 +265,7 @@
 
 (defun make-file-wand (file)
   (let ((wand (new-magick-wand)))
-    (check-boolean (magick-read-image wand (namestring file)))
+    (check-boolean (magick-read-image wand (namestring file)) wand)
     wand))
 
 (defun compare-images (wand1 wand2)
@@ -284,8 +291,8 @@
 
 (defmethod convert-to-lossless-webp ((self magick-native) input output)
   (with-wand (wand input)
-    (check-boolean (magick-set-option wand "webp:lossless" "true"))
-    (check-boolean (magick-strip-image wand))
-    (check-boolean (magick-write-image wand (namestring output)))))
+    (check-boolean (magick-set-option wand "webp:lossless" "true") wand)
+    (check-boolean (magick-strip-image wand) wand)
+    (check-boolean (magick-write-image wand (namestring output)) wand)))
 
 (setf *magick* (make-instance 'magick-native))
