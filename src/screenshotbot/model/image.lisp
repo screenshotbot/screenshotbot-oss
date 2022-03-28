@@ -31,6 +31,7 @@
                 #:store-object
                 #:persistent-class)
   (:import-from #:screenshotbot/magick
+                #:ping-image-dimensions
                 #:magick
                 #:run-magick)
   (:import-from #:bknr.indices
@@ -78,7 +79,8 @@
    #:dimension
    #:dimension-height
    #:dimension-width
-   #:image-format))
+   #:image-format
+   #:ping-image-dimensions))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -576,13 +578,10 @@ different)"
     (image-file-dimensions file)))
 
 (defun image-file-dimensions (file)
-  (let ((res (run-magick
-              (list "identify" "-format" "%w %h" file)
-              :output 'string)))
-    (destructuring-bind (width height) (str:split " " res)
+  (destructuring-bind (width height) (ping-image-dimensions (magick) file)
       (make-instance 'dimension
-                      :width (parse-integer width)
-                      :height (parse-integer height)))))
+                      :width width
+                      :height height)))
 
 (defun image-format (image)
   "Get the image format of the file. This looks at the magic in the

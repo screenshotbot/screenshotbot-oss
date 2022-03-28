@@ -11,7 +11,6 @@
                 #:magick-exception-message
                 #:magick-read-image
                 #:new-magick-wand
-                #:make-file-wand
                 #:magick-exception
                 #:with-wand
                 #:compare-images

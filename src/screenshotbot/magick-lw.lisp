@@ -49,6 +49,11 @@
      (filename (:reference-pass :ef-mb-string)))
   :result-type :boolean)
 
+(fli:define-foreign-function (magick-ping-image "MagickPingImage")
+    ((wand (:pointer wand))
+     (filename (:reference-pass :ef-mb-string)))
+  :result-type :boolean)
+
 (fli:define-foreign-function (magick-compare-images "MagickCompareImages" )
   ((wand (:pointer wand))
    (reference-wand (:pointer wand))
@@ -180,6 +185,10 @@
     ((wand (:pointer wand)))
   :result-type :size-t)
 
+(fli:define-foreign-function (magick-get-image-width "MagickGetImageWidth")
+    ((wand (:pointer wand)))
+  :result-type :size-t)
+
 (defvar +area-resource+ 1)
 
 (fli:define-foreign-function (magick-strip-image "MagickStripImage")
@@ -286,3 +295,12 @@
     (check-boolean (magick-write-image wand (namestring output)) wand)))
 
 (setf *magick* (make-instance 'magick-native))
+
+
+(defmethod ping-image-dimensions ((magick magick-native) file)
+  (with-wand (wand)
+    (check-boolean (magick-ping-image wand (namestring file))
+                   wand)
+    (list
+     (magick-get-image-width wand)
+     (magick-get-image-height wand))))
