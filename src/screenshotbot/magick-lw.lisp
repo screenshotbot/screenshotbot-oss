@@ -19,6 +19,8 @@
 (defclass magick-native (abstract-magick)
   ())
 
+(fli:define-c-typedef magick-size-type :uint64)
+
 (fli:register-module :magicd-wand :real-name "libMagickWand-7.Q8.so")
 
 (fli:define-c-struct wand
@@ -63,9 +65,32 @@
      (file (:reference :ef-mb-string)))
   :result-type :boolean)
 
+(fli:define-c-enum resource-type
+  UndefinedResource
+  AreaResource
+  DiskResource
+  FileResource
+  HeightResource
+  MapResource
+  MemoryResource
+  ThreadResource
+  ThrottleResource
+  TimeResource
+  WidthResource
+  ListLengthResource)
+
 (fli:define-foreign-function (magick-get-resource-limit "MagickGetResourceLimit")
-    ((op :int))
-  :result-type :uint64)
+    ((op resource-type))
+  :result-type magick-size-type)
+
+(fli:define-foreign-function (magick-get-resource "MagickGetResource")
+    ((op resource-type))
+  :result-type magick-size-type)
+
+(fli:define-foreign-function (magick-set-resource-limit "MagickSetResourceLimit")
+    ((op resource-type)
+     (limit magick-size-type))
+  :result-type :boolean)
 
 
 (defvar +area-resource+ 1)
@@ -84,14 +109,22 @@
 
 (defun init-magick-wand ()
   (unless *magick-wand-inited*
-    (setf (uiop:getenv "MAGICK_MEMORY_LIMIT") (mb 30))
-    (setf (uiop:getenv "MAGICK_HEIGHT_LIMIT") "1000000")
-    (setf (uiop:getenv "MAGICK_WIDTH_LIMIT") "1000000")
-    (setf (uiop:getenv "MAGICK_LIST_LENGTH_LIMIT") (format nil "~a" (* 4000 40000)))
-    (setf (uiop:getenv "MAGICK_MAP_LIMIT") (mb 200))
-    (setf (uiop:getenv "MAGICK_DISK_LIMIT") (mb 1000))
-    (setf *magick-wand-inited* t)
-    (magick-wand-genesis)))
+    (magick-wand-genesis)
+    (update-resource-limits)
+    (setf *magick-wand-inited* t)))
+
+(defmacro check-boolean (x)
+  `(assert ,x))
+
+(defun update-resource-limits ()
+  (loop for (name value) in `((AreaResource 30000)
+                              (DiskResource ,(* 1000 1024 1024))
+                              (WidthResource 1000000)
+                              (HeightResource 1000000)
+                              (ListLengthResource ,(* 1000 1024  1024))
+                              (MemoryResource ,(* 200 1024 1024)))
+        do
+           (check-boolean (magick-set-resource-limit name value))))
 
 (defun end-magick-wand ()
   (progn
@@ -138,8 +171,6 @@
       (compare-images wand1 wand2))))
 
 
-(defmacro check-boolean (x)
-  `(assert ,x))
 
 (defmethod convert-to-lossless-webp ((self magick-native) input output)
   (with-wand (wand input)
