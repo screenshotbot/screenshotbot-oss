@@ -35,19 +35,19 @@
 
 (test simple-file-load-save
   (with-fixture state ()
-   (with-wand (wand rose)
+   (with-wand (wand :file rose)
      (pass))))
 
 (test compare-nil
   (with-fixture state ()
-    (with-wand (wand1 rose)
-      (with-wand (wand2 wizard)
+    (with-wand (wand1 :file rose)
+      (with-wand (wand2 :file wizard)
         (is-false (compare-images wand1 wand2))))))
 
 (test compare-is-true
   (with-fixture state ()
-    (with-wand (wand1 rose)
-      (with-wand (wand2 rose-webp)
+    (with-wand (wand1 :file rose)
+      (with-wand (wand2 :file rose-webp)
         (is-true (compare-images wand1 wand2))))))
 
 (test convert-to-webp
@@ -56,8 +56,8 @@
       (convert-to-lossless-webp
        (make-instance 'magick-native)
        rose out)
-      (with-wand (rose1 rose)
-        (with-wand (out1 out)
+      (with-wand (rose1 :file rose)
+        (with-wand (out1 :file out)
           (is-true (compare-images rose1 out1)))))))
 
 (test ensure-convert-to-webp-is-deterministic
@@ -74,7 +74,7 @@
 (test raises-magick-exception
   (with-fixture state ()
     (uiop:with-temporary-file (:pathname p)
-      (with-wand (wand (new-magick-wand))
+      (with-wand (wand)
         (handler-case
             (let ((code (magick-read-image wand (namestring p))))
               (check-boolean code wand)

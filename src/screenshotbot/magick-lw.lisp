@@ -219,7 +219,7 @@
            (t
             (error "expression failed")))))))
 
-(defun raise-magick-exception (wand expression)
+(defun raise-magick-exception (wand &optional expression)
   (multiple-value-bind (message type)
       (magick-get-exception wand 'UndefinedException)
     (declare (ignore type))
@@ -244,29 +244,19 @@
     (magick-wand-terminus)
     (setf *magick-wand-inited* nil)))
 
-(defmacro with-wand ((wand file) &body body)
+(defmacro with-wand ((wand &key file) &body body)
   `(call-with-wand
     ,file (lambda (,wand) ,@body)))
 
 (defun call-with-wand (file fn)
   (init-magick-wand)
-
-  (cond
-    ((or (stringp file)
-         (pathnamep file))
-     (call-with-wand
-      (make-file-wand file) fn))
-    (t
-     (let ((wand file))
-      (unwind-protect
-           (funcall fn wand)
-        (unless (fli:null-pointer-p wand)
-         (destroy-magick-wand wand)))))))
-
-(defun make-file-wand (file)
   (let ((wand (new-magick-wand)))
-    (check-boolean (magick-read-image wand (namestring file)) wand)
-    wand))
+    (unwind-protect
+         (progn
+           (when file
+             (check-boolean (magick-read-image wand (namestring file)) wand))
+           (funcall fn wand))
+      (destroy-magick-wand wand))))
 
 (defun compare-images (wand1 wand2)
   (assert (not (fli:null-pointer-p wand1)))
@@ -283,14 +273,14 @@
        (destroy-magick-wand output)))))
 
 (defmethod compare-image-files ((magick magick-native) file1 file2)
-  (with-wand (wand1 file1)
-    (with-wand (wand2  file2)
+  (with-wand (wand1 :file file1)
+    (with-wand (wand2 :file file2)
       (compare-images wand1 wand2))))
 
 
 
 (defmethod convert-to-lossless-webp ((self magick-native) input output)
-  (with-wand (wand input)
+  (with-wand (wand :file input)
     (check-boolean (magick-set-option wand "webp:lossless" "true") wand)
     (check-boolean (magick-strip-image wand) wand)
     (check-boolean (magick-write-image wand (namestring output)) wand)))
