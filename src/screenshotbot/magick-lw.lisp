@@ -232,10 +232,10 @@
   (multiple-value-bind (message type)
       (magick-get-exception wand 'UndefinedException)
     (declare (ignore type))
+    (magick-clear-exception wand)
     (error 'magick-exception
             :expression expression
-            :message (fli:convert-from-foreign-string message)))
-  (magick-clear-exception wand))
+            :message (fli:convert-from-foreign-string message))))
 
 (defun update-resource-limits ()
   (loop for (name value) in `((AreaResource 3000000)
