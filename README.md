@@ -65,6 +65,11 @@ a few command line tools (`imagemagic` and `html2text`) that we use,
 and we'll automatically pull in an Common Lisp dependencies with
 Quicklisp.
 
+*Update March 2022: We now require ImageMagick 7.1 to be
+installed. Screenshotbot uses the native libraries instead of the
+imagemagick command line. See the Dockerfile for how you can install
+it from source, it can be a bit tricky to get right.*
+
 ### Launch
 
 Once you've picked your implementation, you can use the implementation
