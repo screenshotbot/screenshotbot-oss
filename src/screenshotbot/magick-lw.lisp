@@ -280,7 +280,7 @@
        +root-mean-squared-error-metric+
        0.0)
     (unwind-protect
-         (eql difference 0.0)
+         (= difference 0.0)
       (unless (fli:null-pointer-p output)
        (destroy-magick-wand output)))))
 
