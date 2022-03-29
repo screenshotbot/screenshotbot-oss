@@ -6,6 +6,8 @@
                :markup
                :gravatar
                :pkg
+               #-lispworks
+               :util/fake-fli
                :auth
                :jvm
                #-screenshotbot-oss
@@ -47,7 +49,6 @@
    (:file "plugin")
    (:file "mailer")
    (:file "magick")
-   #+lispworks
    (:file "magick-lw")
    (:file "installation")
    (:file "server" :depends-on ("analytics"))
@@ -204,7 +205,6 @@
                (:file "test-server")
                (:file "test-diff-report")
                (:file "test-mailer")
-               #+lispworks
                (:file "test-magick-lw")
                (:file "test-installation")
                (:file "test-assets")

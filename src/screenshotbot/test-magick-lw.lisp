@@ -71,13 +71,15 @@
                     (md5:md5sum-file out2)))))))
 
 (test raises-magick-exception
-  (with-fixture state ()
-    (uiop:with-temporary-file (:pathname p)
-      (with-wand (wand)
-        (handler-case
-            (let ((code (magick-read-image wand (namestring p))))
-              (check-boolean code wand)
-              (fail "Excepted exception"))
-          (magick-exception (e)
-            (is (str:containsp "decode delegate for"
-                               (magick-exception-message e)))))))))
+  (handler-bind ((error (lambda (e)
+                          (trivial-backtrace:print-backtrace e))))
+   (with-fixture state ()
+     (uiop:with-temporary-file (:pathname p)
+       (with-wand (wand)
+         (handler-case
+             (let ((code (magick-read-image wand (namestring p))))
+               (check-boolean code wand)
+               (fail "Excepted exception"))
+           (magick-exception (e)
+             (is (str:containsp "decode delegate for"
+                                (magick-exception-message e))))))))))

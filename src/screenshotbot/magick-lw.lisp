@@ -10,7 +10,9 @@
   (:import-from #:screenshotbot/magick
                 #:*magick*
                 #:abstract-magick)
-  (:local-nicknames (#:a #:alexandria))
+  (:local-nicknames (#:a #:alexandria)
+                    #-lispworks
+                    (#:fli #:util/fake-fli))
   (:export
    #:compare-images
    #:compare-image-files
@@ -229,6 +231,7 @@
             (error "expression failed")))))))
 
 (defun raise-magick-exception (wand &optional expression)
+  (declare (optimize (debug 3) (speed 0)))
   (multiple-value-bind (message type)
       (magick-get-exception wand 'UndefinedException)
     (declare (ignore type))

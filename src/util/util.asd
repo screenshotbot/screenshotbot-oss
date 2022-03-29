@@ -127,6 +127,11 @@
   :serial t
   :components ((:file "hash-lock")))
 
+(defsystem :util/fake-fli
+  :depends-on (:cffi)
+  :serial t
+  :components (#-lispworks (:file "fake-fli")))
+
 (defsystem :util/phabricator
   :depends-on (:dexador
                :alexandria
