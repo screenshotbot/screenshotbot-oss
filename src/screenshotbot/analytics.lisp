@@ -45,35 +45,26 @@
      (with-open-file (s *analytics-log-file*
                         :direction :output
                         :if-exists :append
+                        :element-type '(unsigned-byte 8)
                         :if-does-not-exist :create)
        (dolist (ev (reverse *events*))
          (when (consp (event-session ev))
            (setf (event-session ev) (car (event-session ev))))
          (setf (writtenp ev) t)
-         (json:encode-json ev s))
+         (cl-store:store ev s))
        (setf *events* nil)
        (finish-output s)))))
 
 (defun all-saved-analytics-events ()
   (with-open-file (s *analytics-log-file*
                      :direction :input
+                     :element-type '(unsigned-byte 8)
                      :if-does-not-exist :create)
     (nreverse
-     (loop for x = (handler-case
-                       (json:decode-json s)
-                     (end-of-file (e)
-                       nil))
+     (loop for x = (ignore-errors
+                    (cl-store:restore s))
            while x
-           collect
-           (flet ((f (field) (assoc-value x field)))
-             (make-instance 'analytics-event
-                             :ip-address (f :ip-address)
-                             :session (f :session)
-                             :writtenp (f :writtenp)
-                             :script-name (f :script-name)
-                             :ts (f :ts)
-                             :referrer (f :referrer)
-                             :user-agent (f :user-agent)))))))
+           collect x))))
 
 (defun all-analytics-events ()
   (append

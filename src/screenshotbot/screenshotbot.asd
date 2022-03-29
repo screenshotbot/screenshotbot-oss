@@ -5,6 +5,7 @@
   :depends-on (:util
                :markup
                :gravatar
+               :cl-store
                :pkg
                #-lispworks
                :util/fake-fli
