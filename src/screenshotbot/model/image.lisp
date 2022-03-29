@@ -47,6 +47,8 @@
                 #:blob-pathname)
   (:import-from #:auto-restart
                 #:with-auto-restart)
+  (:import-from #:screenshotbot/magick-lw
+                #:with-wand)
   ;; classes
   (:export
    #:image
@@ -227,24 +229,22 @@ different from the actual image sizes if the image sizes are
 different)"
   (declare (optimize (speed 3) (safety 0)))
 
-  (let ((bad-pixels)
-        (length 0)
-        (max-length 10000)
-        (height 0)
-        (width 0))
-   (flet ((%map-unequal-pixels (fn)
-            (map-unequal-pixels
-             img1 img2 fn :masks masks)))
-     (let ((num-bad 0))
-       (declare (type fixnum num-bad))
-       (%map-unequal-pixels
-        (lambda (i j)
-          (declare (optimize (speed 3) (safety 0) (debug 0)))
-          (when (< length max-length)
-            (incf length)
-            (push (cons i j) bad-pixels))))))
-    (let ((index (random length)))
-      (elt bad-pixels index))))
+  (with-local-file (file1 img1)
+    (with-local-file (file2 img2)
+      (with-wand (wand1 :file file1)
+        (with-wand (wand2 :file file2)
+          (draw-masks wand1 masks)
+          (draw-masks wand2 masks)
+          (with-wand (result :from (compare-images
+                                    wand1 wand2))
+            ;; Finally, we can walk through the image to find a
+            ;; non-alpha pixel.
+
+            ))))))
+
+
+(defun draw-masks (wand masks)
+  (assert (not masks)))
 
 (defun px-in-mask-p (i j mask)
   (declare (optimize (speed 3) (safety 0))

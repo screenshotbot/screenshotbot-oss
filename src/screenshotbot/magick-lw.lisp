@@ -12,18 +12,21 @@
                 #:abstract-magick)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
-                    (#:fli #:util/fake-fli))
+                    (#-lispworks #:fli #:util/fake-fli))
   (:export
    #:compare-images
    #:compare-image-files
    #:magick-exception
-   #:magick-exception-message))
+   #:magick-exception-message
+   #:map-non-alpha-pixels
+   #:get-non-alpha-pixels))
 (in-package :screenshotbot/magick-lw)
 
 (defclass magick-native (abstract-magick)
   ())
 
 (fli:define-c-typedef magick-size-type :uint64)
+(fli:define-c-typedef quantum :uint8)
 
 (fli:register-module :magicd-wand :real-name "libMagickWand-7.Q8.so")
 
@@ -164,6 +167,24 @@
   (  ConfigureFatalError 795)
   (  PolicyFatalError 799 ))
 
+(fli:define-c-enum alpha-channel-option
+    UndefinedAlphaChannel
+  ActivateAlphaChannel
+  AssociateAlphaChannel
+  BackgroundAlphaChannel
+  CopyAlphaChannel
+  DeactivateAlphaChannel
+  DiscreteAlphaChannel
+  DisassociateAlphaChannel
+  ExtractAlphaChannel
+  OffAlphaChannel
+  OnAlphaChannel
+  OpaqueAlphaChannel
+  RemoveAlphaChannel
+  SetAlphaChannel
+  ShapeAlphaChannel
+  TransparentAlphaChannel)
+
 (fli:define-foreign-function (magick-get-exception "MagickGetException")
     ((wand (:pointer wand))
      (exception-type (:reference-return exception-type)))
@@ -195,7 +216,16 @@
 
 (fli:define-foreign-function (magick-strip-image "MagickStripImage")
     ((wand (:pointer wand)))
-  :result-type :boolean)
+    :result-type :boolean)
+
+(fli:define-foreign-function (magick-get-image-alpha-channel "MagickGetImageAlphaChannel")
+    ((wand (:pointer wand)))
+    :result-type :boolean)
+
+(fli:define-foreign-function (magick-set-image-alpha-channel "MagickSetImageAlphaChannel")
+                             ((wand (:pointer wand))
+                              (alpha-channel-option alpha-channel-option))
+    :result-type :boolean)
 
 ;; Look at compare.h in MagickCore
 (defvar +root-mean-squared-error-metric+ 10)
@@ -256,17 +286,22 @@
     (magick-wand-terminus)
     (setf *magick-wand-inited* nil)))
 
-(defmacro with-wand ((wand &key file) &body body)
+(defmacro with-wand ((wand &key file from (alpha t)) &body body)
   `(call-with-wand
-    ,file (lambda (,wand) ,@body)))
+    ,file (lambda (,wand) ,@body)
+    :from ,from
+    :alpha ,alpha))
 
-(defun call-with-wand (file fn)
+(defun call-with-wand (file fn &key from alpha)
   (init-magick-wand)
-  (let ((wand (new-magick-wand)))
+  (let ((wand (or from (new-magick-wand))))
     (unwind-protect
          (progn
-           (when file
-             (check-boolean (magick-read-image wand (namestring file)) wand))
+             (when file
+               (check-boolean (magick-read-image wand (namestring file)) wand)
+               (when alpha
+                 (check-boolean (magick-set-image-alpha-channel wand 'OnAlphaChannel)
+                                wand)))
            (funcall fn wand))
       (destroy-magick-wand wand))))
 
@@ -307,3 +342,45 @@
     (list
      (magick-get-image-width wand)
      (magick-get-image-height wand))))
+
+
+
+(fli:define-c-struct pixel
+    (x :size-t)
+  (y :size-t))
+
+(fli:define-foreign-function screenshotbot-find-non-transparent-pixels
+     ((wand (:pointer wand))
+      (output (:pointer pixel))
+      (max :size-t))
+     :result-type :size-t)
+
+(fli:register-module :magick-native
+                     :real-name
+                     (asdf:output-file
+                       'asdf:compile-op
+                        (asdf:find-component :screenshotbot "magick-native")))
+
+;; (fli:disconnect-module :magick-native)
+
+
+(defun map-non-alpha-pixels (wand fn &key (limit 1000))
+  ;; for each pixel in wand that is not 100% transparent, call the
+  ;; function, upto LIMIT times.
+  (let ((pxs (get-non-alpha-pixels wand :limit limit)))
+    (loop for i below (car (array-dimensions pxs))
+          do (funcall fn (aref pxs i 0) (aref pxs i 1)))))
+
+(defun get-non-alpha-pixels (wand &key (limit 1000))
+  (when (magick-get-image-alpha-channel wand)
+    (fli:with-dynamic-foreign-objects
+        ((output pixel :nelems limit))
+      (let ((size (screenshotbot-find-non-transparent-pixels
+                   wand output limit)))
+        (let ((ret (make-array (list size 2))))
+         (loop for i below size
+               do
+                  (setf (aref ret i 0) (fli:foreign-slot-value output 'x))
+                  (setf (aref ret i 1) (fli:foreign-slot-value output 'y))
+                  (fli:incf-pointer output))
+          ret)))))

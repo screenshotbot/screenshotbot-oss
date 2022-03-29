@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/magick-lw
+                #:map-non-alpha-pixels
                 #:magick-exception-message
                 #:magick-read-image
                 #:new-magick-wand
@@ -29,7 +30,8 @@
   (tmpdir:with-tmpdir (tmpdir)
     (let ((rose (asdf:system-relative-pathname :screenshotbot "fixture/rose.png"))
           (rose-webp (asdf:system-relative-pathname :screenshotbot "fixture/rose.webp"))
-          (wizard (asdf:system-relative-pathname :screenshotbot "fixture/wizard.png")))
+          (wizard (asdf:system-relative-pathname :screenshotbot "fixture/wizard.png"))
+          (transparent (asdf:system-relative-pathname :screenshotbot "fixture/point.png")))
       (&body))))
 
 (test simple-file-load-save
@@ -71,15 +73,33 @@
                     (md5:md5sum-file out2)))))))
 
 (test raises-magick-exception
-  (handler-bind ((error (lambda (e)
-                          (trivial-backtrace:print-backtrace e))))
-   (with-fixture state ()
-     (uiop:with-temporary-file (:pathname p)
-       (with-wand (wand)
-         (handler-case
-             (let ((code (magick-read-image wand (namestring p))))
-               (check-boolean code wand)
-               (fail "Excepted exception"))
-           (magick-exception (e)
-             (is (str:containsp "decode delegate for"
-                                (magick-exception-message e))))))))))
+  (with-fixture state ()
+    (uiop:with-temporary-file (:pathname p)
+      (with-wand (wand)
+        (handler-case
+            (let ((code (magick-read-image wand (namestring p))))
+              (check-boolean code wand)
+              (fail "Excepted exception"))
+          (magick-exception (e)
+            (is (str:containsp "decode delegate for"
+                               (magick-exception-message e)))))))))
+
+
+(test find-first-non-transparent
+  (with-fixture state ()
+    (let ((transparent-pixel-for-null
+            (block top
+              (with-wand (wand :file transparent)
+                (map-non-alpha-pixels wand
+                                      (lambda (i j)
+                                        (return-from top (cons i j))))))))
+      (is
+       (equal (cons 20 30)
+              transparent-pixel-for-null)))
+    (is
+     (equal (cons 0 0)
+          (block top
+            (with-wand (wand :file rose)
+              (map-non-alpha-pixels wand
+                                    (lambda (i j)
+                                      (return-from top (cons i j))))))))))

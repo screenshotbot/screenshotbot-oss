@@ -1,3 +1,47 @@
+(defpackage :screenshotbot-system
+  (:use :cl
+   :asdf))
+
+(defclass lib-source-file (c-source-file)
+  ())
+
+(defparameter *library-file-dir*
+  (make-pathname :name nil :type nil
+                 :defaults *load-truename*))
+
+(defun default-foreign-library-type ()
+  "Returns string naming default library type for platform"
+  #+(or win32 win64 cygwin mswindows windows) "dll"
+  #+(or macosx darwin ccl-5.0) "dylib"
+  #-(or win32 win64 cygwin mswindows windows macosx darwin ccl-5.0) "so"
+)
+
+(defmethod output-files ((o compile-op) (c lib-source-file))
+  (let ((library-file-type
+          (default-foreign-library-type)))
+    (list (make-pathname :name (component-name c)
+                         :type library-file-type
+                         :defaults *library-file-dir*))))
+
+(defmethod perform ((o load-op) (c lib-source-file))
+  t)
+
+(defmethod perform ((o compile-op) (c lib-source-file))
+  (uiop:run-program (list "/usr/bin/gcc"
+                           "-shared"
+                          (namestring
+                           (merge-pathnames (format nil "~a.c" (component-name c))
+                                            *library-file-dir*))
+                          "-I" "/usr/local/include/ImageMagick-7/"
+                          "-D" "MAGICKCORE_QUANTUM_DEPTH=8"
+                          "-D" "MAGICKCORE_HDRI_ENABLE=0"
+                          "-Werror"
+                          "-Wall"
+                           "-lMagickWand-7.Q8"
+                          "-o" (namestring (car (output-files o c))))
+                    :output *standard-output*
+                    :error-output *error-output*))
+
 (defsystem :screenshotbot
   :serial t
   :author "Arnold Noronha <arnold@screenshotbot.io>"
@@ -50,6 +94,7 @@
    (:file "plugin")
    (:file "mailer")
    (:file "magick")
+   (lib-source-file "magick-native")
    (:file "magick-lw")
    (:file "installation")
    (:file "server" :depends-on ("analytics"))
