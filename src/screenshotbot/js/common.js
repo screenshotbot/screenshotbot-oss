@@ -86,6 +86,7 @@ function prepareReportJs () {
 
 
     function setupImageComparison() {
+        var modal = this;
         var img = $(".image-comparison-modal-image", this);
         var canvas = $("canvas.image-comparison-modal-image",this);
 
@@ -462,7 +463,8 @@ function prepareReportJs () {
 
         }
 
-        zoomToChange.click(function (e) {
+        zoomToChange.on("click", function (e) {
+            console.log("zoom to change clicked");
             // move the image out of the way
 
             if (!canvas.get(0)) {
@@ -492,6 +494,15 @@ function prepareReportJs () {
             });
 
             e.preventDefault();
+        });
+
+        $(modal).on("hide.bs.modal", function () {
+            zoomToChange.off("click");
+            canvas.off("wheel");
+            canvas.off("mousedown");
+            canvas.off("mousemove");
+            canvas.off("mouseup");
+            canvas.off("zoomToChange");
         });
 
     }
