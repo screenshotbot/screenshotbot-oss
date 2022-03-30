@@ -594,15 +594,7 @@ If the images are identical, we return t, else we return NIL."
     :content
     (let* ((s s)
            (x x)
-           (image-comparison-job
-             (make-instance 'image-comparison-job
-                             :before-image x
-                             :after-image s))
-           (compare-nibble (nibble ()
-                             (prepare-image-comparison
-                              image-comparison-job)))
-           (toggle-id (format nil "toggle-id-~a" next-id))
-           (modal-label (format nil "~a-modal-label" toggle-id)))
+           (toggle-id (format nil "toggle-id-~a" next-id)))
 
     <div class= "" >
       <div class= "screenshot-header" >
@@ -628,31 +620,43 @@ If the images are identical, we return t, else we return NIL."
       <change-image-row before-image=(image-public-url (screenshot-image x) :size :full-page)
                         after-image=(image-public-url (screenshot-image s) :size :full-page)
                         />
+      <comparison-modal before=x after=s toggle-id=toggle-id />
+    </div>))))
+  </div>)
 
-      <div class= "modal fade image-comparison-modal" id= toggle-id tabindex= "-1" role= "dialog"
-           aria-labelledby=modal-label
-           aria-hidden= "true" >
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id=modal-label >Image Comparison</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" />
-            </div>
-            <div class="modal-body">
-              <progress-img
-                src=compare-nibble
-                alt= "Image difference" />
-            </div>
-            <div class="modal-footer">
-              <zoom-to-change-button />
+(deftag comparison-modal (&key toggle-id before after)
+  (let* ((modal-label (format nil "~a-modal-label" toggle-id))
+         (image-comparison-job
+           (make-instance 'image-comparison-job
+                           :before-image before
+                           :after-image after))
+         (compare-nibble (nibble ()
+                           (prepare-image-comparison
+                            image-comparison-job))))
+    <div class= "modal fade image-comparison-modal" id= toggle-id tabindex= "-1" role= "dialog"
+         aria-labelledby=modal-label
+         aria-hidden= "true" >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id=modal-label >Image Comparison</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" />
+          </div>
+          <div class="modal-body">
+            <progress-img
+              src=compare-nibble
+              alt= "Image difference" />
+          </div>
+          <div class="modal-footer">
+            <zoom-to-change-button />
 
-              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
-            </div>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
-    </div>))))
-  </div>)
+    </div>))
+
+
 
 (deftag render-diff-report (&key run to
                             (lang-filter (make-instance 'row-filter :value t))
