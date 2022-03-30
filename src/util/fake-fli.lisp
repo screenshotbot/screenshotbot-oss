@@ -14,13 +14,16 @@
    #:define-foreign-function
    #:define-c-enum
    #:convert-from-foreign-string
-   #:null-pointer-p))
+   #:null-pointer-p
+   #:with-dynamic-foreign-objects
+   #:foreign-slot-value
+   #:incf-pointer))
 (in-package :util/fake-fli)
 
 (defun fix-type (x)
   (cond
     ((eql :size-t x)
-     :unsigned-int)
+     :uint64)
     ((not (listp x))
      x)
     ((equal '(:reference-pass :ef-mb-string) x)
@@ -37,30 +40,38 @@
   (declare (ignore name))
   (cffi:load-foreign-library real-name))
 
-(defmacro define-c-struct (name fields)
+(defmacro define-c-struct (name &rest fields)
   `(cffi:defcstruct ,name
-     ,fields))
+     ,@ (loop for (name type) in fields
+              collect (list name (fix-type type)))))
 
-(defmacro define-foreign-function ((name-var name) args &key result-type)
-  (multiple-value-bind (args reference-returns) (parse-reference-returns args)
-    (let ((cffi-name (intern (format nil "%~a-native" name))))
-      `(progn
-         (cffi:defcfun (,name ,cffi-name) ,(fix-type result-type)
-           ,@(loop for arg in args
-                   collect
-                   (destructuring-bind (name type) arg
-                     (list name (fix-type type)))))
-         (defun ,name-var (,@ (mapcar #'car args))
-           ,(wrap-reference-returns
-             reference-returns
-             (let ((returns (loop for x in reference-returns
-                                  collect
-                                  `(cffi:mem-ref ,(car x) ',(cadr (cadr x)))
-)))
-              `(let ((ret (,cffi-name ,@ (mapcar #'car args))))
-                 (values
-                  ret
-                  ,@ returns)))))))))
+(defmacro define-foreign-function (name args &key result-type)
+  (destructuring-bind (name-var name) (cond
+                                        ((symbolp name)
+                                         (list name (str:replace-all
+                                                     "-" "_"
+                                                     (str:downcase (string name)))))
+                                        (t
+                                         name))
+   (multiple-value-bind (args reference-returns) (parse-reference-returns args)
+     (let ((cffi-name (intern (format nil "%~a-native" name))))
+       `(progn
+          (cffi:defcfun (,name ,cffi-name) ,(fix-type result-type)
+            ,@(loop for arg in args
+                    collect
+                    (destructuring-bind (name type) arg
+                      (list name (fix-type type)))))
+          (defun ,name-var (,@ (mapcar #'car args))
+            ,(wrap-reference-returns
+              reference-returns
+              (let ((returns (loop for x in reference-returns
+                                   collect
+                                   `(cffi:mem-ref ,(car x) ',(cadr (cadr x)))
+                                   )))
+                `(let ((ret (,cffi-name ,@ (mapcar #'car args))))
+                   (values
+                    ret
+                    ,@ returns))))))))))
 
 (defun wrap-reference-returns (reference-returns content)
   (cond
@@ -99,3 +110,14 @@
 
 (defun null-pointer-p (x)
   (cffi:null-pointer-p x))
+
+
+(defmacro with-dynamic-foreign-objects (((output type &key nelems)) &body body)
+  `(cffi:with-foreign-object (,output ',type ,nelems)
+     ,@body))
+
+(defmacro foreign-slot-value (obj type slot)
+  `(cffi:foreign-slot-value ,obj ,type ,slot))
+
+(defun incf-pointer (pointer)
+  `(cffi:inc-pointer ,pointer))

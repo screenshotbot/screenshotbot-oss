@@ -86,20 +86,22 @@
 
 
 (test find-first-non-transparent
-  (with-fixture state ()
-    (let ((transparent-pixel-for-null
-            (block top
-              (with-wand (wand :file transparent)
-                (map-non-alpha-pixels wand
-                                      (lambda (i j)
-                                        (return-from top (cons i j))))))))
-      (is
-       (equal (cons 20 30)
-              transparent-pixel-for-null)))
-    (is
-     (equal (cons 0 0)
-          (block top
-            (with-wand (wand :file rose)
-              (map-non-alpha-pixels wand
-                                    (lambda (i j)
-                                      (return-from top (cons i j))))))))))
+  (handler-bind ((error (lambda (E)
+                          (trivial-backtrace:print-backtrace e))))
+   (with-fixture state ()
+     (let ((transparent-pixel-for-null
+             (block top
+               (with-wand (wand :file transparent)
+                 (map-non-alpha-pixels wand
+                                       (lambda (i j)
+                                         (return-from top (cons i j))))))))
+       (is
+        (equal (cons 20 30)
+               transparent-pixel-for-null)))
+     (is
+      (equal (cons 0 0)
+             (block top
+               (with-wand (wand :file rose)
+                 (map-non-alpha-pixels wand
+                                       (lambda (i j)
+                                         (return-from top (cons i j)))))))))))

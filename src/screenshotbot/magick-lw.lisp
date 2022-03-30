@@ -29,6 +29,11 @@
 (fli:define-c-typedef quantum :uint8)
 
 (fli:register-module :magicd-wand :real-name "libMagickWand-7.Q8.so")
+(fli:register-module :magick-native
+                     :real-name
+                     (asdf:output-file
+                       'asdf:compile-op
+                        (asdf:find-component :screenshotbot "magick-native")))
 
 (fli:define-c-struct wand
     (dummy :int))
@@ -349,17 +354,12 @@
     (x :size-t)
   (y :size-t))
 
+
 (fli:define-foreign-function screenshotbot-find-non-transparent-pixels
      ((wand (:pointer wand))
       (output (:pointer pixel))
       (max :size-t))
      :result-type :size-t)
-
-(fli:register-module :magick-native
-                     :real-name
-                     (asdf:output-file
-                       'asdf:compile-op
-                        (asdf:find-component :screenshotbot "magick-native")))
 
 ;; (fli:disconnect-module :magick-native)
 
@@ -372,6 +372,7 @@
           do (funcall fn (aref pxs i 0) (aref pxs i 1)))))
 
 (defun get-non-alpha-pixels (wand &key (limit 1000))
+  (declare (optimize (Debug 3) (speed 0)))
   (when (magick-get-image-alpha-channel wand)
     (fli:with-dynamic-foreign-objects
         ((output pixel :nelems limit))
@@ -380,7 +381,7 @@
         (let ((ret (make-array (list size 2))))
          (loop for i below size
                do
-                  (setf (aref ret i 0) (fli:foreign-slot-value output 'x))
-                  (setf (aref ret i 1) (fli:foreign-slot-value output 'y))
+                  (setf (aref ret i 0) (fli:foreign-slot-value output #-lispworks 'pixel 'x))
+                  (setf (aref ret i 1) (fli:foreign-slot-value output #-lispworks 'pixel 'y))
                   (fli:incf-pointer output))
           ret)))))

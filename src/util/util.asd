@@ -128,7 +128,8 @@
   :components ((:file "hash-lock")))
 
 (defsystem :util/fake-fli
-  :depends-on (:cffi)
+  :depends-on (:cffi
+               :str)
   :serial t
   :components (#-lispworks (:file "fake-fli")))
 
