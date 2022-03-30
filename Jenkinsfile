@@ -18,6 +18,10 @@ pipeline {
     agent any
 
     stages {
+        agent {
+            label "master-worker"
+        }
+
         stage ('Run tests on CCL'){
             steps {
                 doCheckout()
