@@ -136,6 +136,16 @@ function prepareReportJs () {
 
             var ctx = canvasEl.getContext('2d');
 
+            var drawTimeout = null;
+            function scheduleDraw() {
+                if (!drawTimeout) {
+                    drawTimeout = setTimeout(function () {
+                        drawTimeout = null;
+                        draw();
+                    }, 16);
+                }
+            }
+
             function draw() {
                 //fixMaxTranslation();
                 // x* = t + sx. x = (x* - t) / s
@@ -207,7 +217,7 @@ function prepareReportJs () {
                     zoomToChange.prop("disabled", false);
                     canvasEl.height = image.height;
                     canvasEl.width = image.width;
-                    draw();
+                    scheduleDraw();
                 }
             }
 
@@ -237,7 +247,7 @@ function prepareReportJs () {
                     if (isDragging) {
                         translate.x = pos.x - dragStart.x + dragStart.translateX;
                         translate.y = pos.y - dragStart.y + dragStart.translateY;
-                        draw();
+                        scheduleDraw();
                     }
                 }
 
@@ -307,7 +317,7 @@ function prepareReportJs () {
                     y: canvasPos.y - (zoom/zoom0) * (canvasPos.y - translate.y)
                 }
 
-                draw();
+                scheduleDraw();
                 e.preventDefault();
 
             }
@@ -337,7 +347,7 @@ function prepareReportJs () {
                             }
 
                             zoom = (1-progress)*oldZoom + progress * newZoom;
-                            draw();
+                            scheduleDraw();
                         },
                 });
             }
