@@ -13,7 +13,8 @@
    #:magick
    #:*magick*
    #:convert-to-lossless-webp
-   #:ping-image-dimensions))
+   #:ping-image-dimensions
+   #:with-magick-gatekeeper))
 (in-package :screenshotbot/magick)
 
 (defclass abstract-magick ()
@@ -137,11 +138,15 @@
     (and (= 0 ret)
          (string= "0 (0)" (str:trim err)))))
 
+(defmacro with-magick-gatekeeper (()  &body body)
+  `(call-with-semaphore
+    *semaphore*
+    (lambda ()
+      ,@body)))
+
 (defmethod compare-image-files :around ((magick abstract-magick) file1 file2)
-  (call-with-semaphore
-   *semaphore*
-   (lambda ()
-     (call-next-method))))
+  (with-magick-gatekeeper ()
+    (call-next-method)))
 
 
 (defmethod convert-to-lossless-webp ((magick magick-cli) file1 output)
@@ -152,14 +157,12 @@
 
 (defmethod convert-to-lossless-webp ((magick abstract-magick) file1 output)
   (assert (equal "webp" (pathname-type output)))
-  (call-with-semaphore
-   *semaphore*
-   (lambda ()
-     (call-next-method))))
+  (with-magick-gatekeeper ()
+    (call-next-method)))
 
 (defmethod ping-image-dimensions ((magick magick-cli) file)
   (let ((res (run-magick
               (list "identify" "-format" "%w %h" file)
               :output 'string)))
     (mapcar #'parse-integer
-     (str:split " " res))))
+              (str:split " " res))))

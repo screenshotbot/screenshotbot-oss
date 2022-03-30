@@ -8,6 +8,7 @@
   (:use #:cl
         #:screenshotbot/magick)
   (:import-from #:screenshotbot/magick
+                #:with-magick-gatekeeper
                 #:*magick*
                 #:abstract-magick)
   (:local-nicknames (#:a #:alexandria)
@@ -373,15 +374,16 @@
 
 (defun get-non-alpha-pixels (wand &key (limit 1000))
   (declare (optimize (Debug 3) (speed 0)))
-  (when (magick-get-image-alpha-channel wand)
-    (fli:with-dynamic-foreign-objects
-        ((output pixel :nelems limit))
-      (let ((size (screenshotbot-find-non-transparent-pixels
-                   wand output limit)))
-        (let ((ret (make-array (list size 2))))
-         (loop for i below size
-               do
-                  (setf (aref ret i 0) (fli:foreign-slot-value output #-lispworks 'pixel 'x))
-                  (setf (aref ret i 1) (fli:foreign-slot-value output #-lispworks 'pixel 'y))
-                  (fli:incf-pointer output))
-          ret)))))
+  (with-magick-gatekeeper ()
+   (when (magick-get-image-alpha-channel wand)
+     (fli:with-dynamic-foreign-objects
+         ((output pixel :nelems limit))
+       (let ((size (screenshotbot-find-non-transparent-pixels
+                    wand output limit)))
+         (let ((ret (make-array (list size 2))))
+           (loop for i below size
+                 do
+                    (setf (aref ret i 0) (fli:foreign-slot-value output #-lispworks 'pixel 'x))
+                    (setf (aref ret i 1) (fli:foreign-slot-value output #-lispworks 'pixel 'y))
+                    (fli:incf-pointer output))
+           ret))))))

@@ -39,6 +39,8 @@
                 #:reports-for-run)
   (:import-from #:screenshotbot/report-api
                 #:report-title)
+  (:import-from #:screenshotbot/model/image
+                #:image-dimensions)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -105,6 +107,17 @@
            (trivial-file-size:file-size-in-octets file)))
    1024))
 
+(defun num-screenshots-above-16k-dim (run)
+  "Get the number of screenshots that have a dimension above 16k. This
+  is the limit imposed by webp images."
+  (let ((+limit+ 16383))
+    (loop for screenshot in (recorder-run-screenshots run)
+          for dim = (image-dimensions screenshot)
+          if (or
+              (> (dimension-height dim) +limit+)
+              (> (dimension-width dim) +limit+))
+            summing 1)))
+
 (deftag advanced-run-page (&key run)
   (let ((repo (channel-repo (recorder-run-channel run))))
     <app-template>
@@ -121,6 +134,8 @@
         <li>Periodic job?: ,(if (periodic-job-p run) "true" "false")</li>
         <li>Number of screenshots: ,(length (recorder-run-screenshots run))</li>
         <li>Total run size: ,(run-size run)kB</li>
+
+        <li>Screenshots that are above 16k dimensions: ,(num-screenshots-above-16k-dim run) </li>
       </ul>
     </app-template>))
 
