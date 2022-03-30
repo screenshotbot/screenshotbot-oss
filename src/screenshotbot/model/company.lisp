@@ -30,7 +30,6 @@
    #:company-reports
    #:github-config
    #:access-token
-   #:image-cache
    #:company-invites
    #:company-channels
    #:jira-config-url
@@ -116,12 +115,7 @@
    (images
     :initarg :company-images
     :initform nil
-    :documentation "deprecated list of images. do not use.")
-   (image-cache
-    :initform (make-hash-table :test 'equal)
-    :accessor image-cache
-    :transient t
-    :documentation "Cache from image hash to list of all images"))
+    :documentation "deprecated list of images. do not use."))
   (:metaclass persistent-class))
 
 (let ((lock (bt:make-lock "jira-config")))
@@ -137,12 +131,6 @@
 
 (defmethod singletonp ((company company))
   (slot-boundp company 'singletonp))
-
-(defun migrate-images-to-image-cache (company)
-  (with-slots (images) company
-    (dolist (image images)
-      (with-transaction ()
-        (setf (company image) company)))))
 
 (defclass github-config (store-object)
   ((installation-id

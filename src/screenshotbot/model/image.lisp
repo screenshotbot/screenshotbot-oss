@@ -24,8 +24,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company
                 #:verified-p ;; todo: remove, will cause conflict
-                #:image-oid-cache
-                #:image-cache)
+                #:image-oid-cache)
   (:import-from #:bknr.datastore
                 #:with-transaction
                 #:store-object
@@ -501,15 +500,11 @@ different)"
                            (image-format img2))))
      (images-equal-by-content-p img1 img2 :masks masks))))
 
-(defun push-image-to-company-cache (image company)
-  (push image (gethash (image-hash image) (image-cache company))))
+;; Please delete in the future, only for a migration
+(defmethod bknr.datastore:initialize-transient-instance :after ((image image)))
 
-(defmethod bknr.datastore:initialize-transient-instance :after ((image image))
-  (when (company image)
-    (push-image-to-company-cache image (company image))))
-
-(defmethod (setf company) :after ((company company) (image image))
-  (push-image-to-company-cache image company))
+;; Please delete in the future, only for a migration
+(defmethod (setf company) :after ((company company) (image image)))
 
 (defclass local-image (image)
   ((url :initarg :url
