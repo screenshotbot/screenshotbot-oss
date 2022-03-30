@@ -72,8 +72,6 @@
    #:mask-rect-top
    #:mask-rect-height)
   (:export
-   #:find-unequal-pixels
-   #:random-unequal-pixel
    #:draw-rects-in-place
    #:draw-masks-in-place
    #:image-dimensions
@@ -221,36 +219,6 @@
                           ,(namestring tmp)))
       (uiop:rename-file-overwriting-target
        tmp image-file))))
-
-
-(defun find-unequal-pixels (img1 img2)
-  (let ((res (make-array 0 :adjustable t
-                           :fill-pointer t)))
-    (map-unequal-pixels img1 img2
-                        (lambda (i j)
-                          (vector-push-extend (cons i j)
-                                              res)))
-    res))
-
-(defun random-unequal-pixel (img1 img2 &key masks)
-  "Returns three values: a cons with a randomly picked pixel
-coordinate, and the width and height of the comparison (which might be
-different from the actual image sizes if the image sizes are
-different)"
-  (declare (optimize (speed 3) (safety 0)))
-
-  (with-local-file (file1 img1)
-    (with-local-file (file2 img2)
-      (with-wand (wand1 :file file1)
-        (with-wand (wand2 :file file2)
-          (draw-masks wand1 masks)
-          (draw-masks wand2 masks)
-          (with-wand (result :from (compare-images
-                                    wand1 wand2))
-            ;; Finally, we can walk through the image to find a
-            ;; non-alpha pixel.
-
-            ))))))
 
 
 (defun draw-masks (wand masks)

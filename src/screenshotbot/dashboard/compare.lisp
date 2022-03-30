@@ -42,9 +42,7 @@
                 #:map-unequal-pixels
                 #:image-blob
                 #:rect-as-list
-                #:draw-masks-in-place
-                #:random-unequal-pixel
-                #:find-unequal-pixels)
+                #:draw-masks-in-place)
   (:import-from #:screenshotbot/magick
                 #:run-magick)
   (:import-from #:screenshotbot/dashboard/paginated
