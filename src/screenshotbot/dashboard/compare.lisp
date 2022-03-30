@@ -69,6 +69,11 @@
                 #:with-auto-restart)
   (:import-from #:bknr.datastore
                 #:delete-object)
+  (:import-from #:nibble
+                #:nibble-url)
+  (:import-from #:screenshotbot/magick-lw
+                #:get-non-alpha-pixels
+                #:with-wand)
   (:export
    #:diff-report
    #:render-acceptable
@@ -316,8 +321,24 @@
         `((:identical . ,(identical-p image-comparison))
           ;; for debugging: e.g. if we need to delete the comparison
           (:store-object-id . ,(bknr.datastore:store-object-id image-comparison))
+          (:zoom-to . ,(nibble-url (nibble () (random-zoom-to-on-result
+                                               image-comparison))))
           (:src . ,(image-public-url (image-comparison-result image-comparison) :size size))
           (:background . ,(image-public-url (screenshot-image (before-image self)) :size size))))))))
+
+
+(defun random-zoom-to-on-result (image-comparison)
+  (setf (hunchentoot:content-type*) "application/json")
+  (with-local-image (file (image-comparison-result image-comparison))
+    (with-wand (wand :file file)
+      (let ((pxs (get-non-alpha-pixels wand)))
+        (let ((i (random (car (array-dimensions pxs)))))
+          (let ((dims (image-dimensions (image-comparison-result image-comparison))))
+            (json:encode-json-to-string
+             `((:y . ,(aref pxs i 1))
+               (:x . ,(aref pxs i 0))
+               (:width . ,(dimension-width dims))
+               (:height . ,(dimension-height dims))))))))))
 
 (defun do-image-comparison (before-image
                             after-image
@@ -388,22 +409,6 @@ If the images are identical, we return t, else we return NIL."
     <div class= "async-fetch spinner-border" role= "status" data-check-nibble=data-check-nibble />))
 
 
-(defun random-zoom-to (left right)
-  (setf (hunchentoot:header-out :content-type)  "application/json")
-  (json:encode-json-to-string
-   (let ((dims (list (image-dimensions left) (image-dimensions right)))
-         (px (random-unequal-pixel
-              (screenshot-image left)
-              (screenshot-image right)
-              :masks (screenshot-masks right))))
-     `((:y . ,(car px))
-       (:x . ,(cdr px))
-       (:height . ,(apply #'max (mapcar #'dimension-height dims)))
-       (:width . ,(apply #'max (mapcar #'dimension-width dims)))
-       ;; for debugging:
-       (:masks
-        ,(mapcar 'rect-as-list
-                  (screenshot-masks right)))))))
 
 (defun warmup-comparison-images (run previous-run)
   (make-thread
@@ -452,7 +457,7 @@ If the images are identical, we return t, else we return NIL."
       :items (diff-report-changes report))
   </app-template>)
 
-(deftag progress-img (&key (alt "Image Difference") src zoom-to class)
+(deftag progress-img (&key (alt "Image Difference") src class)
   "An <img> with a progress indicator for the image loading."
 
   <div class= (format nil  "progress-image-wrapper ~a" class) >
@@ -476,7 +481,6 @@ If the images are identical, we return t, else we return NIL."
   ,(cond
      ((hunchentoot:parameter "old-compare")
       <:img data-src= src
-            data-zoom-to=zoom-to
             class= "bg-primary image-comparison-modal-image" alt=alt />)
      (t
       <div>
@@ -484,7 +488,6 @@ If the images are identical, we return t, else we return NIL."
           <strong>New interactive comparisons!</strong> Use your mouse to pan through the image. Use the <strong>mouse wheel</strong> to zoom into a location.
         </div>
         <:canvas data-src=src
-                 data-zoom-to=zoom-to
                  class= "image-comparison-modal-image" />
       </div>))
   </div>)
@@ -598,8 +601,6 @@ If the images are identical, we return t, else we return NIL."
            (compare-nibble (nibble ()
                              (prepare-image-comparison
                               image-comparison-job)))
-           (zoom-to-nibble (nibble ()
-                             (random-zoom-to x s)))
            (toggle-id (format nil "toggle-id-~a" next-id))
            (modal-label (format nil "~a-modal-label" toggle-id)))
 
@@ -640,7 +641,6 @@ If the images are identical, we return t, else we return NIL."
             <div class="modal-body">
               <progress-img
                 src=compare-nibble
-                zoom-to=zoom-to-nibble
                 alt= "Image difference" />
             </div>
             <div class="modal-footer">

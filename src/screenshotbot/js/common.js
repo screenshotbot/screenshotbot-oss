@@ -92,6 +92,8 @@ function prepareReportJs () {
         var wrapper = $(img).closest(".progress-image-wrapper");
         var loading = $(wrapper).find(".loading");
 
+
+        var zoomToLink = undefined; // loaded from comparison nibble
         var zoomToChange = $(".zoom-to-change", this);
         var zoomToChangeSpinner = $(zoomToChange).find(".spinner-border");
 
@@ -128,6 +130,7 @@ function prepareReportJs () {
 
             var background = new Image();
             background.src = data.background;
+            zoomToLink = data.zoomTo;
 
             var canvasEl = canvas.get(0);
 
@@ -449,7 +452,7 @@ function prepareReportJs () {
 
         }
 
-        zoomToChange.click(function () {
+        zoomToChange.click(function (e) {
             // move the image out of the way
 
             if (!canvas.get(0)) {
@@ -461,7 +464,7 @@ function prepareReportJs () {
             zoomToChangeSpinner.show();
 
             $.ajax({
-                url: img.data("zoom-to"),
+                url: zoomToLink,
                 success: function(data) {
                     if (canvas.get(0)) {
                         var event = new CustomEvent("zoomToChange", { detail: data });
@@ -477,6 +480,8 @@ function prepareReportJs () {
                     zoomToChangeSpinner.hide();
                 }
             });
+
+            e.preventDefault();
         });
 
     }
