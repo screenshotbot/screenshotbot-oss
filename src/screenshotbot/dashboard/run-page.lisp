@@ -107,7 +107,7 @@
            (trivial-file-size:file-size-in-octets file)))
    1024))
 
-(defun num-screenshots-above-16k-dim (run)
+(defun screenshots-above-16k-dim (run)
   "Get the number of screenshots that have a dimension above 16k. This
   is the limit imposed by webp images."
   (let ((+limit+ 16383))
@@ -116,7 +116,7 @@
           if (or
               (> (dimension-height dim) +limit+)
               (> (dimension-width dim) +limit+))
-            summing 1)))
+            collect screenshot)))
 
 (deftag advanced-run-page (&key run)
   (let ((repo (channel-repo (recorder-run-channel run))))
@@ -135,7 +135,19 @@
         <li>Number of screenshots: ,(length (recorder-run-screenshots run))</li>
         <li>Total run size: ,(run-size run)kB</li>
 
-        <li>Screenshots that are above 16k dimensions: ,(num-screenshots-above-16k-dim run) </li>
+        <li>Screenshots that are above 16k dimensions: ,(length (screenshots-above-16k-dim run))
+
+        <a href= (nibble ()
+                           <app-template>
+                             List of screenshots with large dimensions
+                             <ul>
+                               ,@(loop for x in (screenshots-above-16k-dim run)
+                                      collect <li>,(screenshot-name x)</li>)
+                             </ul>
+                           </app-template>)>
+                           List
+       </a>
+        </li>
       </ul>
     </app-template>))
 
