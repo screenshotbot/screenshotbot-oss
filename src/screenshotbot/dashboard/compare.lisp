@@ -234,11 +234,10 @@
                             p
                             masks)))
          (let* ((image-blob (make-blob-from-file p 'image-blob :type :png))
-                (image (make-instance 'image
-                                       :blob image-blob
-                                       :hash nil
-                                       :verified-p nil ;; the hash is incorrect
-                                       :content-type "image/png")))
+                (image (make-image :blob image-blob
+                                   :hash nil
+                                   :verified-p nil ;; the hash is incorrect
+                                   :content-type "image/png")))
            (bt:with-lock-held (*lock*)
              (or
               (find)

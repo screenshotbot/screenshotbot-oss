@@ -80,7 +80,8 @@
    #:dimension-width
    #:image-format
    #:ping-image-dimensions
-   #:find-image))
+   #:find-image
+   #:make-image))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -386,6 +387,10 @@
             fn :masks masks)
         (cleanup-image-stream stream1)
         (cleanup-image-stream stream2)))))
+
+(defun make-image (&rest args &key &allow-other-keys)
+  (apply #'make-instance 'image
+           args))
 
 (defclass content-equal-result (store-object)
   ((image-1 :initarg :image-1

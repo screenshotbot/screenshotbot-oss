@@ -19,6 +19,8 @@
                 #:with-transaction)
   (:import-from #:screenshotbot/user-api
                 #:current-company)
+  (:import-from #:screenshotbot/model/image
+                #:make-image)
   (:export
    #:verify-image
    #:with-raw-post-data-as-tmp-file))
@@ -84,9 +86,9 @@
          (image
            (or
             image
-            (make-instance 'image :hash hash
-                                  :company (current-company)
-                                  :content-type content-type)))
+            (make-image :hash hash
+                        :company (current-company)
+                        :content-type content-type)))
          (upload-url (when uploadp
                        (cond
                          (*use-blob-store-p*
