@@ -63,10 +63,11 @@
   (ui/a :href (commit-link repo hash)
     (str:substring 0 8 hash)))
 
-(defhandler (run-page :uri "/runs/:id" :method :get) (id)
+(defhandler (run-page :uri "/runs/:id" :method :get) (id name)
   (let* ((run (find-by-oid id 'recorder-run)))
     (render-run-page run :lang-filter t
-                     :device-filter t)))
+                         :device-filter t
+                         :name name)))
 
 (deftag page-nav-dropdown (children &key title)
   (let ()
@@ -142,7 +143,10 @@
                              List of screenshots with large dimensions
                              <ul>
                                ,@(loop for x in (screenshots-above-16k-dim run)
-                                      collect <li>,(screenshot-name x)</li>)
+                                       collect <li>
+                                 <a href= (make-url 'run-page :id (oid run) :name (screenshot-name x))>
+                                   ,(screenshot-name x)
+                                               </a></li>)
                              </ul>
                            </app-template>)>
                            List
@@ -222,7 +226,8 @@
 
 
 (defun render-run-page (run &rest filters &key lang-filter
-                                            device-filter)
+                                            device-filter
+                                            name)
   (can-view! run)
   (flet ((re-call (&rest args)
            (apply 'render-run-page run (append args filters))))
@@ -233,7 +238,14 @@
            (device-filter (make-instance 'row-filter :key 'screenshot-device
                                                      :value device-filter))
            (filtered-screenshots (run-row-filter device-filter
-                                                 (run-row-filter lang-filter (recorder-run-screenshots run)))))
+                                                 (run-row-filter lang-filter (recorder-run-screenshots run))))
+           (filtered-screenshots (cond
+                                   (name
+                                    (loop for s in filtered-screenshots
+                                          if (string-equal (screenshot-name s) name)
+                                            collect s))
+                                   (t
+                                    filtered-screenshots))))
       <app-template >
         <div class= "page-title-box">
           <h4 class= "page-title" >Run from
