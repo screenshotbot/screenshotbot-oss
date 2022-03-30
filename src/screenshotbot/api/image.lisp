@@ -163,16 +163,18 @@
     (let ((etag
             (cond
               ((image-blob image)
-               (ironclad:byte-array-to-hex-string
-                (md5:md5sum-file (bknr.datastore:blob-pathname  (image-blob image)))))
+               (md5:md5sum-file (bknr.datastore:blob-pathname  (image-blob image))))
               (t
-               (get-etag *bucket* (s3-key image))))))
+               (ironclad:hex-string-to-byte-array
+                (get-etag *bucket* (s3-key image)))))))
       (cond
-        ((equal etag (image-hash image))
+        ((equalp etag (image-hash image))
          (with-transaction ()
           (setf (screenshotbot/model/image:verified-p image) t)))
         (T
          (error 'api-error
-                "md5sum mismatch from what was uploaded for image: ~a vs ~a"
-                etag
-                (image-hash image)))))))
+                 (format nil
+                         "md5sum mismatch from what was uploaded for image: ~a vs ~a"
+                         etag
+                         (ironclad:byte-array-to-hex-string
+                          (image-hash image)))))))))

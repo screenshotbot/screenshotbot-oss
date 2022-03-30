@@ -111,7 +111,7 @@
 (defclass image (object-with-oid)
   ((link :initarg :link)
    (hash :initarg :hash
-         :reader image-hash
+         :reader image-hash ;; NOTE: Returns a vector!
          :index-type hash-index
          :index-initargs (:test 'equalp)
          :index-reader images-for-original-hash)
@@ -133,7 +133,9 @@
   (:metaclass persistent-class))
 
 (defmethod find-image ((company company) (hash string))
-  (loop for image in (images-for-original-hash hash)
+  (loop for image in (append
+                      (images-for-original-hash hash)
+                      (images-for-original-hash (ironclad:hex-string-to-byte-array hash)))
         if (and
             (eql (company image) company)
             (verified-p image))
@@ -388,8 +390,12 @@
         (cleanup-image-stream stream1)
         (cleanup-image-stream stream2)))))
 
-(defun make-image (&rest args &key &allow-other-keys)
+(defun make-image (&rest args &key hash &allow-other-keys)
   (apply #'make-instance 'image
+           :hash (cond
+                   ((stringp hash)
+                    (ironclad:hex-string-to-byte-array hash))
+                   (t hash))
            args))
 
 (defclass content-equal-result (store-object)
@@ -460,8 +466,8 @@
   "Check if the two images have the same contents. Looks at both file
   hash and image contents"
   (or
-   (string= (image-hash img1)
-            (image-hash img2))
+   (equalp (image-hash img1)
+           (image-hash img2))
    ;; if the hash's don't match, check the perceptual hash. This is
    ;; slow, so make sure we're only doing this if absolutely required
    (when (or masks
@@ -489,7 +495,7 @@
   ;; this is probably only used for tests... hopefully doesn't hit in
   ;; prod.
   (with-local-image (im image)
-    (ironclad:byte-array-to-hex-string (md5:md5sum-file im))))
+    (md5:md5sum-file im)))
 
 (defmethod external-file-name ((image image))
   (destructuring-bind (part ext) (str:split "/" (image-content-type image))

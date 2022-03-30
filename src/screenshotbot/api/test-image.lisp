@@ -26,7 +26,9 @@
   (:import-from #:../testing
                 #:with-test-user)
   (:import-from #:util/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:screenshotbot/model/image
+                #:make-image))
 
 (util/fiveam:def-suite)
 
@@ -45,7 +47,7 @@
   (with-fixture state ()
     (let ((resp (json:decode-json-from-string
                  (prepare-upload-api
-                  :hash "foo"
+                  :hash "abcd"
                   :content-type "image/png"))))
       (let ((response (assoc-value resp :response)))
         (is (not (str:emptyp (assoc-value response :id))))
@@ -53,13 +55,12 @@
 
 (test reupload-same-url
   (with-fixture state ()
-    (let ((old-im (make-instance 'image
-                                 :hash "foo"
-                                 :company company
-                                 :verified-p t)))
+    (let ((old-im (make-image :hash "abcd"
+                              :company company
+                              :verified-p t)))
      (let ((resp (json:decode-json-from-string
                   (prepare-upload-api
-                   :hash "foo"
+                   :hash "abcd"
                    :content-type "image/png"))))
        (let ((response (assoc-value resp :response)))
          (is (equal (oid old-im) (assoc-value response :id)))
@@ -67,13 +68,12 @@
 
 (test reupload-unverified-image
   (with-fixture state ()
-    (let ((old-im (make-instance 'image
-                                 :hash "foo"
-                                 :company company
-                                 :verified-p nil)))
+    (let ((old-im (make-image :hash "abcd"
+                              :company company
+                              :verified-p nil)))
      (let ((resp (json:decode-json-from-string
                   (prepare-upload-api
-                   :hash "foo"
+                   :hash "abcd"
                    :content-type "image/png"))))
        (let ((response (assoc-value resp :response)))
          (is (not (equal (oid old-im) (assoc-value response :id))))
