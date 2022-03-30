@@ -29,7 +29,6 @@
    #:company
    #:company-reports
    #:github-config
-   #:find-image
    #:access-token
    #:image-cache
    #:company-invites
@@ -247,9 +246,7 @@
 
 
 (defmethod find-image ((company company) hash)
-  (loop for im in (gethash hash (image-cache company))
-        if (verified-p im)
-          return im))
+  (error "Old function: call model/image:find-image instead"))
 
 (defmethod find-image-by-id ((company company) id)
   (let ((obj (find-by-oid id)))

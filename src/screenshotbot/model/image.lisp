@@ -82,7 +82,8 @@
    #:dimension-height
    #:dimension-width
    #:image-format
-   #:ping-image-dimensions))
+   #:ping-image-dimensions
+   #:find-image))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -112,7 +113,10 @@
 (defclass image (object-with-oid)
   ((link :initarg :link)
    (hash :initarg :hash
-         :reader image-hash)
+         :reader image-hash
+         :index-type hash-index
+         :index-initargs (:test 'equalp)
+         :index-reader images-for-original-hash)
    (blob
     :initarg :blob
     :accessor image-blob
@@ -129,6 +133,13 @@
    (content-type :initarg :content-type
                  :reader image-content-type))
   (:metaclass persistent-class))
+
+(defmethod find-image ((company company) (hash string))
+  (loop for image in (images-for-original-hash hash)
+        if (and
+            (eql (company image) company)
+            (verified-p image))
+          return image))
 
 (defmethod print-object ((self image) stream)
   (format stream "#<IMAGE ~a>" (store-object-id self)))

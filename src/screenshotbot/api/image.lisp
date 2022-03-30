@@ -17,8 +17,6 @@
                 #:oid)
   (:import-from #:bknr.datastore
                 #:with-transaction)
-  (:import-from #:screenshotbot/model/company
-                #:find-image)
   (:import-from #:screenshotbot/user-api
                 #:current-company)
   (:export
