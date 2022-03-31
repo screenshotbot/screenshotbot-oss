@@ -719,6 +719,7 @@ If the images are identical, we return t, else we return NIL."
                   <a href=all-comparisons >All Pixel Comparisons</a>
                </page-nav-dropdown>))
 
+
          </div>
          ,(when-let ((repo (channel-repo (recorder-run-channel run)))
                      (this-hash (recorder-run-commit run))
@@ -728,46 +729,81 @@ If the images are identical, we return t, else we return NIL."
              Previous commit: <commit repo= repo hash=prev-hash />
            </p>)
 
+       <div class= "d-flex justify-content-between" >
 
-
-       <div class= "card mt-3">
-         <div class= "card-body">
-           <p>
-             <h1>,(length changes-groups) changes</h1>
-             ,(paginated
-               (lambda (group)
-                 (render-change-group group run script-name))
-               :num 10
-               :items changes-groups)
-           </p>
-
-         </div>
-       </div>
-
-       <div class= "row mt-4">
-         <div class= "col-md-6">
-
-           <div class= "card">
-             <div class= "card-body">
-               <h1>,(length deleted-groups) deleted</h1>
-               <p>
-                 ,(render-single-group-list deleted-groups)
-               </p>
-
-             </div>
+         <div class= "" style= "width: 20em" >
+           <div class= "input-group">
+             <span class= "input-group-text" >
+               <mdi name= "search" />
+             </span>
+             <input class= "form-control search d-inline-block" type= "text" autocomplete= "off"
+                    placeholder= "Search..."
+                    data-target= ".report-result" />
            </div>
          </div>
-       <div class= "col-md-6">
-         <div class= "card">
-           <div class= "card-body">
-             <h1>,(length added-groups) added</h1>
-             ,(render-single-group-list added-groups)
 
-           </div>
-         </div>
+         <ul class= "nav nav-pills report-selector" data-target= ".report-result" >
+           <li class= "nav-item">
+             <a class= "nav-link active" href= "#" data-type= "changes" >,(length changes-groups) changes</a>
+           </li>
+           <li class= "nav-item">
+             <a class= "nav-link" href= "#" data-type= "added" >,(length added-groups) added</a>
+           </li>
+           <li class= "nav-item">
+             <a class= "nav-link" href= "#" data-type= "deleted" >,(length deleted-groups) deleted</a>
+           </li>
+         </ul>
+
        </div>
+
+       <div class= "report-result mt-3" data-update= (nibble () (report-result run
+            changes-groups
+            added-groups
+            deleted-groups))
+            data-args= "{}" >
+         ,(report-result run
+                         changes-groups
+                         added-groups
+                         deleted-groups)
        </div>
+
        </markup:merge-tag>))))
+
+(defun filter-groups (groups search)
+  (loop for group in groups
+        if (or
+            (str:emptyp search)
+            (str:contains? search (group-title group) :ignore-case t))
+          collect group))
+
+(defun report-result (run changes-groups added-groups deleted-groups)
+
+  (let ((type (hunchentoot:parameter "type"))
+        (search (hunchentoot:parameter "search")))
+    (cond
+      ((string-equal "added" type)
+       <div class= "card">
+         <div class= "card-body">
+           ,(render-single-group-list (filter-groups added-groups search))
+
+         </div>
+       </div>)
+      ((string-equal "deleted" type)
+       <div class= "card">
+         <div class= "card-body">
+             ,(render-single-group-list (filter-groups deleted-groups search))
+         </div>
+       </div>)
+      (t
+       <div class= "card">
+         <div class= "card-body">
+           ,(paginated
+             (lambda (group)
+               (render-change-group group run (hunchentoot:script-name*)))
+             :num 10
+             :items (filter-groups changes-groups search))
+         </div>
+       </div>))))
 
 (defun render-single-group-list (groups)
   (paginated
@@ -780,11 +816,15 @@ If the images are identical, we return t, else we return NIL."
             'tab
             :title (get-tab-title screenshot)
             :content
-            <screenshot-box  screenshot=screenshot /> ))))
+            <screenshot-box  screenshot=screenshot title= (group-title group) /> ))))
    :num 5
    :items groups))
 
-(Deftag screenshot-box (&key screenshot)
+(Deftag screenshot-box (&key screenshot title)
   <div class= "mt-4" >
+    <div class= "screenshot-header">
+      <h4>,(progn title) </h4>
+    </div>
+
     <img class= "mt-2 screenshot-image change-image" src= (image-public-url (screenshot-image screenshot) :size :full-page) loading= "lazy" />
   </div>)

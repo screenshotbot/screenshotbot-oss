@@ -30,3 +30,21 @@ $(".search").on("input", function () {
         updateAjaxResults($target);
     }, 250));
 });
+
+
+$("ul.report-selector a").click(function (e) {
+    console.log("clicked");
+    var $ul = $(this).closest("ul");
+    $ul.find("a").removeClass("active");
+    $(this).addClass("active");
+    var $target = $($ul.data("target"));
+
+    var type = $(this).data("type");
+
+    var args = $target.data("args");
+    args["type"] = type;
+
+    updateAjaxResults($target);
+
+    e.preventDefault();
+});
