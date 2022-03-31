@@ -122,6 +122,12 @@
   :components ((:file "fiveam")
                (:file "mock-recording")))
 
+(defsystem :util/health-check
+  :depends-on (:str
+               :alexandria)
+  :serial t
+  :components ((:file "health-check")))
+
 (defsystem :util/hash-lock
   :depends-on (:bordeaux-threads)
   :serial t
@@ -145,6 +151,7 @@
 (defsystem :util/tests
   :depends-on (:util
                :util/hash-lock
+               :util/health-check
                :util/fiveam)
   :serial t
   :components ((:module "tests"
@@ -162,5 +169,6 @@
                              (:file "test-file-lock")
                              (:file "test-html2text")
                              (:file "test-mockable")
+                             (:file "test-health-check")
                              (:file "test-mquery")
                              (:file "test-make-instance-with-accessors")))))
