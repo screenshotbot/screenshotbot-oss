@@ -384,6 +384,7 @@ If the images are identical, we return t, else we return NIL."
   (let* ((data nil)
          (session auth:*current-session*)
          (request hunchentoot:*request*)
+         (acceptor hunchentoot:*acceptor*)
          (data-check-nibble (nibble ()
                               (setf (hunchentoot:content-type*) "application/json")
                               (json:encode-json-to-string
@@ -401,7 +402,8 @@ If the images are identical, we return t, else we return NIL."
                                              (declare (ignore e))
                                              (setf data :error))))
                        (let ((auth:*current-session* session)
-                             (hunchentoot:*request* request))
+                             (hunchentoot:*request* request)
+                             (hunchentoot:*acceptor* acceptor))
                          (setf data (apply 'render-diff-report args)))))))
     <div class= "async-fetch spinner-border" role= "status" data-check-nibble=data-check-nibble />))
 
@@ -659,6 +661,7 @@ If the images are identical, we return t, else we return NIL."
                             (lang-filter (make-instance 'row-filter :value t))
                             (device-filter (make-instance 'row-filter :value t))
                             disable-filters
+                            more
                             acceptable
                             (re-run nil))
   (flet ((filteredp (x) (and (run-row-filter lang-filter x)
@@ -742,17 +745,34 @@ If the images are identical, we return t, else we return NIL."
            </div>
          </div>
 
-         <ul class= "nav nav-pills report-selector" data-target= ".report-result" >
-           <li class= "nav-item">
-             <a class= "nav-link active" href= "#" data-type= "changes" >,(length changes-groups) changes</a>
-           </li>
-           <li class= "nav-item">
-             <a class= "nav-link" href= "#" data-type= "added" >,(length added-groups) added</a>
-           </li>
-           <li class= "nav-item">
-             <a class= "nav-link" href= "#" data-type= "deleted" >,(length deleted-groups) deleted</a>
-           </li>
-         </ul>
+         <div class= "d-flex" >
+           <ul class= "nav nav-pills report-selector" data-target= ".report-result" >
+             <li class= "nav-item">
+               <a class= "nav-link active" href= "#" data-type= "changes" >,(length changes-groups) changes</a>
+             </li>
+             <li class= "nav-item">
+               <a class= "nav-link" href= "#" data-type= "added" >,(length added-groups) added</a>
+             </li>
+             <li class= "nav-item">
+               <a class= "nav-link" href= "#" data-type= "deleted" >,(length deleted-groups) deleted</a>
+             </li>
+           </ul>
+
+           ,(when more
+           <ul class= "nav" >
+
+             <div class="btn-group">
+               <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                 More
+               </button>
+               <ul class="dropdown-menu dropdown-menu-end">
+                 ,@ (loop for (name . url) in more
+                          collect
+                          <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
+               </ul>
+             </div>
+           </ul>)
+         </div>
 
        </div>
 

@@ -78,19 +78,15 @@
              )
 
           <section class= "full-height">
-            <a href= (create-note-page :for report :redirect (make-url 'report-page :id (oid report)))
-               class= "btn btn-secondary mt-2">
-              <span>
-                <mdi name= "add_comment" class= "ps-0" />
-              </span>
-              Add Note
-            </a>
-
             ,(render-notes :for report)
             <render-diff-report run= (report-run report) to= (report-previous-run report)
                                 lang-filter=lang-filter
                                 device-filter=device-filter
                                 acceptable= (report-acceptable report)
+                                more= (list
+                                       (cons
+                                         "Add Note"
+                                         (create-note-page :for report :redirect (make-url 'report-page :id (oid report)))))
                                 re-run=#'re-run />
           </section>
         </app-template>)))))

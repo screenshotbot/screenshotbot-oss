@@ -14,37 +14,42 @@ function updateAjaxResults($target) {
     });
 }
 
-$(".search").on("input", function () {
-    var val = $(this).val();
-    var $target = $($(this).data("target"));
+setupLiveOnAttach(".search", function () {
+    $(this).on("input", function () {
+        var val = $(this).val();
+        var $target = $($(this).data("target"));
 
-    var params = $target.data("args");
+        var params = $target.data("args");
 
-    params["search"] = val;
-    var timeout = $target.data("timeout");
-    if (timeout) {
-        clearTimeout(timeout);
-    }
+        params["search"] = val;
+        var timeout = $target.data("timeout");
+        if (timeout) {
+            clearTimeout(timeout);
+        }
 
-    $target.data("timeout", setTimeout(function () {
-        updateAjaxResults($target);
-    }, 250));
+        $target.data("timeout", setTimeout(function () {
+            updateAjaxResults($target);
+        }, 250));
+    });
 });
 
 
-$("ul.report-selector a").click(function (e) {
-    console.log("clicked");
-    var $ul = $(this).closest("ul");
-    $ul.find("a").removeClass("active");
-    $(this).addClass("active");
-    var $target = $($ul.data("target"));
+setupLiveOnAttach("ul.report-selector a", function () {
+    $(this).click(function (e) {
+        console.log("clicked");
+        var $ul = $(this).closest("ul");
+        $ul.find("a").removeClass("active");
+        $(this).addClass("active");
+        var $target = $($ul.data("target"));
 
-    var type = $(this).data("type");
+        var type = $(this).data("type");
 
-    var args = $target.data("args");
-    args["type"] = type;
+        var args = $target.data("args");
+        args["type"] = type;
 
-    updateAjaxResults($target);
+        updateAjaxResults($target);
 
-    e.preventDefault();
+        e.preventDefault();
+    });
+
 });
