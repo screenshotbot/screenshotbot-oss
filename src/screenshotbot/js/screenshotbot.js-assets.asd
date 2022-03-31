@@ -45,6 +45,7 @@
                              (build-utils:js-file "aos")))
                (build-utils:js-file "jquery.timeago")
                (build-utils:js-file "default")
+               (build-utils:js-file "runs")
                (build-utils:js-file "common")
                (build-utils:js-file "mask-editor")
                #-screenshotbot-oss

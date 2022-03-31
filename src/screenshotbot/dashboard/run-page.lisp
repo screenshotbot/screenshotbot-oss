@@ -65,9 +65,7 @@
 
 (defhandler (run-page :uri "/runs/:id" :method :get) (id name)
   (let* ((run (find-by-oid id 'recorder-run)))
-    (render-run-page run :lang-filter t
-                         :device-filter t
-                         :name name)))
+    (render-run-page run :name name)))
 
 (deftag page-nav-dropdown (children &key title)
   (let ()
@@ -225,27 +223,20 @@
        </page-nav-dropdown>))))
 
 
-(defun render-run-page (run &rest filters &key lang-filter
-                                            device-filter
-                                            name)
+(defun render-run-page (run &rest filters &key name)
   (can-view! run)
   (flet ((re-call (&rest args)
            (apply 'render-run-page run (append args filters))))
 
     (let* ((channel (recorder-run-channel run))
-           (lang-filter (make-instance 'row-filter :key 'screenshot-lang
-                                                   :value lang-filter))
-           (device-filter (make-instance 'row-filter :key 'screenshot-device
-                                                     :value device-filter))
-           (filtered-screenshots (run-row-filter device-filter
-                                                 (run-row-filter lang-filter (recorder-run-screenshots run))))
+           (screenshots (recorder-run-screenshots run))
            (filtered-screenshots (cond
                                    (name
-                                    (loop for s in filtered-screenshots
+                                    (loop for s in screenshots
                                           if (string-equal (screenshot-name s) name)
                                             collect s))
                                    (t
-                                    filtered-screenshots))))
+                                    screenshots))))
       <app-template >
         <div class= "page-title-box">
           <h4 class= "page-title" >Run from
@@ -253,23 +244,28 @@
               ,(created-at run)
             </:time>
           </h4>
-          <a class= "btn btn-danger btn-sm">Delete</a>
+
+          <div class= "d-flex justify-content-between mt-3 mb-3">
+            <div class= "" style= "width: 20em" >
+              <div class= "input-group">
+                <div class= "input-group-prepend">
+                  <span class= "input-group-text" >
+                    <mdi name= "search" />
+                  </span>
+                </div>
+                <input class= "form-control search d-inline-block" type= "text" autocomplete= "off"
+                       placeholder= "Search..."
+                       data-target= "#run-page-results" />
+              </div>
+            </div>
 
 
-          <filter-selector default-title= "All Languages"
-                           prefix= "Language"
-                           row-filter=lang-filter
-                           filter-renderer= (lambda (x) (re-call :lang-filter x))
-                           data= (recorder-run-screenshots run)
-                           />
-          <filter-selector default-title="All Devices"
-                           prefix= "Device"
-                           row-filter=device-filter
-                           filter-renderer= (lambda (x) (re-call :device-filter x))
-                           data= (recorder-run-screenshots run)
-                           />
+            <div class= "">
+              <a class= "btn btn-danger btn-sm">Delete</a>
+              <run-advanced-menu run=run />
+            </div>
+          </div>
 
-      <run-advanced-menu run=run />
         </div>
 
           ,(when-let (reports (reports-for-run run))
@@ -279,53 +275,73 @@
                           <a href= (format nil "/report/~a" (oid report)) >,(report-title report)</a>)
              </div>)
 
-        <div class= "baguetteBox">
+          <div id= "run-page-results" class= "search-results" data-update= (nibble () (update-content run channel))
+               data-args= "{}" >
+            ,(run-page-contents run channel filtered-screenshots)
+          </div>
 
-          ,(paginated
-          (lambda (screenshot)
-           (let* ((name-parts (str:rsplit "--" (screenshot-name screenshot) :limit 2)))
-          <div class= " col-sm-12 col-md-4 col-lg-3 mb-1 mt-2">
-            <div class="card">
-              <div class="card-body">
-                <div class= "screenshot-header" >
-                  <h4 >,(car name-parts)</h4>
-                  ,(when (cadr name-parts)
-                     <h6>,(cadr name-parts)</h6>)
-                  <ul class= "screenshot-options-menu">
-                    <li>
-                      <a href= (make-url 'history-page :channel (store-object-id channel)
-                                                                                         :screenshot-name (screenshot-name screenshot))>
-                        History
-                      </a>
-                    </li>
-
-                    <li>
-                      <a href= (nibble () (mask-editor (recorder-run-channel run) screenshot
-                         :redirect (make-url 'run-page :id (oid run))))
-                         >Edit Masks</a>
-
-                    </li>
-
-                    ,(when *create-issue-popup*
-                       <li>
-                         <a target= "_blank"
-                            href= (nibble ()
-                                            (funcall *create-issue-popup* run screenshot)) >
-                           Create Issue
-                         </a>
-                       </li>)
-                  </ul>
-                </div>
-                <a href= (image-public-url (screenshot-image screenshot)) title= (screenshot-name screenshot) >
-                  <img class= "screenshot-image run-page-image" src= (image-public-url (screenshot-image screenshot)  :size :small) />
-                </a>
-              </div> <!-- end card-body-->
-            </div>
-
-          </div>))
-          :items filtered-screenshots)
-        </div>
       </app-template>)))
+
+(defun update-content (run channel)
+  (let* ((query (hunchentoot:parameter "search"))
+         (screenshots (recorder-run-screenshots run)))
+    (run-page-contents
+     run channel (loop for screenshot in screenshots
+                       if (or (null query)
+                              (str:contains? query (screenshot-name screenshot)
+                                             :ignore-case t))
+                         collect screenshot))))
+
+(defun run-page-contents (run channel filtered-screenshots)
+  <div class= "baguetteBox">
+
+    ,(unless filtered-screenshots
+       <p class= "text-muted" >No screenshots found</p>)
+
+    ,(paginated
+    (lambda (screenshot)
+    (let* ((name-parts (str:rsplit "--" (screenshot-name screenshot) :limit 2)))
+    <div class= " col-sm-12 col-md-4 col-lg-3 mb-1 mt-2">
+      <div class="card">
+        <div class="card-body">
+          <div class= "screenshot-header" >
+            <h4 >,(car name-parts)</h4>
+            ,(when (cadr name-parts)
+               <h6>,(cadr name-parts)</h6>)
+            <ul class= "screenshot-options-menu">
+              <li>
+                <a href= (make-url 'history-page :channel (store-object-id channel)
+                                                                                   :screenshot-name (screenshot-name screenshot))>
+                  History
+                </a>
+              </li>
+
+              <li>
+                <a href= (nibble () (mask-editor (recorder-run-channel run) screenshot
+                   :redirect (make-url 'run-page :id (oid run))))
+                   >Edit Masks</a>
+
+              </li>
+
+              ,(when *create-issue-popup*
+                 <li>
+                   <a target= "_blank"
+                      href= (nibble ()
+                                      (funcall *create-issue-popup* run screenshot)) >
+                     Create Issue
+                   </a>
+                 </li>)
+            </ul>
+          </div>
+          <a href= (image-public-url (screenshot-image screenshot)) title= (screenshot-name screenshot) >
+            <img class= "screenshot-image run-page-image" src= (image-public-url (screenshot-image screenshot)  :size :small) />
+          </a>
+        </div> <!-- end card-body-->
+      </div>
+
+    </div>))
+    :items filtered-screenshots)
+  </div>)
 
 (defclass js-api-result () ())
 
