@@ -248,11 +248,9 @@
           <div class= "d-flex justify-content-between mt-3 mb-3">
             <div class= "" style= "width: 20em" >
               <div class= "input-group">
-                <div class= "input-group-prepend">
-                  <span class= "input-group-text" >
-                    <mdi name= "search" />
-                  </span>
-                </div>
+                <span class= "input-group-text" >
+                  <mdi name= "search" />
+                </span>
                 <input class= "form-control search d-inline-block" type= "text" autocomplete= "off"
                        placeholder= "Search..."
                        data-target= "#run-page-results" />
