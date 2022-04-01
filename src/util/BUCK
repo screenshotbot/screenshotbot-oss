@@ -44,6 +44,19 @@ lisp_library(
 )
 
 lisp_library(
+    name = "health-check",
+    srcs = [
+        "health-check.lisp",
+    ],
+    deps = [
+        "//quicklisp:alexandria",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+lisp_library(
     name = "cdn",
     srcs = [
         "cdn.lisp",

@@ -5,6 +5,7 @@ lisp_test(
     deps = [
         "//src/util:store",
         "//src/util:misc",
+        "//src/util:health-check",
         "//src/util:hash-lock",
         "//src/util:fiveam",
         "//quicklisp:markup",
