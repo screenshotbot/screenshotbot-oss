@@ -331,7 +331,7 @@
                  </li>)
             </ul>
           </div>
-          <a href= (image-public-url (screenshot-image screenshot)) title= (screenshot-name screenshot) >
+          <a href= (image-public-url (screenshot-image screenshot) :size :full-page) title= (screenshot-name screenshot) >
             <img class= "screenshot-image run-page-image" src= (image-public-url (screenshot-image screenshot)  :size :small) />
           </a>
         </div> <!-- end card-body-->
