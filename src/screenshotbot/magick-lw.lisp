@@ -319,9 +319,9 @@
        wand1
        wand2
        +root-mean-squared-error-metric+
-       0.0)
+       0.0d0)
     (unwind-protect
-         (= difference 0.0)
+         (= difference 0.0d0)
       (unless (fli:null-pointer-p output)
        (destroy-magick-wand output)))))
 
