@@ -817,28 +817,37 @@ If the images are identical, we return t, else we return NIL."
       (t
        <div class= "card">
          <div class= "card-body">
-           ,(paginated
-             (lambda (group)
-               (render-change-group group run (hunchentoot:script-name*)))
-             :num 10
-             :items (filter-groups changes-groups search))
+           ,(let ((filtered-groups (filter-groups changes-groups search)))
+              (cond
+                (filtered-groups
+                 (paginated
+                  (lambda (group)
+                    (render-change-group group run (hunchentoot:script-name*)))
+                  :num 10
+                  :items filtered-groups))
+                (t
+                 (no-screenshots))))
          </div>
        </div>))))
 
 (defun render-single-group-list (groups)
-  (paginated
-   (lambda (group)
-    (maybe-tabulate
-     (loop for group-item in (group-items group)
-           for screenshot = (actual-item group-item)
-           collect
-           (make-instance
-            'tab
-            :title (get-tab-title screenshot)
-            :content
-            <screenshot-box  screenshot=screenshot title= (group-title group) /> ))))
-   :num 5
-   :items groups))
+  (cond
+    (groups
+     (paginated
+      (lambda (group)
+        (maybe-tabulate
+         (loop for group-item in (group-items group)
+               for screenshot = (actual-item group-item)
+               collect
+               (make-instance
+                'tab
+                :title (get-tab-title screenshot)
+                :content
+                <screenshot-box  screenshot=screenshot title= (group-title group) /> ))))
+      :num 5
+      :items groups))
+    (t
+     (no-screenshots))))
 
 (Deftag screenshot-box (&key screenshot title)
   <div class= "mt-4" >
@@ -847,4 +856,9 @@ If the images are identical, we return t, else we return NIL."
     </div>
 
     <img class= "mt-2 screenshot-image change-image" src= (image-public-url (screenshot-image screenshot) :size :full-page) loading= "lazy" />
+  </div>)
+
+(defun no-screenshots ()
+  <div class= "text-muted text-center">
+    No changes match filters
   </div>)
