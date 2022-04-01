@@ -512,19 +512,28 @@ If the images are identical, we return t, else we return NIL."
    (content :initarg :content
             :reader tab-content)))
 
-(defun maybe-tabulate (tabs &aux (id (format nil "a~a" (random 10000000))))
+(defun maybe-tabulate (tabs &key header &aux (id (format nil "a~a" (random 10000000))))
   (cond
     ((and (eql 1 (length tabs))
           (str:emptyp (tab-title (car tabs))))
      ;; don't show the tabulation
-     (tab-content (car tabs)))
+     <markup:merge-tag>
+       <div class= "card-header">
+         ,(progn header)
+       </div>
+       <div class= "card-body">
+         ,(tab-content (car tabs))
+       </div>
+     </markup:merge-tag>)
     (t
-       <markup:merge-tag>
-         <ul class= "nav nav-tabs" role= "tablist" >
+     <markup:merge-tag>
+       <div class= "card-header">
+         ,(progn header)
+         <ul class= "nav nav-tabs card-header-tabs" role= "tablist" >
            ,@ (loop for tab in tabs
                     for ctr from 0
                     collect
-                    <li class= "nav-item mt-3" role= "presentation" >
+                    <li class= "nav-item" role= "presentation" >
                       <button class= (format nil "nav-link ~a" (if (= ctr 0) "active" ""))
                               data-bs-toggle= "tab"
                               data-bs-target= (format nil "#~a-~a" id ctr)
@@ -535,7 +544,9 @@ If the images are identical, we return t, else we return NIL."
                       </button>
                     </li>)
          </ul>
+       </div>
 
+       <div class= "card-body">
          <div class= "tab-content">
            ,@(loop for tab in tabs
            for ctr from 0
@@ -547,6 +558,8 @@ If the images are identical, we return t, else we return NIL."
              ,(tab-content tab)
            </div>)
          </div>
+         </div>
+
   </markup:merge-tag>)))
 
 (defclass group-item ()
@@ -576,10 +589,8 @@ If the images are identical, we return t, else we return NIL."
                                                                 :actual-item item))))))
 
 (defun render-change-group (group run script-name)
-  <div class= "mt-4">
-    <div class= "screenshot-header">
-      <h4>,(group-title group)</h4>
-    </div>
+  <div class= "col-12">
+  <div class= "card mb-3">
     ,(maybe-tabulate
       (loop for group-item in (group-items group)
             for change = (actual-item group-item)
@@ -620,8 +631,10 @@ If the images are identical, we return t, else we return NIL."
                         after-image=(image-public-url (screenshot-image s) :size :full-page)
                         />
       <comparison-modal before=x after=s toggle-id=toggle-id />
-    </div>))))
-  </div>)
+    </div>)))
+      :header  <h4>,(group-title group)</h4>)
+  </div>
+    </div>)
 
 (deftag comparison-modal (&key toggle-id before after)
   (let* ((modal-label (format nil "~a-modal-label" toggle-id))
@@ -801,21 +814,12 @@ If the images are identical, we return t, else we return NIL."
         (search (hunchentoot:parameter "search")))
     (cond
       ((string-equal "added" type)
-       <div class= "card">
-         <div class= "card-body">
-           ,(render-single-group-list (filter-groups added-groups search))
-
-         </div>
-       </div>)
+       (render-single-group-list (filter-groups added-groups search)))
       ((string-equal "deleted" type)
-       <div class= "card">
-         <div class= "card-body">
-             ,(render-single-group-list (filter-groups deleted-groups search))
-         </div>
-       </div>)
+
+       (render-single-group-list (filter-groups deleted-groups search)))
       (t
-       <div class= "card">
-         <div class= "card-body">
+       <div class= "">
            ,(let ((filtered-groups (filter-groups changes-groups search)))
               (cond
                 (filtered-groups
@@ -826,7 +830,6 @@ If the images are identical, we return t, else we return NIL."
                   :items filtered-groups))
                 (t
                  (no-screenshots))))
-         </div>
        </div>))))
 
 (defun render-single-group-list (groups)
@@ -834,15 +837,20 @@ If the images are identical, we return t, else we return NIL."
     (groups
      (paginated
       (lambda (group)
-        (maybe-tabulate
-         (loop for group-item in (group-items group)
-               for screenshot = (actual-item group-item)
-               collect
-               (make-instance
-                'tab
-                :title (get-tab-title screenshot)
-                :content
-                <screenshot-box  screenshot=screenshot title= (group-title group) /> ))))
+        <div class= "col-md-6">
+          <div class= "card mb-3">
+            ,(maybe-tabulate
+              (loop for group-item in (group-items group)
+                    for screenshot = (actual-item group-item)
+                    collect
+                    (make-instance
+                     'tab
+                      :title (get-tab-title screenshot)
+                      :content
+                      <screenshot-box  screenshot=screenshot title= (group-title group) /> ))
+              :header <h4>,(group-title group)</h4>)
+          </div>
+        </div>)
       :num 5
       :items groups))
     (t
