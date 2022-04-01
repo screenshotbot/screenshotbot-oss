@@ -588,7 +588,7 @@ If the images are identical, we return t, else we return NIL."
                                                                 :subtitle (funcall subtitle item)
                                                                 :actual-item item))))))
 
-(defun render-change-group (group run script-name)
+(defun render-change-group (group run script-name &key search)
   <div class= "col-12">
   <div class= "card mb-3">
     ,(maybe-tabulate
@@ -632,9 +632,23 @@ If the images are identical, we return t, else we return NIL."
                         />
       <comparison-modal before=x after=s toggle-id=toggle-id />
     </div>)))
-      :header  <h4>,(group-title group)</h4>)
+      :header  <h4>,(highlight-search-term search (group-title group))</h4>)
   </div>
-    </div>)
+  </div>)
+
+(defun highlight-search-term (search title)
+  (cond
+    ((str:emptyp search)
+     title)
+    (t
+
+     (let* ((start (search search title))
+            (end (+ start (length search))))
+       (markup:make-merge-tag
+        (list
+         <span class= "text-muted">,(subseq title 0 start)</span>
+         <span class= "" >,(subseq title start end)</span>
+         <span class= "text-muted">,(subseq title end)</span>))))))
 
 (deftag comparison-modal (&key toggle-id before after)
   (let* ((modal-label (format nil "~a-modal-label" toggle-id))
@@ -814,10 +828,10 @@ If the images are identical, we return t, else we return NIL."
         (search (hunchentoot:parameter "search")))
     (cond
       ((string-equal "added" type)
-       (render-single-group-list (filter-groups added-groups search)))
+       (render-single-group-list (filter-groups added-groups search) :search search))
       ((string-equal "deleted" type)
 
-       (render-single-group-list (filter-groups deleted-groups search)))
+       (render-single-group-list (filter-groups deleted-groups search) :search search))
       (t
        <div class= "">
            ,(let ((filtered-groups (filter-groups changes-groups search)))
@@ -825,14 +839,14 @@ If the images are identical, we return t, else we return NIL."
                 (filtered-groups
                  (paginated
                   (lambda (group)
-                    (render-change-group group run (hunchentoot:script-name*)))
+                    (render-change-group group run (hunchentoot:script-name*)  :search search))
                   :num 10
                   :items filtered-groups))
                 (t
                  (no-screenshots))))
        </div>))))
 
-(defun render-single-group-list (groups)
+(defun render-single-group-list (groups &key search)
   (cond
     (groups
      (paginated
@@ -848,7 +862,7 @@ If the images are identical, we return t, else we return NIL."
                       :title (get-tab-title screenshot)
                       :content
                       <screenshot-box  screenshot=screenshot title= (group-title group) /> ))
-              :header <h4>,(group-title group)</h4>)
+              :header <h4>,(highlight-search-term search (group-title group)) </h4>)
           </div>
         </div>)
       :num 5
