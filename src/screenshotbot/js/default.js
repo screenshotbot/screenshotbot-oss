@@ -244,16 +244,6 @@ function setupNoticeDismiss() {
 
 setupNoticeDismiss();
 
-function prepareBaguetteBox() {
-    if (typeof baguetteBox !== 'undefined') {
-        var name = '.baguetteBox';
-        baguetteBox.run(name);
-    }
-}
-
-$(prepareBaguetteBox);
-
-
 $(".async-fetch").map(function (idx, elm) {
     console.log("Element is", elm);
     function onError() {
@@ -310,10 +300,10 @@ setupLiveOnAttach(".load-more-button", function () {
                 var children = div.children();
                 children.appendTo(container);
                 callLiveOnAttach(children);
+                var bb = button.closest(".baguetteBox");
                 button.parent().remove();
-
-                baguetteBox.destroy(".baguetteBox");
-                prepareBaguetteBox();
+                baguetteBox.destroy("#" + bb.attr("id"));
+                prepareBaguetteBox(bb);
             },
             error: function(data) {
                 setDisabled(false);

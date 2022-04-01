@@ -543,3 +543,19 @@ AOS.init ({
         return false;
     }
 });*/
+
+setupLiveOnAttach(".baguetteBox", function () {
+    prepareBaguetteBox(this);
+});
+
+
+function prepareBaguetteBox(el) {
+    if (typeof baguetteBox !== 'undefined') {
+        var id = $(el).attr("id");
+        if (id) {
+            baguetteBox.run("#" + id);
+        } else {
+            console.log("Baguettebox didn't have an id: ", el);
+        }
+    }
+}

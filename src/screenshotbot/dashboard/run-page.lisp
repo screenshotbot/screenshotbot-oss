@@ -291,7 +291,7 @@
                          collect screenshot))))
 
 (defun run-page-contents (run channel filtered-screenshots)
-  <div class= "baguetteBox">
+  <div class= "baguetteBox" id= (format nil "a-~a" (random 10000000)) >
 
     ,(unless filtered-screenshots
        <p class= "text-muted" >No screenshots found</p>)

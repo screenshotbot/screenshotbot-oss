@@ -59,25 +59,28 @@
               do
                  (unless (probe-file x)
                    (error "The file ~A does not exist" x)))
-        (uiop:run-program
-         (append
-          (list
-           "java"
-           "-jar"
-           (namestring
-            (asdf:system-relative-pathname
-             :build-utils "closure-compiler/closure-compiler-v20200830.jar"))
-            "--compilation_level"
-            "WHITESPACE_ONLY"
-           "--js_output_file"
-           (namestring (car (output-files o j)))
-           "--create_source_map"
-           (namestring (cadr (output-files o j))))
-          (mapcar 'namestring
-                   input-files))
-         :output *standard-output*
-         ;;:error-output *error-output*
-         )
+        (multiple-value-bind  (out err ret)
+            (uiop:run-program
+             (append
+              (list
+               "java"
+               "-jar"
+               (namestring
+                (asdf:system-relative-pathname
+                 :build-utils "closure-compiler/closure-compiler-v20200830.jar"))
+               "--compilation_level"
+               "WHITESPACE_ONLY"
+               "--js_output_file"
+               (namestring (car (output-files o j)))
+               "--create_source_map"
+               (namestring (cadr (output-files o j))))
+              (mapcar 'namestring
+                       input-files))
+             :output 'string
+             :error-output 'string
+             :ignore-error-status t)
+          (unless (= ret 0)
+            (error "Could not compile js assets: ~%~%stdout:~a~%~%stderr:~%~a~%" out err)))
         (with-open-file (s (car (output-files o j)))
          (format t "File size is: ~A" (file-length s))))
     (retry-perform ()
