@@ -27,8 +27,10 @@ $("[data-websocket-stream]").each(function () {
 
     socket.onopen = function () {
         console.log("websocket opened");
+    }
 
-
+    socket.onclose = function(e) {
+        console.log("got close message");
     }
 
     socket.onmessage = function (e) {
