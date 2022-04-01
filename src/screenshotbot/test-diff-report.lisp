@@ -12,6 +12,7 @@
                 #:local-image
                 #:recorder-run)
   (:import-from #:screenshotbot/diff-report
+                #:change
                 #:diff-report-deleted
                 #:diff-report-added
                 #:diff-report
@@ -25,16 +26,6 @@
 
 (util/fiveam:def-suite)
 
-(test 2-changed
-  (is (equal "3 changes"
-             (diff-report-title (make-instance 'diff-report :changes (list 1 2 3)))))
-  (is (equal "3 changes, 1 deleted"
-             (diff-report-title (make-instance 'diff-report :changes (list 1 2 3)
-                                                            :deleted (list 1)))))
-  (is (equal "3 changes, 1 added"
-             (diff-report-title (make-instance 'diff-report :changes (list 1 2 3)
-                                                            :added (list 1))))))
-
 (def-fixture state ()
   (with-test-store ()
     (let* ((img (make-instance 'local-image :url "/assets/images/example-view-square.svg.png"))
@@ -46,7 +37,31 @@
                                          :image img2))
            (run1 (make-instance 'recorder-run :screenshots (list screenshot)))
            (run2 (make-instance 'recorder-run :screenshots (list screenshot2))))
-      (&body))))
+      (flet ((make-change (name)
+               (make-instance 'change
+                               :before (make-screenshot :name name)
+                               :after (make-screenshot :name name))))
+        (&body)))))
+
+(test 2-changed
+  (with-fixture state ()
+    (let ((changes (list
+                    (make-change "1")
+                    (make-change "2")
+                    (make-change "3")))
+          (added (list
+                  (make-screenshot :name "foo"))))
+     (is (equal "3 changes"
+                (diff-report-title (make-instance 'diff-report
+                                                   :changes changes))))
+      (is (equal "3 changes, 1 deleted"
+                 (diff-report-title (make-instance 'diff-report :changes changes
+                                                                :deleted added))))
+      (is (equal "3 changes, 1 added"
+                 (diff-report-title (make-instance 'diff-report :changes changes
+                                                              :added added)))))))
+
+
 
 (test make-diff-report
   (with-fixture state ()

@@ -497,15 +497,6 @@ If the images are identical, we return t, else we return NIL."
     Zoom to change
   </button>)
 
-(defun get-only-screenshot-name (screenshot)
-  (car
-   (str:split "--" (screenshot-name screenshot) :limit 2)))
-
-(defun get-tab-title (screenshot)
-  (cadr
-   (str:split "--" (screenshot-name screenshot) :limit 2)))
-
-
 (defclass tab ()
   ((title :initarg :title
           :reader tab-title)
@@ -561,32 +552,6 @@ If the images are identical, we return t, else we return NIL."
          </div>
 
   </markup:merge-tag>)))
-
-(defclass group-item ()
-  ((subtitle :reader group-item-subtitle
-             :initarg :subtitle)
-   (item :initarg :actual-item
-         :reader actual-item)))
-
-(defclass group ()
-  ((title :initarg :title
-          :reader group-title)
-   (items :initarg :items
-          :reader group-items)))
-
-(defun make-groups (items &key key subtitle)
-  (let ((res (make-hash-table :test #'equal)))
-    (loop for item in items
-          do (push item
-                   (gethash (funcall key item) res nil)))
-    (loop for key being the hash-keys of res
-          collect (make-instance 'group
-                                  :title key
-                                  :items
-                                  (loop for item in (gethash key res)
-                                        collect (make-instance 'group-item
-                                                                :subtitle (funcall subtitle item)
-                                                                :actual-item item))))))
 
 (defun render-change-group (group run script-name &key search)
   <div class= "col-12">
@@ -711,16 +676,9 @@ If the images are identical, we return t, else we return NIL."
                            if (or (filteredp (before change))
                                   (filteredp (after change)))
                              collect change))
-            (changes-groups (make-groups changes :key (lambda (change)
-                                                        (get-only-screenshot-name (before change)))
-                                                 :subtitle (lambda (change)
-                                                             (get-tab-title (before change)))))
-            (added-groups (make-groups added
-                                       :key #'get-only-screenshot-name
-                                       :subtitle #'get-tab-title))
-            (deleted-groups (make-groups deleted
-                                         :key #'get-only-screenshot-name
-                                         :subtitle #'get-tab-title)))
+            (changes-groups (changes-groups report))
+            (added-groups (added-groups report))
+            (deleted-groups (deleted-groups report)))
        <markup:merge-tag>
        ,(when acceptable
           <render-acceptable acceptable=acceptable />)

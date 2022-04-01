@@ -27,7 +27,14 @@
    #:diff-report-changes
    #:make-diff-report
    #:diff-report
-   #:diff-report-title))
+   #:diff-report-title
+   #:changes-groups
+   #:added-groups
+   #:deleted-groups
+   #:group-items
+   #:group-title
+   #:actual-item
+   #:group-item-subtitle))
 (in-package :screenshotbot/diff-report)
 
 (defclass change ()
@@ -50,10 +57,65 @@
             :accessor diff-report-changes
             :documentation "List of all CHANGEs")))
 
+(defclass group-item ()
+  ((subtitle :reader group-item-subtitle
+             :initarg :subtitle)
+   (item :initarg :actual-item
+         :reader actual-item)))
+
+(defclass group ()
+  ((title :initarg :title
+          :reader group-title)
+   (items :initarg :items
+          :reader group-items)))
+
+(defun make-groups (items &key key subtitle)
+  (let ((res (make-hash-table :test #'equal)))
+    (loop for item in items
+          do (push item
+                   (gethash (funcall key item) res nil)))
+    (loop for key being the hash-keys of res
+          collect (make-instance 'group
+                                  :title key
+                                  :items
+                                  (loop for item in (gethash key res)
+                                        collect (make-instance 'group-item
+                                                                :subtitle (funcall subtitle item)
+                                                                :actual-item item))))))
+(defun get-only-screenshot-name (screenshot)
+  (car
+   (str:split "--" (screenshot-name screenshot) :limit 2)))
+
+
+(defun get-tab-title (screenshot)
+  (cadr
+   (str:split "--" (screenshot-name screenshot) :limit 2)))
+
+
+(defmethod changes-groups ((self diff-report))
+  (let ((changes (diff-report-changes self)))
+   (make-groups changes :key (lambda (change)
+                               (get-only-screenshot-name (before change)))
+                        :subtitle (lambda (change)
+                                    (get-tab-title (before change))))))
+
+(defmethod added-groups ((self diff-report))
+  (let ((added (diff-report-added self)))
+    (make-groups added
+                 :key #'get-only-screenshot-name
+                 :subtitle #'get-tab-title)))
+
+(defmethod deleted-groups ((self diff-report))
+  (let ((deleted (diff-report-deleted self)))
+    (make-groups deleted
+                 :key #'get-only-screenshot-name
+                 :subtitle #'get-tab-title)))
+
+
 (defun diff-report-title (diff-report)
-  (let ((added (diff-report-added diff-report))
-        (deleted (diff-report-deleted diff-report))
-        (changes (diff-report-changes diff-report)))
+  (let ((added (added-groups diff-report))
+        (deleted (deleted-groups diff-report))
+        (changes (changes-groups diff-report)))
     (str:join ", "
               (remove-if 'null
                (list

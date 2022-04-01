@@ -34,7 +34,9 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/screenshot
-                #:screenshot))
+                #:screenshot)
+  (:import-from #:screenshotbot/diff-report
+                #:change))
 
 (util/fiveam:def-suite)
 
@@ -148,10 +150,16 @@
 
 (test check-result-for-unempty-diff-report
   (with-test-store ()
-   (let ((diff-report (make-instance 'diff-report :added nil
-                                                  :deleted nil
-                                                  :changes (list :dummy))))
-     (let ((run (make-instance 'recorder-run
+    (let ((diff-report (make-instance
+                        'diff-report
+                         :added nil
+                         :deleted nil
+                         :changes (list
+                                   (make-instance
+                                    'change
+                                     :before (make-instance 'screenshot :name "foo")
+                                     :after (make-instance 'screenshot :name "foo"))))))
+      (let ((run (make-instance 'recorder-run
                                 :channel (make-instance 'dummy-channel))))
        (let ((check (make-check-result-from-diff-report
                      (make-instance 'pull-request-promoter)
