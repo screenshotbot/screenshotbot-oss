@@ -759,7 +759,7 @@ If the images are identical, we return t, else we return NIL."
            </ul>
 
            ,(when more
-           <ul class= "nav" >
+           <ul class= "nav ps-1" >
 
              <div class="btn-group">
                <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
