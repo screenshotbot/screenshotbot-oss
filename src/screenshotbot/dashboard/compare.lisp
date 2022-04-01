@@ -695,7 +695,6 @@ If the images are identical, we return t, else we return NIL."
                                          :key #'get-only-screenshot-name
                                          :subtitle #'get-tab-title)))
        <markup:merge-tag>
-       <div class= "page-title-box">
        ,(when acceptable
           <render-acceptable acceptable=acceptable />)
            ,(unless disable-filters
@@ -723,7 +722,7 @@ If the images are identical, we return t, else we return NIL."
                </page-nav-dropdown>))
 
 
-         </div>
+
          ,(when-let ((repo (channel-repo (recorder-run-channel run)))
                      (this-hash (recorder-run-commit run))
                      (prev-hash (recorder-run-commit to)))
@@ -732,7 +731,7 @@ If the images are identical, we return t, else we return NIL."
              Previous commit: <commit repo= repo hash=prev-hash />
            </p>)
 
-       <div class= "d-flex justify-content-between" >
+       <div class= "mt-3 d-flex justify-content-between" >
 
          <div class= "" style= "width: 20em" >
            <div class= "input-group">
