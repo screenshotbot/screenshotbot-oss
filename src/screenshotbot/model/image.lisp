@@ -620,13 +620,17 @@ recognized the file, we'll return nil."
                (values)))))
 
 (with-auto-restart ()
- (defun convert-image-to-webp (image)
-   (let ((blob (image-blob image)))
+  (defun convert-image-to-webp (image)
+   (let ((blob (image-blob image))
+         (+limit+ 16383))
      (typecase blob
        (image-blob
         (when (and
                (uiop:file-exists-p (blob-pathname blob))
-               (string= "PNG" (image-format image)))
+               (string= "PNG" (image-format image))
+               (let ((dim (image-dimensions image)))
+                 (and (< (dimension-height dim) +limit+)
+                      (< (dimension-width dim) +limit+))))
           (flet ((%rename-file (from to)
                    (log:info "Renaming file from ~a to ~a" from to)
                    (rename-file from to)))
