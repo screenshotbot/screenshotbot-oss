@@ -72,6 +72,8 @@
   (:import-from #:screenshotbot/magick-lw
                 #:get-non-alpha-pixels
                 #:with-wand)
+  (:import-from #:screenshotbot/diff-report
+                #:get-tab-title)
   (:export
    #:diff-report
    #:render-acceptable
