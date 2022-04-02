@@ -475,6 +475,7 @@
              ;; WEBP without the user ever noticing. As long as the
              ;; PNG and the WEBP images are both lossless, they should
              ;; result in identical images.
+             #+nil
              (not (string= (image-format img1)
                            (image-format img2))))
      (images-equal-by-content-p img1 img2 :masks masks))))

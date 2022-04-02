@@ -97,6 +97,7 @@
     (uiop:copy-file pathname (blob-pathname blob))
     image))
 
+#+nil
 (test image-comparison-with-different-file-types
   (with-fixture state ()
     (uiop:with-temporary-file (:pathname png :type "png")
