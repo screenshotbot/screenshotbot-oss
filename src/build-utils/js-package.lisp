@@ -67,7 +67,7 @@
                "-jar"
                (namestring
                 (asdf:system-relative-pathname
-                 :build-utils "closure-compiler/closure-compiler-v20200830.jar"))
+                 :build-utils (asdf:output-file 'compile-op :build-utils/closure-compiler)))
                "--compilation_level"
                "WHITESPACE_ONLY"
                "--js_output_file"

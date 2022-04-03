@@ -22,10 +22,10 @@
     (unless (uiop:file-exists-p output)
       (uiop:with-staging-pathname (output)
         (format t "Downloading asset: ~a~%" (url s))
-       (uiop:run-program
-        (list "curl" "-L" (url s)
-              "-o"
-              (namestring output)))))))
+        (with-open-stream (in (dex:get (url s) :want-stream t :force-binary t))
+          (with-open-file (out output :element-type '(unsigned-byte 8) :direction :output
+                               :if-exists :supersede)
+           (uiop:copy-stream-to-stream in out :element-type '(unsigned-byte 8))))))))
 
 (defmethod output-files ((o compile-op) (s remote-file))
   (list
