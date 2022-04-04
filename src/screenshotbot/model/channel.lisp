@@ -77,6 +77,7 @@
    (active-runs
     :initform nil
     :accessor %active-run-alist
+    :relaxed-object-reference t
     :documentation "Mapping from branch name to active run")
    (branch :initarg :branch
            :accessor channel-branch)

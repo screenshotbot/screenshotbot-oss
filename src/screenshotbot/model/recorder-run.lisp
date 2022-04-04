@@ -70,6 +70,7 @@
   ((channel
     :initarg :channel
     :initform nil
+    :relaxed-object-reference t
     :accessor recorder-run-channel)
    (company
     :initarg :company
