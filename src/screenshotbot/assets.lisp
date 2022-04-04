@@ -86,7 +86,11 @@ rm -f $INSTALLER
                (not (path:-e output)))
           (asdf:operate op component))
         (assert (path:-e output))
-        (hunchentoot:handle-static-file output)))))
+        (handler-case
+            (hunchentoot:handle-static-file output)
+          #+lispworks
+          (comm:socket-io-error (e)
+            (values)))))))
 
 (defmacro define-js (url system)
   (let ((map-url (format nil "~a.map" url)))

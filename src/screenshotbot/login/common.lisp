@@ -25,6 +25,9 @@
   (:use-reexport #:screenshotbot/cdn)
   (:import-from #:screenshotbot/user-api
                 #:signup-get)
+  (:import-from #:local-time
+                #:timestamp-
+                #:timestamp>)
   (:export
    #:*current-company-override*
    #:with-oauth-state-and-redirect
@@ -117,6 +120,21 @@
   (can-view! company)
   (setf (auth:session-value :company) company))
 
+(defun most-recent-company (companies)
+  "Returns the most recently updated company in the list. If none are
+  updated in the last month, then return the personal company"
+  (cdar
+   (sort
+    (let ((cutoff (timestamp- (local-time:now) 60 :day)))
+      (loop for company in companies
+            for run = (car (company-runs company))
+            for created-at = (when run (created-at run))
+            if (and created-at (timestamp> created-at cutoff))
+              collect
+              (cons created-at company)))
+    #'timestamp>
+      :key #'car)))
+
 (defun current-company (&key (user nil user-bound-p))
   (cond
     (*current-company-override*
@@ -126,8 +144,8 @@
        (if (and company (can-view company user))
            company
            (or
-            (user-personal-company user)
-            (car (user-companies user))))))
+            (most-recent-company (user-companies user))
+            (user-personal-company user)))))
     ((not (logged-in-p))
      nil)
     ((boundp '*current-api-key*)
