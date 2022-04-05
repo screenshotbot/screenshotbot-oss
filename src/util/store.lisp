@@ -23,7 +23,8 @@
    #:store-subsystems
    #:validate-indices
    #:register-ref
-   #:find-any-refs))
+   #:find-any-refs
+   #:safe-snapshot))
 (in-package :util/store)
 
 (defvar *object-store*)
@@ -168,7 +169,7 @@
 (defun cron-snapshot ()
   (when (boundp 'bknr.datastore:*store*)
     (log:info "Snapshotting bknr.datastore")
-    (snapshot)))
+    (safe-snapshot "cron-job")))
 
 (cl-cron:make-cron-job 'cron-snapshot
                         :minute 0
@@ -268,7 +269,7 @@
             (set-the-index-to-the-first-index ()
               (setf (bknr.indices::index-effective-slot-definition-indices slot)
                     (list (car indices))))
-            (Continue-using-the-first-index
+            (Continue-using-the-first-index ()
               (values))))
         (let*  ((index (car indices))
                 (unique-index-p (typep index 'bknr.indices:unique-index)))
@@ -386,6 +387,17 @@ set-differences on O and the returned value from this."
        (loop for x being the hash-keys of ret
              collect x)
        #'< :key #'bknr.datastore:store-object-id))))
+
+(defun safe-snapshot (&optional (comment "default-comment"))
+  (let ((directories (fad:list-directory *object-store*)))
+    (snapshot)
+    (let* ((new-directories (fad:list-directory *object-store*))
+           (directories (set-difference new-directories directories :test #'equal)))
+      (assert (= 1 (length directories)))
+      (with-open-file (file (path:catfile (car directories) "comment.txt")
+                            :direction :output)
+        (write-string comment file))
+      (car directories))))
 
 
 ;; (validate-indices)
