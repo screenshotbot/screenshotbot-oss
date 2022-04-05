@@ -14,10 +14,14 @@
 (defun head (list n)
   "Returns the first n elements of the list, or the entire list if the list has fewer than n elements"
   (let ((n (fix-n list n)))
-    (cond
-      ((eq list nil) nil)
-      ((eq n 0) nil)
-      (t (cons (car list) (head (cdr list) (- n 1)))))))
+    (labels ((head (list n prefix)
+               (cond
+                 ((eq list nil) (nreverse prefix))
+                 ((eq n 0) (nreverse prefix))
+                 (t
+                  (head (cdr list) (-  n 1)
+                        (list* (car list) prefix))))))
+      (head list n nil))))
 
 (defun tail (list n)
   "Returns all the elements from the (n+1)th element"

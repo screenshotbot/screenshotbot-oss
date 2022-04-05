@@ -11,7 +11,6 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-lists)
 
-
 (util/fiveam:def-suite)
 
 (test head

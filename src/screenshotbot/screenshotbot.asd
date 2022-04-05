@@ -232,7 +232,8 @@
     :serial t
     :components ((:file "common")))
    (:file "config")
-   (:file "package")))
+   (:file "package")
+   (:file "cleanup")))
 
 
 (defsystem :screenshotbot/tests

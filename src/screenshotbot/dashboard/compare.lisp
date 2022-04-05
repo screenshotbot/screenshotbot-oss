@@ -202,9 +202,11 @@
   ((before :initarg :before
            :reader image-comparison-before
            :index-type hash-index
-           :index-reader %image-comparisons-for-before)
+           :index-reader %image-comparisons-for-before
+           :relaxed-object-reference t)
    (after :initarg :after
-          :reader image-comparison-after)
+          :reader image-comparison-after
+          :relaxed-object-reference t)
    (masks :initarg :masks
           :reader image-comparison-masks)
    (identical-p :initform nil

@@ -335,19 +335,19 @@ set-differences on O and the returned value from this."
                   (unless (gethash x seen)
                     (setf (gethash x seen) t)
                     (when
-                        (cond
-                          ((gethash x original-objects)
-                           t)
-                          (t
-                           ;; otherwise go through the slots
-                           (loop for slotd in (closer-mop:class-slots (class-of x))
-                                 if (and
-                                     (slot-boundp x (closer-mop:slot-definition-name slotd))
-                                     (not (bknr.datastore::transient-slot-p slotd))
-                                     (let ((slot-value (slot-value x
-                                                                   (closer-mop:slot-definition-name slotd))))
-                                       (dfs slot-value)))
-                                   collect t)))
+                        ;; Notice that even if x is in original-objects,
+                        ;; we must still traverse it, otherwise we
+                        ;; might miss some paths.
+                        (or
+                         (loop for slotd in (closer-mop:class-slots (class-of x))
+                               if (and
+                                   (slot-boundp x (closer-mop:slot-definition-name slotd))
+                                   (not (bknr.datastore::transient-slot-p slotd))
+                                   (let ((slot-value (slot-value x
+                                                                 (closer-mop:slot-definition-name slotd))))
+                                     (dfs slot-value)))
+                                 collect t)
+                         (gethash x original-objects))
                       ;; on the way back on the DFS, mark all the
                       ;; nodes as part of the result
                       (setf (gethash x ret) t)))
@@ -356,9 +356,18 @@ set-differences on O and the returned value from this."
                   (gethash x ret))
                  (null
                   nil)
-                 (list
-                  (or (dfs (car x))
-                      (dfs (cdr x))))
+                 (cons
+                  ;; Make sure we always travers in both paths. But we
+                  ;; need tail call optimization, since the lists can
+                  ;; be huge.
+                  (labels ((cons-dfs (x default)
+                             (typecase x
+                               (cons
+                                (let ((left (cons-dfs (car x) default)))
+                                  (cons-dfs (cdr x) left)))
+                               (otherwise
+                                (or (dfs x) default)))))
+                    (cons-dfs x nil)))
                  (vector
                   (loop for y across x
                         if (dfs y)
