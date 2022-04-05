@@ -343,8 +343,10 @@ set-differences on O and the returned value from this."
                                if (and
                                    (slot-boundp x (closer-mop:slot-definition-name slotd))
                                    (not (bknr.datastore::transient-slot-p slotd))
-                                   (let ((slot-value (slot-value x
-                                                                 (closer-mop:slot-definition-name slotd))))
+                                   (not (bknr.datastore::relaxed-object-reference-slot-p slotd))
+                                   (let ((slot-value
+                                           (slot-value x
+                                                       (closer-mop:slot-definition-name slotd))))
                                      (dfs slot-value)))
                                  collect t)
                          (gethash x original-objects))
