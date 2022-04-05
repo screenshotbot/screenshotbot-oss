@@ -617,7 +617,7 @@ If the images are identical, we return t, else we return NIL."
      title)
     (t
 
-     (let* ((start (search search title))
+     (let* ((start (search (str:downcase search) (str:downcase title)))
             (end (+ start (length search))))
        (markup:make-merge-tag
         (list
