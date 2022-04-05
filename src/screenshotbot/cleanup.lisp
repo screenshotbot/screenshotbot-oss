@@ -11,6 +11,8 @@
                 #:image-blob
                 #:image)
   (:import-from #:screenshotbot/dashboard/compare
+                #:image-comparison-after
+                #:image-comparison-before
                 #:image-comparison)
   (:import-from #:util/store
                 #:find-any-refs)
@@ -18,8 +20,42 @@
                 #:hash-set-difference)
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
+  (:import-from #:bknr.indices
+                #:object-destroyed-p)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/cleanup)
+
+(defun bad? (x)
+  (or (null x)
+      (object-destroyed-p x)))
+
+#|
+
+It's a little manual, but the current process of clearning up images
+involves multiple passes. (In the future, once we're confident that
+they work correctly, we'll automate it all.)
+
+First, we DELETE-UNREFERNCED-IMAGES. Verify that the output looks
+reasonable, and call the DELETE-ALL-THESE-OBJECTS restart. Next we
+call DELETE-ORPHANED-IMAGE-COMPARISONS. This function is relatively
+safe since it deletes objects that are essentially caches. Finally
+call DELETE-UNREFERENCED-IMAGES again.
+
+But we're not done, we still need to delete unused images. Consider
+delaying this step if the disk usage isn't critical, since image blobs
+don't have transaction logs.
+
+|#
+
+(defun delete-orphaned-image-comparisons ()
+  (loop for ic in (bknr.datastore:store-objects-with-class 'image-comparison)
+        if (or
+            (bad? (image-comparison-before ic))
+            (bad? (image-comparison-after ic)))
+          do
+             (bknr.datastore:delete-object ic)))
+
+;; (delete-orphaned-image-comparisons)
 
 (defun delete-unreferenced-images ()
   (let ((types '(screenshot
