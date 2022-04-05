@@ -316,45 +316,65 @@
 
 
 (defmethod find-any-refs (objects)
-  "Similar to BKNR.DATASTORE:FIND-REFS, but finds references to any of
-  the objects in the list.
+  "Similar to BKNR.DATASTORE:FIND-REFS, but all elements in the transitive paths from U - O to O.
 
-  We return two values: the list of references, and the list of all
-  objects that are unreferenced."
+This means you can find all unreferenced objects by doing
+set-differences on O and the returned value from this."
 
   ;; Use this to stress-test find-any-refs in prod:
   ;; (length (find-any-refs (class-instances 'store-object)))
 
-  (let ((hash-table (make-hash-table)))
+  (let ((original-objects (make-hash-table))
+        (seen (make-hash-table))
+        (ret (make-hash-table)))
     (loop for obj in objects do
-      (setf (gethash obj hash-table) t))
-    (remove-if-not
-     (lambda (candidate)
-       (find-if (lambda (slotd)
-                  (and (slot-boundp candidate (closer-mop:slot-definition-name slotd))
-                       (not (bknr.datastore::transient-slot-p slotd))
-                       (let ((slot-value (slot-value candidate
-                                                     (closer-mop:slot-definition-name slotd))))
-                         (labels ((find-object (x)
-                                    (etypecase x
-                                      (store-object
-                                       (gethash x hash-table))
-                                      (null
-                                       nil)
-                                      (list
-                                       (or (find-object (car x))
-                                           (find-object (cdr x))))
-                                      (vector
-                                       (loop for y across x
-                                             if (find-object y)
-                                               do (return t)))
-                                      (symbol nil)
-                                      (character nil)
-                                      (number nil)
-                                      (string nil))))
-                           (find-object slot-value)))))
-                (closer-mop:class-slots (class-of candidate))))
-     (class-instances 'store-object))))
+      (setf (gethash obj original-objects) t))
+    (labels ((dfs (x)
+               (etypecase x
+                 (store-object
+                  (unless (gethash x seen)
+                    (setf (gethash x seen) t)
+                    (when
+                        (cond
+                          ((gethash x original-objects)
+                           t)
+                          (t
+                           ;; otherwise go through the slots
+                           (loop for slotd in (closer-mop:class-slots (class-of x))
+                                 if (and
+                                     (slot-boundp x (closer-mop:slot-definition-name slotd))
+                                     (not (bknr.datastore::transient-slot-p slotd))
+                                     (let ((slot-value (slot-value x
+                                                                   (closer-mop:slot-definition-name slotd))))
+                                       (dfs slot-value)))
+                                   collect t)))
+                      ;; on the way back on the DFS, mark all the
+                      ;; nodes as part of the result
+                      (setf (gethash x ret) t)))
+                  ;; But we still need to propagate the last cached
+                  ;; result if we have already dfs-ed this node.
+                  (gethash x ret))
+                 (null
+                  nil)
+                 (list
+                  (or (dfs (car x))
+                      (dfs (cdr x))))
+                 (vector
+                  (loop for y across x
+                        if (dfs y)
+                          collect t))
+                 (symbol nil)
+                 (character nil)
+                 (number nil)
+                 (string nil))))
+      (loop for x in (bknr.datastore:store-objects-with-class 'store-object)
+            if (not (gethash x original-objects))
+              do
+                 (dfs x))
+      (sort
+       (loop for x being the hash-keys of ret
+             collect x)
+       #'< :key #'bknr.datastore:store-object-id))))
 
 
 ;; (validate-indices)

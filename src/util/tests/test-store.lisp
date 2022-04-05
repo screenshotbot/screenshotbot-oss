@@ -88,11 +88,19 @@
 (test create-object-and-reference
   (with-test-store ()
     (let* ((xyz (make-instance 'xyz))
+           (xyz-2 (make-instance 'xyz))
            (abc (make-instance 'abc :ref xyz)))
-      (is (equal (list abc) (find-any-refs (list xyz)))))
+      (is (equal (list xyz abc) (find-any-refs (list xyz)))))
     (let* ((xyz (make-instance 'xyz))
            (abc (make-instance 'abc :ref (list xyz))))
-      (is (equal (list abc) (find-any-refs (list xyz)))))
-        (let* ((xyz (make-instance 'xyz))
+      (is (equal (list xyz abc) (find-any-refs (list xyz)))))
+    (let* ((xyz (make-instance 'xyz))
            (abc (make-instance 'abc :ref (make-array 1 :initial-contents (list xyz)))))
-      (is (equal (list abc) (find-any-refs (list xyz)))))))
+      (is (equal (list xyz abc) (find-any-refs (list xyz)))))))
+
+(test transitive-refs
+  (with-test-store ()
+    (let* ((xyz (make-instance 'xyz))
+           (abc-1 (make-instance 'abc :ref xyz))
+           (abc (make-instance 'abc :ref abc-1)))
+      (is (equal (list xyz abc-1 abc) (find-any-refs (list xyz)))))))
