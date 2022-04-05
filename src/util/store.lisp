@@ -21,7 +21,9 @@
    #:with-test-store
    #:*object-store*
    #:store-subsystems
-   #:validate-indices))
+   #:validate-indices
+   #:register-ref
+   #:find-any-refs))
 (in-package :util/store)
 
 (defvar *object-store*)
@@ -311,5 +313,48 @@
                        (validate-class-index (class-name class)
                                             slot-name))))
     t))
+
+
+(defmethod find-any-refs (objects)
+  "Similar to BKNR.DATASTORE:FIND-REFS, but finds references to any of
+  the objects in the list.
+
+  We return two values: the list of references, and the list of all
+  objects that are unreferenced."
+
+  ;; Use this to stress-test find-any-refs in prod:
+  ;; (length (find-any-refs (class-instances 'store-object)))
+
+  (let ((hash-table (make-hash-table)))
+    (loop for obj in objects do
+      (setf (gethash obj hash-table) t))
+    (remove-if-not
+     (lambda (candidate)
+       (find-if (lambda (slotd)
+                  (and (slot-boundp candidate (closer-mop:slot-definition-name slotd))
+                       (not (bknr.datastore::transient-slot-p slotd))
+                       (let ((slot-value (slot-value candidate
+                                                     (closer-mop:slot-definition-name slotd))))
+                         (labels ((find-object (x)
+                                    (etypecase x
+                                      (store-object
+                                       (gethash x hash-table))
+                                      (null
+                                       nil)
+                                      (list
+                                       (or (find-object (car x))
+                                           (find-object (cdr x))))
+                                      (vector
+                                       (loop for y across x
+                                             if (find-object y)
+                                               do (return t)))
+                                      (symbol nil)
+                                      (character nil)
+                                      (number nil)
+                                      (string nil))))
+                           (find-object slot-value)))))
+                (closer-mop:class-slots (class-of candidate))))
+     (class-instances 'store-object))))
+
 
 ;; (validate-indices)

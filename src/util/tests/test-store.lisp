@@ -9,6 +9,8 @@
           #:fiveam
           #:alexandria)
     (:import-from #:util/store
+                  #:find-any-refs
+                  #:register-ref
                   #:with-test-store
                 #:parse-timetag
                 #:*object-store*
@@ -69,3 +71,28 @@
   (with-test-store ()
     (is (eql 0 (length (all-store-objects)))))
     (is (eql 0 (length (dummy-class-for-name "bleh")))))
+
+
+(defclass xyz (store-object)
+  ()
+  (:metaclass persistent-class))
+
+(defclass abc (store-object)
+  ((ref :initarg :ref))
+  (:metaclass persistent-class))
+
+(def-fixture refs ()
+  (with-test-store ()
+    (&body)))
+
+(test create-object-and-reference
+  (with-test-store ()
+    (let* ((xyz (make-instance 'xyz))
+           (abc (make-instance 'abc :ref xyz)))
+      (is (equal (list abc) (find-any-refs (list xyz)))))
+    (let* ((xyz (make-instance 'xyz))
+           (abc (make-instance 'abc :ref (list xyz))))
+      (is (equal (list abc) (find-any-refs (list xyz)))))
+        (let* ((xyz (make-instance 'xyz))
+           (abc (make-instance 'abc :ref (make-array 1 :initial-contents (list xyz)))))
+      (is (equal (list abc) (find-any-refs (list xyz)))))))

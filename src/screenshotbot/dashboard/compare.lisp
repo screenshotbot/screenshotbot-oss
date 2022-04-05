@@ -74,6 +74,8 @@
                 #:with-wand)
   (:import-from #:screenshotbot/diff-report
                 #:get-tab-title)
+  (:import-from #:bknr.datastore
+                #:cascading-delete-object)
   (:export
    #:diff-report
    #:render-acceptable
@@ -212,6 +214,10 @@
    (result :initarg :result
            :accessor image-comparison-result))
   (:metaclass persistent-class))
+
+(defmethod cascading-delete-p ((image image) (image-comparison image-comparison))
+  "If the reference image is deleted, then delete the comparison."
+  t)
 
 (defmethod find-image-comparison-on-images ((before image)
                                             (after image)
