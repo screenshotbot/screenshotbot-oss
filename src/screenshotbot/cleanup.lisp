@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/cleanup
   (:use #:cl)
   (:import-from #:screenshotbot/model/image
+                #:mask-rect
                 #:image-blob
                 #:image)
   (:import-from #:screenshotbot/dashboard/compare
@@ -23,7 +24,8 @@
 (defun delete-unreferenced-images ()
   (let ((types '(screenshot
                  image
-                 image-blob)))
+                 image-blob
+                 mask-rect)))
     (let ((objects
             (loop for type in types
                   appending (bknr.datastore:store-objects-with-class type))))
@@ -32,12 +34,10 @@
                                              :test #'eql)))
         (restart-case
             (when deletable
-              (error "~d out of ~d elements can be deleted: ~S
-                       ~%all reachable nodes: ~S"
+              (error "~d out of ~d elements can be deleted: ~S"
                      (length deletable)
                      (length objects)
-                     deletable
-                     refs))
+                     deletable))
           (delete-all-these-objects ()
             (bknr.datastore:snapshot) ;; just to be sure
             (loop for x in deletable
