@@ -492,55 +492,81 @@ body.dashboard {
         display:none;
     }
 
+    .navbar-toggler {
+        display: none;
+        color: white;
+
+        &:focus {
+            outline: none;
+        }
+    }
+
+    @include media-breakpoint-down(sm) {
+        .leftside-menu.show {
+            width: 100%;
+
+
+        }
+    }
+
     @include media-breakpoint-down(md) {
-        .leftside-menu {
+        .leftside-menu.show {
+            z-index: 1000;
+            .navbar-toggler {
+                display: inline;
+            }
+        }
+
+        .leftside-menu.collapsing {
+            transition: none;
+        }
+
+        .leftside-menu:not(.show) {
             flex-direction: row !important;
             flex-wrap: none !important;
+            justify-content: space-between;
             width: 100%;
-            float: top;
+            float: none;
+            position: relative;
             height: auto;
+
+
+            .navbar-toggler {
+                display: inline-block;
+                color: white;
+            }
+
+            .nav-link {
+                padding-right: 0.5em;
+                padding-left: 0.5em;
+            }
+            hr {
+                display: none;
+            }
+            #dropdownUser1 {
+                vertical-align: middle;
+                height: 100%;
+            }
+
+            .nav-item .material-icons {
+                padding-right: 0;
+            }
+
+            .nav-link .text, .user-full-name {
+                display: none;
+            }
+
+            ul.nav {
+                display:inline-block;
+            }
+
+            li.nav-item {
+                display: none;
+            }
         }
 
         .content-page {
-            padding-top: 5em;
             margin-left: 1em;
-        }
-
-        .logo-lg {
-            display: none;
-        }
-
-        .logo-sm {
-            display: block;
-            padding-right: 1em;
-        }
-
-        .nav-link {
-            padding-right: 0.5em;
-            padding-left: 0.5em;
-        }
-        hr {
-            display: none;
-        }
-        #dropdownUser1 {
-            vertical-align: middle;
-            height: 100%;
-        }
-
-        .nav-item .material-icons {
-            padding-right: 0;
-        }
-
-        .nav-link .text, .user-full-name {
-            display: none;
-        }
-
-        ul.nav {
-            display:inline-block;
-        }
-
-        li.nav-item {
-            display: inline-block;
         }
     }
 

@@ -58,18 +58,24 @@
   nil)
 (deftag left-side-bar (&key user company script-name)
   (declare (optimize (speed 0) (debug 3)))
-  <div class="d-flex flex-column p-3 text-white bg-dark leftside-menu" >
+  <div class="d-flex flex-column p-3 text-white bg-dark leftside-menu collapse" >
+
+    <div>
+      <button type= "button" href= "#" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".leftside-menu" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <mdi name= "menu" />
+      </button>
+
+      <a href="/" class="align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
 
 
-    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-
-      <span class="logo logo-lg fs-4">
-        <img src= "/assets/images/logo-light.png" />
-      </span>
-      <span class="logo logo-sm fs-4">
-        <img src= "/assets/images/logo-small-light.png" />
-      </span>
-  </a>
+        <span class="logo logo-lg fs-4">
+          <img src= "/assets/images/logo-light.png" />
+        </span>
+        <span class="logo logo-sm fs-4">
+          <img src= "/assets/images/logo-small-light.png" />
+        </span>
+      </a>
+    </div>
   <hr>
 
     <ul class="nav nav-pills flex-column">
