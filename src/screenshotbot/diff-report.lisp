@@ -66,7 +66,13 @@
    (changes :initarg :changes
             :initform nil
             :accessor diff-report-changes
-            :documentation "List of all CHANGEs")))
+            :documentation "List of all CHANGEs")
+   (added-groups :initform nil
+                 :accessor %added-groups)
+   (deleted-groups :initform nil
+                   :accessor %deleted-groups)
+   (changes-groups :initform nil
+                   :accessor %changes-groups)))
 
 (defclass group-item ()
   ((subtitle :reader group-item-subtitle
@@ -104,23 +110,29 @@
 
 
 (defmethod changes-groups ((self diff-report))
-  (let ((changes (diff-report-changes self)))
-   (make-groups changes :key (lambda (change)
-                               (get-only-screenshot-name (before change)))
-                        :subtitle (lambda (change)
-                                    (get-tab-title (before change))))))
+  (util:or-setf
+   (%changes-groups self)
+   (let ((changes (diff-report-changes self)))
+     (make-groups changes :key (lambda (change)
+                                 (get-only-screenshot-name (before change)))
+                          :subtitle (lambda (change)
+                                      (get-tab-title (before change)))))))
 
 (defmethod added-groups ((self diff-report))
-  (let ((added (diff-report-added self)))
-    (make-groups added
-                 :key #'get-only-screenshot-name
-                 :subtitle #'get-tab-title)))
+  (util:or-setf
+   (%added-groups self)
+   (let ((added (diff-report-added self)))
+     (make-groups added
+                  :key #'get-only-screenshot-name
+                  :subtitle #'get-tab-title))))
 
 (defmethod deleted-groups ((self diff-report))
-  (let ((deleted (diff-report-deleted self)))
-    (make-groups deleted
-                 :key #'get-only-screenshot-name
-                 :subtitle #'get-tab-title)))
+  (util:or-setf
+   (%deleted-groups self)
+   (let ((deleted (diff-report-deleted self)))
+     (make-groups deleted
+                  :key #'get-only-screenshot-name
+                  :subtitle #'get-tab-title))))
 
 
 (defun diff-report-title (diff-report)
@@ -165,8 +177,9 @@
       (make-diff-report run to))))
 
 (defun make-diff-report (run to)
-  (symbol-macrolet ((place (gethash (cons run to) *cache*)))
-    (or place (setf place (%make-diff-report run to)))))
+  (util:or-setf
+   (gethash (list run to :v3) *cache*)
+   (%make-diff-report run to)))
 
 (defun %find-changes (names to-names)
   (let ((hash-table (make-hash-table :test #'equal)))
