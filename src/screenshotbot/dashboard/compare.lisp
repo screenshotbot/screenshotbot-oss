@@ -117,7 +117,7 @@
             ((nil)
              "Review"))))
     <markup:merge-tag>
-      <button class= (format nil"ms-1 btn  btn-secondary dropdown-toggle ~a" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <button class= (format nil"btn  btn-secondary dropdown-toggle ~a" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         ,(progn btn-text)
       </button>
       <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
@@ -753,7 +753,7 @@ If the images are identical, we return t, else we return NIL."
            ,(when more
            <ul class= "nav ps-1" >
 
-             <div class="btn-group">
+             <div>
                <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                  More
                </button>
