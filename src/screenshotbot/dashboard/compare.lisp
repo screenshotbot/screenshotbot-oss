@@ -690,14 +690,6 @@ If the images are identical, we return t, else we return NIL."
             (deleted-groups (deleted-groups report)))
        <markup:merge-tag>
 
-           ,(progn
-              #+screenshotbot-oss
-              (progn
-                <page-nav-dropdown title= "Views" >
-                  <a href=all-comparisons >All Pixel Comparisons</a>
-               </page-nav-dropdown>))
-
-
        <div class= "mt-3 d-flex justify-content-between" >
 
          <div class= "" style= "width: 20em" >
@@ -735,8 +727,17 @@ If the images are identical, we return t, else we return NIL."
                  ,@ (loop for (name . url) in more
                           collect
                           <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
-                          <li><a class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal">Info</a></li>
+                 <li><a class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal">Info</a></li>
+                 ,(progn
+                    #+screenshotbot-oss
+                  (progn
+                <li>
+                  <a class= "dropdown-item" href=all-comparisons >All Pixel Comparisons (OSS only) </a>
+                </li>))
+
                </ul>
+
+
 
                ,(when acceptable
                   <render-acceptable acceptable=acceptable />)
