@@ -147,7 +147,7 @@
        (diff-report-deleted diff-report)
        (diff-report-changes diff-report))))
 
-(defhandler (compare-page :uri "/runs/:id/compare/:to") (id to report)
+(defhandler (compare-page :uri "/runs/:id/compare/:to") (id to)
   (when (string= "254" id)
     (hex:safe-redirect "/report/5fd16bcf4f4b3822fd000146"))
   (flet ((find-run (id)
@@ -660,111 +660,94 @@ If the images are identical, we return t, else we return NIL."
 
 
 (deftag render-diff-report (&key run to
-                            (lang-filter (make-instance 'row-filter :value t))
-                            (device-filter (make-instance 'row-filter :value t))
                             more
                             acceptable
                             (re-run nil))
-  (flet ((filteredp (x) (and (run-row-filter lang-filter x)
-                             (run-row-filter device-filter x))))
-   (let* ((report (make-diff-report run to))
-          (script-name (hunchentoot:script-name*))
-          (all-comparisons (nibble ()
-                             (all-comparisons-page report))))
-     (declare (ignorable all-comparisons))
-     (let* ((added (diff-report-added report))
-            (added (loop for s in added
-                         if (filteredp s)
-                           collect s))
-            (deleted (diff-report-deleted report))
-            (deleted (loop for s in deleted
-                           if (filteredp s)
-                             collect s))
-            (changes (diff-report-changes report))
-            (changes (loop for change in changes
-                           if (or (filteredp (before change))
-                                  (filteredp (after change)))
-                             collect change))
-            (changes-groups (changes-groups report))
-            (added-groups (added-groups report))
-            (deleted-groups (deleted-groups report)))
-       <markup:merge-tag>
+  (declare (ignore re-run))
+  (let* ((report (make-diff-report run to))
+         (all-comparisons (nibble ()
+                            (all-comparisons-page report))))
+    (declare (ignorable all-comparisons))
+    (let* ((changes-groups (changes-groups report))
+           (added-groups (added-groups report))
+           (deleted-groups (deleted-groups report)))
+      <markup:merge-tag>
 
-       <div class= "mt-3 d-flex  flex-wrap justify-content-between compare-header" >
+      <div class= "mt-3 d-flex  flex-wrap justify-content-between compare-header" >
 
-         <div class= "report-search-wrapper"  >
-           <div class= "input-group">
-             <span class= "input-group-text report-search" >
-               <mdi name= "search" />
-             </span>
-             <input class= "form-control search d-inline-block" type= "text" autocomplete= "off"
-                    placeholder= "Search..."
-                    data-target= ".report-result" />
-           </div>
-         </div>
+      <div class= "report-search-wrapper"  >
+      <div class= "input-group">
+      <span class= "input-group-text report-search" >
+      <mdi name= "search" />
+      </span>
+      <input class= "form-control search d-inline-block" type= "text" autocomplete= "off"
+      placeholder= "Search..."
+      data-target= ".report-result" />
+      </div>
+      </div>
 
-         <div class= "options" >
-           <ul class= "nav nav-pills report-selector" data-target= ".report-result" >
-             <li class= "nav-item">
-               <a class= "nav-link active" href= "#" data-type= "changes" >,(length changes-groups) changes</a>
-             </li>
-             <li class= "nav-item">
-               <a class= "nav-link" href= "#" data-type= "added" >,(length added-groups) added</a>
-             </li>
-             <li class= "nav-item">
-               <a class= "nav-link" href= "#" data-type= "deleted" >,(length deleted-groups) deleted</a>
-             </li>
+      <div class= "options" >
+      <ul class= "nav nav-pills report-selector" data-target= ".report-result" >
+      <li class= "nav-item">
+      <a class= "nav-link active" href= "#" data-type= "changes" >,(length changes-groups) changes</a>
+      </li>
+      <li class= "nav-item">
+      <a class= "nav-link" href= "#" data-type= "added" >,(length added-groups) added</a>
+      </li>
+      <li class= "nav-item">
+      <a class= "nav-link" href= "#" data-type= "deleted" >,(length deleted-groups) deleted</a>
+      </li>
 
-           ,(when more
+      ,(when more
 
-             <markup:merge-tag>
-               <li class= "nav-item" >
-                 <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                   More
-                 </button>
-                 <ul class="dropdown-menu dropdown-menu-end">
-                   ,@ (loop for (name . url) in more
-                            collect
-                            <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
-                            <li><a class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal">Info</a></li>
-                            ,(progn
-                               #+screenshotbot-oss
-                               (progn
-                                 <li>
-                                   <a class= "dropdown-item" href=all-comparisons >All Pixel Comparisons (OSS only) </a>
-                                 </li>))
+         <markup:merge-tag>
+         <li class= "nav-item" >
+         <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+         More
+         </button>
+         <ul class="dropdown-menu dropdown-menu-end">
+         ,@ (loop for (name . url) in more
+                  collect
+                  <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
+         <li><a class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal">Info</a></li>
+         ,(progn
+            #+screenshotbot-oss
+            (progn
+              <li>
+              <a class= "dropdown-item" href=all-comparisons >All Pixel Comparisons (OSS only) </a>
+              </li>))
 
-                 </ul>
+         </ul>
 
-               </li>
+         </li>
 
-               ,(when acceptable
-                  <li class= "nav-item" >
-                    <render-acceptable acceptable=acceptable />
-                  </li>)
-             </markup:merge-tag>)
-           </ul>
+         ,(when acceptable
+            <li class= "nav-item" >
+            <render-acceptable acceptable=acceptable />
+            </li>)
+         </markup:merge-tag>)
+      </ul>
 
 
 
-         </div>
+      </div>
 
-       </div>
+      </div>
 
-       <div class= "report-result mt-3" data-update= (nibble () (report-result run
-            changes-groups
-            added-groups
-            deleted-groups))
-            data-args= "{}" >
-         ,(report-result run
-                         changes-groups
-                         added-groups
-                         deleted-groups)
-       </div>
+      <div class= "report-result mt-3" data-update= (nibble () (report-result run
+                                                                              changes-groups
+                                                                              added-groups
+                                                                              deleted-groups))
+      data-args= "{}" >
+      ,(report-result run
+                      changes-groups
+                      added-groups
+                      deleted-groups)
+      </div>
 
-       ,(info-modal run to)
+      ,(info-modal run to)
 
-       </markup:merge-tag>))))
+      </markup:merge-tag>)))
 
 (deftag link-to-run (&key run)
   <a href= (hex:make-url "/runs/:id" :id (oid run))>run from ,(timeago :timestamp (created-at run))</a>)
