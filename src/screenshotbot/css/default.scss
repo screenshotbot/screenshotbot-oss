@@ -466,6 +466,14 @@ body.dashboard {
         position: fixed;
     }
 
+    .nav-link:hover {
+        background: $gray-800;
+    }
+
+    .nav-link {
+        margin-bottom: 2px;
+    }
+
     overflow-x: hidden;
 
     .content-page {
