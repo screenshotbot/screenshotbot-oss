@@ -469,16 +469,16 @@ body.dashboard {
             background: $gray-800;
         }
 
+
+        .nav-link.active:hover {
+            background: $primary;
+        }
+
+        .nav-link {
+            margin-bottom: 2px;
+        }
     }
 
-
-    .nav-link.active:hover {
-        background: $primary;
-    }
-
-    .nav-link {
-        margin-bottom: 2px;
-    }
 
 
     overflow-x: hidden;
