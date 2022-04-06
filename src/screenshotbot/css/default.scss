@@ -417,7 +417,7 @@ canvas.image-comparison-modal-image {
     background: $green;
 }
 
-.dropdown .dropdown-report-accepted {
+.dropdown-report-accepted {
     background: $green !important;
 
     &:hover {
@@ -425,7 +425,7 @@ canvas.image-comparison-modal-image {
     }
 }
 
-.dropdown .dropdown-report-rejected {
+.dropdown-report-rejected {
     background-color: $red !important;
 
     &:hover {

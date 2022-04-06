@@ -116,30 +116,30 @@
              "Rejected")
             ((nil)
              "Review"))))
-    <div class="dropdown">
-  <button class= (format nil"btn btn-sm btn-secondary dropdown-toggle ~a" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-  ,(progn btn-text)
-  </button>
-    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
-    <form action=accept method= "POST" class= "dropdown-item" >
-    <button action= "submit" class= "btn btn-link acceptable accept-link" >
-    <input type= "hidden" name= "redirect"
-      value= (hunchentoot:script-name*) />
-    <i class= "mdi mdi-check-bold" />
-    Accept
-    </button>
-    </form>
+    <markup:merge-tag>
+      <button class= (format nil"ms-1 btn  btn-secondary dropdown-toggle ~a" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        ,(progn btn-text)
+      </button>
+      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
+        <form action=accept method= "POST" class= "dropdown-item" >
+          <button action= "submit" class= "btn btn-link acceptable accept-link" >
+            <input type= "hidden" name= "redirect"
+                   value= (hunchentoot:script-name*) />
+            <i class= "mdi mdi-check-bold" />
+            Accept
+          </button>
+        </form>
 
-    <form action=reject method= "POST" class= "dropdown-item">
-    <input type= "hidden" name= "redirect"
-      value= (hunchentoot:script-name* ) />
-    <button action= "submit" class= "btn btn-link acceptable reject-link" >
-    <i class= "mdi mdi-close" />
-    Reject</button>
-    </form>
+        <form action=reject method= "POST" class= "dropdown-item">
+          <input type= "hidden" name= "redirect"
+                 value= (hunchentoot:script-name* ) />
+          <button action= "submit" class= "btn btn-link acceptable reject-link" >
+            <i class= "mdi mdi-close" />
+            Reject</button>
+        </form>
 
-    </div>
-  </div>))
+      </div>
+    </markup:merge-tag>))
 
 (defun diff-report-empty-p (diff-report)
   (not
@@ -690,8 +690,6 @@ If the images are identical, we return t, else we return NIL."
             (added-groups (added-groups report))
             (deleted-groups (deleted-groups report)))
        <markup:merge-tag>
-       ,(when acceptable
-          <render-acceptable acceptable=acceptable />)
            ,(unless disable-filters
               (let ((all-runs (append added deleted (mapcar 'before changes) (mapcar 'after changes))))
                 <markup:merge-tag>
@@ -764,8 +762,12 @@ If the images are identical, we return t, else we return NIL."
                           collect
                           <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
                </ul>
+
+               ,(when acceptable
+                  <render-acceptable acceptable=acceptable />)
              </div>
            </ul>)
+
          </div>
 
        </div>
