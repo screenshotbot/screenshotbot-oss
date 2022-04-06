@@ -46,7 +46,6 @@
    #:run-page
    #:run-row-filter
    #:row-filter
-   #:filter-selector
    #:commit)
   (:export #:mask-editor))
 (in-package :screenshotbot/dashboard/run-page)
@@ -195,32 +194,6 @@
                (eq filter t)
                (equal filter (funcall (row-filter-key row-filter) x)))
              collect x))))
-
-(deftag filter-selector (&key default-title
-                         prefix
-                         data
-                         filter-renderer
-                         row-filter)
-  (let ((devices (remove-duplicates
-                  (loop for row in data
-                        collect (funcall (row-filter-key row-filter) row))
-                  :test 'equal))
-        (filter (row-filter-value row-filter)))
-
-    (cond
-      ((<= (length devices) 1)
-       <markup:merge-tag />)
-      (t
-       <page-nav-dropdown title= (if (eq filter t) default-title (format nil "~a: ~a"  prefix filter)) >
-       <a href= (nibble () (funcall filter-renderer t)) >,(progn default-title) </a>
-       ,@ (loop for device in devices
-                collect
-                (let ((device device))
-                  (let ((device-selector (nibble ()
-                                           (funcall filter-renderer
-                                                    device))))
-                    <a href=device-selector >,(progn device)</a>)) )
-       </page-nav-dropdown>))))
 
 
 (defun render-run-page (run &rest filters &key name)

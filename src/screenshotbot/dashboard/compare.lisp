@@ -33,7 +33,6 @@
                 #:page-nav-dropdown
                 #:row-filter
                 #:mask-editor
-                #:filter-selector
                 #:commit)
   (:import-from #:screenshotbot/model/image
                 #:dimension-width
@@ -83,9 +82,7 @@
    #:diff-report-empty-p
    #:render-diff-report
    #:diff-report-changes
-   #:warmup-comparison-images)
-  ;; forward decls
-  (:export #:filter-selector))
+   #:warmup-comparison-images))
 (in-package :screenshotbot/dashboard/compare)
 
 
@@ -158,7 +155,7 @@
           (to (find-run to)))
      (can-view! run to)
      <app-template>
-     ,(async-diff-report :run run :to to :disable-filters t)
+     ,(async-diff-report :run run :to to)
      </app-template>)))
 
 
@@ -662,7 +659,6 @@ If the images are identical, we return t, else we return NIL."
 (deftag render-diff-report (&key run to
                             (lang-filter (make-instance 'row-filter :value t))
                             (device-filter (make-instance 'row-filter :value t))
-                            disable-filters
                             more
                             acceptable
                             (re-run nil))
@@ -690,22 +686,6 @@ If the images are identical, we return t, else we return NIL."
             (added-groups (added-groups report))
             (deleted-groups (deleted-groups report)))
        <markup:merge-tag>
-           ,(unless disable-filters
-              (let ((all-runs (append added deleted (mapcar 'before changes) (mapcar 'after changes))))
-                <markup:merge-tag>
-                  <filter-selector default-title= "All Languages"
-                                   prefix= "Language"
-                                   row-filter=lang-filter
-                                   filter-renderer= (lambda (x) (funcall re-run :lang-filter x))
-                                   data= all-runs
-                                   />
-                  <filter-selector default-title= "All Devices"
-                                   prefix= "Device"
-                                   row-filter=device-filter
-                                   filter-renderer= (lambda (x) (funcall re-run :device-filter x))
-                                   data= all-runs
-                                   />
-                </markup:merge-tag>))
 
            ,(progn
               #+screenshotbot-oss
