@@ -690,11 +690,11 @@ If the images are identical, we return t, else we return NIL."
             (deleted-groups (deleted-groups report)))
        <markup:merge-tag>
 
-       <div class= "mt-3 d-flex justify-content-between" >
+       <div class= "mt-3 d-flex  flex-wrap justify-content-between compare-header" >
 
-         <div class= "" style= "width: 20em" >
+         <div class= "report-search-wrapper"  >
            <div class= "input-group">
-             <span class= "input-group-text" >
+             <span class= "input-group-text report-search" >
                <mdi name= "search" />
              </span>
              <input class= "form-control search d-inline-block" type= "text" autocomplete= "off"
@@ -703,7 +703,7 @@ If the images are identical, we return t, else we return NIL."
            </div>
          </div>
 
-         <div class= "d-flex" >
+         <div class= "options" >
            <ul class= "nav nav-pills report-selector" data-target= ".report-result" >
              <li class= "nav-item">
                <a class= "nav-link active" href= "#" data-type= "changes" >,(length changes-groups) changes</a>
@@ -714,35 +714,38 @@ If the images are identical, we return t, else we return NIL."
              <li class= "nav-item">
                <a class= "nav-link" href= "#" data-type= "deleted" >,(length deleted-groups) deleted</a>
              </li>
-           </ul>
 
            ,(when more
-           <ul class= "nav ps-1" >
 
-             <div>
-               <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                 More
-               </button>
-               <ul class="dropdown-menu dropdown-menu-end">
-                 ,@ (loop for (name . url) in more
-                          collect
-                          <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
-                 <li><a class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal">Info</a></li>
-                 ,(progn
-                    #+screenshotbot-oss
-                  (progn
-                <li>
-                  <a class= "dropdown-item" href=all-comparisons >All Pixel Comparisons (OSS only) </a>
-                </li>))
+             <markup:merge-tag>
+               <li class= "nav-item" >
+                 <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                   More
+                 </button>
+                 <ul class="dropdown-menu dropdown-menu-end">
+                   ,@ (loop for (name . url) in more
+                            collect
+                            <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
+                            <li><a class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal">Info</a></li>
+                            ,(progn
+                               #+screenshotbot-oss
+                               (progn
+                                 <li>
+                                   <a class= "dropdown-item" href=all-comparisons >All Pixel Comparisons (OSS only) </a>
+                                 </li>))
 
-               </ul>
+                 </ul>
 
-
+               </li>
 
                ,(when acceptable
-                  <render-acceptable acceptable=acceptable />)
-             </div>
-           </ul>)
+                  <li class= "nav-item" >
+                    <render-acceptable acceptable=acceptable />
+                  </li>)
+             </markup:merge-tag>)
+           </ul>
+
+
 
          </div>
 

@@ -509,7 +509,7 @@ body.dashboard {
         }
     }
 
-    @include media-breakpoint-down(md) {
+    @include media-breakpoint-down(lg) {
         .leftside-menu.show {
             z-index: 1000;
             .navbar-toggler {
@@ -638,5 +638,38 @@ a {
     .card-footer {
         padding-top: 1rem;
         padding-bottom: 1rem;
+    }
+}
+
+.compare-header {
+
+    .report-search-wrapper {
+        width: 20em;
+    }
+
+    .nav-item {
+        margin-left: 0.25rem;
+    }
+
+    @include media-breakpoint-down(md) {
+
+        display: block;
+        justify-content: none;
+
+        .report-search-wrapper {
+            display: block;
+            margin-bottom: 0.5rem;
+            width: 100%;
+        }
+
+        .options {
+            width: 100%;
+        }
+
+        .options .nav {
+            width: 100%;
+            display: flex;
+            justify-content: space-evenly;
+        }
     }
 }
