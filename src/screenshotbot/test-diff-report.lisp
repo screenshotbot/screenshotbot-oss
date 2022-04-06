@@ -12,6 +12,7 @@
                 #:local-image
                 #:recorder-run)
   (:import-from #:screenshotbot/diff-report
+                #:*cache*
                 #:change
                 #:diff-report-deleted
                 #:diff-report-added
@@ -27,21 +28,22 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-    (let* ((img (make-instance 'local-image :url "/assets/images/example-view-square.svg.png"))
-           (img2 (make-instance 'local-image :url "/assets/images/example-view.svg.png"))
-           (channel (make-instance 'channel))
-           (screenshot (make-screenshot :name "foo"
-                                        :image img))
-           (screenshot2 (make-screenshot :name "foo"
-                                         :image img2))
-           (run1 (make-instance 'recorder-run :screenshots (list screenshot)))
-           (run2 (make-instance 'recorder-run :screenshots (list screenshot2))))
-      (flet ((make-change (name)
-               (make-instance 'change
+  (let ((*cache* (make-hash-table :test #'equal)))
+   (with-test-store ()
+     (let* ((img (make-instance 'local-image :url "/assets/images/example-view-square.svg.png"))
+            (img2 (make-instance 'local-image :url "/assets/images/example-view.svg.png"))
+            (channel (make-instance 'channel))
+            (screenshot (make-screenshot :name "foo"
+                                         :image img))
+            (screenshot2 (make-screenshot :name "foo"
+                                          :image img2))
+            (run1 (make-instance 'recorder-run :screenshots (list screenshot)))
+            (run2 (make-instance 'recorder-run :screenshots (list screenshot2))))
+       (flet ((make-change (name)
+                (make-instance 'change
                                :before (make-screenshot :name name)
                                :after (make-screenshot :name name))))
-        (&body)))))
+         (&body))))))
 
 (test 2-changed
   (with-fixture state ()

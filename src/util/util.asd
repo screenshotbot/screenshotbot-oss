@@ -88,7 +88,9 @@
                (:file "acceptor")
                (:file "mquery")
                (:file "form-errors")
-               (:file "debugger-hook")))
+               (:file "debugger-hook")
+               #+lispworks
+               (:file "memory")))
 
 (defsystem :util/random-port
   :serial t

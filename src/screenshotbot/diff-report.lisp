@@ -37,6 +37,17 @@
    #:group-item-subtitle))
 (in-package :screenshotbot/diff-report)
 
+(defvar *cache* (trivial-garbage:make-weak-hash-table :test #'equal
+                                                      :weakness :value)
+  "diff reports are generated on the fly. Generally it's fast enough
+  for most use, so we don't persist it. However, the diff-reports can
+  quickly become a dominant source of objects in memory (because of
+  nibbles). For that reason we keep this cache, but keep the cache
+  weak on the values.
+
+  Even without weakness this would be technically still correct, since
+  we won't store a diff-report more than once.")
+
 (defclass change ()
   ((before :initarg :before
            :reader before)
@@ -135,7 +146,7 @@
       (remhash (funcall key x) table))
     (alexandria:hash-table-values table)))
 
-(defun make-diff-report (run to)
+(defun %make-diff-report (run to)
   (restart-case
       (let ((names (recorder-run-screenshots run))
             (to-names (recorder-run-screenshots to)))
@@ -152,6 +163,10 @@
           :changes (%find-changes names to-names)))
     (retry-make-diff-report ()
       (make-diff-report run to))))
+
+(defun make-diff-report (run to)
+  (symbol-macrolet ((place (gethash (cons run to) *cache*)))
+    (or place (setf place (%make-diff-report run to)))))
 
 (defun %find-changes (names to-names)
   (let ((hash-table (make-hash-table :test #'equal)))
