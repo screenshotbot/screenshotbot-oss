@@ -138,7 +138,7 @@
                    collect (parse-integer x)))))))
 
 (defun all-snapshots-sorted (dir)
-  (let ((list (directory "/data/arnold/object-store/")))
+  (let ((list (directory dir)))
     ;; remove any directories that don't look like timestamps
     (let ((list
             (loop for x in list
