@@ -55,6 +55,7 @@
   (:import-from #:bknr.datastore
                 #:make-blob-from-file)
   (:import-from #:screenshotbot/user-api
+                #:created-at
                 #:current-company)
   (:import-from #:screenshotbot/dashboard/image
                 #:handle-resized-image)
@@ -75,6 +76,8 @@
                 #:get-tab-title)
   (:import-from #:bknr.datastore
                 #:cascading-delete-object)
+  (:import-from #:screenshotbot/taskie
+                #:timeago)
   (:export
    #:diff-report
    #:render-acceptable
@@ -695,15 +698,6 @@ If the images are identical, we return t, else we return NIL."
                </page-nav-dropdown>))
 
 
-
-         ,(when-let ((repo (channel-repo (recorder-run-channel run)))
-                     (this-hash (recorder-run-commit run))
-                     (prev-hash (recorder-run-commit to)))
-            <p class= "mt-2" >
-             This commit: <commit repo= repo hash=this-hash /> <br />
-             Previous commit: <commit repo= repo hash=prev-hash />
-           </p>)
-
        <div class= "mt-3 d-flex justify-content-between" >
 
          <div class= "" style= "width: 20em" >
@@ -741,6 +735,7 @@ If the images are identical, we return t, else we return NIL."
                  ,@ (loop for (name . url) in more
                           collect
                           <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
+                          <li><a class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal">Info</a></li>
                </ul>
 
                ,(when acceptable
@@ -763,7 +758,38 @@ If the images are identical, we return t, else we return NIL."
                          deleted-groups)
        </div>
 
+       ,(info-modal run to)
+
        </markup:merge-tag>))))
+
+(deftag link-to-run (&key run)
+  <a href= (hex:make-url "/runs/:id" :id (oid run))>run from ,(timeago :timestamp (created-at run))</a>)
+
+(defun info-modal (run to)
+  <div class="modal" tabindex="-1" id= "comparison-info-modal" >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">More about this report</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Comparing <link-to-run run=run /> to <link-to-run run=to />.</p>
+
+          ,(when-let* ((repo (channel-repo (recorder-run-channel run)))
+                       (this-hash (recorder-run-commit run))
+                       (prev-hash (recorder-run-commit to)))
+             <p class= "mt-2" >
+               This commit: <commit repo= repo hash=this-hash /> <br />
+               Previous commit: <commit repo= repo hash=prev-hash />
+             </p>)
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>)
 
 (defun filter-groups (groups search)
   (loop for group in groups
