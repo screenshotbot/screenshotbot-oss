@@ -464,11 +464,13 @@ body.dashboard {
         height: 100vh;
         float: left;
         position: fixed;
+
+        .nav-link:hover {
+            background: $gray-800;
+        }
+
     }
 
-    .nav-link:hover {
-        background: $gray-800;
-    }
 
     .nav-link.active:hover {
         background: $primary;
