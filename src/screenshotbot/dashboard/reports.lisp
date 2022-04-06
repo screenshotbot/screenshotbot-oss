@@ -42,54 +42,47 @@
     (with-login (:needs-login (not (can-public-view report)))
      (render-report-page report))))
 
-(defun render-report-page (report &rest args &key (lang-filter t)
-                                               (device-filter t))
+(defun render-report-page (report &rest args &key)
   (flet ((re-run (&rest new-args)
            (apply 'render-report-page
                   report
                   (append new-args args))))
-   (let ((lang-filter (make-instance 'row-filter :key 'screenshot-lang
-                                                 :value lang-filter))
-         (device-filter (make-instance 'row-filter :key 'screenshot-device
-                                       :value device-filter)))
-     (check-type report report)
-     (can-view! report)
+   (check-type report report)
+    (can-view! report)
 
-     (cond
-       ((hunchentoot:parameter "v2")
-        (compare-v2-page :report report))
-       (t
-        <app-template>
+    (cond
+      ((hunchentoot:parameter "v2")
+       (compare-v2-page :report report))
+      (t
+       <app-template>
 
-          ,(when (and nil (can-public-view report))
-             <section class= "mt-3" >
-               <div class= "alert alert-danger">
-                 This report can be viewed by public, because the underlying repository is public
-               </div>
-             </section>)
+       ,(when (and nil (can-public-view report))
+          <section class= "mt-3" >
+          <div class= "alert alert-danger">
+          This report can be viewed by public, because the underlying repository is public
+          </div>
+          </section>)
 
-          ,(when nil
-             <section class= "mt-3" >
-               <div class= "alert alert-info">
-                 Hover on the image on the left to visualize the difference!
-               </div>
-             </section>
-
-             )
-
-          <section class= "full-height">
-            ,(render-notes :for report)
-            <render-diff-report run= (report-run report) to= (report-previous-run report)
-                                lang-filter=lang-filter
-                                device-filter=device-filter
-                                acceptable= (report-acceptable report)
-                                more= (list
-                                       (cons
-                                         "Add Note"
-                                         (create-note-page :for report :redirect (make-url 'report-page :id (oid report)))))
-                                re-run=#'re-run />
+       ,(when nil
+          <section class= "mt-3" >
+          <div class= "alert alert-info">
+          Hover on the image on the left to visualize the difference!
+          </div>
           </section>
-        </app-template>)))))
+
+          )
+
+       <section class= "full-height">
+       ,(render-notes :for report)
+       <render-diff-report run= (report-run report) to= (report-previous-run report)
+       acceptable= (report-acceptable report)
+       more= (list
+              (cons
+               "Add Note"
+               (create-note-page :for report :redirect (make-url 'report-page :id (oid report)))))
+       re-run=#'re-run />
+       </section>
+       </app-template>))))
 
 (defhandler (report-list :uri "/report" :method :get
                          :want-login t) ()
