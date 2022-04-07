@@ -269,3 +269,6 @@ upload-sdk: .PHONY $(LW)
 
 upload-mac-intel-sdk:
 	ARCH="x86_64" make upload-sdk
+
+upload-screenshots:
+	~/screenshotbot/recorder --static-website src/screenshotbot/static-web-output --main-branch master

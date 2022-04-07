@@ -324,6 +324,7 @@
   :depends-on (:plump
                :lquery
                :uuid
+               :util
                :cl-store
                :auto-restart
                :dexador
