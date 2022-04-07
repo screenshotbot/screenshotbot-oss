@@ -300,10 +300,11 @@
 
 
 (defsystem :screenshotbot/store-tests
-    :serial t
-    :depends-on (:screenshotbot
-                 :fiveam)
-    :components ((:file "test-store")))
+  :serial t
+  :depends-on (:screenshotbot
+               :util/testing
+               :fiveam)
+  :components ((:file "test-store")))
 
 
 (defsystem :screenshotbot/utils

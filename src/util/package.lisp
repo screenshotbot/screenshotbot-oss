@@ -22,7 +22,6 @@
                  #:util/store
                  #:util/misc
                  #:util/file-lock
-                 #:util/testing
 		 #:util/bind-form
 		 #:util/html2text
 		 #:util/object-id)
@@ -36,7 +35,6 @@
            #:make-url
            #:make-full-url
            #:*disable-sentry*
-           #:with-fake-request
            #:load-countries
            #:load-states
            #:dont-send-the-mail

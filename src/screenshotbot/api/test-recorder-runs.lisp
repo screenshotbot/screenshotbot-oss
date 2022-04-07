@@ -28,13 +28,15 @@
   (:import-from #:../testing
                 #:with-test-user)
   (:import-from #:util/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:util/testing
+                #:with-fake-request))
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
   (with-test-store ()
-   (util:with-fake-request ()
+   (with-fake-request ()
      (auth:with-sessions ()
        (with-test-user (:company company
                         :user user)

@@ -59,7 +59,6 @@
                "hunchentoot-extensions"
                #-screenshotbot-oss
                "stripe"
-               "fiveam" ;; break out testing.lisp
                "log4cl"
                "util/store"
                "util/random-port"
@@ -70,7 +69,6 @@
                (:file "make-instance-with-accessors")
                (:file "emacs")
                (:file "cookies")
-               (:file "testing")
                (:file "bind-form")
                (:file "object-id")
                (:file "lists")
@@ -93,6 +91,12 @@
                (:file "debugger-hook")
                #+lispworks
                (:file "memory")))
+
+(defsystem :util/testing
+  :serial t
+  :depends-on (:fiveam
+               :util)
+  :components ((:file "testing")))
 
 (defsystem :util/random-port
   :serial t
@@ -117,7 +121,7 @@
                (:file "store")))
 
 (defsystem :util/fiveam
-  :depends-on (:util
+  :depends-on (:util/testing
                :fiveam
                :pkg
                :cl-mock

@@ -20,7 +20,9 @@
                 #:*installation*
                 #:installation)
   (:import-from #:util/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:util/testing
+                #:with-fake-request))
 
 (util/fiveam:def-suite)
 
@@ -29,7 +31,7 @@
 ;; AFAICT. Works fine on `make test-lw`
 (test happy-path
   (with-test-store ()
-   (util:with-fake-request (:host "localhost:80")
+   (with-fake-request (:host "localhost:80")
      (let ((*installation* (make-instance 'installation)))
        (prepare-singleton-company)
        (catch 'hunchentoot::handler-done

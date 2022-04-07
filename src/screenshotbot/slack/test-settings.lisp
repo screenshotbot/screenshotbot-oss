@@ -14,13 +14,15 @@
         #:./settings
         #:../login/common)
   (:import-from #:util/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:util/testing
+                #:with-fake-request))
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
   (with-test-store ()
-   (util:with-fake-request ()
+   (with-fake-request ()
      (let* ((company (make-instance 'company))
             (token (make-instance 'slack-token
                                    :access-token "foo"
