@@ -59,7 +59,6 @@
   (secure-random:number (ash 1 120)))
 
 (defun push-nibble (id nibble)
-  (gc)
   (bt:with-lock-held (*lock*)
     (setf (gethash id *nibbles*)
           nibble)))
@@ -227,3 +226,7 @@
        ,@body)
      (setf (assoc-value *named-nibbles* ',name)
            ',args)))
+
+
+(cl-cron:make-cron-job 'gc :minute 43
+                       :hash-key 'gc)
