@@ -257,17 +257,15 @@
   (let* ((query (hunchentoot:parameter "search"))
          (screenshots (recorder-run-screenshots run)))
     (run-page-contents
-     run channel (loop for screenshot in screenshots
-                       if (or (null query)
-                              (str:contains? query (screenshot-name screenshot)
-                                             :ignore-case t))
-                         collect screenshot))))
+     run channel
+     screenshots
+     :filter (lambda (screenshot)
+               (or (null query)
+                   (str:contains? query (screenshot-name screenshot)
+                                  :ignore-case t))))))
 
-(defun run-page-contents (run channel filtered-screenshots)
+(defun run-page-contents (run channel screenshots &key (filter #'identity))
   <div class= "baguetteBox" id= (format nil "a-~a" (random 10000000)) >
-
-    ,(unless filtered-screenshots
-       <p class= "text-muted" >No screenshots found</p>)
 
     ,(paginated
     (lambda (screenshot)
@@ -311,7 +309,9 @@
       </div>
 
     </div>))
-    :items filtered-screenshots)
+    :items screenshots
+    :filter filter
+    :empty-view  <p class= "text-muted" >No screenshots found</p>)
   </div>)
 
 (defclass js-api-result () ())
