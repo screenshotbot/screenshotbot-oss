@@ -11,16 +11,26 @@
       (+ (length list) n)
       n))
 
-(defun head (list n)
-  "Returns the first n elements of the list, or the entire list if the list has fewer than n elements"
+(defun head (list n &key (filter (lambda (x) (declare (ignore x)) t)))
+  "Returns the first n elements of the list, or the entire list if the list has fewer than n elements.
+
+ If filter is provided, it returns only the first n elements that matches the filter.
+
+In either case, we also return a second value which the all the
+remaining elements (unfiltered)"
   (let ((n (fix-n list n)))
     (labels ((head (list n prefix)
                (cond
-                 ((eq list nil) (nreverse prefix))
-                 ((eq n 0) (nreverse prefix))
-                 (t
+                 ((or
+                   (eql list nil)
+                   (eql n 0))
+                  (values (nreverse prefix) list))
+                 ((funcall filter (car list))
                   (head (cdr list) (-  n 1)
-                        (list* (car list) prefix))))))
+                        (list* (car list) prefix)))
+                 (t
+                  (head (cdr list) n prefix)))))
+
       (head list n nil))))
 
 (defun tail (list n)

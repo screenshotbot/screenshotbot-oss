@@ -16,18 +16,28 @@
 (markup:enable-reader)
 
 (defun paginated (fn &key
+                       (filter #'identity)
+                       (empty-view)
                        (num 24)
                        (items nil))
+  "Creates a paginated view. If no element matches, then we return
+NIL, which can be used as a way of determining whether to render an
+empty message."
   (assert (functionp fn))
-  (let* ((this-page (util/lists:head items num))
-         (rest (util/lists:tail items num))
-         (load-more (nibble ()
-                      (paginated fn :num num :items rest))))
-    <div class= "row pb-4 load-more-container" >
-      ,@ (mapcar fn this-page)
+  (multiple-value-bind (this-page rest)
+      (util/lists:head items num :filter filter)
+    (cond
+      (this-page
+       (let* ((load-more (nibble ()
+                           (paginated fn :num num :items rest
+                                         :filter filter))))
+         <div class= "row pb-4 load-more-container" >
+         ,@ (mapcar fn this-page)
 
-      ,(when rest
-      <div class= "col-12 d-flex justify-content-center">
-        <button class= "btn btn-primary load-more-button" data-load-more=load-more >Load More</button>
-      </div>)
-  </div>))
+         ,(when rest
+            <div class= "col-12 d-flex justify-content-center">
+            <button class= "btn btn-primary load-more-button" data-load-more=load-more >Load More</button>
+            </div>)
+         </div>))
+      (t
+       empty-view))))

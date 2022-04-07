@@ -778,12 +778,10 @@ If the images are identical, we return t, else we return NIL."
     </div>
   </div>)
 
-(defun filter-groups (groups search)
-  (loop for group in groups
-        if (or
-            (str:emptyp search)
-            (str:contains? search (group-title group) :ignore-case t))
-          collect group))
+(defun group-matches-p (group search)
+  (or
+   (str:emptyp search)
+   (str:contains? search (group-title group) :ignore-case t)))
 
 (defun report-result (run changes-groups added-groups deleted-groups)
 
@@ -791,47 +789,45 @@ If the images are identical, we return t, else we return NIL."
         (search (hunchentoot:parameter "search")))
     (cond
       ((string-equal "added" type)
-       (render-single-group-list (filter-groups added-groups search) :search search))
+       (render-single-group-list added-groups :search search))
       ((string-equal "deleted" type)
 
-       (render-single-group-list (filter-groups deleted-groups search) :search search))
+       (render-single-group-list deleted-groups :search search))
       (t
        <div class= "">
-           ,(let ((filtered-groups (filter-groups changes-groups search)))
-              (cond
-                (filtered-groups
-                 (paginated
-                  (lambda (group)
-                    (render-change-group group run (hunchentoot:script-name*)  :search search))
-                  :num 10
-                  :items filtered-groups))
-                (t
-                 (no-screenshots))))
+           ,(paginated
+             (lambda (group)
+               (render-change-group group run (hunchentoot:script-name*)  :search search))
+             :num 10
+             :filter (lambda (group)
+                       (group-matches-p group search))
+             :items changes-groups
+             :empty-view (no-screenshots))
        </div>))))
 
 (defun render-single-group-list (groups &key search)
-  (cond
-    (groups
-     (paginated
-      (lambda (group)
-        <div class= "col-md-6">
-          <div class= "card mb-3">
-            ,(maybe-tabulate
-              (loop for group-item in (group-items group)
-                    for screenshot = (actual-item group-item)
-                    collect
-                    (make-instance
-                     'tab
-                      :title (get-tab-title screenshot)
-                      :content
-                      <screenshot-box  screenshot=screenshot title= (group-title group) /> ))
-              :header <h4>,(highlight-search-term search (group-title group)) </h4>)
-          </div>
-        </div>)
-      :num 5
-      :items groups))
-    (t
-     (no-screenshots))))
+  (paginated
+   (lambda (group)
+     <div class= "col-md-6">
+     <div class= "card mb-3">
+     ,(maybe-tabulate
+       (loop for group-item in (group-items group)
+             for screenshot = (actual-item group-item)
+             collect
+             (make-instance
+              'tab
+              :title (get-tab-title screenshot)
+              :content
+              <screenshot-box  screenshot=screenshot title= (group-title group) /> ))
+       :header <h4>,(highlight-search-term search (group-title group)) </h4>)
+     </div>
+     </div>)
+   :num 5
+   :filter (lambda (group)
+             (group-matches-p group search))
+
+   :items groups
+   :empty-view (no-screenshots)))
 
 (Deftag screenshot-box (&key screenshot title)
   <div class= "mt-4" >
