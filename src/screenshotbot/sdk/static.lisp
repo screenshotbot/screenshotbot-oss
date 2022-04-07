@@ -3,6 +3,9 @@
   (:import-from #:screenshotbot/replay/browser-config
                 #:dimensions
                 #:browser-config)
+  (:import-from #:screenshotbot/replay/core
+                #:*http-cache-dir*
+                #:context)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
@@ -152,7 +155,9 @@ upload blobs that haven't been uploaded before."
                             flags:*main-branch*))
   (restart-case
       (tmpdir:with-tmpdir (tmpdir)
-        (let* ((port (util/random-port:random-port))
+        (let* ((*http-cache-dir* tmpdir)
+               (context (make-instance 'context))
+               (port (util/random-port:random-port))
                (acceptor (make-instance 'hunchentoot:acceptor
                                         :port port
                                         :document-root location))
@@ -164,6 +169,7 @@ upload blobs that haven't been uploaded before."
                  (loop for index.html in (find-all-index.htmls location)
                        do
                           (replay:load-url-into
+                           context
                            snapshot
                            (format nil "http://localhost:~a~a" port index.html)
                            tmpdir))

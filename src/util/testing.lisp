@@ -58,9 +58,10 @@
 
 (defun screenshot-static-page (project name content)
   (let ((output (asdf:system-relative-pathname project "static-web-output/")))
-    (ensure-directories-exist output)
-    (with-open-file (file (path:catfile output (format nil "~a.html" name))
-                          :direction :output
-                          :if-exists :supersede)
-      (write-string content file)
-      (fiveam:pass "Screenshot written"))))
+    (let ((output-file (path:catfile output (format nil "~a/index.html" name))))
+      (ensure-directories-exist output-file)
+      (with-open-file (file output-file
+                            :direction :output
+                            :if-exists :supersede)
+        (write-string content file)
+        (fiveam:pass "Screenshot written")))))
