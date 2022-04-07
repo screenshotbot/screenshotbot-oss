@@ -10,8 +10,6 @@ lisp_library(
         "//quicklisp:session-token",
         "//quicklisp:hunchentoot",
         "//third-party/bknr.datastore:bknr.datastore",
-        "//src/util:testing",
-        "//src/util:store",
     ],
     srcs = [
         "package.lisp",
@@ -26,6 +24,9 @@ lisp_test(
     name = "tests",
     deps = [
         ":auth",
+        "//src/util:fiveam",
+        "//src/util:store",
+        "//src/util:testing",
     ],
     srcs = [
         "test-auth.lisp",

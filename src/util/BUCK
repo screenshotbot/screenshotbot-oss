@@ -313,6 +313,8 @@ lisp_library(
         "testing.lisp",
     ],
     deps = [
+        "//src/nibble:nibble",
+        "//quicklisp:fiveam",
         "//quicklisp:hunchentoot",
         "//quicklisp:alexandria",
         "//src/hunchentoot-extensions:hunchentoot-extensions",

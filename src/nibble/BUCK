@@ -10,6 +10,7 @@ lisp_library(
         "//quicklisp:log4cl",
         "//src/hunchentoot-extensions:hunchentoot-extensions",
         "//src/auth:auth",
+        "//quicklisp:cl-cron",
         "//quicklisp:secure-random",
     ],
     visibility = [
