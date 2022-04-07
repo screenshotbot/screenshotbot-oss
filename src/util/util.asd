@@ -59,6 +59,7 @@
                "hunchentoot-extensions"
                #-screenshotbot-oss
                "stripe"
+               "fiveam" ;; break out testing.lisp
                "log4cl"
                "util/store"
                "util/random-port"
