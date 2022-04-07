@@ -6,10 +6,13 @@
 
 (defpackage :util/testing
   (:use #:cl)
+  (:import-from #:nibble
+                #:nibble-plugin)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-fake-request
-   #:in-test-p))
+   #:in-test-p
+   #:screenshot-static-page))
 (in-package :util/testing)
 
 (defvar *in-test-p* nil)
@@ -31,7 +34,12 @@
     additional-post-params
     (call-next-method))))
 
-(defmacro with-fake-request ((&key  (acceptor '(quote hex:base-acceptor)) (host "localhost")
+(defclass test-acceptor (hex:base-acceptor
+                         hex:acceptor-with-plugins)
+  ()
+  (:default-initargs :acceptor-plugins (list (make-instance 'nibble-plugin))))
+
+(defmacro with-fake-request ((&key  (acceptor '(quote test-acceptor)) (host "localhost")
                                 (script-name "/")) &body body)
  `(let* ((hunchentoot::*hunchentoot-stream*)
          (hunchentoot:*catch-errors-p* nil)
@@ -47,3 +55,12 @@
                                                :server-protocol :https
                                                :remote-addr "127.0.0.1")))
     ,@body))
+
+(defun screenshot-static-page (project name content)
+  (let ((output (asdf:system-relative-pathname project "static-web-output/")))
+    (ensure-directories-exist output)
+    (with-open-file (file (path:catfile output (format nil "~a.html" name))
+                          :direction :output
+                          :if-exists :supersede)
+      (write-string content file)
+      (fiveam:pass "Screenshot written"))))

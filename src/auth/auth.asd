@@ -1,7 +1,7 @@
 (asdf:defsystem "auth"
     :serial t
-  :depends-on ("util"
-               "cl-pass"
+  :depends-on ("cl-pass"
+               "bknr.datastore"
                "log4cl"
                "cl-fad"
                #+windows

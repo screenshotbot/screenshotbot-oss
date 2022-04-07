@@ -95,6 +95,12 @@
 ;;(ql:quickload "auth")
 ;;(asdf:load-system "auth")
 
+(let ((dir (asdf:system-relative-pathname :screenshotbot "static-web-output/")))
+ (when (path:-d dir)
+   (uiop:delete-directory-tree dir
+                               :validate (lambda (x)
+                                           (declare (ignore x))
+                                           t))))
 
 
 (eval `(setf ,(find-symbol "*IN-TEST-P*" "UTIL")

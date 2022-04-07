@@ -19,7 +19,10 @@
                 #:installation
                 #:*installation*)
   (:import-from #:screenshotbot/template
-                #:*template-override*))
+                #:*template-override*)
+  (:import-from #:util/testing
+                #:with-fake-request
+                #:screenshot-static-page))
 
 (util/fiveam:def-suite)
 
@@ -33,9 +36,14 @@
 (test simple-page-test
   (let* ((*installation* (make-instance 'installation))
          (*template-override* #'dummy-template))
-    (finishes
-     (%api-key-page :user (make-instance 'test-user
-                                          :api-keys (list (make-instance 'test-api-key
-                                                                          :key "foo"
-                                                                          :secret "sdfsdfdfdfs")))
-                    :company *company*))))
+    (with-fake-request ()
+      (auth:with-sessions ()
+       (screenshot-static-page
+        :screenshotbot
+        "api-key-page"
+        (markup:write-html
+         (%api-key-page :user (make-instance 'test-user
+                                             :api-keys (list (make-instance 'test-api-key
+                                                                            :key "foo"
+                                                                            :secret "sdfsdfdfdfs")))
+                        :company *company*)))))))

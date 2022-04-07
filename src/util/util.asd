@@ -42,6 +42,7 @@
 (defsystem "util"
   :depends-on ("hunchentoot"
                "markup"
+               "nibble"
                "alexandria"
                "uuid"
                "clues"
