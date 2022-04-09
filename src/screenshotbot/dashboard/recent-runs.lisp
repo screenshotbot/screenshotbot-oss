@@ -36,9 +36,7 @@
 (hex:declare-handler 'run-page)
 
 (defun find-recent-runs (&key user user-id)
-  (sort (company-runs (current-company :user user))
-        'local-time:timestamp>
-        :key 'created-at))
+  (company-runs (current-company :user user)))
 
 (deftag conditional-commit (&key repo hash)
 
