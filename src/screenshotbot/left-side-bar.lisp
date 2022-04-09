@@ -14,6 +14,8 @@
   (:import-from #:screenshotbot/template
                 #:left-side-bar
                 #:mdi)
+  (:import-from #:screenshotbot/cdn
+                #:img)
   (:import-from #:markup
                 #:deftag)
   (:import-from #:util
