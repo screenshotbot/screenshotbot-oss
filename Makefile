@@ -272,4 +272,4 @@ upload-mac-intel-sdk:
 
 upload-screenshots: .PHONY
 	curl https://screenshotbot.io/recorder.sh | bash
-	~/screenshotbot/recorder --static-website src/screenshotbot/static-web-output --main-branch master --channel jenkins/screenshotbot
+	~/screenshotbot/recorder --static-website src/screenshotbot/static-web-output/ --main-branch master --channel jenkins/screenshotbot

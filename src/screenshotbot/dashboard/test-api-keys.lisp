@@ -28,14 +28,9 @@
 
 (markup:enable-reader)
 
-(defun dummy-template (children)
-  <div>
-    ,@children
-  </div>)
 
 (test simple-page-test
-  (let* ((*installation* (make-instance 'installation))
-         (*template-override* #'dummy-template))
+  (let* ((*installation* (make-instance 'installation)))
     (with-fake-request ()
       (auth:with-sessions ()
        (screenshot-static-page

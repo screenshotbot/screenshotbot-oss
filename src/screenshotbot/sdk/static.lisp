@@ -49,13 +49,14 @@
   "Upload multiple blobs efficiently, checking to make sure we only
 upload blobs that haven't been uploaded before."
   (restart-case
-      (let ((results (blob-check files)))
-        (loop for result in results
-              for existsp = (a:assoc-value result :exists)
-              for file = (a:assoc-value result :file)
-              if (not existsp)
-                do
-                   (upload-blob file)))
+      (let ((files (remove-if-not #'uiop:file-exists-p files)))
+       (let ((results (blob-check files)))
+         (loop for result in results
+               for existsp = (a:assoc-value result :exists)
+               for file = (a:assoc-value result :file)
+               if (not existsp)
+                 do
+                    (upload-blob file))))
     (retry-upload-multiple-files ()
       (upload-multiple-files files))))
 
