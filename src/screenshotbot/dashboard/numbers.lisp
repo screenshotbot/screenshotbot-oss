@@ -11,6 +11,8 @@
   (:import-from #:markup #:deftag)
   (:import-from #:screenshotbot/template
                 #:mdi)
+  (:import-from #:screenshotbot/model/company
+                #:company)
   (:export #:numbers-section))
 (in-package :screenshotbot/dashboard/numbers)
 
@@ -40,25 +42,35 @@
       </div>
     </div>))
 
-(deftag numbers-section (&key company)
-  (let* ((now (local-time:now))
-         (last-week (local-time:timestamp- now 7 :day))
-         (14-days-ago (local-time:timestamp- now 14 :day))
-         (this-week-screenshots (num-screenshots-last-week company
-                                                       last-week
-                                                       now))
-         (last-week-screenshots (num-screenshots-last-week company
-                                                           14-days-ago
-                                                           last-week)))
-    <div class= "row">
-      ,(numbers-card :title "Screenshots"
-                     :value this-week-screenshots
-                     :last-week-value last-week-screenshots)
+(defvar *cache* (make-hash-table :test #'eql))
 
-      ,(numbers-card :title "Changes"
-                     :value (num-changes-in-period company last-week now)
-                     :last-week-value (num-changes-in-period company 14-days-ago last-week))
-    </div>))
+(deftag numbers-section (&key company)
+  (or
+   (gethash company *cache*)
+   (make-numbers-section :company company)))
+
+
+(defun make-numbers-section (&key company)
+  (setf
+   (gethash company *cache*)
+   (let* ((now (local-time:now))
+          (last-week (local-time:timestamp- now 7 :day))
+          (14-days-ago (local-time:timestamp- now 14 :day))
+          (this-week-screenshots (num-screenshots-last-week company
+                                                            last-week
+                                                            now))
+          (last-week-screenshots (num-screenshots-last-week company
+                                                            14-days-ago
+                                                            last-week)))
+     <div class= "row">
+     ,(numbers-card :title "Screenshots"
+                    :value this-week-screenshots
+                    :last-week-value last-week-screenshots)
+
+     ,(numbers-card :title "Changes"
+                    :value (num-changes-in-period company last-week now)
+                    :last-week-value (num-changes-in-period company 14-days-ago last-week))
+     </div>)))
 
 (defun num-changes-in-period (company start-time end-time)
   (loop for report in (company-reports company)
@@ -85,3 +97,13 @@
                        table)
               t)))
     (hash-table-count table)))
+
+
+(defun rebuild-stats ()
+  (loop for company in (bknr.datastore:store-objects-with-class 'company)
+        do
+           (make-numbers-section :company company)))
+
+(cl-cron:make-cron-job #'rebuild-stats
+                       :minute 32
+                       :hash-key 'rebuild-stats)
