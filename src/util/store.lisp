@@ -101,7 +101,6 @@
            (call-with-test-store (lambda ()) :cleanup nil)))))))
 
 (defun prepare-store ()
-  (setf bknr.datastore:*store-debug* t)
   (make-instance 'safe-mp-store
                  :directory (object-store)
                  :subsystems (store-subsystems))
