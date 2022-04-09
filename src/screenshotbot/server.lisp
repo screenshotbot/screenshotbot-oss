@@ -235,7 +235,7 @@ Disallow: /n")
 (defhandler (nil :uri "/") ()
   (cond
    ((logged-in-p)
-    (hex:safe-redirect "/dashboard"))
+    (hex:safe-redirect "/runs"))
    (*landing-page*
     (funcall *landing-page*))
    (t
