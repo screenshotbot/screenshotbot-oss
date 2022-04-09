@@ -343,3 +343,14 @@ $(function () {
         return new Popover(popoverTriggerEl)
     })
 });
+
+
+$(function () {
+    if (window.location.pathname == "/") {
+        if ($("body").hasClass("dashboard")) {
+            // To avoid redirection when you first load screenshotbot,
+            // we'll load /, and then replace the URL.
+            history.replaceState(null, null, "/runs");
+        }
+    }
+});

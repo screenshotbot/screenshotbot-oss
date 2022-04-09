@@ -10,6 +10,9 @@
                 #:push-analytics-event)
   (:import-from #:screenshotbot/secret
                 #:defsecret)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:default-logged-in-page)
   (:export
    #:defhandler
    #:with-login
@@ -234,8 +237,8 @@ Disallow: /n")
 
 (defhandler (nil :uri "/") ()
   (cond
-   ((logged-in-p)
-    (hex:safe-redirect "/runs"))
+    ((logged-in-p)
+     (default-logged-in-page (installation)))
    (*landing-page*
     (funcall *landing-page*))
    (t

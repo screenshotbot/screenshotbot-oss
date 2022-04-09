@@ -26,7 +26,8 @@
    #:multi-org-feature
    #:default-oidc-provider
    #:installation-domain
-   #:cached-singleton-company))
+   #:cached-singleton-company
+   #:default-logged-in-page))
 (in-package :screenshotbot/installation)
 
 (defclass installation ()
@@ -95,3 +96,5 @@
 (defmacro with-plugin ((name) &body body)
   `(let ((,name (find-plugin (installation) ',name)))
      ,@body))
+
+(defgeneric default-logged-in-page (installation))

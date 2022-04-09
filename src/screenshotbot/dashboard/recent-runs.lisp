@@ -26,6 +26,8 @@
                 #:phabricator-diff-id)
   (:import-from #:screenshotbot/dashboard/explain
                 #:explain)
+  (:import-from #:screenshotbot/installation
+                #:default-logged-in-page)
   (:export #:recent-runs))
 (in-package :screenshotbot/dashboard/recent-runs)
 
@@ -114,7 +116,7 @@
     (dashboard-template
      :user user
      :company company
-     :script-name script-name
+     :script-name "/runs"
      (when numbersp
        (numbers-section :company company))
      (taskie-page-title :title "Recent Runs"
@@ -132,10 +134,14 @@
                   :row-generator (lambda (run)
                                    (recorder-run-row :run run))))))
 
-
-(defhandler (recent-runs :uri "/runs") ()
+(defun %recent-runs ()
   (needs-user!)
 
-  (log:info "Current user is: ~s" (current-user))
   (let ((runs (find-recent-runs :user (current-user))))
     (render-recent-runs runs)))
+
+(defhandler (recent-runs :uri "/runs") ()
+  (%recent-runs))
+
+(defmethod default-logged-in-page ((installation t))
+  (%recent-runs))
