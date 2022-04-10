@@ -99,18 +99,20 @@
      </div>)))
 
 (deftag timeago (&key timestamp)
-  <:time class= "timeago" datetime= timestamp >
+  (let ((timestamp (format nil "~a" timestamp)))
+    <:time class= "timeago" datetime= timestamp >
     ,(progn timestamp)
-  </:time>)
+    </:time>))
 
 (deftag taskie-timestamp (&key prefix timestamp)
 
-  (let ((timestamp
-          (cond
-            ((numberp timestamp)
-             (local-time:universal-to-timestamp timestamp))
-            (t
-             timestamp))))
+  (let* ((timestamp
+           (cond
+             ((numberp timestamp)
+              (local-time:universal-to-timestamp timestamp))
+             (t
+              timestamp)))
+         (timestamp (format nil "~a" timestamp)))
     <ul class="list-inline font-13 text-end">
     <li class="list-inline-item">
     <mdi name= "today" />
