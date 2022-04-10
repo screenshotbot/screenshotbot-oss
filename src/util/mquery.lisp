@@ -8,6 +8,8 @@
   (:use #:cl
         #:markup
         #:alexandria)
+  (:import-from #:markup/markup
+                #:abstract-xml-tag)
   (:export #:$
            #:attr
            #:add-class
@@ -84,7 +86,7 @@
 (defun mqappend (parent child)
   (let ((parent (only parent))
         (child (only child)))
-    (check-type child xml-tag)
+    (check-type child abstract-xml-tag)
     (push child
           (xml-tag-children parent))
     parent))
@@ -96,7 +98,7 @@
 
 (defun $ (query &optional (root *document*))
   (cond
-    ((typep query 'xml-tag)
+    ((typep query 'abstract-xml-tag)
      query)
     (t
      (let ((query (build-matcher query)))
@@ -137,7 +139,7 @@
  (defun after (x)
    (with-vars
        (loop for x in (cdr cell) do
-            (when (typep x 'xml-tag)
+            (when (typep x 'abstract-xml-tag)
               (return-from after x)))))
  (defun (setf after) (val x)
    (with-vars
@@ -263,7 +265,7 @@
    (let ((x (only x)))
      (labels ((write-stream (x)
                 (typecase x
-                  (markup:xml-tag
+                  (markup:abstract-xml-tag
                    (mapc #'write-stream (xml-tag-children x)))
                   (t
                    (format stream "~a" x)))))
