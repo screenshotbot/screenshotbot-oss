@@ -98,18 +98,25 @@
        </div> <!-- end col -->
      </div>)))
 
+(defvar *ts-format-cache* (make-hash-table))
+
+(defun  format-ts (timestamp)
+  (let ((key (cond
+               ((numberp timestamp)
+                timestamp)
+               (t
+                (local-time:timestamp-to-universal timestamp)))))
+    (util:or-setf
+     (gethash key *ts-format-cache*)
+     (format nil
+             (format nil "~a"
+                     (local-time:universal-to-timestamp key))))))
+
 (deftag timeago (&key timestamp)
-  (let* ((timestamp
-           (cond
-             ((numberp timestamp)
-              (local-time:universal-to-timestamp timestamp))
-             (t
-              timestamp)))
-         (timestamp (format nil "~a" timestamp)))
-   (let ((timestamp (format nil "~a" timestamp)))
-     <:time class= "timeago" datetime= timestamp >
-       ,(progn timestamp)
-     </:time>)))
+  (let* ((timestamp (format-ts timestamp)))
+    <:time class= "timeago" datetime= timestamp >
+      ,(progn timestamp)
+    </:time>))
 
 (deftag taskie-timestamp (&key prefix timestamp)
 
