@@ -63,7 +63,8 @@
 
 (deftag recorder-run-row (&key run)
   (taskie-row :object run
-    (ui/a :href (make-url 'run-page :id (oid run))
+              (ui/a :href
+                    (format nil "/runs/~a" (oid run))
       (channel-name (recorder-run-channel run)))
     (ui/div
       (cond
