@@ -99,13 +99,6 @@
      </div>)))
 
 (deftag timeago (&key timestamp)
-  (let ((timestamp (format nil "~a" timestamp)))
-    <:time class= "timeago" datetime= timestamp >
-    ,(progn timestamp)
-    </:time>))
-
-(deftag taskie-timestamp (&key prefix timestamp)
-
   (let* ((timestamp
            (cond
              ((numberp timestamp)
@@ -113,15 +106,20 @@
              (t
               timestamp)))
          (timestamp (format nil "~a" timestamp)))
-    <ul class="list-inline font-13 text-end">
+   (let ((timestamp (format nil "~a" timestamp)))
+     <:time class= "timeago" datetime= timestamp >
+       ,(progn timestamp)
+     </:time>)))
+
+(deftag taskie-timestamp (&key prefix timestamp)
+
+  <ul class="list-inline font-13 text-end">
     <li class="list-inline-item">
-    <mdi name= "today" />
-    ,(progn prefix)
-    <:time class= "timeago" datetime= timestamp >
-    ,(progn timestamp)
-    </:time>
+      <mdi name= "today" />
+      ,(progn prefix)
+      <timeago timestamp=timestamp />
     </li>
-    </ul>))
+  </ul>)
 
 (defun %with-pagination (data body &key prev)
   (let ((n 50))
