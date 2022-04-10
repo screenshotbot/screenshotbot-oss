@@ -50,10 +50,28 @@
         (error "Object ~s isn't of type ~s" obj type)))
     obj))
 
+(defconstant +e+ "0123456789abcdef")
+
+(defun fast-oid-str (oid)
+  (declare (optimize (speed 3)
+                     (debug 0)
+                     (safety 0))
+           (type (array (unsigned-byte 8))))
+  (let ((hex-string (make-string 24)))
+    (loop for i fixnum from 0 below 12
+          do (let ((out (* 2 i)))
+               (multiple-value-bind (top left) (floor (aref oid i) 16)
+                 (setf (aref hex-string out)
+                       (aref +e+ top))
+                 (setf (aref hex-string (1+ out))
+                       (aref +e+ left)))))
+    hex-string))
+
+
 (defmethod oid ((obj object-with-oid))
   (with-slots (oid) obj
-    (str:downcase (mongoid:oid-str oid))))
+    (fast-oid-str oid)))
 
 (defmethod oid ((obj object-with-unindexed-oid))
   (with-slots (oid) obj
-    (str:downcase (mongoid:oid-str oid))))
+    (Fast-oid-str oid)))

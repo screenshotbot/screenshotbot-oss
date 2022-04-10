@@ -48,7 +48,6 @@
                do (bt:with-lock-held (*lock*)
                     (remhash (nibble-id nib) *nibbles*)))))))
 
-
 (defclass nibble-plugin (hex:acceptor-plugin)
   ((wrapper :initarg :wrapper
             :initform 'funcall
