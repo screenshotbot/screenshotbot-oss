@@ -20,10 +20,6 @@
 
 (compile 'register-tdrhq)
 
-(quick-patch:register "https://github.com/moderninterpreters/markup"
-                            "4dd66b0a0223f58e581697a1713ffbf77c0ab798")
-
-
 (register-tdrhq "stripe" "673d4b9600eb7c2dd21b4701a1b18e348dca7267")
 
 (register-tdrhq "fiveam" "162bd30e6179fc787ee94e96104c8ce059d610ff")

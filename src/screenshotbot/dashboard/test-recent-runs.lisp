@@ -23,7 +23,21 @@
                 #:test-company)
   (:import-from #:screenshotbot/installation
                 #:installation
-                #:*installation*))
+                #:*installation*)
+  (:import-from #:screenshotbot/model/company
+                #:company-with-name)
+  (:import-from #:screenshotbot/model/user
+                #:user-with-email)
+  (:import-from #:screenshotbot/dashboard/recent-runs
+                #:find-recent-runs)
+  (:import-from #:screenshotbot/login/common
+                #:*current-company-override*)
+  (:import-from #:screenshotbot/user-api
+                #:company-runs)
+  (:import-from #:util/testing
+                #:with-fake-request)
+  (:import-from #:markup
+                #:write-html))
 
 (util/fiveam:def-suite)
 
@@ -78,3 +92,17 @@
                            :numbersp nil
                            :company company)
        (pass)))))
+
+(defun profile-recent-runs (company email)
+  (let* ((company (company-with-name company))
+         (user (user-with-email email))
+         (*current-company-override* company))
+    (with-fake-request ()
+      (auth:with-sessions ()
+       (loop for i from 0 to 1000 do
+         (write-html (render-recent-runs (util/lists:head (company-runs company) 50)
+                                         :user *user*
+                                         :check-access-p nil
+                                         :script-name "/runs"
+                                         :numbersp nil
+                                         :company company)))))))
