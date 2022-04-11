@@ -99,7 +99,7 @@
          (*current-company-override* company))
     (with-fake-request ()
       (auth:with-sessions ()
-       (loop for i from 0 to 1000 do
+       (loop for i from 0 to 10000 do
          (write-html (render-recent-runs (util/lists:head (company-runs company) 50)
                                          :user *user*
                                          :check-access-p nil
