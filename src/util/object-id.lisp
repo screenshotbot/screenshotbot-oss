@@ -50,7 +50,8 @@
         (error "Object ~s isn't of type ~s" obj type)))
     obj))
 
-(defconstant +e+ "0123456789abcdef")
+(#+lispworks defconstant
+ #-lispworks defparameter +e+ "0123456789abcdef")
 
 (defun fast-oid-str (oid)
   (declare (optimize (speed 3)
