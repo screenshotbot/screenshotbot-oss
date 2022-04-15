@@ -22,7 +22,6 @@
    #:server-with-login
    #:*root*
    #:*is-localhost*
-   #:init-for-delivered-image
    #:document-root
    #:*reuben-ip*
    #:*disable-mail*
@@ -43,7 +42,9 @@
    #:error-user
    #:*seleniump*
    #:no-access-error-page
-   #:*init-hooks*))
+   #:*init-hooks*
+   #:register-init-hook
+   #:call-init-hooks))
 (in-package :screenshotbot/server)
 
 (defparameter *domain* "https://screenshotbot.io")
@@ -99,12 +100,11 @@
 
 (defvar *init-hooks* nil)
 
-(defun init-for-delivered-image ()
-  (setf *root* (pathname "~/web/src/screenshotbot/"))
-  (setf (hunchentoot:acceptor-document-root
-         *acceptor*)
-        (document-root))
-  (mapc #'funcall *init-hooks*))
+(defun call-init-hooks ()
+  (mapc #'funcall (mapcar 'cdr (reverse *init-hooks*))))
+
+(defun register-init-hook (name function)
+  (setf (alexandria:assoc-value *init-hooks* name) function))
 
 (defvar *nibble-plugin* (make-instance 'nibble:nibble-plugin
                                         :prefix "/n/"

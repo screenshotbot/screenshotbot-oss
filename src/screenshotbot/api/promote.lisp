@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/github/access-checks
                 #:fix-github-link)
   (:import-from #:screenshotbot/server
+                #:register-init-hook
                 #:*init-hooks*)
   (:export
    #:with-promotion-log
@@ -62,7 +63,8 @@
 
 (defvar *promotion-appender* (setup-promotion-logger))
 
-(pushnew 'setup-promotion-logger *init-hooks*)
+(register-init-hook 'setup-promotion-logger
+                     #'setup-promotion-logger)
 
 (defvar *promotion-log-stream* nil)
 
