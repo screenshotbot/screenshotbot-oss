@@ -81,7 +81,10 @@
 
 (defclass context ()
   ((seen :initform (make-hash-table :test #'equal)
-         :reader context-seen))
+         :reader context-seen)
+   (custom-css :initarg :custom-css
+               :initform nil
+               :reader custom-css))
   (:documentation "A crawler context. Keeps track of all DFS nodes
   we're looking at, and also allows us to customize the node
   processing for specific websites"))
@@ -662,13 +665,16 @@
   ;;(log:info "Looking at: ~S" node)
   )
 
-(defun add-css (html)
+(defmethod add-css ((context context) html)
   "Add the replay css overrides to the html"
   (a:when-let (head (ignore-errors (elt (lquery:$ html "head") 0)))
     (let ((link (plump:make-element
                         head "link")))
       (setf (plump:attribute link "href") "/css/replay.css")
-      (setf (plump:attribute link "rel") "stylesheet"))))
+      (setf (plump:attribute link "rel") "stylesheet"))
+    (when (custom-css context)
+      (let ((style (plump:make-element head "style")))
+        (plump:make-text-node style (custom-css context))))))
 
 (with-auto-restart ()
  (defmethod load-url-into ((context context) snapshot url tmpdir)
@@ -676,7 +682,7 @@
                                  :force-binary nil))
           (html (plump:parse content)))
      (process-node context html snapshot url)
-     (add-css html)
+     (add-css context html)
 
      #+nil
      (error "got html: ~a"
