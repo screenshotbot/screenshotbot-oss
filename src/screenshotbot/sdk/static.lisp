@@ -31,7 +31,7 @@
                            ("api-secret-key" . ,flags:*api-secret*))
                   :defaults
                   (quri:uri (format nil "~a/api/blob/upload" flags:*hostname*)))))
-     (sdk:put-file uri
+     (sdk:put-file (format nil "~a" uri)
                    stream))))
 
 

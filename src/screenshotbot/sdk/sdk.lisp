@@ -77,11 +77,6 @@
 (define-condition api-error (error)
   ((message :initarg :message)))
 
-(defvar *request* #'dex:request
-  "Ability to override the mechanism used to make the request")
-(defvar *put* #'dex:put
-  "Ability to override the mechanism used to put requests")
-
 (defmethod print-object ((e api-error) stream)
   (with-slots (message) e
    (format stream "#<API-ERROR ~a>" message)))
@@ -92,14 +87,16 @@
   (when (and (eql method :get) parameters)
     (error "Can't use :get with parameters"))
   (with-open-stream (stream
-                     (funcall *request*
-                              (format nil "~a~a" *hostname* api)
-                              :want-stream t
-                              :method method
-                              :content (apply 'list
-                                               (cons "api-key" *api-key*)
-                                               (cons "api-secret-key" *api-secret*)
-                                               parameters)))
+                     (drakma:http-request
+                      (format nil "~a~a" *hostname* api)
+                      :method method
+                      :want-stream t
+                      :method method
+                      :parameters (apply 'list
+                                       (cons "api-key" *api-key*)
+                                       (cons "api-secret-key" *api-secret*)
+                                       parameters)))
+
     (let ((result (json:decode-json stream)))
       (awhen (assoc-value result :error)
         (log:error "API error: ~a" it)
@@ -117,13 +114,13 @@
           (finish-output tmp-stream)
           (file-position tmp-stream 0)
           (log:debug "Got file length: ~a" (file-length tmp-stream))
-          (funcall *put* upload-url
-                   :headers `((:content-type . "application/octet-stream")
-                              ;; There a bug in dexador that prevents the
-                              ;; file-length logic to work correctly in
-                              ;; delivered LW images
-                              (:content-length . ,(file-length tmp-stream)))
-                   :content tmpfile))
+          (drakma:http-request
+           upload-url
+           :method :put
+           :parameters parameters
+           :content-type "application/octet-stream"
+           :content-length (file-length tmp-stream)
+           :content tmpfile))
 
       (log:debug "Got image upload response: ~s" result)
       (unless (eql 200 code)

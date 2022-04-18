@@ -71,7 +71,7 @@
                :util.java
                :util/phabricator
                :hunchensocket
-               :dexador
+               :drakma
                :anaphora
                :dag
                #-screenshotbot-oss
