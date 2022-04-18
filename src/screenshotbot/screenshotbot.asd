@@ -328,6 +328,7 @@
                :cl-store
                :auto-restart
                :dexador
+               :drakma
                :json-mop
                :alexandria)
   :components ((:module "replay"

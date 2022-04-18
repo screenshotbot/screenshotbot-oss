@@ -130,6 +130,11 @@
   :components ((:file "fiveam")
                (:file "mock-recording")))
 
+(defsystem :util/request
+  :depends-on (:drakma)
+  :serial t
+  :components ((:file "request")))
+
 (defsystem :util/health-check
   :depends-on (:str
                :alexandria)

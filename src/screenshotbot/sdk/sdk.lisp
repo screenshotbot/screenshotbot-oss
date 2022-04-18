@@ -41,6 +41,8 @@
                 #:merge-base)
   (:import-from #:uiop
                 #:getenv)
+  (:import-from #:util/request
+                #:http-request)
   (:export
    #:single-directory-run
    #:*request*
@@ -87,7 +89,7 @@
   (when (and (eql method :get) parameters)
     (error "Can't use :get with parameters"))
   (with-open-stream (stream
-                     (drakma:http-request
+                     (http-request
                       (format nil "~a~a" *hostname* api)
                       :method method
                       :want-stream t
@@ -114,7 +116,7 @@
           (finish-output tmp-stream)
           (file-position tmp-stream 0)
           (log:debug "Got file length: ~a" (file-length tmp-stream))
-          (drakma:http-request
+          (http-request
            upload-url
            :method :put
            :parameters parameters
