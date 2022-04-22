@@ -338,5 +338,6 @@
                :alexandria)
   :components ((:module "replay"
                 :serial t
-                :components ((:file "core")
+                :components ((static-file "replay-regex" :type "txt")
+                             (:file "core")
                              (:file "browser-config")))))

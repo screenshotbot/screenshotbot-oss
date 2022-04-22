@@ -476,10 +476,9 @@
       :url url
       :snapshot snapshot))))
 
-(defun regexs ()
-  ;; taken from https://github.com/callumlocke/css-url-rewriter/blob/master/lib/css-url-rewriter.js
+(defparameter *regexs*
   (uiop:read-file-lines
-   (asdf:system-relative-pathname :screenshotbot "replay-regex.txt")))
+   (asdf:system-relative-pathname :screenshotbot "replay/replay-regex.txt")))
 
 (defun should-rewrite-url-p (url)
   (let ((untouched-schemes (list "data:" "moz-extension:")))
@@ -488,7 +487,7 @@
             (not (str:starts-with-p scheme url)))))
 
 (defun rewrite-css-urls (css fn)
-  (destructuring-bind (property-matcher url-matcher) (regexs)
+  (destructuring-bind (property-matcher url-matcher) *regexs*
     (declare (ignore property-matcher))
     (let ((url-scanner (cl-ppcre:create-scanner url-matcher)))
       (cl-ppcre:regex-replace-all
