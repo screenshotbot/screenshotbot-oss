@@ -42,3 +42,14 @@
                                                                             :key "foo"
                                                                             :secret "sdfsdfdfdfs")))
                         :company *company*)))))))
+
+(test empty-api-keys-page-test
+  (let* ((*installation* (make-instance 'installation)))
+    (with-fake-request ()
+      (auth:with-sessions ()
+       (screenshot-static-page
+        :screenshotbot
+        "api-key-page-empty"
+        (markup:write-html
+         (%api-key-page :user (make-instance 'test-user)
+                        :company *company*)))))))
