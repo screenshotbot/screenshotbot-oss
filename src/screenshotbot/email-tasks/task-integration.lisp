@@ -74,7 +74,7 @@
            ;; This is a temporary bcc while I test the email
            ;; notifications.
            #-screenshotbot-oss
-           "arnold@screeenshotbot.io")
+           "arnold@screenshotbot.io")
      :html-message
      (email-content company report))))
 
