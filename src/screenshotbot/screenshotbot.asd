@@ -219,6 +219,9 @@
                  (:file "task-integration")
                  (:file "settings")
                  (:file "all")))
+   (:module "email-tasks"
+    :components ((:file "settings")
+                 (:file "task-integration")))
    (:module "settings"
     :serial t
     :components ((:file "settings-template")
@@ -285,6 +288,8 @@
                #+ (or ccl lispworks)
                (:module "slack"
                 :components ((:file "test-settings")))
+               (:module "email-tasks"
+                :components ((:file "test-task-integration")))
                (:module "api"
                 :components ((:file "test-image")
                              (:file "test-promote")

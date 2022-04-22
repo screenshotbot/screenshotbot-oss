@@ -22,7 +22,8 @@
                                 (company-class '(quote company))
                              (user (gensym "user"))
                              (api-key (gensym "api-key"))) &body body)
-  `(let* ((,company (make-instance ,company-class))
+  `(let* ((,company (make-instance ,company-class
+                                   :name "Dummy org"))
           (,user (make-user :companies (list company)))
           (,api-key (make-instance 'api-key :user user
                                             :company company))
