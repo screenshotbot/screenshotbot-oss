@@ -25,8 +25,6 @@
                 #:pull-request-url
                 #:recorder-run-commit
                 #:activep)
-  (:import-from #:screenshotbot/model/company
-                #:ensureslo)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
