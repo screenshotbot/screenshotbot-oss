@@ -24,13 +24,16 @@
      #'override-if-needed
      (mapcar
       #'package-name
-      (sort
-       (loop for package in (list-all-packages)
-             if (unless (string-equal current-package (package-name package))
-                  (a:when-let (sym (find-symbol (string-upcase name)
-                                                package))
-                    (eql package (symbol-package sym))))
-               collect package)
+        (sort
+         (let ((bad-packages (list (find-package :keyword))))
+          (loop for package in (list-all-packages)
+                if (and
+                    (not (member package bad-packages))
+                    (unless (string-equal current-package (package-name package))
+                      (a:when-let (sym (find-symbol (string-upcase name)
+                                                    package))
+                          (eql package (symbol-package sym)))))
+                    collect package))
        #'> :key (lambda (package)
                   (let ((package-name (package-name package)))
                     (loop for i from 0 below (length current-package)
