@@ -114,6 +114,7 @@
      (apply 'can-view! runs))
     (dashboard-template
      :user user
+     :title "Screenshotbot: Runs"
      :company company
      :script-name "/runs"
      (when numbersp

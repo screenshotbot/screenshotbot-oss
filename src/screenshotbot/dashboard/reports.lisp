@@ -54,7 +54,7 @@
       ((hunchentoot:parameter "v2")
        (compare-v2-page :report report))
       (t
-       <app-template>
+       <app-template title= (report-title report) >
 
        ,(when (and nil (can-public-view report))
           <section class= "mt-3" >
@@ -106,7 +106,7 @@
       (with-pagination (reports reports
                                 :next-link next-link
                                 :prev-link prev-link)
-        <app-template>
+        <app-template title= "Screenshotbot: Reports" >
           <div class= "page-title-box">
             <h4 class= "page-title">Recent Reports</h4>
           </div>

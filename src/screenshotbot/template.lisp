@@ -80,10 +80,11 @@
     <util:google-analytics tracking= "UA-179653755-1" />))
 
 (deftag dashboard-head (&key jquery-ui
+                        (title "Screenshotbot")
                         codemirror)
       <head>
       <meta charset="utf-8" />
-      <title>Screenshotbot</title>
+      <title>,(or title "Screenshotbot")</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <!-- App favicon -->
         <link rel="shortcut icon" href= (util.cdn:make-cdn *favicon*) />
@@ -106,6 +107,7 @@
 
 (deftag dashboard-template (children &key stripe
                             scripts
+                            (title "Screenshotbot")
                             (body-class "dashboard")
                             (user (current-user))
                             codemirror
@@ -115,7 +117,7 @@
                             admin)
   (declare (ignore scripts))
   <html lang="en">
-    <dashboard-head jquery-ui=jquery-ui codemirror=codemirror />
+    <dashboard-head jquery-ui=jquery-ui codemirror=codemirror title=title />
 
     <body class= body-class
           data-user-id= (when user (oid user))
@@ -165,6 +167,7 @@
                       transparent
                       admin
                       jquery-ui
+                      title
                       codemirror
                       scripts
                       script-name
@@ -178,6 +181,7 @@
     ((logged-in-p)
      <dashboard-template admin=admin jquery-ui=jquery-ui stripe=stripe scripts=scripts
                          codemirror=codemirror
+                         title=title
                          script-name= (or script-name (hunchentoot:script-name*)) >,@children </dashboard-template>)
     (t
      (Assert (not admin))

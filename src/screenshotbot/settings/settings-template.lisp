@@ -38,7 +38,7 @@
              collect <settings-menu-item href= (format nil "/settings/~a" (settings-name x))>,(settings-title x)</settings-menu-item>)
   </markup:merge-tag>)
 
-(deftag settings-template (children)
+(deftag settings-template (children &key title)
   (let ((sections (mapcar 'settings-section (mapcar 'cdr (all-settings (installation))))))
     (assert (equal nil
                    (set-difference (remove-duplicates sections)
@@ -46,7 +46,8 @@
                                    :test #'string=)))
 
       <dashboard-template scripts= (list
-                                "/assets/js/settings.js")
+                                    "/assets/js/settings.js")
+                          title= (or title "Screenshotbot: Settings")
                       >
 
     <div class= "row" style= "min-height: 100vh" >

@@ -14,6 +14,7 @@
 (markup:enable-reader)
 
 (markup:deftag simple-card-page (children &key (col-class "col-lg-4 col-md-8")
+                                 title
                                  (max-width "30rem")
                                  script-name
                           form-action)
@@ -38,7 +39,7 @@
                     </div>
                     ,(progn footer)
                   </div>)))
-    <app-template >
+    <app-template title=title >
       <div class= "card-page-container mt-3"
            style= (when max-width
                    (format nil "max-width: ~a" max-width)) >

@@ -61,7 +61,8 @@
   (let* ((api-keys (user-api-keys user company))
          (create-api-key (nibble ()
                            (%create-api-key user company))))
-    <simple-card-page max-width= (if api-keys "60rem" "30rem") >
+    <simple-card-page max-width= (if api-keys "60rem" "30rem")
+                      title= "Screenshotbot: API Keys" >
       <div class= "card-header">
         <div class= "d-flex flex-row justify-content-between">
           <div class= "d-flex ">

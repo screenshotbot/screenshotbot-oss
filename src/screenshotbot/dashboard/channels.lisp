@@ -66,7 +66,7 @@
     (let ((channels (sort (company-channels company)
                         '|STRING<| :key 'channel-name)))
     (with-pagination (channels channels :next-link next-link :prev-link prev-link)
-      (dashboard-template :user user :company company :script-name "/channels"
+      (dashboard-template :user user :company company :script-name "/channels" :title "Screenshotbot: Channels"
        <div class= "page-title-box">
          <h4 class= "page-title">
            Channel<explain title= "Channels">,(explain-channels)</explain> List
