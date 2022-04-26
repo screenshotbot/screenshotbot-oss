@@ -38,7 +38,10 @@
       (hex:safe-redirect 'report-page :id (oid (store-object-with-id 814))))
   (if (equal "814" (string id))
       (hex:safe-redirect 'report-page :id (oid (store-object-with-id 814))))
-  (let ((report (find-by-oid id)))
+  (let ((report (ignore-errors (find-by-oid id))))
+    (unless report
+      (warn "Bad report id used in: ~a" id)
+      (hex:safe-redirect "/report"))
     (with-login (:needs-login (not (can-public-view report)))
      (render-report-page report))))
 
