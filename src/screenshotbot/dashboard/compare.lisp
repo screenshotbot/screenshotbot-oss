@@ -73,6 +73,8 @@
                 #:get-non-alpha-pixels
                 #:with-wand)
   (:import-from #:screenshotbot/diff-report
+                #:actual-item
+                #:changes-groups
                 #:get-tab-title)
   (:import-from #:bknr.datastore
                 #:cascading-delete-object)
@@ -424,20 +426,23 @@ If the images are identical, we return t, else we return NIL."
    (lambda ()
      (restart-case
          (let ((report (make-diff-report run previous-run)))
-          (let ((changes (diff-report-changes report)))
-            (loop for change in changes
-                  for i from 1
-                  for before = (before change)
-                  for after = (after change)
-                  for image-comparison-job = (make-instance 'image-comparison-job
-                                                             :before-image before
-                                                             :after-image after)
-                  do
-                     (progn
-                       (log:info "Warming up compare image ~d of ~d (~a)" i (length changes)
-                                 (screenshot-name after))
-                       (prepare-image-comparison image-comparison-job :size nil
-                                                                      :warmup t)))))
+           ;; warmup in the order that the report would be typically
+           ;; viewed.
+           (dolist (group (changes-groups report))
+            (let ((changes (mapcar #'actual-item (group-items group))))
+              (loop for change in changes
+                    for i from 1
+                    for before = (before change)
+                    for after = (after change)
+                    for image-comparison-job = (make-instance 'image-comparison-job
+                                                               :before-image before
+                                                               :after-image after)
+                    do
+                       (progn
+                         (log:info "Warming up compare image ~d of ~d (~a)" i (length changes)
+                                   (screenshot-name after))
+                         (prepare-image-comparison image-comparison-job :size nil
+                                                                        :warmup t))))))
        (retry-warmup-thread ()
          (warmup-comparison-images run previous-run))))
    :name "warmup-comparison-images"))

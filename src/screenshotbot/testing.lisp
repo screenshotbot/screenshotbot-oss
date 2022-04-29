@@ -19,11 +19,12 @@
                 #:make-user))
 
 (defmacro with-test-user ((&key (company (gensym "company"))
+                                (company-name "Dummy org")
                                 (company-class '(quote company))
                              (user (gensym "user"))
                              (api-key (gensym "api-key"))) &body body)
   `(let* ((,company (make-instance ,company-class
-                                   :name "Dummy org"))
+                                   :name ,company-name))
           (,user (make-user :companies (list company)))
           (,api-key (make-instance 'api-key :user user
                                             :company company))

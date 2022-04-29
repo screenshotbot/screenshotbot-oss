@@ -51,6 +51,7 @@
      (auth:with-sessions ()
        (let ((promoter (make-instance 'master-promoter)))
          (with-test-user (:company company
+                          :company-name "foobar enterprises"
                           :company-class 'test-company
                           :user user
                           :api-key api-key)
