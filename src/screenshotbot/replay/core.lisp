@@ -652,7 +652,10 @@
        ((? "script")
         (replace-attr "src"))
        ((? "input")
-        (plump:remove-attribute node "autofocus")))))
+        (plump:remove-attribute node "autofocus"))
+       ((? "body")
+        (let ((old-class (or (plump:attribute node "class") "")))
+          (setf (plump:attribute node "class") (format nil "~a screenshotbot" old-class)))))))
   (call-next-method))
 
 (defmethod process-node ((context context) (node plump:nesting-node) snapshot root-url)

@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:process-node
                 #:http-cache-dir
                 #:context
                 #:remote-response
@@ -124,6 +125,18 @@ background: url(shttps://google.com?f=1)
           (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
             (load-url-into context snapshot "https://screenshotbot.io/" tmpdir)
             (pass)))))
+
+(test adds-screenshotbot-css
+  (with-fixture state ()
+    (let ((html (plump:parse "<html><body>hello</body></html>")))
+      (process-node (make-instance 'context)
+                    html
+                    (make-instance 'snapshot)
+                    "https://www.google.com")
+      (is (equal "<html><body class=\" screenshotbot\">hello</body></html>"
+                 (with-output-to-string (s)
+                  (plump:serialize html s))))
+      (pass))))
 
 (test utf-8
   (with-fixture state ()
