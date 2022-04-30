@@ -15,6 +15,7 @@
     :accessor value))
   (:metaclass persistent-class))
 
+
 (defmethod initialize-instance :after ((uv user-session-value)
                                        &key session-key
                                          prop-key
