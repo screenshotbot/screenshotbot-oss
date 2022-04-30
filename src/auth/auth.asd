@@ -2,6 +2,7 @@
     :serial t
   :depends-on ("cl-pass"
                "bknr.datastore"
+               "util/misc"
                "log4cl"
                "cl-fad"
                #+windows

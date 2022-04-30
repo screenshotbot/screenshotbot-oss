@@ -61,6 +61,7 @@
                "stripe"
                "log4cl"
                "util/store"
+               "util/misc"
                "util/random-port"
                "cl-cron")
   :serial t
@@ -74,7 +75,6 @@
                (:file "lists")
                (:file "html2text")
                (:file "cdn")
-               (:file "misc")
                (:file "package")
                (:file "mockable")
                (:file "asdf")
@@ -91,6 +91,11 @@
                (:file "debugger-hook")
                #+lispworks
                (:file "memory")))
+
+(defsystem :util/misc
+  :serial t
+  :depends-on (:local-time)
+  :components ((:file "misc")))
 
 (defsystem :util/testing
   :serial t

@@ -5,16 +5,11 @@
 
 (defclass user-session-value (store-object)
   ((session-key-and-prop-key
-    :index-type unique-index
-    :index-reader %find-user-session-value
-    :accessor session-key-and-prop-key
-    :index-values all-user-session-values
-    :index-initargs (:test 'equal))
+    :accessor session-key-and-prop-key)
    (value
     :initarg :value
     :accessor value))
   (:metaclass persistent-class))
-
 
 (defmethod initialize-instance :after ((uv user-session-value)
                                        &key session-key
@@ -26,9 +21,20 @@
 
 
 
-(defun find-user-session-value (session-key prop-key)
-  (%find-user-session-value
-   (cons session-key prop-key)))
+(let ((cache (make-hash-table :test #'equal)))
+  (defun find-user-session-value (session-key prop-key)
+    "The reason we don't use a BKNR index for this is because the
+index has a tendency to go stale. When the index does go stale,
+sessions are one of the first objects created that can make the index
+incorrect. We don't have a crazy number of sessions per instance that
+this would be a problem."
+    (let ((cache-key (cons session-key prop-key)))
+      (util/misc:or-setf
+       (gethash cache-key cache)
+       (loop for user-session-value in (bknr.datastore:store-objects-with-class 'user-session-value)
+             if (equal cache-key (session-key-and-prop-key user-session-value))
+                return user-session-value)))))
+
 
 (defclass user-session-transient ()
   ((session-key
@@ -88,6 +94,8 @@
 
 (defvar *session-token-generator*)
 
+(defvar *lock* (bt:make-lock "auth-lock"))
+
 #+windows
 (defun read-windows-seed ()
   (cl-store:restore (path:catfile (util:system-source-directory :auth) "dummy-init-key.out")))
@@ -143,15 +151,17 @@ value."
   (let ((x (find-user-session-value (session-key session)
                                     key)))
     (and x
-     (value x))))
+         (value x))))
+
 
 (defun (setf session-value) (value key &key (session (current-session)))
-  (let ((x (or
-            (find-user-session-value (session-key session)
-                                     key)
-            (make-instance 'user-session-value
-                           :session-key (session-key session)
-                           :prop-key key))))
+  (let ((x (bt:with-lock-held (*lock*)
+             (or
+              (find-user-session-value (session-key session)
+                                       key)
+              (make-instance 'user-session-value
+                              :session-key (session-key session)
+                              :prop-key key)))))
     (bknr.datastore:with-transaction ()
       (setf (value x) value))))
 
