@@ -133,7 +133,7 @@ background: url(shttps://google.com?f=1)
                     html
                     (make-instance 'snapshot)
                     "https://www.google.com")
-      (is (equal "<html><body class=\" screenshotbot\">hello</body></html>"
+      (is (equal "<html2><body class=\" screenshotbot\">hello</body></html2>"
                  (with-output-to-string (s)
                   (plump:serialize html s))))
       (pass))))
