@@ -95,7 +95,8 @@ also index subclasses of the class to which the slot belongs, default is T")
       (superclasses class))
     (nreverse result)))
 
-(defmethod direct-slot-definition-class ((class indexed-class) &key index index-type)
+(defmethod direct-slot-definition-class ((class indexed-class) &key index index-type
+                                                                 &allow-other-keys)
   (if (or index index-type)
       'index-direct-slot-definition
       (call-next-method)))

@@ -1,8 +1,5 @@
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (or (find-package :bknr.indices.tests)
-      (defpackage :bknr.indices.tests
-	(:use :cl :bknr.indices :unit-test))))
-
+(defpackage :bknr.indices.tests
+  (:use :cl :bknr.indices :unit-test))
 (in-package :bknr.indices.tests)
 
 (define-test-class index-test-class
@@ -289,7 +286,7 @@
       (test-equal (length (all-test-slots)) 6)
       (test-assert (subsetp (list t1 t2 t3 t4 t5 t6) (all-test-slots)))
       (test-equal (all-test-slot4s) (list t6)))))
-      
+
 (defclass test-class ()
   ((x :initarg :x :reader test-class-x)
    (y :initarg :y :reader test-class-y)
@@ -458,5 +455,3 @@
 			    ("Rock" "Metal" "Heavy") ("Reggae") ("Reggae" "Dub"))
 			  (all-track-categories) :test #'equal))
     (test-equal nil (tracks-with-category '("Rock" "Metal" "Trash")))))
-    
-   
