@@ -293,9 +293,38 @@
     (retry--validate-class-index ()
       (validate-class-index class-name slot-name))))
 
+(defun all-store-objects-in-memory ()
+  (flet ((make-sorted (x)
+           (sort x #'< :key #'store-object-id)))
+   (let ((from-bknr (make-sorted (bknr.datastore:all-store-objects))))
+     #-lispworks
+     from-bknr
+     #+lispworks
+     (let ((rest nil))
+       (hcl:sweep-all-objects
+        (lambda (obj)
+          (when (and
+                 (typep obj 'store-object)
+                 (not (bknr.datastore::object-destroyed-p obj))
+                 (ignore-errors
+                  (store-object-id obj)))
+            (push obj rest)))
+        t)
+       (let ((sorted (make-sorted rest)))
+         (restart-case
+             (progn
+               (unless (equal sorted from-bknr)
+                 (error "The objects in memory and bknr index is not in sync, ~a vs ~a objects"
+                        (length sorted)
+                        (length from-bknr)))
+               sorted)
+           (return-the-list-from-memory ()
+             sorted)
+           (return-the-list-from-bknr ()
+             from-bknr)))))))
 
 (defun validate-indices ()
-  (let* ((objects (bknr.datastore:all-store-objects))
+  (let* ((objects (all-store-objects-in-memory))
          (classes (remove-duplicates (mapcar 'class-of objects))))
     (log:info "Got ~a objects and ~a classes"
               (length objects)
