@@ -229,9 +229,6 @@
      ;; it's correct to send false in that case.
      nil)
     (t
-     (log:info "First list has ~d, and second list has ~d elements"
-               (length list1)
-               (length list2))
      (and
       (eql nil (hash-set-difference list1 list2 :test test))
       (eql nil (hash-set-difference list2 list1 :test test))))))
