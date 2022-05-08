@@ -6,7 +6,11 @@
 
 (defpackage #:util/object-id
   (:use #:cl
-	#:bknr.datastore)
+        #:bknr.datastore)
+  (:import-from #:bknr.indices
+                #:unique-index)
+  (:import-from #:util/store
+                #:defindex)
   (:export #:object-with-oid
 	   #:object-with-unindexed-oid
 	   #:find-by-oid
@@ -16,13 +20,16 @@
 (defun %make-oid ()
   (mongoid:oid))
 
+(defindex +oid-index+ 'unique-index
+  :test 'equalp
+  :slot-name 'oid)
+
 ;;;; reloading this object is bad. I thought I had fixed this, but
 ;;;; it's still buggy inside of my patched version of bknr.datastore
 (defclass object-with-oid (store-object)
   ((oid
     :initarg :oid
-    :index-type bknr.indices:unique-index
-    :index-initargs (:test 'equalp)
+    :index +oid-index+
     :index-reader %find-by-oid))
   (:metaclass persistent-class))
 
