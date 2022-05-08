@@ -24,7 +24,8 @@
    #:validate-indices
    #:register-ref
    #:find-any-refs
-   #:safe-snapshot))
+   #:safe-snapshot
+   #:defindex))
 (in-package :util/store)
 
 (defvar *object-store*)
@@ -426,3 +427,8 @@ set-differences on O and the returned value from this."
 
 
 ;; (validate-indices)
+
+(defmacro defindex (name &rest args)
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (defvar ,name
+       (make-instance ,@args))))
