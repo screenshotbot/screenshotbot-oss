@@ -187,7 +187,7 @@
           if (slot-boundp obj slot)
             do
                (let ((slot-value (slot-value obj slot)))
-                 (assert (not (eql :png slot-value)))
+                 ;;(assert (not (eql :png slot-value)))
                  (cond
                    (unique-index-p
                     (when slot-value
@@ -321,9 +321,17 @@
            (return-the-list-from-bknr ()
              from-bknr)))))))
 
+(defun fast-remove-duplicates (list)
+  (let ((hash-table (make-hash-table)))
+    (loop for x in list
+          do (setf (gethash x hash-table) t))
+    (a:hash-table-keys hash-table)))
+
 (defun validate-indices ()
   (let* ((objects (all-store-objects-in-memory))
-         (classes (remove-duplicates (mapcar 'class-of objects))))
+         (classes (fast-remove-duplicates
+                   (loop for class in (fast-remove-duplicates (mapcar 'class-of objects))
+                         append (closer-mop:class-precedence-list class)))))
     (log:info "Got ~a objects and ~a classes"
               (length objects)
               (length classes))
