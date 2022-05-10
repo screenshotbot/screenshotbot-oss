@@ -16,6 +16,8 @@
                 #:make-prefix-matcher
                 #:acceptor-plugins
                 #:make-full-url)
+  (:import-from #:util/threading
+                #:make-thread)
   (:use-reexport #:util/random-port)
   (:use-reexport #:util/ret-let
                  #:util/copying
@@ -30,6 +32,7 @@
            #:google-analytics
            #:safe-redirect
            #:olark
+           #:make-thread
            #:get-request-domain-prefix
            #:access-log
            #:make-url

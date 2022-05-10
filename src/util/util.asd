@@ -60,6 +60,7 @@
                #-screenshotbot-oss
                "stripe"
                "log4cl"
+               "util/threading"
                "util/store"
                "util/misc"
                "util/random-port"
@@ -135,6 +136,11 @@
   :components ((:file "fiveam")
                (:file "mock-recording")))
 
+(defsystem :util/threading
+  :depends-on (:bordeaux-threads)
+  :serial t
+  :components ((:file "threading")))
+
 (defsystem :util/request
   :depends-on (:drakma)
   :serial t
@@ -177,6 +183,7 @@
                              (:file "test-misc")
                              (:file "test-store")
                              (:file "test-hash-lock")
+                             (:file "test-threading")
                              (:file "test-cookies")
                              (:file "test-fiveam")
                              (:file "test-lists")
