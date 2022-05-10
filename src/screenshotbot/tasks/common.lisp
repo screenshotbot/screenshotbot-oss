@@ -101,6 +101,6 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
                                     (thread))
                                   (ignore-task-integation ()
                                     nil))))
-                       (bt:make-thread #'thread))))))))))
+                       (util:make-thread #'thread))))))))))
       (dangerous-retry-full-send-task-flow ()
         (%maybe-send-tasks run))))

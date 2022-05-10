@@ -259,7 +259,7 @@ Disallow: /n")
 
 (defun make-thread (fn &rest args)
   (apply
-   'bt:make-thread
+   'util:make-thread
    (lambda ()
      (funcall-with-sentry-logs fn))
    args))

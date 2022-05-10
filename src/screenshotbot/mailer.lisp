@@ -82,6 +82,6 @@
       nil)))
 
 (defmethod send-mail ((mailer background-mailer) &rest args)
-  (bt:make-thread
+  (util:make-thread
    (lambda ()
      (apply #'send-mail (delegate mailer) args))))
