@@ -20,6 +20,8 @@
                 #:phabricator-config-for-company
                 #:phabricator-url
                 #:conduit-api-key)
+  (:import-from #:util/cron
+                #:def-cron)
   (:export #:phabricator-plugin))
 (in-package :screenshotbot/phabricator/plugin)
 
@@ -61,11 +63,9 @@ diffusion.repository.search."
                    :result)
                   :data)))))))
 
-(cl-cron:make-cron-job (lambda ()
-                         (bt:with-lock-held (*lock*)
-                          (setf *cache* nil)))
-                       :step-min 30
-                       :hash-key 'clean-phabricator-cache)
+(def-cron clean-phabricator-cache (:step-min 30)
+  (bt:with-lock-held (*lock*)
+    (setf *cache* nil)))
 
 (defmethod find-repo-by-name (repos (name string))
   "Find the repo json from diffusion.repository.search that

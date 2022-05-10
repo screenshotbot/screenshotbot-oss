@@ -9,6 +9,8 @@
           #:alexandria)
   (:import-from #:screenshotbot/ignore-and-log-errors
                 #:ignore-and-log-errors)
+  (:import-from #:util/cron
+                #:def-cron)
   (:export #:push-analytics-event))
 (in-package :screenshotbot/analytics)
 
@@ -92,5 +94,5 @@
           (setf ctr 0)
           (clean-events))))))
 
-(cl-cron:make-cron-job 'write-analytics-events
-                        :hash-key 'write-analytics-events)
+(def-cron write-analytics-events ()
+  (write-analytics-events))

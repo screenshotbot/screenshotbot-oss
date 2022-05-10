@@ -13,6 +13,8 @@
                 #:mdi)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:util/cron
+                #:def-cron)
   (:export #:numbers-section))
 (in-package :screenshotbot/dashboard/numbers)
 
@@ -104,6 +106,5 @@
         do
            (make-numbers-section :company company)))
 
-(cl-cron:make-cron-job #'rebuild-stats
-                       :minute 32
-                       :hash-key 'rebuild-stats)
+(def-cron rebuild-stats (:minute 32)
+  (rebuild-stats))
