@@ -53,6 +53,7 @@
                "bknr.datastore"
                "cl-csv"
                "cl-smtp"
+               "util/cron"
                "cl-mongo-id"
                "drakma"
                "cl-json"
@@ -141,6 +142,11 @@
   :serial t
   :components ((:file "threading")))
 
+(defsystem :util/cron
+  :depends-on (:cl-cron
+               :util/threading)
+  :components ((:file "cron")))
+
 (defsystem :util/request
   :depends-on (:drakma)
   :serial t
@@ -161,7 +167,7 @@
   :depends-on (:cffi
                :str)
   :serial t
-  :components (#-lispworks (:file "fake-fli")))
+  :components (#-lispworksc (:file "fake-fli")))
 
 (defsystem :util/phabricator
   :depends-on (:dexador
