@@ -112,69 +112,69 @@ also index subclasses of the class to which the slot belongs, default is T")
       (compile function))))
 
 (defun create-index-access-functions (index &key index-reader index-values
-				      index-mapvalues index-keys index-var)
+				                              index-mapvalues index-keys index-var)
   (defun-and-compile
       `(defun ,index-reader (key) (index-get ,index key)))
   (defun-and-compile
       `(defun ,index-values ()
-	(index-values ,index)))
+	     (index-values ,index)))
   (defun-and-compile
       `(defun ,index-mapvalues (fun)
-	(index-mapvalues ,index fun)))
+	     (index-mapvalues ,index fun)))
   (defun-and-compile
       `(defun ,index-keys ()
-	(index-keys ,index)))
+	     (index-keys ,index)))
   (when index-var
     (when (boundp index-var)
       (warn "~A is already bound to ~A, rebinding to ~A"
-	    index-var (eval index-var) index))
+	        index-var (eval index-var) index))
     (eval `(defparameter ,index-var ,index))))
 
 (defun make-index-object (&key index type initargs reader values mapvalues slots keys var)
   (let ((index-object (if index
-			  (eval index)
-			  (apply #'index-create
-				 (append (cons type (eval-initargs initargs))
-					 (list :slots slots))))))
+			              (eval index)
+			              (apply #'index-create
+				                 (append (cons type (eval-initargs initargs))
+					                     (list :slots slots))))))
     (when index-object
       (create-index-access-functions index-object :index-reader reader
-				     :index-values values
-				     :index-mapvalues mapvalues
-				     :index-keys keys
-				     :index-var var))
+				                                  :index-values values
+				                                  :index-mapvalues mapvalues
+				                                  :index-keys keys
+				                                  :index-var var))
     index-object))
 
 (defmethod compute-effective-slot-definition :around ((class indexed-class)
-						      name direct-slots)
+						                              name direct-slots)
   (declare (ignore name))
   (let* ((normal-slot (call-next-method))
-	 (direct-slots (remove-if-not #'(lambda (slot)
-					  (typep slot 'index-direct-slot-definition))
-				      direct-slots))
-	 (direct-slot (first direct-slots)))
+	     (direct-slots (remove-if-not #'(lambda (slot)
+					                      (typep slot 'index-direct-slot-definition))
+				                      direct-slots))
+	     (direct-slot (first direct-slots)))
     (when (and (typep normal-slot 'index-effective-slot-definition)
-	       direct-slot
-	       (or (not (index-direct-slot-definition-class direct-slot))
-		   (eql (index-direct-slot-definition-class direct-slot) class)))
+	           direct-slot
+	           (or (not (index-direct-slot-definition-class direct-slot))
+		           (eql (index-direct-slot-definition-class direct-slot) class)))
       (setf (index-direct-slot-definition-class direct-slot) class)
       (with-slots (index index-type index-initargs index-subclasses index-keys
-			 index-reader index-values index-mapvalues index-var) direct-slot
-	(when (or index index-type)
-	  (let* ((name (slot-definition-name direct-slot))
-		 (index-object (make-index-object :index index
-						  :type index-type
-						  :initargs index-initargs
-						  :reader index-reader
-						  :keys index-keys
-						  :values index-values
-						  :mapvalues index-mapvalues
-						  :var index-var
-						  :slots (list name))))
-	    (when index-object
-	      (push (make-index-holder :class class :slots (list name)
-				       :name name :index index-object
-				       :index-subclasses index-subclasses)
-		    (indexed-class-indices class)))))))
+			       index-reader index-values index-mapvalues index-var) direct-slot
+	    (when (or index index-type)
+	      (let* ((name (slot-definition-name direct-slot))
+		         (index-object (make-index-object :index index
+						                          :type index-type
+						                          :initargs index-initargs
+						                          :reader index-reader
+						                          :keys index-keys
+						                          :values index-values
+						                          :mapvalues index-mapvalues
+						                          :var index-var
+						                          :slots (list name))))
+	        (when index-object
+	          (push (make-index-holder :class class :slots (list name)
+				                       :name name :index index-object
+				                       :index-subclasses index-subclasses)
+		            (indexed-class-indices class)))))))
     normal-slot))
 
 (defmethod compute-class-indices ((class indexed-class) class-indices)
@@ -264,16 +264,16 @@ also index subclasses of the class to which the slot belongs, default is T")
 (defmethod reinitialize-class-indices
     ((class indexed-class))
   (let ((old-indices (remove class (indexed-class-old-indices class)
-			     :test-not #'eql :key #'index-holder-class))
-	(indices (remove class (indexed-class-indices class)
-			 :test-not #'eql :key #'index-holder-class)))
+			                 :test-not #'eql :key #'index-holder-class))
+	    (indices (remove class (indexed-class-indices class)
+			             :test-not #'eql :key #'index-holder-class)))
     (when old-indices
       (dolist (holder indices)
-	(let ((old-holder (find (index-holder-name holder) old-indices
-				:key #'index-holder-name)))
-	  (when old-holder
-	    (index-reinitialize (index-holder-index holder)
-				(index-holder-index old-holder))))))))
+	    (let ((old-holder (find (index-holder-name holder) old-indices
+				                :key #'index-holder-name)))
+	      (when old-holder
+	        (index-reinitialize (index-holder-index holder)
+				                (index-holder-index old-holder))))))))
 
 (defmethod reinitialize-instance :before ((class indexed-class) &key)
   (setf (indexed-class-old-indices class) (indexed-class-indices class)
