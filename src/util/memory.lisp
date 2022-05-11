@@ -20,5 +20,12 @@
               for i below 100
               do (format t "~a ~s ~a~%" v k (gethash k sizes)))))))
 
+(defun objects-of-type (type)
+  (let ((ret))
+    (hcl:sweep-all-objects
+     (lambda (obj)
+       (when (typep obj type)
+         (push obj ret))))
+    ret))
 
 ;; (histogram)
