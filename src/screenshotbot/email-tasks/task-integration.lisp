@@ -66,7 +66,7 @@
     (send-mail
      (mailer*)
      :to (user-email user)
-     :subject (format nil "Screenshots report: ~a" (report-title report))
+     :subject (format nil "Screenshots changed in ~a" (channel-name (recorder-run-channel (report-run report))))
      :from
      #-screenshotbot-oss "support@screenshotbot.io"
      #+screenshotbot-oss nil ;; default mailer setting
@@ -83,7 +83,7 @@
     <body>
       <p>
         <a href= (report-link report) >
-          Screenshots have changed in ,(channel-name (recorder-run-channel (report-run report))).
+          ,(report-title report)
         </a>
       </p>
 
