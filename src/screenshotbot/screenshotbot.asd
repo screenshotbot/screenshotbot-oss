@@ -49,6 +49,7 @@
   :depends-on (:util
                :markup
                :gravatar
+               (:feature (:not :screenshotbot-oss) :documentation-plugin)
                :cl-store
                :pkg
                #-lispworks
@@ -160,8 +161,6 @@
                  (:file "mask-builder")
                  (:file "site-admin")))
    (:file "invite")
-   (:module "documentation"
-    :components ((:file "doc")))
    (:file "image-comparison")
    (:module "github"
     :serial t

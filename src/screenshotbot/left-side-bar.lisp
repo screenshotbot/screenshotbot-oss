@@ -30,8 +30,7 @@
                        (script-name (error "need script-name")))
   (let ((activep (str:starts-with-p href script-name)))
     <li class= "nav-item"  >
-    <a href= href class= (format nil "nav-link ~a text-white" (if activep "active" ""))
-    target=target >
+      <a href= href class= (format nil "nav-link ~a text-white" (if activep "active" "")) >
         <mdi name=image-class />
         <span class= "text">,@children </span>
       </a>

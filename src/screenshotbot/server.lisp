@@ -27,6 +27,7 @@
    #:*disable-mail*
    #:*seleniump*
    #:*nibble-plugin*
+   #:*documentation-plugin*
    #:*cdn-domain*
    #:*domain*
    #:logged-in-p
@@ -92,6 +93,16 @@
                     hunchensocket:websocket-acceptor
                     hex:acceptor-with-plugins) ())
 
+#-screenshotbot-oss
+(defclass sb-documentation-plugin (documentation-plugin:documentation-plugin)
+  ())
+
+#-screenshotbot-oss
+(defmethod hex:acceptor-plugin-name ((plugin sb-documentation-plugin))
+  ;; limitation of hex plugins, the routing is specified on the parent
+  ;; class.
+  'documentation-plugin:documentation-plugin)
+
 (defvar *acceptor*
   (make-instance 'acceptor
                  :port 3015
@@ -110,9 +121,18 @@
                                         :prefix "/n/"
                                         :wrapper '%handler-wrap))
 
+#-screenshotbot-oss
+(defvar *documentation-plugin*
+  (make-instance 'sb-documentation-plugin
+                  :prefix "/documentation-new/"
+                  :landing-page "why-screenshot-tests"
+                  :root (path:catdir (util:system-source-directory :screenshotbot)
+                                     #P "documentation/")))
 (defun prepare-acceptor-plugins (acceptor)
  (setf (hex:Acceptor-plugins acceptor)
-       (list *nibble-plugin*)))
+       (list *nibble-plugin*
+             #-screenshotbot-oss
+             *documentation-plugin*)))
 
 (prepare-acceptor-plugins *acceptor*)
 
@@ -269,3 +289,9 @@ Disallow: /n")
 #+screenshotbot-oss
 (setf hunchentoot-multi-acceptor:*default-acceptor*
       *acceptor*)
+
+(defhandler (nil :uri "/documentation") ()
+  (hunchentoot:redirect "https://docs.screenshotbot.io/docs/"))
+
+(defhandler (nil :uri "/documentation/:page") (page)
+  (hunchentoot:redirect (format nil "https://docs.screenshotbot.io/docs/~a" page)))
