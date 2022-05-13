@@ -127,7 +127,8 @@
                   :prefix "/documentation-new/"
                   :landing-page "why-screenshot-tests"
                   :root (path:catdir (util:system-source-directory :screenshotbot)
-                                     #P "documentation/")))
+                                     #P "pro/documentation/")))
+
 (defun prepare-acceptor-plugins (acceptor)
  (setf (hex:Acceptor-plugins acceptor)
        (list *nibble-plugin*
