@@ -642,6 +642,7 @@ recognized the file, we'll return nil."
                                         :defaults path))
                     (png (make-pathname :type "png"
                                         :defaults path)))
+                (sleep 1)
                 (convert-to-lossless-webp
                  (magick)
                  path tmp)
