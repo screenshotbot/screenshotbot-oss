@@ -39,11 +39,19 @@
   (if (equal "814" (string id))
       (hex:safe-redirect 'report-page :id (oid (store-object-with-id 814))))
   (let ((report (ignore-errors (find-by-oid id))))
-    (unless report
-      (warn "Bad report id used in: ~a" id)
-      (hex:safe-redirect "/report"))
-    (with-login (:needs-login (not (can-public-view report)))
-     (render-report-page report))))
+    (cond
+     ((not report)
+       ;; We don't use template because this is messing up our Google
+       ;; Analytics. This is most likely trigged by Microsoft Outlook's
+       ;; preview.
+      <html>
+        <body>
+          Invalid Report link, <a href= "/report">Click here to view recent reports</a>
+        </body>
+      </html>)
+     (t
+      (with-login (:needs-login (not (can-public-view report)))
+        (render-report-page report))))))
 
 (defun render-report-page (report &rest args &key)
   (flet ((re-run (&rest new-args)
