@@ -69,7 +69,7 @@ this would be a problem."
 (defun set-session-cookie (token &optional domain)
   (let ((domain (or domain (host-without-port))))
     (let ((domain (fix-cookie-domain domain)))
-     (set-cookie "s" :value token :domain domain :expires (+ (get-universal-time) 1000000)
+     (set-cookie "s" :value token :domain domain :expires (+ (get-universal-time) (* 365 2600 24))
 		             :path "/" :secure (and
                                         *secure-cookie-p*
                                         (string=
