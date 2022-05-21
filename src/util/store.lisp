@@ -424,7 +424,7 @@ set-differences on O and the returned value from this."
 
 ;; (validate-indices)
 
-(defmacro defindex (name class &rest args &key (slot-name "must provide slot-name")
+(defmacro defindex (name class &rest args &key (slot-name (error "must provide slot-name"))
                     &allow-other-keys)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (defvar ,name

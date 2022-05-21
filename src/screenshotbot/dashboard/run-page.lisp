@@ -152,6 +152,9 @@
       </ul>
     </app-template>))
 
+(defmethod extra-advanced-options (run)
+  )
+
 (deftag run-advanced-menu (&key run)
   (let ((promotion-logs (nibble ()
                           (promotion-log-page run)))
@@ -170,6 +173,7 @@
       <a href= promotion-logs >Promotion Logs</a>
       <a href= rerun-promotions >Re-Run Promotions</a>
       <a href=debug-info >Debug Info</a>
+      <a href= (format nil "/review/~a" (oid run)) >Start Review</a>
     </page-nav-dropdown>))
 
 (defun create-filter-matcher (filter &key key)
