@@ -158,22 +158,26 @@
       (output-file source-map)
       (output-files o c)
     (let ((tmp-output (make-pathname :type "css-tmp" :defaults output-file)))
-      (uiop:run-program
-       `(,(sass)
-         ,@ (loop for dep in (required-components c
-                                                  :other-systems t
-                                                  :keep-component 'css-library)
-                  append (list "-I" (namestring (car (output-files
-                                                      'copy-sources-op
-                                                       dep)))))
-         ,(let ((child (car (input-files 'copy-sources-op c))))
-            (namestring
-             child))
-         ,(namestring tmp-output))
-       :element-type 'character
-       :external-format :latin-1
-       :output *standard-output*
-       :error-output *error-output*)
+      (multiple-value-bind (out err ret)
+          (uiop:run-program
+           `(,(sass)
+             ,@ (loop for dep in (required-components c
+                                                      :other-systems t
+                                                      :keep-component 'css-library)
+                      append (list "-I" (namestring (car (output-files
+                                                          'copy-sources-op
+                                                           dep)))))
+             ,(let ((child (car (input-files 'copy-sources-op c))))
+                (namestring
+                 child))
+             ,(namestring tmp-output))
+           :element-type 'character
+           :external-format :latin-1
+           :output 'string
+           :error-output 'string
+           :ignore-error-status t)
+        (unless (= ret 0)
+          (error "Could not compile js assets: ~%~%stdout:~a~%~%stderr:~%~a~%" out err)))
       (uiop:rename-file-overwriting-target tmp-output output-file)
       (uiop:rename-file-overwriting-target (format nil "~a.map" (namestring tmp-output))
                                            source-map))))

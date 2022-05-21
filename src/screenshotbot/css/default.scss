@@ -509,7 +509,7 @@ body.dashboard {
         }
     }
 
-    @include media-breakpoint-down(lg) {
+    @mixin wide-screen () {
         .leftside-menu.show {
             z-index: 1000;
             .navbar-toggler {
@@ -568,6 +568,15 @@ body.dashboard {
         .content-page {
             margin-left: 1em;
         }
+
+    }
+
+    @include media-breakpoint-down(lg) {
+        @include wide-screen;
+    }
+
+    &.wide-screen {
+        @include wide-screen;
     }
 
 }
