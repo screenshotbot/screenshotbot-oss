@@ -255,7 +255,7 @@
   (when value
     (loop for child in (%expand-children (xml-tag-children x))
           if (and
-              (typep child 'xml-tag)
+              (typep child 'abstract-xml-tag)
               (string= value (attr child "value")))
             do
                (setf (attr child "selected") ""))))
