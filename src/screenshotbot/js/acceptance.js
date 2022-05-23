@@ -35,7 +35,7 @@ setupLiveOnAttach(".review-input", function () {
             success: function(data) {
                 var html = $(data);
                 $(".modal", reviewInput).modal('hide');
-                reviewInput.replaceWith(html);
+                reviewInput.closest(".review-input-container").replaceWith(html);
                 callLiveOnAttach(html);
             }
         });
@@ -75,6 +75,7 @@ setupLiveOnAttach(".review-input", function () {
 
     $(".save-rejection", $(this)).click(function (e) {
         replace($(".reject-link", reviewInput).attr("href"), $("[name='comment']", reviewInput).val());
+        updateTab("text-danger");
         e.preventDefault();
     });
 

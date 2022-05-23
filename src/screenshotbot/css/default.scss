@@ -683,6 +683,15 @@ a {
     }
 }
 
+.acceptance-left-side-bar {
+    a.nav-link.text-black {
+        color: black !important;
+    }
+
+    a.nav-link.text-warning {
+        color: $gray-600 !important;
+    }
+}
 
 .review-panel {
     a.acceptable {
@@ -710,5 +719,15 @@ a {
             }
         }
 
+
+    }
+    .alert-heading {
+        font-size: 1.0rem;
+        padding-bottom: 0;
+        margin-bottom: 0;
+    }
+
+    .alert p {
+        margin-bottom: 0;
     }
 }
