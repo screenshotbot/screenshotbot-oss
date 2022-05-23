@@ -29,3 +29,4 @@
     ret))
 
 ;; (histogram)
+;; (random-sample:random-sample (objects-of-type 'system:tlatter) 100)
