@@ -34,13 +34,25 @@ setupLiveOnAttach(".review-input", function () {
             }
         });
     };
+
+    function updateTab(klass) {
+        var id = reviewInput.closest(".tab-pane").attr("id");
+        var title = $("[data-bs-target='#" + id + "'] > span");
+
+        title.removeClass("text-success")
+            .removeClass("text-danger");
+
+        title.addClass(klass);
+    }
     $(".accept-link", $(this)).click(function (e) {
         replace($(this).attr("href"));
+        updateTab("text-success");
         e.preventDefault();
     });
 
     $(".reject-link", $(this)).click(function (e) {
         replace($(this).attr("href"));
+        updateTab("text-danger");
         e.preventDefault();
     });
 

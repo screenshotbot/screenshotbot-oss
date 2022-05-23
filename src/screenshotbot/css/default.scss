@@ -688,4 +688,27 @@ a {
     a.acceptable {
         text-decoration: none;
     }
+
+    .review-tab {
+
+        .close {
+            display: none;
+        }
+
+        .check {
+            display: none;
+        }
+        &.text-success {
+            .check {
+                display: inline-block;
+            }
+        }
+
+        &.text-danger {
+            .close {
+                display: inline-block;
+            }
+        }
+
+    }
 }
