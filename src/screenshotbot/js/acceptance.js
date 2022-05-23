@@ -23,14 +23,18 @@ setupLiveOnAttach(".acceptance-left-side-bar", function () {
 
 setupLiveOnAttach(".review-input", function () {
     var reviewInput = $(this);
-    function replace(href) {
+    function replace(href, comment) {
         $.ajax({
             url: href,
+            data: {
+                comment: comment,
+            },
             error: function () {
                 swAlert("Something went wrong, please refresh the page and try again");
             },
             success: function(data) {
                 var html = $(data);
+                $(".modal", reviewInput).modal('hide');
                 reviewInput.replaceWith(html);
                 callLiveOnAttach(html);
             }
@@ -69,9 +73,8 @@ setupLiveOnAttach(".review-input", function () {
         e.preventDefault();
     });
 
-    $(".reject-link", $(this)).click(function (e) {
-        replace($(this).attr("href"));
-        updateTab("text-danger");
+    $(".save-rejection", $(this)).click(function (e) {
+        replace($(".reject-link", reviewInput).attr("href"), $("[name='comment']", reviewInput).val());
         e.preventDefault();
     });
 
