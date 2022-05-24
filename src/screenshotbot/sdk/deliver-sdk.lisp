@@ -12,15 +12,16 @@
  (let ((output-file (cadddr system:*line-arguments-list*)))
    (delete-file output-file)
    (deliver 'screenshotbot/sdk/main:main output-file 5
-            :keep-function-name t
-            :keep-pretty-printer t
-            :keep-clos-object-printing t
-            :keep-lisp-reader t
-            ;; temporary: get the build green
-            :keep-eval t
-            :keep-symbols `(system:pipe-exit-status)
-            :packages-to-keep-symbol-names :all
-            :multiprocessing t)))
+             :keep-function-name t
+             :keep-debug-mode t
+             :keep-pretty-printer t
+             :keep-clos-object-printing t
+             :keep-lisp-reader t
+             ;; temporary: get the build green
+             :keep-eval t
+             :keep-symbols `(system:pipe-exit-status)
+             :packages-to-keep-symbol-names :all
+             :multiprocessing t)))
 
 (compile 'deliver-main)
 

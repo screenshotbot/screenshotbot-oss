@@ -85,7 +85,7 @@
 
 (defun request (api &key (method :post)
                       parameters)
-  (log:debug "Making API request: ~S, with parameters ~S" api parameters)
+  (log:debug "Making API request: ~S" api)
   (when (and (eql method :get) parameters)
     (error "Can't use :get with parameters"))
   (with-open-stream (stream

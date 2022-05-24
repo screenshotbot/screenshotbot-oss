@@ -53,7 +53,12 @@
                               ;; for end-users, so let's muffle it
                               #+lispworks
                               (when (str:containsp "output-wait is not implemented" msg)
-                                (muffle-warning warning))))))
+                                (muffle-warning warning)))))
+                 #+lispworks
+                 (error (lambda (e)
+                          (declare (ignore e))
+                          (dbg:output-backtrace (if flags:*verbose* :bug-form :brief))
+                          (uiop:quit 1))))
     (apply '%main args))
   #-sbcl
   (log4cl::exit-hook)
