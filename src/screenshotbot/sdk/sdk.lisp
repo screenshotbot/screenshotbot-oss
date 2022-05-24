@@ -315,6 +315,18 @@
         (or *api-secret*
             (uiop:getenv "SCREENSHOTBOT_API_SECRET"))))
 
+(defun guess-master-branch (repo)
+  (flet ((check (x)
+           (rev-parse repo x)))
+    (cond
+      ((check "main")
+       "main")
+      ((check "master")
+       "master")
+      (t
+       (error "Could not guess the main branch, please use --main-branch argument")))))
+
+
 (defun parse-environment ()
   (parse-api-key-from-environment)
 
@@ -333,7 +345,7 @@
     (setf *main-branch*
           (or
            (uiop:getenv "CIRCLE_BRANCH")
-           "master"))))
+           (guess-master-branch (git-repo))))))
 
 (defun link-to-github-pull-request (repo-url pull-id)
   (format nil "~a/pulls/~a"
@@ -432,10 +444,13 @@
                           (cons "branch" branch)
                           (cons "graph-json" json)))))
 
+(defun git-repo ()
+  (make-instance 'git-repo
+                  :link *repo-url*))
+
 (defun single-directory-run (directory &key channel)
   (log:info "Uploading images from: ~a" directory)
-  (let ((repo (make-instance 'git-repo
-                             :link *repo-url*))
+  (let ((repo (git-repo))
         (branch *main-branch*))
     (when *production*
       (update-commit-graph repo branch))
