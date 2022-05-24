@@ -9,6 +9,8 @@
         #:com.google.flag)
   (:import-from #:screenshotbot/sdk/help
                 #:help)
+  (:import-from #:yaml.error
+                #:yaml-error)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
@@ -47,19 +49,22 @@
        (sdk:run-prepare-directory-toplevel)))))
 
 (defun main (&rest args)
-  (handler-bind ((warning (lambda (warning)
-                            (let ((msg (princ-to-string warning)))
-                              ;; This warning is not very actionable
-                              ;; for end-users, so let's muffle it
-                              #+lispworks
-                              (when (str:containsp "output-wait is not implemented" msg)
-                                (muffle-warning warning)))))
-                 #+lispworks
-                 (error (lambda (e)
+  (let ((error-handler (lambda (e)
                           (format t "~%~a~%~%" e)
                           (dbg:output-backtrace (if flags:*verbose* :bug-form :brief))
                           (uiop:quit 1))))
-    (apply '%main args))
+   (handler-bind ((warning (lambda (warning)
+                             (let ((msg (princ-to-string warning)))
+                               ;; This warning is not very actionable
+                               ;; for end-users, so let's muffle it
+                               #+lispworks
+                               (when (str:containsp "output-wait is not implemented" msg)
+                                 (muffle-warning warning)))))
+                  #+lispworks
+                  (error error-handler)
+                  #+lispworks
+                  (yaml-error error-handler))
+     (apply '%main args)))
   #-sbcl
   (log4cl::exit-hook)
   (uiop:quit 0))

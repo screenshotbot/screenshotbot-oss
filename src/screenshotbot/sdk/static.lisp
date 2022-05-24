@@ -93,18 +93,36 @@ upload blobs that haven't been uploaded before."
   "Currently we're not providing a way to modify the browser
   config. We're hardcoding this to a value that we can initially work
   with."
-  (list
-   (make-instance 'browser-config
-                  :type "chrome"
-                  :dimensions (make-instance 'dimensions
-                                            :width 1280
-                                            :height 800)
-                  :name "Google Chrome Desktop")
-   (make-instance 'browser-config
-                  :type "chrome"
-                  :name "Nexus 5 (emulated)"
-                  ;; yes, this inconsistency is intentional for now.
-                  :mobile-emulation "Nexus 6P")))
+  (cond
+    (flags:*browser-configs*
+     (let ((config (cl-yaml:parse (pathname flags:*browser-configs*))))
+       (loop for name being the hash-keys of config
+             using (hash-value value)
+             collect
+             (flet ((dim ()
+                      (a:when-let ((dim (gethash "dimensions" value)))
+                       (str:split "x" dim))))
+               (make-instance 'browser-config
+                               :type (gethash "type" value)
+                               :name name
+                               :dimensions (when (dim)
+                                             (make-instance 'dimensions
+                                                             :width (parse-integer (first (dim)))
+                                                             :height (parse-integer (second (dim)))))
+                               :mobile-emulation (gethash "mobile-emulation" value))))))
+    (t
+     (list
+      (make-instance 'browser-config
+                      :type "chrome"
+                      :dimensions (make-instance 'dimensions
+                                                  :width 1280
+                                                  :height 800)
+                      :name "Google Chrome Desktop")
+      (make-instance 'browser-config
+                      :type "chrome"
+                      :name "Nexus 5 (emulated)"
+                      ;; yes, this inconsistency is intentional for now.
+                      :mobile-emulation "Nexus 6P")))))
 
 (defun schedule-snapshot (snapshot)
   "Schedule a Replay build with the given snapshot"

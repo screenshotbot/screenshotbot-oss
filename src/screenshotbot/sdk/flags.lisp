@@ -31,7 +31,8 @@
    #:*ios-multi-dir*
    #:*ios-diff-dir*
    #:*metadata*
-   #:*static-website*))
+   #:*static-website*
+   #:*browser-configs*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -171,3 +172,10 @@
   :default-value nil
   :type (or null string)
   :help "Use to generate screenshots of a static website")
+
+(define-flag *browser-configs*
+  :selector "browser-configs"
+  :default-value nil
+  :type (or null string)
+  :help "A YAML file that specifies the configuration of the
+  browsers. Please see documentation for details.")
