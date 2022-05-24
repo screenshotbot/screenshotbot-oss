@@ -138,7 +138,6 @@ upload blobs that haven't been uploaded before."
   (labels ((walk (subdir prefix)
              (loop for item in (remove-if #'null (fad:list-directory subdir))
                    if (and
-                       (string-equal "index" (pathname-name item))
                        (string-equal "html" (pathname-type item)))
                      collect (format nil "~a/~a" prefix (path:basename item))
                    if (path:-d item)
