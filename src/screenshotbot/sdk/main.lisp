@@ -56,7 +56,7 @@
                                 (muffle-warning warning)))))
                  #+lispworks
                  (error (lambda (e)
-                          (declare (ignore e))
+                          (format t "~%~a~%~%" e)
                           (dbg:output-backtrace (if flags:*verbose* :bug-form :brief))
                           (uiop:quit 1))))
     (apply '%main args))

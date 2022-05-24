@@ -25,4 +25,4 @@ upload screenshots and generate reports~%~%")
       (loop for l in (cdr lines) do
         (format t "~27A~A~%" " " (str:trim l)))))
   (format t "~%Copyright 2020-2021 Modern Interpreters Inc.~%")
-  (format t "Please reach out to support@screenshotbot.io for any questions"))
+  (format t "Please reach out to support@screenshotbot.io for any questions~%"))

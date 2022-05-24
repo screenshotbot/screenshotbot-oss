@@ -99,7 +99,7 @@
   :selector "branch"
   :default-value nil
   :type (or null string)
-  :help "Git Branch name for screenshot tracking")
+  :help "[OBSOLETE]")
 
 (define-flag *main-branch*
   :selector "main-branch"

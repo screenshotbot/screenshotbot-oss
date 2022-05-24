@@ -317,7 +317,10 @@
 
 (defun parse-environment ()
   (parse-api-key-from-environment)
-  (setf *branch* (or *main-branch* *branch*))
+
+  (when *branch*
+    (error "--branch is no longer supported, please use --main-branch instead"))
+
   (unless *pull-request*
     (setf *pull-request*
           (or
@@ -326,8 +329,8 @@
             (if-let ((repo-url (getenv "BITRISEIO_PULL_REQUEST_REPOSITORY_URL"))
                      (pull-id (getenv "BITRISE_PULL_REQUEST")))
               (link-to-github-pull-request repo-url pull-id))))))
-  (unless *branch*
-    (setf *branch*
+  (unless *main-branch*
+    (setf *main-branch*
           (or
            (uiop:getenv "CIRCLE_BRANCH")
            "master"))))
@@ -433,7 +436,7 @@
   (log:info "Uploading images from: ~a" directory)
   (let ((repo (make-instance 'git-repo
                              :link *repo-url*))
-        (branch *branch*))
+        (branch *main-branch*))
     (when *production*
       (update-commit-graph repo branch))
     (make-directory-run directory
