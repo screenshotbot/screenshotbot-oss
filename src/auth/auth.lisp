@@ -98,7 +98,7 @@ this would be a problem."
 
 #+windows
 (defun read-windows-seed ()
-  (cl-store:restore (path:catfile (util:system-source-directory :auth) "dummy-init-key.out")))
+  (cl-store:restore (path:catfile (asdf:system-source-directory :auth) "dummy-init-key.out")))
 
 (setf *session-token-generator* (session-token:make-generator
                                  #+windows

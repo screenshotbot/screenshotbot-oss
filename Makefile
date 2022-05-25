@@ -279,9 +279,6 @@ src/java/libs: .PHONY
 	echo "))" >> $@/java.libs.asd
 
 
-upload-sdk: .PHONY $(LW)
-	$(LW_SCRIPT) scripts/upload-sdk.lisp
-
 upload-mac-intel-sdk:
 	ARCH="x86_64" make upload-sdk
 

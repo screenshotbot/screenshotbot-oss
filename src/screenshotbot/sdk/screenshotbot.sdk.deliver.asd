@@ -94,7 +94,13 @@
    #+(or :linux (and :arm64 :darwin))
    (format nil "~a/builds/web/build/lw-console-8-0-0"
            (uiop:getenv "HOME"))
+   #+mswindows
+   "g:\\web\\build\\lw-console-8-0-0"
+   #+nil
+   (namestring (uiop:ensure-absolute-pathname
+                (pathname "build/lw-console-8-0-0.exe")))
    (error "unsupported platform image")))
+
 
 (defmethod perform ((o compile-op) (s deliver-script))
   (uiop:run-program (list (lw)

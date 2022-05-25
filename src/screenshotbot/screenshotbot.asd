@@ -328,8 +328,9 @@
   :depends-on (:plump
                :lquery
                :uuid
-               :util
                :cl-store
+               :util/misc
+               :cl+ssl
                :auto-restart
                :dexador
                :drakma

@@ -11,6 +11,8 @@
                 #:json-serializable-class)
   (:import-from #:auto-restart
                 #:with-auto-restart)
+  (:import-from #:util/misc
+                #:or-setf)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:rewrite-css-urls
@@ -338,13 +340,17 @@
 (defvar *http-cache-dir* nil)
 
 (defun http-cache-dir ()
-  (util:or-setf
+  (or-setf
    *http-cache-dir*
-   (let ((dir (path:catdir
-               util:*object-store*
-               "cache/replay-http-cache/")))
-     (ensure-directories-exist dir)
-     dir)))
+   (let ((object-store-sym (find-symbol "*OBJECT-STORE*" "UTIL")))
+     (unless object-store-sym
+       (error "HTTP-CACHE-DIR not supported in SDK, most likely a bug: please reach out to arnold@screenshotbot.io"))
+     (let ((store-dir (symbol-value object-store-sym)))
+      (let ((dir (path:catdir
+                  store-dir
+                  "cache/replay-http-cache/")))
+        (ensure-directories-exist dir)
+        dir)))))
 
 (defun read-file (file)
   (with-open-file (s file :direction :input)
