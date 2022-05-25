@@ -24,16 +24,27 @@ endif
 LW_VERSION=8-0-0
 LW_PREFIX=/opt/software/lispworks
 
+
+ifeq ($(UNAME),Darwin)
+define timeout
+endef
+define timeout
+timeout $1
+endef
+else
+
+endif
+
 JIPR=../jippo
 LW=build/lw-console-$(LW_VERSION)$(ARCH)
 LW_CORE=lispworks-unknown-location
 SRC_DIRS=src local-projects third-party
 LISP_FILES=$(shell find $(SRC_DIRS) -name '*.lisp') $(shell find $(SRC_DIRS) -name '*.asd')
-LW_SCRIPT=timeout 15m $(LW) -quiet -build
+LW_SCRIPT=$(call timeout,15m) $(LW) -quiet -build
 SBCL_SCRIPT=$(sbcl) --script
 TMPFILE=$(shell mktemp)
 JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/
-SBCL_SCRIPT=timeout 5m $(sbcl) --script
+SBCL_SCRIPT=$(call timeout,5m) $(sbcl) --script
 CCL_SCRIPT=CCL_DEFAULT_DIRECTORY=$(CCL_DEFAULT_DIRECTORY) $(CCL_CORE) -b -I $(CCL_IMAGE)
 
 QUICKLISP=quicklisp/dists/quicklisp/

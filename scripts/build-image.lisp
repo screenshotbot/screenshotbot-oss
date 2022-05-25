@@ -55,12 +55,21 @@
 (log4cl::save-hook)
 
 #+lispworks
-(let ((output (car (last (uiop:raw-command-line-arguments)))))
-  (delete-file output)
-  (save-image output
-              :console t
-             :multiprocessing t
-              :environment nil))
+(flet ((build ()
+         (let ((output (car (last (uiop:raw-command-line-arguments)))))
+           (delete-file output)
+           (save-image output
+                       :console t
+                       :multiprocessing t
+                       :environment nil))))
+  #-darwin
+  (build)
+  #+darwin
+  (cond
+    ((hcl:building-universal-intermediate-p)
+     (build))
+    (t
+     (hcl:save-universal-from-script "scripts/build-image.lisp"))))
 
 
 #+sbcl
