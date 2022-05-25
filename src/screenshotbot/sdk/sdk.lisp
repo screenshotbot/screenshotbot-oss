@@ -83,6 +83,12 @@
   (with-slots (message) e
    (format stream "#<API-ERROR ~a>" message)))
 
+(defun ensure-api-success (result)
+  (awhen (assoc-value result :error)
+    (log:error "API error: ~a" it)
+    (error 'api-error :message it))
+  (assoc-value result :response))
+
 (defun request (api &key (method :post)
                       parameters)
   (log:debug "Making API request: ~S" api)
@@ -100,10 +106,7 @@
                                        parameters)))
 
     (let ((result (json:decode-json stream)))
-      (awhen (assoc-value result :error)
-        (log:error "API error: ~a" it)
-        (error 'api-error :message it))
-      (assoc-value result :response))))
+      (ensure-api-success result))))
 
 
 (defun put-file (upload-url stream &key parameters)

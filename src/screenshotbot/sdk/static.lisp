@@ -6,6 +6,8 @@
   (:import-from #:screenshotbot/replay/core
                 #:*http-cache-dir*
                 #:context)
+  (:import-from #:screenshotbot/sdk/sdk
+                #:ensure-api-success)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
@@ -140,16 +142,18 @@ upload blobs that haven't been uploaded before."
                                  :commit commit
                                  :branch-hash branch-hash
                                  :merge-base (git:merge-base repo branch-hash commit))))
-     (json:with-decoder-simple-clos-semantics
-       (uiop:with-temporary-file (:pathname p)
-         (cl-store:store request p)
-         (let ((uri (quri:make-uri
-                     :query `(("api-key" . ,flags:*api-key*)
-                              ("api-secret-key" . ,flags:*api-secret*))
-                     :defaults
-                     (quri:uri (format nil "~a/api/replay/schedule" flags:*hostname*)))))
+     (uiop:with-temporary-file (:pathname p)
+       (cl-store:store request p)
+       (let ((uri (quri:make-uri
+                   :query `(("api-key" . ,flags:*api-key*)
+                            ("api-secret-key" . ,flags:*api-secret*))
+                   :defaults
+                   (quri:uri (format nil "~a/api/replay/schedule" flags:*hostname*)))))
+         (ensure-api-success
+          (json:decode-json-from-string
            (dex:post uri
-                     :content p)))))))
+                     :content p
+                     :force-string t))))))))
 
 (defun find-all-index.htmls (dir)
   (declare (optimize (debug 3) (speed 0)))
@@ -193,8 +197,9 @@ upload blobs that haven't been uploaded before."
                            tmpdir))
 
                  (upload-snapshot-assets snapshot)
-                 (schedule-snapshot snapshot)
-                 (log:info "Screenshot job queued"))
+                 (let* ((result (schedule-snapshot snapshot))
+                        (logs (a:assoc-value result :logs)))
+                   (log:info "Screenshot job queued: ~a" logs)))
             (hunchentoot:stop acceptor))))
     (retry-record-static-website ()
       (record-static-website location))))
