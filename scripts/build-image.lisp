@@ -56,7 +56,7 @@
 
 #+lispworks
 (flet ((build ()
-         (let ((output (car (last (uiop:raw-command-line-arguments)))))
+         (let ((output "build/lw-console-8-0-0"))
            (delete-file output)
            (save-image output
                        :console t

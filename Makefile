@@ -25,11 +25,11 @@ LW_VERSION=8-0-0
 LW_PREFIX=/opt/software/lispworks
 
 
-ifeq ($(UNAME),Darwin)
-define timeout
-endef
+ifeq ($(UNAME),Linux)
 define timeout
 timeout $1
+endef
+define timeout
 endef
 else
 
@@ -56,6 +56,7 @@ endef
 
 
 UNAME=$(shell uname -s)
+CYGWIN=$(findstring CYGWIN,$(UNAME))
 DISTINFO=quicklisp/dists/quicklisp/distinfo.txt
 ARC=build/arc/bin/arc
 
@@ -70,6 +71,9 @@ ifeq ($(UNAME),Darwin)
 	LW_CORE=/Applications/LispWorks\ 8.0\ \(64-bit\)/LispWorks\ \(64-bit\).app/Contents/MacOS/lispworks-8-0-0-macos64-universal
 endif
 
+ifneq ($(CYGWIN),)
+	LW_CORE=/cygdrive/c/Program\ Files\ \(x86\)/LispWorks/lispworks-8-0-0-x86-win32.exe
+endif
 
 define clsql_check_tests
 	TMP=$(TMPFILE) && $1 | tee  $$TMP &&  ! ( grep  "total tests failed" $$TMP ) && grep "Finished Running Tests Against" $$TMP && rm $$TMP
@@ -185,7 +189,7 @@ sdk-tests: $(LW) .PHONY
 
 $(LW): build $(IMAGE_DEPS)
 	# $$PWD is workaround over LW issue #42471
-	$(ARCH_CMD) $(LW_CORE) -build scripts/build-image.lisp -- $$PWD/$@
+	$(ARCH_CMD) $(LW_CORE) -build scripts/build-image.lisp
 
 $(sbcl): build $(IMAGE_DEPS)
 	$(SBCL_CORE) --script scripts/build-image.lisp
