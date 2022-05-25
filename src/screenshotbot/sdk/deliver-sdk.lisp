@@ -27,6 +27,8 @@
               output-file
               5
               :keep-function-name t
+              #+mswindows :console #+mswindows :init
+              #+mswindows :startup-bitmap-file #+mswindows nil
               :keep-debug-mode t
               :keep-pretty-printer t
               :keep-clos-object-printing t

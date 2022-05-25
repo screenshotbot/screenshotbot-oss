@@ -31,10 +31,12 @@
 
 (defun upload-sdk ()
   (asdf:compile-system :screenshotbot.sdk.deliver)
+  #-mswindows
   (let ((output-file (asdf:output-file 'asdf:compile-op
                                        (asdf:find-component
                                         :screenshotbot.sdk.deliver
-                                        "installer"))))
+                                        #-mswindows "installer"
+                                        #+mswindows "deliver-sdk"))))
     (log:info "Output file is: ~a" output-file)
     (assert (path:-e output-file))
     (upload-artifact #+darwin "recorder-darwin"

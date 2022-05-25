@@ -119,6 +119,7 @@
   :defsystem-depends-on (:cl-ppcre #+nil :tmpdir)
   :depends-on (:screenshotbot.sdk)
   :components ((deliver-script "deliver-sdk")
+               #-mswindows
                (makeself-component "installer"
                                    :depends-on ("deliver-sdk")
                                    :type "sh"
