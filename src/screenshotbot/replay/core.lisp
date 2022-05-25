@@ -93,36 +93,22 @@
 
 (defclass http-header ()
   ((name :initarg :name
-         :reader http-header-name
-         :json-key "name")
+         :reader http-header-name)
    (value :initarg :value
-          :reader http-header-value
-          :json-key "value"))
-  (:metaclass json-serializable-class))
+          :reader http-header-value)))
 
 (defclass asset ()
   ((file :initarg :file
-         :reader asset-file
-         :json-key "file"
-         :json-type :string)
+         :reader asset-file)
    (url :initarg :url
-        :reader url
-        :json-key "url"
-        :json-type :string)
+        :reader url)
    (status :initarg :status
-           :reader asset-status
-           :json-key "assetStatus"
-           :json-type :number)
+           :reader asset-status)
    (stylesheetp :initarg :stylesheetp
                 :initform nil
-                :json-key "hasStylesheet"
-                :reader stylesheetp
-                :json-type :bool)
+                :reader stylesheetp)
    (response-headers :initarg :response-headers
-                     :reader asset-response-headers
-                     :json-key "responseHeaders"
-                     :json-type (:list http-header)))
-  (:metaclass json-serializable-class))
+                     :reader asset-response-headers)))
 
 (defmethod print-object ((asset asset) out)
   (format out "#<ASSET ~a ~a>" (asset-file asset) (url asset)))
@@ -135,26 +121,19 @@
 
 (defclass snapshot ()
   ((assets :initform nil
-           :json-key "assets"
-           :accessor assets
-           :json-type (:list asset))
+           :accessor assets)
    (uuid :initform (format nil "~a" (uuid:make-v4-uuid))
-         :reader uuid
-         :json-key "uuid"
-         :json-type :string)
+         :reader uuid)
    (tmpdir :initarg :tmpdir
            :accessor tmpdir)
    (root-files :accessor root-files
-               :json-key "rootFiles"
-               :initform nil
-               :json-type (:list :string))
+               :initform nil)
    (request-counter :accessor request-counter
                     :initform 0
                     :documentation "When the snapshot is being served,
                     this keeps track of the total number of current
                     requests. This allows us to wait until all assets
-                    are served before taking screenshots."))
-  (:metaclass json-serializable-class))
+                    are served before taking screenshots.")))
 
 (defvar *request-counter-lock* (bt:make-lock "request-counter-lock"))
 
