@@ -95,7 +95,7 @@ upload blobs that haven't been uploaded before."
   with."
   (cond
     (flags:*browser-configs*
-     (let ((config (cl-yaml:parse (pathname flags:*browser-configs*))))
+     (let ((config (nyaml:parse (pathname flags:*browser-configs*))))
        (loop for name being the hash-keys of config
              using (hash-value value)
              collect

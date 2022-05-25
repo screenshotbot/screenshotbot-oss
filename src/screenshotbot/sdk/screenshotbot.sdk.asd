@@ -18,7 +18,7 @@
                :util/random-port
                :util/request
                :cl-store
-               :cl-yaml
+               :nyaml
                :cl-fad
                :cxml
                :zip

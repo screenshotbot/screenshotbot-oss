@@ -9,8 +9,6 @@
         #:com.google.flag)
   (:import-from #:screenshotbot/sdk/help
                 #:help)
-  (:import-from #:yaml.error
-                #:yaml-error)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
@@ -61,9 +59,7 @@
                                (when (str:containsp "output-wait is not implemented" msg)
                                  (muffle-warning warning)))))
                   #+lispworks
-                  (error error-handler)
-                  #+lispworks
-                  (yaml-error error-handler))
+                  (error error-handler))
      (apply '%main args)))
   #-sbcl
   (log4cl::exit-hook)
