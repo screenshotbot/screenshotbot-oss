@@ -48,9 +48,12 @@
 
 (defun main (&rest args)
   (let ((error-handler (lambda (e)
-                          (format t "~%~a~%~%" e)
-                          (dbg:output-backtrace (if flags:*verbose* :bug-form :brief))
-                          (uiop:quit 1))))
+                         (format t "~%~a~%~%" e)
+                         #+lispworks
+                         (dbg:output-backtrace (if flags:*verbose* :bug-form :brief))
+                         #-lispworks
+                         (trivial-backtrace:print-backtrace einteg)
+                         (uiop:quit 1))))
    (handler-bind ((warning (lambda (warning)
                              (let ((msg (princ-to-string warning)))
                                ;; This warning is not very actionable
