@@ -71,6 +71,9 @@ sh ./$INSTALLER
 rm -f $INSTALLER
 "))
 
+(defhandler (nil :uri "/recorder.exe" :html nil) ()
+  (hunchentoot:redirect
+   (artifact-link "recorder-win.exe" :cdn t)))
 
 (let ((lock (bt:make-lock)))
   (defun handle-asdf-output (op component &optional (output-num 0) )

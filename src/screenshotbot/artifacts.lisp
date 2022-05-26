@@ -64,7 +64,7 @@
                   (md5-hex blob-pathname)
                   hash))))
       "OK")))
-
+(bknr.datastore:store-objects-with-class 'artifact)
 
 (defhandler (artifact-get :uri "/artifact/:name") (name cache-key)
   (declare (ignore cache-key))
@@ -74,15 +74,17 @@
       (assert (path:-e file))
       (hunchentoot:handle-static-file file))))
 
+
 (defmethod artifact-link ((name string) &key (cdn t))
-  (let ((artifact (artifact-with-name (str:downcase name))))
-    (let ((util.cdn:*cdn-cache-key* (file-write-date (bknr.datastore:blob-pathname artifact))))
-      (let ((url (make-url 'artifact-get :name name)))
-        (cond
-          (*delivered-image*
-           (format nil "~a~a" (installation-domain (installation)) url))
-          (cdn
-           (util.cdn:make-cdn url))
-          (t url))))))
+  (let ((real-name (car (str:rsplit "." name :limit 2))))
+   (let ((artifact (artifact-with-name (str:downcase real-name))))
+     (let ((util.cdn:*cdn-cache-key* (file-write-date (bknr.datastore:blob-pathname artifact))))
+       (let ((url (make-url 'artifact-get :name name)))
+         (cond
+           (*delivered-image*
+            (format nil "~a~a" (installation-domain (installation)) url))
+           (cdn
+            (util.cdn:make-cdn url))
+           (t url)))))))
 
 ;; (upload-artifact "installer-linux" "/home/arnold/.cache/common-lisp/lw-7.1.2-linux-x64/home/arnold/builds/web/screenshotbot/sdk/installer")

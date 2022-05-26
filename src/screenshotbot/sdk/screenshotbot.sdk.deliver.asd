@@ -18,7 +18,7 @@
 (defmethod output-files ((o compile-op) (s deliver-script))
   (let ((output (make-pathname :name (funcall (find-symbol "REGEX-REPLACE-ALL" "CL-PPCRE")
                                  "^deliver-" (component-name s) "")
-                  :type nil
+                  :type #-mswindows nil #+mswindows "exe"
                   :defaults *library-file-dir*)))
     (list
      output

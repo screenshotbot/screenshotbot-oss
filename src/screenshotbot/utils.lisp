@@ -15,8 +15,18 @@
 
 (defun upload-artifact (name filename)
   (log:info "Uploading via scp")
-  (uiop:run-program (list "scp" (namestring filename)
-                          "web@screenshotbot.io:~/tmp-upload"))
+  (uiop:run-program (list
+                     #-mswindows "scp"
+                     #+mswindows "C:\\cygwin64\\bin\\scp.exe"
+                     (#-mswindows identity
+                      #+mswindows (lambda (name)
+                                    (str:replace-all "G:" "/cygdrive/g"
+                                                     (str:replace-all "\\" "/" name)))
+                      (namestring filename))
+                     "web@screenshotbot.io:~/tmp-upload")
+                    :output :interactive
+                    :input :interactive
+                    :error-output :interactive)
   (log:info "Upload done")
   (multiple-value-bind (result code)
       (drakma:http-request "https://screenshotbot.io/intern/artifact/upload"
@@ -31,7 +41,6 @@
 
 (defun upload-sdk ()
   (asdf:compile-system :screenshotbot.sdk.deliver)
-  #-mswindows
   (let ((output-file (asdf:output-file 'asdf:compile-op
                                        (asdf:find-component
                                         :screenshotbot.sdk.deliver
@@ -41,6 +50,7 @@
     (assert (path:-e output-file))
     (upload-artifact #+darwin "recorder-darwin"
                      #+linux "recorder-linux"
+                     #+mswindows "recorder-win"
                      output-file)))
 
 (defun upload-fasl (op system)
