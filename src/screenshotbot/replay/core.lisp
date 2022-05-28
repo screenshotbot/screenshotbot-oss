@@ -121,12 +121,14 @@
 
 (defclass snapshot ()
   ((assets :initform nil
+           :initarg :assets
            :accessor assets)
    (uuid :initform (format nil "~a" (uuid:make-v4-uuid))
          :reader uuid)
    (tmpdir :initarg :tmpdir
            :accessor tmpdir)
    (root-files :accessor root-files
+               :initarg :root-files
                :initform nil)
    (request-counter :accessor request-counter
                     :initform 0
