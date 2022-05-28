@@ -91,7 +91,9 @@
 
 (defclass acceptor (util:base-acceptor
                     hunchensocket:websocket-acceptor
-                    hex:acceptor-with-plugins) ())
+                    hex:acceptor-with-plugins) ()
+  (:default-initargs
+   :name 'screenshotbot-acceptor))
 
 #-screenshotbot-oss
 (defclass sb-documentation-plugin (documentation-plugin:documentation-plugin)

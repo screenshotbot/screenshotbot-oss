@@ -58,11 +58,16 @@
                               :success t
                               :response
                               (%funcall-with-api-handling fn))
-            (api-error (e)
-              (log:warn "API error: ~a" (api-error-msg e))
-              (make-instance 'error-result
-                              :success nil
-                              :error (princ-to-string e)))))))
+             (api-error (e)
+               (log:warn "API error: ~a" (api-error-msg e))
+               (make-instance 'error-result
+                               :success nil
+                               :error (princ-to-string e)))
+             (error (e)
+               (log:warn "Error: ~a" e)
+               (make-instance 'error-result
+                               :success nil
+                               :error "Internal error, please contact support@screenshotbot.io"))))))
     res))
 
 (defmacro defapi ((name &key uri method intern) params &body body)

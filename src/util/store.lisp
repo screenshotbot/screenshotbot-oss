@@ -71,35 +71,46 @@
                  :directory dir
                  :subsystems (store-subsystems)))
 
-(defmacro with-test-store (() &body body)
-  `(call-with-test-store (lambda () ,@body)))
+(defmacro with-test-store ((&key (globally nil)) &body body)
+  `(call-with-test-store (lambda () ,@body)
+                         :globally ,globally))
 
-(defun call-with-test-store (fn &key (cleanup t))
+(defun call-with-test-store (fn &key (cleanup t)
+                                  (globally nil))
   (when (boundp 'bknr.datastore:*store*)
     (error "Don't run this test in a live program with an existing store"))
-  (let ((*store* nil))
-    (flet ((all-objects ()
-             (bknr.datastore:all-store-objects)))
-     (tmpdir:with-tmpdir (dir)
-       (prepare-store-for-test :dir dir)
-       (assert bknr.datastore:*store*)
-       (assert (null (all-objects)))
+  (flet ((inner-work ()
+           (flet ((all-objects ()
+                    (bknr.datastore:all-store-objects)))
+             (tmpdir:with-tmpdir (dir)
+               (prepare-store-for-test :dir dir)
+               (assert bknr.datastore:*store*)
+               (assert (null (all-objects)))
+               (unwind-protect
+                    (progn
+                      (funcall fn)
+                      #+nil
+                      (let ((objs (all-objects)))
+                        (when objs
+                          (error "At the end of the test some objects were not deleted: ~s" objs))))
+                 (let ((store *store*))
+                   (close-store)
+                   (bknr.datastore::close-store-object store))
+
+                 (when cleanup
+                   ;; Look at the associated test. This is the only way I know
+                   ;; of to clean up the indices. I wish there were a better
+                   ;; solution.
+                   (call-with-test-store (lambda ()) :cleanup nil)))))))
+    (cond
+      (globally
        (unwind-protect
             (progn
-              (funcall fn)
-              #+nil
-              (let ((objs (all-objects)))
-                (when objs
-                  (error "At the end of the test some objects were not deleted: ~s" objs))))
-         (let ((store *store*))
-           (close-store)
-           (bknr.datastore::close-store-object store))
-
-         (when cleanup
-           ;; Look at the associated test. This is the only way I know
-           ;; of to clean up the indices. I wish there were a better
-           ;; solution.
-           (call-with-test-store (lambda ()) :cleanup nil)))))))
+              (inner-work))
+         (makunbound '*store*)))
+      (t
+       (let ((*store* nil))
+         (inner-work))))))
 
 (defun prepare-store ()
   (make-instance 'safe-mp-store

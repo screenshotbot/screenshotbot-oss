@@ -105,8 +105,13 @@
                                        (cons "api-secret-key" *api-secret*)
                                        parameters)))
 
-    (let ((result (json:decode-json stream)))
-      (ensure-api-success result))))
+    (handler-case
+        (let ((result (json:decode-json stream)))
+          (ensure-api-success result))
+      (json:json-syntax-error (e)
+        (error "Could not parse json (~a), rest of stream is: ~A"
+               e
+               (uiop:slurp-input-stream 'string stream))))))
 
 
 (defun put-file (upload-url stream &key parameters)
