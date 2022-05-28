@@ -141,10 +141,6 @@
             (verified-p image))
           return image))
 
-(defmethod find-image ((company company) (hash array))
-  (find-image company
-              (ironclad:byte-array-to-hex-string hash)))
-
 (defmethod print-object ((self image) stream)
   (format stream "#<IMAGE ~a>" (store-object-id self)))
 
