@@ -30,7 +30,9 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:screenshotbot/model/screenshot
+                #:*screenshot-cache*))
 
 (util/fiveam:def-suite)
 
@@ -40,19 +42,20 @@
      (auth:with-sessions ()
        (with-test-user (:company company
                         :user user)
-         (let* ((*synchronous-promotion* t)
-                (api-key (make-instance 'api-key :user user :company company))
-                (img1 (make-instance 'image
-                                      :company company
-                                      :hash "foo1"))
-                (img2 (make-instance 'image
-                                      :company company
-                                      :hash "foo2")))
-           (setf (current-user) user)
-           (assert (logged-in-p))
-           (assert (current-user))
-           (let ((*current-api-key* api-key))
-             (&body))))))))
+         (let ((*screenshot-cache* (make-hash-table :test #'equal)))
+          (let* ((*synchronous-promotion* t)
+                 (api-key (make-instance 'api-key :user user :company company))
+                 (img1 (make-instance 'image
+                                       :company company
+                                       :hash "foo1"))
+                 (img2 (make-instance 'image
+                                       :company company
+                                       :hash "foo2")))
+            (setf (current-user) user)
+            (assert (logged-in-p))
+            (assert (current-user))
+            (let ((*current-api-key* api-key))
+              (&body)))))))))
 
 (defun serial-recorder-run-post (&rest args)
   (multiple-value-bind (val verify)
@@ -69,9 +72,10 @@
          :screenshot-records
          `(((:foo . "bar")
             (:name . "img1")
-            (:image-id . ,(oid img1))))))))
+            (:image-id . ,(oid img1)))))
+      (pass))))
 
-(test adds-channel-mask
+(defun test-adds-channel-mask ()
   (with-fixture state ()
     (let ((channel (make-instance 'channel :company company))
           (rects (list
@@ -83,4 +87,13 @@
         (is (eql nil (screenshot-masks screenshot))))
       (let ((screenshot (make-screenshot-for-channel channel
                                                      :name "img1")))
-        (is (eql rects (screenshot-masks screenshot)))))))
+        (is (equal rects (screenshot-masks screenshot)))))))
+
+(test adds-channel-mask
+  (test-adds-channel-mask))
+
+(test adds-channel-mask-2
+  ;; ensure the test fixture is cleaning up properly. In the past,
+  ;; there was a time when *screenshot-cache* was not being cleaned up
+  ;; properly between tests
+  (test-adds-channel-mask))

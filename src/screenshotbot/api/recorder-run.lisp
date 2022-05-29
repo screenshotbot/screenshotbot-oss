@@ -172,8 +172,7 @@
        (make-instance 'create-run-response
                       :id (store-object-id run))
        run
-       channel ;; possibly unsaved channel, gets saved if the run is promoted
-       )))))
+       channel)))))
 
 (let ((sem #+lispworks (mp:make-semaphore :name "promoter semaphore" :count 10)))
   (defun start-promotion-thread (channel run)
