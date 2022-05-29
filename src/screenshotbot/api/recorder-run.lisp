@@ -18,6 +18,7 @@
   (:import-from #:screenshotbot/api/promote
                 #:default-promo)
   (:import-from #:screenshotbot/model/company
+                #:company
                 #:find-or-create-channel
                 #:find-image-by-id
                 #:company-runs)
@@ -36,7 +37,8 @@
   (:export
    #:%recorder-run-post
    #:run-response-id
-   #:start-promotion-thread))
+   #:start-promotion-thread
+   #:prepare-recorder-run))
 (in-package :screenshotbot/api/recorder-run)
 
 
@@ -132,7 +134,8 @@
                              (company (current-company))
                              is-trunk is-clean
                            &allow-other-keys)
-  (declare (optimize (debug 3) (speed 0)))
+  (declare (optimize (debug 3) (speed 0))
+           (ignore pull-request))
   (apply
    'values
    (flet ((nil-if-empty (x) (if (str:emptyp x) nil x)))
@@ -154,25 +157,29 @@
                                       (list field-name
                                             (funcall fn (getf args arg))))))))
 
-      (add-company-run company run)
       (with-transaction ()
         (setf (channel-branch channel) branch))
-
       (with-transaction ()
         (setf (github-repo channel)
               (nil-if-empty github-repo)))
-
-      (log:trace "records: ~s" screenshot-records)
-      ;; now add all the screenshots
-
-      (bt:with-lock-held ((channel-lock channel))
-        (bt:condition-notify (channel-cv channel)))
-
+      (prepare-recorder-run :run run)
       (list
        (make-instance 'create-run-response
-                      :id (store-object-id run))
+                       :id (store-object-id run))
        run
        channel)))))
+
+(defun prepare-recorder-run (&key (run (error "must provide run")))
+  "Common preparation steps for a recorder-run, even before the
+promotion thread starts. Used by the API and by Replay"
+  (let ((channel (recorder-run-channel run))
+        (company (recorder-run-company run)))
+    (check-type channel channel)
+    (check-type company company)
+
+    (add-company-run company run)
+    (bt:with-lock-held ((channel-lock channel))
+      (bt:condition-notify (channel-cv channel)))))
 
 (let ((sem #+lispworks (mp:make-semaphore :name "promoter semaphore" :count 10)))
   (defun start-promotion-thread (channel run)
