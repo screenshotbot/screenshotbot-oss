@@ -39,7 +39,7 @@
     (unless (eql 200 code)
       (error "Failed to upload image: code ~a" code))))
 
-(defun upload-sdk ()
+(defun upload-sdk (&key only-build)
   (asdf:compile-system :screenshotbot.sdk.deliver)
   (let ((output-file (asdf:output-file 'asdf:compile-op
                                        (asdf:find-component
@@ -48,10 +48,11 @@
                                         #+mswindows "deliver-sdk"))))
     (log:info "Output file is: ~a" output-file)
     (assert (path:-e output-file))
-    (upload-artifact #+darwin "recorder-darwin"
-                     #+linux "recorder-linux"
-                     #+mswindows "recorder-win"
-                     output-file)))
+    (unless only-build
+     (upload-artifact #+darwin "recorder-darwin"
+                      #+linux "recorder-linux"
+                      #+mswindows "recorder-win"
+                      output-file))))
 
 (defun upload-fasl (op system)
   (let ((op (or op 'asdf:compile-bundle-op)))
