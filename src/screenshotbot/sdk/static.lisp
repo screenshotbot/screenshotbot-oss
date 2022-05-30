@@ -170,15 +170,25 @@ upload blobs that haven't been uploaded before."
                                   (walk item prefix))))))
     (walk dir "")))
 
+(defun ensure-cache-dir ()
+  (unless *http-cache-dir*
+    (setf *http-cache-dir*
+          #+mswindow
+          (path:catdir (pathname (uiop:getenv "APPDATA"))
+                        #P"screenshotbot/cache/replay/")
+          #-mswindows
+          (pathname "~/.cache/screenshotbot/replay/"))
+    (ensure-directories-exist *http-cache-dir*)))
+
 (defun record-static-website (location)
   (assert (path:-d location))
+  (ensure-cache-dir)
   (when flags:*production*
    (sdk:update-commit-graph (make-instance 'git:git-repo :link flags:*repo-url*)
                             flags:*main-branch*))
   (restart-case
       (tmpdir:with-tmpdir (tmpdir)
-        (let* ((*http-cache-dir* tmpdir)
-               (context (make-instance 'context))
+        (let* ((context (make-instance 'context))
                (port (util/random-port:random-port))
                (acceptor (make-instance 'hunchentoot:acceptor
                                         :port port

@@ -332,6 +332,7 @@
                   store-dir
                   "cache/replay-http-cache/")))
         (ensure-directories-exist dir)
+        (log:debug "Using cache dir for http: ~A" dir)
         dir)))))
 
 (defun read-file (file)
