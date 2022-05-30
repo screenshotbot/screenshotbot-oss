@@ -173,7 +173,7 @@ upload blobs that haven't been uploaded before."
 (defun ensure-cache-dir ()
   (unless *http-cache-dir*
     (setf *http-cache-dir*
-          #+mswindow
+          #+mswindows
           (path:catdir (pathname (uiop:getenv "APPDATA"))
                         #P"screenshotbot/cache/replay/")
           #-mswindows
