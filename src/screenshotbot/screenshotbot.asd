@@ -330,6 +330,7 @@
                :uuid
                :cl-store
                :util/misc
+               :util/request
                :cl+ssl
                :auto-restart
                :dexador
