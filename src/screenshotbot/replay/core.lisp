@@ -190,6 +190,7 @@
          (uiop:copy-stream-to-stream input out :element-type '(unsigned-byte 8))
          (file-position out 0))
        (finish-output out)
+       (close out)
 
        (write-asset p type
                     :tmpdir tmpdir
