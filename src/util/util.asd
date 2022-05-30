@@ -183,11 +183,13 @@
   :depends-on (:util
                :util/hash-lock
                :util/health-check
+               :util/request
                :util/fiveam)
   :serial t
   :components ((:module "tests"
                 :components ((:file "test-ret-let")
                              (:file "test-misc")
+                             (:file "test-request")
                              (:file "test-store")
                              (:file "test-hash-lock")
                              (:file "test-threading")

@@ -81,7 +81,7 @@ background: url(shttps://google.com?f=1)
 (test push-asset-is-correctly-cached
   (with-fixture state ()
    (tmpdir:with-tmpdir (tmpdir)
-     (cl-mock:if-called 'dex:get
+     (cl-mock:if-called 'util/request:http-request
                         (lambda (url &rest args)
                           (values
                            (flexi-streams:make-in-memory-input-stream
@@ -111,7 +111,7 @@ background: url(shttps://google.com?f=1)
 (test happy-path-fetch-toplevel
   (with-fixture state ()
    (tmpdir:with-tmpdir (tmpdir)
-     (cl-mock:if-called 'dex:get
+     (cl-mock:if-called 'util/request:http-request
                         (lambda (url &rest args)
                           (values
                            (flexi-streams:make-in-memory-input-stream
@@ -141,7 +141,7 @@ background: url(shttps://google.com?f=1)
 (test utf-8
   (with-fixture state ()
    (tmpdir:with-tmpdir (tmpdir)
-     (cl-mock:if-called 'dex:get
+     (cl-mock:if-called 'util/request:http-request
                         (lambda (url &rest args)
                           (values
                            (flexi-streams:make-in-memory-input-stream

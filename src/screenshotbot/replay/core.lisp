@@ -306,13 +306,12 @@
               (log:info "Fetching: ~a" url)
               (write-replay-log "Fetching: ~a" url)
 
-              (dex:get url :want-stream t :force-binary force-binary
-                           :read-timeout *timeout*
-                           :keep-alive t
-                           :headers `((:accept . "image/webp,*/*"))
-                           :use-connection-pool t
-                           :connect-timeout *timeout*
-                           :force-string force-string))
+              (util/request:http-request (format nil "~a" url)
+                                         :want-stream t :force-binary force-binary
+                                         :read-timeout *timeout*
+                                         :accept "image/webp,*/*"
+                                         :connection-timeout *timeout*
+                                         :headers-as-hash-table t))
           (setf (gethash "X-Original-Url" response-headers) (quri:render-uri url))
           (remhash "content-security-policy" response-headers)
           (values remote-stream status response-headers)))
