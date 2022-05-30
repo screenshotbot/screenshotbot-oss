@@ -9,6 +9,8 @@
         #:com.google.flag)
   (:import-from #:screenshotbot/sdk/help
                 #:help)
+  (:import-from #:screenshotbot/sdk/sdk
+                #:chdir-for-bin)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
@@ -28,12 +30,11 @@
     (log:debug "Run this in interactive shell: ~S"
                `(progn
                   (chdir-for-bin ,(uiop:getcwd))
-                  (main ',argv)))
+                  (%main ',argv)))
     (cond
       (unrecognized
        (format t "Unrecognized arguments: ~a~%" (Str:join " " unrecognized))
-       (help)
-       (uiop:quit 1))
+       (help))
       (flags:*help*
        (help))
       (flags:*ios-multi-dir*
