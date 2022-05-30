@@ -53,7 +53,7 @@
                        (artifact-with-name name)
                        (make-instance 'artifact
                                        :name name)))))
-      (let ((input-file (pathname "~/tmp-upload")))
+      (let ((input-file (pathname "./tmp-upload")))
        (let ((blob-pathname (bknr.datastore:blob-pathname artifact)))
          (assert (equal
                   (md5-hex input-file)

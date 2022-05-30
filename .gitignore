@@ -36,3 +36,4 @@ dummy-input
 .buckconfig.local
 static-web-output
 amazon-acceptance-test.zip
+tmp-upload

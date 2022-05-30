@@ -23,7 +23,7 @@
                                     (str:replace-all "G:" "/cygdrive/g"
                                                      (str:replace-all "\\" "/" name)))
                       (namestring filename))
-                     "web@screenshotbot.io:~/tmp-upload")
+                     "web@screenshotbot.io:~/web/tmp-upload")
                     :output :interactive
                     :input :interactive
                     :error-output :interactive)

@@ -200,6 +200,10 @@ upload blobs that haven't been uploaded before."
                  (let* ((result (schedule-snapshot snapshot))
                         (logs (a:assoc-value result :logs)))
                    (log:info "Screenshot job queued: ~a" logs)))
-            (hunchentoot:stop acceptor))))
+            (hunchentoot:stop acceptor)
+            #+mswindows
+            (progn
+              (log:info "[windows-only] Waiting 2s before cleanup")
+              (sleep 2)))))
     (retry-record-static-website ()
       (record-static-website location))))
