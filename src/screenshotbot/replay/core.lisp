@@ -505,6 +505,7 @@
                 (css (rewrite-css-urls css #'rewrite-url)))
            (write-string css out)
            (finish-output out)))
+       (close out) ;; required for windows
        (write-asset p "css"
                     :tmpdir (tmpdir snapshot)
                     :url url
