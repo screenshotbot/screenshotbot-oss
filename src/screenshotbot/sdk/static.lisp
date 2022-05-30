@@ -130,8 +130,8 @@ upload blobs that haven't been uploaded before."
   "Schedule a Replay build with the given snapshot"
   (setf (replay:tmpdir snapshot) nil) ;; hack for json encoding
   (let* ((repo (make-instance 'git:git-repo :link flags:*repo-url*))
-         (branch-hash (git:rev-parse repo flags:*main-branch*))
-         (commit (git:current-commit repo)))
+         (branch-hash (ignore-errors (git:rev-parse repo flags:*main-branch*)))
+         (commit (ignore-errors (git:current-commit repo))))
    (let ((request (make-instance 'replay:snapshot-request
                                  :snapshot snapshot
                                  :channel-name flags:*channel*
@@ -141,7 +141,7 @@ upload blobs that haven't been uploaded before."
                                  :browser-configs (browser-configs)
                                  :commit commit
                                  :branch-hash branch-hash
-                                 :merge-base (git:merge-base repo branch-hash commit))))
+                                 :merge-base (ignore-errors (git:merge-base repo branch-hash commit)))))
      (uiop:with-temporary-file (:pathname p)
        (cl-store:store request p)
        (let ((uri (quri:make-uri
