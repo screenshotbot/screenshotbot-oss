@@ -521,7 +521,8 @@ If the images are identical, we return t, else we return NIL."
 (defun maybe-tabulate (tabs &key header &aux (id (format nil "a~a" (random 10000000))))
   (cond
     ((and (eql 1 (length tabs))
-          (str:emptyp (tab-title (car tabs))))
+          (and (stringp (tab-title (car tabs)))
+               (str:emptyp (tab-title (car tabs)))))
      ;; don't show the tabulation
      <markup:merge-tag>
        <div class= "card-header">
