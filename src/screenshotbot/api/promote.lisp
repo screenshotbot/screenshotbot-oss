@@ -204,9 +204,9 @@
               (log:info "This is a periodic job, running promotions")
               (finalize-promotion
                run
-               (active-run channel "master")
+               (active-run channel (master-branch channel))
                channel
-               "master"))
+               run-branch))
              ((null run-branch)
               (log:error :promote "No branch set, not promoting"))
              (t
@@ -313,7 +313,6 @@
               (bt:condition-wait cv lock :timeout 5)))))
 
 (defun maybe-promote-run-on-branch (run channel branch &key wait-timeout)
-  (declare (ignore branch))
   (cond
     ((str:emptyp (github-repo run))
      (log:error :promote "No repo link provided, cannot promote"))
@@ -326,8 +325,7 @@
        (when parent-commit
          (wait-for-run channel parent-commit
                        wait-timeout :minute))
-       (let* ((branch (master-branch channel))
-              (previous-run
+       (let* ((previous-run
                 (active-run channel branch)))
          (%maybe-promote-run-on-branch
           run
@@ -335,24 +333,30 @@
           channel
           branch))))))
 
-(defun finalize-promotion (run previous-run channel branch)
-  (log:info :promote "All checks passed, promoting run")
-  (when previous-run
-    (assert (equal branch
-                   (recorder-run-branch run)))
-    (when (or (not (recorder-previous-run run))
-              (equal (master-branch channel)
-                     branch))
-      (with-transaction ()
-        (setf (recorder-previous-run run)
-              previous-run))))
+(auto-restart:with-auto-restart ()
+ (defun finalize-promotion (run previous-run channel branch)
+   (log:info :promote "All checks passed, promoting run")
+   (when previous-run
+     (assert (equal branch
+                    (recorder-run-branch run)))
+     (when (or (not (recorder-previous-run run))
+               (equal (master-branch channel)
+                      branch))
+       (with-transaction ()
+         (setf (recorder-previous-run run)
+               previous-run))))
 
-  (with-transaction ()
-    (setf (active-run channel branch)
-          run)
-    (setf (github-repo channel)
-          (github-repo run)))
+   (unless (equal branch (master-branch channel))
+     (with-transaction ()
+       (setf (master-branch channel)
+             branch)))
 
-  (let ((publicp (%channel-publicp channel)))
-    (with-transaction ()
-      (setf (publicp channel) publicp))))
+   (with-transaction ()
+     (setf (active-run channel branch)
+           run)
+     (setf (github-repo channel)
+           (github-repo run)))
+
+   (let ((publicp (%channel-publicp channel)))
+     (with-transaction ()
+       (setf (publicp channel) publicp)))))
