@@ -281,6 +281,12 @@
      (cond
        ((equal "file" scheme)
         (error "file:// urls are not supported"))
+       ((member scheme (list "chrome-extension") :test #'string-equal)
+        ;; respond with an empty file
+        (values
+         (make-string-input-stream "")
+         200
+         (make-hash-table)))
        ((or (equal "https" scheme)
             (equal "http" scheme))
         (multiple-value-bind (remote-stream status response-headers)
