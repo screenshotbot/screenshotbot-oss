@@ -1,0 +1,18 @@
+<plugin>
+	<extension
+            point="com.katalon.platform.extensions">
+        <point
+                id="com.mycompany.plugin.myFirstExtensionId"
+                extensionPointId="com.katalon.platform.api.extension.pluginActivationListener"
+                implementationClass="com.mycompany.plugin.MyPluginActivationListener">
+        </point>
+    </extension>
+    <extension
+			point="com.katalon.platform.extensions">
+		<point
+		        id="com.mycompany.plugin.myAnotherExtensionId"
+		        extensionPointId="com.katalon.platform.api.extension.eventListener"
+		        implementationClass="com.mycompany.plugin.MyExecutionEventListener">
+		</point>
+	</extension>
+</plugin>
