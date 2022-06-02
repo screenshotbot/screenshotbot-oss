@@ -204,7 +204,12 @@ upload blobs that haven't been uploaded before."
                            context
                            snapshot
                            (format nil "http://localhost:~a~a" port index.html)
-                           tmpdir))
+                           tmpdir
+                           :actual-url
+                           (when flags:*static-website-assets-root*
+                             (format nil "~a~a"
+                                     flags:*static-website-assets-root*
+                                     index.html))))
 
                  (upload-snapshot-assets snapshot)
                  (let* ((result (schedule-snapshot snapshot))

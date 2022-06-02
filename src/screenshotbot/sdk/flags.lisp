@@ -32,7 +32,8 @@
    #:*ios-diff-dir*
    #:*metadata*
    #:*static-website*
-   #:*browser-configs*))
+   #:*browser-configs*
+   #:*static-website-assets-root*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -172,6 +173,15 @@
   :default-value nil
   :type (or null string)
   :help "Use to generate screenshots of a static website")
+
+(define-flag *static-website-assets-root*
+  :selector "static-website-assets-root"
+  :default-value nil
+  :type (or null string)
+  :help "When parsing the website directory at --static-website, the
+  asset root is used to determine where to fetch JS, CSS and image
+  from. If not specified, we assume the assets are all stored in the
+  same directory.")
 
 (define-flag *browser-configs*
   :selector "browser-configs"

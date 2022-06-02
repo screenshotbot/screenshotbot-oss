@@ -674,11 +674,16 @@
         (plump:make-text-node style (custom-css context))))))
 
 (with-auto-restart ()
- (defmethod load-url-into ((context context) snapshot url tmpdir)
+  (defmethod load-url-into ((context context) snapshot url tmpdir
+                            &key actual-url)
    (let* ((content (http-get url :force-string t
                                  :force-binary nil))
           (html (plump:parse content)))
-     (process-node context html snapshot url)
+     (process-node context html snapshot
+                   ;; If we pass an actual-url, then we should use the
+                   ;; actual URL to figure out where to fetch assets
+                   ;; from
+                   (or actual-url url))
      (add-css context html)
 
      #+nil
