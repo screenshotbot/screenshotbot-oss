@@ -6,13 +6,14 @@
 (defvar *init-hooks* nil)
 
 (defun init-fn ()
+  (format t "~%~%~%;;; Init screenshotbot library~%~%~%")
   (mapc #'funcall *init-hooks*))
 
 (defun deliver-lib (&key debug output)
   (when debug
     (ql:quickload :slynk))
   (push (lambda ()
-          (uiop:symbol-call :slynk :create-server 4009))
+          (uiop:symbol-call :slynk :create-server :port 4009))
         *init-hooks*)
   (lw-ji:setup-deliver-dynamic-library-for-java
    :init-java nil)
