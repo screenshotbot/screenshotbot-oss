@@ -70,6 +70,9 @@
 
 (ql:quickload "log4cl")
 
+;; for SLY
+(ql:quickload "flexi-streams")
+
 #+sbcl ;; not sure why I need this, I didn't debug in detail
 (ql:quickload "prove-asdf")
 
