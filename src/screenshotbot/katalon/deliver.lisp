@@ -41,7 +41,7 @@
                       :output ,output))))
     :output *standard-output*
     :error-output *standard-output*)
-    (log:info "Delivered file size: ~akB" (floor (trivial-file-size:file-size-in-octets output) 1024))))
+    (log:info "Delivered file size: ~aMB" (floor (trivial-file-size:file-size-in-octets output) (* 1024 1024)))))
 
 
 ;; (build :debug t)
