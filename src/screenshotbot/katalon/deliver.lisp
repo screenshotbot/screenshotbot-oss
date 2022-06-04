@@ -3,10 +3,17 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/katalon/deliver)
 
+(defvar *init-hooks* nil)
+
 (defun init-fn ()
-  )
+  (mapc #'funcall *init-hooks*))
 
 (defun deliver-lib (&key debug output)
+  (when debug
+    (ql:quickload :slynk))
+  (push (lambda ()
+          (uiop:symbol-call :slynk :create-server 4009))
+        *init-hooks*)
   (lw-ji:setup-deliver-dynamic-library-for-java
    :init-java nil)
   (lw:deliver 'init-fn
