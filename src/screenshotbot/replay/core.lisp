@@ -673,7 +673,7 @@
       (let ((style (plump:make-element head "style")))
         (plump:make-text-node style (custom-css context))))))
 
-(with-auto-restart ()
+(with-auto-restart (:retries 3 :sleep 10)
   (defmethod load-url-into ((context context) snapshot url tmpdir
                             &key actual-url)
    (let* ((content (http-get url :force-string t
