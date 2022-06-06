@@ -6,7 +6,8 @@
 
 (defpackage :util/tests/test-threading
   (:use #:cl
-        #:fiveam)
+        #:fiveam
+        #:util/threading)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-threading)
 
@@ -20,3 +21,20 @@
                      (setf var t)))))
       (bt:join-thread thread)
       (is-true var))))
+
+
+(test safe-interrupt
+  (let* ((ctr 0)
+         (max-ctr 10)
+         (thread (bt:make-thread
+                  (lambda ()
+                    (with-safe-interruptable
+                      (loop for i below max-ctr
+                            do
+                               (incf ctr)
+                               (safe-interrupt-checkpoint)
+                               (sleep 0.1)))))))
+    (safe-interrupt thread)
+    (bt:join-thread thread)
+    (is (< ctr (/ max-ctr 2)))
+    (pass)))
