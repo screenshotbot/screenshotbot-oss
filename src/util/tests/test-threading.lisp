@@ -27,9 +27,11 @@
 (test safe-interrupt
   (let* ((ctr 0)
          (max-ctr 10)
+         (callback-called-p nil)
          (thread (bt:make-thread
                   (lambda ()
-                    (with-safe-interruptable
+                    (with-safe-interruptable (:on-quit (lambda ()
+                                                         (setf callback-called-p t)))
                       (loop for i below max-ctr
                             do
                                (incf ctr)
@@ -37,5 +39,6 @@
                                (sleep 0.1)))))))
     (safe-interrupt thread)
     (bt:join-thread thread)
+    (is-true callback-called-p)
     (is (< ctr (/ max-ctr 2)))
     (pass)))

@@ -13,6 +13,8 @@
                 #:with-auto-restart)
   (:import-from #:util/misc
                 #:or-setf)
+  (:import-from #:util/threading
+                #:safe-interrupt-checkpoint)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:rewrite-css-urls
@@ -676,41 +678,42 @@
 (with-auto-restart (:retries 3 :sleep 10)
   (defmethod load-url-into ((context context) snapshot url tmpdir
                             &key actual-url)
-   (let* ((content (http-get url :force-string t
-                                 :force-binary nil))
-          (html (plump:parse content)))
-     (process-node context html snapshot
-                   ;; If we pass an actual-url, then we should use the
-                   ;; actual URL to figure out where to fetch assets
-                   ;; from
-                   (or actual-url url))
-     (add-css context html)
+    (safe-interrupt-checkpoint)
+    (let* ((content (http-get url :force-string t
+                                  :force-binary nil))
+           (html (plump:parse content)))
+      (process-node context html snapshot
+                    ;; If we pass an actual-url, then we should use the
+                    ;; actual URL to figure out where to fetch assets
+                    ;; from
+                    (or actual-url url))
+      (add-css context html)
 
-     #+nil
-     (error "got html: ~a"
-            (with-output-to-string (s)
-              (plump:serialize html s)))
-     (uiop:with-temporary-file (:direction :io :stream tmp :element-type '(unsigned-byte 8))
-       (let ((root-asset (call-with-fetch-asset
-                          context
-                          (lambda ()
-                            (plump:serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
-                            (file-position tmp 0)
-                            (let ((headers (make-hash-table)))
-                              (setf (gethash "content-type" headers)
-                                    "text/html; charset=UTF-8")
-                              (setf (gethash "cache-control" headers)
-                                    "no-cache")
-                              (values tmp 200 headers)))
-                          "html"
-                          tmpdir
-                          :url url
-                          :snapshot snapshot)))
-         (push (asset-file root-asset)
-               (root-files snapshot))
-         (push root-asset
-               (assets snapshot))))
-     snapshot)))
+      #+nil
+      (error "got html: ~a"
+             (with-output-to-string (s)
+               (plump:serialize html s)))
+      (uiop:with-temporary-file (:direction :io :stream tmp :element-type '(unsigned-byte 8))
+        (let ((root-asset (call-with-fetch-asset
+                           context
+                           (lambda ()
+                             (plump:serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
+                             (file-position tmp 0)
+                             (let ((headers (make-hash-table)))
+                               (setf (gethash "content-type" headers)
+                                     "text/html; charset=UTF-8")
+                               (setf (gethash "cache-control" headers)
+                                     "no-cache")
+                               (values tmp 200 headers)))
+                           "html"
+                           tmpdir
+                           :url url
+                           :snapshot snapshot)))
+          (push (asset-file root-asset)
+                (root-files snapshot))
+          (push root-asset
+                (assets snapshot))))
+      snapshot)))
 
 (defmethod snapshot-asset-file ((snapshot snapshot)
                                 (asset asset))

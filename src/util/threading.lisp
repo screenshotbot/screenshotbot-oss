@@ -36,15 +36,16 @@
                  *message-handlers*)))
     (funcall body)))
 
-(defmacro with-safe-interruptable (&body body)
+(defmacro with-safe-interruptable ((&key on-quit) &body body)
   "Create a safe interruptable code. The interrupt can only happen at
 checkpoints called by `(safe-interrupte-checkpoint)`"
-  `(call-with-safe-interruptable (lambda () ,@body)))
+  `(call-with-safe-interruptable (lambda () ,@body)
+                                 :on-quit ,on-quit))
 
 (define-condition safe-interrupt ()
   ())
 
-(defun call-with-safe-interruptable (fn)
+(defun call-with-safe-interruptable (fn &key on-quit)
   #-lispworks
   (funcall fn)
   #+lispworks
@@ -53,8 +54,8 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
                                       (signal 'safe-interrupt))))
           (funcall fn))
     (safe-interrupt ()
-      nil)))
-
+      (when on-quit
+        (funcall on-quit)))))
 
 (defun safe-interrupt (process)
   (log:info "going to interrupt")
