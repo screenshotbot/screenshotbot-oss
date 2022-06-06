@@ -64,6 +64,7 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
 
 
 (defun safe-interrupt-checkpoint ()
+  #+lispworks
   (loop for msg = (mp:process-wait-for-event
                    :no-hang-p t)
         while msg
@@ -81,6 +82,7 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
 
 
 (defun send-mail (process message &rest args)
+  #+lispworks
   (mp:process-send process
                    `(,message ,@args)))
 

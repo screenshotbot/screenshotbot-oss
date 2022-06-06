@@ -23,6 +23,7 @@
       (is-true var))))
 
 
+#+lispworks
 (test safe-interrupt
   (let* ((ctr 0)
          (max-ctr 10)
