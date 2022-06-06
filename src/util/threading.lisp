@@ -6,13 +6,16 @@
 
 (defpackage :util/threading
   (:use #:cl)
-  (:local-nicknames (#:a #:alexandria))
+  (:local-nicknames (#:a #:alexandria)
+                    #-lispworks
+                    (#:mp :util/fake-mp))
   (:export
    #:call-with-thread-fixes
    #:make-thread
    #:with-safe-interruptable
    #:safe-interrupt-checkpoint
-   #:safe-interrupt))
+   #:safe-interrupt)
+)
 (in-package :util/threading)
 
 
@@ -46,9 +49,6 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
   ())
 
 (defun call-with-safe-interruptable (fn &key on-quit)
-  #-lispworks
-  (funcall fn)
-  #+lispworks
   (handler-case
       (with-message-handlers ((quit (lambda ()
                                       (signal 'safe-interrupt))))
@@ -58,14 +58,11 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
         (funcall on-quit)))))
 
 (defun safe-interrupt (process)
-  (log:info "going to interrupt")
-  #+lispworks
   (assert (mp:process-p process))
   (send-mail process 'quit))
 
 
 (defun safe-interrupt-checkpoint ()
-  #+lispworks
   (loop for msg = (mp:process-wait-for-event
                    :no-hang-p t)
         while msg
@@ -82,8 +79,8 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
          (log:warn "No message handler for ~a" message))))))
 
 
-(defun send-mail (process message &rest args)
-  #+lispworks
+
+(defmethod send-mail (process message &rest args)
   (mp:process-send process
                    `(,message ,@args)))
 

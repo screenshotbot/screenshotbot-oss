@@ -139,9 +139,12 @@
                (:file "mock-recording")))
 
 (defsystem :util/threading
-  :depends-on (:bordeaux-threads)
+  :depends-on (:bordeaux-threads
+               :mailbox
+               :util/misc)
   :serial t
-  :components ((:file "threading")))
+  :components ((:file "fake-mp")
+               (:file "threading")))
 
 (defsystem :util/cron
   :depends-on (:cl-cron
