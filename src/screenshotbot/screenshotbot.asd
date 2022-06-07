@@ -374,7 +374,8 @@
                              (:file "services")
                              (:file "frontend")
                              (:file "sitemap")
-                             (:file "run-builder")))))
+                             (:file "run-builder")
+                             (:file "integration")))))
 
 (defsystem :screenshotbot/webdriver
   :serial t
