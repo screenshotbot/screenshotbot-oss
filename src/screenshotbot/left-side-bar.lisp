@@ -85,12 +85,10 @@
          Recent Runs
         </left-nav-item>
 
-      ,(progn
-         #-screenshotbot-oss
-         <left-nav-item href= "/web-projects" image-class= "cloud_queue"
-                        script-name=script-name >
-           Web Projects
-         </left-nav-item>)
+      <left-nav-item href= "/web-projects" image-class= "cloud_queue"
+                      script-name=script-name >
+        Web Projects
+       </left-nav-item>
 
       <left-nav-item href= "/channels" image-class= "book"
                      script-name=script-name >
