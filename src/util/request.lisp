@@ -7,7 +7,10 @@
 
 (defun http-request (url &rest args &key headers-as-hash-table
                                       (verify #-mswindows t #+mswindows nil) &allow-other-keys)
-  (let ((args (a:remove-from-plist args :headers-as-hash-table)))
+  (let ((args (a:remove-from-plist args :headers-as-hash-table
+                                   #+ccl :connection-timeout
+                                   #-lispworks :read-timeout)))
+
     (multiple-value-bind (res status headers)
         (apply #'drakma:http-request url
                  :verify verify
