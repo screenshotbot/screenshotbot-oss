@@ -401,3 +401,8 @@
                              (:file "impl")
                              (:file "screenshot")
                              (:file "all")))))
+
+(defsystem :screenshotbot/all
+  :serial t
+  :depends-on (:screenshotbot
+               :screenshotbot/replay))

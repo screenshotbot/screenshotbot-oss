@@ -28,7 +28,7 @@
 
 (ql:quickload "server")
 (ql:quickload "server/slynk")
-(ql:quickload "screenshotbot")
+(ql:quickload "screenshotbot/all")
 
 (screenshotbot/config:load-config)
 
