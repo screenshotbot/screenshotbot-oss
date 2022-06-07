@@ -342,3 +342,28 @@
                 :components ((static-file "replay-regex" :type "txt")
                              (:file "core")
                              (:file "browser-config")))))
+
+(asdf:defsystem :screenshotbot/replay
+  :serial t
+  :depends-on (:dexador
+               :hunchentoot
+               :hunchensocket
+               :tmpdir
+               :quri
+               :screenshotbot/replay-core
+               :ironclad/core
+               :cl-json
+               :ironclad/digests
+               :screenshotbot.sdk
+               :str
+               :flexi-streams
+               :xmls
+               :lquery
+               :drakma
+               :markup
+               :screenshotbot.pro/worker
+               :closer-mop
+               :plump)
+  :components ((:module "replay"
+                :serial t
+                :components ((:file "replay-acceptor")))))
