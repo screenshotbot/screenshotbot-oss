@@ -23,10 +23,5 @@ ADD https://github.com/Clozure/ccl/releases/download/v1.12/ccl-1.12-linuxx86.tar
 RUN tar xvzf ccl.tar.gz
 RUN apt-get update && apt-get install -y html2text openjdk-11-jdk-headless gcc make
 WORKDIR /app
-COPY . .
-
-# For non-oss version
-RUN if ! [ -e launch.lisp ] ; then cp src/screenshotbot/oss/launch.lisp ./ ; fi
-RUN test -f scripts/prepare-image.lisp
 
 CMD /opt/software/ccl/lx86cl64 -l launch.lisp -- --object-store /data/ --start-slynk --slynk-port 4005 --slynk-loopback-interface 0.0.0.0

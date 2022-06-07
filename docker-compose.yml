@@ -9,7 +9,10 @@ services:
       - "4091:4091"
     volumes:
       - screenshotbot-oss:/data
+      - .:/app
+      - screenshotbot-build:/app/build
+
 volumes:
   screenshotbot-oss:
-
+  screenshotbot-build:
 # test

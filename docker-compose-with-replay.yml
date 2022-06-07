@@ -14,6 +14,8 @@ services:
       - "4091:4091"
     volumes:
       - screenshotbot-oss:/data
+      - .:/app
+      - screenshotbot-build:/app/build
 
   selenium-hub:
     image: selenium/hub:4.1.2-20220217
@@ -72,6 +74,7 @@ services:
 volumes:
   screenshotbot-oss:
   squid-cache:
+  screenshotbot-build:
 
 networks:
   default:
