@@ -1,0 +1,79 @@
+version: "3.9"
+services:
+  screenshotbot:
+    build:
+      context: ${SB_OSS_CONTEXT}
+      dockerfile: ${SB_OSS_DOCKERFILE}
+
+    ports:
+      - "4091:4091"
+    volumes:
+      - screenshotbot-oss:/data
+
+  selenium-hub:
+    image: selenium/hub:4.1.2-20220217
+    ports:
+      - "4442-4444:4442-4444"
+    environment:
+      - SE_NODE_SESSION_TIMEOUT=60
+    depends_on:
+      - squid
+    networks:
+      default:
+      selenium:
+
+  selenium-chrome:
+    image: selenium/node-chrome:4.1.2-20220217
+    shm_size: 1g
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_NODE_SESSION_TIMEOUT=60
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=2
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      selenium:
+
+  selenium-firefox:
+    image: selenium/node-firefox:4.1.2-20220217
+    shm_size: 1g
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_NODE_SESSION_TIMEOUT=60
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=2
+    networks:
+      selenium:
+
+  squid:
+    build:
+      context: .
+      dockerfile: docker/squid/Dockerfile
+    ports:
+      - 3128:3128
+    volumes:
+      - squid-cache:/var/spool/squid
+    networks:
+      default:
+      selenium:
+
+volumes:
+  screenshotbot-oss:
+  squid-cache:
+
+networks:
+  default:
+  backend:
+  selenium:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.29.1.0/16
