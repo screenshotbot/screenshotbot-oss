@@ -17,6 +17,7 @@ services:
       - .:/app
       - screenshotbot-build:/app/build
     networks:
+      default:
       selenium:
         ipv4_address: 172.29.1.14
 
