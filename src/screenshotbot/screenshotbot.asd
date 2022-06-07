@@ -369,4 +369,5 @@
                 :serial t
                 :components ((:file "replay-acceptor")
                              (:file "services")
-                             (:file "frontend")))))
+                             (:file "frontend")
+                             (:file "sitemap")))))
