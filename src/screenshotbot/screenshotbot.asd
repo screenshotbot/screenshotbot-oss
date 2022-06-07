@@ -247,6 +247,7 @@
                :screenshotbot/utils
                :screenshotbot/replay-core
                :screenshotbot/webdriver
+               :screenshotbot/replay
                :tmpdir
                :screenshotbot)
   :components ((:file "testing")
@@ -297,7 +298,9 @@
                 :components ((:file "test-image")
                              (:file "test-promote")
                              (:file "test-send-tasks")
-                             (:file "test-recorder-runs")))))
+                             (:file "test-recorder-runs")))
+               (:module "web-build"
+                :components ((:file "test-scheduler")))))
 
 (defsystem :screenshotbot/secrets
   :serial t
@@ -347,6 +350,8 @@
                              (:file "core")
                              (:file "browser-config")))))
 
+
+
 (asdf:defsystem :screenshotbot/replay
   :serial t
   :depends-on (:dexador
@@ -376,7 +381,13 @@
                              (:file "sitemap")
                              (:file "run-builder")
                              (:file "integration")
-                             (:file "remote")))))
+                             (:file "remote")))
+               (:module "web-build"
+                :serial t
+                :components ((:file "project")
+                             (:file "scheduler")
+                             (:file "device-list")
+                             (:file "browsers")))))
 
 (defsystem :screenshotbot/webdriver
   :serial t
