@@ -298,12 +298,18 @@
                    </tr>))
       </tbody>
     </table>
-)
+    )
+
+(defun https? ()
+  (string-equal "https" (hunchentoot:header-in* :x-forwarded-proto)))
 
 (defun remote-run-log-endpoint (remote-run)
   (cond
     ((log-file remote-run)
-     (format nil "wss://~a/wsapp/replay/logs/~a"
+     (format nil "~a://~a/wsapp/replay/logs/~a"
+             (if (https?)
+                 "wss"
+                 "ws")
              (hunchentoot:host)
              (util:oid remote-run)))
     (t
