@@ -89,6 +89,14 @@
 (defparameter *buf-size* 1024
   "A buffer size for base64 decoding")
 
+(defun read-base64-stream-to-file (stream output)
+  (with-open-file (output output
+                          :direction :output
+                          :element-type 'character
+                          :external-format :latin-1)
+    (read-base64-stream-to-stream
+     stream output)))
+
 (defun read-base64-stream-to-stream (input output)
   ;; Can we do this faster?
   (handler-case
@@ -110,11 +118,7 @@
                         ;; We're going to treat the rest of the
                         ;; stream as just a Base64 stream.
                         (when output
-                          (with-open-file (output output
-                                                  :direction :output
-                                                  :element-type 'flexi-streams:octet)
-                            (read-base64-stream-to-stream
-                             stream output)))
+                          (read-base64-stream-to-file stream output))
                         (read-stream-to-end stream)
                         (return-from decode-file-from-json-stream nil))
                        (t

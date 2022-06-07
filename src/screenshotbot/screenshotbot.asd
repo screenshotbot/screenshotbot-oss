@@ -280,7 +280,7 @@
                              (:file "test-commit-graph")
                              (:file "test-acceptable")))
                (:module "webdriver"
-                :components ())
+                :components ((:file "test-screenshot")))
                (:module "github"
                 :components ((:file "test-jwt-token")
                              (:file "test-plugin")
