@@ -17,8 +17,6 @@ services:
       - .:/app
       - screenshotbot-build:/app/build
     networks:
-      default:
-        ipv4_address: 172.20.0.6
       selenium:
         ipv4_address: 172.29.1.14
 
@@ -31,7 +29,6 @@ services:
     depends_on:
       - squid
     networks:
-      default:
       selenium:
 
   selenium-chrome:
