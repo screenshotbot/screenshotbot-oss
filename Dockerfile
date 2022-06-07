@@ -29,4 +29,4 @@ COPY . .
 RUN if ! [ -e launch.lisp ] ; then cp src/screenshotbot/oss/launch.lisp ./ ; fi
 RUN test -f scripts/prepare-image.lisp
 
-CMD /opt/software/ccl/lx86cl64 -l launch.lisp -- --object-store /data/
+CMD /opt/software/ccl/lx86cl64 -l launch.lisp -- --object-store /data/ --start-slynk --slynk-port 4005

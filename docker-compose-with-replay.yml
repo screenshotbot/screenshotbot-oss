@@ -7,6 +7,7 @@ services:
 
     ports:
       - "4091:4091"
+      - "4005"
     volumes:
       - screenshotbot-oss:/data
 
