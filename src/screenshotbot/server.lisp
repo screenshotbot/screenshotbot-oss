@@ -292,9 +292,3 @@ Disallow: /n")
 #+screenshotbot-oss
 (setf hunchentoot-multi-acceptor:*default-acceptor*
       *acceptor*)
-
-(defhandler (nil :uri "/documentation") ()
-  (hunchentoot:redirect "https://docs.screenshotbot.io/docs/"))
-
-(defhandler (nil :uri "/documentation/:page") (page)
-  (hunchentoot:redirect (format nil "https://docs.screenshotbot.io/docs/~a" page)))
