@@ -27,7 +27,7 @@
                :imago
                :imago/pngload
                :md5
-               :screenshotbot/replay
+               :screenshotbot/replay-core
                :dag
                :anaphora
                :str)

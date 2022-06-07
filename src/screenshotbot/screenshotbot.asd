@@ -245,7 +245,7 @@
                :util/fiveam
                :fiveam-matchers
                :screenshotbot/utils
-               :screenshotbot/replay
+               :screenshotbot/replay-core
                :tmpdir
                :screenshotbot)
   :components ((:file "testing")
@@ -323,7 +323,7 @@
                :alexandria)
   :components ((:file "utils")))
 
-(asdf:defsystem :screenshotbot/replay
+(asdf:defsystem :screenshotbot/replay-core
   :serial t
   :depends-on (:plump
                :lquery
