@@ -39,7 +39,8 @@
                                 :params ("SLYNK-LOOPBACK-INTERFACE"))
     (*start-slynk* #+screenshotbot-oss nil
                    #-screenshotbot-oss t
-                   "")
+                   ""
+                   :params ("START-SLYNK"))
     (util/store:*object-store*
      #+screenshotbot-oss "~/.config/screenshotbot/object-store/"
      #-screenshotbot-oss "/data/arnold/object-store/" "" :params ("OBJECT-STORE"))
@@ -148,7 +149,7 @@
       (progn
         (let ((args #-lispworks (cons "<arg0>"(uiop:command-line-arguments))
                     #+lispworks sys:*line-arguments-list*))
-          (log:info "args2 is: ~s" args)
+          (log:info "CLI args: ~s" args)
 
 
           (multiple-value-bind (vars vals matched dispatch rest)
