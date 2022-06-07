@@ -27,16 +27,16 @@
                 #:load-url)
   (:import-from #:nibble
                 #:nibble)
-  (:import-from #:screenshotbot/pro/worker
+  (:import-from #:screenshotbot/webdriver
                 #:chrome
                 #:firefox
                 #:take-screenshot
                 #:with-webdriver)
   (:import-from #:webdriver-client
                 #:http-post-check)
-  (:import-from #:screenshotbot/pro/worker/impl
+  (:import-from #:screenshotbot/webdriver/impl
                 #:call-with-webdriver)
-  (:import-from #:screenshotbot/pro/worker/screenshot
+  (:import-from #:screenshotbot/webdriver/screenshot
                 #:full-page-screenshot)
   (:import-from #:screenshotbot/pro/replay/services
                 #:selenium-server

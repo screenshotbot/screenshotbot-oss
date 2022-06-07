@@ -246,6 +246,7 @@
                :fiveam-matchers
                :screenshotbot/utils
                :screenshotbot/replay-core
+               :screenshotbot/webdriver
                :tmpdir
                :screenshotbot)
   :components ((:file "testing")
@@ -276,6 +277,8 @@
                              (:file "test-image")
                              (:file "test-commit-graph")
                              (:file "test-acceptable")))
+               (:module "webdriver"
+                :components ())
                (:module "github"
                 :components ((:file "test-jwt-token")
                              (:file "test-plugin")
@@ -362,7 +365,7 @@
                :lquery
                :drakma
                :markup
-               :screenshotbot.pro/worker
+               :screenshotbot/webdriver
                :closer-mop
                :plump)
   :components ((:module "replay"
@@ -372,3 +375,15 @@
                              (:file "frontend")
                              (:file "sitemap")
                              (:file "run-builder")))))
+
+(defsystem :screenshotbot/webdriver
+  :serial t
+  :depends-on (:screenshotbot
+               :flexi-streams
+               :auto-restart
+               :cl-webdriver-client)
+  :components ((:module "webdriver"
+                :components ((:file "runner")
+                             (:file "impl")
+                             (:file "screenshot")
+                             (:file "all")))))
