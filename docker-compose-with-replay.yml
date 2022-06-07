@@ -16,6 +16,11 @@ services:
       - screenshotbot-oss:/data
       - .:/app
       - screenshotbot-build:/app/build
+    networks:
+      default:
+        ipv4_address: 172.20.0.6
+      selenium:
+        ipv4_address: 172.29.1.14
 
   selenium-hub:
     image: selenium/hub:4.1.2-20220217
