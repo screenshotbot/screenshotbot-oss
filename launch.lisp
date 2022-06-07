@@ -27,6 +27,7 @@
 (jvm:jvm-init)
 
 (ql:quickload "server")
+(ql:quickload "server/slynk")
 (ql:quickload "screenshotbot")
 
 (screenshotbot/config:load-config)
