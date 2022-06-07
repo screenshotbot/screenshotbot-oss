@@ -370,4 +370,5 @@
                 :components ((:file "replay-acceptor")
                              (:file "services")
                              (:file "frontend")
-                             (:file "sitemap")))))
+                             (:file "sitemap")
+                             (:file "run-builder")))))
