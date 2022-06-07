@@ -89,5 +89,17 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
 
 (defun make-thread (body &rest args)
   (apply #'bt:make-thread
-         body
+           (lambda ()
+             (handler-bind ((error (lambda (e)
+                                     (cond
+                                       (*debugger-hook*
+                                        ;; Small edge case: SWANK/SLYNK might still try
+                                        ;; to redelegate to the
+                                        ;; default debugger which can
+                                        ;; cause the process to crash
+                                        (invoke-debugger e))
+                                       (t
+                                        (trivial-backtrace:print-backtrace e)
+                                        (invoke-restart 'cl:abort))))))
+               (funcall body)))
          args))
