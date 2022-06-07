@@ -269,7 +269,8 @@
                              (:file "test-history")))
                (:module "login"
                 :components ((:file "test-github-oauth")
-                             (:file "test-signup")))
+                             (:file "test-signup")
+                             (:file "test-common")))
                (:module "model"
                 :components ((:file "test-screenshot")
                              (:file "test-user")

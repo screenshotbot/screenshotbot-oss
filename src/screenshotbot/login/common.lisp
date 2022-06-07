@@ -19,6 +19,9 @@
   (:import-from #:screenshotbot/template
                 #:landing-head)
   (:import-from #:screenshotbot/installation
+                #:installation
+                #:*installation*
+                #:multi-org-feature
                 #:auth-provider-signin-form
                 #:auth-provider-signup-form
                 #:auth-provider)
@@ -28,6 +31,8 @@
   (:import-from #:local-time
                 #:timestamp-
                 #:timestamp>)
+  (:import-from #:screenshotbot/model/company
+                #:get-singleton-company)
   (:export
    #:*current-company-override*
    #:with-oauth-state-and-redirect
@@ -136,22 +141,26 @@
       :key #'car)))
 
 (defun current-company (&key (user nil user-bound-p))
-  (cond
-    (*current-company-override*
-     *current-company-override*)
-    (user-bound-p
-     (let* ((company (auth:session-value :company)))
-       (if (and company (can-view company user))
-           company
-           (or
-            (most-recent-company (user-companies user))
-            (user-personal-company user)))))
-    ((not (logged-in-p))
-     nil)
-    ((boundp '*current-api-key*)
-     (api-key-company *current-api-key*))
+  (typecase (installation)
+    (multi-org-feature
+     (cond
+       (*current-company-override*
+        *current-company-override*)
+       (user-bound-p
+        (let* ((company (auth:session-value :company)))
+          (if (and company (can-view company user))
+              company
+              (or
+               (most-recent-company (user-companies user))
+               (user-personal-company user)))))
+       ((not (logged-in-p))
+        nil)
+       ((boundp '*current-api-key*)
+        (api-key-company *current-api-key*))
+       (t
+        (current-company :user (current-user)))))
     (t
-     (current-company :user (current-user)))))
+     (get-singleton-company (installation)))))
 
 (defun logged-in-p ()
   (or
