@@ -367,4 +367,5 @@
                :plump)
   :components ((:module "replay"
                 :serial t
-                :components ((:file "replay-acceptor")))))
+                :components ((:file "replay-acceptor")
+                             (:file "services")))))
