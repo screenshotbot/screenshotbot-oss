@@ -39,8 +39,7 @@
                                 :params ("SLYNK-LOOPBACK-INTERFACE"))
     (*start-slynk* #+screenshotbot-oss nil
                    #-screenshotbot-oss t
-                   ""
-                   :params ("START-SLYNK"))
+                   "")
     (util/store:*object-store*
      #+screenshotbot-oss "~/.config/screenshotbot/object-store/"
      #-screenshotbot-oss "/data/arnold/object-store/" "" :params ("OBJECT-STORE"))
