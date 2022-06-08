@@ -654,3 +654,20 @@ recognized the file, we'll return nil."
                  path tmp)
                 (uiop:rename-file-overwriting-target tmp path)
                 (assert (uiop:file-exists-p path)))))))))))
+
+
+(defun ensure-images-have-hash ()
+  "Used as a migration to fix an issue with images having no hash"
+  (let ((images (reverse
+                 (loop for image in (bknr.datastore:store-objects-with-class 'image)
+                       unless (image-hash image)
+                         collect image))))
+    (loop for image in images
+          do
+             (log:info "looking at: ~a" image)
+             (with-local-image (file image)
+               (let ((hash (md5:md5sum-file file)))
+                 (log:info "Got hash: ~a" hash)
+                 (with-transaction ()
+                   (setf (slot-value image 'hash) hash))
+                 hash)))))
