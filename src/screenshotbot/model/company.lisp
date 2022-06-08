@@ -138,6 +138,7 @@
     :accessor installation-id))
   (:metaclass persistent-class))
 
+
 (defclass phabricator-config (store-object)
   ((company :initarg :company
             :index-initargs (:test 'eql)

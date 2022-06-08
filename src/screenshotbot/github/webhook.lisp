@@ -21,6 +21,8 @@
                 #:github-installation-with-repo-name
                 #:installation-id
                 #:github-installation)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:github-repo)
   (:export
    #:pull-request
    #:github-get-canonical-repo
@@ -33,14 +35,17 @@
    #:github-maybe-update-pull-request))
 (in-package :screenshotbot/github/webhook)
 
-(defun github-get-canonical-repo (repo)
-  (cl-ppcre:regex-replace-all
-   "^git@github.com:"
+(defmethod github-get-canonical-repo (repo)
+  (let ((host (if (str:containsp "bitbucket" repo)
+                  "bitbucket.org"
+                  "github.com")))
    (cl-ppcre:regex-replace-all
-    "https://api."
-    (cl-ppcre:regex-replace-all "[.]git$" repo "")
-    "https://")
-   "https://github.com/"))
+    (format nil "^git@~a:" host)
+    (cl-ppcre:regex-replace-all
+     "https://api."
+     (cl-ppcre:regex-replace-all "[.]git$" repo "")
+     "https://")
+    (format nil "https://~a/" host))))
 
 (defclass pull-request (store-object)
   ((url

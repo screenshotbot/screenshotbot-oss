@@ -28,6 +28,9 @@
                 #:persistent-class)
   (:import-from #:screenshotbot/diff-report
                 #:diff-report-title)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:installation-domain)
   (:export
    #:pull-request-promoter
    #:pr-acceptable))
@@ -44,6 +47,7 @@
   ((send-task-args :initarg :report
                :accessor send-task-args))
   (:metaclass persistent-class))
+
 
 (defmethod (setf acceptable-state) :before (state (acceptable pr-acceptable))
   (let ((old-output (assoc-value (plist-alist (send-task-args acceptable)) :output))
@@ -115,72 +119,105 @@
                   :app-id (app-id plugin)
                   :private-key (private-key plugin)))
 
+(defmethod plugin-installed? ((promoter pull-request-promoter)
+                               company)
+  (plugin-installation-id promoter company))
+
+(defmethod plugin-installation-id ((promoter pull-request-promoter)
+                        company)
+  (installation-id (github-config
+                    company)))
+
+(defmethod valid-repo? ((promoter pull-request-promoter)
+                        repo)
+  (typep repo 'github-repo))
+
+(defmacro p (x)
+  `(let ((ret ,x))
+     (log:info "For ~S got: ~a" ',x ret)
+     ret))
+
 (defmethod maybe-promote ((promoter pull-request-promoter)
                           run)
   (let ((repo (channel-repo (recorder-run-channel run)))
-        (installation-id (installation-id (github-config
-                                           (recorder-run-company run)))))
-    (unless installation-id
+        (company (recorder-run-company run)))
+    (unless (plugin-installed? promoter company)
       (do-promotion-log :error "No github installation id avaialble"))
 
     (do-promotion-log :info "Repo is of type: ~S" (type-of repo))
-    (when (and
-           installation-id
-           (typep repo 'github-repo)
-           (not (equal (recorder-run-merge-base run)
-                       (recorder-run-commit run))))
-      (multiple-value-bind (full parts)
-          (cl-ppcre:scan-to-strings "^https://github.com/(.*/*.)$"
-                                    (github-get-canonical-repo
-                                     (repo-link repo)))
-        (assert full)
-        (let* ((full-name (elt parts 0)))
-          (setf (base-commit promoter)
-                (recorder-run-merge-base run))
 
-          (do-promotion-log :info "Base commit is: ~S" (base-commit promoter))
-          (let ((base-run (retrieve-run
-                           (run-retriever promoter)
-                           (recorder-run-channel run)
-                           (base-commit  promoter))))
-            (setf (promoter-result promoter)
-                  (cond
-                    ((null (base-commit promoter))
-                     (make-instance 'check
-                                     :status :failure
-                                     :title "Base SHA not available for comparison, please check CI setup"
-                                     :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
-                    ((null base-run)
-                     (make-instance 'check
-                                     :status :failure
-                                     :title "Cannot generate Screenshotbot report, try rebasing"
-                                     :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
-                    (t
-                     (make-check-result-from-diff-report
-                      promoter
-                      (make-diff-report run base-run)
-                      run
-                      base-run))))
-            (setf (send-task-args promoter)
-                  (let ((check (promoter-result promoter)))
-                    (list :app-id (app-id promoter)
-                          :private-key (private-key promoter)
-                          :full-name full-name
-                          :check-name (format nil "Screenshotbot Changes: ~a "
-                                              (channel-name (recorder-run-channel run)))
-                          :output `(("title" . ,(check-title check))
-                                    ("summary" . ,(check-summary check)))
-                          :status :completed
-                          :details-url (details-url check)
-                          :installation-id installation-id
-                          :conclusion (str:downcase (check-status (promoter-result promoter)))
-                          :head-sha (recorder-run-commit run))))
-            (when (report promoter)
-              (with-transaction ()
-                (setf
-                 (send-task-args
-                  (report-acceptable (report promoter)))
-                 (send-task-args promoter))))))))))
+    (cond
+      ((and
+        (p (plugin-installed? promoter company))
+        (p (valid-repo? promoter repo))
+        (p (not (equal (recorder-run-merge-base run)
+                     (recorder-run-commit run)))))
+       (multiple-value-bind (full parts)
+           (cl-ppcre:scan-to-strings "^https://.*/(.*/.*)$"
+                                     (github-get-canonical-repo
+                                      (repo-link repo)))
+         (assert full)
+         (let* ((full-name (elt parts 0)))
+           (setf (base-commit promoter)
+                 (recorder-run-merge-base run))
+
+           (do-promotion-log :info "Base commit is: ~S" (base-commit promoter))
+           (let ((base-run (retrieve-run
+                            (run-retriever promoter)
+                            (recorder-run-channel run)
+                            (base-commit  promoter))))
+             (setf (promoter-result promoter)
+                   (cond
+                     ((null (base-commit promoter))
+                      (make-instance 'check
+                                      :status :failure
+                                      :title "Base SHA not available for comparison, please check CI setup"
+                                      :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
+                     ((null base-run)
+                      (make-instance 'check
+                                      :status :failure
+                                      :title "Cannot generate Screenshotbot report, try rebasing"
+                                      :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
+                     (t
+                      (make-check-result-from-diff-report
+                       promoter
+                       (make-diff-report run base-run)
+                       run
+                       base-run))))
+             (setf (send-task-args promoter)
+                   (let ((check (promoter-result promoter)))
+                     (make-task-args promoter
+                                     run
+                                     full-name
+                                     check)))
+             (when (report promoter)
+               (with-transaction ()
+                 (setf
+                  (send-task-args
+                   (report-acceptable (report promoter)))
+                  (send-task-args promoter))))))))
+      (t
+       #+nil
+       (cerror "continue" "not promoting for ~a" promoter)
+       (log:info "Initial checks failed, not going through pull-request-promoter")))))
+
+(defmethod make-task-args ((promoter pull-request-promoter)
+                           run
+                           full-name
+                           check)
+  (let ((company (recorder-run-company run)))
+   (list :app-id (app-id promoter)
+         :private-key (private-key promoter)
+         :full-name full-name
+         :check-name (format nil "Screenshotbot Changes: ~a "
+                             (channel-name (recorder-run-channel run)))
+         :output `(("title" . ,(check-title check))
+                   ("summary" . ,(check-summary check)))
+         :status :completed
+         :details-url (details-url check)
+         :installation-id (plugin-installation-id promoter company)
+         :conclusion (str:downcase (check-status (promoter-result promoter)))
+         :head-sha (recorder-run-commit run))))
 
 (defun make-check-result-from-diff-report (promoter diff-report run base-run)
   (cond
@@ -206,7 +243,8 @@
                       :title (diff-report-title diff-report)
                       :summary "Please verify that the images look reasonable to you"
                       :details-url (format nil
-                                           "https://screenshotbot.io~a"
+                                           "~a~a"
+                                           (installation-domain (installation))
                                            (hex:make-url 'report-page
                                                           :id (oid report))))))))
 
