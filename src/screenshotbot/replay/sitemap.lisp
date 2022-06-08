@@ -22,11 +22,12 @@
        (let* ((content (dex:get url))
               (root (xmls:parse content))
               (urls (xmls:node-children root)))
-         (loop for url in urls
-               collect
-               (loop for attr in (xmls:node-children url)
-                     if (string-equal "loc" (xmls:node-name attr))
-                       return (car (xmls:node-children attr)))))
+         (remove-if #'null
+          (loop for url in urls
+                collect
+                (loop for attr in (xmls:node-children url)
+                      if (string-equal "loc" (xmls:node-name attr))
+                        return (car (xmls:node-children attr))))))
        :test #'equal)
     (retry-parse-sitemap ()
       (parse-sitemap url))))
