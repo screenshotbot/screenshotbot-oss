@@ -21,6 +21,7 @@
         #:screenshotbot/login/github-oauth
         #:screenshotbot/login/populate)
   (:import-from #:screenshotbot/server
+                #:logged-in-p
                 #:*disable-mail*
                 #:defhandler)
   (:import-from #:screenshotbot/installation
@@ -157,7 +158,10 @@
     </auth-template>))
 
 (defhandler (signup-get-page :uri "/signup" :method :get) (invite-code
-                                                      plan)
+                                                           plan)
+    (when (logged-in-p)
+      (hex:safe-redirect "/runs"))
+
   (signup-get :invite-code invite-code :plan plan))
 
 (defun signup-post (&key email password full-name accept-terms-p plan redirect)

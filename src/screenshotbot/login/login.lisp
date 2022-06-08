@@ -18,6 +18,7 @@
         #:screenshotbot/user-api
         #:util/form-errors)
   (:import-from #:screenshotbot/server
+                #:logged-in-p
                 #:defhandler)
   (:import-from #:screenshotbot/login/oidc
                 #:end-session-endpoint)
@@ -135,9 +136,12 @@
 (defhandler (nil :uri "/signin" :method :get) (after-logout redirect)
   (declare (ignore after-logout))
   (let ((redirect (or redirect "/")))
-   (if-let ((provider (default-oidc-provider (installation))))
-     (hunchentoot:redirect (oauth-signin-link provider redirect))
-     (signin-get :redirect redirect))))
+    (when (logged-in-p)
+      (hex:safe-redirect redirect))
+
+    (if-let ((provider (default-oidc-provider (installation))))
+      (hunchentoot:redirect (oauth-signin-link provider redirect))
+      (signin-get :redirect redirect))))
 
 (defun signin-post (&key email password redirect)
   (let (errors
