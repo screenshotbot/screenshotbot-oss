@@ -559,3 +559,26 @@ function prepareBaguetteBox(el) {
         }
     }
 }
+
+setupLiveOnAttach(".modal-link", function () {
+    $(this).click(function (e) {
+        var href = $(this).data("href");
+        $.ajax({
+            url: href,
+            error: function () {
+                swAlert("Something went wrong. Please reload and try again");
+            },
+            success: function (data) {
+                console.log("got data", data);
+                var modal = $(data);
+                $("body").append(modal);
+                var modal = new Modal(modal.get(0), {});
+                modal.show();
+                modal.on("data.bs.dismiss", function () {
+                    $(modal).remove();
+                });
+            },
+        });
+        e.preventDefault();
+    });
+});

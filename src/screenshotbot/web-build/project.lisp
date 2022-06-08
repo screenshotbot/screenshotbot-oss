@@ -47,6 +47,7 @@
                 #:ui/div
                 #:ui/a)
   (:import-from #:screenshotbot/ui/confirmation-page
+                #:confirmation-modal
                 #:confirmation-page)
   (:import-from #:hunchentoot-extensions
                 #:get-request-domain-prefix)
@@ -235,7 +236,7 @@
     <div class= "page-title-box">
       <h3 class= "page-title" >
         ,(web-project-name build)
-        <a href= (nibble () (run-now build)) class="btn btn-primary">Run Now</a>
+        <a data-href= (nibble () (run-now build)) class="btn btn-primary modal-link">Run Now</a>
         <a href= (nibble () (edit-build build)) class= "btn btn-secondary" >Edit Project</a>
       </h3>
     </div>
@@ -411,11 +412,11 @@
 
 (defun run-now (build)
   (restart-case
-      (confirmation-page
+      (confirmation-modal
+       :title (web-project-name build)
        :yes (nibble ()  (actually-run-now build)
               (hex:safe-redirect (nibble ()
                                    (view-build build))))
-       :no "/web-projects"
        <p>Schedule a run for ,(web-project-name build)?</p>)
     (retry-run-now ()
       (run-now build))))

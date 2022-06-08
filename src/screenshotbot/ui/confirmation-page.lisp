@@ -6,7 +6,8 @@
 
 (uiop:define-package :screenshotbot/ui/confirmation-page
   (:use #:cl #:alexandria)
-  (:export #:confirmation-page)
+  (:export #:confirmation-page
+           #:confirmation-modal)
   (:import-from #:screenshotbot/ui/simple-card-page
                 #:simple-card-page))
 (in-package :screenshotbot/ui/confirmation-page)
@@ -21,3 +22,28 @@
       <a href= no class= "btn btn-secondary">No</a>
     </div>
   </simple-card-page>)
+
+(markup:deftag confirmation-modal (children &key yes title)
+  (let ((id (format nil "a-~a" (random 1000000))))
+    <div class= "modal fade" id=id tabindex= "-1" role= "dialog">
+      <div class= "modal-dialog" role= "dialog">
+        <div class= "modal-content">
+          <div class= "modal-header">
+            <strong>,(progn title)</strong>
+          </div>
+
+    <div class= "modal-body">
+      ,@children
+    </div>
+
+    <div class= "modal-footer">
+      <form action=yes method= "post">
+        <input type= "submit" value= "Yes" class= "btn btn-primary" />
+      </form>
+      <input type= "button" class= "btn btn-secondary" value= "No"
+             data-bs-dismiss= "modal"
+             data-bs-target= (format nil "#~a" id) />
+    </div>
+        </div>
+      </div>
+    </div>))
