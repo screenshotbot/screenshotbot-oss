@@ -18,6 +18,7 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/installation
+                #:*installation*
                 #:installation
                 #:multi-org-feature))
 
