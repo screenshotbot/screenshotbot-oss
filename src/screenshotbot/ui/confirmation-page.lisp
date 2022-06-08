@@ -34,7 +34,6 @@
             <strong>,(progn title)</strong>
           </div>)
 
-
     <div class= "modal-body">
       ,@children
     </div>
