@@ -675,6 +675,13 @@
       (let ((style (plump:make-element head "style")))
         (plump:make-text-node style (custom-css context))))))
 
+(defun safe-plump-serialize (&rest args)
+  (handler-bind ((plump-dom:invalid-xml-character
+                   (lambda (e)
+                     (declare (ignore e))
+                     (invoke-restart 'cl:continue))))
+   (apply #'plump:serialize args)))
+
 (with-auto-restart (:retries 3 :sleep 10)
   (defmethod load-url-into ((context context) snapshot url tmpdir
                             &key actual-url)
@@ -697,7 +704,7 @@
         (let ((root-asset (call-with-fetch-asset
                            context
                            (lambda ()
-                             (plump:serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
+                             (safe-plump-serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
                              (file-position tmp 0)
                              (let ((headers (make-hash-table)))
                                (setf (gethash "content-type" headers)
