@@ -16,25 +16,33 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:multi-org-feature))
 
 (util/fiveam:def-suite)
 
+(defclass my-installation (multi-org-feature
+                           installation)
+  ())
+
 (def-fixture state ()
-  (with-test-store ()
-   (with-fake-request ()
-     (let* ((company (make-instance 'company))
-            (token (make-instance 'slack-token
-                                   :access-token "foo"
-                                   :company company
-                                   :ts 34)))
-       (unwind-protect
-            (let ((*current-company-override* company))
-              (&body))
-         (when (default-slack-config company)
-           (delete-object (default-slack-config company)))
-         (delete-object company)
-         (delete-object token))))))
+  (let ((*installation* (make-instance 'my-installation)))
+   (with-test-store ()
+     (with-fake-request ()
+       (let* ((company (make-instance 'company))
+              (token (make-instance 'slack-token
+                                     :access-token "foo"
+                                     :company company
+                                     :ts 34)))
+         (unwind-protect
+              (let ((*current-company-override* company))
+                (&body))
+           (when (default-slack-config company)
+             (delete-object (default-slack-config company)))
+           (delete-object company)
+           (delete-object token)))))))
 
 (test posting-when-nothing-is-available ()
   (with-fixture state ()
