@@ -30,20 +30,29 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:screenshotbot/installation
+                #:*installation*
+                #:installation
+                #:multi-org-feature))
 
 (util/fiveam:def-suite)
 
+(defclass my-installation (multi-org-feature
+                           installation)
+  ())
+
 (def-fixture state ()
-  (with-test-store ()
-   (with-fake-request ()
-     (with-test-user (:company company
-                      :user user
-                      :api-key api-key)
-       (let ((*current-api-key* api-key)
-             (*use-blob-store-p* nil)
-             (*build-presigned-put* (lambda (bucket key) "https://example.com")))
-         (&body))))))
+  (let ((*installation* (make-instance 'my-installation)))
+   (with-test-store ()
+     (with-fake-request ()
+       (with-test-user (:company company
+                        :user user
+                        :api-key api-key)
+         (let ((*current-api-key* api-key)
+               (*use-blob-store-p* nil)
+               (*build-presigned-put* (lambda (bucket key) "https://example.com")))
+           (&body)))))))
 
 (test simple-upload
   (with-fixture state ()
