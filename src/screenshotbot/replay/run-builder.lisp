@@ -48,6 +48,7 @@
                     (fad:copy-file pathname (blob-pathname blob))
                     (make-image :blob blob
                                 :company (company self)
+                                :hash hash
                                 :verified-p t)))))
       (push (make-instance
              'screenshot

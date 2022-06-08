@@ -469,6 +469,8 @@
 (defun image= (img1 img2 masks)
   "Check if the two images have the same contents. Looks at both file
   hash and image contents"
+  (assert (image-hash img1))
+  (assert (image-hash img2))
   (or
    (equalp (image-hash img1)
            (image-hash img2))
