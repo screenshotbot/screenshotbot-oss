@@ -77,14 +77,6 @@
    :cmd command
    :params args))
 
-(defun read-stream-to-end (input)
-  "Read and discard the rest of the stream."
-  (handler-case
-      (uiop:slurp-input-stream #P"/dev/null" input)
-    #+lispworks
-    (conditions:stream-closed-error (e)
-      nil)))
-
 #+nil
 (defparameter *buf-size* 1024
   "A buffer size for base64 decoding")
@@ -119,7 +111,6 @@
                         ;; stream as just a Base64 stream.
                         (when output
                           (read-base64-stream-to-file stream output))
-                        (read-stream-to-end stream)
                         (return-from decode-file-from-json-stream nil))
                        (t
                         (json::init-string-stream-accumulator))))
