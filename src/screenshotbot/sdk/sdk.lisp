@@ -43,6 +43,7 @@
                 #:getenv)
   (:import-from #:util/request
                 #:http-request)
+  (:local-nicknames (#:flags #:screenshotbot/sdk/flags))
   (:export
    #:single-directory-run
    #:*request*
@@ -321,7 +322,10 @@
             (uiop:getenv "SCREENSHOTBOT_API_KEY")))
   (setf *api-secret*
         (or *api-secret*
-            (uiop:getenv "SCREENSHOTBOT_API_SECRET"))))
+            (uiop:getenv "SCREENSHOTBOT_API_SECRET")))
+
+  (alexandria:when-let (hostname (uiop:getenv "SCREENSHOTBOT_API_HOSTNAME"))
+    (setf flags:*hostname* hostname)))
 
 (defun guess-master-branch (repo)
   (flet ((check (x)

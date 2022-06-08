@@ -337,6 +337,7 @@
                :lquery
                :uuid
                :cl-store
+               :util/threading
                :util/misc
                :util/request
                :cl+ssl
