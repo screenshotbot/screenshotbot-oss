@@ -257,7 +257,7 @@
                  for cancel = (util:copying (run)
                                 (nibble ()
                                   (let ((back "/web-projects"))
-                                    (confirmation-page
+                                    (confirmation-modal
                                      :yes
                                      (nibble ()
                                        #+lispworks
@@ -267,7 +267,6 @@
                                          (when thread
                                            (safe-interrupt thread)))
                                        (hex:safe-redirect back))
-                                     :no back
                                      <span>Interrupt job?</span>))))
                  collect
                  (util:copying (run cancel)
@@ -294,7 +293,7 @@
                              (:queued
                               "Queued")
                              (otherwise
-                              <span>Running <a href=cancel >Cancel</a> </span>))))
+                              <span>Running <a href= "#" class= "modal-link" data-href=cancel >Cancel</a> </span>))))
                      </td>
                    </tr>))
       </tbody>

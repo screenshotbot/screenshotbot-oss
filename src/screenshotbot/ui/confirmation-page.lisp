@@ -28,9 +28,12 @@
     <div class= "modal fade" id=id tabindex= "-1" role= "dialog">
       <div class= "modal-dialog" role= "dialog">
         <div class= "modal-content">
+
+          ,(when title
           <div class= "modal-header">
             <strong>,(progn title)</strong>
-          </div>
+          </div>)
+
 
     <div class= "modal-body">
       ,@children
