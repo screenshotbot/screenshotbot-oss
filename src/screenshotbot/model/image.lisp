@@ -48,6 +48,8 @@
                 #:with-auto-restart)
   (:import-from #:screenshotbot/magick-lw
                 #:with-wand)
+  (:import-from #:util/object-id
+                #:oid-array)
   ;; classes
   (:export
    #:image
@@ -542,7 +544,7 @@
      (let ((args nil))
        (when size
          (setf args `(:size ,(string-downcase size))))
-       (apply #'make-url 'image-blob-get :oid (oid image)
+       (apply #'make-url 'image-blob-get :oid (encrypt:encrypt-mongoid (oid-array image))
                 args)))
     (t
      (format nil "https://screenshotbot.s3.amazonaws.com/~a"

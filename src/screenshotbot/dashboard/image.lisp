@@ -101,12 +101,14 @@
         (format nil "image/~a" (pathname-type output-file)))))))
 
 (defhandler (image-blob-get :uri "/image/blob/:oid/default.webp") (oid size)
-  (let* ((image (find-by-oid oid)))
-    (setf (hunchentoot:header-out :content-type) "image/png")
-
-    (cond
-      (size
-       (handle-resized-image image size))
-      (t
-       (with-local-image (file image)
-        (handle-static-file file))))))
+  (let ((oid (encrypt:decrypt-mongoid oid)))
+    (assert oid)
+    (let* ((image (find-by-oid oid)))
+      (check-type image image)
+      (setf (hunchentoot:header-out :content-type) "image/png")
+      (cond
+        (size
+         (handle-resized-image image size))
+        (t
+         (with-local-image (file image)
+           (handle-static-file file)))))))

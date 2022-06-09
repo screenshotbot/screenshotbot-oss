@@ -14,7 +14,8 @@
   (:export #:object-with-oid
 	   #:object-with-unindexed-oid
 	   #:find-by-oid
-	   #:oid))
+	   #:oid
+       #:oid-array))
 (in-package #:util/object-id)
 
 (defun %make-oid ()
@@ -29,6 +30,7 @@
 (defclass object-with-oid (store-object)
   ((oid
     :initarg :oid
+    :reader oid-array
     :index +oid-index+
     :index-reader %find-by-oid))
   (:metaclass persistent-class))
