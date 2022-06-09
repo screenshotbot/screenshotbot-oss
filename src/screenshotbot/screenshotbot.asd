@@ -51,6 +51,7 @@
                :gravatar
                (:feature (:not :screenshotbot-oss) :documentation-plugin)
                :cl-store
+               :encrypt
                :pkg
                #-lispworks
                :util/fake-fli
