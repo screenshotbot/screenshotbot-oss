@@ -44,11 +44,13 @@
   `(hunchentoot:define-easy-handler (,name :uri ,uri :acceptor-names '(replay-proxy)) ,args
      ,@body))
 
+(defun oid-pathname (oid)
+  (path:catfile (cache-dir *acceptor*) (format nil "~a.png" oid)))
 
 (def-proxy-handler (%full-page-screenshot :uri "/full-page-screenshot") (session browser uri)
   (let* ((oid (mongoid:oid-str (mongoid:oid)))
          (driver (make-driver browser :proxy nil))
-         (path (path:catfile (cache-dir *acceptor*) oid))
+         (path (oid-pathname oid))
          (webdriver-client::*uri* uri))
     (let ((webdriver-client::*session*
             (make-instance 'webdriver-client::session
@@ -62,4 +64,7 @@
 
 (def-proxy-handler (%download :uri "/download") (oid)
   (assert (ironclad:hex-string-to-byte-array oid))
-  (hunchentoot:handle-static-file (path:catfile (cache-dir *acceptor*) oid)))
+  (hunchentoot:handle-static-file (oid-pathname oid)))
+
+(def-proxy-handler (%status :uri "/status") ()
+  "OK")

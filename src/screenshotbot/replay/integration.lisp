@@ -263,7 +263,11 @@ accessing the urls or sitemap slot."
                  :parameters `(("session" . ,(webdriver-client::session-id webdriver-client::*session*))
                                ("browser" . ,(string-downcase (type-of driver)))
                                ("uri" . ,webdriver-client::*uri*))
-                 :want-stream t)))
+                 :want-stream t
+                 :connection-timeout 15
+                 ;; this request can be slow! Also give it some time
+                 ;; in case we're in the debugger.
+                 :read-timeout 1200)))
          (json-response (json:decode-json-from-string resp))
          (oid (a:assoc-value json-response :oid))
          (md5 (a:assoc-value json-response :md-5)))
