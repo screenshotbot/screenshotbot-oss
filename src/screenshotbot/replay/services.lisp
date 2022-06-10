@@ -12,7 +12,8 @@
    #:selenium-port
    #:selenium-host
    #:selenium-type
-   #:squid-proxy))
+   #:squid-proxy
+   #:linode?))
 (in-package :screenshotbot/replay/services)
 
 (defclass selenium-server ()
@@ -34,7 +35,8 @@
   (progn #+screenshotbot-oss t))
 
 (defun linode? ()
-  (equal "localhost" (uiop:hostname)))
+  (unless (oss?)
+   (equal "localhost" (uiop:hostname))))
 
 (defun selenium-server (&key (type (error "specify type")))
   (assert (member type '("firefox" "chrome" #-screenshotbot-oss "safari") :test #'equal))

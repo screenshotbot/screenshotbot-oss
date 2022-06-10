@@ -16,6 +16,8 @@
                 #:full-page-screenshot)
   (:import-from #:hunchentoot
                 #:*acceptor*)
+  (:import-from #:screenshotbot/replay/services
+                #:linode?)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:*proxy-port*
@@ -32,8 +34,7 @@
 
 (defvar *proxy-port* 5003)
 
-(defun ensure-proxy ()
-  "Ensure the proxy is running and return the URL to the proxy"
+(defun ensure-local-proxy ()
   (util:or-setf
    *replay-proxy*
    (let ((proxy (make-instance 'replay-proxy :port *proxy-port*)))
@@ -41,6 +42,16 @@
      proxy)
    :thread-safe t)
   (format nil "http://localhost:~a" (hunchentoot:acceptor-port *replay-proxy*)))
+
+(defun ensure-proxy ()
+  "Ensure the proxy is running and return the URL to the proxy"
+  (cond
+    ((linode?)
+     ;; todo: error handling: if this endpoint goes down then just a local
+     ;; proxy.
+     "http://10.9.8.2:5004")
+    (t
+     (ensure-local-proxy))))
 
 (defmacro def-proxy-handler ((name &key uri) args &body body)
   (assert name)
