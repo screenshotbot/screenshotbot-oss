@@ -16,7 +16,10 @@
                 #:full-page-screenshot)
   (:import-from #:hunchentoot
                 #:*acceptor*)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:*proxy-port*
+   #:ensure-proxy))
 (in-package :screenshotbot/replay/proxy)
 
 (defclass replay-proxy (hunchentoot:easy-acceptor)
