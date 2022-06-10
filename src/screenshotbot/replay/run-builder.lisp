@@ -40,12 +40,12 @@
             :accessor company)))
 
 (defmethod record-screenshot ((self all-screenshots)
-                              &key title pathname &allow-other-keys)
-  (let ((hash (md5:md5sum-file pathname)))
+                              &key title md5 fetch)
+  (let ((hash md5))
     (let ((image (or
                   (find-image (company self) hash)
                   (let ((blob (make-instance 'image-blob)))
-                    (fad:copy-file pathname (blob-pathname blob))
+                    (funcall fetch (blob-pathname blob))
                     (make-image :blob blob
                                 :company (company self)
                                 :hash hash

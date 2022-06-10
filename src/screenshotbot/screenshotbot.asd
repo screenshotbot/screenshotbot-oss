@@ -383,6 +383,7 @@
                              (:file "frontend")
                              (:file "sitemap")
                              (:file "run-builder")
+                             (:file "proxy")
                              (:file "integration")
                              (:file "remote")))
                (:module "web-build"

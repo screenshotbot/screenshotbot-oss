@@ -70,6 +70,8 @@
                 #:all-screenshots)
   (:import-from #:util/threading
                 #:safe-interrupt-checkpoint)
+  (:import-from #:screenshotbot/replay/proxy
+                #:ensure-proxy)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
                     (#:integration #:screenshotbot/replay/integration)
@@ -209,51 +211,94 @@ accessing the urls or sitemap slot."
                              (run (error "provide run"))
                              (tmpdir (error "provide tmpdir"))
                              (results (error "provide results")))
-  (let ((files-to-resize nil))
-   (loop for (title . url) in urls
-         for i from 0 do
-           (progn
-             (safe-interrupt-checkpoint)
-             (loop for root-asset in (replay:assets snapshot)
-                   until (string= (replay:url root-asset) url)
-                   finally
-                      (let ((actual-url (quri:render-uri
-                                         (quri:merge-uris
-                                          (asset-file root-asset)
-                                          hosted-url))))
+  (declare (ignore tmpdir)) ;; we used to use this to store images, no longer.
+  (loop for (title . url) in urls
+        for i from 0 do
+          (progn
+            (safe-interrupt-checkpoint)
+            (loop for root-asset in (replay:assets snapshot)
+                  until (string= (replay:url root-asset) url)
+                  finally
+                     (let ((actual-url (quri:render-uri
+                                        (quri:merge-uris
+                                         (asset-file root-asset)
+                                         hosted-url))))
 
-                        (funcall logger url actual-url)
+                       (funcall logger url actual-url)
 
-                        (a:when-let (dimension (frontend:dimensions config))
-                          (window-resize :width (frontend:width dimension)
-                                         :height (frontend:height dimension)))
-                        (setf (webdriver-client:url)
-                              actual-url)))
+                       (a:when-let (dimension (frontend:dimensions config))
+                         (window-resize :width (frontend:width dimension)
+                                        :height (frontend:height dimension)))
+                       (setf (webdriver-client:url)
+                             actual-url)))
 
-             ;; a temporary screenshot, I think this
-             ;; will prime the browser to start loading
-             ;; any assets that might be missing
-             ;;(full-page-screenshot driver nil)
+            ;; a temporary screenshot, I think this
+            ;; will prime the browser to start loading
+            ;; any assets that might be missing
+            ;;(full-page-screenshot driver nil)
 
-             (wait-for-zero-requests
-              :hosted-url hosted-url
-              :uuid (uuid snapshot)
-              :sleep-time (sleep-time run))
+            (wait-for-zero-requests
+             :hosted-url hosted-url
+             :uuid (uuid snapshot)
+             :sleep-time (sleep-time run))
 
 
-             (uiop:with-temporary-file (:pathname file
-                                        :directory tmpdir
-                                        :type (best-image-type config)
-                                        ;; will be cleared by the tmpdir
-                                        :keep t)
-               (delete-file file)
-               (full-page-screenshot driver file)
-               (push file files-to-resize)
-               (record-screenshot
-                results
-                :pathname file
-                :title (format nil "~a--~a"
-                               title (frontend:browser-config-name config))))))))
+            (process-full-page-screenshot
+             driver
+             :results results
+             :title (format nil "~a--~a"
+                            title (frontend:browser-config-name config))))))
+
+(defmethod fetch-full-page-screenshot-handle (driver)
+  "Creates a full-page-screenshot, and returns two values: the handle
+  for the screenshot and the md5sum of the screenshot"
+  (let* ((proxy (ensure-proxy))
+         (url (format nil "~a/full-page-screenshot"
+                      proxy))
+         (resp (uiop:slurp-input-stream
+                'string
+                (util/request:http-request
+                 url
+                 :method :post
+                 :parameters `(("session" . ,(webdriver-client::session-id webdriver-client::*session*))
+                               ("browser" . ,(string-downcase (type-of driver)))
+                               ("uri" . ,webdriver-client::*uri*))
+                 :want-stream t)))
+         (json-response (json:decode-json-from-string resp))
+         (oid (a:assoc-value json-response :oid))
+         (md5 (a:assoc-value json-response :md-5)))
+    (multiple-values oid md5)))
+
+(defmethod write-full-page-screenshot-from-handle (driver oid dest)
+  (let ((proxy (ensure-proxy)))
+   (with-open-stream (stream (util/request:http-request
+                              (format nil "~a/download?oid=~a" proxy oid)
+                              :force-binary t
+                              :want-stream t))
+     (with-open-file (dest dest :direction :output
+                                :if-exists :supersede
+                                :element-type '(unsigned-byte 8)
+                                :if-does-not-exist :create)
+       (uiop:copy-stream-to-stream
+        stream dest
+        :element-type '(unsigned-byte 8))))))
+
+(auto-restart:with-auto-restart ()
+ (defun process-full-page-screenshot (driver &key title
+                                               results)
+   (multiple-value-bind (oid md5)
+       (fetch-full-page-screenshot-handle driver)
+     (assert oid)
+     (assert md5)
+     (record-screenshot
+      results
+      :md5 md5
+      :fetch (lambda (dest)
+               (write-full-page-screenshot-from-handle
+                driver
+                oid
+                dest))
+      :title title))))
 
 (defun wait-for-zero-requests (&key hosted-url uuid sleep-time)
   (safe-interrupt-checkpoint)
