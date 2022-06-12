@@ -15,16 +15,28 @@
 (defclass deliver-script (source-file)
   ((type :initform "lisp")))
 
+(defmethod output-type ((self deliver-script))
+  #-mswindows nil #+mswindows "exe")
+
 (defmethod output-files ((o compile-op) (s deliver-script))
   (let ((output (make-pathname :name (funcall (find-symbol "REGEX-REPLACE-ALL" "CL-PPCRE")
                                  "^deliver-" (component-name s) "")
-                  :type #-mswindows nil #+mswindows "exe"
+                  :type (output-type s)
                   :defaults *library-file-dir*)))
     (list
      output
      #+darwin
      (make-pathname :type "lwheap"
                     :defaults output))))
+
+(defclass deliver-so-script (source-file)
+  ((type :initform "lisp")))
+
+(defmethod output-type ((self deliver-so-script))
+  #+mswindows
+  "dll"
+  #-mswindows
+  "so")
 
 (defmethod perform ((o load-op) (s deliver-script))
   t)
@@ -75,8 +87,8 @@
                              (format nil "./~a.~a"
                                      (pathname-name pathname)
                                      "sh")))
-                      :output :interactive
-                      :error-output :interactive)))
+                      :output t
+                      :error-output t)))
 
 (defmethod perform ((o compile-op) (m makeself-component))
   (eval
@@ -84,19 +96,33 @@
         (,(find-symbol "WITH-TMPDIR" "TMPDIR") (tmpdir)
          (do-perform tmpdir o m)))))
 
+(defun lw ()
+  (or
+   #+(and :x86-64 darwin)
+   "build/lw-console-8-0-0x86_64"
+   #+(or :linux (and :arm64 :darwin))
+   (format nil "~a/builds/web/build/lw-console-8-0-0"
+           (uiop:getenv "HOME"))
+   #+mswindows
+   "g:\\web\\build\\lw-console-8-0-0"
+   #+nil
+   (namestring (uiop:ensure-absolute-pathname
+                (pathname "build/lw-console-8-0-0.exe")))
+   (error "unsupported platform image")))
+
 (defmethod component-pathname ((m makeself-component))
   (call-next-method))
 
 (defmethod perform ((o compile-op) (s deliver-script))
-  (uiop:run-program (list (lw:lisp-image-name)
+  (uiop:run-program (list (lw)
                           "-build"
                           (namestring
                            (merge-pathnames (format nil "~a.lisp" (component-name s))
                                             *library-file-dir*))
                           (namestring
                            (car (output-files o s))))
-                    :output :interactive
-                    :error-output :interactive))
+                    :output t
+                    :error-output t))
 
 (defsystem :screenshotbot.sdk.deliver
   :author "Arnold Noronha <arnold@screenshotbot.io>"
@@ -112,3 +138,6 @@
                                    :archive ("deliver-sdk"
                                              "installer")
                                    :startup-component "installer")))
+
+(defsystem :screenshotbot.sdk.deliver/java-so
+  :components ((deliver-script "deliver-java-so")))

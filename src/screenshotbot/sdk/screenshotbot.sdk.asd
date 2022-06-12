@@ -39,9 +39,7 @@
                (:file "help")
                (:file "sdk")
                (:file "static")
-               (:file "main")
-               #+lispworks
-               (:file "build")))
+               (:file "main")))
 
 
 (defsystem :screenshotbot.sdk/tests
