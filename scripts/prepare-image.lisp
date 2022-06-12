@@ -89,5 +89,4 @@
 #+nil
 (push (pathname (format nil "~a/build-utils/" *cwd*))
       asdf:*central-registry*)
-
 (ql:register-local-projects)

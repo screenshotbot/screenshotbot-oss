@@ -87,23 +87,8 @@
 (defmethod component-pathname ((m makeself-component))
   (call-next-method))
 
-(defun lw ()
-  (or
-   #+(and :x86-64 darwin)
-   "build/lw-console-8-0-0x86_64"
-   #+(or :linux (and :arm64 :darwin))
-   (format nil "~a/builds/web/build/lw-console-8-0-0"
-           (uiop:getenv "HOME"))
-   #+mswindows
-   "g:\\web\\build\\lw-console-8-0-0"
-   #+nil
-   (namestring (uiop:ensure-absolute-pathname
-                (pathname "build/lw-console-8-0-0.exe")))
-   (error "unsupported platform image")))
-
-
 (defmethod perform ((o compile-op) (s deliver-script))
-  (uiop:run-program (list (lw)
+  (uiop:run-program (list (lw:lisp-image-name)
                           "-build"
                           (namestring
                            (merge-pathnames (format nil "~a.lisp" (component-name s))
