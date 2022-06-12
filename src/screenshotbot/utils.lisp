@@ -41,6 +41,7 @@
 
 (defun upload-sdk (&key only-build)
   (asdf:compile-system :screenshotbot.sdk.deliver)
+  (asdf:compile-system :screenshotbot.sdk.deliver/java-so)
   (let ((output-file (asdf:output-file 'asdf:compile-op
                                        (asdf:find-component
                                         :screenshotbot.sdk.deliver
