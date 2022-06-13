@@ -137,13 +137,14 @@
 
 (test check-result-for-diff-report
   (with-test-store ()
-   (let ((empty-report (make-instance 'diff-report :added nil
+    (let ((empty-run (make-instance 'recorder-run))
+          (empty-report (make-instance 'diff-report :added nil
                                                    :deleted nil
                                                    :changes nil)))
      (let ((check (make-check-result-from-diff-report
                    (make-instance 'pull-request-promoter)
                    empty-report
-                   nil nil)))
+                   empty-run nil)))
        (is (eql :success (check-status check)))
        (is (equal "No screenshots changed"
                   (check-title check)))))))

@@ -31,6 +31,8 @@
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:installation-domain)
+  (:import-from #:screenshotbot/dashboard/run-page
+                #:run-page)
   (:export
    #:pull-request-promoter
    #:pr-acceptable))
@@ -220,33 +222,38 @@
          :head-sha (recorder-run-commit run))))
 
 (defun make-check-result-from-diff-report (promoter diff-report run base-run)
-  (cond
-    ((diff-report-empty-p diff-report)
-     (make-instance 'check
-                    :status :success
-                    :title "No screenshots changed"
-                    :summary "No action required on your part"))
-    (t
-     (let ((report (make-instance 'report
-                                  :run run
-                                  :previous-run base-run
-                                  :channel (when run (recorder-run-channel run))
-                                  :title  (diff-report-title diff-report))))
-       (with-transaction ()
-         (setf (report-acceptable report)
-               (make-acceptable promoter report)))
-       (with-transaction ()
-         (setf (report promoter)
-               report))
-       (make-instance 'check
-                      :status :action_required
-                      :title (diff-report-title diff-report)
-                      :summary "Please verify that the images look reasonable to you"
-                      :details-url (format nil
-                                           "~a~a"
-                                           (installation-domain (installation))
-                                           (hex:make-url 'report-page
-                                                          :id (oid report))))))))
+  (flet ((make-details-url (&rest args)
+           (format nil
+                   "~a~a"
+                   (installation-domain (installation))
+                   (apply #'hex:make-url args))))
+   (cond
+     ((diff-report-empty-p diff-report)
+      (make-instance 'check
+                      :status :success
+                      :title "No screenshots changed"
+                      :summary "No action required on your part"
+                      :details-url
+                      (make-details-url 'run-page
+                                         :id (oid run))))
+     (t
+      (let ((report (make-instance 'report
+                                    :run run
+                                    :previous-run base-run
+                                    :channel (when run (recorder-run-channel run))
+                                    :title  (diff-report-title diff-report))))
+        (with-transaction ()
+          (setf (report-acceptable report)
+                (make-acceptable promoter report)))
+        (with-transaction ()
+          (setf (report promoter)
+                report))
+        (make-instance 'check
+                        :status :action_required
+                        :title (diff-report-title diff-report)
+                        :summary "Please verify that the images look reasonable to you"
+                        :details-url (make-details-url 'report-page
+                                                        :id (oid report))))))))
 
 (defmethod make-acceptable ((promoter pull-request-promoter) report)
   (make-instance 'pr-acceptable
