@@ -44,4 +44,9 @@
   (run (list "./gen.sh"))
   (run (list *sdk*
              "--directory" "./screenshots"
+             "--production=false"))
+  #+darwin
+  (run (list "arch" "-x86_64"
+             *sdk*
+             "--directory" "./screenshots"
              "--production=false")))
