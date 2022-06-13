@@ -4,7 +4,7 @@
 (in-package :screenshotbot/sdk/sdk-integration-tests)
 
 (ql:quickload :screenshotbot.sdk.deliver)
-
+(ql:quickload :secure-random)
 
 (defun run (cmd &rest args)
   (apply #'uiop:run-program
@@ -38,6 +38,7 @@
               ,@body)
          (uiop:chdir *original-dir*)))))
 
+
 (with-repo
     ;; veryfy we're correctly cloning the repo
     (assert (path:-e "gen.sh"))
@@ -48,5 +49,26 @@
   #+darwin
   (run (list "arch" "-x86_64"
              *sdk*
+             "--directory" "./screenshots"
+             "--production=false")))
+
+(with-repo
+    (with-open-file (stream "ascii.txt" :if-exists :supersede
+                            :direction :output)
+      (format stream
+              "text 15,15 \"Random code: ~a\" " (secure-random:number 10000000000000000000)))
+  (run (list "./gen.sh"))
+  (run (list *sdk*
+             "--directory" "./screenshots"
+             "--production=false")))
+
+#+darwin
+(with-repo
+    (with-open-file (stream "ascii.txt" :if-exists :supersede
+                            :direction :output)
+      (format stream
+              "text 15,15 \"Random code: ~a\" " (secure-random:number 10000000000000000000)))
+  (run (list "./gen.sh"))
+  (run (list "arch" "-x86_64" *sdk*
              "--directory" "./screenshots"
              "--production=false")))
