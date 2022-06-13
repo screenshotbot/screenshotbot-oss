@@ -19,10 +19,25 @@
   (when (uiop:file-exists-p x)
     (delete-file x)))
 
+(defun include-template-file ()
+  (let ((path (asdf:system-relative-pathname :screenshotbot.sdk "template.lisp")))
+    (with-open-file (out path :direction :output
+                              :if-exists :supersede)
+
+      (fli:start-collecting-template-info)
+      (handler-case
+          (screenshotbot/sdk/sdk::update-commit-graph (screenshotbot/sdk/git::git-repo) "bar")
+        (screenshotbot/sdk/sdk::api-error ()
+          nil))
+      (fli:print-collected-template-info :output-stream out))
+    (let ((output (compile-file path)))
+      (load output))))
+
 (defun deliver-main ()
   (let ((output-file (output-file)))
     #-darwin ;; universal binary, output file should be temporary
     (safe-delete-file output-file)
+    (include-template-file)
     (deliver 'screenshotbot/sdk/main:main
               output-file
               5
