@@ -245,8 +245,9 @@
 
           ,(when-let (reports (reports-for-run run))
              <div class= "alert alert-info mt-2" >
-               This run created a report with
-               ,@ (loop for report in reports collect
+             This run created a report with
+
+               ,(let ((report (car reports)))
                           <a href= (format nil "/report/~a" (oid report)) >,(report-title report)</a>)
              </div>)
 
