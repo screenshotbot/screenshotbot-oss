@@ -196,6 +196,7 @@
                                               ("build-url" . ,*build-url*)
                                               ("pull-request" . ,pull-request)
                                               ("commit" . ,commit)
+                                              ("override-commit-hash" . ,flags:*override-commit-hash*)
                                               ("create-github-issue" . ,(bool create-github-issue))
                                               ("is-clean" . ,(bool (cleanp repo)))
                                               ("gitlab-merge-request-iid" .
