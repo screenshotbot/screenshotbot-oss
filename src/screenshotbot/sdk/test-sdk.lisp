@@ -9,6 +9,7 @@
    :alexandria
         :fiveam)
   (:import-from #:screenshotbot/sdk/sdk
+                #:parse-environment
                 #:%read-directory-from-args
                 #:*directory*
                 #:*metadata*
@@ -21,10 +22,19 @@
                 #:directory-image-bundle)
   (:import-from #:screenshotbot/sdk/bundle
                 #:image-directory
-                #:image-directory-with-diff-dir))
+                #:image-directory-with-diff-dir)
+  (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
+                    (#:a #:alexandria)))
 (in-package :screenshotbot/sdk/test-sdk)
 
 (util/fiveam:def-suite)
+
+(def-fixture state ()
+  (cl-mock:with-mocks ()
+   (util:copying (flags:*pull-request*
+                  flags:*override-commit-hash*
+                  flags:*main-branch*)
+     (&body))))
 
 (test read-directory-for-ios
   (tmpdir:with-tmpdir (s)
@@ -90,3 +100,52 @@
          "4249fe0e72f21fd54dbb2f3325bec263"
          (put-file (format nil "http://127.0.0.1:~a/put" port)
                    s)))))))
+
+(defvar *env-overrides* nil)
+
+(defun fake-getenv (name)
+  (a:assoc-value *env-overrides* name :test #'equal))
+
+(defmacro with-env (bindings &body body)
+  `(util:copying (*env-overrides*)
+     ,@ (loop for (name var) in bindings
+              collect
+              `(push (cons (str:replace-all "-" "_" (string ,name)) ,var)
+                     *env-overrides*))
+     (cl-mock:if-called 'uiop:getenv #'fake-getenv)
+     ,@body))
+
+(test parse-override-commit-hash
+  (with-fixture state ()
+    (with-env ((:circle-pull-request "http://foo"))
+      (parse-environment)
+      (is (equal "http://foo" flags:*pull-request*))))
+  (with-fixture state ()
+    (with-env ((:circle-sha1 "abcd")
+               (:circle-pull-request "http://foo"))
+      (parse-environment)
+      (is (equal "abcd" flags:*override-commit-hash*))))
+  (with-fixture state ()
+    (with-env ((:circle-sha1 "abcd")
+               (:circle-pull-request ""))
+      (parse-environment)
+      (is (equal nil flags:*override-commit-hash*)))))
+
+(test parse-override-commit-hash-with-bitrise
+    (with-fixture state ()
+    (with-env ((:bitrise-git-commit "abcd")
+               (:bitriseio-pull-request-repository-url "https://bitbucket.org/tdrhq/fast-example"))
+      (parse-environment)
+      (is (equal nil flags:*pull-request*))
+      (is (equal nil flags:*override-commit-hash*))))
+
+  (with-fixture state ()
+    (with-env ((:bitrise-git-commit "abcd")
+               (:bitrise-pull-request "1")
+               (:bitriseio-pull-request-repository-url "https://bitbucket.org/tdrhq/fast-example"))
+      (parse-environment)
+
+      (is (equal "https://bitbucket.org/tdrhq/fast-example/pull-requests/1"
+                 flags:*pull-request*))
+
+      (is (equal "abcd" flags:*override-commit-hash*)))))

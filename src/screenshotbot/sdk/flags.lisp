@@ -34,7 +34,8 @@
    #:*static-website*
    #:*browser-configs*
    #:*static-website-assets-root*
-   #:*commit-hash*))
+   #:*commit-hash*
+   #:*override-commit-hash*))
 
 (in-package :screenshotbot/sdk/flags)
 

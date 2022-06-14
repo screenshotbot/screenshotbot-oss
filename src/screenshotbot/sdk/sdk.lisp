@@ -353,6 +353,14 @@
             (if-let ((repo-url (getenv "BITRISEIO_PULL_REQUEST_REPOSITORY_URL"))
                      (pull-id (getenv "BITRISE_PULL_REQUEST")))
               (link-to-github-pull-request repo-url pull-id))))))
+
+  (util:or-setf
+   flags:*override-commit-hash*
+   (unless (str:emptyp *pull-request*)
+     (or
+      (uiop:getenv "CIRCLE_SHA1")
+      (uiop:getenv "BITRISE_GIT_COMMIT"))))
+
   (unless *main-branch*
     (setf *main-branch*
           (or
@@ -360,9 +368,15 @@
            (guess-master-branch (git-repo))))))
 
 (defun link-to-github-pull-request (repo-url pull-id)
-  (format nil "~a/pulls/~a"
-          repo-url
-          pull-id))
+  (let ((key (cond
+               ((str:containsp "bitbucket" repo-url)
+                "pull-requests")
+               (t
+                "pulls"))))
+   (format nil "~a/~a/~a"
+           repo-url
+           key
+           pull-id)))
 
 (defun parse-build-url ()
   (setf *build-url*
