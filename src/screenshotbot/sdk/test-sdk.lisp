@@ -9,6 +9,7 @@
    :alexandria
         :fiveam)
   (:import-from #:screenshotbot/sdk/sdk
+                #:backoff
                 #:parse-environment
                 #:%read-directory-from-args
                 #:*directory*
@@ -149,3 +150,7 @@
                  flags:*pull-request*))
 
       (is (equal "abcd" flags:*override-commit-hash*)))))
+
+(test backoff-happy-path
+  (is (eql 20 (backoff 1)))
+  (is (eql 60 (backoff 100))))
