@@ -293,6 +293,7 @@
             (equal "http" scheme))
         (multiple-value-bind (remote-stream status response-headers)
             (handler-bind ((dex:http-request-failed #'respond-404)
+                           (drakma::drakma-simple-error #'respond-500)
                            (usocket:timeout-error
                              (lambda (e)
                                (cond
