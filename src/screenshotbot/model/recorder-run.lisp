@@ -57,7 +57,8 @@
            #:recorder-run-screenshots
            #:master-branch)
   (:export
-   #:periodic-job-p))
+   #:periodic-job-p
+   #:override-commit-hash))
 (in-package :screenshotbot/model/recorder-run)
 
 (defclass promotion-log (bknr.datastore:blob)
@@ -149,6 +150,12 @@
    (promotion-complete-p
     :initform nil
     :accessor promotion-complete-p)
+   (override-commit-hash
+    :initform nil
+    :initarg :override-commit-hash
+    :accessor override-commit-hash
+    :documentation "Override the pull request commit hash that will be
+    used to update the Pull Request (either GitHub or Bitbucket)")
    (created-at
     :initform nil
     :accessor %created-at))

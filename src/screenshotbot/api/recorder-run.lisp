@@ -65,6 +65,7 @@
                                                  :branch-hash
                                                  :build-url
                                                  :merge-base
+                                                 :override-commit-hash
                                                  (:commit :commit-hash ,#'nil-if-empty)
                                                  (:branch nil ,#'nil-if-empty)
                                                  (:phabricator-diff-id nil ,#'nil-if-empty)

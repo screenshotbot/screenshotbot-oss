@@ -219,7 +219,9 @@
          :details-url (details-url check)
          :installation-id (plugin-installation-id promoter company)
          :conclusion (str:downcase (check-status (promoter-result promoter)))
-         :head-sha (recorder-run-commit run))))
+         :head-sha (or
+                    (override-commit-hash run)
+                    (recorder-run-commit run)))))
 
 (defun make-check-result-from-diff-report (promoter diff-report run base-run)
   (flet ((make-details-url (&rest args)

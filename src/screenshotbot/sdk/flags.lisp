@@ -33,7 +33,8 @@
    #:*metadata*
    #:*static-website*
    #:*browser-configs*
-   #:*static-website-assets-root*))
+   #:*static-website-assets-root*
+   #:*commit-hash*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -189,3 +190,13 @@
   :type (or null string)
   :help "A YAML file that specifies the configuration of the
   browsers. Please see documentation for details.")
+
+(define-flag *override-commit-hash*
+  :selector "override-commit-hash"
+  :default-value nil
+  :type (or null string)
+  :help "Override the commit hash detected by git. In most cases you
+  don't need this, and this is only relevant for Pull Requests, and
+  only if you rebase your changes as part of your CI run. This hash
+  must be the full hash, partial hashes or tag names are not
+  suitable.")
