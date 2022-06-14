@@ -43,6 +43,8 @@
                 #:getenv)
   (:import-from #:util/request
                 #:http-request)
+  (:import-from #:util/misc
+                #:or-setf)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags))
   (:export
    #:single-directory-run
@@ -354,7 +356,7 @@
                      (pull-id (getenv "BITRISE_PULL_REQUEST")))
               (link-to-github-pull-request repo-url pull-id))))))
 
-  (util:or-setf
+  (or-setf
    flags:*override-commit-hash*
    (unless (str:emptyp *pull-request*)
      (or
