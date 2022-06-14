@@ -60,7 +60,7 @@
   :selector "api-key"
   :default-value nil
   :type (or null string)
-  :help "Screenshotbot API Key")
+  :help "Screenshotbot API Key. Defaults to $SCREENSHOTBOT_API_KEY.")
 
 (define-flag *create-github-issue*
   :selector "create-github-issue"
@@ -72,7 +72,7 @@
   :selector "api-secret"
   :default-value nil
   :type (or null string)
-  :help "Screenshotbot API Secret")
+  :help "Screenshotbot API Secret. Defaults to $SCREENSHOTBOT_API_SECRET")
 
 (define-flag *gitlab-merge-request-iid*
   :selector "gitlab-merge-request-iid"
@@ -84,20 +84,21 @@
   :selector "api-hostname"
   :default-value "https://api.screenshotbot.io"
   :type string
-  :help "Screenshotbot API Endpoing"
-  :documentation "Only used for Enterprise User")
+  :help "Screenshotbot API Endpoint"
+  :documentation "Only used for Enterprise or Open Source users, Defaults to `https://api.screenshotbot.io` or $SCREENSHOTBOT_API_HOSTNAME")
 
 (define-flag *channel*
   :selector "channel"
   :default-value "unnamed-channel"
   :type string
-  :help "Channel name for screenshot tracking")
+  :help "Channel name for screenshot tracking. Defaults to `unnamed-channel`.")
 
 (define-flag *pull-request*
   :selector "pull-request"
   :default-value nil
   :type (or null string)
-  :help "Pull request URL")
+  :help "Pull request URL. Automatically detected on CircleCI,
+  Bitrise, Netlify.")
 
 (define-flag *branch*
   :selector "branch"
@@ -109,7 +110,8 @@
   :selector "main-branch"
   :default-value nil
   :type (or null string)
-  :help "Git Branch of the main branch being tracked")
+  :help "Git Branch of the main branch being tracked. We try first
+  `main` and then `master`, by checking for origin/<branch-name>")
 
 (define-flag *repo-url*
   :selector "repo-url"
@@ -121,7 +123,7 @@
   :selector "phabricator-diff-id"
   :default-value nil
   :type (or null string)
-  :help "PHabricator Diff ID")
+  :help "Phabricator Diff ID")
 
 (define-flag *build-url*
   :selector "build-url"
@@ -132,7 +134,10 @@
 (define-flag *production*
   :selector "production"
   :default-value t
-  :type boolean)
+  :type boolean
+  :documentation "Whether this is a run on your CI. For local runs, we
+  suggest using `--production=false`. This avoids polluting your runs
+  in production.")
 
 (define-flag *help*
   :selector "help"
@@ -147,7 +152,8 @@
 (define-flag *device-regex*
   :selector "device-regex"
   :default-value nil
-  :type (or null string))
+  :type (or null string)
+  :documentation "[OBSOLETE]")
 
 (define-flag *ios-multi-dir*
   :selector "ios-multi-dir"
@@ -200,4 +206,5 @@
   don't need this, and this is only relevant for Pull Requests, and
   only if you rebase your changes as part of your CI run. This hash
   must be the full hash, partial hashes or tag names are not
-  suitable.")
+  suitable.
+  Automatically detected on: CircleCI, Bitrise")

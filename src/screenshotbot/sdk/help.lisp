@@ -18,16 +18,22 @@
   (format t "Use this script from your CI pipelines or locally to
 upload screenshots and generate reports~%~%")
   (format t "Options:~%~%")
-  (loop for (name . flag) in com.google.flag::*registered-flags* do
-    (let* ((lines (str:lines (com.google.flag::help flag)))
+  (loop for (name . flag) in (sort com.google.flag::*registered-flags* #'string< :key #'car) do
+    (let* ((lines (mapcar #'str:trim (str:lines (com.google.flag::help flag))))
+           (lines (loop for line in lines
+                        for start from 0
+                        if (= start 0)
+                          collect line
+                        else
+                          collect (str:concat " " line)))
            (lines (cond
-                    ((< (length name) 23)
+                    ((< (length name) 22)
                      lines)
                     (t
                      (list* "" lines)))))
-      (format t "  --~23A~40A~%" name
+      (format t " --~22A~40A~%" name
               (or (car lines) ""))
       (loop for l in (cdr lines) do
-        (format t "~27A~A~%" " " (str:trim l)))))
+        (format t "~25A~A~%" " " l))))
   (format t "~%Copyright 2020-2022 Modern Interpreters Inc.~%")
   (format t "Please reach out to support@screenshotbot.io for any questions~%"))
