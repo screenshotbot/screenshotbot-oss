@@ -41,6 +41,8 @@
                 #:report-title)
   (:import-from #:screenshotbot/model/image
                 #:image-dimensions)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:override-commit-hash)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -123,6 +125,7 @@
       <ul>
         <li>Repo url: ,(github-repo run)</li>
         <li>Commit: ,(commit :repo repo :hash (recorder-run-commit run)) </li>
+        <li>Override Commit hash for Pull Requests: ,(commit :repo repo :hash (override-commit-hash run))</li>
         <li>Main Branch: ,(recorder-run-branch run)</li>
         <li>Commit on branch: ,(commit :repo repo :hash (recorder-run-branch-hash run))</li>
         <li>Merge base: ,(commit :repo repo :hash (recorder-run-merge-base run))</li>
