@@ -1,0 +1,16 @@
+staging
+replay
+
+# static IP for staging
+172.29.1.15
+
+# second static IP for staging. It's unclear which network is used to
+# connect from staging to the squid proxy since both are two networks.
+172.20.0.6
+
+
+# static IP for replay
+172.29.1.14
+
+# production over OpenVPN
+10.9.8.1
