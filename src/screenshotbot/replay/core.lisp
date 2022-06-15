@@ -112,6 +112,9 @@
    (response-headers :initarg :response-headers
                      :reader asset-response-headers)))
 
+(defmethod asset-file-name ((asset asset))
+  (car (last (str:split "/" (asset-file asset)))))
+
 (defmethod print-object ((asset asset) out)
   (format out "#<ASSET ~a ~a>" (asset-file asset) (url asset)))
 
@@ -509,7 +512,7 @@
                                 :directory (tmpdir snapshot))
        (flet ((rewrite-url (this-url)
                 (let ((full-url (quri:merge-uris this-url url)))
-                  (asset-file
+                  (asset-file-name
                    (push-asset context snapshot full-url nil)))))
          (let* ((css (uiop:slurp-stream-string remote-stream))
                 (css (rewrite-css-urls css #'rewrite-url)))
@@ -589,7 +592,7 @@
                 name
                 (lambda (uri)
                   (let* ((asset (push-asset context snapshot uri stylesheetp))
-                         (res (asset-file asset)))
+                         (res (asset-file-name asset)))
                     res))))
              (parse-intrinsic (x)
                (parse-integer (str:replace-all "w" "" x)))
@@ -613,7 +616,7 @@
                                        (let ((asset (push-asset context snapshot uri nil)))
                                          (str:join " "
                                                    (list
-                                                    (asset-file asset)
+                                                    (asset-file-name asset)
                                                     width)))))))
                         (setf (plump:attribute node name)
                               final-attr))))))))
