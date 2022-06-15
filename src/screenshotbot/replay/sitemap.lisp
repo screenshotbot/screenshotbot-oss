@@ -33,4 +33,4 @@
       (parse-sitemap url))))
 
 
-;; (parse-sitemap "https://rollins-edu-cla-staging.netlify.app/sitemap.xml")
+;; (parse-sitemap "https://rollins.edu/sitemap.xml")

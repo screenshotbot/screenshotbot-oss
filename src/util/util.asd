@@ -122,6 +122,7 @@
   :depends-on (:bknr.datastore
                :str
                :local-time
+               :copy-directory
                :cffi
                :cl-cron)
   :components ((lib-source-file "store-native")

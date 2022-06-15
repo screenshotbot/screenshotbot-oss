@@ -123,10 +123,8 @@
     (tmpdir:with-tmpdir (dir)
       (let ((out-current (path:catdir dir "current/")))
         (log:info "Copyin file ~a to ~a" store-dir dir)
-        (uiop:run-program (list "rsync" "-av" (namestring (path:catdir store-dir "current/"))
-                                (namestring out-current))
-                          :output :interactive
-                          :error-output :interactive)
+        (copy-directory:copy (path:catdir store-dir "current/")
+                             out-current)
         (assert (path:-d out-current))
         (make-instance 'safe-mp-store
                         :directory dir
