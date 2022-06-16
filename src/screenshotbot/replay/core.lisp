@@ -15,6 +15,8 @@
                 #:or-setf)
   (:import-from #:util/threading
                 #:safe-interrupt-checkpoint)
+  (:import-from #:util/sha256
+                #:sha256-file)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:rewrite-css-urls
@@ -215,7 +217,7 @@
     (finish-output *replay-logs*)))
 
 (defun hash-file (file)
-  (ironclad:digest-file :sha256 file))
+  (sha256-file file))
 
 (defun write-asset (p type &key tmpdir
                              url

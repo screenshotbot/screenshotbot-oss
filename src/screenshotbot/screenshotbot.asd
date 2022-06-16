@@ -342,6 +342,7 @@
                :util/misc
                :util/request
                :cl+ssl
+               :util/digests
                :auto-restart
                :dexador
                :drakma
