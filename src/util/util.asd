@@ -151,8 +151,8 @@
                 :extra-args
                 (#+darwin "-I/opt/homebrew/opt/openssl/include/")
                 :if-feature (:and :lispworks (:or :linux :darwin)))
-               (:file "sha256" :if-feature (:and :lispworks (:or :linux :darwin)))
-               (:file "sha256-non-lw" :if-feature (:not (:and :lispworks (:or :linux :darwin))))))
+               (:file "digests" :if-feature (:and :lispworks (:or :linux :darwin)))
+               (:file "digests-non-lw" :if-feature (:not (:and :lispworks (:or :linux :darwin))))))
 
 (defsystem :util/threading
   :depends-on (:bordeaux-threads
@@ -226,4 +226,4 @@
                              (:file "test-health-check")
                              (:file "test-mquery")
                              (:file "test-make-instance-with-accessors")
-                             (:file "test-sha256")))))
+                             (:file "test-digests")))))

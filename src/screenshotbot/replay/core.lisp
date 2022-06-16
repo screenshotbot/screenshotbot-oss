@@ -15,7 +15,7 @@
                 #:or-setf)
   (:import-from #:util/threading
                 #:safe-interrupt-checkpoint)
-  (:import-from #:util/sha256
+  (:import-from #:util/digests
                 #:sha256-file)
   (:local-nicknames (#:a #:alexandria))
   (:export

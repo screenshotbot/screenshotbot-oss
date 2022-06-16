@@ -6,12 +6,12 @@
 
 ;; for non Lispworks only
 
-(defpackage :util/sha256
+(defpackage :util/digests
   (:use #:cl)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:sha256-file))
-(in-package :util/sha256)
+(in-package :util/digests)
 
 (defun sha256-file (file)
   (ironclad:digest-file :sha256 file))

@@ -4,12 +4,12 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :util/tests/test-sha256
+(defpackage :util/tests/test-digests
   (:use #:cl
         #:fiveam
-        #:util/sha256)
+        #:util/digests)
   (:local-nicknames (#:a #:alexandria)))
-(in-package :util/tests/test-sha256)
+(in-package :util/tests/test-digests)
 
 
 (util/fiveam:def-suite)
