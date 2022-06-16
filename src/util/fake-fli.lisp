@@ -17,12 +17,20 @@
    #:null-pointer-p
    #:with-dynamic-foreign-objects
    #:foreign-slot-value
-   #:incf-pointer))
+   #:incf-pointer
+   #:malloc
+   #:free))
 (in-package :util/fake-fli)
 
-(defun fix-type (x)
+(defun fix-type (x &key (allow-count t))
+  "Returns two values the converted type, and the count, in case of an array"
+  (log:info "fixing type: ~S" x)
   (cond
+    ((not x)
+     (error "this looks like a bad type: ~a" x))
     ((eql :size-t x)
+     :uint64)
+    ((eql :time-t x)
      :uint64)
     ((not (listp x))
      x)
@@ -30,11 +38,20 @@
      :string)
     ((equal '(:reference :ef-mb-string) x)
      :string)
+    ((equal :c-array (car x))
+     (unless allow-count
+       (Error "count not supported in this location"))
+     (assert (fix-type (cadr x)))
+     (values (fix-type (cadr x)) (caddr x)))
+    ((equal :pointer (car x))
+     :pointer)
     (t
      x)))
 
 (defmacro define-c-typedef (name type)
-  `(cffi:defctype ,name ,(fix-type type)))
+  (multiple-value-bind (type count) (fix-type type)
+    (assert (not count))
+   `(cffi:defctype ,name ,type)))
 
 (defun register-module (name &key real-name)
   (declare (ignore name))
@@ -43,9 +60,13 @@
 (defmacro define-c-struct (name &rest fields)
   `(cffi:defcstruct ,name
      ,@ (loop for (name type) in fields
-              collect (list name (fix-type type)))))
+              collect (multiple-value-bind (type count) (fix-type type)
+                        (list* name type
+                               (when count
+                                 (list :count count)))))))
 
 (defmacro define-foreign-function (name args &key result-type)
+  (assert result-type)
   (destructuring-bind (name-var name) (cond
                                         ((symbolp name)
                                          (list name (str:replace-all
@@ -56,11 +77,11 @@
    (multiple-value-bind (args reference-returns) (parse-reference-returns args)
      (let ((cffi-name (intern (format nil "%~a-native" name))))
        `(progn
-          (cffi:defcfun (,name ,cffi-name) ,(fix-type result-type)
+          (cffi:defcfun (,name ,cffi-name) ,(fix-type result-type :allow-count nil)
             ,@(loop for arg in args
                     collect
                     (destructuring-bind (name type) arg
-                      (list name (fix-type type)))))
+                      (list name (fix-type type :allow-count nil)))))
           (defun ,name-var (,@ (mapcar #'car args))
             ,(wrap-reference-returns
               reference-returns
@@ -112,7 +133,7 @@
   (cffi:null-pointer-p x))
 
 
-(defmacro with-dynamic-foreign-objects (((output type &key nelems)) &body body)
+(defmacro with-dynamic-foreign-objects (((output type &key (nelems 1))) &body body)
   `(cffi:with-foreign-object (,output ',type ,nelems)
      ,@body))
 
@@ -121,3 +142,10 @@
 
 (defun incf-pointer (pointer)
   `(cffi:inc-pointer ,pointer))
+
+
+(defun malloc (&key type)
+  (cffi:foreign-alloc (fix-type type :allow-count nil)))
+
+(Defun free (obj)
+  (cffi:foreign-free obj))
