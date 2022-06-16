@@ -8,6 +8,8 @@
                 #:context)
   (:import-from #:screenshotbot/sdk/sdk
                 #:ensure-api-success)
+  (:import-from #:util/digests
+                #:sha256-file)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
@@ -19,7 +21,7 @@
 
 
 (defun md5-file (file)
-  (ironclad:byte-array-to-hex-string (ironclad:digest-file :sha256 file)))
+  (ironclad:byte-array-to-hex-string (sha256-file  file)))
 
 (defun upload-blob (file)
   "Upload the blob, without checking if it has been previously uploaded"
