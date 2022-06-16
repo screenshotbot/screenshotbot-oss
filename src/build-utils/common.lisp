@@ -41,5 +41,5 @@
            collect (namestring el)
          else
            collect el)
-   :standard-output *standard-output*
-   :error-output *error-output*))
+   :standard-output t
+   :error-output t))

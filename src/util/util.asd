@@ -4,7 +4,9 @@
 (in-package :util-system)
 
 (defclass lib-source-file (c-source-file)
-  ())
+  ((extra-args :initarg :extra-args
+               :initform nil
+               :reader extra-args)))
 
 (defparameter *library-file-dir*
   (make-pathname :name nil :type nil
@@ -28,12 +30,14 @@
   t)
 
 (defmethod perform ((o compile-op) (c lib-source-file))
-  (uiop:run-program (list "/usr/bin/gcc" "-lssl" "-shared" "-o" (namestring (car (output-files o c)))
-                          "-Werror"
-                          "-fPIC"
-                          (namestring
-                           (merge-pathnames (format nil "~a.c" (component-name c))
-                                            *library-file-dir*)))
+  (uiop:run-program (list* "/usr/bin/gcc" "-shared"
+                           "-o" (namestring (car (output-files o c)))
+                           "-Werror"
+                           "-fPIC"
+                           (namestring
+                            (merge-pathnames (format nil "~a.c" (component-name c))
+                                             *library-file-dir*))
+                           (extra-args c))
                     :output t
                     :error-output t))
 
@@ -142,9 +146,15 @@
 (defsystem :util/digests
   :depends-on ()
   :serial t
-  :components ((lib-source-file "digest")
-               (:file "sha256" :if-feature :lispworks)
-               (:file "sha256-non-lw" :if-feature (:not :lispworks))))
+  :components ((lib-source-file "digest"
+                                :extra-args
+                                #-darwin
+                                ("-lssl")
+                                #+darwin
+                                ("-lressl")
+                                :if-feature (:and :lispworks :linux))
+               (:file "sha256" :if-feature (:and :lispworks :linux))
+               (:file "sha256-non-lw" :if-feature (:not (:and :lispworks :linux)))))
 
 (defsystem :util/threading
   :depends-on (:bordeaux-threads
