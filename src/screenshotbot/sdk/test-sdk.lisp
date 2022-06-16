@@ -24,6 +24,8 @@
   (:import-from #:screenshotbot/sdk/bundle
                 #:image-directory
                 #:image-directory-with-diff-dir)
+  (:import-from #:util/digests
+                #:md5-file)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:a #:alexandria)))
 (in-package :screenshotbot/sdk/test-sdk)
@@ -69,7 +71,7 @@
 (hunchentoot:define-easy-handler (get-md5-sum :uri "/put" :acceptor-names '(test-acceptor)) ()
   (declare (optimize (speed 0) (debug 3)))
   (screenshotbot/api/image:with-raw-post-data-as-tmp-file (p)
-    (ironclad:byte-array-to-hex-string (md5:md5sum-file p))))
+    (ironclad:byte-array-to-hex-string (md5-file p))))
 
 (defmacro with-acceptor ((acceptor) &body body)
   `(let ((acceptor ,acceptor)

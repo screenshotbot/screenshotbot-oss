@@ -17,6 +17,8 @@
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
                 #:has-item)
+  (:import-from #:util/digests
+                #:md5-file)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags :screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/test-static)
@@ -46,14 +48,14 @@
                                                    :acceptor-names '(test-acceptor))
     (hash type api-key api-secret-key)
   (screenshotbot/api/image:with-raw-post-data-as-tmp-file (p)
-    (setf *hex* (md5:md5sum-file p))))
+    (setf *hex* (md5-file p))))
 
 (test blob-upload
   (with-fixture state ()
     (uiop:with-temporary-file (:pathname p :stream out)
       (write "zoidberg" :stream out)
       (finish-output out)
-      (let ((md5 (md5:md5sum-file p)))
+      (let ((md5 (md5-file p)))
         (upload-blob p)
         (is (equalp *hex* md5))))))
 
@@ -64,7 +66,7 @@
       (loop for i from 0 to 255 do
         (write-byte i out))
       (finish-output out)
-      (let ((md5 (md5:md5sum-file p)))
+      (let ((md5 (md5-file p)))
         (upload-blob p)
         (is  (equalp *hex* md5))))))
 

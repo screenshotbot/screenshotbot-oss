@@ -21,6 +21,8 @@
                 #:current-company)
   (:import-from #:screenshotbot/model/image
                 #:make-image)
+  (:import-from #:util/digests
+                #:md5-file)
   (:export
    #:verify-image
    #:with-raw-post-data-as-tmp-file))
@@ -163,7 +165,7 @@
     (let ((etag
             (cond
               ((image-blob image)
-               (md5:md5sum-file (bknr.datastore:blob-pathname  (image-blob image))))
+               (md5-file (bknr.datastore:blob-pathname  (image-blob image))))
               (t
                (ironclad:hex-string-to-byte-array
                 (get-etag *bucket* (s3-key image)))))))

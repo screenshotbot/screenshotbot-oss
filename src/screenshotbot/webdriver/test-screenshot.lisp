@@ -9,6 +9,8 @@
         #:fiveam)
   (:import-from #:screenshotbot/webdriver/screenshot
                 #:decode-file-from-json-stream)
+  (:import-from #:util/digests
+                #:md5-file)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/webdriver/test-screenshot)
 
@@ -17,7 +19,7 @@
 
 (def-fixture state ()
   (let* ((input (asdf:system-relative-pathname :screenshotbot "fixture/rose.png"))
-         (original-md5 (ironclad:byte-array-to-hex-string (md5:md5sum-file input))))
+         (original-md5 (ironclad:byte-array-to-hex-string (md5-file input))))
     (&body)))
 
 (test simple-base64-decoding

@@ -22,11 +22,13 @@
   (:import-from #:screenshotbot/api/recorder-run
                 #:%recorder-run-post
                 #:run-response-id)
+  (:import-from #:util/digests
+                #:md5-file)
   (:export #:populate-company))
 (in-package :screenshotbot/login/populate)
 
 (defun md5sum-file (file)
-  (let ((bytes (md5:md5sum-file file)))
+  (let ((bytes (md5-file file)))
     (ironclad:byte-array-to-hex-string bytes)))
 
 

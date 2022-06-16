@@ -50,6 +50,8 @@
                 #:with-wand)
   (:import-from #:util/object-id
                 #:oid-array)
+  (:import-from #:util/digests
+                #:md5-file)
   ;; classes
   (:export
    #:image
@@ -504,7 +506,7 @@
   ;; this is probably only used for tests... hopefully doesn't hit in
   ;; prod.
   (with-local-image (im image)
-    (md5:md5sum-file im)))
+    (md5-file im)))
 
 (defmethod external-file-name ((image image))
   (destructuring-bind (part ext) (str:split "/" (image-content-type image))
@@ -668,7 +670,7 @@ recognized the file, we'll return nil."
           do
              (log:info "looking at: ~a" image)
              (with-local-image (file image)
-               (let ((hash (md5:md5sum-file file)))
+               (let ((hash (md5-file file)))
                  (log:info "Got hash: ~a" hash)
                  (with-transaction ()
                    (setf (slot-value image 'hash) hash))

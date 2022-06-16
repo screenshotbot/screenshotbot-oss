@@ -35,6 +35,8 @@
                 #:with-test-store)
   (:import-from #:bknr.datastore
                 #:blob-pathname)
+  (:import-from #:util/digests
+                #:md5-file)
   (:export))
 
 (util/fiveam:def-suite)
@@ -90,7 +92,7 @@
 
 (defun make-test-image (pathname)
   (let* ((blob (make-instance 'image-blob))
-         (hash (ironclad:byte-array-to-hex-string (md5:md5sum-file pathname)))
+         (hash (ironclad:byte-array-to-hex-string (md5-file pathname)))
          (image (make-instance 'image
                                 :blob blob
                                 :hash hash)))

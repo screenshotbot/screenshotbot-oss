@@ -18,6 +18,8 @@
                 #:*acceptor*)
   (:import-from #:screenshotbot/replay/services
                 #:linode?)
+  (:import-from #:util/digests
+                #:md5-file)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:*proxy-port*
@@ -74,7 +76,7 @@
       (setf (hunchentoot:content-type*) "application/json")
       (json:encode-json-to-string
        `((:oid . ,oid)
-         (:md5 . ,(ironclad:byte-array-to-hex-string (md5:md5sum-file path))))))))
+         (:md5 . ,(ironclad:byte-array-to-hex-string (md5-file path))))))))
 
 (def-proxy-handler (%download :uri "/download") (oid)
   (assert (ironclad:hex-string-to-byte-array oid))

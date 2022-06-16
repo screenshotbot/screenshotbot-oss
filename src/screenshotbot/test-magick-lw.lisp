@@ -20,6 +20,8 @@
                 #:convert-to-lossless-webp)
   (:import-from #:screenshotbot/magick-lw
                 #:check-boolean)
+  (:import-from #:util/digests
+                #:md5-file)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-magick-lw)
 
@@ -69,8 +71,8 @@
       (uiop:with-temporary-file (:pathname out2 :type "webp")
         (convert-to-lossless-webp (make-instance 'magick-native)
                                   rose out2)
-        (is (equalp (md5:md5sum-file out)
-                    (md5:md5sum-file out2)))))))
+        (is (equalp (md5-file out)
+                    (md5-file out2)))))))
 
 (test raises-magick-exception
   (with-fixture state ()

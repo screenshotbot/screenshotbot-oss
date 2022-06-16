@@ -65,6 +65,7 @@
                :util/form-state
                :util/hash-lock
                :jose
+               :util/digests
                :trivial-file-size
                :screenshotbot.js-assets
                :oidc
