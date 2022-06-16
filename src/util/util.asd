@@ -28,14 +28,14 @@
   t)
 
 (defmethod perform ((o compile-op) (c lib-source-file))
-  (uiop:run-program (list "/usr/bin/gcc" "-shared" "-o" (namestring (car (output-files o c)))
+  (uiop:run-program (list "/usr/bin/gcc" "-lssl" "-shared" "-o" (namestring (car (output-files o c)))
                           "-Werror"
                           "-fPIC"
                           (namestring
                            (merge-pathnames (format nil "~a.c" (component-name c))
                                             *library-file-dir*)))
-                    :output :interactive
-                    :error-output :interactive))
+                    :output t
+                    :error-output t))
 
 
 
@@ -139,6 +139,13 @@
   :components ((:file "fiveam")
                (:file "mock-recording")))
 
+(defsystem :util/digests
+  :depends-on ()
+  :serial t
+  :components ((lib-source-file "digest")
+               (:file "sha256" :if-feature :lispworks)
+               (:file "sha256-non-lw" :if-feature (:not :lispworks))))
+
 (defsystem :util/threading
   :depends-on (:bordeaux-threads
                :mailbox
@@ -187,6 +194,7 @@
   :depends-on (:util
                :util/hash-lock
                :util/health-check
+               :util/digests
                :util/request
                :util/fiveam)
   :serial t
@@ -209,4 +217,5 @@
                              (:file "test-mockable")
                              (:file "test-health-check")
                              (:file "test-mquery")
-                             (:file "test-make-instance-with-accessors")))))
+                             (:file "test-make-instance-with-accessors")
+                             (:file "test-sha256")))))

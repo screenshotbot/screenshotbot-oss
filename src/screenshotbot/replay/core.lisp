@@ -204,6 +204,7 @@
                     :response-headers response-headers
                     :status status)))))
 
+
 (defun write-replay-log (message &rest args)
   (unless (eql *terminal-io* *replay-logs*)
     (local-time:format-timestring
