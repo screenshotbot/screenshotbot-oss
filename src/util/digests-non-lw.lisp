@@ -10,8 +10,12 @@
   (:use #:cl)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:sha256-file))
+   #:sha256-file
+   #:md5-file))
 (in-package :util/digests)
 
 (defun sha256-file (file)
   (ironclad:digest-file :sha256 file))
+
+(defun md5-file (file)
+  (md5:md5sum-file file))

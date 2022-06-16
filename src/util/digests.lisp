@@ -8,7 +8,8 @@
   (:use #:cl)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:sha256-file))
+   #:sha256-file
+   #:md5-file))
 (in-package :util/digests)
 
 #|
@@ -38,6 +39,10 @@ typedef struct SHA512state_st {
     ()
   :result-type :int)
 
+(fli:define-foreign-function (sizeof-md5-ctx "tdrhq_sizeof_MD5_CTX")
+    ()
+  :result-type :int)
+
 (fli:define-foreign-function (sha256-init "SHA256_Init")
     ((ctx (:pointer :void)))
   :result-type :int)
@@ -53,13 +58,32 @@ typedef struct SHA512state_st {
      (ctx (:pointer :void)))
   :result-type :int)
 
-(defun sha256-file (file)
+
+(fli:define-foreign-function (md5-init "MD5_Init")
+    ((ctx (:pointer :void)))
+  :result-type :int)
+
+(fli:define-foreign-function (md5-update "MD5_Update")
+    ((ctx (:pointer :void))
+     (data :lisp-simple-1d-array)
+     (len :size-t))
+  :result-type :int)
+
+(fli:define-foreign-function (md5-final "MD5_Final")
+    ((md :lisp-simple-1d-array)
+     (ctx (:pointer :void)))
+  :result-type :int)
+
+(defun digest-file (file &key ctx-size
+                           init
+                           update
+                           final
+                           digest-length)
   (comm:ensure-ssl)
-  (fli:with-dynamic-foreign-objects ((sha-ctx :char :nelems (+ 20 (sizeof-sha256-ctx))))
-    (unless (= 1 (sha256-init sha-ctx))
+  (fli:with-dynamic-foreign-objects ((sha-ctx :char :nelems (+ 20 ctx-size)))
+    (unless (= 1 (funcall init sha-ctx))
       (error "could not init SHA digest"))
     (let* ((buf-size (* 16 1024))
-           (digest-length 32)
            (buffer (make-array buf-size :element-type '(unsigned-byte 8)
                                         :allocation :pinnable))
            (result (make-array digest-length :element-type '(unsigned-byte 8)
@@ -74,10 +98,24 @@ typedef struct SHA512state_st {
                  (if (= bytes 0)
                      (return-from inner))
                  (unless (= 1
-                            (sha256-update sha-ctx
+                            (funcall update sha-ctx
                                            buffer
                                            bytes))
                    (error "Could not update digest"))))
-      (unless (= 1 (sha256-final result sha-ctx))
+      (unless (= 1 (funcall final result sha-ctx))
         (error "Could not finalize SHA digest"))
       result)))
+
+(defun sha256-file (file)
+  (digest-file file :ctx-size (sizeof-sha256-ctx)
+                    :init #'sha256-init
+                    :update #'sha256-update
+                    :final #'sha256-final
+                    :digest-length 32))
+
+(defun md5-file (file)
+  (digest-file file :ctx-size (sizeof-md5-ctx)
+                    :init #'md5-init
+                    :update #'md5-update
+                    :final #'md5-final
+                    :digest-length 16))
