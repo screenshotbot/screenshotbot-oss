@@ -146,15 +146,13 @@
 (defsystem :util/digests
   :depends-on ()
   :serial t
-  :components ((lib-source-file "digest"
-                                :extra-args
-                                #-darwin
-                                ("-lssl")
-                                #+darwin
-                                ("-lressl")
-                                :if-feature (:and :lispworks :linux))
-               (:file "sha256" :if-feature (:and :lispworks :linux))
-               (:file "sha256-non-lw" :if-feature (:not (:and :lispworks :linux)))))
+  :components ((lib-source-file
+                "digest"
+                :extra-args
+                (#+darwin "-I/opt/homebrew/opt/openssl/include/")
+                :if-feature (:and :lispworks (:or :linux :darwin)))
+               (:file "sha256" :if-feature (:and :lispworks (:or :linux :darwin)))
+               (:file "sha256-non-lw" :if-feature (:not (:and :lispworks (:or :linux :darwin))))))
 
 (defsystem :util/threading
   :depends-on (:bordeaux-threads
