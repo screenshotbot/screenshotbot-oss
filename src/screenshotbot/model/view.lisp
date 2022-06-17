@@ -39,17 +39,23 @@
 
 (defun can-view! (&rest objects)
   (let ((user (current-user)))
-   (dolist (obj objects)
-     (unless (or
-              (can-public-view obj)
-              (and user
-               (can-view obj user)))
-       (restart-case
-           (error 'no-access-error
-                  :user user
-                  :obj obj)
-         (give-access-anyway ()
-           nil))))))
+    (dolist (obj objects)
+      (unless (or
+               (can-public-view obj)
+               (and user
+                    (can-view obj user)))
+        (restart-case
+            (error 'no-access-error
+                    :user user
+                    :obj obj)
+          (give-access-anyway ()
+            nil))))))
+
+(defmethod can-view :around (obj (user user))
+  (or
+   (call-next-method)
+   ;; super-admins can access everything
+   (adminp user)))
 
 (defmethod can-public-view (obj)
   nil)
