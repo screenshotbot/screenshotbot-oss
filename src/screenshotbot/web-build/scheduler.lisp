@@ -8,6 +8,7 @@
   (:use #:cl)
   (:nicknames :screenshotbot/pro/web-build/scheduler)
   (:import-from #:screenshotbot/web-build/project
+                #:web-project-scheduled-job
                 #:update-next-job-at
                 #:web-project-name
                 #:web-project-schedule-p
@@ -72,20 +73,21 @@
                                      (start-ts nil))
    "Maybe run the project if needed. As an edge case, if the
 next-runtime is not set, then it is calculated and updated."
-   (let ((start-ts (or start-ts
-                       (start-ts (web-project-name project)))))
-    (bt:with-lock-held (*lock*)
-      (when (web-project-schedule-p project)
-        (flet ((update-next-job-at ()
-                 (let ((update (next-runtime now start-ts
-                                             (web-project-schedule-every project))))
-                   (with-transaction ()
-                     (setf (next-job-at project)
-                           update)))))
-          (let ((next-job-at (next-job-at project)))
-            (when (and next-job-at (< next-job-at now))
-              (%run-now project))
-            (update-next-job-at))))))))
+   (unless (web-project-scheduled-job project) ;; new style
+    (let ((start-ts (or start-ts
+                        (start-ts (web-project-name project)))))
+      (bt:with-lock-held (*lock*)
+        (when (web-project-schedule-p project)
+          (flet ((update-next-job-at ()
+                   (let ((update (next-runtime now start-ts
+                                               (web-project-schedule-every project))))
+                     (with-transaction ()
+                       (setf (next-job-at project)
+                             update)))))
+            (let ((next-job-at (next-job-at project)))
+              (when (and next-job-at (< next-job-at now))
+                (%run-now project))
+              (update-next-job-at)))))))))
 
 
 (defun run-web-projects ()

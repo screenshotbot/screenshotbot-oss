@@ -73,6 +73,23 @@
                 #:find-by-oid)
   (:import-from #:util/threading
                 #:safe-interrupt)
+  (:import-from #:screenshotbot/dashboard/explain
+                #:explain)
+  (:import-from #:scheduled-jobs
+                #:make-scheduled-job
+                #:make-scheduled-job)
+  (:import-from #:scheduled-jobs/model
+                #:cronexpr)
+  (:import-from #:scheduled-jobs/bindings
+                #:invalid-cron-expr-message
+                #:invalid-cron-expr
+                #:cron-parse-expr)
+  (:import-from #:screenshotbot/model/company
+                #:company-owner
+                #:company-admins)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:installation-domain)
   (:local-nicknames (#:a #:alexandria)
                     (#:integration #:screenshotbot/replay/integration)
                     (#:frontend #:screenshotbot/replay/frontend)
@@ -106,6 +123,10 @@
             :index-reader web-projects-for-company)
    (remote-runs :initform nil
                 :accessor remote-runs)
+   (scheduled-job :initform nil
+                  :initarg :scheduled-job
+                  :accessor web-project-scheduled-job
+                  :relaxed-object-reference t)
    (schedule-p :initform nil
                :initarg :schedule-p
                :accessor web-project-schedule-p)
@@ -187,7 +208,7 @@
                      (length (browsers build)))))))
 
 (defhandler (nil :uri "/web-projects") ()
-  (app-template :title "Screenshotbot: Web Projectslo"
+  (app-template :title "Screenshotbot: Web Projects"
    <div>
      ,(taskie-page-title
        :title "Web projects"
@@ -214,7 +235,16 @@
                          (ui/div
                           <span>,(summary build) </span>)
                          (cond
-                           ((web-project-schedule-p build)
+                           ((and
+                             (web-project-schedule-p build)
+                             (web-project-scheduled-job build))
+                            (taskie-timestamp
+                             :prefix "Next run"
+                             :timestamp (scheduled-jobs:at (web-project-scheduled-job build))))
+
+                           ((and
+                             (web-project-schedule-p build)
+                             (next-job-at build))
                             (taskie-timestamp
                              :prefix "Next run"
                              :timestamp (next-job-at build)))
@@ -332,8 +362,16 @@
      (can-view! remote-run)
      (remote-run-logs remote-run))))
 
-(progn
-  <option value=nil />)
+(defun fix-cronexpr (name cronexpr)
+  (let ((hash (md5:md5sum-string name)))
+    (format nil "~a ~a ~a"
+            ;; not truly random, but good enough
+            (mod (elt hash 0) 60)
+            (mod (elt hash 1) 60)
+            cronexpr)))
+
+(defun unfix-cronexpr (cronexpr)
+  (third (str:split " " cronexpr :limit 3)))
 
 (defun form (&key submit browsers
                name
@@ -341,7 +379,7 @@
                custom-css
                sitemap
                schedule-p
-               schedule-every)
+               cronexpr)
   (flet ((option (value title)
            <option value=value
                    selected= (if (member value (mapcar #'store-object-id browsers)) markup:+empty+)
@@ -394,12 +432,14 @@
       <div class= "form-group mb-3">
         <input type= "checkbox" id= "schedule-p" name= "schedule-p" class= "form-check-input"
                checked= (when schedule-p "checked") />
-        <label for= "schedule-p" class= "form-check-label" >Run every
-          <input type= "number" name= "schedule-every" id= "schedule-every"
-                 max= "48" min= "0" style= "width: 3em"
-                 value=schedule-every />
-          hours.
+        <label for= "schedule-p" class= "form-check-label" >Schedule <explain-cron-expr />
         </label>
+
+        <input type= "input" name= "cronexpr" id= "cronexpr"
+               class= "form-control mt-1"
+               placeholder= "*/3 * * *"
+               value= cronexpr />
+
       </div>
 
 
@@ -410,6 +450,7 @@
   </simple-card-page>))
 
 (defun run-now (build)
+  "The name of this function is important, it's stored in the scheduled jobs on disk"
   (restart-case
       (confirmation-modal
        :title (web-project-name build)
@@ -419,6 +460,16 @@
        <p>Schedule a run for ,(web-project-name build)?</p>)
     (retry-run-now ()
       (run-now build))))
+
+(defun scheduled-job-run-now (project)
+  (let ((company (company project)))
+   (actually-run-now
+    project
+    :user (or
+           (company-owner company)
+           (car (company-admins company)))
+    :company company
+    :host (installation-domain (installation)))))
 
 (defun actually-run-now (build
                          &key (user (current-user))
@@ -463,12 +514,12 @@
                           urls
                           sitemap
                           schedule-p
-                          schedule-every)
+                          cronexpr)
                    (form-submit :name name
                                 :urls urls
                                 :sitemap sitemap
                                 :schedule-p schedule-p
-                                :schedule-every schedule-every
+                                :cronexpr cronexpr
                                 :submit submit)))
     (form :submit submit)))
 
@@ -477,15 +528,43 @@
         if (string-equal name key)
           collect value))
 
+(defun fix-cron-message (message)
+  "Fixes the cron message from cron-parse-expr to be user-friendly"
+  (cond
+    ((str:containsp "Invalid number" message)
+     (str:replace-all "6 fields" "4 fields" message))
+    (t (format nil "Error from cron parser: ~A" message))))
+
+(markup:deftag explain-cron-expr ()
+  <explain>
+    <p>
+      Use a cron like syntax to schedule your jobs. e.g. to schedule every every day at 8am, do
+      <span class= "text-monospace" >8 * * *</span>
+    </p>
+
+    <p>
+      Unlike Cron you can't specify minutes, Screenshotbot will pick a random minute.
+    </p>
+
+    <p>
+      The fields are respectively: Hour, Day of Month, Month, Day of Week.
+    </p>
+
+    <h6>Examples</h6>
+
+    <p>
+      To schedule every three hours: */3 * * *. To schedule 8am and 4pm on weekdays do: 8,4 * * MON-FRI.
+    </p>
+  </explain>)
+
 (defun form-submit (&rest args &key name urls sitemap submit
                                  edit
                                  schedule-p
                                  custom-css
-                                 schedule-every
+                                 cronexpr
                                  (browsers (multiple-parameters "browsers")))
   (restart-case
-      (let ((errors)
-            (schedule-every (parse-integer (if (str:emptyp schedule-every) "0" schedule-every))))
+      (let ((errors))
         (flet ((check (test field message)
                  (unless test
                    (push (cons field message) errors))))
@@ -516,13 +595,19 @@
                    "Too many browsers selected")
 
             (when schedule-p
-             (check (< 2 schedule-every)
-                    :schedule-p
-                    (format nil "Schedule is too low ~S" schedule-p)))
+              (handler-case
+                  (cron-parse-expr (fix-cronexpr name  cronexpr))
+                (invalid-cron-expr (e)
+                  (let ((message (invalid-cron-expr-message e)))
+                    (check nil
+                           :cronexpr
+                           (fix-cron-message message))))))
             (cond
               (errors
                (with-form-errors (:errors errors
                                   :name name
+                                  :cronexpr cronexpr
+                                  :schedule-p :schedule-p
                                   :urls (str:join #\Newline urls)
                                   :sitemap sitemap
                                   :was-validated t)
@@ -533,13 +618,14 @@
                       (make-instance 'web-project
                                       :name name
                                       :company (current-company)
+                                      :schedule-p schedule-p
                                       :urls urls
-                                      :schedule-p (when schedule-p t)
-                                      :schedule-every schedule-every
                                       :custom-css custom-css
                                       :browsers browsers
                                       :sitemap sitemap)))
-                 (update-next-job-at project))
+                 (update-scheduled-job project
+                                       schedule-p
+                                       cronexpr))
 
                (hex:safe-redirect "/web-projects"))
               (edit
@@ -547,16 +633,30 @@
                  (setf (web-project-name edit) name)
                  (setf (urls edit) urls)
                  (setf (browsers edit) browsers)
+                 (Setf (web-project-schedule-p edit) schedule-p)
                  (setf (custom-css edit) custom-css)
-                 (setf (sitemap edit) sitemap)
-                 (setf (web-project-schedule-p edit)
-                       (when schedule-p t))
-                 (setf (web-project-schedule-every edit)
-                       schedule-every))
-               (update-next-job-at edit)
+                 (setf (sitemap edit) sitemap))
+               (update-scheduled-job edit
+                                     schedule-p
+                                     cronexpr)
                (hex:safe-redirect "/web-projects"))))))
     (retry-form-submit ()
       (apply #'form-submit args))))
+
+(defun update-scheduled-job (self schedule-p cronexpr)
+  (when (web-project-scheduled-job self)
+    (with-transaction ()
+      (setf (web-project-scheduled-job self) nil))
+    (a:when-let ((scheduled-job (web-project-scheduled-job self)))
+     (unless (bknr.datastore::object-destroyed-p scheduled-job)
+       (bknr.datastore:delete-object scheduled-job))))
+  (when schedule-p
+    (let ((job (make-scheduled-job :cronexpr (fix-cronexpr (web-project-name self) cronexpr)
+                                   :tzname "America/New_York" ;; TODO
+                                   :function 'scheduled-job-run-now
+                                   :args (list self))))
+      (with-transaction ()
+        (setf (web-project-scheduled-job self) job)))))
 
 (defun edit-build (build)
   (let (submit)
@@ -564,14 +664,14 @@
           (nibble (name urls sitemap
                         schedule-p
                         custom-css
-                        schedule-every)
+                        cronexpr)
             (form-submit :name name
                          :urls urls
                          :sitemap sitemap
                          :edit build
                          :schedule-p schedule-p
                          :custom-css custom-css
-                         :schedule-every schedule-every
+                         :cronexpr cronexpr
                          :submit submit)))
    (form :name (web-project-name build)
          :urls (str:join #\Newline (urls build))
@@ -580,7 +680,10 @@
          :custom-css (custom-css build)
          :submit submit
          :schedule-p (web-project-schedule-p build)
-         :schedule-every (web-project-schedule-every build))))
+         :cronexpr (a:when-let (scheduled-job
+                                (web-project-scheduled-job build))
+                     (unless (bknr.datastore::object-destroyed-p scheduled-job)
+                      (unfix-cronexpr (cronexpr  scheduled-job)))))))
 
 (defun run-chris ()
   (let ((build (data:store-object-with-id 667899)))

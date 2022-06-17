@@ -372,6 +372,7 @@
                :screenshotbot.sdk
                :str
                :flexi-streams
+               :scheduled-jobs
                :xmls
                :lquery
                :drakma
