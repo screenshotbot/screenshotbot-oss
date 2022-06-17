@@ -684,3 +684,12 @@
                                 (web-project-scheduled-job build))
                      (unless (bknr.datastore::object-destroyed-p scheduled-job)
                       (unfix-cronexpr (cronexpr  scheduled-job)))))))
+
+#+nil
+(defun migrate-to-cronexpr ()
+  (loop for build in (bknr.datastore:store-objects-with-class 'web-project)
+        if (and
+            (not (web-project-scheduled-job build))
+            (web-project-schedule-p build)
+            (web-project-schedule-every build))
+          collect build))
