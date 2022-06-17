@@ -521,8 +521,7 @@ If the images are identical, we return t, else we return NIL."
 (defun maybe-tabulate (tabs &key header &aux (id (format nil "a~a" (random 10000000))))
   (cond
     ((and (eql 1 (length tabs))
-          (and (stringp (tab-title (car tabs)))
-               (str:emptyp (tab-title (car tabs)))))
+          (str:emptyp (tab-title (car tabs))))
      ;; don't show the tabulation
      <markup:merge-tag>
        <div class= "card-header">
@@ -544,9 +543,10 @@ If the images are identical, we return t, else we return NIL."
                       <button class= (format nil "nav-link ~a" (if (= ctr 0) "active" ""))
                               data-bs-toggle= "tab"
                               data-bs-target= (format nil "#~a-~a" id ctr)
-                              role=tab
+                              data-title= (tab-title tab)
+                              role= "tab"
                               aria-controls= (format nil "~a-~a" id ctr)
-                              aria-selector (if (= ctr 0) "true" "false") >
+                              aria-selector=(if (= ctr 0) "true" "false") >
                         ,(tab-title tab)
                       </button>
                     </li>)
