@@ -684,10 +684,3 @@
                                 (web-project-scheduled-job build))
                      (unless (bknr.datastore::object-destroyed-p scheduled-job)
                       (unfix-cronexpr (cronexpr  scheduled-job)))))))
-
-(defun run-chris ()
-  (let ((build (data:store-object-with-id 667899)))
-    (actually-run-now build
-                      :user (user-with-email "chrispecoraro@gmail.com")
-                      :company (company build)
-                      :host "https://screenshotbot.io")))
