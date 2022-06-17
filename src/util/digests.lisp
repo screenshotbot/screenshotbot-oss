@@ -29,8 +29,6 @@ typedef struct SHA512state_st {
 (let ((output (asdf:output-file 'asdf:compile-op
                                  (asdf:find-component :util/digests
                                                       "digest"))))
-  #+nil ;; we don't want a moment of no module exist
-  (fli:disconnect-module :util-digest-native)
   (fli:register-module
    :util-digest-native
    :real-name output))
@@ -42,6 +40,11 @@ typedef struct SHA512state_st {
 (fli:define-foreign-function (sizeof-md5-ctx "tdrhq_sizeof_MD5_CTX")
     ()
   :result-type :int)
+
+(defparameter *sizeof-sha256-ctx* (sizeof-sha256-ctx))
+(defparameter *sizeof-md5-ctx* (sizeof-md5-ctx))
+
+(fli:disconnect-module :util-digest-native)
 
 (fli:define-foreign-function (sha256-init "SHA256_Init")
     ((ctx (:pointer :void)))
@@ -107,14 +110,14 @@ typedef struct SHA512state_st {
       result)))
 
 (defun sha256-file (file)
-  (digest-file file :ctx-size (sizeof-sha256-ctx)
+  (digest-file file :ctx-size *sizeof-sha256-ctx*
                     :init #'sha256-init
                     :update #'sha256-update
                     :final #'sha256-final
                     :digest-length 32))
 
 (defun md5-file (file)
-  (digest-file file :ctx-size (sizeof-md5-ctx)
+  (digest-file file :ctx-size *sizeof-md5-ctx*
                     :init #'md5-init
                     :update #'md5-update
                     :final #'md5-final
