@@ -19,12 +19,13 @@
    #:foreign-slot-value
    #:incf-pointer
    #:malloc
-   #:free))
+   #:free
+   #:dereference))
 (in-package :util/fake-fli)
 
 (defun fix-type (x &key (allow-count t))
   "Returns two values the converted type, and the count, in case of an array"
-  (log:info "fixing type: ~S" x)
+  #+nil(log:info "fixing type: ~S" x)
   (cond
     ((not x)
      (error "this looks like a bad type: ~a" x))
@@ -133,7 +134,8 @@
   (cffi:null-pointer-p x))
 
 
-(defmacro with-dynamic-foreign-objects (((output type &key (nelems 1))) &body body)
+(defmacro with-dynamic-foreign-objects (((output type &key (nelems 1) (fill 0))) &body body)
+  ;; fill is ignored!
   `(cffi:with-foreign-object (,output ',type ,nelems)
      ,@body))
 
@@ -143,6 +145,8 @@
 (defun incf-pointer (pointer)
   `(cffi:inc-pointer ,pointer))
 
+(defun dereference (obj type)
+  (cffi:mem-ref obj type))
 
 (defun malloc (&key type)
   (cffi:foreign-alloc (fix-type type :allow-count nil)))
