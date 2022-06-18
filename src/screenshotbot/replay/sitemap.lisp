@@ -14,6 +14,11 @@
    #:parse-sitemap))
 (in-package :screenshotbot/replay/sitemap)
 
+(defun read-loc (url)
+  (loop for attr in (xmls:node-children url)
+        if (string-equal "loc" (xmls:node-name attr))
+          return (car (xmls:node-children attr))))
+
 (defun parse-sitemap (url)
   "Gets the list of all URLS in a given sitemap file"
   (write-replay-log "Fetching sitemap: ~a" url)
@@ -22,15 +27,13 @@
        (let* ((content (dex:get url))
               (root (xmls:parse content))
               (urls (xmls:node-children root)))
-         (remove-if #'null
-          (loop for url in urls
-                collect
-                (loop for attr in (xmls:node-children url)
-                      if (string-equal "loc" (xmls:node-name attr))
-                        return (car (xmls:node-children attr))))))
+         (remove-if
+          #'null
+            (loop for url in urls
+                  if (equal "url" (xmls:node-name url))
+                    collect (read-loc url)
+                  if (equal "sitemap" (xmls:node-name url))
+                    append (parse-sitemap (read-loc url)))))
        :test #'equal)
     (retry-parse-sitemap ()
       (parse-sitemap url))))
-
-
-;; (parse-sitemap "https://rollins.edu/sitemap.xml")
