@@ -37,5 +37,5 @@
     ,@args))
 
 #+lispworks
-(def-cron gc (:minute 14 :step-hour 6)
+(def-cron gc (:minute 14 :hour 6)
   (hcl:gc-generation t))
