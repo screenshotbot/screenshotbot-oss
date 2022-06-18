@@ -291,6 +291,7 @@
                              (:file "test-webhook")))
                (:module "replay"
                 :components ((:file "test-core")
+                             (:file "test-sitemap")
                              (:file "test-replay-acceptor")))
                #+ (or ccl lispworks)
                (:module "slack"
