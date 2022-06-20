@@ -42,7 +42,8 @@
    #:now
    #:at
    #:bad-argument-error
-   #:call-job))
+   #:call-job
+   #:*scheduled-job*))
 (in-package :scheduled-jobs)
 
 
@@ -50,6 +51,9 @@
   ())
 
 (defvar *executor* (make-instance 'threaded-executor))
+
+(defvar *scheduled-job* nil
+  "The current scheduled job, bound when a job is being executed")
 
 (defun now ()
   (get-universal-time))
@@ -133,7 +137,10 @@ we're not looking in to what the object references."
                  (%update-queue next)))
               (t
                (unwind-protect
-                    (call-job *executor* (scheduled-job-function next)
+                    (call-job *executor*
+                              (lambda (&rest args)
+                                (let ((*scheduled-job* next))
+                                 (apply (scheduled-job-function next) args)))
                               (scheduled-job-args next))
                  (flet ((schedule-at (at)
                           (with-transaction ()

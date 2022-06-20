@@ -11,6 +11,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:scheduled-jobs
+                #:*scheduled-job*
                 #:*executor*
                 #:call-pending-scheduled-jobs
                 #:now
@@ -277,3 +278,15 @@
       (setf time 21)
       (call-pending-scheduled-jobs)
       (is (eql 2 *ctr*)))))
+
+(defun test-binding ()
+  (setf *state* (type-of *scheduled-job*)))
+
+(test scheduled-job-is-bound
+  (with-fixture state ()
+    (make-scheduled-job :at 20
+                        :function 'test-binding
+                        :args '())
+    (setf time 21)
+    (call-pending-scheduled-jobs)
+    (is (eql 'scheduled-job *state*))))
