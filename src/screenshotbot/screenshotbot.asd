@@ -304,7 +304,8 @@
                              (:file "test-send-tasks")
                              (:file "test-recorder-runs")))
                (:module "web-build"
-                :components ((:file "test-scheduler")))))
+                :components ((:file "test-scheduler")
+                             (:file "test-project")))))
 
 (defsystem :screenshotbot/secrets
   :serial t

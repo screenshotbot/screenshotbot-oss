@@ -649,12 +649,11 @@
       (apply #'form-submit args))))
 
 (defun update-scheduled-job (self schedule-p cronexpr)
-  (when (web-project-scheduled-job self)
+  (a:when-let ((scheduled-job (web-project-scheduled-job self)))
     (with-transaction ()
-      (setf (web-project-scheduled-job self) nil))
-    (a:when-let ((scheduled-job (web-project-scheduled-job self)))
-     (unless (bknr.datastore::object-destroyed-p scheduled-job)
-       (bknr.datastore:delete-object scheduled-job))))
+     (setf (web-project-scheduled-job self) nil))
+    (unless (bknr.datastore::object-destroyed-p scheduled-job)
+      (bknr.datastore:delete-object scheduled-job)))
   (when schedule-p
     (let ((job (make-scheduled-job :cronexpr (fix-cronexpr (web-project-name self) cronexpr)
                                    :tzname "America/New_York" ;; TODO
