@@ -13,3 +13,6 @@
 
 (define-key sly-inspector-mode-map
   (kbd "<delete>") 'arnold-delete-bknr-object)
+
+(defun arnold-update-bknr-slot ()
+  )

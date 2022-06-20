@@ -133,6 +133,11 @@
                (:file "file-lock")
                (:file "store")))
 
+(defsystem :util/bknr-slynk
+  :serial t
+  :depends-on (:slynk)
+  :components ((:file "bknr-slynk")))
+
 (defsystem :util/fiveam
   :depends-on (:util/testing
                :fiveam
