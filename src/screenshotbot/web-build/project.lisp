@@ -462,14 +462,19 @@
       (run-now build))))
 
 (defun scheduled-job-run-now (project)
-  (let ((company (company project)))
-   (actually-run-now
-    project
-    :user (or
-           (company-owner company)
-           (car (company-admins company)))
-    :company company
-    :host (installation-domain (installation)))))
+  (cond
+    ((and scheduled-jobs:*scheduled-job*
+          (eql scheduled-jobs:*scheduled-job* (web-project-scheduled-job project)))
+     (warn "Stale scheduled job for project: ~a" scheduled-jobs:*scheduled-job*))
+    (t
+     (let ((company (company project)))
+       (actually-run-now
+        project
+        :user (or
+               (company-owner company)
+               (car (company-admins company)))
+        :company company
+        :host (installation-domain (installation)))))))
 
 (defun actually-run-now (build
                          &key (user (current-user))
