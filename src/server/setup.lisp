@@ -164,9 +164,8 @@
 
             (when *verify-store*
               (log:config :info)
-              (hcl:profile
-               (time
-                (util/store:verify-store)))
+              (time
+               (util/store:verify-store))
               (log:info "Done verifying store")
               (uiop:quit 0))
 
