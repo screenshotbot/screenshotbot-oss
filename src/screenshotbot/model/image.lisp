@@ -659,7 +659,6 @@ recognized the file, we'll return nil."
                 (uiop:rename-file-overwriting-target tmp path)
                 (assert (uiop:file-exists-p path)))))))))))
 
-
 (defun ensure-images-have-hash ()
   "Used as a migration to fix an issue with images having no hash"
   (let ((images (reverse
