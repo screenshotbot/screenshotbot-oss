@@ -90,7 +90,7 @@
             </p>
 
             <p>
-              You will use an API key to upload screenshots with the <a href= "https://docs.screenshotbot.io/docs/recorder-cli/" target= "_blank">Screenshotbot SDK</a>. You don't need an API key for web projects.
+              You will use an API key to upload screenshots with the <a href= "/documentation/api/command-line-interface" target= "_blank">Screenshotbot SDK</a>. You don't need an API key for web projects.
             </p>
           </div>))
     </simple-card-page>))
