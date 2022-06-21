@@ -21,6 +21,7 @@
                 #:scheduled-job-function
                 #:scheduled-job)
   (:import-from #:priority-queue
+                #:pqueue-front-value
                 #:pqueue-empty-p
                 #:pqueue-pop
                 #:pqueue-front-key
@@ -112,55 +113,59 @@ we're not looking in to what the object references."
 (defun %call-pending-scheduled-jobs ()
   (let ((queue (priority-queue))
         (now (now)))
-    (multiple-value-bind (next-wrapper next-at)
-        (bt:with-lock-held (*lock*)
-          (unless (pqueue-empty-p queue)
-            (pqueue-pop queue)))
-      (let ((next (when next-wrapper
-                    (job next-wrapper))))
-       (unwind-protect
-            (cond
-              ((null next)
-               :no-more)
-              ((or
-                (object-destroyed-p next)
-                ;; If (setf at) was called on the object, then
-                ;; this could be a stale reference in the
-                ;; priority queue.
-                (not (eql next-wrapper (wrapper next))))
-               (%call-pending-scheduled-jobs))
-              ((> next-at now)
-               ;; We're done. But we need to push this object back on to the
-               ;; queue. If an error happens here, we'll lose this job
-               ;; forever, so fingers crossed.
-               (bt:with-lock-held (*lock*)
-                 (%update-queue next)))
-              (t
-               (unwind-protect
-                    (call-job *executor*
-                              (lambda (&rest args)
-                                (let ((*scheduled-job* next))
-                                 (apply (scheduled-job-function next) args)))
-                              (scheduled-job-args next))
-                 (flet ((schedule-at (at)
-                          (with-transaction ()
-                            ;; the queue will be updated in the unwind-protect
-                            (setf (%at next) at))
-                          (bt:with-lock-held (*lock*)
-                            (%update-queue next))))
-                   (cond
-                     ((cronexpr next)
-                      ;; Figure out the next run time based on the cronexpr
-                      (let ((cron-expr (ignore-errors
-                                        (cron-parse-expr (cronexpr next)))))
-                        (when cron-expr
-                          (schedule-at (cron-next cron-expr :now (now)
-                                                  :timezone (tz-offset next))))))
-                     ((periodic next)
-                      (schedule-at (+ (periodic next) now)))
-                     (t
-                      (delete-object next)))))
-               (%call-pending-scheduled-jobs))))))))
+    (when (bt:with-lock-held (*lock*)
+            (and
+             (not (pqueue-empty-p queue))
+             (< (pqueue-front-key queue) now)))
+     (multiple-value-bind (next-wrapper next-at)
+         (bt:with-lock-held (*lock*)
+           (unless (pqueue-empty-p queue)
+             (pqueue-pop queue)))
+       (let ((next (when next-wrapper
+                     (job next-wrapper))))
+         (cond
+           ((null next)
+            :no-more)
+           ((or
+             (object-destroyed-p next)
+             ;; If (setf at) was called on the object, then
+             ;; this could be a stale reference in the
+             ;; priority queue.
+             (not (eql next-wrapper (wrapper next))))
+            (%call-pending-scheduled-jobs))
+           ((> next-at now)
+            (error "We should not be here, we should've handled this earlier"))
+           (t
+            (unwind-protect
+                 (call-job *executor*
+                           (lambda (&rest args)
+                             (let ((*scheduled-job* next))
+                               (apply (scheduled-job-function next) args)))
+                           (scheduled-job-args next))
+              (%reschedule-job next now))
+            (%call-pending-scheduled-jobs))))))))
+
+(defun %reschedule-job (next now)
+  "After a job has just been run, call this to reschedule the job onto
+the queue. Internal detail."
+  (flet ((schedule-at (at)
+           (with-transaction ()
+             ;; the queue will be updated in the unwind-protect
+             (setf (%at next) at))
+           (bt:with-lock-held (*lock*)
+             (%update-queue next))))
+    (cond
+      ((cronexpr next)
+       ;; Figure out the next run time based on the cronexpr
+       (let ((cron-expr (ignore-errors
+                         (cron-parse-expr (cronexpr next)))))
+         (when cron-expr
+           (schedule-at (cron-next cron-expr :now (now)
+                                             :timezone (tz-offset next))))))
+      ((periodic next)
+       (schedule-at (+ (periodic next) now)))
+      (t
+       (delete-object next)))))
 
 (defun call-pending-scheduled-jobs ()
   (bt:with-lock-held (*call-pending-scheduled-jobs-lock*)
