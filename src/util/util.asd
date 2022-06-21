@@ -163,6 +163,7 @@
 (defsystem :util/threading
   :depends-on (:bordeaux-threads
                :mailbox
+               :sentry
                :util/misc)
   :serial t
   :components ((:file "fake-mp")

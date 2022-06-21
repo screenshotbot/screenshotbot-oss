@@ -13,6 +13,8 @@
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:default-logged-in-page)
+  (:import-from #:util/threading
+                #:log-sentry)
   (:export
    #:defhandler
    #:with-login
@@ -165,21 +167,6 @@
    (obj :initarg :obj
         :accessor error-obj)))
 
-(defvar *warning-count*)
-
-(defun %log-sentry (condition)
-  #-screenshotbot-oss
-  (sentry-client:capture-exception condition))
-
-(defmethod log-sentry (condition)
-  (when hunchentoot:*catch-errors-p*
-    (%log-sentry condition)))
-
-(defmethod log-sentry :around ((warning warning))
-  (when (<= (incf *warning-count*) 5)
-    (call-next-method)))
-
-
 (defun %handler-wrap (impl)
   (restart-case
       (let ((*warning-count* 0))
@@ -274,17 +261,10 @@ Disallow: /n")
                           "mx.tdrhq.com"
                           "api.screenshotbot.io")
 
-(defun funcall-with-sentry-logs (fn)
-  (let ((*warning-count* 0))
-   (handler-bind ((error #'log-sentry)
-                  (warning #'log-sentry))
-     (funcall fn))))
-
 (defun make-thread (fn &rest args)
   (apply
    'util:make-thread
-   (lambda ()
-     (funcall-with-sentry-logs fn))
+   fn
    args))
 
 

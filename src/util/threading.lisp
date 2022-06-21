@@ -14,7 +14,8 @@
    #:make-thread
    #:with-safe-interruptable
    #:safe-interrupt-checkpoint
-   #:safe-interrupt)
+   #:safe-interrupt
+   #:log-sentry)
 )
 (in-package :util/threading)
 
@@ -87,6 +88,27 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
 (defun call-with-thread-fixes (fn)
   (funcall fn))
 
+(defvar *warning-count*)
+
+(defun %log-sentry (condition)
+  #-screenshotbot-oss
+  (sentry-client:capture-exception condition))
+
+(defmethod log-sentry (condition)
+  (when hunchentoot:*catch-errors-p*
+    (%log-sentry condition)))
+
+(defmethod log-sentry :around ((warning warning))
+  (when (<= (incf *warning-count*) 5)
+    (call-next-method)))
+
+
+(defun funcall-with-sentry-logs (fn)
+  (let ((*warning-count* 0))
+   (handler-bind ((error #'log-sentry)
+                  (warning #'log-sentry))
+     (funcall fn))))
+
 (defun make-thread (body &rest args)
   (apply #'bt:make-thread
            (lambda ()
@@ -101,5 +123,5 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
                                        (t
                                         (trivial-backtrace:print-backtrace e)
                                         (invoke-restart 'cl:abort))))))
-               (funcall body)))
+               (funcall-with-sentry-logs body)))
          args))

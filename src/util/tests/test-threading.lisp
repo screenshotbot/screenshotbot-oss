@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam
         #:util/threading)
+  (:import-from #:util/threading
+                #:funcall-with-sentry-logs)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-threading)
 
@@ -41,3 +43,42 @@
     (is-true callback-called-p)
     (is (< ctr (/ max-ctr 2)))
     (pass)))
+
+(def-fixture sentry-mocks ()
+  (cl-mock:with-mocks ()
+    (let ((hunchentoot:*catch-errors-p* t))
+      (let ((sentry-logs nil))
+        #-screenshotbot-oss
+        (cl-mock:if-called
+         'sentry-client:capture-exception
+          (lambda (e)
+            (push e sentry-logs)))
+       (&body)))))
+
+(define-condition my-simple-warning (warning)
+  ())
+
+(define-condition my-simple-error (error)
+  ())
+
+(test sentry-logging-for-make-thread
+  (with-fixture sentry-mocks ()
+    (funcall-with-sentry-logs
+     (lambda ()
+       (warn 'my-simple-warning)))
+    (is (eql 1 (length sentry-logs)))
+    (signals my-simple-error
+     (funcall-with-sentry-logs
+      (lambda ()
+        (error 'my-simple-error))))
+    (is (eql 2 (length sentry-logs)))))
+
+#-screenshotbot-oss
+(test large-number-of-warnings
+  (with-fixture sentry-mocks ()
+    (funcall-with-sentry-logs
+     (lambda ()
+       (loop for i below 100 do
+         (warn
+          'my-simple-warning))))
+    (is (eql 5 (length sentry-logs)))))
