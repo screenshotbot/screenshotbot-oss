@@ -14,6 +14,7 @@
                 #:installation
                 #:default-logged-in-page)
   (:import-from #:util/threading
+                #:*warning-count*
                 #:log-sentry)
   (:export
    #:defhandler

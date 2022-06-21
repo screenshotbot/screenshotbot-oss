@@ -88,7 +88,7 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
 (defun call-with-thread-fixes (fn)
   (funcall fn))
 
-(defvar *warning-count*)
+(defvar *warning-count* 0)
 
 (defun %log-sentry (condition)
   #-screenshotbot-oss
