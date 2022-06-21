@@ -464,7 +464,8 @@
 (defun scheduled-job-run-now (project)
   (cond
     ((and scheduled-jobs:*scheduled-job*
-          (eql scheduled-jobs:*scheduled-job* (web-project-scheduled-job project)))
+          (not
+           (eql scheduled-jobs:*scheduled-job* (web-project-scheduled-job project))))
      (warn "Stale scheduled job for project: ~a" scheduled-jobs:*scheduled-job*))
     (t
      (let ((company (company project)))
