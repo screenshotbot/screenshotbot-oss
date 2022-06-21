@@ -90,7 +90,7 @@ internal use only."
 (defmethod next-cron-run-time ((self scheduled-job))
   "Calculate the next runtime for cron. If an error happens we're retur")
 
-(defmethod initialize-transient-instance ((self scheduled-job))
+(defmethod bknr.datastore:initialize-transient-instance ((self scheduled-job))
   (bt:with-lock-held (*lock*)
     (%update-queue self)))
 

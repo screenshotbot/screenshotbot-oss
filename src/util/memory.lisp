@@ -28,5 +28,15 @@
          (push obj ret))))
     ret))
 
+(defun weighted-random-sample (objects weight-fn)
+  (let* ((total (loop for obj in objects
+                      summing (funcall weight-fn obj)))
+         (pt (random total)))
+    (let ((curr 0))
+      (dolist (obj objects)
+        (incf curr (funcall weight-fn obj))
+        (when (> curr pt)
+          (return obj))))))
+
 ;; (histogram)
-;; (random-sample:random-sample (objects-of-type 'hunchentoot:acceptor) 100)
+;; (random-sample:random-sample (objects-of-type 'system:tlatter) 100)
