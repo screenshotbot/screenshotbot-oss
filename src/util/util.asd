@@ -163,6 +163,7 @@
 (defsystem :util/threading
   :depends-on (:bordeaux-threads
                :mailbox
+               #-screenshotbot-oss
                :sentry
                :util/misc)
   :serial t
