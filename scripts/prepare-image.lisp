@@ -67,6 +67,13 @@
 (push (pathname (format nil "~asrc/" *cwd*)) ql:*local-project-directories*)
 (push (pathname (format nil "~athird-party/" *cwd*)) ql:*local-project-directories*)
 
+(defun maybe-configure-proxy ()
+  (let ((proxy (uiop:getenv "HTTP_PROXY")))
+    (when (and proxy (> (length proxy) 0))
+      (setf ql:*proxy-url* proxy))))
+
+(maybe-configure-proxy)
+
 
 (ql:quickload "log4cl")
 
