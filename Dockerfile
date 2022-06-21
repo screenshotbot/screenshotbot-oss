@@ -4,7 +4,7 @@ FROM debian:stable AS magick_base
 RUN apt-get update && apt-get install -y libyaml-dev git-core libpng-dev zlib1g-dev libpng16-16  zlib1g g++ libtool     libpng16-16 libpng-dev libjpeg62-turbo libjpeg62-turbo-dev libgomp1 ghostscript libxml2-dev libxml2-utils libtiff-dev libfontconfig1-dev libfreetype6-dev fonts-dejavu libwebp6 libwebp-dev makeself exiftool build-essential
 
 ADD https://imagemagick.org/archive/ImageMagick.tar.gz ImageMagick.tar.gz
-RUN tar xvzf ImageMagick.tar.gz ImageMagick
+RUN tar xvzf ImageMagick.tar.gz
 
 RUN mv ImageMagick-* ImageMagick/
 WORKDIR ImageMagick
