@@ -85,7 +85,9 @@
    #:image-format
    #:ping-image-dimensions
    #:find-image
-   #:make-image))
+   #:make-image
+   #:image-on-filesystem-p
+   #:image-filesystem-pathname))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -186,12 +188,20 @@
     (%s3-key s3-blob) ;; old objects
     (bknr.datastore:store-object-id s3-blob))))
 
+(defmethod image-on-filesystem-p ((image image))
+  "Is the image stored on the local filesystem."
+  (typep (image-blob image) 'image-blob))
+
+(defmethod image-filesystem-pathname ((image image))
+  "If the image is stored on the current file system, return the
+  pathname to the image. If it's stored remotely, raise an error!"
+  (assert (image-on-filesystem-p image))
+  (bknr.datastore:blob-pathname (image-blob image)))
+
 (defmethod %with-local-image ((image image) fn)
   (cond
-    ((typep
-      (image-blob image)
-      'image-blob)
-     (funcall fn (bknr.datastore:blob-pathname (image-blob image))))
+    ((image-on-filesystem-p image)
+     (funcall fn (image-filesystem-pathname image)))
     (t
      (uiop:with-temporary-file (:pathname p :stream s :direction :output :type "png"
                                 :element-type 'flexi-streams:octet)
@@ -518,10 +528,8 @@
 
 (defmethod open-image-stream ((image image))
   (cond
-    ((typep
-      (image-blob image)
-      'image-blob)
-     (let ((pathname (bknr.datastore:blob-pathname (image-blob image))))
+    ((image-on-filesystem-p image)
+     (let ((pathname (image-filesystem-pathname image)))
        (log:debug "Loading local image at: ~S" pathname)
        (open
         pathname
@@ -542,7 +550,7 @@
 
 (defmethod image-public-url ((image image) &key size)
   (cond
-    ((typep (image-blob image) 'image-blob)
+    ((image-on-filesystem-p image)
      (let ((args nil))
        (when size
          (setf args `(:size ,(string-downcase size))))
@@ -632,32 +640,30 @@ recognized the file, we'll return nil."
 
 (with-auto-restart ()
   (defun convert-image-to-webp (image)
-   (let ((blob (image-blob image))
-         (+limit+ 16383))
-     (typecase blob
-       (image-blob
-        (when (and
-               (uiop:file-exists-p (blob-pathname blob))
-               (string= "PNG" (image-format image))
-               (let ((dim (image-dimensions image)))
-                 (and (< (dimension-height dim) +limit+)
-                      (< (dimension-width dim) +limit+))))
-          (flet ((%rename-file (from to)
-                   (log:info "Renaming file from ~a to ~a" from to)
-                   (rename-file from to)))
-            (let ((path (make-pathname :type :unspecific
-                                       :defaults (blob-pathname blob))))
-              (log:info "will switch blob: ~a" path)
-              (let ((tmp (make-pathname :type "webp"
-                                        :defaults path))
-                    (png (make-pathname :type "png"
-                                        :defaults path)))
-                (sleep 1)
-                (convert-to-lossless-webp
-                 (magick)
-                 path tmp)
-                (uiop:rename-file-overwriting-target tmp path)
-                (assert (uiop:file-exists-p path)))))))))))
+   (let ((+limit+ 16383))
+     (when (and
+            (image-on-filesystem-p image)
+            (uiop:file-exists-p (image-filesystem-pathname image))
+            (string= "PNG" (image-format image))
+            (let ((dim (image-dimensions image)))
+              (and (< (dimension-height dim) +limit+)
+                   (< (dimension-width dim) +limit+))))
+       (flet ((%rename-file (from to)
+                (log:info "Renaming file from ~a to ~a" from to)
+                (rename-file from to)))
+         (let ((path (make-pathname :type :unspecific
+                                    :defaults (image-filesystem-pathname image))))
+           (log:info "will switch image: ~a" path)
+           (let ((tmp (make-pathname :type "webp"
+                                     :defaults path))
+                 (png (make-pathname :type "png"
+                                     :defaults path)))
+             (sleep 1)
+             (convert-to-lossless-webp
+              (magick)
+              path tmp)
+             (uiop:rename-file-overwriting-target tmp path)
+             (assert (uiop:file-exists-p path)))))))))
 
 (defun ensure-images-have-hash ()
   "Used as a migration to fix an issue with images having no hash"
