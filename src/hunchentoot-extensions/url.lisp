@@ -131,7 +131,7 @@ to decide how to attach the new parameter to the end of the string."
 (defun get-request-domain-prefix (&optional (request hunchentoot:*request*))
   "Like https://xyz.com or http://localhost:3014. Appropriate for use
   in emails"
-  (destructuring-bind (host &optional (port 80)) (str:split ":" (hunchentoot:host request))
+  (destructuring-bind (host &optional (port "80")) (str:split ":" (hunchentoot:host request))
     (let ((port (parse-integer port)))
      (case port
        (443 (format nil "https://~a" host))

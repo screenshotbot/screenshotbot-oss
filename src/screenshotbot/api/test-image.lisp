@@ -50,7 +50,6 @@
                         :user user
                         :api-key api-key)
          (let ((*current-api-key* api-key)
-               (*use-blob-store-p* nil)
                (*build-presigned-put* (lambda (bucket key) "https://example.com")))
            (&body)))))))
 
@@ -60,6 +59,7 @@
                  (prepare-upload-api
                   :hash "abcd"
                   :content-type "image/png"))))
+      (is-true (assoc-value resp :success))
       (let ((response (assoc-value resp :response)))
         (is (not (str:emptyp (assoc-value response :id))))
         (is-true (assoc-value response :upload-url))))))

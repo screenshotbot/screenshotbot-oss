@@ -113,7 +113,7 @@
 (defapi (prepare-upload-api :uri "/api/screenshot") (hash content-type hash-list)
   (cond
     (hash
-     (prepare-single-upload hash content-type))
+     (prepare-single-upload hash nil))
     (hash-list
      (loop for hash in (json:decode-json-from-string hash-list)
            collect

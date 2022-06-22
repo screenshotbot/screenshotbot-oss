@@ -54,10 +54,12 @@
   (let ((res
           (json:encode-json-to-string
            (handler-case
-               (make-instance 'result
-                              :success t
-                              :response
-                              (%funcall-with-api-handling fn))
+               (handler-bind ((error (lambda (e)
+                                       (trivial-backtrace:print-backtrace e))))
+                (make-instance 'result
+                               :success t
+                               :response
+                               (%funcall-with-api-handling fn)))
              (api-error (e)
                (log:warn "API error: ~a" (api-error-msg e))
                (make-instance 'error-result
