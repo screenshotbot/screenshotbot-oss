@@ -25,7 +25,9 @@
    #:register-ref
    #:find-any-refs
    #:safe-snapshot
-   #:defindex))
+   #:defindex
+   #:validate-class
+   #:with-class-validation))
 (in-package :util/store)
 
 (defvar *object-store*)
@@ -430,6 +432,35 @@ set-differences on O and the returned value from this."
         (write-string comment file))
       (car directories))))
 
+(defun verify-old-class (class-name slots)
+  #+nil(log:info "Verifying: ~S: ~S " class-name slots)
+  (let ((old-class (find-class class-name nil)))
+    (when old-class
+      (let ((old-slots (mapcar #'closer-mop:slot-definition-name
+                               (closer-mop:class-direct-slots old-class))))
+        (a:when-let ((diff (set-difference
+                            old-slots
+                            (mapcar #'car slots))))
+
+
+          (cerror "Dangerous continue and lose data" "missing slots: ~a"
+                  diff))))))
+
+(defmacro with-class-validation (&body body)
+  "Wrap a defclass for store objects to add extra validations"
+  (assert (= 1 (length body)))
+  (let* ((def (car body))
+         (class-name (elt def 1))
+         (slots (elt def 3)))
+    ;; verify both at compile time and load time, just how it is. The
+    ;; compiler updates the classes unfortunately, which will make the
+    ;; load-time verification pass.
+    (verify-old-class class-name slots)
+
+    `(progn
+       (verify-old-class ',class-name
+                         ',slots)
+       ,def)))
 
 ;; (validate-indices)
 

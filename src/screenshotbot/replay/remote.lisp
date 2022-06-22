@@ -42,6 +42,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:util/store
+                #:with-class-validation
                 #:defindex)
   (:import-from #:bknr.indices
                 #:hash-index)
@@ -138,32 +139,33 @@
 
 ;; (send-remote-run (make-testing-run))
 
-(defclass remote-run (object-with-oid)
-  ((remote-url :initarg :remote-url
-               :reader remote-url
-               :initform nil)
-   (company :initarg :company
-            :initform nil
-            :index-type hash-index
-            :index-reader remote-runs-for-company
-            :reader remote-run-company)
-   (log-file :initarg :log-file
-             :reader log-file
-             :initform nil)
-   (oid :initarg :remote-oid
-        :initform nil
-        :reader remote-oid)
-   (donep :initarg :donep
-          :initform nil
-          :writer (setf donep))
-   (status :initarg :status
-           :initform :unknown
-           :accessor remote-run-status)
-   (%created-at :initform 0
-                :initarg :created-at
-                :reader %created-at))
-  (:metaclass persistent-class)
-  (:default-initargs :created-at (get-universal-time)))
+(with-class-validation
+ (defclass remote-run (object-with-oid)
+   ((remote-url :initarg :remote-url
+                :reader remote-url
+                :initform nil)
+    (company :initarg :company
+             :initform nil
+             :index-type hash-index
+             :index-reader remote-runs-for-company
+             :reader remote-run-company)
+    (log-file :initarg :log-file
+              :reader log-file
+              :initform nil)
+    (oid :initarg :remote-oid
+         :initform nil
+         :reader remote-oid)
+    (donep :initarg :donep
+           :initform nil
+           :writer (setf donep))
+    (status :initarg :status
+            :initform :unknown
+            :accessor remote-run-status)
+    (%created-at :initform 0
+                 :initarg :created-at
+                 :reader %created-at))
+   (:metaclass persistent-class)
+   (:default-initargs :created-at (get-universal-time))))
 
 (defmethod can-view ((self remote-run) (user user))
   (let ((company (remote-run-company self)))
