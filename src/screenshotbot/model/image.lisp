@@ -87,7 +87,8 @@
    #:find-image
    #:make-image
    #:image-on-filesystem-p
-   #:image-filesystem-pathname))
+   #:image-filesystem-pathname
+   #:update-image))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -123,7 +124,7 @@
          :index-reader images-for-original-hash)
    (blob
     :initarg :blob
-    :accessor image-blob
+    :accessor %image-blob ;; don't access directly!
     :initform nil)
    (company
     :initarg :company
@@ -190,13 +191,13 @@
 
 (defmethod image-on-filesystem-p ((image image))
   "Is the image stored on the local filesystem."
-  (typep (image-blob image) 'image-blob))
+  (typep (%image-blob image) 'image-blob))
 
 (defmethod image-filesystem-pathname ((image image))
   "If the image is stored on the current file system, return the
   pathname to the image. If it's stored remotely, raise an error!"
   (assert (image-on-filesystem-p image))
-  (bknr.datastore:blob-pathname (image-blob image)))
+  (bknr.datastore:blob-pathname (%image-blob image)))
 
 (defmethod %with-local-image ((image image) fn)
   (cond
@@ -408,13 +409,30 @@
         (cleanup-image-stream stream1)
         (cleanup-image-stream stream2)))))
 
-(defun make-image (&rest args &key hash &allow-other-keys)
-  (apply #'make-instance 'image
+(defun make-image (&rest args &key hash blob pathname &allow-other-keys)
+  (when blob
+    (error "don't specify blob"))
+  (let ((args (alexandria:remove-from-plist args :pathname)))
+
+    (apply #'make-instance 'image
+           :blob (or
+                  blob
+                  (when pathname
+                   (bknr.datastore:make-blob-from-file pathname 'image-blob :type :png)))
            :hash (cond
                    ((stringp hash)
                     (ironclad:hex-string-to-byte-array hash))
-                   (t hash))
-           args))
+                   (hash hash)
+                   (pathname
+                    (md5-file pathname))
+                   (t (error "must provide hash or pathname")))
+           args)))
+
+(defmethod update-image ((image image) &key pathname)
+  (assert pathname)
+  (let ((blob (bknr.datastore:make-blob-from-file pathname 'image-blob :type :png)))
+    (with-transaction ()
+     (setf (%image-blob image) blob))))
 
 (defclass content-equal-result (store-object)
   ((image-1 :initarg :image-1

@@ -91,12 +91,8 @@
     (make-test-image p)))
 
 (defun make-test-image (pathname)
-  (let* ((blob (make-instance 'image-blob))
-         (hash (ironclad:byte-array-to-hex-string (md5-file pathname)))
-         (image (make-instance 'image
-                                :blob blob
-                                :hash hash)))
-    (uiop:copy-file pathname (blob-pathname blob))
+  (let* ((image (make-image
+                 :pathname pathname)))
     image))
 
 #+nil
@@ -175,9 +171,7 @@
 (test image-dimensions
   (with-fixture state ()
     (let* ((file (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
-           (blob (make-instance 'image-blob))
-           (image (make-instance 'image :blob blob)))
-      (uiop:copy-file file (blob-pathname blob))
+           (image (make-image :pathname file)))
       (let ((dimension (image-dimensions image)))
         (is (typep dimension 'dimension))
         (is (eql 360 (dimension-height dimension)))
@@ -188,7 +182,14 @@
     (is (equal "PNG" (image-format img)))
     (uiop:with-temporary-file (:pathname webp :type "webp")
       (run-magick (list "convert" "rose:" webp))
-      (let* ((blob (make-instance 'image-blob))
-             (image (make-instance 'image :blob blob)))
-        (uiop:copy-file webp (blob-pathname blob))
+      (let* ((image (make-image :pathname webp)))
         (is (equal "WEBP" (image-format image)))))))
+
+(test make-image-with-filename
+  (with-fixture state ()
+   (let ((file (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png")))
+     (let ((image (make-image :pathname file)))
+       (is-true (image-on-filesystem-p image))
+       (is (path:-e (image-filesystem-pathname image)))
+       (is (equalp #(145 184 144 188 213 44 215 112 157 4 202 64 212 94 93 133)
+                   (util/digests:md5-file (image-filesystem-pathname image))))))))

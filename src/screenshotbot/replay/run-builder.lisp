@@ -44,10 +44,11 @@
   (let ((hash md5))
     (let ((image (or
                   (find-image (company self) hash)
-                  (let ((blob (make-instance 'image-blob)))
-                    (funcall fetch (blob-pathname blob))
-                    (make-image :blob blob
-                                :company (company self)
+                  (uiop:with-temporary-file (:pathname tmpfile)
+                    (delete-file tmpfile)
+                    (funcall fetch tmpfile)
+                    (make-image :company (company self)
+                                :pathname tmpfile
                                 :hash hash
                                 :verified-p t)))))
       (push (make-instance

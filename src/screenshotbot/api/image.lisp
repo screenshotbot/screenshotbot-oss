@@ -20,6 +20,7 @@
   (:import-from #:screenshotbot/user-api
                 #:current-company)
   (:import-from #:screenshotbot/model/image
+                #:update-image
                 #:make-image)
   (:import-from #:util/digests
                 #:md5-file)
@@ -142,10 +143,7 @@
 (defhandler (api-upload-image-blob :uri "/api/image/blob" :method :put) (oid)
   (let ((image (find-by-oid oid)))
     (with-raw-post-data-as-tmp-file (p)
-      (with-transaction ()
-        (setf (image-blob image)
-              (bknr.datastore:make-blob-from-file
-               p 'image-blob :type :png)))
+      (update-image image :pathname p)
       (verify-image image)
       "0")))
 
