@@ -23,3 +23,11 @@ analytics-log-file.log
 *.lx64fsl
 .git
 buck-out
+quicklisp
+src
+third-party
+local-projects
+tools
+log
+analytics-log-file.log
+.buckd
