@@ -52,6 +52,8 @@
                 #:oid-array)
   (:import-from #:util/digests
                 #:md5-file)
+  (:import-from #:util/store
+                #:with-class-validation)
   ;; classes
   (:export
    #:image
@@ -115,29 +117,40 @@
 (defmethod initialize-instance :around ((s3-blob s3-blob) &rest args)
   (call-next-method))
 
-(defclass image (object-with-oid)
-  ((link :initarg :link)
-   (hash :initarg :hash
-         :reader image-hash ;; NOTE: Returns a vector!
-         :index-type hash-index
-         :index-initargs (:test 'equalp)
-         :index-reader images-for-original-hash)
-   (blob
-    :initarg :blob
-    :accessor %image-blob ;; don't access directly!
-    :initform nil)
-   (company
-    :initarg :company
-    :accessor company
-    :initform nil)
-   (verified-p
-    :accessor verified-p
-    :initform nil
-    :initarg :verified-p
-    :documentation "If we have verified that this image was uploaded")
-   (content-type :initarg :content-type
-                 :reader image-content-type))
-  (:metaclass persistent-class))
+(defparameter +image-state-filesystem+ 1
+  "Image is saved on the local filesystem")
+
+(with-class-validation
+ (defclass image (object-with-oid)
+   ((link :initarg :link)
+    (hash :initarg :hash
+          :reader image-hash ;; NOTE: Returns a vector!
+          :index-type hash-index
+          :index-initargs (:test 'equalp)
+          :index-reader images-for-original-hash)
+    (state :initarg :state
+           :initform nil
+           :accessor %image-state
+           :documentation "The state of the image. We use integers
+           because they're cheaper to parse in bknr.datastore, and
+           image objects are the largest number of objects in the
+           store.")
+    (blob
+     :initarg :blob
+     :accessor %image-blob ;; don't access directly!
+     :initform nil)
+    (company
+     :initarg :company
+     :accessor company
+     :initform nil)
+    (verified-p
+     :accessor verified-p
+     :initform nil
+     :initarg :verified-p
+     :documentation "If we have verified that this image was uploaded")
+    (content-type :initarg :content-type
+                  :reader image-content-type))
+   (:metaclass persistent-class)))
 
 (defmethod find-image ((company company) (hash string))
   (loop for image in (append
@@ -191,16 +204,34 @@
 
 (defmethod image-on-filesystem-p ((image image))
   "Is the image stored on the local filesystem."
-  (typep (%image-blob image) 'image-blob))
+  (or
+   (eql +image-state-filesystem+ (%image-state image))
+   (null (%image-blob image))
+   (typep (%image-blob image) 'image-blob)))
 
 (defmethod image-filesystem-pathname ((image image))
   "If the image is stored on the current file system, return the
   pathname to the image. If it's stored remotely, raise an error!"
   (assert (image-on-filesystem-p image))
-  (bknr.datastore:blob-pathname (%image-blob image)))
+  (cond
+    ((eql +image-state-filesystem+ (%image-state image))
+     (local-location-for-oid (oid-array image)))
+    ((%image-blob image)
+     (bknr.datastore:blob-pathname (%image-blob image)))
+    (t
+     ;; the file most likely does not exist at this point, but this is
+     ;; what you're asking for!
+     (local-location-for-oid (oid-array image)))))
+
+(defmethod image-not-uploaded-yet-p ((image image))
+  (and
+   (eql nil (%image-state image))
+   (not (%image-blob image))))
 
 (defmethod %with-local-image ((image image) fn)
   (cond
+    ((image-not-uploaded-yet-p image)
+     (error "no image uploaded yet for ~a" image))
     ((image-on-filesystem-p image)
      (funcall fn (image-filesystem-pathname image)))
     (t
@@ -409,30 +440,61 @@
         (cleanup-image-stream stream1)
         (cleanup-image-stream stream2)))))
 
+(defun local-location-for-oid (oid)
+  "Figure out the local location for the given OID"
+  (let* ((oid (coerce oid '(vector (unsigned-byte 8))))
+         (image-dir (path:catdir (bknr.datastore::store-directory
+                                     bknr.datastore:*store*)
+                                    "image-blobs/"))
+         (p1 (ironclad:byte-array-to-hex-string (subseq oid 0 1)))
+         (p2 (ironclad:byte-array-to-hex-string (subseq oid 1 2)))
+         (p4 (ironclad:byte-array-to-hex-string (subseq oid 2))))
+    ;; The first two bytes change approximately once every 0.7 days,
+    ;; so each directory has enough space for all files generated in
+    ;; one day. That should be good enough for anybody!
+    (let ((file (path:catfile image-dir
+                              (make-pathname
+                               :directory (list :relative p1 p2)
+                               :name p4))))
+      (ensure-directories-exist file)
+      file)))
+
 (defun make-image (&rest args &key hash blob pathname &allow-other-keys)
   (when blob
     (error "don't specify blob"))
-  (let ((args (alexandria:remove-from-plist args :pathname)))
-
-    (apply #'make-instance 'image
-           :blob (or
-                  blob
-                  (when pathname
-                   (bknr.datastore:make-blob-from-file pathname 'image-blob :type :png)))
-           :hash (cond
-                   ((stringp hash)
-                    (ironclad:hex-string-to-byte-array hash))
-                   (hash hash)
-                   (pathname
-                    (md5-file pathname))
-                   (t (error "must provide hash or pathname")))
-           args)))
+  (unless (or hash pathname)
+    (error "Must provide at least one of hash or pathname"))
+  (let* ((args (alexandria:remove-from-plist args :pathname))
+         (oid (mongoid:oid))
+         (hash (cond
+                 ((stringp hash)
+                  (ironclad:hex-string-to-byte-array hash))
+                 (t
+                  hash))))
+    (let ((image-file (local-location-for-oid oid)))
+      ;; TODO: copy-overwriting-target could be a lot more efficient in
+      ;; many cases.
+      (when pathname
+        (assert (path:-e pathname))
+        (uiop:copy-file pathname image-file))
+      (apply #'make-instance 'image
+             :oid oid
+             :state (cond
+                      (pathname
+                       +image-state-filesystem+))
+             :hash (cond
+                     (hash hash)
+                     (pathname
+                      (md5-file image-file))
+                     (t (error "must provide hash or pathname")))
+             args))))
 
 (defmethod update-image ((image image) &key pathname)
   (assert pathname)
-  (let ((blob (bknr.datastore:make-blob-from-file pathname 'image-blob :type :png)))
-    (with-transaction ()
-     (setf (%image-blob image) blob))))
+  (with-transaction ()
+    (setf (%image-state image)
+          +image-state-filesystem+))
+  (uiop:copy-file pathname (image-filesystem-pathname image)))
 
 (defclass content-equal-result (store-object)
   ((image-1 :initarg :image-1

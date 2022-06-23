@@ -18,6 +18,11 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:screenshotbot/model/image
+                #:%image-state
+                #:+image-state-filesystem+
+                #:with-local-image
+                #:update-image
+                #:local-location-for-oid
                 #:slow-image-comparison
                 #:image-format
                 #:dimension-width
@@ -41,14 +46,22 @@
 
 (util/fiveam:def-suite)
 
+(defun static-asset (file)
+  (asdf:system-relative-pathname :screenshotbot
+                                 (path:catfile "static/" file)))
+
 (def-fixture state ()
-  (with-test-store ()
-   (let* ((img (make-instance 'local-image :url "/assets/images/old-example-view-right.png"))
-          (img2 (make-instance 'local-image :url "/assets/images/old-example-view-left.png"))
-          (img-copy (make-instance 'local-image :url "/assets/images/old-example-view-right.png"))
-          (rect (make-instance 'mask-rect :left 8 :top 11
-                                          :height 99 :width 103)))
-     (&body))))
+  (let ((file (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png")))
+   (with-test-store ()
+     (let* ((img (make-image
+                  :pathname (static-asset "assets/images/old-example-view-right.png")))
+            (img2 (make-image
+                   :pathname (static-asset "assets/images/old-example-view-left.png")))
+            (img-copy (make-image
+                       :pathname (static-asset "assets/images/old-example-view-right.png")))
+            (rect (make-instance 'mask-rect :left 8 :top 11
+                                            :height 99 :width 103)))
+       (&body)))))
 
 (test simple-compare ()
   (with-fixture state ()
@@ -187,9 +200,24 @@
 
 (test make-image-with-filename
   (with-fixture state ()
-   (let ((file (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png")))
-     (let ((image (make-image :pathname file)))
-       (is-true (image-on-filesystem-p image))
-       (is (path:-e (image-filesystem-pathname image)))
-       (is (equalp #(145 184 144 188 213 44 215 112 157 4 202 64 212 94 93 133)
-                   (util/digests:md5-file (image-filesystem-pathname image))))))))
+   (let ((image (make-image :pathname file)))
+     (is-true (image-on-filesystem-p image))
+     (is (eql +image-state-filesystem+ (%image-state image)))
+     (is (path:-e (image-filesystem-pathname image)))
+     (is (equalp #(145 184 144 188 213 44 215 112 157 4 202 64 212 94 93 133)
+                 (util/digests:md5-file (image-filesystem-pathname image)))))))
+
+(test local-location-for-oid--ensure-directory-is-writeable
+  (with-fixture state ()
+    (with-open-file (file (local-location-for-oid (mongoid:oid))
+                          :direction :output)
+      (write-string "hello" file))))
+
+(test update-image
+  (with-fixture state ()
+    (let ((hash #(145 184 144 188 213 44 215 112 157 4 202 64 212 94 93 133)))
+     (let ((image (make-image :hash hash)))
+       (update-image image :pathname file)
+       (with-local-image (file image)
+         (is (equalp hash
+                     (md5-file file))))))))

@@ -22,16 +22,24 @@
                 #:make-diff-report
                 #:diff-report-title)
   (:import-from #:util/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:screenshotbot/model/image
+                #:make-image))
 (in-package :screenshotbot/test-diff-report)
 
 (util/fiveam:def-suite)
 
+(defun static-asset (file)
+  (asdf:system-relative-pathname :screenshotbot
+                                 (path:catfile "static/" file)))
+
 (def-fixture state ()
   (let ((*cache* (make-hash-table :test #'equal)))
    (with-test-store ()
-     (let* ((img (make-instance 'local-image :url "/assets/images/example-view-square.svg.png"))
-            (img2 (make-instance 'local-image :url "/assets/images/example-view.svg.png"))
+     (let* ((img (make-image
+                  :pathname (static-asset "assets/images/example-view-square.svg.png")))
+            (img2 (make-image
+                   :pathname (static-asset "assets/images/example-view.svg.png")))
             (channel (make-instance 'channel))
             (screenshot (make-screenshot :name "foo"
                                          :image img))
