@@ -20,6 +20,8 @@
   (:import-from #:screenshotbot/user-api
                 #:current-company)
   (:import-from #:screenshotbot/model/image
+                #:image-filesystem-pathname
+                #:image-on-filesystem-p
                 #:update-image
                 #:make-image)
   (:import-from #:util/digests
@@ -162,8 +164,8 @@
     ;; check again! could've been verified by now
     (let ((etag
             (cond
-              ((image-blob image)
-               (md5-file (bknr.datastore:blob-pathname  (image-blob image))))
+              ((image-on-filesystem-p image)
+               (md5-file (image-filesystem-pathname image)))
               (t
                (ironclad:hex-string-to-byte-array
                 (get-etag *bucket* (s3-key image)))))))
