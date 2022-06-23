@@ -152,6 +152,7 @@
                   :reader image-content-type))
    (:metaclass persistent-class)))
 
+
 (defmethod find-image ((company company) (hash string))
   (loop for image in (append
                       (images-for-original-hash hash)
@@ -439,6 +440,28 @@
             fn :masks masks)
         (cleanup-image-stream stream1)
         (cleanup-image-stream stream2)))))
+
+(defmethod maybe-rewrite-image-blob ((image image))
+  (restart-case
+      (when (image-on-filesystem-p image)
+        (alexandria:when-let ((blob (%image-blob image)))
+          (let ((dest (local-location-for-oid (oid-array image)))
+                (src (blob-pathname blob)))
+            (when (path:-e src)
+              (assert (osicat-posix:link
+                       src dest)))
+            (with-transaction ()
+              (setf (%image-blob image) nil)
+              (setf (%image-state image) +image-state-filesystem+)))))
+    (ignore-image ()
+      nil)))
+
+(defun rewrite-all-image-blobs ()
+  (loop for image in (reverse (bknr.datastore:class-instances 'image))
+        do
+        (maybe-rewrite-image-blob image)))
+
+
 
 (defun local-location-for-oid (oid)
   "Figure out the local location for the given OID"

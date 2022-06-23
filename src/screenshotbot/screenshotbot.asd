@@ -72,6 +72,7 @@
                :screenshotbot.css-assets
                :screenshotbot/secrets
                :util.java
+               :osicat
                :util/phabricator
                :hunchensocket
                :drakma
