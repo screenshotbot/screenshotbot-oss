@@ -50,5 +50,6 @@
 
 (deftag admin-app-template (children)
   <app-template admin=t jquery-ui=t >
+  <script src= "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.js" />
   ,@children
   </app-template>)

@@ -11,7 +11,8 @@
                 #:ignore-and-log-errors)
   (:import-from #:util/cron
                 #:def-cron)
-  (:export #:push-analytics-event))
+  (:export #:push-analytics-event
+           #:analytics-event-ts))
 (in-package :screenshotbot/analytics)
 
 (defvar *events-lock* (bt:make-lock))
@@ -35,7 +36,8 @@
     :initform nil
     :accessor writtenp)
    (ts :initform (get-universal-time)
-       :initarg :ts)
+       :initarg :ts
+       :reader analytics-event-ts)
    (referrer :initarg :referrer)
    (user-agent :initarg :user-agent)))
 
