@@ -6,7 +6,8 @@
 
 (uiop/package:define-package :screenshotbot/cdn
     (:use #:cl)
-  (:export #:script #:link #:img))
+  (:export #:script #:link #:img
+           #:make-image-cdn-url))
 (in-package :screenshotbot/cdn)
 
 (markup:enable-reader)
@@ -21,7 +22,14 @@
 
 (markup:deftag img (&key src (alt "Image") srcset class style height width id loading)
   (let ((util.cdn:*cdn-cache-key* "images4" ))
-    <:img src= (if (str:starts-with-p "/image/blob/" src) src (util.cdn:make-cdn src)) alt=alt srcset=srcset class=class style=style
+    <:img src= (if (str:starts-with-p "/image/blob/" (make-image-cdn-url src)) src (util.cdn:make-cdn src)) alt=alt srcset=srcset class=class style=style
           height=height width=width id=id
           loading=loading
     />))
+
+(defun make-image-cdn-url (url)
+  "This is a specific CDN to use for actual screenshot images. For now
+  we're using our default CDN, but we might change this in the
+  future. For instance, separate installations might have a different
+  CDN."
+  (util.cdn:make-cdn url))

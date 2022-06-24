@@ -98,6 +98,11 @@
                #+lispworks
                (:file "memory")))
 
+(defsystem :util/logrotate
+  :serial t
+  :depends-on ()
+  :components ((:file "logrotate")))
+
 (defsystem :util/misc
   :serial t
   :depends-on (:local-time)

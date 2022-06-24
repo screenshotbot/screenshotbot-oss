@@ -450,6 +450,7 @@
             (when (path:-e src)
               (assert (osicat-posix:link
                        src dest)))
+            (log:info "Rewriting blob for ~s: ~s" image blob)
             (with-transaction ()
               (setf (%image-blob image) nil)
               (setf (%image-state image) +image-state-filesystem+)))))
