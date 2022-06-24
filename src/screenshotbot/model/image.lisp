@@ -54,6 +54,8 @@
                 #:md5-file)
   (:import-from #:util/store
                 #:with-class-validation)
+  (:import-from #:screenshotbot/cdn
+                #:make-image-cdn-url)
   ;; classes
   (:export
    #:image
@@ -653,16 +655,17 @@
 
 
 (defmethod image-public-url ((image image) &key size)
-  (cond
-    ((image-on-filesystem-p image)
-     (let ((args nil))
-       (when size
-         (setf args `(:size ,(string-downcase size))))
-       (apply #'make-url 'image-blob-get :oid (encrypt:encrypt-mongoid (oid-array image))
-                args)))
-    (t
-     (format nil "https://screenshotbot.s3.amazonaws.com/~a"
-             (s3-key image)))))
+  (make-image-cdn-url
+   (cond
+     ((image-on-filesystem-p image)
+      (let ((args nil))
+        (when size
+          (setf args `(:size ,(string-downcase size))))
+        (apply #'make-url 'image-blob-get :oid (encrypt:encrypt-mongoid (oid-array image))
+               args)))
+     (t
+      (format nil "https://screenshotbot.s3.amazonaws.com/~a"
+              (s3-key image))))))
 
 (defmethod image-local-url ((image image))
   (image-public-url image))
