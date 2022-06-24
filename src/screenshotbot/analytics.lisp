@@ -12,7 +12,8 @@
   (:import-from #:util/cron
                 #:def-cron)
   (:export #:push-analytics-event
-           #:analytics-event-ts))
+           #:analytics-event-ts
+           #:analytics-event-script-name))
 (in-package :screenshotbot/analytics)
 
 (defvar *events-lock* (bt:make-lock))
@@ -27,7 +28,8 @@
     :initarg :session
     :accessor event-session)
    (script-name
-    :initarg :script-name)
+    :initarg :script-name
+    :reader analytics-event-script-name)
    (query-string
     :initarg :query-string
     :initform nil)
