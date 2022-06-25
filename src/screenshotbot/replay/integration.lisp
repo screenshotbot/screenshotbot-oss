@@ -331,20 +331,23 @@ accessing the urls or sitemap slot."
     (call-next list 0)))
 
 (with-auto-restart ()
- (defun replay-job-from-snapshot (&key snapshot urls run tmpdir)
+  (defun replay-job-from-snapshot (&key (snapshot (error "must provide snapshot"))
+                                     urls run tmpdir)
    (let* ((results (make-instance 'all-screenshots
                                    :company (company run)))
           (url-count  (length urls)))
      (prog1
          results
        (let ((configs (browser-configs run)))
+         (assert configs)
          (dolist (config configs)
            (let ((selenium-server (selenium-server
                                    :type (browser-type config))))
-            (call-with-hosted-snapshot
-             snapshot
-             (lambda (hosted-url)
-               (let ((webdriver-client::*uri*
+             (call-with-hosted-snapshot
+              (company run)
+              snapshot
+              (lambda (hosted-url)
+                              (let ((webdriver-client::*uri*
                        (selenium-server-url selenium-server)))
                  (write-replay-log "Waiting for Selenium worker of type ~a" (browser-type config))
                  (call-with-batches

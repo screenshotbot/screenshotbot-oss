@@ -11,6 +11,7 @@
                 #:*acceptor*
                 #:define-easy-handler)
   (:import-from #:screenshotbot/replay/core
+                #:snapshot
                 #:request-counter
                 #:call-with-request-counter)
   (:import-from #:local-time
@@ -22,6 +23,8 @@
   (:import-from #:screenshotbot/server
                 #:register-init-hook
                 #:*init-hooks*)
+  (:import-from #:screenshotbot/model/company
+                #:company)
   (:export
    #:call-with-hosted-snapshot
    #:render-acceptor
@@ -54,9 +57,10 @@
 (defmethod initialize-instance :after ((acceptor render-acceptor) &key snapshot
                                        &allow-other-keys)
   (when snapshot
-   (push-snapshot acceptor snapshot)))
+    (error "OBSOLETE: passing snapshot as initarg")))
 
 (defmethod push-snapshot ((acceptor render-acceptor)
+                          (company company)
                           (snapshot replay:snapshot))
   (setf (gethash (format nil "~a" (replay:uuid snapshot)) (acceptor-snapshots acceptor))
         snapshot))
@@ -191,8 +195,11 @@
     (t
      "replay")))
 
-(defun call-with-hosted-snapshot (snapshot fn &key (hostname (hostname)))
-  (push-snapshot (default-render-acceptor) snapshot)
+(defmethod call-with-hosted-snapshot ((company company)
+                                      (snapshot snapshot)
+                                      fn &key (hostname (hostname)))
+  (assert (functionp fn))
+  (push-snapshot (default-render-acceptor) company snapshot)
   (unwind-protect
        (let ((acceptor (default-render-acceptor))
              (root-asset (car (replay:root-assets snapshot))))
@@ -201,21 +208,3 @@
                                hostname  (hunchentoot:acceptor-port acceptor)
                                (replay:asset-file root-asset)))))
     (pop-snapshot (default-render-acceptor) snapshot)))
-
-
-
-#+nil
-(defun render (url)
-  (tmpdir:with-tmpdir (dir)
-   (let* ((snapshot (replay:load-url url dir)))
-     (flet ((fn (url)
-              (uiop:run-program (list "/home/arnold/.local/bin/firefox" url)
-                                :error-output t
-                                :output t)
-              (log:info "Waiting for timeout")
-              (sleep 60)))
-
-       (call-with-hosted-snapshot snapshot
-                                  #'fn)))))
-
-;; (render "https://www.rollins.edu/college-of-liberal-arts")

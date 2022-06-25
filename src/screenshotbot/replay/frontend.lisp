@@ -19,8 +19,6 @@
   (:import-from #:markup
                 #:write-html
                 #:deftag)
-  (:import-from #:screenshotbot/pro/replay/replay-acceptor
-                #:call-with-hosted-snapshot)
   (:import-from #:screenshotbot/replay/core
                 #:uuid
                 #:*replay-logs*

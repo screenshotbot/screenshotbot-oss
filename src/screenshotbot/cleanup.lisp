@@ -80,3 +80,4 @@ don't have transaction logs.
                   do (bknr.datastore:delete-object x))))))))
 
 ;; (delete-unreferenced-images)
+;; (bknr.datastore::delete-orphaned-blob-files nil)
