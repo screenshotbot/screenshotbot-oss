@@ -153,8 +153,7 @@ clean-fasl: .PHONY
 	find src -name *.64ufasl -delete
 
 clean: clean-fasl
-	rm -rf buil
-	rm -rf assets
+	rm -rf build
 
 clsql-tests-sbcl: $(sbcl)
 	$(call clsql_check_tests,$(SBCL_SCRIPT) scripts/run-clsql-tests.lisp)
@@ -201,13 +200,6 @@ selenium-tests: $(LW)
 
 selenium-tests-without-x: $(LW)
 	$(LW_SCRIPT) scripts/run-selenium-tests.lisp
-
-assets: $(LW) .PHONY
-	mkdir -p assets
-	rm -f assets/lispcalls.jar
-	cp $(LW_PREFIX)/lib/$(LW_VERSION)-0/etc/lispcalls.jar assets/
-	$(LW_SCRIPT) scripts/deliver-screenshotbot.lisp
-
 
 $(CCL_IMAGE): build $(IMAGE_DEPS)
 	rm -f $@
