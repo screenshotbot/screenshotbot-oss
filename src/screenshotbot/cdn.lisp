@@ -32,4 +32,4 @@
   we're using our default CDN, but we might change this in the
   future. For instance, separate installations might have a different
   CDN."
-  (util.cdn:make-cdn url))
+  url)
