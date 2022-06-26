@@ -71,3 +71,13 @@
           (is (equal 200 ret))
           (is (equalp (md5:md5sum-file *fixture*)
                       (md5:md5sum-stream stream))))))))
+
+
+(test expect-404-for-non-existent-assets
+  (with-fixture state ()
+    (push-snapshot acceptor company snapshot)
+    (let ((url (format nil "~a/snapshot/~a/assets/abcd01.png"
+                       host
+                       (uuid snapshot))))
+      (signals dex:http-request-not-found
+        (dex:get url)))))

@@ -11,6 +11,8 @@
                 #:*acceptor*
                 #:define-easy-handler)
   (:import-from #:screenshotbot/replay/core
+                #:asset-file
+                #:assets
                 #:snapshot
                 #:request-counter
                 #:call-with-request-counter)
@@ -38,7 +40,10 @@
 
 (defclass render-acceptor (hunchentoot:easy-acceptor)
   ((snapshots :reader acceptor-snapshots
-              :initform (make-hash-table :test #'equal)))
+              :initform (make-hash-table :test #'equal))
+   (asset-maps :reader asset-maps
+               :initform (make-hash-table)
+               :documentation "For each snapshot, a map from filename to asset"))
   (:default-initargs :name 'replay
                      :port 5002
                      :access-log-destination nil
@@ -63,11 +68,17 @@
                           (company company)
                           (snapshot replay:snapshot))
   (setf (gethash (format nil "~a" (replay:uuid snapshot)) (acceptor-snapshots acceptor))
-        snapshot))
+        snapshot)
+  (let ((asset-map (make-hash-table :test #'equal)))
+    (dolist (asset (assets snapshot))
+      (setf (gethash (asset-file asset) asset-map) asset))
+    (setf (gethash snapshot (asset-maps acceptor))
+          asset-map)))
 
 (defmethod pop-snapshot ((acceptor render-acceptor)
                          (snapshot replay:snapshot))
-  (remhash (format nil "~a" (replay:uuid snapshot))  (acceptor-snapshots acceptor)))
+  (remhash (format nil "~a" (replay:uuid snapshot))  (acceptor-snapshots acceptor))
+  (remhash snapshot (Asset-maps acceptor)))
 
 
 (define-easy-handler (root :uri "/root" :acceptor-names '(replay)) ()
@@ -151,15 +162,15 @@
     (call-with-request-counter
      snapshot
      (lambda ()
-       (loop for asset in (replay:assets snapshot)
-             if (string= script-name (replay:asset-file asset))
-               do
-                  (return
-                    (handle-asset snapshot asset))
-             finally
-                (progn
-                  (log:error "No such asset: ~a" script-name)
-                  (setf (hunchentoot:return-code*) 404)))))))
+       (let* ((asset-map (gethash snapshot (asset-maps hunchentoot:*acceptor*)))
+              (asset (gethash script-name asset-map)))
+         (cond
+           (asset
+            (handle-asset snapshot asset))
+           (t
+            (log:error "No such asset: ~a" script-name)
+            (setf (hunchentoot:return-code*) 404)
+            "No such asset")))))))
 
 (define-easy-handler (wait-for-zero :uri "/wait-for-zero-requests"
                                     :acceptor-names '(replay))
