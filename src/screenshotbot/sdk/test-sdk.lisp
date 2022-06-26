@@ -26,6 +26,8 @@
                 #:image-directory-with-diff-dir)
   (:import-from #:util/digests
                 #:md5-file)
+  (:import-from #:util/testing
+                #:with-local-acceptor)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:a #:alexandria)))
 (in-package :screenshotbot/sdk/test-sdk)
@@ -73,36 +75,20 @@
   (screenshotbot/api/image:with-raw-post-data-as-tmp-file (p)
     (ironclad:byte-array-to-hex-string (md5-file p))))
 
-(defmacro with-acceptor ((acceptor) &body body)
-  `(let ((acceptor ,acceptor)
-         (fn (lambda () ,@body)))
-     (unwind-protect
-          (progn
-            (hunchentoot:start acceptor)
-            (setf hunchentoot:*catch-errors-p* nil)
-            (funcall fn))
-       (progn
-         (setf hunchentoot:*catch-errors-p* t)
-         (hunchentoot:stop acceptor)))))
 
 #-darwin
 (test simple-put-image
-  (let* ((port (util:random-port))
-         (acceptor (make-instance 'hunchentoot:easy-acceptor
-                                  :port port
-                                  :name 'test-acceptor)))
-    (log:info "Using port: ~a" (hunchentoot:acceptor-port acceptor))
-    (with-acceptor (acceptor)
-     (with-open-file (s (asdf:system-relative-pathname
-                         :screenshotbot.sdk
-                         "file-for-test.bin")
-                        :direction :input
-                        :element-type 'flexi-streams:octet)
-       (is
-        (equal
-         "4249fe0e72f21fd54dbb2f3325bec263"
-         (put-file (format nil "http://127.0.0.1:~a/put" port)
-                   s)))))))
+  (with-local-acceptor (host) ('hunchentoot:easy-acceptor
+                                :name 'test-acceptor)
+    (with-open-file (s (asdf:system-relative-pathname
+                        :screenshotbot.sdk
+                        "file-for-test.bin")
+                       :direction :input
+                       :element-type 'flexi-streams:octet)
+      (is
+       (equal
+        "4249fe0e72f21fd54dbb2f3325bec263"
+        (put-file (format nil "~a/put" host) s))))))
 
 (defvar *env-overrides* nil)
 

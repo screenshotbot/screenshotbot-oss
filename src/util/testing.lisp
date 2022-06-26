@@ -72,7 +72,7 @@
 (defmacro with-local-acceptor ((host &key prepare-acceptor-callback) (name &rest args) &body body)
   "Create a debuggable single threaded acceptor for running tests"
   `(flet ((fn (,host) ,@body))
-     (call-with-local-acceptor #'fn ,prepare-acceptor-callback ,name ,args)))
+     (call-with-local-acceptor #'fn ,prepare-acceptor-callback ,name (list ,@args))))
 
 (defmethod safe-start ((acceptor acceptor) &key listen-callback)
   ;; this is copied from hunchentoot:start except for listen-callback
