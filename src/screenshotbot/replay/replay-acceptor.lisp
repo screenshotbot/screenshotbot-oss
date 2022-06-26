@@ -151,15 +151,15 @@
     (call-with-request-counter
      snapshot
      (lambda ()
-      (loop for asset in (replay:assets snapshot)
-            if (string= script-name (replay:asset-file asset))
-              do
-                 (return
-                   (handle-asset snapshot asset))
-            finally
-               (progn
-                 (log:error "No such asset: ~a" script-name)
-                 (setf (hunchentoot:return-code*) 404)))))))
+       (loop for asset in (replay:assets snapshot)
+             if (string= script-name (replay:asset-file asset))
+               do
+                  (return
+                    (handle-asset snapshot asset))
+             finally
+                (progn
+                  (log:error "No such asset: ~a" script-name)
+                  (setf (hunchentoot:return-code*) 404)))))))
 
 (define-easy-handler (wait-for-zero :uri "/wait-for-zero-requests"
                                     :acceptor-names '(replay))

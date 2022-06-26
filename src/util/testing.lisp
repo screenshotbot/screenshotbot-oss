@@ -69,9 +69,11 @@
         (write-string content file)
         (fiveam:pass "Screenshot written")))))
 
-(defmacro with-local-acceptor ((host &key prepare-acceptor-callback) (name &rest args) &body body)
+(defmacro with-local-acceptor ((host &key prepare-acceptor-callback (acceptor (gensym))) (name &rest args) &body body)
   "Create a debuggable single threaded acceptor for running tests"
-  `(flet ((fn (,host) ,@body))
+  `(flet ((fn (,host ,acceptor)
+            (declare (ignorable ,acceptor))
+            ,@body))
      (call-with-local-acceptor #'fn ,prepare-acceptor-callback ,name (list ,@args))))
 
 (defmethod safe-start ((acceptor acceptor) &key listen-callback)
@@ -84,12 +86,16 @@
     (hunchentoot:execute-acceptor taskmaster))
   acceptor)
 
+(defclass debuggable-taskmaster (hunchentoot:single-threaded-taskmaster)
+  ())
+
 (defun call-with-local-acceptor (fn prepare-acceptor-callback name args)
   (let ((port (util/random-port:random-port)))
-   (let ((acceptor (apply #'make-instance name
-                            :port port
-                            :taskmaster (make-instance 'hunchentoot:single-threaded-taskmaster)
-                            args)))
+    (let ((acceptor (apply #'make-instance name
+                             :message-log-destination *standard-output*
+                             :port port
+                             :taskmaster (make-instance 'debuggable-taskmaster)
+                             args)))
      (when prepare-acceptor-callback
        (funcall prepare-acceptor-callback acceptor))
      (let ((lock (bt:make-lock))
@@ -98,16 +104,15 @@
          (let ((thread (bt:make-thread
                         (lambda ()
                           (let ((hunchentoot:*catch-errors-p* nil))
-                            (handler-bind ((error (lambda (e)
-                                                    (trivial-backtrace:print-backtrace e))))
-                             (safe-start
-                              acceptor
-                              :listen-callback
-                              (lambda ()
-                                (bt:with-lock-held (lock)
-                                  (bt:condition-notify acceptor-ready))))))))))
+                            (safe-start
+                             acceptor
+                             :listen-callback
+                             (lambda ()
+                               (bt:with-lock-held (lock)
+                                 (bt:condition-notify acceptor-ready)))))))))
            (bt:condition-wait acceptor-ready lock)
            (unwind-protect
-                (funcall fn (format nil "http://localhost:~d" port))
+                (funcall fn (format nil "http://localhost:~d" port)
+                         acceptor)
              (hunchentoot:stop acceptor)
              (bt:join-thread thread))))))))
