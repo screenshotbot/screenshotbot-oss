@@ -68,15 +68,19 @@
      :to (user-email user)
      :subject (format nil "Screenshots changed in ~a" (channel-name (recorder-run-channel (report-run report))))
      :from
-     #-screenshotbot-oss "support@screenshotbot.io"
+     #-screenshotbot-oss "Screenshotbot Notifications <notifications@screenshotbot.io>"
      #+screenshotbot-oss nil ;; default mailer setting
+     :reply-to (progn
+                 #-screenshotbot-oss "support@screenshotbot.io"
+                 #+screenshotbot-oss nil)
      :bcc (list
            ;; This is a temporary bcc while I test the email
            ;; notifications.
            #-screenshotbot-oss
            "arnold@tdrhq.com")
      :html-message
-     (email-content company report))))
+     (email-content company report)
+     )))
 
 (defun email-content (company report)
   <html>

@@ -63,6 +63,7 @@
 
 (defmethod send-mail ((mailer smtp-mailer)
                       &key from subject to html-message
+                        reply-to
                         bcc)
   (restart-case
       (unless util:*disable-emails*
@@ -75,6 +76,7 @@
         :ssl (ssl mailer)
         :bcc bcc
         :port (port mailer)
+        :reply-to reply-to
         :authentication (authentication mailer)
         :port (port mailer)
         :html-message (markup:write-html html-message)))
