@@ -62,6 +62,10 @@
   (:import-from #:screenshotbot/replay/integration
                 #:write-full-page-screenshot-from-handle
                 #:fetch-full-page-screenshot-handle)
+  (:import-from #:hunchentoot
+                #:single-threaded-taskmaster)
+  (:import-from #:util/testing
+                #:with-local-acceptor)
   (:local-nicknames (#:a #:alexandria)
                     (#:integration #:screenshotbot/replay/integration)
                     (#:run-builder #:screenshotbot/replay/run-builder)))
@@ -180,31 +184,28 @@
          'all-screenshots))))
 
 (test process-results
-  (let ((port (random-port)))
-    (with-fixture state (:host (format nil "http://localhost:~a" port))
-      (let ((acceptor (make-instance 'acceptor
-                                      :port port)))
-        (prepare-acceptor-plugins acceptor)
-        (hunchentoot:start acceptor)
-
-        (unwind-protect
-             (let ((all-screenshots (make-instance 'all-screenshots
-                                                    :company company)))
-               (let ((pathname (asdf:system-relative-pathname
-                           :screenshotbot
-                           "fixture/rose.png")))
-                 (run-builder:record-screenshot
-                  all-screenshots
-                  :title "rose"
-                  :md5 (md5:md5sum-file pathname)
-                  :fetch (lambda (dest)
-                           (fad:copy-file pathname dest))))
-               (finishes
-                 (process-results
-                  run
-                  all-screenshots
-                  )))
-          (hunchentoot:stop acceptor))))))
+  (with-local-acceptor (host
+                        :prepare-acceptor-callback (lambda (acceptor)
+                                                     (prepare-acceptor-plugins acceptor)))
+      ('acceptor)
+   (with-fixture state (:host host)
+     (unwind-protect
+          (let ((all-screenshots (make-instance 'all-screenshots
+                                                 :company company)))
+            (let ((pathname (asdf:system-relative-pathname
+                             :screenshotbot
+                             "fixture/rose.png")))
+              (run-builder:record-screenshot
+               all-screenshots
+               :title "rose"
+               :md5 (md5:md5sum-file pathname)
+               :fetch (lambda (dest)
+                        (fad:copy-file pathname dest))))
+            (finishes
+              (process-results
+               run
+               all-screenshots
+               )))))))
 
 (test if-old-image-is-rewritten-on-disk-we-still-dont-reupload
   (let ((port (random-port)))

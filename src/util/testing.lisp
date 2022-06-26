@@ -8,11 +8,14 @@
   (:use #:cl)
   (:import-from #:nibble
                 #:nibble-plugin)
+  (:import-from #:hunchentoot
+                #:acceptor)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-fake-request
    #:in-test-p
-   #:screenshot-static-page))
+   #:screenshot-static-page
+   #:with-local-acceptor))
 (in-package :util/testing)
 
 (defvar *in-test-p* nil)
@@ -65,3 +68,46 @@
                             :if-exists :supersede)
         (write-string content file)
         (fiveam:pass "Screenshot written")))))
+
+(defmacro with-local-acceptor ((host &key prepare-acceptor-callback) (name &rest args) &body body)
+  "Create a debuggable single threaded acceptor for running tests"
+  `(flet ((fn (,host) ,@body))
+     (call-with-local-acceptor #'fn ,prepare-acceptor-callback ,name ,args)))
+
+(defmethod safe-start ((acceptor acceptor) &key listen-callback)
+  ;; this is copied from hunchentoot:start except for listen-callback
+  (setf (hunchentoot::acceptor-shutdown-p acceptor) nil)
+  (let ((taskmaster (hunchentoot::acceptor-taskmaster acceptor)))
+    (setf (hunchentoot:taskmaster-acceptor taskmaster) acceptor)
+    (hunchentoot:start-listening acceptor)
+    (funcall listen-callback)
+    (hunchentoot:execute-acceptor taskmaster))
+  acceptor)
+
+(defun call-with-local-acceptor (fn prepare-acceptor-callback name args)
+  (let ((port (util/random-port:random-port)))
+   (let ((acceptor (apply #'make-instance name
+                            :port port
+                            :taskmaster (make-instance 'hunchentoot:single-threaded-taskmaster)
+                            args)))
+     (when prepare-acceptor-callback
+       (funcall prepare-acceptor-callback acceptor))
+     (let ((lock (bt:make-lock))
+           (acceptor-ready (bt:make-condition-variable)))
+       (bt:with-lock-held (lock)
+         (let ((thread (bt:make-thread
+                        (lambda ()
+                          (let ((hunchentoot:*catch-errors-p* nil))
+                            (handler-bind ((error (lambda (e)
+                                                    (trivial-backtrace:print-backtrace e))))
+                             (safe-start
+                              acceptor
+                              :listen-callback
+                              (lambda ()
+                                (bt:with-lock-held (lock)
+                                  (bt:condition-notify acceptor-ready))))))))))
+           (bt:condition-wait acceptor-ready lock)
+           (unwind-protect
+                (funcall fn (format nil "http://localhost:~d" port))
+             (hunchentoot:stop acceptor)
+             (bt:join-thread thread))))))))
