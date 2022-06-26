@@ -19,6 +19,8 @@
                 #:has-item)
   (:import-from #:util/digests
                 #:md5-file)
+  (:import-from #:util/testing
+                #:with-local-acceptor)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags :screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/test-static)
@@ -32,16 +34,12 @@
 
 (def-fixture state ()
   (cleanup)
-  (let* ((port (util/random-port:random-port))
-         (acceptor (make-instance 'hunchentoot:easy-acceptor
-                                  :name 'test-acceptor
-                                  :port port)))
-    (let ((flags:*hostname* (format nil "http://127.0.0.1:~a" port)))
+  (with-local-acceptor (host) ('hunchentoot:easy-acceptor
+                                :name 'test-acceptor)
+   (let ((flags:*hostname* host))
      (unwind-protect
           (progn
-            (hunchentoot:start acceptor)
             (&body))
-       (hunchentoot:stop acceptor)
        (cleanup)))))
 
 (hunchentoot:define-easy-handler (fake-blob-upload :uri "/api/blob/upload"
