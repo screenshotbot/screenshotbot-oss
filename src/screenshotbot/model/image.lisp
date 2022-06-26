@@ -198,9 +198,9 @@
     (list top left height width)))
 
 (defmethod s3-key ((image image))
-  (check-type (image-blob image)
+  (check-type (%image-blob image)
               s3-blob)
-  (let ((s3-blob (image-blob image)))
+  (let ((s3-blob (%image-blob image)))
    (or
     (%s3-key s3-blob) ;; old objects
     (bknr.datastore:store-object-id s3-blob))))
