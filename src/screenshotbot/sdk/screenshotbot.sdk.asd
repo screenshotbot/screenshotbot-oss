@@ -46,6 +46,7 @@
   :serial t
   :depends-on (:screenshotbot.sdk
                :fiveam
+               :fiveam-matchers
                :screenshotbot
                :util/fiveam)
   :components ((:file "test-bundle")
