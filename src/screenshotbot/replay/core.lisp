@@ -50,7 +50,8 @@
    #:call-with-request-counter
    #:write-replay-log
    #:context
-   #:asset-file-name))
+   #:asset-file-name
+   #:parse-max-age))
 (in-package :screenshotbot/replay/core)
 
 
@@ -367,18 +368,23 @@
    (headers :initarg :headers
             :reader remote-response-headers)))
 
+(defun parse-max-age (cache-control)
+  (let ((parts (str:split "," cache-control)))
+    (or
+     (loop for part in parts
+           do
+              (destructuring-bind (key &optional value) (str:split "=" (str:trim part))
+                (when (string-equal "max-age" key)
+                  (return
+                    (parse-integer value)))))
+     0)))
+
 (defmethod max-age ((self remote-response))
   (let ((cache-control (gethash "cache-control" (remote-response-headers self))))
     (log:debug "Got cache-control: ~a" cache-control)
     (cond
       (cache-control
-       (let ((parts (str:split "," cache-control)))
-         (loop for part in parts
-               do
-                  (destructuring-bind (key &optional value) (str:split "=" (str:trim part))
-                    (when (string-equal "max-age" key)
-                      (return
-                        (parse-integer value)))))))
+       (parse-max-age cache-control))
       (t
        -1))))
 

@@ -41,7 +41,7 @@
                          :screenshotbot
                          "fixture/rose.png"))
 
-(def-fixture state ()
+(def-fixture state (&key response-headers)
   (with-test-store (:globally t)
     (tmpdir:with-tmpdir (tmpdir)
      (with-local-acceptor (host :acceptor acceptor)
@@ -58,9 +58,10 @@
                        :file (format nil "/snapshot/~a/assets/abcd00.png"
                                      (uuid snapshot))
                        :response-headers
-                       (list (make-instance 'http-header
+                       (list* (make-instance 'http-header
                                              :name "Content-type"
-                                             :value "image/png")))))
+                                             :value "image/png")
+                              response-headers))))
          (setf (assets snapshot)
                (list asset))
          (&body))))))
@@ -96,14 +97,57 @@
     (let ((url (format nil "~a/company/~a/assets/abcd00.png"
                        host
                        (encrypt:encrypt-mongoid (oid-array company)))))
-      (multiple-value-bind (stream ret)
+      (multiple-value-bind (stream ret headers)
           (dex:get url
                    :force-binary t
                    :want-stream t)
         (with-open-stream (stream stream)
           (is (equal 200 ret))
           (is (equalp (md5:md5sum-file *fixture*)
-                      (md5:md5sum-stream stream))))))))
+                      (md5:md5sum-stream stream))))
+
+        ;; verify minimum caching
+        (is (equal "max-age=300" (gethash "cache-control" headers)))))))
+
+(test dont-override-max-age-for-large
+  (with-fixture state (:response-headers (list (make-instance 'http-header
+                                                               :name "Cache-Control"
+                                                               :value "max-age=360000")))
+    (push-snapshot acceptor company snapshot)
+    (let ((url (format nil "~a/company/~a/assets/abcd00.png"
+                       host
+                       (encrypt:encrypt-mongoid (oid-array company)))))
+      (multiple-value-bind (stream ret headers)
+          (dex:get url
+                   :force-binary t
+                   :want-stream t)
+        (with-open-stream (stream stream)
+          (is (equal 200 ret))
+          (is (equalp (md5:md5sum-file *fixture*)
+                      (md5:md5sum-stream stream))))
+
+        ;; max-age should not be overwritten
+        (is (equal "max-age=360000" (gethash "cache-control" headers)))))))
+
+(test small-max-ages-are-overwritten
+  (with-fixture state (:response-headers (list (make-instance 'http-header
+                                                               :name "Cache-Control"
+                                                               :value "max-age=2")))
+    (push-snapshot acceptor company snapshot)
+    (let ((url (format nil "~a/company/~a/assets/abcd00.png"
+                       host
+                       (encrypt:encrypt-mongoid (oid-array company)))))
+      (multiple-value-bind (stream ret headers)
+          (dex:get url
+                   :force-binary t
+                   :want-stream t)
+        (with-open-stream (stream stream)
+          (is (equal 200 ret))
+          (is (equalp (md5:md5sum-file *fixture*)
+                      (md5:md5sum-stream stream))))
+
+        ;; max-age should not be overwritten
+        (is (equal "max-age=300" (gethash "cache-control" headers)))))))
 
 (test expect-404-for-non-existent-assets-by-company
   (with-fixture state ()

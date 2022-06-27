@@ -11,6 +11,7 @@
                 #:*acceptor*
                 #:define-easy-handler)
   (:import-from #:screenshotbot/replay/core
+                #:parse-max-age
                 #:asset-file-name
                 #:asset-file
                 #:assets
@@ -128,7 +129,11 @@
               (t
                ;; hack: please remove
                (make-pathname :type "tmp"
-                              :defaults f)))))
+                              :defaults f))))
+          (set-minimum-cache ()
+            (setf (hunchentoot:header-out "cache-control" hunchentoot:*reply*)
+                  "max-age=300")))
+     (set-minimum-cache)
      (let ((input-file (fix-input-file (replay:snapshot-asset-file snapshot asset))))
        (setf (hunchentoot:return-code*)
              (replay:asset-status asset))
@@ -136,19 +141,27 @@
              for key = (replay:http-header-name header)
              for val = (replay:http-header-value header)
              do
-                (unless (member key (list "transfer-encoding") :test #'string-equal)
-                 (setf (hunchentoot:header-out key hunchentoot:*reply*)
-                       (cond
-                         ((string-equal "content-length" key)
-                          ;; hunchentoot has special handling for
-                          ;; content-length. But also, we might have
-                          ;; modified the file since we downloaded it, so
-                          ;; we should use the updated length.
-                          (assert (uiop:file-exists-p input-file))
-                          (with-open-file (input input-file)
-                            (file-length input)))
-                         (t
-                          val)))))
+                (cond
+                  ((member key (list "transfer-encoding") :test #'string-equal)
+                   ;; do nothing
+                   nil)
+                  ((and
+                    (string-equal "cache-control" key)
+                    (< (parse-max-age val) 300))
+                   (set-minimum-cache))
+                  (t
+                   (setf (hunchentoot:header-out key hunchentoot:*reply*)
+                         (cond
+                           ((string-equal "content-length" key)
+                            ;; hunchentoot has special handling for
+                            ;; content-length. But also, we might have
+                            ;; modified the file since we downloaded it, so
+                            ;; we should use the updated length.
+                            (assert (uiop:file-exists-p input-file))
+                            (with-open-file (input input-file)
+                              (file-length input)))
+                           (t
+                            val))))))
        (handler-case
            (let ((out (hunchentoot:send-headers)))
              (assert (uiop:file-exists-p input-file))
