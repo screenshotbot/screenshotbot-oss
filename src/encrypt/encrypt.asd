@@ -9,6 +9,7 @@
 (defsystem encrypt/tests
   :serial t
   :depends-on (:encrypt
+               :util/fiveam
                :tmpdir
                :cl-mongo-id)
   :components ((:file "test-encrypt")))
