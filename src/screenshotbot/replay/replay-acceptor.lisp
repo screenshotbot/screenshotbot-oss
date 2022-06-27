@@ -119,6 +119,10 @@
    (hunchentoot:handle-static-file
     file)))
 
+(defun set-cache-control (seconds)
+  (setf (hunchentoot:header-out "cache-control" hunchentoot:*reply*)
+        (format nil "max-age=~d" seconds)))
+
 (with-auto-restart ()
  (defun handle-asset (snapshot asset)
    (log:info "Starting with ~a" asset)
@@ -131,8 +135,7 @@
                (make-pathname :type "tmp"
                               :defaults f))))
           (set-minimum-cache ()
-            (setf (hunchentoot:header-out "cache-control" hunchentoot:*reply*)
-                  "max-age=300")))
+            (set-cache-control 300)))
      (set-minimum-cache)
      (let ((input-file (fix-input-file (replay:snapshot-asset-file snapshot asset))))
        (setf (hunchentoot:return-code*)
@@ -203,6 +206,7 @@
 (defun send-404 (script-name)
   (log:error "No such asset: ~a" script-name)
   (setf (hunchentoot:return-code*) 404)
+  (set-cache-control 3600)
   "No such asset")
 
 (define-easy-handler (asset-from-company

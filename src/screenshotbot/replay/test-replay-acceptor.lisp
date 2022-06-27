@@ -154,8 +154,12 @@
     (let ((url (format nil "~a/company/~a/assets/abcd01.png"
                        host
                        (encrypt:encrypt-mongoid (oid-array company)))))
-      (signals dex:http-request-not-found
-        (dex:get url)))))
+      (handler-case
+          (progn
+            (dex:get url)
+            (fail "expected error"))
+        (dex:http-request-not-found (e)
+          (is (equal "max-age=3600" (gethash "cache-control" (dex:response-headers e)))))))))
 
 
 (test handle-asset-from-company
