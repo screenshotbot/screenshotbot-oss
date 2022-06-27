@@ -109,6 +109,38 @@
         ;; verify minimum caching
         (is (equal "max-age=300" (gethash "cache-control" headers)))))))
 
+(test loading-by-company
+  (with-fixture state ()
+    (push-snapshot acceptor company snapshot)
+    (let ((url (format nil "~a/company/~a/assets/abcd00.png"
+                       host
+                       (encrypt:encrypt-mongoid (oid-array company)))))
+      (multiple-value-bind (stream ret headers)
+          (dex:get url
+                   :force-binary t
+                   :want-stream t)
+        (with-open-stream (stream stream)
+          (is (equal 200 ret))
+          (is (equalp (md5:md5sum-file *fixture*)
+                      (md5:md5sum-stream stream))))
+
+        ;; verify minimum caching
+        (is (equal "max-age=300" (gethash "cache-control" headers)))))))
+
+(test http-revalidate-by-HEAD
+  (with-fixture state ()
+    (push-snapshot acceptor company snapshot)
+    (let ((url (format nil "~a/company/~a/assets/abcd00.png"
+                       host
+                       (encrypt:encrypt-mongoid (oid-array company)))))
+      (multiple-value-bind (data ret headers)
+          (dex:head url)
+        (is (equalp #() data))
+        (is (equal 200 ret))
+
+        ;; verify minimum caching
+        (is (equal "max-age=300" (gethash "cache-control" headers)))))))
+
 (test dont-override-max-age-for-large
   (with-fixture state (:response-headers (list (make-instance 'http-header
                                                                :name "Cache-Control"

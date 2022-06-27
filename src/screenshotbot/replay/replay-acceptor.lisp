@@ -175,15 +175,21 @@
                             val))))))
        (handler-case
            (let ((out (hunchentoot:send-headers)))
-             (assert (uiop:file-exists-p input-file))
-             (when (uiop:file-exists-p input-file)
-               (with-open-file (input input-file
-                                      :element-type '(unsigned-byte 8))
-                 (uiop:copy-stream-to-stream input out :element-type '(unsigned-byte 8))))
+             (ecase (hunchentoot:request-method*)
+               (:head)
+               (:get
+                (send-file-to-stream input-file out)))
              (finish-output out))
          #+lispworks
          (comm:socket-io-error ()))
        (log:info "Done with ~a" asset)))))
+
+(defun send-file-to-stream (input-file out)
+  (assert (uiop:file-exists-p input-file))
+  (when (uiop:file-exists-p input-file)
+    (with-open-file (input input-file
+                           :element-type '(unsigned-byte 8))
+      (uiop:copy-stream-to-stream input out :element-type '(unsigned-byte 8)))))
 
 (defvar *lock* (bt:make-lock))
 (define-easy-handler (asset :uri (lambda (request)
