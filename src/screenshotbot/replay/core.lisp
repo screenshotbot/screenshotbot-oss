@@ -49,7 +49,8 @@
    #:request-counter
    #:call-with-request-counter
    #:write-replay-log
-   #:context))
+   #:context
+   #:asset-file-name))
 (in-package :screenshotbot/replay/core)
 
 

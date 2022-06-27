@@ -8,6 +8,12 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/replay-acceptor
+                #:acceptor-snapshots
+                #:asset-maps
+                #:pop-snapshot
+                #:snapshots-company
+                #:handle-asset
+                #:handle-asset-from-company
                 #:push-snapshot
                 #:render-acceptor
                 #:default-render-acceptor
@@ -24,6 +30,8 @@
                 #:with-test-store)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:util/object-id
+                #:oid-array)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/replay/test-replay-acceptor)
 
@@ -81,3 +89,51 @@
                        (uuid snapshot))))
       (signals dex:http-request-not-found
         (dex:get url)))))
+
+(test loading-by-company
+  (with-fixture state ()
+    (push-snapshot acceptor company snapshot)
+    (let ((url (format nil "~a/company/~a/assets/abcd00.png"
+                       host
+                       (encrypt:encrypt-mongoid (oid-array company)))))
+      (multiple-value-bind (stream ret)
+          (dex:get url
+                   :force-binary t
+                   :want-stream t)
+        (with-open-stream (stream stream)
+          (is (equal 200 ret))
+          (is (equalp (md5:md5sum-file *fixture*)
+                      (md5:md5sum-stream stream))))))))
+
+(test expect-404-for-non-existent-assets-by-company
+  (with-fixture state ()
+    (let ((url (format nil "~a/company/~a/assets/abcd01.png"
+                       host
+                       (encrypt:encrypt-mongoid (oid-array company)))))
+      (signals dex:http-request-not-found
+        (dex:get url)))))
+
+
+(test handle-asset-from-company
+  (with-fixture state ()
+    (push-snapshot acceptor company snapshot)
+    (cl-mock:with-mocks ()
+     (let ((called-args nil))
+       (cl-mock:if-called 'handle-asset
+                           (lambda (snapshot asset)
+                             (setf called-args (list snapshot asset))))
+       (handle-asset-from-company acceptor company "abcd00.png")
+       (is (equal (list snapshot asset)
+                  called-args))))))
+
+(test cleanup-pop-snapshot
+  (with-fixture state ()
+    (is (eql 0 (length (snapshots-company acceptor))))
+    (push-snapshot acceptor company snapshot)
+    (is (eql 1 (length (snapshots-company acceptor))))
+    (pop-snapshot acceptor snapshot)
+    (is (eql 0 (length (snapshots-company acceptor))))
+    (is (eql '()
+              (a:hash-table-keys (asset-maps acceptor))))
+    (is (eql '()
+              (a:hash-table-keys (acceptor-snapshots acceptor))))))

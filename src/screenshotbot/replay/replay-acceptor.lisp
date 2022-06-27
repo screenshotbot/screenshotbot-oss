@@ -11,6 +11,7 @@
                 #:*acceptor*
                 #:define-easy-handler)
   (:import-from #:screenshotbot/replay/core
+                #:asset-file-name
                 #:asset-file
                 #:assets
                 #:snapshot
@@ -27,6 +28,8 @@
                 #:*init-hooks*)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:util/object-id
+                #:find-by-oid)
   (:export
    #:call-with-hosted-snapshot
    #:render-acceptor
@@ -81,7 +84,7 @@
          (snapshots-company acceptor)))
   (let ((asset-map (make-hash-table :test #'equal)))
     (dolist (asset (assets snapshot))
-      (setf (gethash (asset-file asset) asset-map) asset))
+      (setf (gethash (asset-file-name asset) asset-map) asset))
     (setf (gethash snapshot (asset-maps acceptor))
           asset-map)))
 
@@ -167,7 +170,9 @@
                             :acceptor-names '(replay))
     ()
   (let* ((script-name (hunchentoot:script-name hunchentoot:*request*))
-         (uuid (elt (str:split "/" script-name) 2))
+         (parts (str:split "/" script-name))
+         (uuid (elt parts 2))
+         (asset-file-name (elt parts 4))
          (snapshot (gethash uuid (acceptor-snapshots hunchentoot:*acceptor*))))
     (unless snapshot
       (error "Could not find snapshot for uuid `~a`" uuid))
@@ -175,14 +180,47 @@
      snapshot
      (lambda ()
        (let* ((asset-map (gethash snapshot (asset-maps hunchentoot:*acceptor*)))
-              (asset (gethash script-name asset-map)))
+              (asset (gethash asset-file-name asset-map)))
          (cond
            (asset
             (handle-asset snapshot asset))
            (t
-            (log:error "No such asset: ~a" script-name)
-            (setf (hunchentoot:return-code*) 404)
-            "No such asset")))))))
+            (send-404 script-name))))))))
+
+(defun send-404 (script-name)
+  (log:error "No such asset: ~a" script-name)
+  (setf (hunchentoot:return-code*) 404)
+  "No such asset")
+
+(define-easy-handler (asset-from-company
+                      :uri (lambda (request)
+                             (let ((script-name (hunchentoot:script-name request)))
+                               (and
+                                (str:starts-with-p "/company/" script-name)
+                                (str:containsp "/assets/" script-name))))
+                            :acceptor-names '(replay))
+    ()
+  (let* ((script-name (hunchentoot:script-name hunchentoot:*request*))
+         (parts (str:split "/" script-name))
+         (company-oid (encrypt:decrypt-mongoid (elt parts 2)))
+         (asset-file-name (elt parts 4))
+         (company (find-by-oid company-oid)))
+    (check-type company company)
+    (handle-asset-from-company
+     hunchentoot:*acceptor*
+     company
+     asset-file-name)))
+
+(defun handle-asset-from-company (acceptor company asset-file-name)
+  (loop for (snapshot . check-company) in (snapshots-company acceptor)
+        for asset-map = (gethash snapshot (asset-maps acceptor))
+        for asset = (gethash asset-file-name asset-map)
+        if (and (eql company check-company) asset)
+          do
+             (return
+               (handle-asset snapshot asset))
+        finally
+        (send-404 asset-file-name)))
 
 (define-easy-handler (wait-for-zero :uri "/wait-for-zero-requests"
                                     :acceptor-names '(replay))
@@ -229,5 +267,5 @@
          (progn
            (funcall fn (format nil "http://~a:~a~a"
                                hostname  (hunchentoot:acceptor-port acceptor)
-                               (replay:asset-file root-asset)))))
+                               (replay:asset-file-name root-asset)))))
     (pop-snapshot (default-render-acceptor) snapshot)))

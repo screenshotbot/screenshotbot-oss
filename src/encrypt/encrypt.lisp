@@ -19,8 +19,14 @@
 
 (defun blowfish-key ()
   (bt:with-lock-held (*lock*)
-   (let ((file (path:catfile (util/store:object-store)
-                             "blowfish-key.txt")))
+    (let ((file (path:catfile
+                 (cond
+                  ((boundp 'util/store:*object-store*)
+                   (util/store:object-store))
+                  (t
+                   ;; just for test convenience
+                   (bknr.datastore::store-directory bknr.datastore:*store*)))
+                 "blowfish-key.txt")))
      (flet ((read-file () (str:trim
                            (uiop:read-file-string file))))
        (cond
