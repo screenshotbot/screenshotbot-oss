@@ -34,7 +34,7 @@
                          "fixture/rose.png"))
 
 (def-fixture state ()
-  (with-test-store ()
+  (with-test-store (:globally t)
     (tmpdir:with-tmpdir (tmpdir)
      (with-local-acceptor (host :acceptor acceptor)
          ('render-acceptor)
