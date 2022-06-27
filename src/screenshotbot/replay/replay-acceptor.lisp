@@ -38,12 +38,18 @@
 (defun document-root ()
   (asdf:system-relative-pathname :screenshotbot.pro "replay/static/"))
 
+
+
 (defclass render-acceptor (hunchentoot:easy-acceptor)
   ((snapshots :reader acceptor-snapshots
               :initform (make-hash-table :test #'equal))
    (asset-maps :reader asset-maps
                :initform (make-hash-table)
-               :documentation "For each snapshot, a map from filename to asset"))
+               :documentation "For each snapshot, a map from filename to asset")
+   (snapshots-company
+    :initform nil
+    :accessor snapshots-company
+    :documentation "A list of company and snapshot pairs"))
   (:default-initargs :name 'replay
                      :port 5002
                      :access-log-destination nil
@@ -69,6 +75,10 @@
                           (snapshot replay:snapshot))
   (setf (gethash (format nil "~a" (replay:uuid snapshot)) (acceptor-snapshots acceptor))
         snapshot)
+  (setf (snapshots-company acceptor)
+        (acons
+         snapshot company
+         (snapshots-company acceptor)))
   (let ((asset-map (make-hash-table :test #'equal)))
     (dolist (asset (assets snapshot))
       (setf (gethash (asset-file asset) asset-map) asset))
@@ -77,6 +87,8 @@
 
 (defmethod pop-snapshot ((acceptor render-acceptor)
                          (snapshot replay:snapshot))
+  (a:deletef (snapshots-company acceptor)
+             snapshot :key #'car)
   (remhash (format nil "~a" (replay:uuid snapshot))  (acceptor-snapshots acceptor))
   (remhash snapshot (Asset-maps acceptor)))
 
