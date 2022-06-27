@@ -222,30 +222,6 @@
         finally
         (send-404 asset-file-name)))
 
-(define-easy-handler (wait-for-zero :uri "/wait-for-zero-requests"
-                                    :acceptor-names '(replay))
-    (uuid (timeout :parameter-type 'integer :init-form 10))
-  (log:info "Wait for zero requests at ~a" (get-universal-time))
-  (unwind-protect
-       (let* ((snapshot (gethash uuid (acceptor-snapshots hunchentoot:*acceptor*)))
-              (start-time (local-time:now))
-              (last-non-zero (local-time:now)))
-
-         (loop
-           (progn
-             (cond
-               ((> (request-counter snapshot) 0)
-                (log:info "Request counter: ~a" (request-counter snapshot))
-                (setf last-non-zero (local-time:now)))
-               ((let ((now (now)))
-                  (or (timestamp>= now
-                                   (timestamp+ last-non-zero timeout :sec))
-                      (timestamp>= now
-                                   (timestamp+ start-time (* 10 timeout) :sec))))
-                (return)))
-             (sleep 0.1)))))
-  (log:info "End waiting for zero requests at ~a" (get-universal-time)))
-
 
 (defun hostname ()
   (cond
@@ -267,5 +243,5 @@
          (progn
            (funcall fn (format nil "http://~a:~a~a"
                                hostname  (hunchentoot:acceptor-port acceptor)
-                               (replay:asset-file-name root-asset)))))
+                               (replay:asset-file root-asset)))))
     (pop-snapshot (default-render-acceptor) snapshot)))

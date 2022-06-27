@@ -237,11 +237,16 @@ accessing the urls or sitemap slot."
             ;; any assets that might be missing
             ;;(full-page-screenshot driver nil)
 
-            (wait-for-zero-requests
-             :hosted-url hosted-url
-             :uuid (uuid snapshot)
-             :sleep-time (sleep-time run))
 
+            ;; TODO: This sleep-time used to be part of
+            ;; wait-for-zero-requests. Currently, because of
+            ;; aggressive proxy caching, there's no way of waiting for
+            ;; zero requests. In the previous logic we would *at
+            ;; least* sleep for this much time, but might be more
+            ;; while requests are pending. We might be able to reduce
+            ;; this in the future, but it's not the bottleneck at time
+            ;; of writing.
+            (sleep (sleep-time run))
 
             (process-full-page-screenshot
              driver
@@ -303,20 +308,6 @@ accessing the urls or sitemap slot."
                 oid
                 dest))
       :title title))))
-
-(defun wait-for-zero-requests (&key hosted-url uuid sleep-time)
-  (safe-interrupt-checkpoint)
-  (let ((initial-timeout 1))
-    (dex:get (quri:merge-uris
-              (format nil "/wait-for-zero-requests?uuid=~a&timeout=~a"
-                      uuid
-                      initial-timeout)
-              (quri:uri hosted-url)))
-    (let ((remaining-time (max 0 (- sleep-time initial-timeout))))
-      (when (> remaining-time 0)
-        (write-replay-log "Waiting for ~a seconds now" remaining-time)
-        (log:info "Waiting for ~a seconds now..." remaining-time)
-        (sleep remaining-time)))))
 
 (defun call-with-batches (list fn &key (batch-size 10))
   (labels ((call-next (list ctr)

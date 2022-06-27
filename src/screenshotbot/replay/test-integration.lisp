@@ -10,7 +10,6 @@
   (:import-from #:screenshotbot/replay/integration
                 #:all-screenshots
                 #:process-results
-                #:wait-for-zero-requests
                 #:replay-job-from-snapshot
                 #:remove-base-url
                 #:get-local-addr)
@@ -161,8 +160,6 @@
             (cl-mock:if-called '(setf webdriver-client:url)
                                 (lambda (url)
                                   nil))
-            (cl-mock:if-called 'wait-for-zero-requests
-                                (lambda (&rest args)))
             (cl-mock:if-called 'call-with-hosted-snapshot
                                 (lambda (company snapshot fn &rest args)
                                   (funcall fn "http://fake-url/")))
