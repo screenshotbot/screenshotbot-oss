@@ -159,6 +159,17 @@
             (dex:get url)
             (fail "expected error"))
         (dex:http-request-not-found (e)
+          (is (equal "max-age=60" (gethash "cache-control" (dex:response-headers e)))))))))
+
+(test expect-404-for-non-existent-file
+  (with-fixture state ()
+    (let ((url (format nil "~a/foo/bar.png"
+                       host)))
+      (handler-case
+          (progn
+            (dex:get url)
+            (fail "expected error"))
+        (dex:http-request-not-found (e)
           (is (equal "max-age=3600" (gethash "cache-control" (dex:response-headers e)))))))))
 
 

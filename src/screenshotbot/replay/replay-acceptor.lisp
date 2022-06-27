@@ -43,8 +43,11 @@
   (asdf:system-relative-pathname :screenshotbot.pro "replay/static/"))
 
 
+(defclass cached-404-acceptor (hunchentoot:acceptor)
+  ())
 
-(defclass render-acceptor (hunchentoot:easy-acceptor)
+(defclass render-acceptor (hunchentoot:easy-acceptor
+                           cached-404-acceptor)
   ((snapshots :reader acceptor-snapshots
               :initform (make-hash-table :test #'equal))
    (asset-maps :reader asset-maps
@@ -59,7 +62,12 @@
                      :access-log-destination nil
                      :message-log-destination nil))
 
+
 (defvar *default-render-acceptor* nil)
+
+(defmethod hunchentoot:acceptor-dispatch-request ((acceptor cached-404-acceptor)
+                                                  request)
+  (send-404 (hunchentoot:script-name request) 3600))
 
 (defun default-render-acceptor ()
   (util:or-setf
@@ -203,10 +211,10 @@
            (t
             (send-404 script-name))))))))
 
-(defun send-404 (script-name)
+(defun send-404 (script-name &optional (cache-time 60))
   (log:error "No such asset: ~a" script-name)
   (setf (hunchentoot:return-code*) 404)
-  (set-cache-control 3600)
+  (set-cache-control cache-time)
   "No such asset")
 
 (define-easy-handler (asset-from-company
