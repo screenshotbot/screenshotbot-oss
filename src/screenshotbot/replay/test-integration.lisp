@@ -99,7 +99,7 @@
   `(let ((old-installation *installation*))
      (tmpdir:with-tmpdir (tmp-store-dir)
        (progn
-         (setf *object-store* tmp-store-dir)
+         (setf *object-store* (namestring tmp-store-dir))
          (setf *synchronous-promotion* t)
          (setf *installation* (make-instance 'test-installation :plugins nil))
          (unwind-protect

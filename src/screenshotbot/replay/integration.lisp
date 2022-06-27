@@ -34,6 +34,7 @@
   (:import-from #:screenshotbot/replay/sitemap
                 #:parse-sitemap)
   (:import-from #:screenshotbot/replay/core
+                #:asset-file-name
                 #:context
                 #:write-replay-log
                 #:uuid
@@ -72,6 +73,8 @@
                 #:safe-interrupt-checkpoint)
   (:import-from #:screenshotbot/replay/proxy
                 #:ensure-proxy)
+  (:import-from #:util/object-id
+                #:oid-array)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
                     (#:integration #:screenshotbot/replay/integration)
@@ -221,7 +224,10 @@ accessing the urls or sitemap slot."
                   finally
                      (let ((actual-url (quri:render-uri
                                         (quri:merge-uris
-                                         (asset-file root-asset)
+                                         (format nil "/company/~a/assets/~a"
+                                                 (encrypt:encrypt-mongoid
+                                                  (oid-array (company run)))
+                                                 (asset-file-name root-asset))
                                          hosted-url))))
 
                        (funcall logger url actual-url)
