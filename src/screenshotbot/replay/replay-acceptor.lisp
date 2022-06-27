@@ -11,6 +11,9 @@
                 #:*acceptor*
                 #:define-easy-handler)
   (:import-from #:screenshotbot/replay/core
+                #:asset-response-headers
+                #:http-header-value
+                #:http-header-name
                 #:parse-max-age
                 #:asset-file-name
                 #:asset-file
@@ -134,55 +137,80 @@
 (with-auto-restart ()
  (defun handle-asset (snapshot asset)
    (log:info "Starting with ~a" asset)
-   (flet ((fix-input-file (f)
-            (cond
-              ((uiop:file-exists-p f)
-               f)
-              (t
-               ;; hack: please remove
-               (make-pathname :type "tmp"
-                              :defaults f))))
-          (set-minimum-cache ()
-            (set-cache-control 300)))
-     (set-minimum-cache)
-     (let ((input-file (fix-input-file (replay:snapshot-asset-file snapshot asset))))
-       (setf (hunchentoot:return-code*)
-             (replay:asset-status asset))
-       (loop for header in (replay:asset-response-headers asset)
-             for key = (replay:http-header-name header)
-             for val = (replay:http-header-value header)
-             do
-                (cond
-                  ((member key (list "transfer-encoding") :test #'string-equal)
-                   ;; do nothing
-                   nil)
-                  ((and
-                    (string-equal "cache-control" key)
-                    (< (parse-max-age val) 300))
-                   (set-minimum-cache))
-                  (t
-                   (setf (hunchentoot:header-out key hunchentoot:*reply*)
-                         (cond
-                           ((string-equal "content-length" key)
-                            ;; hunchentoot has special handling for
-                            ;; content-length. But also, we might have
-                            ;; modified the file since we downloaded it, so
-                            ;; we should use the updated length.
-                            (assert (uiop:file-exists-p input-file))
-                            (with-open-file (input input-file)
-                              (file-length input)))
-                           (t
-                            val))))))
-       (handler-case
-           (let ((out (hunchentoot:send-headers)))
-             (ecase (hunchentoot:request-method*)
-               (:head)
-               (:get
-                (send-file-to-stream input-file out)))
-             (finish-output out))
-         #+lispworks
-         (comm:socket-io-error ()))
-       (log:info "Done with ~a" asset)))))
+   (let ((if-modified-since (hunchentoot:header-in* :if-modified-since))
+         (last-modified (loop for header in (asset-response-headers asset)
+                              if (string-equal (http-header-name header)
+                                               "last-modified")
+                                return (http-header-value header))))
+     (cond
+       ((and if-modified-since
+             (string-equal if-modified-since last-modified))
+        (handle-asset-not-modified asset))
+       (t
+        (handle-asset-modified snapshot asset))))))
+
+(defun handle-asset-not-modified (asset)
+  (send-asset-headers asset :content-length nil)
+  (setf (hunchentoot:return-code*) hunchentoot:+http-not-modified+)
+  (hunchentoot:abort-request-handler))
+
+(defun handle-asset-modified (snapshot asset)
+  (flet ((fix-input-file (f)
+           (cond
+             ((uiop:file-exists-p f)
+              f)
+             (t
+              ;; hack: please remove
+              (make-pathname :type "tmp"
+                             :defaults f))))
+         (set-minimum-cache ()
+           (set-cache-control 300)))
+    (set-minimum-cache)
+    (let ((input-file (fix-input-file (replay:snapshot-asset-file snapshot asset))))
+      (setf (hunchentoot:return-code*)
+            (replay:asset-status asset))
+      (send-asset-headers asset
+                          :content-length
+                          (with-open-file (input input-file)
+                            (file-length input)))
+
+      (handler-case
+          (let ((out (hunchentoot:send-headers)))
+            (ecase (hunchentoot:request-method*)
+              (:head)
+              (:get
+               (send-file-to-stream input-file out)))
+            (finish-output out))
+        #+lispworks
+        (comm:socket-io-error ()))
+      (log:info "Done with ~a" asset))))
+
+(defun send-asset-headers (asset &key content-length)
+  (loop for header in (replay:asset-response-headers asset)
+        for key = (replay:http-header-name header)
+        for val = (replay:http-header-value header)
+        do
+           (cond
+             ((member key (list "transfer-encoding") :test #'string-equal)
+              ;; do nothing
+              nil)
+             ((and
+               (string-equal "cache-control" key)
+               (< (parse-max-age val) 300))
+              (set-cache-control 300))
+             (t
+              (flet ((send-header (val)
+                       (setf (hunchentoot:header-out key hunchentoot:*reply*) val)))
+               (cond
+                 ((string-equal "content-length" key)
+                  ;; hunchentoot has special handling for
+                  ;; content-length. But also, we might have
+                  ;; modified the file since we downloaded it, so
+                  ;; we should use the updated length.
+                  (when content-length
+                    (send-header content-length)))
+                 (t
+                  (send-header val))))))))
 
 (defun send-file-to-stream (input-file out)
   (assert (uiop:file-exists-p input-file))

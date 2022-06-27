@@ -217,6 +217,41 @@
        (is (equal (list snapshot asset)
                   called-args))))))
 
+(test handle-asset-not-modified
+  (with-fixture state (:response-headers (list
+                                          (make-instance 'http-header
+                                                          :name "Last-Modified"
+                                                          :value "Wed, 21 Oct 2015 07:28:00 GMT")))
+    (push-snapshot acceptor company snapshot)
+    (let ((url (format nil "~a/company/~a/assets/abcd00.png"
+                       host
+                       (encrypt:encrypt-mongoid (oid-array company)))))
+      (handler-case
+          (multiple-value-bind (data ret headers)
+              (dex:get url
+                       :headers `(("If-modified-since" . "Wed, 21 Oct 2015 07:28:00 GMT")))
+            (is (equalp #() data))
+            (is (eql 304 ret)))))))
+
+(test handle-asset-not-modified-with-content-length
+  (with-fixture state (:response-headers (list
+                                          (make-instance 'http-header
+                                                          :name "content-length"
+                                                          :value 20)
+                                          (make-instance 'http-header
+                                                          :name "Last-Modified"
+                                                          :value "Wed, 21 Oct 2015 07:28:00 GMT")))
+    (push-snapshot acceptor company snapshot)
+    (let ((url (format nil "~a/company/~a/assets/abcd00.png"
+                       host
+                       (encrypt:encrypt-mongoid (oid-array company)))))
+      (handler-case
+          (multiple-value-bind (data ret headers)
+              (dex:get url
+                       :headers `(("If-modified-since" . "Wed, 21 Oct 2015 07:28:00 GMT")))
+            (is (equalp #() data))
+            (is (eql 304 ret)))))))
+
 (test cleanup-pop-snapshot
   (with-fixture state ()
     (is (eql 0 (length (snapshots-company acceptor))))
