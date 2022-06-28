@@ -140,7 +140,7 @@ too."
                :initform nil
                :accessor custom-css)
    (sleep :initarg :sleep
-          :initform 1
+          :initform 0.5
           :reader sleep-time)))
 
 (define-condition config-error (simple-error)
