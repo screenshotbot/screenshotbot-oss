@@ -109,19 +109,27 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
                   (warning #'log-sentry))
      (funcall fn))))
 
+(defvar *catch-errors-p* t)
+
+(defun %invoke-debugger (e)
+  ;; mockable version of invoke-debugger
+  (invoke-debugger e))
+
+(defun handle-error (e)
+  (cond
+    ((and *catch-errors-p* *debugger-hook*)
+     ;; Small edge case: SWANK/SLYNK might still try
+     ;; to redelegate to the
+     ;; default debugger which can
+     ;; cause the process to crash
+     (%invoke-debugger e))
+    (t
+     (trivial-backtrace:print-backtrace e)
+     (invoke-restart 'cl:abort))))
+
 (defun make-thread (body &rest args)
   (apply #'bt:make-thread
            (lambda ()
-             (handler-bind ((error (lambda (e)
-                                     (cond
-                                       (*debugger-hook*
-                                        ;; Small edge case: SWANK/SLYNK might still try
-                                        ;; to redelegate to the
-                                        ;; default debugger which can
-                                        ;; cause the process to crash
-                                        (invoke-debugger e))
-                                       (t
-                                        (trivial-backtrace:print-backtrace e)
-                                        (invoke-restart 'cl:abort))))))
+             (handler-bind ((error #'handle-error))
                (funcall-with-sentry-logs body)))
          args))

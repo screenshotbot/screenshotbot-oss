@@ -9,6 +9,9 @@
         #:fiveam
         #:util/threading)
   (:import-from #:util/threading
+                #:%invoke-debugger
+                #:handle-error
+                #:*catch-errors-p*
                 #:funcall-with-sentry-logs)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-threading)
@@ -16,33 +19,40 @@
 
 (util/fiveam:def-suite)
 
+(def-fixture state ()
+  (let ((*catch-errors-p* t)
+        (*debugger-hook* *debugger-hook*))
+    (&body)))
+
 (test simple-create-thread
-  (let ((var nil))
-    (let ((thread (util:make-thread
-                   (lambda ()
-                     (setf var t)))))
-      (bt:join-thread thread)
-      (is-true var))))
+  (with-fixture state ()
+   (let ((var nil))
+     (let ((thread (util:make-thread
+                    (lambda ()
+                      (setf var t)))))
+       (bt:join-thread thread)
+       (is-true var)))))
 
 
 (test safe-interrupt
-  (let* ((ctr 0)
-         (max-ctr 10)
-         (callback-called-p nil)
-         (thread (bt:make-thread
-                  (lambda ()
-                    (with-safe-interruptable (:on-quit (lambda ()
-                                                         (setf callback-called-p t)))
-                      (loop for i below max-ctr
-                            do
-                               (incf ctr)
-                               (safe-interrupt-checkpoint)
-                               (sleep 0.1)))))))
-    (safe-interrupt thread)
-    (bt:join-thread thread)
-    (is-true callback-called-p)
-    (is (< ctr (/ max-ctr 2)))
-    (pass)))
+  (with-fixture state ()
+   (let* ((ctr 0)
+          (max-ctr 10)
+          (callback-called-p nil)
+          (thread (bt:make-thread
+                   (lambda ()
+                     (with-safe-interruptable (:on-quit (lambda ()
+                                                          (setf callback-called-p t)))
+                       (loop for i below max-ctr
+                             do
+                                (incf ctr)
+                                (safe-interrupt-checkpoint)
+                                (sleep 0.1)))))))
+     (safe-interrupt thread)
+     (bt:join-thread thread)
+     (is-true callback-called-p)
+     (is (< ctr (/ max-ctr 2)))
+     (pass))))
 
 (def-fixture sentry-mocks ()
   (cl-mock:with-mocks ()
@@ -62,23 +72,63 @@
   ())
 
 (test sentry-logging-for-make-thread
-  (with-fixture sentry-mocks ()
-    (funcall-with-sentry-logs
-     (lambda ()
-       (warn 'my-simple-warning)))
-    (is (eql 1 (length sentry-logs)))
-    (signals my-simple-error
+  (with-fixture state ()
+   (with-fixture sentry-mocks ()
      (funcall-with-sentry-logs
       (lambda ()
-        (error 'my-simple-error))))
-    (is (eql 2 (length sentry-logs)))))
+        (warn 'my-simple-warning)))
+     (is (eql 1 (length sentry-logs)))
+     (signals my-simple-error
+       (funcall-with-sentry-logs
+        (lambda ()
+          (error 'my-simple-error))))
+     (is (eql 2 (length sentry-logs))))))
 
 #-screenshotbot-oss
 (test large-number-of-warnings
-  (with-fixture sentry-mocks ()
-    (funcall-with-sentry-logs
-     (lambda ()
-       (loop for i below 100 do
-         (warn
-          'my-simple-warning))))
-    (is (eql 5 (length sentry-logs)))))
+  (with-fixture state ()
+   (with-fixture sentry-mocks ()
+     (funcall-with-sentry-logs
+      (lambda ()
+        (loop for i below 100 do
+          (warn
+           'my-simple-warning))))
+     (is (eql 5 (length sentry-logs))))))
+
+
+(test handle-error-if-catch-errors-p
+  (with-fixture state ()
+    (with-fixture sentry-mocks ()
+      (let (debugger-hook-called-p)
+        (setf *debugger-hook* (lambda (e old-debugger-hook)
+                                (error "never called")))
+        (cl-mock:if-called '%invoke-debugger
+                            (lambda (e)
+                              (setf debugger-hook-called-p t)))
+        (handle-error (make-instance 'error))
+        (is-true debugger-hook-called-p)))))
+
+(test handle-error-if-not-catch-errors-p
+  (with-fixture state ()
+    (with-fixture sentry-mocks ()
+      (let (debugger-hook-called-p
+            abort-called-p)
+        (setf *debugger-hook* (lambda (e h)))
+        (setf *catch-errors-p* nil)
+        (cl-mock:if-called '%invoke-debugger
+                            (lambda (e)
+                              (setf debugger-hook-called-p t)))
+        (restart-case
+            (handle-error (make-instance 'error))
+          (cl:abort ()
+            (setf abort-called-p t)))
+        (is-false debugger-hook-called-p)
+        (is-true abort-called-p)))))
+
+(test ensure-cl-abort-is-a-valid-restart
+  (let ((restart nil))
+    (let ((thread (bt:make-thread
+                   (lambda ()
+                     (setf restart (find-restart 'cl:abort))))))
+      (bt:join-thread thread)
+      (is-true restart))))
