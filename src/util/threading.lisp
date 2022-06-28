@@ -117,7 +117,9 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
 
 (defun handle-error (e)
   (cond
-    ((and *catch-errors-p* *debugger-hook*)
+    ((and
+      (not *catch-errors-p*)
+      *debugger-hook*)
      ;; Small edge case: SWANK/SLYNK might still try
      ;; to redelegate to the
      ;; default debugger which can

@@ -96,28 +96,32 @@
      (is (eql 5 (length sentry-logs))))))
 
 
-(test handle-error-if-catch-errors-p
+(test handle-error-if-not-catch-errors-p
   (with-fixture state ()
     (with-fixture sentry-mocks ()
       (let (debugger-hook-called-p)
+        (setf *catch-errors-p* nil)
         (setf *debugger-hook* (lambda (e old-debugger-hook)
                                 (error "never called")))
         (cl-mock:if-called '%invoke-debugger
                             (lambda (e)
-                              (setf debugger-hook-called-p t)))
-        (handle-error (make-instance 'error))
+                              (setf debugger-hook-called-p :seen-1)))
+        (restart-case
+            (handle-error (make-instance 'error))
+          (cl:abort ()
+            (fail "got abort, when we shouldn't have")))
         (is-true debugger-hook-called-p)))))
 
-(test handle-error-if-not-catch-errors-p
+(test handle-error-if-catch-errors-p
   (with-fixture state ()
     (with-fixture sentry-mocks ()
       (let (debugger-hook-called-p
             abort-called-p)
+        (setf *catch-errors-p* t)
         (setf *debugger-hook* (lambda (e h)))
-        (setf *catch-errors-p* nil)
         (cl-mock:if-called '%invoke-debugger
                             (lambda (e)
-                              (setf debugger-hook-called-p t)))
+                              (setf debugger-hook-called-p :seen)))
         (restart-case
             (handle-error (make-instance 'error))
           (cl:abort ()
