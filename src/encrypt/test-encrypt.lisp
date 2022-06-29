@@ -19,8 +19,12 @@
 (def-fixture state (&key dir)
   (tmpdir:with-tmpdir (tmpdir)
     (let ((util/store:*object-store* (namestring (or dir tmpdir))))
-      (let ((*cipher* nil))
-       (&body)))))
+      (let ((old-cipher *cipher*))
+        (unwind-protect
+             (progn
+               (setf *cipher* nil)
+               (&body))
+          (setf *cipher* old-cipher))))))
 
 (test blowfish-key-happy-path
   (with-fixture state ()
@@ -30,6 +34,38 @@
   (with-fixture state ()
     (is (equalp (blowfish-key)
                 (blowfish-key)))))
+
+(test multithreaded-key-is-always-the-same
+  (with-fixture state ()
+   (let ((num-threads 100)
+         (correct 0)
+         (incorrect nil)
+         (lock (bt:make-lock))
+         (store util/store:*object-store*))
+     (let ((encrypted (encrypt "foobar")))
+       (flet ((thread-call ()
+                (let* ((util/store:*object-store* store)
+                       (*cipher* nil)
+                       (test-encryption (encrypt "foobar")))
+                  (log:info "Store is: " util/store:*object-store*)
+                  (cond
+                    ((equal test-encryption encrypted)
+                     (bt:with-lock-held (lock)
+                       (incf correct)))
+                    (t
+                     (bt:with-lock-held (lock)
+                       (push test-encryption incorrect)))))))
+         (thread-call)
+         (thread-call)
+         (let ((threads (loop for i from 2 below num-threads
+                             collect (bt:make-thread
+                                      (lambda ()
+                                        (ignore-errors
+                                         (thread-call)))))))
+           (loop for thread in threads
+                do (bt:join-thread thread))
+           (is (equal nil incorrect))
+           (is (eql num-threads correct))))))))
 
 (test encode-decode
   (with-fixture state ()

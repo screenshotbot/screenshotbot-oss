@@ -21,7 +21,7 @@
   (bt:with-lock-held (*lock*)
     (let ((file (path:catfile
                  (cond
-                  ((boundp 'util/store:*object-store*)
+                  ((ignore-errors util/store:*object-store*)
                    (util/store:object-store))
                   (t
                    ;; just for test convenience
@@ -48,9 +48,10 @@
 
 (defvar *cipher* nil)
 (defun get-cipher ()
-  (or
+  (util/misc:or-setf
    *cipher*
-   (ironclad:make-cipher 'ironclad:blowfish :mode :ecb :key (key))))
+   (ironclad:make-cipher 'ironclad:blowfish :mode :ecb :key (key))
+   :thread-safe t))
 
 (defun coerce-to-byte-array (a)
   (coerce a '(vector (unsigned-byte 8))))

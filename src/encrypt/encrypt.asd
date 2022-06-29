@@ -3,6 +3,7 @@
   :depends-on (:ironclad
                :secure-random
                :util/store
+               :util/misc
                :cl-base64)
   :components ((:file "encrypt")))
 
