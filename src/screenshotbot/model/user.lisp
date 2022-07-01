@@ -88,7 +88,7 @@
           :reader user-email
           :index-initargs (:test #'equal)
           :index-type unique-index
-          :index-reader user-with-email
+          :index-reader %user-with-email
           :writer (setf user-email))
    (password-hash :type (or null string)
                   :initform nil
@@ -138,6 +138,13 @@
 
 (defun all-users ()
   (store-objects-with-class 'user))
+
+(defun user-with-email (email)
+  (loop for user in (all-users)
+        if (and (slot-boundp user 'email)
+                (user-email user)
+                (string-equal (user-email user) email))
+          return user))
 
 (defun make-user (&rest args &key companies &allow-other-keys)
   (let ((user (apply #'make-instance 'user args)))

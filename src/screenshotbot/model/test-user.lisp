@@ -26,6 +26,7 @@
   (:import-from #:bknr.indices
                 #:object-destroyed-p)
   (:import-from #:screenshotbot/model/user
+                #:user-with-email
                 #:make-user
                 #:default-company)
   (:import-from #:util/store
@@ -118,3 +119,9 @@
                  :companies (list user-company))))
      (is (eql user-company
               (default-company user))))))
+
+(test user-with-email-is-case-insensitive
+  (with-fixture state ()
+    (let ((user (make-user :email "IT@example.com")))
+      (is (eql user (user-with-email "IT@example.com")))
+      (is (eql user (user-with-email "it@example.com"))))))
