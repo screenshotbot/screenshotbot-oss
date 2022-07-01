@@ -132,6 +132,7 @@
         <li>Pull request: ,(or (pull-request-url run) "NA")</li>
         <li>Phabricator Diff-id: ,(or (phabricator-diff-id run) "NA")</li>
         <li>Build URL: <a href=(run-build-url run)>,(run-build-url run)</a> </li>
+        <li>Production?: ,(if (trunkp run) "true" "false")</li>
         <li>Periodic job?: ,(if (periodic-job-p run) "true" "false")</li>
         <li>Number of screenshots: ,(length (recorder-run-screenshots run))</li>
         <li>Total run size: ,(run-size run)kB</li>
