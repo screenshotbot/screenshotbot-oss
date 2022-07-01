@@ -10,6 +10,7 @@
   (:import-from #:bknr.datastore
                 #:delete-object)
   (:import-from #:screenshotbot/user-api
+                #:user-email
                 #:user
                 #:user-companies)
   (:import-from #:screenshotbot/model/company
@@ -26,11 +27,15 @@
   (:import-from #:bknr.indices
                 #:object-destroyed-p)
   (:import-from #:screenshotbot/model/user
+                #:user-email-exists
+                #:*lowercase-email-map*
                 #:user-with-email
                 #:make-user
                 #:default-company)
   (:import-from #:util/store
                 #:with-test-store)
+  (:import-from #:bknr.datastore
+                #:with-transaction)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-user)
 
@@ -43,8 +48,8 @@
 
 (def-fixture state ()
   (with-test-store ()
-   (let ((*installation* (make-instance 'pro-installation)))
-     (&body))))
+    (let ((*installation* (make-instance 'pro-installation)))
+      (&body))))
 
 (test make-user
   (with-fixture state ()
@@ -125,3 +130,28 @@
     (let ((user (make-user :email "IT@example.com")))
       (is (eql user (user-with-email "IT@example.com")))
       (is (eql user (user-with-email "it@example.com"))))))
+
+(test user-with-email-is-case-insensitive-the-other-way-around
+  (with-fixture state ()
+    (let ((user (make-user :email "it@example.com")))
+      (is (eql user (user-with-email "IT@example.com")))
+      (is (eql user (user-with-email "it@example.com"))))))
+
+(test user-with-email-is-case-insentivie-even-after-setting-email
+  (with-fixture state ()
+    (let ((user (make-user :email "foo@example.com")))
+      (is (eql user (user-with-email "foo@example.com")))
+      (with-transaction ()
+        (setf (user-email user) "IT@example.com"))
+      (is (equal user (user-with-email "it@example.com")))
+      (is (equal nil (user-with-email "foo@example.com"))))))
+
+(test |don't allow me to add a new user with same email|
+  (with-fixture state ()
+    (make-user :email "IT@example.com")
+    (signals user-email-exists
+      (make-user :email "it@example.com"))
+    ;; check that our store is still valid though
+    (make-user :email "foo@example.com")
+    (signals user-email-exists
+      (make-user :email "IT@example.com"))))

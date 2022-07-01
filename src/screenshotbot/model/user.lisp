@@ -31,6 +31,8 @@
                 #:store-objects-with-class)
   (:import-from #:bknr.indices
                 #:destroy-object)
+  (:import-from #:util/store
+                #:def-store-local)
   (:export
    #:user
    #:email-confirmation-code
@@ -72,6 +74,12 @@
 (in-package :screenshotbot/model/user)
 
 (defvar *current-api-key*)
+
+(def-store-local *lowercase-email-map*
+    (make-hash-table :test #'equal)
+  "A map from lowercase emails to the user. There might be stale
+  mappings, so please use user-with-email to access this map, and
+  don't directly use this map.")
 
 (defun arnold ()
   (user-with-email "arnold@tdrhq.com"))
@@ -136,15 +144,46 @@
     company."))
   (:metaclass persistent-class))
 
+(define-condition user-email-exists (error)
+  ((email :initarg :email)))
+
+(defmethod print-object ((e user-email-exists) out)
+  (format out "The user already exists with email: ~a"
+          (slot-value e 'email)))
+
+(defmethod update-lowercase-email-map ((user user))
+  "Update the lowercase email index. This might be called inside the transaction to make-user, in which case it should correctly error and not update the state"
+  (let ((email (str:downcase (user-email user))))
+    (when email ;; mostly for tests
+     (symbol-macrolet ((place (gethash email *lowercase-email-map*)))
+       (let ((prev-user place))
+         (cond
+           ((null prev-user)
+            (setf place user))
+           ((not (eql prev-user user))
+            (error 'user-email-exists :email email))))))))
+
+(defmethod bknr.datastore:initialize-transient-instance :after ((user user))
+  (update-lowercase-email-map user))
+
 (defun all-users ()
   (store-objects-with-class 'user))
 
 (defun user-with-email (email)
-  (loop for user in (all-users)
-        if (and (slot-boundp user 'email)
-                (user-email user)
-                (string-equal (user-email user) email))
-          return user))
+  (let ((old-val (%user-with-email email)))
+   (let ((user
+           (gethash (str:downcase email) *lowercase-email-map*)))
+     (cond
+       ((and user
+             (string-equal email (user-email user)))
+        user)
+       (t
+        (when old-val
+          ;; Safety measure. Once we verify this is not happening, we
+          ;; can safely delete the use of old-val and just always
+          ;; return nil
+          (warn "The new index did not match the new-index for ~a" email))
+        old-val)))))
 
 (defun make-user (&rest args &key companies &allow-other-keys)
   (let ((user (apply #'make-instance 'user args)))
@@ -275,3 +314,6 @@
     (find (%default-company user) user-companies)
     (user-personal-company user)
     (car user-companies))))
+
+(defmethod (setf user-email) :after (email (user user))
+  (update-lowercase-email-map user))
