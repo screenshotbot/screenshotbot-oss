@@ -31,6 +31,9 @@
 
 (defvar *lock* (bt:make-recursive-lock))
 
+;; TODO: replace this logic with def-store-local. It's best to time
+;; this with a restart
+
 (defvar *priority-queues*
   (apply #'make-hash-table
            #+lispworks

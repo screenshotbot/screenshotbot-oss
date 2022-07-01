@@ -9,6 +9,7 @@
           #:fiveam
           #:alexandria)
     (:import-from #:util/store
+                  #:def-store-local
                   #:find-any-refs
                   #:register-ref
                   #:with-test-store
@@ -126,3 +127,29 @@
            (abc-1 (make-instance 'abc :ref xyz))
            (abc (make-instance 'abc :ref (list abc-1 2 xyz))))
       (is (equal (list xyz abc-1 abc) (find-any-refs (list xyz)))))))
+
+(def-store-local *store-local* (make-hash-table)
+  "A test cache")
+
+
+(test store-local
+  (let (one two)
+    (with-test-store ()
+      (setf one *store-local*)
+      (is (eql one *store-local*)))
+    (with-test-store ()
+      (setf two *store-local*)
+      (is (not (eql one two))))))
+
+(test setf-store-local
+  (let (one two)
+    (with-test-store ()
+      (setf *store-local* 'foo)
+      (is (eql *store-local* 'foo)))
+    (with-test-store ()
+      (is (not (eql 'foo *store-local*)))
+      (setf *store-local* 'bar)
+      (is (eql 'bar *store-local*)))))
+
+(test store-local-with-a-store
+  (signals unbound-variable *store-local*))

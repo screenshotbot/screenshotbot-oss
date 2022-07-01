@@ -27,7 +27,8 @@
    #:safe-snapshot
    #:defindex
    #:validate-class
-   #:with-class-validation))
+   #:with-class-validation
+   #:def-store-local))
 (in-package :util/store)
 
 (defvar *object-store*)
@@ -469,3 +470,31 @@ set-differences on O and the returned value from this."
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (defvar ,name
        (make-instance ,class ,@args))))
+
+
+(defvar *store-local-lock* (bt:make-lock))
+
+(defvar *store-local-map* (make-hash-table
+                           #+lispworks :weak-kind
+                           #+lispworks :key)
+  "A map from store to the alist of all store local variables")
+
+
+(symbol-macrolet ((place (gethash bknr.datastore:*store* *store-local-map*)))
+  (defun get-store-local (name)
+    (util/misc:or-setf
+     (a:assoc-value place name)
+     (funcall (get name 'store-local-init-fn))
+     :thread-safe t))
+  (defun (setf get-store-local) (value name)
+    (setf (a:assoc-value place name) value)))
+
+(defmacro def-store-local (name initform documentation)
+  "Defines a variable thats local to the current store. You cannot use
+this variable in LET forms, but you can SETF it if you like."
+  `(progn
+     (setf (get ',name 'store-local-init-fn)
+           (lambda () ,initform))
+     (define-symbol-macro
+         ,name
+         (get-store-local ',name))))
