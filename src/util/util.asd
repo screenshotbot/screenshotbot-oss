@@ -129,6 +129,7 @@
 (defsystem :util/store
   :serial t
   :depends-on (:bknr.datastore
+               :util/misc
                :str
                :local-time
                :copy-directory
