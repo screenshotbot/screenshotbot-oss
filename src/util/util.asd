@@ -106,7 +106,8 @@
 (defsystem :util/misc
   :serial t
   :depends-on (:local-time
-               :str)
+               :str
+               :hunchentoot)
   :components ((:file "misc")))
 
 (defsystem :util/testing
