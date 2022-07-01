@@ -154,15 +154,15 @@
 (defmethod update-lowercase-email-map ((user user))
   "Update the lowercase email index. This might be called inside the transaction to make-user, in which case it should correctly error and not update the state"
   (when (slot-boundp user 'email)
-   (let ((email (str:downcase (user-email user))))
-     (when email ;; mostly for tests
-       (symbol-macrolet ((place (gethash email *lowercase-email-map*)))
-         (let ((prev-user place))
-           (cond
-             ((null prev-user)
-              (setf place user))
-             ((not (eql prev-user user))
-              (error 'user-email-exists :email email)))))))))
+    (let ((email (str:downcase (user-email user))))
+      (when email ;; mostly for tests
+        (symbol-macrolet ((place (gethash email *lowercase-email-map*)))
+          (let ((prev-user place))
+            (cond
+              ((null prev-user)
+               (setf place user))
+              ((not (eql prev-user user))
+               (error 'user-email-exists :email (user-email user))))))))))
 
 (defmethod bknr.datastore:initialize-transient-instance :after ((user user))
   (update-lowercase-email-map user))
