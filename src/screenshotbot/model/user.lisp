@@ -312,7 +312,7 @@
                               args))))
 
 (defmethod default-company ((user user))
-  (let ((user-companies (user-companies user)))
+  (let ((user-companies (user-companies  user)))
    (or
     (find (%default-company user) user-companies)
     (user-personal-company user)
