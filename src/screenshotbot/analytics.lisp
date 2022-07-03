@@ -13,7 +13,8 @@
                 #:def-cron)
   (:export #:push-analytics-event
            #:analytics-event-ts
-           #:analytics-event-script-name))
+           #:analytics-event-script-name
+           #:map-analytics-events))
 (in-package :screenshotbot/analytics)
 
 (defvar *events-lock* (bt:make-lock))
@@ -90,6 +91,17 @@
   (append
    *events*
    (all-saved-analytics-events)))
+
+(defun map-analytics-events (function &key (keep-if (lambda (x) (declare (ignore x)) t))
+                                        limit)
+  (let ((count 0))
+    (loop for ev in (all-analytics-events)
+          while (or (null limit) (< count limit))
+          if (funcall keep-if ev)
+            collect
+            (progn
+                (incf count)
+                (funcall function ev)))))
 
 
 (defun push-analytics-event ()
