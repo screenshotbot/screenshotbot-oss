@@ -16,7 +16,6 @@
            #:analytics-event-script-name))
 (in-package :screenshotbot/analytics)
 
-#-lispworks
 (defvar *events-lock* (bt:make-lock))
 (defvar *events* nil)
 
@@ -63,17 +62,18 @@
 
 (defun %write-analytics-events ()
   (let ((old-events (atomic-exchange *events* nil)))
-    (with-open-file (s *analytics-log-file*
-                       :direction :output
-                       :if-exists :append
-                       :element-type '(unsigned-byte 8)
-                       :if-does-not-exist :create)
-      (dolist (ev (nreverse old-events))
-        (when (consp (event-session ev))
-          (setf (event-session ev) (car (event-session ev))))
-        (setf (writtenp ev) t)
-        (cl-store:store ev s))
-      (finish-output s))))
+    (bt:with-lock-held (*events-lock*)
+     (with-open-file (s *analytics-log-file*
+                        :direction :output
+                        :if-exists :append
+                        :element-type '(unsigned-byte 8)
+                        :if-does-not-exist :create)
+       (dolist (ev (nreverse old-events))
+         (when (consp (event-session ev))
+           (setf (event-session ev) (car (event-session ev))))
+         (setf (writtenp ev) t)
+         (cl-store:store ev s))
+       (finish-output s)))))
 
 (defun all-saved-analytics-events ()
   (with-open-file (s *analytics-log-file*
