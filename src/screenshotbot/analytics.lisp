@@ -47,19 +47,22 @@
   ;; if we enter the debugger with the lock, then the website will be
   ;; down. So let's always, forcefully never enter the debugger.
   (ignore-and-log-errors ()
-   (bt:with-lock-held (*events-lock*)
-     (with-open-file (s *analytics-log-file*
-                        :direction :output
-                        :if-exists :append
-                        :element-type '(unsigned-byte 8)
-                        :if-does-not-exist :create)
-       (dolist (ev (reverse *events*))
-         (when (consp (event-session ev))
-           (setf (event-session ev) (car (event-session ev))))
-         (setf (writtenp ev) t)
-         (cl-store:store ev s))
-       (setf *events* nil)
-       (finish-output s)))))
+    (%write-analytics-events)))
+
+(defun %write-analytics-events ()
+  (bt:with-lock-held (*events-lock*)
+    (with-open-file (s *analytics-log-file*
+                       :direction :output
+                       :if-exists :append
+                       :element-type '(unsigned-byte 8)
+                       :if-does-not-exist :create)
+      (dolist (ev (reverse *events*))
+        (when (consp (event-session ev))
+          (setf (event-session ev) (car (event-session ev))))
+        (setf (writtenp ev) t)
+        (cl-store:store ev s))
+      (setf *events* nil)
+      (finish-output s))))
 
 (defun all-saved-analytics-events ()
   (with-open-file (s *analytics-log-file*

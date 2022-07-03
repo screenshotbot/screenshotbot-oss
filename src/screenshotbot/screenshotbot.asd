@@ -298,6 +298,7 @@
                #+ (or ccl lispworks)
                (:module "slack"
                 :components ((:file "test-settings")))
+               (:file "test-analytics")
                (:module "email-tasks"
                 :components ((:file "test-task-integration")))
                (:module "api"
