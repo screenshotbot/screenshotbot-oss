@@ -16,6 +16,7 @@
            #:analytics-event-script-name))
 (in-package :screenshotbot/analytics)
 
+#-lispworks
 (defvar *events-lock* (bt:make-lock))
 (defvar *events* nil)
 
@@ -49,19 +50,29 @@
   (ignore-and-log-errors ()
     (%write-analytics-events)))
 
+
+(defmacro atomic-exchange (place new-val)
+  #-lispworks
+  `(bt:with-lock-held (*events-lock*)
+     (let ((old-value ,place))
+       (setf ,place ,new-val)
+       old-value))
+  #+lispworks
+  `(system:atomic-exchange ,place ,new-val))
+
+
 (defun %write-analytics-events ()
-  (bt:with-lock-held (*events-lock*)
+  (let ((old-events (atomic-exchange *events* nil)))
     (with-open-file (s *analytics-log-file*
                        :direction :output
                        :if-exists :append
                        :element-type '(unsigned-byte 8)
                        :if-does-not-exist :create)
-      (dolist (ev (reverse *events*))
+      (dolist (ev (nreverse old-events))
         (when (consp (event-session ev))
           (setf (event-session ev) (car (event-session ev))))
         (setf (writtenp ev) t)
         (cl-store:store ev s))
-      (setf *events* nil)
       (finish-output s))))
 
 (defun all-saved-analytics-events ()
@@ -80,26 +91,20 @@
    *events*
    (all-saved-analytics-events)))
 
-(defun clean-events ()
-  (let ((cell (nthcdr 1000 *events*)))
-    (if cell
-        (setf (cdr cell) nil))))
 
-(let ((ctr 0))
-  (defun push-analytics-event ()
-    (let ((ev (make-instance 'analytics-event
-                             :ip-address (hunchentoot:real-remote-addr)
-                             :user-agent (hunchentoot:user-agent)
-                             :session (auth:session-key (auth:current-session))
-                             :referrer (hunchentoot:referer)
-                             :script-name (hunchentoot:script-name hunchentoot:*request*)
-                             :query-string (hunchentoot:query-string*))))
-      (bt:with-lock-held (*events-lock*)
-        (push ev *events*)
-        (incf ctr)
-        (when (<= 1000 ctr)
-          (setf ctr 0)
-          (clean-events))))))
+(defun push-analytics-event ()
+  (let ((ev (make-instance 'analytics-event
+                            :ip-address (hunchentoot:real-remote-addr)
+                            :user-agent (hunchentoot:user-agent)
+                            :session (auth:session-key (auth:current-session))
+                            :referrer (hunchentoot:referer)
+                            :script-name (hunchentoot:script-name hunchentoot:*request*)
+                            :query-string (hunchentoot:query-string*))))
+    #+lispworks
+    (system:atomic-push ev *events*) ;; micro optimization :/
+    #-lispworks
+    (bt:with-lock-held (*events-lock*)
+      (push ev *events*))))
 
 (def-cron write-analytics-events ()
   (write-analytics-events))

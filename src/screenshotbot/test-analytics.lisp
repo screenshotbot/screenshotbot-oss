@@ -6,7 +6,6 @@
                 #:event-session
                 #:analytics-event
                 #:%write-analytics-events
-                #:*events-lock*
                 #:write-analytics-events
                 #:all-analytics-events
                 #:*analytics-log-file*
@@ -22,7 +21,6 @@
   (uiop:with-temporary-file (:pathname p)
     (let ((*events* nil)
           (*analytics-log-file* p)
-          (*events-lock* (bt:make-lock))
           (ev1 (make-instance 'analytics-event
                                :session "foo")))
       (&body))))
@@ -52,3 +50,11 @@
         (is (eql 1 (length *events*)))
         (write-analytics-events)
         (is (eql 1 (length (all-analytics-events))))))))
+
+(test push-a-lot-of-analytics-events
+  (with-fixture state ()
+    (with-fake-request ()
+      (auth:with-sessions ()
+        (loop for i below 100
+              do (push-analytics-event))
+        (is (eql 100 (length *events*)))))))
