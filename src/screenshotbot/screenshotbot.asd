@@ -52,6 +52,7 @@
                (:feature (:not :screenshotbot-oss) :documentation-plugin)
                :cl-store
                :encrypt
+               :iterate
                :pkg
                #-lispworks
                :util/fake-fli

@@ -74,4 +74,8 @@
       (push ev1 *events*))
     (is (equal (list "foo" "foo" "foo")
                (map-analytics-events #'event-session
+                                       :limit 3)))
+    (write-analytics-events)
+    (is (equal (list "foo" "foo" "foo")
+               (map-analytics-events #'event-session
                                        :limit 3)))))

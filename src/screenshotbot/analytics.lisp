@@ -6,7 +6,8 @@
 
 (uiop/package:define-package :screenshotbot/analytics
     (:use #:cl
-          #:alexandria)
+          #:alexandria
+          #:iterate)
   (:import-from #:screenshotbot/ignore-and-log-errors
                 #:ignore-and-log-errors)
   (:import-from #:util/cron
@@ -77,10 +78,13 @@
        (finish-output s)))))
 
 (defun all-saved-analytics-events ()
-  (with-open-file (s *analytics-log-file*
-                     :direction :input
-                     :element-type '(unsigned-byte 8)
-                     :if-does-not-exist :create)
+  (read-log-file *analytics-log-file*))
+
+(defun read-log-file (log-file)
+  (with-open-file (s log-file
+                   :direction :input
+                   :element-type '(unsigned-byte 8)
+                   :if-does-not-exist :create)
     (nreverse
      (loop for x = (ignore-errors
                     (cl-store:restore s))
@@ -88,20 +92,33 @@
            collect x))))
 
 (defun all-analytics-events ()
-  (append
-   *events*
-   (all-saved-analytics-events)))
+  (map-analytics-events #'identity))
 
 (defun map-analytics-events (function &key (keep-if (lambda (x) (declare (ignore x)) t))
                                         limit)
-  (let ((count 0))
-    (loop for ev in (all-analytics-events)
-          while (or (null limit) (< count limit))
-          if (funcall keep-if ev)
-            collect
-            (progn
-                (incf count)
-                (funcall function ev)))))
+  (let ((count 0)
+        ret)
+    (declare (type fixnum count))
+    (flet ((keep-looking? ()
+             (or (null limit) (< count limit)))
+           (maybe-send (ev)
+             (when (funcall keep-if ev)
+               (incf count)
+               (push (funcall function ev) ret))))
+      (iter (for ev in *events*)
+        (while (keep-looking?))
+        (maybe-send ev))
+      (flet ((process-log-file (log-file)
+               (iter (for ev in (read-log-file log-file))
+                 (while (keep-looking?))
+                 (maybe-send ev))))
+        (process-log-file *analytics-log-file*)
+        (iter (for i from 0)
+          (while (keep-looking?))
+          (let ((log-file (format nil "~a.~d" (namestring *analytics-log-file*) i)))
+            (while (path:-e log-file))
+            (process-log-file log-file))))
+      (nreverse ret))))
 
 
 (defun push-analytics-event ()
