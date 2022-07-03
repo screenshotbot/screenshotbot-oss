@@ -9,22 +9,22 @@
                 #:%write-analytics-events
                 #:write-analytics-events
                 #:all-analytics-events
-                #:*analytics-log-file*
                 #:*events*)
   (:import-from #:util/testing
                 #:with-fake-request)
+  (:import-from #:util/store
+                #:with-test-store)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-analytics)
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (uiop:with-temporary-file (:pathname p)
-    (let ((*events* nil)
-          (*analytics-log-file* p)
-          (ev1 (make-instance 'analytics-event
-                               :session "foo")))
-      (&body))))
+  (with-test-store ()
+   (let ((*events* nil)
+         (ev1 (make-instance 'analytics-event
+                              :session "foo")))
+     (&body))))
 
 (test preconditions
   (with-fixture state ()

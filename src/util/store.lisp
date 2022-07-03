@@ -87,6 +87,7 @@
                     (bknr.datastore:all-store-objects)))
              (tmpdir:with-tmpdir (dir)
                (prepare-store-for-test :dir dir)
+               (setf util/store:*object-store* (namestring dir))
                (assert bknr.datastore:*store*)
                (assert (null (all-objects)))
                (unwind-protect
@@ -110,9 +111,11 @@
        (unwind-protect
             (progn
               (inner-work))
+         (makunbound 'util/store::*object-store*)
          (makunbound '*store*)))
       (t
-       (let ((*store* nil))
+       (let ((*store* nil)
+             (util/store::*object-store* nil))
          (inner-work))))))
 
 (defun prepare-store ()

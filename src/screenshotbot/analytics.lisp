@@ -12,6 +12,8 @@
                 #:ignore-and-log-errors)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:util/store
+                #:object-store)
   (:export #:push-analytics-event
            #:analytics-event-ts
            #:analytics-event-script-name
@@ -21,7 +23,9 @@
 (defvar *events-lock* (bt:make-lock))
 (defvar *events* nil)
 
-(defvar *analytics-log-file* #P "analytics-log-file.log")
+(defun analytics-log-file ()
+  (ensure-directories-exist
+   (path:catfile (object-store) "analytics/access-log")))
 
 (defclass analytics-event ()
   ((ip-address
@@ -65,7 +69,7 @@
 (defun %write-analytics-events ()
   (let ((old-events (atomic-exchange *events* nil)))
     (bt:with-lock-held (*events-lock*)
-     (with-open-file (s *analytics-log-file*
+     (with-open-file (s (analytics-log-file)
                         :direction :output
                         :if-exists :append
                         :element-type '(unsigned-byte 8)
@@ -78,7 +82,7 @@
        (finish-output s)))))
 
 (defun all-saved-analytics-events ()
-  (read-log-file *analytics-log-file*))
+  (read-log-file (analytics-log-file)))
 
 (defun read-log-file (log-file)
   (with-open-file (s log-file
@@ -112,10 +116,10 @@
                (iter (for ev in (read-log-file log-file))
                  (while (keep-looking?))
                  (maybe-send ev))))
-        (process-log-file *analytics-log-file*)
+        (process-log-file (analytics-log-file))
         (iter (for i from 0)
           (while (keep-looking?))
-          (let ((log-file (format nil "~a.~d" (namestring *analytics-log-file*) i)))
+          (let ((log-file (format nil "~a.~d" (namestring (analytics-log-file)) i)))
             (while (path:-e log-file))
             (process-log-file log-file))))
       (nreverse ret))))
