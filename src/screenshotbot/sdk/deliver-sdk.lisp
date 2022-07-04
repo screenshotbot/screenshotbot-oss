@@ -49,8 +49,7 @@
      output-file
      :toplevel 'screenshotbot/sdk/main:main
      :executable t
-     :save-runtime-options t
-     :compression t)
+     :save-runtime-options t)
 
     #+lispworks
     (deliver 'screenshotbot/sdk/main:main

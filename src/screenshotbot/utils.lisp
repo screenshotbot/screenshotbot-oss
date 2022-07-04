@@ -48,14 +48,14 @@
   (let ((output-file (asdf:output-file 'asdf:compile-op
                                         (asdf:find-component
                                         :screenshotbot.sdk.deliver
-                                        #-mswindows "installer"
-                                        #+mswindows "deliver-sdk"))))
+                                        #-(or mswindows win32) "installer"
+                                        #+(or mswindows win32) "deliver-sdk"))))
     (log:info "Output file is: ~a" output-file)
     (assert (path:-e output-file))
     (unless only-build
      (upload-artifact #+darwin "recorder-darwin"
                       #+linux "recorder-linux"
-                      #+mswindows "recorder-win"
+                      #+(or win32 mswindows) "recorder-win"
                       output-file))))
 
 (defun upload-fasl (op system)

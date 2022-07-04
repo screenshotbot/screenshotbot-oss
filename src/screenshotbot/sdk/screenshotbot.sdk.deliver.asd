@@ -118,7 +118,17 @@
                             #+lispworks
                             (t (list (lw) "-build"))
                             #+sbcl
-                            (t (list "build/sbcl-console" "--script"))
+                            (t (list
+                                (namestring
+                                 (make-pathname
+                                  ;; win32 is just what SBCL calls it,
+                                  ;; it seems to be true on 64 bit
+                                  ;; too.
+                                  #+win32  :type #+win32 "exe"
+                                  :defaults
+                                  #P"build/sbcl-console"))
+
+                                "--script"))
                             (t (error "Unimplemented for CL implementation")))
 
                           (list
@@ -136,7 +146,7 @@
   :defsystem-depends-on (:cl-ppcre #+nil :tmpdir)
   :depends-on (:screenshotbot.sdk)
   :components ((deliver-script "deliver-sdk")
-               #-mswindows
+               #- (or mswindows win32)
                (makeself-component "installer"
                                    :depends-on ("deliver-sdk")
                                    :type "sh"

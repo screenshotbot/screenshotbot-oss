@@ -73,8 +73,12 @@
 
 
 #+sbcl
-(sb-ext:save-lisp-and-die "build/sbcl-console"
-                          :executable t)
+(sb-ext:save-lisp-and-die
+ (namestring
+  (make-pathname
+   #+win32 :type #+win32 "exe"
+   :defaults #P"build/sbcl-console"))
+ :executable t)
 
 #+ccl
 (defun ccl-toplevel-function ()
