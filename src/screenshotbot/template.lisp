@@ -248,7 +248,10 @@
 
 
 (deftag landing-head (&key
-                      (style "/assets/css/default.css"))
+                      (style #-screenshotbot-oss
+                             "/assets/css/extended-dashboard.css"
+                             #+screenshotbot-oss
+                             "/assets/css/default.css"))
   <head>
     <meta charset="utf-8" />
     <title>Screenshotbot</title>

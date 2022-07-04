@@ -58,27 +58,34 @@
                                :redirect redirect))))
   <form action=result method= "POST" >
     <div class="form-group mb-3">
-      <label for="emailaddress" class= "form-label" >Email address</label>
-      <input name= "email"  class="form-control" type="email" id="emailaddress" required="" placeholder="Enter your email">
+      <input name= "email"  class="form-control" type="email" id="emailaddress" required="" placeholder="Email">
     </div>
 
     <div class="form-group mb-3">
-      <a href="/forgot-password" class="text-muted float-end"><small>Forgot your password?</small></a>
-      <label for="password" class= "form-label" >Password</label>
       <div class="input-group input-group-merge">
-        <input name= "password" type="password" id="password" class="form-control" placeholder="Enter your password">
+        <input name= "password" type="password" id="password" class="form-control" placeholder="Password">
       </div>
     </div>
 
-    <div class="form-group mb-3">
-      <div class="custom-control custom-checkbox">
-        <input type="checkbox" class="custom-control-input" id="checkbox-signin" checked= "checked" >
-          <label class="form-label custom-control-label" for="checkbox-signin">Remember me</label>
+    <div class= "d-flex justify-content-between">
+      <div class="form-check ps-0">
+        <input type="checkbox" class="form-check-input me-3" id="checkbox-signin" checked= "checked" >
+          <label class="form-check-label" for="checkbox-signin">Remember me</label>
       </div>
+
+      <div>
+        <a href="/forgot-password" class="links"><small>Forgot your password?</small></a>
+      </div>
+
     </div>
 
-    <div class="form-group mb-0 text-center">
-      <button class="btn btn-primary" type="submit"> Log In </button>
+    <div class= "float-end">
+
+    </div>
+
+
+    <div class="form-group mb-0">
+      <button class="btn btn-primary" type="submit"> Sign In </button>
     </div>
   </form>))
 
@@ -92,8 +99,6 @@
       <div class="account-pages mt-5 mb-5">
         <div class="container">
           ,(progn alert)
-                <div class="row justify-content-center">
-                    <div class="col-lg-5">
                         <div class="card">
 
                             <!-- Logo -->
@@ -101,9 +106,8 @@
                             <auth-header-logo />
                             </div>
 
-                            <div class="text-center w-75 m-auto">
-                              <h4 class="text-dark-50 text-center mt-0 font-weight-bold">Sign In</h4>
-                              <p class="text-muted mb-4">Enter your email address and password to access the dashboard.</p>
+                            <div class="">
+                              <h4 class="text-dark-50 ps-4 mt-0 font-weight-bold">Sign In</h4>
                             </div>
 
                             <div class="card-body p-4">
@@ -116,10 +120,7 @@
 
                         <div class="row mt-3">
                             <div class="col-12 text-center">
-                                <p class="text-muted">Don't have an account? <a href=signup class="text-muted ms-1"><b>Sign Up</b></a></p>
-                            </div> <!-- end col -->
-                        </div>
-                        <!-- end row -->
+                                <p class="signup-message">Don't have an account? <a href=signup class="ms-1"><b>Sign Up</b></a></p>
 
                     </div> <!-- end col -->
                 </div>

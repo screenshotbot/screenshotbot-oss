@@ -65,13 +65,11 @@
       <input type= "hidden" name= "invite-code" value=invite-code />
       <input type= "hidden" name= "plan" value=plan />
       <div class="form-group mb-3">
-        <label for="fullname" class= "form-label" >Full Name</label>
-        <input name= "full-name" class="form-control" type="text" id="fullname" placeholder="Enter your name" required= "required" >
+        <input name= "full-name" class="form-control" type="text" id="fullname" placeholder="Full Name" required= "required" >
       </div>
 
       <div class="form-group mb-3">
-        <label for="email" class= "form-label" >Email address</label>
-        <input name= "email" class="form-control" type="email" id="email" required= "required" placeholder="Enter your email"
+        <input name= "email" class="form-control" type="email" id="email" required= "required" placeholder="Your Email"
                value=
                (unless (str:emptyp invite-code)
                                                (let ((invite (invite-with-code invite-code)))
@@ -80,19 +78,16 @@
       </div>
 
       <div class="form-group mb-3">
-        <label for="password" class= "form-label" >Password</label>
         <div class="input-group input-group-merge">
-          <input name= "password"  type="password" id="password" class="form-control" placeholder="Enter your password">
+          <input name= "password"  type="password" id="password" class="form-control" placeholder="Password">
         </div>
       </div>
 
 
 
-      <div class="form-group mb-3">
-        <div class="custom-control custom-checkbox">
-          <input name= "accept-terms-p" type="checkbox" class="custom-control-input" id="checkbox-signup">
-            <label class="form-label custom-control-label" for="checkbox-signup">I accept <a href="/terms" class="text-muted">Terms and Conditions</a></label>
-        </div>
+      <div class="form-check ps-0 mb-3">
+          <input name= "accept-terms-p" type="checkbox" class="form-check-input me-3" id="checkbox-signup">
+            <label class="form-check-label" for="checkbox-signup">I accept <a href="/terms" class="">Terms and Conditions</a></label>
       </div>
 
       <div class="form-group mb-0 text-center">
@@ -109,25 +104,17 @@
                              :alert alert)))
         (invite (when invite-code
                   (invite-with-code invite-code))))
-    <auth-template>
+    <auth-template body-class= "signup" >
       <div class="account-pages mt-5 mb-5">
         <div class="container">
 
           ,(progn alert)
-
-          <div class="row justify-content-center">
-            <div class="col-lg-5">
               <div class="card">
-                <!-- Logo-->
-                <div class="card-header pt-4 pb-4 text-center bg-primary">
-                  <auth-header-logo />
-                </div>
 
                 <div class="card-body p-4">
 
-                  <div class="text-center w-75 m-auto">
-                    <h4 class="text-dark-50 text-center mt-0 font-weight-bold">Free Sign Up</h4>
-                    <p class="text-muted mb-4">Don't have an account? Create your account, it takes less than a minute </p>
+                  <div class="">
+                    <h4 class="text-dark-50 mt-0 font-weight-bold">Sign Up</h4>
                   </div>
 
 
@@ -142,13 +129,10 @@
 
               <div class="row mt-3">
                 <div class="col-12 text-center">
-                  <p class="text-muted">Already have account? <a href=login class="text-muted ml-1"><b>Log In</b></a></p>
+                  <p class="">Already have account? <a href=login class="ml-1"><b>Log In</b></a></p>
                 </div> <!-- end col-->
               </div>
               <!-- end row -->
-
-            </div> <!-- end col -->
-          </div>
           <!-- end row -->
         </div>
         <!-- end container -->

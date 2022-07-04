@@ -194,10 +194,36 @@
       (nibble () (hex:safe-redirect redirect))
       redirect))
 
-(markup:deftag auth-template (children)
+(markup:deftag auth-template (children &key body-class simple)
   <html lang= "en" >
     <landing-head  />
-    <body >
-      ,@ (progn children)
-    </body>
+
+    ,(cond
+       (simple
+        <body class= "">
+          ,@ (progn children)
+        </body>)
+       (t
+        <body class= (format nil "auth-pages ~a" body-class) >
+
+
+          <div class= "left-image">
+            <a class= "navbar-brand" href= "/">
+              <img src= "/assets/images/logo-dark.png" />
+            </a>
+            <img src= "/assets/images/auth/botty-left.png" />
+
+            <span class= "copy" >
+              &copy; 2022 Modern Interpreters Inc.
+            </span>
+          </div>
+
+          <div class= "form-container">
+            <div class= "home-link">
+              <a href= "/">Home</a>
+            </div>
+            ,@ (progn children)
+          </div>
+        </body>))
+
   </html>)

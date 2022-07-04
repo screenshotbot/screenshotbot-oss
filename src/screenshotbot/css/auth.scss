@@ -1,0 +1,202 @@
+.auth-pages {
+    display: flex;
+    flex-direction: row;
+
+
+    font-family: Metropolis;
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: Montserrat !important;
+        font-weight: bold;
+        color: white;
+    }
+
+    .left-image {
+        height: 100vh;
+        width: 50vw;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        .copy {
+            position: absolute;
+            bottom: 5em;
+        }
+
+        .navbar-brand {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+        }
+    }
+
+
+    .form-container {
+        height: 100vh;
+        width: 50vw;
+        background: #52ad77;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .home-link {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            color: black;
+            display: none;
+
+            @include media-breakpoint-down(lg) {
+                display: block;
+            }
+        }
+
+        .card {
+            background: none;
+            border: none;
+            width: 49.3rem;
+            padding: 0 !important;
+
+        }
+        .card-header {
+            display: none;
+        }
+
+        h4 {
+            font-weight: bold;
+            font-size: 4rem;
+        }
+
+        input[type="email"],input[type="text"] {
+            margin-bottom: 1.6rem !important;
+        }
+        input[type="text"], input[type="email"], input[type="password"], button, a.btn {
+            height: 6.4rem;
+            font-size: 2rem;
+            padding-left: 3.4rem;
+            padding-right: 3.4rem;
+            width: 100%;
+            border-radius: 5px;
+        }
+
+        input[type="checkbox"] {
+            width: 1.9rem;
+            height: 1.9rem;
+            border: none !important;
+            border-radius: 5px;
+            margin-left: 0 !important;
+            padding: 0;
+        }
+
+        button, a.btn {
+            border-radius: 999px;
+            font-family: "Montserrat";
+            font-weight: 500;
+            font-size: 1.8rem;
+            border: none;
+        }
+
+        .btn-primary {
+            background: black;
+            color: white;
+            margin-bottom: 8.8rem !important;
+            margin-top: 3.6rem;
+        }
+
+        a.btn {
+            background: #f2f2f2;
+            color: black;
+            margin: auto;
+            line-height: 6.4rem;
+            padding-top: 0;
+            padding-bottom: 0;
+
+            svg {
+                height: 3rem;
+                width: 3rem;
+                vertical-align: middle !important;
+                margin-right: 1.8rem;
+            }
+        }
+
+        .form-check-label {
+            font-size: 1.4rem;
+        }
+
+        a.links {
+            color: white;
+            text-decoration: none;
+        }
+
+        a.links:hover {
+            text-decoration: underline;
+        }
+
+        label {
+            color: white;
+        }
+
+        .signup-message {
+            color: white;
+            a {
+                color: white;
+            }
+        }
+
+        .invalid-feedback {
+            font-size: 1.6rem;
+            padding: 0.5em;
+            width: auto;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    }
+
+    a, p, a:hover {
+        color: white;
+    }
+
+    &.signup {
+        .form-container {
+            background: #dd5068;
+        }
+
+        .invalid-feedback {
+            color: black;
+        }
+
+        input.is-invalid {
+            border: solid 2px red;
+            color: red;
+        }
+
+        .form-check-input:is-invalid {
+            border:solid 2px red;
+        }
+
+        .was-validated .form-check-input:invalid ~ .form-check-label, .form-check-input.is-invalid ~ .form-check-label {
+            color: black;
+        }
+    }
+
+    &.simple {
+        .left-image {
+            display:none;
+        }
+
+        .form-container {
+            background: white;
+        }
+    }
+
+    @include media-breakpoint-down(lg) {
+        .left-image {
+            display: none;
+        }
+
+        .form-container {
+            width: 100vw;
+        }
+    }
+}

@@ -31,7 +31,7 @@
               :accessor used-up-p)))
 
 (deftag forgot-password-confirmation (&key email)
-  <auth-template>
+  <auth-template simple=t >
     <div class= "container">
       <div class= "card">
         <div class= "card-body">
@@ -138,7 +138,7 @@
                                           :was-validated t
                                              :email email)
                          (forgot-password-page))))))))
-    <auth-template>
+    <auth-template simple=t >
       <div class= "account-pages mt-5 mb-5">
         <div class= "container">
           <div class= "row justify-content-center">

@@ -19,7 +19,7 @@
       (setf (mquery:val ($ (mquery:namequery name)))
             val))))
 
-(defun %with-form-errors (html &key errors args args-list was-validated)
+(defun %with-form-errors (html &key errors args args-list was-validated tooltip)
   (let ((args (append args args-list)))
    (mquery:with-document (html)
      (when was-validated
@@ -40,14 +40,15 @@
                          (mquery:after input))
                         (t
                          input)))
-                     <div class= "invalid-feedback">,(progn msg)</div>))))))))
+                     <div class= (if tooltip "invalid-tooltip" "invalid-feedback") >,(progn msg)</div>))))))))
   (values html errors))
 
-(defmacro with-form-errors ((&rest args &key errors args-list was-validated &allow-other-keys) &body body)
+(defmacro with-form-errors ((&rest args &key errors args-list was-validated tooltip &allow-other-keys) &body body)
   (let* ((args (plist-alist args)))
     `(%with-form-errors (progn ,@body)
                         :errors ,errors
                         :was-validated ,was-validated
+                        :tooltip ,tooltip
                         :args (list ,@(loop for x in args collect
                                             `(cons ,(car x) ,(cdr x))))
                         :args-list ,args-list)))
