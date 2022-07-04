@@ -15,6 +15,7 @@
   (let ((output-file (output-file)))
     (ensure-directories-exist output-file)
     (lw-ji:setup-deliver-dynamic-library-for-java)
+
     (deliver 'main
               output-file
               5

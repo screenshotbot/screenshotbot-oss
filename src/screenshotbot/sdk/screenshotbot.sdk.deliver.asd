@@ -114,13 +114,19 @@
   (call-next-method))
 
 (defmethod perform ((o compile-op) (s deliver-script))
-  (uiop:run-program (list (lw)
-                          "-build"
-                          (namestring
-                           (merge-pathnames (format nil "~a.lisp" (component-name s))
-                                            *library-file-dir*))
-                          (namestring
-                           (car (output-files o s))))
+  (uiop:run-program (append (cond
+                            #+lispworks
+                            (t (list (lw) "-build"))
+                            #+sbcl
+                            (t (list "build/sbcl-console" "--script"))
+                            (t (error "Unimplemented for CL implementation")))
+
+                          (list
+                           (namestring
+                            (merge-pathnames (format nil "~a.lisp" (component-name s))
+                                             *library-file-dir*))
+                           (namestring
+                            (car (output-files o s)))))
                     :output t
                     :error-output t))
 
@@ -139,5 +145,6 @@
                                              "installer")
                                    :startup-component "installer")))
 
+#+lispworks
 (defsystem :screenshotbot.sdk.deliver/java-so
   :components ((deliver-script "deliver-java-so")))

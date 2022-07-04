@@ -19,6 +19,7 @@
   (when (uiop:file-exists-p x)
     (delete-file x)))
 
+#+lispworks
 (defun include-template-file ()
   (let ((path (asdf:system-relative-pathname :screenshotbot.sdk "template.lisp")))
     (with-open-file (out path :direction :output
@@ -37,7 +38,21 @@
   (let ((output-file (output-file)))
     #-darwin ;; universal binary, output file should be temporary
     (safe-delete-file output-file)
+    #+lispworks
     (include-template-file)
+
+    #+ccl
+    (error "unimplemented")
+
+    #+sbcl
+    (sb-ext:save-lisp-and-die
+     output-file
+     :toplevel 'screenshotbot/sdk/main:main
+     :executable t
+     :save-runtime-options t
+     :compression t)
+
+    #+lispworks
     (deliver 'screenshotbot/sdk/main:main
               output-file
               5

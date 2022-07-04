@@ -35,8 +35,11 @@
        (unwind-protect
             (progn
               (uiop:chdir dir)
+              ;; SBCL also needs this:
+              (setf *default-pathname-defaults* dir)
               ,@body)
-         (uiop:chdir *original-dir*)))))
+         (uiop:chdir *original-dir*)
+         (setf *default-pathname-defaults* *original-dir*)))))
 
 
 (with-repo

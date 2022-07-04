@@ -20,7 +20,7 @@
 (in-package :screenshotbot/sdk/main)
 
 (defun %main (&optional (argv #+lispworks system:*line-arguments-list*
-                              #-lispworks nil))
+                              #-lispworks (uiop:command-line-arguments)))
   (log4cl:reset-logging-configuration)
   (log:config :info)
   (log:info "Screenshotbot SDK v2.3.14")
@@ -48,6 +48,7 @@
        (sdk:run-prepare-directory-toplevel)))))
 
 (defun main (&rest args)
+  (uiop:setup-command-line-arguments)
   (let ((error-handler (lambda (e)
                          (format t "~%~a~%~%" e)
                          #+lispworks
