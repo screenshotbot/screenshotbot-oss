@@ -41,14 +41,26 @@
               ;; SBCL also needs this:
               (setf *default-pathname-defaults* dir)
               ,@body)
+
+         ;; On Windows, for some reason I'm unable to delete the .git
+         ;; directory. Well, not *some* reason. It's just because the
+         ;; directories are all marked as read-only. I don't know how
+         ;; to clear that up at the moment, so I'm using the nuclear
+         ;; option.
+         #+(or mswindows win32)
+         (run (list "rm" "-rfv" (format nil "~a/.git" (namestring dir))))
+
+
          (uiop:chdir *original-dir*)
          (setf *default-pathname-defaults* *original-dir*)))))
 
+(defun run-gen.sh ()
+  (run (list #+ (or mswindows win32) (namestring #P"C:/cygwin64/bin/bash") "./gen.sh")))
 
 (with-repo
     ;; veryfy we're correctly cloning the repo
     (assert (path:-e "gen.sh"))
-  (run (list #+ (or mswindows win32) (namestring #P"C:/cygwin64/bin/bash") "./gen.sh"))
+  (run-gen.sh)
   (run (list *sdk*
              "--directory" "./screenshots"
              "--production=false"))
@@ -63,7 +75,7 @@
                             :direction :output)
       (format stream
               "text 15,15 \"Random code: ~a\" " (secure-random:number 10000000000000000000)))
-  (run (list "./gen.sh"))
+  (run-gen.sh)
   (run (list *sdk*
              "--directory" "./screenshots"
              "--production=false")))
@@ -74,7 +86,7 @@
                             :direction :output)
       (format stream
               "text 15,15 \"Random code: ~a\" " (secure-random:number 10000000000000000000)))
-  (run (list "./gen.sh"))
+  (run-gen.sh)
   (run (list "arch" "-x86_64" *sdk*
              "--directory" "./screenshots"
              "--production=false")))

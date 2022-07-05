@@ -6,8 +6,8 @@
 (in-package :util/request)
 
 (defun http-request (url &rest args &key headers-as-hash-table
-                                      (verify #-mswindows :required
-                                              #+mswindows nil)
+                                      (verify #-(or mswindows win32) :required
+                                              #+(or mswindows win32) nil)
                      &allow-other-keys)
   (let ((args (a:remove-from-plist args :headers-as-hash-table
                                    #+ccl :connection-timeout
