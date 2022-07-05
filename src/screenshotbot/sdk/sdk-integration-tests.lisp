@@ -3,6 +3,9 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/sdk/sdk-integration-tests)
 
+(uiop:setup-temporary-directory)
+
+
 (ql:quickload :screenshotbot.sdk.deliver)
 (ql:quickload :secure-random)
 
@@ -45,7 +48,7 @@
 (with-repo
     ;; veryfy we're correctly cloning the repo
     (assert (path:-e "gen.sh"))
-  (run (list "./gen.sh"))
+  (run (list #+ (or mswindows win32) (namestring #P"C:/cygwin64/bin/bash") "./gen.sh"))
   (run (list *sdk*
              "--directory" "./screenshots"
              "--production=false"))
