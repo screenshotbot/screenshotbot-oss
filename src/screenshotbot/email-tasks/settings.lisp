@@ -93,7 +93,7 @@
             <h3>Email notifications for tasks</h3>
           </div>
           <div class= "card-body" >
-            <p class= "text-muted" >By default, we send notifications to every user on the account. You can control whether eyou account should receive emails on this page.</p>
+            <p class= "text-muted" >By default, we send notifications to every user on the account. You can control whether your account should receive emails on this page.</p>
 
             <div class= "form-check">
               <input type= "checkbox" name= "enabledp"
