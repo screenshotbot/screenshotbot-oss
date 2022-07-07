@@ -45,8 +45,9 @@
    :thread-safe t)
   (format nil "http://localhost:~a" (hunchentoot:acceptor-port *replay-proxy*)))
 
-(defun ensure-proxy ()
+(defun ensure-proxy (selenium-service)
   "Ensure the proxy is running and return the URL to the proxy"
+  (declare (ignore selenium-service))
   (cond
     ((linode?)
      ;; todo: error handling: if this endpoint goes down then just a local

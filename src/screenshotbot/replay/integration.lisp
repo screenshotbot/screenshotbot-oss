@@ -206,6 +206,7 @@ accessing the urls or sitemap slot."
       (process-results run results))))
 
 (defun run-replay-on-urls (&key (snapshot (error "provide snapshot"))
+                                (replay-proxy (error "provide replay proxy"))
                              (urls (error "provide urls"))
                              (logger (lambda (url actual-url) (declare (ignore url actual-url))))
                              (hosted-url (error "provide hosted-url"))
@@ -256,15 +257,15 @@ accessing the urls or sitemap slot."
 
             (process-full-page-screenshot
              driver
+             replay-proxy
              :results results
              :title (format nil "~a--~a"
                             title (frontend:browser-config-name config))))))
 
-(defmethod fetch-full-page-screenshot-handle (driver)
+(defmethod fetch-full-page-screenshot-handle (driver proxy)
   "Creates a full-page-screenshot, and returns two values: the handle
   for the screenshot and the md5sum of the screenshot"
-  (let* ((proxy (ensure-proxy))
-         (url (format nil "~a/full-page-screenshot"
+  (let* ((url (format nil "~a/full-page-screenshot"
                       proxy))
          (resp (uiop:slurp-input-stream
                 'string
@@ -284,25 +285,26 @@ accessing the urls or sitemap slot."
          (md5 (a:assoc-value json-response :md-5)))
     (values oid md5)))
 
-(defmethod write-full-page-screenshot-from-handle (driver oid dest)
-  (let ((proxy (ensure-proxy)))
-   (with-open-stream (stream (util/request:http-request
-                              (format nil "~a/download?oid=~a" proxy oid)
-                              :force-binary t
-                              :want-stream t))
-     (with-open-file (dest dest :direction :output
-                                :if-exists :supersede
-                                :element-type '(unsigned-byte 8)
-                                :if-does-not-exist :create)
-       (uiop:copy-stream-to-stream
-        stream dest
-        :element-type '(unsigned-byte 8))))))
+(defmethod write-full-page-screenshot-from-handle (driver proxy oid dest)
+  (with-open-stream (stream (util/request:http-request
+                             (format nil "~a/download?oid=~a" proxy oid)
+                             :force-binary t
+                             :want-stream t))
+    (with-open-file (dest dest :direction :output
+                               :if-exists :supersede
+                               :element-type '(unsigned-byte 8)
+                               :if-does-not-exist :create)
+      (uiop:copy-stream-to-stream
+       stream dest
+       :element-type '(unsigned-byte 8)))))
 
 (auto-restart:with-auto-restart ()
- (defun process-full-page-screenshot (driver &key title
-                                               results)
+ (defun process-full-page-screenshot (driver
+                                      proxy
+                                      &key title
+                                        results)
    (multiple-value-bind (oid md5)
-       (fetch-full-page-screenshot-handle driver)
+       (fetch-full-page-screenshot-handle driver proxy)
      (assert oid)
      (assert md5)
      (record-screenshot
@@ -311,6 +313,7 @@ accessing the urls or sitemap slot."
       :fetch (lambda (dest)
                (write-full-page-screenshot-from-handle
                 driver
+                proxy
                 oid
                 dest))
       :title title))))
@@ -356,6 +359,7 @@ accessing the urls or sitemap slot."
                        (write-replay-log "Selenium worker is ready")
                        (run-replay-on-urls
                         :snapshot snapshot
+                        :replay-proxy (ensure-proxy selenium-server)
                         :urls urls
                         :hosted-url hosted-url
                         :driver driver

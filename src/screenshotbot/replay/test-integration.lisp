@@ -83,10 +83,11 @@
 (defmethod full-page-screenshot ((driver fake-driver) file)
   (error "this method should not be directly called"))
 
-(defmethod fetch-full-page-screenshot-handle ((driver fake-driver))
+(defmethod fetch-full-page-screenshot-handle ((driver fake-driver) proxy)
   (values "123" (md5:md5sum-string "foobar")))
 
 (defmethod write-full-page-screenshot-from-handle ((driver fake-driver)
+                                                   proxy
                                                    oid file)
   (with-open-file (stream file :direction :output)
     (write-string "foobar" stream)))
@@ -165,7 +166,7 @@
                                   (funcall fn "http://fake-url/")))
 
             (cl-mock:if-called 'ensure-proxy
-                                (lambda ()
+                                (lambda (selenium-service)
                                   "http://fakehost:5003"))
             (&body)))))))
 
