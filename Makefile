@@ -114,7 +114,8 @@ ifneq ($(OS),Windows_NT)
 		$(MAKE) recreate-cache-dir ; \
 	fi
 else
-	REM TODO: detect the cache-dir correctly
+# TODO: detect the cache-dir correctly
+	if not exist build mkdir build
 	echo $(CACHE_KEY) > $@
 endif
 
@@ -159,7 +160,7 @@ test-store: submodule $(LW)
 	$(LW_SCRIPT) ./run-store-tests.lisp
 
 build: | build/cache-key $(DISTINFO)
-	# build/build? Temporary fix for LW8-darwin
+# build/build? Temporary fix for LW8-darwin
 	mkdir -p build
 
 clean-fasl: .PHONY

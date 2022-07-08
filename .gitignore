@@ -14,6 +14,7 @@ system-index.txt
 .sass-cache
 repl.lisp-repl
 *.64ufasl
+*.64ofasl
 *.fasl
 config.lisp
 build

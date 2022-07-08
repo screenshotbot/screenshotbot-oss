@@ -7,6 +7,7 @@
 (defpackage :util/store
   (:use #:cl
         #:bknr.datastore
+        #-mswindows
         #:util/file-lock)
   (:import-from #:bknr.datastore
                 #:close-store)
@@ -52,8 +53,9 @@
      path)))
 
 (defclass safe-mp-store (bknr.datastore:mp-store)
-  (lock))
+  (#-mswindows lock))
 
+#-mswindows
 (defmethod initialize-instance :before ((store safe-mp-store) &key directory &allow-other-keys)
   (with-slots (lock) store
     (setf lock
@@ -61,6 +63,7 @@
                          :file (path:catfile directory
                                              "store.lock")))))
 
+#-mswindows
 (defmethod bknr.datastore::close-store-object :after ((store safe-mp-store))
   (with-slots (lock) store
     (release-file-lock lock)))

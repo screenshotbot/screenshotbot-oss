@@ -23,6 +23,7 @@
                  #:util/copying
                  #:util/store
                  #:util/misc
+                 #-mswindows
                  #:util/file-lock
 		 #:util/bind-form
 		 #:util/html2text

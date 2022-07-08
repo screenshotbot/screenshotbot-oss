@@ -127,7 +127,13 @@
                 (assert (uiop:file-exists-p x)))
        (let ((cmd `("javac"
                     "-d" ,(namestring dir)
-                    "-cp" ,(join ":" (mapcar 'namestring (compile-class-path s)))
+                    "-cp" ,(join 
+                            (cond 
+                             ((uiop:os-windows-p)
+                              ";")
+                             (t
+                              ":"))
+                            (mapcar 'namestring (compile-class-path s)))
                     ,@(mapcar 'namestring (all-java-files s)))))
          (safe-run-program cmd))))
 

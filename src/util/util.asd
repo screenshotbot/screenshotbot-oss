@@ -136,7 +136,8 @@
                :copy-directory
                :cffi
                :cl-cron)
-  :components ((lib-source-file "store-native")
+  :components (#-mswindows (lib-source-file "store-native")
+		#-mswindows
                (:file "file-lock")
                (:file "store")))
 
@@ -236,6 +237,7 @@
                              (:file "test-cdn")
                              (:file "test-bind-form")
                              (:file "test-objectid")
+			     #-mswindows
                              (:file "test-file-lock")
                              (:file "test-html2text")
                              (:file "test-mockable")
