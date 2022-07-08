@@ -74,7 +74,7 @@ ifeq ($(UNAME),Darwin)
 endif
 
 ifneq ($(CYGWIN),)
-	LW_CORE=/cygdrive/c/Program\ Files\ \(x86\)/LispWorks/lispworks-8-0-0-x86-win32.exe
+	LW_CORE=/cygdrive/c/Program\ Files/LispWorks/lispworks-8-0-0-x64-windows.exe
 endif
 
 define clsql_check_tests
