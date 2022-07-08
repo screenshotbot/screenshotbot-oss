@@ -127,7 +127,6 @@
                :alexandria)
   :components ((:file "form-state")))
 
-#-mswindows
 (defsystem :util/store
   :serial t
   :depends-on (:bknr.datastore

@@ -9,16 +9,37 @@
 (ql:quickload :screenshotbot.sdk.deliver)
 (ql:quickload :secure-random)
 
-(defun run (cmd &rest args)
-  (apply #'uiop:run-program
-           (loop for x in cmd
-                 if (pathnamep x)
-                   collect (namestring x)
-                 else collect x)
-           (append
-            args
-            (list :output t
-                  :error-output t))))
+(defvar *default-cmd-dir* ".")
+
+(defun run (cmd &rest args &key (directory *default-cmd-dir*) &allow-other-keys)
+  (let* ((cmd (loop for x in cmd
+                    if (pathnamep x)
+                      collect (namestring x)
+                    else collect x))
+         (cmd (loop for x in cmd
+                    collect (uiop:escape-shell-command x)))
+         (cmd (str:join " " cmd))
+         (cmd (format nil "cd ~a && ~a"
+                      (uiop:escape-shell-command
+                       (cond
+                         ((pathnamep directory)
+                          (namestring directory))
+                         (t
+                          directory)))
+                      cmd)))
+   (apply #'uiop:run-program
+            (append
+             (cond
+               ((uiop:os-windows-p)
+                (list "cmd" "/c"))
+               (t
+                (list "bash" "-c")))
+             (list
+              cmd))
+            (append
+             (a:remove-from-plist args :directory)
+             (list :output t
+                   :error-output t)))))
 
 (defvar *sdk* (car (asdf:output-files 'asdf:compile-op
                                        (asdf:find-component :screenshotbot.sdk.deliver
@@ -34,32 +55,26 @@
 (defmacro with-repo (&body body)
   `(tmpdir:with-tmpdir (dir)
      (run (list "git" "clone" "https://github.com/tdrhq/fast-example" dir))
-     (let ((*original-dir* (uiop:getcwd)))
-       (unwind-protect
-            (progn
-              (uiop:chdir dir)
-              ;; SBCL also needs this:
-              (setf *default-pathname-defaults* dir)
-              ,@body)
+     (unwind-protect
+          (let ((*default-cmd-dir* dir))
+            ,@body)
 
-         ;; On Windows, for some reason I'm unable to delete the .git
-         ;; directory. Well, not *some* reason. It's just because the
-         ;; directories are all marked as read-only. I don't know how
-         ;; to clear that up at the moment, so I'm using the nuclear
-         ;; option.
-         #+(or mswindows win32)
-         (run (list "rm" "-rfv" (format nil "~a/.git" (namestring dir))))
-
-
-         (uiop:chdir *original-dir*)
-         (setf *default-pathname-defaults* *original-dir*)))))
+       ;; On Windows, for some reason I'm unable to delete the .git
+       ;; directory. Well, not *some* reason. It's just because the
+       ;; directories are all marked as read-only. I don't know how
+       ;; to clear that up at the moment, so I'm using the nuclear
+       ;; option.
+       #+(or mswindows win32)
+       (run (list "rm" "-rfv" (format nil "~a/.git" (namestring dir)))))))
 
 (defun run-gen.sh ()
-  (run (list #+ (or mswindows win32) (namestring #P"C:/cygwin64/bin/bash") "./gen.sh")))
+  (run (list #+ (or mswindows win32) (namestring #P"C:/cygwin64/bin/bash")
+             "./gen.sh")))
 
 (with-repo
-    ;; veryfy we're correctly cloning the repo
-    (assert (path:-e "gen.sh"))
+  ;; veryfy we're correctly cloning the repo
+  #-mswindows
+  (run (list "test" "-e" "gen.sh"))
   (run-gen.sh)
   (run (list *sdk*
              "--directory" "./screenshots"

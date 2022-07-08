@@ -52,10 +52,16 @@
   nil)
 
 (defun $ (&rest args)
-  (let ((out
-         (uiop:run-program (flatten args)
-                           :output 'string
-                           :error-output *error-output*)))
+  (let* ((args (flatten args))
+         (args (loop for arg in args
+                    if (pathnamep arg)
+                      collect (namestring arg)
+                    else
+                      collect arg))
+         (out
+           (uiop:run-program args
+                             :output 'string
+                             :error-output *error-output*)))
     (str:trim out)))
 
 (defmethod read-graph ((repo git-repo))

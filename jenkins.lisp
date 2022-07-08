@@ -32,7 +32,7 @@
 #+lispworks
 (ql:quickload "slynk")
 
-#+lispworks
+#+(and :lispworks (not :mswindows))
 (ql:quickload :osicat :silent t)
 
 ;; #+lispworks

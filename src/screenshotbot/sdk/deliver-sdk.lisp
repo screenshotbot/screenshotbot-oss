@@ -26,10 +26,21 @@
                               :if-exists :supersede)
 
       (fli:start-collecting-template-info)
-      (handler-case
-          (screenshotbot/sdk/sdk::update-commit-graph (screenshotbot/sdk/git::git-repo) "bar")
-        (screenshotbot/sdk/sdk::api-error ()
-          nil))
+      (tmpdir:with-tmpdir (dir)
+        (unwind-protect
+             (let ((git-repo (make-instance 'screenshotbot/sdk/git::git-repo
+                                             :dir dir
+                                             :link "https://github.com/tdrhq/fast-example")))
+               (screenshotbot/sdk/git::$
+                 (list "git" "clone" "https://github.com/tdrhq/fast-example"
+                       dir))
+               (handler-case
+                   (screenshotbot/sdk/sdk::update-commit-graph git-repo "bar")
+                 (screenshotbot/sdk/sdk::api-error ()
+                   nil)))
+          #+mswindows
+          (screenshotbot/sdk/git::$
+            (list "attrib" "-r" (format nil "~a\*.*" (namestring dir)) "/s"))))
       (fli:print-collected-template-info :output-stream out))
     (let ((output (compile-file path)))
       (load output))))

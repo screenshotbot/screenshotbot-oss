@@ -56,8 +56,12 @@ define COPYBARA
 ( $(COPYBARA_CMD) copy.bara.sky $1 | tee build/cb-output ) || grep "No new changes to import" build/cb-output
 endef
 
+ifeq ($(OS), Windows_NT)
+	UNAME=Windows
+else
+	UNAME=$(shell uname -s)
+endif
 
-UNAME=$(shell uname -s)
 CYGWIN=$(findstring CYGWIN,$(UNAME))
 DISTINFO=quicklisp/dists/quicklisp/distinfo.txt
 ARC=build/arc/bin/arc
@@ -73,8 +77,8 @@ ifeq ($(UNAME),Darwin)
 	LW_CORE=/Applications/LispWorks\ 8.0\ \(64-bit\)/LispWorks\ \(64-bit\).app/Contents/MacOS/lispworks-8-0-0-macos64-universal
 endif
 
-ifneq ($(CYGWIN),)
-	LW_CORE=/cygdrive/c/Program\ Files/LispWorks/lispworks-8-0-0-x64-windows.exe
+ifeq ($(OS),Windows_NT)
+	LW_CORE="C:\Program Files\LispWorks\lispworks-8-0-0-x64-windows.exe"
 endif
 
 define clsql_check_tests
@@ -93,17 +97,27 @@ all:
 	true
 
 submodule:
-	#	git submodule init
-	# git submodule update
+#	git submodule init
+# git submodule update
+
+recreate-cache-dir:
+	echo "Cleaning build/ directory" ; \
+	rm -rf build/asdf-cache build/slime-fasls ; \
+	rm -rf quicklisp/dists/quicklisp/software ; \
+	mkdir build ; \
+	echo $(CACHE_KEY) > $@ ; \
+
 
 build/cache-key: .PHONY
+ifneq ($(OS),Windows_NT)
 	if ! [ -e build/cache-key ] || ! [ x`cat build/cache-key` = x$(CACHE_KEY) ] ; then \
-		echo "Cleaning build/ directory" ; \
-		rm -rf build/asdf-cache build/slime-fasls ; \
-		rm -rf quicklisp/dists/quicklisp/software ; \
-		mkdir build ; \
-		echo $(CACHE_KEY) > $@ ; \
+		$(MAKE) recreate-cache-dir ; \
 	fi
+else
+	REM TODO: detect the cache-dir correctly
+	echo $(CACHE_KEY) > $@
+endif
+
 
 .PHONY:
 
@@ -133,15 +147,12 @@ tests:| show-info clean-sys-index test-parts selenium-tests conditional-copybara
 test-parts: test-sb test-lw test-ccl test-store
 
 test-sb: submodule $(sbcl) build/affected-files.txt
-	pwd
 	$(sbcl) --script ./jenkins.lisp
 
 test-ccl: submodule $(CCL_IMAGE)
-	pwd
 	$(CCL_SCRIPT) ./jenkins.lisp
 
 test-lw: submodule $(LW) build/affected-files.txt
-	pwd
 	$(LW_SCRIPT) ./jenkins.lisp
 
 test-store: submodule $(LW)
@@ -189,7 +200,8 @@ sdk-tests: $(LW) .PHONY
 	$(LW_SCRIPT) ./jenkins.lisp -system screenshotbot.sdk/tests -no-jvm
 
 $(LW): build $(IMAGE_DEPS)
-	# $$PWD is workaround over LW issue #42471
+	echo in here
+# $$PWD is workaround over LW issue #42471
 	$(ARCH_CMD) $(LW_CORE) -build scripts/build-image.lisp
 
 $(sbcl): build $(IMAGE_DEPS)
