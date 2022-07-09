@@ -39,9 +39,10 @@ is provided, add each of the directories to asdf:*central-registry*"
       (uiop:run-program cmd
                         :output 'string
                         :ignore-error-status t
-                        :error-output 'string)
+                        :error-output 'string
+                        :directory (uiop:getcwd))
     (unless (eql 0 ret)
-      (error "Bash command `~a` failed: ~%stdout: ~a~%~% stderr:~%~A~%"
+      (error "Shell command `~a` failed: ~%stdout: ~a~%~% stderr:~%~A~%"
              cmd
              out err))
     (trim out)))

@@ -24,7 +24,7 @@
       asdf:*central-registry*)
 
 
-(defvar *cwd* (merge-pathnames
+(defparameter *cwd* (merge-pathnames
                *default-pathname-defaults*
                (uiop:getcwd)))
 
