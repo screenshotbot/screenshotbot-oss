@@ -40,7 +40,10 @@
 
 (defmethod perform ((o compile-op) (c lib-source-file))
   (let ((output-file (car (output-files o c))))
-    (delete-file output-file)
+    (restart-case
+        (uiop:delete-file-if-exists output-file)
+      (ignore-deletion ()
+        (values)))
     (uiop:with-staging-pathname (output-file output-file)
       (uiop:run-program (list* "gcc" "-shared"
                                "-o" (namestring output-file)

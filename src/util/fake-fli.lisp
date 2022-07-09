@@ -54,9 +54,9 @@
     (assert (not count))
    `(cffi:defctype ,name ,type)))
 
-(defun register-module (name &key real-name)
+(defun register-module (name &key real-name file-name)
   (declare (ignore name))
-  (cffi:load-foreign-library real-name))
+  (cffi:load-foreign-library (or file-name real-name)))
 
 (defmacro define-c-struct (name &rest fields)
   `(cffi:defcstruct ,name
