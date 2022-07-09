@@ -91,7 +91,7 @@ typedef struct SHA512state_st {
                                         :allocation :pinnable))
            (result (make-array digest-length :element-type '(unsigned-byte 8)
                                :initial-element 0
-                                             :allocation :pinnable)))
+                               :allocation :pinnable)))
       (with-open-file (stream file :direction :input
                                    :element-type '(unsigned-byte 8))
         (loop named inner

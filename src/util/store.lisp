@@ -47,7 +47,10 @@
 
 (defun object-store ()
   (let* ((dir *object-store*)
-         (dir (if (str:ends-with-p "/" dir) dir (format nil "~a/" dir))))
+         (dir (if (or 
+                   (str:ends-with-p "/" dir)
+                   (and (uiop:os-windows-p) (str:ends-with-p "\\" dir)))
+                  dir (format nil "~a/" dir))))
    (let ((path (pathname dir)))
      (ensure-directories-exist path)
      path)))
