@@ -39,7 +39,7 @@
     (cffi:load-foreign-library output)))
 
 (defmethod perform ((o compile-op) (c lib-source-file))
-  (uiop:run-program (list* "/usr/bin/gcc" "-shared"
+  (uiop:run-program (list* "gcc" "-shared"
                            "-o" (namestring (car (output-files o c)))
                            "-Werror"
                            "-fPIC"
