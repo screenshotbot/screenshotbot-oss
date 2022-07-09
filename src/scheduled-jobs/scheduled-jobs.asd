@@ -39,8 +39,9 @@
     (cffi:load-foreign-library output)))
 
 (defmethod perform ((o compile-op) (c lib-source-file))
-  (uiop:run-program (list* "gcc" "-shared"
-                           "-o" (namestring (car (output-files o c)))
+  (uiop:with-staging-pathname (output-file (car (output-files o c)))
+    (uiop:run-program (list* "gcc" "-shared"
+                           "-o" (namestring output-file)
                            "-Werror"
                            "-fPIC"
                            (namestring
@@ -48,7 +49,7 @@
                                              *library-file-dir*))
                            (extra-args c))
                     :output t
-                    :error-output t))
+                    :error-output t)))
 
 (defsystem #:scheduled-jobs/headers
   :serial t
