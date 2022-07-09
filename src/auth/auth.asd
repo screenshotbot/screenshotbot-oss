@@ -5,7 +5,6 @@
                "util/misc"
                "log4cl"
                "cl-fad"
-               #+windows
                "cl-store"
                "session-token")
   :components ((:file "package")

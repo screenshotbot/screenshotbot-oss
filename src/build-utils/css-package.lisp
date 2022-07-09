@@ -140,11 +140,19 @@
              0 (length prefix)))))
 
 (defun sass ()
-  #+linux
-  (namestring
-        (asdf:system-relative-pathname :build-utils "dart-sass/sass"))
-  #+darwin
-  "sass")
+  (cond
+   ((uiop:os-macosx-p)
+    "sass")
+   ((uiop:os-unix-p)
+      (namestring
+        (asdf:system-relative-pathname :build-utils "dart-sass/sass")))
+   ((uiop:os-windows-p)
+    ;; choco install sass
+    "sass")
+   (t
+    (error "unsupported implementation could not find `sass`"))))
+    
+
 
 (defmethod asdf:component-depends-on ((o copy-sources-op) (c css-library))
   (loop for x in (asdf:system-depends-on c)
