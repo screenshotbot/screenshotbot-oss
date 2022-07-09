@@ -23,6 +23,12 @@
 #+nil
 (register-tdrhq "stripe" "673d4b9600eb7c2dd21b4701a1b18e348dca7267")
 
+;; Only on Windows, we're unable to checkout nyaml, because its test
+;; code has file names that don't load on Windows. This patched
+;; version has all the test code deleted.
+#+mswindows
+(register-tdrhq "nyaml" "28d43dae676ad013affeab3c2b0f0d9307490d53")
+
 (register-tdrhq "fiveam" "162bd30e6179fc787ee94e96104c8ce059d610ff")
 (register-tdrhq "cl-mongo-id" "5313c5f8b5cc035818372681297d75966ecf1d93")
 (register-tdrhq "named-readtables" "6ae08604e907959e33d3a19f1f1ae0733adc0dcd")
