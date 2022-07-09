@@ -35,14 +35,26 @@
 (defun libjvm.so ()
   (or
    *libjvm*
-   (let ((guesses (list
-                   "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so"
-                   "/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so")))
-     (loop for guess in guesses
-           if (path:-e guess)
-             do (return guess)
-           finally
-           (error "Could not find java or libjvm.so, pass --libjvm argument")))))
+   (cond
+    ((uiop:os-windows-p)
+     (let* ((openjdk #P"C:/Program Files/OpenJDK/")
+            (versions (fad:list-directory openjdk)))
+       (loop for version in versions
+             for jvm = (path:catfile version "bin/server/jvm.dll")
+               if (path:-e jvm)
+               do (return jvm)
+             finally
+               (error "Could not find java, pass '--libjvm' argument"))))
+       
+    (t
+     (let ((guesses (list
+                     "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so"
+                     "/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so")))
+       (loop for guess in guesses
+             if (path:-e guess)
+               do (return guess)
+             finally
+               (error "Could not find java or libjvm.so, pass --libjvm argument")))))))
 
 #+ccl
 (defun jvm-init-for-ccl ()
