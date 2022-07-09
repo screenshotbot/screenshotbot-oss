@@ -189,25 +189,25 @@
    (multiple-value-bind (remote-stream status response-headers)
        (funcall fn)
      ;; dex:get should handle redirects, but just in case:
-     (assert (not (member status `(301 302))))
-     (fix-asset-headers response-headers)
-
-     (uiop:with-temporary-file (:pathname p :stream out :directory tmpdir :keep t
-                                :element-type '(unsigned-byte 8)
-                                :direction :io)
-       (with-open-stream (input remote-stream)
+     (with-open-stream (input remote-stream)
+       (assert (not (member status `(301 302))))
+       (fix-asset-headers response-headers)
+       
+       (uiop:with-temporary-file (:pathname p :stream out :directory tmpdir :keep t
+                                  :element-type '(unsigned-byte 8)
+                                  :direction :io)
          (uiop:copy-stream-to-stream input out :element-type '(unsigned-byte 8))
-         (file-position out 0))
-       (finish-output out)
-       (close out)
-
-       (write-asset p type
-                    :tmpdir tmpdir
-                    :url url
-                    :snapshot snapshot
-                    :response-headers response-headers
-                    :status status)))))
-
+         (file-position out 0)
+         (finish-output out)
+         (close out)
+         
+         (write-asset p type
+                      :tmpdir tmpdir
+                      :url url
+                      :snapshot snapshot
+                      :response-headers response-headers
+                      :status status))))))
+  
 
 (defun write-replay-log (message &rest args)
   (unless (eql *terminal-io* *replay-logs*)
@@ -431,17 +431,18 @@
            (info (make-pathname :type "info-v3" :defaults output)))
       (flet ((read-cached ()
                (let ((info (cl-store:restore info)))
-                (values
-                 (open output :element-type (cond
-                                             (force-binary
-                                              '(unsigned-byte 8))
-                                             (force-string
-                                              'character)
-                                             (t
-                                              'character))
-                       :external-format (guess-external-format info))
-                 (remote-response-status info)
-                 (remote-response-headers info))))
+                 (log:debug "Opening from cache: ~a" output)
+                 (values
+                  (open output :element-type (cond
+                                              (force-binary
+                                               '(unsigned-byte 8))
+                                              (force-string
+                                               'character)
+                                              (t
+                                               'character))
+                        :external-format (guess-external-format info))
+                  (remote-response-status info)
+                  (remote-response-headers info))))
              (good-cache-p (file)
                (uiop:file-exists-p file)))
         (cond
@@ -467,6 +468,7 @@
                                            :request-time (get-universal-time)
                                            :headers %headers)
                             info))
+          (log:debug "Caching for the first time ~a" output)
           (read-cached)))))))
 
 (with-auto-restart ()
@@ -476,6 +478,7 @@
      (call-with-fetch-asset
       context
       (lambda ()
+        (log:debug "v1 of fetch-asset")
         (http-get url))
       (cond
         (pathname
@@ -516,6 +519,7 @@
 
 
 (defmethod fetch-css-asset ((context context) (snapshot snapshot) url tmpdir)
+  (log:debug "calling from fetch-css-asset")
   (multiple-value-bind (remote-stream status response-headers) (http-get url :force-binary nil)
     (with-open-stream (remote-stream remote-stream)
      (uiop:with-temporary-file (:stream out :pathname p :type "css"
@@ -702,41 +706,42 @@
   (defmethod load-url-into ((context context) snapshot url tmpdir
                             &key actual-url)
     (safe-interrupt-checkpoint)
-    (let* ((content (http-get url :force-string t
+    (with-open-stream (content (http-get url :force-string t
                                   :force-binary nil))
-           (html (plump:parse content)))
-      (process-node context html snapshot
-                    ;; If we pass an actual-url, then we should use the
-                    ;; actual URL to figure out where to fetch assets
-                    ;; from
-                    (or actual-url url))
-      (add-css context html)
-
-      #+nil
-      (error "got html: ~a"
-             (with-output-to-string (s)
-               (plump:serialize html s)))
-      (uiop:with-temporary-file (:direction :io :stream tmp :element-type '(unsigned-byte 8))
-        (let ((root-asset (call-with-fetch-asset
-                           context
-                           (lambda ()
-                             (safe-plump-serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
-                             (file-position tmp 0)
-                             (let ((headers (make-hash-table)))
-                               (setf (gethash "content-type" headers)
-                                     "text/html; charset=UTF-8")
-                               (setf (gethash "cache-control" headers)
-                                     "no-cache")
-                               (values tmp 200 headers)))
-                           "html"
-                           tmpdir
-                           :url url
-                           :snapshot snapshot)))
-          (push (asset-file root-asset)
-                (root-files snapshot))
-          (push root-asset
+      (let ((html (plump:parse content)))
+        (process-node context html snapshot
+                      ;; If we pass an actual-url, then we should use the
+                      ;; actual URL to figure out where to fetch assets
+                      ;; from
+                      (or actual-url url))
+        (add-css context html)
+        
+        #+nil
+        (error "got html: ~a"
+               (with-output-to-string (s)
+                 (plump:serialize html s)))
+        (uiop:with-temporary-file (:direction :io :stream tmp :element-type '(unsigned-byte 8))
+          (let ((root-asset (call-with-fetch-asset
+                             context
+                             (lambda ()
+                               (log:debug "v2 of fetch asset")
+                               (safe-plump-serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
+                               (file-position tmp 0)
+                               (let ((headers (make-hash-table)))
+                                 (setf (gethash "content-type" headers)
+                                       "text/html; charset=UTF-8")
+                                 (setf (gethash "cache-control" headers)
+                                       "no-cache")
+                                 (values tmp 200 headers)))
+                             "html"
+                             tmpdir
+                             :url url
+                             :snapshot snapshot)))
+            (push (asset-file root-asset)
+                  (root-files snapshot))
+            (push root-asset
                 (assets snapshot))))
-      snapshot)))
+        snapshot))))
 
 (defmethod snapshot-asset-file ((snapshot snapshot)
                                 (asset asset))

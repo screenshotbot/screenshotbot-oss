@@ -108,6 +108,22 @@ background: url(shttps://google.com?f=1)
        (push-asset context snapshot (quri:uri font)  t)
        (is (equal 2 (length (assets snapshot))))))))
 
+(test happy-path-fetch-toplevel-only-once
+  (with-fixture state ()
+   (tmpdir:with-tmpdir (tmpdir)
+     (cl-mock:if-called 'util/request:http-request
+                        (lambda (url &rest args)
+                          (values
+                           (flexi-streams:make-in-memory-input-stream
+                            (flexi-streams:string-to-octets
+                             "<html><body></body></html>"))
+                           200
+                           (make-hash-table :test #'equal))))
+
+     (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
+       ;; Just verifying that on Windows, we don't keep any stale file descriptors around
+       (load-url-into context snapshot (quri:uri "https://screenshotbot.io/") tmpdir)))))
+
 (test happy-path-fetch-toplevel
   (with-fixture state ()
    (tmpdir:with-tmpdir (tmpdir)
