@@ -40,14 +40,20 @@
     (bt:signal-semaphore sem)))
 
 (defun magick-prefix-uncached ()
-  (multiple-value-bind (out err ret)
-      (uiop:run-program (list "which" "magick")
-                        :ignore-error-status t
-                        :output 'string)
-    (declare (ignore err))
-    (cond
-      ((= 0 ret)
-       (list (str:trim out))))))
+  (cond
+   ((uiop:os-unix-p)
+    (multiple-value-bind (out err ret)
+        (uiop:run-program (list "which" "magick")
+                          :ignore-error-status t
+                          :output 'string)
+      (declare (ignore err))
+      (cond
+       ((= 0 ret)
+        (list (str:trim out))))))
+   ((uiop:os-windows-p)
+    (list "C:\\Program Files\\ImageMagick-7.1.0-Q8\\magick"))
+   (t
+    (error "Unsupported impl"))))
 
 (let (cache)
  (defun magick-prefix ()
