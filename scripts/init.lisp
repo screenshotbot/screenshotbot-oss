@@ -20,6 +20,7 @@
 
 (compile 'register-tdrhq)
 
+#+nil
 (register-tdrhq "stripe" "673d4b9600eb7c2dd21b4701a1b18e348dca7267")
 
 (register-tdrhq "fiveam" "162bd30e6179fc787ee94e96104c8ce059d610ff")

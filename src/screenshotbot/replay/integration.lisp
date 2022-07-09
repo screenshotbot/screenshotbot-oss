@@ -152,9 +152,10 @@ too."
 
 (defmethod remove-base-url ((url string))
   (let ((uri (quri:uri url)))
-    (setf (quri:uri-scheme uri) nil)
-    (setf (quri:uri-host uri) nil)
-    (quri:render-uri uri)))
+    (quri:render-uri
+     (quri:copy-uri uri
+                    :scheme nil
+                    :host nil))))
 
 
 (defmethod urls ((run run))
@@ -225,11 +226,13 @@ accessing the urls or sitemap slot."
                   finally
                      (let ((actual-url (quri:render-uri
                                         (quri:merge-uris
-                                         (format nil "/company/~a/assets/~a"
-                                                 (encrypt:encrypt-mongoid
-                                                  (oid-array (company run)))
-                                                 (asset-file-name root-asset))
-                                         hosted-url))))
+                                         (quri:uri
+                                          (format nil "/company/~a/assets/~a"
+                                                  (encrypt:encrypt-mongoid
+                                                   (oid-array (company run)))
+                                                  (asset-file-name root-asset)))
+                                         (quri:uri
+                                          hosted-url)))))
 
                        (funcall logger url actual-url)
 

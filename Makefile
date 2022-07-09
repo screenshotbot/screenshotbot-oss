@@ -100,18 +100,16 @@ submodule:
 #	git submodule init
 # git submodule update
 
-recreate-cache-dir:
-	echo "Cleaning build/ directory" ; \
-	rm -rf build/asdf-cache build/slime-fasls ; \
-	rm -rf quicklisp/dists/quicklisp/software ; \
-	mkdir build ; \
-	echo $(CACHE_KEY) > $@ ; \
 
 
 build/cache-key: .PHONY
 ifneq ($(OS),Windows_NT)
 	if ! [ -e build/cache-key ] || ! [ x`cat build/cache-key` = x$(CACHE_KEY) ] ; then \
-		$(MAKE) recreate-cache-dir ; \
+		echo "Cleaning build/ directory" ; \
+		rm -rf build/asdf-cache build/slime-fasls ; \
+		rm -rf quicklisp/dists/quicklisp/software ; \
+		mkdir build ; \
+		echo $(CACHE_KEY) > $@ ; \
 	fi
 else
 # TODO: detect the cache-dir correctly

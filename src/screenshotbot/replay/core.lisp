@@ -521,7 +521,7 @@
      (uiop:with-temporary-file (:stream out :pathname p :type "css"
                                 :directory (tmpdir snapshot))
        (flet ((rewrite-url (this-url)
-                (let ((full-url (quri:merge-uris this-url url)))
+                (let ((full-url (quri:merge-uris (quri:uri this-url) url)))
                   (asset-file-name
                    (push-asset context snapshot full-url nil)))))
          (let* ((css (uiop:slurp-stream-string remote-stream))
@@ -595,7 +595,9 @@
                  (when (and val
                             (should-rewrite-url-p val))
                    (let* ((ref-uri val)
-                          (uri (quri:merge-uris ref-uri root-url)))
+                          (uri (quri:merge-uris
+                                (quri:uri ref-uri)
+                                (quri:uri root-url))))
                      (setf (plump:attribute node name) (funcall fn uri))))))
              (replace-attr (name &optional stylesheetp)
                (safe-replace-attr
@@ -620,7 +622,7 @@
                               (str:join
                                ","
                                (loop for (url . width) in  data
-                                     for uri = (quri:merge-uris url root-url)
+                                     for uri = (quri:merge-uris (quri:uri url) (quri:uri root-url))
                                      if (<= (parse-intrinsic width) max-width)
                                        collect
                                        (let ((asset (push-asset context snapshot uri nil)))
