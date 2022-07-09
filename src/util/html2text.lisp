@@ -12,18 +12,22 @@
 (markup:enable-reader)
 
 (defun html2text (markup)
-  (uiop:with-temporary-file (:stream input-stream
-                             :pathname input-pathname
-                             :prefix "input-html"
-                             :direction :io :external-format :utf-8)
-   (let* ((markup (if (stringp markup) markup
-                      (markup:write-html markup))))
-     (write-string markup input-stream)
-     (finish-output input-stream)
+  (cond
+   ((uiop:os-windows-p)
+    "Please view in HTML to view this email")
+   (t
+    (uiop:with-temporary-file (:stream input-stream
+                               :pathname input-pathname
+                               :prefix "input-html"
+                               :direction :io :external-format :utf-8)
+      (let* ((markup (if (stringp markup) markup
+                       (markup:write-html markup))))
+        (write-string markup input-stream)
+        (finish-output input-stream)
 
-     (uiop:with-temporary-file (:pathname output-pathname
-                                :prefix "output-html")
-      (uiop:run-program (list "html2text" "-utf8")
-                        :input input-pathname
-                        :output output-pathname)
-      (uiop:read-file-string output-pathname :external-format :utf-8)))))
+        (uiop:with-temporary-file (:pathname output-pathname
+                                   :prefix "output-html")
+          (uiop:run-program (list "html2text" "-utf8")
+                            :input input-pathname
+                            :output output-pathname)
+          (uiop:read-file-string output-pathname :external-format :utf-8)))))))

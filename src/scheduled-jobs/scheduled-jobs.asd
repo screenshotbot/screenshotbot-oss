@@ -39,17 +39,19 @@
     (cffi:load-foreign-library output)))
 
 (defmethod perform ((o compile-op) (c lib-source-file))
-  (uiop:with-staging-pathname (output-file (car (output-files o c)))
-    (uiop:run-program (list* "gcc" "-shared"
-                           "-o" (namestring output-file)
-                           "-Werror"
-                           "-fPIC"
-                           (namestring
-                            (merge-pathnames (format nil "~a.c" (component-name c))
-                                             *library-file-dir*))
-                           (extra-args c))
-                    :output t
-                    :error-output t)))
+  (let ((output-file (car (output-files o c))))
+    (delete-file output-file)
+    (uiop:with-staging-pathname (output-file output-file)
+      (uiop:run-program (list* "gcc" "-shared"
+                               "-o" (namestring output-file)
+                               "-Werror"
+                               "-fPIC"
+                               (namestring
+                                (merge-pathnames (format nil "~a.c" (component-name c))
+                                                 *library-file-dir*))
+                               (extra-args c))
+                        :output t
+                        :error-output t))))
 
 (defsystem #:scheduled-jobs/headers
   :serial t

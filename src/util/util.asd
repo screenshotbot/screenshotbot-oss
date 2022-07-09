@@ -239,6 +239,7 @@
                              (:file "test-objectid")
 			     #-mswindows
                              (:file "test-file-lock")
+                             #-mswindows
                              (:file "test-html2text")
                              (:file "test-mockable")
                              (:file "test-health-check")
