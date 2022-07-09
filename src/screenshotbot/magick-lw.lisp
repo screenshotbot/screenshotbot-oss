@@ -29,12 +29,21 @@
 (fli:define-c-typedef magick-size-type :uint64)
 (fli:define-c-typedef quantum :uint8)
 
-(fli:register-module :magicd-wand :real-name "libMagickWand-7.Q8.so")
+(fli:register-module 
+ ;; TODO: typo in module name, we should fix when a restart is due.
+ :magicd-wand 
+ :real-name 
+ (cond
+  ((uiop:os-windows-p)
+   "C:/Program Files/ImageMagick-7.1.0-Q8/CORE_RL_MagickWand_.dll")
+  (t "libMagickWand-7.Q8.so")))
+
 (fli:register-module :magick-native
                      :real-name
                      (asdf:output-file
                        'asdf:compile-op
                         (asdf:find-component :screenshotbot "magick-native")))
+
 
 (fli:define-c-struct wand
     (dummy :int))
