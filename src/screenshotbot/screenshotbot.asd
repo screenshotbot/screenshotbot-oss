@@ -27,21 +27,29 @@
   t)
 
 (defmethod perform ((o compile-op) (c lib-source-file))
-  (uiop:run-program (list "/usr/bin/gcc"
-                           "-shared"
-                          (namestring
-                           (merge-pathnames (format nil "~a.c" (component-name c))
-                                            *library-file-dir*))
-                          "-I" "/usr/local/include/ImageMagick-7/"
-                          "-D" "MAGICKCORE_QUANTUM_DEPTH=8"
-                          "-D" "MAGICKCORE_HDRI_ENABLE=0"
-                          "-Werror"
-                          "-Wall"
-                           "-lMagickWand-7.Q8"
-                          "-o" (namestring (car (output-files o c))))
-                    :output *standard-output*
-                    :error-output *error-output*))
-
+  (uiop:run-program `("gcc"
+                      "-shared"
+                      ,(namestring
+                        (merge-pathnames (format nil "~a.c" (component-name c))
+                                         *library-file-dir*))
+                      "-I" 
+                      ,(cond
+                        ((uiop:os-windows-p)
+                         (namestring #P"C:/Program Files/ImageMagick-7.1.0-Q8/include/"))
+                        (t "/usr/local/include/ImageMagick-7/"))
+                      "-D" "MAGICKCORE_QUANTUM_DEPTH=8"
+                      "-D" "MAGICKCORE_HDRI_ENABLE=0"
+                      "-Werror"
+                      "-Wall"
+                      ,@(cond
+                         ((uiop:os-windows-p)
+                          (list "-L" (namestring #P"C:/Program Files/ImageMagick-7.1.0-Q8/lib/") "-lCORE_RL_MagickWand_"))
+                         (t
+                          (list "-lMagickWand-7.Q8")))
+                      "-o" ,(namestring (car (output-files o c))))
+                      :output *standard-output*
+                      :error-output *error-output*))
+  
 (defsystem :screenshotbot
   :serial t
   :author "Arnold Noronha <arnold@screenshotbot.io>"
