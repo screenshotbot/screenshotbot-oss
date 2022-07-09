@@ -73,13 +73,13 @@
                        host
                        (uuid snapshot))))
       (multiple-value-bind (stream ret)
-          (dex:get url
-                   :force-binary t
-                   :want-stream t)
+          (util/request:http-request url
+                                     :force-binary t
+                                     :want-stream t)
         (with-open-stream (stream stream)
           (is (equal 200 ret))
           (is (equalp (md5:md5sum-file *fixture*)
-                      (md5:md5sum-stream stream))))))))
+                      (ironclad:digest-stream :md5 stream))))))))
 
 
 (test expect-404-for-non-existent-assets
@@ -98,13 +98,14 @@
                        host
                        (encrypt:encrypt-mongoid (oid-array company)))))
       (multiple-value-bind (stream ret headers)
-          (dex:get url
-                   :force-binary t
-                   :want-stream t)
+          (util/request:http-request url
+                                     :force-binary t
+                                     :headers-as-hash-table t
+                                     :want-stream t)
         (with-open-stream (stream stream)
           (is (equal 200 ret))
           (is (equalp (md5:md5sum-file *fixture*)
-                      (md5:md5sum-stream stream))))
+                      (ironclad:digest-stream :md5 stream))))
 
         ;; verify minimum caching
         (is (equal "max-age=300" (gethash "cache-control" headers)))))))
@@ -132,13 +133,14 @@
                        host
                        (encrypt:encrypt-mongoid (oid-array company)))))
       (multiple-value-bind (stream ret headers)
-          (dex:get url
-                   :force-binary t
-                   :want-stream t)
+          (util/request:http-request url
+                                     :force-binary t
+                                     :headers-as-hash-table t
+                                     :want-stream t)
         (with-open-stream (stream stream)
           (is (equal 200 ret))
           (is (equalp (md5:md5sum-file *fixture*)
-                      (md5:md5sum-stream stream))))
+                      (ironclad:digest-stream :md5 stream))))
 
         ;; max-age should not be overwritten
         (is (equal "max-age=360000" (gethash "cache-control" headers)))))))
@@ -152,13 +154,14 @@
                        host
                        (encrypt:encrypt-mongoid (oid-array company)))))
       (multiple-value-bind (stream ret headers)
-          (dex:get url
-                   :force-binary t
-                   :want-stream t)
+          (util/request:http-request url
+                                     :force-binary t
+                                     :headers-as-hash-table t
+                                     :want-stream t)
         (with-open-stream (stream stream)
           (is (equal 200 ret))
           (is (equalp (md5:md5sum-file *fixture*)
-                      (md5:md5sum-stream stream))))
+                      (ironclad:digest-stream :md5 stream))))
 
         ;; max-age should not be overwritten
         (is (equal "max-age=300" (gethash "cache-control" headers)))))))
