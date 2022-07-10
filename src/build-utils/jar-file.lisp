@@ -237,4 +237,4 @@
 
 ;; (all-java-files (find-system :java.main))
 ;; (compile-system :java.main)
-;; (compile-class-path (find-system :clinjy/java))
+;; (compile-class-path (find-system :java.main))

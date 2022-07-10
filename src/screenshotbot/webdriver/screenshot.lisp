@@ -84,8 +84,7 @@
 (defun read-base64-stream-to-file (stream output)
   (with-open-file (output output
                           :direction :output
-                          :element-type 'character
-                          :external-format :latin-1)
+                          :element-type '(unsigned-byte 8))
     (read-base64-stream-to-stream
      stream output)))
 
