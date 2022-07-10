@@ -21,8 +21,9 @@
 
 (defun %main (&optional (argv #+lispworks system:*line-arguments-list*
                               #-lispworks (uiop:command-line-arguments)))
-  (log4cl:reset-logging-configuration)
+  (log:config :sane :immediate-flush t)
   (log:config :info)
+
   (log:info "Screenshotbot SDK v2.3.14")
   (let ((unrecognized   (parse-command-line (cdr (command-line)))))
     (when flags:*verbose*
