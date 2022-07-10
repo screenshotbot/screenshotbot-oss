@@ -127,7 +127,6 @@ public class SimpleNativeLibrary implements Serializable {
         }
 
         try {
-            System.out.println("Using args: " + klass + " " + args);
             return wrapPrimitives(newInstance(klass, args));
         } catch (Exception e) {
             e.printStackTrace();

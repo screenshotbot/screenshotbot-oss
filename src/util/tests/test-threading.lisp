@@ -56,6 +56,10 @@
 
 (def-fixture sentry-mocks ()
   (cl-mock:with-mocks ()
+    ;; don't print the stack traces to the test output
+    (cl-mock:if-called 'trivial-backtrace:print-backtrace
+                        (lambda (e)))
+
     (let ((hunchentoot:*catch-errors-p* t))
       (let ((sentry-logs nil))
         #-screenshotbot-oss

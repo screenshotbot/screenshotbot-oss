@@ -95,6 +95,18 @@
 ;;(ql:quickload "auth")
 ;;(asdf:load-system "auth")
 
+(defun hide-outputs ()
+  (setf fiveam:*test-dribble* *standard-output*)
+  (let ((null-file (open "/dev/null" :direction :output
+                                     :if-exists :supersede)))
+    (setf *standard-output* null-file)
+    (setf *error-output* null-file)
+    (setf *trace-output* null-file)
+    (log:config :fatal)))
+
+(unless (equal "1" (uiop:getenv "TDRHQ_TEST_DEBUG"))
+  (hide-outputs))
+
 (let ((dir (asdf:system-relative-pathname :screenshotbot "static-web-output/")))
  (when (path:-d dir)
    (uiop:delete-directory-tree dir
