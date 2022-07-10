@@ -104,7 +104,7 @@
    (format nil "~a/builds/web/build/lw-console-8-0-0"
            (uiop:getenv "HOME"))
    #+mswindows
-   "g:\\web\\build\\lw-console-8-0-0"
+   ".\\build\\lw-console-8-0-0.exe"
    #+nil
    (namestring (uiop:ensure-absolute-pathname
                 (pathname "build/lw-console-8-0-0.exe")))

@@ -65,11 +65,12 @@
        ;; to clear that up at the moment, so I'm using the nuclear
        ;; option.
        #+(or mswindows win32)
-       (run (list "rm" "-rfv" (format nil "~a/.git" (namestring dir)))))))
+       (run (list "attrib" "-r" (format nil "~a\\.git\\*.*" (namestring dir)) "/s")))))
 
 (defun run-gen.sh ()
-  (run (list #+ (or mswindows win32) (namestring #P"C:/cygwin64/bin/bash")
-             "./gen.sh")))
+  (ensure-directories-exist (format nil "~ascreenshots/" *default-cmd-dir*))
+  (run (list "magick" "convert"
+             "-size" "360x360" "xc:white" "-fill" "black" "-stroke" "black" "-draw" "@ascii.txt" "-strip" "screenshots/image.png")))
 
 (with-repo
   ;; veryfy we're correctly cloning the repo
