@@ -85,8 +85,13 @@
   (with-open-file (output output
                           :direction :output
                           :element-type '(unsigned-byte 8))
-    (read-base64-stream-to-stream
-     stream output)))
+    (let ((output
+            #+sbcl
+            (flexi-streams:make-flexi-stream output :external-format :latin-1)
+            #-sbcl
+            output))
+     (read-base64-stream-to-stream
+      stream output))))
 
 (defun read-base64-stream-to-stream (input output)
   ;; Can we do this faster?
