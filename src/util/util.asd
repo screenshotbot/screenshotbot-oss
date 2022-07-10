@@ -240,7 +240,7 @@
                              (:file "test-objectid")
 			     #-mswindows
                              (:file "test-file-lock")
-                             #-mswindows
+                             #-(or darwin mswindows)
                              (:file "test-html2text")
                              (:file "test-mockable")
                              (:file "test-health-check")

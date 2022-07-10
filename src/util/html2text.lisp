@@ -13,7 +13,7 @@
 
 (defun html2text (markup)
   (cond
-   ((uiop:os-windows-p)
+   ((or (uiop:os-windows-p) (uiop:os-macosx-p))
     "Please view in HTML to view this email")
    (t
     (uiop:with-temporary-file (:stream input-stream
