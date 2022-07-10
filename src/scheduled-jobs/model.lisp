@@ -102,7 +102,8 @@ internal use only."
       (t 0))))
 
 (defmethod tz-offset ((tzname string))
-  (let ((tz (local-time:find-timezone-by-location-name tzname)))
+  (let* ((tzname (if (uiop:os-windows-p) (str:replace-all "/" "\\" tzname) tzname))
+         (tz (local-time:find-timezone-by-location-name tzname)))
     (cond
       (tz
        (/ (local-time:timestamp-subtimezone
