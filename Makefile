@@ -112,9 +112,9 @@ ifneq ($(OS),Windows_NT)
 		echo $(CACHE_KEY) > $@ ; \
 	fi
 else
-# TODO: detect the cache-dir correctly
+# TODO: detect the cache-key correctly, currently you have to manually delete this file to reset
 	if not exist build mkdir build
-	echo $(CACHE_KEY) > $@
+	if not exist $@ ( echo $(CACHE_KEY) > $@ )
 endif
 
 
