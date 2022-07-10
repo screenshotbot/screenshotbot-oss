@@ -99,20 +99,31 @@
      (when prepare-acceptor-callback
        (funcall prepare-acceptor-callback acceptor))
      (let ((lock (bt:make-lock))
-           (acceptor-ready (bt:make-condition-variable)))
+           (acceptor-ready (bt:make-condition-variable))
+           (thread-crashed? nil)
+           (catch-errors? hunchentoot:*catch-errors-p*))
        (bt:with-lock-held (lock)
          (let ((thread (bt:make-thread
                         (lambda ()
-                          (let ((hunchentoot:*catch-errors-p* nil))
-                            (safe-start
-                             acceptor
-                             :listen-callback
-                             (lambda ()
-                               (bt:with-lock-held (lock)
-                                 (bt:condition-notify acceptor-ready)))))))))
+                         (restart-case
+                             (handler-bind ((error (lambda (e)
+                                                     (when catch-errors? ;; in non interactive mode
+                                                       (trivial-backtrace:print-backtrace e)
+                                                       (invoke-restart 'exit-acceptor)))))
+                               (let ((hunchentoot:*catch-errors-p* nil))
+                                 (safe-start
+                                  acceptor
+                                  :listen-callback
+                                  (lambda ()
+                                    (bt:with-lock-held (lock)
+                                      (bt:condition-notify acceptor-ready))))))
+                           (exit-acceptor ()
+                             nil))))))
            (bt:condition-wait acceptor-ready lock)
            (unwind-protect
                 (funcall fn (format nil "http://localhost:~d" port)
                          acceptor)
              (hunchentoot:stop acceptor)
-             (bt:join-thread thread))))))))
+             (bt:join-thread thread)
+             (when thread-crashed?
+               (error "The acceptor thread crashed, see logs")))))))))
