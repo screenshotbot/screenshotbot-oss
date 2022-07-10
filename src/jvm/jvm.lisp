@@ -49,7 +49,8 @@
     (t
      (let ((guesses (list
                      "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so"
-                     "/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so")))
+                     "/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so"
+                     "/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home/lib/server/libjvm.dylib")))
        (loop for guess in guesses
              if (path:-e guess)
                do (return guess)
