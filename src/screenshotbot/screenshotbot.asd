@@ -36,14 +36,19 @@
                       ,(cond
                         ((uiop:os-windows-p)
                          (namestring #P"C:/Program Files/ImageMagick-7.1.0-Q8/include/"))
+			((uiop:os-macosx-p)
+		         (namestring #P"/opt/homebrew/include/ImageMagick-7/"))
                         (t "/usr/local/include/ImageMagick-7/"))
-                      "-D" "MAGICKCORE_QUANTUM_DEPTH=8"
-                      "-D" "MAGICKCORE_HDRI_ENABLE=0"
+			;; It's super difficult to install the D8 version of imagemagick on Mac... maybe in the future
+                      "-D" ,(format nil "MAGICKCORE_QUANTUM_DEPTH=~a" (if (uiop:os-macosx-p) 16 8))
+                      "-D" ,(format nil "MAGICKCORE_HDRI_ENABLE=~a" (if (uiop:os-macosx-p) 1 0))
                       "-Werror"
                       "-Wall"
                       ,@(cond
                          ((uiop:os-windows-p)
                           (list "-L" (namestring #P"C:/Program Files/ImageMagick-7.1.0-Q8/lib/") "-lCORE_RL_MagickWand_"))
+                         ((uiop:os-macosx-p)
+                          (list "-L/opt/homebrew/Cellar/imagemagick/7.1.0-43/lib" "-lMagickWand-7.Q16HDRI"))
                          (t
                           (list "-lMagickWand-7.Q8")))
                       "-o" ,(namestring (car (output-files o c))))

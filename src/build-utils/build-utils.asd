@@ -6,7 +6,8 @@
 
 (defsystem :build-utils
   :serial t
-  :depends-on (:tmpdir)
+  :depends-on (:tmpdir
+               :str)
   :components ((:file "wild-module")
                (:file "common")
                (:file "remote-file")
