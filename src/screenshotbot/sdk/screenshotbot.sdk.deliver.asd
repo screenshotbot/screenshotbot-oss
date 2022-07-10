@@ -104,7 +104,7 @@
    (format nil "~a/builds/web/build/lw-console-8-0-0"
            (uiop:getenv "HOME"))
    #+mswindows
-   ".\\build\\lw-console-8-0-0.exe"
+   ".\\build\\lw-console-8-0-0"
    #+nil
    (namestring (uiop:ensure-absolute-pathname
                 (pathname "build/lw-console-8-0-0.exe")))
@@ -137,6 +137,7 @@
                                              *library-file-dir*))
                            (namestring
                             (car (output-files o s)))))
+                    :directory (asdf:system-relative-pathname :screenshotbot.sdk "../../../")
                     :output t
                     :error-output t))
 

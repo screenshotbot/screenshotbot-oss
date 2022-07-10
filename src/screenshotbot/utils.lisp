@@ -18,13 +18,8 @@
 (defun upload-artifact (name filename)
   (log:info "Uploading via scp")
   (uiop:run-program (list
-                     #-mswindows "scp"
-                     #+mswindows "C:\\cygwin64\\bin\\scp.exe"
-                     (#-mswindows identity
-                      #+mswindows (lambda (name)
-                                    (str:replace-all "G:" "/cygdrive/g"
-                                                     (str:replace-all "\\" "/" name)))
-                      (namestring filename))
+                     "scp"
+                     (namestring filename)
                      "web@screenshotbot.io:~/web/tmp-upload")
                     :output :interactive
                     :input :interactive
