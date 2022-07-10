@@ -24,7 +24,7 @@
   (log:config :sane :immediate-flush t)
   (log:config :info)
 
-  (log:info "Screenshotbot SDK v2.3.14")
+  (log:info "Screenshotbot SDK v2.3.15")
   (let ((unrecognized   (parse-command-line (cdr (command-line)))))
     (when flags:*verbose*
       (log:config :debug))
