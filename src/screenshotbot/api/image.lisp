@@ -135,7 +135,10 @@
     (let* (;;(content-length (parse-integer (hunchentoot:header-in* :content-length)))
            (in-stream (hunchentoot:raw-post-data :force-binary t
                                                  :want-stream t)))
-      (fad:copy-stream in-stream (flexi-streams:make-flexi-stream s)))
+      (let ((buf (make-array 4096 :element-type '(unsigned-byte 8))))
+        (loop for bytes = (read-sequence buf in-stream)
+              while (> bytes 0)
+              do (write-sequence buf s :end bytes))))
     (finish-output s)
     (funcall fn p)))
 

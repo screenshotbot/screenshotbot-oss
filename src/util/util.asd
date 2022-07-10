@@ -163,10 +163,11 @@
   :components ((lib-source-file
                 "digest"
                 :extra-args
-                (#+darwin "-I/opt/homebrew/opt/openssl/include/")
-                :if-feature (:and :lispworks (:or :linux :darwin)))
-               (:file "digests" :if-feature (:and :lispworks (:or :linux :darwin)))
-               (:file "digests-non-lw" :if-feature (:not (:and :lispworks (:or :linux :darwin))))))
+                (#+darwin "-I/opt/homebrew/opt/openssl/include/"
+                 #+mswindows "-IC:\\Program Files\\OpenSSL-Win64\\include\\")
+                :if-feature (:and :lispworks (:or :linux :darwin :mswindows)))
+               (:file "digests" :if-feature (:and :lispworks (:or :linux :darwin :mswindows)))
+               (:file "digests-non-lw" :if-feature (:not (:and :lispworks (:or :linux :darwin :mswindows))))))
 
 (defsystem :util/threading
   :depends-on (:bordeaux-threads

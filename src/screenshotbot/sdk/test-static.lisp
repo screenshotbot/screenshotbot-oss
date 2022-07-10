@@ -28,9 +28,11 @@
 (util/fiveam:def-suite)
 
 (defvar *hex* nil)
+(defvar *len* -1)
 
 (defun cleanup ()
-  (setf *hex* nil))
+  (setf *hex* nil)
+  (setf *len* -1))
 
 (def-fixture state ()
   (cleanup)
@@ -46,6 +48,7 @@
                                                    :acceptor-names '(test-acceptor))
     (hash type api-key api-secret-key)
   (screenshotbot/api/image:with-raw-post-data-as-tmp-file (p)
+    (setf *len* (trivial-file-size:file-size-in-octets p)) 
     (setf *hex* (md5-file p))))
 
 (test blob-upload
@@ -64,8 +67,10 @@
       (loop for i from 0 to 255 do
         (write-byte i out))
       (finish-output out)
+      (is (eql 256 (trivial-file-size:file-size-in-octets p)))
       (let ((md5 (md5-file p)))
         (upload-blob p)
+        (is (eql 256 *len*))
         (is  (equalp *hex* md5))))))
 
 (defun touch (file)

@@ -130,7 +130,6 @@
         (error "Could not parse json:"
                json)))))
 
-
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
   (defun put-file (upload-url stream &key parameters)
     ;; In case we're retrying put-file, let's make sure we reset the
@@ -139,23 +138,23 @@
     (multiple-value-bind (result code)
         (uiop:with-temporary-file (:stream tmp-stream :pathname tmpfile :direction :io
                                    :element-type 'flexi-streams:octet)
-         (uiop:copy-stream-to-stream stream tmp-stream
-                                     :element-type 'flexi-streams:octet)
-         (finish-output tmp-stream)
-         (file-position tmp-stream 0)
-         (log:debug "Got file length: ~a" (file-length tmp-stream))
-         (http-request
-          upload-url
-          :method :put
-          :parameters parameters
-          :content-type "application/octet-stream"
-          :content-length (file-length tmp-stream)
-          :content tmpfile))
+          (uiop:copy-stream-to-stream stream tmp-stream
+                                      :element-type 'flexi-streams:octet)
+          (finish-output tmp-stream)
+          (file-position tmp-stream 0)
+          (log:debug "Got file length: ~a" (file-length tmp-stream))
+          (http-request
+           upload-url
+           :method :put
+           :parameters parameters
+           :content-type "application/octet-stream"
+           :content-length (file-length tmp-stream)
+           :content tmpfile))
 
-     (log:debug "Got image upload response: ~s" result)
-     (unless (eql 200 code)
-       (error "Failed to upload image: code ~a" code))
-     result)))
+      (log:debug "Got image upload response: ~s" result)
+      (unless (eql 200 code)
+        (error "Failed to upload image: code ~a" code))
+      result)))
 
 (defun upload-image (key stream hash response)
   (Assert hash)
