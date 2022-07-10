@@ -63,47 +63,46 @@
 
 (test prepare-git-repo-integration-test
   (tmpdir:with-tmpdir (dir)
-    (flet ((bash (x)
-             (run-program-with-errors (list "bash" "-c"
-                                            (format nil "cd ~a && ~a"
-                                                    (namestring dir)
-                                                    x)))))
-      (signals error
-        (bash "false"))
-      (bash "true")
-      (bash "which git")
-      (bash "mkdir source")
-      (bash "cd source && git init .")
-      (bash "cd source && git config user.email foo@tdrhq.com")
-      (bash "cd source && git config user.name 'Foo Bar'")
-      (bash "cd source && echo hello > file.txt")
-      (bash "cd source && git add file.txt")
-      (bash "cd source && git commit -a -m first-commit")
-      (bash "cd source && echo hello2 > file.txt")
-      (bash "cd source && git commit -a -m second-commit")
-      (let ((first-commit (bash "cd source && git rev-parse HEAD^"))
-            (second-commit (bash "cd source && git rev-parse HEAD")))
-        ;; let's use this repo to make our new clone
-        (finishes
-         (prepare-git-repo (namestring (path:catdir dir "source/"))
-                           first-commit
-                           (path:catdir dir "dest/")))
+    (let ((source (ensure-directories-exist (path:catdir dir "source/")))
+          (dest (path:catdir dir "dest/")))
+      (flet ((bash (x)
+               (run-program-with-errors (str:split " " x)  :directory source))
+             (bash-dest (x)
+               (run-program-with-errors (str:split " " x) :directory dest)
+        (bash "git init .")
+        (bash "git config user.email foo@tdrhq.com")
+        (bash "git config user.name FooBar")
+        (with-open-file (file.txt (path:catfile source file.txt)
+                                  :direction :output)
+          (write-string "hello" file.txt))
+        (bash "git add file.txt")
+        (bash "git commit -a -m first-commit")
+        (with-open-file (file.txt (path:catfile source file.txt)
+                                  :direction :output
+                                  :if-exists :supersede)
+          (write-string "hello2" file.txt))
+        (bash "git commit -a -m second-commit")
+        (let ((first-commit (bash "git rev-parse HEAD^"))
+              (second-commit (bash "git rev-parse HEAD")))
+          ;; let's use this repo to make our new clone
+          (finishes
+            (prepare-git-repo (namestring source)
+                              first-commit
+                              dest))
 
-
-
-        (is (equal first-commit (bash "cd dest && git rev-parse HEAD")))
+        (is (equal first-commit (bash-dest "git rev-parse HEAD")))
         (is (equal "hello" (str:trim (uiop:read-file-string (path:catfile dir "dest/file.txt")))))
 
         ;; can I clone to the same directory again?
         (finishes
-         (prepare-git-repo (namestring (path:catdir dir "source/"))
-                           first-commit
-                           (path:catdir dir "dest/")))
+          (prepare-git-repo (namestring source)
+                            first-commit
+                            dest))
 
         ;; can I switch the commit?
         (finishes
-          (prepare-git-repo (namestring (path:catdir dir "source/"))
+          (prepare-git-repo (namestring source)
                             second-commit
-                            (path:catdir dir "dest/")))
+                            dest))
 
-        (is (equal "hello2" (str:trim (uiop:read-file-string (path:catfile dir "dest/file.txt")))))))))
+        (is (equal "hello2" (str:trim (uiop:read-file-string (path:catfile dir "dest/file.txt"))))))))))))

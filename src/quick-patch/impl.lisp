@@ -34,13 +34,13 @@ is provided, add each of the directories to asdf:*central-registry*"
 (defun register-external (&rest args)
   (apply #'register args))
 
-(defun run-program-with-errors (cmd)
+(defun run-program-with-errors (cmd &key (directory (uiop:getcwd)))
   (multiple-value-bind (out err ret)
       (uiop:run-program cmd
                         :output 'string
                         :ignore-error-status t
                         :error-output 'string
-                        :directory (uiop:getcwd))
+                        :directory directory)
     (unless (eql 0 ret)
       (error "Shell command `~a` failed: ~%stdout: ~a~%~% stderr:~%~A~%"
              cmd
