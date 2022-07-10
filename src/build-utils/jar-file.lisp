@@ -111,6 +111,19 @@
           (format output "~a~a" sep x))))
      (get-output-stream-string output))))
 
+(defun java-prefix ()
+  (cond
+   ((uiop:os-macosx-p)
+    "/opt/homebrew/opt/java/bin/")
+   (t "")))
+
+(defun jar-binary ()
+  (str:concat (java-prefix) "jar"))
+
+(defun javac-binary ()
+  (str:concat (java-prefix) "javac"))
+ 
+
 (defmethod asdf:perform ((o compile-op) (s java-library))
   #+nil(log:info "compiling: ~s" s)
   (destructuring-bind (jar dir) (output-files o s)
@@ -125,7 +138,7 @@
        (loop for x in (compile-class-path s)
              do
                 (assert (uiop:file-exists-p x)))
-       (let ((cmd `("javac"
+       (let ((cmd `(,(javac-binary)
                     "-d" ,(namestring dir)
                     "-cp" ,(join 
                             (cond 
@@ -140,7 +153,7 @@
     (copy-resources s dir)
     (when (path:-e jar)
      (delete-file jar))
-    (safe-run-program (list "jar"
+    (safe-run-program (list (jar-binary)
                             "cf" (namestring jar)
                             "-C" (namestring dir)
                             "."))))
