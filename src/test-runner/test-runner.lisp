@@ -4,7 +4,8 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:init
-   #:main))
+   #:main
+   #:image-main))
 (in-package :test-runner/test-runner)
 
 (defun init-jvm-for-ccl ()
@@ -39,8 +40,6 @@
   #+ccl
   (init-jvm-for-ccl)
   (load-systems)
-  (unless (equal "1" (uiop:getenv "TDRHQ_TEST_DEBUG"))
-    (hide-outputs))
   (clean-up-screenshotbot-screenshots))
 
 (defun find-tests ()
@@ -90,14 +89,64 @@
       (log:info "Loading: ~s" system)
      (ql:quickload system))))
 
-(defun main ()
+(defun maybe-hide-outputs ()
+  (unless (equal "1" (uiop:getenv "TDRHQ_TEST_DEBUG"))
+    (hide-outputs)))
+
+(defun call-with-main-wrapper (fn)
+
   (tmpdir:with-tmpdir (tmpdir)
     ;; on CCL, the JVM is already loaded before the main systems
     #+lispworks
     (unless (position "-no-jvm" system:*line-arguments-list* :test #'equal)
       (jvm:jvm-init))
-    (fiveam:test foo-bar
-      (fiveam:is-true (equal "foo" "foo")))
-    (if (not (fiveam:run-all-tests))
-        (uiop:quit 1)))
+    (funcall fn))
   (uiop:quit 0))
+
+(defun safely-run-all-tests ()
+  (fiveam:test foo-bar
+    (fiveam:is-true (equal "foo" "foo")))
+  (if (not (fiveam:run-all-tests))
+      (uiop:quit 1)))
+
+(defun main ()
+  (call-with-main-wrapper
+   (lambda ()
+     (maybe-hide-outputs)
+     (safely-run-all-tests))))
+
+(defun fix-system-name (system)
+  (let ((system (if (str:starts-with-p ":" system)
+                    (str:upcase (str:substring 1 nil system))
+                    system)))
+    system))
+
+(defun guess-fiveam-suite (system)
+  (let ((system (str:upcase system)))
+    (let ((suite-name
+            (if (str:ends-with-p "/TESTS" system)
+                (str:replace-all "/TESTS" "" system)
+                system)))
+      (let ((guessed (intern suite-name "KEYWORD")))
+        (format t "Guessed suite name as: ~a" guessed)
+        guessed))))
+
+(defun image-main ()
+  "The main function when called the test-runner is saved to build/t"
+  (call-with-main-wrapper
+   (lambda ()
+     #+lispworks
+     (let ((systems (loop for name in (cdr system:*line-arguments-list*)
+                          if (not (eql #\- (elt name 0)))
+                            collect name)))
+       (format t "Running tests: ~S~%" systems)
+       (dolist (system systems)
+         (ql:quickload (fix-system-name system)))
+       (format t "Loaded tests~%" systems)
+       (maybe-hide-outputs)
+       (loop for system in systems
+             collect (fiveam:run (guess-fiveam-suite system))
+             into all-results
+             finally
+                (unless (fiveam:explain! (alexandria:flatten all-results))
+                  (uiop:quit 1)))))))
