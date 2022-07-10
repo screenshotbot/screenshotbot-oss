@@ -8,7 +8,8 @@
   (:use #:cl
         #:iterate)
   (:export
-   #:with-auto-restart))
+   #:with-auto-restart
+   #:*global-enable-auto-retries-p*))
 (in-package :auto-restart)
 
 
@@ -18,6 +19,9 @@
   restart to be defined inside the body, not before it."))
 
 (defvar *attempt* 0)
+
+(defvar *global-enable-auto-retries-p* t
+  "Globally enable or disable automatic retries. Useful for unit tests.")
 
 (defmacro with-auto-restart ((&key (retries 0)
                                    (sleep 0)
@@ -67,7 +71,7 @@
                  (let ((attempt *attempt*))
                    (flet ((error-handler (e)
                             (declare (ignore e))
-                            (when (< attempt ,retries)
+                            (when (and *global-enable-auto-retries-p* (< attempt ,retries))
                               (let ((sleep-time (funcall ,sleep-var attempt)))
                                 (unless (= 0 sleep-time)
                                   (sleep sleep-time)))

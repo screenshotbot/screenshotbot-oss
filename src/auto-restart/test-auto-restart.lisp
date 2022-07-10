@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:auto-restart
+                #:*global-enable-auto-retries-p*
                 #:restart-already-defined
                 #:with-auto-restart))
 (in-package :test-auto-restart)
@@ -169,7 +170,24 @@
     (is (equal '(t t t)
                 res))))
 
+(test but-we-dont-retry-if-the-global-flag-is-off
+  (let ((res nil)
+        (*global-enable-auto-retries-p* nil))
+    (with-auto-restart (:retries 3)
+      (defun foo ()
+        "dfdf"
+        (declare (inline))
+        (cond
+          ((not (>= (length res) 10))
+           (push t res)
+           (error 'test-error))
+          (t
+           res))))
 
+    (signals test-error
+      (foo))
+    (is (equal '(t)
+                res))))
 
 (test actually-do-automatic-retries-with-fake-sleep-happy-path
   (let ((res nil))

@@ -34,34 +34,39 @@
 
 (util/fiveam:def-suite)
 
+
 (def-fixture state ()
   (cl-mock:with-mocks ()
-   (util:copying (flags:*pull-request*
-                  flags:*override-commit-hash*
-                  flags:*main-branch*)
-     (&body))))
+    (let ((auto-restart:*global-enable-auto-retries-p* nil))
+     (util:copying (flags:*pull-request*
+                    flags:*override-commit-hash*
+                    flags:*main-branch*)
+       (&body)))))
 
 (test read-directory-for-ios
-  (tmpdir:with-tmpdir (s)
-    (let ((*directory* (namestring s)))
-     (is (typep (%read-directory-from-args)
-                'image-directory)))))
+  (with-fixture state ()
+   (tmpdir:with-tmpdir (s)
+     (let ((*directory* (namestring s)))
+       (is (typep (%read-directory-from-args)
+                  'image-directory))))))
 
 (test read-directory-for-android
-  (tmpdir:with-tmpdir (s)
-    (let ((*directory* (namestring s)))
-      (uiop:with-temporary-file (:pathname metadata :type "xml")
-        (let ((*metadata* (namestring metadata)))
-          (is (typep (%read-directory-from-args)
-                     'directory-image-bundle)))))))
+  (with-fixture state ()
+   (tmpdir:with-tmpdir (s)
+     (let ((*directory* (namestring s)))
+       (uiop:with-temporary-file (:pathname metadata :type "xml")
+         (let ((*metadata* (namestring metadata)))
+           (is (typep (%read-directory-from-args)
+                      'directory-image-bundle))))))))
 
 (test read-directory-with-ios-diff-dir
-  (tmpdir:with-tmpdir (s)
-    (tmpdir:with-tmpdir (s2)
-      (let ((*directory* (namestring s))
-            (*ios-diff-dir* (namestring s2)))
-        (is (typep (%read-directory-from-args)
-                   'image-directory-with-diff-dir))))))
+  (with-fixture state ()
+   (tmpdir:with-tmpdir (s)
+     (tmpdir:with-tmpdir (s2)
+       (let ((*directory* (namestring s))
+             (*ios-diff-dir* (namestring s2)))
+         (is (typep (%read-directory-from-args)
+                    'image-directory-with-diff-dir)))))))
 
 (test get-relative-path
   (is (equal #P "foo/"
@@ -78,17 +83,18 @@
 
 #-darwin
 (test simple-put-image
-  (with-local-acceptor (host) ('hunchentoot:easy-acceptor
-                                :name 'test-acceptor)
-    (with-open-file (s (asdf:system-relative-pathname
-                        :screenshotbot.sdk
-                        "file-for-test.bin")
-                       :direction :input
-                       :element-type 'flexi-streams:octet)
-      (is
-       (equal
-        "4249fe0e72f21fd54dbb2f3325bec263"
-        (put-file (format nil "~a/put" host) s))))))
+  (with-fixture state ()
+   (with-local-acceptor (host) ('hunchentoot:easy-acceptor
+                                 :name 'test-acceptor)
+     (with-open-file (s (asdf:system-relative-pathname
+                         :screenshotbot.sdk
+                         "file-for-test.bin")
+                        :direction :input
+                        :element-type 'flexi-streams:octet)
+       (is
+        (equal
+         "4249fe0e72f21fd54dbb2f3325bec263"
+         (put-file (format nil "~a/put" host) s)))))))
 
 (defvar *env-overrides* nil)
 

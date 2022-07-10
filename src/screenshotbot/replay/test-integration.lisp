@@ -97,7 +97,8 @@
   ())
 
 (defmacro with-test-globals (&body body)
-  `(let ((old-installation *installation*))
+  `(let ((old-installation *installation*)
+         (auto-restart:*global-enable-auto-retries-p* nil))
      (tmpdir:with-tmpdir (tmp-store-dir)
        (progn
          (setf *object-store* (namestring tmp-store-dir))

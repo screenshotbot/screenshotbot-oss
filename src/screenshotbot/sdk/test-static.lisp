@@ -36,19 +36,20 @@
 
 (def-fixture state ()
   (cleanup)
-  (with-local-acceptor (host) ('hunchentoot:easy-acceptor
-                                :name 'test-acceptor)
-   (let ((flags:*hostname* host))
-     (unwind-protect
-          (progn
-            (&body))
-       (cleanup)))))
+  (let ((auto-restart:*global-enable-auto-retries-p* nil))
+   (with-local-acceptor (host) ('hunchentoot:easy-acceptor
+                                 :name 'test-acceptor)
+     (let ((flags:*hostname* host))
+       (unwind-protect
+            (progn
+              (&body))
+         (cleanup))))))
 
 (hunchentoot:define-easy-handler (fake-blob-upload :uri "/api/blob/upload"
                                                    :acceptor-names '(test-acceptor))
     (hash type api-key api-secret-key)
   (screenshotbot/api/image:with-raw-post-data-as-tmp-file (p)
-    (setf *len* (trivial-file-size:file-size-in-octets p)) 
+    (setf *len* (trivial-file-size:file-size-in-octets p))
     (setf *hex* (md5-file p))))
 
 (test blob-upload
