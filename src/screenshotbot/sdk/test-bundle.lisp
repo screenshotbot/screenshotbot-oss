@@ -38,6 +38,15 @@
              (list "foo1" "foo3")
              (mapcar 'image-name ims)))))))
 
+(defun true-namestring (x)
+  "On Mac, the temp directory uses a symbolic link so it's not
+possible to compare the namestring directly"
+  (truename (namestring x)))
+
+;; The SDK supports specifying the images as a pair of "static" images
+;; (say checked into the repo), and the "diffs". In this situation,
+;; the actual images will be all the static images overriden by any
+;; that are in the diff-dir
 (test diff-dir
   (with-fixture state ()
     (tmpdir:with-tmpdir (diff-dir)
@@ -49,8 +58,9 @@
             (is (%set-equal
                  (list "foo1" "foo3")
                  (mapcar 'image-name ims)))
+            (is (not (str:starts-with-p "/private" (namestring dir))))
             (is (%set-equal
-                 (mapcar 'namestring
+                 (mapcar 'true-namestring
                          (list (path:catfile dir "foo1.png")
                                (path:catfile diff-dir "failed_foo3.png")))
-                 (mapcar 'namestring (mapcar 'image-pathname ims))))))))))
+                 (mapcar 'true-namestring (mapcar 'image-pathname ims))))))))))
