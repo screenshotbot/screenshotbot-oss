@@ -245,6 +245,15 @@
        (finish-output s)
        (funcall fn p)))))
 
+(defmethod %with-local-image ((image local-image) fn)
+  ;; this could be bad if users have a way of creating local-images,
+  ;; but they don't. It's always created in code for demo
+  ;; purposes. (TODO: We should remove that logic, and use real images
+  ;; instead).
+  (funcall fn (asdf:system-relative-pathname
+               :screenshotbot
+               (format nil "static~a" (local-image-url image)))))
+
 (defmacro with-local-image ((file screenshot) &body body)
   `(flet ((body (,file) ,@body))
      (%with-local-image ,screenshot #'body)))
