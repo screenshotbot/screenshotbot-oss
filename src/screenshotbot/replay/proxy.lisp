@@ -45,6 +45,7 @@
    :thread-safe t)
   (format nil "http://localhost:~a" (hunchentoot:acceptor-port *replay-proxy*)))
 
+;; If you change this behaves, make sure it looks reasonable in launch-proxy.lisp
 (defun ensure-proxy (selenium-service)
   "Ensure the proxy is running and return the URL to the proxy"
   (declare (ignore selenium-service))
