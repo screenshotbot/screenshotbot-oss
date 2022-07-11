@@ -31,7 +31,10 @@
    #:slack-error-code
    #:slack-message-failed
    #:slack-post-on-channel
-   #:slack-methods)
+   #:slack-methods
+   #:audit-log
+   #:slack-audit-logs-for-company
+   #:post-on-channel-audit-log)
   ;; forward decls
   (:export #:find-or-create-slack-config))
 (in-package :screenshotbot/slack/core)
@@ -56,6 +59,36 @@
     :reader %created-at))
   (:metaclass persistent-class))
 
+(defclass audit-log (store-object)
+  ((company :initarg :company
+            :index-type hash-index
+            :index-reader %slack-audit-logs-for-company)
+   (err :initarg :error
+        :initform nil
+        :accessor audit-log-error))
+  (:metaclass persistent-class))
+
+(defun slack-audit-logs-for-company (company)
+  (let ((logs (%slack-audit-logs-for-company company)))
+    ;; the BKNR datastore indices is super buggy for this
+    ;; index. Probably because of the inheritence.
+    (let ((hash-table (make-hash-table)))
+      (loop for log in logs
+            unless (bknr.datastore::object-destroyed-p log)
+            do (setf (gethash log hash-table) t))
+      (sort (alexandria:hash-table-keys hash-table)
+            #'> :key #'bknr.datastore:store-object-id))))
+
+(defclass post-on-channel-audit-log (audit-log)
+  ((slack-channel :initarg :channel
+            :reader slack-channel)
+   (text :initarg :text
+            :reader slack-text)
+   (ts :initarg :ts
+       :reader %created-at))
+  (:default-initargs :ts (get-universal-time))
+  (:metaclass persistent-class))
+
 (defun latest-slack-token (company)
   (let ((token
          (car (sort (slack-tokens-for-company company)
@@ -78,17 +111,26 @@
   (with-slots (response) e
     (format out "Slack error with response: ~a" response)))
 
-(defun check-slack-ok (response)
+(defun check-slack-ok (response &optional audit-log)
   (unless (equal "true" (#_toString (#_isOk response)))
-    (error 'slack-error :response (#_getError response))))
+    (let ((response (#_getError response)))
+      (when audit-log
+       (with-transaction ()
+         (setf (audit-log-error audit-log) response)))
+      (error 'slack-error :response response))))
 
-(defun slack-post-on-channel (&key channel text methods)
-  (let ((builder (#_builder #,com.slack.api.methods.request.chat.ChatPostMessageRequest)))
-    (#_channel builder channel)
-    (#_text builder text)
-    (let ((response (#_chatPostMessage methods (#_build builder))))
-      (check-slack-ok response)
-      t)))
+(defun slack-post-on-channel (&key channel text token company)
+  (let ((methods (slack-methods :token token)))
+   (let ((audit-log (make-instance 'post-on-channel-audit-log
+                                    :company company
+                                    :channel channel
+                                    :text text)))
+     (let ((builder (#_builder #,com.slack.api.methods.request.chat.ChatPostMessageRequest)))
+       (#_channel builder channel)
+       (#_text builder text)
+       (let ((response (#_chatPostMessage methods (#_build builder))))
+         (check-slack-ok response audit-log)
+         t)))))
 
 (defhandler (nil :uri "/slack-app-redirect") (code state)
   (declare (ignore state))

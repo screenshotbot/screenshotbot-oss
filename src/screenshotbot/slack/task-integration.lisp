@@ -35,7 +35,8 @@
     (let ((it (default-slack-config company)))
      (slack-post-on-channel
       :channel (slack-config-channel it)
-      :methods (slack-methods :token (access-token (access-token it)))
+      :company company
+      :token (access-token (access-token it))
       :text (format nil "Screenshots changed in ~a, see: ~a"
                     (channel-name (report-channel report))
                     (report-link report))))))

@@ -22,8 +22,12 @@
                 #:client-id
                 #:slack-plugin)
   (:import-from #:screenshotbot/slack/core
+                #:audit-log-error
+                #:slack-channel
                 #:slack-error-response
                 #:slack-error)
+  (:import-from #:screenshotbot/taskie
+                #:timeago)
   (:export #:post-settings-slack))
 (in-package :screenshotbot/slack/settings)
 
@@ -52,21 +56,21 @@
 
 (defun slack-settings-test (&key slack-token channel)
   (declare (optimize (debug 3)))
-  (let ((methods (slack-methods :token slack-token)))
-    (handler-case
-        (progn
-          (slack-post-on-channel :channel channel
-                                 :methods methods
-                                 :text "Test message to test Slack connection")
-          <simple-card-page>
-            <p>Please verify that the message was sent to the slack channel!</p>
-            <a href= "/settings/slack">Back</a>
-          </simple-card-page>)
-      (slack-error (e)
+  (handler-case
+      (progn
+        (slack-post-on-channel :channel channel
+                               :company (current-company)
+                               :token slack-token
+                               :text "Test message to test Slack connection")
         <simple-card-page>
-          <p>Failed to post to slack: ,(slack-error-response e)</p>
+          <p>Please verify that the message was sent to the slack channel!</p>
           <a href= "/settings/slack">Back</a>
-        </simple-card-page>))))
+        </simple-card-page>)
+    (slack-error (e)
+      <simple-card-page>
+        <p>Failed to post to slack: ,(slack-error-response e)</p>
+        <a href= "/settings/slack">Back</a>
+      </simple-card-page>)))
 
 (defun find-or-create-slack-config (company)
   (or
@@ -149,8 +153,39 @@
 
 
     </div>
+
+    <audit-logs />
       </form>
   </settings-template>))
+
+(deftag audit-logs ()
+  <div class= "card mt-3">
+    <div class= "card-header">
+      <h5>API Audit Logs</h5>
+    </div>
+
+  <div class= "card-body">
+    <p class= "text-muted">All API calls to Slack made by Screenshotbot in the last 30 days will be listed here.</p>
+
+    <ul>
+      ,@ (loop for audit-log in (slack-audit-logs-for-company (current-company))
+               collect
+               <li>,(render-audit-log audit-log)</li>)
+    </ul>
+  </div>
+  </div>)
+
+(defmethod render-audit-log ((self post-on-channel-audit-log))
+  (let ((timeago (timeago :timestamp (created-at self))))
+   (cond
+     ((audit-log-error self)
+      <span class= "text-danger" >Error trying to post to ,(slack-channel self): <b>,(audit-log-error self)</b>, tried ,(progn timeago) </span>)
+     (t
+      <span class= "text-success" >Posted on ,(slack-channel self) at ,(progn timeago) </span>))))
+
+(defmethod render-audit-log ((audit-log t))
+  (warn "missing renderer for audit-log ~a" audit-log)
+  (format nil "~a" audit-log))
 
 (defsettings slack
   :name "slack"
