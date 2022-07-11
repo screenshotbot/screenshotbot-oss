@@ -63,10 +63,9 @@
     (when token
      (values (access-token token) token))))
 
-(define-condition slack-message-failed (error)
-  ((error-code
-    :initarg :error-code
-    :accessor slack-error-code)))
+(define-condition slack-error (error)
+  ((response :initarg :response
+             :reader slack-error-response)))
 
 (defun slack-instance ()
   (#_getInstance #,com.slack.api.Slack))
@@ -75,9 +74,13 @@
   (check-type token string)
   (#_methods (slack-instance) token))
 
+(defmethod print-object ((e slack-error) out)
+  (with-slots (response) e
+    (format out "Slack error with response: ~a" response)))
+
 (defun check-slack-ok (response)
   (unless (equal "true" (#_toString (#_isOk response)))
-    (error "Slack API error: ~a" (#_getError response))))
+    (error 'slack-error :response (#_getError response))))
 
 (defun slack-post-on-channel (&key channel text methods)
   (let ((builder (#_builder #,com.slack.api.methods.request.chat.ChatPostMessageRequest)))

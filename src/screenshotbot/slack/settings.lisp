@@ -21,6 +21,9 @@
   (:import-from #:screenshotbot/slack/plugin
                 #:client-id
                 #:slack-plugin)
+  (:import-from #:screenshotbot/slack/core
+                #:slack-error-response
+                #:slack-error)
   (:export #:post-settings-slack))
 (in-package :screenshotbot/slack/settings)
 
@@ -59,9 +62,9 @@
             <p>Please verify that the message was sent to the slack channel!</p>
             <a href= "/settings/slack">Back</a>
           </simple-card-page>)
-      (slack-message-failed (e)
+      (slack-error (e)
         <simple-card-page>
-          <p>Failed to post to slack: ,(slack-error-code e)</p>
+          <p>Failed to post to slack: ,(slack-error-response e)</p>
           <a href= "/settings/slack">Back</a>
         </simple-card-page>))))
 
