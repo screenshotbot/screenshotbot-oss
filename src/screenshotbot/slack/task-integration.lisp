@@ -16,7 +16,9 @@
         #:anaphora
         #:screenshotbot/slack/core)
   (:import-from #:screenshotbot/dashboard/reports
-                #:report-link))
+                #:report-link)
+  (:import-from #:screenshotbot/slack/core
+                #:slack-error))
 (in-package :screenshotbot/slack/task-integration)
 
 (defclass slack-task-integration (task-integration)
@@ -33,10 +35,15 @@
   (let ((company (task-integration-company inst)))
     (assert (enabledp inst))
     (let ((it (default-slack-config company)))
-     (slack-post-on-channel
-      :channel (slack-config-channel it)
-      :company company
-      :token (access-token (access-token it))
-      :text (format nil "Screenshots changed in ~a, see: ~a"
-                    (channel-name (report-channel report))
-                    (report-link report))))))
+      (handler-case
+          (slack-post-on-channel
+           :channel (slack-config-channel it)
+           :company company
+           :token (access-token (access-token it))
+           :text (format nil "Screenshots changed in ~a, see: ~a"
+                         (channel-name (report-channel report))
+                         (report-link report)))
+        (slack-error (e)
+          ;; the slack API error has already been logged, so we should
+          ;; not propagate this.
+          (values))))))

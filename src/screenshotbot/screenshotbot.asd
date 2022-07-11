@@ -32,7 +32,7 @@
                       ,(namestring
                         (merge-pathnames (format nil "~a.c" (component-name c))
                                          *library-file-dir*))
-                      "-I" 
+                      "-I"
                       ,(cond
                         ((uiop:os-windows-p)
                          (namestring #P"C:/Program Files/ImageMagick-7.1.0-Q8/include/"))
@@ -54,7 +54,7 @@
                       "-o" ,(namestring (car (output-files o c))))
                       :output *standard-output*
                       :error-output *error-output*))
-  
+
 (defsystem :screenshotbot
   :serial t
   :author "Arnold Noronha <arnold@screenshotbot.io>"
@@ -311,7 +311,8 @@
                              (:file "test-replay-acceptor")))
                #+ (or ccl lispworks)
                (:module "slack"
-                :components ((:file "test-settings")))
+                :components ((:file "test-settings")
+                             (:file "test-task-integration")))
                (:file "test-analytics")
                (:module "email-tasks"
                 :components ((:file "test-task-integration")))
