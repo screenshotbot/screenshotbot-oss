@@ -183,4 +183,5 @@ the queue. Internal detail."
    :name "schedule-job"))
 
 (def-cron call-pending-scheduled-job ()
-  (call-pending-scheduled-jobs))
+  (when (boundp 'bknr.datastore:*store*)
+   (call-pending-scheduled-jobs)))
