@@ -12,7 +12,8 @@
    #:funcall-if
    #:?.
    #:or-setf
-   #:not-null!))
+   #:not-null!
+   #:uniq))
 (in-package :util/misc)
 
 
@@ -76,3 +77,12 @@
 
 (defmacro not-empty! (x)
   `(%not-null-or-empty ,x ',x))
+
+(defun uniq (list &key (test #'eql))
+  "Given a sorted list, remove adjacent duplicates"
+  (let ((ret nil))
+    (loop for x in list
+          if (or (null ret)
+                 (not (funcall test x (car ret))))
+            do (push x ret))
+    (nreverse ret)))
