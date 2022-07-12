@@ -231,6 +231,12 @@
    (eql nil (%image-state image))
    (not (%image-blob image))))
 
+(defclass local-image (image)
+  ((url :initarg :url
+        :accessor local-image-url))
+  (:metaclass persistent-class)
+  (:documentation "An IMAGE, that's used only for testing purposes locally"))
+
 (defmethod %with-local-image ((image image) fn)
   (cond
     ((image-not-uploaded-yet-p image)
@@ -620,12 +626,6 @@
 
 ;; Please delete in the future, only for a migration
 (defmethod (setf company) :after ((company company) (image image)))
-
-(defclass local-image (image)
-  ((url :initarg :url
-        :accessor local-image-url))
-  (:metaclass persistent-class)
-  (:documentation "An IMAGE, that's used only for testing purposes locally"))
 
 (defmethod image-hash ((image local-image))
   ;; this is probably only used for tests... hopefully doesn't hit in
