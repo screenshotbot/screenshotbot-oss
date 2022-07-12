@@ -141,7 +141,8 @@
 
 
 (defun main (&key (enable-store t)
-               (jvm t))
+               (jvm t)
+               (acceptor *multi-acceptor*))
   "Called from launch scripts, either web-bin or launch.lisp"
 
   (unwind-on-interrupt ()
@@ -154,7 +155,7 @@
           (multiple-value-bind (vars vals matched dispatch rest)
               (cl-cli:parse-cli args
                                 *options*)
-
+            (declare (ignore matched dispatch rest))
             (loop for var in vars
                   for val in vals
                   do (setf (symbol-value var) val))
@@ -204,22 +205,24 @@
               (*shell*
                (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
               (t
-               (hunchentoot:start *multi-acceptor*)))
+               (hunchentoot:start acceptor)))
 
             (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
-                      *port*)
+                      (hunchentoot:acceptor-port acceptor))
 
             (setup-appenders :clear t)
 
             (log:info "Now we wait indefinitely for shutdown notifications"))))
 
     ;; unwind if an interrupt happens
-    (format t "SHUTTING DOWN~%")
+    (log:config :sane :immediate-flush t)
+    (log:config :info)
+    (log:info "SHUTTING DOWN~%")
     (finish-output t)
     (log:info "Shutting down cron")
     (cl-cron:stop-cron)
     (log:info "Shutting down hunchentoot")
-    (hunchentoot:stop *multi-acceptor*)
+    (hunchentoot:stop acceptor)
 
     ;;;; Don't snapshot the store, if the process is killed while the
     ;;;; snapshot is happening, we have to manually recover the store
@@ -247,6 +250,7 @@
               unless (member (mp:process-name p)
                              '("Hierarchy Watcher"
                                "The idle process"
+                               "Initial delivery process"
                                "Restart Function Process")
                              :test 'string=)
               collect p)))
