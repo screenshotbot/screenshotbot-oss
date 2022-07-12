@@ -142,7 +142,7 @@
 
 (defun main (&key (enable-store t)
                (jvm t)
-               (acceptor *multi-acceptor*))
+               acceptor)
   "Called from launch scripts, either web-bin or launch.lisp"
 
   (unwind-on-interrupt ()
@@ -177,7 +177,10 @@
               (uiop:quit 0))
 
             (log:info "The port is now ~a" *port*)
-            (init-multi-acceptor)
+
+            (unless acceptor
+              (init-multi-acceptor)
+              (setf acceptor *multi-acceptor*))
             #+lispworks
             (when jvm
              (jvm:jvm-init))
