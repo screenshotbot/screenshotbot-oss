@@ -11,7 +11,8 @@
    #:fix-for-webp
    #:funcall-if
    #:?.
-   #:or-setf))
+   #:or-setf
+   #:not-null!))
 (in-package :util/misc)
 
 
@@ -58,3 +59,20 @@
      `(or
        ,place
        (setf ,place ,expr)))))
+
+
+(defun %not-null (x expr)
+  (cond
+    (x x)
+    (t (error "Expected ~s to eval to a not null value" expr))))
+
+(defmacro not-null! (x)
+  `(%not-null ,x ',x))
+
+(defun %not-null-or-empty (x expr)
+  (cond
+    ((not (str:emptyp  x)) x)
+    (t (error "Expected ~s to eval to a non-empty value" expr))))
+
+(defmacro not-empty! (x)
+  `(%not-null-or-empty ,x ',x))
