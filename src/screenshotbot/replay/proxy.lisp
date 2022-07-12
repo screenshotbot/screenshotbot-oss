@@ -54,13 +54,23 @@
      ;; todo: error handling: if this endpoint goes down then just a local
      ;; proxy.
      "http://10.9.8.2:5004")
+    #+screenshotbot-oss
     (t
-     (ensure-local-proxy))))
+     (ensure-local-proxy))
+    (t
+     ;; This is the docker host. The proxy will run on the host
+     ;; container since we need it to create docker containers.
+     "http://172.17.0.1:5004")))
 
-(defmacro def-proxy-handler ((name &key uri) args &body body)
-  (assert name)
-  `(hunchentoot:define-easy-handler (,name :uri ,uri :acceptor-names '(replay-proxy)) ,args
-     ,@body))
+(defun %handler-wrap (fn)
+  (funcall fn))
+
+(defmacro def-proxy-handler ((name &key uri method) args &body body)
+  `(hex:better-easy-handler (,name :uri ,uri :acceptor-names '(replay-proxy) :method ,method) ,args
+     (%handler-wrap
+      (lambda ()
+        ,@body))))
+
 
 (defun oid-pathname (oid)
   (path:catfile (cache-dir *acceptor*) (format nil "~a.png" oid)))
@@ -79,6 +89,38 @@
       (json:encode-json-to-string
        `((:oid . ,oid)
          (:md5 . ,(ironclad:byte-array-to-hex-string (md5-file path))))))))
+
+(def-proxy-handler (nil :uri "/wd/hub") ()
+  (error "Unimpl"))
+
+(auto-restart:with-auto-restart ()
+ (defun relay-request ()
+   (let ((content (hunchentoot:raw-post-data))
+         (script-name (hunchentoot:script-name*)))
+     (multiple-value-bind (data ret headers)
+         (util/request:http-request
+          (format nil "http://localhost:4444~a"
+                  script-name)
+          :method (hunchentoot:request-method*)
+          :want-string t
+          :content-type (hunchentoot:content-type*)
+          :content content)
+       (assert (not (eql ret 500)))
+       (setf (hunchentoot:return-code*) ret)
+       (setf (hunchentoot:content-type*) (a:assoc-value headers :content-type))
+       data))))
+
+(def-proxy-handler (nil :uri "/wd/hub/session" :method :post) ()
+  (relay-request))
+
+(def-proxy-handler (nil :uri (lambda (request)
+                               (let ((script-name (hunchentoot:script-name request)))
+                                 (let ((prefix "/wd/hub/session/"))
+                                  (and
+                                   (str:starts-with-p prefix script-name)
+                                   (> (length script-name) (length prefix)))))))
+                   ()
+  (relay-request))
 
 (def-proxy-handler (%download :uri "/download") (oid)
   (assert (ironclad:hex-string-to-byte-array oid))

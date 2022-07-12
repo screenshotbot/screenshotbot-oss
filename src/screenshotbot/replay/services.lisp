@@ -47,7 +47,7 @@
                           ((linode?)
                            "10.9.8.2")
                           (t
-                           "selenium-hub"))
+                           "172.17.0.1"))
                   :squid-proxy (cond
                                  #-screenshotbot-oss
                                  ((equal "safari" type)
@@ -59,5 +59,9 @@
                                  (t
                                   ;; docker
                                   "squid:3128"))
-                  :port 4444
+                  :port (cond
+                         ((or (oss?) (linode?))
+                          4444)
+                         (t
+                          5004))
                   :type nil))
