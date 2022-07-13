@@ -18,15 +18,6 @@
   *hub*)
 
 (auto-restart:with-auto-restart ()
- (defun relay-request (&key content
-                         script-name
-                         method
-                         )
-))
-
-
-
-(auto-restart:with-auto-restart ()
  (defmethod request-session-and-respond ((hub local-hub)
                                          (arguments string))
    (multiple-value-bind (data ret)
