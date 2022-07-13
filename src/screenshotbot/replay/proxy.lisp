@@ -20,6 +20,9 @@
                 #:linode?)
   (:import-from #:util/digests
                 #:md5-file)
+  (:import-from #:screenshotbot/hub/server
+                #:request-session-and-respond
+                #:hub)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:*proxy-port*
@@ -111,7 +114,12 @@
        data))))
 
 (def-proxy-handler (nil :uri "/wd/hub/session" :method :post) ()
-  (relay-request))
+  (let ((content (hunchentoot:raw-post-data
+                  :force-text t)))
+    (let ((hub (hub)))
+      (request-session-and-respond
+       hub
+       content))))
 
 (def-proxy-handler (nil :uri (lambda (request)
                                (let ((script-name (hunchentoot:script-name request)))

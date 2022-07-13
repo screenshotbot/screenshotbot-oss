@@ -398,6 +398,7 @@
                :drakma
                :markup
                :screenshotbot/webdriver
+               :screenshotbot/hub
                :closer-mop
                :plump)
   :components ((:module "replay"
@@ -416,6 +417,14 @@
                              (:file "scheduler")
                              (:file "device-list")
                              (:file "browsers")))))
+
+(defsystem :screenshotbot/hub
+  :serial t
+  :depends-on (:util/request
+               :hunchentoot
+               :cl-json)
+  :components ((:module "hub"
+                :components ((:file "server")))))
 
 (defsystem :screenshotbot/webdriver
   :serial t
