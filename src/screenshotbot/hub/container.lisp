@@ -11,7 +11,11 @@
 
 (defclass container ()
   ((cid :accessor container-id
-        :initarg :container-id)))
+        :initarg :container-id)
+   (container-ipaddr
+    :initarg :container-ipaddr
+    :reader container-ipaddr)))
+
 (defmethod print-object ((self container) out)
   (format out "#<CONTAINER ~a>" (str:substring 0 8 (container-id self))))
 
@@ -25,10 +29,18 @@
 
 (defun make-container (image &key port)
   (let ((args (list image)))
-    (let ((container-id  (run*
-                          (list* "docker" "run" "-d" args))))
+    (let* ((container-id  (str:trim (run*
+                                     (list* "docker" "run" "-d" args))))
+           (ipaddr (str:trim (run*
+                              (list "docker" "inspect"
+                                     "--format" "{{ .NetworkSettings.IPAddress }}"
+                                     container-id)))))
+
+
       (make-instance 'container
-                      :container-id (str:trim container-id)))))
+                      :container-id container-id
+                      :container-ipaddr ipaddr))))
+
 
 
 (defmethod container-stop ((self container))
