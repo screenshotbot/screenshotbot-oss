@@ -60,7 +60,7 @@
                                   ;; docker
                                   "squid:3128"))
                   :port (cond
-                         ((or (oss?) (linode?))
+                         ((or (oss?))
                           4444)
                          (t
                           5004))
