@@ -2,7 +2,8 @@
   (:use #:cl)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:hub))
+   #:hub
+   #:relay-session-request))
 (in-package :screenshotbot/hub/server)
 
 (defclass local-hub ()
@@ -15,6 +16,15 @@
 
 (defun hub ()
   *hub*)
+
+(auto-restart:with-auto-restart ()
+ (defun relay-request (&key content
+                         script-name
+                         method
+                         )
+))
+
+
 
 (auto-restart:with-auto-restart ()
  (defmethod request-session-and-respond ((hub local-hub)
@@ -31,3 +41,23 @@
      (setf (hunchentoot:return-code*) ret)
      (setf (hunchentoot:content-type*) +json-content-type+)
      data)))
+
+(auto-restart:with-auto-restart ()
+  (defmethod relay-session-request ((hub local-hub)
+                                    &key (method (error "provide method"))
+                                      (script-name (error "provide-script-name"))
+                                      (content (error "provide content"))
+                                      (content-type (error "provide-content-type")))
+    (log:info "Relaying request for ~a" script-name)
+    (multiple-value-bind (data ret headers)
+        (util/request:http-request
+         (format nil "http://localhost:4444~a"
+                 script-name)
+         :method method
+         :want-string t
+         :content-type content-type
+         :content content)
+      (assert (not (eql ret 500)))
+      (setf (hunchentoot:return-code*) ret)
+      (setf (hunchentoot:content-type*) (a:assoc-value headers :content-type))
+      data)))

@@ -21,6 +21,7 @@
   (:import-from #:util/digests
                 #:md5-file)
   (:import-from #:screenshotbot/hub/server
+                #:relay-session-request
                 #:request-session-and-respond
                 #:hub)
   (:local-nicknames (#:a #:alexandria))
@@ -96,23 +97,6 @@
 (def-proxy-handler (nil :uri "/wd/hub") ()
   (error "Unimpl"))
 
-(auto-restart:with-auto-restart ()
- (defun relay-request ()
-   (let ((content (hunchentoot:raw-post-data))
-         (script-name (hunchentoot:script-name*)))
-     (multiple-value-bind (data ret headers)
-         (util/request:http-request
-          (format nil "http://localhost:4444~a"
-                  script-name)
-          :method (hunchentoot:request-method*)
-          :want-string t
-          :content-type (hunchentoot:content-type*)
-          :content content)
-       (assert (not (eql ret 500)))
-       (setf (hunchentoot:return-code*) ret)
-       (setf (hunchentoot:content-type*) (a:assoc-value headers :content-type))
-       data))))
-
 (def-proxy-handler (nil :uri "/wd/hub/session" :method :post) ()
   (let ((content (hunchentoot:raw-post-data
                   :force-text t)))
@@ -128,7 +112,13 @@
                                    (str:starts-with-p prefix script-name)
                                    (> (length script-name) (length prefix)))))))
                    ()
-  (relay-request))
+  (let ((hub (hub)))
+    (relay-session-request hub
+                           :method (hunchentoot:request-method*)
+                           :content (hunchentoot:raw-post-data :force-text t)
+                           :content-type (hunchentoot:content-type*)
+                           :script-name (hunchentoot:script-name*))
+   (relay-request)))
 
 (def-proxy-handler (%download :uri "/download") (oid)
   (assert (ironclad:hex-string-to-byte-array oid))
