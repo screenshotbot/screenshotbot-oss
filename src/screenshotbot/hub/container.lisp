@@ -27,6 +27,12 @@
    :error-output *standard-output*
    :output output))
 
+(defun build-image (tag dockerfile)
+  (run*
+   (list "docker" "build" "-t" tag
+         "-f" dockerfile ".")
+   :output *standard-output*))
+
 (defun make-container (image &key port)
   (let ((args (list image)))
     (let* ((container-id  (str:trim (run*

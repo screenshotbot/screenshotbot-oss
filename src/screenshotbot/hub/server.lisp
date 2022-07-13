@@ -9,13 +9,21 @@
 (defclass local-hub ()
   ())
 
+
 (defparameter +json-content-type+
   "application/json; charset=UTF-8")
 
-(defvar *hub* (make-instance 'local-hub))
+(defvar *hub* nil)
 
 (defun hub ()
-  *hub*)
+  (util:or-setf
+   *hub*
+   (let ((hub (make-instance 'hub)))
+     (start-hub hub)
+     hub)
+   :thread-safe t))
+
+(defmethod start-hub ((self local-hub)))
 
 (auto-restart:with-auto-restart ()
  (defmethod request-session-and-respond ((hub local-hub)
