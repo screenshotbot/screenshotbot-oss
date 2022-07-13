@@ -424,7 +424,8 @@
                :hunchentoot
                :cl-json)
   :components ((:module "hub"
-                :components ((:file "server")))))
+                :components ((:file "server")
+                             (:file "container")))))
 
 (defsystem :screenshotbot/webdriver
   :serial t
