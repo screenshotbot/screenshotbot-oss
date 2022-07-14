@@ -168,7 +168,7 @@
                                                    :cert-file *ssl-cert*
                                                    :implementation :openssl))))
     (setf *remote-debugging-process*
-     (dbg:start-client-remote-debugging-server
+     (util/remote-debugging:start-client-remote-debugging-server
       :port port
       :ssl ssl-ctx)))
   (log:info "Remote debugging server started"))

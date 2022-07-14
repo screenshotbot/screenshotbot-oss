@@ -110,6 +110,12 @@
                :hunchentoot)
   :components ((:file "misc")))
 
+#+lispworks
+(defsystem :util/remote-debugging
+  :serial t
+  :depends-on ((:require "remote-debugger-client"))
+  :components ((:file "remote-debugging")))
+
 (defsystem :util/testing
   :serial t
   :depends-on (:fiveam

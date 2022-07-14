@@ -10,6 +10,8 @@
                "cl-cron"
                #+ (or ccl lispworks)
                "jvm"
+               #+lispworks
+               "util/remote-debugging"
                "bordeaux-threads"
                "bknr.datastore"
                "hunchentoot-multi-acceptor")
