@@ -25,6 +25,15 @@
 (defvar *socketmaster*)
 (defvar *shell*)
 (defvar *start-slynk*)
+
+;; Reminder you can generate a self-signed pair like so:
+;; openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -sha256 -days 365 -nodes -subj '/CN=localhost'
+
+(defvar *ssl-key*)
+(defvar *ssl-cert*)
+
+(defvar *remote-debugging-client-port*)
+
 (defvar *slynk-loopback-interface*)
 
 (defparameter *options*
@@ -46,7 +55,16 @@
     (*verify-store* nil "")
     (*verify-snapshots* nil "")
     #-sbcl
-    (jvm:*libjvm* nil "Location of libjvm.so" :params ("LIBJVM"))))
+    (jvm:*libjvm* nil "Location of libjvm.so" :params ("LIBJVM"))
+    (*ssl-key* nil "SSL Key to be used for remote-debugging-client and other services"
+               :params ("SSL-KEY"))
+    (*ssl-cert* nil "Corresponding SSL Certificate file"
+                :params ("SSL-CERT"))
+    (*remote-debugging-client-port*
+     nil
+     "A port to open a Lispworks remote debugging client. If SSL key is
+ provided, we'll attach an SSL context to the socket"
+     :params ("REMOTE-DEBUGGING-CLIENT-PORT"))))
 
 (defclass my-acceptor (hunchentoot-multi-acceptor:multi-acceptor)
   ())
@@ -139,6 +157,21 @@
 (defun setup-log4cl-debugger-hook ()
   )
 
+(defvar *remote-debugging-process* nil)
+
+#+lispworks
+(defun start-remote-debugging-client (port)
+  (log:info "Starting remote debugging server on port ~a" port)
+  (let ((ssl-ctx (when *ssl-key*
+                   (log:info "Using SSL key at ~a" *ssl-key*)
+                   (comm:create-ssl-server-context :key-file *ssl-key*
+                                                   :cert-file *ssl-cert*
+                                                   :implementation :openssl))))
+    (setf *remote-debugging-process*
+     (dbg:start-client-remote-debugging-server
+      :port port
+      :ssl ssl-ctx)))
+  (log:info "Remote debugging server started"))
 
 (defun main (&key (enable-store t)
                (jvm t)
@@ -162,6 +195,11 @@
 
             (when *start-slynk*
               (slynk-prepare *slynk-preparer*))
+
+            #+lispworks
+            (when *remote-debugging-client-port*
+              (start-remote-debugging-client
+               *remote-debugging-client-port*))
 
             (when *verify-store*
               (log:config :info)
@@ -233,6 +271,10 @@
 
     (when enable-store
       (bknr.datastore:close-store))
+
+    #+lispworks
+    (when *remote-debugging-process*
+      (comm:server-terminate *remote-debugging-process*))
 
     (log:info "Shutting down slynk")
     (slynk-teardown *slynk-preparer*)
