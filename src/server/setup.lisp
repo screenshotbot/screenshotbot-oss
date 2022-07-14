@@ -33,7 +33,7 @@
 (defvar *ssl-cert*)
 
 (defvar *remote-debugging-client-port*)
-
+(defvar *remote-debugging-password*)
 (defvar *slynk-loopback-interface*)
 
 (defparameter *options*
@@ -64,7 +64,11 @@
      nil
      "A port to open a Lispworks remote debugging client. If SSL key is
  provided, we'll attach an SSL context to the socket"
-     :params ("REMOTE-DEBUGGING-CLIENT-PORT"))))
+     :params ("REMOTE-DEBUGGING-CLIENT-PORT"))
+    (*remote-debugging-password*
+     nil
+     "A password required for a client to connect"
+     :params ("REMOTE-DEBUGGING-CLIENT"))))
 
 (defclass my-acceptor (hunchentoot-multi-acceptor:multi-acceptor)
   ())
@@ -163,13 +167,14 @@
 (defun start-remote-debugging-client (port)
   (log:info "Starting remote debugging server on port ~a" port)
   (let ((ssl-ctx (when *ssl-key*
-                   (log:info "Using SSL key at ~a" *ssl-key*)
+                   (log:info "Using SSL key at ~a, cert at ~a" *ssl-key* *ssl-cert*)
                    (comm:create-ssl-server-context :key-file *ssl-key*
                                                    :cert-file *ssl-cert*
                                                    :implementation :openssl))))
     (setf *remote-debugging-process*
      (util/remote-debugging:start-client-remote-debugging-server
       :port port
+      :password *remote-debugging-password*
       :ssl ssl-ctx)))
   (log:info "Remote debugging server started"))
 
