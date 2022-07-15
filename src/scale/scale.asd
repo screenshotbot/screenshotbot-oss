@@ -1,4 +1,4 @@
-(defsytem :scale
+(defsystem :scale
   :serial t
   :depends-on (:util/request
                :str)
