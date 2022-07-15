@@ -62,20 +62,21 @@
                 :method :post
                 :parameters `(("image" . "linode/debian11")
                               ("root_pass" . "ArnoshLighthouse1987")
+                              ("authorized_keys" .
+                                                 #(,(str:trim (uiop:read-file-string (secret-file "id_rsa.pub")))))
                               ("region" . "us-east")
                               ("tags" . #("scale"))
                               ("type" . "g6-nanode-1")
                               ("stackscript_id" . 1024979)
                               ("stackscript_data"
-                               . (("SB_AUTHORIZED_KEYS"
-                                   . ,(uiop:read-file-string (secret-file "id_rsa.pub")))
-                                  ("SB_SECRET" . "secret")))))))
+                               . (("SB_SECRET" . "secret")))))))
     (make-instance 'instance
                     :id (a:assoc-value image :id)
                     :provider self
                     :ipv4 (car (a:assoc-value image :ipv-4)))))
 
 (defmethod delete-instance ((instance instance))
+  (log:info "Deleting ~a" instance)
   (http-request
    (provider instance)
    (format nil "/linode/instances/~a" (instance-id instance))
@@ -85,6 +86,8 @@
   (let ((image (http-request
                 (provider instance)
                 (format nil "/linode/instances/~a" (instance-id instance)))))
+    #+nil
+    (log:info "Got response: ~S" image)
     (let ((status (a:assoc-value image :status)))
       (log:info "Instance not ready: ~a" status)
       (equal "running" status))))
@@ -112,5 +115,5 @@
     (unwind-protect
          (progn
            (wait-for-ready instance)
-           (ssh-run instance "cat /root/sb_secret"))
+           (ssh-run instance "ls -a  /root/"))
       (delete-instance instance))))
