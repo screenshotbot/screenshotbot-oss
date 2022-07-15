@@ -99,29 +99,30 @@
                             &key                              region)
   (declare (ignore type region))
   (let ((secret (secure-random:number 1000000000000000000000000000000000000)))
-   (let ((image (http-request
-                 self
-                 "/linode/instances"
-                 :method :post
-                 :parameters `(("image" . "linode/debian11")
-                               ("root_pass" . "ArnoshLighthouse1987")
-                               ("authorized_keys" .
-                                                  #(,(str:trim (uiop:read-file-string (secret-file "id_rsa.pub")))))
-                               ("region" . "us-east")
-                               ("tags" . #("scale"))
-                               ("type" . "g6-nanode-1")
-                               ("stackscript_id" . 1024979)
-                               ("stackscript_data"
-                                . (("SB_CALLBACK_URL" . ,(callback-url self secret))))))))
-     (let ((instance
-             (make-instance 'instance
-                             :id (a:assoc-value image :id)
-                             :provider self
-                             :secret secret
-                             :ipv4 (car (a:assoc-value image :ipv-4)))))
-       (bt:with-lock-held (*lock*)
-        (push instance *instances*))
-       instance))))
+    (log:info "Making linode create-instance request")
+    (let ((image (http-request
+                  self
+                  "/linode/instances"
+                  :method :post
+                  :parameters `(("image" . "linode/debian11")
+                                ("root_pass" . "ArnoshLighthouse1987")
+                                ("authorized_keys" .
+                                                   #(,(str:trim (uiop:read-file-string (secret-file "id_rsa.pub")))))
+                                ("region" . "us-east")
+                                ("tags" . #("scale"))
+                                ("type" . "g6-nanode-1")
+                                ("stackscript_id" . 1024979)
+                                ("stackscript_data"
+                                 . (("SB_CALLBACK_URL" . ,(callback-url self secret))))))))
+      (let ((instance
+              (make-instance 'instance
+                              :id (a:assoc-value image :id)
+                              :provider self
+                              :secret secret
+                              :ipv4 (car (a:assoc-value image :ipv-4)))))
+        (bt:with-lock-held (*lock*)
+          (push instance *instances*))
+        instance))))
 
 (defmethod delete-instance ((instance instance))
   (log:info "Deleting ~a" instance)
@@ -167,22 +168,43 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
 
 ;; (rewrite-known-hosts *test* "1.2.3.4")
 
+
+(defmacro with-known-hosts ((name self) &body body)
+  `(uiop:with-temporary-file (:pathname known-hosts :stream s :direction :output)
+     (write-string (rewrite-known-hosts (known-hosts self)
+                                        (ip-address self)) s)
+     (finish-output s)
+     ,@body))
+
 (auto-restart:with-auto-restart ()
  (defmethod ssh-run ((self instance) cmd
                      &key (output *standard-output*)
                        (error-output *standard-output*))
-   (uiop:with-temporary-file (:pathname known-hosts :stream s :direction :output)
-     (write-string (rewrite-known-hosts (known-hosts self)
-                                        (ip-address self)) s)
-     (finish-output s)
+   (with-known-hosts (known-hosts self)
      (uiop:run-program
-      `("ssh" "-o" ,(format nil "UserKnownHostsFile=~a" (namestring known-hosts))
-              "-i" ,(secret-file "id_rsa")
-              ,(format nil "root@~a" (ip-address self))
-              "bash" "-c" ,(uiop:escape-sh-token cmd))
+      `("ssh" ,@ (ssh-opts self known-hosts)
+                 ,(format nil "root@~a" (ip-address self))
+                 "bash" "-c" ,(uiop:escape-sh-token cmd))
       :output output
       :error-output error-output))))
 
+(defmethod ssh-opts ((self instance) known-hosts)
+  `("-o" ,(format nil "UserKnownHostsFile=~a" (namestring known-hosts))
+         "-i" ,(secret-file "id_rsa")))
+
+(auto-restart:with-auto-restart ()
+  (defmethod scp ((self instance) from to)
+    (with-known-hosts (known-hosts self)
+     (uiop:run-program
+      `("scp"
+        ,@ (ssh-opts self known-hosts)
+        ,(namestring from)
+        ,(format nil "root@~a:~a" (ip-address self)
+                 (namestring to)))
+      :output *standard-output*
+      :error-output *standard-output*))))
+
 #+nil
 (with-instance (self (make-instance 'linode) :small)
-  (ssh-run self "ls /"))
+  (scp self "/home/arnold/builds/web/.gitignore" "/root/default.css")
+  (ssh-run self "ls /root/"))
