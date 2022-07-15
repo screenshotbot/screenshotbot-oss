@@ -24,9 +24,13 @@
    (loop for instance in *instances*
          if (eql (instance-secret instance) secret)
            do
-              (bt:with-lock-held ((lock instance))
-                (setf (callback-received-p instance) t)
-                (bt:condition-notify (cv instance))))))
+              (unless (callback-received-p instance)
+                (let ((body (hunchentoot:raw-post-data :force-text t)))
+                  (log:info "got body as: ~S" body)
+                  (bt:with-lock-held ((lock instance))
+                    (setf (callback-received-p instance) t)
+                    (setf (known-hosts instance) body)
+                    (bt:condition-notify (cv instance))))))))
 
 (defclass linode ()
   ((access-token :initarg :access-token
@@ -48,6 +52,8 @@
          :reader ip-address)
    (secret :initarg :secret
            :reader instance-secret)
+   (known-hosts :initarg :known-hosts
+                :accessor known-hosts)
    (cv :initform (bt:make-condition-variable)
        :reader cv)
    (lock :initform (bt:make-lock)
@@ -150,17 +156,32 @@
           finally
           (error "Did not receive callback"))))
 
+(defvar *test* "localhost ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMi3Pnzlr84phRm3h6eKmX4FaVtrZuQ0kUCcplbofdL1
+localhost ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDacgrVkYfIr0L8dbyanWOFy+P6Ltee0NKQufoiLKnmiTeFfjQxKCl/zDXTX3B7ZjjMAcGNazLEkswYilB4XMqXtUyoBNCTtcHU/PToSJ/UJk+qXn0+ieh/Kvv6rpr+4Kks0kUvyb/5EKf0G+eoHTAaS5CvGSYiZ4FT0ReObp1unHY5Q9eycLunYsCloKiUrOQT33p9qBh0tUID0VZlUyHinKKG8LRFYbm4XautECng26SpIzMSxrU6/XFKI7+ou98P6A8S31FPLbXQ+6dQ/kwevhlgwYsQZYf0CtibGSvsLRMLFahmRzkPUfw3wmnwutEqNdpdH/NKrafO5w54up1/H35ouyrwoNCbw+cFM8qEdOwcO2wgv7RbwjRVzlxl+erIrdu58DBGvBJPDyYBedUNOi4vtwDUJtPqxgK1V8ew6WPHicox9qDm5L7nGsfgF7go3DIRRtqRQDku/mK8kmAtziSeJ63iXAUXZpFo1jW7PmUki1+mlm1cUY3EKn/Wjb8=
+localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBIxj05X+4ZdA96pHEBYfRsgNQO2kKUBbkBnuUNcQ+aZqg7z78K1RT3vGTr9100SP2bLB3kDPID4xJf+357bp4HY=")
+
+(defun rewrite-known-hosts (input ip-addr)
+  (cl-ppcre:regex-replace-all "^localhost "
+                              input
+                              (format nil "~a " ip-addr)))
+
+;; (rewrite-known-hosts *test* "1.2.3.4")
+
 (auto-restart:with-auto-restart ()
  (defmethod ssh-run ((self instance) cmd
                      &key (output *standard-output*)
                        (error-output *standard-output*))
-   (uiop:run-program
-    `("ssh" "-o" "StrictHostKeyChecking=no"
-            "-i" ,(secret-file "id_rsa")
-            ,(format nil "root@~a" (ip-address self))
-            "bash" "-c" ,(uiop:escape-sh-token cmd))
-    :output output
-    :error-output error-output)))
+   (uiop:with-temporary-file (:pathname known-hosts :stream s :direction :output)
+     (write-string (rewrite-known-hosts (known-hosts self)
+                                        (ip-address self)) s)
+     (finish-output s)
+     (uiop:run-program
+      `("ssh" "-o" ,(format nil "UserKnownHostsFile=~a" (namestring known-hosts))
+              "-i" ,(secret-file "id_rsa")
+              ,(format nil "root@~a" (ip-address self))
+              "bash" "-c" ,(uiop:escape-sh-token cmd))
+      :output output
+      :error-output error-output))))
 
 #+nil
 (let ((linode (make-instance 'linode :callback-server "https://staging.screenshotbot.io")))
