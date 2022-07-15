@@ -12,7 +12,10 @@
 (defclass instance ()
   ((id :initarg :id
        :reader instance-id)
-   (ipv4 :initarg :ipv4)))
+   (ipv4 :initarg :ipv4
+         :reader ip-address)
+   (provider :initarg :provider
+             :reader provider)))
 
 (defun http-request (linode url &rest args &key parameters &allow-other-keys)
   (multiple-value-bind (response err)
@@ -51,19 +54,39 @@
                 :parameters `(("image" . "linode/debian11")
                               ("root_pass" . "ArnoshLighthouse1987")
                               ("region" . "us-east")
-                              ("type" . "g6-nanode-1")))))
+                              ("tags" . #("scale"))
+                              ("type" . "g6-nanode-1")
+                              ("stackscript_id" . 1024979)
+                              ("stackscript_data"
+                               . (("SB_AUTHORIZED_KEYS"
+                                   . ,(uiop:read-file-string "~/.ssh/id_rsa.pub"))
+                                  ("SB_SECRET" . "secret")))))))
     (make-instance 'instance
                     :id (a:assoc-value image :id)
-                    :ipv4 (a:assoc-value image :ipv-4))))
+                    :provider self
+                    :ipv4 (car (a:assoc-value image :ipv-4)))))
 
-(defmethod delete-instance ((self linode)
-                            (instance instance))
+(defmethod delete-instance ((instance instance))
   (http-request
-   self
+   (provider instance)
    (format nil "/linode/instances/~a" (instance-id instance))
    :method :delete))
 
+(auto-restart:with-auto-restart ()
+ (defmethod ssh-run ((self instance) cmd
+                     &key (output *standard-output*)
+                       (error-output *standard-output*))
+   (uiop:run-program
+    `("ssh" "-o" "StrictHostKeyChecking=no"
+            ,(format nil "root@~a" (ip-address self))
+            "bash" "-c" ,(uiop:escape-sh-token cmd))
+    :output output
+    :error-output error-output)))
 
 #+nil
 (let ((linode (make-instance 'linode)))
-  (create-instance linode :small))
+  (let ((instance (create-instance linode :small)))
+    (unwind-protect
+         (progn
+           (ssh-run instance "ls /root/"))
+      (delete-instance instance))))
