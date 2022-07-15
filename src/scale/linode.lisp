@@ -72,6 +72,19 @@
    (format nil "/linode/instances/~a" (instance-id instance))
    :method :delete))
 
+(defmethod readyp ((instance instance))
+  (let ((image (http-request
+                (provider instance)
+                (format nil "/linode/instances/~a" (instance-id instance)))))
+    (let ((status (a:assoc-value image :status)))
+      (log:info "Instance not ready: ~a" status)
+      (equal "running" status))))
+
+(defmethod wait-for-ready ((instance instance))
+  (loop for i from 0 to 100
+        until (readyp instance)
+        do (sleep 1)))
+
 (auto-restart:with-auto-restart ()
  (defmethod ssh-run ((self instance) cmd
                      &key (output *standard-output*)
@@ -88,5 +101,6 @@
   (let ((instance (create-instance linode :small)))
     (unwind-protect
          (progn
-           (ssh-run instance "ls /root/"))
+           (wait-for-ready instance)
+           (ssh-run instance "cat /root/sb_secret"))
       (delete-instance instance))))
