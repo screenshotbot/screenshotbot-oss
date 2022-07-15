@@ -55,11 +55,29 @@ end" out))
                     &key (output *standard-output*) (error-output *standard-output*))
   (log:info "Running command ~S on vagrant" cmd)
   (run*
-   (list "vagrant" "ssh" "-c" cmd)
+   (list "vagrant" "ssh" "-c" (format nil "sudo bash -c ~a" (uiop:escape-sh-token cmd)))
    :output output
    :error-output error-output
    :directory (tmpdir self)))
 
+(auto-restart:with-auto-restart ()
+ (defmethod scp ((self instance)
+                 from
+                 to)
+   (log:info "Copying file")
+   (let ((tmpfile (format nil "/tmp/a~a" (secure-random:number 10000000000000000000))))
+     (run*
+      (list "vagrant" "scp"
+            (namestring from) (format nil ":~a" tmpfile))
+      :directory (tmpdir self))
+     (ssh-run
+      self
+      (list "mv" tmpfile (namestring to)))
+     (ssh-run
+      self
+      (list "chown" "root:root" (namestring to))))))
+
 #+nil
 (with-instance (instance (make-instance 'vagrant) :small)
-  (ssh-run instance "ls /"))
+  (ssh-run instance "whoami")
+  (scp instance "~/default.css" "/root/default.css"))
