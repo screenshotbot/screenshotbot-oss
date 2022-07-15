@@ -12,6 +12,14 @@
      "../../.secrets/")
     name)))
 
+(defvar *lock* (bt:make-lock))
+
+(defvar *instances* nil)
+
+(hunchentoot:define-easy-handler (linode-ready
+                                  :uri "/scale/linode/ready")
+    )
+
 (defclass linode ()
   ((access-token :initarg :access-token
                  :reader access-token
@@ -23,6 +31,8 @@
        :reader instance-id)
    (ipv4 :initarg :ipv4
          :reader ip-address)
+   (secret :initarg :secret
+           :reader instance-secret)
    (provider :initarg :provider
              :reader provider)))
 
@@ -56,27 +66,35 @@
                             type
                             &key                              region)
   (declare (ignore type region))
-  (let ((image (http-request
-                self
-                "/linode/instances"
-                :method :post
-                :parameters `(("image" . "linode/debian11")
-                              ("root_pass" . "ArnoshLighthouse1987")
-                              ("authorized_keys" .
-                                                 #(,(str:trim (uiop:read-file-string (secret-file "id_rsa.pub")))))
-                              ("region" . "us-east")
-                              ("tags" . #("scale"))
-                              ("type" . "g6-nanode-1")
-                              ("stackscript_id" . 1024979)
-                              ("stackscript_data"
-                               . (("SB_SECRET" . "secret")))))))
-    (make-instance 'instance
-                    :id (a:assoc-value image :id)
-                    :provider self
-                    :ipv4 (car (a:assoc-value image :ipv-4)))))
+  (let ((secret (secure-random:number 1000000000000000000000000000000000000)))
+   (let ((image (http-request
+                 self
+                 "/linode/instances"
+                 :method :post
+                 :parameters `(("image" . "linode/debian11")
+                               ("root_pass" . "ArnoshLighthouse1987")
+                               ("authorized_keys" .
+                                                  #(,(str:trim (uiop:read-file-string (secret-file "id_rsa.pub")))))
+                               ("region" . "us-east")
+                               ("tags" . #("scale"))
+                               ("type" . "g6-nanode-1")
+                               ("stackscript_id" . 1024979)
+                               ("stackscript_data"
+                                . (("SB_SECRET" . ,(format nil "~a" secret))))))))
+     (let ((instance
+             (make-instance 'instance
+                             :id (a:assoc-value image :id)
+                             :provider self
+                             :secret secret
+                             :ipv4 (car (a:assoc-value image :ipv-4)))))
+       (bt:with-lock-held (*lock*)
+        (push instance *instances*))
+       instance))))
 
 (defmethod delete-instance ((instance instance))
   (log:info "Deleting ~a" instance)
+  (bt:with-lock-held (*lock*)
+   (a:removef *instances* instance))
   (http-request
    (provider instance)
    (format nil "/linode/instances/~a" (instance-id instance))
