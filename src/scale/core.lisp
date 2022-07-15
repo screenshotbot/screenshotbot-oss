@@ -8,4 +8,4 @@
 
 (defgeneric create-instance (provider type &key region))
 
-(defgeneric delete-instance (provider instance))
+(defgeneric delete-instance (instance))
