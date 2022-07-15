@@ -7,4 +7,5 @@
                :bordeaux-threads
                :cl-fad)
   :components ((:file "core")
-               (:file "linode")))
+               (:file "linode")
+               (:file "vagrant")))
