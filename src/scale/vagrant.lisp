@@ -50,6 +50,16 @@ end" out))
 (defmethod wait-for-ready ((self instance))
   t)
 
+(defmethod ssh-run ((self instance)
+                    (cmd string)
+                    &key (output *standard-output*) (error-output *standard-output*))
+  (log:info "Running command ~S on vagrant" cmd)
+  (run*
+   (list "vagrant" "ssh" "-c" cmd)
+   :output output
+   :error-output error-output
+   :directory (tmpdir self)))
+
 #+nil
 (with-instance (instance (make-instance 'vagrant) :small)
-  nil)
+  (ssh-run instance "ls /"))

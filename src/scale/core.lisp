@@ -14,6 +14,8 @@
 
 (defgeneric wait-for-ready (instance))
 
+(defgeneric ssh-run (instance cmd &key output error-output))
+
 (Defun call-with-instance (fn &rest args)
   (let ((instance (apply #'create-instance args)))
     (unwind-protect
