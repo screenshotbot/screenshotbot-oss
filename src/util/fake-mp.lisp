@@ -7,7 +7,8 @@
    #:process-p
    #:process-wait-for-event
    #:process-send
-   #:process-mailbox))
+   #:process-mailbox
+   #:process-wait))
 (in-package :util/fake-mp)
 
 
@@ -37,3 +38,7 @@
 (defun process-send (process message)
   (let ((mailbox (ensure-mailbox process)))
     (mailbox:post-mail message mailbox)))
+
+(defun process-wait (wait-reason wait-fn)
+  (loop while (not wait-fn)
+        do (sleep 0.1)))
