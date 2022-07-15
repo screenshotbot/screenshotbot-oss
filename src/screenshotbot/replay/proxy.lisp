@@ -117,8 +117,7 @@
                            :method (hunchentoot:request-method*)
                            :content (hunchentoot:raw-post-data :force-text t)
                            :content-type (hunchentoot:content-type*)
-                           :script-name (hunchentoot:script-name*))
-   (relay-request)))
+                           :script-name (hunchentoot:script-name*))))
 
 (def-proxy-handler (%download :uri "/download") (oid)
   (assert (ironclad:hex-string-to-byte-array oid))

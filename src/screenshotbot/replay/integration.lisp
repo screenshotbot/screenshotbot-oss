@@ -344,8 +344,7 @@ accessing the urls or sitemap slot."
        (let ((configs (browser-configs run)))
          (assert configs)
          (dolist (config configs)
-           (let ((selenium-server (selenium-server
-                                   :type (browser-type config))))
+           (with-selenium-server (selenium-server :type (browser-type config))
              (call-with-hosted-snapshot
               (company run)
               snapshot

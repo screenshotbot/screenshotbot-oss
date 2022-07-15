@@ -18,7 +18,7 @@
 (defun hub ()
   (util:or-setf
    *hub*
-   (let ((hub (make-instance 'hub)))
+   (let ((hub (make-instance 'local-hub)))
      (start-hub hub)
      hub)
    :thread-safe t))
