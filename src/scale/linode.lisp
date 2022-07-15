@@ -18,7 +18,15 @@
 
 (hunchentoot:define-easy-handler (linode-ready
                                   :uri "/scale/linode/ready")
-    )
+    (secret)
+  (log:info "Got callback for secret: ~a" secret)
+  (let ((secret (parse-integer secret)))
+   (loop for instance in *instances*
+         if (eql (instance-secret instance) secret)
+           do
+              (bt:with-lock-held ((lock instance))
+                (setf (callback-received-p instance) t)
+                (bt:condition-notify (cv instance))))))
 
 (defclass linode ()
   ((access-token :initarg :access-token
@@ -29,10 +37,17 @@
 (defclass instance ()
   ((id :initarg :id
        :reader instance-id)
+   (callback-received-p
+    :accessor callback-received-p
+    :initform nil)
    (ipv4 :initarg :ipv4
          :reader ip-address)
    (secret :initarg :secret
            :reader instance-secret)
+   (cv :initform (bt:make-condition-variable)
+       :reader cv)
+   (lock :initform (bt:make-lock)
+         :reader lock)
    (provider :initarg :provider
              :reader provider)))
 
@@ -80,7 +95,7 @@
                                ("type" . "g6-nanode-1")
                                ("stackscript_id" . 1024979)
                                ("stackscript_data"
-                                . (("SB_SECRET" . ,(format nil "~a" secret))))))))
+                                . (("SB_CALLBACK_URL" . ,(format nil "https://staging.screenshotbot.io/scale/linode/ready?secret=~a" secret))))))))
      (let ((instance
              (make-instance 'instance
                              :id (a:assoc-value image :id)
@@ -111,9 +126,18 @@
       (equal "running" status))))
 
 (defmethod wait-for-ready ((instance instance))
-  (loop for i from 0 to 100
-        until (readyp instance)
-        do (sleep 1)))
+  (bt:with-lock-held ((lock instance))
+    (loop for i from 0 to 100
+          do
+             (cond
+               ((callback-received-p instance)
+                (return))
+               (t
+                (log:info "Waiting for instance ~a to be ready" instance)
+                (bt:condition-wait (cv instance) (lock instance)
+                                   :timeout 1)))
+          finally
+          (error "Did not receive callback"))))
 
 (auto-restart:with-auto-restart ()
  (defmethod ssh-run ((self instance) cmd
