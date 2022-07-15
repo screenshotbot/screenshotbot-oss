@@ -184,10 +184,5 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
       :error-output error-output))))
 
 #+nil
-(let ((linode (make-instance 'linode :callback-server "https://staging.screenshotbot.io")))
-  (let ((instance (create-instance linode :small)))
-    (unwind-protect
-         (progn
-           (wait-for-ready instance)
-           (ssh-run instance "ls -a  /root/"))
-      (delete-instance instance))))
+(with-instance (self (make-instance 'linode) :small)
+  (ssh-run self "ls /"))
