@@ -32,7 +32,11 @@
   ((access-token :initarg :access-token
                  :reader access-token
                  :initform (str:trim (uiop:read-file-string
-                                      (secret-file "linode-api-token"))))))
+                                      (secret-file "linode-api-token"))))
+   (callback-server
+    :initarg :callback-server
+    :initform "https://staging.screenshotbot.io"
+    :reader callback-server)))
 
 (defclass instance ()
   ((id :initarg :id
@@ -76,6 +80,13 @@
 (defun linode-images (linode)
   (http-request linode "/images"))
 
+(defmethod callback-url ((self linode) secret)
+  (quri:render-uri
+   (quri:merge-uris
+    (quri:uri (format nil "/scale/linode/ready?secret=~a"
+                      secret))
+    (quri:uri (callback-server self)))))
+
 
 (defmethod create-instance ((self linode)
                             type
@@ -95,7 +106,7 @@
                                ("type" . "g6-nanode-1")
                                ("stackscript_id" . 1024979)
                                ("stackscript_data"
-                                . (("SB_CALLBACK_URL" . ,(format nil "https://staging.screenshotbot.io/scale/linode/ready?secret=~a" secret))))))))
+                                . (("SB_CALLBACK_URL" . ,(callback-url self secret))))))))
      (let ((instance
              (make-instance 'instance
                              :id (a:assoc-value image :id)
@@ -152,7 +163,7 @@
     :error-output error-output)))
 
 #+nil
-(let ((linode (make-instance 'linode)))
+(let ((linode (make-instance 'linode :callback-server "https://staging.screenshotbot.io")))
   (let ((instance (create-instance linode :small)))
     (unwind-protect
          (progn

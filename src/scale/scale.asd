@@ -1,6 +1,10 @@
 (defsystem :scale
   :serial t
   :depends-on (:util/request
-               :str)
+               :str
+               :quri
+               :alexandria
+               :bordeaux-threads
+               :cl-fad)
   :components ((:file "core")
                (:file "linode")))
