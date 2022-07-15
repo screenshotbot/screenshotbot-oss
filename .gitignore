@@ -38,4 +38,4 @@ dummy-input
 static-web-output
 amazon-acceptance-test.zip
 tmp-upload
-.linode-api-token
+.secrets

@@ -4,10 +4,19 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :scale/linode)
 
+(defun secret-file (name)
+  (namestring
+   (path:catfile
+    (asdf:system-relative-pathname
+     :screenshotbot
+     "../../.secrets/")
+    name)))
+
 (defclass linode ()
   ((access-token :initarg :access-token
                  :reader access-token
-                 :initform (str:trim (uiop:read-file-string "~/.linode-api-token")))))
+                 :initform (str:trim (uiop:read-file-string
+                                      (secret-file "linode-api-token"))))))
 
 (defclass instance ()
   ((id :initarg :id
@@ -59,7 +68,7 @@
                               ("stackscript_id" . 1024979)
                               ("stackscript_data"
                                . (("SB_AUTHORIZED_KEYS"
-                                   . ,(uiop:read-file-string "~/.ssh/id_rsa.pub"))
+                                   . ,(uiop:read-file-string (secret-file "id_rsa.pub")))
                                   ("SB_SECRET" . "secret")))))))
     (make-instance 'instance
                     :id (a:assoc-value image :id)
@@ -91,6 +100,7 @@
                        (error-output *standard-output*))
    (uiop:run-program
     `("ssh" "-o" "StrictHostKeyChecking=no"
+            "-i" ,(secret-file "id_rsa")
             ,(format nil "root@~a" (ip-address self))
             "bash" "-c" ,(uiop:escape-sh-token cmd))
     :output output
