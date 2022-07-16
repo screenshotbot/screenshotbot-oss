@@ -66,11 +66,11 @@
                           5004))
                   :type nil))
 
-(defun call-with-selenium-server (args fn)
+(defun call-with-selenium-server (fn &key type)
   (funcall fn
-           (apply #'selenium-server args)))
+           (selenium-server :type type)))
 
 (defmacro with-selenium-server ((var &rest args) &body body)
   `(call-with-selenium-server
-    (list ,@args)
-    (lambda (,var) ,@body)))
+    (lambda (,var) ,@body)
+    ,@args))
