@@ -53,15 +53,16 @@
       ,@body)
     ,@create-instance-args))
 
-(defun download-file (url output)
-  (log:info "Downloading ~a" url)
-  (let ((input (util/request:http-request
-                url
-                :want-stream t
-                :force-binary t)))
-    (uiop:with-staging-pathname (output)
+(auto-restart:with-auto-restart ()
+ (defun download-file (url output)
+   (log:info "Downloading ~a" url)
+   (let ((input (util/request:http-request
+                 url
+                 :want-stream t
+                 :force-binary t)))
      (with-open-file (output output :element-type '(unsigned-byte 8)
-                                    :direction :output)
+                                     :direction :output
+                                     :if-exists :supersede)
        (uiop:copy-stream-to-stream
         input
         output
