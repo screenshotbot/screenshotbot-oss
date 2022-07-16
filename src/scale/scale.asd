@@ -8,4 +8,5 @@
                :cl-fad)
   :components ((:file "core")
                (:file "linode")
-               (:file "vagrant")))
+               (:file "vagrant")
+               (:file "image")))

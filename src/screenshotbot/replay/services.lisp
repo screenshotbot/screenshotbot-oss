@@ -13,6 +13,9 @@
                 #:with-instance)
   (:import-from #:scale/linode
                 #:linode)
+  (:import-from #:scale/image
+                #:with-imaged-instance
+                #:defimage)
   (:nicknames :screenshotbot/pro/replay/services)
   (:local-nicknames (#:a #:alexandria))
   (:export
@@ -81,8 +84,7 @@
 
 (defun install-firefox (instance version)
   ;; See https://github.com/browser-actions/setup-firefox/blob/master/src/DownloadURL.ts
-  (ssh-run instance (list "apt-get" "update"))
-  (ssh-run instance (list "apt-get" "install" "-y" "curl" "libasound2"
+  (ssh-run instance (list "apt-get" "install" "-y" "libasound2"
                           ;; just install all the damn deps
                           "firefox-esr"))
   (ssh-run
@@ -100,13 +102,23 @@
   (ssh-run instance "ls -l")
   (ssh-run instance "firefox/firefox --version"))
 
+(defimage (debian-base :instance instance)
+          ()
+          :debian-11
+  (ssh-run instance (list "apt-get" "update"))
+  (ssh-run instance (list "apt-get" "install" "-y" "curl")))
+
+(defimage (firefox :instance instance)
+    (version)
+    debian-base
+  (install-firefox instance version))
+
 (defun call-firefox-using-scale-provider (fn provider)
-  (with-instance (machine provider :small)
-    (install-firefox machine "102.0")
+  (with-imaged-instance (machine (firefox :version "102.0") provider :size :small)
     (funcall fn)))
 
 #+nil
-(call-firefox-using-scale-provider (lambda ()) (make-instance 'vagrant))
+(call-firefox-using-scale-provider (lambda () (log:info "with image!")) (make-instance 'vagrant))
 
 (defun call-with-selenium-server (fn &key type)
   (cond
