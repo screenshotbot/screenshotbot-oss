@@ -61,6 +61,7 @@
                 #:api-key-secret-key
                 #:api-key-key)
   (:import-from #:screenshotbot/replay/services
+                #:with-selenium-server
                 #:squid-proxy
                 #:selenium-port
                 #:selenium-host
