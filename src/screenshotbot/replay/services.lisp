@@ -102,6 +102,20 @@
   (ssh-run instance "ls -l")
   (ssh-run instance "firefox/firefox --version"))
 
+(defun install-geckodriver (instance)
+  (ssh-run instance "apt-get install -y wget")
+  (ssh-run
+   instance
+   ;; For reasons I don't quite understand curl doesn't work on github assets
+   (list
+    "wget"
+    "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux64.tar.gz"
+    "-O"
+    "geckodriver.tar.gz"))
+  (ssh-run
+   instance
+   "tar xvzf geckodriver.tar.gz"))
+
 (defimage (debian-base :instance instance)
           ()
           :debian-11
@@ -111,7 +125,8 @@
 (defimage (firefox :instance instance)
     (version)
     debian-base
-  (install-firefox instance version))
+  (install-firefox instance version)
+  (install-geckodriver instance))
 
 (defun call-firefox-using-scale-provider (fn provider)
   (with-imaged-instance (machine (firefox :version "102.0") provider :size :small)
