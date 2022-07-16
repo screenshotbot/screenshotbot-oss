@@ -65,6 +65,9 @@
                 #:single-threaded-taskmaster)
   (:import-from #:util/testing
                 #:with-local-acceptor)
+  (:import-from #:screenshotbot/replay/services
+                #:selenium-server
+                #:call-with-selenium-server)
   (:local-nicknames (#:a #:alexandria)
                     (#:integration #:screenshotbot/replay/integration)
                     (#:run-builder #:screenshotbot/replay/run-builder)))
@@ -149,6 +152,14 @@
                                                        :name "firefox"
                                                        :type "firefox"))))
                  (fake-driver (make-instance 'fake-driver)))
+            (cl-mock:if-called 'call-with-selenium-server
+                                (lambda (fn &key type)
+                                  (funcall fn
+                                           (make-instance 'selenium-server
+                                                           :host "foo.bar"
+                                                           :squid-proxy "foo.bar:3128"
+                                                           :port 9093
+                                                           :type nil))))
             (cl-mock:if-called 'get-local-addr
                                 (lambda (&rest args)
                                   "de.ad.be.ef"))

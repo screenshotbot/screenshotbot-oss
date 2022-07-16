@@ -6,6 +6,13 @@
 
 (defpackage :screenshotbot/replay/services
   (:use #:cl)
+  (:import-from #:scale/vagrant
+                #:vagrant)
+  (:import-from #:scale/core
+                #:ssh-run
+                #:with-instance)
+  (:import-from #:scale/linode
+                #:linode)
   (:nicknames :screenshotbot/pro/replay/services)
   (:local-nicknames (#:a #:alexandria))
   (:export
@@ -15,6 +22,9 @@
    #:squid-proxy
    #:linode?))
 (in-package :screenshotbot/replay/services)
+
+(named-readtables:in-readtable :interpol-syntax)
+
 
 (defclass selenium-server ()
   ((host :initarg :host
@@ -37,6 +47,9 @@
 (defun linode? ()
   (unless (oss?)
    (equal "localhost" (uiop:hostname))))
+
+(defun scale-provider ()
+  (make-instance 'vagrant))
 
 (defun selenium-server (&key (type (error "specify type")))
   (assert (member type '("firefox" "chrome" #-screenshotbot-oss "safari") :test #'equal))
@@ -66,9 +79,44 @@
                           5004))
                   :type nil))
 
+(defun install-firefox (instance version)
+  ;; See https://github.com/browser-actions/setup-firefox/blob/master/src/DownloadURL.ts
+  (ssh-run instance (list "apt-get" "update"))
+  (ssh-run instance (list "apt-get" "install" "-y" "curl" "libasound2"
+                          ;; just install all the damn deps
+                          "firefox-esr"))
+  (ssh-run
+   instance
+   (list "curl" "-f" "-s"
+         (format nil
+                 "https://ftp.mozilla.org/pub/firefox/releases/~a/linux-x86_64/en-US/firefox-~a.tar.bz2" version version)
+         "-o"
+         "firefox.tar.bz2"))
+  (ssh-run instance "ls -l")
+  (ssh-run instance "file firefox.tar.bz2")
+  (ssh-run
+   instance
+   "tar xvjf firefox.tar.bz2")
+  (ssh-run instance "ls -l")
+  (ssh-run instance "firefox/firefox --version"))
+
+(defun call-firefox-using-scale-provider (fn provider)
+  (with-instance (machine provider :small)
+    (install-firefox machine "102.0")
+    (funcall fn)))
+
+#+nil
+(call-firefox-using-scale-provider (lambda ()) (make-instance 'vagrant))
+
 (defun call-with-selenium-server (fn &key type)
-  (funcall fn
-           (selenium-server :type type)))
+  (cond
+    ((and (not (linode?))
+          (equal "firefox" type))
+     (call-firefox-using-scale-provider fn
+                                        (scale-provider)))
+    (t
+     (funcall fn
+              (selenium-server :type type)))))
 
 (defmacro with-selenium-server ((var &rest args) &body body)
   `(call-with-selenium-server
