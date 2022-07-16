@@ -68,7 +68,7 @@ end" out))
    (let ((tmpfile (format nil "/tmp/a~a" (secure-random:number 10000000000000000000))))
      (run*
       (list "vagrant" "scp"
-            (namestring from) (format nil ":~a" tmpfile))
+            (namestring (truename from)) (format nil ":~a" tmpfile))
       :directory (tmpdir self))
      (ssh-run
       self

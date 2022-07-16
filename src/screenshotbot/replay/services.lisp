@@ -9,6 +9,7 @@
   (:import-from #:scale/vagrant
                 #:vagrant)
   (:import-from #:scale/core
+                #:add-url
                 #:ssh-run
                 #:with-instance)
   (:import-from #:scale/linode
@@ -87,13 +88,11 @@
   (ssh-run instance (list "apt-get" "install" "-y" "libasound2"
                           ;; just install all the damn deps
                           "firefox-esr"))
-  (ssh-run
+  (add-url
    instance
-   (list "curl" "-f" "-s"
-         (format nil
-                 "https://ftp.mozilla.org/pub/firefox/releases/~a/linux-x86_64/en-US/firefox-~a.tar.bz2" version version)
-         "-o"
-         "firefox.tar.bz2"))
+   (format nil
+           "https://ftp.mozilla.org/pub/firefox/releases/~a/linux-x86_64/en-US/firefox-~a.tar.bz2" version version)
+   "firefox.tar.bz2")
   (ssh-run instance "ls -l")
   (ssh-run instance "file firefox.tar.bz2")
   (ssh-run
@@ -104,14 +103,11 @@
 
 (defun install-geckodriver (instance)
   (ssh-run instance "apt-get install -y wget")
-  (ssh-run
+  (add-url
    instance
-   ;; For reasons I don't quite understand curl doesn't work on github assets
-   (list
-    "wget"
-    "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux64.tar.gz"
-    "-O"
-    "geckodriver.tar.gz"))
+   "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux64.tar.gz"
+   "geckodriver.tar.gz")
+
   (ssh-run
    instance
    "tar xvzf geckodriver.tar.gz"))
@@ -119,8 +115,7 @@
 (defimage (debian-base :instance instance)
           ()
           :debian-11
-  (ssh-run instance (list "apt-get" "update"))
-  (ssh-run instance (list "apt-get" "install" "-y" "curl")))
+  (ssh-run instance (list "apt-get" "update")))
 
 (defimage (firefox :instance instance)
     (version)

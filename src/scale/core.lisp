@@ -7,7 +7,9 @@
    #:wait-for-ready
    #:with-instance
    #:scp
-   #:encode-bash-command))
+   #:encode-bash-command
+   #:add-url
+   #:ssh-run))
 (in-package :scale/core)
 
 (defvar *last-instance*)
@@ -50,3 +52,28 @@
     (lambda (,instance)
       ,@body)
     ,@create-instance-args))
+
+(defun download-file (url output)
+  (log:info "Downloading ~a" url)
+  (let ((input (util/request:http-request
+                url
+                :want-stream t
+                :force-binary t)))
+    (uiop:with-staging-pathname (output)
+     (with-open-file (output output :element-type '(unsigned-byte 8)
+                                    :direction :output)
+       (uiop:copy-stream-to-stream
+        input
+        output
+        :element-type '(unsigned-byte 8))))))
+
+
+(defun add-url (instance url output)
+  (let ((cache (ensure-directories-exist
+                (make-pathname
+                 :name (ironclad:byte-array-to-hex-string (md5:md5sum-string url))
+                 :defaults "build/web-cache/"))))
+    (unless (path:-e cache)
+      (download-file url cache))
+    (assert (path:-e cache))
+    (scp instance cache output)))
