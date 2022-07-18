@@ -102,7 +102,6 @@
   (ssh-run instance "firefox/firefox --version"))
 
 (defun install-geckodriver (instance)
-  (ssh-run instance "apt-get install -y wget")
   (add-url
    instance
    "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux64.tar.gz"
@@ -125,10 +124,12 @@
 
 (defun call-firefox-using-scale-provider (fn provider)
   (with-imaged-instance (machine (firefox :version "102.0") provider :size :small)
+    (ssh-run machine "./geckodriver --binary firefox/firefox")
     (funcall fn)))
 
 #+nil
-(call-firefox-using-scale-provider (lambda () (log:info "with image!")) (make-instance 'vagrant))
+(call-firefox-using-scale-provider
+ (lambda () (log:info "with image!")) (make-instance 'vagrant))
 
 (defun call-with-selenium-server (fn &key type)
   (cond

@@ -9,7 +9,8 @@
    #:scp
    #:encode-bash-command
    #:add-url
-   #:ssh-run))
+   #:ssh-run
+   #:ip-address))
 (in-package :scale/core)
 
 (defvar *last-instance*)
@@ -22,6 +23,8 @@
 (defgeneric ssh-run (instance cmd &key output error-output))
 
 (defmethod scp (instance local-file remote-file))
+
+(defgeneric ip-address (instance))
 
 (defmethod ssh-run (instance (cmd list) &rest args &key &allow-other-keys)
   (apply #'ssh-run

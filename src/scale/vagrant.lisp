@@ -33,8 +33,10 @@ end" out))
     (run*
      (list "vagrant" "up")
      :directory directory)
-    (make-instance 'instance
-                    :directory directory)))
+    (let ((ret (make-instance 'instance
+                               :directory directory)))
+      (ssh-run ret "ip addr show")
+      ret)))
 
 (defmethod delete-instance ((self instance))
   (log:info "Stopping container")
