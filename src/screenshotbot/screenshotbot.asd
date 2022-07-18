@@ -422,6 +422,7 @@
 (defsystem :screenshotbot/hub
   :serial t
   :depends-on (:util/request
+               :util/misc
                :hunchentoot
                :cl-json)
   :components ((:module "hub"

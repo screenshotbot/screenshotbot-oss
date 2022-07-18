@@ -1,5 +1,7 @@
 (defpackage :screenshotbot/hub/server
   (:use #:cl)
+  (:import-from #:util/misc
+                #:or-setf)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:hub
@@ -16,7 +18,7 @@
 (defvar *hub* nil)
 
 (defun hub ()
-  (util:or-setf
+  (or-setf
    *hub*
    (let ((hub (make-instance 'local-hub)))
      (start-hub hub)

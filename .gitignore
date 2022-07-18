@@ -39,3 +39,4 @@ static-web-output
 amazon-acceptance-test.zip
 tmp-upload
 .secrets
+.qlot

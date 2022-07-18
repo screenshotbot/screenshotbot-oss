@@ -28,6 +28,7 @@
                :imago/pngload
                :md5
                :screenshotbot/replay-core
+               :screenshotbot/hub
                :dag
                :anaphora
                :str)
@@ -39,6 +40,7 @@
                (:file "help")
                (:file "sdk")
                (:file "static")
+               (:file "selenium")
                (:file "main")))
 
 
