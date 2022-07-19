@@ -133,6 +133,7 @@
 
 (defun call-with-selenium-server (fn &key type)
   (cond
+    #+nil
     ((and (not (linode?))
           (equal "firefox" type))
      (call-firefox-using-scale-provider fn
