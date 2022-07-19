@@ -19,10 +19,6 @@
                 #:http-get-value)
   (:import-from #:auto-restart
                 #:with-auto-restart)
-  (:import-from #:screenshotbot/magick
-                #:magick
-                #:convert-to-lossless-webp
-                #:run-magick)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:full-page-screenshot))
@@ -63,13 +59,7 @@
        ((or (null file) (string-equal "png" (pathname-type file)))
         (decode-image  file))
        (t
-        (uiop:with-temporary-file (:pathname png :type "png" :prefix "full-page-screenshot")
-          (delete-file png)
-          (decode-image png)
-          (log:info "Converting firefox png to webp")
-          (convert-to-lossless-webp
-           (magick)
-           png file)))))))
+        (error "type ~a not supported" (pathname-type file)))))))
 
 (defmethod execute-cdp-command ((driver chrome) command args)
   (http-post-value

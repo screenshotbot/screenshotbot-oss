@@ -6,11 +6,7 @@
 
 (pkg:define-package :screenshotbot/webdriver/impl
     (:use #:cl
-          #:alexandria
-          #:util/java
-          #:screenshotbot/webdriver/runner)
-  (:import-from #:util/java
-                #:read-java-field)
+          #:alexandria)
   (:import-from #:webdriver-client
                 #:ignore-session-deletion
                 #:window-resize
@@ -21,8 +17,6 @@
              #:chrome
              #:firefox
              #:call-with-webdriver))
-
-(named-readtables:in-readtable java-syntax)
 
 
 (defun make-dict (alist)

@@ -5,7 +5,8 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:hub
-   #:relay-session-request))
+   #:relay-session-request
+   #:*hub*))
 (in-package :screenshotbot/hub/server)
 
 (defclass local-hub ()

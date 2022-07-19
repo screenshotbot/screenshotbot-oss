@@ -16,8 +16,6 @@
                 #:full-page-screenshot)
   (:import-from #:hunchentoot
                 #:*acceptor*)
-  (:import-from #:screenshotbot/replay/services
-                #:linode?)
   (:import-from #:util/digests
                 #:md5-file)
   (:import-from #:screenshotbot/hub/server
@@ -33,15 +31,22 @@
 (defclass replay-proxy (hunchentoot:easy-acceptor)
   ((cache-dir :initarg :cache-dir
               :reader cache-dir
-              :initform (pathname "~/screenshot-proxy-cache/")))
+              :initform (pathname "~/screenshot-proxy-cache/"))
+   (hub :initarg :hub
+        :initform (hub)
+        :reader replay-proxy-hub))
   (:default-initargs :name 'replay-proxy))
+
+(defun linode? ()
+  #-screenshotbot-oss
+  (equal "localhost" (uiop:hostname)))
 
 (defvar *replay-proxy* nil)
 
 (defvar *proxy-port* 5003)
 
 (defun ensure-local-proxy ()
-  (util:or-setf
+  (util/misc:or-setf
    *replay-proxy*
    (let ((proxy (make-instance 'replay-proxy :port *proxy-port*)))
      (hunchentoot:start proxy)
@@ -100,7 +105,7 @@
 (def-proxy-handler (nil :uri "/wd/hub/session" :method :post) ()
   (let ((content (hunchentoot:raw-post-data
                   :force-text t)))
-    (let ((hub (hub)))
+    (let ((hub (replay-proxy-hub hunchentoot:*acceptor*)))
       (request-session-and-respond
        hub
        content))))
@@ -112,7 +117,7 @@
                                    (str:starts-with-p prefix script-name)
                                    (> (length script-name) (length prefix)))))))
                    ()
-  (let ((hub (hub)))
+  (let ((hub (replay-proxy-hub hunchentoot:*acceptor*)))
     (relay-session-request hub
                            :method (hunchentoot:request-method*)
                            :content (hunchentoot:raw-post-data :force-text t)

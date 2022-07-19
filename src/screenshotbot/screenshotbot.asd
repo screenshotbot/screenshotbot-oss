@@ -363,8 +363,13 @@
                :util/threading
                :util/misc
                :util/request
+               :hunchentoot-extensions
+               :cl-mongo-id
+               :cl-webdriver-client
+               :screenshotbot/webdriver
                :cl+ssl
                :util/digests
+               :screenshotbot/hub
                :auto-restart
                :dexador
                :drakma
@@ -374,7 +379,8 @@
                 :serial t
                 :components ((static-file "replay-regex" :type "txt")
                              (:file "core")
-                             (:file "browser-config")))))
+                             (:file "browser-config")
+                             (:file "proxy")))))
 
 
 
@@ -383,6 +389,7 @@
   :depends-on (:dexador
                :hunchentoot
                :hunchensocket
+               :screenshotbot
                :tmpdir
                :quri
                :screenshotbot/replay-core
@@ -409,7 +416,6 @@
                              (:file "frontend")
                              (:file "sitemap")
                              (:file "run-builder")
-                             (:file "proxy")
                              (:file "integration")
                              (:file "remote")))
                (:module "web-build"
@@ -424,6 +430,7 @@
   :depends-on (:util/request
                :util/misc
                :hunchentoot
+               :auto-restart
                :cl-json)
   :components ((:module "hub"
                 :components ((:file "server")
@@ -431,13 +438,12 @@
 
 (defsystem :screenshotbot/webdriver
   :serial t
-  :depends-on (:screenshotbot
-               :flexi-streams
+  :depends-on (:flexi-streams
+               :trivial-file-size
                :auto-restart
                :cl-webdriver-client)
   :components ((:module "webdriver"
-                :components ((:file "runner")
-                             (:file "impl")
+                :components ((:file "impl")
                              (:file "screenshot")
                              (:file "all")))))
 
