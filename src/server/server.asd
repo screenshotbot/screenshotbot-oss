@@ -4,10 +4,17 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+(defsystem "server/interrupts"
+  :depends-on (:alexandria
+               :bordeaux-threads)
+  :serial t
+  :components ((:file "interrupts")))
+
 (defsystem "server"
   :depends-on ("cl-cli"
                "util/store"
                "cl-cron"
+               "server/interrupts"
                #+ (or ccl lispworks)
                "jvm"
                #+lispworks

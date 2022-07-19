@@ -5,6 +5,8 @@
                 #:*hub*)
   (:import-from #:screenshotbot/replay/proxy
                 #:replay-proxy)
+  (:import-from #:server/interrupts
+                #:unwind-on-interrupt)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags))
   (:export
@@ -25,4 +27,8 @@
                           :hub (make-instance 'client-hub)
                           :cache-dir (ensure-directories-exist #P"~/screenshotbot/proxy-cache/")
                           :port flags:*selenium-hub-port*)))
-    (hunchentoot:start proxy)))
+    (unwind-on-interrupt ()
+        (hunchentoot:start proxy)
+        (progn
+          (log:info "terminating")
+          (hunchentoot:stop proxy)))))

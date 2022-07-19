@@ -28,6 +28,7 @@
                :imago/pngload
                :md5
                :screenshotbot/replay-core
+               :server/interrupts
                :screenshotbot/hub
                :dag
                :anaphora
