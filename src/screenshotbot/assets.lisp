@@ -48,11 +48,13 @@
 
 (define-css "/assets/css/default.css" :screenshotbot.css-assets)
 
-(defhandler (nil :uri "/recorder.sh" :html nil) (no-cdn)
-  (setf (hunchentoot:content-type*) "application/x-sh")
-  (let ((darwin-link (artifact-link "recorder-darwin" :cdn (not no-cdn)))
-        (linux-link (artifact-link "recorder-linux" :cdn (not no-cdn))))
-      #?"#!/bin/sh
+(defmacro define-platform-asset (name)
+  `(progn
+     (defhandler (nil :uri ,(format nil "/~a.sh" name) :html nil) (no-cdn)
+       (setf (hunchentoot:content-type*) "application/x-sh")
+       (let ((darwin-link (artifact-link ,(format nil "~a-darwin" name) :cdn (not no-cdn)))
+             (linux-link (artifact-link ,(format nil "~a-linux" name) :cdn (not no-cdn))))
+       #?"#!/bin/sh
 set -e
 set -x
 
@@ -70,10 +72,11 @@ fi
 sh ./$INSTALLER
 rm -f $INSTALLER
 "))
+     (defhandler (nil :uri ,(format nil "/~a.exe" name) :html nil) ()
+       (hunchentoot:redirect
+        (artifact-link ,(format nil "~a-win.exe" name) :cdn t)))))
 
-(defhandler (nil :uri "/recorder.exe" :html nil) ()
-  (hunchentoot:redirect
-   (artifact-link "recorder-win.exe" :cdn t)))
+(define-platform-asset "recorder")
 
 (let ((lock (bt:make-lock)))
   (defun handle-asdf-output (op component &optional (output-num 0) )
