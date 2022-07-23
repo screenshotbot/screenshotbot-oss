@@ -9,7 +9,7 @@
 (ql:quickload :screenshotbot.sdk)
 
 (defun output-file ()
-  (car (asdf:output-files 'asdf:compile-op (asdf:find-component :screenshotbot.sdk.deliver "deliver-sdk"))))
+  (car (asdf:output-files 'asdf:compile-op (asdf:find-component :screenshotbot.sdk/deliver "deliver-sdk"))))
 
 (format t "We'll be writing to ~A~%" (output-file))
 

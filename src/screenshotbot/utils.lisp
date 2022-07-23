@@ -37,12 +37,12 @@
       (error "Failed to upload image: code ~a" code))))
 
 (defun upload-sdk (&key only-build)
-  (asdf:compile-system :screenshotbot.sdk.deliver)
+  (asdf:compile-system :screenshotbot.sdk/deliver)
   #+nil
-  (asdf:compile-system :screenshotbot.sdk.deliver/java-so)
+  (asdf:compile-system :screenshotbot.sdk/deliver/java-so)
   (let ((output-file (asdf:output-file 'asdf:compile-op
                                         (asdf:find-component
-                                        :screenshotbot.sdk.deliver
+                                        :screenshotbot.sdk/deliver
                                         #-(or mswindows win32) "installer"
                                         #+(or mswindows win32) "deliver-sdk"))))
     (log:info "Output file is: ~a" output-file)

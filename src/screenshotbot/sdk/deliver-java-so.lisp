@@ -5,7 +5,7 @@
 (defun output-file ()
   (car (asdf:output-files
         'asdf:compile-op
-         (asdf:find-component :screenshotbot.sdk.deliver/java-so "deliver-java-so"))))
+         (asdf:find-component :screenshotbot.sdk/deliver-java-so "deliver-java-so"))))
 
 (defun main ())
 

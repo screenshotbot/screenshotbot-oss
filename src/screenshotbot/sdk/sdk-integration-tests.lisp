@@ -6,7 +6,7 @@
 (uiop:setup-temporary-directory)
 
 
-(ql:quickload :screenshotbot.sdk.deliver)
+(ql:quickload :screenshotbot.sdk/deliver)
 (ql:quickload :secure-random)
 
 (defvar *default-cmd-dir* ".")
@@ -42,7 +42,7 @@
                    :error-output t)))))
 
 (defvar *sdk* (car (asdf:output-files 'asdf:compile-op
-                                       (asdf:find-component :screenshotbot.sdk.deliver
+                                       (asdf:find-component :screenshotbot.sdk/deliver
                                                             "deliver-sdk"))))
 
 (when (str:emptyp (uiop:getenv "SCREENSHOTBOT_API_KEY"))

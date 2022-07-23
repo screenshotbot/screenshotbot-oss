@@ -23,7 +23,7 @@
 
 
 (flet ((output-file ()  (asdf:output-file 'asdf:compile-op
-                                          (asdf:find-component :screenshotbot.sdk.deliver "deliver-sdk"))) )
+                                          (asdf:find-component :screenshotbot.sdk/deliver "deliver-sdk"))) )
  (defhandler (static-recorder-linux :uri "/release/recorder-linux.sh") ()
    (hunchentoot:handle-static-file
     (output-file)))

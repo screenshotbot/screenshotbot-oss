@@ -55,3 +55,25 @@
   :components ((:file "test-bundle")
                (:file "test-sdk")
                (:file "test-static")))
+
+
+(defsystem :screenshotbot.sdk/deliver
+  :author "Arnold Noronha <arnold@screenshotbot.io>"
+  :license "Mozilla Public License, v 2.0"
+  :defsystem-depends-on (#:screenshotbot/build-utils)
+  :depends-on (:screenshotbot.sdk)
+  :components (("SCREENSHOTBOT/PLATFORM-ASSET:DELIVER-SCRIPT"
+                "deliver-sdk")
+               #- (or mswindows win32)
+               ("SCREENSHOTBOT/PLATFORM-ASSET:MAKESELF-COMPONENT" "installer"
+                                   :depends-on ("deliver-sdk")
+                                   :type "sh"
+                                   :label "screenshotbot-installer"
+                                   :archive ("deliver-sdk"
+                                             "installer")
+                                   :startup-component "installer")))
+
+#+lispworks
+(defsystem :screenshotbot.sdk/deliver-java-so
+  :components (("SCREENSHOTBOT/PLATFORM-ASSET:DELIVER-SO-SCRIPT"
+                "deliver-java-so")))
