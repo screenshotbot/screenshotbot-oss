@@ -15,10 +15,14 @@
    #:with-safe-interruptable
    #:safe-interrupt-checkpoint
    #:safe-interrupt
-   #:log-sentry)
+   #:log-sentry
+   #:*catch-errors-p*
+   #:*log-sentry-p*)
 )
 (in-package :util/threading)
 
+(defvar *catch-errors-p* t)
+(defvar *log-sentry-p* t)
 
 (defvar *message-handlers* nil)
 
@@ -102,14 +106,17 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
   (when (<= (incf *warning-count*) 5)
     (call-next-method)))
 
+(defun maybe-log-sentry (condition)
+  (when *log-sentry-p*
+    (log-sentry condition)))
+
 
 (defun funcall-with-sentry-logs (fn)
   (let ((*warning-count* 0))
-   (handler-bind ((error #'log-sentry)
-                  (warning #'log-sentry))
+   (handler-bind ((error #'maybe-log-sentry)
+                  (warning #'maybe-log-sentry))
      (funcall fn))))
 
-(defvar *catch-errors-p* t)
 
 (defun %invoke-debugger (e)
   ;; mockable version of invoke-debugger
