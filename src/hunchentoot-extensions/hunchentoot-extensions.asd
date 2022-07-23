@@ -15,7 +15,8 @@
   :components ((:file "package")
                (:file "url")
                (:file "acceptor-with-plugins")
-               (:file "better-easy-handler")))
+               (:file "better-easy-handler")
+               (:file "webp")))
 
 (defsystem :hunchentoot-extensions/tests
   :serial t

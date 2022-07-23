@@ -7,8 +7,6 @@
 (defpackage :util/misc
   (:use #:cl)
   (:export
-   #:supports-webp?
-   #:fix-for-webp
    #:funcall-if
    #:?.
    #:or-setf
@@ -16,20 +14,6 @@
    #:uniq))
 (in-package :util/misc)
 
-
-(defun supports-webp? ()
-  (if (boundp 'hunchentoot:*request*)
-      (str:contains?  "image/webp" (hunchentoot:header-in :accept hunchentoot:*request*))))
-
-(defun fix-for-webp (url &key force)
-  (cond
-    ((or force (supports-webp?))
-     (let ((parts (str:split "?" url)))
-       (str:join "?" (cons
-                      (ppcre:regex-replace "\\.[a-z]*$" (car parts) ".webp")
-                      (cdr parts)))))
-    (t
-     url)))
 
 (defun funcall-if (fn arg &rest rest)
   "If arg is not nil, then call the function fn with the args (cons arg rest)"

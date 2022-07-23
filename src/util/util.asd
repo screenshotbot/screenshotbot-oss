@@ -106,8 +106,7 @@
 (defsystem :util/misc
   :serial t
   :depends-on (:local-time
-               :str
-               :hunchentoot)
+               :str)
   :components ((:file "misc")))
 
 #+lispworks

@@ -57,13 +57,11 @@
            #:is-intern?
            #:acceptor-funcall-handler
            #:defview
-           #:supports-webp?
            #:acceptor-plugin
            #:acceptor-plugins
            #:acceptor-with-plugins
            #:wrap-template
            #:define-plugin-handler
-           #:fix-for-webp
            #:vpush
            #:oid
            #:oid-bytes

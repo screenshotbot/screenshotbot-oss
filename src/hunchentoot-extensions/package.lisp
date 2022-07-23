@@ -28,4 +28,6 @@
            #:declare-handler
            #:acceptor-plugins
            #:safe-redirect
-           #:make-url))
+           #:make-url
+           #:supports-webp?
+           #:fix-for-webp))
