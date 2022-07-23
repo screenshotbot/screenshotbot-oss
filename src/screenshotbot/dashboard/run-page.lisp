@@ -43,13 +43,16 @@
                 #:image-dimensions)
   (:import-from #:screenshotbot/model/recorder-run
                 #:override-commit-hash)
+  (:import-from #:screenshotbot/installation
+                #:installation)
   (:export
    #:*create-issue-popup*
    #:run-page
    #:run-row-filter
    #:row-filter
    #:commit)
-  (:export #:mask-editor))
+  (:export #:mask-editor
+           #:start-review-enabled-p))
 (in-package :screenshotbot/dashboard/run-page)
 
 (markup:enable-reader)
@@ -159,6 +162,9 @@
 (defmethod extra-advanced-options (run)
   )
 
+(defmethod start-review-enabled-p ((installation t) (run t))
+  nil)
+
 (deftag run-advanced-menu (&key run)
   (let ((promotion-logs (nibble ()
                           (promotion-log-page run)))
@@ -177,7 +183,8 @@
       <a href= promotion-logs >Promotion Logs</a>
       <a href= rerun-promotions >Re-Run Promotions</a>
       <a href=debug-info >Debug Info</a>
-      <a href= (format nil "/review/~a" (oid run)) >Start Review</a>
+      ,(when (start-review-enabled-p (installation) run)
+         <a href= (format nil "/review/~a" (oid run)) >Start Review</a>)
     </page-nav-dropdown>))
 
 (defun create-filter-matcher (filter &key key)
