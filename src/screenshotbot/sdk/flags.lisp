@@ -8,6 +8,8 @@
   (:use #:cl
         #:com.google.flag
         #:alexandria)
+  (:use-reexport
+   #:screenshotbot/sdk/common-flags)
   (:export
    #:*directory*
    #:*verbose*
@@ -47,22 +49,11 @@
   :type string
   :help "Directory of images")
 
-(define-flag *verbose*
-   :default-value nil
-   :selector "verbose"
-   :type boolean
-   :help "Verbose logs")
-
 (define-flag *org-defaults*
   :default-value nil
   :selector "defaults"
   :type (or null string))
 
-(define-flag *api-key*
-  :selector "api-key"
-  :default-value nil
-  :type (or null string)
-  :help "Screenshotbot API Key. Defaults to $SCREENSHOTBOT_API_KEY.")
 
 (define-flag *create-github-issue*
   :selector "create-github-issue"
@@ -70,11 +61,6 @@
   :type boolean
   :help "Create a Github issue if enabled on your account")
 
-(define-flag *api-secret*
-  :selector "api-secret"
-  :default-value nil
-  :type (or null string)
-  :help "Screenshotbot API Secret. Defaults to $SCREENSHOTBOT_API_SECRET")
 
 (define-flag *gitlab-merge-request-iid*
   :selector "gitlab-merge-request-iid"
@@ -82,12 +68,6 @@
   :type (or null string)
   :help "GitLab merge request IID")
 
-(define-flag *hostname*
-  :selector "api-hostname"
-  :default-value "https://api.screenshotbot.io"
-  :type string
-  :help "Screenshotbot API Endpoint"
-  :documentation "Only used for Enterprise or Open Source users, Defaults to `https://api.screenshotbot.io` or $SCREENSHOTBOT_API_HOSTNAME")
 
 (define-flag *channel*
   :selector "channel"
@@ -141,10 +121,6 @@
   suggest using `--production=false`. This avoids polluting your runs
   in production.")
 
-(define-flag *help*
-  :selector "help"
-  :default-value nil
-  :type boolean)
 
 (define-flag *lang-regex*
   :selector "lang-regex"

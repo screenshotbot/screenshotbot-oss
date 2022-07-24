@@ -17,6 +17,7 @@
                :log4cl
                :util/random-port
                :util/request
+               :screenshotbot.sdk/common-flags
                :cl-store
                :nyaml
                :cl-fad
@@ -43,6 +44,11 @@
                (:file "static")
                (:file "selenium")
                (:file "main")))
+
+(defsystem :screenshotbot.sdk/common-flags
+  :serial t
+  :depends-on (#:com.google.flag)
+  :components ((:file "common-flags")))
 
 
 (defsystem :screenshotbot.sdk/tests
