@@ -5,8 +5,12 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defsystem :screenshotbot.client-hub
-  :depends-on (#:screenshotbot.sdk/common-flags)
+  :depends-on (#:screenshotbot.sdk/common-flags
+               #:screenshotbot/hub
+               #:server/interrupts
+               #:screenshotbot/replay-core)
   :components ((:file "flags")
+               (:file "selenium")
                (:file "main")))
 
 (defsystem :screenshotbot.client-hub/deliver

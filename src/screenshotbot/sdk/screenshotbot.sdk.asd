@@ -29,8 +29,6 @@
                :imago/pngload
                :md5
                :screenshotbot/replay-core
-               :server/interrupts
-               :screenshotbot/hub
                :dag
                :anaphora
                :str)
@@ -42,7 +40,6 @@
                (:file "help")
                (:file "sdk")
                (:file "static")
-               (:file "selenium")
                (:file "main")))
 
 (defsystem :screenshotbot.sdk/common-flags

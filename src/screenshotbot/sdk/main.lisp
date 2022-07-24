@@ -14,8 +14,7 @@
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
-                    (#:static #:screenshotbot/sdk/static)
-                    (#:selenium #:screenshotbot/sdk/selenium))
+                    (#:static #:screenshotbot/sdk/static))
   (:export
    #:main))
 (in-package :screenshotbot/sdk/main)
@@ -45,8 +44,6 @@
       (flags:*static-website*
        (sdk:parse-org-defaults)
        (static:record-static-website flags:*static-website*))
-      (flags:*selenium-hub*
-       (selenium:start-hub))
       (t
        (sdk:parse-org-defaults)
        (sdk:run-prepare-directory-toplevel)))))

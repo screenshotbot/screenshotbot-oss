@@ -186,13 +186,3 @@
   must be the full hash, partial hashes or tag names are not
   suitable.
   Automatically detected on: CircleCI, Bitrise")
-
-(define-flag *selenium-hub*
-  :selector "selenium-hub"
-  :default-value nil
-  :type boolean)
-
-(define-flag *selenium-hub-port*
-  :selector "selenium-hub-port"
-  :default-value 4444
-  :type integer)
