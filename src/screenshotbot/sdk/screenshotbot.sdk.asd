@@ -62,10 +62,10 @@
   :license "Mozilla Public License, v 2.0"
   :defsystem-depends-on (#:screenshotbot/build-utils)
   :depends-on (:screenshotbot.sdk)
-  :components (("SCREENSHOTBOT/PLATFORM-ASSET:DELIVER-SCRIPT"
+  :components (("screenshotbot/platform-asset:deliver-script"
                 "deliver-sdk")
                #- (or mswindows win32)
-               ("SCREENSHOTBOT/PLATFORM-ASSET:MAKESELF-COMPONENT" "installer"
+               ("screenshotbot/platform-asset:makeself-component" "installer"
                                    :depends-on ("deliver-sdk")
                                    :type "sh"
                                    :label "screenshotbot-installer"
@@ -75,5 +75,5 @@
 
 #+lispworks
 (defsystem :screenshotbot.sdk/deliver-java-so
-  :components (("SCREENSHOTBOT/PLATFORM-ASSET:DELIVER-SO-SCRIPT"
+  :components (("screenshotbot/platform-asset:deliver-so-script"
                 "deliver-java-so")))
