@@ -88,7 +88,10 @@
   ;; See https://github.com/browser-actions/setup-firefox/blob/master/src/DownloadURL.ts
   (ssh-sudo instance (list "apt-get" "install" "-y" "libasound2"
                            ;; just install all the damn deps
-                           "firefox-esr"))
+                           "firefox-esr"
+                           ;; Required to uncompress the downloaded
+                           ;; file, at least on the Linode image.
+                           "bzip2"))
   (add-url
    instance
    (format nil

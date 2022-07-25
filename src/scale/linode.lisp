@@ -51,7 +51,9 @@
    (lock :initform (bt:make-lock)
          :reader lock)
    (provider :initarg :provider
-             :reader provider)))
+             :reader provider)
+   (ssh-config :initform ""
+               :reader ssh-config)))
 
 (defun http-request (linode url &rest args &key parameters &allow-other-keys)
   (multiple-value-bind (response err)
