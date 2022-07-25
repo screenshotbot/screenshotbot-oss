@@ -9,6 +9,7 @@
   (:import-from #:scale/vagrant
                 #:vagrant)
   (:import-from #:scale/core
+                #:ssh-sudo
                 #:add-url
                 #:ssh-run
                 #:with-instance)
@@ -85,9 +86,9 @@
 
 (defun install-firefox (instance version)
   ;; See https://github.com/browser-actions/setup-firefox/blob/master/src/DownloadURL.ts
-  (ssh-run instance (list "apt-get" "install" "-y" "libasound2"
-                          ;; just install all the damn deps
-                          "firefox-esr"))
+  (ssh-sudo instance (list "apt-get" "install" "-y" "libasound2"
+                           ;; just install all the damn deps
+                           "firefox-esr"))
   (add-url
    instance
    (format nil
@@ -114,7 +115,7 @@
 (defimage (debian-base :instance instance)
           ()
           :debian-11
-  (ssh-run instance (list "apt-get" "update")))
+  (ssh-sudo instance (list "apt-get" "update")))
 
 (defimage (firefox :instance instance)
     (version)
@@ -124,7 +125,7 @@
 
 (defun call-firefox-using-scale-provider (fn provider)
   (with-imaged-instance (machine (firefox :version "102.0") provider :size :small)
-    (ssh-run machine "./geckodriver --binary firefox/firefox")
+    ;;(ssh-run machine "./geckodriver --binary firefox/firefox")
     (funcall fn)))
 
 #+nil

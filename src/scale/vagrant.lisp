@@ -6,7 +6,13 @@
 
 (defclass instance ()
   ((directory :initarg :directory
-              :reader tmpdir)))
+              :reader tmpdir)
+   (ip-address :accessor ip-address)
+   (known-hosts :accessor known-hosts)
+   (ssh-config :accessor ssh-config)))
+
+(defmethod ssh-user ((self instance))
+  "vagrant")
 
 (defclass vagrant ()
   ())
@@ -34,9 +40,36 @@ end" out))
      (list "vagrant" "up")
      :directory directory)
     (let ((ret (make-instance 'instance
-                               :directory directory)))
-      (ssh-run ret "ip addr show")
+                              :directory directory)))
+      (handler-bind ((error (lambda (e)
+                              (declare (ignore e))
+                              (log:info "Couldn't finish pre-setup for instance")
+                              (delete-instance ret))))
+        (prepare-vagrant-instance ret directory))
       ret)))
+
+(auto-restart:with-auto-restart ()
+ (defun prepare-vagrant-instance (ret directory)
+   (run*
+    (list "vagrant" "scp" (namestring (secret-file "id_rsa.pub"))
+          "default:/home/vagrant/.ssh/authorized_keys2")
+    :directory directory)
+   (let ((ip-address (ssh-run-via-vagrant ret "hostname -I"
+                                          :output 'string)))
+     (log:info "Got IP address: ~a" ip-address)
+     (setf (ip-address ret) (str:trim ip-address)))
+   (let ((known-hosts (ssh-run-via-vagrant ret
+                                           (format nil "ssh-keyscan ~a" (ip-address ret))
+                                           :output 'string)))
+     (log:info "Got known hosts: ~a" known-hosts)
+     (setf (known-hosts ret) known-hosts))
+   (let ((ssh-config (run* (list "vagrant" "ssh-config")
+                           :directory directory
+                           :output 'string)))
+     (log:info "Got ssh config: ~a" ssh-config)
+     (setf (ssh-config ret) (str:replace-all "Host default"
+                                             (format nil "Host ~a" (ip-address ret))
+                                             ssh-config)))))
 
 (defmethod delete-instance ((self instance))
   (log:info "Stopping container")
@@ -52,9 +85,9 @@ end" out))
 (defmethod wait-for-ready ((self instance))
   t)
 
-(defmethod ssh-run ((self instance)
-                    (cmd string)
-                    &key (output *standard-output*) (error-output *standard-output*))
+(defmethod ssh-run-via-vagrant ((self instance) (cmd string)
+                                &key (output *standard-output*)
+                                  (error-output *error-output*))
   (log:info "Running command ~S on vagrant" cmd)
   (run*
    (list "vagrant" "ssh" "-c" (format nil "sudo bash -c ~a" (uiop:escape-sh-token cmd)))
@@ -62,22 +95,6 @@ end" out))
    :error-output error-output
    :directory (tmpdir self)))
 
-(auto-restart:with-auto-restart ()
- (defmethod scp ((self instance)
-                 from
-                 to)
-   (log:info "Copying file")
-   (let ((tmpfile (format nil "/tmp/a~a" (secure-random:number 10000000000000000000))))
-     (run*
-      (list "vagrant" "scp"
-            (namestring (truename from)) (format nil ":~a" tmpfile))
-      :directory (tmpdir self))
-     (ssh-run
-      self
-      (list "mv" tmpfile (namestring to)))
-     (ssh-run
-      self
-      (list "chown" "root:root" (namestring to))))))
 
 #+nil
 (with-instance (instance (make-instance 'vagrant) :small)

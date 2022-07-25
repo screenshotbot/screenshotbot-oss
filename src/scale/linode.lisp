@@ -4,14 +4,6 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :scale/linode)
 
-(defun secret-file (name)
-  (namestring
-   (path:catfile
-    (asdf:system-relative-pathname
-     :screenshotbot
-     "../../.secrets/")
-    name)))
-
 (defvar *lock* (bt:make-lock))
 
 (defvar *instances* nil)
@@ -157,52 +149,6 @@
           finally
           (error "Did not receive callback"))))
 
-(defvar *test* "localhost ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMi3Pnzlr84phRm3h6eKmX4FaVtrZuQ0kUCcplbofdL1
-localhost ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDacgrVkYfIr0L8dbyanWOFy+P6Ltee0NKQufoiLKnmiTeFfjQxKCl/zDXTX3B7ZjjMAcGNazLEkswYilB4XMqXtUyoBNCTtcHU/PToSJ/UJk+qXn0+ieh/Kvv6rpr+4Kks0kUvyb/5EKf0G+eoHTAaS5CvGSYiZ4FT0ReObp1unHY5Q9eycLunYsCloKiUrOQT33p9qBh0tUID0VZlUyHinKKG8LRFYbm4XautECng26SpIzMSxrU6/XFKI7+ou98P6A8S31FPLbXQ+6dQ/kwevhlgwYsQZYf0CtibGSvsLRMLFahmRzkPUfw3wmnwutEqNdpdH/NKrafO5w54up1/H35ouyrwoNCbw+cFM8qEdOwcO2wgv7RbwjRVzlxl+erIrdu58DBGvBJPDyYBedUNOi4vtwDUJtPqxgK1V8ew6WPHicox9qDm5L7nGsfgF7go3DIRRtqRQDku/mK8kmAtziSeJ63iXAUXZpFo1jW7PmUki1+mlm1cUY3EKn/Wjb8=
-localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBIxj05X+4ZdA96pHEBYfRsgNQO2kKUBbkBnuUNcQ+aZqg7z78K1RT3vGTr9100SP2bLB3kDPID4xJf+357bp4HY=")
-
-(defun rewrite-known-hosts (input ip-addr)
-  (cl-ppcre:regex-replace-all "^localhost "
-                              input
-                              (format nil "~a " ip-addr)))
-
-;; (rewrite-known-hosts *test* "1.2.3.4")
-
-
-(defmacro with-known-hosts ((name self) &body body)
-  `(uiop:with-temporary-file (:pathname known-hosts :stream s :direction :output)
-     (write-string (rewrite-known-hosts (known-hosts self)
-                                        (ip-address self)) s)
-     (finish-output s)
-     ,@body))
-
-(auto-restart:with-auto-restart ()
- (defmethod ssh-run ((self instance) cmd
-                     &key (output *standard-output*)
-                       (error-output *standard-output*))
-   (with-known-hosts (known-hosts self)
-     (uiop:run-program
-      `("ssh" ,@ (ssh-opts self known-hosts)
-                 ,(format nil "root@~a" (ip-address self))
-                 "bash" "-c" ,(uiop:escape-sh-token cmd))
-      :output output
-      :error-output error-output))))
-
-(defmethod ssh-opts ((self instance) known-hosts)
-  `("-o" ,(format nil "UserKnownHostsFile=~a" (namestring known-hosts))
-         "-i" ,(secret-file "id_rsa")))
-
-(auto-restart:with-auto-restart ()
-  (defmethod scp ((self instance) from to)
-    (with-known-hosts (known-hosts self)
-     (uiop:run-program
-      `("scp"
-        ,@ (ssh-opts self known-hosts)
-        ,(namestring from)
-        ,(format nil "root@~a:~a" (ip-address self)
-                 (namestring to)))
-      :output *standard-output*
-      :error-output *standard-output*))))
 
 #+nil
 (with-instance (self (make-instance 'linode) :small)
