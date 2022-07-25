@@ -35,7 +35,9 @@
    (hub :initarg :hub
         :initform (hub)
         :reader replay-proxy-hub))
-  (:default-initargs :name 'replay-proxy))
+  (:default-initargs :name 'replay-proxy)
+  (:documentation "Even though this is called 'replay' it refers to a Selenium proxy,
+ with some added functinality for screenshots."))
 
 (defun linode? ()
   #-screenshotbot-oss

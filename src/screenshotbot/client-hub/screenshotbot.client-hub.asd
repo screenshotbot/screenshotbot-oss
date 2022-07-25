@@ -8,7 +8,8 @@
   :depends-on (#:screenshotbot.sdk/common-flags
                #:screenshotbot/hub
                #:server/interrupts
-               #:screenshotbot/replay-core)
+               #:screenshotbot/replay
+               #:scale)
   :components ((:file "flags")
                (:file "selenium")
                (:file "main")))

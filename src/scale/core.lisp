@@ -61,6 +61,7 @@
    (log:info "Downloading ~a" url)
    (let ((input (util/request:http-request
                  url
+                 :ensure-success t
                  :want-stream t
                  :force-binary t)))
      (with-open-file (output output :element-type '(unsigned-byte 8)
@@ -76,7 +77,9 @@
   (let ((cache (ensure-directories-exist
                 (make-pathname
                  :name (ironclad:byte-array-to-hex-string (md5:md5sum-string url))
-                 :defaults "build/web-cache/"))))
+                 :defaults (asdf:system-relative-pathname
+                            :screenshotbot
+                            "../../build/web-cache/")))))
     (unless (path:-e cache)
       (download-file url cache))
     (assert (path:-e cache))
