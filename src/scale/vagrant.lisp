@@ -9,7 +9,7 @@
               :reader tmpdir)
    (ip-address :accessor ip-address)
    (known-hosts :accessor known-hosts)
-   (ssh-config :accessor ssh-config)))
+   (ssh-port :accessor ssh-port)))
 
 (defmethod ssh-user ((self instance))
   "vagrant")
@@ -54,22 +54,22 @@ end" out))
     (list "vagrant" "scp" (namestring (secret-file "id_rsa.pub"))
           "default:/home/vagrant/.ssh/authorized_keys2")
     :directory directory)
-   (let ((ip-address (ssh-run-via-vagrant ret "hostname -I"
-                                          :output 'string)))
-     (log:info "Got IP address: ~a" ip-address)
-     (setf (ip-address ret) (str:trim ip-address)))
    (let ((known-hosts (ssh-run-via-vagrant ret
-                                           (format nil "ssh-keyscan ~a" (ip-address ret))
+                                           "ssh-keyscan localhost"
                                            :output 'string)))
      (log:info "Got known hosts: ~a" known-hosts)
      (setf (known-hosts ret) known-hosts))
    (let ((ssh-config (run* (list "vagrant" "ssh-config")
                            :directory directory
                            :output 'string)))
-     (log:info "Got ssh config: ~a" ssh-config)
-     (setf (ssh-config ret) (str:replace-all "Host default"
-                                             (format nil "Host ~a" (ip-address ret))
-                                             ssh-config)))))
+     (flet ((read-config (name)
+              (loop for line in (str:lines ssh-config)
+                    for (key val) = (str:split " " (str:trim line))
+                    if (string-equal key name)
+                      return val)))
+
+       (setf (ip-address ret) (read-config "HostName"))
+       (setf (ssh-port ret) (read-config "Port"))))))
 
 (defmethod delete-instance ((self instance))
   (log:info "Stopping container")

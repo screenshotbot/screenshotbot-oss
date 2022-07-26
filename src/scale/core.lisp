@@ -14,9 +14,9 @@
    #:rewrite-known-hosts
    #:known-hosts
    #:secret-file
-   #:ssh-config
    #:ssh-sudo
-   #:ssh-user))
+   #:ssh-user
+   #:ssh-port))
 (in-package :scale/core)
 
 (defvar *last-instance*)
@@ -34,7 +34,9 @@
 
 (defgeneric known-hosts (instance))
 
-(defgeneric ssh-config (instance))
+(defgeneric ssh-port (instance)
+  (:method (instance)
+    22))
 
 (defmethod ssh-run (instance (cmd list) &rest args &key &allow-other-keys)
   (apply #'ssh-run
@@ -110,27 +112,23 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
 
 (defun rewrite-known-hosts (input ip-addr)
   "Rewrite the output of ssh-keyscan localhost"
-  (cl-ppcre:regex-replace-all "^localhost "
-                              input
-                              (format nil "~a " ip-addr)))
+  (let ((scanner (cl-ppcre:create-scanner "^localhost " :multi-line-mode t)))
+   (cl-ppcre:regex-replace-all scanner
+                               input
+                               (format nil "~a " ip-addr))))
 
-;; (rewrite-known-hosts *test* "1.2.3.4")
+;; (format t (rewrite-known-hosts *test* "1.2.3.4"))
 
-(defmacro with-ssh-config ((config name) self &body body)
+(defmacro with-known-hosts ((name) self &body body)
   (let ((self-sym (gensym "self"))
         (s (gensym "s")))
     `(let ((,self-sym ,self))
-       (uiop:with-temporary-file (:pathname ,config :stream ,s :direction :output)
-         (declare (ignorable ,config))
-         (write-string (ssh-config ,self-sym)
-                       ,s)
+       (uiop:with-temporary-file (:pathname ,name :stream ,s :direction :output)
+         (declare (ignorable ,name))
+         (write-string (rewrite-known-hosts (known-hosts ,self-sym)
+                                            (ip-address ,self-sym)) ,s)
          (finish-output ,s)
-         (uiop:with-temporary-file (:pathname ,name :stream ,s :direction :output)
-           (declare (ignorable ,name))
-           (write-string (rewrite-known-hosts (known-hosts ,self-sym)
-                                              (ip-address ,self-sym)) ,s)
-           (finish-output ,s)
-           ,@body)))))
+         ,@body))))
 
 (defun secret-file (name)
   (namestring
@@ -146,7 +144,7 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
                      &key (output *standard-output*)
                        (error-output *standard-output*))
    (log:info "Running via core SSH: ~a" cmd)
-   (with-ssh-config (config known-hosts) self
+   (with-known-hosts (known-hosts) self
      (uiop:run-program
       `("ssh" ,@ (ssh-opts self config known-hosts)
                  ,(format nil "~a@~a"
@@ -161,18 +159,19 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
          self (format nil "sudo ~a" cmd)
          args))
 
-(defmethod ssh-opts ((self t) config known-hosts)
-  `("-F" ,(namestring config)
+(defmethod ssh-opts ((self t) known-hosts &key scp)
+  `(,(if scp "-P" "-p") ,(format nil "~a" (ssh-port self))
+    "-o" "PasswordAuthentication=no"
          "-o" ,(format nil "UserKnownHostsFile=~a" (namestring known-hosts))
          "-i" ,(secret-file "id_rsa")))
 
 (auto-restart:with-auto-restart ()
   (defmethod scp ((self t) from to)
     (log:info "Copying via core SCP")
-    (with-ssh-config (config known-hosts) self
+    (with-known-hosts (known-hosts) self
      (uiop:run-program
       `("scp"
-        ,@ (ssh-opts self config known-hosts)
+        ,@(ssh-opts self known-hosts :scp t)
         ,(namestring from)
         ,(format nil "~a@~a:~a" (ssh-user self)
                  (ip-address self)
