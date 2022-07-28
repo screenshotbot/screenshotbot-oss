@@ -1,5 +1,7 @@
 (defpackage :scale/core
   (:use #:cl)
+  (:import-from #:libssh2
+                #:authentication)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:create-instance
@@ -16,10 +18,18 @@
    #:secret-file
    #:ssh-sudo
    #:ssh-user
-   #:ssh-port))
+   #:ssh-port
+   #:base-instance))
 (in-package :scale/core)
 
 (defvar *last-instance*)
+
+(defclass base-instance ()
+  ((ssh-connection :initform nil
+                   :accessor %ssh-connection)
+   (lock :initform (bt:make-lock)
+         :reader lock)))
+
 (defgeneric create-instance (provider type &key region))
 
 (defgeneric delete-instance (instance))
@@ -33,6 +43,41 @@
 (defgeneric ip-address (instance))
 
 (defgeneric known-hosts (instance))
+
+
+(defmethod delete-instance :before ((instance base-instance))
+  (when (%ssh-connection instance)
+    (libssh2:destroy-ssh-connection (%ssh-connection instance))))
+
+(defmacro with-known-hosts ((name) self &body body)
+  (let ((self-sym (gensym "self"))
+        (s (gensym "s")))
+    `(let ((,self-sym ,self))
+       (uiop:with-temporary-file (:pathname ,name :stream ,s :direction :output)
+         (declare (ignorable ,name))
+         (write-string (rewrite-known-hosts (known-hosts ,self-sym)
+                                            (ip-address ,self-sym)) ,s)
+         (finish-output ,s)
+         ,@body))))
+
+(defmethod ssh-connection ((self base-instance))
+  (bt:with-lock-held ((lock self))
+   (util/misc:or-setf
+    (%ssh-connection self)
+    (with-known-hosts (known-hosts) self
+      (log:info "Creating ssh connection")
+      (let ((session (libssh2:create-ssh-connection
+                               (ip-address self)
+                               :hosts-db (namestring known-hosts)
+                               :port (ssh-port self))))
+        (unless (authentication session (libssh2:make-publickey-auth
+                                     (ssh-user self)
+                                     (pathname-directory
+                                      (secret-file "id_rsa"))
+                                     "id_rsa"))
+          (error 'libssh2::ssh-authentication-failure))
+        (log:info "Initial SSH connection: ~a" session)
+        session)))))
 
 (defgeneric ssh-port (instance)
   (:method (instance)
@@ -119,16 +164,6 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
 
 ;; (format t (rewrite-known-hosts *test* "1.2.3.4"))
 
-(defmacro with-known-hosts ((name) self &body body)
-  (let ((self-sym (gensym "self"))
-        (s (gensym "s")))
-    `(let ((,self-sym ,self))
-       (uiop:with-temporary-file (:pathname ,name :stream ,s :direction :output)
-         (declare (ignorable ,name))
-         (write-string (rewrite-known-hosts (known-hosts ,self-sym)
-                                            (ip-address ,self-sym)) ,s)
-         (finish-output ,s)
-         ,@body))))
 
 (defun secret-file (name)
   (namestring
@@ -138,43 +173,99 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
      "../../.secrets/")
     name)))
 
+(defmethod read-streams ((stream libssh2:ssh-channel-stream)
+                         stdout-callback
+                         stderr-callback)
+  (let* ((socket (libssh2:socket stream))
+         (channel (libssh2:channel stream))
+         (+size+ 32)
+         (arr (make-array +size+ :element-type '(unsigned-byte 8) :allocation :static)))
+
+    (unwind-protect
+         (progn
+           #+lispworks
+           (mp:notice-fd (usocket:socket socket))
+
+           (loop while t do
+             (when (libssh2:channel-eofp channel)
+               (return))
+
+             (let ((did-read? nil))
+               (flet ((read-stream (stream callback)
+                        (let ((read (libssh2:channel-read
+                                     channel
+                                     arr
+                                     :end +size+
+                                     :type stream)))
+                          (cond
+                            ((< read 0)
+                             (error "Error while reading SSH stream"))
+                            ((> read 0)
+                             (setf did-read? t)
+                             (funcall callback arr read))
+                            ((= 0 read)
+                             (return-from read-streams))))))
+                 (read-stream :stdout stdout-callback)
+                 #+nil ;; not sure this works :/
+                 (read-stream :stderr stderr-callback))
+               (unless did-read?
+                 (sleep 0.1)))))
+
+      #+lispworks
+      (mp:unnotice-fd (usocket:socket socket)))))
+
 
 (auto-restart:with-auto-restart ()
  (defmethod ssh-run ((self t) cmd
                      &key (output *standard-output*)
                        (error-output *standard-output*))
    (log:info "Running via core SSH: ~a" cmd)
-   (with-known-hosts (known-hosts) self
-     (uiop:run-program
-      `("ssh" ,@ (ssh-opts self config known-hosts)
-                 ,(format nil "~a@~a"
-                          (ssh-user self)
-                          (ip-address self))
-                 "bash" "-c" ,(uiop:escape-sh-token cmd))
-      :output output
-      :error-output error-output))))
+   (let ((conn (ssh-connection self)))
+     (libssh2:with-execute (stream conn (format nil "~a 2>/dev/null" cmd))
+       (labels ((flush-output (output buf size)
+                  (write-sequence
+                   (flexi-streams:octets-to-string buf
+                                                   :end  size)
+                   output))
+                (do-reading (output)
+                  (read-streams stream
+                                (lambda (buf size)
+                                  (flush-output output buf size))
+                                (lambda (buf size)
+                                  (flush-output error-output buf size)))))
+
+         (cond
+           ((eql 'string output)
+            (with-output-to-string (out)
+              (do-reading out)))
+           (t
+            (do-reading output))))))))
+
+#+nil
+(libssh2:with-ssh-connection conn
+    ("tdrhq.com"
+     (libssh2:make-publickey-auth
+      "arnold"
+      (pathname-directory #P "~/.ssh/")
+      "id_rsa")
+     :hosts-db (namestring #P "/home/arnold/.ssh/known_hosts")
+     :port 22)
+  (libssh2:with-execute (stream conn "ls")
+    (let ((stream (flexi-streams:make-flexi-stream stream)))
+     (format t "~a~%"
+             (uiop:slurp-input-stream 'string stream)))))
 
 (defmethod ssh-sudo ((self t) (cmd string) &rest args)
   (apply #'ssh-run
          self (format nil "sudo ~a" cmd)
          args))
 
-(defmethod ssh-opts ((self t) known-hosts &key scp)
-  `(,(if scp "-P" "-p") ,(format nil "~a" (ssh-port self))
-    "-o" "PasswordAuthentication=no"
-         "-o" ,(format nil "UserKnownHostsFile=~a" (namestring known-hosts))
-         "-i" ,(secret-file "id_rsa")))
 
 (auto-restart:with-auto-restart ()
   (defmethod scp ((self t) from to)
     (log:info "Copying via core SCP")
-    (with-known-hosts (known-hosts) self
-     (uiop:run-program
-      `("scp"
-        ,@(ssh-opts self known-hosts :scp t)
-        ,(namestring from)
-        ,(format nil "~a@~a:~a" (ssh-user self)
-                 (ip-address self)
-                 (namestring to)))
-      :output *standard-output*
-      :error-output *standard-output*))))
+    (let ((conn (ssh-connection self)))
+      (libssh2:scp-put
+       from
+       to
+       conn))))

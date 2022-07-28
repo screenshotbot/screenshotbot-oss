@@ -4,7 +4,7 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :scale/vagrant)
 
-(defclass instance ()
+(defclass instance (base-instance)
   ((directory :initarg :directory
               :reader tmpdir)
    (ip-address :accessor ip-address)
@@ -49,11 +49,14 @@ end" out))
       ret)))
 
 (auto-restart:with-auto-restart ()
- (defun prepare-vagrant-instance (ret directory)
-   (run*
-    (list "vagrant" "scp" (namestring (secret-file "id_rsa.pub"))
-          "default:/home/vagrant/.ssh/authorized_keys2")
-    :directory directory)
+  (defun prepare-vagrant-instance (ret directory)
+    (run*
+     (list "vagrant" "scp" (namestring (secret-file "id_rsa.pub"))
+          "default:/home/vagrant/id_rsa.pub")
+     :directory directory)
+
+    (ssh-run-via-vagrant ret
+                         "cat id_rsa.pub >> ~vagrant/.ssh/authorized_keys && cat ~vagrant/.ssh/authorized_keys")
    (let ((known-hosts (ssh-run-via-vagrant ret
                                            "ssh-keyscan localhost"
                                            :output 'string)))
@@ -69,7 +72,7 @@ end" out))
                       return val)))
 
        (setf (ip-address ret) (read-config "HostName"))
-       (setf (ssh-port ret) (read-config "Port"))))))
+       (setf (ssh-port ret) (parse-integer (read-config "Port")))))))
 
 (defmethod delete-instance ((self instance))
   (log:info "Stopping container")

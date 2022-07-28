@@ -34,7 +34,7 @@
     :initform "https://staging.screenshotbot.io"
     :reader callback-server)))
 
-(defclass instance ()
+(defclass instance (base-instance)
   ((id :initarg :id
        :reader instance-id)
    (callback-received-p
