@@ -184,10 +184,11 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
 
 (defmethod read-streams ((stream libssh2:ssh-channel-stream)
                          stdout-callback
-                         stderr-callback)
+                         stderr-callback
+                         &key (interrupt-fn (lambda () nil)))
   (let* ((socket (libssh2:socket stream))
          (channel (libssh2:channel stream))
-         (+size+ 32)
+         (+size+ 2560)
          (arr (make-array +size+ :element-type '(unsigned-byte 8) :allocation :static)))
 
     (unwind-protect
@@ -195,7 +196,7 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
            #+lispworks
            (mp:notice-fd (usocket:socket socket))
 
-           (loop while t do
+           (loop while (not (funcall interrupt-fn)) do
              (when (libssh2:channel-eofp channel)
                (return))
 
@@ -205,8 +206,11 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
                                      channel
                                      arr
                                      :end +size+
-                                     :type stream)))
+                                     :type stream
+                                     :non-blocking t)))
                           (cond
+                            ((eql libssh2:+eagain+ read)
+                             (libssh2:wait-for-fd channel))
                             ((< read 0)
                              (error "Error while reading SSH stream"))
                             ((> read 0)
@@ -223,11 +227,19 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
       #+lispworks
       (mp:unnotice-fd (usocket:socket socket)))))
 
+(defclass remote-process ()
+  ((thread :initarg :thread)
+   (exit-status :initform nil
+                :reader exit-status)
+   (terminate-flag :initform nil
+                   :accessor terminate-flag)))
+
 
 (auto-restart:with-auto-restart ()
  (defmethod ssh-run ((self t) cmd
                      &key (output *standard-output*)
-                       (error-output *standard-output*))
+                       (error-output *standard-output*)
+                       (interrupt-fn (lambda () nil)))
    (log:info "Running via core SSH: ~a" cmd)
    (with-ssh-connection (conn self :non-blocking t)
      (libssh2:with-execute (stream conn (format nil "~a 2>/dev/null" cmd))
@@ -241,7 +253,8 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
                                 (lambda (buf size)
                                   (flush-output output buf size))
                                 (lambda (buf size)
-                                  (flush-output error-output buf size)))))
+                                  (flush-output error-output buf size))
+                                :interrupt-fn interrupt-fn)))
 
          (cond
            ((eql 'string output)
@@ -249,6 +262,9 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
               (do-reading out)))
            (t
             (do-reading output))))))))
+
+
+
 
 #+nil
 (libssh2:with-ssh-connection conn
