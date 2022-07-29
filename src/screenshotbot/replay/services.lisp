@@ -118,7 +118,8 @@
 (defimage (debian-base :instance instance)
           ()
           :debian-11
-  (ssh-sudo instance (list "apt-get" "update")))
+  (ssh-sudo instance (list "apt-get" "update"))
+  (ssh-sudo instance "apt-get install -y xvfb"))
 
 (defimage (firefox :instance instance)
     (version)

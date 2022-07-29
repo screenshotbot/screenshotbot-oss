@@ -73,7 +73,7 @@
 
 (auto-restart:with-auto-restart ()
   (defun process-vagrant-instance (instance arguments)
-    (ssh-run instance "./geckodriver -vv --binary firefox/firefox < /dev/null > geckdriver_output 2>&1 &")
+    (ssh-run instance "xvfb-run ./geckodriver -vv --binary firefox/firefox < /dev/null > geckdriver_output 2>&1 &")
     (wait-for-driver-ready instance "http://localhost:4444")
     (let ((resp (http-request-via instance
                                   "http://localhost:4444/session"
