@@ -260,10 +260,11 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
      (funcall fn))
     (t
      (let ((*ssh-connection-cache* nil))
-       (funcall fn)
-       (loop for (nil . conn) in *ssh-connection-cache*
-             do
-                (libssh2:destroy-ssh-connection conn))))))
+       (unwind-protect
+            (funcall fn)
+         (loop for (nil . conn) in *ssh-connection-cache*
+               do
+                  (libssh2:destroy-ssh-connection conn)))))))
 
 
 (auto-restart:with-auto-restart ()

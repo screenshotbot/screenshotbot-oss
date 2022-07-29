@@ -35,6 +35,9 @@
       (write-string
        "Vagrant.configure('2') do |config|
   config.vm.box = \"debian/bullseye64\"
+  config.vm.provider \"virtualbox\" do |v|
+    v.memory = 2048
+  end
 end" out))
     (run*
      (list "vagrant" "up")
