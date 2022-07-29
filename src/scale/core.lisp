@@ -25,9 +25,7 @@
 (defvar *last-instance*)
 
 (defclass base-instance ()
-  ((ssh-connection :initform nil
-                   :accessor %ssh-connection)
-   (lock :initform (bt:make-lock)
+  ((lock :initform (bt:make-lock)
          :reader lock)))
 
 (defgeneric create-instance (provider type &key region))
@@ -45,9 +43,7 @@
 (defgeneric known-hosts (instance))
 
 
-(defmethod delete-instance :before ((instance base-instance))
-  (when (%ssh-connection instance)
-    (libssh2:destroy-ssh-connection (%ssh-connection instance))))
+(defmethod delete-instance :before ((instance base-instance)))
 
 (defmacro with-known-hosts ((name) self &body body)
   (let ((self-sym (gensym "self"))
@@ -61,23 +57,31 @@
          ,@body))))
 
 (defmethod ssh-connection ((self base-instance))
-  (bt:with-lock-held ((lock self))
-   (util/misc:or-setf
-    (%ssh-connection self)
-    (with-known-hosts (known-hosts) self
-      (log:info "Creating ssh connection")
-      (let ((session (libssh2:create-ssh-connection
-                               (ip-address self)
-                               :hosts-db (namestring known-hosts)
-                               :port (ssh-port self))))
-        (unless (authentication session (libssh2:make-publickey-auth
-                                     (ssh-user self)
-                                     (pathname-directory
-                                      (secret-file "id_rsa"))
-                                     "id_rsa"))
-          (error 'libssh2::ssh-authentication-failure))
-        (log:info "Initial SSH connection: ~a" session)
-        session)))))
+  (with-known-hosts (known-hosts) self
+    (log:info "Creating ssh connection")
+    (let ((session (libssh2:create-ssh-connection
+                    (ip-address self)
+                    :hosts-db (namestring known-hosts)
+                    :port (ssh-port self))))
+      (unless (authentication session (libssh2:make-publickey-auth
+                                       (ssh-user self)
+                                       (pathname-directory
+                                        (secret-file "id_rsa"))
+                                       "id_rsa"))
+        (error 'libssh2::ssh-authentication-failure))
+      (log:info "Initial SSH connection: ~a" session)
+      session)))
+
+(defmethod call-with-ssh-connection ((Self base-instance) fn)
+  (let ((conn (ssh-connection self)))
+    (unwind-protect
+         (funcall fn conn)
+      (libssh2:destroy-ssh-Connection conn))))
+
+(defmacro with-ssh-connection ((conn self) &body body)
+  `(call-with-ssh-connection
+    ,self
+    (lambda (,conn) ,@body)))
 
 (defgeneric ssh-port (instance)
   (:method (instance)
@@ -220,7 +224,7 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
                      &key (output *standard-output*)
                        (error-output *standard-output*))
    (log:info "Running via core SSH: ~a" cmd)
-   (let ((conn (ssh-connection self)))
+   (with-ssh-connection (conn self)
      (libssh2:with-execute (stream conn (format nil "~a 2>/dev/null" cmd))
        (labels ((flush-output (output buf size)
                   (write-sequence
@@ -264,7 +268,7 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
 (auto-restart:with-auto-restart ()
   (defmethod scp ((self t) from to)
     (log:info "Copying via core SCP")
-    (let ((conn (ssh-connection self)))
+    (with-ssh-connection (conn self)
       (libssh2:scp-put
        from
        to
