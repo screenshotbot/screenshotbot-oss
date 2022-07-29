@@ -19,7 +19,8 @@
    #:ssh-sudo
    #:ssh-user
    #:ssh-port
-   #:base-instance))
+   #:base-instance
+   #:http-request-via))
 (in-package :scale/core)
 
 (defvar *last-instance*)
@@ -297,3 +298,20 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
         from
         to
         conn)))))
+
+(auto-restart:with-auto-restart ()
+ (defmethod http-request-via ((self t)
+                              url &rest args)
+   (let ((uri (quri:uri url)))
+    (with-ssh-connection (conn self :non-blocking t)
+      (let ((stream (libssh2:channel-direct-tcpip
+                     conn
+                     (quri:uri-host uri)
+                     (or (quri:uri-port uri) 80))))
+        ;; The stream will be closed by drakma
+        (let ((stream (flexi-streams:make-flexi-stream (chunga:make-chunked-stream stream))))
+          (apply #'util/request:http-request
+                 url
+                 :stream stream
+                 :close t
+                 args)))))))

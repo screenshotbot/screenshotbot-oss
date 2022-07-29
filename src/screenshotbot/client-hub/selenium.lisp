@@ -10,6 +10,7 @@
   (:import-from #:scale/vagrant
                 #:vagrant)
   (:import-from #:scale/core
+                #:http-request-via
                 #:ssh-run
                 #:delete-instance
                 #:create-instance)
@@ -47,15 +48,21 @@
     (bt:with-lock-held (*lock*)
      (push instance (instances hub)))
     (restart-case
-        (process-vagrant-instance instance)
+        (process-vagrant-instance instance arguments)
       (cleanup-image-and-error ()
         (delete-instance instance)
         (error "No instance to work with since we cleaned up the image")))))
 
 (auto-restart:with-auto-restart ()
-  (defun process-vagrant-instance (instance)
-    (ssh-run instance "./geckodriver --binary firefox/firefox < /dev/null >/dev/null 2>&1 &")
-    (error "unimpl")))
+  (defun process-vagrant-instance (instance arguments)
+    (ssh-run instance "./geckodriver -v --binary firefox/firefox < /dev/null > geckdriver_output 2>&1 &")
+    (let ((resp (http-request-via instance
+                                  "http://localhost:4444/session"
+                                  :method :post
+                                  :content arguments
+                                  :content-type "application/json"
+                                  :want-string t)))
+      (error "don't know what to do with: ~a" resp))))
 
 
 (defun start-hub ()
