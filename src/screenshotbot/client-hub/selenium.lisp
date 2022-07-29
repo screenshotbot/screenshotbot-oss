@@ -58,10 +58,18 @@
 (auto-restart:with-auto-restart ()
   (defun wait-for-driver-ready (instance url)
     (loop while t do
-      (let ((response (http-request-via instance
-                                        (format nil "~a/status" url)
-                                        :want-string t)))
-        (error "got status ~s" response)))))
+      (let ((response (ignore-errors
+                       (http-request-via instance
+                                         (format nil "~a/status" url)
+                                         :want-string t))))
+        (let ((body (ignore-errors
+                     (json:decode-json-from-string response))))
+          (cond
+            ((a:assoc-value (a:assoc-value body :value) :ready)
+             (return t))
+            (t
+             (log:info "driver not ready yet")
+             (sleep 0.1))))))))
 
 (auto-restart:with-auto-restart ()
   (defun process-vagrant-instance (instance arguments)
