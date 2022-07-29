@@ -70,8 +70,9 @@
   `(with-instance (,instance ,provider ,size)
      ;; replay the image on it for now.. in the future, we'll actually
      ;; cache the image
-     (apply-image ,instance ',image)
-     ,@body))
+     (scale/core:with-cached-ssh-connections ()
+       (apply-image ,instance ',image)
+       ,@body)))
 
 (defun create-image-instance (image provider &key size)
   "Creates an instance, but make sure you call destroy-instance on the response"

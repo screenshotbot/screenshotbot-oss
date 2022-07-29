@@ -20,10 +20,13 @@
    #:ssh-user
    #:ssh-port
    #:base-instance
-   #:http-request-via))
+   #:http-request-via
+   #:with-cached-ssh-connections))
 (in-package :scale/core)
 
 (defvar *last-instance*)
+
+(defvar *ssh-connection-cache*)
 
 (defclass base-instance ()
   ((lock :initform (bt:make-lock)
@@ -73,15 +76,25 @@
       (log:info "Initial SSH connection: ~a" session)
       session)))
 
-(defmethod call-with-ssh-connection ((Self base-instance) fn &key non-blocking)
-  (let ((conn (ssh-connection self)))
-    (when non-blocking
-      (libssh2::session-set-blocking
-       (libssh2:session conn)
-       :non-blocking))
-    (unwind-protect
-         (funcall fn conn)
-      (libssh2:destroy-ssh-Connection conn))))
+(defmethod call-with-ssh-connection ((Self base-instance) fn &key (non-blocking t))
+  (let ((caching-enabled-p (and non-blocking
+                                (boundp '*ssh-connection-cache*))))
+   (let ((conn (cond
+                 (caching-enabled-p
+                  (util/misc:or-setf
+                   (a:assoc-value *ssh-connection-cache*
+                                  self)
+                   (ssh-connection self)))
+                 (t
+                  (ssh-connection self)))))
+     (when non-blocking
+       (libssh2::session-set-blocking
+        (libssh2:session conn)
+        :non-blocking))
+     (unwind-protect
+          (funcall fn conn)
+       (unless caching-enabled-p
+         (libssh2:destroy-ssh-Connection conn))))))
 
 (defmacro with-ssh-connection ((conn self &key non-blocking) &body body)
   `(call-with-ssh-connection
@@ -234,6 +247,23 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
                 :reader exit-status)
    (terminate-flag :initform nil
                    :accessor terminate-flag)))
+
+(defmacro with-cached-ssh-connections (() &body body)
+  `(call-with-cached-ssh-connections
+    (lambda () ,@body)))
+
+
+(defun call-with-cached-ssh-connections (fn)
+  (cond
+    ((boundp '*ssh-connection-cache*)
+     ;; nested calls
+     (funcall fn))
+    (t
+     (let ((*ssh-connection-cache* nil))
+       (funcall fn)
+       (loop for (nil . conn) in *ssh-connection-cache*
+             do
+                (libssh2:destroy-ssh-connection conn))))))
 
 
 (auto-restart:with-auto-restart ()
