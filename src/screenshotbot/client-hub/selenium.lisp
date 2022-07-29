@@ -10,6 +10,7 @@
   (:import-from #:scale/vagrant
                 #:vagrant)
   (:import-from #:scale/core
+                #:with-cached-ssh-connections
                 #:http-request-via
                 #:ssh-run
                 #:delete-instance
@@ -41,21 +42,31 @@
 
 (defmethod request-session-and-respond ((hub vagrant-based-hub)
                                         (arguments string))
-  (let ((instance (create-image-instance
-                   '(firefox :version "102.0")
-                   *vagrant-service*
-                   :size :small)))
-    (bt:with-lock-held (*lock*)
-     (push instance (instances hub)))
-    (restart-case
-        (process-vagrant-instance instance arguments)
-      (cleanup-image-and-error ()
-        (delete-instance instance)
-        (error "No instance to work with since we cleaned up the image")))))
+  (with-cached-ssh-connections ()
+   (let ((instance (create-image-instance
+                    '(firefox :version "102.0")
+                    *vagrant-service*
+                    :size :small)))
+     (bt:with-lock-held (*lock*)
+       (push instance (instances hub)))
+     (restart-case
+         (process-vagrant-instance instance arguments)
+       (cleanup-image-and-error ()
+         (delete-instance instance)
+         (error "No instance to work with since we cleaned up the image"))))))
+
+(auto-restart:with-auto-restart ()
+  (defun wait-for-driver-ready (instance url)
+    (loop while t do
+      (let ((response (http-request-via instance
+                                        (format nil "~a/status" url)
+                                        :want-string t)))
+        (error "got status ~s" response)))))
 
 (auto-restart:with-auto-restart ()
   (defun process-vagrant-instance (instance arguments)
-    (ssh-run instance "./geckodriver -v --binary firefox/firefox < /dev/null > geckdriver_output 2>&1 &")
+    (ssh-run instance "./geckodriver -vv --binary firefox/firefox < /dev/null > geckdriver_output 2>&1 &")
+    (wait-for-driver-ready instance "http://localhost:4444")
     (let ((resp (http-request-via instance
                                   "http://localhost:4444/session"
                                   :method :post
