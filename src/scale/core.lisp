@@ -229,7 +229,7 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
                      &key (output *standard-output*)
                        (error-output *standard-output*))
    (log:info "Running via core SSH: ~a" cmd)
-   (with-ssh-connection (conn self)
+   (with-ssh-connection (conn self :non-blocking t)
      (libssh2:with-execute (stream conn (format nil "~a 2>/dev/null" cmd))
        (labels ((flush-output (output buf size)
                   (write-sequence
