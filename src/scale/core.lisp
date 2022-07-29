@@ -72,16 +72,21 @@
       (log:info "Initial SSH connection: ~a" session)
       session)))
 
-(defmethod call-with-ssh-connection ((Self base-instance) fn)
+(defmethod call-with-ssh-connection ((Self base-instance) fn &key non-blocking)
   (let ((conn (ssh-connection self)))
+    (when non-blocking
+      (libssh2::session-set-blocking
+       (libssh2:session conn)
+       :non-blocking))
     (unwind-protect
          (funcall fn conn)
       (libssh2:destroy-ssh-Connection conn))))
 
-(defmacro with-ssh-connection ((conn self) &body body)
+(defmacro with-ssh-connection ((conn self &key non-blocking) &body body)
   `(call-with-ssh-connection
     ,self
-    (lambda (,conn) ,@body)))
+    (lambda (,conn) ,@body)
+    :non-blocking ,non-blocking))
 
 (defgeneric ssh-port (instance)
   (:method (instance)
@@ -268,8 +273,11 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
 (auto-restart:with-auto-restart ()
   (defmethod scp ((self t) from to)
     (log:info "Copying via core SCP")
-    (with-ssh-connection (conn self)
-      (libssh2:scp-put
-       from
-       to
-       conn))))
+    (with-ssh-connection (conn self :non-blocking t)
+      (with-open-file (in from
+                          :direction :input
+                          :element-type '(unsigned-byte 8))
+       (libssh2:scp-put
+        from
+        to
+        conn)))))
