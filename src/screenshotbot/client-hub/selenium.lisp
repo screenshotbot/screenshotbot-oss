@@ -10,6 +10,7 @@
   (:import-from #:scale/vagrant
                 #:vagrant)
   (:import-from #:scale/core
+                #:ssh-run
                 #:delete-instance
                 #:create-instance)
   (:import-from #:scale/image
@@ -53,6 +54,7 @@
 
 (auto-restart:with-auto-restart ()
   (defun process-vagrant-instance (instance)
+    (ssh-run instance "./geckodriver --binary firefox/firefox < /dev/null >/dev/null 2>&1 &")
     (error "unimpl")))
 
 
