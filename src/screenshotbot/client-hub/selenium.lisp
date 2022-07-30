@@ -78,8 +78,9 @@
                                   &key method content content-type
                                     script-name)
   (let* ((session-id (elt (str:split "/" script-name) 4))
+         (rest-script (a:lastcar (str:split "/" script-name :limit 4)))
          (url (format nil "http://localhost:4444/~a"
-                      (a:lastcar (str:split "/" script-name :limit 4)))))
+                      rest-script)))
     (log:info "Delegating request for session: ~a to ~a" session-id url)
     (let* ((session (find-session hub session-id))
            (instance (session-instance session)))
@@ -95,8 +96,20 @@
         (setf (hunchentoot:return-code*) ret)
         (setf (hunchentoot:content-type*) (a:assoc-value headers :content-type))
         (log:info "Relaying back response: ~a" (str:shorten 80 data))
+
+        (maybe-delete-session hub session rest-script method)
+
         data))))
 
+
+(defun maybe-delete-session (hub session rest-script method)
+  (log:trace "Got query: ~a ~a" method rest-script)
+  (when (and (eql method :delete)
+             (eql 2 (length (str:split "/" rest-script))))
+    (bt:with-lock-held (*lock*)
+      (a:removef (sessions hub) session))
+    (log:info "Deleting instance")
+    (delete-instance (session-instance session))))
 
 (auto-restart:with-auto-restart ()
   (defun wait-for-driver-ready (instance url)
