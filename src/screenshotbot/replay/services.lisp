@@ -122,7 +122,7 @@
   (ssh-sudo instance (list "apt-get" "update"))
   (ssh-sudo instance "apt-get install -y xvfb"))
 
-(defimage (firefox :instance instance :version 2)
+(defimage (firefox :instance instance :version 3)
     (version)
     debian-base
   (install-firefox instance version)

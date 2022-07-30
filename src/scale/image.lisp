@@ -97,17 +97,23 @@
 (defmethod apply-image (instance (image-spec (eql :debian-11))
                         &key apply-parent))
 
-(defmethod apply-image (instance image-spec &key (apply-parent t))
+(defun destructure-spec (image-spec)
   (when (not (root-spec-p image-spec))
-   (let ((image-spec (if (symbolp image-spec) (list image-spec) image-spec)))
-     (destructuring-bind (name . args) image-spec
-       (let ((spec (a:assoc-value *image-specs* name)))
-         (unless spec
-           (error "Could not find spec for ~a" name))
-         (when apply-parent
-          (let ((parent (apply (parent-image-fn spec) args)))
-            (apply-image instance parent)))
-         (apply (init-fn spec) instance args))))))
+    (let ((image-spec (if (symbolp image-spec) (list image-spec) image-spec)))
+      (destructuring-bind (name . args) image-spec
+        (let ((spec (a:assoc-value *image-specs* name)))
+          (unless spec
+            (error "Could not find spec for ~a" name))
+          (values
+           spec
+           args
+           (apply (parent-image-fn spec) args)))))))
+
+(defmethod apply-image (instance image-spec &key (apply-parent t))
+  (multiple-value-bind (spec args parent) (destructure-spec image-spec)
+    (when apply-parent
+      (apply-image instance parent))
+    (apply (init-fn spec) instance args)))
 
 (defmacro with-imaged-instance ((instance image provider &key size) &body body)
   `(call-with-imaged-instance
@@ -126,16 +132,24 @@
 
 (defun create-image-instance (image provider &key size)
   "Creates an instance, but make sure you call destroy-instance on the response"
-  (let ((snapshot-name (image-spec-serialized-key image)))
-    (cond
-      ((snapshot-exists-p provider snapshot-name)
-       (create-instance provider size
-                        :image snapshot-name))
-      (t
-       (with-instance (instance provider size)
-         ;; replay the image on it for now.. in the future, we'll actually
-         ;; cache the image
-         (scale/core:with-cached-ssh-connections ()
-           (apply-image instance image)
-           (make-snapshot instance snapshot-name)
-           instance))))))
+  (cond
+    ((or (eql :debian-11 image)
+         (equal '(:debian-11) image))
+     (create-instance provider :debian-11 :size size))
+    (t
+     (let ((snapshot-name (image-spec-serialized-key image)))
+       (cond
+         ((snapshot-exists-p provider snapshot-name)
+          (create-instance provider size
+                           :image snapshot-name))
+         (t
+
+          (multiple-value-bind (spec args parent-spec) (destructure-spec image)
+            (declare (ignore spec args))
+            (let ((instance (create-image-instance parent-spec
+                                                   provider
+                                                   :size size)))
+              (scale/core:with-cached-ssh-connections ()
+                (apply-image instance image :apply-parent nil))
+              (make-snapshot instance snapshot-name)
+              instance))))))))

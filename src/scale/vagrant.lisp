@@ -4,7 +4,9 @@
   (:import-from #:scale/core
                 #:make-snapshot
                 #:snapshot-exists-p)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:*vagrant*))
 (in-package :scale/vagrant)
 
 (defvar *lock* (bt:make-lock))
@@ -190,4 +192,10 @@ end
                  :name snapshot-name
                  :type "box"))
                (config-name (instance-config self)))
-         :directory (vagrant-dir))))
+          :directory (vagrant-dir))
+    ;; Bring the instance back up.
+    (run* (list "vagrant" "up" (config-name (instance-config self)))
+          :directory (vagrant-dir))
+    ;; In case the IP address or some such changed, let's make sure we
+    ;; can still access it.
+    (prepare-vagrant-instance self (vagrant-dir))))
