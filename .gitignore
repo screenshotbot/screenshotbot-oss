@@ -40,3 +40,4 @@ amazon-acceptance-test.zip
 tmp-upload
 .secrets
 .qlot
+.vagrant
