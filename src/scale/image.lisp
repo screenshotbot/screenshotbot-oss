@@ -1,6 +1,7 @@
 (defpackage :scale/image
   (:use #:cl)
   (:import-from #:scale/core
+                #:snapshot-pending-p
                 #:with-cached-ssh-connections
                 #:delete-instance
                 #:make-snapshot
@@ -151,5 +152,7 @@
                                                    :size size)))
               (scale/core:with-cached-ssh-connections ()
                 (apply-image instance image :apply-parent nil))
-              (make-snapshot instance snapshot-name)
+              (unless (snapshot-pending-p provider snapshot-name)
+                (log:info "No snapshot pending, making snapshot")
+                (make-snapshot instance snapshot-name))
               instance))))))))

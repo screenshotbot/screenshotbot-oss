@@ -25,7 +25,8 @@
    #:snapshot-supported-p
    #:make-snapshot
    #:create-instance-from-snapshot
-   #:snapshot-exists-p))
+   #:snapshot-exists-p
+   #:snapshot-pending-p))
 (in-package :scale/core)
 
 (defvar *last-instance*)
@@ -54,7 +55,13 @@
 
 (defgeneric make-snapshot (instance snapshot-name))
 
-(defgeneric snapshot-exists-p (provider snapshot-name))
+(defgeneric snapshot-exists-p (provider snapshot-name)
+  (:documentation "The snapshot by this name is created and ready for use"))
+
+(defgeneric snapshot-pending-p (provider snapshot-name)
+  (:method (provider snapshot-name)
+    nil)
+  (:documentation "The snapshot by this name is pending"))
 
 (defgeneric create-instance-from-snapshot (provider snapshot-name type &key region))
 
