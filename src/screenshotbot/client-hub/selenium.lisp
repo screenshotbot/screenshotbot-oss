@@ -28,9 +28,26 @@
 
 (defvar *lock* (bt:make-lock))
 
+(defclass session ()
+  ((id :initarg :id
+       :reader session-id)
+   (instance :initarg :instance
+             :accessor session-instance)
+   (last-used :initform (get-universal-time)
+              :accessor last-used)))
+
 (defclass client-hub ()
-  ((instances :initform nil
-              :accessor instances)))
+  ((sessions :initform nil
+             :accessor sessions)))
+
+(defun find-session (hub session-id)
+  (let ((sessions (bt:with-lock-held (*lock*) (sessions hub))))
+    (loop for session in sessions
+          if (string-equal (session-id session) session-id)
+            return session)))
+
+(defmethod touch-session (session)
+  (setf (last-used session) (get-universal-time)))
 
 (defclass vagrant-based-hub (client-hub)
   ())
@@ -64,8 +81,9 @@
          (url (format nil "http://localhost:4444/~a"
                       (a:lastcar (str:split "/" script-name :limit 4)))))
     (log:info "Delegating request for session: ~a to ~a" session-id url)
-    (let ((instance (a:assoc-value (instances hub) session-id :test #'equal)))
-      (assert instance)
+    (let* ((session (find-session hub session-id))
+           (instance (session-instance session)))
+      (touch-session session)
       (multiple-value-bind (data ret headers)
           (http-request-via instance
                             url
@@ -117,8 +135,11 @@
         (log:info "Got session-id ~a" session-id)
         (assert session-id)
         (bt:with-lock-held (*lock*)
-          (setf (a:assoc-value (instances hub) session-id :test #'equal)
-                instance)))
+          (push
+           (make-instance 'session
+                          :id session-id
+                          :instance instance)
+           (sessions hub))))
       resp)))
 
 
