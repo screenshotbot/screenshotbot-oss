@@ -16,6 +16,7 @@
   (:import-from #:scale/linode
                 #:linode)
   (:import-from #:scale/image
+                #:image-spec-serialized-key
                 #:with-imaged-instance
                 #:defimage)
   (:nicknames :screenshotbot/pro/replay/services)

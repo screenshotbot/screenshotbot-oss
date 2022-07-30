@@ -1,6 +1,9 @@
 (defpackage :scale/vagrant
   (:use #:cl
         #:scale/core)
+  (:import-from #:scale/core
+                #:make-snapshot
+                #:snapshot-exists-p)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :scale/vagrant)
 
@@ -31,6 +34,8 @@
 (defclass vagrant ()
   ((configs :initform nil
             :accessor vagrant-configs)))
+
+(defvar *vagrant* (make-instance 'vagrant))
 
 
 (defun run* (cmd &key (output *standard-output*)
@@ -65,16 +70,28 @@ end
   " (config-name config) (config-box config)))
 
     (write-line
-           "end" out)))
+     "end" out)))
 
-(defmethod create-instance ((self vagrant) type &key &allow-other-keys)
+(defun normalize-image-name (name)
+  (cond
+    ((str:starts-with-p "debian" name)
+     name)
+    (t
+     (format nil "file://~a"
+             (namestring
+              (make-pathname
+               :name name
+               :type "box"
+               :defaults (vagrant-dir)))))))
+
+(defmethod create-instance ((self vagrant) type &key (image "debian/bullseye64") &allow-other-keys)
   (declare (ignore type))
   (log:info "Starting container")
   (let* ((name (bt:with-lock-held (*lock*)
                  (format nil "machine-~a" (incf *ctr*))))
          (config (make-instance 'config
                                 :name name
-                                :box "debian/bullseye64")))
+                                :box (normalize-image-name image))))
     (let ((directory (vagrant-dir)))
       (bt:with-lock-held (*lock*)
         (push config (vagrant-configs self))
@@ -131,6 +148,7 @@ end
    (list "vagrant" "destroy" "-f" "--no-tty" (config-name (instance-config self)))
    :directory (tmpdir self))
   (bt:with-lock-held (*lock*)
+    #+nil ;; never remove configs
     (a:removef (vagrant-configs (vagrant self)) (instance-config self))
     (write-configs (vagrant self))))
 
@@ -154,3 +172,22 @@ end
 (with-instance (instance (make-instance 'vagrant) :small)
   (ssh-run instance "whoami")
   (scp instance "~/default.css" "/root/default.css"))
+
+(auto-restart:with-auto-restart ()
+  (defmethod snapshot-exists-p ((self vagrant) snapshot-name)
+    (path:-e (make-pathname
+              :name snapshot-name
+              :type "box" :defaults
+              (vagrant-dir)))))
+
+
+(auto-restart:with-auto-restart ()
+  (defmethod make-snapshot ((self instance) snapshot-name)
+    (log:info "making snapshot")
+    (run* (list "vagrant" "package" "--output"
+                (namestring
+                 (make-pathname
+                 :name snapshot-name
+                 :type "box"))
+               (config-name (instance-config self)))
+         :directory (vagrant-dir))))

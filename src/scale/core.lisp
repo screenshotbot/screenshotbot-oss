@@ -21,7 +21,11 @@
    #:ssh-port
    #:base-instance
    #:http-request-via
-   #:with-cached-ssh-connections))
+   #:with-cached-ssh-connections
+   #:snapshot-supported-p
+   #:make-snapshot
+   #:create-instance-from-snapshot
+   #:snapshot-exists-p))
 (in-package :scale/core)
 
 (defvar *last-instance*)
@@ -32,7 +36,7 @@
   ((lock :initform (bt:make-lock)
          :reader lock)))
 
-(defgeneric create-instance (provider type &key region))
+(defgeneric create-instance (provider type &key region image))
 
 (defgeneric delete-instance (instance))
 
@@ -45,6 +49,14 @@
 (defgeneric ip-address (instance))
 
 (defgeneric known-hosts (instance))
+
+(defgeneric snapshot-supported-p (provider))
+
+(defgeneric make-snapshot (instance snapshot-name))
+
+(defgeneric snapshot-exists-p (provider snapshot-name))
+
+(defgeneric create-instance-from-snapshot (provider snapshot-name type &key region))
 
 
 (defmethod delete-instance :before ((instance base-instance)))

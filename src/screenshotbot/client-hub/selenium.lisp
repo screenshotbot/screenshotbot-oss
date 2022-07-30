@@ -36,7 +36,7 @@
   ())
 
 
-(defvar *vagrant-service* (make-instance 'vagrant))
+(defvar *vagrant-service* scale/vagrant:*vagrant*)
 
 (defvar *vagrant-hub* (make-instance 'vagrant-based-hub))
 
@@ -76,7 +76,7 @@
         ;;(assert (not (eql ret 500)))
         (setf (hunchentoot:return-code*) ret)
         (setf (hunchentoot:content-type*) (a:assoc-value headers :content-type))
-        (log:info "Relaying back response: ~a" data)
+        (log:info "Relaying back response: ~a" (str:shorten 80 data))
         data))))
 
 
