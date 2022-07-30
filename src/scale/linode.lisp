@@ -144,6 +144,7 @@
                               ("region" . "us-east")
                               ("tags" . #("scale"))
                               ("type" . "g6-nanode-1")
+                              ("swap_size" . 2048)
 
                               ;; Only use the stackscript if we're using a base image
                               ,@ (when (str:starts-with-p "linode/" image)
@@ -244,12 +245,16 @@
 
 (auto-restart:with-auto-restart ()
   (defmethod snapshot-exists-p ((self linode) snapshot-name)
+    nil ;; never take a snapshot
+    #+nil
     (multiple-value-bind (image response)
         (find-snapshot self snapshot-name)
       (when (and image (string-equal "available" (a:assoc-value response :status)))
         image))))
 
 (defmethod snapshot-pending-p ((self linode) snapshot-name)
+  t ;; never take a snapshot
+  #+nil
   (multiple-value-bind (image response)
       (find-snapshot self snapshot-name)
     (and
@@ -276,7 +281,8 @@
                         :parameters `(("description" . "Automatically created snapshot")
                                       ("label" . ,label)
                                       ("disk_id" . ,disk-id)))))
-         (let ((known-hosts (ssh-run self "ssh-keyscan localhost")))
+         (let ((known-hosts (ssh-run self "ssh-keyscan localhost"
+                                     :output 'string)))
            (make-instance 'image
                           :snapshot-name snapshot-name
                           :known-hosts known-hosts
