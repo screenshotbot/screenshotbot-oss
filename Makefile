@@ -203,9 +203,8 @@ $(LW): build $(IMAGE_DEPS)
 # $$PWD is workaround over LW issue #42471
 	$(ARCH_CMD) $(LW_CORE) -build scripts/build-image.lisp
 
-$(sbcl): build $(IMAGE_DEPS)
+$(sbcl): build $(IMAGE_DEPS) .PHONY
 	$(SBCL_CORE) --script scripts/build-image.lisp
-
 
 selenium-tests: $(LW)
 	# rm -rf src/screenshotbot/selenium-output

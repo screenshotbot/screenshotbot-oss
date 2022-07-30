@@ -19,6 +19,9 @@
 
 (require "asdf")
 
+#+sbcl
+(require "sb-sprof")
+
 #+nil
 (push (pathname (format nil "~a/local-projects/poiu/" (namestring (uiop:getcwd))))
       asdf:*central-registry*)
