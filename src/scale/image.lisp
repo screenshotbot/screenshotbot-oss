@@ -43,7 +43,7 @@
         ',name)
        (make-instance 'image-spec
                       :name ',name
-                      :version 'version
+                      :version ,version
                       :init-fn (lambda (,instance &key ,@parameters)
                                  (declare (ignorable instance))
                                  ,@body)
