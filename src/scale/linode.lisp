@@ -88,7 +88,8 @@
 
 (defmethod create-instance ((self linode)
                             type
-                            &key                              region)
+                            &key region
+                              image)
   (declare (ignore type region))
   (let ((secret (secure-random:number 1000000000000000000000000000000000000)))
     (log:info "Making linode create-instance request")
