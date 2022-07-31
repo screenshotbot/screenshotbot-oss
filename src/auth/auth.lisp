@@ -51,6 +51,8 @@ this would be a problem."
 
 (defvar *secure-cookie-p* t)
 
+(defparameter *cookie-name* "s2")
+
 (defun ip-address-p (domain)
   (or
    (search "localhost" domain)
@@ -69,22 +71,23 @@ this would be a problem."
 (defun set-session-cookie (token &optional domain)
   (let ((domain (or domain (host-without-port))))
     (let ((domain (fix-cookie-domain domain)))
-     (set-cookie "s" :value token :domain domain :expires (+ (get-universal-time) (* 365 2600 24))
-		             :path "/" :secure (and
-                                        *secure-cookie-p*
+      (set-cookie *cookie-name*
+                  :value token :domain domain :expires (+ (get-universal-time) (* 365 2600 24))
+                  :path "/" :secure (and
+                                     *secure-cookie-p*
                                         (string=
                                          "https"
                                          (hunchentoot:header-in* :x-forwarded-proto)))))))
 
 (defun has-session? ()
-  (let ((s (cookie-in "s")))
+  (let ((s (cookie-in *cookie-name*)))
     (and s (not (equal s "")))))
 
 (defun drop-session (&optional domain)
   (set-session-cookie "" domain))
 
 (defun %current-session ()
-  (let ((token (cookie-in "s")))
+  (let ((token (cookie-in *cookie-name*)))
     (and
      token
      (not (equal "" token))
