@@ -78,36 +78,31 @@ rm -f $INSTALLER
 
 (define-platform-asset "recorder")
 
-(let ((lock (bt:make-lock)))
-  (defun handle-asdf-output (op component &optional (output-num 0) )
-    (bt:with-lock-held (lock)
-      (let ((output
-              (cond
-                ((eql component :screenshotbot.css-assets)
-                 "/home/arnold/builds/web/build/asdf-cache/lw-8.0.1-linux-x64/src/screenshotbot/css/screenshotbot.css-assets.css")
-                ((eql component :screenshotbot.pro.css)
-                 "/home/arnold/builds/web/build/asdf-cache/lw-8.0.1-linux-x64/src/screenshotbot/pro/css/screenshotbot.pro.css.css")
-                ((eql component :screenshotbot.pro.js)
-                 "/home/arnold/builds/web/build/asdf-cache/lw-8.0.1-linux-x64/src/screenshotbot/pro/js/screenshotbot.pro.js.js")
-                ((eql component :screenshotbot.js-assets)
-                 "/home/arnold/builds/web/build/asdf-cache/lw-8.0.1-linux-x64/src/screenshotbot/js/screenshotbot.js-assets.js")
-                (t
-                 (elt
-                  (asdf:output-files
-                   op
-                   (asdf:find-system component nil))
-                  output-num)))))
-        (when (or
-               (staging-p)
-               ;; in case we delete ~/.cache
-               (not (path:-e output)))
-          (asdf:operate op component))
-        (assert (path:-e output))
-        (handler-case
-            (hunchentoot:handle-static-file output)
-          #+lispworks
-          (comm:socket-io-error (e)
-            (values)))))))
+(defvar *lock* (bt:make-lock "assets-lock"))
+
+(defmacro handle-asdf-output (op component &optional (output-num 0))
+  (let ((output-files (asdf:output-files (eval op)
+                                         (asdf:find-system (eval component) nil))))
+    `(%handle-asdf-output
+      ,op
+      ,component
+      ',output-files
+      ,output-num)))
+
+(defun %handle-asdf-output (op component output-files output-num )
+  (bt:with-lock-held (*lock*)
+    (let ((output (elt output-files output-num)))
+      (when (or
+             (staging-p)
+             ;; in case we delete ~/.cache
+             (not (path:-e output)))
+        (asdf:operate op component))
+      (assert (path:-e output))
+      (handler-case
+          (hunchentoot:handle-static-file output)
+        #+lispworks
+        (comm:socket-io-error (e)
+          (values))))))
 
 (defmacro define-js (url system)
   (let ((map-url (format nil "~a.map" url)))
