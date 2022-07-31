@@ -100,13 +100,21 @@ this would be a problem."
 (defun read-windows-seed ()
   (cl-store:restore (path:catfile (asdf:system-source-directory :auth) "dummy-init-key.out")))
 
-(setf *session-token-generator* (session-token:make-generator
-                                 #+windows
-                                 :initial-seed
-                                 #+windows
-                                 (progn
-                                   (log:warn "Using insecure seed, only use on Windows")
-                                   (read-windows-seed))))
+(defun init-session-token-generator ()
+  (setf *session-token-generator* (session-token:make-generator
+                                   #+windows
+                                   :initial-seed
+                                   #+windows
+                                   (progn
+                                     (log:warn "Using insecure seed, only use on Windows")
+                                     (read-windows-seed)))))
+
+(init-session-token-generator)
+
+#+lispworks
+(lw:define-action "When starting image" "re-initialize token generator"
+  #'init-session-token-generator)
+
 
 (defun set-session (session &optional domain)
   (set-session-cookie (car (session-key session)) domain))
