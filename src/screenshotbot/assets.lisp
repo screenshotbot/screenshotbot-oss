@@ -81,8 +81,7 @@ rm -f $INSTALLER
 (defvar *lock* (bt:make-lock "assets-lock"))
 
 (defmacro handle-asdf-output (op component &optional (output-num 0))
-  (let ((output-files (asdf:output-files (eval op)
-                                         (asdf:find-system (eval component) nil))))
+  (let ((output-files (eval `(asdf:output-files ,op (asdf:find-component ,component nil)))))
     `(%handle-asdf-output
       ,op
       ,component
