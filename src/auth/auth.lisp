@@ -126,7 +126,9 @@ this would be a problem."
 (defun %make-session ()
   "Only creates the session, does not do anything else with it"
   (let ((session (make-instance 'user-session-transient
-				:token (funcall *session-token-generator*))))
+                                :token
+                                (bt:with-lock-held (*lock*)
+                                 (funcall *session-token-generator*)))))
 
     session))
 
