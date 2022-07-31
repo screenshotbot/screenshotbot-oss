@@ -86,6 +86,7 @@ rm -f $INSTALLER
         (artifact-link ,(format nil "~a-win.exe" name) :cdn t)))))
 
 (define-platform-asset "recorder")
+(define-platform-asset "selenium-proxy")
 
 (defvar *lock* (bt:make-lock "assets-lock"))
 
