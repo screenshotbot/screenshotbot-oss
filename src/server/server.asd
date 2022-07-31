@@ -20,10 +20,12 @@
                #+lispworks
                "util/remote-debugging"
                "bordeaux-threads"
+               "util/health-check"
                "bknr.datastore"
                "hunchentoot-multi-acceptor")
   :serial t
   :components ((:file "interrupts")
+               (:file "health-checks")
                (:file "setup")))
 
 ;; For slynk support, load this before calling server:main. The reason

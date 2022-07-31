@@ -8,6 +8,8 @@
   (:use #:cl
         #:bknr.datastore
         #:server/interrupts)
+  (:import-from #:util/health-check
+                #:run-health-checks)
   (:export #:main
            #:register-acceptor
            #:slynk-loop
@@ -211,6 +213,8 @@
               (time
                (util/store:verify-store))
               (log:info "Done verifying store")
+              (log:info "Running health checks...")
+              (run-health-checks)
               (uiop:quit 0))
 
             #+nil
