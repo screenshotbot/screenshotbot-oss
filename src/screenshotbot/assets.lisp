@@ -81,11 +81,22 @@ rm -f $INSTALLER
 (let ((lock (bt:make-lock)))
   (defun handle-asdf-output (op component &optional (output-num 0) )
     (bt:with-lock-held (lock)
-      (let ((output (elt
-                     (asdf:output-files
-                      op
-                      (asdf:find-system component nil))
-                     output-num)))
+      (let ((output
+              (cond
+                ((eql component :screenshotbot.css-assets)
+                 "/home/arnold/builds/web/build/asdf-cache/lw-8.0.1-linux-x64/src/screenshotbot/css/screenshotbot.css-assets.css")
+                ((eql component :screenshotbot.pro.css)
+                 "/home/arnold/builds/web/build/asdf-cache/lw-8.0.1-linux-x64/src/screenshotbot/pro/css/screenshotbot.pro.css.css")
+                ((eql component :screenshotbot.pro.js)
+                 "/home/arnold/builds/web/build/asdf-cache/lw-8.0.1-linux-x64/src/screenshotbot/pro/js/screenshotbot.pro.js.js")
+                ((eql component :screenshotbot.js-assets)
+                 "/home/arnold/builds/web/build/asdf-cache/lw-8.0.1-linux-x64/src/screenshotbot/js/screenshotbot.js-assets.js")
+                (t
+                 (elt
+                  (asdf:output-files
+                   op
+                   (asdf:find-system component nil))
+                  output-num)))))
         (when (or
                (staging-p)
                ;; in case we delete ~/.cache

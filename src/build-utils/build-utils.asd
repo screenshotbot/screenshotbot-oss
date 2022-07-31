@@ -7,6 +7,7 @@
 (defsystem :build-utils
   :serial t
   :depends-on (:tmpdir
+               :alexandria
                :str)
   :components ((:file "wild-module")
                (:file "common")

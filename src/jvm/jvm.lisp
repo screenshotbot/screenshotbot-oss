@@ -45,7 +45,7 @@
                do (return jvm)
              finally
                (error "Could not find java, pass '--libjvm' argument"))))
-       
+
     (t
      (let ((guesses (list
                      "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so"
@@ -65,10 +65,12 @@
               (format nil "-Djava.class.path=~a"
                       (str:join ":" (mapcar 'namestring (jvm-get-classpath)))))))
 
+(defvar *classpath* (jvm-get-classpath))
+
 (defun jvm-init ()
   #+lispworks
   (lw-ji:init-java-interface
-   :java-class-path (jvm-get-classpath)
+   :java-class-path *classpath*
    :option-strings (list #+nil"-verbose")
    :jvm-library-path (libjvm.so))
 

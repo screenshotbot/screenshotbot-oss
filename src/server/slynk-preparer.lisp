@@ -15,6 +15,7 @@
 (setf server:*slynk-preparer* (make-instance 'slynk-preparer))
 
 (defmethod slynk-prepare ((self slynk-preparer))
+
   (log:info "starting up slynk")
   (slynk-loop))
 
