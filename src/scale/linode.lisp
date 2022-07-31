@@ -48,14 +48,14 @@
                     (bt:condition-notify (cv instance))))))))
 
 (defclass linode ()
-  ((access-token :initarg :access-token
-                 :accessor access-token
-                 :initform (str:trim (uiop:read-file-string
-                                      (secret-file "linode-api-token"))))
-   (callback-server
+  ((callback-server
     :initarg :callback-server
     :initform "https://staging.screenshotbot.io"
     :reader callback-server)))
+
+(defmethod access-token ((self linode))
+  (str:trim (uiop:read-file-string
+             (secret-file "linode-api-token"))))
 
 (defvar *linode* (make-instance 'linode))
 
