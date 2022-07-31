@@ -36,6 +36,14 @@
 (defhandler (nil :uri "/recorder-master.jar") ()
   (hex:safe-redirect "/release/recorder-master.jar"))
 
+(defmacro handle-asdf-output (op component &optional (output-num 0))
+  (let ((output-files (eval `(asdf:output-files ,op (asdf:find-component ,component nil)))))
+    `(%handle-asdf-output
+      ,op
+      ,component
+      ',output-files
+      ,output-num)))
+
 (defmacro define-css (uri asdf-target)
   (let ((map-uri (format nil "~a.map" uri)))
    `(progn
@@ -44,6 +52,7 @@
         (handle-asdf-output 'asdf:compile-op  ,asdf-target))
       (defhandler (nil :uri ,map-uri :html nil) ()
         (handle-asdf-output 'asdf:compile-op ,asdf-target 1)))))
+
 
 
 (define-css "/assets/css/default.css" :screenshotbot.css-assets)
@@ -80,13 +89,6 @@ rm -f $INSTALLER
 
 (defvar *lock* (bt:make-lock "assets-lock"))
 
-(defmacro handle-asdf-output (op component &optional (output-num 0))
-  (let ((output-files (eval `(asdf:output-files ,op (asdf:find-component ,component nil)))))
-    `(%handle-asdf-output
-      ,op
-      ,component
-      ',output-files
-      ,output-num)))
 
 (defun %handle-asdf-output (op component output-files output-num )
   (bt:with-lock-held (*lock*)
