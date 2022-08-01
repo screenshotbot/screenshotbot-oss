@@ -37,7 +37,8 @@
   (:export
    #:call-with-hosted-snapshot
    #:render-acceptor
-   #:push-snapshot)
+   #:push-snapshot
+   #:with-hosted-snapshot)
   (:local-nicknames (#:a #:alexandria)
                     (#:replay #:screenshotbot/replay/core)))
 (in-package #:screenshotbot/replay/replay-acceptor)
@@ -290,6 +291,15 @@
      "staging")
     (t
      "replay")))
+
+(defmacro with-hosted-snapshot ((hosted-url company snapshot &key (hostname '(hostname)))
+                                &body body)
+  `(call-with-hosted-snapshot
+    ,company
+    ,snapshot
+    (lambda (,hosted-url)
+      ,@body)
+    :hostname ,hostname))
 
 (defmethod call-with-hosted-snapshot ((company company)
                                       (snapshot snapshot)

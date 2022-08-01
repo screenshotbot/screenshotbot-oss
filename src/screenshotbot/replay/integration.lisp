@@ -43,8 +43,10 @@
                 #:load-url-into
                 #:snapshot)
   (:import-from #:screenshotbot/replay/replay-acceptor
+                #:with-hosted-snapshot
                 #:call-with-hosted-snapshot)
   (:import-from #:screenshotbot/webdriver/impl
+                #:with-webdriver
                 #:call-with-webdriver)
   (:import-from #:screenshotbot/webdriver/screenshot
                 #:full-page-screenshot)
@@ -322,6 +324,12 @@ accessing the urls or sitemap slot."
                 dest))
       :title title))))
 
+(defmacro with-batches ((batch first-index) list &body body)
+  `(call-with-batches
+    ,list
+    (lambda (,batch ,first-index)
+      ,@body)))
+
 (defun call-with-batches (list fn &key (batch-size 10))
   (labels ((call-next (list ctr)
              (multiple-value-bind (batch rest)
@@ -340,50 +348,43 @@ accessing the urls or sitemap slot."
    (let* ((results (make-instance 'all-screenshots
                                    :company (company run)))
           (url-count  (length urls)))
-     (prog1
-         results
+     (prog1 results
        (let ((configs (browser-configs run)))
          (assert configs)
          (dolist (config configs)
            (with-selenium-server (selenium-server :type (browser-type config))
-             (call-with-hosted-snapshot
-              (company run)
-              snapshot
-              (lambda (hosted-url)
-                              (let ((webdriver-client::*uri*
+             (with-hosted-snapshot (hosted-url (company run) snapshot)
+               (let ((webdriver-client::*uri*
                        (selenium-server-url selenium-server)))
                  (write-replay-log "Waiting for Selenium worker of type ~a" (browser-type config))
-                 (call-with-batches
-                  urls
-                  (lambda (urls idx)
-                    (call-with-webdriver
-                     (lambda (driver)
-                       ;; We have our browser and our hosted snapshots, let's go through this
-                       (write-replay-log "Selenium worker is ready")
-                       (run-replay-on-urls
-                        :snapshot snapshot
-                        :replay-proxy (ensure-proxy selenium-server)
-                        :urls urls
-                        :hosted-url hosted-url
-                        :driver driver
-                        :logger (lambda (url actual-url)
-                                  (write-replay-log "[~a/~a] Running url: ~a / ~a"
-                                                    (incf idx)
-                                                    url-count  url actual-url))
-                        :config config
-                        :run run
-                        :tmpdir tmpdir
-                        :results results))
-                     :proxy (squid-proxy selenium-server)
-                     :browser (frontend:browser-type config)
-                     :dimensions (when (frontend:dimensions config)
-                                   (cons
-                                    (frontend:width (dimensions config))
-                                    (frontend:height (dimensions config))))
-                     :mobile-emulation (frontend:mobile-emulation config))))))
-             :hostname (get-local-addr
-                        (selenium-host selenium-server)
-                        (selenium-port selenium-server))))))))))
+                 (with-batches (urls idx) urls
+                   (with-webdriver (driver
+                                    :proxy (squid-proxy selenium-server)
+                                    :browser (frontend:browser-type config)
+                                    :dimensions (when (frontend:dimensions config)
+                                                  (cons
+                                                   (frontend:width (dimensions config))
+                                                   (frontend:height (dimensions config))))
+                                    :mobile-emulation (frontend:mobile-emulation config))
+                     ;; We have our browser and our hosted snapshots, let's go through this
+                     (write-replay-log "Selenium worker is ready")
+                     (run-replay-on-urls
+                      :snapshot snapshot
+                      :replay-proxy (ensure-proxy selenium-server)
+                      :urls urls
+                      :hosted-url hosted-url
+                      :driver driver
+                      :logger (lambda (url actual-url)
+                                (write-replay-log "[~a/~a] Running url: ~a / ~a"
+                                                  (incf idx)
+                                                  url-count  url actual-url))
+                      :config config
+                      :run run
+                      :tmpdir tmpdir
+                      :results results))))
+               :hostname (get-local-addr
+                          (selenium-host selenium-server)
+                          (selenium-port selenium-server))))))))))
 
 
 (defun best-image-type (config)
