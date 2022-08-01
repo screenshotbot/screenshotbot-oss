@@ -42,7 +42,8 @@
        :index-type unique-index
        :index-initargs (:test #'equal)
        :index-reader session-by-id)
-   (instance :ini targ :instance
+   (instance :initarg :instance
+             :relaxed-object-reference t
              :accessor session-instance)
    (last-used :initform (get-universal-time)
               :accessor last-used))
