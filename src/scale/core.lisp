@@ -42,9 +42,25 @@
    ((lock :initform (bt:make-lock)
           :transient t
           :reader lock)
+    (last-used :transient t
+               ;; If the image gets restarted, we lose this timestamp,
+               ;; but that's okay, it'll eventually get cleaned up.
+               :initform (get-universal-time)
+               :accessor last-used)
     (%created-at :initarg :created-at))
    (:metaclass persistent-class)
    (:default-initargs :created-at (get-universal-time))))
+
+(defmacro with-update-last-used ((instance) &body body)
+  `(call-with-update-last-used ,instance (lambda () ,@body)))
+
+(defun call-with-update-last-used (instance fn)
+  (flet ((update ()
+           (setf (last-used instance) (get-universal-time))))
+    (update)
+    (unwind-protect
+         (funcall fn)
+      (update))))
 
 (defgeneric create-instance (provider type &key region image))
 
@@ -52,9 +68,15 @@
 
 (defgeneric wait-for-ready (instance))
 
-(defgeneric ssh-run (instance cmd &key output error-output))
+(defgeneric ssh-run (instance cmd &key output error-output)
+  (:method :around (instance cmd &key &allow-other-keys)
+    (with-update-last-used (instance)
+      (call-next-method))))
 
-(defgeneric scp (instance local-file remote-file))
+(defgeneric scp (instance local-file remote-file)
+  (:method :around (instance local-file remote-file)
+    (with-update-last-used (instance)
+      (call-next-method))))
 
 (defgeneric ip-address (instance))
 
@@ -62,7 +84,10 @@
 
 (defgeneric snapshot-supported-p (provider))
 
-(defgeneric make-snapshot (instance snapshot-name))
+(defgeneric make-snapshot (instance snapshot-name)
+  (:method :around (instance snapshot-name)
+    (with-update-last-used (instance)
+      (call-next-method))))
 
 (defgeneric snapshot-exists-p (provider snapshot-name)
   (:documentation "The snapshot by this name is created and ready for use"))
@@ -89,6 +114,7 @@
          ,@body))))
 
 (defmethod ssh-connection ((self base-instance))
+  (setf (last-used self) (get-universal-time))
   (with-known-hosts (known-hosts) self
     (log:info "Creating ssh connection")
     (let ((session (libssh2:create-ssh-connection
@@ -190,16 +216,17 @@
 
 
 (defun add-url (instance url output)
-  (let ((cache (ensure-directories-exist
-                (make-pathname
-                 :name (ironclad:byte-array-to-hex-string (md5:md5sum-string url))
-                 :defaults (asdf:system-relative-pathname
-                            :screenshotbot
-                            "../../build/web-cache/")))))
-    (unless (path:-e cache)
-      (download-file url cache))
-    (assert (path:-e cache))
-    (scp instance cache output)))
+  (with-update-last-used (instance) ;; the download might take a while
+   (let ((cache (ensure-directories-exist
+                 (make-pathname
+                  :name (ironclad:byte-array-to-hex-string (md5:md5sum-string url))
+                  :defaults (asdf:system-relative-pathname
+                             :screenshotbot
+                             "../../build/web-cache/")))))
+     (unless (path:-e cache)
+       (download-file url cache))
+     (assert (path:-e cache))
+     (scp instance cache output))))
 
 
 (defvar *test* "localhost ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMi3Pnzlr84phRm3h6eKmX4FaVtrZuQ0kUCcplbofdL1
@@ -350,27 +377,25 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
   (defmethod scp ((self t) from to)
     (log:info "Copying via core SCP")
     (with-ssh-connection (conn self :non-blocking t)
-      (with-open-file (in from
-                          :direction :input
-                          :element-type '(unsigned-byte 8))
-       (libssh2:scp-put
-        from
-        to
-        conn)))))
+      (libssh2:scp-put
+       from
+       to
+       conn))))
 
 (auto-restart:with-auto-restart ()
  (defmethod http-request-via ((self t)
                               url &rest args)
-   (let ((uri (quri:uri url)))
-    (with-ssh-connection (conn self :non-blocking t)
-      (let ((stream (libssh2:channel-direct-tcpip
-                     conn
-                     (quri:uri-host uri)
-                     (or (quri:uri-port uri) 80))))
-        ;; The stream will be closed by drakma
-        (let ((stream (flexi-streams:make-flexi-stream (chunga:make-chunked-stream stream))))
-          (apply #'util/request:http-request
-                 url
-                 :stream stream
-                 :close t
-                 args)))))))
+   (with-update-last-used (self)
+    (let ((uri (quri:uri url)))
+      (with-ssh-connection (conn self :non-blocking t)
+        (let ((stream (libssh2:channel-direct-tcpip
+                       conn
+                       (quri:uri-host uri)
+                       (or (quri:uri-port uri) 80))))
+          ;; The stream will be closed by drakma
+          (let ((stream (flexi-streams:make-flexi-stream (chunga:make-chunked-stream stream))))
+            (apply #'util/request:http-request
+                   url
+                   :stream stream
+                   :close t
+                   args))))))))
