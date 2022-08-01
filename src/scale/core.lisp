@@ -8,6 +8,8 @@
                 #:with-class-validation)
   (:import-from #:bknr.datastore
                 #:store-objects-with-class)
+  (:import-from #:util/cron
+                #:def-cron)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:create-instance
@@ -409,9 +411,13 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
 
 (let ((lock (bt:make-lock)))
   (defun delete-stale-instances ()
+    (log:info "Attempting to delete stale instances")
     (bt:with-lock-held (lock)
      (let ((cutoff-time (- (%get-universal-time) (* 2 3600))))
        (loop for instance in (store-objects-with-class 'base-instance)
              if (< (last-used instance) cutoff-time)
                do
                   (delete-instance instance))))))
+
+(def-cron delete-stale-instance (:step-min 15)
+  (delete-stale-instances))
