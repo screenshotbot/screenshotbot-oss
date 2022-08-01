@@ -9,6 +9,12 @@
                 #:hash-index)
   (:import-from #:bknr.datastore
                 #:persistent-class)
+  (:import-from #:bknr.datastore
+                #:persistent-class)
+  (:import-from #:bknr.datastore
+                #:with-transaction)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:*linode*))
@@ -51,7 +57,10 @@
   ((callback-server
     :initarg :callback-server
     :initform "https://staging.screenshotbot.io"
-    :reader callback-server)))
+    :reader callback-server)
+   (unsafe-mode :initform nil
+                :initarg :unsafe-mode
+                :reader unsafe-mode)))
 
 (defmethod access-token ((self linode))
   (str:trim (uiop:read-file-string
@@ -59,24 +68,28 @@
 
 (defvar *linode* (make-instance 'linode))
 
-(defclass instance (base-instance)
-  ((id :initarg :id
-       :reader instance-id)
-   (callback-received-p
-    :accessor callback-received-p
-    :initform nil)
-   (ipv4 :initarg :ipv4
-         :reader ip-address)
-   (secret :initarg :secret
-           :reader instance-secret)
-   (known-hosts :initarg :known-hosts
-                :accessor known-hosts)
-   (cv :initform (bt:make-condition-variable)
-       :reader cv)
-   (lock :initform (bt:make-lock)
-         :reader lock)
-   (provider :initarg :provider
-             :reader provider)))
+(with-class-validation
+ (defclass instance (base-instance)
+   ((id :initarg :id
+        :reader instance-id)
+    (callback-received-p
+     :accessor callback-received-p
+     :initform nil)
+    (ipv4 :initarg :ipv4
+          :reader ip-address)
+    (secret :initarg :secret
+            :reader instance-secret)
+    (known-hosts :initarg :known-hosts
+                 :accessor known-hosts)
+    (cv :initform (bt:make-condition-variable)
+        :transient t
+        :reader cv)
+    (lock :initform (bt:make-lock)
+          :transient t
+          :reader lock)
+    (provider :transient t
+              :accessor provider))
+   (:metaclass persistent-class)))
 
 (define-condition not-found (error)
   ((url :initarg :url)))
@@ -147,7 +160,9 @@
                               ("swap_size" . 2048)
 
                               ;; Only use the stackscript if we're using a base image
-                              ,@ (when (str:starts-with-p "linode/" image)
+                              ,@ (when (and
+                                        (not (unsafe-mode self))
+                                        (str:starts-with-p "linode/" image))
                                    `(("stackscript_id" . 1024979)
                                      ("stackscript_data"
                                       . (("SB_CALLBACK_URL" . ,(callback-url self secret))))))))))
@@ -156,9 +171,9 @@
       (let ((instance
               (make-instance 'instance
                               :id (a:assoc-value ret :id)
-                              :provider self
                               :secret secret
                               :ipv4 (car (a:assoc-value ret :ipv-4)))))
+        (setf (provider instance) self)
 
         (bt:with-lock-held (*lock*)
           (push instance *instances*))
@@ -169,22 +184,45 @@
            ;; known-hosts from the image.
            (let ((image (find-snapshot self image)))
              (assert image)
-             (setf (known-hosts instance) (known-hosts image)
-                   (callback-received-p instance) t)
-             (loop for i from 0 to 300
-                   if (readyp instance)
-                     do
-                        (return)
-                   else
-                     do
-                        (log:info "Waiting for imaged instance to be ready")
-                        (sleep 1)
-                   finally
-                   (error "image wasn't ready in time"))))
+             (with-transaction ()
+              (setf (known-hosts instance) (known-hosts image)
+                    (callback-received-p instance) t))
+             (wait-for-api-ready instance)))
+          ((unsafe-mode self)
+           (log:warn "Using unsafe test-mode to get known-hosts")
+           (wait-for-api-ready instance)
+           (let ((known-hosts (keyscan instance)))
+            (with-transaction ()
+              (setf (known-hosts instance) known-hosts
+                    (callback-received-p instance) t))))
           (t
            (wait-for-ready instance)))
 
         instance))))
+
+(defmethod keyscan ((self instance))
+  (loop for i from 0 to 100 do
+    (handler-case
+        (return
+          (uiop:run-program
+           (list "ssh-keyscan" (ip-address self))
+           :output 'string
+           :error-output *standard-output*))
+      (uiop:subprocess-error ()
+        (log:warn "Error while trying to get keyscan")
+        (sleep 1)))))
+
+(defun wait-for-api-ready (instance)
+  (loop for i from 0 to 300
+        if (readyp instance)
+          do
+             (return)
+        else
+          do
+             (log:info "Waiting for instance to be ready via api")
+             (sleep 1)
+        finally
+           (error "image wasn't ready in time")))
 
 (defmethod delete-instance ((instance instance))
   (log:info "Deleting ~a" instance)

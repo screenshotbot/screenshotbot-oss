@@ -20,6 +20,14 @@
                 #:create-image-instance)
   (:import-from #:screenshotbot/replay/services
                 #:firefox)
+  (:import-from #:bknr.datastore
+                #:store-object)
+  (:import-from #:bknr.datastore
+                #:persistent-class)
+  (:import-from #:bknr.indices
+                #:unique-index)
+  (:import-from #:bknr.datastore
+                #:with-transaction)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/client-hub/flags))
   (:export
@@ -28,13 +36,17 @@
 
 (defvar *lock* (bt:make-lock))
 
-(defclass session ()
+(defclass session (store-object)
   ((id :initarg :id
-       :reader session-id)
-   (instance :initarg :instance
+       :reader session-id
+       :index-type unique-index
+       :index-initargs (:test #'equal)
+       :index-reader session-by-id)
+   (instance :ini targ :instance
              :accessor session-instance)
    (last-used :initform (get-universal-time)
-              :accessor last-used)))
+              :accessor last-used))
+  (:metaclass persistent-class))
 
 (defclass client-hub ()
   ((sessions :initform nil
@@ -47,7 +59,8 @@
             return session)))
 
 (defmethod touch-session (session)
-  (setf (last-used session) (get-universal-time)))
+  (with-transaction ()
+   (setf (last-used session) (get-universal-time))))
 
 (defclass vagrant-based-hub (client-hub)
   ())

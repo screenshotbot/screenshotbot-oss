@@ -2,6 +2,10 @@
   (:use #:cl)
   (:import-from #:libssh2
                 #:authentication)
+  (:import-from #:bknr.datastore
+                #:persistent-class)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:create-instance
@@ -33,9 +37,14 @@
 
 (defvar *ssh-connection-cache*)
 
-(defclass base-instance ()
-  ((lock :initform (bt:make-lock)
-         :reader lock)))
+(with-class-validation
+ (defclass base-instance (bknr.datastore:store-object)
+   ((lock :initform (bt:make-lock)
+          :transient t
+          :reader lock)
+    (%created-at :initarg :created-at))
+   (:metaclass persistent-class)
+   (:default-initargs :created-at (get-universal-time))))
 
 (defgeneric create-instance (provider type &key region image))
 

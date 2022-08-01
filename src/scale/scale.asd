@@ -9,6 +9,7 @@
                :md5
                :secure-random
                :hunchentoot
+               :bknr.datastore
                :cl-json
                :tmpdir
                :bordeaux-threads

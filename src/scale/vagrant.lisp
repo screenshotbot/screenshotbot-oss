@@ -4,6 +4,16 @@
   (:import-from #:scale/core
                 #:make-snapshot
                 #:snapshot-exists-p)
+  (:import-from #:bknr.datastore
+                #:persistent-class)
+  (:import-from #:bknr.datastore
+                #:store-object)
+  (:import-from #:bknr.datastore
+                #:persistent-class)
+  (:import-from #:bknr.datastore
+                #:with-transaction)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:*vagrant*))
@@ -11,22 +21,26 @@
 
 (defvar *lock* (bt:make-lock))
 
-(defclass instance (base-instance)
-  ((directory :initarg :directory
-              :reader tmpdir)
-   (ip-address :accessor ip-address)
-   (known-hosts :accessor known-hosts)
-   (ssh-port :accessor ssh-port)
-   (vagrant :initarg :vagrant
-            :reader vagrant)
-   (config :accessor instance-config
-           :initarg :config)))
+(with-class-validation
+ (defclass instance (base-instance)
+   ((directory :initarg :directory
+               :reader tmpdir)
+    (ip-address :accessor ip-address)
+    (known-hosts :accessor known-hosts)
+    (ssh-port :accessor ssh-port)
+    (vagrant :transient t
+             :accessor vagrant)
+    (config :accessor instance-config
+            :initarg :config))
+   (:metaclass persistent-class)))
 
-(defclass config ()
-  ((name :initarg :name
-         :reader config-name)
-   (box :initarg :box
-        :reader config-box)))
+(with-class-validation
+ (defclass config (store-object)
+   ((name :initarg :name
+          :reader config-name)
+    (box :initarg :box
+         :reader config-box))
+   (:metaclass persistent-class)))
 
 (defmethod ssh-user ((self instance))
   "vagrant")
@@ -102,9 +116,9 @@ end
       (list "vagrant" "up" name)
       :directory directory)
      (let ((ret (make-instance 'instance
-                               :directory directory
-                               :config config
-                               :vagrant self)))
+                               :directory (namestring directory)
+                               :config config)))
+       (setf (vagrant ret) self)
        (handler-bind ((error (lambda (e)
                                (declare (ignore e))
                                (log:info "Couldn't finish pre-setup for instance")
@@ -126,7 +140,8 @@ end
                                            "ssh-keyscan localhost"
                                            :output 'string)))
      (log:info "Got known hosts: ~a" known-hosts)
-     (setf (known-hosts ret) known-hosts))
+     (with-transaction ()
+      (setf (known-hosts ret) known-hosts)))
     (let ((ssh-config (run* (list "vagrant" "ssh-config"
                                   (config-name (instance-config ret)))
                            :directory directory
@@ -136,9 +151,9 @@ end
                     for (key val) = (str:split " " (str:trim line))
                     if (string-equal key name)
                       return val)))
-
-       (setf (ip-address ret) (read-config "HostName"))
-       (setf (ssh-port ret) (parse-integer (read-config "Port")))))))
+       (with-transaction ()
+         (setf (ip-address ret) (read-config "HostName"))
+         (setf (ssh-port ret) (parse-integer (read-config "Port"))))))))
 
 (defmethod delete-instance ((self instance))
   (log:info "Stopping container")
@@ -158,7 +173,7 @@ end
   t)
 
 (defmethod ssh-run-via-vagrant ((self instance) (cmd string)
-                                &key (output *standard-output*)
+                                 &key (output *standard-output*)
                                   (error-output *error-output*))
   (log:info "Running command ~S on vagrant" cmd)
   (run*
