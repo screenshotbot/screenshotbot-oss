@@ -8,6 +8,8 @@
 
 (ql:quickload :screenshotbot.sdk/deliver)
 (ql:quickload :secure-random)
+(ql:quickload :tmpdir)
+(ql:quickload :cl-fad)
 
 (defvar *default-cmd-dir* ".")
 
@@ -72,37 +74,46 @@
   (run (list "magick" "convert"
              "-size" "360x360" "xc:white" "-fill" "black" "-stroke" "black" "-draw" "@ascii.txt" "-strip" "screenshots/image.png")))
 
-(with-repo
-  ;; veryfy we're correctly cloning the repo
-  #-mswindows
-  (run (list "test" "-e" "gen.sh"))
-  (run-gen.sh)
-  (run (list *sdk*
-             "--directory" "./screenshots"
-             "--production=false"))
+(defun run-tests ()
+  (with-repo
+    ;; veryfy we're correctly cloning the repo
+    #-mswindows
+    (run (list "test" "-e" "gen.sh"))
+    (run-gen.sh)
+    (run (list *sdk*
+               "--directory" "./screenshots"
+               "--production=false"))
+    #+darwin
+    (run (list "arch" "-x86_64"
+               *sdk*
+               "--directory" "./screenshots"
+               "--production=false")))
+
+  (with-repo
+      (with-open-file (stream (path:catfile *default-cmd-dir* "ascii.txt")
+                              :if-exists :supersede
+                              :direction :output)
+        (format stream
+                "text 15,15 \"Random code: ~a\" " (secure-random:number 10000000000000000000)))
+    (run-gen.sh)
+    (run (list *sdk*
+               "--directory" "./screenshots"
+               "--production=false")))
+
   #+darwin
-  (run (list "arch" "-x86_64"
-             *sdk*
-             "--directory" "./screenshots"
-             "--production=false")))
+  (with-repo
+      (with-open-file (stream (path:catfile *default-cmd-dir* "ascii.txt") :if-exists :supersede
+                                          :direction :output)
+        (format stream
+                "text 15,15 \"Random code: ~a\" " (secure-random:number 10000000000000000000)))
+    (run-gen.sh)
+    (run (list "arch" "-x86_64" *sdk*
+               "--directory" "./screenshots"
+               "--production=false"))))
 
-(with-repo
-    (with-open-file (stream "ascii.txt" :if-exists :supersede
-                            :direction :output)
-      (format stream
-              "text 15,15 \"Random code: ~a\" " (secure-random:number 10000000000000000000)))
-  (run-gen.sh)
-  (run (list *sdk*
-             "--directory" "./screenshots"
-             "--production=false")))
+(defun run-tests-with-tmpdir ()
+  (tmpdir:with-tmpdir (dir)
+    (let ((*default-cmd-dir* dir))
+      (run-tests))))
 
-#+darwin
-(with-repo
-    (with-open-file (stream "ascii.txt" :if-exists :supersede
-                            :direction :output)
-      (format stream
-              "text 15,15 \"Random code: ~a\" " (secure-random:number 10000000000000000000)))
-  (run-gen.sh)
-  (run (list "arch" "-x86_64" *sdk*
-             "--directory" "./screenshots"
-             "--production=false")))
+(run-tests-with-tmpdir)
