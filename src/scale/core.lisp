@@ -6,6 +6,8 @@
                 #:persistent-class)
   (:import-from #:util/store
                 #:with-class-validation)
+  (:import-from #:bknr.datastore
+                #:store-objects-with-class)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:create-instance
@@ -37,6 +39,9 @@
 
 (defvar *ssh-connection-cache*)
 
+(defun %get-universal-time ()
+  (get-universal-time))
+
 (with-class-validation
  (defclass base-instance (bknr.datastore:store-object)
    ((lock :initform (bt:make-lock)
@@ -45,18 +50,18 @@
     (last-used :transient t
                ;; If the image gets restarted, we lose this timestamp,
                ;; but that's okay, it'll eventually get cleaned up.
-               :initform (get-universal-time)
+               :initform (%get-universal-time)
                :accessor last-used)
     (%created-at :initarg :created-at))
    (:metaclass persistent-class)
-   (:default-initargs :created-at (get-universal-time))))
+   (:default-initargs :created-at (%get-universal-time))))
 
 (defmacro with-update-last-used ((instance) &body body)
   `(call-with-update-last-used ,instance (lambda () ,@body)))
 
 (defun call-with-update-last-used (instance fn)
   (flet ((update ()
-           (setf (last-used instance) (get-universal-time))))
+           (setf (last-used instance) (%get-universal-time))))
     (update)
     (unwind-protect
          (funcall fn)
@@ -64,7 +69,9 @@
 
 (defgeneric create-instance (provider type &key region image))
 
-(defgeneric delete-instance (instance))
+(defgeneric delete-instance (instance)
+  (:method :after (instance)
+    (bknr.datastore:delete-object instance)))
 
 (defgeneric wait-for-ready (instance))
 
@@ -114,7 +121,7 @@
          ,@body))))
 
 (defmethod ssh-connection ((self base-instance))
-  (setf (last-used self) (get-universal-time))
+  (setf (last-used self) (%get-universal-time))
   (with-known-hosts (known-hosts) self
     (log:info "Creating ssh connection")
     (let ((session (libssh2:create-ssh-connection
@@ -399,3 +406,12 @@ localhost ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAA
                    :stream stream
                    :close t
                    args))))))))
+
+(let ((lock (bt:make-lock)))
+  (defun delete-stale-instances ()
+    (bt:with-lock-held (lock)
+     (let ((cutoff-time (- (%get-universal-time) (* 2 3600))))
+       (loop for instance in (store-objects-with-class 'base-instance)
+             if (< (last-used instance) cutoff-time)
+               do
+                  (delete-instance instance))))))
