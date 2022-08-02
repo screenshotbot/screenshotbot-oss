@@ -161,6 +161,17 @@
     :accessor %created-at))
   (:metaclass has-created-at))
 
+;; (unpromote-run (util:find-by-oid "62e92bff4e92435beab42f53"))
+
+(defun unpromote-run (run)
+  (let ((previous-run (recorder-previous-run run))
+        (channel (recorder-run-channel run))
+        (branch (recorder-run-branch run)))
+    (assert (eql run (active-run channel branch)))
+    (with-transaction ()
+     (setf (recorder-previous-run run) nil))
+    (setf (active-run channel branch) previous-run)))
+
 (defun migrate-recorder-runs ()
   (flet ((listify (X)
            (if (listp x) x (list x))))
