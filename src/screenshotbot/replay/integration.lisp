@@ -353,7 +353,10 @@ accessing the urls or sitemap slot."
          (assert configs)
          (dolist (config configs)
            (with-selenium-server (selenium-server :type (browser-type config))
-             (with-hosted-snapshot (hosted-url (company run) snapshot)
+             (with-hosted-snapshot (hosted-url (company run) snapshot
+                                    :hostname (get-local-addr
+                                               (selenium-host selenium-server)
+                                               (selenium-port selenium-server)))
                (let ((webdriver-client::*uri*
                        (selenium-server-url selenium-server)))
                  (write-replay-log "Waiting for Selenium worker of type ~a" (browser-type config))
@@ -381,10 +384,7 @@ accessing the urls or sitemap slot."
                       :config config
                       :run run
                       :tmpdir tmpdir
-                      :results results))))
-               :hostname (get-local-addr
-                          (selenium-host selenium-server)
-                          (selenium-port selenium-server))))))))))
+                      :results results))))))))))))
 
 
 (defun best-image-type (config)
