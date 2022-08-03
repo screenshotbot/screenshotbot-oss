@@ -208,53 +208,55 @@
                      (length (browsers build)))))))
 
 (defhandler (nil :uri "/web-projects") ()
-  (app-template :title "Screenshotbot: Web Projects"
-   <div>
-     ,(taskie-page-title
-       :title "Web projects"
-       <a href= (nibble () (new-project)) class= "btn btn-primary">
-         New Project
-       </a>
-       <a href= "/browsers" class= "btn btn-secondary ms-1">
-         Browser Configurations
-       </a>
+  (with-login ()
+    (app-template
+     :title "Screenshotbot: Web Projects"
+     <div>
+       ,(taskie-page-title
+         :title "Web projects"
+         <a href= (nibble () (new-project)) class= "btn btn-primary">
+           New Project
+         </a>
+         <a href= "/browsers" class= "btn btn-secondary ms-1">
+           Browser Configurations
+         </a>
 
-       <a class= "ms-1" href= (nibble () (recent-runs))>All runs</a>)
-     ,(taskie-list
-       :items (web-projects-for-company (current-company))
-       :empty-message "No web projects"
-       :row-generator (lambda (build)
-                        (taskie-row
-                         :object build
-                         <span>
-                           <a href=(nibble () (view-build build)) >
-                             ,(web-project-name build)
-                           </a>
-                         </span>
+         <a class= "ms-1" href= (nibble () (recent-runs))>All runs</a>)
+       ,(taskie-list
+         :items (web-projects-for-company (current-company))
+         :empty-message "No web projects"
+         :row-generator (lambda (build)
+                          (taskie-row
+                           :object build
+                           <span>
+                             <a href=(nibble () (view-build build)) >
+                               ,(web-project-name build)
+                             </a>
+                           </span>
 
-                         (ui/div
-                          <span>,(summary build) </span>)
-                         (cond
-                           ((and
-                             (web-project-schedule-p build)
-                             (web-project-scheduled-job build))
-                            (taskie-timestamp
-                             :prefix "Next run"
-                             :timestamp (scheduled-jobs:at (web-project-scheduled-job build))))
+                           (ui/div
+                            <span>,(summary build) </span>)
+                           (cond
+                             ((and
+                               (web-project-schedule-p build)
+                               (web-project-scheduled-job build))
+                              (taskie-timestamp
+                               :prefix "Next run"
+                               :timestamp (scheduled-jobs:at (web-project-scheduled-job build))))
 
-                           ((and
-                             (web-project-schedule-p build)
-                             (next-job-at build))
-                            (taskie-timestamp
-                             :prefix "Next run"
-                             :timestamp (next-job-at build)))
-                           (t
-                            <ul class= "list-inline font-13 text-end" >
-                              <li class= "list-inline-item" >
-                                <em>Not scheduled</em>
-                              </li>
-                            </ul>)))))
-   </div>))
+                             ((and
+                               (web-project-schedule-p build)
+                               (next-job-at build))
+                              (taskie-timestamp
+                               :prefix "Next run"
+                               :timestamp (next-job-at build)))
+                             (t
+                              <ul class= "list-inline font-13 text-end" >
+                                <li class= "list-inline-item" >
+                                  <em>Not scheduled</em>
+                                </li>
+                              </ul>)))))
+     </div>)))
 
 (defun recent-runs ()
   <app-template title="Recent Web runs">
