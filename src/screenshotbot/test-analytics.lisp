@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/analytics
+                #:make-digest
                 #:map-analytics-events
                 #:push-analytics-event
                 #:event-session
@@ -41,7 +42,7 @@
     (is (not (equal (list ev1)  (all-analytics-events))))
 
     ;; but it should be properly restored
-    (is (equal "foo" (event-session (car (all-analytics-events)))))))
+    (is (equalp (make-digest "foo") (event-session (car (all-analytics-events)))))))
 
 (test push-analytics-event
   (with-fixture state ()
@@ -63,19 +64,19 @@
 (test map-analytics-event
   (with-fixture state ()
     (push ev1 *events*)
-    (is (equal (list "foo")
+    (is (equalp (list (make-digest "foo"))
                (map-analytics-events #'event-session)))
-    (is (equal nil
+    (is (equalp nil
                (map-analytics-events #'event-session
                                        :keep-if (lambda (x)
                                                   (declare (ignore x))
                                                   nil))))
     (dotimes (i 100)
       (push ev1 *events*))
-    (is (equal (list "foo" "foo" "foo")
+    (is (equalp (list (make-digest "foo") (make-digest "foo") (make-digest "foo"))
                (map-analytics-events #'event-session
                                        :limit 3)))
     (write-analytics-events)
-    (is (equal (list "foo" "foo" "foo")
+    (is (equalp (list (make-digest "foo") (make-digest "foo") (make-digest "foo"))
                (map-analytics-events #'event-session
                                        :limit 3)))))

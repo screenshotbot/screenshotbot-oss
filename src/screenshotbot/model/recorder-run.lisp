@@ -161,8 +161,6 @@
     :accessor %created-at))
   (:metaclass has-created-at))
 
-;; (unpromote-run (util:find-by-oid "62e92bff4e92435beab42f53"))
-
 (defun unpromote-run (run)
   (let ((previous-run (recorder-previous-run run))
         (channel (recorder-run-channel run))

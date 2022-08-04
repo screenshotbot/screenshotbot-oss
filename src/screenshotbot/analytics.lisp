@@ -65,6 +65,14 @@
   #+lispworks
   `(system:atomic-exchange ,place ,new-val))
 
+(defun make-digest (str)
+    (ironclad:digest-sequence
+     :sha256 (flexi-streams:string-to-octets str)))
+
+(defun hash-session-id (ev)
+  (when (stringp (event-session ev))
+    (setf (event-session ev)
+          (make-digest (event-session ev)))))
 
 (defun %write-analytics-events ()
   (let ((old-events (atomic-exchange *events* nil)))
@@ -77,6 +85,7 @@
        (dolist (ev (nreverse old-events))
          (when (consp (event-session ev))
            (setf (event-session ev) (car (event-session ev))))
+         (hash-session-id ev)
          (setf (writtenp ev) t)
          (cl-store:store ev s))
        (finish-output s)))))
@@ -108,6 +117,7 @@
            (maybe-send (ev)
              (when (funcall keep-if ev)
                (incf count)
+               (hash-session-id ev)
                (push (funcall function ev) ret))))
       (iter (for ev in *events*)
         (while (keep-looking?))
@@ -129,7 +139,7 @@
   (let ((ev (make-instance 'analytics-event
                             :ip-address (hunchentoot:real-remote-addr)
                             :user-agent (hunchentoot:user-agent)
-                            :session (auth:session-key (auth:current-session))
+                            :session (car (auth:session-key (auth:current-session)))
                             :referrer (hunchentoot:referer)
                             :script-name (hunchentoot:script-name hunchentoot:*request*)
                             :query-string (hunchentoot:query-string*))))
