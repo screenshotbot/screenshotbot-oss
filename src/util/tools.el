@@ -16,3 +16,14 @@
 
 (defun arnold-update-bknr-slot ()
   )
+
+(defun arnold-compile-function-at-point ()
+  (interactive)
+  (let ((fn-name (thing-at-point 'sexp)))
+    (sly-eval `(cl:let ((sym (cl:find-symbol ,(upcase fn-name)
+                                             cl:*package*)))
+                       (cl:cond
+                        (sym
+                         (cl:compile sym))
+                        (cl:t
+                         (cl:error "function not defined: ~a" sym)))))))
