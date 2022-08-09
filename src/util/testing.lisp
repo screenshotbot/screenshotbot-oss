@@ -92,10 +92,10 @@
 (defun call-with-local-acceptor (fn prepare-acceptor-callback name args)
   (let ((port (util/random-port:random-port)))
     (let ((acceptor (apply #'make-instance name
-                             :message-log-destination *standard-output*
-                             :port port
-                             :taskmaster (make-instance 'debuggable-taskmaster)
-                             args)))
+                           :message-log-destination *standard-output*
+                           :port port
+                           :taskmaster (make-instance 'debuggable-taskmaster)
+                           args)))
      (when prepare-acceptor-callback
        (funcall prepare-acceptor-callback acceptor))
      (let ((lock (bt:make-lock))

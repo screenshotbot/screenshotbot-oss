@@ -130,31 +130,49 @@
         (error "Could not parse json:"
                json)))))
 
+(defun call-with-file-stream (non-file-stream fn)
+  "See doc for with-file-stream"
+  (handler-case
+      (file-length non-file-stream)
+    (type-error ()
+      (error "Unimplemented non-file-stream: this is a bug, please ping support@screenshotbot.io")))
+  (funcall fn non-file-stream))
+
+(defmacro with-file-stream ((stream non-file-stream) &body body)
+  "This actually does nothing: it just calls the body with stream bound to non-file-stream.
+
+However: the intention is that we bind stream to a stream where we can
+call file-length. Currently, it appears that the only streams we would
+actually call put-file/upload-image with are file streams, so we just
+don't implement this behavior for other streams. However, this
+analysis was made later, so we're keeping this code here and if we get
+a stram on which file-length doesn't work we raise a more parseable
+error."
+  `(call-with-file-stream
+    ,non-file-stream
+    (lambda (,stream) ,@body)))
+
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
   (defun put-file (upload-url stream &key parameters)
     ;; In case we're retrying put-file, let's make sure we reset the
     ;; stream
     (file-position stream 0)
-    (multiple-value-bind (result code)
-        (uiop:with-temporary-file (:stream tmp-stream :pathname tmpfile :direction :io
-                                   :element-type 'flexi-streams:octet)
-          (uiop:copy-stream-to-stream stream tmp-stream
-                                      :element-type 'flexi-streams:octet)
-          (finish-output tmp-stream)
-          (file-position tmp-stream 0)
-          (log:debug "Got file length: ~a" (file-length tmp-stream))
-          (http-request
-           upload-url
-           :method :put
-           :parameters parameters
-           :content-type "application/octet-stream"
-           :content-length (file-length tmp-stream)
-           :content tmpfile))
+    (with-file-stream (stream stream)
+     (let ((file-length (file-length stream)))
+       (log:debug "Got file length: ~a" file-length)
+       (multiple-value-bind (result code)
+         (http-request
+          upload-url
+          :method :put
+          :parameters parameters
+          :content-type "application/octet-stream"
+          :content-length file-length
+          :content stream)
 
-      (log:debug "Got image upload response: ~s" result)
-      (unless (eql 200 code)
-        (error "Failed to upload image: code ~a" code))
-      result)))
+         (log:debug "Got image upload response: ~s" result)
+         (unless (eql 200 code)
+           (error "Failed to upload image: code ~a" code))
+         result)))))
 
 (defun upload-image (key stream hash response)
   (Assert hash)

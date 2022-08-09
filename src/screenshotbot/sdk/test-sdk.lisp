@@ -76,9 +76,12 @@
 
 
 (hunchentoot:define-easy-handler (get-md5-sum :uri "/put" :acceptor-names '(test-acceptor)) ()
-  (declare (optimize (speed 0) (debug 3)))
-  (screenshotbot/api/image:with-raw-post-data-as-tmp-file (p)
-    (ironclad:byte-array-to-hex-string (md5-file p))))
+  (log:info "Running fake PUT")
+  (ironclad:byte-array-to-hex-string
+   (ironclad:digest-sequence
+    :md5
+    (hunchentoot:raw-post-data :force-binary t
+                               :want-stream nil))))
 
 
 #-darwin

@@ -128,7 +128,7 @@
 (defhandler (nil :uri "/api/prepare-upload" :method :post :html nil) (hash content-type)
   (prepare-upload-api :hash hash :content-type content-type))
 
-
+;; I'm skeptical of the correctness of this, see D5631
 (defun %with-raw-post-data-as-tmp-file (fn)
   (uiop:with-temporary-file (:stream s :pathname p :direction :output
                              :element-type 'flexi-streams:octet)

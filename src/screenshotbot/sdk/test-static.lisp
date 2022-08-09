@@ -48,14 +48,15 @@
 (hunchentoot:define-easy-handler (fake-blob-upload :uri "/api/blob/upload"
                                                    :acceptor-names '(test-acceptor))
     (hash type api-key api-secret-key)
-  (screenshotbot/api/image:with-raw-post-data-as-tmp-file (p)
-    (setf *len* (trivial-file-size:file-size-in-octets p))
-    (setf *hex* (md5-file p))))
+  (let ((seq (hunchentoot:raw-post-data :force-binary t
+                                        :want-stream nil)))
+    (setf *len* (length seq))
+    (setf *hex* (ironclad:digest-sequence :md5 seq))))
 
 (test blob-upload
   (with-fixture state ()
     (uiop:with-temporary-file (:pathname p :stream out)
-      (write "zoidberg" :stream out)
+      (write-string "zoidberg" out)
       (finish-output out)
       (let ((md5 (md5-file p)))
         (upload-blob p)
