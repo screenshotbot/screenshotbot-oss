@@ -29,7 +29,7 @@
 (fli:define-c-typedef magick-size-type :uint64)
 (fli:define-c-typedef quantum :uint8)
 
-(defvar *windows-magick-dir* 
+(defvar *windows-magick-dir*
   #P"c:/Program Files/ImageMagick-7.1.0-Q8/")
 
 (defun win-magick-lib (name)
@@ -42,19 +42,17 @@
     (unless *path-setp*
       (setf (uiop:getenv "Path") (format nil "~a;~a" (namestring *windows-magick-dir*) (uiop:getenv "Path")))
       (setf *path-setp* t)))
-  
-  (fli:register-module 
+
+  (fli:register-module
    ;; TODO: typo in module name, we should fix when a restart is due.
-   :magicd-wand 
-   :file-name 
+   :magicd-wand
+   :file-name
    (cond
     ((uiop:os-windows-p)
      ;; TODO: if needed we can discover this from the registry, see the
      ;; python wand code that does the same
      (win-magick-lib "MagickWand"))
     (t "libMagickWand-7.Q8.so"))))
-
-(register-magick-wand)
 
 ;; (fli:disconnect-module :magicd-wand)
 
@@ -272,6 +270,7 @@
 
 (defun init-magick-wand ()
   (unless *magick-wand-inited*
+    (register-magick-wand)
     (magick-wand-genesis)
     (update-resource-limits)
     (setf *magick-wand-inited* t)))
