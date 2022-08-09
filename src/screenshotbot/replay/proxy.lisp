@@ -25,7 +25,9 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:*proxy-port*
-   #:ensure-proxy))
+   #:ensure-proxy
+   #:selenium-host
+   #:selenium-port))
 (in-package :screenshotbot/replay/proxy)
 
 (defclass replay-proxy (hunchentoot:easy-acceptor)
@@ -64,7 +66,9 @@
     ((linode?)
      ;; todo: error handling: if this endpoint goes down then just a local
      ;; proxy.
-     "http://10.9.8.2:5004")
+     (format nil "http://~a:~d"
+             (selenium-host selenium-service)
+             (selenium-port selenium-service)))
     #+screenshotbot-oss
     (t
      (ensure-local-proxy))

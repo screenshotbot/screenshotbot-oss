@@ -19,6 +19,9 @@
                 #:image-spec-serialized-key
                 #:with-imaged-instance
                 #:defimage)
+  (:import-from #:screenshotbot/replay/proxy
+                #:selenium-host
+                #:selenium-port)
   (:nicknames :screenshotbot/pro/replay/services)
   (:local-nicknames (#:a #:alexandria))
   (:export
@@ -64,7 +67,7 @@
                           ((oss?)
                            "selenium-hub")
                           ((linode?)
-                           "10.9.8.2")
+                           "172.104.213.118")
                           (t
                            "172.17.0.1"))
                   :squid-proxy (cond
