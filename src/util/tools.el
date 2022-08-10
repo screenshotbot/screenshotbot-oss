@@ -21,9 +21,10 @@
   (interactive)
   (let ((fn-name (thing-at-point 'sexp)))
     (sly-eval `(cl:let ((sym (cl:find-symbol ,(upcase fn-name)
-                                             cl:*package*)))
+                                             ,(read (sly-current-package)))))
                        (cl:cond
                         (sym
                          (cl:compile sym))
                         (cl:t
-                         (cl:error "function not defined: ~a" sym)))))))
+                         (cl:error "function not defined: ~a (~a ~a)" sym ,fn-name ,(read (sly-current-package)))))))
+    (message "Compiled function")))

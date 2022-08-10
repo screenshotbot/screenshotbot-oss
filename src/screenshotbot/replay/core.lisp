@@ -192,7 +192,7 @@
      (with-open-stream (input remote-stream)
        (assert (not (member status `(301 302))))
        (fix-asset-headers response-headers)
-       
+
        (uiop:with-temporary-file (:pathname p :stream out :directory tmpdir :keep t
                                   :element-type '(unsigned-byte 8)
                                   :direction :io)
@@ -200,14 +200,14 @@
          (file-position out 0)
          (finish-output out)
          (close out)
-         
+
          (write-asset p type
                       :tmpdir tmpdir
                       :url url
                       :snapshot snapshot
                       :response-headers response-headers
                       :status status))))))
-  
+
 
 (defun write-replay-log (message &rest args)
   (unless (eql *terminal-io* *replay-logs*)
@@ -715,7 +715,7 @@
                       ;; from
                       (or actual-url url))
         (add-css context html)
-        
+
         #+nil
         (error "got html: ~a"
                (with-output-to-string (s)
