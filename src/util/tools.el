@@ -28,3 +28,14 @@
                         (cl:t
                          (cl:error "function not defined: ~a (~a ~a)" sym ,fn-name ,(read (sly-current-package)))))))
     (message "Compiled function")))
+
+(defun arnold-inspect-useful-pointers ()
+  (interactive)
+  (sly-inspector-eval
+   "(cl:progn
+     (system::x-find-useful-pointer *)
+nil)")
+  (message "Done finding useful pointers")
+  (sly-inspect "system::*d*")
+  ;;(sly-eval `(cl:setf system::*d* nil))
+  )
