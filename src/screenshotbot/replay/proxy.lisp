@@ -22,6 +22,8 @@
                 #:relay-session-request
                 #:request-session-and-respond
                 #:hub)
+  (:import-from #:util/cron
+                #:def-cron)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:*proxy-port*
@@ -30,10 +32,13 @@
    #:selenium-port))
 (in-package :screenshotbot/replay/proxy)
 
+(defvar *screenshot-proxy-cache*
+  "~/screenshot-proxy-cache/")
+
 (defclass replay-proxy (hunchentoot:easy-acceptor)
   ((cache-dir :initarg :cache-dir
               :reader cache-dir
-              :initform (pathname "~/screenshot-proxy-cache/"))
+              :initform (pathname *screenshot-proxy-cache*))
    (hub :initarg :hub
         :initform (hub)
         :reader replay-proxy-hub))
@@ -136,3 +141,16 @@
 
 (def-proxy-handler (%status :uri "/status") ()
   "OK")
+
+(defun clean-old-screenshots ()
+  (let ((cut-off (- (get-universal-time)
+                    (* 10 60))))
+   (loop for file in  (fad:list-directory *screenshot-proxy-cache*)
+         for write-date = (file-write-date file)
+         if (< write-date cut-off)
+           do
+              (log:info "Deleting file ~a" file)
+              (delete-file file))))
+
+(def-cron clean-old-screenshots (:step-min 5)
+  (clean-old-screenshots))
