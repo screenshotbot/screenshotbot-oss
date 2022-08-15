@@ -369,6 +369,7 @@
                :screenshotbot/webdriver
                :cl+ssl
                :util/digests
+               :util/cron
                :screenshotbot/hub
                :auto-restart
                :dexador
