@@ -99,7 +99,7 @@
                   (with-transaction ()
                     (setf (remote-run-status remote-run) :queued))
                   (with-open-file (stream (bknr.datastore:blob-pathname log-file) :direction :output)
-                    (handler-bind ((condition (lambda (e)
+                    (handler-bind ((error (lambda (e)
                                                 (write-replay-log "Got condition: ~a" e))))
                      (with-hash-lock-held ((remote-run-company remote-run) *hash-lock*)
                        (with-transaction ()
