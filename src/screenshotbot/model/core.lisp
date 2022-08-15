@@ -24,6 +24,9 @@
 (defclass has-created-at (persistent-class)
   ())
 
+(defvar *lock* (bt:make-lock "random-string"))
+(defvar *generator* (make-instance 'secure-random::open-ssl-generator))
+
 (deftransaction
     set-created-at (obj val)
   (check-type obj store-object)
@@ -40,11 +43,16 @@
     (loop for item in items do
       (unless (slot-boundp item slot)
         (with-transaction ()
-         (setf (slot-value item slot) nil))))))
+          (setf (slot-value item slot) nil))))))
+
+
+(defun %random (num)
+  (secure-random:number num *generator*))
 
 (defun generate-random-string (length chars)
-  (coerce (loop repeat length collect (aref chars (random (length chars))))
-          'string))
+  (bt:with-lock-held (*lock*)
+    (coerce (loop repeat length collect (aref chars (%random (length chars))))
+            'string)))
 
 (defun %all-alpha (&optional (from \#a) (to \#z))
   (let ((From (char-code from))

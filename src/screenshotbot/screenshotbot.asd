@@ -83,6 +83,7 @@
                :trivial-file-size
                :screenshotbot.js-assets
                :oidc
+               :cl-isaac
                :screenshotbot.css-assets
                :screenshotbot/secrets
                :util.java
@@ -289,7 +290,8 @@
                              (:file "test-signup")
                              (:file "test-common")))
                (:module "model"
-                :components ((:file "test-screenshot")
+                :components ((:file "test-core")
+                             (:file "test-screenshot")
                              (:file "test-user")
                              (:file "test-channel")
                              (:file "test-company")
