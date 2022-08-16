@@ -40,6 +40,8 @@
   (:import-from #:screenshotbot/model/company
                 #:company
                 #:company-runs)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:export
    #:channel
    #:set-channel-screenshot-mask
@@ -68,58 +70,59 @@
 ;; repo link
 (defvar *channel-repo-overrides* nil)
 
-(defclass channel (store-object)
-  ((name :initarg :name
-         :reader channel-name)
-   (company
-    :initarg :company
-    :initform nil
-    :accessor company)
-   (active-runs
-    :initform nil
-    :accessor all-active-runs
-    :relaxed-object-reference t
-    :documentation "Mapping from branch name to active run as an alist")
-   (branch :initarg :branch
-           :accessor channel-branch)
-   (github-repo :initarg :github-repo
-                :writer (setf github-repo)
-                :reader %%github-repo)
-   (github-repo-full-name :accessor github-repo-full-name
-                          :index-type hash-index
-                          :index-initargs (:test 'equal)
-                          :index-reader channel-with-github-repo-full-name)
-   (master-branch :accessor master-branch
-                  :initform "master")
-   (masks :initform nil
-          :reader masks
-          :documentation "assoc value from screenshot name to list of MASK-RECTs")
-   (publicp :initform nil
-            :initarg :publicp
-            :accessor publicp)
-   (repo-cache
-    :initform nil
-    :transient t)
-   (channel-runs
-    :initform nil
-    :transient t
-    :accessor channel-runs)
-   (lock
-    :initform (bt:make-lock)
-    :transient t
-    :reader channel-lock)
-   (promotion-lock
-    :initform (bt:make-lock)
-    :transient t
-    :reader channel-promotion-lock)
-   (cv
-    :initform (bt:make-condition-variable :name "channel-cv")
-    :transient t
-    :reader channel-cv)
-   (created-at
-    :initform (local-time:timestamp-to-universal (local-time:now))
-    :accessor %created-at))
-  (:metaclass persistent-class))
+(with-class-validation
+ (defclass channel (store-object)
+   ((name :initarg :name
+          :reader channel-name)
+    (company
+     :initarg :company
+     :initform nil
+     :accessor company)
+    (active-runs
+     :initform nil
+     :accessor all-active-runs
+     :relaxed-object-reference t
+     :documentation "Mapping from branch name to active run as an alist")
+    (branch :initarg :branch
+            :accessor channel-branch)
+    (github-repo :initarg :github-repo
+                 :writer (setf github-repo)
+                 :reader %%github-repo)
+    (github-repo-full-name :accessor github-repo-full-name
+                           :index-type hash-index
+                           :index-initargs (:test 'equal)
+                           :index-reader channel-with-github-repo-full-name)
+    (master-branch :accessor master-branch
+                   :initform "master")
+    (masks :initform nil
+           :reader masks
+           :documentation "assoc value from screenshot name to list of MASK-RECTs")
+    (publicp :initform nil
+             :initarg :publicp
+             :accessor publicp)
+    (repo-cache
+     :initform nil
+     :transient t)
+    (channel-runs
+     :initform nil
+     :transient t
+     :accessor channel-runs)
+    (lock
+     :initform (bt:make-lock)
+     :transient t
+     :reader channel-lock)
+    (promotion-lock
+     :initform (bt:make-lock)
+     :transient t
+     :reader channel-promotion-lock)
+    (cv
+     :initform (bt:make-condition-variable :name "channel-cv")
+     :transient t
+     :reader channel-cv)
+    (created-at
+     :initform (local-time:timestamp-to-universal (local-time:now))
+     :accessor %created-at))
+   (:metaclass persistent-class)))
 
 (defmethod channel-company ((channel channel))
   (company channel))
