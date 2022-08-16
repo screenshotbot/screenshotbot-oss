@@ -53,7 +53,8 @@
    #:*channel-repo-overrides*
    #:masks
    #:channel-cv
-   #:channel-lock)
+   #:channel-lock
+   #:all-active-runs)
 
   ;; forward decls
   (:export
@@ -76,9 +77,9 @@
     :accessor company)
    (active-runs
     :initform nil
-    :accessor %active-run-alist
+    :accessor all-active-runs
     :relaxed-object-reference t
-    :documentation "Mapping from branch name to active run")
+    :documentation "Mapping from branch name to active run as an alist")
    (branch :initarg :branch
            :accessor channel-branch)
    (github-repo :initarg :github-repo
@@ -157,7 +158,7 @@
     (check-type channel channel)
     (check-type branch string)
     (setf
-     (assoc-value (%active-run-alist channel)
+     (assoc-value (all-active-runs channel)
                   branch
                   :test 'equal)
      run))
@@ -174,7 +175,7 @@
   (%set-active-run channel branch run))
 
 (defmethod active-run ((channel channel) branch)
-  (assoc-value (%active-run-alist channel)
+  (assoc-value (all-active-runs channel)
                branch :test 'equal))
 
 (defmethod clear-caches ((channel channel))

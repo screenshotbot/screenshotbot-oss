@@ -17,7 +17,13 @@
                 #:defhandler)
   (:import-from #:markup #:deftag)
   (:import-from #:screenshotbot/dashboard/explain
-                #:explain))
+                #:explain)
+  (:import-from #:screenshotbot/model/channel
+                #:all-active-runs)
+  (:import-from #:util/object-id
+                #:oid)
+  (:import-from #:screenshotbot/dashboard/run-page
+                #:run-page))
 (in-package :screenshotbot/dashboard/channels)
 
 (markup:enable-reader)
@@ -30,13 +36,13 @@
       <p>First seen: <timeago timestamp= (created-at channel) />
       </p>
       <p>Active run:
-        ,(anaphora:acase (channel-active-run channel)
-        (nil
-        "None"
-        (otherwise
-        <a href=(make-url 'run-page :id (oid it)) >
-          Run
-      </a>)))
+        ,@ (or
+            (loop for (branch . run) in (all-active-runs channel)
+                  collect
+                  <a href=(hex:make-url 'run-page :id (oid run)) >
+                    Run on ,(progn branch)
+                  </a>)
+            (list "None"))
       </p>
   </simple-card-page>)
 
