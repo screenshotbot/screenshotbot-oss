@@ -282,7 +282,9 @@
        (log :info "Previous run is not an on an ancestor commit. This is usually a race condition, but is okay."))
       (t
        (cond
-         ((not (if previous-run (activep previous-run) t))
+         ((not (if previous-run
+                   (eql previous-run (active-run channel branch))
+                   t))
           (log :error "Another run got promoted while we were debating this one."))
          (t
           (finalize-promotion run previous-run
