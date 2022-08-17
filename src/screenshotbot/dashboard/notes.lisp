@@ -19,6 +19,7 @@
                 #:find-notes-for
                 #:note)
   (:import-from #:screenshotbot/user-api
+                #:adminp
                 #:user-full-name
                 #:user
                 #:current-user)
@@ -112,13 +113,21 @@
             (declare (ignore note))
             (hex:safe-redirect redirect))))))))
 
+(defun render-user-name (user)
+  (cond
+    #-screenshotbot-oss
+    ((adminp user)
+     "Screenshotbot Support")
+    (t
+     (user-full-name user))))
+
 (defun render-notes (&key for)
   (let ((notes (find-notes-for for)))
     (when notes
-      <div>
+      <div class= "mt-3" >
         ,@ (loop for note in notes collect
         <div class= "alert alert-info mt-1" >
-          <h6><b>,(user-full-name (user note))</b> added a note:</h6>
+          <h6><b>,(render-user-name (user note))</b> added a note:</h6>
           <div>,(message note)</div>
         </div>)
       </div>)))
