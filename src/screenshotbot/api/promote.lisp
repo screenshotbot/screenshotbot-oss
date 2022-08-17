@@ -13,6 +13,7 @@
         #:screenshotbot/model/recorder-run
         #:screenshotbot/model/channel
         #:screenshotbot/git-repo)
+  (:shadow #:log)
   (:import-from #:bknr.datastore
                 #:with-transaction
                 #:store-object-id)
@@ -60,6 +61,17 @@
       (log4cl:add-appender (log4cl:make-logger :promote) appender)
       appender)))
 
+(defun log (level message &rest args)
+  (cond
+    (*promotion-log-stream*
+     (format *promotion-log-stream* "~a " level)
+     (apply #'format *promotion-log-stream*
+              message
+              args)
+     (format *promotion-log-stream* "~%"))
+    (t
+     (warn "Attempted to call promotion log when no promotion is running: ~a" message))))
+
 
 (defvar *promotion-appender* (setup-promotion-logger))
 
@@ -80,9 +92,9 @@
       (unwind-protect
            (progn
              ;;(format *current-promotion-stream* "BEGIN~%")
-             (log:info "Beginning promotion: ~S" s)
+             (log :info "Beginning promotion: ~S" s)
              (funcall fn))
-        (log:info "End promotion")
+        (log :info "End promotion")
         (finish-output s)))))
 
 ;; In order to this this, you need
@@ -90,7 +102,7 @@
 
 (defun do-promotion-log (level fmt &rest args)
   (let ((msg (apply #'format nil fmt args)))
-   (log:info "~a" msg))
+   (log :info "~a" msg))
   (when *promotion-log-stream*
     (format *promotion-log-stream* "~a: " level)
     (apply #'format *promotion-log-stream*
@@ -144,13 +156,13 @@
 (defmethod maybe-promote ((promoter delegating-promoter) run)
   (restart-case
       (dolist (delegate (delegates promoter))
-        (log:info :promote "Delegating to promoter ~s" delegate)
+        (log :info "Delegating to promoter ~s" delegate)
         (maybe-promote delegate run))
     (dangerous-restart-all-promotions ()
       (maybe-promote promoter run))))
 
 (defmethod maybe-promote :before (promoter run)
-  (log:info :promote "Running promoter: ~s on ~s" promoter run))
+  (log :info "Running promoter: ~s on ~s" promoter run))
 
 (defmethod maybe-send-tasks ((promoter delegating-promoter) run)
   (dolist (delegate (delegates promoter))
@@ -158,7 +170,7 @@
 
 (defmethod channel-ancestorp ((channel channel) commit1 commit2)
   "check if COMMIT1 is an ancestor of COMMIT2"
-  (log:info :promote "Checking ancestry (channel: ~a): ~a ~a" (store-object-id channel) commit1 commit2)
+  (log :info "Checking ancestry (channel: ~a): ~a ~a" (store-object-id channel) commit1 commit2)
   (restart-case
       (repo-ancestor-p (channel-repo channel)
                        commit1
@@ -185,7 +197,7 @@
            (optimize (debug 3) (speed 0)))
   (unless channel
     (setf channel (recorder-run-channel run)))
-  (log:info "Begin image verifications for ~a" run)
+  (log :info "Begin image verifications for ~a" run)
   (recorder-run-verify run)
 
   (restart-case
@@ -194,21 +206,21 @@
                (cons channel (github-repo run))
                *channel-repo-overrides*)))
        (bt:with-lock-held ((channel-promotion-lock channel))
-         (log:info "Inside promotion logic")
+         (log :info "Inside promotion logic")
          (let ((run-branch (recorder-run-branch run)))
-           (log:info "Branch on run: ~a" run-branch)
+           (log :info "Branch on run: ~a" run-branch)
            (cond
              ((pull-request-url run)
-              (log:error :promote "Looks like there's a Pull Request attached, not promoting"))
+              (log :error "Looks like there's a Pull Request attached, not promoting"))
              ((periodic-job-p run)
-              (log:info "This is a periodic job, running promotions")
+              (log :info "This is a periodic job, running promotions")
               (finalize-promotion
                run
                (active-run channel (master-branch channel))
                channel
                run-branch))
              ((null run-branch)
-              (log:error :promote "No branch set, not promoting"))
+              (log :error "No branch set, not promoting"))
              (t
               (maybe-promote-run-on-branch run channel run-branch
                                            :wait-timeout wait-timeout))))))
@@ -229,28 +241,28 @@
                      (t
                       sbranch))))
             (channel-ancestorp channel commit branch-commit))))
-    (log:info :promote "previous run: ~s" previous-run)
+    (log :info "previous run: ~s" previous-run)
 
     (when previous-run
-      (log:info :promote "Attempting switch: ~a -> ~a"
+      (log :info "Attempting switch: ~a -> ~a"
                 (recorder-run-commit previous-run)
                 (recorder-run-commit run)))
-    (log:info :promote "According to run master has branch-hash ~A"
+    (log :info "According to run master has branch-hash ~A"
               (recorder-run-branch-hash run))
     (cond
       ((not (trunkp run))
-       (log:info :promote "not promoting run because it's not production run"))
+       (log :info  "not promoting run because it's not production run"))
       ((not (recorder-run-branch-hash run))
-       (log:error :promote "branch-hash not present in run"))
+       (log :error  "branch-hash not present in run"))
       ((and (not *disable-ancestor-checks-p*)
             previous-run
             (not (in-branch-p (recorder-run-commit previous-run)
                               branch)))
-       (log:error :promote "The previous commit ~a is no longer in branch ~a"
+       (log :error "The previous commit ~a is no longer in branch ~a"
                   (recorder-run-commit previous-run)
                   branch))
       ((not (in-branch-p (recorder-run-commit run) branch))
-       (log:error :promote "The commit ~a is not in branch ~a"
+       (log :error "The commit ~a is not in branch ~a"
                   (recorder-run-commit run)
                   branch))
       #+nil ;; todo: do we really need this? we removed this for generic-git-repo
@@ -260,18 +272,18 @@
       ((and previous-run
             (string= (recorder-run-commit previous-run)
                      (recorder-run-commit run)))
-       (log:info :promote "The current promoted run is already on the same commit"))
+       (log :info "The current promoted run is already on the same commit"))
       ((and (not *disable-ancestor-checks-p*)
             previous-run
             (not (channel-ancestorp
                   channel
                   (recorder-run-commit previous-run)
                   (recorder-run-commit run))))
-       (log:info :promote "Previous run is not an on an ancestor commit. This is usually a race condition, but is okay."))
+       (log :info "Previous run is not an on an ancestor commit. This is usually a race condition, but is okay."))
       (t
        (cond
          ((not (if previous-run (activep previous-run) t))
-          (log:error :promote "Another run got promoted while we were debating this one."))
+          (log :error "Another run got promoted while we were debating this one."))
          (t
           (finalize-promotion run previous-run
                               channel branch)))))))
@@ -293,7 +305,7 @@
                       (return t))
                      (t
                       ;; nothing to do. wait on the CV and try again
-                      (log:info :promote "Waiting for commit `~a` to be available (best effort, will not fail if it's unavailable)" commit)
+                      (log :info "Waiting for commit `~a` to be available (best effort, will not fail if it's unavailable)" commit)
                       (bt:condition-wait (channel-cv channel)
                                          (channel-lock channel)
                                          :timeout 15))))))
@@ -309,15 +321,15 @@
              ((promotion-complete-p run)
               (return t))
              (t
-              (log:info :promote "Waiting for run ~a to be completed" run)
+              (log :info "Waiting for run ~a to be completed" run)
               (bt:condition-wait cv lock :timeout 5)))))
 
 (defun maybe-promote-run-on-branch (run channel branch &key wait-timeout)
   (cond
     ((str:emptyp (github-repo run))
-     (log:error :promote "No repo link provided, cannot promote"))
+     (log :error "No repo link provided, cannot promote"))
     ((null (recorder-run-commit run))
-     (log:error :promote "No commit specified, not promoting"))
+     (log :error "No commit specified, not promoting"))
     (t
      (let ((parent-commit (get-parent-commit
                            (channel-repo channel)
@@ -335,7 +347,7 @@
 
 (auto-restart:with-auto-restart ()
  (defun finalize-promotion (run previous-run channel branch)
-   (log:info :promote "All checks passed, promoting run")
+   (log :info "All checks passed, promoting run")
    (when previous-run
      (assert (equal branch
                     (recorder-run-branch run)))
