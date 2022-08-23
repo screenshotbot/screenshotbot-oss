@@ -58,6 +58,7 @@
          :method method
          :want-string t
          :content-type content-type
+         :read-timeout 45
          :content content)
       (assert (not (eql ret 500)))
       (setf (hunchentoot:return-code*) ret)

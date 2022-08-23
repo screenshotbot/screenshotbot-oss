@@ -38,6 +38,7 @@
                  :verify verify
                  args)
       (handler-bind ((error (lambda (e)
+                              (declare (ignore e))
                               ;; We're not going to actually return the stream
                               (when (streamp res)
                                 (close res)))))
