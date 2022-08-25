@@ -219,7 +219,7 @@
 
 (test if-old-image-is-rewritten-on-disk-we-still-dont-reupload
   (let ((port (random-port)))
-    (with-fixture state (:host (format nil "http://localhost:~a" port))
+    (with-fixture state (:host (format nil "http://127.0.0.1:~a" port))
       (let ((acceptor (make-instance 'acceptor
                                       :port port)))
         (prepare-acceptor-plugins acceptor)
