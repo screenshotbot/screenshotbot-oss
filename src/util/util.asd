@@ -132,6 +132,11 @@
                :alexandria)
   :components ((:file "form-state")))
 
+(defsystem :util/macros
+  :serial t
+  :depends-on ()
+  :components ((:file "macros")))
+
 (defsystem :util/store
   :serial t
   :depends-on (:bknr.datastore
@@ -225,6 +230,7 @@
   :depends-on (:util
                :util/hash-lock
                :util/health-check
+               :util/macros
                :util/digests
                :util/request
                :util/fiveam)
@@ -232,6 +238,7 @@
   :components ((:module "tests"
                 :components ((:file "test-ret-let")
                              (:file "test-misc")
+                             (:file "test-macros")
                              (:file "test-request")
                              (:file "test-store")
                              (:file "test-hash-lock")
