@@ -10,8 +10,6 @@
   (:import-from #:bknr.datastore
                 #:persistent-class)
   (:import-from #:bknr.datastore
-                #:persistent-class)
-  (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:util/store
                 #:with-class-validation)

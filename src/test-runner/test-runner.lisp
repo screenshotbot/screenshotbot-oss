@@ -16,7 +16,7 @@
 (defun hide-outputs ()
   (setf fiveam:*test-dribble* *standard-output*)
   (let ((null-file (open (if (uiop:os-windows-p) "nul" "/dev/null") :direction :output
-                                                                    :if-exists :supersede)))
+                                                                    :if-exists :append)))
     (setf *standard-output* null-file)
     (setf *error-output* null-file)
     (setf *trace-output* null-file)
