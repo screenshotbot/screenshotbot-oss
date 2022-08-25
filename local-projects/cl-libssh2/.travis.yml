@@ -1,0 +1,24 @@
+language: common-lisp
+
+env:
+  matrix:
+    - LISP=sbcl
+
+install:
+  # Install cl-travis
+  - curl https://raw.githubusercontent.com/luismbo/cl-travis/master/install.sh | bash
+  # Install the SSH server, openssl tools, and libssh2
+  - sudo apt-get install -y openssh-server openssl libssh2-1
+  # create a group for testing
+  - sudo groupadd ssh2test
+  - sudo useradd -g ssh2test -p $(openssl passwd "test1") test1
+  - sudo useradd -g ssh2test -p $(openssl passwd "test2") test2
+
+script:
+  - cl -e '(ql:quickload :hu.dwim.stefil)'
+       -e '(ql:quickload :cffi-grovel)'
+       -e '(ql:quickload :libssh2.test)'
+       -e '(setf libssh2.test::*user1* "test1" libssh2.test::*password1* "test1")'
+       -e '(setf libssh2.test::*user2* "test2" libssh2.test::*password2* "test2")'
+       -e '(libssh2.test:run-all-tests)'
+  - ls -al /tmp/

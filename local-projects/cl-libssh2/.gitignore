@@ -1,0 +1,4 @@
+*.FASL
+*.fasl
+*.lisp-temp
+/.quicklisp-path
