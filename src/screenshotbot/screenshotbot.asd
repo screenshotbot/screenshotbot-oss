@@ -444,6 +444,8 @@
   :depends-on (:flexi-streams
                :trivial-file-size
                :auto-restart
+               #-lispworks
+               :util/fake-fli
                :cl-webdriver-client)
   :components ((:module "webdriver"
                 :components ((:file "impl")
