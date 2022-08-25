@@ -37,6 +37,7 @@
         :method :post
         :want-string t
         :content-type +json-content-type+
+        :read-timeout 300
         :content arguments
         :external-format-out :utf-8)
      (assert (not (eql ret 500)))
