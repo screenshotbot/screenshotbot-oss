@@ -27,6 +27,7 @@
     (with-open-file (input input-file :element-type '(unsigned-byte 8))
       (uiop:copy-stream-to-stream input output :element-type '(unsigned-byte 8)))))
 
+#-ccl
 (test simple-base64-decoding
   (with-fixture state ()
     (let* ((binary (read-file-bytes input-file))
