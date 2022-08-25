@@ -121,7 +121,7 @@
                              nil))))))
            (bt:condition-wait acceptor-ready lock)
            (unwind-protect
-                (funcall fn (format nil "http://localhost:~d" port)
+                (funcall fn (format nil "http://127.0.0.1:~d" port)
                          acceptor)
              (hunchentoot:stop acceptor)
              (bt:join-thread thread)
