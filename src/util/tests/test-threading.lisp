@@ -75,6 +75,7 @@
 (define-condition my-simple-error (error)
   ())
 
+#-screenshotbot-oss
 (test sentry-logging-for-make-thread
   (with-fixture state ()
    (with-fixture sentry-mocks ()
