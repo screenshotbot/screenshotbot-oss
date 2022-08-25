@@ -1,6 +1,7 @@
 (defpackage :screenshotbot/client-hub/selenium
   (:use #:cl)
   (:import-from #:screenshotbot/hub/server
+                #:direct-selenium-url
                 #:relay-session-request
                 #:request-session-and-respond
                 #:*hub*)
@@ -88,12 +89,17 @@
          (delete-instance instance)
          (error "No instance to work with since we cleaned up the image"))))))
 
+(defmethod direct-selenium-url ((hub client-hub)
+                                session-id)
+  "http://localhost:4444")
+
 (defmethod relay-session-request ((hub client-hub)
                                   &key method content content-type
                                     script-name)
   (let* ((session-id (elt (str:split "/" script-name) 4))
          (rest-script (a:lastcar (str:split "/" script-name :limit 4)))
-         (url (format nil "http://localhost:4444/~a"
+         (url (format nil "~a/~a"
+                      (direct-selenium-url hub session-id)
                       rest-script)))
     (log:info "Delegating request for session: ~a to ~a" session-id url)
     (let* ((session (find-session hub session-id))

@@ -19,6 +19,7 @@
   (:import-from #:util/digests
                 #:md5-file)
   (:import-from #:screenshotbot/hub/server
+                #:direct-selenium-url
                 #:relay-session-request
                 #:request-session-and-respond
                 #:hub)
@@ -116,11 +117,13 @@
                                                             (dbg:output-backtrace :debug :stream out)))))))))))
     (funcall fn)))
 
-(def-proxy-handler (%full-page-screenshot :uri "/full-page-screenshot") (session browser uri)
+(def-proxy-handler (%full-page-screenshot :uri "/full-page-screenshot") (session browser)
   (let* ((oid (mongoid:oid-str (mongoid:oid)))
          (driver (make-driver browser :proxy nil))
          (path (oid-pathname oid))
-         (webdriver-client::*uri* uri))
+         (webdriver-client::*uri* (direct-selenium-url
+                                   (replay-proxy-hub hunchentoot:*acceptor*)
+                                   session)))
     (let ((webdriver-client::*session*
             (make-instance 'webdriver-client::session
                             :id session)))

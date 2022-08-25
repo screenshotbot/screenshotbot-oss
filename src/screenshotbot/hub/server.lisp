@@ -6,7 +6,8 @@
   (:export
    #:hub
    #:relay-session-request
-   #:*hub*))
+   #:*hub*
+   #:direct-selenium-url))
 (in-package :screenshotbot/hub/server)
 
 (defclass local-hub ()
@@ -25,6 +26,14 @@
      (start-hub hub)
      hub)
    :thread-safe t))
+
+(defgeneric direct-selenium-url (hub session-id)
+  (:method (hub (session-id string))
+    "http://localhost:4444")
+  (:documentation "A direct URL to access the selenium server while avoiding the
+ intermediate hub. This should only be used by the
+ /full-page-screenshot, since outside of this you might be firewalled
+ against accessing this URL directly."))
 
 (defmethod start-hub ((self local-hub)))
 
