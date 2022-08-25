@@ -1,3 +1,7 @@
+<p align="center">
+    <img src="https://screenshotbot.io/assets/images/logo-dark.png" width="40%" />
+</p>
+
 # Screenshotbot: Screenshot Testing Service
 
 [![Build Status](http://jenkins.tdrhq.com/buildStatus/icon?job=screenshotbot-oss)](http://jenkins.tdrhq.com/job/screenshotbot-oss/)
