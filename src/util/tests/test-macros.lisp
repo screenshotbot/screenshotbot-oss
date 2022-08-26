@@ -87,6 +87,17 @@
                   '(one &key two)
                    '(aaa :two 2)))))
 
+(test get-bindings-for-keys
+  ;; Not that this would say &key foo, since this is the expression
+  ;; that goes into the lamba-list for the user defined block
+  (is (equal '(var)
+              (get-bindings
+               '(&key &binding foo)
+                '(:foo var))))
+  (is (equal '(aaa bbb) (get-bindings
+                              '(&binding aaa &key &binding bbb)
+                               '(aaa :bbb bbb)))))
+
 (test get-non-bindings
   (is (equal '() (get-non-bindings
                   '(&binding one)
@@ -98,15 +109,39 @@
                         '(&binding one &key foo)
                          '(aaa :foo 2)))))
 
+(test get-non-bindings-for-keys
+  (is (equal '() (get-non-bindings
+                  '(&key &binding foo)
+                   '(:foo var))))
+  (is (equal '() (get-non-bindings
+                  '(&binding aaa &key &binding bbb)
+                   '(aaa :bbb bb))))
+  (is (equal '(:foo 2)
+              (get-non-bindings
+               '(&binding aaa &key &binding bbb foo)
+                '(aaa :bbb bbb :foo 2)))))
+
 (defblock with-bindings (&binding a &binding b &key one two
                                   &fn fn)
   (funcall fn 1 2))
+
 
 (test bindings
   (is (equal 3
              (with-bindings (aaa bbb)
                (+ aaa bbb))))
+  #+nil
   (signals unsupported-lambda-list
     (eval
      `(defblock with-key-bindings (&binding a &key &binding b)
         (funcall fn 1 3)))))
+
+
+(test bindings-with-keys
+  (defblock with-key-bindings (&binding a &key &binding b one two
+                                        &fn fn)
+    (funcall fn 1 2))
+
+  (is (equal 3
+             (with-key-bindings (aaa :b bbb)
+               (+ aaa bbb)))))

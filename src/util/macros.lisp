@@ -20,33 +20,61 @@
 
 (defun get-bindings (real-fn-args fn-arg-values)
   (let ((fn-args (remove-&fn real-fn-args)))
-    (eval
-     `(destructuring-bind
+    (let ((expr `(destructuring-bind
           ,(loop for x in fn-args
                  if (binding-sym-p x)
                    collect (name x)
                  else
                    collect x)
           ',fn-arg-values
-        (list ,@ (loop for x in fn-args
-                       if (binding-sym-p x)
-                         collect (name x)))))))
+        (list ,@ (let ((seen-&key nil))
+                     (loop for x in fn-args
+                           if (eql '&key x)
+                             do
+                                (setf seen-&key t)
+                           if (and (binding-sym-p x))
+                             collect
+                             (name x)))))))
+      (log:info "Going to eval expr: ~s" expr)
+      (eval expr))))
 
 (defun get-non-bindings (real-fn-args fn-arg-values)
   "Carefully remove all the fn-arg-values that correspond to bindings"
   (let ((fn-args (remove-&fn real-fn-args)))
-    (labels ((%get-non-bindings (args value-exprs keysp)
+    (labels ((is-binding-key (name)
+               (loop for x in fn-args
+                     if (and
+                         (binding-sym-p x)
+                         (string= (string (name x)) (string name)))
+                       return t))
+             (%get-non-bindings (args value-exprs keysp)
                (log:info "Looking at ~a ~a" args value-exprs)
                (cond
-                 ((null args)
+                 ((null value-exprs)
                   value-exprs)
-                 ((binding-sym-p (car args))
+                 ((and (binding-sym-p (car args))
+                       (not keysp))
                   (%get-non-bindings (cdr args)
                                      (cdr value-exprs)
                                      keysp))
-                 ((eql (car args) 'cl:&key)
-                  ;; Currently not supporting &binding in the keys section
-                  value-exprs)
+                 ((and (eql (car args) 'cl:&key)
+                       (not keysp))
+                  (list*
+                   (%get-non-bindings args
+                                      value-exprs
+                                      t)))
+                 ((and keysp (is-binding-key (car value-exprs)))
+                  (%get-non-bindings args
+                                     (cddr value-exprs)
+                                     t))
+                 (keysp
+                  (assert (not (is-binding-key (car value-exprs))))
+                  (list*
+                   (car value-exprs)
+                   (cadr value-exprs)
+                   (%get-non-bindings args
+                                      (cddr value-exprs)
+                                      t)))
                  (t
                   (list*
                    (car value-exprs)
@@ -74,9 +102,6 @@
               (destructuring-bind (next &rest rest) args
                 (cond
                   ((is-sym next '&binding)
-                   (when seen-key
-                     (error 'unsupported-lambda-list
-                             :reason "&binding not supported after &key"))
                    (when seen-rest
                      (error 'unsupported-lambda-list
                              :reason "&binding not supported after &rest"))
