@@ -24,14 +24,14 @@
 
 (util/fiveam:def-suite)
 
+(defblock with-basic-stuff (&fn fn)
+  (funcall fn))
+
+(defblock with-return-something-else (&fn fn)
+  (funcall fn)
+  :another)
 
 (test preconditions
-  (defblock with-basic-stuff (&fn fn)
-    (funcall fn))
-
-  (defblock with-return-something-else (&fn fn)
-    (funcall fn)
-    :another)
   (is (equal :test
              (with-basic-stuff ()
                :test)))
@@ -39,9 +39,10 @@
              (with-return-something-else ()
                :test))))
 
+(defblock with-arg (add &fn fn)
+  (+ add (funcall fn)))
+
 (test can-use-arguments
-  (defblock with-arg (add &fn fn)
-    (+ add (funcall fn)))
 
   (is (equal 5 (with-arg (1)
                  4)))
@@ -50,18 +51,18 @@
     (is (equal 50 (with-arg (4)
                     (+ 1 value))))))
 
-(test arguments-get-evaluated
-  (defblock with-eval-arg (add &fn fn)
-    (+ add (funcall fn)))
+(defblock with-eval-arg (add &fn fn)
+  (+ add (funcall fn)))
 
+(test arguments-get-evaluated
   (let ((value 1))
     (is (equal 5 (with-eval-arg (value)
                    4)))))
 
-(test multiple-arguments
-  (defblock with-multiple-args (one two &fn fn)
-    (list one two))
+(defblock with-multiple-args (one two &fn fn)
+  (list one two))
 
+(test multiple-arguments
   (is (equal (list :one :two)
              (with-multiple-args (:one :two)
                nil))))
@@ -97,13 +98,15 @@
                         '(&binding one &key foo)
                          '(aaa :foo 2)))))
 
+(defblock with-bindings (&binding a &binding b &key one two
+                                  &fn fn)
+  (funcall fn 1 2))
+
 (test bindings
-  (defblock with-bindings (&binding a &binding b &key one two
-                                          &fn fn)
-    (funcall fn 1 2))
   (is (equal 3
              (with-bindings (aaa bbb)
                (+ aaa bbb))))
   (signals unsupported-lambda-list
-      (defblock with-key-bindings (&binding a &key &binding b)
-        (funcall fn 1 3))))
+    (eval
+     `(defblock with-key-bindings (&binding a &key &binding b)
+        (funcall fn 1 3)))))

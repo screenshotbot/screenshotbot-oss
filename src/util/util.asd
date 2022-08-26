@@ -230,6 +230,7 @@
   :depends-on (:util
                :util/hash-lock
                :util/health-check
+               :fiveam-matchers
                :util/macros
                :util/digests
                :util/request

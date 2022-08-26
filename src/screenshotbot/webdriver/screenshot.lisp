@@ -169,6 +169,7 @@
      (in-size :int))
   :result-type :int)
 
+#+lispworks
 (fli:define-foreign-function (evp-decode-final "EVP_DecodeFinal")
     ((ctx (:pointer evp-encode-ctx))
      (out :lisp-simple-1d-array)
@@ -197,7 +198,8 @@
                          (setf found-data-p t))
                        ret)))))
     (funcall decoder stream)
-    ;; The decode should return from the toplevel function
+    ;; The decode shoul
+    d return from the toplevel function
     (error "Did not find a :data attribute in the response json")))
 
 
