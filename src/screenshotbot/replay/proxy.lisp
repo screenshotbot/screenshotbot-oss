@@ -25,6 +25,8 @@
                 #:hub)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:util/macros
+                #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:*proxy-port*
@@ -83,11 +85,21 @@
      ;; container since we need it to create docker containers.
      "http://172.17.0.1:5004")))
 
-(defmacro with-error-handling (&body body)
-  `(call-with-error-handling (lambda () ,@body)))
+(def-easy-macro with-error-handling (&fn fn)
+  (handler-bind ((error (lambda (e)
+                          (setf (hunchentoot:return-code*) 500)
+                          (return-from call-with-error-handling
+                            (json:encode-json-to-string
+                             `(("value" . (("error" . ,(%print-condition e))
+                                           ("message" . "Error forwarding request")
+                                           #+lispworks
+                                           ("stacktrace" .
+                                                         ,(with-output-to-string (out)
+                                                            (dbg:output-backtrace :debug :stream out)))))))))))
+    (funcall fn)))
 
 (defun %handler-wrap (fn)
-  (with-error-handling
+  (with-error-handling ()
     (funcall fn)))
 
 (defmacro def-proxy-handler ((name &key uri method) args &body body)
@@ -104,18 +116,6 @@
   (let ((*print-escape* nil))
     (format nil "~a" e)))
 
-(defun call-with-error-handling (fn)
-  (handler-bind ((error (lambda (e)
-                          (setf (hunchentoot:return-code*) 500)
-                          (return-from call-with-error-handling
-                            (json:encode-json-to-string
-                             `(("value" . (("error" . ,(%print-condition e))
-                                           ("message" . "Error forwarding request")
-                                           #+lispworks
-                                           ("stacktrace" .
-                                                         ,(with-output-to-string (out)
-                                                            (dbg:output-backtrace :debug :stream out)))))))))))
-    (funcall fn)))
 
 (def-proxy-handler (%full-page-screenshot :uri "/full-page-screenshot") (session browser)
   (let* ((oid (mongoid:oid-str (mongoid:oid)))

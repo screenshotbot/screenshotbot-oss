@@ -362,6 +362,7 @@
   :depends-on (:plump
                :lquery
                :uuid
+               :util/macros
                :cl-store
                :util/threading
                :util/misc

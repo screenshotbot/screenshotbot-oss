@@ -78,6 +78,8 @@
                 #:ensure-proxy)
   (:import-from #:util/object-id
                 #:oid-array)
+  (:import-from #:util/macros
+                #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
                     (#:integration #:screenshotbot/replay/integration)
@@ -324,13 +326,9 @@ accessing the urls or sitemap slot."
                 dest))
       :title title))))
 
-(defmacro with-batches ((batch first-index) list &body body)
-  `(call-with-batches
-    ,list
-    (lambda (,batch ,first-index)
-      ,@body)))
-
-(defun call-with-batches (list fn &key (batch-size 10))
+(def-easy-macro with-batches (&binding batch
+                                       list &fn fn &key (batch-size 10)
+                                       &binding index)
   (labels ((call-next (list ctr)
              (multiple-value-bind (batch rest)
                  (util/lists:head list batch-size)
@@ -360,7 +358,7 @@ accessing the urls or sitemap slot."
                (let ((webdriver-client::*uri*
                        (selenium-server-url selenium-server)))
                  (write-replay-log "Waiting for Selenium worker of type ~a" (browser-type config))
-                 (with-batches (urls idx) urls
+                 (with-batches (urls urls :index idx)
                    (with-webdriver (driver
                                     :proxy (squid-proxy selenium-server)
                                     :browser (frontend:browser-type config)
