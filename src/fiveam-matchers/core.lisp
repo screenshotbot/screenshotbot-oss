@@ -149,6 +149,13 @@
          unless (matchesp matcher value)
            return t)))
 
+(defmethod describe-mismatch ((has-all has-all) value)
+  (loop for matcher in (matchers has-all)
+        unless (matchesp matcher value)
+          return (describe-mismatch matcher value)
+        finally
+        (return "no mismatch")))
+
 (defmethod matchesp ((has-any has-any) value)
   (loop for matcher in (matchers has-any)
         if (matchesp matcher value)

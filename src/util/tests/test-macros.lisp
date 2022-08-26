@@ -15,6 +15,9 @@
                 #:binding-sym
                 #:remove-&fn)
   (:import-from #:fiveam-matchers/core
+                #:equal-to
+                #:has-all
+                #:is-not
                 #:has-typep
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
@@ -145,3 +148,29 @@
   (is (equal 3
              (with-key-bindings (aaa :b bbb)
                (+ aaa bbb)))))
+
+(defblock collect-loop (&binding item list &fn fn)
+  (loop for x in list
+        for i from 0
+        collect (funcall fn x)))
+
+(test default-binding-example
+  (is
+   (equal '(2 4 6)
+    (collect-loop (item '(1 2 3))
+      (* 2 item)))))
+
+(defblock collect-loop-with-index (&binding item list &key &binding index &fn fn)
+  (loop for x in list
+        for i from 0
+        collect (funcall fn x i)))
+
+(test default-binding-example-with-index
+  (is
+   (equal '(0 2 6)
+    (collect-loop-with-index (item '(1 2 3) :index i)
+      (* item i))))
+  (is
+   (equal '(1 2 3)
+    (collect-loop-with-index (item '(1 2 3))
+      item))))

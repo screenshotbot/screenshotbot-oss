@@ -15,7 +15,9 @@
   ((reason :initarg :reason)))
 
 (defun build-funcall (fn-name real-fn-args fn-arg-values body)
-  `(,fn-name (lambda (,@ (get-bindings real-fn-args fn-arg-values)) ,@body)
+  `(,fn-name (lambda (,@ (loop for x in (get-bindings real-fn-args fn-arg-values)
+                               if x collect x
+                                 else collect (gensym))) ,@body)
              ,@ (get-non-bindings real-fn-args fn-arg-values)))
 
 (defun get-bindings (real-fn-args fn-arg-values)
@@ -35,6 +37,7 @@
                            if (and (binding-sym-p x))
                              collect
                              (name x)))))))
+      #+nil
       (log:info "Going to eval expr: ~s" expr)
       (eval expr))))
 
@@ -48,6 +51,7 @@
                          (string= (string (name x)) (string name)))
                        return t))
              (%get-non-bindings (args value-exprs keysp)
+               #+nil
                (log:info "Looking at ~a ~a" args value-exprs)
                (cond
                  ((null value-exprs)
@@ -144,7 +148,6 @@
         else
           collect x into binding-syms
         finally (return (values final-arg binding-syms))))
-
 
 (defmacro defblock (name real-fn-args  &body body)
   (let ((fn-name (intern (format nil "CALL-~a" (string name)) *package*)))
