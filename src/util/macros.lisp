@@ -8,7 +8,7 @@
   (:use #:cl)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:defblock))
+   #:def-easy-macro))
 (in-package :util/macros)
 
 (define-condition unsupported-lambda-list (error)
@@ -149,7 +149,7 @@
           collect x into binding-syms
         finally (return (values final-arg binding-syms))))
 
-(defmacro defblock (name real-fn-args  &body body)
+(defmacro def-easy-macro (name real-fn-args  &body body)
   (let ((fn-name (intern (format nil "CALL-~a" (string name)) *package*)))
     (multiple-value-bind (fn-args body-fn) (remove-&fn real-fn-args)
      `(progn

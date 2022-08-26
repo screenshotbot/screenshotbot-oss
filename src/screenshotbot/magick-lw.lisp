@@ -12,7 +12,7 @@
                 #:*magick*
                 #:abstract-magick)
   (:import-from #:util/macros
-                #:defblock)
+                #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#-lispworks #:fli #:util/fake-fli))
@@ -322,7 +322,7 @@
     (magick-wand-terminus)
     (setf *magick-wand-inited* nil)))
 
-(defblock with-wand (&binding wand &key file from (alpha t) &fn fn)
+(def-easy-macro with-wand (&binding wand &key file from (alpha t) &fn fn)
   (init-magick-wand)
   (let ((wand (or from (new-magick-wand))))
     (unwind-protect

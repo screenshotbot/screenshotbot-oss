@@ -27,10 +27,10 @@
 
 (util/fiveam:def-suite)
 
-(defblock with-basic-stuff (&fn fn)
+(def-easy-macro with-basic-stuff (&fn fn)
   (funcall fn))
 
-(defblock with-return-something-else (&fn fn)
+(def-easy-macro with-return-something-else (&fn fn)
   (funcall fn)
   :another)
 
@@ -42,7 +42,7 @@
              (with-return-something-else ()
                :test))))
 
-(defblock with-arg (add &fn fn)
+(def-easy-macro with-arg (add &fn fn)
   (+ add (funcall fn)))
 
 (test can-use-arguments
@@ -54,7 +54,7 @@
     (is (equal 50 (with-arg (4)
                     (+ 1 value))))))
 
-(defblock with-eval-arg (add &fn fn)
+(def-easy-macro with-eval-arg (add &fn fn)
   (+ add (funcall fn)))
 
 (test arguments-get-evaluated
@@ -62,7 +62,7 @@
     (is (equal 5 (with-eval-arg (value)
                    4)))))
 
-(defblock with-multiple-args (one two &fn fn)
+(def-easy-macro with-multiple-args (one two &fn fn)
   (list one two))
 
 (test multiple-arguments
@@ -124,7 +124,7 @@
                '(&binding aaa &key &binding bbb foo)
                 '(aaa :bbb bbb :foo 2)))))
 
-(defblock with-bindings (&binding a &binding b &key one two
+(def-easy-macro with-bindings (&binding a &binding b &key one two
                                   &fn fn)
   (funcall fn 1 2))
 
@@ -136,12 +136,12 @@
   #+nil
   (signals unsupported-lambda-list
     (eval
-     `(defblock with-key-bindings (&binding a &key &binding b)
+     `(def-easy-macro with-key-bindings (&binding a &key &binding b)
         (funcall fn 1 3)))))
 
 
 (test bindings-with-keys
-  (defblock with-key-bindings (&binding a &key &binding b one two
+  (def-easy-macro with-key-bindings (&binding a &key &binding b one two
                                         &fn fn)
     (funcall fn 1 2))
 
@@ -149,7 +149,7 @@
              (with-key-bindings (aaa :b bbb)
                (+ aaa bbb)))))
 
-(defblock collect-loop (&binding item list &fn fn)
+(def-easy-macro collect-loop (&binding item list &fn fn)
   (loop for x in list
         for i from 0
         collect (funcall fn x)))
@@ -160,7 +160,7 @@
     (collect-loop (item '(1 2 3))
       (* 2 item)))))
 
-(defblock collect-loop-with-index (&binding item list &key &binding index &fn fn)
+(def-easy-macro collect-loop-with-index (&binding item list &key &binding index &fn fn)
   (loop for x in list
         for i from 0
         collect (funcall fn x i)))
