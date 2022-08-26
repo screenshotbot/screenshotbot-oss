@@ -97,6 +97,7 @@
                :sentry-client
                :quri
                :clavier
+               :util/macros
                :cl-cron
                :cl-interpol
                :dns-client

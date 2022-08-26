@@ -11,6 +11,8 @@
                 #:with-magick-gatekeeper
                 #:*magick*
                 #:abstract-magick)
+  (:import-from #:util/macros
+                #:defblock)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#-lispworks #:fli #:util/fake-fli))
@@ -320,13 +322,7 @@
     (magick-wand-terminus)
     (setf *magick-wand-inited* nil)))
 
-(defmacro with-wand ((wand &key file from (alpha t)) &body body)
-  `(call-with-wand
-    ,file (lambda (,wand) ,@body)
-    :from ,from
-    :alpha ,alpha))
-
-(defun call-with-wand (file fn &key from alpha)
+(defblock with-wand (&binding wand &key file from (alpha t) &fn fn)
   (init-magick-wand)
   (let ((wand (or from (new-magick-wand))))
     (unwind-protect
@@ -338,6 +334,7 @@
                                 wand)))
            (funcall fn wand))
       (destroy-magick-wand wand))))
+
 
 (defun compare-images (wand1 wand2)
   (assert (not (fli:null-pointer-p wand1)))
