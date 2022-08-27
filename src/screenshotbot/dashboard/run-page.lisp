@@ -45,6 +45,10 @@
                 #:override-commit-hash)
   (:import-from #:screenshotbot/installation
                 #:installation)
+  (:import-from #:screenshotbot/git-repo
+                #:commit-graph)
+  (:import-from #:dag
+                #:ordered-commits)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -121,6 +125,42 @@
               (> (dimension-width dim) +limit+))
             collect screenshot)))
 
+(deftag view-git-graph (repo)
+  (let* ((commit-graph (commit-graph-dag (commit-graph (car repo))))
+         (commits (dag:ordered-commits commit-graph)))
+    <app-template>
+      <div class= "alert alert-info mt-3">
+        This shows all the information we have about your Git commit
+ history. In particular, we only store the Git hashes. This
+ information here is for debugging information only when reaching out
+ to Screenshotbot support.
+      </div>
+      <table class= "table" >
+        <thead>
+          <tr>
+            <th>Commit hash</th>
+            <th>Author (if available)</th>
+            <th>Parents</th>
+          </tr>
+        </thead>
+        <tbody>
+        ,@ (loop for commit in commits collect
+                 <tr>
+                   <td id= (dag:sha commit) >,(str:shorten 13 (dag:sha commit)) </td>
+                   <td>,(or (dag:author commit) "no author") </td>
+                   <td>
+                     ,@ (loop for parent in (dag:parents commit)
+                              collect
+                              <span>
+                                <a href= (format nil "#~a" parent)>,(str:shorten 13 parent)</a>
+                              </span>)
+
+                   </td>
+                 </tr>)
+        </tbody>
+      </table>
+    </app-template>))
+
 (deftag advanced-run-page (&key run)
   (let ((repo (channel-repo (recorder-run-channel run))))
     <app-template>
@@ -130,7 +170,8 @@
         <li>Commit: ,(commit :repo repo :hash (recorder-run-commit run)) </li>
         <li>Override Commit hash for Pull Requests: ,(commit :repo repo :hash (override-commit-hash run))</li>
         <li>Main Branch: ,(recorder-run-branch run)</li>
-        <li>Commit on branch: ,(commit :repo repo :hash (recorder-run-branch-hash run))</li>
+        <li>Commit on branch: ,(commit :repo repo :hash (ignore-errors
+                                                         (recorder-run-branch-hash run)))</li>
         <li>Merge base: ,(commit :repo repo :hash (recorder-run-merge-base run))</li>
         <li>Pull request: ,(or (pull-request-url run) "NA")</li>
         <li>Phabricator Diff-id: ,(or (phabricator-diff-id run) "NA")</li>
@@ -157,6 +198,9 @@
        </a>
         </li>
       </ul>
+
+       <a href= (nibble () (view-git-graph repo))
+          class= "btn btn-secondary">Debug Git Graph</a>
     </app-template>))
 
 (defmethod extra-advanced-options (run)

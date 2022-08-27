@@ -45,6 +45,11 @@
    (pathname :initarg :pathname
              :documentation "For debugging only")))
 
+(defmethod ordered-commits ((dag dag))
+  (let ((sorted (safe-topological-sort (digraph dag))))
+    (loop for id in sorted
+          collect (gethash id (commit-map dag)))))
+
 (defmethod get-commit ((dag dag) (sha string))
   (let ((id (commit-node-id sha)))
     (log:debug "Commit id for ~a is ~a" sha id)

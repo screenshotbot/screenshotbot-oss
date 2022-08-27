@@ -15,5 +15,8 @@
            #:ancestorp
            #:get-commit
            #:write-to-stream
-           #:read-from-stream))
+           #:read-from-stream
+           #:ordered-commits
+           #:sha
+           #:author))
 (in-package :dag)
