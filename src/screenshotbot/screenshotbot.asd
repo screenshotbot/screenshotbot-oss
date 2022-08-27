@@ -75,6 +75,7 @@
                :sentry
                :server
                :auto-restart
+               :serapeum
                :java.libs
                :util/form-state
                :util/hash-lock

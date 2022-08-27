@@ -30,7 +30,7 @@
 
 (defvar *semaphore* (bt:make-semaphore
                      :name "magick"
-                     :count 20))
+                     :count (serapeum:count-cpus)))
 
 (defun call-with-semaphore (sem fn)
   (unwind-protect
