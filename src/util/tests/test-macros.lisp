@@ -140,11 +140,12 @@
         (funcall fn 1 3)))))
 
 
-(test bindings-with-keys
-  (def-easy-macro with-key-bindings (&binding a &key &binding b one two
-                                        &fn fn)
-    (funcall fn 1 2))
+(def-easy-macro with-key-bindings (&binding a &key &binding b one two
+                                            &fn fn)
+  (funcall fn 1 2))
 
+
+(test bindings-with-keys
   (is (equal 3
              (with-key-bindings (aaa :b bbb)
                (+ aaa bbb)))))
