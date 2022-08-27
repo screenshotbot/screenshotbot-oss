@@ -187,55 +187,65 @@
     <app-template>
       ,(when alert
       <div class="alert alert-info mt-3">,(progn alert)</div>)
-      <h2>Debug Run Information</h2>
-      <ul>
-        <li>Repo url: ,(github-repo run)</li>
-        <li>Commit: ,(commit :repo repo :hash (recorder-run-commit run)) </li>
-        <li>Override Commit hash for Pull Requests: ,(commit :repo repo :hash (override-commit-hash run))</li>
-        <li>Main Branch: ,(recorder-run-branch run)</li>
-        <li>Commit on branch: ,(commit :repo repo :hash (ignore-errors
-                                                         (recorder-run-branch-hash run)))</li>
-        <li>Merge base: ,(commit :repo repo :hash (recorder-run-merge-base run))</li>
-        <li>Pull request: ,(or (pull-request-url run) "NA")</li>
-        <li>Phabricator Diff-id: ,(or (phabricator-diff-id run) "NA")</li>
-        <li>Build URL: <a href=(run-build-url run)>,(run-build-url run)</a> </li>
-        <li>Production?: ,(if (trunkp run) "true" "false")</li>
-        <li>Periodic job?: ,(if (periodic-job-p run) "true" "false")</li>
-        <li>Number of screenshots: ,(length (recorder-run-screenshots run))</li>
-        <li>Total run size: ,(run-size run)kB</li>
+      <div class="card mt-3 shadow" style="max-width: 50em">
+        <div class="card-header">
+          <h2>Debug Run Information</h2>
+        </div>
+        <div class="card-body">
+          <ul>
+            <li>Repo url: ,(github-repo run)</li>
+            <li>Commit: ,(commit :repo repo :hash (recorder-run-commit run)) </li>
+            <li>Override Commit hash for Pull Requests: ,(commit :repo repo :hash (override-commit-hash run))</li>
+            <li>Main Branch: ,(recorder-run-branch run)</li>
+            <li>Commit on branch: ,(commit :repo repo :hash (ignore-errors
+                                                             (recorder-run-branch-hash run)))</li>
+            <li>Merge base: ,(commit :repo repo :hash (recorder-run-merge-base run))</li>
+            <li>Pull request: ,(or (pull-request-url run) "NA")</li>
+            <li>Phabricator Diff-id: ,(or (phabricator-diff-id run) "NA")</li>
+            <li>Build URL: <a href=(run-build-url run)>,(run-build-url run)</a> </li>
+            <li>Production?: ,(if (trunkp run) "true" "false")</li>
+            <li>Periodic job?: ,(if (periodic-job-p run) "true" "false")</li>
+            <li>Number of screenshots: ,(length (recorder-run-screenshots run))</li>
+            <li>Total run size: ,(run-size run)kB</li>
 
-        <li>Screenshots that are above 16k dimensions: ,(length (screenshots-above-16k-dim run))
+            <li>Screenshots that are above 16k dimensions: ,(length (screenshots-above-16k-dim run))
 
-        <a href= (nibble ()
-                           <app-template>
-                             List of screenshots with large dimensions
-                             <ul>
-                               ,@(loop for x in (screenshots-above-16k-dim run)
-                                       collect <li>
-                                 <a href= (make-url 'run-page :id (oid run) :name (screenshot-name x))>
-                                   ,(screenshot-name x)
-                                               </a></li>)
-                             </ul>
-                           </app-template>)>
-                           List
-       </a>
-        </li>
-      </ul>
+            <a href= (nibble ()
+                               <app-template>
+                                 List of screenshots with large dimensions
+                                 <ul>
+                                   ,@(loop for x in (screenshots-above-16k-dim run)
+                                           collect <li>
+                                     <a href= (make-url 'run-page :id (oid run) :name (screenshot-name x))>
+                                       ,(screenshot-name x)
+                                                   </a></li>)
+                                 </ul>
+                               </app-template>)>
+                               List
+    </a>
+            </li>
+          </ul>
+        </div>
 
-    <form>
-       <a href= (nibble () (view-git-graph repo))
-          class= "btn btn-secondary">Debug Git Graph</a>
-       ,(when (and (activep run)
-                   (or
-                    (adminp (current-user))
-                    (member (current-user) (company-admins (current-company)))))
-       <a
-         href=(nibble () (unpromote-run-flow run))
-               class="btn btn-danger" >
+    <div class="card-footer">
+      <form>
+        <a href= (nibble () (view-git-graph repo))
+           class= "btn btn-secondary">Debug Git Graph</a>
+        ,(when (and (activep run)
+                    (or
+                     (adminp (current-user))
+                     (member (current-user) (company-admins (current-company)))))
+           <a
+             href=(nibble () (unpromote-run-flow run))
+             class="btn btn-danger" >
 
-         Undo promotion
-       </a>)
-    </form>
+             Undo promotion
+           </a>)
+      </form>
+        </div>
+
+        </div>
+
     </app-template>))
 
 (defmethod extra-advanced-options (run)
