@@ -25,6 +25,8 @@
                 #:pull-request-url
                 #:recorder-run-commit
                 #:activep)
+  (:import-from #:util/store
+                #:with-class-validation)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -58,108 +60,111 @@
            #:master-branch)
   (:export
    #:periodic-job-p
-   #:override-commit-hash))
+   #:override-commit-hash
+   #:unpromote-run))
 (in-package :screenshotbot/model/recorder-run)
 
-(defclass promotion-log (bknr.datastore:blob)
-  ()
-  (:metaclass persistent-class))
+(with-class-validation
+ (defclass promotion-log (bknr.datastore:blob)
+   ()
+   (:metaclass persistent-class)))
 
-(defclass recorder-run (object-with-oid)
-  ((channel
-    :initarg :channel
-    :initform nil
-    :relaxed-object-reference t
-    :accessor recorder-run-channel)
-   (company
-    :initarg :company
-    :reader recorder-run-company)
-   (commit-hash
-    :initarg :commit-hash
-    :initform nil
-    :accessor recorder-run-commit)
-   (promotion-log
-    :initform nil
-    :accessor %promotion-log)
-   (build-url
-    :initform nil
-    :initarg :build-url
-    :accessor run-build-url)
-   (github-repo
-    :initform nil
-    :initarg :github-repo
-    :accessor github-repo)
-   (cleanp
-    :initarg cleanp)
-   (activep
-    :initarg :activep
-    :initform nil)
-   (branch
-    :initarg :branch
-    :accessor recorder-run-branch)
-   (branch-hash
-    :initarg :branch-hash
-    :initform nil
-    :accessor recorder-run-branch-hash
-    :documentation "If a --branch is provided, this is the sha of the
+(with-class-validation
+ (defclass recorder-run (object-with-oid)
+   ((channel
+     :initarg :channel
+     :initform nil
+     :relaxed-object-reference t
+     :accessor recorder-run-channel)
+    (company
+     :initarg :company
+     :reader recorder-run-company)
+    (commit-hash
+     :initarg :commit-hash
+     :initform nil
+     :accessor recorder-run-commit)
+    (promotion-log
+     :initform nil
+     :accessor %promotion-log)
+    (build-url
+     :initform nil
+     :initarg :build-url
+     :accessor run-build-url)
+    (github-repo
+     :initform nil
+     :initarg :github-repo
+     :accessor github-repo)
+    (cleanp
+     :initarg cleanp)
+    (activep
+     :initarg :activep
+     :initform nil)
+    (branch
+     :initarg :branch
+     :accessor recorder-run-branch)
+    (branch-hash
+     :initarg :branch-hash
+     :initform nil
+     :accessor recorder-run-branch-hash
+     :documentation "If a --branch is provided, this is the sha of the
     specified branch at the time of run. This might be different from
     the COMMIT-HASH, because the COMMIT-HASH might on, say a Pull
     Request (tied to the branch) or an ancestor of the branch.")
-   (merge-base-hash
-    :initform nil
-    :initarg :merge-base
-    :accessor recorder-run-merge-base
-    :documentation "The merge base between branch-hash and commit-hash")
-   (pull-request
-    :initarg :pull-request
-    :initform nil
-    :reader pull-request-url)
-   (gitlab-merge-request-iid
-    :initarg :gitlab-merge-request-iid
-    :initform nil
-    :reader gitlab-merge-request-iid)
-   (phabricator-diff-id
-    :initarg :phabricator-diff-id
-    :initform nil
-    :reader phabricator-diff-id)
-   (previous-run
-    :initform nil
-    :initarg :previous-run
-    :accessor recorder-previous-run
-    :documentation "The previous *ACTIVE* run. Unpromoted runs aren't tracked on the channel, because often the reason it's unpromoted means that we don't understand if it belongs to the channel. If there are multile previous-runs for different branches, this will always point to the previous run on master branch.")
-   (create-github-issue-p
-    :initform t
-    :initarg :create-github-issue-p
-    :accessor create-github-issue-p)
-   (trunkp
-    :initarg :trunkp
-    :accessor trunkp
-    :initform nil
-    :documentation "whether this is tracking a production branch (as opposed to dev)")
-   (periodic-job-p
-    :initarg :periodic-job-p
-    :initform nil
-    :accessor periodic-job-p
-    :documentation "Jobs that are done periodically, as opposed to for
+    (merge-base-hash
+     :initform nil
+     :initarg :merge-base
+     :accessor recorder-run-merge-base
+     :documentation "The merge base between branch-hash and commit-hash")
+    (pull-request
+     :initarg :pull-request
+     :initform nil
+     :reader pull-request-url)
+    (gitlab-merge-request-iid
+     :initarg :gitlab-merge-request-iid
+     :initform nil
+     :reader gitlab-merge-request-iid)
+    (phabricator-diff-id
+     :initarg :phabricator-diff-id
+     :initform nil
+     :reader phabricator-diff-id)
+    (previous-run
+     :initform nil
+     :initarg :previous-run
+     :accessor recorder-previous-run
+     :documentation "The previous *ACTIVE* run. Unpromoted runs aren't tracked on the channel, because often the reason it's unpromoted means that we don't understand if it belongs to the channel. If there are multile previous-runs for different branches, this will always point to the previous run on master branch.")
+    (create-github-issue-p
+     :initform t
+     :initarg :create-github-issue-p
+     :accessor create-github-issue-p)
+    (trunkp
+     :initarg :trunkp
+     :accessor trunkp
+     :initform nil
+     :documentation "whether this is tracking a production branch (as opposed to dev)")
+    (periodic-job-p
+     :initarg :periodic-job-p
+     :initform nil
+     :accessor periodic-job-p
+     :documentation "Jobs that are done periodically, as opposed to for
     each commit. We will attempt to promote each run. This is mostly
     for taking screenshots of public websites.")
-   (Screenshots
-    :initarg :screenshots
-    :initform nil
-    :accessor recorder-run-screenshots)
-   (promotion-complete-p
-    :initform nil
-    :accessor promotion-complete-p)
-   (override-commit-hash
-    :initform nil
-    :initarg :override-commit-hash
-    :accessor override-commit-hash
-    :documentation "Override the pull request commit hash that will be
+    (Screenshots
+     :initarg :screenshots
+     :initform nil
+     :accessor recorder-run-screenshots)
+    (promotion-complete-p
+     :initform nil
+     :accessor promotion-complete-p)
+    (override-commit-hash
+     :initform nil
+     :initarg :override-commit-hash
+     :accessor override-commit-hash
+     :documentation "Override the pull request commit hash that will be
     used to update the Pull Request (either GitHub or Bitbucket)")
-   (created-at
-    :initform nil
-    :accessor %created-at))
-  (:metaclass has-created-at))
+    (created-at
+     :initform nil
+     :accessor %created-at))
+   (:metaclass has-created-at)))
 
 (defun unpromote-run (run)
   (let ((previous-run (recorder-previous-run run))

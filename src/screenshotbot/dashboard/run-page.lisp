@@ -49,6 +49,10 @@
                 #:commit-graph)
   (:import-from #:dag
                 #:ordered-commits)
+  (:import-from #:screenshotbot/ui/confirmation-page
+                #:confirmation-page)
+  (:import-from #:screenshotbot/user-api
+                #:adminp)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -81,7 +85,7 @@
     (mquery:add-class (mquery:$ "a" children) "dropdown-item")
 
     <div class="dropdown">
-  <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+  <a class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     ,(progn title)
   </button>
   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
@@ -161,9 +165,26 @@
       </table>
     </app-template>))
 
-(deftag advanced-run-page (&key run)
+(defun unpromote-run-flow (run)
+  (confirmation-page
+   :yes (nibble ()
+          (unpromote-run run)
+          (hex:safe-redirect (nibble () (advanced-run-page :run run
+                                                           :alert "This run has been un-promoted"))))
+   :no (nibble ()
+         (advanced-run-page :run run))
+
+     <span>
+       Are you sure you want to unpromote this run? Usually you only have to do this if you rewrite your Git history. If you're unsure please reach out to Screenshotbot support before doing this.
+     </span>
+))
+
+
+(deftag advanced-run-page (&key run alert)
   (let ((repo (channel-repo (recorder-run-channel run))))
     <app-template>
+      ,(when alert
+      <div class="alert alert-info mt-3">,(progn alert)</div>)
       <h2>Debug Run Information</h2>
       <ul>
         <li>Repo url: ,(github-repo run)</li>
@@ -199,8 +220,17 @@
         </li>
       </ul>
 
+    <form>
        <a href= (nibble () (view-git-graph repo))
           class= "btn btn-secondary">Debug Git Graph</a>
+       ,(when (and (activep run) (adminp (current-user)))
+       <a
+         href=(nibble () (unpromote-run-flow run))
+               class="btn btn-danger" >
+
+         Undo promotion
+       </a>)
+    </form>
     </app-template>))
 
 (defmethod extra-advanced-options (run)
