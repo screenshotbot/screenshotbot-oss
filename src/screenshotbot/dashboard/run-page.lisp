@@ -53,6 +53,8 @@
                 #:confirmation-page)
   (:import-from #:screenshotbot/user-api
                 #:adminp)
+  (:import-from #:screenshotbot/model/company
+                #:company-admins)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -223,7 +225,10 @@
     <form>
        <a href= (nibble () (view-git-graph repo))
           class= "btn btn-secondary">Debug Git Graph</a>
-       ,(when (and (activep run) (adminp (current-user)))
+       ,(when (and (activep run)
+                   (or
+                    (adminp (current-user))
+                    (member (current-user) (company-admins (current-company)))))
        <a
          href=(nibble () (unpromote-run-flow run))
                class="btn btn-danger" >
