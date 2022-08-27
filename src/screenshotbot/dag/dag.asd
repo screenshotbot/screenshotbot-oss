@@ -15,5 +15,6 @@
 (defsystem :dag/tests
   :serial t
   :depends-on (:dag
-               :fiveam)
+               :fiveam
+               :util/fiveam)
   :components ((:file "test-dag")))
