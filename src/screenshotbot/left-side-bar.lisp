@@ -72,12 +72,14 @@
 
 
         <span class="logo logo-lg fs-4">
-          <img-with-fallback src= "/assets/images/logo-light.webp"
-                             alt= "Screenshotbot logo" />
+          <img-with-fallback src= "/assets/images/logo-light-scaled.webp"
+                             alt= "Screenshotbot logo"
+                             loading= "lazy" />
         </span>
         <span class="logo logo-sm fs-4">
-          <img-with-fallback src= "/assets/images/logo-small-light.webp"
-                             alt= "Screenshotbot logo" />
+          <img-with-fallback src= "/assets/images/logo-small-light-scaled.webp"
+                             alt= "Screenshotbot logo"
+                             loading= "lazy" />
         </span>
       </a>
     </div>
