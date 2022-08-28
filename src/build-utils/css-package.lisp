@@ -186,7 +186,7 @@
            :error-output 'string
            :ignore-error-status t)
         (unless (= ret 0)
-          (error "Could not compile js assets: ~%~%stdout:~a~%~%stderr:~%~a~%" out err)))
+          (error "Could not compile css assets: ~%~%stdout:~a~%~%stderr:~%~a~%" out err)))
       (uiop:rename-file-overwriting-target tmp-output output-file)
       (uiop:rename-file-overwriting-target (format nil "~a.map" (namestring tmp-output))
                                            source-map))))

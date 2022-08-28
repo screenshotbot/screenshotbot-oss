@@ -39,8 +39,6 @@
                 #:*seleniump*
                 #:*reuben-ip*
                 #:logged-in-p)
-  (:import-from #:./google-fonts
-                #:google-fonts)
   (:import-from #:screenshotbot/user-api
                 #:user-email)
   (:import-from #:util
@@ -88,8 +86,6 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <!-- App favicon -->
         <link rel="shortcut icon" href= (util.cdn:make-cdn *favicon*) />
-        <!-- App css -->
-        <google-fonts />
 
   ,(when jquery-ui
      <link rel= "stylesheet" href= "https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />)
@@ -268,7 +264,6 @@
       <meta property= "twitter:description" content= "Build Pixel Perfect Apps with Screenshot Tests" />
 
       <!-- App css -->
-      <google-fonts />
       <link href=style rel="stylesheet" type="text/css" id="light-style" />
       <selenium-css />
   </head>)

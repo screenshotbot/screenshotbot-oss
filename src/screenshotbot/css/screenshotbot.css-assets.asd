@@ -2,10 +2,17 @@
   (:use :cl :asdf))
 (in-package :screenshotbot-system.css-assets)
 
-(defsystem screenshotbot.css-assets/library
+(defsystem :screenshotbot.css-assets/montserrat
   :class "BUILD-UTILS:CSS-LIBRARY"
   :defsystem-depends-on (:build-utils)
   :depends-on (:bootstrap5-css)
+  :components (("BUILD-UTILS:SCSS-FILE" "montserrat")))
+
+(defsystem screenshotbot.css-assets/library
+  :class "BUILD-UTILS:CSS-LIBRARY"
+  :defsystem-depends-on (:build-utils)
+  :depends-on (:bootstrap5-css
+               :screenshotbot.css-assets/montserrat)
   :components (("BUILD-UTILS:SCSS-FILE" "sidebar")
                ("BUILD-UTILS:SCSS-FILE" "material-icons")
                ("BUILD-UTILS:CSS-FILE" "bootstrap-icons")
