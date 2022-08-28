@@ -40,6 +40,10 @@
         align-items: center;
         justify-content: center;
 
+        @media(max-height: 700px) {
+            align-items: flex-start;
+        }
+
         .home-link {
             position: absolute;
             top: 1rem;
