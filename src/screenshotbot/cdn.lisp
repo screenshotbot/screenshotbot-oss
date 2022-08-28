@@ -21,12 +21,17 @@
   id=id
   href= (util.cdn:make-cdn href) />)
 
-(markup:deftag img (&key src (alt "Image") srcset class style height width id loading)
+(defun cdn-for-image-url (src)
   (let ((util.cdn:*cdn-cache-key* "images4" ))
-    <:img src= (if (str:starts-with-p "/image/blob/" (make-image-cdn-url src)) src (util.cdn:make-cdn src)) alt=alt srcset=srcset class=class style=style
-          height=height width=width id=id
-          loading=loading
-    />))
+    (if (str:starts-with-p "/image/blob/" (make-image-cdn-url src))
+        src
+        (util.cdn:make-cdn src))))
+
+(markup:deftag img (&key src (alt "Image") srcset class style height width id loading)
+  <:img src= (cdn-for-image-url src)  alt=alt srcset=srcset class=class style=style
+        height=height width=width id=id
+        loading=loading
+        />)
 
 (defun make-image-cdn-url (url)
   "This is a specific CDN to use for actual screenshot images. For now
@@ -40,8 +45,8 @@
 (markup:deftag img-with-fallback (&key class src alt loading)
   (assert (str:ends-with-p ".webp" src))
   <picture class=class >
-    <source srcset=src />
-    <img src= (str:replace-all ".webp" ".png" src)
+    <source srcset= (cdn-for-image-url src) />
+    <:img src= (cdn-for-image-url (str:replace-all ".webp" ".png" src))
          loading=loading
          alt=alt />
   </picture>)
