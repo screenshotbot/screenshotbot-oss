@@ -163,16 +163,21 @@
      ,(async-diff-report :run run :to to)
      </app-template>)))
 
-
 (deftag change-image-row (&key before-image
-                          after-image)
+                          after-image
+                          before-dims
+                          after-dims)
   <div class="change-image-row">
     <img class= "screenshot-image change-image change-image-left" src= before-image
-         loading= "lazy" />
+         loading= "lazy"
+         width= (dimension-width before-dims)
+         height= (dimension-height before-dims) />
 
     <mdi name= "arrow_forward" />
     <img class= "screenshot-image change-image change-image-right" src= after-image
-         loading= "lazy" />
+         loading= "lazy"
+         width= (dimension-width after-dims)
+         height= (dimension-height after-dims) />
   </div>)
 
 (deftag change-image-row-triple (&key before-image
@@ -607,6 +612,8 @@ If the images are identical, we return t, else we return NIL."
       </div>
       <change-image-row before-image=(image-public-url (screenshot-image x) :size :full-page)
                         after-image=(image-public-url (screenshot-image s) :size :full-page)
+                        before-dims= (image-dimensions (screenshot-image x))
+                        after-dims= (image-dimensions (screenshot-image s))
                         />
       <comparison-modal before=x after=s toggle-id=toggle-id />
     </div>)))
@@ -833,13 +840,16 @@ If the images are identical, we return t, else we return NIL."
    :empty-view (no-screenshots)))
 
 (Deftag screenshot-box (&key screenshot title)
-  <div class= "mt-4" >
-    <div class= "screenshot-header">
-      <h4>,(progn title) </h4>
-    </div>
+  (let ((dimensions (image-dimensions (screenshot-image screenshot))))
+    <div class= "mt-4" >
+      <div class= "screenshot-header">
+        <h4>,(progn title) </h4>
+      </div>
 
-    <img class= "mt-2 screenshot-image change-image" src= (image-public-url (screenshot-image screenshot) :size :full-page) loading= "lazy" />
-  </div>)
+    <img class= "mt-2 screenshot-image change-image" src= (image-public-url (screenshot-image screenshot) :size :full-page) loading= "lazy"
+         height= (dimension-height dimensions)
+         width= (dimension-width dimensions) />
+    </div>))
 
 (defun no-screenshots ()
   <div class= "text-muted text-center">
