@@ -6,6 +6,11 @@
 
 (uiop/package:define-package :screenshotbot/cdn
     (:use #:cl)
+  (:import-from #:screenshotbot/magick
+                #:ping-image-dimensions
+                #:*magick*)
+  (:import-from #:screenshotbot/server
+                #:document-root)
   (:export #:script #:link #:img
            #:make-image-cdn-url
            #:img-with-fallback))
@@ -28,10 +33,12 @@
         (util.cdn:make-cdn src))))
 
 (markup:deftag img (&key src (alt "Image") srcset class style height width id loading)
-  <:img src= (cdn-for-image-url src)  alt=alt srcset=srcset class=class style=style
-        height=height width=width id=id
-        loading=loading
-        />)
+  (let ((dims (image-dimensions src)))
+    <:img src= (cdn-for-image-url src)  alt=alt srcset=srcset class=class style=style
+          height= (or height (first dims))
+          width= (or width (second dims)) id=id
+          loading=loading
+        />))
 
 (defun make-image-cdn-url (url)
   "This is a specific CDN to use for actual screenshot images. For now
@@ -40,13 +47,33 @@
   CDN."
   url)
 
+(defvar *dim-cache* (make-hash-table :test #'equal)
+  "Cache of image dimensions for every possible image.")
+
+(defun image-dimensions (url)
+  (when (str:starts-with-p "/assets/" url)
+    (multiple-value-bind (result present-p)
+        (gethash url *dim-cache*)
+      (cond
+        (present-p
+         result)
+        (t
+         (setf (Gethash url *dim-cache*)
+               (ignore-errors
+                (ping-image-dimensions
+                 *magick*
+                 (path:catfile (document-root) (str:substring 1 nil url))))))))))
+
 ;; Technically should not be here, but can't think of a better place
 ;; for now.
 (markup:deftag img-with-fallback (&key class src alt loading)
   (assert (str:ends-with-p ".webp" src))
-  <picture class=class >
-    <source srcset= (cdn-for-image-url src) />
-    <:img src= (cdn-for-image-url (str:replace-all ".webp" ".png" src))
-         loading=loading
-         alt=alt />
-  </picture>)
+  (let ((dims (image-dimensions src)))
+    <picture class=class >
+      <source srcset= (cdn-for-image-url src) />
+      <:img src= (cdn-for-image-url (str:replace-all ".webp" ".png" src))
+            width= (first dims)
+            height= (second dims)
+            loading=loading
+            alt=alt />
+    </picture>))
