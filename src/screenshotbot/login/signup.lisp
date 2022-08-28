@@ -87,7 +87,7 @@
 
       <div class="form-check ps-0 mb-3">
           <input name= "accept-terms-p" type="checkbox" class="form-check-input me-3" id="checkbox-signup">
-            <label class="form-check-label" for="checkbox-signup">I accept <a href="/terms" class="">Terms and Conditions</a></label>
+            <label class="form-check-label" for="checkbox-signup">I accept the <a href="/terms" class="">Terms and Conditions</a></label>
       </div>
 
       <div class="form-group mb-0 text-center">
