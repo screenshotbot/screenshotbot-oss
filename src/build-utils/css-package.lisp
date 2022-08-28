@@ -151,7 +151,7 @@
     "sass")
    (t
     (error "unsupported implementation could not find `sass`"))))
-    
+
 
 
 (defmethod asdf:component-depends-on ((o copy-sources-op) (c css-library))
@@ -169,6 +169,7 @@
       (multiple-value-bind (out err ret)
           (uiop:run-program
            `(,(sass)
+             "--style=compressed"
              ,@ (loop for dep in (required-components c
                                                       :other-systems t
                                                       :keep-component 'css-library)
