@@ -386,6 +386,7 @@
                 :components ((static-file "replay-regex" :type "txt")
                              (:file "core")
                              (:file "browser-config")
+                             (:file "squid")
                              (:file "proxy")))))
 
 
