@@ -62,6 +62,11 @@
             width: 49.3rem;
             padding: 0 !important;
 
+            @include media-breakpoint-down(sm) {
+                width: 100%;
+                max-width: 49.3rem;
+            }
+
         }
         .card-header {
             display: none;
@@ -201,6 +206,7 @@
 
         .form-container {
             width: 100vw;
+            padding: 2em;
         }
     }
 }

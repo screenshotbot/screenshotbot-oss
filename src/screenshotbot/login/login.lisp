@@ -97,7 +97,6 @@
     <auth-template>
 
       <div class="account-pages mt-5 mb-5">
-        <div class="container">
           ,(progn alert)
                         <div class="card">
 
@@ -125,8 +124,6 @@
                     </div> <!-- end col -->
                 </div>
                 <!-- end row -->
-            </div>
-            <!-- end container -->
         </div>
         <!-- end page -->
 
