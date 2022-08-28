@@ -39,10 +39,9 @@
 ;; for now.
 (markup:deftag img-with-fallback (&key class src alt loading)
   (assert (str:ends-with-p ".webp" src))
-  <picture>
+  <picture class=class >
     <source srcset=src />
     <img src= (str:replace-all ".webp" ".png" src)
-         class=class
          loading=loading
          alt=alt />
   </picture>)
