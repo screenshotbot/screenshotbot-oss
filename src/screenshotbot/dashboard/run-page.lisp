@@ -408,7 +408,11 @@
             </ul>
           </div>
           <a href= (image-public-url (screenshot-image screenshot) :size :full-page) title= (screenshot-name screenshot) >
-            <img class= "screenshot-image run-page-image" src= (image-public-url (screenshot-image screenshot)  :size :small) />
+            ,(let ((dimensions (image-dimensions (screenshot-image screenshot))))
+               <img class= "screenshot-image run-page-image" src= (image-public-url (screenshot-image screenshot)  :size :small)
+                 width= (dimension-width dimensions)
+                    height= (dimension-height dimensions)
+                    />)
           </a>
         </div> <!-- end card-body-->
       </div>

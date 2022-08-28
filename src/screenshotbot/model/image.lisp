@@ -693,9 +693,13 @@
    (width :initarg :width
           :reader dimension-width)))
 
+(defvar *dim-cache* (make-hash-table))
+
 (defmethod image-dimensions (image)
-  (with-local-image (file image)
-    (image-file-dimensions file)))
+  (util:or-setf
+   (gethash image *dim-cache*)
+   (with-local-image (file image)
+     (image-file-dimensions file))))
 
 (defun image-file-dimensions (file)
   (destructuring-bind (width height) (ping-image-dimensions (magick) file)
