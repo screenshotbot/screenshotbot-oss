@@ -270,10 +270,6 @@
       <!-- App css -->
       <google-fonts />
       <link href=style rel="stylesheet" type="text/css" id="light-style" />
-      <link href= "https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"
-            rel= "stylesheet"
-            type= "text/css"
-            />
       <selenium-css />
   </head>)
 
