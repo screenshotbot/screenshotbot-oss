@@ -7,7 +7,8 @@
 (uiop/package:define-package :screenshotbot/cdn
     (:use #:cl)
   (:export #:script #:link #:img
-           #:make-image-cdn-url))
+           #:make-image-cdn-url
+           #:img-with-fallback))
 (in-package :screenshotbot/cdn)
 
 (markup:enable-reader)
@@ -33,3 +34,15 @@
   future. For instance, separate installations might have a different
   CDN."
   url)
+
+;; Technically should not be here, but can't think of a better place
+;; for now.
+(markup:deftag img-with-fallback (&key class src alt loading)
+  (assert (str:ends-with-p ".webp" src))
+  <picture>
+    <source srcset=src />
+    <img src= (str:replace-all ".webp" ".png" src)
+         class=class
+         loading=loading
+         alt=alt />
+  </picture>)

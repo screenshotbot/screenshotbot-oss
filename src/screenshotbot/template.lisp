@@ -51,7 +51,7 @@
 (defparameter *favicon* "/assets/images/logo-favicon.png")
 
 (defparameter *og-image*
-  "https://screenshotbot.io/assets/images/logo-dark.png")
+  "https://screenshotbot.io/assets/images/logo-dark.webp")
 
 (defmethod render-extra-scripts ((installation installation))
   nil)

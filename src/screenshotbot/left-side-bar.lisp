@@ -21,7 +21,9 @@
   (:import-from #:util
                 #:make-url)
   (:import-from #:nibble
-                #:nibble))
+                #:nibble)
+  (:import-from #:screenshotbot/cdn
+                #:img-with-fallback))
 (in-package :screenshotbot/left-side-bar)
 
 (markup:enable-reader)
@@ -70,10 +72,12 @@
 
 
         <span class="logo logo-lg fs-4">
-          <img src= "/assets/images/logo-light.png" />
+          <img-with-fallback src= "/assets/images/logo-light.webp"
+                             alt= "Screenshotbot logo" />
         </span>
         <span class="logo logo-sm fs-4">
-          <img src= "/assets/images/logo-small-light.png" />
+          <img-with-fallback src= "/assets/images/logo-small-light.webp"
+                             alt= "Screenshotbot logo" />
         </span>
       </a>
     </div>

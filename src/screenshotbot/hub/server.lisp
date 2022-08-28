@@ -7,7 +7,8 @@
    #:hub
    #:relay-session-request
    #:*hub*
-   #:direct-selenium-url))
+   #:direct-selenium-url
+   #:img-with-fallback))
 (in-package :screenshotbot/hub/server)
 
 (defclass local-hub ()
