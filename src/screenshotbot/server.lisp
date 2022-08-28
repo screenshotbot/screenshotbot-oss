@@ -204,7 +204,7 @@
                                body))))))
 
 (defparameter *asset-regex*
-  (cl-ppcre:create-scanner "[.](js|css|woff|otf|woff2|png|jpg|jpeg|webp)$"))
+  (cl-ppcre:create-scanner "[.](js|css|woff|otf|woff2|png|jpg|jpeg|webp|svg)$"))
 
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor acceptor) request)
   (declare (optimize (speed 3))
@@ -214,7 +214,7 @@
       ((staging-p)
        (setf (hunchentoot:header-out "Cache-Control") "no-cache"))
       ((cl-ppcre:scan *asset-regex* script-name)
-       (setf (hunchentoot:header-out "Cache-Control") "max-age=360000")))
+       (setf (hunchentoot:header-out "Cache-Control") "max-age=3600000")))
     (when (and
            (str:starts-with-p "/assets" script-name)
            (not *is-localhost*))
