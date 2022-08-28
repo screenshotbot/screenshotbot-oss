@@ -211,7 +211,7 @@
             <a class= "navbar-brand" href= "/">
               <img src= "/assets/images/logo-dark.png" />
             </a>
-            <img src= "/assets/images/auth/botty-left.png" />
+            <img class= "botty-image"  src= "/assets/images/auth/botty-left.png" />
 
             <span class= "copy" >
               &copy; 2022 Modern Interpreters Inc.

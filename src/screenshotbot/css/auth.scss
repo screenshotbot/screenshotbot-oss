@@ -199,6 +199,13 @@
         }
     }
 
+    .left-image {
+        .botty-image {
+            width: auto;
+            height: auto;
+        }
+    }
+
     @include media-breakpoint-down(lg) {
         .left-image {
             display: none;
