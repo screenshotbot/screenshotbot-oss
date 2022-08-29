@@ -41,13 +41,13 @@
 ;;(build-utils::get-css-component #P "~/builds/web/screenshotbot/static/assets/css/")
 
 (defsystem screenshotbot.css-assets
-  :class build-utils:css-system
+  :class "build-utils:css-system"
   :defsystem-depends-on (:build-utils)
   :depends-on (:screenshotbot.css-assets/library)
   :components (("BUILD-UTILS:SCSS-FILE" "default")))
 
 (defsystem screenshotbot.css-assets/doks
-  :class build-utils:css-system
+  :class "build-utils:css-system"
   :defsystem-depends-on (:build-utils)
   :depends-on (:bootstrap-css
                :doks-css

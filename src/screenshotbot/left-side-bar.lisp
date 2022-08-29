@@ -61,9 +61,9 @@
   nil)
 (deftag left-side-bar (&key user company script-name)
   (declare (optimize (speed 0) (debug 3)))
-  <div class="d-flex flex-column p-3 text-white bg-dark leftside-menu collapse" >
+  <div class="d-flex flex-column text-white bg-dark leftside-menu collapse" >
 
-    <div>
+    <div class= "text-center p-3" >
       <button type= "button" href= "#" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".leftside-menu" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <mdi name= "menu" />
       </button>
@@ -83,9 +83,9 @@
         </span>
       </a>
     </div>
-  <hr>
+  <hr class= "mt-0" >
 
-    <ul class="nav nav-pills flex-column">
+    <ul class="nav nav-pills flex-column ps-3 pe-3">
       <left-nav-item href= "/runs" image-class= "play_circle"
                      script-name=script-name >
          Recent Runs
@@ -108,7 +108,7 @@
     </ul>
     <hr />
 
-    <ul class="nav nav-pills flex-column mb-auto">
+    <ul class="nav nav-pills flex-column mb-auto ps-3 pe-3">
       <left-nav-item href= "/documentation" image-class= "tungsten" target= "_blank"
                      script-name=script-name >
         Documentation
@@ -145,9 +145,9 @@
          </li>)
     </ul>
 
-    <hr />
+    <hr class= "mb-0" />
     ,(let ()
-    <div class="dropdown">
+    <div class="dropdown p-3">
       <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
         <img src= (user-image-url user) alt="mdo" width="32" height="32" class="rounded-circle me-2">
           <strong class= "user-full-name" > ,(cond
