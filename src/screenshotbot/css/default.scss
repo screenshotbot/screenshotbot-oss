@@ -739,3 +739,13 @@ a {
         margin-bottom: 0;
     }
 }
+
+h4.screenshot-title {
+    text-overflow: ellipsis;
+    overflow:hidden;
+    white-space: nowrap;
+
+    &:hover {
+        white-space: normal;
+    }
+}

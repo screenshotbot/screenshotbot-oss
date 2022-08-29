@@ -617,7 +617,7 @@ If the images are identical, we return t, else we return NIL."
                         />
       <comparison-modal before=x after=s toggle-id=toggle-id />
     </div>)))
-      :header  <h4>,(highlight-search-term search (group-title group))</h4>)
+      :header  <h4 class= "screenshot-title">,(highlight-search-term search (group-title group))</h4>)
   </div>
   </div>)
 
@@ -829,7 +829,7 @@ If the images are identical, we return t, else we return NIL."
               :title (get-tab-title screenshot)
               :content
               <screenshot-box  screenshot=screenshot title= (group-title group) /> ))
-       :header <h4>,(highlight-search-term search (group-title group)) </h4>)
+       :header <h4 class= "screenshot-title" >,(highlight-search-term search (group-title group)) </h4>)
      </div>
      </div>)
    :num 5
