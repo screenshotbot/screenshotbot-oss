@@ -379,7 +379,7 @@
       <div class="card">
         <div class="card-body">
           <div class= "screenshot-header" >
-            <h4>,(car name-parts)</h4>
+            <h4 class= "screenshot-title" >,(car name-parts)</h4>
             ,(when (cadr name-parts)
                <h6>,(cadr name-parts)</h6>)
             <ul class= "screenshot-options-menu">
