@@ -92,14 +92,13 @@
       </p>
 
       <p style= "color: #222" >
-        To disable email notifications for reports
+        To stop receiving email notifications for reports
         <a href= (format nil
                   "~a/settings/email-tasks?company=~a"
                   (installation-domain (installation))
                   (oid company))
            >click here</a>.
-
-        If you're having any difficulty changing this setting, please feel free to respond to this email for support.
+        You can respond to this email for support from Screenshotbot staff.
       </p>
     </body>
   </html>)
