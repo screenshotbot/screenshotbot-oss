@@ -1,8 +1,7 @@
 (pkg:define-package :util/java/test-binding
     (:use #:cl
           #:fiveam
-          #:fiveam-matchers
-          #:alexandria)
+          #:fiveam-matchers)
   (:import-from #:util/java
                 #:java-syntax
                 #:new-instance)

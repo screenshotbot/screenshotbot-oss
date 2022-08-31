@@ -6,6 +6,7 @@
                (:file "lists")
                (:file "has-length")
                (:file "every-item")
+               (:file "strings")
                (:file "all")))
 
 (defsystem :fiveam-matchers/tests

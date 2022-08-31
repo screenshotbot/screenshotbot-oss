@@ -6,7 +6,8 @@
 
 (defpackage :screenshotbot/test-magick-lw
   (:use #:cl
-        #:fiveam)
+        #:fiveam
+        #:fiveam-matchers)
   (:import-from #:screenshotbot/magick-lw
                 #:map-non-alpha-pixels
                 #:magick-exception-message
@@ -22,7 +23,7 @@
                 #:check-boolean)
   (:import-from #:util/digests
                 #:md5-file)
-  (:local-nicknames (#:a #:alexandria)))
+   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-magick-lw)
 
 
@@ -85,6 +86,26 @@
           (magick-exception (e)
             (is (str:containsp "decode delegate for"
                                (magick-exception-message e)))))))))
+
+
+(test raises-magick-exception-message-is-not-corrupted
+  ;; Just ensuring that magick-relinquish-memory is the right thing to
+  ;; do.
+  (with-fixture state ()
+    (uiop:with-temporary-file (:pathname p)
+      (with-wand (wand)
+        (let ((messages
+                (loop for x from 0 to 100
+                      collect
+                      (handler-case
+                          (let ((code (magick-read-image wand (namestring p))))
+                            (check-boolean code wand)
+                            (fail "Excepted exception"))
+                        (magick-exception (e)
+                          (magick-exception-message e))))))
+          (assert-that messages
+                       (every-item
+                        (starts-with "no decode delegate for"))))))))
 
 
 (test find-first-non-transparent

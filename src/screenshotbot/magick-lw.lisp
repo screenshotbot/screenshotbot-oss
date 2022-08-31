@@ -225,6 +225,9 @@
      (exception-type (:reference-return exception-type)))
   :result-type (:pointer :char))
 
+(fli:define-foreign-function (magick-relinquish-memory "MagickRelinquishMemory")
+  ((resource (:pointer :void)))
+  :result-type :void)
 
 (fli:define-foreign-function (magick-get-resource-limit "MagickGetResourceLimit")
     ((op resource-type))
@@ -302,9 +305,11 @@
       (magick-get-exception wand 'UndefinedException)
     (declare (ignore type))
     (magick-clear-exception wand)
-    (error 'magick-exception
-            :expression expression
-            :message (fli:convert-from-foreign-string message))))
+    (unwind-protect
+         (error 'magick-exception
+                 :expression expression
+                 :message (fli:convert-from-foreign-string message))
+      (magick-relinquish-memory message))))
 
 (defun update-resource-limits ()
   (loop for (name value) in `((AreaResource 3000000)
