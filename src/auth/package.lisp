@@ -35,4 +35,5 @@
            #:current-user-id
            #:%make-session
            #:handle-signup
-           #:user-id))
+           #:user-id
+           #:find-user-session-value-by-hash))

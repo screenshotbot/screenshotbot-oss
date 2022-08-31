@@ -35,6 +35,28 @@ this would be a problem."
              if (equal cache-key (session-key-and-prop-key user-session-value))
                 return user-session-value)))))
 
+(defvar *hash-cache* (make-hash-table :test #'equal))
+
+(defun find-user-session-value-by-hash (session-key-hash prop-key)
+  "This is used for analytics purposes since we don't want to store the
+ session key itself in plain text in many places."
+  (let* ((session-key-hash (ironclad:hex-string-to-byte-array session-key-hash))
+         (cache-key (cons session-key-hash prop-key)))
+    (util/misc:or-setf
+     (gethash cache-key *hash-cache*)
+     (loop for user-session-value in (bknr.datastore:store-objects-with-class 'user-session-value)
+           for session-key = (car (session-key-and-prop-key user-session-value))
+           if (and
+               (equalp session-key-hash
+                       (ironclad:digest-sequence
+                        :sha256
+                        (flexi-streams:string-to-octets
+                         (car session-key))))
+               (equal prop-key
+                      (cdr session-key)))
+             do
+                (return (value user-session-value))))))
+
 
 (defclass user-session-transient ()
   ((session-key
