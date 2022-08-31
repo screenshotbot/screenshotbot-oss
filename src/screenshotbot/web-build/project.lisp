@@ -287,11 +287,11 @@
       <tbody>
         ,@ (loop for run in (util/lists:head runs 40)
                  for cancel = (util:copying (run)
-                                (nibble ()
+                                (nibble (:name :interrupt-web-project)
                                   (let ((back "/web-projects"))
                                     (confirmation-modal
                                      :yes
-                                     (nibble ()
+                                     (nibble (:name :interrupt-web-project-confirm)
                                        #+lispworks
                                        (multiple-value-bind (thread-id thread)
                                            (run-thread-id run)
@@ -304,7 +304,9 @@
                  (util:copying (run cancel)
                    <tr>
                      <td>
-                       <a href= (nibble () (remote-run-logs run)) >
+                       <a href= (nibble (:name :remote-job-logs)
+                                  (remote-run-logs run))
+                   >
                          ,(timeago :timestamp (created-at run))
                        </a>
                      </td>

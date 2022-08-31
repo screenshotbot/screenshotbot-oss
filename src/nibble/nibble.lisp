@@ -18,6 +18,10 @@
   ((impl :initarg :impl)
    (id :initarg :id
        :reader nibble-id)
+   (name :initarg :name
+         :initform nil
+         :reader nibble-name
+         :documentation "A name use for analytics and debugging purposes")
    (args :initarg :args)
    (once :initarg :once
          :initform nil)
@@ -88,18 +92,20 @@
      (let* ((position (position-if 'keywordp args-and-options))
             (args (subseq args-and-options 0 position))
             (options (when position (subseq args-and-options position))))
-       (destructuring-bind (&key once method (check-session-p t)) options
+       (destructuring-bind (&key once name method (check-session-p t)) options
          (declare (ignore method)) ;; I don't remember why we introduced this
                                    ;; in the first place
          `(call-nibble :once ,once
+                       :name ,name
                        :args ',args
                        :check-session-p ,check-session-p
                        :impl (lambda ,args ,@body)))))))
 
-(defun call-nibble (&key once args check-session-p impl)
+(defun call-nibble (&key once name args check-session-p impl)
   (let* ((id (make-id))
          (nibble (make-instance 'nibble
                                  :impl impl
+                                 :name name
                                  :session (current-session)
                                  :user
                                  (cond
@@ -199,21 +205,25 @@
                     (final-render)))))))))))))
 
 (defun nibble-full-url (nibble)
-  (hex:make-full-url
+  (apply #'hex:make-full-url
    hunchentoot:*request*
    'run-nibble
-   :id (slot-value nibble 'id)))
+   :id (slot-value nibble 'id)
+   (when (nibble-name nibble)
+     `(:_n ,(string-downcase (nibble-name nibble))))))
 
 (defun nibble-url (nibble)
-  (hex:make-url
-   'run-nibble
-   :id (slot-value nibble 'id)))
+  (apply #'hex:make-url
+           'run-nibble
+            :id (slot-value nibble 'id)
+            (when (nibble-name nibble)
+              `(:_n ,(string-downcase (nibble-name nibble))))))
 
 
 (defmethod markup:format-attr-val (stream (nibble nibble))
   (with-slots (id) nibble
    (format stream "\"~a\""
-           (hex:make-url 'run-nibble :id id))))
+           (nibble-url nibble))))
 
 (defmethod hex:safe-redirect ((nibble nibble) &rest args)
   (apply 'hex:safe-redirect (nibble-url nibble)

@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:nibble
+                #:nibble-url
                 #:nibble-current-user
                 #:defnibble
                 #:nibble-plugin
@@ -54,3 +55,12 @@
                   (render-nibble
                    plugin
                    (nibble foo-with-args))))))))
+
+(test with-name-renders-url
+  (with-fixture state ()
+    (util/testing:with-fake-request ()
+      (auth:with-sessions ()
+       (let ((nibble (nibble (:name :foobar)
+                       "")))
+         (is (str:ends-with-p "?_n=foobar"
+                              (nibble-url  nibble))))))))
