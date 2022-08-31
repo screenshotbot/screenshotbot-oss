@@ -28,7 +28,7 @@ empty message."
       (util/lists:head items num :filter filter)
     (cond
       (this-page
-       (let* ((load-more (nibble ()
+       (let* ((load-more (nibble (:name :load-more)
                            (paginated fn :num num :items rest
                                          :filter filter))))
          <div class= "row pb-4 load-more-container" >
