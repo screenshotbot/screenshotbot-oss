@@ -96,10 +96,10 @@
 (defvar *lock* (bt:make-lock "image-comparison"))
 
 (deftag render-acceptable (&key acceptable)
-  (let ((accept (nibble (redirect)
+  (let ((accept (nibble (redirect :name :accept)
                   (setf (acceptable-state acceptable) :accepted)
                   (hex:safe-redirect redirect)))
-        (reject (nibble (redirect)
+        (reject (nibble (redirect :name :reject)
                   (setf (acceptable-state acceptable) :rejected)
                   (hex:safe-redirect redirect)))
         (btn-class
@@ -332,8 +332,8 @@
         `((:identical . ,(identical-p image-comparison))
           ;; for debugging: e.g. if we need to delete the comparison
           (:store-object-id . ,(bknr.datastore:store-object-id image-comparison))
-          (:zoom-to . ,(nibble-url (nibble () (random-zoom-to-on-result
-                                               image-comparison))))
+          (:zoom-to . ,(nibble-url (nibble (:name :zoom) (random-zoom-to-on-result
+                                                          image-comparison))))
           (:src . ,(image-public-url (image-comparison-result image-comparison) :size size))
           (:background . ,(image-public-url (screenshot-image (before-image self)) :size size))))))))
 
@@ -399,7 +399,7 @@ If the images are identical, we return t, else we return NIL."
          (session auth:*current-session*)
          (request hunchentoot:*request*)
          (acceptor hunchentoot:*acceptor*)
-         (data-check-nibble (nibble ()
+         (data-check-nibble (nibble (:name :data-check)
                               (setf (hunchentoot:content-type*) "application/json")
                               (json:encode-json-to-string
                                (cond
@@ -460,7 +460,7 @@ If the images are identical, we return t, else we return NIL."
                                                     :before-image before
                                                     :after-image after))
               (comparison-image (util:copying (image-comparison-job)
-                                    (nibble ()
+                                    (nibble (:name :comparison)
                                       (prepare-image-comparison image-comparison-job :size :full-page)))))
          <div class= "image-comparison-wrapper" >
            <h3>,(screenshot-name before)</h3>
@@ -602,7 +602,7 @@ If the images are identical, we return t, else we return NIL."
             </a>
           </li>
           <li>
-            <a href= (nibble () (mask-editor (recorder-run-channel run) s
+            <a href= (nibble (:name :mask-editor) (mask-editor (recorder-run-channel run) s
                :redirect script-name))
                >
               Edit Masks
@@ -641,7 +641,7 @@ If the images are identical, we return t, else we return NIL."
            (make-instance 'image-comparison-job
                            :before-image before
                            :after-image after))
-         (compare-nibble (nibble ()
+         (compare-nibble (nibble (:name :compare-link)
                            (prepare-image-comparison
                             image-comparison-job))))
     <div class= "modal fade image-comparison-modal" id= toggle-id tabindex= "-1" role= "dialog"
@@ -675,7 +675,7 @@ If the images are identical, we return t, else we return NIL."
                             (re-run nil))
   (declare (ignore re-run))
   (let* ((report (make-diff-report run to))
-         (all-comparisons (nibble ()
+         (all-comparisons (nibble (:name :all-comparison)
                             (all-comparisons-page report))))
     (declare (ignorable all-comparisons))
     (let* ((changes-groups (changes-groups report))
@@ -744,10 +744,11 @@ If the images are identical, we return t, else we return NIL."
 
       </div>
 
-      <div class= "report-result mt-3" data-update= (nibble () (report-result run
-                                                                              changes-groups
-                                                                              added-groups
-                                                                              deleted-groups))
+      <div class= "report-result mt-3"
+           data-update= (nibble (:name :u-r-res) (report-result run
+           changes-groups
+           added-groups
+           deleted-groups))
       data-args= "{}" >
       ,(report-result run
                       changes-groups
