@@ -7,15 +7,26 @@
 (defpackage :screenshotbot/magick/test-memory
   (:use #:cl
         #:fiveam)
-  (:import-from #:screenshotbot/magick/memory
-                #:realloc
-                #:free
-                #:malloc)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria)
+                    #-lispworks
+                    (#:fli #:util/fake-fli)))
 (in-package :screenshotbot/magick/test-memory)
 
-
 (util/fiveam:def-suite)
+
+
+(fli:define-foreign-function (malloc "screenshotbot_malloc")
+  ((size :size-t))
+  :result-type (:pointer :void))
+
+(fli:define-foreign-function (realloc "screenshotbot_realloc")
+  ((ptr (:pointer :void))
+   (size :size-t))
+  :result-type (:pointer :void))
+
+(fli:define-foreign-function (free "screenshotbot_free")
+  ((ptr (:pointer :void)))
+  :result-type :void)
 
 (test allocate
   (let ((mem (malloc 20)))
@@ -29,3 +40,18 @@
       (unwind-protect
            (is (not (fli:null-pointer-p mem)))
         (free mem)))))
+
+(test big-realloc
+  (let ((mem (malloc 20)))
+    (let ((mem (realloc mem (* 4 1024 1024))))
+      (unwind-protect
+           (is (not (fli:null-pointer-p mem)))
+        (free mem)))))
+
+(test big-then-small-realloc
+  (let ((mem (malloc 20)))
+    (let ((mem (realloc mem (* 4 1024 1024))))
+      (let ((mem (realloc mem 1024)))
+       (unwind-protect
+            (is (not (fli:null-pointer-p mem)))
+         (free mem))))))

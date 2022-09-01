@@ -36,12 +36,12 @@
 
 
 (defun add-info (mem size)
-  (setf (gethash (fli:pointer-address mem) *allocs*)
-        (make-instance 'allocation-info
-                        :size size)))
+  (ignore-errors
+   (setf (gethash (fli:pointer-address mem) *allocs*)
+         (make-instance 'allocation-info
+                         :size size))))
 
 (defun malloc (size)
-  #+nil
   (log:debug "Allocation ~d" size)
   (let ((mem (%malloc size)))
     (add-info mem size)
@@ -52,10 +52,10 @@
   (malloc size))
 
 (defun clear-info (ptr)
-  (remhash (fli:pointer-address ptr) *allocs*))
+  (ignore-errors
+   (remhash (fli:pointer-address ptr) *allocs*)))
 
 (defun free (ptr)
-  #+nil
   (log:debug "Freeing ~a" ptr)
   (clear-info ptr)
   (%free ptr))
@@ -65,14 +65,13 @@
   (free ptr))
 
 (defun realloc (ptr size)
-  #+nil
   (log:info "Realloc ~d" size)
   (let ((ret (%realloc ptr size)))
     (clear-info ptr)
     (add-info ret size)
     ret))
 
-(fli:define-foreign-callable ("screenshotbot_realloc" :result-type :void)
+(fli:define-foreign-callable ("screenshotbot_realloc" :result-type (:pointer :void))
     ((ptr (:pointer :void))
      (size :size-t))
   (realloc ptr size))
