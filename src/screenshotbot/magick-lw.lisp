@@ -61,8 +61,8 @@
 (fli:register-module :magick-native
                      :real-name
                      (asdf:output-file
-                       'asdf:compile-op
-                        (asdf:find-component :screenshotbot "magick-native")))
+                         'asdf:compile-op
+                          (asdf:find-component :screenshotbot "magick-native")))
 
 
 (fli:define-c-struct wand
@@ -219,6 +219,23 @@
   SetAlphaChannel
   ShapeAlphaChannel
   TransparentAlphaChannel)
+
+(fli:define-foreign-function (%get-policy-value "GetPolicyValue")
+    ((name (:reference-pass :ef-mb-string)))
+  :result-type (:pointer :char)
+  :documentation "For debugging only")
+
+(fli:define-foreign-function (get-max-memory-request "GetMaxMemoryRequest")
+    ()
+  :result-type :size-t
+  :documentation "For debugging only")
+
+(defun get-policy-value (name)
+  (let ((ret (%get-policy-value name)))
+    (unless (fli:null-pointer-p ret)
+     (unwind-protect
+          (fli:convert-from-foreign-string ret)
+       (magick-relinquish-memory ret)))))
 
 (fli:define-foreign-function (magick-get-exception "MagickGetException")
     ((wand (:pointer wand))
