@@ -5,7 +5,6 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/magick/magick-lw
-  (:nicknames :screenshotbot/magick-lw) ;; TODO: t384
   (:use #:cl
         #:screenshotbot/magick/magick)
   (:import-from #:screenshotbot/magick
