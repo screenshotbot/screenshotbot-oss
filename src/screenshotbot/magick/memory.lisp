@@ -12,9 +12,14 @@
 (in-package :screenshotbot/magick/memory)
 
 (defclass allocation-info ()
-  ((size :initarg :size)))
+  ((size :initarg :size
+         :reader allocation-info-size)))
 
 (defvar *allocs* (make-hash-table))
+
+(defun get-total-allocs ()
+  (loop for info being the hash-values of *allocs*
+        summing (allocation-info-size info)))
 
 (fli:define-foreign-function (%malloc "malloc")
   ((size :size-t))
@@ -36,6 +41,7 @@
                         :size size)))
 
 (defun malloc (size)
+  #+nil
   (log:debug "Allocation ~d" size)
   (let ((mem (%malloc size)))
     (add-info mem size)
@@ -49,15 +55,17 @@
   (remhash (fli:pointer-address ptr) *allocs*))
 
 (defun free (ptr)
+  #+nil
   (log:debug "Freeing ~a" ptr)
   (clear-info ptr)
   (%free ptr))
 
 (fli:define-foreign-callable ("screenshotbot_free" :result-type :void)
     ((ptr (:pointer :void)))
-  (free size))
+  (free ptr))
 
 (defun realloc (ptr size)
+  #+nil
   (log:info "Realloc ~d" size)
   (let ((ret (%realloc ptr size)))
     (clear-info ptr)

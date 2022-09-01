@@ -293,9 +293,16 @@
 (defun init-magick-wand ()
   (unless *magick-wand-inited*
     (register-magick-wand)
+    #+lispworks
+    (screenshotbot/magick/memory:update-magick-memory-methods)
     (magick-wand-genesis)
     (update-resource-limits)
     (setf *magick-wand-inited* t)))
+
+(defun end-magick-wand ()
+  (progn
+    (magick-wand-terminus)
+    (setf *magick-wand-inited* nil)))
 
 (define-condition magick-exception (error)
   ((expression :initarg :expression)
@@ -338,11 +345,6 @@
         do
            (check-boolean (magick-set-resource-limit name value)
                           nil)))
-
-(defun end-magick-wand ()
-  (progn
-    (magick-wand-terminus)
-    (setf *magick-wand-inited* nil)))
 
 (def-easy-macro with-wand (&binding wand &key file from (alpha t) &fn fn)
   (init-magick-wand)
