@@ -69,7 +69,7 @@
                 #:delete-object)
   (:import-from #:nibble
                 #:nibble-url)
-  (:import-from #:screenshotbot/magick-lw
+  (:import-from #:screenshotbot/magick/magick-lw
                 #:get-non-alpha-pixels
                 #:with-wand)
   (:import-from #:screenshotbot/diff-report

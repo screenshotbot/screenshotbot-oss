@@ -46,7 +46,7 @@
                 #:blob-pathname)
   (:import-from #:auto-restart
                 #:with-auto-restart)
-  (:import-from #:screenshotbot/magick-lw
+  (:import-from #:screenshotbot/magick/magick-lw
                 #:with-wand)
   (:import-from #:util/object-id
                 #:oid-array)

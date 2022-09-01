@@ -4,9 +4,10 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/magick-lw
+(defpackage :screenshotbot/magick/magick-lw
+  (:nicknames :screenshotbot/magick-lw) ;; TODO: t384
   (:use #:cl
-        #:screenshotbot/magick)
+        #:screenshotbot/magick/magick)
   (:import-from #:screenshotbot/magick
                 #:with-magick-gatekeeper
                 #:*magick*
@@ -23,7 +24,7 @@
    #:magick-exception-message
    #:map-non-alpha-pixels
    #:get-non-alpha-pixels))
-(in-package :screenshotbot/magick-lw)
+(in-package :screenshotbot/magick/magick-lw)
 
 (defclass magick-native (abstract-magick)
   ())
@@ -62,7 +63,7 @@
                      :real-name
                      (asdf:output-file
                          'asdf:compile-op
-                          (asdf:find-component :screenshotbot "magick-native")))
+                          (asdf:find-component :screenshotbot '("magick" "magick-native"))))
 
 
 (fli:define-c-struct wand

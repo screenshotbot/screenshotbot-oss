@@ -4,7 +4,8 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/magick
+(uiop:define-package :screenshotbot/magick/magick
+  (:nicknames :screenshotbot/magick)
   (:use #:cl)
   (:local-nicknames (#:a #:alexandria))
   (:export
@@ -15,7 +16,7 @@
    #:convert-to-lossless-webp
    #:ping-image-dimensions
    #:with-magick-gatekeeper))
-(in-package :screenshotbot/magick)
+(in-package :screenshotbot/magick/magick)
 
 (defclass abstract-magick ()
   ())

@@ -19,9 +19,8 @@
 (defmethod output-files ((o compile-op) (c lib-source-file))
   (let ((library-file-type
           (default-foreign-library-type)))
-    (list (make-pathname :name (component-name c)
-                         :type library-file-type
-                         :defaults *library-file-dir*))))
+    (list (make-pathname :type library-file-type
+                         :defaults (asdf:component-pathname c)))))
 
 (defmethod perform ((o load-op) (c lib-source-file))
   t)
@@ -30,8 +29,7 @@
   (uiop:run-program `("gcc"
                       "-shared"
                       ,(namestring
-                        (merge-pathnames (format nil "~a.c" (component-name c))
-                                         *library-file-dir*))
+                        (component-pathname c))
                       "-I"
                       ,(cond
                         ((uiop:os-windows-p)
@@ -114,9 +112,10 @@
    (:file "analytics" :depends-on ("ignore-and-log-errors"))
    (:file "plugin")
    (:file "mailer")
-   (:file "magick")
-   (lib-source-file "magick-native")
-   (:file "magick-lw")
+   (:module "magick"
+    :components ((:file "magick")
+                 (lib-source-file "magick-native")
+                 (:file "magick-lw")))
    (:file "installation")
    (:file "server" :depends-on ("analytics"))
    (:file "cdn")
@@ -275,7 +274,8 @@
                (:file "test-server")
                (:file "test-diff-report")
                (:file "test-mailer")
-               (:file "test-magick-lw")
+               (:module "magick"
+                :components ((:file "test-magick-lw")))
                (:file "test-installation")
                (:file "test-assets")
                (:file "test-template")

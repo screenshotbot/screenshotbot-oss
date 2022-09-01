@@ -4,27 +4,26 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/test-magick-lw
+(defpackage :screenshotbot/magick/test-magick-lw
   (:use #:cl
         #:fiveam
         #:fiveam-matchers)
-  (:import-from #:screenshotbot/magick-lw
+  (:import-from #:screenshotbot/magick/magick-lw
                 #:map-non-alpha-pixels
                 #:magick-exception-message
                 #:magick-read-image
                 #:new-magick-wand
                 #:magick-exception
                 #:with-wand
+                #:check-boolean
                 #:compare-images
                 #:magick-native)
-  (:import-from #:screenshotbot/magick
+  (:import-from #:screenshotbot/magick/magick
                 #:convert-to-lossless-webp)
-  (:import-from #:screenshotbot/magick-lw
-                #:check-boolean)
   (:import-from #:util/digests
                 #:md5-file)
    (:local-nicknames (#:a #:alexandria)))
-(in-package :screenshotbot/test-magick-lw)
+(in-package :screenshotbot/magick/test-magick-lw)
 
 
 (util/fiveam:def-suite)
