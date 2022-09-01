@@ -66,7 +66,7 @@
                                (when count
                                  (list :count count)))))))
 
-(defmacro define-foreign-function (name args &key result-type)
+(defmacro define-foreign-function (name args &key result-type documentation)
   (assert result-type)
   (destructuring-bind (name-var name) (cond
                                         ((symbolp name)
