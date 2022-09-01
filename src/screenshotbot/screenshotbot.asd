@@ -115,7 +115,8 @@
    (:module "magick"
     :components ((:file "magick")
                  (lib-source-file "magick-native")
-                 (:file "magick-lw")))
+                 (:file "magick-lw")
+                 (:file "memory")))
    (:file "installation")
    (:file "server" :depends-on ("analytics"))
    (:file "cdn")
@@ -275,7 +276,8 @@
                (:file "test-diff-report")
                (:file "test-mailer")
                (:module "magick"
-                :components ((:file "test-magick-lw")))
+                :components ((:file "test-magick-lw")
+                             (:file "test-memory")))
                (:file "test-installation")
                (:file "test-assets")
                (:file "test-template")
