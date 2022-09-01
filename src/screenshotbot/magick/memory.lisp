@@ -36,6 +36,7 @@
                         :size size)))
 
 (defun malloc (size)
+  (log:debug "Allocation ~d" size)
   (let ((mem (%malloc size)))
     (add-info mem size)
     mem))
@@ -48,6 +49,7 @@
   (remhash (fli:pointer-address ptr) *allocs*))
 
 (defun free (ptr)
+  (log:debug "Freeing ~a" ptr)
   (clear-info ptr)
   (%free ptr))
 
@@ -56,6 +58,7 @@
   (free size))
 
 (defun realloc (ptr size)
+  (log:info "Realloc ~d" size)
   (let ((ret (%realloc ptr size)))
     (clear-info ptr)
     (add-info ret size)

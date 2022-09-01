@@ -115,8 +115,8 @@
    (:module "magick"
     :components ((:file "magick")
                  (lib-source-file "magick-native")
-                 (:file "magick-lw")
-                 (:file "memory")))
+                 (:file "memory" :if-feature :lispworks)
+                 (:file "magick-lw")))
    (:file "installation")
    (:file "server" :depends-on ("analytics"))
    (:file "cdn")
@@ -277,7 +277,7 @@
                (:file "test-mailer")
                (:module "magick"
                 :components ((:file "test-magick-lw")
-                             (:file "test-memory")))
+                             (:file "test-memory" :if-feature :lispworks)))
                (:file "test-installation")
                (:file "test-assets")
                (:file "test-template")
