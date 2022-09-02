@@ -11,6 +11,11 @@
   (:import-from #:screenshotbot/server
                 #:staging-p
                 #:defhandler)
+  (:import-from #:screenshotbot/artifacts
+                #:artifact-file-name
+                #:call-hooks)
+  (:import-from #:util/store
+                #:add-datastore-hook)
   (:export
    #:define-css
    #:define-js))
@@ -57,13 +62,10 @@
 
 (define-css "/assets/css/default.css" :screenshotbot.css-assets)
 
-(defmacro define-platform-asset (name)
-  `(progn
-     (defhandler (nil :uri ,(format nil "/~a.sh" name) :html nil) (no-cdn)
-       (setf (hunchentoot:content-type*) "application/x-sh")
-       (let ((darwin-link (artifact-link ,(format nil "~a-darwin" name) :cdn (not no-cdn)))
-             (linux-link (artifact-link ,(format nil "~a-linux" name) :cdn (not no-cdn))))
-       #?"#!/bin/sh
+(defun generate-.sh (name)
+  (let ((darwin-link (artifact-link (format nil "~a-darwin" name)))
+        (linux-link (artifact-link (format nil "~a-linux" name))))
+    #?"#!/bin/sh
 set -e
 set -x
 
@@ -81,10 +83,35 @@ fi
 sh ./$INSTALLER
 rm -f $INSTALLER
 "))
+
+
+(defmacro define-platform-asset (name)
+  `(progn
+     (flet ((generate ()
+              (uiop:with-staging-pathname (output
+                                           (artifact-file-name ,(format nil "~a.sh" name)))
+                (with-open-file (output output :direction :output
+                                               :if-exists :append)
+                  (write-string (generate-.sh ,name)
+                                output)))))
+       ,@ (loop for suffix in '("darwin" "linux")
+                collect
+                `(def-artifact-hook (',(intern name) ,(format nil "~a-~a"
+                                                              name suffix))
+                   (generate)))
+       (add-datastore-hook
+        #'generate))
+
+     (defhandler (nil :uri ,(format nil "/~a.sh" name) :html nil) ()
+       (setf (hunchentoot:content-type*) "application/x-sh")
+       (hunchentoot:handle-static-file
+        (artifact-file-name (format nil "~a.sh" ,name))))
+
      (defhandler (nil :uri ,(format nil "/~a.exe" name) :html nil) ()
        (hunchentoot:redirect
         (artifact-link ,(format nil "~a-win.exe" name) :cdn t)))))
 
+;; (call-hooks "recorder-linux")
 (define-platform-asset "recorder")
 (define-platform-asset "selenium-proxy")
 

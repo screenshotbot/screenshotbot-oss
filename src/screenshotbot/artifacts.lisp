@@ -28,10 +28,13 @@
                 #:store-directory)
   (:import-from #:bknr.datastore
                 #:*store*)
+  (:import-from #:util/macros
+                #:def-easy-macro)
   (:export #:artifact-with-name
            #:artifact-link
            #:md5-hex
-           #:artifact)
+           #:artifact
+           #:def-artifact-hook)
   (:local-nicknames (#:dns-client #:org.shirakumo.dns-client)))
 (in-package :screenshotbot/artifacts)
 
@@ -49,6 +52,24 @@
          :index-reader artifact-with-name
          :accessor artifact-name))
   (:metaclass persistent-class))
+
+(defvar *artifact-hooks* nil)
+
+(defclass artifact-hook ()
+  ((dep :initarg :dep
+        :reader artifact-hook-dep)
+   (callback :initarg :callback
+             :reader artifact-hook-callback)))
+
+(defclass generated-artifact ()
+  ((key :initarg :key
+        :reader generated-artifact-key)
+   (name :initarg :name
+         :reader generated-artifact-name)
+   (deps :initarg :deps
+         :reader generated-artifact-deps)
+   (generator :initarg :generator
+              :reader generated-artifact-generator)))
 
 (defvar *in-test-p* nil)
 
@@ -69,6 +90,7 @@
     (assert (equal
              (md5-hex file-name)
              hash))
+    (call-hooks name)
     "OK"))
 
 
@@ -92,5 +114,19 @@
           (cdn
            (util.cdn:make-cdn url))
           (t url))))))
+
+(def-easy-macro def-artifact-hook (key artifact-name &fn fn)
+  (setf
+   (alexandria:assoc-value *artifact-hooks* key :test #'equal)
+   (make-instance 'artifact-hook
+                   :dep artifact-name
+                   :callback fn)))
+
+(defun call-hooks (dep)
+  (loop for (nil . hook) in *artifact-hooks*
+        if (equal dep (artifact-hook-dep hook))
+          do
+        (funcall (artifact-hook-callback hook))))
+
 
 ;; (upload-artifact "installer-linux" "/home/arnold/.cache/common-lisp/lw-7.1.2-linux-x64/home/arnold/builds/web/screenshotbot/sdk/installer")

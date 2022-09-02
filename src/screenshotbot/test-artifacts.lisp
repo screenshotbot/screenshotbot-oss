@@ -15,6 +15,9 @@
   (:import-from #:screenshotbot/secret
                 #:secret)
   (:import-from #:screenshotbot/artifacts
+                #:def-artifact-hook
+                #:call-hooks
+                #:*artifact-hooks*
                 #:*in-test-p*
                 #:ensure-private-ip
                 #:artifact-link)
@@ -27,16 +30,19 @@
 (def-fixture state ()
   (tmpdir:with-tmpdir (dir)
     (assert (not (boundp '*object-store*)))
-    (let ((old-secret (secret :artifact-upload-key)))
+    (let ((old-secret (secret :artifact-upload-key))
+          (old-hooks *artifact-hooks*))
       (unwind-protect
            (progn
              (setf *object-store* (namestring dir))
+             (setf old-hooks *artifact-hooks*)
              (setf *in-test-p* t)
              (setf (secret :artifact-upload-key) "foobar")
              (with-local-acceptor (host) ('screenshotbot/server:acceptor)
                (&body)))
         (setf (secret :artifact-upload-key) old-secret)
         (setf *in-test-p* nil)
+        (setf *artifact-hooks* old-hooks)
         (makunbound '*object-store*)))))
 
 (test upload-and-download ()
@@ -118,3 +124,11 @@
         (finishes
           (parse-integer
            (car (last (str:split "=" link)))))))))
+
+(test hooks
+  (with-fixture state ()
+    (let ((count 0))
+      (def-artifact-hook ('foo "bar")
+        (incf count))
+      (call-hooks "bar")
+      (is (eql 1 count)))))
