@@ -284,6 +284,7 @@
                (:file "test-taskie")
                (:module "dashboard"
                 :components ((:file "test-recent-runs")
+                             (:file "test-compare")
                              (:file "test-api-keys")
                              (:file "test-image")
                              (:file "test-channels")
