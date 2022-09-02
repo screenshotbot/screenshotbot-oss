@@ -104,8 +104,7 @@ rm -f $INSTALLER
 
      (defhandler (nil :uri ,(format nil "/~a.sh" name) :html nil) ()
        (setf (hunchentoot:content-type*) "application/x-sh")
-       (hunchentoot:handle-static-file
-        (artifact-file-name (format nil "~a.sh" ,name))))
+       (generate-.sh ,name))
 
      (defhandler (nil :uri ,(format nil "/~a.exe" name) :html nil) ()
        (hunchentoot:redirect
