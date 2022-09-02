@@ -273,6 +273,7 @@
                (:file "factory")
                (:file "test-ignore-and-log-errors")
                (:file "test-server")
+               (:file "test-artifacts")
                (:file "test-diff-report")
                (:file "test-mailer")
                (:module "magick"

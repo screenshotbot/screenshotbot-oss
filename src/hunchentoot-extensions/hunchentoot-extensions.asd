@@ -16,6 +16,7 @@
                (:file "url")
                (:file "acceptor-with-plugins")
                (:file "better-easy-handler")
+               (:file "postdata")
                (:file "webp")))
 
 (defsystem :hunchentoot-extensions/tests

@@ -22,6 +22,12 @@
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:installation-domain)
+  (:import-from #:util/store
+                #:object-store)
+  (:import-from #:bknr.datastore
+                #:store-directory)
+  (:import-from #:bknr.datastore
+                #:*store*)
   (:export #:artifact-with-name
            #:artifact-link
            #:md5-hex
@@ -29,6 +35,13 @@
   (:local-nicknames (#:dns-client #:org.shirakumo.dns-client)))
 (in-package :screenshotbot/artifacts)
 
+(defun artifacts-dir ()
+  (ensure-directories-exist
+   (path:catdir
+    (object-store)
+    "artifacts/")))
+
+;; DEPRECATED: DO NOT USE.
 (defclass artifact (blob)
   ((name :initarg :name
          :index-initargs (:test #'equal)
@@ -37,54 +50,47 @@
          :accessor artifact-name))
   (:metaclass persistent-class))
 
+(defvar *in-test-p* nil)
+
+(defun ensure-private-ip ()
+  (unless *in-test-p* ;; can't mock because of multithreading
+   (assert (equal (dns-client:resolve "tdrhq.com") (hunchentoot:real-remote-addr)))))
 
 (defun md5-hex (f)
   (ironclad:byte-array-to-hex-string (md5:md5sum-file f)))
 
+(defhandler (nil :uri "/intern/artifact/upload" :method :put) (name hash upload-key)
+  (assert name)
+  (assert (secret :artifact-upload-key))
+  (ensure-private-ip)
+  (assert (equal upload-key (secret :artifact-upload-key)))
+  (let ((file-name (artifact-file-name name)))
+    (hex:write-postdata-to-file file-name)
+    (assert (equal
+             (md5-hex file-name)
+             hash))
+    "OK"))
 
-(let ((lock (bt:make-lock)))
-  (defhandler (nil :uri "/intern/artifact/upload" :method :put) (name hash upload-key)
-    (assert name)
-    (assert (equal (dns-client:resolve "tdrhq.com") (hunchentoot:real-remote-addr)))
-    (assert (secret :artifact-upload-key))
-    (assert (equal upload-key (secret :artifact-upload-key)))
-    (let ((artifact (bt:with-lock-held (lock)
-                      (or
-                       (artifact-with-name name)
-                       (make-instance 'artifact
-                                       :name name)))))
-      (let ((input-file (pathname "./tmp-upload")))
-       (let ((blob-pathname (bknr.datastore:blob-pathname artifact)))
-         (assert (equal
-                  (md5-hex input-file)
-                  hash))
-         (uiop:rename-file-overwriting-target
-          input-file blob-pathname)
-         (assert (equal
-                  (md5-hex blob-pathname)
-                  hash))))
-      "OK")))
-(bknr.datastore:store-objects-with-class 'artifact)
+
+(defun artifact-file-name (name)
+  (assert (not (str:containsp "/." name)))
+  (assert (not (str:containsp ".." name)))
+  (path:catfile (artifacts-dir)  (str:downcase name)))
 
 (defhandler (artifact-get :uri "/artifact/:name") (name cache-key)
   (declare (ignore cache-key))
-  (let ((name (car (str:rsplit "." name :limit 2))))
-    (let* ((artifact (artifact-with-name name))
-           (file (bknr.datastore:blob-pathname artifact)))
-      (assert (path:-e file))
-      (hunchentoot:handle-static-file file))))
+  (let ((file (artifact-file-name name)))
+    (assert (path:-e file))
+    (hunchentoot:handle-static-file file)))
 
 
 (defmethod artifact-link ((name string) &key (cdn t))
-  (let ((real-name (car (str:rsplit "." name :limit 2))))
-   (let ((artifact (artifact-with-name (str:downcase real-name))))
-     (let ((util.cdn:*cdn-cache-key* (file-write-date (bknr.datastore:blob-pathname artifact))))
-       (let ((url (make-url 'artifact-get :name name)))
-         (cond
-           (*delivered-image*
-            (format nil "~a~a" (installation-domain (installation)) url))
-           (cdn
-            (util.cdn:make-cdn url))
-           (t url)))))))
+  (let ((file-name (artifact-file-name name)))
+    (let ((util.cdn:*cdn-cache-key* (file-write-date file-name)))
+      (let ((url (make-url 'artifact-get :name name)))
+        (cond
+          (cdn
+           (util.cdn:make-cdn url))
+          (t url))))))
 
 ;; (upload-artifact "installer-linux" "/home/arnold/.cache/common-lisp/lw-7.1.2-linux-x64/home/arnold/builds/web/screenshotbot/sdk/installer")

@@ -14,6 +14,7 @@
            #:make-full-url
            #:acceptor-plugin-name
            #:acceptor-plugin-prefix
+           #:write-postdata-to-file
            #:wrap-template
            #:acceptor-plugin
            #:define-plugin-handler
