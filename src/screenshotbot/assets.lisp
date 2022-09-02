@@ -16,6 +16,13 @@
                 #:call-hooks)
   (:import-from #:util/store
                 #:add-datastore-hook)
+  (:import-from #:util.cdn
+                #:*cdn-domain*)
+  (:import-from #:screenshotbot/installation
+                #:installation-domain
+                #:installation)
+  (:import-from #:util.cdn
+                #:*cdn-domain*)
   (:export
    #:define-css
    #:define-js))
@@ -63,9 +70,10 @@
 (define-css "/assets/css/default.css" :screenshotbot.css-assets)
 
 (defun generate-.sh (name)
-  (let ((darwin-link (artifact-link (format nil "~a-darwin" name)))
-        (linux-link (artifact-link (format nil "~a-linux" name))))
-    #?"#!/bin/sh
+  (let ((util.cdn:*cdn-domain* screenshotbot/server:*cdn-domain*))
+   (let ((darwin-link (artifact-link (format nil "~a-darwin" name)))
+         (linux-link (artifact-link (format nil "~a-linux" name))))
+     #?"#!/bin/sh
 set -e
 set -x
 
@@ -82,7 +90,7 @@ else
 fi
 sh ./$INSTALLER
 rm -f $INSTALLER
-"))
+")))
 
 
 (defmacro define-platform-asset (name)
@@ -104,7 +112,8 @@ rm -f $INSTALLER
 
      (defhandler (nil :uri ,(format nil "/~a.sh" name) :html nil) ()
        (setf (hunchentoot:content-type*) "application/x-sh")
-       (generate-.sh ,name))
+       (hunchentoot:handle-static-file
+        (artifact-file-name (format nil "~a.sh" ,name))))
 
      (defhandler (nil :uri ,(format nil "/~a.exe" name) :html nil) ()
        (hunchentoot:redirect
