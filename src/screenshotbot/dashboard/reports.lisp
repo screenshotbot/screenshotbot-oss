@@ -12,6 +12,7 @@
         #:screenshotbot/report-api
         #:screenshotbot/taskie)
   (:import-from #:screenshotbot/server
+                #:staging-p
                 #:with-login
                 #:defhandler)
   (:import-from #:util
@@ -40,18 +41,27 @@
       (hex:safe-redirect 'report-page :id (oid (store-object-with-id 814))))
   (let ((report (ignore-errors (find-by-oid id))))
     (cond
-     ((not report)
+      #-screenshotbot-oss
+      ((and
+        (staging-p)
+        (not report))
+       ;; TODO: T389
+       ;; We had a temporary bug where we sent out staging links in
+       ;; prod, handle this gracefully for now
+       (hunchentoot:redirect
+        (format nil "https://screenshotbot.io~a" (hunchentoot:script-name*))))
+      ((not report)
        ;; We don't use template because this is messing up our Google
        ;; Analytics. This is most likely trigged by Microsoft Outlook's
        ;; preview.
-      <html>
-        <body>
-          Invalid Report link, <a href= "/report">Click here to view recent reports</a>
-        </body>
-      </html>)
-     (t
-      (with-login (:needs-login (not (can-public-view report)))
-        (render-report-page report))))))
+       <html>
+         <body>
+           Invalid Report link, <a href= "/report">Click here to view recent reports</a>
+         </body>
+       </html>)
+      (t
+       (with-login (:needs-login (not (can-public-view report)))
+         (render-report-page report))))))
 
 (defun render-report-page (report &rest args &key)
   (flet ((re-run (&rest new-args)
