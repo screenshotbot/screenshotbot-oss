@@ -35,33 +35,52 @@
 (markup:enable-reader)
 
 (defhandler (report-page :uri "/report/:id" :method :get) (id)
-  (if (member (string id) (list "2" "3") :test 'equal)
-      (hex:safe-redirect 'report-page :id (oid (store-object-with-id 814))))
-  (if (equal "814" (string id))
-      (hex:safe-redirect 'report-page :id (oid (store-object-with-id 814))))
-  (let ((report (ignore-errors (find-by-oid id))))
-    (cond
-      #-screenshotbot-oss
-      ((and
-        (staging-p)
-        (not report))
-       ;; TODO: T389
-       ;; We had a temporary bug where we sent out staging links in
-       ;; prod, handle this gracefully for now
-       (hunchentoot:redirect
-        (format nil "https://screenshotbot.io~a" (hunchentoot:script-name*))))
-      ((not report)
-       ;; We don't use template because this is messing up our Google
-       ;; Analytics. This is most likely trigged by Microsoft Outlook's
-       ;; preview.
-       <html>
-         <body>
-           Invalid Report link, <a href= "/report">Click here to view recent reports</a>
-         </body>
-       </html>)
-      (t
-       (with-login (:needs-login (not (can-public-view report)))
-         (render-report-page report))))))
+  (cond
+    ((member (string id) (list "2" "3" "5fd16bcf4f4b3822fd000146"
+                               "5fd16bcf4f4b3822fd000144"
+                               "814")
+             :test 'equal)
+     (expired-report))
+    (t
+     (let ((report (ignore-errors (find-by-oid id))))
+       (cond
+         #-screenshotbot-oss
+         ((and
+           (staging-p)
+           (not report))
+          ;; TODO: T389
+          ;; We had a temporary bug where we sent out staging links in
+          ;; prod, handle this gracefully for now
+          (hunchentoot:redirect
+           (format nil "https://screenshotbot.io~a" (hunchentoot:script-name*))))
+         ((not report)
+          ;; We don't use template because this is messing up our Google
+          ;; Analytics. This is most likely trigged by Microsoft Outlook's
+          ;; preview.
+          <html>
+          <body>
+          Invalid Report link, <a href= "/report">Click here to view recent reports</a>
+          </body>
+          </html>)
+         (t
+          (with-login (:needs-login (not (can-public-view report)))
+            (render-report-page report))))))))
+
+(defun expired-report ()
+  <app-template>
+    <div class= "card mt-3" style= "max-width: 40em" >
+      <div class= "card-header">
+        <h3 class= "mt-0" >Expired report</h3>
+      </div>
+      <div class= "card-body">
+        This report is expired! If you're here from GitHub, please reach out to us at <a href= "mailto:support@screenshotbot.io">support@screenshotbot.io</a> for a more recent demo.
+      </div>
+
+      <div class= "card-footer">
+        <a href= "/" class = "btn btn-lg btn-primary">Home</a>
+      </div>
+    </div>
+  </app-template>)
 
 (defun render-report-page (report &rest args &key)
   (flet ((re-run (&rest new-args)
