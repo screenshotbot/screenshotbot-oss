@@ -39,7 +39,7 @@
         (finish-output out)
         t)
     (error (e)
-      (format out "FAILURE~%")
+      (format out "FAILURE [~a]~%" e)
       (finish-output out)
       nil)))
 
@@ -50,7 +50,13 @@
           collect (health-check-name health-check) into failed
         finally
            (progn
-             (format out "All health checks done~%")
+             (cond
+               (failed
+                (format out "=======================~%")
+                (format out "HEALTH CHECKS FAILED!!!~%")
+                (format out "=======================~%"))
+               (t
+                (format out "All health checks done~%")))
              (return
                (values (not failed) failed)))))
 
