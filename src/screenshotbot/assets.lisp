@@ -108,7 +108,8 @@ rm -f $INSTALLER
                                                               name suffix))
                    (generate)))
        (add-datastore-hook
-        #'generate))
+        #'generate
+          :immediate t))
 
      (defhandler (nil :uri ,(format nil "/~a.sh" name) :html nil) ()
        (setf (hunchentoot:content-type*) "application/x-sh")

@@ -37,9 +37,14 @@
 (defvar *datastore-hooks* nil)
 (defvar *calledp* nil)
 
-(defun add-datastore-hook (fn)
-  (unless *calledp*
-   (pushnew fn *datastore-hooks*)))
+(defun add-datastore-hook (fn &key immediate)
+  "Add a hook, if :immediate is set, and the store is already active the
+ callback is called immediately."
+  (cond
+   ((not *calledp*)
+    (pushnew fn *datastore-hooks*))
+   (immediate
+    (funcall fn))))
 
 (defun dispatch-datastore-hooks ()
   (mapc 'funcall *datastore-hooks*)
@@ -47,7 +52,7 @@
 
 (defun object-store ()
   (let* ((dir *object-store*)
-         (dir (if (or 
+         (dir (if (or
                    (str:ends-with-p "/" dir)
                    (and (uiop:os-windows-p) (str:ends-with-p "\\" dir)))
                   dir (format nil "~a/" dir))))
