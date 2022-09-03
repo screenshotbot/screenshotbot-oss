@@ -220,8 +220,7 @@
 
 (defmethod log-crash-extras ((acceptor base-acceptor) condition)
   `(("url" .
-           ,(hunchentoot:request-uri*))
-    ("hostname" . ,(uiop:hostname))))
+           ,(hunchentoot:request-uri*))))
 
 (defmethod log-crash-extras :around ((acceptor base-acceptor) condition)
   (loop for (k . v) in (call-next-method)
