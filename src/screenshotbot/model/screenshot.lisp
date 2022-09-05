@@ -62,7 +62,7 @@
       (constant-string-with-str str)
       (make-instance 'constant-string :str str)))))
 
-(def-store-local *screenshot-cache* (make-hash-table :test 'equal))
+(def-store-local *screenshot-cache-v2* (make-hash-table :test 'equal))
 
 (defclass abstract-screenshot ()
   ())
@@ -131,7 +131,7 @@
 ;;(ensure-slot-boundp (store-objects-with-class 'screenshot) 'image)
 
 (let ((lock (bt:make-lock)))
-  (symbol-macrolet ((place (gethash (screenshot-cache-key screenshot) *screenshot-cache*)))
+  (symbol-macrolet ((place (gethash (screenshot-cache-key screenshot) *screenshot-cache-v2*)))
     (defun screenshot-add-to-cache (screenshot)
       (check-type screenshot screenshot)
       (bt:with-lock-held (lock)
