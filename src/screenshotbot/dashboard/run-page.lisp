@@ -409,12 +409,18 @@
                  </li>)
             </ul>
           </div>
-          <a href= (image-public-url (screenshot-image screenshot) :size :full-page) title= (screenshot-name screenshot) >
+          <a href= (image-public-url (screenshot-image screenshot) :size :full-page :type "webp") title= (screenshot-name screenshot)>
             ,(let ((dimensions (ignore-errors (image-dimensions (screenshot-image screenshot)))))
-               <img class= "screenshot-image run-page-image" src= (image-public-url (screenshot-image screenshot)  :size :small)
-                 width= (?. dimension-width dimensions)
-                    height= (?. dimension-height dimensions)
-                    />)
+               <picture class="">
+                 <source srcset= (image-public-url (screenshot-image screenshot) :size :small :type :png) />
+                 <:img
+                   class= "screenshot-image run-page-image"
+                   src= (image-public-url (screenshot-image screenshot)  :size :small
+                                                                       :type :webp)
+                   width= (?. dimension-width dimensions)
+                   height= (?. dimension-height dimensions)
+                    />
+               </picture>)
           </a>
         </div> <!-- end card-body-->
       </div>

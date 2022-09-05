@@ -85,22 +85,31 @@
    (str:containsp "image/webp" accept)
    (str:starts-with-p "curl" user-agent)))
 
-(defun handle-resized-image (image size &key warmup)
+(defun handle-resized-image (image size &key warmup
+                                          type)
   (cond
     (warmup
      (build-resized-image image size))
     (t
      (let ((output-file (build-resized-image
                          image size
-                         :type (if (webp-supported-p
-                                    (hunchentoot:header-in* :user-agent)
-                                    (hunchentoot:header-in* :accept))
-                                   :webp :png))))
+                         :type (cond
+                                 ((string= type "webp")
+                                  :webp)
+                                 ((string= type "png")
+                                  :png)
+                                 ((webp-supported-p
+                                     (hunchentoot:header-in* :user-agent)
+                                     (hunchentoot:header-in* :accept))
+                                  ;; This dynamic behavior doesn't work well with CDNs
+                                  :webp)
+                                 (t
+                                  :png)))))
        (handle-static-file
         output-file
         (format nil "image/~a" (pathname-type output-file)))))))
 
-(defhandler (image-blob-get :uri "/image/blob/:oid/default.webp") (oid size)
+(defhandler (image-blob-get :uri "/image/blob/:oid/default.webp") (oid size type)
   (let ((oid (encrypt:decrypt-mongoid oid)))
     (assert oid)
     (let* ((image (find-by-oid oid)))

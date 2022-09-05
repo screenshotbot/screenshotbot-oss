@@ -663,18 +663,27 @@
         :element-type 'flexi-streams:octet))
 
 
-(defmethod image-public-url ((image image) &key size)
-  (make-image-cdn-url
-   (cond
-     ((image-on-filesystem-p image)
-      (let ((args nil))
-        (when size
-          (setf args `(:size ,(string-downcase size))))
-        (apply #'make-url 'image-blob-get :oid (encrypt:encrypt-mongoid (oid-array image))
-               args)))
-     (t
-      (format nil "https://screenshotbot.s3.amazonaws.com/~a"
-              (s3-key image))))))
+(defmethod image-public-url ((image image) &key size type)
+  (let ((url
+         (cond
+           ((image-on-filesystem-p image)
+            (let ((args nil))
+              (when size
+                (setf args `(:size ,(string-downcase size))))
+              (when type
+                (setf args (list* :type (str:downcase type) args)))
+              (apply #'make-url 'image-blob-get :oid (encrypt:encrypt-mongoid (oid-array image))
+                       args)))
+           (t
+            (format nil "https://screenshotbot.s3.amazonaws.com/~a"
+                    (s3-key image))))))
+    (cond
+      (type
+       (make-image-cdn-url url))
+      (t
+       ;; the image endpoint needs to guess the type based on Accept:
+       ;; headers. So we don't cache this for now.
+       url))))
 
 (defmethod image-local-url ((image image))
   (image-public-url image))

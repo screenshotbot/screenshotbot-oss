@@ -28,7 +28,7 @@
 
 (defun cdn-for-image-url (src)
   (let ((util.cdn:*cdn-cache-key* "images5" ))
-    (if (str:starts-with-p "/image/blob/" (make-image-cdn-url src))
+    (if (str:starts-with-p "/image/blob/" src)
         src
         (util.cdn:make-cdn src))))
 
@@ -67,7 +67,7 @@
 ;; Technically should not be here, but can't think of a better place
 ;; for now.
 (markup:deftag img-with-fallback (&key class src alt loading)
-  (assert (str:ends-with-p ".webp" src))
+  (assert (str:containsp ".webp" src))
   (let ((dims (image-dimensions src)))
     <picture class=class >
       <source srcset= (cdn-for-image-url src) />
