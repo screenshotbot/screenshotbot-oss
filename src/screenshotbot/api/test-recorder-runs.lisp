@@ -51,20 +51,19 @@
        (auth:with-sessions ()
          (with-test-user (:company company
                           :user user)
-           (let ((*screenshot-cache* (make-hash-table :test #'equal)))
-             (let* ((*synchronous-promotion* t)
-                    (api-key (make-instance 'api-key :user user :company company))
-                    (img1 (make-instance 'image
-                                          :company company
-                                          :hash "foo1"))
-                    (img2 (make-instance 'image
-                                          :company company
-                                          :hash "foo2")))
-               (setf (current-user) user)
-               (assert (logged-in-p))
-               (assert (current-user))
-               (let ((*current-api-key* api-key))
-                 (&body))))))))))
+           (let* ((*synchronous-promotion* t)
+                  (api-key (make-instance 'api-key :user user :company company))
+                  (img1 (make-instance 'image
+                                        :company company
+                                        :hash "foo1"))
+                  (img2 (make-instance 'image
+                                        :company company
+                                        :hash "foo2")))
+             (setf (current-user) user)
+             (assert (logged-in-p))
+             (assert (current-user))
+             (let ((*current-api-key* api-key))
+               (&body)))))))))
 
 (defun serial-recorder-run-post (&rest args)
   (multiple-value-bind (val verify)

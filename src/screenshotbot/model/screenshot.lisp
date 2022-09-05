@@ -26,6 +26,8 @@
   (:import-from #:screenshotbot/model/image
                 #:%with-local-image
                 #:rect-as-list)
+  (:import-from #:util/store
+                #:def-store-local)
   (:export
    #:constant-string
    #:get-constant
@@ -60,7 +62,7 @@
       (constant-string-with-str str)
       (make-instance 'constant-string :str str)))))
 
-(defvar *screenshot-cache* (make-hash-table :test 'equal))
+(def-store-local *screenshot-cache* (make-hash-table :test 'equal))
 
 (defclass abstract-screenshot ()
   ())

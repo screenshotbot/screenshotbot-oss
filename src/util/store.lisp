@@ -503,7 +503,7 @@ set-differences on O and the returned value from this."
   (defun (setf get-store-local) (value name)
     (setf (a:assoc-value place name) value)))
 
-(defmacro def-store-local (name initform documentation)
+(defmacro def-store-local (name initform &optional documentation)
   "Defines a variable thats local to the current store. You cannot use
 this variable in LET forms, but you can SETF it if you like."
   `(progn
