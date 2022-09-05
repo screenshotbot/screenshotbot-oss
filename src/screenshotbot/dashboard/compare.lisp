@@ -165,23 +165,37 @@
      ,(async-diff-report :run run :to to)
      </app-template>)))
 
+(deftag picture-with-img (&key image dimensions alt class)
+  <picture>
+    <source srcset= (image-public-url image :size :full-page :type :webp) type= "image/webp" />
+    <img class= (format nil "screenshot-image change-image ~a" class) src= (image-public-url image :size :full-page :type :png)
+         loading= "lazy"
+         alt=alt
+         width= (?. dimension-width dimensions)
+         height= (?. dimension-height dimensions)
+/>
+
+  </picture>)
+
 (deftag change-image-row (&key before-image
                           after-image
                           before-dims
                           after-dims)
   <div class="change-image-row">
-    <img class= "screenshot-image change-image change-image-left" src= before-image
-         loading= "lazy"
-         alt= "before image"
-         width= (?. dimension-width before-dims)
-         height= (?. dimension-height before-dims) />
 
+    <picture-with-img
+      image=before-image
+      dimensions=before-dims
+      alt= "before image"
+      class= "change-image-left" />
     <mdi name= "arrow_forward" />
-    <img class= "screenshot-image change-image change-image-right" src= after-image
-         loading= "lazy"
-         alt= "after image"
-         width= (?. dimension-width after-dims)
-         height= (?. dimension-height after-dims) />
+
+    <picture-with-img
+      image=after-image
+      dimensions=after-dims
+      alt="after image"
+      class= "change-image-right" />
+
   </div>)
 
 (deftag change-image-row-triple (&key before-image
@@ -614,8 +628,8 @@ If the images are identical, we return t, else we return NIL."
           </li>
         </ul>
       </div>
-      <change-image-row before-image=(image-public-url (screenshot-image x) :size :full-page)
-                        after-image=(image-public-url (screenshot-image s) :size :full-page)
+      <change-image-row before-image=(screenshot-image x)
+                        after-image=(screenshot-image s)
                         before-dims= (ignore-errors (image-dimensions (screenshot-image x)))
                         after-dims= (ignore-errors (image-dimensions (screenshot-image s)))
                         />
@@ -851,10 +865,11 @@ If the images are identical, we return t, else we return NIL."
         <h4>,(progn title) </h4>
       </div>
 
-    <img class= "mt-2 screenshot-image change-image" src= (image-public-url (screenshot-image screenshot) :size :full-page) loading= "lazy"
-         alt=title
-         height= (?. dimension-height dimensions)
-         width= (?. dimension-width dimensions) />
+    <picture-with-img
+      class= "mt-2"
+      image= (screenshot-image screenshot)
+      dimensions=dimensions
+      alt=title />
     </div>))
 
 (defun no-screenshots ()

@@ -412,11 +412,11 @@
           <a href= (image-public-url (screenshot-image screenshot) :size :full-page :type "webp") title= (screenshot-name screenshot)>
             ,(let ((dimensions (ignore-errors (image-dimensions (screenshot-image screenshot)))))
                <picture class="">
-                 <source srcset= (image-public-url (screenshot-image screenshot) :size :small :type :png) />
+                 <source srcset= (image-public-url (screenshot-image screenshot) :size :small :type :webp) />
                  <:img
                    class= "screenshot-image run-page-image"
                    src= (image-public-url (screenshot-image screenshot)  :size :small
-                                                                       :type :webp)
+                                                                       :type :png)
                    width= (?. dimension-width dimensions)
                    height= (?. dimension-height dimensions)
                     />

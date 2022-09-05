@@ -28,19 +28,38 @@ function prepareReportJs () {
         console.log("Setting up mouseover");
         var img = $(this);
         var oldSrc = $(this).attr("src");
-        var newSrc = $(this).closest(".change-image-row")
-            .find(".change-image-right").attr("src");
+        var newImg = $(this).closest(".change-image-row")
+            .find(".change-image-right");
+        var newSrc = newImg.attr("src");
+
+        function findSourceTag(img) {
+            return $(img).closest("picture").find("source[type='image/webp'");
+        }
+
+        console.log("first");
+        var oldWebpSrcset = findSourceTag(this).attr("srcset");
+        console.log("second");
+        var newWebpSrcset = findSourceTag(newImg).attr("srcset");
 
         var isTouching = false;
         var isMousing = false;
 
         function setImg() {
-            var src = (isTouching || isMousing) ? newSrc : oldSrc;
+            let [src, webpSrcset] =
+                (isTouching || isMousing)
+                ? [newSrc, newWebpSrcset]
+                : [oldSrc, oldWebpSrcset];
             if (src === undefined) {
                 throw 'No src available';
             }
+
+            if (webpSrcset ==- undefined) {
+                throw 'No webp srcset available';
+            }
+
             if (!$.fx.off) {
                 $(img).attr("src", src);
+                findSourceTag(img).attr("srcset", webpSrcset);
             }
         }
 
