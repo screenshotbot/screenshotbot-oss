@@ -151,7 +151,7 @@
 (defmethod bknr.datastore:initialize-transient-instance :after ((screenshot screenshot))
   (screenshot-add-to-cache screenshot))
 
-;; (mapc 'screenshot-add-to-cache (store-objects-with-class 'screenshot))
+;; (mapc 'screenshot-add-to-cache (bknr.datastore:store-objects-with-class 'screenshot))
 
 
 (defmethod screenshot-name ((screenshot abstract-screenshot))
