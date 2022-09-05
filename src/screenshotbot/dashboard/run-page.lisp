@@ -55,6 +55,8 @@
                 #:adminp)
   (:import-from #:screenshotbot/model/company
                 #:company-admins)
+  (:import-from #:util/misc
+                #:?.)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -408,10 +410,10 @@
             </ul>
           </div>
           <a href= (image-public-url (screenshot-image screenshot) :size :full-page) title= (screenshot-name screenshot) >
-            ,(let ((dimensions (image-dimensions (screenshot-image screenshot))))
+            ,(let ((dimensions (ignore-errors (image-dimensions (screenshot-image screenshot)))))
                <img class= "screenshot-image run-page-image" src= (image-public-url (screenshot-image screenshot)  :size :small)
-                 width= (dimension-width dimensions)
-                    height= (dimension-height dimensions)
+                 width= (?. dimension-width dimensions)
+                    height= (?. dimension-height dimensions)
                     />)
           </a>
         </div> <!-- end card-body-->
