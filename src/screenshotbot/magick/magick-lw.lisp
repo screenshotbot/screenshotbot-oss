@@ -341,7 +341,7 @@
                               (WidthResource 10000)
                               (HeightResource 40000)
                               (ListLengthResource ,(* 10000 1024  1024))
-                              (MemoryResource ,(* 200 1024 1024)))
+                              (MemoryResource ,(* 2000 1024 1024)))
         do
            (check-boolean (magick-set-resource-limit name value)
                           nil)))
