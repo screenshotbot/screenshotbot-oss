@@ -12,6 +12,7 @@
         #:screenshotbot/template
         #:screenshotbot/diff-report
         #:screenshotbot/model/screenshot
+        #:screenshotbot/model/image-comparison
         #:screenshotbot/model/image
         #:screenshotbot/model/view
         #:screenshotbot/model/report
@@ -22,8 +23,6 @@
   (:import-from #:util
                 #:find-by-oid
                 #:oid)
-  (:import-from #:screenshotbot/model/image-comparison
-                #:image-comparison)
   (:import-from #:markup #:deftag)
   (:import-from #:screenshotbot/server
                 #:make-thread
@@ -96,6 +95,13 @@
    #:warmup-comparison-images))
 (in-package :screenshotbot/dashboard/compare)
 
+;; fake symbols for bknr migration
+(progn
+ '(result
+   before
+   after
+   identical-p
+   result))
 
 (markup:enable-reader)
 
@@ -227,25 +233,6 @@
     :documentation "The actual image-comparison object. You can get
     the resulting image and other context from this object")))
 
-(with-transient-copy (transient-image-comparison abstract-image-comparison)
-  (defclass image-comparison (store-object)
-    ((before :initarg :before
-             :reader image-comparison-before
-             :index-type hash-index
-             :index-reader %image-comparisons-for-before
-             :relaxed-object-reference t)
-     (after :initarg :after
-            :reader image-comparison-after
-            :relaxed-object-reference t)
-     (masks :initarg :masks
-            :reader image-comparison-masks)
-     (identical-p :initform nil
-                  :accessor identical-p
-                  :initarg :identical-p
-                  :documentation "A result inducating that the images differ only in exif data")
-     (result :initarg :result
-             :accessor image-comparison-result))
-    (:metaclass persistent-class)))
 
 (defmethod cascading-delete-p ((image image) (image-comparison image-comparison))
   "If the reference image is deleted, then delete the comparison."
