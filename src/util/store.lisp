@@ -29,7 +29,8 @@
    #:defindex
    #:validate-class
    #:with-class-validation
-   #:def-store-local))
+   #:def-store-local
+   #:location-for-oid))
 (in-package :util/store)
 
 (defvar *object-store*)
@@ -512,3 +513,21 @@ this variable in LET forms, but you can SETF it if you like."
      (define-symbol-macro
          ,name
          (get-store-local ',name))))
+
+(defmethod location-for-oid ((root pathname) (oid array))
+  (let* ((oid (coerce oid '(vector (unsigned-byte 8))))
+         (image-dir (path:catdir (bknr.datastore::store-directory
+                                     bknr.datastore:*store*)
+                                 root))
+         (p1 (ironclad:byte-array-to-hex-string (subseq oid 0 1)))
+         (p2 (ironclad:byte-array-to-hex-string (subseq oid 1 2)))
+         (p4 (ironclad:byte-array-to-hex-string (subseq oid 2))))
+    ;; The first two bytes change approximately once every 0.7 days,
+    ;; so each directory has enough space for all files generated in
+    ;; one day. That should be good enough for anybody!
+    (let ((file (path:catfile image-dir
+                              (make-pathname
+                               :directory (list :relative p1 p2)
+                               :name p4))))
+      (ensure-directories-exist file)
+      file)))

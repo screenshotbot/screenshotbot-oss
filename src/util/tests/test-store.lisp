@@ -9,6 +9,7 @@
           #:fiveam
           #:alexandria)
     (:import-from #:util/store
+                  #:location-for-oid
                   #:def-store-local
                   #:find-any-refs
                   #:register-ref
@@ -153,3 +154,20 @@
 
 (test store-local-with-a-store
   (signals unbound-variable *store-local*))
+
+
+(test location-for-oid--ensure-directory-is-writeable
+  (with-test-store ()
+    (with-open-file (file (location-for-oid  #P"foo-bar/" (mongoid:oid))
+                          :direction :output)
+      (write-string "hello" file))
+    (pass)))
+
+(test location-for-oid/expected-pathname
+  (with-test-store ()
+    (let ((pathname (location-for-oid #P "foo-bar/" #(#xab #xbc #x01 #x23
+                                                      #xab #xbc #x01 #x23
+                                                      #xab #xbc #x01 #x23))))
+      (is (str:ends-with-p
+           "foo-bar/ab/bc/0123abbc0123abbc0123"
+           (namestring pathname))))))
