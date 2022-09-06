@@ -3,8 +3,13 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/image-comparison)
 
-(ignore-errors
- (import (uiop:find-symbol* :image-comparison
-                            :screenshotbot/dashboard/compare)))
+(let ((sym (ignore-errors
+            (uiop:find-symbol* :image-comparison
+                               :screenshotbot/dashboard/compare))))
+  (when sym
+   (import sym)
+   (unintern sym :screenshotbot/dashboard/compare)
+   (import sym)))
+
 
 (uiop:export* :image-comparison *package*)
