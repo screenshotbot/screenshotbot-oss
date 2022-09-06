@@ -173,7 +173,7 @@
       (let ((*warning-count* 0))
        (handler-bind ((warning #'log-sentry))
          (let ((util.cdn:*cdn-domain*
-                 (unless (and nil (staging-p))
+                 (unless (staging-p)
                    *cdn-domain*)))
            (auth:with-sessions ()
              (push-analytics-event)
