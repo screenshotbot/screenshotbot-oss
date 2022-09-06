@@ -144,6 +144,7 @@
                :str
                :local-time
                :copy-directory
+               :ironclad/core
                :cffi
                :cl-cron)
   :components (#-mswindows (lib-source-file "store-native")
