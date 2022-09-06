@@ -122,8 +122,12 @@
 (defparameter +image-state-filesystem+ 1
   "Image is saved on the local filesystem")
 
+(defclass abstract-image ()
+  ())
+
 (with-class-validation
- (defclass image (object-with-oid)
+ (defclass image (object-with-oid
+                  abstract-image)
    ((link :initarg :link)
     (hash :initarg :hash
           :reader image-hash ;; NOTE: Returns a vector!
