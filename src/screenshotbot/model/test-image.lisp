@@ -32,7 +32,7 @@
                 #:map-unequal-pixels-on-file
                 #:map-unequal-pixels-arr
                 #:%map-unequal-pixels
-                #:fake-mask-rect
+                #:transient-mask-rect
                 #:map-unequal-pixels)
   (:import-from #:screenshotbot/magick
                 #:run-magick)
@@ -150,14 +150,14 @@
                 (unequal-pixels arr1 arr2)))
      (is (equal nil
                 (unequal-pixels arr1 arr2
-                                :masks (list (make-instance 'fake-mask-rect
+                                :masks (list (make-instance 'transient-mask-rect
                                                             :top 1
                                                             :left 1
                                                             :height 1
                                                             :width 1)))))
      (is (equal `((1 . 1))
                 (unequal-pixels arr1 arr2
-                                :masks (list (make-instance 'fake-mask-rect
+                                :masks (list (make-instance 'transient-mask-rect
                                                             :top 0
                                                             :left 0
                                                             :height 1

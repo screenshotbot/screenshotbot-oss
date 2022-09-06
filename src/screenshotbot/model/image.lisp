@@ -57,6 +57,8 @@
                 #:with-class-validation)
   (:import-from #:screenshotbot/cdn
                 #:make-image-cdn-url)
+  (:import-from #:screenshotbot/model/transient-object
+                #:with-transient-copy)
   ;; classes
   (:export
    #:image
@@ -176,27 +178,17 @@
 (defmethod print-object ((self image) stream)
   (format stream "#<IMAGE ~a>" (store-object-id self)))
 
-(defclass mask-rect (store-object)
-  ((top :initarg :top
-        :accessor mask-rect-top)
-   (left :initarg :left
-         :accessor mask-rect-left)
-   (height :initarg :height
-           :accessor mask-rect-height)
-   (width :initarg :width
-          :accessor mask-rect-width))
-  (:metaclass persistent-class))
-
-(defclass fake-mask-rect ()
-  ((top :initarg :top
-        :accessor mask-rect-top)
-   (left :initarg :left
-         :accessor mask-rect-left)
-   (height :initarg :height
-           :accessor mask-rect-height)
-   (width :initarg :width
-          :accessor mask-rect-width))
-  (:documentation "MASK-RECT for testing"))
+(with-transient-copy (transient-mask-rect abstract-mask-rect)
+  (defclass mask-rect (store-object)
+    ((top :initarg :top
+          :accessor mask-rect-top)
+     (left :initarg :left
+           :accessor mask-rect-left)
+     (height :initarg :height
+             :accessor mask-rect-height)
+     (width :initarg :width
+            :accessor mask-rect-width))
+    (:metaclass persistent-class)))
 
 (defmethod rect-as-list ((rect mask-rect))
   (with-slots (top left height width) rect
