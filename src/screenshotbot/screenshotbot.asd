@@ -143,6 +143,7 @@
    (:module "model"
     :serial t
     :components ((:file "core")
+                 (:file "transient-object")
                  (:file "company")
                  (:file "user")
                  (:file "invite")
@@ -296,6 +297,7 @@
                              (:file "test-common")))
                (:module "model"
                 :components ((:file "test-core")
+                             (:file "test-transient-object")
                              (:file "test-screenshot")
                              (:file "test-user")
                              (:file "test-channel")
