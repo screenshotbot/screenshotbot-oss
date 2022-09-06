@@ -22,6 +22,8 @@
   (:import-from #:util
                 #:find-by-oid
                 #:oid)
+  (:import-from #:screenshotbot/model/image-comparison
+                #:image-comparison)
   (:import-from #:markup #:deftag)
   (:import-from #:screenshotbot/server
                 #:make-thread

@@ -152,6 +152,7 @@
                  (:file "recorder-run")
                  (:file "report" :depends-on ("recorder-run"))
                  (:file "image")
+                 (:file "image-comparison")
                  (:file "channel")
                  (:file "screenshot")
                  (:file "api-key")
