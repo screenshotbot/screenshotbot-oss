@@ -5,7 +5,6 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-
 (defpackage :screenshotbot/model/test-transient-object
   (:use #:cl
         #:fiveam)
@@ -49,3 +48,10 @@
       (with-transaction ()
         (setf (obj-value obj) :arg2))
       (is (eql :arg2 (obj-value obj))))))
+
+(test transactions-are-okay-even-for-transient-objects
+  (with-fixture state ()
+    (let ((obj (make-instance 'mem-obj)))
+      (with-transaction ()
+        (setf (obj-value obj) :arg2))
+      (pass))))
