@@ -117,7 +117,7 @@
       (setf (hunchentoot:header-out :content-type) "image/png")
       (cond
         (size
-         (handle-resized-image image size))
+         (handle-resized-image image size :type type))
         (t
          (with-local-image (file image)
            (handle-static-file file)))))))
