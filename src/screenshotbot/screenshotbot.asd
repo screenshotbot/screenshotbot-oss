@@ -304,6 +304,7 @@
                              (:file "test-channel")
                              (:file "test-company")
                              (:file "test-image")
+                             (:file "test-image-comparison")
                              (:file "test-commit-graph")
                              (:file "test-acceptable")))
                (:module "webdriver"
