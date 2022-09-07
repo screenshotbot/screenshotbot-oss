@@ -45,7 +45,9 @@
   we're using our default CDN, but we might change this in the
   future. For instance, separate installations might have a different
   CDN."
-  (util.cdn:make-cdn url))
+  ;; si: screenshot-image
+  (let ((util.cdn:*cdn-cache-key* "si-1" ))
+    (util.cdn:make-cdn url)))
 
 (defvar *dim-cache* (make-hash-table :test #'equal)
   "Cache of image dimensions for every possible image.")
