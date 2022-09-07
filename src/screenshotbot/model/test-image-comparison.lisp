@@ -21,6 +21,9 @@
                 #:blob-pathname)
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
+  (:import-from #:screenshotbot/model/image-comparison
+                #:find-existing-image-comparison
+                #:find-image-comparison-on-images)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-image-comparison)
 
@@ -51,3 +54,25 @@
     (uiop:with-temporary-file (:pathname out :type "png")
       (is-true
        (do-image-comparison (make-screenshot im1) (make-screenshot im2) out nil)))))
+
+(test find-image-comparison-on-images
+  (with-fixture state ()
+    (let ((before (make-image :pathname im1))
+          (after (make-image :pathname im2)))
+      ;; this will create a new image-comparison
+      (let ((result (find-image-comparison-on-images before after nil)))
+        (is-true result)
+        (is (eql result (find-image-comparison-on-images before after nil)))))))
+
+
+(test find-existing-image-comparison
+  (with-fixture state ()
+    (let ((before (make-image :pathname im1))
+          (after (make-image :pathname im2)))
+      (is (null (find-existing-image-comparison before after nil)))
+      (let ((expected (make-instance 'image-comparison
+                                      :before before
+                                      :after after
+                                      :masks nil)))
+        (is (eql expected (find-existing-image-comparison
+                           before after nil)))))))

@@ -89,6 +89,11 @@ If the images are identical, we return t, else we return NIL."
                  (return-from check nil)))
               t)))))))
 
+(defun find-existing-image-comparison (before after masks)
+  (loop for comparison in (%image-comparisons-for-before before)
+        if (and (eql after (image-comparison-after comparison))
+                (equal masks (image-comparison-masks comparison)))
+          return comparison))
 
 (defmethod find-image-comparison-on-images ((before image)
                                             (after image)
@@ -99,10 +104,7 @@ If the images are identical, we return t, else we return NIL."
   returns true if the images are completely identical, or nil
   otherwise"
   (flet ((find ()
-           (loop for comparison in (%image-comparisons-for-before before)
-                 if (and (eql after (image-comparison-after comparison))
-                         (equal masks (image-comparison-masks comparison)))
-                   return comparison)))
+           (find-existing-image-comparison before after masks)))
     (or
      (bt:with-lock-held (*lock*)
        (find))
