@@ -7,7 +7,9 @@
                 #:object-with-oid)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:with-transient-copy))
+   #:with-transient-copy
+   #:make-transient-clone
+   #:cannot-make-transient))
 (in-package :screenshotbot/model/transient-object)
 
 (defun remove-index-args (slot-def)
@@ -40,3 +42,12 @@
         (,keyword ,class-name (,@parent-classes ,parent-class)
                   ,slot-defs
                   ,@options)))))
+
+(define-condition cannot-make-transient (error)
+  ((obj :initarg :obj)))
+
+(defgeneric make-transient-clone (obj)
+  (:documentation "Make a transient clone of a given object. The rules of creating the
+ clone might vary depending on the object and business logic, so be
+ sure to look at the implementation details for the object that you're
+ interested in."))

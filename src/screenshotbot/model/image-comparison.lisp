@@ -4,6 +4,7 @@
   (:import-from #:bknr.datastore
                 #:persistent-class)
   (:import-from #:screenshotbot/model/transient-object
+                #:make-transient-clone
                 #:with-transient-copy)
   (:import-from #:bknr.datastore
                 #:store-object)
@@ -21,6 +22,10 @@
                 #:with-auto-restart)
   (:import-from #:bknr.datastore
                 #:delete-object)
+  (:import-from #:util/object-id
+                #:oid-array)
+  (:import-from #:util/store
+                #:location-for-oid)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -52,6 +57,34 @@
      (result :initarg :result
              :accessor image-comparison-result))
     (:metaclass persistent-class)))
+
+(defun transient-objects-for-before (before)
+  (let ((file (location-for-before-image before)))
+    (when (path:-e file)
+      (cl-store:restore file))))
+
+(defmethod make-transient-clone ((self image-comparison))
+  (make-instance
+   'transient-image-comparison
+    :before (make-transient-clone (image-comparison-before self))
+    :after (make-transient-clone (image-comparison-after self))
+    :masks (mapcar #'make-transient-clone (image-comparison-masks self))
+    :identical-p (identical-p self)
+    :result (make-transient-clone (image-comparison-result self))))
+
+(defmethod location-for-before-image ((self image))
+  (location-for-oid #P "cl-store/image-comparisons/"
+                    (oid-array self)))
+
+(defmethod make-transient ((self image-comparison))
+  "Persist the image comparison to disk, and delete the bknr object"
+  (let ((old (transient-objects-for-before (image-comparison-before self))))
+    (let ((filename (location-for-before-image (image-comparison-before self))))
+      (uiop:with-staging-pathname (filename)
+        (cl-store:store (list* (make-transient-clone self)
+                               old)
+                        filename))
+      (bknr.datastore:delete-object self))))
 
 (defun do-image-comparison (before-image
                             after-image

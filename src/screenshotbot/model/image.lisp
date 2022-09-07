@@ -58,7 +58,11 @@
   (:import-from #:screenshotbot/cdn
                 #:make-image-cdn-url)
   (:import-from #:screenshotbot/model/transient-object
+                #:cannot-make-transient
+                #:make-transient-clone
                 #:with-transient-copy)
+  (:import-from #:util/misc
+                #:?.)
   ;; classes
   (:export
    #:image
@@ -157,6 +161,15 @@
                    :reader image-content-type))
     (:metaclass persistent-class)))
 
+(defmethod make-transient-clone ((image image))
+  (when (%image-blob image)
+    (error 'cannot-make-transient :obj image))
+  (make-instance 'transient-image
+                 :oid (oid-array image)
+                 :hash (image-hash image)
+                 :state (%image-state image)
+                 :company (?. oid-array (company image))
+                 :verified-p (verified-p image)))
 
 (defmethod find-image ((company company) (hash string))
   (loop for image in (append
@@ -185,6 +198,13 @@
      (width :initarg :width
             :accessor mask-rect-width))
     (:metaclass persistent-class)))
+
+(defmethod make-transient-clone ((self mask-rect))
+  (make-instance 'transient-mask-rect
+                 :top (mask-rect-top self)
+                 :left (mask-rect-left self)
+                 :height (mask-rect-height self)
+                 :width (mask-rect-width self)))
 
 (defmethod rect-as-list ((rect mask-rect))
   (with-slots (top left height width) rect

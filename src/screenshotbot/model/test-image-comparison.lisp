@@ -15,6 +15,7 @@
                 #:image-comparison
                 #:do-image-comparison)
   (:import-from #:screenshotbot/model/image
+                #:mask-rect
                 #:make-image
                 #:image-blob)
   (:import-from #:bknr.datastore
@@ -22,6 +23,9 @@
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
   (:import-from #:screenshotbot/model/image-comparison
+                #:transient-objects-for-before
+                #:make-transient
+                #:%image-comparisons-for-before
                 #:find-existing-image-comparison
                 #:find-image-comparison-on-images)
   (:local-nicknames (#:a #:alexandria)))
@@ -76,3 +80,24 @@
                                       :masks nil)))
         (is (eql expected (find-existing-image-comparison
                            before after nil)))))))
+
+(test find-existing-image-comparison-transient
+  (with-fixture state ()
+    (let ((before (make-image :pathname im1))
+          (after (make-image :pathname im2)))
+      (is (null (find-existing-image-comparison before after nil)))
+      (let ((expected (make-instance 'image-comparison
+                                      :before before
+                                      :after after
+                                      :result (make-image :pathname im3)
+                                      :identical-p t
+                                      :masks (list
+                                              (make-instance 'mask-rect
+                                                             :left 0
+                                                             :top 0
+                                                             :width 10
+                                                             :height 10)))))
+        (is (equal 1 (length (%image-comparisons-for-before before))))
+        (make-transient expected)
+        (is (equal 1 (length (transient-objects-for-before before))))
+        (is (equal 0 (length (%image-comparisons-for-before before))))))))
