@@ -1,5 +1,6 @@
 (defpackage :screenshotbot/model/image-comparison
   (:use #:cl)
+  (:shadow #:find)
   (:import-from #:bknr.datastore
                 #:persistent-class)
   (:import-from #:screenshotbot/model/transient-object
