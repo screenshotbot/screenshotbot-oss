@@ -734,7 +734,7 @@
        :header <h4 class= "screenshot-title" >,(highlight-search-term search (group-title group)) </h4>)
      </div>
      </div>)
-   :num 5
+   :num 12
    :filter (lambda (group)
              (group-matches-p group search))
 
