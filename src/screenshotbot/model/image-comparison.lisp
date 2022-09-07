@@ -9,12 +9,17 @@
   (:import-from #:bknr.indices
                 #:hash-index)
   (:import-from #:screenshotbot/model/image
+                #:image-filesystem-pathname
                 #:draw-masks-in-place
                 #:with-local-image
                 #:make-image
                 #:image)
   (:import-from #:screenshotbot/magick/magick
                 #:run-magick)
+  (:import-from #:auto-restart
+                #:with-auto-restart)
+  (:import-from #:bknr.datastore
+                #:delete-object)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -125,3 +130,30 @@ If the images are identical, we return t, else we return NIL."
                               :masks masks
                               :identical-p identical-p
                               :result image)))))))))
+
+(with-auto-restart ()
+  (defmethod recreate-image-comparison ((self image-comparison))
+    (log:info "recreating: ~a" (bknr.datastore:store-object-id self))
+    (let* ((image (image-comparison-result self))
+           (pathname (image-filesystem-pathname image)))
+      (check-type image image)
+      (restart-case
+          (progn
+            (let ((before (image-comparison-before self))
+                  (after (image-comparison-after self))
+                  (masks (image-comparison-masks self)))
+              (delete-object self)
+              (find-image-comparison-on-images
+               before after masks))
+            (delete-object image)
+            (log:info "Deleting ~a" pathname)
+            (delete-file pathname))
+        (ignore-this-comparison ()
+          (values))))))
+
+
+(defmethod recreate-all-image-comparisons ()
+  (loop for image-comparison in (reverse
+                                 (bknr.datastore:store-objects-with-class 'image-comparison))
+        do
+        (recreate-image-comparison image-comparison)))

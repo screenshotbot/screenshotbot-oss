@@ -232,34 +232,6 @@
     the resulting image and other context from this object")))
 
 
-(with-auto-restart ()
-  (defmethod recreate-image-comparison ((self image-comparison))
-    (log:info "recreating: ~a" (bknr.datastore:store-object-id self))
-    (let* ((image (image-comparison-result self))
-           (blob (image-blob image)))
-      (check-type blob image-blob)
-      (check-type image image)
-      (restart-case
-          (let ((pathname (bknr.datastore:blob-pathname blob)))
-            (let ((before (image-comparison-before self))
-                  (after (image-comparison-after self))
-                  (masks (image-comparison-masks self)))
-              (delete-object self)
-              (find-image-comparison-on-images
-               before after masks))
-            (delete-object image)
-            (delete-object blob)
-            (log:info "Deleting ~a" pathname)
-            (delete-file pathname))
-        (ignore-this-comparison ()
-          (values))))))
-
-(defmethod recreate-all-image-comparisons ()
-  (loop for image-comparison in (reverse
-                                 (bknr.datastore:store-objects-with-class 'image-comparison))
-        do
-        (recreate-image-comparison image-comparison)))
-
 (defmethod find-image-comparison ((before-screenshot screenshot)
                                   (after-screenshot screenshot))
   ;; second level of caching, we're going to look through the

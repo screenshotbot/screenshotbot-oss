@@ -10,7 +10,7 @@
                 #:mask-rect
                 #:image-blob
                 #:image)
-  (:import-from #:screenshotbot/dashboard/compare
+  (:import-from #:screenshotbot/model/image-comparison
                 #:image-comparison-after
                 #:image-comparison-before
                 #:image-comparison)
