@@ -86,6 +86,8 @@
   ;; started by socketmaster
   (cond
     (*socketmaster*
+     (error "Socketmaster no longer supported, needs patched hunchentoot")
+     #+nil
      (setf (hunchentoot::acceptor-listen-socket acceptor)
            (usocket::make-stream-server-socket 3 :element-type '(unsigned-byte 8))))
     (t
