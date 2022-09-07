@@ -103,13 +103,7 @@
                            'api-upload-image-blob
                            :oid (oid image)))
                          (t
-                          (let ((blob (make-instance 's3-blob)))
-                            (with-transaction ()
-                              (setf (image-blob image)
-                                    blob)))
-                          (funcall *build-presigned-put*
-                                   *bucket*
-                                   (s3-key image)))))))
+                          (error "S3 Blob store no longer supported"))))))
     (make-instance 'upload-response
                    :id (oid image)
                    :upload-url upload-url)))

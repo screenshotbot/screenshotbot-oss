@@ -85,6 +85,8 @@
                 #:?.)
   (:import-from #:screenshotbot/model/transient-object
                 #:with-transient-copy)
+  (:import-from #:screenshotbot/model/image-comparison
+                #:find-image-comparison-on-images)
   (:export
    #:diff-report
    #:render-acceptable
