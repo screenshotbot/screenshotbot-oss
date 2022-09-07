@@ -99,6 +99,7 @@
                               collect (format nil "~d" i)))
        (usocket:socket-close socket)))))
 
+#+nil
 (defun get-local-name (service)
   "Not currently in use. Mostly because we're hardcoding names in the
 squid config, so if we do this we'd have to dynamically update squid

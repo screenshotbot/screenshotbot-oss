@@ -20,6 +20,7 @@
   (:import-from #:screenshotbot/user-api
                 #:current-company)
   (:import-from #:screenshotbot/model/image
+                #:image-blob
                 #:image-filesystem-pathname
                 #:image-on-filesystem-p
                 #:update-image
