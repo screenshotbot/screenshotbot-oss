@@ -11,11 +11,11 @@
                 #:with-test-store)
   (:import-from #:util/testing
                 #:with-fake-request)
-  (:import-from #:screenshotbot/model/image
-                #:make-image-comparison
+  (:import-from #:screenshotbot/model/image-comparison
                 #:image-comparison
                 #:do-image-comparison)
   (:import-from #:screenshotbot/model/image
+                #:make-image
                 #:image-blob)
   (:import-from #:bknr.datastore
                 #:blob-pathname)
