@@ -11,7 +11,8 @@
                 #:with-test-store)
   (:import-from #:util/testing
                 #:with-fake-request)
-  (:import-from #:screenshotbot/model/image-comparison
+  (:import-from #:screenshotbot/model/image
+                #:make-image-comparison
                 #:image-comparison
                 #:do-image-comparison)
   (:import-from #:screenshotbot/model/image
@@ -34,10 +35,7 @@
              (im3 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-3.png"))
              (objs))
          (labels ((make-screenshot (img)
-                    (let* ((image-blob (make-instance 'image-blob))
-                           (image (make-instance 'screenshotbot/model:image
-                                                  :blob image-blob)))
-                      (uiop:copy-file img (blob-pathname image-blob))
+                    (let* ((image (make-image :pathname img)))
                       (make-instance 'screenshot
                                       :name "foobar"
                                       :image image))))
