@@ -601,12 +601,6 @@
                            (image-format img2))))
      (images-equal-by-content-p img1 img2 :masks masks))))
 
-;; Please delete in the future, only for a migration
-(defmethod bknr.datastore:initialize-transient-instance :after ((image image)))
-
-;; Please delete in the future, only for a migration
-(defmethod (setf company) :after ((company company) (image image)))
-
 (defmethod image-hash ((image local-image))
   ;; this is probably only used for tests... hopefully doesn't hit in
   ;; prod.
