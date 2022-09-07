@@ -18,6 +18,9 @@
                 #:store-object)
   (:import-from #:bknr.datastore
                 #:with-transaction)
+  (:import-from #:util/object-id
+                #:oid-array
+                #:object-with-oid)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-transient-object)
 
@@ -55,3 +58,14 @@
       (with-transaction ()
         (setf (obj-value obj) :arg2))
       (pass))))
+
+(with-transient-copy (mem-obj-id abstract-obj-id)
+  (defclass obj-id (object-with-oid)
+    ((value :initarg :value
+            :accessor obj-value))
+    (:metaclass persistent-class)))
+
+(test object-with-oid
+  (with-fixture state ()
+    (let ((obj (make-instance 'mem-obj-id :oid #(22 22))))
+      (is (equalp #(22 22) (oid-array obj))))))

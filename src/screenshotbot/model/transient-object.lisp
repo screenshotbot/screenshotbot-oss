@@ -2,6 +2,9 @@
   (:use #:cl)
   (:import-from #:util/store
                 #:with-class-validation)
+  (:import-from #:util/object-id
+                #:oid-array
+                #:object-with-oid)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-transient-copy))
@@ -28,7 +31,10 @@
         ())
 
       (defclass ,transient-class (,parent-class)
-        ,(mapcar #'remove-index-args slot-defs))
+        (,@ (when (member 'object-with-oid parent-classes)
+              `((oid :initarg :oid
+                     :accessor oid-array)))
+         ,@(mapcar #'remove-index-args slot-defs)))
 
       (with-class-validation
         (,keyword ,class-name (,@parent-classes ,parent-class)
