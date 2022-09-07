@@ -125,41 +125,37 @@
 (defparameter +image-state-filesystem+ 1
   "Image is saved on the local filesystem")
 
-(defclass abstract-image ()
-  ())
-
-(with-class-validation
- (defclass image (object-with-oid
-                  abstract-image)
-   ((link :initarg :link)
-    (hash :initarg :hash
-          :reader image-hash ;; NOTE: Returns a vector!
-          :index-type hash-index
-          :index-initargs (:test 'equalp)
-          :index-reader images-for-original-hash)
-    (state :initarg :state
-           :initform nil
-           :accessor %image-state
-           :documentation "The state of the image. We use integers
+(with-transient-copy (transient-image abstract-image)
+  (defclass image (object-with-oid)
+    ((link :initarg :link)
+     (hash :initarg :hash
+           :reader image-hash ;; NOTE: Returns a vector!
+           :index-type hash-index
+           :index-initargs (:test 'equalp)
+           :index-reader images-for-original-hash)
+     (state :initarg :state
+            :initform nil
+            :accessor %image-state
+            :documentation "The state of the image. We use integers
            because they're cheaper to parse in bknr.datastore, and
            image objects are the largest number of objects in the
            store.")
-    (blob
-     :initarg :blob
-     :accessor %image-blob ;; don't access directly!
-     :initform nil)
-    (company
-     :initarg :company
-     :accessor company
-     :initform nil)
-    (verified-p
-     :accessor verified-p
-     :initform nil
-     :initarg :verified-p
-     :documentation "If we have verified that this image was uploaded")
-    (content-type :initarg :content-type
-                  :reader image-content-type))
-   (:metaclass persistent-class)))
+     (blob
+      :initarg :blob
+      :accessor %image-blob ;; don't access directly!
+      :initform nil)
+     (company
+      :initarg :company
+      :accessor company
+      :initform nil)
+     (verified-p
+      :accessor verified-p
+      :initform nil
+      :initarg :verified-p
+      :documentation "If we have verified that this image was uploaded")
+     (content-type :initarg :content-type
+                   :reader image-content-type))
+    (:metaclass persistent-class)))
 
 
 (defmethod find-image ((company company) (hash string))
