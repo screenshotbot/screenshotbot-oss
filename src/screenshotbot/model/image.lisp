@@ -165,10 +165,10 @@
   (when (%image-blob image)
     (error 'cannot-make-transient :obj image))
   (make-instance 'transient-image
-                 :oid (oid-array image)
+                 :oid (oid image)
                  :hash (image-hash image)
                  :state (%image-state image)
-                 :company (?. oid-array (company image))
+                 :company (?. oid (company image))
                  :verified-p (verified-p image)))
 
 (defmethod find-image ((company company) (hash string))
