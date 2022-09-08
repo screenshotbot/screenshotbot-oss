@@ -112,7 +112,6 @@
          if (or
              (not (image-on-filesystem-p result))
              (let ((file (image-filesystem-pathname result)))
-               (log:info "Got ~a ~a" (file-write-date file) threshold)
                (assert (path:-e file))
                (< (file-write-date file) threshold)))
            collect ic)))
