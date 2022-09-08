@@ -299,6 +299,7 @@
                (:module "model"
                 :components ((:file "test-core")
                              (:file "test-transient-object")
+                             (:file "test-recorder-run")
                              (:file "test-screenshot")
                              (:file "test-user")
                              (:file "test-channel")

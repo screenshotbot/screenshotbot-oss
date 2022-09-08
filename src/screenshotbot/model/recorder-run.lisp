@@ -26,7 +26,10 @@
                 #:recorder-run-commit
                 #:activep)
   (:import-from #:util/store
+                #:location-for-oid
                 #:with-class-validation)
+  (:import-from #:util/object-id
+                #:oid-array)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -68,6 +71,10 @@
  (defclass promotion-log (bknr.datastore:blob)
    ()
    (:metaclass persistent-class)))
+
+(defclass transient-promotion-log ()
+  ((oid-array :initarg :oid-array
+              :reader oid-array)))
 
 (with-class-validation
  (defclass recorder-run (object-with-oid)
@@ -218,15 +225,20 @@
 
 (let ((lock (bt:make-lock)))
   (defmethod promotion-log ((run recorder-run))
-    (flet ((val () (%promotion-log run)))
-     (or
-      (val)
-      (bt:with-lock-held (lock)
-        (or
-         (val)
-         (with-transaction ()
-           (setf (%promotion-log run)
-                 (make-instance 'promotion-log)))))))))
+    (cond
+      ((%promotion-log run)
+       (flet ((val () (%promotion-log run)))
+         (or
+          (val)
+          (bt:with-lock-held (lock)
+            (or
+             (val)
+             (with-transaction ()
+               (setf (%promotion-log run)
+                     (make-instance 'promotion-log))))))))
+      (t
+       (make-instance 'transient-promotion-log
+                      :oid-array (oid-array run))))))
 
 ;; (loop for run in (store-objects-with-class 'recorder-run) if (recorder-run-channel run) do (pushnew run (channel-runs (recorder-run-channel run))))
 (let ((lock (bt:make-lock)))
@@ -253,3 +265,27 @@
 
 (defmethod (setf activep) (val (run recorder-run))
   (error "Old method, set active-run on channel directly"))
+
+(defmethod bknr.datastore:blob-pathname ((self transient-promotion-log))
+  (ensure-directories-exist
+   (location-for-oid #P"promotion-logs/"
+                     (oid-array self))))
+
+;; Migration
+(defun convert-old-promotion-logs ()
+  (loop for run in (bknr.datastore:store-objects-with-class 'recorder-run)
+        for promotion-log = (%promotion-log run)
+        if (typep promotion-log 'promotion-log)
+          do
+             (let ((pathname (bknr.datastore:blob-pathname promotion-log)))
+              (restart-case
+                  (progn
+                    (with-transaction ()
+                      (setf (%promotion-log run) nil))
+                    (when (path:-e pathname)
+                      (rename-file
+                       pathname
+                       (bknr.datastore:blob-pathname (promotion-log run))))
+                    (bknr.datastore:delete-object promotion-log))
+                (ignore-this-blob ()
+                  (values))))))
