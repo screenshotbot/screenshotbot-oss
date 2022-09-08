@@ -99,7 +99,8 @@
    #:make-image
    #:image-on-filesystem-p
    #:image-filesystem-pathname
-   #:update-image))
+   #:update-image
+   #:mask=))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -165,7 +166,7 @@
   (when (%image-blob image)
     (error 'cannot-make-transient :obj image))
   (make-instance 'transient-image
-                 :oid (oid image)
+                 :oid (oid-array image)
                  :hash (image-hash image)
                  :state (%image-state image)
                  :company (?. oid (company image))
@@ -199,6 +200,19 @@
             :accessor mask-rect-width))
     (:metaclass persistent-class)))
 
+(defmethod mask= ((a abstract-mask-rect) (b abstract-mask-rect))
+  (or
+   (eql a b)
+   (every #'identity
+    (loop for fn in (list #'mask-rect-top
+                          #'mask-rect-left
+                          #'mask-rect-height
+                          #'mask-rect-width)
+          collect
+          (eql
+           (funcall fn a)
+           (funcall fn b))))))
+
 (defmethod make-transient-clone ((self mask-rect))
   (make-instance 'transient-mask-rect
                  :top (mask-rect-top self)
@@ -218,14 +232,17 @@
     (%s3-key s3-blob) ;; old objects
     (bknr.datastore:store-object-id s3-blob))))
 
-(defmethod image-on-filesystem-p ((image image))
+(defmethod image-on-filesystem-p ((image abstract-image))
   "Is the image stored on the local filesystem."
   (or
    (eql +image-state-filesystem+ (%image-state image))
    (null (%image-blob image))
    (typep (%image-blob image) 'image-blob)))
 
-(defmethod image-filesystem-pathname ((image image))
+(defmethod image-on-filesystem-p ((image image))
+  (call-next-method))
+
+(defmethod image-filesystem-pathname ((image abstract-image))
   "If the image is stored on the current file system, return the
   pathname to the image. If it's stored remotely, raise an error!"
   (assert (image-on-filesystem-p image))
@@ -239,10 +256,17 @@
      ;; what you're asking for!
      (local-location-for-oid (oid-array image)))))
 
+;; todo: remove
+(defmethod image-filesystem-pathname ((image image))
+  (call-next-method))
+
 (defmethod image-not-uploaded-yet-p ((image image))
   (and
    (eql nil (%image-state image))
    (not (%image-blob image))))
+
+(defmethod image-not-uploaded-yet-p ((image transient-image))
+  nil)
 
 (defclass local-image (image)
   ((url :initarg :url
@@ -250,7 +274,7 @@
   (:metaclass persistent-class)
   (:documentation "An IMAGE, that's used only for testing purposes locally"))
 
-(defmethod %with-local-image ((image image) fn)
+(defmethod %with-local-image ((image abstract-image) fn)
   (cond
     ((image-not-uploaded-yet-p image)
      (error "no image uploaded yet for ~a" image))
@@ -263,6 +287,10 @@
          (uiop:copy-stream-to-stream remote s :element-type 'flexi-streams:octet))
        (finish-output s)
        (funcall fn p)))))
+
+;; todo: remove
+(defmethod %with-local-image ((image image) fn)
+  (call-next-method))
 
 (defmethod %with-local-image ((image local-image) fn)
   ;; this could be bad if users have a way of creating local-images,
@@ -657,7 +685,7 @@
         :element-type 'flexi-streams:octet))
 
 
-(defmethod image-public-url ((image image) &key size type)
+(defmethod image-public-url ((image abstract-image) &key size type)
   (let ((url
          (cond
            ((image-on-filesystem-p image)
@@ -678,6 +706,9 @@
        ;; the image endpoint needs to guess the type based on Accept:
        ;; headers. So we don't cache this for now.
        url))))
+
+(defmethod image-public-url ((image image) &key size type)
+  (call-next-method))
 
 (defmethod image-local-url ((image image))
   (image-public-url image))

@@ -11,6 +11,7 @@
   (:import-from #:bknr.indices
                 #:hash-index)
   (:import-from #:screenshotbot/model/image
+                #:mask=
                 #:image-filesystem-pathname
                 #:draw-masks-in-place
                 #:with-local-image
@@ -23,6 +24,7 @@
   (:import-from #:bknr.datastore
                 #:delete-object)
   (:import-from #:util/object-id
+                #:oid
                 #:oid-array)
   (:import-from #:util/store
                 #:location-for-oid)
@@ -43,7 +45,7 @@
     ((before :initarg :before
              :reader image-comparison-before
              :index-type hash-index
-             :index-reader %image-comparisons-for-before
+             :index-reader %%image-comparisons-for-before
              :relaxed-object-reference t)
      (after :initarg :after
             :reader image-comparison-after
@@ -72,6 +74,13 @@
     :identical-p (identical-p self)
     :result (make-transient-clone (image-comparison-result self))))
 
+(defun %image-comparisons-for-before (before)
+  (append
+   (let ((pathname (location-for-before-image before)))
+     (when (path:-e pathname)
+      (cl-store:restore pathname)))
+   (%%image-comparisons-for-before before)))
+
 (defmethod location-for-before-image ((self image))
   (location-for-oid #P "cl-store/image-comparisons/"
                     (oid-array self)))
@@ -85,6 +94,8 @@
                                old)
                         filename))
       (bknr.datastore:delete-object self))))
+
+;; (make-transient (bknr.datastore:store-object-with-id 701037))
 
 (defun do-image-comparison (before-image
                             after-image
@@ -130,8 +141,12 @@ If the images are identical, we return t, else we return NIL."
 
 (defun find-existing-image-comparison (before after masks)
   (loop for comparison in (%image-comparisons-for-before before)
-        if (and (eql after (image-comparison-after comparison))
-                (equal masks (image-comparison-masks comparison)))
+        if (and (string= (oid after) (oid (image-comparison-after comparison)))
+                (equal (length masks) (length (image-comparison-masks comparison)))
+                (every #'identity
+                       (loop for x in masks
+                             for y in (image-comparison-masks comparison)
+                             collect (mask= x y))))
           return comparison))
 
 (defmethod find-image-comparison-on-images ((before image)

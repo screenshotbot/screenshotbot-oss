@@ -78,10 +78,7 @@
     hex-string))
 
 
-(defmethod oid ((obj object-with-oid))
-  (with-slots (oid) obj
-    (fast-oid-str oid)))
+(defgeneric oid (obj))
 
-(defmethod oid ((obj object-with-unindexed-oid))
-  (with-slots (oid) obj
-    (Fast-oid-str oid)))
+(defmethod oid (obj)
+  (fast-oid-str (oid-array obj)))

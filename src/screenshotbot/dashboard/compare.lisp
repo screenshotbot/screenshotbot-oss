@@ -86,6 +86,8 @@
                 #:with-transient-copy)
   (:import-from #:screenshotbot/model/image-comparison
                 #:find-image-comparison-on-images)
+  (:import-from #:bknr.datastore
+                #:store-object)
   (:export
    #:diff-report
    #:render-acceptable
@@ -274,7 +276,10 @@
        (json:encode-json-to-string
         `((:identical . ,(identical-p image-comparison))
           ;; for debugging: e.g. if we need to delete the comparison
-          (:store-object-id . ,(bknr.datastore:store-object-id image-comparison))
+          (:store-object-id
+           .
+           ,(when (typep image-comparison 'store-object)
+              (bknr.datastore:store-object-id image-comparison)))
           (:zoom-to . ,(nibble-url (nibble (:name :zoom) (random-zoom-to-on-result
                                                           image-comparison))))
           (:src . ,(image-public-url (image-comparison-result image-comparison) :size size))

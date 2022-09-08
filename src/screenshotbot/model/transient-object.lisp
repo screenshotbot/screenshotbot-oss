@@ -4,6 +4,7 @@
                 #:with-class-validation)
   (:import-from #:util/object-id
                 #:oid-array
+                #:oid
                 #:object-with-oid)
   (:local-nicknames (#:a #:alexandria))
   (:export
