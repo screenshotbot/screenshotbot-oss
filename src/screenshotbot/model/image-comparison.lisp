@@ -79,11 +79,6 @@
     :identical-p (identical-p self)
     :result (make-transient-clone (image-comparison-result self))))
 
-(defun %transient-image-comparisons-for-before (before)
-  (let ((pathname (location-for-before-image before)))
-    (when (path:-e pathname)
-      (cl-store:restore pathname))))
-
 (defmethod location-for-before-image ((self image))
   (location-for-oid #P "cl-store/image-comparisons/"
                     (oid-array self)))
@@ -96,6 +91,7 @@
         (cl-store:store (list* (make-transient-clone self)
                                old)
                         filename))
+      (assert (path:-e (location-for-before-image (image-comparison-before self))))
       (log:info "Deleting: ~s" self)
       (bknr.datastore:delete-object self))))
 
@@ -174,7 +170,8 @@ If the images are identical, we return t, else we return NIL."
                   return comparison)))
     (or
      (find-in (%image-comparisons-for-before before))
-     (find-in (%transient-image-comparisons-for-before before)))))
+     (let ((transient-image-comparisons (transient-objects-for-before before)))
+       (find-in transient-image-comparisons)))))
 
 (defmethod find-image-comparison-on-images ((before image)
                                             (after image)
