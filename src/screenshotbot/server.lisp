@@ -16,6 +16,8 @@
   (:import-from #:util/threading
                 #:*warning-count*
                 #:log-sentry)
+  (:import-from #:hunchentoot-extensions
+                #:log-crash-extras)
   (:export
    #:defhandler
    #:with-login
@@ -48,7 +50,8 @@
    #:no-access-error-page
    #:*init-hooks*
    #:register-init-hook
-   #:call-init-hooks))
+   #:call-init-hooks)
+  (:local-nicknames (#:threading #:util/threading)))
 (in-package :screenshotbot/server)
 
 (defparameter *domain* "https://screenshotbot.io")
@@ -171,16 +174,21 @@
 (defun %handler-wrap (impl)
   (restart-case
       (let ((*warning-count* 0))
-       (handler-bind ((warning #'log-sentry))
-         (let ((util.cdn:*cdn-domain*
-                 (unless (staging-p)
-                   *cdn-domain*)))
-           (auth:with-sessions ()
-             (push-analytics-event)
-             (handler-case
-                 (funcall impl)
-               (no-access-error (e)
-                 (no-access-error-page)))))))
+        (let ((threading:*extras*
+                (list*
+                 (lambda (e)
+                   (log-crash-extras hunchentoot:*acceptor* e))
+                 threading:*extras*)))
+         (handler-bind ((warning #'threading:log-sentry))
+           (let ((util.cdn:*cdn-domain*
+                   (unless (staging-p)
+                     *cdn-domain*)))
+             (auth:with-sessions ()
+               (push-analytics-event)
+               (handler-case
+                   (funcall impl)
+                 (no-access-error (e)
+                   (no-access-error-page))))))))
     (retry-handler ()
       (%handler-wrap impl))))
 
