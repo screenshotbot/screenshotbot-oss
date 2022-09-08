@@ -11,6 +11,7 @@
   (:import-from #:bknr.indices
                 #:hash-index)
   (:import-from #:screenshotbot/model/image
+                #:image-on-filesystem-p
                 #:mask=
                 #:image-filesystem-pathname
                 #:draw-masks-in-place
@@ -28,6 +29,10 @@
                 #:oid-array)
   (:import-from #:util/store
                 #:location-for-oid)
+  (:import-from #:bknr.datastore
+                #:class-instances)
+  (:import-from #:bknr.datastore
+                #:store-objects-with-class)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -96,6 +101,21 @@
       (bknr.datastore:delete-object self))))
 
 ;; (make-transient (bknr.datastore:store-object-with-id 701037))
+
+(defun find-old-image-comparisons ()
+  "Finds old BKNR objects that haven't been touched in a while. It uses
+ the timestamp of te result image to determine if they have been
+ created a while ago, so it's not 100% accurate, but good enough."
+  (let ((threshold (- (get-universal-time) 0)))
+   (loop for ic in (store-objects-with-class 'image-comparison)
+         for result = (image-comparison-result ic)
+         if (or
+             (not (image-on-filesystem-p result))
+             (let ((file (image-filesystem-pathname result)))
+               (log:info "Got ~a ~a" (file-write-date file) threshold)
+               (assert (path:-e file))
+               (< (file-write-date file) threshold)))
+           collect ic)))
 
 (defun do-image-comparison (before-image
                             after-image

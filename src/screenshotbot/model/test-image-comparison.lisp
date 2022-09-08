@@ -12,10 +12,12 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/model/image-comparison
+                #:find-old-image-comparisons
                 #:%%image-comparisons-for-before
                 #:image-comparison
                 #:do-image-comparison)
   (:import-from #:screenshotbot/model/image
+                #:image-filesystem-pathname
                 #:mask-rect
                 #:make-image
                 #:image-blob)
@@ -29,7 +31,11 @@
                 #:%image-comparisons-for-before
                 #:find-existing-image-comparison
                 #:find-image-comparison-on-images)
-  (:local-nicknames (#:a #:alexandria)))
+  (:import-from #:util/macros
+                #:def-easy-macro)
+  (:local-nicknames (#:a #:alexandria)
+                    #-lispworks
+                    (#:fli #:util/fake-fli)))
 (in-package :screenshotbot/model/test-image-comparison)
 
 (util/fiveam:def-suite)
@@ -102,3 +108,39 @@
         (make-transient expected)
         (is (equal 1 (length (transient-objects-for-before before))))
         (is (equal 0 (length (%%image-comparisons-for-before before))))))))
+
+(def-easy-macro with-file-copy (&binding result file &fn fn)
+  (uiop:with-temporary-file (:pathname res :stream s)
+    (close s)
+    (delete-file res)
+    (fad:copy-file file res)
+    (funcall fn (namestring res))))
+
+#+lispworks
+(fli:define-c-struct timeval
+    (sec  :long
+          :initarg :sec)
+  (usec :long
+        :initarg :usec))
+
+#+lispworks
+(fli:define-foreign-function utimes
+    ((filename (:reference-pass :ef-mb-string))
+     (times (:c-array timeval 2)))
+  :result-type :int)
+
+#+lispworks
+(test find-old-image-comparisons
+  (with-fixture state ()
+    (fli:with-dynamic-foreign-objects ((times timeval :nelems 2 :fill 0))
+      (with-file-copy (file-1 im1)
+        (with-file-copy (file-2 im2)
+          (let* ((im-1 (make-image :pathname file-1))
+                 (cmp-1 (make-instance 'image-comparison
+                                       :result im-1))
+                 (cmp-2 (make-instance 'image-comparison
+                                       :result (make-image :pathname file-2))))
+            (utimes (namestring (image-filesystem-pathname im-1)) times)
+            (is (equal (list cmp-1)
+                       (find-old-image-comparisons)))
+            (pass)))))))
