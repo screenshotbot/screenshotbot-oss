@@ -22,6 +22,8 @@
                 #:screenshot)
   (:import-from #:bknr.indices
                 #:object-destroyed-p)
+  (:import-from #:util/object-id
+                #:creation-time-from-oid)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/cleanup)
 
@@ -57,6 +59,10 @@ don't have transaction logs.
 
 ;; (delete-orphaned-image-comparisons)
 
+(defun oldp (obj)
+  (< (creation-time-from-oid obj)
+     (- (get-universal-time) (* 7 24 3600))))
+
 (defun delete-unreferenced-images ()
   (let ((types '(screenshot
                  image
@@ -67,7 +73,9 @@ don't have transaction logs.
                   appending (bknr.datastore:store-objects-with-class type))))
       (let* ((refs (find-any-refs objects))
              (deletable (hash-set-difference objects refs
-                                             :test #'eql)))
+                                             :test #'eql))
+             (deletable
+               (remove-if-not #'oldp deletable )))
         (restart-case
             (when deletable
               (error "~d out of ~d elements can be deleted: ~S"
