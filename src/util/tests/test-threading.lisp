@@ -65,8 +65,9 @@
         #-screenshotbot-oss
         (cl-mock:if-called
          'sentry-client:capture-exception
-          (lambda (e)
-            (push e sentry-logs)))
+         (lambda (e &key extras)
+           (declare (ignore extras))
+           (push e sentry-logs)))
        (&body)))))
 
 (define-condition my-simple-warning (warning)
