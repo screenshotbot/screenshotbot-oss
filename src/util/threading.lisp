@@ -17,8 +17,7 @@
    #:safe-interrupt
    #:log-sentry
    #:*catch-errors-p*
-   #:*log-sentry-p*
-   #:*extras*)
+   #:*log-sentry-p*)
 )
 (in-package :util/threading)
 
@@ -95,18 +94,9 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
 
 (defvar *warning-count* 0)
 
-(defvar *extras* nil)
-
-(defun build-extras (condition)
-  ;; If the extras are nil, it probably means some calback is not
-  ;; returning a list
-  (ignore-errors
-   (loop for extra in *extras*
-         appending (ignore-errors (funcall extra condition)))))
-
 (defun %log-sentry (condition)
   #-screenshotbot-oss
-  (sentry-client:capture-exception condition :extras (build-extras condition)))
+  (sentry-client:capture-exception condition))
 
 (defmethod log-sentry (condition)
   (when hunchentoot:*catch-errors-p*
