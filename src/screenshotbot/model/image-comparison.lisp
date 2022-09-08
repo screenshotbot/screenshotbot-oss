@@ -106,7 +106,7 @@
   "Finds old BKNR objects that haven't been touched in a while. It uses
  the timestamp of te result image to determine if they have been
  created a while ago, so it's not 100% accurate, but good enough."
-  (let ((threshold (- (get-universal-time) 0)))
+  (let ((threshold (- (get-universal-time) (* 2 24 30 3600))))
    (loop for ic in (store-objects-with-class 'image-comparison)
          for result = (image-comparison-result ic)
          if (or
