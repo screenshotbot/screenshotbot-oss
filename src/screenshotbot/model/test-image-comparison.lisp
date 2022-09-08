@@ -13,7 +13,7 @@
                 #:with-fake-request)
   (:import-from #:screenshotbot/model/image-comparison
                 #:find-old-image-comparisons
-                #:%%image-comparisons-for-before
+                #:%image-comparisons-for-before
                 #:image-comparison
                 #:do-image-comparison)
   (:import-from #:screenshotbot/model/image
@@ -107,7 +107,7 @@
         (is (equal 1 (length (%image-comparisons-for-before before))))
         (make-transient expected)
         (is (equal 1 (length (transient-objects-for-before before))))
-        (is (equal 0 (length (%%image-comparisons-for-before before))))))))
+        (is (equal 0 (length (%image-comparisons-for-before before))))))))
 
 (def-easy-macro with-file-copy (&binding result file &fn fn)
   (uiop:with-temporary-file (:pathname res :stream s)

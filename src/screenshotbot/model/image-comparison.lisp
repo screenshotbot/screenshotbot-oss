@@ -50,7 +50,7 @@
     ((before :initarg :before
              :reader image-comparison-before
              :index-type hash-index
-             :index-reader %%image-comparisons-for-before
+             :index-reader %image-comparisons-for-before
              :relaxed-object-reference t)
      (after :initarg :after
             :reader image-comparison-after
@@ -79,12 +79,10 @@
     :identical-p (identical-p self)
     :result (make-transient-clone (image-comparison-result self))))
 
-(defun %image-comparisons-for-before (before)
-  (append
-   (let ((pathname (location-for-before-image before)))
-     (when (path:-e pathname)
-      (cl-store:restore pathname)))
-   (%%image-comparisons-for-before before)))
+(defun %transient-image-comparisons-for-before (before)
+  (let ((pathname (location-for-before-image before)))
+    (when (path:-e pathname)
+      (cl-store:restore pathname))))
 
 (defmethod location-for-before-image ((self image))
   (location-for-oid #P "cl-store/image-comparisons/"
@@ -98,9 +96,11 @@
         (cl-store:store (list* (make-transient-clone self)
                                old)
                         filename))
+      (log:info "Deleting: ~s" self)
       (bknr.datastore:delete-object self))))
 
 ;; (make-transient (bknr.datastore:store-object-with-id 701037))
+
 
 (defun find-old-image-comparisons ()
   "Finds old BKNR objects that haven't been touched in a while. It uses
@@ -115,6 +115,10 @@
                (assert (path:-e file))
                (< (file-write-date file) threshold)))
            collect ic)))
+
+(defun make-old-transient ()
+  (mapc #'make-transient (find-old-image-comparisons)))
+
 
 (defun do-image-comparison (before-image
                             after-image
@@ -159,14 +163,18 @@ If the images are identical, we return t, else we return NIL."
               t)))))))
 
 (defun find-existing-image-comparison (before after masks)
-  (loop for comparison in (%image-comparisons-for-before before)
-        if (and (string= (oid after) (oid (image-comparison-after comparison)))
-                (equal (length masks) (length (image-comparison-masks comparison)))
-                (every #'identity
-                       (loop for x in masks
-                             for y in (image-comparison-masks comparison)
-                             collect (mask= x y))))
-          return comparison))
+  (flet ((find-in (list)
+          (loop for comparison in list
+                if (and (string= (oid after) (oid (image-comparison-after comparison)))
+                        (equal (length masks) (length (image-comparison-masks comparison)))
+                        (every #'identity
+                               (loop for x in masks
+                                     for y in (image-comparison-masks comparison)
+                                     collect (mask= x y))))
+                  return comparison)))
+    (or
+     (find-in (%image-comparisons-for-before before))
+     (find-in (%transient-image-comparisons-for-before before)))))
 
 (defmethod find-image-comparison-on-images ((before image)
                                             (after image)
@@ -192,12 +200,14 @@ If the images are identical, we return t, else we return NIL."
            (bt:with-lock-held (*lock*)
              (or
               (find)
-              (make-instance 'image-comparison
-                              :before before
-                              :after after
-                              :masks masks
-                              :identical-p identical-p
-                              :result image)))))))))
+              (progn
+                (log:info "making new image-comparison")
+                (make-instance 'image-comparison
+                               :before before
+                               :after after
+                               :masks masks
+                               :identical-p identical-p
+                               :result image))))))))))
 
 (with-auto-restart ()
   (defmethod recreate-image-comparison ((self image-comparison))
