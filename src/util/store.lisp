@@ -444,7 +444,11 @@ set-differences on O and the returned value from this."
            (directories (set-difference new-directories directories :test #'equal)))
       (assert (= 1 (length directories)))
       (with-open-file (file (path:catfile (car directories) "comment.txt")
-                            :direction :output)
+                            :direction :output
+                            ;; If we recovered from an existing
+                            ;; snapshot, then the comment.txt might
+                            ;; already be here.
+                            :if-exists :supersede)
         (write-string comment file))
       (car directories))))
 
