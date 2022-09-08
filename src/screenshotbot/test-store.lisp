@@ -47,9 +47,6 @@
         (is (not (eql run updated-run)))
         (is (not (eql promo-log (promotion-log updated-run))))
         (is (eql
-             (store-object-id promo-log)
-             (store-object-id (promotion-log updated-run))))
-        (is (eql
              (%created-at run)
              (%created-at updated-run)))
         (is (equal old-oid
@@ -70,9 +67,6 @@
         (is (typep updated-run 'recorder-run))
         (is (not (eql run updated-run)))
         (is (not (eql promo-log (promotion-log updated-run))))
-        (is (eql
-             (store-object-id promo-log)
-             (store-object-id (promotion-log updated-run))))
         (is (eql
              (%created-at run)
              (%created-at updated-run)))
