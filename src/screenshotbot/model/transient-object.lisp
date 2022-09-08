@@ -6,6 +6,8 @@
                 #:oid-array
                 #:oid
                 #:object-with-oid)
+  (:import-from #:bknr.datastore
+                #:store-object)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-transient-copy
@@ -37,6 +39,9 @@
         (,@ (when (member 'object-with-oid parent-classes)
               `((oid :initarg :oid
                      :accessor oid-array)))
+         (id :initarg :id
+             :accessor transient-object-original-id
+             :documentation "The original id, for debugging purposes")
          ,@(mapcar #'remove-index-args slot-defs)))
 
       (with-class-validation
@@ -52,3 +57,8 @@
  clone might vary depending on the object and business logic, so be
  sure to look at the implementation details for the object that you're
  interested in."))
+
+(defmethod make-transient-clone :around ((self store-object))
+  (let ((ret (call-next-method)))
+    (setf (transient-object-original-id ret) (bknr.datastore:store-object-id self))
+    ret))
