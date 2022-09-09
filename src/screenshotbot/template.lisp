@@ -75,7 +75,7 @@
 (markup:deftag google-analytics ()
   #-screenshotbot-oss
   (when (analyticsp)
-    <script defer data-domain="screenshotbot.io" src="https://plausible.screenshotbot.io/js/plausible.js"></script>))
+    <:script data-domain="screenshotbot.io" src="https://plausible.screenshotbot.io/js/plausible.js" defer ></:script>))
 
 (deftag dashboard-head (&key jquery-ui
                         (title "Screenshotbot")
