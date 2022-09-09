@@ -13,7 +13,6 @@
                 #:with-fake-request)
   (:import-from #:screenshotbot/model/image-comparison
                 #:find-old-image-comparisons
-                #:%image-comparisons-for-before
                 #:image-comparison
                 #:do-image-comparison)
   (:import-from #:screenshotbot/model/image
