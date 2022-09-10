@@ -47,12 +47,14 @@
   (:import-from #:auto-restart
                 #:with-auto-restart)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:ping-image-metadata
                 #:with-wand)
   (:import-from #:util/object-id
                 #:oid-array)
   (:import-from #:util/digests
                 #:md5-file)
   (:import-from #:util/store
+                #:def-store-local
                 #:location-for-oid
                 #:with-class-validation)
   (:import-from #:screenshotbot/cdn
@@ -100,7 +102,8 @@
    #:image-on-filesystem-p
    #:image-filesystem-pathname
    #:update-image
-   #:mask=))
+   #:mask=
+   #:image-metadata))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -528,6 +531,11 @@
    #P"image-blobs/"
    oid))
 
+(defun metadata-location-for-oid (oid)
+  (location-for-oid
+   #P "cl-store/image-metadata/"
+   oid))
+
 (defun make-image (&rest args &key hash blob pathname &allow-other-keys)
   (when blob
     (error "don't specify blob"))
@@ -721,19 +729,40 @@
 (defmethod can-view ((image image) user)
   (is-user-id-same image user))
 
+(defclass metadata ()
+  ((image-format :initarg :image-format
+                 :reader metadata-image-format)
+   (dimensions :initarg :dimensions
+               :reader metadata-image-dimensions)))
+
 (defclass dimension ()
   ((height :initarg :height
            :reader dimension-height)
    (width :initarg :width
           :reader dimension-width)))
 
-(defvar *dim-cache* (make-hash-table))
+(def-store-local *metadata-cache* (make-hash-table))
+
+(defmethod image-metadata ((image abstract-image))
+  (util:or-setf
+   (gethash image *metadata-cache*)
+   (with-local-image (file image)
+     (destructuring-bind (width height type)
+         (ping-image-metadata (magick) file)
+       (assert (member type '("WEBP" "PNG" "JPEG")
+                       :test #'string=))
+       (make-instance 'metadata
+                      :image-format (intern type "KEYWORD")
+                      :dimensions
+                      (make-instance 'dimension
+                                     :height height
+                                     :width width))))))
+
+(defmethod invalidate-image-metadata ((image abstract-image))
+  (remhash image *metadata-cache*))
 
 (defmethod image-dimensions (image)
-  (util:or-setf
-   (gethash image *dim-cache*)
-   (with-local-image (file image)
-     (image-file-dimensions file))))
+  (metadata-image-dimensions (image-metadata image)))
 
 (defun image-file-dimensions (file)
   (destructuring-bind (width height) (ping-image-dimensions (magick) file)
@@ -744,39 +773,9 @@
 (defun image-format (image)
   "Get the image format of the file. This looks at the magic in the
 file content to determine the file type, not the pathname's
-type. Example output could be either \"PNG\" or \"WEBP\". If we can't
+type. Example output could be either :PNG or :WEBP. If we can't
 recognized the file, we'll return nil."
-  (with-local-image (file image)
-    ;; Calling into imagemagick is slow, so we implement our own logic
-    ;; to look into the file's magick bytes
-    (with-open-file (stream file :direction :input
-                                 :element-type '(unsigned-byte 8))
-
-
-      (let ((words (loop for i below 3
-                         collect (make-array 4 :element-type '(unsigned-byte 8)))))
-        (loop for word in words do
-          (read-sequence word stream))
-
-        (cond
-          ((and (equalp #(#x89 #x50 #x4E #x47)
-                        (elt words 0))
-                (equalp #(#x0D #x0A #x1A #x0A)
-                        (elt words 1)))
-           "PNG")
-          ((and (equalp #(#x52 #x49 #x46 #x46)
-                        (elt words 0))
-                (equalp #(#x57 #x45 #x42 #x50)
-                        (elt words 2)))
-           "WEBP")
-          (t
-           (warn "Unidentified image format with magic: ~s" words)
-           (ignore-errors
-            (str:trim
-             (run-magick
-              (list "identify" "-format" "%m" file)
-              :output 'string)))))))))
-
+  (metadata-image-format (image-metadata image)))
 
 (defun convert-all-images-to-webp ()
   "Converts all the images to lossless webp, while maintaining the
@@ -798,7 +797,7 @@ recognized the file, we'll return nil."
      (when (and
             (image-on-filesystem-p image)
             (uiop:file-exists-p (image-filesystem-pathname image))
-            (string= "PNG" (image-format image))
+            (eql :png (image-format image))
             (let ((dim (image-dimensions image)))
               (and (< (dimension-height dim) +limit+)
                    (< (dimension-width dim) +limit+))))
@@ -813,9 +812,11 @@ recognized the file, we'll return nil."
                  (png (make-pathname :type "png"
                                      :defaults path)))
              (sleep 1)
+             (invalidate-image-metadata image)
              (convert-to-lossless-webp
               (magick)
               path tmp)
+             (invalidate-image-metadata image)
              (uiop:rename-file-overwriting-target tmp path)
              (assert (uiop:file-exists-p path)))))))))
 

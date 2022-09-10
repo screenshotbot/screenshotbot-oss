@@ -24,6 +24,7 @@
                 #:screenshot-get-canonical
                 #:recorder-run-screenshots)
   (:import-from #:screenshotbot/model/image
+                #:image-metadata
                 #:%with-local-image
                 #:rect-as-list)
   (:import-from #:util/store
@@ -196,3 +197,6 @@
                             (push run result-runs)))
                          (setf last-run s)))))
     (values result result-runs)))
+
+(defmethod image-metadata ((self screenshot))
+  (image-metadata (screenshot-image self)))

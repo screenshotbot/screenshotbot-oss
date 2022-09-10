@@ -195,11 +195,11 @@
 
 (test image-format
   (with-fixture state ()
-    (is (equal "PNG" (image-format img)))
+    (is (eql :png (image-format img)))
     (uiop:with-temporary-file (:pathname webp :type "webp")
       (run-magick (list "convert" "rose:" webp))
       (let* ((image (make-image :pathname webp)))
-        (is (equal "WEBP" (image-format image)))))))
+        (is (eql :webp (image-format image)))))))
 
 (test make-image-with-filename
   (with-fixture state ()
@@ -230,7 +230,7 @@
     (flet ((types ()
              (loop for im in (class-instances 'image)
                    collect
-                   (intern (image-format im) "KEYWORD"))))
+                   (image-format im))))
       (is (equal '(:png :png :png)
                  (types)))
       (convert-all-images-to-webp)
