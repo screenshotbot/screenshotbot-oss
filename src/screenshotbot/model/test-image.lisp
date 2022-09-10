@@ -18,6 +18,7 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:screenshotbot/model/image
+                #:convert-all-images-to-webp
                 #:%image-state
                 #:+image-state-filesystem+
                 #:with-local-image
@@ -42,6 +43,8 @@
                 #:blob-pathname)
   (:import-from #:util/digests
                 #:md5-file)
+  (:import-from #:bknr.datastore
+                #:class-instances)
   (:export))
 
 (util/fiveam:def-suite)
@@ -221,3 +224,15 @@
        (with-local-image (file image)
          (is (equalp hash
                      (md5-file file))))))))
+
+(test convert-all-images-to-webp
+  (with-fixture state ()
+    (flet ((types ()
+             (loop for im in (class-instances 'image)
+                   collect
+                   (intern (image-format im) "KEYWORD"))))
+      (is (equal '(:png :png :png)
+                 (types)))
+      (convert-all-images-to-webp)
+      (is (equal '(:webp :webp :webp)
+                 (types))))))

@@ -99,6 +99,11 @@
          (unix (cl-mongo-id:get-timestamp oid-arr)))
     (unix-to-universal-time unix)))
 
+(defmethod is-recent-p ((object object-with-oid) &key (days 14))
+  (> (creation-time-from-oid object)
+     (- (get-universal-time)
+        (* days 24 3600))))
+
 (defgeneric oid (obj))
 
 (defmethod oid (obj)
