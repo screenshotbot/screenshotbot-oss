@@ -9,6 +9,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:ping-image-metadata
                 #:map-non-alpha-pixels
                 #:magick-exception-message
                 #:magick-read-image
@@ -127,3 +128,12 @@
                  (map-non-alpha-pixels wand
                                        (lambda (i j)
                                          (return-from top (cons i j)))))))))))
+
+(test ping-image-metadata
+  (with-fixture state ()
+    (is (equal '(70 46 "PNG")
+               (ping-image-metadata (make-instance 'magick-native)
+                                    rose)))
+    (is (equal '(70 46 "WEBP")
+               (ping-image-metadata (make-instance 'magick-native)
+                                    rose-webp)))))

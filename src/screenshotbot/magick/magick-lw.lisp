@@ -22,7 +22,8 @@
    #:magick-exception
    #:magick-exception-message
    #:map-non-alpha-pixels
-   #:get-non-alpha-pixels))
+   #:get-non-alpha-pixels
+   #:ping-image-metadata))
 (in-package :screenshotbot/magick/magick-lw)
 
 (defclass magick-native (abstract-magick)
@@ -267,6 +268,10 @@
     ((wand (:pointer wand)))
   :result-type :size-t)
 
+(fli:define-foreign-function (magick-get-image-format "MagickGetImageFormat")
+    ((wand (:pointer wand)))
+  :result-type (:pointer :char))
+
 (defvar +area-resource+ 1)
 
 (fli:define-foreign-function (magick-strip-image "MagickStripImage")
@@ -391,12 +396,22 @@
 
 
 (defmethod ping-image-dimensions ((magick magick-native) file)
+  (destructuring-bind (width height format)
+      (ping-image-metadata magick file)
+    (declare (ignore format))
+    (list width height)))
+
+(defmethod ping-image-metadata ((magick magick-native) file)
   (with-wand (wand)
     (check-boolean (magick-ping-image wand (namestring file))
                    wand)
     (list
      (magick-get-image-width wand)
-     (magick-get-image-height wand))))
+     (magick-get-image-height wand)
+     (let ((format (magick-get-image-format wand)))
+       (unwind-protect
+            (fli:convert-from-foreign-string format)
+         (magick-relinquish-memory format))))))
 
 
 
