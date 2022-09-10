@@ -782,7 +782,7 @@ recognized the file, we'll return nil."
   original hashes. This way, any jobs referencing the old hashes will
   still not send a new image, and we can recover a lot of disk
   space."
-  (loop for image in (bknr.datastore:store-objects-with-class 'image)
+  (loop for image in (reverse (bknr.datastore:store-objects-with-class 'image))
         for i from 0
         do
            (log:info "Converting image: ~a / ~a" i image)
