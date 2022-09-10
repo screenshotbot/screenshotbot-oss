@@ -265,7 +265,6 @@ $(".async-fetch").map(function (idx, elm) {
                     var newData = $(data["data"]);
                     $(elm).replaceWith(newData);
                     callLiveOnAttach(newData);
-                    prepareReportJs();
                 } else {
                     onError();
                 }

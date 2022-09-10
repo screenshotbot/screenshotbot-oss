@@ -25,7 +25,7 @@ function callLiveOnAttach(nodes) {
 
 function prepareReportJs () {
     setupLiveOnAttach(".change-image-left", function () {
-        console.log("Setting up mouseover");
+        console.log("Setting up mouseover", this);
         var img = $(this);
         var oldSrc = $(this).attr("src");
         var newImg = $(this).closest(".change-image-row")
