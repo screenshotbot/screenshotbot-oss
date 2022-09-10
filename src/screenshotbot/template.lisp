@@ -64,17 +64,17 @@
     <link rel= "stylesheet" href= "/assets/css/selenium.css" />))
 
 
-(defun analyticsp ()
+(defmethod analyticsp ((self installation))
+  nil)
+
+(defmethod analyticsp :around (self)
   (and
    (boundp 'hunchentoot:*request*) ;; for tests
-   (not
-    (or
-     (equal *reuben-ip* (hunchentoot:real-remote-addr))
-     (staging-p)))))
+   (call-next-method)))
 
 (markup:deftag google-analytics ()
   #-screenshotbot-oss
-  (when (analyticsp)
+  (when (analyticsp (installation))
     <:script data-domain="screenshotbot.io" src="https://plausible.screenshotbot.io/js/plausible.js" defer ></:script>))
 
 (deftag dashboard-head (&key jquery-ui

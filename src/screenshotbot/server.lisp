@@ -58,7 +58,7 @@
 (defvar *root* (util:system-source-directory :screenshotbot))
 
 (defvar *is-localhost* nil)
-(defvar *reuben-ip* "") ;; see update-reuben-ip.lisp
+
 (defvar *seleniump* nil)
 
 (defmacro defvar-with-doc (name doc)
