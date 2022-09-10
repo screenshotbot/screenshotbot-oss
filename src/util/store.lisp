@@ -518,7 +518,8 @@ this variable in LET forms, but you can SETF it if you like."
          ,name
          (get-store-local ',name))))
 
-(defmethod location-for-oid ((root pathname) (oid array))
+(defmethod location-for-oid ((root pathname) (oid array)
+                             &key suffix)
   (let* ((oid (coerce oid '(vector (unsigned-byte 8))))
          (image-dir (path:catdir (bknr.datastore::store-directory
                                      bknr.datastore:*store*)
@@ -532,6 +533,9 @@ this variable in LET forms, but you can SETF it if you like."
     (let ((file (path:catfile image-dir
                               (make-pathname
                                :directory (list :relative p1 p2)
-                               :name p4))))
+                               :name (cond
+                                       (suffix
+                                        (format nil "~a-~a" p4 suffix))
+                                       (t p4))))))
       (ensure-directories-exist file)
       file)))

@@ -171,3 +171,13 @@
       (is (str:ends-with-p
            "foo-bar/ab/bc/0123abbc0123abbc0123"
            (namestring pathname))))))
+
+(test location-for-oid/with-suffix
+  (with-test-store ()
+    (let ((pathname (location-for-oid #P "foo-bar/" #(#xab #xbc #x01 #x23
+                                                      #xab #xbc #x01 #x23
+                                                      #xab #xbc #x01 #x23)
+                                      :suffix "metadata")))
+      (is (str:ends-with-p
+           "foo-bar/ab/bc/0123abbc0123abbc0123-metadata"
+           (namestring pathname))))))
