@@ -188,7 +188,7 @@
   ;; always keep at least 7 snapshots even if they are old
   (loop for (ts . dir) in (nthcdr 7 (all-snapshots-sorted (object-store)))
         if (local-time:timestamp< ts (local-time:timestamp- (local-time:now)
-                                                            1 :month))
+                                                            14 :day))
           do
              (delete-snapshot-dir dir)))
 
