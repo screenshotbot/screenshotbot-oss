@@ -49,7 +49,7 @@
 (defparameter *favicon* "/assets/images/logo-favicon.png")
 
 (defparameter *og-image*
-  "https://screenshotbot.io/assets/images/logo-dark.webp")
+  "https://screenshotbot.io/assets/images/logo-dark-scaled.webp")
 
 (defmethod render-extra-scripts ((installation installation))
   nil)
@@ -260,6 +260,9 @@
 
       <meta property="og:image"  content= *og-image* />
       <meta property= "og:description" content= "Build Pixel Perfect Apps with Screenshot Tests" />
+      <meta property= "twitter:card" content= "summary" />
+      <meta property= "twitter:site" content="@screenshotbotio" />
+      <meta property= "twitter:title" content= "Build Pixel Perfect Apps with Screenshot Testing" />
       <meta property="twitter:image"  content= *og-image* />
       <meta property= "twitter:description" content= "Build Pixel Perfect Apps with Screenshot Tests" />
 
