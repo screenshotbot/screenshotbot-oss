@@ -214,7 +214,7 @@
             <img class= "botty-image"  src= "/assets/images/auth/botty-left.png" />
 
             <span class= "copy" >
-              &copy; 2022 Modern Interpreters Inc.
+              &copy; 2018-2022 Modern Interpreters Inc.
             </span>
           </div>
 
