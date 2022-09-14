@@ -125,6 +125,9 @@
 
         .btn-primary {
             background: black;
+            &:hover {
+                background: lighten(black, 20%);
+            }
             color: white;
             margin-bottom: 8.8rem !important;
             margin-top: 3.6rem;
@@ -132,6 +135,9 @@
 
         a.btn {
             background: #f2f2f2;
+            &:hover {
+                background: darken(#f2f2f2, 10%);
+            }
             color: black;
             margin: auto;
             line-height: 6.4rem;
