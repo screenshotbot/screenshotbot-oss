@@ -152,7 +152,8 @@
               company
               (or
                (most-recent-company (user-companies user))
-               (user-personal-company user)))))
+               (user-personal-company user)
+               (car (user-companies user))))))
        ((not (logged-in-p))
         nil)
        ((boundp '*current-api-key*)
