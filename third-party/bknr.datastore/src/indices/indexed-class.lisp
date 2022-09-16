@@ -299,43 +299,42 @@ also index subclasses of the class to which the slot belongs, default is T")
 (defvar *indexed-class-override* nil)
 
 (defmethod slot-value-using-class :before ((class indexed-class) object
-                                           (slot slot-definition))
-  (when (and (not (eql (slot-definition-name slot) 'destroyed-p))
-	     (object-destroyed-p object)
-	     (not *indexed-class-override*))
-    (error "Can not get slot ~A of destroyed object of class ~a."
-	       (slot-definition-name slot) (class-name (class-of object)))))
+                                           #-lispworks
+                                           slot
+                                           #+lispworks
+                                           (slot-name symbol))
+  #+lispworks
+  (assert (symbolp slot-name))
+  (let (#-lispworks (slot-name (slot-definition-name slot)))
+   (when (and (not (eql slot-name 'destroyed-p))
+	          (object-destroyed-p object)
+	          (not *indexed-class-override*))
+     (error "Can not get slot ~A of destroyed object of class ~a."
+	        slot-name (class-name (class-of object))))))
 
-#+lispworks
+#+lispworks ;; TODO: T393
 (defmethod slot-value-using-class ((class indexed-class) object
                                    (slot symbol))
-  (let ((slot-def (clos:find-slot-definition slot class)))
-    (unless slot-def
-      (error "Did not find slot ~S in ~S"
-             slot class))
-    (slot-value-using-class class
-                            object
-                           slot-def)))
+  (call-next-method))
 
 (defmethod (setf slot-value-using-class) :before
-    (newvalue (class indexed-class) object (slot slot-definition))
+    (newvalue (class indexed-class) object
+     #-lispworks
+     slot
+     #+lispworks
+     (slot-name symbol))
   (declare (ignore newvalue))
-  (when (and (not (eql (slot-definition-name slot) 'destroyed-p))
-	     (object-destroyed-p object)
-	     (not *indexed-class-override*))
-    (error "Can not set slot ~A of destroyed object ~a."
-	       (slot-definition-name slot) (class-name (class-of object)))))
+  (let (#-lispworks (slot-name (slot-definition-name slot)))
+   (when (and (not (eql slot-name 'destroyed-p))
+	          (object-destroyed-p object)
+	          (not *indexed-class-override*))
+     (error "Can not set slot ~A of destroyed object ~a."
+	        slot-name (class-name (class-of object))))))
 
-#+lispworks
+#+lispworks ;; TODO: T393
 (defmethod (setf slot-value-using-class)
     (newvalue (class indexed-class) object (slot symbol))
-  (let ((slot-def (clos:find-slot-definition slot class)))
-    (unless slot-def
-      (error "Did not find slot ~S in ~S"
-             slot class))
-    (setf (slot-value-using-class class object
-                                  slot-def)
-          newvalue)))
+  (call-next-method))
 
 (defmethod slot-makunbound-using-class :before ((class indexed-class) object
                                                 (slot slot-definition))

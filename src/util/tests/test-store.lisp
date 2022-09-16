@@ -26,7 +26,9 @@
   (:import-from #:bknr.datastore
                 #:all-store-objects)
   (:import-from #:bknr.indices
-                #:hash-index))
+                #:hash-index)
+  (:import-from #:bknr.datastore
+                #:delete-object))
 (in-package :util/tests/test-store)
 
 
@@ -181,3 +183,19 @@
       (is (str:ends-with-p
            "foo-bar/ab/bc/0123abbc0123abbc0123-metadata"
            (namestring pathname))))))
+
+(test cant-access-deleted-object-slots
+  "This is checking some changes we have in bknr.datastore. In particular,
+ making sure our slot-value-using-class is correctly wired. (See
+ indexed-class.lisp or D5784)"
+  (with-test-store ()
+    (let ((obj (make-instance 'dummy-class :name "foo")))
+      (is (equal "foo" (slot-value obj 'name)))
+      (delete-object obj)
+      (handler-case
+          (progn
+           (slot-value obj 'name)
+           (fail "expected error"))
+        (error (e)
+          (is (str:containsp "Can not get slot NAME of destroyed"
+                             (format nil "~a" e))))))))
