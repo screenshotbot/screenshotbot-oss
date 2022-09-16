@@ -239,6 +239,7 @@
   (let ((branch (or branch (master-branch channel))))
     (let ((run (active-run channel branch)))
       (loop while run
+            for i from 0 to 1000
             collect (unwind-protect
                          run
                       (setf run (recorder-previous-run run)))))))
