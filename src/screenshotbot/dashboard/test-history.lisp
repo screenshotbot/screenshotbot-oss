@@ -13,7 +13,9 @@
   (:import-from #:./history
                 #:render-history)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:screenshotbot/screenshot-api
+                #:get-screenshot-history))
 
 (util/fiveam:def-suite)
 
@@ -24,20 +26,25 @@
   (make-instance 'test-image))
 
 (test simple-render-history
-  (with-fake-request ()
-    (auth:with-sessions ()
-     (render-history
-      :screenshots (list (make-instance 'my-screenshot
-                                         :name "one")
-                         (make-instance 'my-screenshot
-                                         :name "one")
-                         (make-instance 'my-screenshot
-                                         :name "one"))
-      :channel (make-instance 'test-channel)
-      :runs (list (make-instance 'test-recorder-run
-                                  :commit "one")
-                  (make-instance 'test-recorder-run
-                                  :commit "two")
-                  (make-instance 'test-recorder-run
-                                  :commit "three")))))
+  (cl-mock:with-mocks ()
+    (cl-mock:if-called 'get-screenshot-history
+                        (lambda (channel screenshot-name)
+                          (values
+                           (list (make-instance 'my-screenshot
+                                             :name "one")
+                             (make-instance 'my-screenshot
+                                             :name "one")
+                             (make-instance 'my-screenshot
+                                             :name "one"))
+                           (list (make-instance 'test-recorder-run
+                                                 :commit "one")
+                                 (make-instance 'test-recorder-run
+                                                 :commit "two")
+                                 (make-instance 'test-recorder-run
+                                                 :commit "three")))))
+    (with-fake-request ()
+      (auth:with-sessions ()
+        (render-history
+         :screenshot-name "foo"
+         :channel (make-instance 'test-channel))))) ()
   (pass))

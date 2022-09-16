@@ -24,63 +24,77 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:screenshotbot/dashboard/compare
-                #:comparison-modal))
+                #:comparison-modal)
+  (:import-from #:screenshotbot/dashboard/paginated
+                #:paginated))
 (in-package :screenshotbot/dashboard/history)
 
 
 (markup:enable-reader)
 
-(markup:deftag render-history (&key screenshots runs channel)
-  <div class= "baguetteBox" >
-    ,@ (loop for (s . rest) on screenshots
-    for r in runs
-    for toggle-id = (format nil "compare-~a" (random 1000000))
-    collect
-    (cond
-    (s
-    <div class= "mb-4" >
+(defun render-single-screenshot (r s &key previous-screenshot
+                                       channel)
+  (let ((toggle-id (format nil "compare-~a" (random 1000000))))
+   (cond
+     (s
+      <div class= "mb-4" >
       <h4>,(screenshot-name s)</h4>
 
-      ,(when rest
+      ,(when previous-screenshot
          (comparison-modal :toggle-id toggle-id
-                           :before (car rest)
+                           :before previous-screenshot
                            :after s))
       <div class= "screenshot-header">
-        <ul class= "screenshot-options-menu">
-          <li>
-            ,(cond
-               ((recorder-run-commit r)
-                <span>First seen in <commit repo= (channel-repo channel)
-                                         hash= (recorder-run-commit r) /></span>)
-               (t
-                <span>First seen <a href= (hex:make-url "/runs/:id" :id (oid r))>,(timeago :timestamp (created-at r))</a></span>))
-          </li>
+      <ul class= "screenshot-options-menu">
+      <li>
+      ,(cond
+         ((recorder-run-commit r)
+          <span>First seen in <commit repo= (channel-repo channel)
+          hash= (recorder-run-commit r) /></span>)
+         (t
+          <span>First seen <a href= (hex:make-url "/runs/:id" :id (oid r))>,(timeago :timestamp (created-at r))</a></span>))
+      </li>
 
-          ,(when rest
-             <li>
-               <a href= "#" data-bs-toggle= "modal" data-bs-target = (format nil "#~a" toggle-id) >  Compare</a>
-             </li>)
+      ,(when previous-screenshot
+         <li>
+         <a href= "#" data-bs-toggle= "modal" data-bs-target = (format nil "#~a" toggle-id) >  Compare</a>
+         </li>)
 
-        </ul>
+      </ul>
       </div>
-        <a href= (image-public-url (screenshot-image s) :size :full-page) title= "Full screenshot">
-        <img src=(image-public-url (screenshot-image s) :size :small) />
+      <a href= (image-public-url (screenshot-image s) :size :full-page) title= "Full screenshot">
+      <img src=(image-public-url (screenshot-image s) :size :small) />
       </a>
 
-    </div>)
-    (t
-     <div>
-       <h4>Deleted</h4>
-     </div>)))
+      </div>)
+     (t
+      <div>
+      <h4>Deleted</h4>
+      </div>))))
+
+(markup:deftag render-history (&key screenshot-name channel)
+  <div class= "baguetteBox" >
+    ,(multiple-value-bind (screenshots runs)
+         (get-screenshot-history channel screenshot-name)
+       (paginated
+        (lambda (args)
+          (apply #'render-single-screenshot args))
+        :num 12
+        :items
+        (loop for (s . rest) on screenshots
+              for r in runs
+              collect
+              (list
+               r s
+               :previous-screenshot (car rest)
+               :channel channel))))
   </div>)
 
 (defhandler (history-page :uri "/channel/:channel/history")
             (channel screenshot-name)
   (let ((channel (store-object-with-id (parse-integer channel))))
     (can-view! channel)
-    (multiple-value-bind (screenshots runs) (get-screenshot-history channel screenshot-name)
-      (app-template
-       (render-history
-        :screenshots screenshots
-        :channel channel
-        :runs runs)))))
+    (app-template
+     (render-history
+      :screenshot-name screenshot-name
+      :channel channel))))
