@@ -217,6 +217,7 @@
               (log:config :info)
               (time
                (cond
+                 #+lispworks
                  (*profile-store*
                   (hcl:profile
                    (util/store:verify-store)))
