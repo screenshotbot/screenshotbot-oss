@@ -184,49 +184,51 @@
               (loop for s in (recorder-run-screenshots run)
                     if (string= screenshot-name (screenshot-name s))
                       return s))))
-      (labels ((bump ()
-                 (setf run prev-run)
-                 (setf prev-run (funcall get-next-promoted-run)))
-               (iterator ()
-                 (when run
-                   (let ((screenshot (find-in-run run))
-                         (prev-screenshot (find-in-run prev-run)))
-                     (cond
-                       ((not screenshot)
-                        ;; The screenshot didn't exist when the
-                        ;; channel was originally created, so we
-                        ;; reached the end of its history.
-                        (values nil nil))
-                       ((not prev-screenshot)
-                        (let ((run run))
-                          (bump)
-                          (values (list screenshot run nil) t)))
-                       ((image= (screenshot-image screenshot)
-                                (screenshot-image prev-screenshot)
-                                ;; TODO: should we use masks here?
-                                ;; Probably not.
-                                nil)
-                        (bump)
-                        ;; Tail call optimize the next call
-                        (iterator))
-                       (t
-                        ;; in this, we found a difference between
-                        ;; the current and the next screenshot.
-                        (let ((run run))
-                          (bump)
-                          (values (list screenshot run prev-screenshot) t))))))))
+      (let ((screenshot (find-in-run run)))
+        (labels ((bump (prev-screenshot)
+                   (setf run prev-run)
+                   (setf screenshot prev-screenshot)
+                   (setf prev-run (funcall get-next-promoted-run)))
+                 (iterator ()
+                   (when run
+                     (let ((prev-screenshot (find-in-run prev-run)))
+                       (flet ((respond (prev-screenshot)
+                                (let ((run run)
+                                      (screenshot screenshot))
+                                  (bump prev-screenshot)
+                                  (values (list screenshot run prev-screenshot) t))))
+                         (cond
+                           ((not screenshot)
+                            ;; The screenshot didn't exist when the
+                            ;; channel was originally created, so we
+                            ;; reached the end of its history.
+                            (values nil nil))
+                           ((not prev-screenshot)
+                            (respond nil))
+                           ((image= (screenshot-image screenshot)
+                                    (screenshot-image prev-screenshot)
+                                    ;; TODO: should we use masks here?
+                                    ;; Probably not.
+                                    nil)
+                            (bump prev-screenshot)
+                            ;; Tail call optimize the next call
+                            (iterator))
+                           (t
+                            ;; in this, we found a difference between
+                            ;; the current and the next screenshot.
+                            (respond prev-screenshot))))))))
 
-        (cond
-          (iterator
-           #'iterator)
-          (t
-           (loop for next = (iterator)
-                 while next
-                 for i from 0 upto 1000
-                 collect (first next) into result
-                 collect (second next) into result-runs
-                 finally
-                    (return (values result result-runs)))))))))
+          (cond
+            (iterator
+             #'iterator)
+            (t
+             (loop for next = (iterator)
+                   while next
+                   for i from 0 upto 1000
+                   collect (first next) into result
+                   collect (second next) into result-runs
+                   finally
+                      (return (values result result-runs))))))))))
 
 (defmethod image-metadata ((self screenshot))
   (image-metadata (screenshot-image self)))
