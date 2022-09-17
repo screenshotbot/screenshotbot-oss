@@ -51,7 +51,7 @@
    (cond
      (s
       <div class= "mb-4" >
-      <h4>,(screenshot-name s)
+      <h4>test-screenshot
       ,(when name-change-p
          <span class= "badge bg-warning">
            Renamed or copied
@@ -92,7 +92,7 @@
 
 (markup:deftag render-history (&key screenshot-name channel)
   <div class= "baguetteBox" >
-    <h1>Promotion History for ,(progn screenshot-name)</h1>
+    <h1>Promotion History for test-screenshot</h1>
     ,(paginated
       (lambda (args)
         (destructuring-bind (run screenshot previous-screenshot)
