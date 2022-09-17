@@ -25,23 +25,34 @@
 (defmethod screenshot-image ((screenshot my-screenshot))
   (make-instance 'test-image))
 
+(defun make-history-iterator ()
+  (let ((screenshots (list (make-instance 'my-screenshot
+                                           :name "one")
+                           (make-instance 'my-screenshot
+                                           :name "one")
+                           (make-instance 'my-screenshot
+                                           :name "one")))
+        (runs (list (make-instance 'test-recorder-run
+                                    :commit "one")
+                    (make-instance 'test-recorder-run
+                                    :commit "two")
+                    (make-instance 'test-recorder-run
+                                    :commit "three"))))
+    (lambda ()
+      (values
+       (list (pop screenshots)
+             (pop runs)
+             (car screenshots))
+       screenshots))))
+
 (test simple-render-history
   (cl-mock:with-mocks ()
-    (cl-mock:if-called 'get-screenshot-history
-                        (lambda (channel screenshot-name)
-                          (values
-                           (list (make-instance 'my-screenshot
-                                             :name "one")
-                             (make-instance 'my-screenshot
-                                             :name "one")
-                             (make-instance 'my-screenshot
-                                             :name "one"))
-                           (list (make-instance 'test-recorder-run
-                                                 :commit "one")
-                                 (make-instance 'test-recorder-run
-                                                 :commit "two")
-                                 (make-instance 'test-recorder-run
-                                                 :commit "three")))))
+    (let ((remaining-screenshots ))
+     (cl-mock:if-called 'get-screenshot-history
+                         (lambda (channel screenshot-name &key iterator)
+                           (declare (ignore channel screenshot-name))
+                           (is-true iterator)
+                           (make-history-iterator))))
     (with-fake-request ()
       (auth:with-sessions ()
         (render-history
