@@ -68,7 +68,7 @@
       ,(cond
          ((recorder-run-commit r)
           <span>First seen in <commit repo= (channel-repo channel)
-          hash= (recorder-run-commit r) />,(timeago :timestamp (created-at r)) </span>)
+          hash= (recorder-run-commit r) />, ,(timeago :timestamp (created-at r)) </span>)
          (t
           <span>First seen <a href= (hex:make-url "/runs/:id" :id (oid r))>,(timeago :timestamp (created-at r))</a></span>))
       </li>
