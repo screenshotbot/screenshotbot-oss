@@ -26,7 +26,11 @@
   (:import-from #:screenshotbot/dashboard/compare
                 #:comparison-modal)
   (:import-from #:screenshotbot/dashboard/paginated
-                #:paginated))
+                #:paginated)
+  (:import-from #:screenshotbot/user-api
+                #:screenshot-name)
+  (:import-from #:screenshotbot/model/image
+                #:image=))
 (in-package :screenshotbot/dashboard/history)
 
 
@@ -34,13 +38,27 @@
 
 (defun render-single-screenshot (r s &key previous-screenshot
                                        channel)
-  (let ((toggle-id (format nil "compare-~a" (random 1000000))))
+  (let ((toggle-id (format nil "compare-~a" (random 1000000)))
+        (name-change-p (and
+                        previous-screenshot
+                        (not (string= (screenshot-name s)
+                                      (screenshot-name previous-screenshot)))))
+        (image-change-p (and
+                         previous-screenshot
+                         (not (image= (screenshot-image s)
+                                      (screenshot-image previous-screenshot)
+                                      nil)))))
    (cond
      (s
       <div class= "mb-4" >
-      <h4>,(screenshot-name s)</h4>
+      <h4>,(screenshot-name s)
+      ,(when name-change-p
+         <span class= "badge bg-warning">
+           Renamed or copied
+         </span>)
+      </h4>
 
-      ,(when previous-screenshot
+      ,(when (and previous-screenshot image-change-p)
          (comparison-modal :toggle-id toggle-id
                            :before previous-screenshot
                            :after s))
@@ -55,7 +73,7 @@
           <span>First seen <a href= (hex:make-url "/runs/:id" :id (oid r))>,(timeago :timestamp (created-at r))</a></span>))
       </li>
 
-      ,(when previous-screenshot
+      ,(when (and previous-screenshot image-change-p)
          <li>
          <a href= "#" data-bs-toggle= "modal" data-bs-target = (format nil "#~a" toggle-id) >  Compare</a>
          </li>)

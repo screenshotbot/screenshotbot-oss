@@ -15,7 +15,9 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/screenshot-api
-                #:get-screenshot-history))
+                #:get-screenshot-history)
+  (:import-from #:screenshotbot/model/image
+                #:image-hash))
 
 (util/fiveam:def-suite)
 
@@ -46,16 +48,20 @@
        screenshots))))
 
 (test simple-render-history
-  (cl-mock:with-mocks ()
-    (let ((remaining-screenshots ))
-     (cl-mock:if-called 'get-screenshot-history
-                         (lambda (channel screenshot-name &key iterator)
-                           (declare (ignore channel screenshot-name))
-                           (is-true iterator)
-                           (make-history-iterator))))
-    (with-fake-request ()
-      (auth:with-sessions ()
-        (render-history
-         :screenshot-name "foo"
-         :channel (make-instance 'test-channel))))) ()
+  (let ((ctr 0))
+   (cl-mock:with-mocks ()
+     (let ((remaining-screenshots ))
+       (cl-mock:if-called 'get-screenshot-history
+                           (lambda (channel screenshot-name &key iterator)
+                             (declare (ignore channel screenshot-name))
+                             (is-true iterator)
+                             (make-history-iterator)))
+       (cl-mock:if-called 'image-hash
+                           (lambda (image)
+                             (incf ctr))))
+     (with-fake-request ()
+       (auth:with-sessions ()
+         (render-history
+          :screenshot-name "foo"
+          :channel (make-instance 'test-channel)))))) ()
   (pass))
