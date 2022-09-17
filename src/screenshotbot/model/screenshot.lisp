@@ -195,7 +195,7 @@
                        ((not prev-screenshot)
                         (let ((run run))
                           (bump)
-                          (values (list screenshot run) t)))
+                          (values (list screenshot run nil) t)))
                        ((image= (screenshot-image screenshot)
                                 (screenshot-image prev-screenshot)
                                 ;; TODO: should we use masks here?
@@ -209,7 +209,7 @@
                         ;; the current and the next screenshot.
                         (let ((run run))
                           (bump)
-                          (values (list screenshot run) t))))))))
+                          (values (list screenshot run prev-screenshot) t))))))))
 
         (cond
           (iterator

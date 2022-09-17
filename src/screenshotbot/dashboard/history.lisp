@@ -74,20 +74,15 @@
 
 (markup:deftag render-history (&key screenshot-name channel)
   <div class= "baguetteBox" >
-    ,(multiple-value-bind (screenshots runs)
-         (get-screenshot-history channel screenshot-name)
-       (paginated
-        (lambda (args)
-          (apply #'render-single-screenshot args))
-        :num 12
-        :items
-        (loop for (s . rest) on screenshots
-              for r in runs
-              collect
-              (list
-               r s
-               :previous-screenshot (car rest)
-               :channel channel))))
+    ,(paginated
+      (lambda (args)
+        (destructuring-bind (run screenshot previous-screenshot)
+            args
+          (render-single-screenshot screenshot run
+                                    :previous-screenshot previous-screenshot
+                                    :channel channel)))
+      :num 12
+      :iterator (get-screenshot-history channel screenshot-name :iterator t))
   </div>)
 
 (defhandler (history-page :uri "/channel/:channel/history")
