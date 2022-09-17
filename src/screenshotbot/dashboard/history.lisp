@@ -51,7 +51,7 @@
    (cond
      (s
       <div class= "mb-4" >
-      <h4>test-screenshot
+      <h4>,(screenshot-name s)
       ,(when name-change-p
          <span class= "badge bg-warning">
            Renamed or copied
@@ -68,7 +68,7 @@
       ,(cond
          ((recorder-run-commit r)
           <span>First seen in <commit repo= (channel-repo channel)
-          hash= (recorder-run-commit r) />, ,(timeago :timestamp (created-at r)) </span>)
+          hash= (recorder-run-commit r) />,(timeago :timestamp (created-at r)) </span>)
          (t
           <span>First seen <a href= (hex:make-url "/runs/:id" :id (oid r))>,(timeago :timestamp (created-at r))</a></span>))
       </li>
@@ -92,7 +92,7 @@
 
 (markup:deftag render-history (&key screenshot-name channel)
   <div class= "baguetteBox" >
-    <h1>Promotion History for test-screenshot</h1>
+    <h1>Promotion History for ,(progn screenshot-name)</h1>
     ,(paginated
       (lambda (args)
         (destructuring-bind (run screenshot previous-screenshot)
