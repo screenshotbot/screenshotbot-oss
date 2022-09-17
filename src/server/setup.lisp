@@ -23,6 +23,7 @@
 (defvar *port*)
 (defvar *slynk-port*)
 (defvar *verify-store*)
+(defvar *profile-store*)
 (defvar *verify-snapshots*)
 (defvar *socketmaster*)
 (defvar *shell*)
@@ -55,6 +56,8 @@
      #+screenshotbot-oss "~/.config/screenshotbot/object-store/"
      #-screenshotbot-oss "/data/arnold/object-store/" "" :params ("OBJECT-STORE"))
     (*verify-store* nil "")
+    #+lispworks
+    (*profile-store* nil "When used with --verify-store, profiles the store load")
     (*verify-snapshots* nil "")
     #-sbcl
     (jvm:*libjvm* nil "Location of libjvm.so" :params ("LIBJVM"))
@@ -213,7 +216,13 @@
             (when *verify-store*
               (log:config :info)
               (time
-               (util/store:verify-store))
+               (cond
+                 (*profile-store*
+                  (hcl:profile
+                   (util/store:verify-store)))
+                 (t
+                  (util/store:verify-store))))
+
               (log:info "Done verifying store")
               (log:info "Running health checks...")
               (run-health-checks)
