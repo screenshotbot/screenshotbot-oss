@@ -68,7 +68,7 @@
       ,(cond
          ((recorder-run-commit r)
           <span>First seen in <commit repo= (channel-repo channel)
-          hash= (recorder-run-commit r) /></span>)
+          hash= (recorder-run-commit r) />, ,(timeago :timestamp (created-at r)) </span>)
          (t
           <span>First seen <a href= (hex:make-url "/runs/:id" :id (oid r))>,(timeago :timestamp (created-at r))</a></span>))
       </li>
@@ -81,7 +81,7 @@
       </ul>
       </div>
       <a href= (image-public-url (screenshot-image s) :size :full-page) title= "Full screenshot">
-      <img src=(image-public-url (screenshot-image s) :size :small) />
+      <img class= "screenshot-image" src=(image-public-url (screenshot-image s) :size :small) />
       </a>
 
       </div>)
@@ -92,6 +92,7 @@
 
 (markup:deftag render-history (&key screenshot-name channel)
   <div class= "baguetteBox" >
+    <h1>Promotion History for ,(progn screenshot-name)</h1>
     ,(paginated
       (lambda (args)
         (destructuring-bind (run screenshot previous-screenshot)

@@ -57,7 +57,9 @@
 (defclass test-recorder-run ()
   ((commit :initform "foo"
            :initarg :commit
-           :accessor recorder-run-commit)))
+           :accessor recorder-run-commit)
+   (%created-at :initform (get-universal-time)
+                :accessor %created-at)))
 
 
 (defclass test-image ()
