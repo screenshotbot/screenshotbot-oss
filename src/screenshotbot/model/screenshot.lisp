@@ -192,6 +192,11 @@
                    (let ((screenshot (find-in-run run))
                          (prev-screenshot (find-in-run prev-run)))
                      (cond
+                       ((not screenshot)
+                        ;; The screenshot didn't exist when the
+                        ;; channel was originally created, so we
+                        ;; reached the end of its history.
+                        (values nil nil))
                        ((not prev-screenshot)
                         (let ((run run))
                           (bump)
@@ -216,7 +221,7 @@
            #'iterator)
           (t
            (loop for next = (iterator)
-                 while (and next (car next))
+                 while next
                  for i from 0 upto 1000
                  collect (first next) into result
                  collect (second next) into result-runs
