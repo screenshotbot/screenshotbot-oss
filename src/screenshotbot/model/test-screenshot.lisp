@@ -29,34 +29,61 @@
     (setf (channel-runs channel) nil)
     (is (equal nil (get-screenshot-history channel "foo")))))
 
+(def-fixture history-fixture ()
+  (let* ((im1 (make-image :pathname (asdf:system-relative-pathname :screenshotbot "fixture/rose.png")))
+         (im2 (make-image :pathname (asdf:system-relative-pathname :screenshotbot "fixture/wizard.png"))))
+    (&body)))
+
 (test theres-runs-but-none-of-this-name
   (with-fixture state ()
-    (let* ((im1 (make-image :pathname (asdf:system-relative-pathname :screenshotbot "fixture/rose.png")))
-           (im2 (make-image :pathname (asdf:system-relative-pathname :screenshotbot "fixture/wizard.png")))
-           (run1 (make-instance 'recorder-run
-                                 :screenshots (list
-                                               (make-instance 'screenshot
-                                                               :name "foo"
-                                                               :image im1))
-                                    :channel channel))
-           (run2 (make-instance 'recorder-run
-                                :screenshots (list
-                                              (make-instance 'screenshot
-                                                             :name "foo"
-                                                             :image im2))
-                                :previous-run run1
-                                :channel channel)))
-      (setf (active-run channel "master") run2)
-      (is-true (recorder-run-screenshots run1))
-      (is-true channel)
-      (setf (channel-runs channel)
-            (list run2 run1))
-      (is (equal nil (get-screenshot-history channel "blah")))
-      (is (equal (list run2 run1) (channel-promoted-runs channel)))
-      (is (equal (list
-                  (car (recorder-run-screenshots run2))
-                  (car (recorder-run-screenshots run1)))
-                 (get-screenshot-history channel "foo"))))))
+    (with-fixture history-fixture ()
+      (let* ((run1 (make-instance 'recorder-run
+                                   :screenshots (list
+                                                 (make-instance 'screenshot
+                                                                 :name "foo"
+                                                                 :image im1))
+                                   :channel channel))
+             (run2 (make-instance 'recorder-run
+                                   :screenshots (list
+                                                 (make-instance 'screenshot
+                                                                 :name "foo"
+                                                                 :image im2))
+                                   :previous-run run1
+                                   :channel channel)))
+        (is-true (recorder-run-screenshots run1))
+        (setf (active-run channel "master") run2)
+        (is-true channel)
+        (setf (channel-runs channel)
+              (list run2 run1))
+        (is (equal nil (get-screenshot-history channel "blah")))
+        (is (equal (list run2 run1) (channel-promoted-runs channel)))
+        (is (equal (list
+                    (car (recorder-run-screenshots run2))
+                    (car (recorder-run-screenshots run1)))
+                   (get-screenshot-history channel "foo")))))))
+
+(test in-history-we-also-pull-renamed-screenshots
+  (with-fixture state ()
+    (with-fixture history-fixture ()
+      (let* ((run1 (make-instance 'recorder-run
+                                   :screenshots (list
+                                                 (make-instance 'screenshot
+                                                                 :name "bar"
+                                                                 :image im1))
+                                   :channel channel))
+             (run2 (make-instance 'recorder-run
+                                   :screenshots (list
+                                                 (make-instance 'screenshot
+                                                                 :name "foo"
+                                                                 :image im1))
+                                   :previous-run run1
+                                   :channel channel)))
+        (setf (active-run channel "master") run2)
+        (is (equal (list
+                    (car (recorder-run-screenshots run2))
+                    (car (recorder-run-screenshots run1)))
+                   (get-screenshot-history channel "foo")))))))
+
 
 (test make-screenshot-uniqueness ()
   (with-test-store ()

@@ -179,19 +179,32 @@
   (let* ((get-next-promoted-run (channel-promoted-runs channel :iterator t))
          (run (funcall get-next-promoted-run))
          (prev-run (funcall get-next-promoted-run)))
-    (flet ((find-in-run (run)
+    (flet ((find-in-run (run screenshot-name)
              (when run
               (loop for s in (recorder-run-screenshots run)
                     if (string= screenshot-name (screenshot-name s))
-                      return s))))
-      (let ((screenshot (find-in-run run)))
+                      return s)))
+           (find-by-image (run screenshot)
+             (when run
+               (loop for s in (recorder-run-screenshots run)
+                     if (image=
+                         (screenshot-image s)
+                         (screenshot-image screenshot)
+                         nil)
+                       return s))))
+      (let ((screenshot (find-in-run run screenshot-name)))
         (labels ((bump (prev-screenshot)
                    (setf run prev-run)
                    (setf screenshot prev-screenshot)
                    (setf prev-run (funcall get-next-promoted-run)))
                  (iterator ()
                    (when run
-                     (let ((prev-screenshot (find-in-run prev-run)))
+                     (let ((prev-screenshot
+                             (when screenshot
+                               (or
+                                (find-in-run prev-run
+                                             (screenshot-name screenshot))
+                                (find-by-image prev-run screenshot)))))
                        (flet ((respond (prev-screenshot)
                                 (let ((run run)
                                       (screenshot screenshot))
@@ -205,11 +218,14 @@
                             (values nil nil))
                            ((not prev-screenshot)
                             (respond nil))
-                           ((image= (screenshot-image screenshot)
-                                    (screenshot-image prev-screenshot)
-                                    ;; TODO: should we use masks here?
-                                    ;; Probably not.
-                                    nil)
+                           ((and
+                             (string= (screenshot-name screenshot)
+                                      (screenshot-name prev-screenshot))
+                             (image= (screenshot-image screenshot)
+                                     (screenshot-image prev-screenshot)
+                                     ;; TODO: should we use masks here?
+                                     ;; Probably not.
+                                     nil))
                             (bump prev-screenshot)
                             ;; Tail call optimize the next call
                             (iterator))
