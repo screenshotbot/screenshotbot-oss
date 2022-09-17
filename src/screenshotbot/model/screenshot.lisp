@@ -24,6 +24,7 @@
                 #:screenshot-get-canonical
                 #:recorder-run-screenshots)
   (:import-from #:screenshotbot/model/image
+                #:image=
                 #:image-metadata
                 #:%with-local-image
                 #:rect-as-list)
@@ -174,29 +175,53 @@
 (defmethod %with-local-image ((screenshot screenshot) fn)
   (%with-local-image (screenshot-image screenshot) fn))
 
-(defun get-screenshot-history (channel screenshot-name)
-  (let ((last-run nil)
-        (result nil)
-        (result-runs nil))
-    (loop for run in (reverse (channel-promoted-runs channel))
-          collect
-          (let ((screenshots (recorder-run-screenshots run)))
-            (loop for s in screenshots
-                  if (string= screenshot-name (screenshot-name s))
-                    do (progn
-                         (cond
-                           ((or
-                             (and (not last-run) (not s))
-                             (and last-run s
-                                  (eql (screenshot-image last-run)
-                                       (screenshot-image s))))
-                            ;; do nothing, this outcome is same as last outcome
-                            nil)
-                           (t
-                            (push s result)
-                            (push run result-runs)))
-                         (setf last-run s)))))
-    (values result result-runs)))
+(defun get-screenshot-history (channel screenshot-name &key (iterator nil))
+  (let* ((get-next-promoted-run (channel-promoted-runs channel :iterator t))
+         (run (funcall get-next-promoted-run))
+         (prev-run (funcall get-next-promoted-run)))
+    (flet ((find-in-run (run)
+             (when run
+              (loop for s in (recorder-run-screenshots run)
+                    if (string= screenshot-name (screenshot-name s))
+                      return s))))
+      (labels ((bump ()
+                 (setf run prev-run)
+                 (setf prev-run (funcall get-next-promoted-run)))
+               (iterator ()
+                 (when run
+                   (let ((screenshot (find-in-run run))
+                         (prev-screenshot (find-in-run prev-run)))
+                     (cond
+                       ((not prev-screenshot)
+                        (let ((run run))
+                          (bump)
+                          (values (list screenshot run) t)))
+                       ((image= (screenshot-image screenshot)
+                                (screenshot-image prev-screenshot)
+                                ;; TODO: should we use masks here?
+                                ;; Probably not.
+                                nil)
+                        (bump)
+                        ;; Tail call optimize the next call
+                        (iterator))
+                       (t
+                        ;; in this, we found a difference between
+                        ;; the current and the next screenshot.
+                        (let ((run run))
+                          (bump)
+                          (values (list screenshot run) t))))))))
+
+        (cond
+          (iterator
+           #'iterator)
+          (t
+           (loop for next = (iterator)
+                 while (and next (car next))
+                 for i from 0 upto 1000
+                 collect (first next) into result
+                 collect (second next) into result-runs
+                 finally
+                    (return (values result result-runs)))))))))
 
 (defmethod image-metadata ((self screenshot))
   (image-metadata (screenshot-image self)))

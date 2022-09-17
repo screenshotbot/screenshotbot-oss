@@ -31,19 +31,21 @@
 
 (test theres-runs-but-none-of-this-name
   (with-fixture state ()
-    (let* ((run1 (make-instance 'recorder-run
-                                :screenshots (list
-                                              (make-instance 'screenshot
-                                                             :name "foo"
-                                                             :image 'im1))
-                                :channel channel))
+    (let* ((im1 (make-image :pathname (asdf:system-relative-pathname :screenshotbot "fixture/rose.png")))
+           (im2 (make-image :pathname (asdf:system-relative-pathname :screenshotbot "fixture/wizard.png")))
+           (run1 (make-instance 'recorder-run
+                                 :screenshots (list
+                                               (make-instance 'screenshot
+                                                               :name "foo"
+                                                               :image im1))
+                                    :channel channel))
            (run2 (make-instance 'recorder-run
                                 :screenshots (list
                                               (make-instance 'screenshot
                                                              :name "foo"
-                                                             :image 'im2))
+                                                             :image im2))
                                 :previous-run run1
-                                :chanel channel)))
+                                :channel channel)))
       (setf (active-run channel "master") run2)
       (is-true (recorder-run-screenshots run1))
       (is-true channel)

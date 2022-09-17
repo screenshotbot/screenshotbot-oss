@@ -235,11 +235,26 @@
             (activep run))
           return run))
 
-(defun channel-promoted-runs (channel &key branch)
+(defun channel-promoted-runs (channel &key branch
+                                        (iterator nil))
+  "Get the list of promoted-runs. If iterator is t, it returns a function
+ that always returns two values: the next promoted-run, and whether
+ this is an eof, or end of list. It is safe to call the iterator
+ multiple times at the end."
   (let ((branch (or branch (master-branch channel))))
     (let ((run (active-run channel branch)))
-      (loop while run
-            for i from 0 to 1000
-            collect (unwind-protect
-                         run
-                      (setf run (recorder-previous-run run)))))))
+      (flet ((iterator ()
+               (when run
+                (let ((next run)
+                      (previous-run (recorder-previous-run run)))
+                  (setf run previous-run)
+                  (values next (not (null next)))))))
+
+        (cond
+          (iterator
+           #'iterator)
+          (t
+           (loop for run = (iterator)
+                 for i from 0 to 1000
+                 while run
+                 collect run)))))))
