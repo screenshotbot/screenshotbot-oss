@@ -1,0 +1,90 @@
+{
+  "viewHierarchy": {
+    "class": "com.facebook.litho.LithoView",
+    "left": 0,
+    "top": 0,
+    "width": 826,
+    "height": 353,
+    "children": [
+      {
+        "class": "com.facebook.litho.Row",
+        "left": 0,
+        "top": 0,
+        "width": 826,
+        "height": 353,
+        "children": [
+          {
+            "class": "com.facebook.litho.widget.Image",
+            "left": 0,
+            "top": 0,
+            "width": 176,
+            "height": 176,
+            "children": []
+          },
+          {
+            "class": "com.facebook.litho.widget.Image",
+            "left": 176,
+            "top": 0,
+            "width": 353,
+            "height": 353,
+            "children": []
+          },
+          {
+            "class": "com.facebook.litho.widget.Image",
+            "left": 529,
+            "top": 0,
+            "width": 88,
+            "height": 88,
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "version": 1,
+  "axHierarchy": {
+    "class": "com.facebook.litho.LithoView",
+    "actionList": null,
+    "boundsInParent": {
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "bottom": 0
+    },
+    "boundsInScreen": {
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "bottom": 0
+    },
+    "canOpenPopup": false,
+    "childCount": 0,
+    "collectionInfo": null,
+    "collectionItemInfo": null,
+    "contentDescription": null,
+    "error": null,
+    "extras": "Bundle[{}]",
+    "inputType": 0,
+    "isCheckable": false,
+    "isChecked": false,
+    "isClickable": false,
+    "isContentInvalid": false,
+    "isDismissable": false,
+    "isEditable": false,
+    "isEnabled": false,
+    "isFocusable": false,
+    "isImportantForAccessibility": false,
+    "isLongClickable": false,
+    "isMultiLine": false,
+    "isPassword": false,
+    "isScrollable": false,
+    "isSelected": false,
+    "isVisibleToUser": false,
+    "liveRegion": 0,
+    "maxTextLength": -1,
+    "movementGranularities": 0,
+    "rangeInfo": null,
+    "text": null,
+    "children": null
+  }
+}

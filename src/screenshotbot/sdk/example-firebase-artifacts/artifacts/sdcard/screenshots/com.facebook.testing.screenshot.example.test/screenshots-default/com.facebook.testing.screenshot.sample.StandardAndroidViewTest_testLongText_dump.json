@@ -1,0 +1,171 @@
+{
+  "viewHierarchy": {
+    "class": "android.widget.LinearLayout",
+    "left": 0,
+    "top": 0,
+    "width": 826,
+    "height": 132,
+    "children": [
+      {
+        "class": "android.widget.EditText",
+        "left": 0,
+        "top": 1,
+        "width": 583,
+        "height": 124
+      },
+      {
+        "class": "android.widget.Button",
+        "left": 583,
+        "top": 0,
+        "width": 243,
+        "height": 132
+      }
+    ]
+  },
+  "version": 1,
+  "axHierarchy": {
+    "class": "android.widget.LinearLayout",
+    "actionList": null,
+    "boundsInParent": {
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "bottom": 0
+    },
+    "boundsInScreen": {
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "bottom": 0
+    },
+    "canOpenPopup": false,
+    "childCount": 0,
+    "collectionInfo": null,
+    "collectionItemInfo": null,
+    "contentDescription": null,
+    "error": null,
+    "extras": "Bundle[{}]",
+    "inputType": 0,
+    "isCheckable": false,
+    "isChecked": false,
+    "isClickable": false,
+    "isContentInvalid": false,
+    "isDismissable": false,
+    "isEditable": false,
+    "isEnabled": false,
+    "isFocusable": false,
+    "isImportantForAccessibility": false,
+    "isLongClickable": false,
+    "isMultiLine": false,
+    "isPassword": false,
+    "isScrollable": false,
+    "isSelected": false,
+    "isVisibleToUser": false,
+    "liveRegion": 0,
+    "maxTextLength": -1,
+    "movementGranularities": 0,
+    "rangeInfo": null,
+    "text": null,
+    "children": [
+      {
+        "class": "android.widget.EditText",
+        "actionList": [
+          256,
+          512,
+          131072,
+          2097152
+        ],
+        "boundsInParent": {
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "bottom": 0
+        },
+        "boundsInScreen": {
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "bottom": 0
+        },
+        "canOpenPopup": false,
+        "childCount": 0,
+        "collectionInfo": null,
+        "collectionItemInfo": null,
+        "contentDescription": null,
+        "error": null,
+        "extras": "Bundle[{}]",
+        "inputType": 1,
+        "isCheckable": false,
+        "isChecked": false,
+        "isClickable": false,
+        "isContentInvalid": false,
+        "isDismissable": false,
+        "isEditable": true,
+        "isEnabled": false,
+        "isFocusable": false,
+        "isImportantForAccessibility": false,
+        "isLongClickable": false,
+        "isMultiLine": false,
+        "isPassword": false,
+        "isScrollable": false,
+        "isSelected": false,
+        "isVisibleToUser": false,
+        "liveRegion": 0,
+        "maxTextLength": -1,
+        "movementGranularities": 31,
+        "rangeInfo": null,
+        "text": "This is a really long text and should overflow",
+        "children": null
+      },
+      {
+        "class": "android.widget.Button",
+        "actionList": [
+          256,
+          512,
+          131072
+        ],
+        "boundsInParent": {
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "bottom": 0
+        },
+        "boundsInScreen": {
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "bottom": 0
+        },
+        "canOpenPopup": false,
+        "childCount": 0,
+        "collectionInfo": null,
+        "collectionItemInfo": null,
+        "contentDescription": null,
+        "error": null,
+        "extras": "Bundle[{}]",
+        "inputType": 0,
+        "isCheckable": false,
+        "isChecked": false,
+        "isClickable": false,
+        "isContentInvalid": false,
+        "isDismissable": false,
+        "isEditable": false,
+        "isEnabled": false,
+        "isFocusable": false,
+        "isImportantForAccessibility": false,
+        "isLongClickable": false,
+        "isMultiLine": true,
+        "isPassword": false,
+        "isScrollable": false,
+        "isSelected": false,
+        "isVisibleToUser": false,
+        "liveRegion": 0,
+        "maxTextLength": -1,
+        "movementGranularities": 31,
+        "rangeInfo": null,
+        "text": "SEARCH!",
+        "children": null
+      }
+    ]
+  }
+}

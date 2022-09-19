@@ -1,0 +1,63 @@
+{
+  "viewHierarchy": {
+    "class": "com.google.android.material.floatingactionbutton.FloatingActionButton",
+    "left": 0,
+    "top": 0,
+    "width": 154,
+    "height": 154
+  },
+  "version": 1,
+  "axHierarchy": {
+    "class": "com.google.android.material.floatingactionbutton.FloatingActionButton",
+    "actionList": [
+      4,
+      8,
+      2,
+      64,
+      16,
+      16908342
+    ],
+    "boundsInParent": {
+      "left": 0,
+      "right": 154,
+      "top": 0,
+      "bottom": 154
+    },
+    "boundsInScreen": {
+      "left": 882,
+      "right": 1036,
+      "top": 1590,
+      "bottom": 1744
+    },
+    "canOpenPopup": false,
+    "childCount": 0,
+    "className": "android.widget.ImageButton",
+    "collectionInfo": null,
+    "collectionItemInfo": null,
+    "contentDescription": null,
+    "error": null,
+    "extras": "Bundle[{}]",
+    "inputType": 0,
+    "isCheckable": false,
+    "isChecked": false,
+    "isClickable": true,
+    "isContentInvalid": false,
+    "isDismissable": false,
+    "isEditable": false,
+    "isEnabled": true,
+    "isFocusable": true,
+    "isImportantForAccessibility": true,
+    "isLongClickable": false,
+    "isMultiLine": false,
+    "isPassword": false,
+    "isScrollable": false,
+    "isSelected": false,
+    "isVisibleToUser": true,
+    "liveRegion": 0,
+    "maxTextLength": -1,
+    "movementGranularities": 0,
+    "rangeInfo": null,
+    "text": null,
+    "children": null
+  }
+}

@@ -327,8 +327,7 @@ error."
   (cond
     ((android-run-p)
      (log:info "Looks like an Android run")
-     (make-image-bundle *directory*
-                                   :metadata *metadata*))
+     (make-image-bundle :metadata *metadata*))
     ((not (str:emptyp *directory*))
      (unless (path:-d *directory*)
        (error "Not a directory: ~a. Did you miss --metadata if you intended to use a bundle.zip?" *directory*))

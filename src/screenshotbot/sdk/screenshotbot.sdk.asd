@@ -59,6 +59,7 @@
                :screenshotbot
                :util/fiveam)
   :components ((:file "test-bundle")
+               (:file "test-android")
                (:file "test-sdk")
                (:file "test-firebase")
                (:file "test-static")))

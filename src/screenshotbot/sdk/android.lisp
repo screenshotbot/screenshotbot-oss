@@ -9,7 +9,9 @@
         #:screenshotbot/sdk/flags
         #:alexandria)
   (:import-from #:screenshotbot/sdk/bundle
+                #:streamed-image
                 #:list-images)
+  (:local-nicknames (#:a #:alexandria))
   (:export
    #:directory-image-bundle))
 (in-package :screenshotbot/sdk/android)
@@ -93,10 +95,9 @@
         dest))))
 
 (defmethod read-screenshot-tiles (screenshot (bundle image-bundle))
-  (declare (optimize (speed 0) (debug 3)))
-  (let* ((name (node-value (child-by-name screenshot "name")))
-         (tile-height (node-integer-value (child-by-name screenshot "tile_height")))
-         (tile-width (node-integer-value (child-by-name screenshot "tile_width"))))
+  (let* ((name (a:assoc-value screenshot :name))
+         (tile-height (a:assoc-value screenshot :tile-height))
+         (tile-width (a:assoc-value screenshot :tile-width)))
     (let ((arr (make-array (list tile-width tile-height))))
       (dotimes (w tile-width)
         (dotimes (h tile-height)
@@ -109,20 +110,15 @@
       (cons name (merge-tiles arr)))))
 
 (defun read-android-metadata (metadata-file image-bundle)
-  (let ((xml (cxml:parse-file metadata-file (cxml-dom:make-dom-builder))))
-    (loop for screenshot across (dom:child-nodes (dom:document-element xml))
-          collect (read-screenshot-tiles screenshot image-bundle))))
+  (with-open-file (metadata-file metadata-file)
+   (let ((screenshots (json:decode-json metadata-file)))
+     (loop for screenshot in screenshots
+           collect (read-screenshot-tiles screenshot image-bundle)))))
 
-(defun make-image-bundle (output &key metadata)
-  (cond
-    ((path:-d output)
-     (make-instance 'directory-image-bundle :directory output
-                    :metadata metadata))
-    ((path:-e output)
-     (make-instance 'zip-image-bundle :zip output
-                    :metadata metadata))
-    (t
-     (error "Does not exist: ~a" output))))
+(defun make-image-bundle (&key metadata)
+  (make-instance 'directory-image-bundle
+                  :directory (fad:pathname-directory-pathname metadata)
+                  :metadata metadata))
 
 
 (defmethod list-images ((bundle image-bundle))
