@@ -71,11 +71,12 @@
 
 (defun generate-.sh (name)
   (let ((util.cdn:*cdn-domain* screenshotbot/server:*cdn-domain*))
-    (let ((darwin-link (artifact-link (format nil "~a-darwin" name)
-                                      :cdn (not (staging-p))))
-          (linux-link (artifact-link (format nil "~a-linux" name)
-                                     :cdn (not (staging-p)))))
-     #?"#!/bin/sh
+    (let ((staging-p (not (equal "localhost" (uiop:hostname)))))
+     (let ((darwin-link (artifact-link (format nil "~a-darwin" name)
+                                       :cdn (not staging-p)))
+           (linux-link (artifact-link (format nil "~a-linux" name)
+                                      :cdn (not staging-p))))
+       #?"#!/bin/sh
 set -e
 set -x
 
@@ -92,7 +93,7 @@ else
 fi
 sh ./$INSTALLER
 rm -f $INSTALLER
-")))
+"))))
 
 
 (defmacro define-platform-asset (name)
