@@ -113,7 +113,10 @@
         (cond
           (cdn
            (util.cdn:make-cdn url))
-          (t url))))))
+          (t
+           (format nil "~a~a"
+                   (installation-domain (installation))
+                   url)))))))
 
 (def-easy-macro def-artifact-hook (key artifact-name &fn fn)
   (setf
