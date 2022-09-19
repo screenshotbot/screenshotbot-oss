@@ -14,7 +14,8 @@
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
-                    (#:static #:screenshotbot/sdk/static))
+                    (#:static #:screenshotbot/sdk/static)
+                    (#:firebase #:screenshotbot/sdk/firebase))
   (:export
    #:main))
 (in-package :screenshotbot/sdk/main)
@@ -44,6 +45,10 @@
       (flags:*static-website*
        (sdk:parse-org-defaults)
        (static:record-static-website flags:*static-website*))
+      (flags:*firebase-output*
+       (firebase:with-firebase-output (flags:*firebase-output*)
+         (sdk:parse-org-defaults)
+         (sdk:run-prepare-directory-toplevel)))
       (t
        (sdk:parse-org-defaults)
        (sdk:run-prepare-directory-toplevel)))))

@@ -17,6 +17,7 @@
                :log4cl
                :util/random-port
                :util/request
+               :util/macros
                :screenshotbot.sdk/common-flags
                :cl-store
                :nyaml
