@@ -39,7 +39,8 @@
    #:*commit-hash*
    #:*override-commit-hash*
    #:*selenium-hub*
-   #:*selenium-hub-port*))
+   #:*selenium-hub-port*
+   #:*firebase-output*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -186,3 +187,14 @@
   must be the full hash, partial hashes or tag names are not
   suitable.
   Automatically detected on: CircleCI, Bitrise")
+
+(define-flag *firebase-output*
+  :selector "firebase-output"
+  :default-value nil
+  :type (or null string)
+  :help "When running Android tests in Firebase Test Lab, pass the output of
+ the `gcloud firebase test android run` as a file to this option. We'll
+ automatically fetch the required files from Google Cloud, and clean
+ up  the files from Google Cloud when we're done. We use the `gcloud`
+ command line tool so you must have already called
+ activate-service-account before this step.")
