@@ -36,16 +36,15 @@
            finally
               (oops)))))
 
-(defun artifact-dir-p (dir)
-  (equal "artifacts" (car (last (pathname-directory dir)))))
-
-(defun find-artifacts-directory (dir)
+(defun find-file (dir file-name)
   (cond
-    ((artifact-dir-p dir)
+    ((and
+      (equal (pathname-name file-name) (pathname-name dir))
+      (equal (pathname-type file-name) (pathname-type dir)))
      dir)
     (t
      (loop for child in (fad:list-directory dir)
-           for artifact = (find-artifacts-directory child)
+           for artifact = (find-file child file-name)
            if artifact
              return artifact))))
 
@@ -71,7 +70,5 @@
          :error-output *standard-output*))
 
       (log:info "Downloaded screenshots, processing it locally")
-      (let ((artifacts (find-artifacts-directory dir)))
-        (let ((flags:*directory* (namestring (path:catfile artifacts "screenshot_bundle.zip")))
-              (flags:*metadata* (namestring (path:catfile artifacts "metadata.xml"))))
-          (funcall fn))))))
+      (let ((flags:*metadata* (find-file dir "metadata.json")))
+        (funcall fn)))))

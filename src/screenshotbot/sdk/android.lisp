@@ -116,6 +116,15 @@
            collect (read-screenshot-tiles screenshot image-bundle)))))
 
 (defun make-image-bundle (&key metadata)
+  (when (string-equal "xml" (pathname-type metadata))
+    (error "It looks like you are using an older version of
+ screenshot-tests-for-android or Shot.
+
+These older versions use a different metadata format and are currently
+ unsupported by this CLI tool. Please upgrade to either
+ screenshot-tests-for-android 0.14.0, or Shot 5.13.0. If you need to
+ use an older version of these libraries, please contact
+ support@screenshotbot.io"))
   (make-instance 'directory-image-bundle
                   :directory (fad:pathname-directory-pathname metadata)
                   :metadata metadata))
