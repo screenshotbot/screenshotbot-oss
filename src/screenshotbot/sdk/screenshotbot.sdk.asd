@@ -29,12 +29,14 @@
                :imago/pngload
                :md5
                :screenshotbot/replay-core
+
                :dag
                :anaphora
                :str)
   :components ((:file "package")
                (:file "flags")
                (:file "bundle")
+               (:file "firebase")
                (:file "android")
                (:file "git")
                (:file "help")
@@ -57,6 +59,7 @@
                :util/fiveam)
   :components ((:file "test-bundle")
                (:file "test-sdk")
+               (:file "test-firebase")
                (:file "test-static")))
 
 
