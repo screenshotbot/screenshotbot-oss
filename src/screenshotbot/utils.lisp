@@ -17,13 +17,6 @@
 
 (defun upload-artifact (name filename)
   (log:info "Uploading via scp")
-  (uiop:run-program (list
-                     "scp"
-                     (namestring filename)
-                     "web@screenshotbot.io:~/web/tmp-upload")
-                    :output :interactive
-                    :input :interactive
-                    :error-output :interactive)
   (log:info "Upload done")
   (multiple-value-bind (result code)
       (drakma:http-request "https://screenshotbot.io/intern/artifact/upload"
@@ -31,7 +24,8 @@
                            :force-binary t
                            :parameters `(("name" . ,name)
                                          ("hash" . ,(md5-hex filename))
-                                         ("upload-key" . ,(secret :artifact-upload-key))))
+                                         ("upload-key" . ,(secret :artifact-upload-key)))
+                           :content (pathname filename))
     (log:info "Got image upload response: ~s" (flexi-streams:octets-to-string result))
     (unless (eql 200 code)
       (error "Failed to upload image: code ~a" code))))
