@@ -11,6 +11,9 @@
                 #:help)
   (:import-from #:screenshotbot/sdk/sdk
                 #:chdir-for-bin)
+  (:import-from #:util/threading
+                #:*extras*
+                #:funcall-with-sentry-logs)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
@@ -55,23 +58,28 @@
 
 (defun main (&rest args)
   (uiop:setup-command-line-arguments)
+  #-screenshotbot-oss
+  (sentry-client:initialize-sentry-client
+   sentry:*dsn*)
   (let ((error-handler (lambda (e)
                          (format t "~%~a~%~%" e)
                          #+lispworks
                          (dbg:output-backtrace (if flags:*verbose* :bug-form :brief))
                          #-lispworks
                          (trivial-backtrace:print-backtrace einteg)
+                         #-screenshotbot-oss
+                         (util/threading:log-sentry e)
                          (uiop:quit 1))))
-   (handler-bind ((warning (lambda (warning)
-                             (let ((msg (princ-to-string warning)))
-                               ;; This warning is not very actionable
-                               ;; for end-users, so let's muffle it
-                               #+lispworks
-                               (when (str:containsp "output-wait is not implemented" msg)
-                                 (muffle-warning warning)))))
-                  #+lispworks
-                  (error error-handler))
-     (apply '%main args)))
+    (handler-bind ((warning (lambda (warning)
+                              (let ((msg (princ-to-string warning)))
+                                ;; This warning is not very actionable
+                                ;; for end-users, so let's muffle it
+                                #+lispworks
+                                (when (str:containsp "output-wait is not implemented" msg)
+                                  (muffle-warning warning)))))
+                   #+lispworks
+                   (error error-handler))
+      (apply '%main args)))
   #-sbcl
   (log4cl::exit-hook)
   (uiop:quit 0))

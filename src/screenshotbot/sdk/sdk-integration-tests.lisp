@@ -74,8 +74,21 @@
   (run (list "magick" "convert"
              "-size" "360x360" "xc:white" "-fill" "black" "-stroke" "black" "-draw" "@ascii.txt" "-strip" "screenshots/image.png")))
 
+
+(defun test-crash ()
+  (log:info "## TESTING CRASH REPORT TO SENTRY")
+  (multiple-value-bind (out err res)
+      (run (list *sdk*
+                 "--directory"
+                 "sdk-integration-test-dummy-dir")
+           :ignore-error-status t)
+    (log:info "Got error code: ~a" res)
+    (assert (not (= res 0)))
+    (assert (= 1 res))))
+
 (defun run-tests ()
   (with-repo
+    (test-crash)
     ;; veryfy we're correctly cloning the repo
     #-mswindows
     (run (list "test" "-e" "gen.sh"))

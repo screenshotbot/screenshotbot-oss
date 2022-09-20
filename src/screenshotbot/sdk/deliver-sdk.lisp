@@ -45,6 +45,11 @@
     (let ((output (compile-file path)))
       (load output))))
 
+(defun sentry-client::lw-find-dspec-location (frame)
+  nil)
+
+(compile 'sentry-client::lw-find-dspec-location)
+
 (defun deliver-main ()
   (let ((output-file (output-file)))
     #-darwin ;; universal binary, output file should be temporary
@@ -75,7 +80,8 @@
               :keep-lisp-reader t
               ;; temporary: get the build green
               :keep-eval t
-              :keep-symbols `(system:pipe-exit-status)
+              :keep-symbols `(system:pipe-exit-status
+                              dspec:find-dspec-locations)
               :packages-to-keep-symbol-names :all
               :multiprocessing t)))
 

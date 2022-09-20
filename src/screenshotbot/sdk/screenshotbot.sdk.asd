@@ -19,6 +19,8 @@
                :util/request
                :util/macros
                :screenshotbot.sdk/common-flags
+               #-screenshotbot-oss
+               :sentry
                :cl-store
                :nyaml
                :cl-fad
