@@ -54,7 +54,7 @@
   (with-fixture state ()
    (tmpdir:with-tmpdir (s)
      (let ((*directory* (namestring s)))
-       (uiop:with-temporary-file (:pathname metadata :type "xml")
+       (uiop:with-temporary-file (:pathname metadata :type "json")
          (let ((*metadata* (namestring metadata)))
            (is (typep (%read-directory-from-args)
                       'directory-image-bundle))))))))
