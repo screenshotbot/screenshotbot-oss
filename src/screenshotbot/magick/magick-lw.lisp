@@ -36,7 +36,9 @@
   #P"c:/Program Files/ImageMagick-7.1.0-Q8/")
 
 (defun win-magick-lib (name)
-  (namestring (pathname (path:catfile *windows-magick-dir* (format nil "CORE_RL_~a_.dll" name)))))
+  (let ((ret (namestring (pathname (path:catfile *windows-magick-dir* (format nil "CORE_RL_~a_.dll" name))))))
+    (assert (path:-e ret))
+    ret))
 
 (defvar *path-setp* nil)
 
@@ -45,6 +47,11 @@
     (unless *path-setp*
       (setf (uiop:getenv "Path") (format nil "~a;~a" (namestring *windows-magick-dir*) (uiop:getenv "Path")))
       (setf *path-setp* t)))
+
+  (when (uiop:os-windows-p)
+    (fli:register-module
+     :magick-core
+     :file-name (win-magick-lib "MagickCore")))
 
   (fli:register-module
    ;; TODO: typo in module name, we should fix when a restart is due.

@@ -128,7 +128,7 @@
      (times (:c-array timeval 2)))
   :result-type :int)
 
-#+lispworks
+#+(and :lispworks (not :mswindows))
 (test find-old-image-comparisons
   (with-fixture state ()
     (fli:with-dynamic-foreign-objects ((times timeval :nelems 2 :fill 0))

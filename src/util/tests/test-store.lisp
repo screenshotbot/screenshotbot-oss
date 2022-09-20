@@ -157,6 +157,12 @@
 (test store-local-with-a-store
   (signals unbound-variable *store-local*))
 
+(defun fix-for-windows (x)
+  (cond
+   ((uiop:os-windows-p)
+    (str:replace-all "/" "\\" x))
+   (t
+    x)))
 
 (test location-for-oid--ensure-directory-is-writeable
   (with-test-store ()
@@ -171,7 +177,7 @@
                                                       #xab #xbc #x01 #x23
                                                       #xab #xbc #x01 #x23))))
       (is (str:ends-with-p
-           "foo-bar/ab/bc/0123abbc0123abbc0123"
+           (fix-for-windows "foo-bar/ab/bc/0123abbc0123abbc0123")
            (namestring pathname))))))
 
 (test location-for-oid/with-suffix
@@ -181,7 +187,7 @@
                                                       #xab #xbc #x01 #x23)
                                       :suffix "metadata")))
       (is (str:ends-with-p
-           "foo-bar/ab/bc/0123abbc0123abbc0123-metadata"
+           (fix-for-windows "foo-bar/ab/bc/0123abbc0123abbc0123-metadata")
            (namestring pathname))))))
 
 (test cant-access-deleted-object-slots

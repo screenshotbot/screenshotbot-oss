@@ -36,12 +36,17 @@
 (define-foreign-library libssh2
   (:darwin "libssh2.dylib")
   (:unix  "libssh2.so.1")
-  (:win32 "libssh2-1.dll")
+  (:win32 "libssh2.dll")
   (t (:default "libssh2")))
 
 (use-foreign-library libssh2)
 
 (defcfun ("libssh2_init" %library-init) +ERROR-CODE+)
+
+#+mswindows
+(pushnew #P"C:/Program Files (x86)/libssh2/bin/"
+         cffi:*foreign-library-directories* :test #'equal)
+
 (defun library-init ()
   (result-or-error
     (%library-init)))
