@@ -116,10 +116,13 @@
        ,(render-notes :for report)
        <render-diff-report run= (report-run report) to= (report-previous-run report)
        acceptable= (report-acceptable report)
-       more= (list
-              (cons
-               "Add Note"
-               (create-note-page :for report :redirect (make-url 'report-page :id (oid report)))))
+                           more=
+                           (remove-if #'null
+                            (list
+                           (when (current-user)
+                            (cons
+                             "Add Note"
+                             (create-note-page :for report :redirect (make-url 'report-page :id (oid report)))))))
        re-run=#'re-run />
        </section>
        </app-template>))))

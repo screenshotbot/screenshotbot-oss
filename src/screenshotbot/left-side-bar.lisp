@@ -114,7 +114,7 @@
         Documentation
   </left-nav-item>
 
-      ,(unless (singletonp company)
+      ,(when (and company (not (singletonp company)))
          <left-nav-item href= "/invite" image-class= "person_add"
                         script-name=script-name >
            Invite Members
@@ -133,7 +133,7 @@
            Billing
          </left-nav-item>)
 
-      ,(progn
+      ,(when user
          #-screenshotbot-oss
          <li class= "nav-item"  >
            <a href= "#" class= "nav-link text-white modal-link" data-href= "/ticket/create" >
@@ -146,7 +146,7 @@
     </ul>
 
     <hr class= "mb-0" />
-    ,(let ()
+    ,(when user
     <div class="dropdown p-3">
       <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
         <img src= (user-image-url user) alt="mdo" width="32" height="32" class="rounded-circle me-2">

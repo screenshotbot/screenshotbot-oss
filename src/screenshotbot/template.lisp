@@ -126,7 +126,13 @@
 
             <!-- Start Content-->
   <div class="">
-  <user-notice-list user=user />
+    ,(cond
+       (user
+        <user-notice-list user=user />)
+       (t
+        ;; fix this, I shouldn't need this, but it breaks the CSS if
+        ;; it isn't here.
+        <div id= "user-notice-list" class= "row" />))
               ,@children
             </div> <!-- container -->
 
@@ -174,21 +180,11 @@
     (*template-override*
      (funcall *template-override*
               children))
-    ((logged-in-p)
+    (t
      <dashboard-template admin=admin jquery-ui=jquery-ui stripe=stripe scripts=scripts
                          codemirror=codemirror
                          title=title
-                         script-name= (or script-name (hunchentoot:script-name*)) >,@children </dashboard-template>)
-    (t
-     (Assert (not admin))
-     <html>
-       <landing-head />
-       <section>
-         <div class= "container">
-           ,@children
-         </div>
-       </section>
-     </html>)))
+                         script-name= (or script-name (hunchentoot:script-name*)) >,@children </dashboard-template>)))
 
 (defmethod hunchentoot:acceptor-status-message ((acceptor acceptor)
                                                 (http-status-code (eql hunchentoot:+http-not-found+))

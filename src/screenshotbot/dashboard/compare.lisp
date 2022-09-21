@@ -55,6 +55,7 @@
   (:import-from #:bknr.datastore
                 #:make-blob-from-file)
   (:import-from #:screenshotbot/user-api
+                #:current-user
                 #:created-at
                 #:current-company)
   (:import-from #:screenshotbot/dashboard/image
@@ -614,34 +615,32 @@
       <a class= "nav-link" href= "#" data-type= "deleted" >,(length deleted-groups) deleted</a>
       </li>
 
-      ,(when more
+      <markup:merge-tag>
+      <li class= "nav-item" >
+      <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+      More
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+      ,@ (loop for (name . url) in more
+               collect
+               <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
+      <li><a class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal">Info</a></li>
+      ,(progn
+         #+screenshotbot-oss
+         (progn
+           <li>
+           <a class= "dropdown-item" href=all-comparisons >All Pixel Comparisons (OSS only) </a>
+           </li>))
 
-         <markup:merge-tag>
+      </ul>
+
+      </li>
+
+      ,(when acceptable
          <li class= "nav-item" >
-         <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-         More
-         </button>
-         <ul class="dropdown-menu dropdown-menu-end">
-         ,@ (loop for (name . url) in more
-                  collect
-                  <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
-         <li><a class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal">Info</a></li>
-         ,(progn
-            #+screenshotbot-oss
-            (progn
-              <li>
-              <a class= "dropdown-item" href=all-comparisons >All Pixel Comparisons (OSS only) </a>
-              </li>))
-
-         </ul>
-
-         </li>
-
-         ,(when acceptable
-            <li class= "nav-item" >
-            <render-acceptable acceptable=acceptable />
-            </li>)
-         </markup:merge-tag>)
+         <render-acceptable acceptable=acceptable />
+         </li>)
+      </markup:merge-tag>
       </ul>
 
 

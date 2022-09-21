@@ -337,10 +337,11 @@
             </div>
 
 
-            <div class= "">
-              <a class= "btn btn-danger btn-sm">Delete</a>
-              <run-advanced-menu run=run />
-            </div>
+            ,(when (current-user)
+               <div class= "">
+                 <a class= "btn btn-danger btn-sm">Delete</a>
+                 <run-advanced-menu run=run />
+               </div>)
           </div>
 
         </div>
