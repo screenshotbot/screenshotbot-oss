@@ -57,6 +57,8 @@
                 #:company-admins)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:screenshotbot/model/view
+                #:can-edit)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -337,7 +339,7 @@
             </div>
 
 
-            ,(when (current-user)
+            ,(when (can-edit run (current-user))
                <div class= "">
                  <a class= "btn btn-danger btn-sm">Delete</a>
                  <run-advanced-menu run=run />

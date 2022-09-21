@@ -55,6 +55,7 @@
   (:import-from #:bknr.datastore
                 #:make-blob-from-file)
   (:import-from #:screenshotbot/user-api
+                #:can-view!
                 #:current-user
                 #:created-at
                 #:current-company)
@@ -89,6 +90,8 @@
                 #:find-image-comparison-on-images)
   (:import-from #:bknr.datastore
                 #:store-object)
+  (:import-from #:screenshotbot/model/view
+                #:can-edit!)
   (:export
    #:diff-report
    #:render-acceptable

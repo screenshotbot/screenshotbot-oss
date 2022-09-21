@@ -18,7 +18,9 @@
    #:can-view
    #:can-view!
    #:can-public-view
-   #:is-user-id-same))
+   #:is-user-id-same
+   #:can-edit!
+   #:can-edit))
 (in-package :screenshotbot/model/view)
 
 ;; This file adds logic to check if a specific object can be viewed by
@@ -56,6 +58,21 @@
    (call-next-method)
    ;; super-admins can access everything
    (adminp user)))
+
+(defmethod can-edit! (&rest objects)
+  (let ((user (current-user)))
+    (dolist (obj objects)
+      (unless (can-edit obj user)
+        (error 'no-access-error :user user :obj obj)))))
+
+(defmethod can-edit (obj user)
+  nil)
+
+(defmethod can-edit :around (obj user)
+  (and
+   user
+   (can-view obj user)
+   (call-next-method)))
 
 (defmethod can-public-view (obj)
   nil)

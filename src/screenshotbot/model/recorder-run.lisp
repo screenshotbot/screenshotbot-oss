@@ -18,6 +18,8 @@
   (:import-from #:util
                 #:object-with-oid)
   (:import-from #:screenshotbot/user-api
+                #:user
+                #:user-companies
                 #:model-id
                 #:recorder-run-screenshots
                 #:recorder-run-channel
@@ -30,6 +32,8 @@
                 #:with-class-validation)
   (:import-from #:util/object-id
                 #:oid-array)
+  (:import-from #:screenshotbot/model/view
+                #:can-edit)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -256,6 +260,11 @@
 
 (defmethod can-public-view ((run recorder-run))
   (publicp (recorder-run-channel run)))
+
+(defmethod can-edit ((run recorder-run) (user user))
+  (member
+   (recorder-run-company run)
+   (user-companies user)))
 
 (defmethod activep ((run recorder-run))
   (let ((channel (recorder-run-channel run)))
