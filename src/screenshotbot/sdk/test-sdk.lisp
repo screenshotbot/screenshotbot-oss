@@ -20,6 +20,7 @@
                 #:*ios-diff-dir*
                 #:put-file)
   (:import-from #:screenshotbot/sdk/android
+                #:image-bundles
                 #:directory-image-bundle)
   (:import-from #:screenshotbot/sdk/bundle
                 #:image-directory
@@ -56,7 +57,7 @@
      (let ((*directory* (namestring s)))
        (uiop:with-temporary-file (:pathname metadata :type "json")
          (let ((*metadata* (namestring metadata)))
-           (is (typep (%read-directory-from-args)
+           (is (typep (car (image-bundles (%read-directory-from-args)))
                       'directory-image-bundle))))))))
 
 (test read-directory-with-ios-diff-dir

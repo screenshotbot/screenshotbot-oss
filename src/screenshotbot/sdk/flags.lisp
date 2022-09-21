@@ -10,6 +10,8 @@
         #:alexandria)
   (:use-reexport
    #:screenshotbot/sdk/common-flags)
+  (:import-from #:com.google.flag
+                #:parse-string)
   (:export
    #:*directory*
    #:*verbose*
@@ -152,7 +154,8 @@
 (define-flag *metadata*
   :selector "metadata"
   :default-value nil
-  :type (or null string)
+  :type (or null string list)
+  :parser parse-string
   :help "A metadata.xml file (Android only)")
 
 (define-flag *static-website*

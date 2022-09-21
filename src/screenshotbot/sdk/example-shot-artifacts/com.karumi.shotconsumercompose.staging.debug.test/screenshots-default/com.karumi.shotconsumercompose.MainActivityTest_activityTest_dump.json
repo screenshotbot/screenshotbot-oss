@@ -1,0 +1,94 @@
+{
+  "viewHierarchy": {
+    "class": "com.android.internal.policy.DecorView",
+    "left": 0,
+    "top": 0,
+    "width": 1080,
+    "height": 1920,
+    "children": [
+      {
+        "class": "android.widget.LinearLayout",
+        "left": 0,
+        "top": 0,
+        "width": 1080,
+        "height": 1788,
+        "children": [
+          {
+            "class": "android.view.ViewStub",
+            "left": 0,
+            "top": 0,
+            "width": 0,
+            "height": 0
+          },
+          {
+            "class": "android.widget.FrameLayout",
+            "left": 0,
+            "top": 66,
+            "width": 1080,
+            "height": 1722,
+            "children": [
+              {
+                "class": "androidx.appcompat.widget.FitWindowsLinearLayout",
+                "left": 0,
+                "top": 66,
+                "width": 1080,
+                "height": 1722,
+                "children": [
+                  {
+                    "class": "androidx.appcompat.widget.ViewStubCompat",
+                    "left": 0,
+                    "top": 66,
+                    "width": 0,
+                    "height": 0
+                  },
+                  {
+                    "class": "androidx.appcompat.widget.ContentFrameLayout",
+                    "left": 0,
+                    "top": 66,
+                    "width": 1080,
+                    "height": 1722,
+                    "children": [
+                      {
+                        "class": "androidx.compose.ui.platform.ComposeView",
+                        "left": 0,
+                        "top": 66,
+                        "width": 277,
+                        "height": 335,
+                        "children": [
+                          {
+                            "class": "androidx.compose.ui.platform.AndroidComposeView",
+                            "left": 0,
+                            "top": 66,
+                            "width": 277,
+                            "height": 335,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "class": "android.view.View",
+        "left": 0,
+        "top": 1788,
+        "width": 1080,
+        "height": 132
+      },
+      {
+        "class": "android.view.View",
+        "left": 0,
+        "top": 0,
+        "width": 1080,
+        "height": 66
+      }
+    ]
+  },
+  "version": 1,
+  "axHierarchy": {}
+}

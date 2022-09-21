@@ -9,6 +9,7 @@
         #:screenshotbot/sdk/flags
         #:alexandria)
   (:import-from #:screenshotbot/sdk/bundle
+                #:image-directory
                 #:streamed-image
                 #:list-images)
   (:local-nicknames (#:a #:alexandria))
@@ -31,6 +32,10 @@
 (defclass image-bundle ()
   ((metadata :initarg :metadata
              :accessor metadata-file)))
+
+(defclass multi-metadata-bundle ()
+  ((image-bundles :initarg :image-bundles
+                  :reader image-bundles)))
 
 (defclass directory-image-bundle (image-bundle)
   ((directory :initarg :directory)))
@@ -109,15 +114,18 @@
             (setf (aref arr w h) (read-image bundle name)))))
       (cons name (merge-tiles arr)))))
 
+
+(defmethod decode-metadata (metadata-file image-bundle)
+  (json:decode-json metadata-file))
+
 (defun read-android-metadata (metadata-file image-bundle)
   (with-open-file (metadata-file metadata-file)
-   (let ((screenshots (json:decode-json metadata-file)))
+   (let ((screenshots (decode-metadata metadata-file image-bundle)))
      (loop for screenshot in screenshots
            collect (read-screenshot-tiles screenshot image-bundle)))))
 
-(defun make-image-bundle (&key metadata)
-  (when (string-equal "xml" (pathname-type metadata))
-    (error "It looks like you are using an older version of
+(defun old-version! ()
+  (error "It looks like you are using an older version of
  screenshot-tests-for-android or Shot.
 
 These older versions use a different metadata format and are currently
@@ -125,9 +133,35 @@ These older versions use a different metadata format and are currently
  screenshot-tests-for-android 0.14.0, or Shot 5.13.0. If you need to
  use an older version of these libraries, please contact
  support@screenshotbot.io"))
-  (make-instance 'directory-image-bundle
-                  :directory (fad:pathname-directory-pathname metadata)
-                  :metadata metadata))
+
+(defun make-image-bundle (&key metadata)
+  (make-instance 'multi-metadata-bundle
+                  :image-bundles
+                  (loop for metadata in (cond
+                                          ((listp metadata)
+                                           metadata)
+                                          (t
+                                           ;; We're allowing a list of metadata files
+                                           ;; instead of just one metadata file, in
+                                           ;; order to support Shot's metadata_compose.json
+                                           (list metadata)))
+                        collect
+                        (progn
+                            (when (string-equal "xml" (pathname-type metadata))
+                              (old-version!))
+
+                            (cond
+                              ((equal "metadata_compose"
+                                      (pathname-name metadata))
+                               (make-instance
+                                'image-directory
+                                 :directory (fad:pathname-directory-pathname
+                                             metadata)))
+                              (t
+                               (make-instance
+                                'directory-image-bundle
+                                 :directory (fad:pathname-directory-pathname metadata)
+                                 :metadata metadata)))))))
 
 
 (defmethod list-images ((bundle image-bundle))
@@ -142,9 +176,13 @@ These older versions use a different metadata format and are currently
                                        :element-type 'flexi-streams:octet)
               (imago:write-png im p)
               (make-instance 'streamed-image
-                             :name name
-                             :stream (open p :direction :input
-                                           :element-type 'flexi-streams:octet)))))))
+                              :name name
+                              :stream (open p :direction :input
+                                              :element-type 'flexi-streams:octet)))))))
+
+(defmethod list-images ((bundle multi-metadata-bundle))
+  (loop for image-bundle in (image-bundles bundle)
+        appending (list-images image-bundle)))
 
 #+nil
 (make-regular-dir (path:catfile (asdf:system-source-directory :screenshotbot.sdk)

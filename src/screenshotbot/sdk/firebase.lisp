@@ -63,6 +63,7 @@
          :output *standard-output*
          :error-output *standard-output*)
         (log:info "Cleaning up the Google cloud directory before we continue")
+        #+nil
         (uiop:run-program
          (list "gcloud" "alpha" "storage" "rm" "-r"
                cloud-location)
@@ -70,5 +71,9 @@
          :error-output *standard-output*))
 
       (log:info "Downloaded screenshots, processing it locally")
-      (let ((flags:*metadata* (find-file dir "metadata.json")))
+      (let ((flags:*metadata*
+              (remove-if #'null
+               (list
+                (find-file dir "metadata.json")
+                (find-file dir "metadata_compose.json")))))
         (funcall fn)))))
