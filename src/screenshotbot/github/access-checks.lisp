@@ -24,6 +24,7 @@
                 #:github-repo
                 #:repo-left-ancestor-p)
   (:import-from #:screenshotbot/git-repo
+                #:public-repo-p
                 #:get-parent-commit
                 #:repo-link
                 #:commit-link
