@@ -1,5 +1,6 @@
 (defpackage :screenshotbot/github/read-repos
   (:use #:cl)
+  #+ (or ccl lispworks)
   (:import-from #:util/java
                 #:java-syntax
                 #:read-java-field
@@ -10,6 +11,7 @@
                 #:github-client)
   (:import-from #:oidc/oidc
                 #:access-token-str)
+  #+ (or ccl lispworks)
   (:import-from #:util/java/java
                 #:*bfalse*
                 #:*btrue*
@@ -20,22 +22,13 @@
    #:can-edit-repo))
 (in-package :screenshotbot/github/read-repos)
 
+#+ (or ccl lispworks)
 (named-readtables:in-readtable java-syntax)
 
-(defun read-repo-list (access-token)
-  (let ((repo-service
-          (new-instance #,org.eclipse.egit.github.core.service.RepositoryService
-                        (github-client :oauth-token
-                                       (access-token-str access-token)))))
-    (let ((repos (java-list->list
-                  (#_getRepositories repo-service))))
-      (loop for repo in repos
-            collect
-            (format nil "~a/~a"
-                    (#_getLogin (#_getOwner repo))
-                    (#_getName repo))))))
-
 (defun can-edit-repo (access-token repo)
+  #- (or ccl lispworks)
+  t
+  #+ (or ccl lispworks)
   (let ((collab-service
           (new-instance #,org.eclipse.egit.github.core.service.CollaboratorService
                         (github-client :oauth-token
