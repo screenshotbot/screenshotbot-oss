@@ -48,20 +48,32 @@
   (:default-initargs
    :oauth-name "GitHub"))
 
-(defun make-gh-oauth-link (github-oauth redirect &key authorize-link)
+(defun github-oauth-provider ()
+  (loop for auth-provider in (auth-providers (installation))
+        if (typep auth-provider 'github-oauth-provider)
+          return auth-provider))
+
+(defun make-gh-oauth-link (github-oauth redirect
+                           &key
+                             authorize-link
+                             ;; We sometimes need to get access tokens
+                             ;; not for login purposes.
+                             (access-token-callback #'process-access-token)
+                             (scope "user:email"))
   (declare (ignore authorize-link)) ;; too lazy to figure out what this was
   (let ((redirect (nibble:nibble (code)
                     (%gh-oauth-callback
                      github-oauth code
-                     redirect))))
-   (format nil "https://github.com~a"
-           (make-url "/login/oauth/authorize"
-                     :client_id (client-id github-oauth)
-                     :scope "user:email"
-                     :state (nibble:nibble-id redirect)
-                     :redirect_uri (hex:make-full-url
-                                    hunchentoot:*request*
-                                    "/account/oauth-callback")))))
+                     redirect
+                     :access-token-callback access-token-callback))))
+    (format nil "https://github.com~a"
+            (make-url "/login/oauth/authorize"
+                      :client_id (client-id github-oauth)
+                      :scope scope
+                      :state (nibble:nibble-id redirect)
+                      :redirect_uri (hex:make-full-url
+                                     hunchentoot:*request*
+                                     "/account/oauth-callback")))))
 
 (defmethod oauth-signin-link ((auth github-oauth-provider) redirect)
   (declare (ignore auth))
@@ -71,7 +83,11 @@
   (declare (ignore auth))
   (make-gh-oauth-link auth redirect))
 
-(defun %gh-oauth-callback (auth-provider code redirect)
+(defun process-access-token (access-token)
+  (let ((user (get-user-from-gh-access-token access-token)))
+    (setf (current-user) user)))
+
+(defun %gh-oauth-callback (auth-provider code redirect &key (access-token-callback #'process-access-token))
   (restart-case
       (progn
         (let ((access-token (oauth-get-access-token
@@ -81,8 +97,7 @@
                              :code code
                              :redirect_uri (hex:make-full-url hunchentoot:*request*
                                                               'oauth-callback))))
-          (let ((user (get-user-from-gh-access-token access-token)))
-            (setf (current-user) user))
+          (funcall access-token-callback access-token)
           (hex:safe-redirect redirect)))
     (retry-gh-oauth-callback ()
       (%gh-oauth-callback auth-provider code redirect))))

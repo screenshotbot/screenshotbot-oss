@@ -25,7 +25,13 @@
   (:import-from #:screenshotbot/github/webhook
                 #:*hooks*)
   (:import-from #:bknr.datastore
-                #:class-instances))
+                #:class-instances)
+  (:import-from #:nibble
+                #:nibble)
+  (:import-from #:screenshotbot/github/read-repos
+                #:read-repo-list)
+  (:import-from #:screenshotbot/ui/simple-card-page
+                #:simple-card-page))
 (in-package :screenshotbot/github/settings)
 
 (markup:enable-reader)
@@ -63,8 +69,48 @@
 (pushnew 'installation-delete-webhook
           *hooks*)
 
+(defun render-repo-list (access-token)
+  (let ((repos (read-repo-list access-token)))
+    <simple-card-page>
+      <div class= "card-header">
+        <h3>Install the Screenshotbot GitHub app</h3>
+      </div>
+
+      <div>
+        <p>
+          In order for Screenshotbot to be able to post build status (or "
+          GitHub Checks") to your pull requests, you need to install the app on your repositories.
+        </p>
+
+        <p>
+          Below we list all the repositories listed on your account.
+        </p>
+
+        <ul>
+          ,@ (loop for repo in repos collect
+                   <li><a href= (format nil "https://github.com/~a" repo)>,(progn repo)</a></li>)
+        </ul>
+      </div>
+
+      <div class= "card-footer">
+        <a href= "/settings/github" class= "btn btn-secondary" >Done</a>
+      </div>
+    </simple-card-page>))
+
 (defun settings-github-page ()
-  (let ((installation-id (installation-id (github-config (current-company)))))
+  (let* ((installation-id (installation-id (github-config (current-company))))
+         access-token
+         (oauth-link (uiop:call-function
+                      ;; TODO: cleanup dependency
+                      "screenshotbot/login/github-oauth:make-gh-oauth-link"
+                      (uiop:call-function
+                       ;; TODO: cleanup dependency
+                       "screenshotbot/login/github-oauth:github-oauth-provider")
+                      (nibble ()
+                        (render-repo-list access-token))
+                      :access-token-callback (lambda (token)
+                                               (setf access-token token))
+                     :scope "user:email")))
     <settings-template>
       <div class= "card mt-3">
         <div class= "card-header">
@@ -77,7 +123,12 @@
           <p>
             This app does <b>not</b> get permissions to access to your repositories, it only needs write access to the Checks API.
           </p>
+
+          <p>
+            <a href=oauth-link >Choose repositories</a>
+          </p>
         </div>
+
 
         <div class= "card-footer">
 

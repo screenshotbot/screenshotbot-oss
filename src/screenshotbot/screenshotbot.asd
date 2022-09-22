@@ -201,6 +201,7 @@
                  (:file "access-checks")
                  (:file "pr-checks" :depends-on ("access-checks"))
                  (:file "pull-request-promoter")
+                 (:file "read-repos")
                  (:file "settings")
                  (:file "task-integration")
                  (:file "all")))

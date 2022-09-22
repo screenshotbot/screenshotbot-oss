@@ -39,7 +39,6 @@
                      ("iat" . ,ts)
                      ("exp" . ,(+ 300 ts)))))))
 
-;; (github-create-jwt-token)
 
 (defun github-request (url
                        &key parameters installation-token
