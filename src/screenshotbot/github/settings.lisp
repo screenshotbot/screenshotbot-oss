@@ -42,29 +42,33 @@
       (github-app-installation-callback state installation-id setup-action))))
 
 (defun settings-github-page ()
-  <settings-template>
-    <div class= "card mt-3">
-      <div class= "card-header">
-        <h3>Setup GitHub Checks</h3>
-      </div>
+  (let ((installation-id (installation-id (github-config (current-company)))))
+    <settings-template>
+      <div class= "card mt-3">
+        <div class= "card-header">
+          <h3>Setup GitHub Checks</h3>
+        </div>
 
-      <div class= "card-body">
-        <p>In order to enable Build Statuses (called GitHub Checks) you will need to install the Screenshotbot Checks app to your GitHub organization.</p>
+        <div class= "card-body">
+          <p>In order to enable Build Statuses (called GitHub Checks) you will need to install the Screenshotbot Checks app to your GitHub organization.</p>
 
-        <p>
-          This app does <b>not</b> get permissions to access to your repositories, it only needs write access to the Checks API.
-        </p>
-      </div>
+          <p>
+            This app does <b>not</b> get permissions to access to your repositories, it only needs write access to the Checks API.
+          </p>
+        </div>
 
-      <div class= "card-footer">
-        <a href= (format nil "https://github.com/apps/~a/installations/new"
-                  (app-name (github-plugin)))
-           class= "btn btn-primary" >
-          Install App on GitHub
-        </a>
+        <div class= "card-footer">
+
+          <a href= (format nil "https://github.com/apps/~a/installations/new"
+                    (app-name (github-plugin)))
+             class= (if installation-id "btn btn-secondary" "btn btn-primary") >
+            ,(if installation-id
+                 "Configure"
+                 "Install App on GitHub")
+          </a>
+        </div>
       </div>
-    </div>
-  </settings-template>)
+    </settings-template>))
 
 (defsettings settings-github-page
   :name "github"
