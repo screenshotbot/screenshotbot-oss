@@ -200,7 +200,7 @@
               <div style="margin-top: 3em" >
 
                 <h4>Verified repositories</h4>
-                <table class= "table table-borderless" >
+                <table class= "table table-borderless table-hover" >
                   <thead>
                     <tr>
                       <th>Repository</th>
