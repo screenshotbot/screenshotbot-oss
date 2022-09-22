@@ -199,6 +199,7 @@
                  (:file "webhook")
                  (:file "jwt-token")
                  (:file "access-checks")
+                 (:file "app-installation")
                  (:file "pr-checks" :depends-on ("access-checks"))
                  (:file "pull-request-promoter")
                  (:file "read-repos")
@@ -321,6 +322,7 @@
                 :components ((:file "test-screenshot")))
                (:module "github"
                 :components ((:file "test-jwt-token")
+                             (:file "test-app-installation")
                              (:file "test-plugin")
                              (:file "test-access-checks")
                              (:file "test-pull-request-promoter")

@@ -18,6 +18,8 @@
   (:import-from #:screenshotbot/github/jwt-token
                 #:github-create-jwt-token
                 #:github-request)
+  (:import-from #:screenshotbot/github/app-installation
+                #:github-get-access-token-for-installation)
   (:export
    #:github-service
    #:github-update-pull-request))
@@ -36,18 +38,6 @@
 (defun github-get-credentials (client)
   (read-java-field client "credentials"))
 
-
-(defun github-get-access-token-for-installation (installation-id &key
-                                                                   app-id
-                                                                   private-key)
-  (with-throttler (*github-throttler*)
-   (assoc-value (github-request
-                 (format nil "/app/installations/~a/access_tokens" installation-id)
-                 :jwt-token (github-create-jwt-token
-                             :app-id app-id
-                             :private-key private-key)
-                 :method :post)
-                :token)))
 
 ;; (github-get-access-token-for-installation 16121814)
 
