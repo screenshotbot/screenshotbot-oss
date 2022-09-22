@@ -98,7 +98,7 @@
                                   (ironclad:byte-array-to-hex-string expected))))
            (unless (equal expected actual)
              (error "invalid hmac, expected ~a, got ~a" expected actual))))
-       (log:info "hmac validated")
+       (log:debug "hmac validated")
        (let ((json (json:decode-json
                     (flexi-streams:make-flexi-stream
                      (flexi-streams:make-in-memory-input-stream data)))))

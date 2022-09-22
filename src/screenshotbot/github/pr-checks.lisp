@@ -82,7 +82,7 @@
                                                     conclusion
                                                     head-sha)
   (assert (member status (list nil :queued :in-progress :completed)))
-  (log:info "Updating pull request ~s" all-args)
+  (log:debug "Updating pull request on ~s" full-name)
   (github-create-check-run
    full-name
    :name check-name
