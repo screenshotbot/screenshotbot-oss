@@ -20,7 +20,12 @@
                 #:with-login)
   (:import-from
    #:bknr.datastore
-   #:with-transaction))
+   #:with-transaction)
+  (:local-nicknames (#:a #:alexandria))
+  (:import-from #:screenshotbot/github/webhook
+                #:*hooks*)
+  (:import-from #:bknr.datastore
+                #:class-instances))
 (in-package :screenshotbot/github/settings)
 
 (markup:enable-reader)
@@ -40,6 +45,23 @@
         (hex:safe-redirect "/settings/github"))
     (retry-app-installation-callback ()
       (github-app-installation-callback state installation-id setup-action))))
+
+(defun installation-delete-webhook (json)
+  (let ((installation (a:assoc-value json :installation)))
+   (when (and (equal "deleted" (a:assoc-value json :action))
+              installation)
+     (let ((id (a:assoc-value installation :id)))
+       (delete-installation-by-id id)))))
+
+(defun delete-installation-by-id (id)
+  (log:info "Deleting by installation by id: ~a" id)
+  (loop for github-config in (class-instances 'github-config)
+        if (eql id (installation-id github-config))
+          do (with-transaction ()
+               (setf (installation-id github-config) nil))))
+
+(pushnew 'installation-delete-webhook
+          *hooks*)
 
 (defun settings-github-page ()
   (let ((installation-id (installation-id (github-config (current-company)))))

@@ -35,7 +35,8 @@
    #:pull-request-base
    #:all-pull-requests
    #:pull-request-with-url
-   #:github-maybe-update-pull-request))
+   #:github-maybe-update-pull-request
+   #:*hooks*))
 (in-package :screenshotbot/github/webhook)
 
 (defmethod github-get-canonical-repo (repo)
@@ -77,6 +78,8 @@
 
 (defun channels-for-pull-request (pull-request))
 
+(defvar *hooks* nil)
+
 (defhandler (nil :uri "/github-webhook") ()
   (let ((webhook-secret (webhook-secret (github-plugin))))
    (let ((stream (hunchentoot:raw-post-data
@@ -105,6 +108,8 @@
          ;; use it before when we did special code for Pull Requests,
          ;; and eventually just moved to the checks API. I think it
          ;; could go.
+         (loop for hook in *hooks*
+               do (funcall hook json))
          (let ((pull-request (github-maybe-update-pull-request json)))
            (declare (ignore pull-request)))))
      "OK")))
