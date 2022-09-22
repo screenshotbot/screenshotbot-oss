@@ -91,6 +91,7 @@
   (:import-from #:bknr.datastore
                 #:store-object)
   (:import-from #:screenshotbot/model/view
+                #:can-edit
                 #:can-edit!)
   (:export
    #:diff-report
@@ -639,7 +640,7 @@
 
       </li>
 
-      ,(when acceptable
+      ,(when (and (can-edit run (current-user)) acceptable)
          <li class= "nav-item" >
          <render-acceptable acceptable=acceptable />
          </li>)
