@@ -396,9 +396,7 @@ error."
 
   (unless *main-branch*
     (setf *main-branch*
-          (or
-           (uiop:getenv "CIRCLE_BRANCH")
-           (guess-master-branch (git-repo))))))
+          (guess-master-branch (git-repo)))))
 
 (defun link-to-github-pull-request (repo-url pull-id)
   (let ((key (cond
