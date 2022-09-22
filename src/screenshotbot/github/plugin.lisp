@@ -11,16 +11,25 @@
                 #:plugin-parse-repo)
   (:import-from #:screenshotbot/model/recorder-run
                 #:github-repo)
+  (:import-from #:screenshotbot/installation
+                #:find-plugin
+                #:installation)
   (:export
    #:github-plugin
    ;; todo: separate these to
    #:github-repo
    #:app-id
-   #:private-key))
+   #:private-key
+   #:app-name
+   #:webhook-secret))
 (in-package :screenshotbot/github/plugin)
 
 (defclass github-plugin (plugin)
-  ((app-id :initarg :app-id
+  ((app-name :initarg :app-name
+             :accessor app-name)
+   (webhook-secret :initarg :webhook-secret
+                   :accessor webhook-secret)
+   (app-id :initarg :app-id
            :accessor app-id)
    (private-key :initarg :private-key
                 :accessor private-key)))
@@ -47,3 +56,6 @@
   (when (str:containsp "github" repo-str)
     (make-github-repo :link repo-str
                       :company company)))
+
+(defun github-plugin (&key (installation (installation)))
+  (find-plugin installation 'github-plugin))

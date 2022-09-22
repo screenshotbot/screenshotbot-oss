@@ -13,6 +13,7 @@
         #:screenshotbot/user-api
         #:screenshotbot/settings-api)
   (:import-from #:screenshotbot/github/plugin
+                #:app-name
                 #:github-plugin)
   (:import-from #:screenshotbot/server
                 #:defhandler
@@ -30,7 +31,7 @@
       (with-login ()
         (let ((config (github-config (current-company))))
           (cond
-            ((equal "install" setup-action)
+            ((str:s-member (list "install" "update") setup-action)
              (with-transaction ()
                (setf (installation-id config)
                      (parse-integer installation-id))))
@@ -56,7 +57,8 @@
       </div>
 
       <div class= "card-footer">
-        <a href= (format nil "https://github.com/apps/screenshotbot/installations/new")
+        <a href= (format nil "https://github.com/apps/~a/installations/new"
+                  (app-name (github-plugin)))
            class= "btn btn-primary" >
           Install App on GitHub
         </a>

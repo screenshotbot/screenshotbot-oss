@@ -23,6 +23,9 @@
                 #:github-installation)
   (:import-from #:screenshotbot/model/recorder-run
                 #:github-repo)
+  (:import-from #:screenshotbot/github/plugin
+                #:webhook-secret
+                #:github-plugin)
   (:export
    #:pull-request
    #:github-get-canonical-repo
@@ -74,15 +77,16 @@
 
 (defun channels-for-pull-request (pull-request))
 
-(let ((webhook-secret "supersecretsauce89"))
- (defhandler (nil :uri "/github-webhook") ()
+(defhandler (nil :uri "/github-webhook") ()
+  (let ((webhook-secret (webhook-secret (github-plugin))))
    (let ((stream (hunchentoot:raw-post-data
                   :want-stream t
                   :force-binary t))
          (length (parse-integer (hunchentoot:header-in* :content-length))))
      (let ((data (make-array length :element-type 'flexi-streams:octet )))
        (read-sequence data stream)
-       (let ((hmac (ironclad:make-hmac (flexi-streams:string-to-octets webhook-secret)
+       (let ((hmac (ironclad:make-hmac (flexi-streams:string-to-octets
+                                        webhook-secret)
                                        :sha256)))
          (ironclad:update-hmac hmac data)
          (let* ((expected (ironclad:hmac-digest hmac))
