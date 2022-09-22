@@ -49,7 +49,9 @@
   (:import-from #:screenshotbot/github/app-installation
                 #:app-installed-p)
   (:import-from #:screenshotbot/template
-                #:mdi))
+                #:mdi)
+  (:export
+   #:verified-repo-p))
 (in-package :screenshotbot/github/settings)
 
 (markup:enable-reader)
@@ -156,6 +158,10 @@
       (sort
        (a:hash-table-keys table)
        #'string<))))
+
+(defun verified-repo-p (repo company)
+  (str:s-member (verified-repos company)
+                (repo-string-identifier repo)))
 
 (defun settings-github-page ()
   (let* ((installation-id (installation-id (github-config (current-company))))

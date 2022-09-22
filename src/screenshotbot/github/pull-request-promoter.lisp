@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/github/pull-request-promoter
+(defpackage :screenshotbot/github/pull-request-promoter
   (:use #:cl
         #:alexandria
         #:screenshotbot/promote-api
@@ -33,6 +33,13 @@
                 #:installation-domain)
   (:import-from #:screenshotbot/dashboard/run-page
                 #:run-page)
+  (:import-from #:screenshotbot/github/settings
+                #:verified-repo-p)
+  (:import-from #:screenshotbot/github/app-installation
+                #:app-installation-id
+                #:app-installed-p)
+  (:import-from #:screenshotbot/github/access-checks
+                #:repo-string-identifier)
   (:export
    #:pull-request-promoter
    #:pr-acceptable))
@@ -122,13 +129,15 @@
                   :private-key (private-key plugin)))
 
 (defmethod plugin-installed? ((promoter pull-request-promoter)
-                               company)
-  (plugin-installation-id promoter company))
-
-(defmethod plugin-installation-id ((promoter pull-request-promoter)
-                        company)
-  (installation-id (github-config
-                    company)))
+                               company
+                              repo-url)
+  (cond
+    ((not (verified-repo-p repo-url company))
+     (do-promotion-log :error "Repo ~a not verified" repo-url)
+     nil)
+    ((not (app-installed-p (repo-string-identifier repo-url)))
+     (do-promotion-log :error "The Screenshotbot app is not installed on ~a" repo-url))
+    (t t)))
 
 (defmethod valid-repo? ((promoter pull-request-promoter)
                         repo)
@@ -141,19 +150,15 @@
 
 (defmethod maybe-promote ((promoter pull-request-promoter)
                           run)
-  (let ((repo (channel-repo (recorder-run-channel run)))
-        (company (recorder-run-company run)))
-    (unless (plugin-installed? promoter company)
-      (do-promotion-log :error "No github installation id avaialble"))
-
-    (do-promotion-log :info "Repo is of type: ~S" (type-of repo))
-
+  (let* ((repo (channel-repo (recorder-run-channel run)))
+         (repo-url (repo-link repo))
+         (company (recorder-run-company run)))
     (cond
       ((and
-        (p (plugin-installed? promoter company))
-        (p (valid-repo? promoter repo))
-        (p (not (equal (recorder-run-merge-base run)
-                     (recorder-run-commit run)))))
+        (valid-repo? promoter repo)
+        (plugin-installed? promoter company repo-url)
+        (not (equal (recorder-run-merge-base run)
+                    (recorder-run-commit run))))
        (multiple-value-bind (full parts)
            (cl-ppcre:scan-to-strings "^https://.*/(.*/.*)$"
                                      (github-get-canonical-repo
@@ -207,7 +212,7 @@
                            run
                            full-name
                            check)
-  (let ((company (recorder-run-company run)))
+  (let ((repo-url (repo-link (channel-repo (recorder-run-channel run)))))
    (list :app-id (app-id promoter)
          :private-key (private-key promoter)
          :full-name full-name
@@ -217,7 +222,7 @@
                    ("summary" . ,(check-summary check)))
          :status :completed
          :details-url (details-url check)
-         :installation-id (plugin-installation-id promoter company)
+         :installation-id (app-installation-id (repo-string-identifier repo-url))
          :conclusion (str:downcase (check-status (promoter-result promoter)))
          :head-sha (or
                     (override-commit-hash run)

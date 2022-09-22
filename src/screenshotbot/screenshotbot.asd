@@ -201,9 +201,9 @@
                  (:file "access-checks")
                  (:file "app-installation")
                  (:file "pr-checks" :depends-on ("access-checks"))
-                 (:file "pull-request-promoter")
                  (:file "read-repos")
                  (:file "settings")
+                 (:file "pull-request-promoter")
                  (:file "task-integration")
                  (:file "all")))
    (:module "phabricator"

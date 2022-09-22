@@ -111,9 +111,12 @@
                   :token)))
 
 (defun app-installed-p (repo-id)
+  (not (null (app-installation-id repo-id))))
+
+(defun app-installation-id (repo-id)
   (block top
    (dolist (installation (class-instances 'app-installation))
      (dolist (installed-repo (app-installation-repos installation))
        (when (string-equal installed-repo repo-id)
-         (return-from top t))))
+         (return-from top (installation-id installation)))))
    nil))

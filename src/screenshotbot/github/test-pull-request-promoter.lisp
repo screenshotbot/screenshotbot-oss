@@ -29,14 +29,18 @@
                 #:retrieve-run
                 #:make-check-result-from-diff-report
                 #:report)
-  (:import-from #:screenshotbot/model/company
-                #:installation-id)
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
   (:import-from #:screenshotbot/diff-report
-                #:change))
+                #:change)
+  (:import-from #:screenshotbot/github/app-installation
+                #:app-installed-p)
+  (:import-from #:screenshotbot/github/settings
+                #:verified-repo-p)
+  (:import-from #:screenshotbot/github/pull-request-promoter
+                #:plugin-installed?))
 
 (util/fiveam:def-suite)
 
@@ -48,21 +52,22 @@
 (defclass my-run-retriever ()
   ())
 
+(defclass dummy-repo (github-repo)
+  ())
+
 (defclass dummy-channel (test-object)
   ((run :accessor channel-runs
         :initform nil)
    (name :accessor channel-name
-         :initform "foo"))
+         :initform "foo")
+   (repo :transient t
+         :initform (make-instance 'dummy-repo)
+         :accessor channel-repo))
   (:metaclass persistent-class))
 
-(defclass dummy-repo (github-repo)
-  ())
 
 (defmethod repo-link ((repo dummy-repo))
   "https://github.com/foo/bar.git")
-
-(defmethod channel-repo ((channel dummy-channel))
-  (make-instance 'dummy-repo))
 
 (defmethod retrieve-run ((retriever my-run-retriever)
                          channel base-commit)
@@ -73,10 +78,12 @@
 (def-fixture state (&key (run-retriever 'my-run-retriever))
   (with-test-store ()
    (cl-mock:with-mocks ()
-     (cl-mock:if-called 'installation-id
-                         (lambda (&rest args)
-                           (declare (ignore args))
-                           "mocked-installation-id"))
+     (cl-mock:if-called 'verified-repo-p
+                         (lambda (repo company)
+                           t))
+     (cl-mock:if-called 'app-installed-p
+                         (lambda (repo)
+                           t))
      (let ((company (make-instance 'company))
            (promoter (make-instance 'pull-request-promoter
                                      :app-id "dummy-app-id"
@@ -98,6 +105,40 @@
       (maybe-promote promoter run)
       (is-false (report promoter))
       (is (equal "car"(base-commit promoter))))))
+
+(test bitbucket-repo-doesnt-cause-promoter-to-crash
+  (with-fixture state ()
+    (let* ((repo (make-instance 'generic-git-repo
+                                 :link "foo"))
+           (channel (let ((channel (make-instance 'dummy-channel)))
+                      (setf (channel-repo channel) repo)
+                      channel))
+           (run (make-instance 'recorder-run
+                                :company company
+                                :channel channel
+                                :merge-base "car"
+                                :commit-hash "foo")))
+      (maybe-promote promoter run))))
+
+(test plugin-installed?
+  (with-fixture state ()
+    (is-true (plugin-installed?
+              promoter company "https://github.com/far/bar"))
+    (cl-mock:if-called 'verified-repo-p
+                        (lambda (repo company)
+                          nil)
+                        :at-start t)
+    (is-false (plugin-installed?
+               promoter company "https://github.com/far/bar"))))
+
+(test plugin-installed?-should-return-false-if-app-not-installed
+  (with-fixture state ()
+    (cl-mock:if-called 'app-installed-p
+                        (lambda (repo)
+                          nil)
+                        :at-start t)
+    (is-false (plugin-installed?
+               promoter company "https://github.com/far/bar"))))
 
 (test run-with-pr-creates-a-report
   (with-fixture state ()
