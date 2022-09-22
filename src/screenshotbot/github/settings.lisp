@@ -29,9 +29,27 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/github/read-repos
+                #:can-edit-repo
                 #:read-repo-list)
   (:import-from #:screenshotbot/ui/simple-card-page
-                #:simple-card-page))
+                #:simple-card-page)
+  (:import-from #:util/store
+                #:with-class-validation)
+  (:import-from #:bknr.datastore
+                #:store-object)
+  (:import-from #:bknr.datastore
+                #:persistent-class)
+  (:import-from #:bknr.indices
+                #:hash-index)
+  (:import-from #:util/form-errors
+                #:with-form-errors)
+  (:import-from #:screenshotbot/github/access-checks
+                #:repo-string-identifier
+                #:github-repo-id)
+  (:import-from #:screenshotbot/github/app-installation
+                #:app-installed-p)
+  (:import-from #:screenshotbot/template
+                #:mdi))
 (in-package :screenshotbot/github/settings)
 
 (markup:enable-reader)
@@ -51,6 +69,17 @@
         (hex:safe-redirect "/settings/github"))
     (retry-app-installation-callback ()
       (github-app-installation-callback state installation-id setup-action))))
+
+
+(with-class-validation
+  (defclass verified-repo (store-object)
+    ((%company :initarg :company
+               :reader company
+               :index-type hash-index
+               :index-reader %verified-repos-for-company)
+     (repo-id :initarg :repo-id
+              :reader repo-id))
+    (:metaclass persistent-class)))
 
 (defun installation-delete-webhook (json)
   (let ((installation (a:assoc-value json :installation)))
@@ -97,43 +126,141 @@
       </div>
     </simple-card-page>))
 
+(defun verify-repo (repo access-token)
+  (let ((errors))
+    (flet ((check (field test message)
+             (unless test
+               (push (cons field message)
+                     errors))))
+      (check :repo (ignore-errors (github-repo-id repo))
+             "Does not look like a valid GitHub repo")
+      (check :repo (can-edit-repo access-token repo)
+             "You don't seem to have access to this repository. Are you using the wrong GitHub account?")
+      (cond
+        (errors
+         (with-form-errors (:was-validated t
+                            :repo repo
+                            :errors errors)
+           (settings-github-page)))
+        (t
+         (make-instance 'verified-repo
+                         :company (current-company)
+                         :repo-id (repo-string-identifier repo))
+         (hex:safe-redirect "/settings/github"))))))
+
+(defun verified-repos (company)
+  (let ((repos (%verified-repos-for-company company)))
+    (let ((table (make-hash-table :test #'equal)))
+      (loop for repo in repos do
+        (setf (gethash (repo-id repo) table) t))
+      (sort
+       (a:hash-table-keys table)
+       #'string<))))
+
 (defun settings-github-page ()
   (let* ((installation-id (installation-id (github-config (current-company))))
          access-token
-         (oauth-link (uiop:call-function
-                      ;; TODO: cleanup dependency
-                      "screenshotbot/login/github-oauth:make-gh-oauth-link"
-                      (uiop:call-function
-                       ;; TODO: cleanup dependency
-                       "screenshotbot/login/github-oauth:github-oauth-provider")
-                      (nibble ()
-                        (render-repo-list access-token))
-                      :access-token-callback (lambda (token)
-                                               (setf access-token token))
-                     :scope "user:email")))
+         (app-configuration-url
+           (format nil "https://github.com/apps/~a/installations/new"
+                    (app-name (github-plugin))))
+         (verify-repo (nibble (repo)
+                        (hex:safe-redirect
+                         (uiop:call-function
+                          ;; TODO: cleanup dependency
+                          "screenshotbot/login/github-oauth:make-gh-oauth-link"
+                          (uiop:call-function
+                           ;; TODO: cleanup dependency
+                           "screenshotbot/login/github-oauth:github-oauth-provider")
+                          (nibble ()
+                            (verify-repo repo access-token))
+                          :access-token-callback (lambda (token)
+                                                   (setf access-token token))
+                          :scope "user:email read:org repo")))))
     <settings-template>
-      <div class= "card mt-3">
+      <div class= "card mt-3" style= "max-width: 80em;" >
         <div class= "card-header">
           <h3>Setup GitHub Checks</h3>
         </div>
 
-        <div class= "card-body">
-          <p>In order to enable Build Statuses (called GitHub Checks) you will need to install the Screenshotbot Checks app to your GitHub organization.</p>
+        <div class= "card-body" >
+          <p>In order to enable GitHub Checks you first need to verify that you have access to the repository, and then install the Screenshotbot app on the repository or organization.</p>
 
-          <p>
-            This app does <b>not</b> get permissions to access to your repositories, it only needs write access to the Checks API.
-          </p>
+          <form class= "mb-3 mt-3" action=verify-repo method= "POST" >
+            <label for= "repo" class= "form-label" >Verify your GitHub repository</label>
+            <div class= "input-group" style= "max-width: 50em" >
+              <input id= "repo" name= "repo"
+                     type= "text" class= "form-control" placeholder= "https://github.com/org/repo" />
+              <input type= "submit" class= "btn btn-primary" value= "Verify Repository" />
+            </div>
+          </form>
 
-          <p>
-            <a href=oauth-link >Choose repositories</a>
-          </p>
+        ,(let ((verified-repos (verified-repos (current-company))))
+           (cond
+             (verified-repos
+              <div style="margin-top: 3em" >
+
+                <h4>Verified repositories</h4>
+                <table class= "table table-borderless" >
+                  <thead>
+                    <tr>
+                      <th>Repository</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                  ,@ (loop for repo in verified-repos
+                           for app-installed-p = (app-installed-p repo)
+                           collect
+                               <tr>
+                                 <td>
+                                   ,(progn repo)
+                                 </td>
+                                   ,(cond
+                                      (app-installed-p
+                                       <markup:merge-tag>
+                                         <td>
+                                           <span>
+                                             <span class= "text-success">
+                                               <mdi name= "done" /> Verified, and App is installed
+                                             </span>
+                                           </span>
+                                         </td>
+                                         <td>
+                                           <a href= app-configuration-url >
+                                             Configure on GitHub
+                                           </a>
+                                         </td>
+                                       </markup:merge-tag>
+                                       )
+                                      (t
+                                       <markup:merge-tag>
+                                         <td>
+                                           <span class= "text-danger">
+                                             <mdi name= "error" />
+                                             Verified, but app not installed
+                                           </span>
+                                         </td>
+                                         <td>
+                                           <a href= app-configuration-url >Install App</a>
+                                         </td>
+                                       </markup:merge-tag>))
+                               </tr>)
+                             </tbody>
+                           </table>
+              </div>)))
+
+
+
+          <div class= "alert alert-info" >
+            The GitHub app does <b>not</b> get permissions to access to your repositories, it only needs write access to the Checks API. We will request access to read repository metadata only during the verification step.
+          </div>
         </div>
-
 
         <div class= "card-footer">
 
-          <a href= (format nil "https://github.com/apps/~a/installations/new"
-                    (app-name (github-plugin)))
+          <a href= app-configuration-url
              class= (if installation-id "btn btn-secondary" "btn btn-primary") >
             ,(if installation-id
                  "Configure"

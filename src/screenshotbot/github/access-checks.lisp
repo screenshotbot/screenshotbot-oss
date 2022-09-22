@@ -177,6 +177,9 @@
 (defmethod github-repo-id ((repo github-repo))
   (github-repo-id (repo-link repo)))
 
+(defun repo-string-identifier (repo-url)
+  (#_generateId (github-repo-id repo-url)))
+
 (defun can-access-github-repo (github-link)
   (let ((repo-id (github-repo-id github-link)))
     (#_getIssues repo-id

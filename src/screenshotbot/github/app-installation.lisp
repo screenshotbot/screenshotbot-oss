@@ -20,9 +20,12 @@
                 #:app-id)
   (:import-from #:bknr.datastore
                 #:with-transaction)
+  (:import-from #:bknr.datastore
+                #:class-instances)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:github-get-access-token-for-installation))
+   #:github-get-access-token-for-installation
+   #:app-installed-p))
 (in-package :screenshotbot/github/app-installation)
 
 (defclass app-installation (store-object)
@@ -106,3 +109,11 @@
                                :private-key private-key)
                    :method :post)
                   :token)))
+
+(defun app-installed-p (repo-id)
+  (block top
+   (dolist (installation (class-instances 'app-installation))
+     (dolist (installed-repo (app-installation-repos installation))
+       (when (string-equal installed-repo repo-id)
+         (return-from top t))))
+   nil))

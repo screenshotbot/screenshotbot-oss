@@ -6,6 +6,8 @@
 
 (uiop/package:define-package :util/form-errors
     (:use #:cl #:alexandria #:mquery)
+  (:import-from #:markup
+                #:xml-tag-children)
   (:export #:with-form-errors
            #:update-form-values))
 (in-package :util/form-errors)
@@ -33,14 +35,21 @@
                (assert input)
                (mquery:remove-class input "is-valid")
                (mquery:add-class input "is-invalid")
-               (setf (mquery:after
-                      (cond
-                        ((equal "checkbox" (mquery:attr input "type"))
-                         ;; for checkbox there's a label after the input form
-                         (mquery:after input))
-                        (t
-                         input)))
-                     <div class= (if tooltip "invalid-tooltip" "invalid-feedback") >,(progn msg)</div>))))))))
+               (let ((input-group (let ((parent (mquery:parent input)))
+                                    (when (mquery:has-class-p parent "input-group")
+                                      parent))))
+                 (when input-group
+                   (mquery:add-class input-group "has-validation"))
+                (setf (mquery:after
+                       (cond
+                         ((equal "checkbox" (mquery:attr input "type"))
+                          ;; for checkbox there's a label after the input form
+                          (mquery:after input))
+                         (input-group
+                          (car (last (xml-tag-children (mquery:parent input)))))
+                         (t
+                          input)))
+                      <div class= (if tooltip "invalid-tooltip" "invalid-feedback") >,(progn msg)</div>)))))))))
   (values html errors))
 
 (defmacro with-form-errors ((&rest args &key errors args-list was-validated tooltip &allow-other-keys) &body body)
