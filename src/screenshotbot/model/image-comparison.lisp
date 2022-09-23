@@ -33,6 +33,8 @@
                 #:class-instances)
   (:import-from #:bknr.datastore
                 #:store-objects-with-class)
+  (:import-from #:util/cron
+                #:def-cron)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -114,7 +116,6 @@
 
 (defun make-old-transient ()
   (mapc #'make-transient (find-old-image-comparisons)))
-
 
 (defun do-image-comparison (before-image
                             after-image

@@ -48,5 +48,5 @@
   (loop for (nil . cleanup) in *cleanups* do
     (process-cleanup cleanup)))
 
-(def-cron dispatch-cleanups ()
+(def-cron dispatch-cleanups (:minute 23 :hour 1)
   (dispatch-cleanups))
