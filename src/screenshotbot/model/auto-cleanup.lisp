@@ -41,6 +41,7 @@
     (dolist (obj objs)
       (when (< (funcall (cleanup-timestamp cleanup) obj)
                threshold)
+        (log:info "Auto-deleting: ~s" obj)
         (delete-object obj)))))
 
 (defun dispatch-cleanups ()
