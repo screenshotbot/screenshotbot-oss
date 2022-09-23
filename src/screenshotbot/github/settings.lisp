@@ -16,6 +16,7 @@
                 #:app-name
                 #:github-plugin)
   (:import-from #:screenshotbot/server
+                #:staging-p
                 #:defhandler
                 #:with-login)
   (:import-from
@@ -50,6 +51,10 @@
                 #:app-installed-p)
   (:import-from #:screenshotbot/template
                 #:mdi)
+  (:import-from #:screenshotbot/github/audit-log
+                #:github-audit-logs-for-company)
+  (:import-from #:screenshotbot/dashboard/paginated
+                #:paginated)
   (:export
    #:verified-repo-p))
 (in-package :screenshotbot/github/settings)
@@ -267,14 +272,38 @@
         <div class= "card-footer">
 
           <a href= app-configuration-url
-             class= (if installation-id "btn btn-secondary" "btn btn-primary") >
+             class= (if installation-id "btn btn-outline-secondary" "btn btn-outline-primary") >
             ,(if installation-id
                  "Configure"
                  "Install App on GitHub")
           </a>
         </div>
       </div>
+
+      ,(when (staging-p)
+         (render-audit-logs))
     </settings-template>))
+
+(defmethod render-audit-log-item ((self t))
+  <span> [Missing renderer] Audit log item of type ,(type-of self) </span>)
+
+(deftag render-audit-logs ()
+  <div class= "card mt-3 audit-log-card" style= "max-width: 80em" >
+    <div class= "card-header">
+      <h5>API Audit Logs</h5>
+    </div>
+
+  <div class= "card-body">
+    <p class= "text-muted">All API calls to GitHub made by Screenshotbot in the last 30 days will be listed here. This does not include OAuth calls since that's made on the user's behalf.</p>
+
+    <ul>
+      ,(paginated
+        (lambda (x)
+          <li>,(render-audit-log-item x)</li>)
+        :items (github-audit-logs-for-company (current-company)))
+    </ul>
+  </div>
+  </div>)
 
 (defsettings settings-github-page
   :name "github"

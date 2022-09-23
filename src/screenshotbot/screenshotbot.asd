@@ -195,6 +195,7 @@
     :serial t
     :components ((:file "plugin")
                  (:file "github-installation")
+                 (:file "audit-log")
                  (:file "marketplace")
                  (:file "webhook")
                  (:file "jwt-token")
