@@ -117,6 +117,9 @@
 (defun make-old-transient ()
   (mapc #'make-transient (find-old-image-comparisons)))
 
+(def-cron make-old-transient (:minute 45 :hour 22)
+  (make-old-transient))
+
 (defun do-image-comparison (before-image
                             after-image
                             p
