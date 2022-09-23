@@ -152,6 +152,7 @@
     :serial t
     :components ((:file "core")
                  (:file "transient-object")
+                 (:file "auto-cleanup")
                  (:file "company")
                  (:file "user")
                  (:file "invite")
@@ -309,6 +310,7 @@
                              (:file "test-common")))
                (:module "model"
                 :components ((:file "test-core")
+                             (:file "test-auto-cleanup")
                              (:file "test-transient-object")
                              (:file "test-recorder-run")
                              (:file "test-screenshot")
