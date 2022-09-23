@@ -25,6 +25,8 @@
                 #:defhandler)
   (:import-from #:screenshotbot/secret
                 #:secret)
+  (:import-from #:screenshotbot/model/auto-cleanup
+                #:register-auto-cleanup)
   (:export
    #:slack-token
    #:latest-slack-token
@@ -88,6 +90,8 @@
        :reader %created-at))
   (:default-initargs :ts (get-universal-time))
   (:metaclass persistent-class))
+
+(register-auto-cleanup 'audit-log :timestamp #'%created-at)
 
 (defun latest-slack-token (company)
   (let ((token
