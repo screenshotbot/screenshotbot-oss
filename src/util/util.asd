@@ -186,6 +186,7 @@
                #-screenshotbot-oss
                :sentry
                :trivial-garbage
+               :util/macros
                :util/misc)
   :serial t
   :components ((:file "fake-mp")

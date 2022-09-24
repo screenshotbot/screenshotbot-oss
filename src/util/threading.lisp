@@ -6,6 +6,8 @@
 
 (defpackage :util/threading
   (:use #:cl)
+  (:import-from #:util/macros
+                #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#:mp :util/fake-mp))
@@ -18,7 +20,8 @@
    #:log-sentry
    #:*catch-errors-p*
    #:*log-sentry-p*
-   #:*extras*)
+   #:*extras*
+   #:ignore-and-log-errors)
 )
 (in-package :util/threading)
 
@@ -146,9 +149,13 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
      (trivial-backtrace:print-backtrace e)
      (invoke-restart 'cl:abort))))
 
+(def-easy-macro ignore-and-log-errors (&fn fn)
+  (handler-bind ((error #'handle-error))
+    (funcall-with-sentry-logs fn)))
+
 (defun make-thread (body &rest args)
   (apply #'bt:make-thread
            (lambda ()
-             (handler-bind ((error #'handle-error))
-               (funcall-with-sentry-logs body)))
-         args))
+             (ignore-and-log-errors ()
+               (funcall body)))
+           args))
