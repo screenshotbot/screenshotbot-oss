@@ -130,17 +130,21 @@ tree. This version uses the Kahn's algorithm instead of DFS"
 
 
 (defmethod write-to-stream ((dag dag) stream)
-  (json:encode-json
-   `((:commits .
-               ,(reverse
-                 (loop for node-id in (pp (safe-topological-sort (digraph dag)))
-                       collect
-                       (let ((commit (gethash node-id (commit-map dag))))
-                         `((:sha . ,(sha commit))
-                           (:author . ,(author commit))
-                           (:parents . ,(parents commit)))))))
-     (:dummy . "0"))
-   stream)
+  (let ((sorted-nodes (safe-topological-sort (digraph dag)))
+        (commit-map (commit-map dag)))
+   (json:encode-json
+    `((:commits .
+                ,(reverse
+                  (loop for node-id in sorted-nodes
+                        collect
+                        (let ((commit (gethash node-id commit-map)))
+                          (unless commit
+                            (error "Internal error: could not find node for id ~a" node-id))
+                          `((:sha . ,(sha commit))
+                            (:author . ,(author commit))
+                            (:parents . ,(parents commit)))))))
+      (:dummy . "0"))
+    stream))
   (finish-output stream))
 
 (defun read-from-stream (stream)

@@ -27,6 +27,13 @@
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:installation-domain)
+  (:import-from #:screenshotbot/user-api
+                #:current-company)
+  (:import-from #:screenshotbot/gitlab/settings
+                #:company
+                #:gitlab-token
+                #:gitlab-url
+                #:gitlab-settings-for-company)
   (:export
    #:merge-request-promoter
    #:gitlab-acceptable))
@@ -47,10 +54,11 @@
       (parse-integer mr-id))))
 
 (defun gitlab-request (repo url &key (method :get) content)
-  (dex:request (format nil "~a~a" *gitlab-url* url)
-               :method method
-               :headers `(("PRIVATE-TOKEN" . ,(repo-access-token repo)))
-               :content content))
+  (let ((settings (gitlab-settings-for-company (company repo))))
+   (dex:request (format nil "~a/api/v4~a" (gitlab-url settings) url)
+                :method method
+                :headers `(("PRIVATE-TOKEN" . ,(gitlab-token settings)))
+                :content content)))
 
 (defclass merge-request ()
   ((base-sha :initarg :base-sha

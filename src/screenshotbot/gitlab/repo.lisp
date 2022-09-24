@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/gitlab/repo
+(defpackage :screenshotbot/gitlab/repo
   (:use #:cl
         #:alexandria
         #:screenshotbot/model/channel)
@@ -16,6 +16,8 @@
   (:import-from #:screenshotbot/git-repo
                 #:public-repo-p
                 #:generic-git-repo)
+  (:import-from #:screenshotbot/model/company
+                #:company)
   (:export
    #:gitlab-repo
    #:project-path
@@ -29,8 +31,8 @@
 (defclass gitlab-repo (generic-git-repo)
   ((link :initarg :link
          :accessor repo-link)
-   (access-token :initarg :access-token
-                 :accessor repo-access-token)))
+   (company :initarg :company
+            :accessor company)))
 
 (defun make-gitlab-repo (&href link)
   (make-instance 'gitlab-repo

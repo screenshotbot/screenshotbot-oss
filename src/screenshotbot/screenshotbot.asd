@@ -219,6 +219,7 @@
     :serial t
     :components ((:file "repo")
                  (:file "plugin")
+                 (:file "settings")
                  (:file "merge-request-promoter")
                  (:file "all")))
    (:module "api"
