@@ -22,6 +22,8 @@
   (:import-from #:screenshotbot/server
                 #:register-init-hook
                 #:*init-hooks*)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors)
   (:export
    #:with-promotion-log
    #:default-promoter
@@ -157,7 +159,8 @@
   (restart-case
       (dolist (delegate (delegates promoter))
         (log :info "Delegating to promoter ~s" delegate)
-        (maybe-promote delegate run))
+        (ignore-and-log-errors ()
+          (maybe-promote delegate run)))
     (dangerous-restart-all-promotions ()
       (maybe-promote promoter run))))
 
