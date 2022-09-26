@@ -257,24 +257,36 @@
      ;; it's correct to send false in that case.
      nil)
     (t
-     (and
-      (eql nil (hash-set-difference list1 list2 :test test))
-      (eql nil (hash-set-difference list2 list1 :test test))))))
+     (let ((diff-1 (hash-set-difference list1 list2 :test test))
+           (diff-2 (hash-set-difference list2 list1 :test test)))
+       (values
+        (and
+         (eql nil diff-1)
+         (eql nil diff-2))
+        diff-1
+        diff-2)))))
 
 (defun assert-hash-tables= (h1 h2)
   (unless (eql (hash-table-test h1)
                (hash-table-test h2))
     (error "the two hash tables have different test functions"))
-  (unless (unordered-equalp
+  (multiple-value-bind (res diff-1 diff-2)
+      (unordered-equalp
            (alexandria:hash-table-keys h1)
            (alexandria:hash-table-keys h2)
            :test (hash-table-test h1))
-    (error "The two hash tables have different keys"))
+    (unless res
+      (error "The two hash tables have different keys. ~%Missing keys in new-hash-table: ~s~% Missing keys in old hash-table: ~s~%"
+             diff-1
+             diff-2)))
   (loop for k being the hash-keys of h1
         for value1 = (gethash k h1)
         for value2 = (gethash k h2)
-        unless (unordered-equalp  value1 value2)
-          do (error "the two hash tables have different values for key ~a" k)))
+        do
+           (multiple-value-bind (res diff-1 diff-2)
+               (unordered-equalp  value1 value2)
+             (unless res
+               (error "the two hash tables have different values for key ~a~%Missing values in new hash-table:~S~%Missing values in old hash-table:~s" k diff-1 diff-2)))))
 
 (defun validate-class-index (class-name slot-name)
   (declare (optimize (debug 3)))
