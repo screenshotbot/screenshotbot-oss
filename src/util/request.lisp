@@ -37,27 +37,33 @@
                  :want-stream want-stream
                  :verify verify
                  args)
-      (handler-bind ((error (lambda (e)
-                              (declare (ignore e))
-                              ;; We're not going to actually return the stream
-                              (when (streamp res)
-                                (close res)))))
+      (flet ((maybe-ensure-success (&optional response)
+             (when (and ensure-success
+                        (not (http-success-response? status)))
+               (error "Got response code ~a when downloading ~a" status url))))
+       (handler-bind ((error (lambda (e)
+                               (declare (ignore e))
+                               ;; We're not going to actually return the stream
+                               (when (streamp res)
+                                 (close res)))))
 
-        (when (and ensure-success
-                   (not (http-success-response? status)))
-          (error "Got response code ~a when downloading ~a" status url))
-        (values
-         (cond
-           (want-string
-            (uiop:slurp-input-stream 'string res))
-           (t
-            res))
-         status
-         (cond
-           (headers-as-hash-table
-            (make-header-hash-table headers))
-           (t
-            headers)))))))
+         (values
+          (cond
+            (want-string
+             (let ((response (uiop:slurp-input-stream 'string res)))
+               ;; by calling this here, we'll have the response in the
+               ;; stack trace.
+               (maybe-ensure-success response)
+               response))
+            (t
+             (maybe-ensure-success)
+             res))
+          status
+          (cond
+            (headers-as-hash-table
+             (make-header-hash-table headers))
+            (t
+             headers))))))))
 
 (defun make-header-hash-table (headers)
   (let ((ret (make-hash-table :test #'equal)))

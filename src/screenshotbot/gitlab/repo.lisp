@@ -18,6 +18,8 @@
                 #:generic-git-repo)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:screenshotbot/user-api
+                #:commit-link)
   (:export
    #:gitlab-repo
    #:project-path
@@ -38,16 +40,8 @@
   (make-instance 'gitlab-repo
                  :link link))
 
-(defun pp (x)
-  (log:info "Returning: ~S" x)
-  x)
-
 (defmethod project-path ((repo gitlab-repo))
   (str:substring 1 nil (elt (multiple-value-list (quri:parse-uri (repo-link repo))) 4)))
-
-
-(defsecret :gitlab-repo-access-token
-  "Access token for GitLab API")
 
 (defmethod public-repo-p ((repo gitlab-repo))
   (restart-case
@@ -59,3 +53,7 @@
         nil))
     (retry-public-repo-p ()
       (public-repo-p repo))))
+
+(defmethod commit-link ((repo gitlab-repo)
+                        hash)
+  (format nil ""))

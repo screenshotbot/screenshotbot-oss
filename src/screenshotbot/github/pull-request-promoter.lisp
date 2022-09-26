@@ -42,7 +42,8 @@
                 #:repo-string-identifier)
   (:export
    #:pull-request-promoter
-   #:pr-acceptable))
+   #:pr-acceptable
+   #:format-updated-summary))
 (in-package :screenshotbot/github/pull-request-promoter)
 (in-package :screenshotbot.pr)
 
@@ -57,16 +58,17 @@
                :accessor send-task-args))
   (:metaclass persistent-class))
 
+(defun format-updated-summary (state user)
+  (let ((summary
+          (str:capitalize (string state))))
+    (when user
+      (setf summary (format nil "~a by ~a"
+                            summary
+                            (user-email user))))))
 
 (defmethod (setf acceptable-state) :before (state (acceptable pr-acceptable))
-  (let ((old-output (assoc-value (plist-alist (send-task-args acceptable)) :output))
-        (current-user (current-user)))
-    (let ((summary
-            (str:capitalize (string state))))
-      (when current-user
-        (setf summary (format nil "~a by ~a"
-                              summary
-                              (user-email current-user))))
+  (let ((old-output (assoc-value (plist-alist (send-task-args acceptable)) :output)))
+    (let ((summary (format-updated-summary state (current-user))))
      (apply
       'github-update-pull-request
       :conclusion (ecase state
@@ -197,12 +199,13 @@
                                      run
                                      full-name
                                      check)))
-             (when (report promoter)
-               (with-transaction ()
-                 (setf
-                  (send-task-args
-                   (report-acceptable (report promoter)))
-                  (send-task-args promoter))))))))
+             (let ((send-task-args (send-task-args promoter)))
+              (when (report promoter)
+                (with-transaction ()
+                  (setf
+                   (send-task-args
+                    (report-acceptable (report promoter)))
+                   send-task-args))))))))
       (t
        #+nil
        (cerror "continue" "not promoting for ~a" promoter)
