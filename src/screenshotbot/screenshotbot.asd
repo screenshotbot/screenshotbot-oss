@@ -85,6 +85,7 @@
                :java.libs
                :util/form-state
                :util/hash-lock
+               :util/request
                :jose
                :util/digests
                :trivial-file-size
