@@ -60,11 +60,13 @@
 
 (defun format-updated-summary (state user)
   (let ((summary
-          (str:capitalize (string state))))
+          (str:downcase (string state))))
     (when user
       (setf summary (format nil "~a by ~a"
                             summary
-                            (user-email user))))))
+                            (or
+                             (user-full-name user)
+                             (user-email user)))))))
 
 (defmethod (setf acceptable-state) :before (state (acceptable pr-acceptable))
   (let ((old-output (assoc-value (plist-alist (send-task-args acceptable)) :output)))
