@@ -141,20 +141,20 @@
         ,(progn btn-text)
       </button>
       <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
-        <form action=accept method= "POST" class= "dropdown-item" >
-          <button action= "submit" class= "btn btn-link acceptable accept-link" >
+        <form action=accept method= "POST" >
+          <button action= "submit" class= "btn btn-link acceptable accept-link dropdown-item" >
             <input type= "hidden" name= "redirect"
                    value= (hunchentoot:script-name*) />
-            <i class= "mdi mdi-check-bold" />
+            <mdi name= "check" />
             Accept
           </button>
         </form>
 
-        <form action=reject method= "POST" class= "dropdown-item">
+        <form action=reject method= "POST">
           <input type= "hidden" name= "redirect"
                  value= (hunchentoot:script-name* ) />
-          <button action= "submit" class= "btn btn-link acceptable reject-link" >
-            <i class= "mdi mdi-close" />
+          <button action= "submit" class= "btn btn-link acceptable reject-link dropdown-item" >
+            <mdi name= "close" />
             Reject</button>
         </form>
 

@@ -439,12 +439,16 @@ canvas.image-comparison-modal-image {
     }
 }
 
-.acceptable.accept-link {
-    color: $green !important;
-}
+.acceptable {
+    /* the btn adds a border radius, remove it */
+    border-radius: 0;
+    &.accept-link {
+        color: $green !important;
+    }
 
-.acceptable.reject-link {
-    color: $red !important;
+    &.reject-link {
+        color: $red !important;
+    }
 }
 
 .dropdown-report-accepted {
