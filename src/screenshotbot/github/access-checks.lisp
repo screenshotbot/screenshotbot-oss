@@ -56,18 +56,21 @@
 (defclass throttler ()
   ((lock :initform (bt:make-lock)
          :reader throttler-lock)
-   (last-ts :initform (local-time:now))))
+   (last-ts :initform (local-time:now)
+            :accessor last-ts)))
 
 (defparameter *github-throttler* (make-instance 'throttler))
 
 (defun %with-throttler (throttler fn)
   (bt:with-lock-held ((throttler-lock throttler))
-    (with-slots (last-ts) throttler
-      (loop while (local-time:timestamp> last-ts (local-time:timestamp- (local-time:now) 0.8 :sec))
-            do (progn
-                 (log:debug "Waiting for throttling lock")
-                 (sleep 0.2)))
-      (setf last-ts (local-time:now))))
+    (loop while (local-time:timestamp> (last-ts throttler)
+                                       (local-time:timestamp- (local-time:now)
+                                                              (* 800 1000 1000)
+                                                              :nsec))
+          do (progn
+               (log:debug "Waiting for throttling lock")
+               (sleep 0.2)))
+    (setf (last-ts throttler) (local-time:now)))
   (funcall fn))
 
 (defmacro with-throttler ((throttler) &body body)
