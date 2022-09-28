@@ -155,6 +155,7 @@
                  (:file "transient-object")
                  (:file "auto-cleanup")
                  (:file "company")
+                 (:file "sharing")
                  (:file "user")
                  (:file "invite")
                  (:file "github")
