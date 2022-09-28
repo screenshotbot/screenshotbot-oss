@@ -628,7 +628,7 @@
       ,@ (loop for (name . url) in more
                collect
                <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
-      <li><a class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal">Info</a></li>
+      <li><a class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal"><mdi name= "info"/> Info</a></li>
       ,(progn
          #+screenshotbot-oss
          (progn
@@ -677,7 +677,7 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">More about this report</h5>
+          <h5 class="modal-title">,(channel-name (recorder-run-channel run)) </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">

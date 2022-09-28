@@ -121,7 +121,7 @@
                             (list
                            (when (current-user)
                             (cons
-                             "Add Note"
+                           <span><mdi name= "chat" /> Add Note</span>
                              (create-note-page :for report :redirect (make-url 'report-page :id (oid report)))))))
        re-run=#'re-run />
        </section>
