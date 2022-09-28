@@ -34,9 +34,8 @@ setupLiveOnAttach(".search", function () {
 });
 
 
-setupLiveOnAttach("ul.report-selector a", function () {
+setupLiveOnAttach("ul.report-selector > li > a", function () {
     $(this).click(function (e) {
-        console.log("clicked");
         var $ul = $(this).closest("ul");
         $ul.find("a").removeClass("active");
         $(this).addClass("active");
@@ -45,6 +44,7 @@ setupLiveOnAttach("ul.report-selector a", function () {
         var type = $(this).data("type");
 
         var args = $target.data("args");
+
         args["type"] = type;
 
         updateAjaxResults($target);

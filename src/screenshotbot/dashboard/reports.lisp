@@ -222,7 +222,7 @@
   (list
    (when (current-user)
      (cons
-      <span><mdi name= "share" />Share</span>
+      <span><mdi name= "share" /> Share</span>
       (nibble (:name "share")
         (share-report report))))
    (when (current-user)

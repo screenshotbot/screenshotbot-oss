@@ -628,7 +628,7 @@
       ,@ (loop for (name . url) in more
                collect
                <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
-      <li><a class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal"><mdi name= "info"/> Info</a></li>
+      <li><a role= "button" class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal"><mdi name= "info"/> Info</a></li>
       ,(progn
          #+screenshotbot-oss
          (progn
