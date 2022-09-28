@@ -298,3 +298,6 @@
     (check-type company company)
     (check-type run store-object)
     (push run (company-runs company)))
+
+(defmethod company-admin-p ((company company) user)
+  (member user (company-admins company)))

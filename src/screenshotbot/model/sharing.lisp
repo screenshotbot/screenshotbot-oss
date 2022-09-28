@@ -18,7 +18,11 @@
                 #:with-class-validation)
   (:import-from #:bknr.indices
                 #:hash-index)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:shares-for-company
+   #:share-creator
+   #:expiry-date))
 (in-package :screenshotbot/model/sharing)
 
 (with-class-validation
@@ -30,13 +34,15 @@
     (creator :initarg :creator
              :reader share-creator)
     (%company :initarg :company
-              :reader company)
+              :reader company
+              :index-type hash-index
+              :index-reader shares-for-company)
     (expiry-date :initarg :expiry-date
                  :reader expiry-date
                  :type (or null string)
                  :documentation "expiration date in yyyy-mm-dd format")
     (revoked-p :initform nil
-             :reader share-revoked-p))
+             :accessor share-revoked-p))
    (:metaclass persistent-class)))
 
 (defmethod share-expired-p ((share share))

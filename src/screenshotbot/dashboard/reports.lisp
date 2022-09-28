@@ -41,7 +41,8 @@
                 #:share)
   (:import-from #:util/object-id
                 #:oid-array)
-  (:export #:report-page #:report-link))
+  (:export #:report-page #:report-link
+           #:shared-report-page))
 (in-package :screenshotbot/dashboard/reports)
 
 (markup:enable-reader)

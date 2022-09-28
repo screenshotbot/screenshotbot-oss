@@ -261,7 +261,8 @@
     :serial t
     :components ((:file "settings-template")
                  (:file "general")
-                 (:file "security")))
+                 (:file "security")
+                 (:file "shares")))
    (:module "admin"
     :serial t
     :components ((:file "core")
