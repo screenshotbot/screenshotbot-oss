@@ -151,6 +151,7 @@
             <th>Commit hash</th>
             <th>Author (if available)</th>
             <th>Parents</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -166,6 +167,7 @@
                               </span>)
 
                    </td>
+                   <td><button class= "highlight-branch btn btn-link" data-commit= (dag:sha commit) >Highlight Branch</button></td>
                  </tr>)
         </tbody>
       </table>

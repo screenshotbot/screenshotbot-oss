@@ -825,4 +825,8 @@ table.git-graph {
     tr:target {
         background-color: $gray-300;
     }
+
+    tr.highlighted {
+        background-color: $gray-500;
+    }
 }
