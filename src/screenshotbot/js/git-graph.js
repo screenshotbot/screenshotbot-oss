@@ -1,5 +1,8 @@
 /*
  * Code related to the the logic with debugging Git graphs. (See run-page.lisp).
+ *
+ * If this gets too complicated, remove this from the main default.js,
+ * since it's not required.
  */
 (function () {
 
