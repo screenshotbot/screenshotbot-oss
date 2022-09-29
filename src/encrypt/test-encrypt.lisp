@@ -9,8 +9,8 @@
         #:fiveam
         #:encrypt)
   (:import-from #:encrypt
-                #:get-cipher
-                #:*cipher*
+                #:get-blowfish-cipher
+                #:*blowfish-cipher*
                 #:blowfish-key)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :encrypt/test-encrypt)
@@ -20,12 +20,12 @@
 (def-fixture state (&key dir)
   (tmpdir:with-tmpdir (tmpdir)
     (let ((util/store:*object-store* (namestring (or dir tmpdir))))
-      (let ((old-cipher *cipher*))
+      (let ((old-cipher *blowfish-cipher*))
         (unwind-protect
              (progn
-               (setf *cipher* nil)
+               (setf *blowfish-cipher* nil)
                (&body))
-          (setf *cipher* old-cipher))))))
+          (setf *blowfish-cipher* old-cipher))))))
 
 (test blowfish-key-happy-path
   (with-fixture state ()
@@ -114,7 +114,7 @@
             (mongoid (ironclad:hex-string-to-byte-array
                      "6335a9540900bb3e0bed4375")))
        (cl-mock:if-called
-        'get-cipher
+        'get-blowfish-cipher
         (lambda ()
           (ironclad:make-cipher 'ironclad:blowfish
                                  :mode :ecb

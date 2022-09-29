@@ -17,40 +17,39 @@
 
 (defvar *lock* (bt:make-lock))
 
+(defun key-from-disk (filename bytes)
+  (base64:base64-string-to-usb8-array
+   (bt:with-lock-held (*lock*)
+     (let ((file (path:catfile
+                  (cond
+                    ((ignore-errors util/store:*object-store*)
+                     (util/store:object-store))
+                    (t
+                     ;; just for test convenience
+                     (bknr.datastore::store-directory bknr.datastore:*store*)))
+                  filename)))
+       (flet ((read-file () (str:trim
+                             (uiop:read-file-string file))))
+         (cond
+           ((path:-e file)
+            (read-file))
+           (t
+            (let ((string (base64:usb8-array-to-base64-string
+                           (secure-random:bytes bytes secure-random:*generator*))))
+              (with-open-file (stream file :direction :output)
+                (write-string string stream))
+              (read-file)))))))))
+
 (defun blowfish-key ()
-  (bt:with-lock-held (*lock*)
-    (let ((file (path:catfile
-                 (cond
-                  ((ignore-errors util/store:*object-store*)
-                   (util/store:object-store))
-                  (t
-                   ;; just for test convenience
-                   (bknr.datastore::store-directory bknr.datastore:*store*)))
-                 "blowfish-key.txt")))
-     (flet ((read-file () (str:trim
-                           (uiop:read-file-string file))))
-       (cond
-         ((path:-e file)
-          (read-file))
-         (t
-          (let ((string (base64:usb8-array-to-base64-string (secure-random:bytes 8 secure-random:*generator*))))
-            (with-open-file (stream file :direction :output)
-              (write-string string stream))
-            (read-file))))))))
-
-
-(defun key ()
-  (base64:base64-string-to-usb8-array (blowfish-key)))
+  (key-from-disk "blowfish-key.txt" 8))
 
 (defvar *zero-byte* (coerce 0 '(unsigned-byte 8)))
 
-(defvar *cipher* nil)
-
-(defvar *cipher* nil)
-(defun get-cipher ()
+(defvar *blowfish-cipher* nil)
+(defun get-blowfish-cipher ()
   (util/misc:or-setf
-   *cipher*
-   (ironclad:make-cipher 'ironclad:blowfish :mode :ecb :key (key))
+   *blowfish-cipher*
+   (ironclad:make-cipher 'ironclad:blowfish :mode :ecb :key (blowfish-key))
    :thread-safe t))
 
 (defun coerce-to-byte-array (a)
@@ -76,21 +75,21 @@
          (output (make-array (length in-array) :element-type '(unsigned-byte 8)
                                                :initial-element 0)))
     (multiple-value-bind (consumed produced)
-        (ironclad:encrypt (get-cipher) in-array output :padding 0 :handle-final-block t)
+        (ironclad:encrypt (get-blowfish-cipher) in-array output :padding 0 :handle-final-block t)
       (assert (= consumed (length in-array)))
       (assert (= produced (length output))))
     (base64:usb8-array-to-base64-string output :uri t)))
 
 (defun decrypt (a)
   (let ((in-array (base64:base64-string-to-usb8-array a :uri t)))
-    (ironclad:decrypt-in-place (get-cipher) in-array)
+    (ironclad:decrypt-in-place (get-blowfish-cipher) in-array)
     (map 'string #'code-char (remove-padding in-array))))
 
 (defun decrypt-array (arr length)
   "Decrypt an encoded array. However, the length of the array is not
   known, so you must provide that as an argument."
   (let ((in-array (base64:base64-string-to-usb8-array arr :uri t)))
-    (ironclad:decrypt-in-place (get-cipher) in-array)
+    (ironclad:decrypt-in-place (get-blowfish-cipher) in-array)
     (subseq in-array 0 length)))
 
 (defconstant +mongoid-length+ 12)
