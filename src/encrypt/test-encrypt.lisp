@@ -9,6 +9,7 @@
         #:fiveam
         #:encrypt)
   (:import-from #:encrypt
+                #:*aes-128-cipher*
                 #:get-blowfish-cipher
                 #:*blowfish-cipher*
                 #:blowfish-key)
@@ -20,12 +21,15 @@
 (def-fixture state (&key dir)
   (tmpdir:with-tmpdir (tmpdir)
     (let ((util/store:*object-store* (namestring (or dir tmpdir))))
-      (let ((old-cipher *blowfish-cipher*))
+      (let ((old-cipher *blowfish-cipher*)
+            (old-aes-cipher *aes-128-cipher*))
         (unwind-protect
              (progn
                (setf *blowfish-cipher* nil)
+               (setf *aes-128-cipher* nil)
                (&body))
-          (setf *blowfish-cipher* old-cipher))))))
+          (setf *blowfish-cipher* old-cipher)
+          (setf *aes-128-cipher* old-aes-cipher))))))
 
 (test blowfish-key-happy-path
   (with-fixture state ()
@@ -121,8 +125,8 @@
                                  :key key)))
         ;; It's okay to remove this next line if we change the format,
         ;; just keep the test after this.
-        (is (equal "aZ5wagzYQY5Xwt9lowj1JA.."
-                   (encrypt-mongoid mongoid)))
+        (is (not (equal "aZ5wagzYQY5Xwt9lowj1JA.."
+                    (encrypt-mongoid mongoid))))
         (is (equalp
              mongoid
              (decrypt-mongoid "aZ5wagzYQY5Xwt9lowj1JA..")))))))

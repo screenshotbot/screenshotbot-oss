@@ -52,6 +52,14 @@
    (ironclad:make-cipher 'ironclad:blowfish :mode :ecb :key (blowfish-key))
    :thread-safe t))
 
+(defvar *aes-128-cipher* nil)
+
+(defun get-aes-128-cipher ()
+  (util/misc:or-setf
+   *aes-128-cipher*
+   (ironclad:make-cipher 'ironclad:aes
+                          :mode :ecb :key (key-from-disk "aes-128-key.txt" 16))))
+
 (defun coerce-to-byte-array (a)
   (coerce a '(vector (unsigned-byte 8))))
 
@@ -70,14 +78,22 @@
 (defun encrypt (a)
   (encrypt-array (ironclad:ascii-string-to-byte-array a)))
 
-(defun encrypt-array (arr)
+(defun encrypt-array (arr &optional (cipher (get-blowfish-cipher))
+                            (base64-padding 0)
+                            (version 0))
   (let* ((in-array (add-padding arr))
-         (output (make-array (length in-array) :element-type '(unsigned-byte 8)
+         (output (make-array (+
+                              (length in-array)
+                              base64-padding) :element-type '(unsigned-byte 8)
                                                :initial-element 0)))
     (multiple-value-bind (consumed produced)
-        (ironclad:encrypt (get-blowfish-cipher) in-array output :padding 0 :handle-final-block t)
+        (ironclad:encrypt cipher in-array output :padding 0 :handle-final-block t)
       (assert (= consumed (length in-array)))
-      (assert (= produced (length output))))
+      (assert (= produced (length in-array))))
+
+    (when (> base64-padding 0)
+     (setf (elt output (1- (length output))) version))
+
     (base64:usb8-array-to-base64-string output :uri t)))
 
 (defun decrypt (a)
@@ -85,21 +101,43 @@
     (ironclad:decrypt-in-place (get-blowfish-cipher) in-array)
     (map 'string #'code-char (remove-padding in-array))))
 
-(defun decrypt-array (arr length)
+(defun decrypt-array (arr length &optional (cipher (get-blowfish-cipher)))
   "Decrypt an encoded array. However, the length of the array is not
   known, so you must provide that as an argument."
   (let ((in-array (base64:base64-string-to-usb8-array arr :uri t)))
-    (ironclad:decrypt-in-place (get-blowfish-cipher) in-array)
+    (ironclad:decrypt-in-place cipher in-array)
     (subseq in-array 0 length)))
 
 (defconstant +mongoid-length+ 12)
 
 (defun encrypt-mongoid (mongoid)
+  "For encrypting mongoids, we use AES-128. Using a 64-bit blowfish key
+ can reveal some information that can be used to recreate mongoids,
+ even though the likelyhood is really low. Basically the first 8 bytes
+ are timestamp and process id, and the last 8 bytes has only about
+ 1000 different values, (assuming the process id remains the same). So
+ if you know a timestamp, you can try 1000 different second-halfs to
+ retrieve another valid mongoid within the same timestamp.
+
+ Encrypting the 12 bytes with a 16-byte cipher will result in a 16-byte
+ output. Base64 encoding this will require 4/3*18 = 24 bytes. This
+ means we have two extra bytes to store an unencryption version
+ information of the encoding. If we see padding characters `..`
+ instead we assuming it's the v0 blowfish encryption.
+ "
   (when (stringp mongoid)
     (error "Please provide the mongoid as an array"))
   (unless (= +mongoid-length+ (length mongoid))
     (error "Invalid mongoid length"))
-  (encrypt-array mongoid))
+  (encrypt-array mongoid (get-aes-128-cipher) 2 1))
 
 (defun decrypt-mongoid (encrypted-mongoid)
-  (decrypt-array encrypted-mongoid +mongoid-length+))
+  (cond
+    ((and
+      (= 24 (length encrypted-mongoid))
+      (eql #\. (elt encrypted-mongoid 23)))
+     (decrypt-array  encrypted-mongoid +mongoid-length+
+                    (get-blowfish-cipher)))
+    (t
+     (decrypt-array encrypted-mongoid +mongoid-length+
+                    (get-aes-128-cipher)))))
