@@ -9,6 +9,7 @@
         #:fiveam
         #:encrypt)
   (:import-from #:encrypt
+                #:get-cipher
                 #:*cipher*
                 #:blowfish-key)
   (:local-nicknames (#:a #:alexandria)))
@@ -104,3 +105,24 @@
         (is (stringp encrypted))
         (is (eql 24 (length encrypted)))
         (is (equalp mongoid (decrypt-mongoid encrypted)))))))
+
+(test decrypt-old-format
+  (with-fixture state ()
+    (cl-mock:with-mocks ()
+      (let ((key (make-array 8 :element-type '(unsigned-byte 8)
+                               :initial-contents #(1 2 3 4 5 6 7 8)))
+            (mongoid (ironclad:hex-string-to-byte-array
+                     "6335a9540900bb3e0bed4375")))
+       (cl-mock:if-called
+        'get-cipher
+        (lambda ()
+          (ironclad:make-cipher 'ironclad:blowfish
+                                 :mode :ecb
+                                 :key key)))
+        ;; It's okay to remove this next line if we change the format,
+        ;; just keep the test after this.
+        (is (equal "aZ5wagzYQY5Xwt9lowj1JA.."
+                   (encrypt-mongoid mongoid)))
+        (is (equalp
+             mongoid
+             (decrypt-mongoid "aZ5wagzYQY5Xwt9lowj1JA..")))))))
