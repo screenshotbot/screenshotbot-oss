@@ -820,3 +820,9 @@ h4.screenshot-title {
     // text-transform: uppercase;
     //letter-spacing: 0.0892857143em;
 }
+
+table.git-graph {
+    tr:target {
+        background-color: $gray-300;
+    }
+}

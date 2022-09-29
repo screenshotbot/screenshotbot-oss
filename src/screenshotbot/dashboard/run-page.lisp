@@ -145,7 +145,7 @@
  information here is for debugging information only when reaching out
  to Screenshotbot support.
       </div>
-      <table class= "table" >
+      <table class= "table git-graph" >
         <thead>
           <tr>
             <th>Commit hash</th>
@@ -155,14 +155,14 @@
         </thead>
         <tbody>
         ,@ (loop for commit in commits collect
-                 <tr>
-                   <td id= (dag:sha commit) >,(str:shorten 13 (dag:sha commit)) </td>
+                 <tr id= (dag:sha commit) >
+                   <td class= "font-monospace" >,(str:shorten 13 (dag:sha commit)) </td>
                    <td>,(or (dag:author commit) "no author") </td>
-                   <td>
+                   <td class= "font-monospace" >
                      ,@ (loop for parent in (dag:parents commit)
                               collect
                               <span>
-                                <a href= (format nil "#~a" parent)>,(str:shorten 13 parent)</a>
+                                <a href= (format nil "#~a" parent) class= "commit-link" >,(str:shorten 13 parent)</a>
                               </span>)
 
                    </td>

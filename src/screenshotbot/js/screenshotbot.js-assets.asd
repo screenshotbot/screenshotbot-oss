@@ -51,4 +51,5 @@
                #-screenshotbot-oss
                (build-utils:js-file "chatwoot")
                (build-utils:js-file "websocket-logs")
-               (build-utils:js-file "acceptance")))
+               (build-utils:js-file "acceptance")
+               (build-utils:js-file "git-graph")))
