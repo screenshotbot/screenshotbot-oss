@@ -115,9 +115,12 @@
  can reveal some information that can be used to recreate mongoids,
  even though the likelyhood is really low. Basically the first 8 bytes
  are timestamp and process id, and the last 8 bytes has only about
- 1000 different values, (assuming the process id remains the same). So
- if you know a timestamp, you can try 1000 different second-halfs to
- retrieve another valid mongoid within the same timestamp.
+ 2^24 different values, (assuming the process id remains the same). So
+ if you know a timestamp, you can try 16m different second-halfs to
+ retrieve another valid mongoid within the same timestamp. You could
+ probably be more clever about limiting the search set, or by forcing
+ generations of mongoids to get back to a previously known number. But
+ again, the likelyhood is very low.
 
  Encrypting the 12 bytes with a 16-byte cipher will result in a 16-byte
  output. Base64 encoding this will require 4/3*18 = 24 bytes. This
