@@ -17,10 +17,6 @@
                 #:defhandler)
   (:import-from #:screenshotbot/model/company
                 #:installation-id)
-  (:import-from #:screenshotbot/github/github-installation
-                #:github-installation-with-repo-name
-                #:installation-id
-                #:github-installation)
   (:import-from #:screenshotbot/model/recorder-run
                 #:github-repo)
   (:import-from #:screenshotbot/github/plugin
