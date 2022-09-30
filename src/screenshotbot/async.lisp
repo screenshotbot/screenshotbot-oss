@@ -23,6 +23,7 @@
 (defvar *channel-lock* (bt:make-lock))
 
 (defun async-kernel ()
+  "Lazily create the kernel if not already created"
   (util:or-setf
    *kernel*
    (lparallel:make-kernel 8 :name "default-screenshotbot-kernel")
@@ -31,13 +32,16 @@
 
 (defun make-channel (&rest args)
   (let ((lparallel:*kernel* (async-kernel)))
-    (lparallel:make-channel )))
+    (apply #'lparallel:make-channel args)))
 
 (def-easy-macro with-screenshotbot-kernel (&fn fn)
+  "Bind lparallel:*kernel* to the screenshotbot kernel"
   (let ((lparallel:*kernel* (async-kernel)))
     (funcall fn)))
 
 (defmacro define-channel (name &rest args)
+  "Define a symbol-macro that lazily evaulates to a valid channel,
+ creating the kernel if required."
   (let ((var (intern (format nil "*~a-VAR*" (string name))))
         (fun (intern (format nil "~a-CREATOR" (string name)))))
     `(progn
@@ -53,6 +57,7 @@
            (,fun)))))
 
 (defun shutdown ()
+  "Safely shutdown the kernel. Called from server/setup.lisp."
   (with-screenshotbot-kernel ()
     (log:info "Shutting down: screenshotbot lparallel kernel")
     (lparallel:end-kernel :wait t)
