@@ -68,6 +68,7 @@
   :depends-on (:util
                :markup
                :gravatar
+               :lparallel
                (:feature (:not :screenshotbot-oss) :documentation-plugin)
                :cl-store
                :encrypt
@@ -128,6 +129,7 @@
                  (:file "magick-lw")))
    (:file "installation")
    (:file "server" :depends-on ("analytics"))
+   (:file "async")
    (:file "cdn")
    (:file "user-api")
    (:file "notice-api")

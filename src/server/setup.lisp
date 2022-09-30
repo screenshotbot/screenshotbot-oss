@@ -17,7 +17,8 @@
            #:slynk-prepare
            #:*slynk-loopback-interface*
            #:*slynk-port*
-           #:slynk-teardown))
+           #:slynk-teardown
+           #:*shutdown-hooks*))
 (in-package #:server)
 
 (defvar *port*)
@@ -111,6 +112,8 @@
       ;; Immediately register the acceptor if we're executing this live
       (when (boundp '*multi-acceptor*)
         (init-sub-acceptors)))))
+
+(defvar *shutdown-hooks* nil)
 
 (defun init-multi-acceptor ()
   (setf *multi-acceptor* (make-instance 'my-acceptor :port (parse-integer *port*) :name 'multi-acceptor))
@@ -285,6 +288,9 @@
     (cl-cron:stop-cron)
     (log:info "Shutting down hunchentoot")
     (hunchentoot:stop acceptor)
+
+    (log:info "Calling shutdown hooks")
+    (mapc 'funcall *shutdown-hooks*)
 
     ;;;; Don't snapshot the store, if the process is killed while the
     ;;;; snapshot is happening, we have to manually recover the store

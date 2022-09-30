@@ -22,6 +22,13 @@
   (:import-from #:screenshotbot/github/plugin
                 #:webhook-secret
                 #:github-plugin)
+  (:import-from #:screenshotbot/async
+                #:with-screenshotbot-kernel
+                #:define-channel)
+  (:import-from #:lparallel.kernel
+                #:submit-task)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors)
   (:export
    #:pull-request
    #:github-get-canonical-repo
@@ -77,37 +84,42 @@
 (defvar *hooks* nil)
 
 (defhandler (nil :uri "/github-webhook") ()
-  (let ((webhook-secret (webhook-secret (github-plugin))))
-    (let ((stream (hunchentoot:raw-post-data
-                   :want-stream t
-                   :force-binary t))
-          (length (parse-integer (hunchentoot:header-in* :content-length))))
-      (let ((data (make-array length :element-type 'flexi-streams:octet )))
-        (read-sequence data stream)
-        (let ((hmac (ironclad:make-hmac (flexi-streams:string-to-octets
-                                         webhook-secret)
-                                        :sha256)))
-          (ironclad:update-hmac hmac data)
-          (let* ((expected (ironclad:hmac-digest hmac))
-                 (actual (hunchentoot:header-in* :x-hub-signature-256))
-                 (expected (format nil "sha256=~a"
-                                   (ironclad:byte-array-to-hex-string expected))))
-            (unless (equal expected actual)
-              (error "invalid hmac, expected ~a, got ~a" expected actual))))
-        (log:debug "hmac validated")
-        (let ((json (json:decode-json
-                     (flexi-streams:make-flexi-stream
-                      (flexi-streams:make-in-memory-input-stream data)))))
-          (log:debug "got json: ~a" json)
-          ;; todo: does this next call actually do anything? We used to
-          ;; use it before when we did special code for Pull Requests,
-          ;; and eventually just moved to the checks API. I think it
-          ;; could go.
-          (loop for hook in *hooks*
-                do (funcall hook json))
-          (let ((pull-request (github-maybe-update-pull-request json)))
-            (declare (ignore pull-request)))))
-      "OK")))
+  (with-screenshotbot-kernel ()
+   (let ((webhook-secret (webhook-secret (github-plugin))))
+     (let ((stream (hunchentoot:raw-post-data
+                    :want-stream t
+                    :force-binary t))
+           (length (parse-integer (hunchentoot:header-in* :content-length)))
+           (signature (hunchentoot:header-in* :x-hub-signature-256)))
+       (let ((data (make-array length :element-type 'flexi-streams:octet )))
+         (read-sequence data stream)
+         (lparallel:future
+           (ignore-and-log-errors ()
+             (let ((hmac (ironclad:make-hmac (flexi-streams:string-to-octets
+                                            webhook-secret)
+                                             :sha256)))
+             (ironclad:update-hmac hmac data)
+             (let* ((expected (ironclad:hmac-digest hmac))
+                    (actual signature)
+                    (expected (format nil "sha256=~a"
+                                      (ironclad:byte-array-to-hex-string expected))))
+               (unless (equal expected actual)
+                 (error "invalid hmac, expected ~a, got ~a" expected actual))))
+           (log:debug "hmac validated")
+           (let ((json (json:decode-json
+                        (flexi-streams:make-flexi-stream
+                         (flexi-streams:make-in-memory-input-stream data)))))
+             (log:debug "got json: ~a" json)
+             ;; todo: does this next call actually do anything? We used to
+             ;; use it before when we did special code for Pull Requests,
+             ;; and eventually just moved to the checks API. I think it
+             ;; could go.
+             (loop for hook in *hooks*
+                   do (funcall hook json))
+             (let ((pull-request (github-maybe-update-pull-request json)))
+               (declare (ignore pull-request))))
+               )))
+       "OK"))))
 
 (defun github-maybe-update-pull-request (json)
   (let ((obj (assoc-value json :pull--request)))
