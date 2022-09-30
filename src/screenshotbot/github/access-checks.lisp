@@ -6,8 +6,7 @@
 
 (uiop:define-package :screenshotbot/github/access-checks
   (:use #:cl
-        #:alexandria
-        #:screenshotbot/github/github-installation)
+        #:alexandria)
   (:import-from #:util/java
                 #:java-syntax
                 #:read-java-field
@@ -29,9 +28,6 @@
                 #:repo-link
                 #:commit-link
                 #:generic-git-repo)
-  (:import-from #:screenshotbot/github/webhook
-                #:github-installation-with-repo-name
-                #:installation-id)
   (:export
    #:github-repo
    #:github-user-service
