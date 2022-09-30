@@ -18,7 +18,6 @@
    #:installation-id))
 (in-package :screenshotbot/github/github-installation)
 
-#+screenshotbot-oss
 (defclass github-installation (store-object)
   ((repo-name
     :initarg :repo-name
