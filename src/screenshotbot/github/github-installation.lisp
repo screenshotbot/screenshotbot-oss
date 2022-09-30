@@ -18,6 +18,7 @@
    #:installation-id))
 (in-package :screenshotbot/github/github-installation)
 
+#+screenshotbot-oss
 (defclass github-installation (store-object)
   ((repo-name
     :initarg :repo-name
@@ -27,4 +28,6 @@
    (installation-id
     :initarg :installation-id
     :accessor installation-id))
-  (:metaclass persistent-class))
+  (:metaclass persistent-class)
+  (:documentation "UNUSED! Do not use for anything, this is here for backward
+ compatibility with the store."))
