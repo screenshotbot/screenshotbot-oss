@@ -18,6 +18,8 @@
 
 (defvar *kernel* nil)
 
+(defvar *magick-kernel* nil)
+
 (defvar *kernel-lock* (bt:make-lock))
 
 (defvar *channel-lock* (bt:make-lock))
@@ -26,7 +28,15 @@
   "Lazily create the kernel if not already created"
   (util:or-setf
    *kernel*
-   (lparallel:make-kernel 8 :name "default-screenshotbot-kernel")
+   (lparallel:make-kernel 20 :name "default-screenshotbot-kernel")
+   :thread-safe t
+   :lock *kernel-lock*))
+
+(defun magick-kernel ()
+  (util:or-setf
+   *magick-kernel*
+   (lparallel:make-kernel (serapeum:count-cpus)
+                          :name "default-screenshotbot-kernel")
    :thread-safe t
    :lock *kernel-lock*))
 
@@ -37,6 +47,10 @@
 (def-easy-macro with-screenshotbot-kernel (&fn fn)
   "Bind lparallel:*kernel* to the screenshotbot kernel"
   (let ((lparallel:*kernel* (async-kernel)))
+    (funcall fn)))
+
+(def-easy-macro with-magick-kernel (&fn fn)
+  (let ((lparallel:*kernel* (magick-kernel)))
     (funcall fn)))
 
 (defmacro define-channel (name &rest args)
