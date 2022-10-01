@@ -6,16 +6,32 @@
 
 (defpackage :util/hash-lock
   (:use #:cl)
+  (:import-from #:util/macros
+                #:def-easy-macro)
+  (:import-from #:lparallel.promise
+                #:fulfill)
+  (:import-from #:lparallel.promise
+                #:promise)
+  (:import-from #:lparallel.promise
+                #:fulfill)
   (:export
    #:hash-lock
-   #:with-hash-lock-held))
+   #:with-hash-lock-held
+   #:hash-locked-future)
+  (:local-nicknames (#:a #:alexandria)))
 (in-package :util/hash-lock)
 
 (defclass object-state ()
   ((item-lock :initform (bt:make-lock)
               :reader item-lock)
+   (future-queue :accessor future-queue
+                 :initform nil)
+   (future-running-p :initform nil)
    (count :initform 0
-          :accessor %count)))
+          :accessor %count
+          :documentation "Total number of threads that are waiting or running. This does not
+ include future-queue, but will include any future that is currently
+ running.")))
 
 (defclass hash-lock ()
   ((lock :initform (bt:make-lock "hash-lock")
@@ -55,3 +71,46 @@
            ;; we were the last one waiting on this, we can free up all
            ;; the resource associated with this object
            (remhash obj (%hash-table hash-lock))))))))
+
+(defclass hash-locked-future ()
+  ((promise :initarg :promise
+            :reader hash-locked-promise)
+   (body :initarg :body
+         :reader body)
+   (kernel :initarg :kernel
+           :reader kernel)))
+
+(def-easy-macro hash-locked-future (obj hash-lock &fn body)
+  "Like future, but we ensure the lock is held before running the future.
+ We can be a little more efficient by ensuring that only one object is
+ running at any point of time."
+  (let ((promise (promise)))
+    (bt:with-lock-held ((%lock hash-lock))
+      (let ((obj-state (object-state obj hash-lock)))
+        (a:appendf
+         (future-queue obj-state)
+         (list
+          (make-instance 'hash-locked-future
+                         :promise promise
+                         :body body
+                         :kernel lparallel:*kernel*)))
+        (unless (second (future-queue obj-state))
+          ;; If there's exactly one item on the list, then we should
+          ;; trigger the next future.
+          (trigger-next-future obj-state hash-lock))))
+    promise))
+
+(defun trigger-next-future (object-state hash-lock)
+  "Trigger the next future in the queue. Make sure you're holding the
+ hash-lock's lock before calling this function"
+  (let ((next-future (car (future-queue object-state))))
+    (let ((lparallel:*kernel* (kernel next-future)))
+      (lparallel:future
+        (fulfill
+            (hash-locked-promise next-future)
+          (bt:with-lock-held ((item-lock object-state))
+            (funcall (body next-future))))
+        (bt:with-lock-held ((%lock hash-lock))
+          (pop (future-queue object-state))
+          (when (future-queue object-state)
+            (trigger-next-future object-state hash-lock)))))))

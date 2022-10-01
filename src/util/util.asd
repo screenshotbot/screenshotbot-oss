@@ -209,7 +209,9 @@
   :components ((:file "health-check")))
 
 (defsystem :util/hash-lock
-  :depends-on (:bordeaux-threads)
+  :depends-on (:bordeaux-threads
+               :lparallel
+               :alexandria)
   :serial t
   :components ((:file "hash-lock")))
 

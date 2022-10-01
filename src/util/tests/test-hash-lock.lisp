@@ -10,6 +10,8 @@
         #:fiveam)
   (:import-from #:util/hash-lock
                 #:%hash-table)
+  (:import-from #:lparallel
+                #:force)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-hash-lock)
 
@@ -84,3 +86,30 @@
           (with-hash-lock-held (t hash-lock)
             (error 'test-error)))
       (is (eql 0 (hash-table-count (%hash-table hash-lock)))))))
+
+(def-fixture lparallel ()
+  (let ((lparallel:*kernel* (lparallel:make-kernel 10)))
+    (unwind-protect
+         (&body)
+      (lparallel:end-kernel :wait t))))
+
+(test simple-future-run ()
+  (with-fixture lparallel ()
+    (let ((num 0))
+      (let ((hash-lock (make-instance 'hash-lock :test #'equal)))
+        (force
+         (hash-locked-future ("foo" hash-lock)
+           (incf num)))
+        (is (eql 1 num))))))
+
+(test futures-stress-test ()
+  (with-fixture lparallel ()
+    (let* ((count 0)
+           (hash-lock (make-instance 'hash-lock))
+           (futures (loop for x from 0 below 1000
+                          collect
+                          (hash-locked-future (:foo hash-lock)
+                            (incf count 2)))))
+      (loop for future in futures
+            do (force future))
+      (is (= 2000 count)))))
