@@ -20,7 +20,8 @@
             :accessor api-key)))
 
 (defun make-phab-instance-from-arcrc (url)
-  (let* ((api-url (quri:render-uri (quri:merge-uris "/api/" url))))
+  (let* ((api-url (quri:render-uri (quri:merge-uris
+                                    (quri:uri "/api/") url))))
    (with-open-file (file "~/.arcrc")
      (let* ((json:*json-identifier-name-to-lisp* #'string)
             (arcrc (json:decode-json file))
