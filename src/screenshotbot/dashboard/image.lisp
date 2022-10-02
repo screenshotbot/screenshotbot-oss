@@ -10,6 +10,12 @@
         #:screenshotbot/model/image)
   (:import-from #:screenshotbot/server
                 #:defhandler)
+  (:import-from #:lparallel
+                #:delay
+                #:future
+                #:chain
+                #:promise
+                #:force)
   (:import-from #:util #:find-by-oid)
   (:import-from #:hunchentoot
                 #:handle-static-file)
@@ -20,8 +26,12 @@
   (:import-from #:screenshotbot/magick
                 #:run-magick)
   (:import-from #:util/hash-lock
+                #:hash-locked-future
                 #:with-hash-lock-held
                 #:hash-lock)
+  (:import-from #:screenshotbot/async
+                #:with-magick-kernel
+                #:with-screenshotbot-kernel)
   (:export
    #:handle-resized-image))
 (in-package :screenshotbot/dashboard/image)
@@ -34,51 +44,63 @@
     (ensure-directories-exist dir)
     dir))
 
-(defun build-resized-image (image size-name &key (type :webp))
-  (let ((size (cond
-                ((string-equal "small" size-name) "300x300")
-                ((string-equal "half-page" size-name) "600x600")
-                ((string-equal "full-page" size-name) "2000x2000")
-                ((string-equal "tiny" size-name) "5x5") ;; for testing only
-                (t (error "invalid image size: ~a" size-name)))))
-   (flet ((output-file (type)
-            (make-pathname
-             :type type
-             :defaults (cache-dir)
-             :name (format nil "~a-~a" (oid image) size))))
-     (ecase type
-       (:png
-        (warn "Requesting a png")
-        (let ((webp (build-resized-image
-                     image size-name
-                     :type :webp))
-              (png (output-file "png")))
-          (with-hash-lock-held ((list image size) *image-resize-lock*)
-            (unless (uiop:file-exists-p png)
-              (uiop:with-staging-pathname (png)
-                (run-magick
-                 (list "convert"
-                       webp
-                       "-strip"
-                       png)))))
-          png))
-       (:webp
-        (let* ((output-file (output-file "webp")))
-          (cond
-            ((uiop:file-exists-p output-file)
-             output-file)
-            (t
-             (with-hash-lock-held ((list image size) *image-resize-lock*)
-               (unless (uiop:file-exists-p output-file)
-                 (with-local-image (input image)
-                   (uiop:with-staging-pathname (output-file)
-                     (run-magick
-                      (list "convert" input
-                            "-resize"
-                            (format nil "~a>" size)
-                            "-strip"
-                            output-file))))))
-             output-file))))))))
+(defun %ignore (x)
+  (declare (ignore x)))
+
+(defun build-resized-image (image size-name &key (type :webp)
+                                              callback)
+  (with-screenshotbot-kernel ()
+    (let ((size (cond
+                  ((string-equal "small" size-name) "300x300")
+                  ((string-equal "half-page" size-name) "600x600")
+                  ((string-equal "full-page" size-name) "2000x2000")
+                  ((string-equal "tiny" size-name) "5x5") ;; for testing only
+                  (t (error "invalid image size: ~a" size-name)))))
+      (flet ((output-file (type)
+               (make-pathname
+                :type type
+                :defaults (cache-dir)
+                :name (format nil "~a-~a" (oid image) size)))
+             (respond (res)
+               (cond
+                 (callback
+                  (chain (future (funcall callback res))))
+                 (t
+                  res))))
+        (ecase type
+          (:png
+           (warn "Requesting a png")
+           (build-resized-image
+            image size-name
+            :type :webp
+            :callback (lambda (webp)
+                        (let ((png (output-file "png")))
+                          (unless (uiop:file-exists-p png)
+                            (uiop:with-staging-pathname (png)
+                              (run-magick
+                               (list "convert"
+                                     webp
+                                     "-strip"
+                                     png))))
+                          (respond png)))))
+          (:webp
+           (let* ((output-file (output-file "webp")))
+             (cond
+               ((uiop:file-exists-p output-file)
+                (delay output-file))
+               (t
+                (with-magick-kernel ()
+                  (hash-locked-future ((list image size) *image-resize-lock*)
+                    (unless (uiop:file-exists-p output-file)
+                      (with-local-image (input image)
+                        (uiop:with-staging-pathname (output-file)
+                          (run-magick
+                           (list "convert" input
+                                 "-resize"
+                                 (format nil "~a>" size)
+                                 "-strip"
+                                 output-file)))))
+                    (respond output-file))))))))))))
 
 (defun webp-supported-p (user-agent accept)
   (or
@@ -89,22 +111,25 @@
                                           type)
   (cond
     (warmup
-     (build-resized-image image size))
+     (force
+      (build-resized-image image size)))
     (t
-     (let ((output-file (build-resized-image
-                         image size
-                         :type (cond
-                                 ((string= type "webp")
-                                  :webp)
-                                 ((string= type "png")
-                                  :png)
-                                 ((webp-supported-p
-                                     (hunchentoot:header-in* :user-agent)
-                                     (hunchentoot:header-in* :accept))
-                                  ;; This dynamic behavior doesn't work well with CDNs
-                                  :webp)
-                                 (t
-                                  :png)))))
+     (let ((output-file
+             (force
+              (build-resized-image
+               image size
+               :type (cond
+                       ((string= type "webp")
+                        :webp)
+                       ((string= type "png")
+                        :png)
+                       ((webp-supported-p
+                         (hunchentoot:header-in* :user-agent)
+                         (hunchentoot:header-in* :accept))
+                        ;; This dynamic behavior doesn't work well with CDNs
+                        :webp)
+                       (t
+                        :png))))))
        (handle-static-file
         output-file
         (format nil "image/~a" (pathname-type output-file)))))))

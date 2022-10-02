@@ -10,6 +10,10 @@
   (:import-from #:screenshotbot/dashboard/image
                 #:build-resized-image
                 #:handle-resized-image)
+  (:import-from #:lparallel
+                #:force
+                #:chain
+                #:future)
   (:import-from #:screenshotbot/model
                 #:image-blob)
   (:import-from #:screenshotbot/model/image
@@ -20,6 +24,14 @@
                 #:blob-pathname)
   (:import-from #:util/store
                 #:with-test-store)
+  (:import-from #:screenshotbot/async
+                #:shutdown
+                #:with-screenshotbot-kernel)
+  (:import-from #:util/hash-lock
+                #:hash-locked-future
+                #:hash-lock)
+  (:import-from #:lparallel.kernel
+                #:*debug-tasks-p*)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-image)
 
@@ -27,16 +39,63 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-    (tmpdir:with-tmpdir (util/store:*object-store*)
-      (let* ((im1 (asdf:system-relative-pathname
-                :screenshotbot
-                "dashboard/fixture/image.png"))
-          (im-blob (make-instance 'image-blob))
-          (im (make-instance 'image
-                              :blob im-blob)))
-        (uiop:copy-file im1 (blob-pathname im-blob))
-        (&body)))))
+  (with-test-store (:globally t)
+    (with-screenshotbot-kernel ()
+      (let ((debug-tasks-p *debug-tasks-p*))
+        (let* ((im1 (asdf:system-relative-pathname
+                     :screenshotbot
+                     "dashboard/fixture/image.png"))
+               (im-blob (make-instance 'image-blob))
+               (im (make-instance 'image
+                                  :blob im-blob)))
+          (uiop:copy-file im1 (blob-pathname im-blob))
+          (unwind-protect
+               (progn
+                 (setf *debug-tasks-p* nil)
+                 (&body))
+            (setf *debug-tasks-p* debug-tasks-p)
+            (shutdown)))))))
+
+(test future-has-*store*
+  (with-fixture state ()
+    (let ((random-value (random 1000)))
+      (symbol-macrolet ((query (list
+                                random-value
+                                bknr.datastore:*store*
+                                util/store:*object-store*)))
+        (is (equal query query))
+        (is (equal query
+                   (force
+                    (future
+                      query))))
+        (is (equal query
+                   (force (future
+                            (chain (future query))))))
+        (let ((one (future query))
+              (two (future query))
+              (three (future query)))
+          (is (equal query (force one)))
+          (is (equal query (force two)))
+          (is (equal query (force three))))))))
+
+(test hash-lock-has-*store*
+  (with-fixture state ()
+    (let ((random-value (random 1000)))
+      (symbol-macrolet ((query (list
+                                random-value
+                                bknr.datastore:*store*
+                                util/store:*object-store*)))
+        (let ((hash-lock (make-instance 'hash-lock)))
+          (is (equal :foo
+                     (force
+                      (hash-locked-future (2 hash-lock)
+                        :foo))))
+          (future query)
+          (future query)
+          (is (equal query
+                     (force
+                      (hash-locked-future (2 hash-lock)
+                        query)))))))))
 
 (test handle-resized-image-warmup-happy-path
   (with-fixture state ()
@@ -51,6 +110,6 @@
 
 (test build-resized-image-for-png
   (with-fixture state ()
-    (let ((output-file (build-resized-image im :tiny :type :png)))
+    (let ((output-file (force (build-resized-image im :tiny :type :png))))
       (is (equal "png" (pathname-type output-file)))
-      (build-resized-image im :tiny :type :png))))
+      (force (build-resized-image im :tiny :type :png)))))

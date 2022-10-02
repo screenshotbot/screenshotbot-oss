@@ -73,10 +73,17 @@
 
 (defun shutdown ()
   "Safely shutdown the kernel. Called from server/setup.lisp."
-  (with-screenshotbot-kernel ()
-    (log:info "Shutting down: screenshotbot lparallel kernel")
-    (lparallel:end-kernel :wait t)
-    (setf *kernel* nil)
-    (log:info "Done: screenshotbot lparallel kernel")))
+  (when *kernel*
+    (with-screenshotbot-kernel ()
+      (log:info "Shutting down: screenshotbot lparallel kernel")
+      (lparallel:end-kernel :wait t)
+      (setf *kernel* nil)
+      (log:info "Done: screenshotbot lparallel kernel")))
+  (when *magick-kernel*
+    (with-magick-kernel ()
+      (log:info "Shutting down: magick kernel")
+      (lparallel:end-kernel :wait t)
+      (setf *magick-kernel* nil)
+      (log:info "Done: magick kernel"))))
 
 (pushnew 'shutdown *shutdown-hooks*)

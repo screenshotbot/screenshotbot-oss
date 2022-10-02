@@ -87,7 +87,7 @@
 (def-easy-macro hash-locked-future (obj hash-lock &fn body)
   "Like future, but we ensure the lock is held before running the future.
  We can be a little more efficient by ensuring that only one object is
- running at any point of time."
+o running at any point of time."
   (let ((promise (promise)))
     (bt:with-lock-held ((%lock hash-lock))
       (let ((obj-state (object-state obj hash-lock)))
