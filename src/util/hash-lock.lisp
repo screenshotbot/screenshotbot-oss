@@ -14,6 +14,10 @@
                 #:promise)
   (:import-from #:lparallel.promise
                 #:fulfill)
+  (:import-from #:lparallel.promise
+                #:chain)
+  (:import-from #:lparallel.promise
+                #:future)
   (:export
    #:hash-lock
    #:with-hash-lock-held
@@ -105,12 +109,13 @@
  hash-lock's lock before calling this function"
   (let ((next-future (car (future-queue object-state))))
     (let ((lparallel:*kernel* (kernel next-future)))
-      (lparallel:future
-        (fulfill
-            (hash-locked-promise next-future)
-          (bt:with-lock-held ((item-lock object-state))
-            (funcall (body next-future))))
-        (bt:with-lock-held ((%lock hash-lock))
-          (pop (future-queue object-state))
-          (when (future-queue object-state)
-            (trigger-next-future object-state hash-lock)))))))
+      (fulfill (hash-locked-promise next-future)
+        (chain
+         (future
+          (unwind-protect
+               (bt:with-lock-held ((item-lock object-state))
+                 (funcall (body next-future)))
+            (bt:with-lock-held ((%lock hash-lock))
+              (pop (future-queue object-state))
+              (when (future-queue object-state)
+                (trigger-next-future object-state hash-lock))))))))))

@@ -36,6 +36,7 @@
   (util:or-setf
    *magick-kernel*
    (lparallel:make-kernel (serapeum:count-cpus)
+
                           :name "default-screenshotbot-kernel")
    :thread-safe t
    :lock *kernel-lock*))

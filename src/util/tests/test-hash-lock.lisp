@@ -12,6 +12,18 @@
                 #:%hash-table)
   (:import-from #:lparallel
                 #:force)
+  (:import-from #:lparallel.promise
+                #:future)
+  (:import-from #:lparallel.kernel
+                #:*debug-tasks-p*)
+  (:import-from #:lparallel.promise
+                #:promise)
+  (:import-from #:lparallel.kernel
+                #:wrap-error)
+  (:import-from #:lparallel.promise
+                #:fulfill)
+  (:import-from #:lparallel.promise
+                #:chain)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-hash-lock)
 
@@ -88,9 +100,12 @@
       (is (eql 0 (hash-table-count (%hash-table hash-lock)))))))
 
 (def-fixture lparallel ()
-  (let ((lparallel:*kernel* (lparallel:make-kernel 10)))
+  (let ((lparallel:*kernel* (lparallel:make-kernel 10))
+        (debug-tasks-p *debug-tasks-p* ))
+    (setf *debug-tasks-p* nil)
     (unwind-protect
          (&body)
+      (setf *debug-tasks-p* debug-tasks-p)
       (lparallel:end-kernel :wait t))))
 
 (test simple-future-run ()
@@ -113,3 +128,27 @@
       (loop for future in futures
             do (force future))
       (is (= 2000 count)))))
+
+(define-condition inner-condition (error)
+  ())
+
+(test futures-error-test ()
+  (with-fixture lparallel ()
+    (is (eql 2 (force (future 2))))
+    (signals inner-condition
+     (force
+         (future
+           (error 'inner-condition))))
+    ;; Check that promises also propagage errors
+    (let ((promise (promise)))
+      (fulfill promise
+        (chain
+         (future (error 'inner-condition))))
+      (signals inner-condition
+        (force promise)))
+
+    (let ((hash-lock (make-instance 'hash-lock)))
+      (signals inner-condition
+        (force
+         (hash-locked-future (:foo hash-lock)
+           (error 'inner-condition)))))))
