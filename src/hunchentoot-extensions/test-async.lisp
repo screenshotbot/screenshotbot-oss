@@ -81,3 +81,24 @@
 (test happy-really-async-path
   (with-fixture state ()
     (is (equal "bar1" (get "/happy-really-async-path")))))
+
+(defhandler ("/errors") ()
+  (hex:prepare-async-response (r)
+    (hex:handle-async-error r)))
+
+(test has-errors
+  (with-fixture state ()
+    (is (eql 500
+             (second (multiple-value-list (get "/errors")))))))
+
+(defhandler ("/async-errors") ()
+  (hex:prepare-async-response (r)
+    (bt:make-thread
+     (lambda ()
+       (sleep 0.1)
+       (hex:handle-async-error r :code 501)))))
+
+(test has-errors
+  (with-fixture state ()
+    (is (eql 501
+             (second (multiple-value-list (get "/async-errors")))))))

@@ -43,6 +43,10 @@
     (hunchentoot:abort-request-handler)))
 
 (defun cleanup (response)
+  (let ((stream (response-stream response)))
+    (when (open-stream-p stream)
+      (finish-output stream)
+      (close stream)))
   (remhash response *in-progress*))
 
 (defun hex:handle-async-static-file (async-response output-file)
@@ -58,6 +62,23 @@
              (uiop:copy-stream-to-stream file
                                          stream
                                          :element-type '(unsigned-byte 8))
-             (force-output stream)
+             (finish-output stream)
+             ;; this close is required.. not sure why though
              (close stream))))
+    (cleanup async-response)))
+
+(defun hex:handle-async-error (async-response &key (code 500)
+                                                (message "Something went wrong internally."))
+  ;; We don't have prebuilt headers to work with here, so let's mock
+  ;; the HTTP response.
+  (unwind-protect
+       (let ((stream (flex:make-flexi-stream
+                      (response-stream async-response))))
+         (format stream "HTTP/1.1 ~a Internal Server Error~C~C" code
+                 #\Return #\Linefeed)
+         (format stream "Content-Length: ~a~C~C~C~C" (length message)
+                 #\Return #\Linefeed
+                 #\Return #\Linefeed)
+         (format stream "~a" message)
+         (finish-output stream))
     (cleanup async-response)))
