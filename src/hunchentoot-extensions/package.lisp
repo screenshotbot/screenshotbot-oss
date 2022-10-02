@@ -31,4 +31,6 @@
            #:safe-redirect
            #:make-url
            #:supports-webp?
-           #:fix-for-webp))
+           #:fix-for-webp
+           #:prepare-async-response
+           #:handle-async-static-file))

@@ -286,9 +286,14 @@ Apache log analysis tools.)"
            res)))
       (t
        (let ((res (funcall body)))
-         (unless hunchentoot::*headers-sent*
+         (unless (or
+                  hunchentoot::*headers-sent*)
           (assert (Stringp res)))
          res)))))
+
+(defun socket-detached-p ()
+  "In some cases, we might detach the socket to asynchronously respond to the request"
+  (null hunchentoot::*close-hunchentoot-stream*))
 
 (defun %only-request-of-type (uri type)
   (assert (member type '(nil :get :post :delete :put)))

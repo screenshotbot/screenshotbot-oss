@@ -10,6 +10,7 @@
                :str
                :markup
                :quri
+               :util/macros
                :do-urlencode
                :log4cl)
   :components ((:file "package")
@@ -17,6 +18,7 @@
                (:file "acceptor-with-plugins")
                (:file "better-easy-handler")
                (:file "postdata")
+               (:file "async")
                (:file "webp")))
 
 (defsystem :hunchentoot-extensions/tests
@@ -25,4 +27,5 @@
                :fiveam)
   :components ((:file "test-acceptor-with-plugins")
                (:file "test-better-easy-handler")
-               (:file "test-url")))
+               (:file "test-url")
+               (:file "test-async")))
