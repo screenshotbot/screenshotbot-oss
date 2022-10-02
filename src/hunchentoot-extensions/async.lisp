@@ -28,6 +28,28 @@
             :reader response-headers)))
 
 (def-easy-macro prepare-async-response (&binding async-response &fn body)
+  "Handle slow HTTP requests 'asynchronously'.
+
+This macro takes a body, and has one binding. The body is executed
+ with the binding, which is an async-response object, and after that
+ the response thread is aborted.
+
+Within the body, you SHOULD NOT attempt to access or modify any
+ hunchentoot data structures. Any headers should've been set before
+ this call. The only calls you may do are hex:handle-async-static-file
+ and hex:handle-async-error.
+
+You MUST call one of these functions eventually. Forgetting to do so
+ will leak the stream. (However, you can go back and debug leaked
+ streams in the *in-progress* variable. In the future, we'll add an
+ automatic timeout to destroy old async-responses.)
+
+You can call those functions synchronously in the body, or you can
+ call it from a different thread after the body is done. Both will
+ behave correctly.
+
+The current implementation has limited functionality with what you can
+ do with the response. We'll add more if needed in the future."
   (let* ((stream hunchentoot::*hunchentoot-stream*)
          (headers (flex:with-output-to-sequence (stream)
                     (let ((hunchentoot::*hunchentoot-stream* stream))
