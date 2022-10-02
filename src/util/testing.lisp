@@ -15,7 +15,8 @@
    #:with-fake-request
    #:in-test-p
    #:screenshot-static-page
-   #:with-local-acceptor))
+   #:with-local-acceptor
+   #:with-global-binding))
 (in-package :util/testing)
 
 (defvar *in-test-p* nil)
@@ -127,3 +128,26 @@
              (bt:join-thread thread)
              (when thread-crashed?
                (error "The acceptor thread crashed, see logs")))))))))
+
+(defmacro with-global-binding (((sym value) &rest others) &body body)
+  `(call-with-global-binding ',sym ,value
+                             ,(cond
+                                ((null others)
+                                 `(lambda () ,@body))
+                                (t
+                                 `(lambda ()
+                                    (with-global-binding ,others
+                                      ,@body))))))
+
+(defun call-with-global-binding (sym value fn)
+  (let* ((boundp (boundp sym))
+         (old-val (when boundp  (symbol-value sym))))
+    (unwind-protect
+         (progn
+           (setf (symbol-value sym) value)
+           (funcall fn))
+      (cond
+        (boundp
+         (setf (symbol-value sym) old-val))
+        (t
+         (makunbound sym))))))

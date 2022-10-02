@@ -250,6 +250,7 @@
                              (:file "test-threading")
                              (:file "test-cookies")
                              (:file "test-fiveam")
+                             (:file "test-testing")
                              (:file "test-lists")
                              (:file "test-models")
                              (:file "test-cdn")

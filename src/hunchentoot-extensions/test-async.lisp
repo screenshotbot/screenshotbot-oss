@@ -42,7 +42,9 @@
 
 (def-fixture state ()
   (with-local-acceptor (*host*) ('my-acceptor)
-    (&body)))
+    (unwind-protect
+
+         (&body))))
 
 (defhandler ("/happy-path") ()
   "foo")
