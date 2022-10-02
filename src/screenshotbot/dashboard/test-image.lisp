@@ -113,3 +113,10 @@
     (let ((output-file (force (build-resized-image im :tiny :type :png))))
       (is (equal "png" (pathname-type output-file)))
       (force (build-resized-image im :tiny :type :png)))))
+
+(test build-resized-image-for-png-when-webp-alread-exists
+  (with-fixture state ()
+    (force (build-resized-image im :tiny :type :webp))
+    (let ((output-file (force (build-resized-image im :tiny :type :png))))
+      (is (equal "png" (pathname-type output-file)))
+      (force (build-resized-image im :tiny :type :png)))))

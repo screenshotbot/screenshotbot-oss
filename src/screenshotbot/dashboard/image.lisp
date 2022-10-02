@@ -87,7 +87,7 @@
            (let* ((output-file (output-file "webp")))
              (cond
                ((uiop:file-exists-p output-file)
-                (delay output-file))
+                (respond output-file))
                (t
                 (with-magick-kernel ()
                   (hash-locked-future ((list image size) *image-resize-lock*)
