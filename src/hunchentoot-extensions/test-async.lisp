@@ -9,6 +9,7 @@
         #:fiveam)
   (:shadow :get)
   (:import-from #:util/testing
+                #:with-global-binding
                 #:with-local-acceptor
                 #:test-acceptor
                 #:with-fake-request)
@@ -19,6 +20,8 @@
                 #:better-easy-handler)
   (:import-from #:util/request
                 #:http-request)
+  (:import-from #:lparallel.promise
+                #:future)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :hunchentoot-extensions/test-async)
 
@@ -31,20 +34,19 @@
    :name 'my-acceptor))
 
 (defvar *host*)
+(defvar *tmp*)
 
 (defmacro defhandler ((uri) () &body body)
   `(better-easy-handler (nil :uri ,uri :acceptor-names '(my-acceptor) :html nil) ()
-     (uiop:with-temporary-file (:stream s :pathname p :external-format :latin-1)
-       (declare (ignorable p))
-       (write-string "bar1" s)
-       (finish-output s)
-       ,@body)))
+     ,@body))
 
 (def-fixture state ()
   (with-local-acceptor (*host*) ('my-acceptor)
-    (unwind-protect
-
-         (&body))))
+    (uiop:with-temporary-file (:stream s :pathname p :external-format :latin-1)
+      (write-string "bar1" s)
+      (finish-output s)
+      (with-global-binding ((*tmp* p))
+       (&body)))))
 
 (defhandler ("/happy-path") ()
   "foo")
@@ -60,9 +62,22 @@
 (defhandler ("/happy-async-path") ()
   (setf (hunchentoot:header-out :content-type) "image/png")
   (hex:prepare-async-response (r)
-    (hex:handle-async-static-file r p))
+    (hex:handle-async-static-file r *tmp*))
   "Bad")
 
 (test happy-async-path
   (with-fixture state ()
     (is (equal "bar1" (get "/happy-async-path")))))
+
+(defhandler ("/happy-really-async-path") ()
+  (setf (hunchentoot:header-out :content-type) "image/png")
+  (hex:prepare-async-response (r)
+    (bt:make-thread
+     (lambda ()
+       (sleep 0.1)
+       (hex:handle-async-static-file r *tmp*))))
+  "Bad")
+
+(test happy-really-async-path
+  (with-fixture state ()
+    (is (equal "bar1" (get "/happy-really-async-path")))))
