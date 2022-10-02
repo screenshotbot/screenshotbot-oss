@@ -28,7 +28,7 @@
   "Lazily create the kernel if not already created"
   (util:or-setf
    *kernel*
-   (lparallel:make-kernel 20 :name "default-screenshotbot-kernel")
+   (lparallel:make-kernel 20 :name "screenshotbot-kernel")
    :thread-safe t
    :lock *kernel-lock*))
 
@@ -37,7 +37,7 @@
    *magick-kernel*
    (lparallel:make-kernel (serapeum:count-cpus)
 
-                          :name "default-screenshotbot-kernel")
+                          :name "magick-kernel")
    :thread-safe t
    :lock *kernel-lock*))
 
