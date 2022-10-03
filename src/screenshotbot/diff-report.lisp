@@ -144,10 +144,10 @@
                (list
                 (when changes
                   (format nil "~d changes" (length changes)))
-                (when deleted
-                  (format nil "~d deleted" (length deleted)))
                 (when added
-                  (format nil "~d added" (length added))))))))
+                  (format nil "~d added" (length added)))
+                (when deleted
+                  (format nil "~d deleted" (length deleted))))))))
 
 (defun hash-set-difference (left right &key test (key #'identity))
   "Similar to set-difference, but more performant"
