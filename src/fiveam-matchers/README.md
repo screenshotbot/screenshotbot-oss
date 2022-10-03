@@ -101,7 +101,7 @@ Finally, we need to describe what the mismatch is:
 In the following APIs, most functions that accept a matcher also accept a value, in which case it's treated as `(equal-to value)`.
 
 * `(equal-to val)`: check if result is `equal` to `val`.
-* `(is-not {matcher})`:  check that result does not match the given matcher
+* `(is-not {matcher|value})`:  check that result does not match the given matcher
 * `(has-all {matchers|value}*)`: check that result matches all of the matchers
 * `(has-any {matchers|value}*)`: check if the result matches at least one of the matchers
 * `(has-typep 'type)`: check if the result is of type
