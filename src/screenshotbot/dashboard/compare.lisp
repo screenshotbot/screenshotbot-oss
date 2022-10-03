@@ -579,6 +579,11 @@
     </div>))
 
 
+(deftag compare-tab-a (body &key type default-type)
+  <a class= (format nil "nav-link ~a" (when (string= type default-type) "active"))
+     href= "#" data-type= type >
+    ,@body
+  </a>)
 
 (deftag render-diff-report (&key run to
                             more
@@ -591,7 +596,12 @@
     (declare (ignorable all-comparisons))
     (let* ((changes-groups (changes-groups report))
            (added-groups (added-groups report))
-           (deleted-groups (deleted-groups report)))
+           (deleted-groups (deleted-groups report))
+           (default-type
+             (cond
+               ((not (zerop (length changes-groups))) "changes")
+               ((not (zerop (length added-groups))) "added")
+               ((not (zerop (length deleted-groups))) "deleted"))))
       <markup:merge-tag>
 
       <div class= "mt-3 d-flex  flex-wrap justify-content-between compare-header" >
@@ -610,13 +620,19 @@
       <div class= "options" >
       <ul class= "nav nav-pills report-selector" data-target= ".report-result" >
       <li class= "nav-item">
-      <a class= "nav-link active" href= "#" data-type= "changes" >,(length changes-groups) changes</a>
+        <compare-tab-a type= "changes" default-type=default-type >
+          ,(length changes-groups) changes
+        </compare-tab-a>
       </li>
       <li class= "nav-item">
-      <a class= "nav-link" href= "#" data-type= "added" >,(length added-groups) added</a>
+        <compare-tab-a type= "added" default-type=default-type >
+          ,(length added-groups) added
+        </compare-tab-a>
       </li>
       <li class= "nav-item">
-      <a class= "nav-link" href= "#" data-type= "deleted" >,(length deleted-groups) deleted</a>
+        <compare-tab-a type= "deleted" default-type=default-type >
+          ,(length deleted-groups) deleted
+        </compare-tab-a>
       </li>
 
       <markup:merge-tag>
@@ -662,7 +678,8 @@
       ,(report-result run
                       changes-groups
                       added-groups
-                      deleted-groups)
+                      deleted-groups
+                      :type default-type)
       </div>
 
       ,(info-modal run to)
@@ -703,15 +720,15 @@
    (str:emptyp search)
    (str:contains? search (group-title group) :ignore-case t)))
 
-(defun report-result (run changes-groups added-groups deleted-groups)
+(defun report-result (run changes-groups added-groups deleted-groups
+                      &key
+                      (type (hunchentoot:parameter "type")))
 
-  (let ((type (hunchentoot:parameter "type"))
-        (search (hunchentoot:parameter "search")))
+  (let ((search (hunchentoot:parameter "search")))
     (cond
       ((string-equal "added" type)
        (render-single-group-list added-groups :search search))
       ((string-equal "deleted" type)
-
        (render-single-group-list deleted-groups :search search))
       (t
        <div class= "">
