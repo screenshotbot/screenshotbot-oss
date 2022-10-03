@@ -75,7 +75,8 @@ Define a method that creates the matcher:
 ```
 
 (A common pattern is defining the method with an argument that's
-already a matcher, for insteance the `has-item` needs this)
+already a matcher, for insteance the `has-item` needs this. The
+function `ensure-matcher` is useful to implement this.)
 
 Let's create a method to describe the matcher:
 
