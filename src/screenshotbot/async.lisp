@@ -6,7 +6,7 @@
 
 (defpackage :screenshotbot/async
   (:use #:cl)
-  (:import-from #:util/macros
+  (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:server
                 #:*shutdown-hooks*)

@@ -28,7 +28,7 @@
                 #:store-directory)
   (:import-from #:bknr.datastore
                 #:*store*)
-  (:import-from #:util/macros
+  (:import-from #:easy-macros
                 #:def-easy-macro)
   (:export #:artifact-with-name
            #:artifact-link

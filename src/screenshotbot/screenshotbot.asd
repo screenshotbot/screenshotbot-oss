@@ -106,7 +106,7 @@
                :sentry-client
                :quri
                :clavier
-               :util/macros
+               :easy-macros
                :cl-cron
                :cl-interpol
                :dns-client
@@ -390,7 +390,7 @@
   :depends-on (:plump
                :lquery
                :uuid
-               :util/macros
+               :easy-macros
                :cl-store
                :util/threading
                :util/misc

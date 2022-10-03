@@ -25,7 +25,7 @@
                 #:hub)
   (:import-from #:util/cron
                 #:def-cron)
-  (:import-from #:util/macros
+  (:import-from #:easy-macros
                 #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria))
   (:export

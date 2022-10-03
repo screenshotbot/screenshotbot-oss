@@ -78,7 +78,7 @@
                 #:ensure-proxy)
   (:import-from #:util/object-id
                 #:oid-array)
-  (:import-from #:util/macros
+  (:import-from #:easy-macros
                 #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)

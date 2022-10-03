@@ -7,7 +7,7 @@
 (defpackage :hunchentoot-extensions/async
   (:use #:cl
         #:hex)
-  (:import-from #:util/macros
+  (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:hunchentoot
                 #:reset-connection-stream

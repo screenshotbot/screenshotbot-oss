@@ -10,7 +10,7 @@
                :str
                :markup
                :quri
-               :util/macros
+               :easy-macros
                :do-urlencode
                :log4cl)
   :components ((:file "package")

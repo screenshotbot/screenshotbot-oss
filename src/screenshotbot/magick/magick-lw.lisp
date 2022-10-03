@@ -11,7 +11,7 @@
                 #:with-magick-gatekeeper
                 #:*magick*
                 #:abstract-magick)
-  (:import-from #:util/macros
+  (:import-from #:easy-macros
                 #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks

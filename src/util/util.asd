@@ -132,11 +132,6 @@
                :alexandria)
   :components ((:file "form-state")))
 
-(defsystem :util/macros
-  :serial t
-  :depends-on ()
-  :components ((:file "macros")))
-
 (defsystem :util/store
   :serial t
   :depends-on (:bknr.datastore
@@ -186,7 +181,7 @@
                #-screenshotbot-oss
                :sentry
                :trivial-garbage
-               :util/macros
+               :easy-macros
                :util/misc)
   :serial t
   :components ((:file "fake-mp")
@@ -235,7 +230,7 @@
                :util/hash-lock
                :util/health-check
                :fiveam-matchers
-               :util/macros
+               :easy-macros
                :util/digests
                :util/request
                :util/fiveam)
@@ -243,7 +238,6 @@
   :components ((:module "tests"
                 :components ((:file "test-ret-let")
                              (:file "test-misc")
-                             (:file "test-macros")
                              (:file "test-request")
                              (:file "test-store")
                              (:file "test-hash-lock")

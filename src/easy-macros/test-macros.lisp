@@ -6,9 +6,9 @@
 
 (defpackage :util/tests/test-macros
   (:use #:cl
-        #:util/macros
+        #:easy-macros
         #:fiveam)
-  (:import-from #:util/macros
+  (:import-from #:easy-macros
                 #:unsupported-lambda-list
                 #:get-non-bindings
                 #:get-bindings

@@ -1,6 +1,6 @@
 (defpackage :screenshotbot/sdk/firebase
   (:use #:cl)
-  (:import-from #:util/macros
+  (:import-from #:easy-macros
                 #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags))

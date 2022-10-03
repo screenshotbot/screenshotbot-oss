@@ -6,7 +6,7 @@
 
 (defpackage :screenshotbot/replay/squid
   (:use #:cl)
-  (:import-from #:util/macros
+  (:import-from #:easy-macros
                 #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/replay/squid)

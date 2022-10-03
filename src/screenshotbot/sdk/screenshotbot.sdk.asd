@@ -17,7 +17,7 @@
                :log4cl
                :util/random-port
                :util/request
-               :util/macros
+               :easy-macros
                :screenshotbot.sdk/common-flags
                #-screenshotbot-oss
                :sentry

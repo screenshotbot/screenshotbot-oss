@@ -30,7 +30,7 @@
                 #:%image-comparisons-for-before
                 #:find-existing-image-comparison
                 #:find-image-comparison-on-images)
-  (:import-from #:util/macros
+  (:import-from #:easy-macros
                 #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
