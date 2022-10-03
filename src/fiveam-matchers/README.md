@@ -102,6 +102,12 @@ Finally, we need to describe why the test failed:
   `("expected `" ,actual "` to start with " ,(prefix matcher) ))
 ```
 
+When you build a new matcher, try to allow the arguments to be
+matchers themselves. For instance, if you create a matcher that says
+an HTML tag has an attribute value, the attribute value does not have
+to be a string: You can imagine a developer might want to check that
+`class` attribute matches having a substring.
+
 ## API
 
 In the following APIs, most functions that accept a matcher also accept a value, in which case it's treated as `(equal-to value)`.
