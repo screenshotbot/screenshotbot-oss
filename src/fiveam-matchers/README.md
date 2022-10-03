@@ -96,6 +96,26 @@ Finally, we need to describe what the mismatch is:
   `("expected `" ,actual "` to start with " ,(prefix matcher) ))
 ```
 
+## API
+
+In the following APIs, most functions that accept a matcher also accept a value, in which case it's treated as `(equal-to value)`.
+
+* `(equal-to val)`: check if result is `equal` to `val`.
+* `(is-not {matcher})`:  check that result does not match the given matcher
+* `(has-all {matchers|value}*)`: check that result matches all of the matchers
+* `(has-any {matchers|value}*)`: check if the result matches at least one of the matchers
+* `(has-typep 'type)`: check if the result is of type
+* `(is-string val)`: check if result is string
+* `(contains {matchers|value}*)`: Check if the result is a list for which
+  each element matches the corresponding matchers. (Note: the name can
+  be confusing. It "reads" like the result should contain that
+  element, but that's not what it is. We've kept the name to be
+  consistent with Hamcrest).
+* `(has-item {matcher|value})`: Check if the result is a list that has an item
+  that matches the matcher.
+* `(has-length num)`: Check if the result has `length` equal to the num.
+* `(every-item {macher|value})`: Check if every item in the list matches the given matcher.
+* `(starts-with prefix)`: Check if the result starts with the given string.
 
 ## Contributing
 
