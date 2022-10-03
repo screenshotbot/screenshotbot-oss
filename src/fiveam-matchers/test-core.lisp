@@ -13,7 +13,7 @@
                 #:equal-to))
 (in-package #:fiveam-matchers/test-core)
 
-(util/fiveam:def-suite)
+(def-suite* :fiveam-matchers/test-core)
 
 (test preconditions
   (pass))

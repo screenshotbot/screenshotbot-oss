@@ -10,7 +10,7 @@
                 #:assert-that))
 (in-package #:fiveam-matchers/test-lists)
 
-(util/fiveam:def-suite)
+(def-suite* :fiveam-matchers/test-lists)
 
 (test contains
   (let ((matcher (contains (equal-to "foobar") (equal-to "zoidberg"))))

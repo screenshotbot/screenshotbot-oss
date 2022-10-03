@@ -1,6 +1,7 @@
 (defsystem :fiveam-matchers
   :serial t
-  :depends-on (:fiveam)
+  :depends-on (:fiveam
+               :str)
   :description "An extensible matchers library for FiveAM"
   :author "Arnold Noronha <arnold@tdrhq.com>"
   :license  "Apache License, Version 2.0"
