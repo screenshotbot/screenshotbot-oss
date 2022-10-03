@@ -1,6 +1,9 @@
 
 # fiveam-matchers
 
+[![tdrhq](https://circleci.com/gh/tdrhq/fiveam-matchers.svg?style=shield)](https://app.circleci.com/pipelines/github/tdrhq/fiveam-matchers?branch=master)
+
+
 fiveam-matchers is an extensible, composable matchers library for fiveam.
 
 ## Examples
