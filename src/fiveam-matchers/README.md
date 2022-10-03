@@ -99,8 +99,10 @@ Finally, we need to describe what the mismatch is:
 
 ## Contributing
 
-Please feel free to send us Pull Requests for your matchers! You can
-send us pull requests for new matchers, or for the core library.
+This isn't a complete set of matchers. Aspirationally, we want to have
+a version of all the matchers in Hamcrest, but we'll probably just
+build them as we need them. Please send us Pull Requests
+for your matchers!
 
 ## Author
 
