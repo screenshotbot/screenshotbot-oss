@@ -91,9 +91,9 @@ Let's create a method to describe the matcher:
 ```
 
 For convenience, you don't need to explicitly format the message. You
-can return a list of objects that are all appended to each other. This
-method is not called. When the test fails this is used to render what
-was actually expected.
+can return a list of objects that are all appended to each other. When
+the test fails this is used to render what was actually expected (as
+opposed to the what failed).
 
 Finally, we need to describe why the test failed:
 
