@@ -47,60 +47,58 @@
 (defun %ignore (x)
   (declare (ignore x)))
 
-(defun build-resized-image (image size-name &key (type :webp)
-                                              callback)
-  (with-screenshotbot-kernel ()
-    (let ((size (cond
-                  ((string-equal "small" size-name) "300x300")
-                  ((string-equal "half-page" size-name) "600x600")
-                  ((string-equal "full-page" size-name) "2000x2000")
-                  ((string-equal "tiny" size-name) "5x5") ;; for testing only
-                  (t (error "invalid image size: ~a" size-name)))))
-      (flet ((output-file (type)
-               (make-pathname
-                :type type
-                :defaults (cache-dir)
-                :name (format nil "~a-~a" (oid image) size)))
-             (respond (res)
-               (cond
-                 (callback
-                  (chain (future (funcall callback res))))
-                 (t
-                  res))))
-        (ecase type
-          (:png
-           (warn "Requesting a png")
-           (build-resized-image
-            image size-name
-            :type :webp
-            :callback (lambda (webp)
-                        (let ((png (output-file "png")))
-                          (unless (uiop:file-exists-p png)
-                            (uiop:with-staging-pathname (png)
-                              (run-magick
-                               (list "convert"
-                                     webp
-                                     "-strip"
-                                     png))))
-                          (respond png)))))
-          (:webp
-           (let* ((output-file (output-file "webp")))
-             (cond
-               ((uiop:file-exists-p output-file)
-                (respond output-file))
-               (t
-                (with-magick-kernel ()
-                  (hash-locked-future ((list image size) *image-resize-lock*)
-                    (unless (uiop:file-exists-p output-file)
-                      (with-local-image (input image)
-                        (uiop:with-staging-pathname (output-file)
-                          (run-magick
-                           (list "convert" input
-                                 "-resize"
-                                 (format nil "~a>" size)
-                                 "-strip"
-                                 output-file)))))
-                    (respond output-file))))))))))))
+(defun %build-resized-image (image size-name &key type)
+  "Synchronous version. Do not call directly."
+  (let ((size (cond
+                ((string-equal "small" size-name) "300x300")
+                ((string-equal "half-page" size-name) "600x600")
+                ((string-equal "full-page" size-name) "2000x2000")
+                ((string-equal "tiny" size-name) "5x5") ;; for testing only
+                (t (error "invalid image size: ~a" size-name)))))
+    (flet ((output-file (type)
+             (make-pathname
+              :type type
+              :defaults (cache-dir)
+              :name (format nil "~a-~a" (oid image) size)))
+           (respond (res)
+             res))
+      (ecase type
+        (:png
+         (warn "Requesting a png")
+         (let ((webp (%build-resized-image
+                      image size-name
+                      :type :webp)))
+           (let ((png (output-file "png")))
+             (unless (uiop:file-exists-p png)
+               (uiop:with-staging-pathname (png)
+                 (run-magick
+                  (list "convert"
+                        webp
+                        "-strip"
+                        png))))
+             (respond png))))
+        (:webp
+         (let* ((output-file (output-file "webp")))
+           (cond
+             ((uiop:file-exists-p output-file)
+              (respond output-file))
+             (t
+              (unless (uiop:file-exists-p output-file)
+                (with-local-image (input image)
+                  (uiop:with-staging-pathname (output-file)
+                    (run-magick
+                     (list "convert" input
+                           "-resize"
+                           (format nil "~a>" size)
+                           "-strip"
+                           output-file)))))
+              (respond output-file)))))))))
+
+(defun build-resized-image (image size-name &key (type :webp))
+  (with-magick-kernel ()
+    (hash-locked-future ((list image size-name) *image-resize-lock*)
+      (%build-resized-image image size-name
+                            :type type))))
 
 (defun webp-supported-p (user-agent accept)
   (or
