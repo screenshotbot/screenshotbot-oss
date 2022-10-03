@@ -78,6 +78,11 @@ Define a method that creates the matcher:
 already a matcher, for insteance the `has-item` needs this. The
 function `ensure-matcher` is useful to implement this.)
 
+The next two methods are not essential. There are defaults
+implemented, but if you're building a matcher that will be used by
+other people, we encourage implementing them. It'll give the developer
+a better error message when the test fails.
+
 Let's create a method to describe the matcher:
 
 ```
@@ -87,10 +92,10 @@ Let's create a method to describe the matcher:
 
 For convenience, you don't need to explicitly format the message. You
 can return a list of objects that are all appended to each other. This
-method is not called. This function is used to render failure messages
-better.
+method is not called. When the test fails this is used to render what
+was actually expected.
 
-Finally, we need to describe what the mismatch is:
+Finally, we need to describe why the test failed:
 
 ```
 (defmethod describe-mismatch ((matcher starts-with-matcher) actual)
