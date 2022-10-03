@@ -599,9 +599,10 @@
            (deleted-groups (deleted-groups report))
            (default-type
              (cond
-               ((not (zerop (length changes-groups))) "changes")
-               ((not (zerop (length added-groups))) "added")
-               ((not (zerop (length deleted-groups))) "deleted"))))
+               (changes-groups "changes")
+               (added-groups "added")
+               (deleted-groups "deleted")
+               (t "changes"))))
       <markup:merge-tag>
 
       <div class= "mt-3 d-flex  flex-wrap justify-content-between compare-header" >
