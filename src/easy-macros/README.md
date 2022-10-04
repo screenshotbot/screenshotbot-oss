@@ -73,6 +73,21 @@ All the arguments named with `&binding` are not part of argument-list,
 they will be sequentially bound to the `&fn` body function. The rest
 of expressions form the lambda-list for the argument-list.
 
+### maplist
+
+Common Lisp comes with `dolist`, but not a `maplist`. Let's implement
+a quick `maplist` macro using `loop`:
+
+```
+(def-easy-macro maplist (&binding x list &fn fn)
+  (loop for value in list collect (funcall fn x)))
+```
+
+Before `def-easy-macro` this would've been too much work to define for
+something simple. With `def-easy-macro` it's just as easy to work with
+as any regular function, so you tend to macrofy even tiny abstractions
+like this.
+
 
 ## Caveats with redefinitions
 
