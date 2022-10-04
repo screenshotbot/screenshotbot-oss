@@ -9,9 +9,12 @@
   (:import-from #:bknr.datastore
                 #:store-object
                 #:persistent-class)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:export #:test-object))
 (in-package :screenshotbot/model/test-object)
 
-(defclass test-object (store-object)
-  ()
-  (:metaclass persistent-class))
+(with-class-validation
+  (defclass test-object (store-object)
+    ()
+    (:metaclass persistent-class)))

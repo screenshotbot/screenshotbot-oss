@@ -14,6 +14,8 @@
                 #:hash-index)
   (:import-from #:bknr.datastore
                 #:persistent-class)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:note
@@ -23,16 +25,17 @@
    #:find-notes-for))
 (in-package :screenshotbot/model/note)
 
-(defclass note (store-object)
-  ((user :initarg :user
-         :reader user)
-   (message :initarg :message
-            :reader message)
-   (for :initarg :For
-        :reader note-for
-        :index-type hash-index
-        :index-reader find-notes-for)
-   (created-at :initform 0
-               :initarg :created-at))
-  (:metaclass persistent-class)
-  (:default-initargs :created-at (get-universal-time)))
+(with-class-validation
+  (defclass note (store-object)
+    ((user :initarg :user
+           :reader user)
+     (message :initarg :message
+              :reader message)
+     (for :initarg :For
+          :reader note-for
+          :index-type hash-index
+          :index-reader find-notes-for)
+     (created-at :initform 0
+                 :initarg :created-at))
+    (:metaclass persistent-class)
+    (:default-initargs :created-at (get-universal-time))))

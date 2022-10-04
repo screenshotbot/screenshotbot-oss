@@ -32,6 +32,7 @@
   (:import-from #:bknr.indices
                 #:destroy-object)
   (:import-from #:util/store
+                #:with-class-validation
                 #:def-store-local)
   (:export
    #:user
@@ -84,65 +85,66 @@
 (defun arnold ()
   (user-with-email "arnold@tdrhq.com"))
 
-(defclass user (util:object-with-oid)
-  ((full-name :type (or null string)
-              :initarg :full-name
-              :initform nil
-              :reader %user-full-name
-              :writer (setf user-full-name))
-   (email :type (or null string)
-          :initarg :email
-          :initform nil
-          :reader user-email
-          :index-initargs (:test #'equal)
-          :index-type unique-index
-          :index-reader %user-with-email
-          :writer (setf user-email))
-   (password-hash :type (or null string)
-                  :initform nil
-                  :accessor auth:password-hash)
-   (confirmed-p :type boolean
-                :accessor confirmed-p)
-   (professionalp
-    :type boolean
-    :initarg :professionalp
-    :initform nil
-    :accessor professionalp)
-   (notices
-    :initform nil
-    :accessor user-notices)
-   (unaccepted-invites
-    :initform nil
-    :accessor unaccepted-invites)
-   (lock
-    :transient t
-    :initform (bt:make-lock))
-   (adminp
-    :initform nil
-    :accessor adminp)
-   (email-confirmations
-    :initarg :email-confirmations
-    :initform nil
-    :accessor email-confirmations)
-   (oauth-users
-    :initform nil
-    :accessor oauth-users)
-   (companies
-    :initarg :companies
-    :accessor %user-companies
-    :documentation "This companies slot is only use in a multi-org
+(with-class-validation
+  (defclass user (util:object-with-oid)
+    ((full-name :type (or null string)
+                :initarg :full-name
+                :initform nil
+                :reader %user-full-name
+                :writer (setf user-full-name))
+     (email :type (or null string)
+            :initarg :email
+            :initform nil
+            :reader user-email
+            :index-initargs (:test #'equal)
+            :index-type unique-index
+            :index-reader %user-with-email
+            :writer (setf user-email))
+     (password-hash :type (or null string)
+                    :initform nil
+                    :accessor auth:password-hash)
+     (confirmed-p :type boolean
+                  :accessor confirmed-p)
+     (professionalp
+      :type boolean
+      :initarg :professionalp
+      :initform nil
+      :accessor professionalp)
+     (notices
+      :initform nil
+      :accessor user-notices)
+     (unaccepted-invites
+      :initform nil
+      :accessor unaccepted-invites)
+     (lock
+      :transient t
+      :initform (bt:make-lock))
+     (adminp
+      :initform nil
+      :accessor adminp)
+     (email-confirmations
+      :initarg :email-confirmations
+      :initform nil
+      :accessor email-confirmations)
+     (oauth-users
+      :initform nil
+      :accessor oauth-users)
+     (companies
+      :initarg :companies
+      :accessor %user-companies
+      :documentation "This companies slot is only use in a multi-org
     set-up. A default installation of Screenshotbot OSS, would be a
     single org set up.")
-   (default-company
-    :initarg :default-company
-    :initform nil
-    :writer (setf default-company)
-    :reader %default-company
-    :documentation "The default company when this user logs in. We'll
+     (default-company
+      :initarg :default-company
+      :initform nil
+      :writer (setf default-company)
+      :reader %default-company
+      :documentation "The default company when this user logs in. We'll
     change this when the user 'switches' companies in the UI. If no
     default company is provided it should default to the personal
     company."))
-  (:metaclass persistent-class))
+    (:metaclass persistent-class)))
 
 (define-condition user-email-exists (error)
   ((email :initarg :email)))
@@ -241,12 +243,13 @@
   (declare (ignore companies user installation))
   (error "Can't set user-companies with multi-org-feature"))
 
-(defclass user-notice (util:object-with-unindexed-oid)
-  ((title :initarg :title
-          :accessor notice-title)
-   (summary :initarg :summary
-            :accessor notice-summary))
-  (:metaclass persistent-class))
+(with-class-validation
+  (defclass user-notice (util:object-with-unindexed-oid)
+    ((title :initarg :title
+            :accessor notice-title)
+     (summary :initarg :summary
+              :accessor notice-summary))
+    (:metaclass persistent-class)))
 
 (defmacro with-user-lock ((&optional (user `(current-user))) &body body)
   `(flet ((body () ,@body))
@@ -281,21 +284,22 @@
   (car (str:split " " (user-full-name user))))
 
 
-(defclass email-confirmation-code (object-with-oid)
-  ((code :initform (make-secret-code)
-         :type string
-         :reader secret-code)
-   (email :type (or null string)
-          :initform nil
-          :initarg :email
-          :reader confirmation-code-email)
-   (confirmed-p
-    :type boolean
-    :accessor confirmation-confirmed-p)
-   (user
-    :initarg :user
-    :accessor confirmation-user))
-  (:metaclass persistent-class))
+(with-class-validation
+  (defclass email-confirmation-code (object-with-oid)
+    ((code :initform (make-secret-code)
+           :type string
+           :reader secret-code)
+     (email :type (or null string)
+            :initform nil
+            :initarg :email
+            :reader confirmation-code-email)
+     (confirmed-p
+      :type boolean
+      :accessor confirmation-confirmed-p)
+     (user
+      :initarg :user
+      :accessor confirmation-user))
+    (:metaclass persistent-class)))
 
 (defun finish-confirmation (confirmation)
   (let ((user (confirmation-user confirmation)))

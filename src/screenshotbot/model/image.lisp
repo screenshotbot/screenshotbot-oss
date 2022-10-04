@@ -111,20 +111,22 @@
 (defvar *image-creation-hooks*
   nil)
 
-(defclass image-blob (bknr.datastore:blob)
-  ()
-  (:metaclass persistent-class))
+(with-class-validation
+  (defclass image-blob (bknr.datastore:blob)
+    ()
+    (:metaclass persistent-class)))
 
-(defclass s3-blob (store-object)
-  ((s3-key :accessor %s3-key
-           :initform nil
-           :initarg :s3-key
-           :documentation "In the past we used to generate a random
+(with-class-validation
+  (defclass s3-blob (store-object)
+    ((s3-key :accessor %s3-key
+             :initform nil
+             :initarg :s3-key
+             :documentation "In the past we used to generate a random
            identifier as the s3 key. These days we just use the object
            id. Once we write a migration to move all the old objects
            to the new ids, we can remove this. This is most likely not
            used by any open souce users either."))
-  (:metaclass persistent-class))
+    (:metaclass persistent-class)))
 
 
 (defmethod initialize-instance :around ((s3-blob s3-blob) &rest args)
@@ -573,19 +575,20 @@
           +image-state-filesystem+))
   (uiop:copy-file pathname (image-filesystem-pathname image)))
 
-(defclass content-equal-result (store-object)
-  ((image-1 :initarg :image-1
-            :index-type hash-index
-            :index-reader content-equal-results-for-image-1)
-   (image-2 :initarg :image-2
-            :reader image-2)
-   (masks :initarg :masks
-          :reader masks)
-   (result :initarg :result
-           :reader result))
-  (:metaclass persistent-class)
-  (:documentation "Comparing two images by content can be slow. This
-  caches the result of such comparisons."))
+(with-class-validation
+  (defclass content-equal-result (store-object)
+    ((image-1 :initarg :image-1
+              :index-type hash-index
+              :index-reader content-equal-results-for-image-1)
+     (image-2 :initarg :image-2
+              :reader image-2)
+     (masks :initarg :masks
+            :reader masks)
+     (result :initarg :result
+             :reader result))
+    (:metaclass persistent-class)
+    (:documentation "Comparing two images by content can be slow. This
+  caches the result of such comparisons.")))
 
 (defun clear-content-equal-results ()
   (mapc #'bknr.datastore:delete-object

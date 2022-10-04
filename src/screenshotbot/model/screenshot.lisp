@@ -29,6 +29,7 @@
                 #:%with-local-image
                 #:rect-as-list)
   (:import-from #:util/store
+                #:with-class-validation
                 #:def-store-local)
   (:export
    #:constant-string
@@ -48,14 +49,15 @@
 ;; needed. Most of my RAM usage is probably from the JVM. I had about
 ;; 600k screenshot objects, so probably less than 60MB of it would be
 ;; the names.
-(defclass constant-string (store-object)
-  ((str :type string
-        :initarg :str
-        :index-initargs (:test #'equal)
-        :index-type unique-index
-        :index-reader constant-string-with-str
-        :reader constant-string-string))
-  (:metaclass persistent-class))
+(with-class-validation
+  (defclass constant-string (store-object)
+    ((str :type string
+          :initarg :str
+          :index-initargs (:test #'equal)
+          :index-type unique-index
+          :index-reader constant-string-with-str
+          :reader constant-string-string))
+    (:metaclass persistent-class)))
 
 (let ((lock (bt:make-lock)))
   (defmethod get-constant ((str string))
@@ -69,31 +71,32 @@
 (defclass abstract-screenshot ()
   ())
 
-(defclass screenshot (store-object abstract-screenshot)
-  ((name :type string
-         :initarg :name
-         :accessor %screenshot-name)
-   (recorder-run
-    :initarg :run
-    :accessor screenshot-run
-    :documentation "DEPRECATED")
-   (lang
-    :initarg :lang
-    :initform nil
-    :accessor screenshot-lang)
-   (device
-    :initarg :device
-    :initform nil
-    :accessor screenshot-device)
-   (image
-    :initarg :image
-    :initform nil
-    :accessor screenshot-image)
-   (masks
-    :initarg :masks
-    :initform nil
-    :accessor screenshot-masks))
-  (:metaclass persistent-class))
+(with-class-validation
+  (defclass screenshot (store-object abstract-screenshot)
+    ((name :type string
+           :initarg :name
+           :accessor %screenshot-name)
+     (recorder-run
+      :initarg :run
+      :accessor screenshot-run
+      :documentation "DEPRECATED")
+     (lang
+      :initarg :lang
+      :initform nil
+      :accessor screenshot-lang)
+     (device
+      :initarg :device
+      :initform nil
+      :accessor screenshot-device)
+     (image
+      :initarg :image
+      :initform nil
+      :accessor screenshot-image)
+     (masks
+      :initarg :masks
+      :initform nil
+      :accessor screenshot-masks))
+    (:metaclass persistent-class)))
 
 (defclass fake-screenshot (abstract-screenshot)
   ((name :initarg :name

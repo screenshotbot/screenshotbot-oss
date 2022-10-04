@@ -17,6 +17,8 @@
   (:import-from #:util #:make-secret-code)
   (:import-from #:screenshotbot/notice-api
                 #:invite-company)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:export
    #:invite
    #:all-invites
@@ -30,22 +32,23 @@
    #:invite-used-p))
 (in-package :screenshotbot/model/invite)
 
-(defclass invite (store-object)
-  ((code :initform (make-secret-code)
-         :accessor invite-code)
-   (inviter :initarg :inviter
-            :accessor inviter)
-   (email :initarg :email
-          :initform nil
-          :reader invite-email)
-   (used-p :initform nil
-           :accessor invite-used-p)
-   (email-count
-    :initform 0
-    :accessor email-count)
-   (company :initarg :company
-            :accessor invite-company))
-  (:metaclass persistent-class))
+(with-class-validation
+  (defclass invite (store-object)
+    ((code :initform (make-secret-code)
+           :accessor invite-code)
+     (inviter :initarg :inviter
+              :accessor inviter)
+     (email :initarg :email
+            :initform nil
+            :reader invite-email)
+     (used-p :initform nil
+             :accessor invite-used-p)
+     (email-count
+      :initform 0
+      :accessor email-count)
+     (company :initarg :company
+              :accessor invite-company))
+    (:metaclass persistent-class)))
 
 (defmethod print-object ((invite invite) out)
   (with-slots (email) invite

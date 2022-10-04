@@ -25,6 +25,8 @@
                 #:cached-singleton-company
                 #:multi-org-feature
                 #:installation)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:export
    #:company
    #:company-reports
@@ -61,62 +63,63 @@
    #:company-owner))
 (in-package :screenshotbot/model/company)
 
-(defclass company (object-with-oid)
-  ((name
-    :initarg :name
-    :accessor %company-name
-    :index-initargs (:test 'equal)
-    :index-type unique-index
-    :index-reader company-with-name
-    :index-values all-named-companies)
-   (personalp
-    :initarg :personalp
-    :accessor personalp
-    :initform nil)
-   (owner
-    :initarg :owner
-    :accessor company-owner
-    :initform nil)
-   (admins
-    :initarg :admins
-    :initform nil
-    :reader company-admins)
-   (runs
-    :initarg :runs
-    :initform nil
-    :accessor company-runs)
-   (reports
-    :initarg :reports
-    :initform nil
-    :accessor company-reports)
-   (invites
-    :initform nil
-    :accessor company-invites)
-   (channels
-    :initarg :channels
-    :initform nil
-    :accessor company-channels)
-   (default-slack-config
-    :initform nil
-    :initarg :default-slack-config
-    :accessor default-slack-config)
-   (github-config
-    :initform nil)
-   (jira-config
-    :initform nil
-    :reader %jira-config
-    :writer (setf jira-config))
-   (demo-filled-p
-    :initform nil)
-   (singletonp
-    :initarg :singletonp
-    :index-type unique-index
-    :index-reader company-with-singletonp)
-   (images
-    :initarg :company-images
-    :initform nil
-    :documentation "deprecated list of images. do not use."))
-  (:metaclass persistent-class))
+(with-class-validation
+  (defclass company (object-with-oid)
+    ((name
+      :initarg :name
+      :accessor %company-name
+      :index-initargs (:test 'equal)
+      :index-type unique-index
+      :index-reader company-with-name
+      :index-values all-named-companies)
+     (personalp
+      :initarg :personalp
+      :accessor personalp
+      :initform nil)
+     (owner
+      :initarg :owner
+      :accessor company-owner
+      :initform nil)
+     (admins
+      :initarg :admins
+      :initform nil
+      :reader company-admins)
+     (runs
+      :initarg :runs
+      :initform nil
+      :accessor company-runs)
+     (reports
+      :initarg :reports
+      :initform nil
+      :accessor company-reports)
+     (invites
+      :initform nil
+      :accessor company-invites)
+     (channels
+      :initarg :channels
+      :initform nil
+      :accessor company-channels)
+     (default-slack-config
+      :initform nil
+      :initarg :default-slack-config
+      :accessor default-slack-config)
+     (github-config
+      :initform nil)
+     (jira-config
+      :initform nil
+      :reader %jira-config
+      :writer (setf jira-config))
+     (demo-filled-p
+      :initform nil)
+     (singletonp
+      :initarg :singletonp
+      :index-type unique-index
+      :index-reader company-with-singletonp)
+     (images
+      :initarg :company-images
+      :initform nil
+      :documentation "deprecated list of images. do not use."))
+    (:metaclass persistent-class)))
 
 (let ((lock (bt:make-lock "jira-config")))
   (defmethod jira-config ((company company))
@@ -132,24 +135,26 @@
 (defmethod singletonp ((company company))
   (slot-boundp company 'singletonp))
 
-(defclass github-config (store-object)
-  ((installation-id
-    :initform nil
-    :accessor installation-id))
-  (:metaclass persistent-class))
+(with-class-validation
+ (defclass github-config (store-object)
+   ((installation-id
+     :initform nil
+     :accessor installation-id))
+   (:metaclass persistent-class)))
 
-(defclass phabricator-config (store-object)
-  ((company :initarg :company
-            :index-initargs (:test 'eql)
-            :index-type unique-index
-            :index-reader %phabricator-config-for-company)
-   (url :initarg :url
-        :initform nil
-        :accessor phabricator-url)
-   (api-key :initarg :api-key
-            :initform nil
-            :accessor conduit-api-key))
-  (:metaclass persistent-class))
+(with-class-validation
+  (defclass phabricator-config (store-object)
+    ((company :initarg :company
+              :index-initargs (:test 'eql)
+              :index-type unique-index
+              :index-reader %phabricator-config-for-company)
+     (url :initarg :url
+          :initform nil
+          :accessor phabricator-url)
+     (api-key :initarg :api-key
+              :initform nil
+              :accessor conduit-api-key))
+    (:metaclass persistent-class)))
 
 (let ((lock (bt:make-lock)))
  (defun phabricator-config-for-company (company)
@@ -168,38 +173,40 @@
        github-config
        (setf github-config (make-instance 'github-config)))))))
 
-(defclass slack-config (store-object)
-  ((access-token
-    :initarg :access-token
-    :initform nil
-    :accessor access-token)
-   (channel
-    :initarg :channel
-    :accessor slack-config-channel)
-   (enabledp
-    :initarg :enabledp
-    :initform nil
-    :accessor enabledp))
-  (:metaclass persistent-class))
+(with-class-validation
+  (defclass slack-config (store-object)
+    ((access-token
+      :initarg :access-token
+      :initform nil
+      :accessor access-token)
+     (channel
+      :initarg :channel
+      :accessor slack-config-channel)
+     (enabledp
+      :initarg :enabledp
+      :initform nil
+      :accessor enabledp))
+    (:metaclass persistent-class)))
 
-(defclass jira-config (store-object)
-  ((url :initarg :url
-        :initform nil
-        :accessor jira-config-url)
-   (username :initarg :username
-             :initform nil
-             :accessor jira-config-username)
-   (password :initarg :password
-             :initform nil
-             :accessor jira-config-password)
-   (project-id :initarg :project-id
+(with-class-validation
+  (defclass jira-config (store-object)
+    ((url :initarg :url
+          :initform nil
+          :accessor jira-config-url)
+     (username :initarg :username
                :initform nil
-               :accessor jira-config-project-id)
-   (enabledp
-    :initarg :enabledp
-    :initform nil
-    :accessor enabledp))
-  (:metaclass persistent-class))
+               :accessor jira-config-username)
+     (password :initarg :password
+               :initform nil
+               :accessor jira-config-password)
+     (project-id :initarg :project-id
+                 :initform nil
+                 :accessor jira-config-project-id)
+     (enabledp
+      :initarg :enabledp
+      :initform nil
+      :accessor enabledp))
+    (:metaclass persistent-class)))
 
 
 ;; eh, we could do better

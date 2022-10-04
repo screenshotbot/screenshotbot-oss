@@ -16,6 +16,8 @@
                 #:commit-graph)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:export
    #:commit-graph
    #:repo-url
@@ -25,18 +27,19 @@
    #:commit-graph-dag))
 (in-package :screenshotbot/model/commit-graph)
 
-(defclass commit-graph (bknr.datastore:blob)
-  ((url :type string
-        :initform nil
-        :accessor repo-url
-        :initarg :url)
-   (company :initarg :company
-            :accessor company
-            :initform nil)
-   (lock :initform (bt:make-recursive-lock)
-         :transient t
-         :accessor lock))
-  (:metaclass persistent-class))
+(with-class-validation
+  (defclass commit-graph (bknr.datastore:blob)
+    ((url :type string
+          :initform nil
+          :accessor repo-url
+          :initarg :url)
+     (company :initarg :company
+              :accessor company
+              :initform nil)
+     (lock :initform (bt:make-recursive-lock)
+           :transient t
+           :accessor lock))
+    (:metaclass persistent-class)))
 
 (defmethod find-commit-graph ((company company) (url string))
   (log:info "Finding commit graph for company ~a and repo ~a" company url)

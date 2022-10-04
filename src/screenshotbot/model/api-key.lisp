@@ -18,6 +18,8 @@
                 #:persistent-class)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:export
    #:api-key
    #:%find-api-key
@@ -30,34 +32,35 @@
    #:api-key-secret-key))
 (in-package :screenshotbot/model/api-key)
 
-(defclass api-key (store-object)
-  ((user
-    :type user
-    :initarg :user
-    :accessor api-key-user)
-   (company
-    :type company
-    :initarg :company
-    :initform nil
-    :accessor api-key-company)
-   (api-key
-    :type string
-    :accessor api-key-key
-    :initarg :api-key
-    :index-type unique-index
-    :index-initargs (:test #'equal)
-    :index-reader %%find-api-key
-    :index-values all-api-keys
-    :initform nil)
-   (api-secret-key
-    :type string
-    :initarg :api-secret-key
-    :accessor api-key-secret-key
-    :initform nil)
-   (expired-p
-    :type boolean
-    :initform nil))
-  (:metaclass persistent-class))
+(with-class-validation
+  (defclass api-key (store-object)
+    ((user
+      :type user
+      :initarg :user
+      :accessor api-key-user)
+     (company
+      :type company
+      :initarg :company
+      :initform nil
+      :accessor api-key-company)
+     (api-key
+      :type string
+      :accessor api-key-key
+      :initarg :api-key
+      :index-type unique-index
+      :index-initargs (:test #'equal)
+      :index-reader %%find-api-key
+      :index-values all-api-keys
+      :initform nil)
+     (api-secret-key
+      :type string
+      :initarg :api-secret-key
+      :accessor api-key-secret-key
+      :initform nil)
+     (expired-p
+      :type boolean
+      :initform nil))
+    (:metaclass persistent-class)))
 
 (defvar *transient-keys* (make-hash-table :test #'equal))
 

@@ -19,6 +19,8 @@
                 #:oauth-user-user
                 #:oauth-user-avatar
                 #:oauth-user-email)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:export
    #:oauth-access-token
    #:github-access-token
@@ -34,35 +36,36 @@
    #:access-token-string))
 (in-package :screenshotbot/model/github)
 
-(defclass github-user (store-object)
-  ((gh-user-id :type integer
-               :initarg :gh-user-id
-               :index-type unique-index
-               :initform nil
-               :index-initargs (:test 'equal)
-               :index-reader %find-github-user-by-id)
-   (email :type (or null string)
-          :initarg :email
-          :initform nil
-          :accessor oauth-user-email)
-   (full-name :type (or null string)
-              :initarg :full-name
-              :initform nil
-              :reader %oauth-user-full-name
-              :writer (setf oauth-user-full-name))
-   (avatar :type (or null string)
-           :initarg :avatar
+(with-class-validation
+  (defclass github-user (store-object)
+    ((gh-user-id :type integer
+                 :initarg :gh-user-id
+                 :index-type unique-index
+                 :initform nil
+                 :index-initargs (:test 'equal)
+                 :index-reader %find-github-user-by-id)
+     (email :type (or null string)
+            :initarg :email
+            :initform nil
+            :accessor oauth-user-email)
+     (full-name :type (or null string)
+                :initarg :full-name
+                :initform nil
+                :reader %oauth-user-full-name
+                :writer (setf oauth-user-full-name))
+     (avatar :type (or null string)
+             :initarg :avatar
+             :initform nil
+             :accessor oauth-user-avatar)
+     (login :initform nil
+            :initarg :login
+            :accessor github-login)
+     (known-emails :initform nil
+                   :accessor known-emails)
+     (user :initarg :user
            :initform nil
-           :accessor oauth-user-avatar)
-   (login :initform nil
-          :initarg :login
-          :accessor github-login)
-   (known-emails :initform nil
-                 :accessor known-emails)
-   (user :initarg :user
-         :initform nil
-         :accessor oauth-user-user))
-  (:metaclass persistent-class))
+           :accessor oauth-user-user))
+    (:metaclass persistent-class)))
 
 (defmethod oauth-user-full-name ((self github-user))
   (cond
