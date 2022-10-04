@@ -8,13 +8,13 @@
   (:use #:cl
         #:alexandria
         #:bknr.datastore
-        #:../model/user
-        #:../model/channel
-        #:../model/image
-        #:../model/screenshot
-        #:../model/company
-        #:../model/api-key
-        #:../user-api
+        #:screenshotbot/model/user
+        #:screenshotbot/model/channel
+        #:screenshotbot/model/image
+        #:screenshotbot/model/screenshot
+        #:screenshotbot/model/company
+        #:screenshotbot/model/api-key
+        #:screenshotbot/user-api
         #:fiveam)
   (:import-from #:../server
                 #:logged-in-p)

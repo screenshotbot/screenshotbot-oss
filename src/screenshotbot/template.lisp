@@ -8,8 +8,8 @@
 (pkg:define-package :screenshotbot/template
     (:use #:cl
           #:alexandria
-          #:./cdn
-          #:./user-api)
+          #:screenshotbot/cdn
+          #:screenshotbot/user-api)
   (:use-reexport #:screenshotbot/cdn)
   (:export #:selenium-css
            #:mdi

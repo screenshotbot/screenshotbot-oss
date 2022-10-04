@@ -7,7 +7,7 @@
 (pkg:define-package :screenshotbot/test-template
     (:use #:cl
           #:alexandria
-          #:./template
+          #:screenshotbot/template
           #:fiveam)
   (:import-from #:./factory
                 #:*user*

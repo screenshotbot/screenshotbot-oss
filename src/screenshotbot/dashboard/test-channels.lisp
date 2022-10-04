@@ -7,7 +7,7 @@
 (pkg:define-package :screenshotbot/dashboard/test-channels
     (:use #:cl
           #:alexandria
-          #:../user-api
+          #:screenshotbot/user-api
           #:fiveam)
   (:import-from #:./channels
                 #:%list-projects)

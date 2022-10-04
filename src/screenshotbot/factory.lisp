@@ -7,13 +7,13 @@
 (pkg:define-package :screenshotbot/factory
     (:use #:cl
           #:alexandria
-          #:./template
-          #:./user-api
-          #:./screenshot-api
-          #:./report-api
-          #:./git-repo
-          #:./model/github
-          #:./api-key-api)
+          #:screenshotbot/template
+          #:screenshotbot/user-api
+          #:screenshotbot/screenshot-api
+          #:screenshotbot/report-api
+          #:screenshotbot/git-repo
+          #:screenshotbot/model/github
+          #:screenshotbot/api-key-api)
   (:import-from #:./github/access-checks
                 #:github-repo)
   (:export #:test-user

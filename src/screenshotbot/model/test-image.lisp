@@ -7,7 +7,7 @@
 (pkg:define-package :screenshotbot/model/test-image
   (:use #:cl
         #:fiveam
-        #:./image)
+        #:screenshotbot/model/image)
   (:import-from #:./image
                 #:image
                 #:local-image

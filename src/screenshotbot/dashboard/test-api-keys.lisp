@@ -8,7 +8,7 @@
     (:use #:cl
           #:alexandria
           #:fiveam
-          #:../api-key-api)
+          #:screenshotbot/api-key-api)
   (:import-from #:./api-keys
                 #:%api-key-page)
   (:import-from #:../factory

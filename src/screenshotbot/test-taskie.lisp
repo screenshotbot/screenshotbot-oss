@@ -7,7 +7,7 @@
 (pkg:define-package :screenshotbot/test-taskie
     (:use #:cl
           #:alexandria
-          #:./taskie
+          #:screenshotbot/taskie
           #:fiveam)
   (:import-from #:./taskie
                 #:with-pagination))

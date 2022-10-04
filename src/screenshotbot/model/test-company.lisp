@@ -1,7 +1,7 @@
 (pkg:define-package :screenshotbot/model/test-company
     (:use #:cl
           #:fiveam
-          #:./company)
+          #:screenshotbot/model/company)
   (:import-from #:bknr.datastore
                 #:delete-object)
   (:import-from #:screenshotbot/user-api

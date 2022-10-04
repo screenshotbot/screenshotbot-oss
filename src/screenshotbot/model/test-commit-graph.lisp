@@ -7,8 +7,8 @@
 (pkg:define-package :screenshotbot/model/test-commit-graph
   (:use #:cl
         #:fiveam
-        #:./commit-graph
-        #:./company)
+        #:screenshotbot/model/commit-graph
+        #:screenshotbot/model/company)
   (:import-from #:util/store
                 #:with-test-store))
 

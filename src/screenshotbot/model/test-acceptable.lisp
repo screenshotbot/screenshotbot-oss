@@ -8,7 +8,7 @@
   (:use #:cl
         #:alexandria
         #:fiveam
-        #:./report)
+        #:screenshotbot/model/report)
   (:import-from #:util/store
                 #:with-test-store))
 

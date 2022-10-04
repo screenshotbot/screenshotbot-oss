@@ -9,9 +9,9 @@
         #:alexandria
         #:bknr.datastore
         #:fiveam
-        #:../model/user
-        #:../model/github
-        #:../api-key-api)
+        #:screenshotbot/model/user
+        #:screenshotbot/model/github
+        #:screenshotbot/api-key-api)
   (:import-from #:./github-oauth
                 #:prepare-gh-user)
   (:import-from #:bknr.datastore

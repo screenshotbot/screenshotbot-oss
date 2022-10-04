@@ -4,8 +4,8 @@
         #:bknr.datastore
         #:util
         #:fiveam
-        #:./model/recorder-run
-        #:./model/core))
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/model/core))
 
 (defvar *tmpdir*)
 

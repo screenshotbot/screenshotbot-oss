@@ -7,7 +7,7 @@
 (pkg:define-package :util/java/reader
   (:use #:cl)
   #+ (or ccl lispworks)
-  (:import-from ./java
+  (:import-from #:util/java/java
                 #:invoke
                 #:%%read-java-field
                 #:array->list)

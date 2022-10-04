@@ -9,14 +9,14 @@
         #:alexandria
         #:bknr.datastore
         #:fiveam
-        #:./promote
-        #:../model/recorder-run
-        #:../model/channel
-        #:../model/company
-        #:../model/user
-        #:../git-repo
-        #:../user-api
-        #:../model/api-key)
+        #:screenshotbot/api/promote
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/model/channel
+        #:screenshotbot/model/company
+        #:screenshotbot/model/user
+        #:screenshotbot/git-repo
+        #:screenshotbot/user-api
+        #:screenshotbot/model/api-key)
   (:import-from #:bknr.datastore
                 #:persistent-class)
 

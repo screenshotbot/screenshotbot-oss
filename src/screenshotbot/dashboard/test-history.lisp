@@ -8,8 +8,8 @@
     (:use #:cl
           #:alexandria
           #:fiveam
-          #:../screenshot-api
-          #:../factory)
+          #:screenshotbot/screenshot-api
+          #:screenshotbot/factory)
   (:import-from #:./history
                 #:render-history)
   (:import-from #:util/testing

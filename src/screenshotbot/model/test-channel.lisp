@@ -7,9 +7,9 @@
 (pkg:define-package :screenshotbot/model/test-channel
   (:use #:cl
         #:alexandria
-        #:./channel
-        #:./recorder-run
-        #:./company
+        #:screenshotbot/model/channel
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/model/company
         #:fiveam)
   (:import-from #:./channel
                 #:get-full-repo-from-repo)

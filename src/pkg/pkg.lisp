@@ -30,7 +30,7 @@
      (:use-reexport
       `(:use-reexport ,@ (cdr clause)))
      (:use
-      `(:use ,@ (mapcar #'fix-rel (cdr clause))))
+      `(:use ,@ (cdr clause)))
      (:shadowing-import-from
       clause)
      (otherwise clause))))

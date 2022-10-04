@@ -7,8 +7,8 @@
 (pkg:define-package :screenshotbot/github/test-access-checks
   (:use #:cl
         #:fiveam
-        #:./access-checks
-        #:../user-api))
+        #:screenshotbot/github/access-checks
+        #:screenshotbot/user-api))
 
 (util/fiveam:def-suite)
 

@@ -8,11 +8,11 @@
   (:use #:cl
         #:alexandria
         #:bknr.datastore
-        #:../model/channel
-        #:../model/screenshot
-        #:../model/image
-        #:../model/recorder-run
-        #:../model/company
+        #:screenshotbot/model/channel
+        #:screenshotbot/model/screenshot
+        #:screenshotbot/model/image
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/model/company
         #:fiveam)
   (:import-from #:util/store
                 #:with-test-store))

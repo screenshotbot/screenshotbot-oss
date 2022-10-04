@@ -8,7 +8,7 @@
     (:use #:cl
           #:alexandria
           #:fiveam
-          #:./installation))
+          #:screenshotbot/installation))
 
 (util/fiveam:def-suite)
 

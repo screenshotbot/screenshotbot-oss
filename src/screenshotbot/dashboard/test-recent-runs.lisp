@@ -8,10 +8,10 @@
     (:use #:cl
           #:alexandria
           #:fiveam
-          #:../user-api
-          #:../model/github
-          #:../model/recorder-run
-          #:./recent-runs)
+          #:screenshotbot/user-api
+          #:screenshotbot/model/github
+          #:screenshotbot/model/recorder-run
+          #:screenshotbot/dashboard/recent-runs)
   (:import-from #:./recent-runs
                 #:recorder-run-row
                 #:render-recent-runs)

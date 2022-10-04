@@ -9,10 +9,10 @@
         #:alexandria
         #:bknr.datastore
         #:fiveam
-        #:../model
-        #:./core
-        #:./settings
-        #:../login/common)
+        #:screenshotbot/model
+        #:screenshotbot/slack/core
+        #:screenshotbot/slack/settings
+        #:screenshotbot/login/common)
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:util/testing

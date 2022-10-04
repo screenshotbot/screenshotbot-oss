@@ -8,15 +8,15 @@
   (:use #:cl
         #:alexandria
         #:bknr.datastore
-        #:../model/recorder-run
-        #:../model/user
-        #:../user-api
-        #:./promote
-        #:../model/screenshot
-        #:../promote-api
-        #:../model/api-key
-        #:../model/channel
-        #:../model/company
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/model/user
+        #:screenshotbot/user-api
+        #:screenshotbot/api/promote
+        #:screenshotbot/model/screenshot
+        #:screenshotbot/promote-api
+        #:screenshotbot/model/api-key
+        #:screenshotbot/model/channel
+        #:screenshotbot/model/company
         #:fiveam)
   (:import-from #:../github/task-integration
                 #:*create-issue-fn*

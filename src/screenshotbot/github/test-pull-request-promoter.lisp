@@ -8,16 +8,16 @@
   (:use #:cl
         #:alexandria
         #:bknr.datastore
-        #:../github
-        #:../model/test-object
-        #:../model/company
-        #:../compare
-        #:../diff-report
-        #:./access-checks
-        #:../model/recorder-run
-        #:../promote-api
-        #:../model/channel
-        #:../git-repo
+        #:screenshotbot/github
+        #:screenshotbot/model/test-object
+        #:screenshotbot/model/company
+        #:screenshotbot/compare
+        #:screenshotbot/diff-report
+        #:screenshotbot/github/access-checks
+        #:screenshotbot/model/recorder-run
+        #:screenshotbot/promote-api
+        #:screenshotbot/model/channel
+        #:screenshotbot/git-repo
         #:fiveam)
   (:import-from #:../api/promote
                 #:maybe-promote-run)
