@@ -29,7 +29,7 @@ What about this:
             (has-item 3)))))
 ```
 
-That makes sense too, it's basically just saying 3 is the result
+That makes sense too, it's basically just saying 3 is in the result
 list. This is can be done with regular fiveam macros though. Let's try
 something harder.
 
