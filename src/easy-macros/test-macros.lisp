@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :util/tests/test-macros
+(defpackage :easy-macros/test-macros
   (:use #:cl
         #:easy-macros
         #:fiveam)
@@ -22,10 +22,10 @@
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
                 #:contains))
-(in-package :util/tests/test-macros)
+(in-package :easy-macros/test-macros)
 
 
-(util/fiveam:def-suite)
+(def-suite* :easy-macros/test-macros)
 
 (def-easy-macro with-basic-stuff (&fn fn)
   (funcall fn))

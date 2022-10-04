@@ -6,7 +6,6 @@
 
 (defpackage :easy-macros
   (:use #:cl)
-  (:local-nicknames (#:a #:alexandria))
   (:export
    #:def-easy-macro))
 (in-package :easy-macros)

@@ -13,5 +13,6 @@
   :serial t
   :depends-on (:easy-macros
                :fiveam
+               :alexandria
                :fiveam-matchers)
   :components ((:file "test-macros")))
