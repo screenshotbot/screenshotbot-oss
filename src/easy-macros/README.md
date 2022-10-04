@@ -70,3 +70,39 @@ how you could write more complex arguments in the macro.
 All the arguments named with `&binding` are not part of argument-list,
 they will be sequentially bound to the `&fn` body function. The rest
 of expressions form the lambda-list for the argument-list.
+
+
+## Caveats with redefinitions
+
+Most redefinitions will automatically be applied to all callers. If
+you change the lambda-list (either `&binding` or otherwise), the new
+definition may not be compatible.
+
+## TODO
+
+This library is NOT very polished.
+
+However, even with its limited polish it's been ridiculously useful in
+my work, so I thought I should put it out there and accept feedback
+and pull requests. There are few things that I'd personally like to see:
+
+* Less brittle lambda-list parsing: currently it's really hacky
+* A way to implement macros of the form:
+```
+(def-stuff my-stuff (...)
+  ,@body)
+```
+* In a similar vein as above: sometimes in macros you want to pass the
+  quoted symbol name instead of the evaluated expression. In theory I
+  can build that...
+* But I want to limit what this library does. I want to make it easy
+  for somebody new to CL to write macros *most* of the time. Just
+  because I can doesn't mean I should.
+
+## Author
+
+Arnold Noronha <arnold@screenshotbot.io>
+
+## License
+
+Apache License, Version 2.0
