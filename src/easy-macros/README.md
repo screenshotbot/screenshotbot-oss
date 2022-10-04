@@ -117,7 +117,7 @@ in the meantime you can use quick-patch to install:
 
 ```
 (ql:quickload :quick-patch)
-(quick-patch:register "https://github.com/tdrhq/fiveam-matchers.git" "master")
+(quick-patch:register "https://github.com/tdrhq/easy-macros.git" "main")
 (quick-patch:checkout-all ".quick-patch/")
 ```
 
