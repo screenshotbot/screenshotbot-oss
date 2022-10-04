@@ -80,7 +80,7 @@ a quick `maplist` macro using `loop`:
 
 ```
 (def-easy-macro maplist (&binding x list &fn fn)
-  (loop for value in list collect (funcall fn x)))
+  (loop for value in list collect (funcall fn value))
 ```
 
 Before `def-easy-macro` this would've been too much work to define for
