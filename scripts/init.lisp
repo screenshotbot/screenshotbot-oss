@@ -48,4 +48,11 @@
 (quick-patch:register "https://github.com/tokenrove/imago"
                       "29f2b42b248785acae3d05d5dd97a4e9ad0d8ecb")
 
+;; TODO: automatically generate hashes
+#+screenshotbot-oss
+(progn
+  (register-tdrhq "easy-macros" "main")
+  (register-tdrhq "markup" "main")
+  (register-tdrhq "fiveam-matchers" "master"))
+
 (quick-patch:checkout-all "build/quick-patch/")
