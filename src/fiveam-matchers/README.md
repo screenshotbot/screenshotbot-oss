@@ -144,6 +144,17 @@ Finally, you can use the matchers using the `assert-that`:
 `(assert-that test-expression {matcher}*)`. Note that you can provide
 multiple matchers to that expression, it's equivalent.
 
+## Installation
+
+We're waiting on this to be part of the next Quicklisp distribution,
+in the meantime you can use quick-patch to install:
+
+```
+(ql:quickload :quick-patch)
+(quick-patch:register "https://github.com/tdrhq/fiveam-matchers.git" "master")
+(quick-patch:checkout-all ".quick-patch/")
+```
+
 ## Contributing
 
 This isn't a complete set of matchers. Aspirationally, we want to have

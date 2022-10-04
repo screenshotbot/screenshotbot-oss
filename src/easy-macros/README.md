@@ -95,6 +95,17 @@ Most redefinitions will automatically be applied to all callers. If
 you change the lambda-list (either `&binding` or otherwise), the new
 definition may not be compatible.
 
+## Installation
+
+We're waiting on this to be part of the next Quicklisp distribution,
+in the meantime you can use quick-patch to install:
+
+```
+(ql:quickload :quick-patch)
+(quick-patch:register "https://github.com/tdrhq/fiveam-matchers.git" "master")
+(quick-patch:checkout-all ".quick-patch/")
+```
+
 ## TODO
 
 This library is NOT very polished.
