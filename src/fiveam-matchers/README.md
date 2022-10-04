@@ -75,8 +75,19 @@ Define a method that creates the matcher:
 ```
 
 (A common pattern is defining the method with an argument that's
-already a matcher, for insteance the `has-item` needs this. The
+already a matcher, for instance the `has-item` needs this. The
 function `ensure-matcher` is useful to implement this.)
+
+Now we need to do the actual checks:
+
+```
+(defmethod matchesp ((matcher starts-with-matcher)
+                     actual)
+  (and
+   (stringp actual)
+   (str:starts-with-p (prefix matcher)
+                      actual)))
+```
 
 The next two methods are not essential. There are defaults
 implemented, but if you're building a matcher that will be used by
