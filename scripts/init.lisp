@@ -51,7 +51,7 @@
 ;; TODO: automatically generate hashes
 #+screenshotbot-oss
 (progn
-  (quick-patch:register "https://github.com/moderninterpreters/markup" "main")
+  (quick-patch:register "https://github.com/moderninterpreters/markup" "master")
   (register-tdrhq "easy-macros" "main")
   (register-tdrhq "fiveam-matchers" "master"))
 
