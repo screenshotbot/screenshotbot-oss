@@ -8,17 +8,17 @@
     (:use #:cl
           #:alexandria
           #:screenshotbot/mailer)
-  (:import-from #:./installation
+  (:import-from #:screenshotbot/installation
                 #:installation)
-  (:import-from #:./github
+  (:import-from #:screenshotbot/github
                 #:github-plugin)
-  (:import-from #:./phabricator
+  (:import-from #:screenshotbot/phabricator
                 #:phabricator-plugin)
-  (:import-from #:./mailer
+  (:import-from #:screenshotbot/mailer
                 #:local-smtp-mailer
                 #:noop-mailer)
   #+ (or ccl lispworks)
-  (:import-from #:./slack
+  (:import-from #:screenshotbot/slack
                 #:slack-plugin)
   (:import-from #:screenshotbot/login/github-oauth
                 #:github-oauth-provider)

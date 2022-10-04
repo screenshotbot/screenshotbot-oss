@@ -22,7 +22,7 @@
   (labels ((fix-rel (other)
            (fix-name name other))
            (fix-import-from (clause)
-             `(,(car clause) ,(fix-rel (cadr clause))
+             `(,(car clause) ,(cadr clause)
                ,@(cddr clause))))
    (case (car clause)
      (:import-from

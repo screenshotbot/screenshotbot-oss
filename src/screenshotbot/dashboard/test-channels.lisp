@@ -9,9 +9,9 @@
           #:alexandria
           #:screenshotbot/user-api
           #:fiveam)
-  (:import-from #:./channels
+  (:import-from #:screenshotbot/dashboard/channels
                 #:%list-projects)
-  (:import-from #:../factory
+  (:import-from #:screenshotbot/factory
                 #:test-user
                 #:test-channel
                 #:test-company)

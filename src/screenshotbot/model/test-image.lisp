@@ -8,7 +8,7 @@
   (:use #:cl
         #:fiveam
         #:screenshotbot/model/image)
-  (:import-from #:./image
+  (:import-from #:screenshotbot/model/image
                 #:image
                 #:local-image
                 #:image-blob

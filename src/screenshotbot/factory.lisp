@@ -14,7 +14,7 @@
           #:screenshotbot/git-repo
           #:screenshotbot/model/github
           #:screenshotbot/api-key-api)
-  (:import-from #:./github/access-checks
+  (:import-from #:screenshotbot/github/access-checks
                 #:github-repo)
   (:export #:test-user
            #:test-company

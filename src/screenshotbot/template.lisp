@@ -26,13 +26,13 @@
            #:landing-template
            #:dashboard-head
            #:*template-override*)
-  (:import-from #:./installation
+  (:import-from #:screenshotbot/installation
                 #:installation)
-  (:import-from #:./user-api
+  (:import-from #:screenshotbot/user-api
                 #:current-company)
   (:import-from #:markup
                 #:deftag)
-  (:import-from #:./server
+  (:import-from #:screenshotbot/server
                 #:acceptor
                 #:defhandler
                 #:staging-p

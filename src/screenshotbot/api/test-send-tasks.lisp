@@ -18,15 +18,15 @@
         #:screenshotbot/model/channel
         #:screenshotbot/model/company
         #:fiveam)
-  (:import-from #:../github/task-integration
+  (:import-from #:screenshotbot/github/task-integration
                 #:*create-issue-fn*
                 #:github-create-issue)
-  (:import-from #:../tasks/common
+  (:import-from #:screenshotbot/tasks/common
                 #:noop-task-integration
                 #:get-enabled-task-integrations)
   (:import-from #:bknr.datastore
                 #:persistent-class)
-  (:import-from #:../testing
+  (:import-from #:screenshotbot/testing
                 #:with-test-user)
   (:import-from #:util/store
                 #:with-test-store)

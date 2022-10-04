@@ -9,7 +9,7 @@
           #:alexandria
           #:screenshotbot/template
           #:fiveam)
-  (:import-from #:./factory
+  (:import-from #:screenshotbot/factory
                 #:*user*
                 #:*company*)
   (:import-from #:screenshotbot/template

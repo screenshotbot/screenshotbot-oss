@@ -8,9 +8,9 @@
   (:use #:cl
         #:alexandria
         #:fiveam)
-  (:import-from #:../model/core
+  (:import-from #:screenshotbot/model/core
                 #:generate-api-secret)
-  (:import-from #:./webhook
+  (:import-from #:screenshotbot/github/webhook
                 #:pull-request
                 #:pull-request-head
                 #:pull-request-base

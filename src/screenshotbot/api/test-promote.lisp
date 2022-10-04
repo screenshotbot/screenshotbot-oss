@@ -20,7 +20,7 @@
   (:import-from #:bknr.datastore
                 #:persistent-class)
 
-  (:import-from #:../testing
+  (:import-from #:screenshotbot/testing
                 #:with-test-user)
   (:import-from #:screenshotbot/api/promote
                 #:*promotion-log-stream*)

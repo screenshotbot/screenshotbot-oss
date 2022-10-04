@@ -9,21 +9,21 @@
         #:alexandria
         #:bknr.datastore
         #:fiveam)
-  (:import-from #:../user-api
+  (:import-from #:screenshotbot/user-api
                 #:*current-api-key*)
   (:import-from #:util
                 #:oid)
-  (:import-from #:./image
+  (:import-from #:screenshotbot/api/image
                 #:prepare-upload-api
                 #:*use-blob-store-p*
                 #:*build-presigned-put*)
-  (:import-from #:../model/company
+  (:import-from #:screenshotbot/model/company
                 #:company)
-  (:import-from #:../model/user
+  (:import-from #:screenshotbot/model/user
                 #:user)
-  (:import-from #:../model/image
+  (:import-from #:screenshotbot/model/image
                 #:image)
-  (:import-from #:../testing
+  (:import-from #:screenshotbot/testing
                 #:with-test-user)
   (:import-from #:util/store
                 #:with-test-store)

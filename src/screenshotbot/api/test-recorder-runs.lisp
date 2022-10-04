@@ -16,16 +16,16 @@
         #:screenshotbot/model/api-key
         #:screenshotbot/user-api
         #:fiveam)
-  (:import-from #:../server
+  (:import-from #:screenshotbot/server
                 #:logged-in-p)
-  (:import-from #:./recorder-run
+  (:import-from #:screenshotbot/api/recorder-run
                 #:make-screenshot-for-channel
                 #:*synchronous-promotion*
                 #:*synchronous-promotion*
                 #:%recorder-run-post)
   (:import-from #:util
                 #:oid)
-  (:import-from #:../testing
+  (:import-from #:screenshotbot/testing
                 #:with-test-user)
   (:import-from #:util/store
                 #:with-test-store)

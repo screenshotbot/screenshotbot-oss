@@ -10,7 +10,7 @@
           #:fiveam
           #:screenshotbot/screenshot-api
           #:screenshotbot/factory)
-  (:import-from #:./history
+  (:import-from #:screenshotbot/dashboard/history
                 #:render-history)
   (:import-from #:util/testing
                 #:with-fake-request)

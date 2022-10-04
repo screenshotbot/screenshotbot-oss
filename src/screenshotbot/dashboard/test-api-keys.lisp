@@ -9,9 +9,9 @@
           #:alexandria
           #:fiveam
           #:screenshotbot/api-key-api)
-  (:import-from #:./api-keys
+  (:import-from #:screenshotbot/dashboard/api-keys
                 #:%api-key-page)
-  (:import-from #:../factory
+  (:import-from #:screenshotbot/factory
                 #:test-user
                 #:test-api-key
                 #:*company*)

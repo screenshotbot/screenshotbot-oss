@@ -7,11 +7,11 @@
 (pkg:define-package :screenshotbot/testing
     (:use #:cl
           #:alexandria)
-  (:import-from #:./model/company
+  (:import-from #:screenshotbot/model/company
                 #:company)
-  (:import-from #:./model/user
+  (:import-from #:screenshotbot/model/user
                 #:user)
-  (:import-from #:./model/api-key
+  (:import-from #:screenshotbot/model/api-key
                 #:api-key)
   (:import-from #:bknr.datastore
                 #:delete-object)

@@ -19,9 +19,9 @@
         #:screenshotbot/model/channel
         #:screenshotbot/git-repo
         #:fiveam)
-  (:import-from #:../api/promote
+  (:import-from #:screenshotbot/api/promote
                 #:maybe-promote-run)
-  (:import-from #:./pull-request-promoter
+  (:import-from #:screenshotbot/github/pull-request-promoter
                 #:base-commit
                 #:promoter-result
                 #:check-status

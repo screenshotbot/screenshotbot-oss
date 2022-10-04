@@ -9,7 +9,7 @@
           #:alexandria
           #:screenshotbot/taskie
           #:fiveam)
-  (:import-from #:./taskie
+  (:import-from #:screenshotbot/taskie
                 #:with-pagination))
 
 (util/fiveam:def-suite)

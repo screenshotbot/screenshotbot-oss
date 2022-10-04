@@ -12,7 +12,7 @@
         #:screenshotbot/model/user
         #:screenshotbot/model/github
         #:screenshotbot/api-key-api)
-  (:import-from #:./github-oauth
+  (:import-from #:screenshotbot/login/github-oauth
                 #:prepare-gh-user)
   (:import-from #:bknr.datastore
                 #:store-object-id)

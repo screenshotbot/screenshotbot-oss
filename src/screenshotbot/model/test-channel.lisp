@@ -11,7 +11,7 @@
         #:screenshotbot/model/recorder-run
         #:screenshotbot/model/company
         #:fiveam)
-  (:import-from #:./channel
+  (:import-from #:screenshotbot/model/channel
                 #:get-full-repo-from-repo)
   (:import-from #:util/store
                 #:with-test-store))

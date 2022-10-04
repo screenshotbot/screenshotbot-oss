@@ -8,9 +8,9 @@
     (:use #:cl
           #:alexandria
           #:fiveam)
-  (:Import-from #:../server
+  (:Import-from #:screenshotbot/server
                 #:*disable-mail*)
-  (:import-from #:./signup
+  (:import-from #:screenshotbot/login/signup
                 #:signup-post)
   (:import-from #:screenshotbot/model/company
                 #:prepare-singleton-company

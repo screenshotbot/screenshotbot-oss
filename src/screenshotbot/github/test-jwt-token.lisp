@@ -8,7 +8,7 @@
     (:use #:cl
           #:fiveam
           #:alexandria)
-  (:import-from #:./jwt-token
+  (:import-from #:screenshotbot/github/jwt-token
                 #:github-create-jwt-token))
 
 (util/fiveam:def-suite)

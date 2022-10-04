@@ -12,12 +12,12 @@
           #:screenshotbot/model/github
           #:screenshotbot/model/recorder-run
           #:screenshotbot/dashboard/recent-runs)
-  (:import-from #:./recent-runs
+  (:import-from #:screenshotbot/dashboard/recent-runs
                 #:recorder-run-row
                 #:render-recent-runs)
   (:import-from #:bknr.datastore
                 #:store-object-id)
-  (:import-from #:../factory
+  (:import-from #:screenshotbot/factory
                 #:*user*
                 #:*company*
                 #:test-company)
