@@ -7,4 +7,4 @@
 (pkg:define-package :screenshotbot/slack
     (:use #:cl
           #:alexandria)
-  (:use-reexport #:./slack/plugin))
+  (:use-reexport #:screenshotbot/slack/plugin))

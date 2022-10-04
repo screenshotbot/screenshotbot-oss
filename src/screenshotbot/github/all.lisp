@@ -7,9 +7,9 @@
 (pkg:define-package :screenshotbot/github
     (:use #:cl
           #:alexandria)
-  (:use-reexport #:./github/marketplace
-                 #:./github/webhook
-                 #:./github/access-checks
-                 #:./github/pr-checks
-                 #:./github/pull-request-promoter
-                 #:./github/plugin))
+  (:use-reexport #:screenshotbot/github/marketplace
+                 #:screenshotbot/github/webhook
+                 #:screenshotbot/github/access-checks
+                 #:screenshotbot/github/pr-checks
+                 #:screenshotbot/github/pull-request-promoter
+                 #:screenshotbot/github/plugin))

@@ -10,7 +10,7 @@
           #:alexandria
           #:./cdn
           #:./user-api)
-  (:use-reexport #:./cdn)
+  (:use-reexport #:screenshotbot/cdn)
   (:export #:selenium-css
            #:mdi
            #:landing-head

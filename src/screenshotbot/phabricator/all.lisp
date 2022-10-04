@@ -7,4 +7,4 @@
 (pkg:define-package :screenshotbot/phabricator
     (:use #:cl
           #:alexandria)
-  (:use-reexport #:./phabricator/plugin))
+  (:use-reexport #:screenshotbot/phabricator/plugin))

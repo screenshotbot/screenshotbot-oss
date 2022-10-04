@@ -7,7 +7,7 @@
 (pkg:define-package :util/java
     (:use-reexport
      #+ (or ccl lispworks)
-     :./java/java
-     :./java/reader
+     :util/java/java
+     :util/java/reader
      #+ (or ccl lispworks)
-     :./java/binding))
+     :util/java/binding))

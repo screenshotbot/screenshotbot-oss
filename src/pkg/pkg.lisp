@@ -28,7 +28,7 @@
      (:import-from
       (fix-import-from clause))
      (:use-reexport
-      `(:use-reexport ,@ (mapcar #'fix-rel (cdr clause))))
+      `(:use-reexport ,@ (cdr clause)))
      (:use
       `(:use ,@ (mapcar #'fix-rel (cdr clause))))
      (:shadowing-import-from

@@ -6,6 +6,6 @@
 
 (pkg:define-package :screenshotbot/gitlab
     (:use #:cl)
-  (:use-reexport #:./gitlab/repo
-                 #:./gitlab/merge-request-promoter
-                 #:./gitlab/plugin))
+  (:use-reexport #:screenshotbot/gitlab/repo
+                 #:screenshotbot/gitlab/merge-request-promoter
+                 #:screenshotbot/gitlab/plugin))
