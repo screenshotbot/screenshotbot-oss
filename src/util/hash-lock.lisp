@@ -9,14 +9,9 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:lparallel.promise
-                #:fulfill)
-  (:import-from #:lparallel.promise
-                #:promise)
-  (:import-from #:lparallel.promise
-                #:fulfill)
-  (:import-from #:lparallel.promise
-                #:chain)
-  (:import-from #:lparallel.promise
+                #:fulfill
+                #:promise
+                #:chain
                 #:future)
   (:export
    #:hash-lock
