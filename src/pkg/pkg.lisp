@@ -32,7 +32,7 @@
      (:use
       `(:use ,@ (mapcar #'fix-rel (cdr clause))))
      (:shadowing-import-from
-      (fix-import-from clause))
+      clause)
      (otherwise clause))))
 
 (defmacro define-package (name &rest clauses)
