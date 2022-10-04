@@ -41,6 +41,21 @@ Notice a few things:
 * If you redefine custom-ignore-errors, all callers of the macro will
   point to the new code, unlike with regular macros. (With some caveats! See below.)
 
+We don't need to use `funcall` by the way, the following is equivalent:
+
+```
+(def-easy-macro custom-ignore-errors (&fn fn)
+  (handler-case
+     (fn)
+    (error () nil)))
+```
+
+We're still figuring out which one we like better. This version
+obviously is lesser code, but it also breaks the expectation that
+arguments in the lambda-list are variables. But anyway, moving on to
+next examples.
+
+
 ### with-open-file
 
 ```

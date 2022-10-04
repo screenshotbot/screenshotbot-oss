@@ -135,8 +135,23 @@
                                   &fn fn)
   (funcall fn 1 2))
 
+(def-easy-macro with-bindings-v2 (&binding a &binding b &key one two
+                                           &fn fn)
+  (fn 1 2))
+
+
 
 (test bindings
+  (is (equal 3
+             (with-bindings (aaa bbb)
+               (+ aaa bbb))))
+  #+nil
+  (signals unsupported-lambda-list
+    (eval
+     `(def-easy-macro with-key-bindings (&binding a &key &binding b)
+        (funcall fn 1 3)))))
+
+(test bindings-v2
   (is (equal 3
              (with-bindings (aaa bbb)
                (+ aaa bbb))))

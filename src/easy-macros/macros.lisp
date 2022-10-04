@@ -160,6 +160,9 @@
     (multiple-value-bind (fn-args body-fn) (remove-&fn real-fn-args)
      `(progn
         (defun ,fn-name (,body-fn ,@ (remove-binding-syms fn-args))
-          ,@body)
+          (flet ((,body-fn (&rest args)
+                   (declare (inline))
+                   (apply ,body-fn args)))
+            ,@body))
         (defmacro ,name ((&rest fn-arg-values) &body macro-body)
           (build-funcall ',fn-name ',real-fn-args fn-arg-values macro-body))))))
