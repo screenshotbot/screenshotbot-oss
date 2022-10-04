@@ -1,6 +1,8 @@
 
 # easy-macros: An easy way to write 90% of your macros
 
+[![tdrhq](https://circleci.com/gh/tdrhq/easy-macros.svg?style=shield)](https://app.circleci.com/pipelines/github/tdrhq/easy-macros?branch=main)
+
 Easy-macros help you write macros of this form:
 
 ```
