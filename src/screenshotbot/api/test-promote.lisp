@@ -32,7 +32,10 @@
 (util/fiveam:def-suite)
 
 (defclass dummy-repo ()
-  ((commits :initform (list "car" "car2" "master"))))
+  ((commits :initform `(("master" . "car2")
+                        ("new-master" . "bar")
+                        ("bar" . "car2")
+                        ("car2" . "car")))))
 
 (defclass test-channel (channel)
   ()
@@ -46,23 +49,26 @@
 
 (defmethod get-parent-commit ((repo dummy-repo) commit)
   (with-slots (commits) repo
-    (loop for x in commits
-          for next in (cdr commits)
-          if (equal next commit)
-            do (return x))))
+    (assoc-value commits commit :test #'equal)))
 
 (defmethod merge-base ((repo dummy-repo) commit1 commit2)
-  (with-slots (commits) repo
-    (flet ((name-to-order (name)
-             (let ((res (position name
-                                  commits
-                                  :test 'string=)))
-               (assert res)
-               res)))
-      (if (< (name-to-order commit1)
-             (name-to-order commit2))
-          commit1
-          commit2))))
+  (flet ((one-way (commit1 commit2)
+           (let (seen)
+             (labels ((dfs (commit)
+                        (when commit
+                          (push commit seen)
+                          (dfs (get-parent-commit repo commit)))))
+               (dfs commit1))
+             (labels ((dfs (commit)
+                        (when commit
+                          (cond
+                            ((str:s-member seen commit)
+                             commit)
+                            (t
+                             (dfs  (get-parent-commit repo commit)))))))
+               (dfs commit2)))))
+    (or (one-way commit1 commit2)
+        (one-way commit2 commit1))))
 
 (defmethod repo-ancestor-p ((repo dummy-repo) commit1 commit2)
   (equal commit1 (merge-base repo commit1 commit2)))
