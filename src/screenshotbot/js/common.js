@@ -591,9 +591,8 @@ setupLiveOnAttach(".modal-link", function () {
                 console.log("got data", data);
                 var modal = $(data);
                 $("body").append(modal);
-                var modal = new Modal(modal.get(0), {});
-                modal.show();
-                modal.on("data.bs.dismiss", function () {
+                (new Modal(modal.get(0), {})).show();
+                $(modal).on("data.bs.dismiss", function () {
                     $(modal).remove();
                 });
             },
