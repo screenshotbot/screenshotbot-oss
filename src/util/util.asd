@@ -193,7 +193,8 @@
   :components ((:file "cron")))
 
 (defsystem :util/request
-  :depends-on (:drakma)
+  :depends-on (:drakma
+               :easy-macros)
   :serial t
   :components ((:file "request")))
 
