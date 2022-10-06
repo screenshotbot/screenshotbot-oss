@@ -181,6 +181,7 @@
                  (:file "home")
                  (:file "paginated")
                  (:file "numbers")
+                 (:file "review-link")
                  (:file "run-page")
                  (:file "image")
                  (:file "compare")
@@ -223,6 +224,7 @@
     :serial t
     :components ((:file "repo")
                  (:file "plugin")
+                 (:file "review-link")
                  (:file "settings")
                  (:file "merge-request-promoter")
                  (:file "all")))
