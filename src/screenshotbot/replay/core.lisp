@@ -255,8 +255,11 @@
      :status status)))
 
 (defun fix-malformed-url (url)
-  (let ((url (quri:render-uri (quri:uri url))))
-    (str:replace-all " " "%20" url)))
+  (let* ((url (quri:render-uri (quri:uri url)))
+         (url (str:replace-all " " "%20" url))
+         (url (str:replace-all "[" "%5B" url))
+         (url (str:replace-all "]" "%5D" url)))
+    url))
 
 (defun http-get-without-cache (url &key (force-binary t)
                                      (force-string nil))
