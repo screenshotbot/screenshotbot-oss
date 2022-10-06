@@ -93,6 +93,8 @@
   (:import-from #:screenshotbot/model/view
                 #:can-edit
                 #:can-edit!)
+  (:import-from #:screenshotbot/dashboard/review-link
+                #:review-link)
   (:export
    #:diff-report
    #:render-acceptable
@@ -704,10 +706,14 @@
           ,(when-let* ((repo (channel-repo (recorder-run-channel run)))
                        (this-hash (recorder-run-commit run))
                        (prev-hash (recorder-run-commit to)))
-             <p class= "mt-2" >
-               This commit: <commit repo= repo hash=this-hash /> <br />
-               Previous commit: <commit repo= repo hash=prev-hash />
-             </p>)
+             (let ((review-link (review-link :run run)))
+               <p class= "mt-2" >
+                 This commit: <commit repo= repo hash=this-hash />
+                 ,(when review-link
+                    <span> on ,(progn review-link)</span>)
+                 <br />
+                 Previous commit: <commit repo= repo hash=prev-hash />
+               </p>))
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

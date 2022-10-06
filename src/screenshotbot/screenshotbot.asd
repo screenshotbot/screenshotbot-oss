@@ -181,6 +181,7 @@
                  (:file "home")
                  (:file "paginated")
                  (:file "numbers")
+                 (:file "review-link")
                  (:file "run-page")
                  (:file "image")
                  (:file "compare")

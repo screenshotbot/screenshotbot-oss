@@ -22,12 +22,14 @@
                 #:commit)
   (:import-from #:screenshotbot/dashboard/run-page
                 #:run-page)
-  (:import-from #:screenshotbot/model/recorder-run
-                #:phabricator-diff-id)
   (:import-from #:screenshotbot/dashboard/explain
                 #:explain)
   (:import-from #:screenshotbot/installation
                 #:default-logged-in-page)
+  (:import-from #:util/misc
+                #:?.)
+  (:import-from #:screenshotbot/dashboard/review-link
+                #:review-link)
   (:export #:recent-runs))
 (in-package :screenshotbot/dashboard/recent-runs)
 
@@ -66,40 +68,35 @@
               (ui/a :href
                     (format nil "/runs/~a" (oid run))
       (channel-name (recorder-run-channel run)))
-    (ui/div
-      (cond
-        ((activep run)
-         <span>
-           Promoted<explain title= "Promoted run"><promoted-tooltip /></explain>  run
-         <conditional-commit repo= (channel-repo (recorder-run-channel run))
-         hash= (recorder-run-commit run) />
-         </span>)
-        ((recorder-previous-run run)
-         <span>Previously promoted run
-           <conditional-commit repo= (channel-repo (recorder-run-channel run))
-                               hash= (recorder-run-commit run) />
-         </span>)
-        ((pull-request-url run)
-         <span>
-           Run on <a href= (pull-request-url run)>
-             ,(cond
-                ((phabricator-diff-id run)
-                 <span>Revision</span>)
-                (t
-                 <span>Pull Request</span>))
-                  </a>
-         </span>)
-        (t
-         <span>
-           Unpromoted run
-           ,(when-let ((repo (channel-repo (recorder-run-channel run)))
-                       (hash (recorder-run-commit run)))
-              <span>
-                on
-                <commit repo= repo hash=hash />
-              </span>)
-         </span>
-)))
+              (ui/div
+               (let ((review-link (review-link :run run)))
+                (cond
+                  ((activep run)
+                   <span>
+                   Promoted<explain title= "Promoted run"><promoted-tooltip /></explain>  run
+                   <conditional-commit repo= (channel-repo (recorder-run-channel run))
+                   hash= (recorder-run-commit run) />
+                   </span>)
+                  ((recorder-previous-run run)
+                   <span>Previously promoted run
+                   <conditional-commit repo= (channel-repo (recorder-run-channel run))
+                   hash= (recorder-run-commit run) />
+                   </span>)
+                  (review-link
+                   <span>
+                     Run on ,(progn review-link)
+                   </span>)
+                  (t
+                   <span>
+                   Unpromoted run
+                   ,(when-let ((repo (channel-repo (recorder-run-channel run)))
+                               (hash (recorder-run-commit run)))
+                      <span>
+                      on
+                      <commit repo= repo hash=hash />
+                      </span>)
+                   </span>
+                   ))))
 
     (taskie-timestamp :prefix "" :timestamp (created-at run))))
 
