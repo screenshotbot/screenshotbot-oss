@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:fix-malformed-url
                 #:process-node
                 #:http-cache-dir
                 #:context
@@ -194,3 +195,9 @@ background: url(shttps://google.com?f=1)
     (tmpdir:with-tmpdir (util:*object-store*)
       (let ((*http-cache-dir* nil))
         (is (path:-d (path:catdir (http-cache-dir))))))))
+
+(test fix-malformed-url
+  (is (equal
+       "https://www.rollins.edu/academic-advising/images/Tres%20Loch.jpg"
+       (fix-malformed-url
+        "https://www.rollins.edu/academic-advising/images/Tres Loch.jpg"))))

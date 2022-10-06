@@ -254,10 +254,15 @@
      :stylesheetp stylesheetp
      :status status)))
 
+(defun fix-malformed-url (url)
+  (let ((url (quri:render-uri (quri:uri url))))
+    (str:replace-all " " "%20" url)))
+
 (defun http-get-without-cache (url &key (force-binary t)
                                      (force-string nil))
 
-  (let* ((url (quri:uri url))
+  (let* ((url (fix-malformed-url url))
+         (url (quri:uri url))
          (scheme (quri:uri-scheme url))
          (timeout-retries 0))
     (flet ((respond-404 (e)
