@@ -33,28 +33,16 @@
   (:import-from #:screenshotbot/login/common
                 #:*current-company-override*)
   (:import-from #:screenshotbot/user-api
-                #:pull-request-url
                 #:company-runs)
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:markup
-                #:write-html)
-  (:import-from #:screenshotbot/model/recorder-run
-                #:gitlab-merge-request-iid
-                #:phabricator-diff-id))
+                #:write-html))
 
 (util/fiveam:def-suite)
 
 (defclass test-run ()
-  ((phabricator-diff-id
-    :initform nil
-    :reader phabricator-diff-id)
-   (merge-request-iid
-    :initform nil
-    :reader gitlab-merge-request-iid)
-   (pull-request-url
-    :initform nil
-    :reader pull-request-url)))
+  ())
 
 (defclass test-channel ()
   ())
