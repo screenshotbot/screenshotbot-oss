@@ -30,17 +30,23 @@
      ;; We don't need to handle SSL errors
      (funcall fn))
     (t
-     (handler-case
-         (funcall fn)
-       #+lispworks
-       (comm:ssl-verification-failure (e)
-         (values
-          (cond
-            (want-stream
-             (make-string-input-stream ""))
-            (t
-             ""))
-          502 nil))))))
+     (flet ((handle-error (e)
+              (declare (ignore e))
+              (values
+               (cond
+                 (want-stream
+                  (make-string-input-stream ""))
+                 (t
+                  ""))
+               502 nil)))
+      (handler-case
+          (funcall fn)
+        #+lispworks
+        (comm:ssl-verification-failure (e)
+          (handle-error e))
+        #+lispworks
+        (comm:socket-create-error (e)
+          (handle-error e)))))))
 
 (defun http-request (url &rest args &key headers-as-hash-table
                                       want-string

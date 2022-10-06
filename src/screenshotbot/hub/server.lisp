@@ -71,7 +71,8 @@
          :content-type content-type
          :read-timeout 45
          :content content)
-      (assert (not (eql ret 500)))
+      (when (eql ret 500)
+        (error "Got bad response code for remote hub: ~a ~S" data headers))
       (setf (hunchentoot:return-code*) ret)
       (setf (hunchentoot:content-type*) (a:assoc-value headers :content-type))
       data)))

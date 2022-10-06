@@ -225,51 +225,54 @@ accessing the urls or sitemap slot."
   (declare (ignore tmpdir)) ;; we used to use this to store images, no longer.
   (loop for (title . url) in urls
         for i from 0 do
-          (progn
-            (safe-interrupt-checkpoint)
-            (loop for root-asset in (replay:assets snapshot)
-                  until (string= (replay:url root-asset) url)
-                  finally
-                     (let ((actual-url (quri:render-uri
-                                        (quri:merge-uris
-                                         (quri:uri
-                                          (format nil "/company/~a/assets/~a"
-                                                  (encrypt:encrypt-mongoid
-                                                   (oid-array (company run)))
-                                                  (asset-file-name root-asset)))
-                                         (quri:uri
-                                          hosted-url)))))
+          (restart-case
+              (progn
+                (safe-interrupt-checkpoint)
+                (loop for root-asset in (replay:assets snapshot)
+                      until (string= (replay:url root-asset) url)
+                      finally
+                         (let ((actual-url (quri:render-uri
+                                            (quri:merge-uris
+                                             (quri:uri
+                                              (format nil "/company/~a/assets/~a"
+                                                      (encrypt:encrypt-mongoid
+                                                       (oid-array (company run)))
+                                                      (asset-file-name root-asset)))
+                                             (quri:uri
+                                              hosted-url)))))
 
-                       (funcall logger url actual-url)
+                           (funcall logger url actual-url)
 
-                       (a:when-let (dimension (frontend:dimensions config))
-                         (window-resize :width (frontend:width dimension)
-                                        :height (frontend:height dimension)))
-                       (setf (webdriver-client:url)
-                             actual-url)))
+                           (a:when-let (dimension (frontend:dimensions config))
+                             (window-resize :width (frontend:width dimension)
+                                            :height (frontend:height dimension)))
+                           (setf (webdriver-client:url)
+                                 actual-url)))
 
-            ;; a temporary screenshot, I think this
-            ;; will prime the browser to start loading
-            ;; any assets that might be missing
-            ;;(full-page-screenshot driver nil)
+                ;; a temporary screenshot, I think this
+                ;; will prime the browser to start loading
+                ;; any assets that might be missing
+                ;;(full-page-screenshot driver nil)
 
 
-            ;; TODO: This sleep-time used to be part of
-            ;; wait-for-zero-requests. Currently, because of
-            ;; aggressive proxy caching, there's no way of waiting for
-            ;; zero requests. In the previous logic we would *at
-            ;; least* sleep for this much time, but might be more
-            ;; while requests are pending. We might be able to reduce
-            ;; this in the future, but it's not the bottleneck at time
-            ;; of writing.
-            (sleep (sleep-time run))
+                ;; TODO: This sleep-time used to be part of
+                ;; wait-for-zero-requests. Currently, because of
+                ;; aggressive proxy caching, there's no way of waiting for
+                ;; zero requests. In the previous logic we would *at
+                ;; least* sleep for this much time, but might be more
+                ;; while requests are pending. We might be able to reduce
+                ;; this in the future, but it's not the bottleneck at time
+                ;; of writing.
+                (sleep (sleep-time run))
 
-            (process-full-page-screenshot
-             driver
-             replay-proxy
-             :results results
-             :title (format nil "~a--~a"
-                            title (frontend:browser-config-name config))))))
+                (process-full-page-screenshot
+                 driver
+                 replay-proxy
+                 :results results
+                 :title (format nil "~a--~a"
+                                title (frontend:browser-config-name config))))
+            (ignore-this-url ()
+              nil))))
 
 (defmethod fetch-full-page-screenshot-handle (driver proxy)
   "Creates a full-page-screenshot, and returns two values: the handle
