@@ -27,7 +27,9 @@
    #:default-oidc-provider
    #:installation-domain
    #:cached-singleton-company
-   #:default-logged-in-page))
+   #:default-logged-in-page
+   #:installation-s3-store
+   #:null-s3-store))
 (in-package :screenshotbot/installation)
 
 (defclass installation ()
@@ -44,6 +46,9 @@
                               (make-instance 'standard-auth-provider))
                    :initarg :auth-providers
                    :accessor auth-providers)
+   (s3-store :initform (make-instance 'null-s3-store)
+             :initarg :s3-store
+             :accessor installation-s3-store)
    (default-oidc-provider :initform nil
                           :initarg :default-oidc-provider
                           :accessor default-oidc-provider)
@@ -77,6 +82,11 @@
 
 (defclass email-auth-provider ()
   ())
+
+
+(defclass null-s3-store ()
+  ())
+
 
 (defvar *installation* (make-instance 'installation))
 

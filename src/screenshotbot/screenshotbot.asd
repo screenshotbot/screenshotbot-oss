@@ -110,6 +110,7 @@
                :cl-cron
                :cl-interpol
                :dns-client
+               :zs3
                :random-sample
                :pem
                ;;:cljwt-custom ;; custom comes from clath, for rs-256
@@ -130,6 +131,9 @@
    (:file "installation")
    (:file "server" :depends-on ("analytics"))
    (:file "async")
+   (:module "s3"
+    :serial t
+    :components ((:file "core")))
    (:file "cdn")
    (:file "user-api")
    (:file "notice-api")
