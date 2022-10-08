@@ -24,7 +24,10 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/image
-                #:make-image))
+                #:make-image)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:*installation*))
 (in-package :screenshotbot/test-diff-report)
 
 (util/fiveam:def-suite)
@@ -34,7 +37,8 @@
                                  (path:catfile "static/" file)))
 
 (def-fixture state ()
-  (let ((*cache* (make-hash-table :test #'equal)))
+  (let ((*installation* (make-instance 'installation))
+        (*cache* (make-hash-table :test #'equal)))
    (with-test-store ()
      (let* ((img (make-image
                   :pathname (static-asset "assets/images/example-view-square.svg.png")))

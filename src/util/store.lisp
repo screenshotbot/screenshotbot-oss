@@ -532,22 +532,28 @@ this variable in LET forms, but you can SETF it if you like."
 
 (defmethod location-for-oid ((root pathname) (oid array)
                              &key suffix)
+  "Returns two values: the absolute pathname for the given oid and root,
+ and the relative pathname relative to the object store. The second
+ value is useful for propagating to s3-store."
   (let* ((oid (coerce oid '(vector (unsigned-byte 8))))
-         (image-dir (path:catdir (bknr.datastore::store-directory
-                                     bknr.datastore:*store*)
-                                 root))
+         (store-dir (bknr.datastore::store-directory
+                                     bknr.datastore:*store*))
          (p1 (ironclad:byte-array-to-hex-string oid :start 0 :end 1))
          (p2 (ironclad:byte-array-to-hex-string oid :start 1 :end 2))
          (p4 (ironclad:byte-array-to-hex-string oid :start 2)))
     ;; The first two bytes change approximately once every 0.7 days,
     ;; so each directory has enough space for all files generated in
     ;; one day. That should be good enough for anybody!
-    (let ((file (path:catfile image-dir
-                              (make-pathname
-                               :directory (list :relative p1 p2)
-                               :name (cond
-                                       (suffix
-                                        (format nil "~a-~a" p4 suffix))
-                                       (t p4))))))
+    (let* ((relpath (make-pathname
+                     :directory (list :relative p1 p2)
+                     :name (cond
+                             (suffix
+                              (format nil "~a-~a" p4 suffix))
+                             (t p4))))
+           (file (path:catfile store-dir
+                               root
+                               relpath)))
       (ensure-directories-exist file)
-      file)))
+      (values file
+              (namestring
+               (path:catfile root relpath))))))

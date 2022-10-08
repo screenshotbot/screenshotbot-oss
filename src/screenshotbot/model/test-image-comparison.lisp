@@ -32,6 +32,9 @@
                 #:find-image-comparison-on-images)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:*installation*)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#:fli #:util/fake-fli)))
@@ -40,19 +43,20 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-   (tmpdir:with-tmpdir (dir)
-     (with-fake-request ()
-       (let ((im1 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
-             (im2 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-2.png"))
-             (im3 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-3.png"))
-             (objs))
-         (labels ((make-screenshot (img)
-                    (let* ((image (make-image :pathname img)))
-                      (make-instance 'screenshot
-                                      :name "foobar"
-                                      :image image))))
-           (&body)))))))
+  (let ((*installation* (make-instance 'installation)))
+   (with-test-store ()
+     (tmpdir:with-tmpdir (dir)
+       (with-fake-request ()
+         (let ((im1 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
+               (im2 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-2.png"))
+               (im3 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-3.png"))
+               (objs))
+           (labels ((make-screenshot (img)
+                      (let* ((image (make-image :pathname img)))
+                        (make-instance 'screenshot
+                                        :name "foobar"
+                                        :image image))))
+             (&body))))))))
 
 (test do-image-comparison
   (with-fixture state ()

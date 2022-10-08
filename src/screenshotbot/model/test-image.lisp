@@ -45,6 +45,9 @@
                 #:md5-file)
   (:import-from #:bknr.datastore
                 #:class-instances)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:*installation*)
   (:export))
 
 (util/fiveam:def-suite)
@@ -54,17 +57,18 @@
                                  (path:catfile "static/" file)))
 
 (def-fixture state ()
-  (let ((file (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png")))
-   (with-test-store ()
-     (let* ((img (make-image
-                  :pathname (static-asset "assets/images/old-example-view-right.png")))
-            (img2 (make-image
-                   :pathname (static-asset "assets/images/old-example-view-left.png")))
-            (img-copy (make-image
-                       :pathname (static-asset "assets/images/old-example-view-right.png")))
-            (rect (make-instance 'mask-rect :left 8 :top 11
-                                            :height 99 :width 103)))
-       (&body)))))
+  (let ((*installation* (make-instance 'installation)))
+   (let ((file (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png")))
+     (with-test-store ()
+       (let* ((img (make-image
+                    :pathname (static-asset "assets/images/old-example-view-right.png")))
+              (img2 (make-image
+                     :pathname (static-asset "assets/images/old-example-view-left.png")))
+              (img-copy (make-image
+                         :pathname (static-asset "assets/images/old-example-view-right.png")))
+              (rect (make-instance 'mask-rect :left 8 :top 11
+                                              :height 99 :width 103)))
+         (&body))))))
 
 (test simple-compare ()
   (with-fixture state ()

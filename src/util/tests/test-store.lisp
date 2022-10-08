@@ -178,6 +178,19 @@
                                                       #xab #xbc #x01 #x23))))
       (is (str:ends-with-p
            (fix-for-windows "foo-bar/ab/bc/0123abbc0123abbc0123")
+           (namestring pathname)))
+      ;; Ensure absolute
+      (is (not (str:starts-with-p "foo-bar" (namestring pathname)))))))
+
+(test location-for-oid/expected-relative-path
+  (with-test-store ()
+    (let ((pathname (nth-value
+                     1
+                     (location-for-oid #P "foo-bar/" #(#xab #xbc #x01 #x23
+                                                       #xab #xbc #x01 #x23
+                                                       #xab #xbc #x01 #x23)))))
+      (is (string=
+           (fix-for-windows "foo-bar/ab/bc/0123abbc0123abbc0123")
            (namestring pathname))))))
 
 (test location-for-oid/with-suffix

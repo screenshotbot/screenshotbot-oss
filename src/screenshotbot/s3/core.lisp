@@ -15,9 +15,12 @@
                 #:*s3-endpoint*)
   (:import-from #:screenshotbot/installation
                 #:null-s3-store)
+  (:import-from #:screenshotbot/async
+                #:with-screenshotbot-kernel)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:null-store))
+   #:null-store
+   #:s3-store-update-remote))
 (in-package :screenshotbot/s3/core)
 
 (defclass s3-store ()
@@ -28,7 +31,8 @@
    (access-key :initarg :access-key
                :reader access-key)
    (secret-access-key :initarg :secret-access-key
-                      :reader secret-key)))
+                      :reader secret-key))
+  (:documentation "An S3 copy of the object-store"))
 
 (def-easy-macro with-store (store &fn fn)
   (let ((*s3-endpoint* (endpoint store))
@@ -43,6 +47,14 @@
      key)))
 
 (defmethod upload-file ((store null-s3-store) file key)
+  nil)
+
+(defmethod s3-store-update-remote ((store s3-store) file key)
+  (with-screenshotbot-kernel ()
+    (lparallel:speculate
+      (upload-file store file key))))
+
+(defmethod s3-store-update-remote ((store null-s3-store) file key)
   nil)
 
 #|

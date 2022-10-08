@@ -15,14 +15,18 @@
         #:screenshotbot/model/company
         #:fiveam)
   (:import-from #:util/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:*installation*))
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-   (let* ((channel (make-instance 'channel)))
-     (&body))))
+  (let ((*installation* (make-instance 'installation)))
+   (with-test-store ()
+     (let* ((channel (make-instance 'channel)))
+       (&body)))))
 
 (test no-history
   (with-fixture state ()

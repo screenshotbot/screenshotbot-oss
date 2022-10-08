@@ -65,6 +65,11 @@
                 #:with-transient-copy)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:installation-s3-store)
+  (:import-from #:screenshotbot/s3/core
+                #:s3-store-update-remote)
   ;; classes
   (:export
    #:image
@@ -550,30 +555,42 @@
                   (ironclad:hex-string-to-byte-array hash))
                  (t
                   hash))))
-    (let ((image-file (local-location-for-oid oid)))
+    (multiple-value-bind (image-file s3-key) (local-location-for-oid oid)
       ;; TODO: copy-overwriting-target could be a lot more efficient in
       ;; many cases.
       (when pathname
         (assert (path:-e pathname))
         (uiop:copy-file pathname image-file))
+      (s3-store-update-remote
+       (installation-s3-store (installation))
+       image-file
+       s3-key)
       (apply #'make-instance 'image
-             :oid oid
-             :state (cond
-                      (pathname
-                       +image-state-filesystem+))
-             :hash (cond
-                     (hash hash)
-                     (pathname
-                      (md5-file image-file))
-                     (t (error "must provide hash or pathname")))
-             args))))
+               :oid oid
+               :state (cond
+                        (pathname
+                         +image-state-filesystem+))
+               :hash (cond
+                       (hash hash)
+                       (pathname
+                        (md5-file image-file))
+                       (t (error "must provide hash or pathname")))
+               args))))
 
 (defmethod update-image ((image image) &key pathname)
   (assert pathname)
   (with-transaction ()
     (setf (%image-state image)
           +image-state-filesystem+))
-  (uiop:copy-file pathname (image-filesystem-pathname image)))
+  (multiple-value-bind (dest key) (image-filesystem-pathname image)
+    (uiop:copy-file pathname dest)
+    (when key
+      (s3-store-update-remote
+       (installation-s3-store
+        (installation))
+       dest
+       key))
+    dest))
 
 (with-class-validation
   (defclass content-equal-result (store-object)
