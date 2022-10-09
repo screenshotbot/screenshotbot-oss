@@ -21,7 +21,6 @@
                 #:current-company)
   (:import-from #:screenshotbot/model/image
                 #:image-blob
-                #:image-filesystem-pathname
                 #:update-image
                 #:make-image)
   (:import-from #:util/digests
@@ -159,16 +158,17 @@
 (defmethod verify-image (image)
   (unless (screenshotbot/model/image:verified-p image)
     ;; check again! could've been verified by now
-    (let ((etag
-            (md5-file (image-filesystem-pathname image))))
-      (cond
-        ((equalp etag (image-hash image))
-         (with-transaction ()
-          (setf (screenshotbot/model/image:verified-p image) t)))
-        (t
-         (error 'api-error
-                 (format nil
-                         "md5sum mismatch from what was uploaded for image: ~a vs ~a"
-                         etag
-                         (ironclad:byte-array-to-hex-string
-                          (image-hash image)))))))))
+    (with-local-image (file image)
+     (let ((etag
+             (md5-file file)))
+       (cond
+         ((equalp etag (image-hash image))
+          (with-transaction ()
+            (setf (screenshotbot/model/image:verified-p image) t)))
+         (t
+          (error 'api-error
+                  (format nil
+                          "md5sum mismatch from what was uploaded for image: ~a vs ~a"
+                          etag
+                          (ironclad:byte-array-to-hex-string
+                           (image-hash image))))))))))

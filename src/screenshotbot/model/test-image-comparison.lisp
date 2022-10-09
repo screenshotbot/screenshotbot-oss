@@ -16,7 +16,7 @@
                 #:image-comparison
                 #:do-image-comparison)
   (:import-from #:screenshotbot/model/image
-                #:image-filesystem-pathname
+                #:with-local-image
                 #:mask-rect
                 #:make-image
                 #:image-blob)
@@ -143,7 +143,8 @@
                                        :result im-1))
                  (cmp-2 (make-instance 'image-comparison
                                        :result (make-image :pathname file-2))))
-            (utimes (namestring (image-filesystem-pathname im-1)) times)
+            (with-local-image (pathname im-1)
+              (utimes (namestring pathname) times))
             (is (equal (list cmp-1)
                        (find-old-image-comparisons)))
             (pass)))))))

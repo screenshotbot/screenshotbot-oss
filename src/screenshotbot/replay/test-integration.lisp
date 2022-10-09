@@ -43,7 +43,7 @@
   (:import-from #:bknr.datastore
                 #:blob-pathname)
   (:import-from #:screenshotbot/model/image
-                #:image-filesystem-pathname
+                #:with-local-image
                 #:image
                 #:image-blob)
   (:import-from #:screenshotbot/installation
@@ -245,12 +245,13 @@
                 (is (eql 1 (length objs))))
                (loop for im in (bknr.datastore:store-objects-with-class 'image)
                      do
-                        (fad:copy-file
-                         (asdf:system-relative-pathname
-                          :screenshotbot
-                          "fixture/rose.webp")
-                         (image-filesystem-pathname im)
-                         :overwrite t))
+                        (with-local-image (pathname im)
+                         (fad:copy-file
+                          (asdf:system-relative-pathname
+                           :screenshotbot
+                           "fixture/rose.webp")
+                          pathname
+                          :overwrite t)))
 
                (process-results
                 run
