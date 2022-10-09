@@ -86,7 +86,6 @@
    #:image-hash
    #:image-blob-get
    #:s3-key
-   #:s3-blob
    #:image-blob
    #:verified-p
    #:mask-rect-left
@@ -122,22 +121,6 @@
   (defclass image-blob (bknr.datastore:blob)
     ()
     (:metaclass persistent-class)))
-
-(with-class-validation
-  (defclass s3-blob (store-object)
-    ((s3-key :accessor %s3-key
-             :initform nil
-             :initarg :s3-key
-             :documentation "In the past we used to generate a random
-           identifier as the s3 key. These days we just use the object
-           id. Once we write a migration to move all the old objects
-           to the new ids, we can remove this. This is most likely not
-           used by any open souce users either."))
-    (:metaclass persistent-class)))
-
-
-(defmethod initialize-instance :around ((s3-blob s3-blob) &rest args)
-  (call-next-method))
 
 (defparameter +image-state-filesystem+ 1
   "Image is saved on the local filesystem")
@@ -247,14 +230,6 @@
 (defmethod rect-as-list ((rect mask-rect))
   (with-slots (top left height width) rect
     (list top left height width)))
-
-(defmethod s3-key ((image image))
-  (check-type (%image-blob image)
-              s3-blob)
-  (let ((s3-blob (%image-blob image)))
-   (or
-    (%s3-key s3-blob) ;; old objects
-    (bknr.datastore:store-object-id s3-blob))))
 
 (defmethod image-on-filesystem-p ((image abstract-image))
   "Is the image stored on the local filesystem."
@@ -735,18 +710,13 @@
 
 (defmethod image-public-url ((image abstract-image) &key size type)
   (let ((url
-         (cond
-           ((image-on-filesystem-p image)
-            (let ((args nil))
-              (when size
-                (setf args `(:size ,(string-downcase size))))
-              (when type
-                (setf args (list* :type (str:downcase type) args)))
-              (apply #'make-url 'image-blob-get :oid (encrypt:encrypt-mongoid (oid-array image))
-                       args)))
-           (t
-            (format nil "https://screenshotbot.s3.amazonaws.com/~a"
-                    (s3-key image))))))
+         (let ((args nil))
+           (when size
+             (setf args `(:size ,(string-downcase size))))
+           (when type
+             (setf args (list* :type (str:downcase type) args)))
+           (apply #'make-url 'image-blob-get :oid (encrypt:encrypt-mongoid (oid-array image))
+                    args))))
     (cond
       (type
        (make-image-cdn-url url))

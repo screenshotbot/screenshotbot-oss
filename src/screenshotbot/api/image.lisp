@@ -161,17 +161,12 @@
   (unless (screenshotbot/model/image:verified-p image)
     ;; check again! could've been verified by now
     (let ((etag
-            (cond
-              ((image-on-filesystem-p image)
-               (md5-file (image-filesystem-pathname image)))
-              (t
-               (ironclad:hex-string-to-byte-array
-                (get-etag *bucket* (s3-key image)))))))
+            (md5-file (image-filesystem-pathname image))))
       (cond
         ((equalp etag (image-hash image))
          (with-transaction ()
           (setf (screenshotbot/model/image:verified-p image) t)))
-        (T
+        (t
          (error 'api-error
                  (format nil
                          "md5sum mismatch from what was uploaded for image: ~a vs ~a"
