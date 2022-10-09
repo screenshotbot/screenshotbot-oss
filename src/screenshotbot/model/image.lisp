@@ -80,7 +80,6 @@
   ;;methods
   (:export
    #:with-local-image
-   #:open-image-stream
    #:image=
    #:image-public-url
    #:image-hash
@@ -243,10 +242,6 @@
      ;; the file most likely does not exist at this point, but this is
      ;; what you're asking for!
      (local-location-for-oid (oid-array image)))))
-
-;; todo: remove
-(defmethod image-filesystem-pathname ((image image))
-  (call-next-method))
 
 (defmethod image-not-uploaded-yet-p ((image image))
   (and
@@ -666,20 +661,6 @@
   ;; prod.
   (with-local-image (im image)
     (md5-file im)))
-
-(defmethod open-image-stream ((image image))
-  (let ((pathname (image-filesystem-pathname image)))
-    (log:debug "Loading local image at: ~S" pathname)
-    (open
-     pathname
-     :direction :input
-     :element-type 'flexi-streams:octet)))
-
-(defmethod open-image-stream ((image local-image))
-  (open (path:catfile (document-root) (str:substring 1 nil (local-image-url image)))
-        :direction :input
-        :element-type 'flexi-streams:octet))
-
 
 (defmethod image-public-url ((image abstract-image) &key size type)
   (let ((url

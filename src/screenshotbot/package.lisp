@@ -146,7 +146,6 @@
            #:base-acceptable
            #:tracked-url
            #:tracked-url-click
-           #:open-image-stream
            #:ignore-and-log-errors
            #:adminp
            #:github-repos-for-user
