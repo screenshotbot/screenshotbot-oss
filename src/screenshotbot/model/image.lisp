@@ -69,6 +69,7 @@
                 #:installation
                 #:installation-s3-store)
   (:import-from #:screenshotbot/s3/core
+                #:s3-store-fetch-remote
                 #:s3-store-update-remote)
   ;; classes
   (:export
@@ -289,7 +290,17 @@
     ((image-not-uploaded-yet-p image)
      (error "no image uploaded yet for ~a" image))
     ((image-on-filesystem-p image)
-     (funcall fn (image-filesystem-pathname image)))
+     (multiple-value-bind (file key) (image-filesystem-pathname image)
+       (cond
+         ((path:-e file)
+          (funcall fn file))
+         (t
+          (s3-store-fetch-remote
+           (installation-s3-store
+            (installation))
+           file
+           key)
+          (funcall fn file)))))
     (t
      (uiop:with-temporary-file (:pathname p :stream s :direction :output :type "png"
                                 :element-type 'flexi-streams:octet)

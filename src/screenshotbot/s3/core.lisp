@@ -23,7 +23,10 @@
    #:s3-store-update-remote))
 (in-package :screenshotbot/s3/core)
 
-(defclass s3-store ()
+(defclass base-store ()
+  ())
+
+(defclass s3-store (base-store)
   ((endpoint :initarg :endpoint
              :reader endpoint)
    (bucket :initarg :bucket
@@ -56,6 +59,16 @@
 
 (defmethod s3-store-update-remote ((store null-s3-store) file key)
   nil)
+
+(defmethod s3-store-fetch-remote :before ((store base-store) file key)
+  (ensure-directories-exist file))
+
+(defmethod s3-store-fetch-remote ((store null-s3-store) file key)
+  (error "Recovering images not supported: Can't fetch remote file from null s3 store"))
+
+(defmethod s3-store-fetch-remote ((store s3-store) file key)
+  (with-store (store)
+    (zs3:get-file (bucket store) key file)))
 
 #|
 (upload-file *store* "/home/arnold/builds/web/backup.sh"

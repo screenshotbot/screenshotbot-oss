@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/model/image)
   (:import-from #:screenshotbot/model/image
+                #:image-filesystem-pathname
                 #:image
                 #:local-image
                 #:image-blob
@@ -49,7 +50,11 @@
                 #:installation
                 #:*installation*)
   (:import-from #:screenshotbot/s3/core
+                #:base-store
+                #:s3-store-fetch-remote
                 #:s3-store-update-remote)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export))
 
 (util/fiveam:def-suite)
@@ -58,7 +63,7 @@
   (asdf:system-relative-pathname :screenshotbot
                                  (path:catfile "static/" file)))
 
-(defclass fake-s3-store ()
+(defclass fake-s3-store (base-store)
   ((dir :initarg :dir
         :reader store-dir)))
 
@@ -70,24 +75,35 @@
      (store-dir store)
      key))))
 
+(defmethod s3-store-fetch-remote ((store fake-s3-store)
+                                  file
+                                  key)
+  (uiop:copy-file
+   (ensure-directories-exist
+    (path:catfile (store-dir store)
+                  key))
+   file))
 
-
-(def-fixture state ()
+(def-easy-macro with-base-fixture (&fn fn)
   (tmpdir:with-tmpdir (fake-s3-store-dir)
    (let ((*installation* (make-instance 'installation
                                          :s3-store (make-instance 'fake-s3-store
                                                                    :dir fake-s3-store-dir))))
-     (let ((file (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png")))
-       (with-test-store ()
-         (let* ((img (make-image
-                      :pathname (static-asset "assets/images/old-example-view-right.png")))
-                (img2 (make-image
-                       :pathname (static-asset "assets/images/old-example-view-left.png")))
-                (img-copy (make-image
-                           :pathname (static-asset "assets/images/old-example-view-right.png")))
-                (rect (make-instance 'mask-rect :left 8 :top 11
-                                                :height 99 :width 103)))
-           (&body)))))))
+     (funcall fn))))
+
+(def-fixture state ()
+  (with-base-fixture ()
+   (let ((file (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png")))
+     (with-test-store ()
+       (let* ((img (make-image
+                    :pathname (static-asset "assets/images/old-example-view-right.png")))
+              (img2 (make-image
+                     :pathname (static-asset "assets/images/old-example-view-left.png")))
+              (img-copy (make-image
+                         :pathname (static-asset "assets/images/old-example-view-right.png")))
+              (rect (make-instance 'mask-rect :left 8 :top 11
+                                              :height 99 :width 103)))
+         (&body))))))
 
 (test simple-compare ()
   (with-fixture state ()
@@ -259,3 +275,26 @@
       (convert-all-images-to-webp)
       (is (equal '(:webp :webp :webp)
                  (types))))))
+
+(test with-local-image-when-theres-no-local-image
+  (with-fixture state ()
+    (let ((local-file (image-filesystem-pathname img)))
+      (is (path:-e local-file))
+      (delete-file local-file)
+      (with-local-image (local-file img)
+        (is (path:-e local-file))))))
+
+(test with-local-image-when-theres-not-even-a-directory
+  (with-fixture state ()
+    (let ((dir (make-pathname
+                :type nil
+                :name nil
+                :defaults (image-filesystem-pathname img))))
+      (fad:delete-directory-and-files
+       dir)
+      (is (not (path:-d dir))))
+
+    (is (not (path:-e (image-filesystem-pathname img))))
+
+    (with-local-image (local-file img)
+      (is (path:-e local-file)))))
