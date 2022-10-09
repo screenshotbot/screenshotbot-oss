@@ -17,6 +17,8 @@
                 #:null-s3-store)
   (:import-from #:screenshotbot/async
                 #:with-screenshotbot-kernel)
+  (:import-from #:util/misc
+                #:safe-ensure-directories-exist)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:null-store
@@ -61,7 +63,7 @@
   nil)
 
 (defmethod s3-store-fetch-remote :before ((store base-store) file key)
-  (ensure-directories-exist file))
+  (safe-ensure-directories-exist file))
 
 (defmethod s3-store-fetch-remote ((store null-s3-store) file key)
   (error "Recovering images not supported: Can't fetch remote file from null s3 store"))

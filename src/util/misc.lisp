@@ -11,7 +11,8 @@
    #:?.
    #:or-setf
    #:not-null!
-   #:uniq))
+   #:uniq
+   #:safe-ensure-directories-exist))
 (in-package :util/misc)
 
 
@@ -70,3 +71,28 @@
                  (not (funcall test x (car ret))))
             do (push x ret))
     (nreverse ret)))
+
+(defun safe-ensure-directories-exist (x)
+  "cl:ensure-directories-exist is not thread safe. This version is
+ thread-safe for all practical purposes, without too much overhead.
+
+In the error case, it's hard to distinguish between a real error (e.g.
+ the directory is not writeable"
+  (handler-case
+      (ensure-directories-exist x)
+    (file-error (e)
+      (dotimes (i 10)
+        ;; The lock isn't doing much here though, the idea is just to
+        ;; reduce the possibility of collisions.
+        (bt:with-lock-held (*lock*)
+          (handler-case
+              (return-from safe-ensure-directories-exist
+                (ensure-directories-exist x))
+            (file-error (next)
+              ;; If an error happens, the file-error-pathname is
+              ;; filled out. If the second round is tsi
+              (when (equal (file-error-pathname e)
+                           (file-error-pathname next))
+                (error next))
+              (setf e next)))))
+      (error "Could not not create the directory even after multiple attempts"))))
