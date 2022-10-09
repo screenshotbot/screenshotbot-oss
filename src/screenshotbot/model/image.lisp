@@ -104,7 +104,6 @@
    #:ping-image-dimensions
    #:find-image
    #:make-image
-   #:image-on-filesystem-p
    #:image-filesystem-pathname
    #:update-image
    #:mask=
@@ -231,17 +230,9 @@
   (with-slots (top left height width) rect
     (list top left height width)))
 
-(defmethod image-on-filesystem-p ((image abstract-image))
-  "Is the image stored on the local filesystem."
-  t)
-
-(defmethod image-on-filesystem-p ((image image))
-  (call-next-method))
-
 (defmethod image-filesystem-pathname ((image abstract-image))
   "If the image is stored on the current file system, return the
   pathname to the image. If it's stored remotely, raise an error!"
-  (assert (image-on-filesystem-p image))
   (cond
     ((eql +image-state-filesystem+ (%image-state image))
      (local-location-for-oid (oid-array image)))
@@ -274,7 +265,7 @@
   (cond
     ((image-not-uploaded-yet-p image)
      (error "no image uploaded yet for ~a" image))
-    ((image-on-filesystem-p image)
+    (t
      (multiple-value-bind (file key) (image-filesystem-pathname image)
        (cond
          ((path:-e file)
@@ -285,14 +276,7 @@
             (installation))
            file
            key)
-          (funcall fn file)))))
-    (t
-     (uiop:with-temporary-file (:pathname p :stream s :direction :output :type "png"
-                                :element-type 'flexi-streams:octet)
-       (with-open-stream (remote (open-image-stream image))
-         (uiop:copy-stream-to-stream remote s :element-type 'flexi-streams:octet))
-       (finish-output s)
-       (funcall fn p)))))
+          (funcall fn file)))))))
 
 ;; todo: remove
 (defmethod %with-local-image ((image image) fn)
@@ -508,17 +492,16 @@
 #+screenshotbot-oss
 (defmethod maybe-rewrite-image-blob ((image image))
   (restart-case
-      (when (image-on-filesystem-p image)
-        (alexandria:when-let ((blob (%image-blob image)))
-          (let ((dest (local-location-for-oid (oid-array image)))
-                (src (blob-pathname blob)))
-            (when (path:-e src)
-              (assert (osicat-posix:link
-                       src dest)))
-            (log:info "Rewriting blob for ~s: ~s" image blob)
-            (with-transaction ()
-              (setf (%image-blob image) nil)
-              (setf (%image-state image) +image-state-filesystem+)))))
+      (alexandria:when-let ((blob (%image-blob image)))
+        (let ((dest (local-location-for-oid (oid-array image)))
+              (src (blob-pathname blob)))
+          (when (path:-e src)
+            (assert (osicat-posix:link
+                     src dest)))
+          (log:info "Rewriting blob for ~s: ~s" image blob)
+          (with-transaction ()
+            (setf (%image-blob image) nil)
+            (setf (%image-state image) +image-state-filesystem+))))
     (ignore-image ()
       nil)))
 
@@ -685,20 +668,12 @@
     (md5-file im)))
 
 (defmethod open-image-stream ((image image))
-  (cond
-    ((image-on-filesystem-p image)
-     (let ((pathname (image-filesystem-pathname image)))
-       (log:debug "Loading local image at: ~S" pathname)
-       (open
-        pathname
-        :direction :input
-        :element-type 'flexi-streams:octet)))
-    (t
-     (let ((url (image-public-url image)))
-       (log:info "Fetching image: ~a" url)
-       (dex:get url
-                :force-binary t
-                :want-stream t)))))
+  (let ((pathname (image-filesystem-pathname image)))
+    (log:debug "Loading local image at: ~S" pathname)
+    (open
+     pathname
+     :direction :input
+     :element-type 'flexi-streams:octet)))
 
 (defmethod open-image-stream ((image local-image))
   (open (path:catfile (document-root) (str:substring 1 nil (local-image-url image)))
@@ -803,7 +778,6 @@ recognized the file, we'll return nil."
   (defun convert-image-to-webp (image)
    (let ((+limit+ 16383))
      (when (and
-            (image-on-filesystem-p image)
             (uiop:file-exists-p (image-filesystem-pathname image))
             (eql :png (image-format image))
             (let ((dim (image-dimensions image)))

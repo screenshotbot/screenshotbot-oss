@@ -22,7 +22,6 @@
   (:import-from #:screenshotbot/model/image
                 #:image-blob
                 #:image-filesystem-pathname
-                #:image-on-filesystem-p
                 #:update-image
                 #:make-image)
   (:import-from #:util/digests

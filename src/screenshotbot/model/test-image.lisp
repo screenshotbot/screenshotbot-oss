@@ -243,7 +243,6 @@
 (test make-image-with-filename
   (with-fixture state ()
    (let ((image (make-image :pathname file)))
-     (is-true (image-on-filesystem-p image))
      (is (eql +image-state-filesystem+ (%image-state image)))
      (is (path:-e (image-filesystem-pathname image)))
      (is (equalp #(145 184 144 188 213 44 215 112 157 4 202 64 212 94 93 133)

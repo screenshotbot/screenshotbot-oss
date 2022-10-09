@@ -11,7 +11,6 @@
   (:import-from #:bknr.indices
                 #:hash-index)
   (:import-from #:screenshotbot/model/image
-                #:image-on-filesystem-p
                 #:mask=
                 #:image-filesystem-pathname
                 #:draw-masks-in-place
@@ -107,11 +106,9 @@
   (let ((threshold (- (get-universal-time) (* 2 24 30 3600))))
    (loop for ic in (store-objects-with-class 'image-comparison)
          for result = (image-comparison-result ic)
-         if (or
-             (not (image-on-filesystem-p result))
-             (let ((file (image-filesystem-pathname result)))
-               (assert (path:-e file))
-               (< (file-write-date file) threshold)))
+         if (let ((file (image-filesystem-pathname result)))
+              (assert (path:-e file))
+              (< (file-write-date file) threshold))
            collect ic)))
 
 (defun make-old-transient ()
