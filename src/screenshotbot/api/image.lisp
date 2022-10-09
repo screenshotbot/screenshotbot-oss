@@ -87,14 +87,14 @@
 (defparameter *use-blob-store-p* t)
 
 (defun prepare-single-upload (hash content-type)
+  (declare (ignore content-type))
   (let* ((image (find-image (current-company) hash))
          (uploadp (not image))
          (image
            (or
             image
             (make-image :hash hash
-                        :company (current-company)
-                        :content-type content-type)))
+                        :company (current-company))))
          (upload-url (when uploadp
                        (cond
                          (*use-blob-store-p*

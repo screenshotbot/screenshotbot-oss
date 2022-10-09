@@ -173,6 +173,7 @@
       :initform nil
       :initarg :verified-p
       :documentation "If we have verified that this image was uploaded")
+     #+screenshotbot-oss
      (content-type :initarg :content-type
                    :reader image-content-type))
     (:metaclass persistent-class)))
@@ -704,14 +705,6 @@
   ;; prod.
   (with-local-image (im image)
     (md5-file im)))
-
-(defmethod external-file-name ((image image))
-  (destructuring-bind (part ext) (str:split "/" (image-content-type image))
-    (assert (equal "image" part))
-    (format nil "~a.~a"
-            (s3-key image)
-            ext)))
-
 
 (defmethod open-image-stream ((image image))
   (cond
