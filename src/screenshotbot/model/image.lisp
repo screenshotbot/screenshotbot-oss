@@ -141,9 +141,13 @@
 (defparameter +image-state-filesystem+ 1
   "Image is saved on the local filesystem")
 
+;; Some of these slots are limited to screenshotbot-oss. This is for
+;; backward compatibility in the OSS version, where we don't have a
+;; schema migration process.
 (with-transient-copy (transient-image abstract-image)
   (defclass image (object-with-oid)
-    ((link :initarg :link)
+    (#+screenshotbot-oss
+     (link :initarg :link)
      (hash :initarg :hash
            :reader image-hash ;; NOTE: Returns a vector!
            :index-type hash-index
@@ -172,6 +176,12 @@
      (content-type :initarg :content-type
                    :reader image-content-type))
     (:metaclass persistent-class)))
+
+#|
+(loop for im in (bknr.datastore:class-instances 'image)
+      if (slot-boundp im 'link)
+       collect im)
+|#
 
 (defmethod make-transient-clone ((image image))
   (when (%image-blob image)
