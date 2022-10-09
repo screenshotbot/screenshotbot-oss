@@ -117,6 +117,7 @@
 (defvar *image-creation-hooks*
   nil)
 
+#+screenshotbot-oss
 (with-class-validation
   (defclass image-blob (bknr.datastore:blob)
     ()
@@ -162,6 +163,7 @@
            store.")
      (blob
       :initarg :blob
+      :relaxed-object-reference t
       :accessor %image-blob ;; don't access directly!
       :initform nil)
      (company
@@ -179,8 +181,8 @@
     (:metaclass persistent-class)))
 
 #|
-(loop for im in (bknr.datastore:class-instances 'image)
-      if (slot-boundp im 'link)
+(loop for im in (bknr.datastore:class-instances 'image-blob)
+
        collect im)
 |#
 
@@ -259,6 +261,7 @@
   (or
    (eql +image-state-filesystem+ (%image-state image))
    (null (%image-blob image))
+   #+screenshotbot-oss
    (typep (%image-blob image) 'image-blob)))
 
 (defmethod image-on-filesystem-p ((image image))
@@ -565,12 +568,13 @@
    #P "cl-store/image-metadata/"
    oid))
 
-(defun make-image (&rest args &key hash blob pathname &allow-other-keys)
+(defun make-image (&rest args &key hash blob pathname
+                   for-tests &allow-other-keys)
   (when blob
     (error "don't specify blob"))
   (unless (or hash pathname)
     (error "Must provide at least one of hash or pathname"))
-  (let* ((args (alexandria:remove-from-plist args :pathname))
+  (let* ((args (alexandria:remove-from-plist args :pathname :for-tests))
          (oid (mongoid:oid))
          (hash (cond
                  ((stringp hash)
@@ -583,10 +587,11 @@
       (when pathname
         (assert (path:-e pathname))
         (uiop:copy-file pathname image-file)
-        (s3-store-update-remote
-         (installation-s3-store (installation))
-         image-file
-         s3-key))
+        (unless for-tests ;; todo: refactor better
+         (s3-store-update-remote
+          (installation-s3-store (installation))
+          image-file
+          s3-key)))
 
       (apply #'make-instance 'image
                :oid oid

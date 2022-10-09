@@ -14,9 +14,8 @@
                 #:force
                 #:chain
                 #:future)
-  (:import-from #:screenshotbot/model
-                #:image-blob)
   (:import-from #:screenshotbot/model/image
+                #:make-image
                 #:image)
   (:import-from #:bknr.datastore
                 #:delete-object)
@@ -32,6 +31,9 @@
                 #:hash-lock)
   (:import-from #:lparallel.kernel
                 #:*debug-tasks-p*)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:*installation*)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-image)
 
@@ -39,22 +41,20 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store (:globally t)
-    (with-screenshotbot-kernel ()
-      (let ((debug-tasks-p *debug-tasks-p*))
-        (let* ((im1 (asdf:system-relative-pathname
-                     :screenshotbot
-                     "dashboard/fixture/image.png"))
-               (im-blob (make-instance 'image-blob))
-               (im (make-instance 'image
-                                  :blob im-blob)))
-          (uiop:copy-file im1 (blob-pathname im-blob))
-          (unwind-protect
-               (progn
-                 (setf *debug-tasks-p* nil)
-                 (&body))
-            (setf *debug-tasks-p* debug-tasks-p)
-            (shutdown)))))))
+  (let ((*installation* (make-instance 'installation)))
+   (with-test-store (:globally t)
+     (with-screenshotbot-kernel ()
+       (let ((debug-tasks-p *debug-tasks-p*))
+         (let* ((im1 (asdf:system-relative-pathname
+                      :screenshotbot
+                      "dashboard/fixture/image.png"))
+                (im (make-image :pathname im1 :for-tests t)))
+           (unwind-protect
+                (progn
+                  (setf *debug-tasks-p* nil)
+                  (&body))
+             (setf *debug-tasks-p* debug-tasks-p)
+             (shutdown))))))))
 
 (test future-has-*store*
   (with-fixture state ()

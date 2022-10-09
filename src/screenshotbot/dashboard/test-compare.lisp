@@ -5,8 +5,8 @@
                 #:random-zoom-to-on-result
                 #:image-comparison)
   (:import-from #:screenshotbot/model/image
+                #:make-image
                 #:image
-                #:image-blob
                 #:local-image)
   (:import-from #:bknr.datastore
                 #:blob-pathname)
@@ -32,10 +32,7 @@
              (im3 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-3.png"))
              (objs))
          (labels ((make-screenshot (img)
-                    (let* ((image-blob (make-instance 'image-blob))
-                           (image (make-instance 'screenshotbot/model:image
-                                                  :blob image-blob)))
-                      (uiop:copy-file img (blob-pathname image-blob))
+                    (let* ((image (make-image :pathname img :for-tests t)))
                       (make-instance 'screenshot
                                       :name "foobar"
                                       :image image))))
