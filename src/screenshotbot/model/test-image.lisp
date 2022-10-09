@@ -48,6 +48,8 @@
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:*installation*)
+  (:import-from #:screenshotbot/s3/core
+                #:s3-store-update-remote)
   (:export))
 
 (util/fiveam:def-suite)
@@ -56,19 +58,36 @@
   (asdf:system-relative-pathname :screenshotbot
                                  (path:catfile "static/" file)))
 
+(defclass fake-s3-store ()
+  ((dir :initarg :dir
+        :reader store-dir)))
+
+(defmethod s3-store-update-remote ((store fake-s3-store) file key)
+  (uiop:copy-file
+   file
+   (ensure-directories-exist
+    (path:catfile
+     (store-dir store)
+     key))))
+
+
+
 (def-fixture state ()
-  (let ((*installation* (make-instance 'installation)))
-   (let ((file (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png")))
-     (with-test-store ()
-       (let* ((img (make-image
-                    :pathname (static-asset "assets/images/old-example-view-right.png")))
-              (img2 (make-image
-                     :pathname (static-asset "assets/images/old-example-view-left.png")))
-              (img-copy (make-image
-                         :pathname (static-asset "assets/images/old-example-view-right.png")))
-              (rect (make-instance 'mask-rect :left 8 :top 11
-                                              :height 99 :width 103)))
-         (&body))))))
+  (tmpdir:with-tmpdir (fake-s3-store-dir)
+   (let ((*installation* (make-instance 'installation
+                                         :s3-store (make-instance 'fake-s3-store
+                                                                   :dir fake-s3-store-dir))))
+     (let ((file (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png")))
+       (with-test-store ()
+         (let* ((img (make-image
+                      :pathname (static-asset "assets/images/old-example-view-right.png")))
+                (img2 (make-image
+                       :pathname (static-asset "assets/images/old-example-view-left.png")))
+                (img-copy (make-image
+                           :pathname (static-asset "assets/images/old-example-view-right.png")))
+                (rect (make-instance 'mask-rect :left 8 :top 11
+                                                :height 99 :width 103)))
+           (&body)))))))
 
 (test simple-compare ()
   (with-fixture state ()

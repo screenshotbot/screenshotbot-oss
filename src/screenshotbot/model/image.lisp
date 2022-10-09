@@ -560,11 +560,12 @@
       ;; many cases.
       (when pathname
         (assert (path:-e pathname))
-        (uiop:copy-file pathname image-file))
-      (s3-store-update-remote
-       (installation-s3-store (installation))
-       image-file
-       s3-key)
+        (uiop:copy-file pathname image-file)
+        (s3-store-update-remote
+         (installation-s3-store (installation))
+         image-file
+         s3-key))
+
       (apply #'make-instance 'image
                :oid oid
                :state (cond
