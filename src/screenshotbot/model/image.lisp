@@ -144,6 +144,7 @@
            because they're cheaper to parse in bknr.datastore, and
            image objects are the largest number of objects in the
            store.")
+     #+screenshotbot-oss
      (blob
       :initarg :blob
       :relaxed-object-reference t
@@ -164,14 +165,13 @@
     (:metaclass persistent-class)))
 
 #|
-(loop for im in (bknr.datastore:class-instances 'image-blob)
 
-       collect im)
+(loop for im in (bknr.datastore:class-instances 's3-blob)
+
+       do (bknr.datastore:delete-object im))
 |#
 
 (defmethod make-transient-clone ((image image))
-  (when (%image-blob image)
-    (error 'cannot-make-transient :obj image))
   (make-instance 'transient-image
                  :oid (oid-array image)
                  :hash (image-hash image)
@@ -233,11 +233,7 @@
 
 (defmethod image-on-filesystem-p ((image abstract-image))
   "Is the image stored on the local filesystem."
-  (or
-   (eql +image-state-filesystem+ (%image-state image))
-   (null (%image-blob image))
-   #+screenshotbot-oss
-   (typep (%image-blob image) 'image-blob)))
+  t)
 
 (defmethod image-on-filesystem-p ((image image))
   (call-next-method))
@@ -249,6 +245,7 @@
   (cond
     ((eql +image-state-filesystem+ (%image-state image))
      (local-location-for-oid (oid-array image)))
+    #+screenshotbot-oss
     ((%image-blob image)
      (bknr.datastore:blob-pathname (%image-blob image)))
     (t
@@ -262,8 +259,7 @@
 
 (defmethod image-not-uploaded-yet-p ((image image))
   (and
-   (eql nil (%image-state image))
-   (not (%image-blob image))))
+   (eql nil (%image-state image))))
 
 (defmethod image-not-uploaded-yet-p ((image transient-image))
   nil)
@@ -509,6 +505,7 @@
         (cleanup-image-stream stream1)
         (cleanup-image-stream stream2)))))
 
+#+screenshotbot-oss
 (defmethod maybe-rewrite-image-blob ((image image))
   (restart-case
       (when (image-on-filesystem-p image)
@@ -525,6 +522,7 @@
     (ignore-image ()
       nil)))
 
+#+screenshotbot-oss
 (defun rewrite-all-image-blobs ()
   (loop for image in (reverse (bknr.datastore:class-instances 'image))
         do
