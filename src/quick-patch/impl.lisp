@@ -80,7 +80,17 @@ is provided, add each of the directories to asdf:*central-registry*"
                                       "fetch"
                                       "origin"
                                       commit))
-            (prepare-git-repo repo (rev-parse (format nil "origin/~a" commit)) cache-dir))))
+
+            ;; At this point commit could be either something like
+            ;; "master", in which case we need to reroute this to
+            ;; origin/master, or it could be a commit hash?
+            (let ((commit (or
+                            (ignore-errors
+                             (when (= 40 (length commit))
+                               (rev-parse commit)))
+                            (ignore-errors
+                             (rev-parse (format nil "origin/~a" commit))))))
+             (run-program-with-errors (git "checkout" commit))))))
         (t
          (run-program-with-errors (list
                                    "git" "clone"
