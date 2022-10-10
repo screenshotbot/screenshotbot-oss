@@ -147,6 +147,12 @@
                (:file "file-lock")
                (:file "store")))
 
+(defsystem :util/lru-cache
+  :serial t
+  :depends-on (:easy-macros
+               :cl-fad)
+  :components ((:file "lru-cache")))
+
 (defsystem :util/bknr-slynk
   :serial t
   :depends-on (:slynk)

@@ -17,6 +17,9 @@
                 #:safe-interrupt-checkpoint)
   (:import-from #:util/digests
                 #:sha256-file)
+  (:import-from #:util/lru-cache
+                #:with-cache-file
+                #:lru-cache)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:rewrite-css-urls
@@ -343,21 +346,25 @@
        (t
         (error "unsupported scheme: ~a" scheme))))))
 
-(defvar *http-cache-dir* nil)
+(defvar *cache* nil)
 
 (defun http-cache-dir ()
-  (or-setf
-   *http-cache-dir*
-   (let ((object-store-sym (find-symbol "*OBJECT-STORE*" "UTIL")))
-     (unless object-store-sym
-       (error "HTTP-CACHE-DIR not supported in SDK, most likely a bug: please reach out to arnold@screenshotbot.io"))
-     (let ((store-dir (symbol-value object-store-sym)))
+  (let ((object-store-sym (find-symbol "*OBJECT-STORE*" "UTIL")))
+    (unless object-store-sym
+      (error "HTTP-CACHE-DIR not supported in SDK, most likely a bug: please reach out to arnold@screenshotbot.io"))
+    (let ((store-dir (symbol-value object-store-sym)))
       (let ((dir (path:catdir
                   store-dir
                   "cache/replay-http-cache/")))
         (ensure-directories-exist dir)
         (log:debug "Using cache dir for http: ~A" dir)
-        dir)))))
+        dir))))
+
+(defun lru-cache ()
+  (util:or-setf
+   *cache*
+   (make-instance 'lru-cache
+                   :dir (http-cache-dir))))
 
 (defun read-file (file)
   (with-open-file (s file :direction :input)
@@ -435,49 +442,49 @@
                      nil "~a-~a-v5"
                      (ironclad:byte-array-to-hex-string (ironclad:digest-sequence :sha256 (flexi-streams:string-to-octets  (quri:render-uri url))))
                      force-binary)))
-    (let* ((output (make-pathname :name cache-key :type "data" :defaults (http-cache-dir)))
-           (info (make-pathname :type "info-v3" :defaults output)))
-      (flet ((read-cached ()
-               (let ((info (cl-store:restore info)))
-                 (log:debug "Opening from cache: ~a" output)
-                 (values
-                  (open output :element-type (cond
-                                              (force-binary
-                                               '(unsigned-byte 8))
-                                              (force-string
-                                               'character)
-                                              (t
-                                               'character))
-                        :external-format (guess-external-format info))
-                  (remote-response-status info)
-                  (remote-response-headers info))))
-             (good-cache-p (file)
-               (uiop:file-exists-p file)))
-        (cond
-          ((and cache (every #'good-cache-p (list info output))
+    (with-cache-file (output (lru-cache) (make-pathname :name cache-key :type "data"))
+      (with-cache-file (info (lru-cache) (make-pathname :name cache-key :type "info-v3"))
+       (flet ((read-cached ()
                 (let ((info (cl-store:restore info)))
-                  (and
-                   (slot-boundp info 'request-time) #| Compatibility with old cache|#
-                   (max-age info)
-                   (< (get-universal-time)
-                      (+ (max-age info) (request-time info))))))
-           (write-replay-log "Using cached asset for ~a" url)
-           (read-cached))
-         (t
-          ;; we're not cached yet
-          (multiple-value-bind (stream %status %headers)
-              (http-get-without-cache url :force-binary t)
-            (with-open-file (output output :element-type '(unsigned-byte 8)
-                                           :if-exists :supersede
-                                           :direction :output)
-              (uiop:copy-stream-to-stream stream output :element-type '(unsigned-byte 8)))
-            (cl-store:store (make-instance 'remote-response
-                                           :status %status
-                                           :request-time (get-universal-time)
-                                           :headers %headers)
-                            info))
-          (log:debug "Caching for the first time ~a" output)
-          (read-cached)))))))
+                  (log:debug "Opening from cache: ~a" output)
+                  (values
+                   (open output :element-type (cond
+                                                (force-binary
+                                                 '(unsigned-byte 8))
+                                                (force-string
+                                                 'character)
+                                                (t
+                                                 'character))
+                                :external-format (guess-external-format info))
+                   (remote-response-status info)
+                   (remote-response-headers info))))
+              (good-cache-p (file)
+                (uiop:file-exists-p file)))
+         (cond
+           ((and cache (every #'good-cache-p (list info output))
+                 (let ((info (cl-store:restore info)))
+                   (and
+                    (slot-boundp info 'request-time) #| Compatibility with old cache|#
+                    (max-age info)
+                    (< (get-universal-time)
+                       (+ (max-age info) (request-time info))))))
+            (write-replay-log "Using cached asset for ~a" url)
+            (read-cached))
+           (t
+            ;; we're not cached yet
+            (multiple-value-bind (stream %status %headers)
+                (http-get-without-cache url :force-binary t)
+              (with-open-file (output output :element-type '(unsigned-byte 8)
+                                             :if-exists :supersede
+                                             :direction :output)
+                (uiop:copy-stream-to-stream stream output :element-type '(unsigned-byte 8)))
+              (cl-store:store (make-instance 'remote-response
+                                              :status %status
+                                              :request-time (get-universal-time)
+                                              :headers %headers)
+                              info))
+            (log:debug "Caching for the first time ~a" output)
+            (read-cached))))))))
 
 (with-auto-restart ()
  (defmethod fetch-asset ((context context) url tmpdir (snapshot snapshot))

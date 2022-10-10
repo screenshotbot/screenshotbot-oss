@@ -401,6 +401,7 @@
                :util/threading
                :util/misc
                :util/request
+               :util/lru-cache
                :hunchentoot-extensions
                :cl-mongo-id
                :cl-webdriver-client

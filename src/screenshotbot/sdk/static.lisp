@@ -4,7 +4,7 @@
                 #:dimensions
                 #:browser-config)
   (:import-from #:screenshotbot/replay/core
-                #:*http-cache-dir*
+                #:*cache*
                 #:context)
   (:import-from #:screenshotbot/sdk/sdk
                 #:ensure-api-success)
@@ -173,14 +173,17 @@ upload blobs that haven't been uploaded before."
     (walk dir "")))
 
 (defun ensure-cache-dir ()
-  (unless *http-cache-dir*
-    (setf *http-cache-dir*
-          #+mswindows
-          (path:catdir (pathname (uiop:getenv "APPDATA"))
-                        #P"screenshotbot/cache/replay/")
-          #-mswindows
-          (pathname "~/.cache/screenshotbot/replay/"))
-    (ensure-directories-exist *http-cache-dir*)))
+  (unless *cache*
+    (let ((path #+mswindows
+                (path:catdir (pathname (uiop:getenv "APPDATA"))
+                             #P"screenshotbot/cache/replay/")
+                #-mswindows
+                (pathname "~/.cache/screenshotbot/replay/")))
+      (ensure-directories-exist path)
+
+     (setf *cache*
+           (make-instance 'lru-cache
+                           :dir path)))))
 
 (defun record-static-website (location)
   (assert (path:-d location))

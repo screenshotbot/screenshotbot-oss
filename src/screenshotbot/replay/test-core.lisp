@@ -9,13 +9,13 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:*cache*
                 #:fix-malformed-url
                 #:process-node
                 #:http-cache-dir
                 #:context
                 #:remote-response
                 #:guess-external-format
-                #:*http-cache-dir*
                 #:load-url-into
                 #:url
                 #:assets
@@ -25,6 +25,8 @@
                 #:push-asset
                 #:rewrite-css-urls
                 #:http-get)
+  (:import-from #:util/lru-cache
+                #:lru-cache)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/replay/test-core)
 
@@ -33,7 +35,8 @@
 
 (def-fixture state ()
   (tmpdir:with-tmpdir (tmpdir)
-    (let ((*http-cache-dir* tmpdir)
+    (let ((*cache* (make-instance 'lru-cache
+                                   :dir tmpdir))
           (context (make-instance 'context)))
       (cl-mock:with-mocks ()
        (&body)))))
@@ -193,8 +196,8 @@ background: url(shttps://google.com?f=1)
 (test http-cache-dir
   (with-fixture state ()
     (tmpdir:with-tmpdir (util:*object-store*)
-      (let ((*http-cache-dir* nil))
-        (is (path:-d (path:catdir (http-cache-dir))))))))
+      (let ((*cache* nil))
+        (is (path:-d (path:catdir (util/lru-cache::dir (lru-cache)))))))))
 
 (test fix-malformed-url
   (is (equal
