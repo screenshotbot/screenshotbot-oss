@@ -363,7 +363,8 @@
   (util:or-setf
    *cache*
    (make-instance 'util/lru-cache:lru-cache
-                   :dir (http-cache-dir))))
+                  :dir (http-cache-dir)
+                  :max-size "2GB")))
 
 (defun read-file (file)
   (with-open-file (s file :direction :input)
