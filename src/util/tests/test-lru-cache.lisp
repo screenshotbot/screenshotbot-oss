@@ -186,3 +186,23 @@
       (is (>= 20 (length (queue-head cache))))
       (is (>= 20 (queue-length cache)))
       (is (= 1 (queue-count cache))))))
+
+(test delete-old-entries
+  (with-fixture state ()
+    (let ((cache (make-instance 'lru-cache
+                                :dir dir
+                                :max-size 10)))
+      (dotimes (i 2)
+        (with-cache-file (pathname cache (format nil "foo-~d.txt" i))
+          (write-test-string pathname)))
+      (is (equal 1 (queue-count cache)))
+      (is (equal 6 (cache-size cache)))
+      (is-true (path:-e (path:catfile dir "foo-1.txt")))
+      (is-false (path:-e (path:catfile dir "foo-0.txt"))))))
+
+(test can-use-gb
+  (with-fixture state ()
+   (let ((cache (make-instance 'lru-cache
+                               :dir dir
+                               :max-size "4GB")))
+     (with-cache-file (pathname cache "foo.txt")))))

@@ -96,3 +96,26 @@ In the error case, it's hard to distinguish between a real error (e.g.
                 (error next))
               (setf e next)))))
       (error "Could not not create the directory even after multiple attempts"))))
+
+
+(defmethod parse-size ((size number))
+  size)
+
+(defmethod parse-size ((size string))
+  (multiple-value-bind (num suffix-pos)
+      (parse-integer size :junk-allowed t)
+    (let ((suffix (str:substring suffix-pos nil size)))
+     (cond
+       ((string-equal "GB" suffix)
+        (* num 1024 1024 1024))
+       ((string-equal "MB" suffix)
+        (* num 1024 1024))
+       ((string-equal "kB" suffix)
+        (* num 1024))
+       ((or
+         (string-equal "" suffix)
+         (string-equal "b" suffix)
+         (string-equal "bytes" suffix))
+        num)
+       (t
+        (error "could not parse size suffix: ~a in ~a" suffix size))))))
