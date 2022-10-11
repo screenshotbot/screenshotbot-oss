@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:%lru-cache
                 #:*cache*
                 #:fix-malformed-url
                 #:process-node
@@ -197,7 +198,7 @@ background: url(shttps://google.com?f=1)
   (with-fixture state ()
     (tmpdir:with-tmpdir (util:*object-store*)
       (let ((*cache* nil))
-        (is (path:-d (path:catdir (util/lru-cache::dir (lru-cache)))))))))
+        (is (path:-d (path:catdir (util/lru-cache::dir (%lru-cache)))))))))
 
 (test fix-malformed-url
   (is (equal

@@ -18,8 +18,7 @@
   (:import-from #:util/digests
                 #:sha256-file)
   (:import-from #:util/lru-cache
-                #:with-cache-file
-                #:lru-cache)
+                #:with-cache-file)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:rewrite-css-urls
@@ -360,10 +359,10 @@
         (log:debug "Using cache dir for http: ~A" dir)
         dir))))
 
-(defun lru-cache ()
+(defun %lru-cache ()
   (util:or-setf
    *cache*
-   (make-instance 'lru-cache
+   (make-instance 'util/lru-cache:lru-cache
                    :dir (http-cache-dir))))
 
 (defun read-file (file)
@@ -442,8 +441,8 @@
                      nil "~a-~a-v5"
                      (ironclad:byte-array-to-hex-string (ironclad:digest-sequence :sha256 (flexi-streams:string-to-octets  (quri:render-uri url))))
                      force-binary)))
-    (with-cache-file (output (lru-cache) (make-pathname :name cache-key :type "data"))
-      (with-cache-file (info (lru-cache) (make-pathname :name cache-key :type "info-v3"))
+    (with-cache-file (output (%lru-cache) (make-pathname :name cache-key :type "data"))
+      (with-cache-file (info (%lru-cache) (make-pathname :name cache-key :type "info-v3"))
        (flet ((read-cached ()
                 (let ((info (cl-store:restore info)))
                   (log:debug "Opening from cache: ~a" output)

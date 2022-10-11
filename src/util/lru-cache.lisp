@@ -40,7 +40,11 @@
          :reader item-size)))
 
 (defmethod file-atime ((self lru-cache) file)
-  (error "unimpl"))
+  #+lispworks
+  (let ((stat (sys:get-file-stat file)))
+    (sys:file-stat-last-access stat))
+  #-lispworks
+  (file-write-date file))
 
 (defmethod read-all-files ((self lru-cache) directory)
   (let (ret)
