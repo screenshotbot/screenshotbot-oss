@@ -8,7 +8,6 @@
   (:use #:cl)
   (:import-from #:easy-macros
                 #:def-easy-macro)
-  (:local-nicknames (#:a #:alexandria))
   (:export
    #:lru-cache
    #:with-cache-file))

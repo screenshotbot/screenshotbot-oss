@@ -150,6 +150,7 @@
 (defsystem :util/lru-cache
   :serial t
   :depends-on (:easy-macros
+               :trivial-file-size
                :cl-fad)
   :components ((:file "lru-cache")))
 
