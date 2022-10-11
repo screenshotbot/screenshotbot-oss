@@ -236,6 +236,7 @@
   :depends-on (:util
                :util/hash-lock
                :util/health-check
+               :util/lru-cache
                :fiveam-matchers
                :easy-macros
                :util/digests
@@ -256,6 +257,7 @@
                              (:file "test-models")
                              (:file "test-cdn")
                              (:file "test-bind-form")
+                             (:file "test-lru-cache")
                              (:file "test-objectid")
 			     #-mswindows
                              (:file "test-file-lock")
