@@ -152,32 +152,33 @@
          (decf-cache-size cache item))))))
 
 (defun bump-key (cache pathname key)
-  (bt:with-lock-held ((lock cache))
-    ;; remove the item if it exists in the queue
-    (remove-item cache key)
-    (let* ((item (make-instance 'item
-                                :key key
-                                :size (or
-                                       (ignore-errors
-                                        (trivial-file-size:file-size-in-octets pathname))
-                                       0)))
-           (new-tail (cons
-                      item
-                      nil)))
-      (incf-cache-size cache item)
-      (setf (gethash key (cons-map cache)) new-tail)
-      (cond
-        ((queue-tail cache)
-         (setf (cdr (queue-tail cache)) new-tail)
-         (setf (queue-tail cache) new-tail)
-         (incf (queue-length cache))
-         (incf (queue-count cache)))
-        (t
-         (setf (queue-head cache) new-tail)
-         (setf (queue-tail cache) new-tail)
-         (reset-state cache)))
-      (maybe-trim-queue cache)
-      (maybe-purge-entries cache))))
+  (let ((key (namestring key)))
+   (bt:with-lock-held ((lock cache))
+     ;; remove the item if it exists in the queue
+     (remove-item cache key)
+     (let* ((item (make-instance 'item
+                                 :key key
+                                 :size (or
+                                        (ignore-errors
+                                         (trivial-file-size:file-size-in-octets pathname))
+                                        0)))
+            (new-tail (cons
+                       item
+                       nil)))
+       (incf-cache-size cache item)
+       (setf (gethash key (cons-map cache)) new-tail)
+       (cond
+         ((queue-tail cache)
+          (setf (cdr (queue-tail cache)) new-tail)
+          (setf (queue-tail cache) new-tail)
+          (incf (queue-length cache))
+          (incf (queue-count cache)))
+         (t
+          (setf (queue-head cache) new-tail)
+          (setf (queue-tail cache) new-tail)
+          (reset-state cache)))
+       (maybe-trim-queue cache)
+       (maybe-purge-entries cache)))))
 
 (defmethod maybe-trim-queue ((cache lru-cache))
   (when (> (queue-length cache)
