@@ -137,7 +137,7 @@
 
 (with-auto-restart ()
  (defun handle-asset (snapshot asset)
-   (log:info "Starting with ~a" asset)
+   (log:debug "Starting with ~a" asset)
    (let ((if-modified-since (hunchentoot:header-in* :if-modified-since))
          (last-modified (loop for header in (asset-response-headers asset)
                               if (string-equal (http-header-name header)
@@ -184,7 +184,7 @@
             (finish-output out))
         #+lispworks
         (comm:socket-io-error ()))
-      (log:info "Done with ~a" asset))))
+      (log:debug "Done with ~a" asset))))
 
 (defun send-asset-headers (asset &key content-length)
   (loop for header in (replay:asset-response-headers asset)
@@ -247,7 +247,7 @@
             (send-404 script-name))))))))
 
 (defun send-404 (script-name &optional (cache-time 60))
-  (log:error "No such asset: ~a" script-name)
+  (log:debug "No such asset: ~a" script-name)
   (setf (hunchentoot:return-code*) 404)
   (set-cache-control cache-time)
   "No such asset")
