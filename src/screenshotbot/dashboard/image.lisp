@@ -112,12 +112,10 @@
               (build-resized-image
                image size
                :type (cond
-                       ((string= type "webp")
-                        :webp)
                        ((string= type "png")
                         :png)
                        (t
-                        :png))))))
+                        :webp))))))
        (handle-static-file
         output-file
         (format nil "image/~a" (pathname-type output-file)))))))
