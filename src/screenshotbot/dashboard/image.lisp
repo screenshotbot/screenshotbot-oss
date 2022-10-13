@@ -100,11 +100,6 @@
       (%build-resized-image image size-name
                             :type type))))
 
-(defun webp-supported-p (user-agent accept)
-  (or
-   (str:containsp "image/webp" accept)
-   (str:starts-with-p "curl" user-agent)))
-
 (defun handle-resized-image (image size &key warmup
                                           type)
   (cond
@@ -121,11 +116,6 @@
                         :webp)
                        ((string= type "png")
                         :png)
-                       ((webp-supported-p
-                         (hunchentoot:header-in* :user-agent)
-                         (hunchentoot:header-in* :accept))
-                        ;; This dynamic behavior doesn't work well with CDNs
-                        :webp)
                        (t
                         :png))))))
        (handle-static-file
