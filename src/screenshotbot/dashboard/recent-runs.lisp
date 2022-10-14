@@ -114,18 +114,20 @@
      :title "Screenshotbot: Runs"
      :company company
      :script-name "/runs"
+     #+nil
      (when numbersp
        (numbers-section :company company))
      (taskie-page-title :title "Recent Runs"
-                        (ui/a :id "compare-runs" :btn :success
-                              :class "btn-sm ms-3"
-                              "Compare")
                         (ui/a :id "delete-runs" :btn :danger
+                              :class "btn-sm"
+                              "Delete Selected")
+                        (ui/a :id "compare-runs" :btn :success
                               :class "btn-sm ms-1"
-                              "Delete Selected"))
+                              "Compare"))
 
      (taskie-list :empty-message "No recent runs to show. But that's okay, it's easy to get started!"
                   :items runs
+                  :headers (list "Channel" "Status" "Date")
                   :next-link next-link
                   :prev-link prev-link
                   :row-generator (lambda (run)

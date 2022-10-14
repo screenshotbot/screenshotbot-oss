@@ -41,6 +41,8 @@
                 #:share)
   (:import-from #:util/object-id
                 #:oid-array)
+  (:import-from #:screenshotbot/taskie
+                #:taskie-page-title)
   (:export #:report-page #:report-link
            #:shared-report-page))
 (in-package :screenshotbot/dashboard/reports)
@@ -108,7 +110,7 @@
       ((hunchentoot:parameter "v2")
        (compare-v2-page :report report))
       (t
-       <app-template title= (report-title report) >
+       <app-template body-class= "dashboard bg-white" title= (report-title report) >
 
        ,(when (and nil (can-public-view report))
           <section class= "mt-3" >
@@ -238,28 +240,27 @@
                                  :id (oid row))>
                                  ,(channel-name (recorder-run-channel (report-run row)))
              </a>
-             <div>,(report-title row) </div>
-             <ul class="list-inline font-13 text-right">
-               <li class="list-inline-item">
-                 <mdi name= "today" />
-                 <:time class= "timeago" datetime= (created-at row) >
-                   ,(created-at row)
-                 </:time>
-               </li>
-             </ul>
+           <div>,(report-title row) </div>
+           <span>
+           <mdi name= "today" />
+           <:time class= "timeago" datetime= (created-at row) >
+           ,(created-at row)
+           </:time>
+           </span>
            </taskie-row>))
     (let ((reports (company-reports (current-company))))
       (with-pagination (reports reports
                                 :next-link next-link
                                 :prev-link prev-link)
         <app-template title= "Screenshotbot: Reports" >
-          <div class= "page-title-box">
-            <h4 class= "page-title">Recent Reports</h4>
-          </div>
+          <taskie-page-title title= "Recent Reports" />
+
           <taskie-list empty-message="No reports to show! Reports are created when
                                       your CI builds create a run with differing images."
                        items=reports
+                       headers= (list "Name" "State" "Time")
                        next-link=next-link
+                       checkboxes=nil
                        prev-link=prev-link
                        row-generator=#'row-generator
                        />

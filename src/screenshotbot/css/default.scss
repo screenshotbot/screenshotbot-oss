@@ -33,6 +33,8 @@ $section-blue: #3C42A7;
 
 @import "auth";
 
+$body-background: #f4f5f6;
+
 body {
     font-family: Roboto, "sans-serif";
     font-size: 0.875rem;
@@ -258,6 +260,88 @@ section.features-section .text-small {
 .taskie-list.nonempty {
     color: $gray-700;
 }
+
+table.taskie-list {
+    width: 100%;
+    background: white;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+
+    th, td {
+        padding-left: 1em;
+        padding-right: 1em;
+    }
+
+    thead tr {
+        border-bottom: 2px solid $body-background;
+    }
+
+    tr {
+        border-top: 1px solid $body-background;
+        border-bottom: 1px solid $body-background;
+        height: 3em;
+
+        & td:first-child, & th:first-child {
+            padding-left: 1.5rem;
+            margin-right: 1.5rem;
+        }
+
+        & td:last-child, & th:last-child {
+            padding-right: 1.5rem;
+        }
+
+        transition: background 0.1s;
+    }
+
+    .material-icons {
+        color: $gray-500;
+    }
+
+    tbody {
+        tr:hover {
+            background: lighten($primary, 44%);
+            transition: background 0.1s;
+            padding-left: 0.5rem;
+        }
+
+        tr.empty {
+            background: white !important;
+        }
+    }
+
+    td.taskie-timestamp {
+    }
+
+    &.checkboxes th:first-child {
+        width: 3em;
+    }
+
+    th {
+        height: 3.2rem;
+        background: #f9fafa;
+        color: #888f91;
+        border: 1px solid $body-background;
+
+        &:first-child {
+            border-left: 0px solid $body-background;
+        }
+    }
+
+}
+
+.taskie-row {
+
+    ul, li {
+        margin-bottom: 0;
+        margin-top: 0;
+        padding-top: 0;
+        padding-bottom:0;
+    }
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+
+}
+
 
 ul.landing-summary li {
     list-style: none;
@@ -496,6 +580,7 @@ canvas.image-comparison-modal-image {
 }
 
 body.dashboard {
+    background: $body-background;
 
     .leftside-menu {
         width: $left-side-menu-width;
@@ -536,6 +621,11 @@ body.dashboard {
     .content-page {
         margin-left: calc(#{$left-side-menu-width} + 1em);
         margin-right: 1em;
+        .main-content {
+            max-width: 1280px;
+            margin-left: auto;
+            margin-right: auto;
+        }
     }
 
     .logo-sm {

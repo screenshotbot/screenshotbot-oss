@@ -171,6 +171,7 @@
                       jquery-ui
                       title
                       codemirror
+                      (body-class "dashboard")
                       scripts
                       script-name
                       (nav-bar-style :dark))
@@ -184,6 +185,7 @@
      <dashboard-template admin=admin jquery-ui=jquery-ui stripe=stripe scripts=scripts
                          codemirror=codemirror
                          title=title
+                         body-class=body-class
                          script-name= (or script-name (hunchentoot:script-name*)) >,@children </dashboard-template>)))
 
 (defmethod hunchentoot:acceptor-status-message ((acceptor acceptor)

@@ -320,7 +320,7 @@
                                             collect s))
                                    (t
                                     screenshots))))
-      <app-template >
+      <app-template body-class= "dashboard bg-white" >
         <div class= "page-title-box">
           <h4 class= "page-title" >Run from
             <:time class= "timeago" datetime= (created-at run)>

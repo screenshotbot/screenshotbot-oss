@@ -179,7 +179,7 @@
    (let* ((run (find-run id))
           (to (find-run to)))
      (can-view! run to)
-     <app-template>
+     <app-template body-class= "dashboard bg-white" >
      ,(async-diff-report :run run :to to)
      </app-template>)))
 

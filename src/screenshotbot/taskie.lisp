@@ -34,10 +34,13 @@
         collect (nth j x)))
 
 (deftag taskie-page-title (children &key title)
-  <div class= "page-title-box">
-  <h4 class= "page-title" >,(progn title)
-    ,@children
-  </h4>
+  <div class= "page-title-box main-content">
+    <h4 class= "page-title" >,(progn title)
+    </h4>
+
+    <div class= "float-end">
+      ,@children
+    </div>
   </div>)
 
 (deftag taskie-page-item (children &key href)
@@ -47,22 +50,45 @@
     </a>
   </li>)
 
+(defvar *checkboxes*)
+
 (deftag taskie-list (children &key empty-message items row-generator
+                     headers
+                     (checkboxes t)
                      next-link
                      prev-link)
   <markup:merge-tag>
-  <div class= (format nil "card mb-0 taskie-list mt-3 mb-3 ~a"
+  <table class= (format nil "main-content taskie-list mt-3 mb-3 ~a ~a"
                       (if items
                           "nonempty"
-                          "empty")) >
-    <div class="card-body">
-      ,(unless items
-         <p class= "text-muted" >,(progn empty-message) </p>)
-      ,@ (loop for item in items collect
-               (funcall row-generator item))
-    </div> <!-- end card-body-->
+                          "empty")
+                                  (if checkboxes "checkboxes")) >
 
-  </div>
+      <thead>
+        <tr>
+          ,(when checkboxes
+             <th>
+             </th>)
+
+          ,@ (loop for header in headers
+                   collect <th>,(progn header)</th>)
+        </tr>
+      </thead>
+      <tbody>
+
+      ,@ (cond
+           (items
+            (loop for item in items collect
+                  (let ((*checkboxes* checkboxes))
+                   (funcall row-generator item))))
+           (t
+            (list
+             <tr class= "empty" >
+               <td colspan= "100%" class= "text-center pt-3 pb-3 text-muted" >
+                 ,(progn empty-message)</td></tr>)))
+      </tbody>
+
+  </table>
   ,(when (or prev-link next-link)
        <nav aria-label="Page navigation" class= "mt-3" >
          <ul class="pagination justify-content-center">
@@ -73,32 +99,27 @@
 )
            </markup:merge-tag>)
 
-(let ((id-counter 0))
- (deftag taskie-row (children &key object)
-   (let ((children (remove-if 'stringp children))
-         (id-name (format nil "check-~a"(incf id-counter))))
-     <div class="row justify-content-sm-between">
-       <div class="col-sm-6 mb-1 mt-1 mb-sm-0">
-         <div class="custom-control custom-checkbox">
-           <input type="checkbox" class="recent-run-item custom-control-input"
-                  id=id-name data-model-id= (if (typep object 'object-with-oid) (oid object) (store-object-id object)) >
-             <label class="custom-control-label" for=id-name />
-             ,(car children)
-         </div> <!-- end checkbox -->
-       </div> <!-- end col -->
-       <div class="col-sm-6">
-         <div class="d-flex justify-content-between">
-           <div class= "mb-1 mt-1" >
-             ,(cadr children)
-           </div>
-           <div class= "mt-1" >
-             ,(caddr children)
-           </div>
-         </div> <!-- end .d-flex-->
-       </div> <!-- end col -->
-     </div>)))
+(defvar *id-counter* 0)
+
+(deftag taskie-row (children &key object)
+  (let ((children (remove-if 'stringp children))
+        (id-name (format nil "check-~a"(incf *id-counter*))))
+    <tr>
+      ,(when *checkboxes*
+         <td>
+           <div class="form-check">
+             <input type="checkbox" class="recent-run-item form-check-input"
+             id=id-name data-model-id= (if (typep object 'object-with-oid) (ignore-errors (oid object)) (store-object-id object)) >
+        </div> <!-- end checkbox -->
+
+      </td>)
+
+      ,@ (loop for child in children
+               collect <td>,(progn child)</td>)
+    </tr>))
 
 (defvar *ts-format-cache* (make-hash-table))
+
 
 (defun  format-ts (timestamp)
   (let ((key (cond
@@ -120,13 +141,11 @@
 
 (deftag taskie-timestamp (&key prefix timestamp)
 
-  <ul class="list-inline font-13 text-end">
-    <li class="list-inline-item">
+    <span class= "taskie-timestamp" >
       <mdi name= "today" />
       ,(progn prefix)
       <timeago timestamp=timestamp />
-    </li>
-  </ul>)
+    </span>)
 
 (defun %with-pagination (data body &key prev)
   (let ((n 50))

@@ -214,17 +214,19 @@
      <div>
        ,(taskie-page-title
          :title "Web projects"
-         <a href= (nibble () (new-project)) class= "btn btn-primary">
-           New Project
-         </a>
-         <a href= "/browsers" class= "btn btn-secondary ms-1">
+         <a class= "me-3" href= (nibble () (recent-runs))>All runs</a>
+
+         <a href= "/browsers" class= "btn btn-secondary btn-sm">
            Browser Configurations
          </a>
 
-         <a class= "ms-1" href= (nibble () (recent-runs))>All runs</a>)
+         <a href= (nibble () (new-project)) class= "btn btn-primary btn-sm ms-1">
+           New Project
+         </a>)
        ,(taskie-list
          :items (web-projects-for-company (current-company))
          :empty-message "No web projects"
+         :headers (list "Project Name" "Description" "Next run")
          :row-generator (lambda (build)
                           (taskie-row
                            :object build
@@ -241,7 +243,7 @@
                                (web-project-schedule-p build)
                                (web-project-scheduled-job build))
                               (taskie-timestamp
-                               :prefix "Next run"
+                               :prefix ""
                                :timestamp (scheduled-jobs:at (web-project-scheduled-job build))))
 
                              ((and
@@ -251,11 +253,7 @@
                                :prefix "Next run"
                                :timestamp (next-job-at build)))
                              (t
-                              <ul class= "list-inline font-13 text-end" >
-                                <li class= "list-inline-item" >
-                                  <em>Not scheduled</em>
-                                </li>
-                              </ul>)))))
+                              <em class= "text-muted" >Not scheduled</em>)))))
      </div>)))
 
 (defun recent-runs ()
@@ -265,28 +263,35 @@
 
 (defun view-build (build)
   <app-template title= (format nil "Screenshotbot: ~a" (web-project-name build)) >
-    <div class= "page-title-box">
-      <h3 class= "page-title" >
-        ,(web-project-name build)
-        <a data-href= (nibble () (run-now build)) class="btn btn-primary modal-link">Run Now</a>
-        <a href= (nibble () (edit-build build)) class= "btn btn-secondary" >Edit Project</a>
-      </h3>
-    </div>
+    ,(taskie-page-title :title (web-project-name build)
+        <a href= (nibble () (edit-build build)) class= "btn btn-secondary btn-sm" >Edit Project</a>
+        <a data-href= (nibble () (run-now build)) class="ms-1 btn btn-primary btn-sm modal-link">Run Now</a>
+                        )
+
     <render-runs runs=(remote-runs build) />
   </app-template>)
 
 
 (markup:deftag render-runs (&key runs)
-      <table class= "table" >
-      <thead>
-        <tr>
-          <th>Started at</th>
-          <th>Done</th>
-        </tr>
-      </thead>
-      <tbody>
-        ,@ (loop for run in (util/lists:head runs 40)
-                 for cancel = (util:copying (run)
+  <markup:merge-tag>
+    ,(taskie-list
+      :items runs
+      :checkboxes nil
+      :empty-message "No previous runs"
+      :headers (list "Run date" "Status")
+      :row-generator (lambda (run)
+                       (taskie-row
+                        :object run
+                        <span>
+                        <a href= (nibble (:name :remote-job-logs)
+                                   (remote-run-logs run))
+                        >
+                        ,(timeago :timestamp (created-at run))
+                        </a>
+                        </span>
+                        <span>
+
+                        ,(let ((cancel (util:copying (run)
                                 (nibble (:name :interrupt-web-project)
                                   (let ((back "/web-projects"))
                                     (confirmation-modal
@@ -299,40 +304,27 @@
                                          (when thread
                                            (safe-interrupt thread)))
                                        (hex:safe-redirect back))
-                                     <span>Interrupt job?</span>))))
-                 collect
-                 (util:copying (run cancel)
-                   <tr>
-                     <td>
-                       <a href= (nibble (:name :remote-job-logs)
-                                  (remote-run-logs run))
-                   >
-                         ,(timeago :timestamp (created-at run))
-                       </a>
-                     </td>
-                     <td title= (run-thread-id run) >
-                       ,(cond
-                          ((donep run)
-                           (case (remote-run-status run)
-                             (:success
-                              "Finished")
-                             (:user-aborted
-                              "Aborted by user")
-                             (otherwise
-                              "Unknown error")))
-                          (t
-                           (case (remote-run-status run)
-                             (:unknown
-                              "Unknown state")
-                             (:queued
-                              "Queued")
-                             (otherwise
-                              <span>Running <a href= "#" class= "modal-link" data-href=cancel >Cancel</a> </span>))))
-                     </td>
-                   </tr>))
-      </tbody>
-    </table>
-    )
+                                     <span>Interrupt job?</span>))))))
+                             (cond
+                            ((donep run)
+                             (case (remote-run-status run)
+                               (:success
+                                "Finished")
+                               (:user-aborted
+                                "Aborted by user")
+                               (otherwise
+                                "Unknown error")))
+                            (t
+                             (case (remote-run-status run)
+                               (:unknown
+                                "Unknown state")
+                               (:queued
+                                "Queued")
+                               (otherwise
+                                <span>Running <a href= "#" class= "modal-link" data-href=cancel >Cancel</a> </span>)))))
+                        </span>
+                        )))
+  </markup:merge-tag>)
 
 (defun https? ()
   (string-equal "https" (hunchentoot:header-in* :x-forwarded-proto)))

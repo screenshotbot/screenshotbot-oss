@@ -23,7 +23,9 @@
   (:import-from #:util/object-id
                 #:oid)
   (:import-from #:screenshotbot/dashboard/run-page
-                #:run-page))
+                #:run-page)
+  (:import-from #:screenshotbot/taskie
+                #:taskie-page-title))
 (in-package :screenshotbot/dashboard/channels)
 
 (markup:enable-reader)
@@ -51,9 +53,7 @@
               (ui/a :href (nibble ()
                             (single-channel-view channel))
                     (channel-name channel))
-              (ui/div)
-              (taskie-timestamp :prefix "First created"
-                                :timestamp (created-at channel))))
+              (taskie-timestamp :timestamp (created-at channel))))
 
 (deftag explain-channels ()
   <div>
@@ -66,6 +66,11 @@
     <p>Web projects will also be associated with a channel by the same name as the project.</p>
   </div>)
 
+(defun channel-page-title ()
+  <span>
+    Channel List <explain title= "Channels">,(explain-channels)</explain>
+  </span>)
+
 (defun %list-projects (&key
                          (user (current-user))
                          (company (current-company)))
@@ -73,19 +78,20 @@
                         '|STRING<| :key 'channel-name)))
     (with-pagination (channels channels :next-link next-link :prev-link prev-link)
       (dashboard-template :user user :company company :script-name "/channels" :title "Screenshotbot: Channels"
-       <div class= "page-title-box">
-         <h4 class= "page-title">
-           Channel<explain title= "Channels">,(explain-channels)</explain> List
-         </h4>
-       </div>
+       <taskie-page-title title= (channel-page-title) >
+       </taskie-page-title>
 
         (taskie-list :empty-message "No projects to show! Projects are
                                    automatically created when you start a run"
                      :items channels
+       :headers (list "Channel" "First created")
                      :next-link next-link
+       :checkboxes nil
                      :prev-link prev-link
                      :row-generator (lambda (channel)
                                  (channel-list-row :channel channel)))))))
+
+
 
 (defhandler (projects-page :uri "/channels") ()
   (with-login ()
