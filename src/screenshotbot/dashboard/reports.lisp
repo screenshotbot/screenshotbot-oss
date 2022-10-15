@@ -258,7 +258,7 @@
           <taskie-list empty-message="No reports to show! Reports are created when
                                       your CI builds create a run with differing images."
                        items=reports
-                       headers= (list "Name" "State" "Time")
+                       headers= (list "Channel" "State" "Time")
                        next-link=next-link
                        checkboxes=nil
                        prev-link=prev-link
