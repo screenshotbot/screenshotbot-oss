@@ -10,6 +10,7 @@
           #:screenshotbot/taskie
           #:fiveam)
   (:import-from #:screenshotbot/taskie
+                #:timeago
                 #:with-pagination))
 
 (util/fiveam:def-suite)
@@ -42,3 +43,12 @@
   (let ((data nil))
     (with-pagination (page data :next-link next-link :prev-link prev-link)
       (is (equal nil page)))))
+
+(test timeago-happy-path
+  (finishes (timeago :timestamp 40))
+  (finishes (timeago :timestamp (local-time:universal-to-timestamp 40)))
+  (is (equal
+       (markup:write-html
+        (timeago :timestamp 40))
+       (markup:write-html
+        (timeago :timestamp (local-time:universal-to-timestamp 40))))))
