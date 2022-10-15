@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/dashboard/api-keys
+(defpackage :screenshotbot/dashboard/api-keys
   (:use #:cl
         #:alexandria
         #:nibble
@@ -20,10 +20,9 @@
                 #:simple-card-page)
   (:import-from #:screenshotbot/server
                 #:with-login)
-  (:import-from #:staskie-page-title/taskie
-                #:taskie-page-title)
   (:import-from #:screenshotbot/taskie
                 #:taskie-row
+                #:taskie-page-title
                 #:taskie-list))
 (in-package :screenshotbot/dashboard/api-keys)
 
@@ -104,24 +103,6 @@
                              </span>
                            </taskie-row>)))
     </dashboard-template>))
-
-(defun api-keys-table (api-keys)
-        <table class= "table table-hover">
-        <thead>
-          <tr>
-            <th>API Key</th>
-            <th>API Secret</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-      ,@ (loop for api-key in api-keys
-               collect
-               )
-
-        </tbody>
-
-      </table>)
 
 (defhandler (api-keys :uri "/api-keys") ()
   (with-login ()
