@@ -16,6 +16,8 @@ $section-blue: #3C42A7;
 
 @import "./bootstrap/scss/functions";
 @import "./bootstrap/scss/variables";
+$body-background: #f4f5f6;
+$card-border-color: darken($body-background, 5%);
 @import "./bootstrap/scss/bootstrap";
 
 @import "variables";
@@ -33,7 +35,6 @@ $section-blue: #3C42A7;
 
 @import "auth";
 
-$body-background: #f4f5f6;
 
 body {
     font-family: Roboto, "sans-serif";
@@ -799,6 +800,11 @@ a {
     .card-header {
         h1, h2, h3, h4, h5, h6 {
             margin-top: 0.5rem;
+            color: darken(#888f91, 10%);
+        }
+
+        h3 {
+            font-size: 1.2rem;
         }
     }
 
