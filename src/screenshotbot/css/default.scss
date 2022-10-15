@@ -314,6 +314,11 @@ table.taskie-list {
 
     &.checkboxes th:first-child {
         width: 3em;
+        border-right: none;
+    }
+
+    &.checkboxes th:nth-child(2) {
+        border-left: none;
     }
 
     th {
