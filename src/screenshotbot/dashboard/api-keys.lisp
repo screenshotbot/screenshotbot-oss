@@ -13,12 +13,18 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/template
+                #:mdi
                 #:dashboard-template)
   (:import-from #:screenshotbot/ui
                 #:confirmation-page
                 #:simple-card-page)
   (:import-from #:screenshotbot/server
-                #:with-login))
+                #:with-login)
+  (:import-from #:staskie-page-title/taskie
+                #:taskie-page-title)
+  (:import-from #:screenshotbot/taskie
+                #:taskie-row
+                #:taskie-list))
 (in-package :screenshotbot/dashboard/api-keys)
 
 (markup:enable-reader)
@@ -61,39 +67,43 @@
   (let* ((api-keys (user-api-keys user company))
          (create-api-key (nibble ()
                            (%create-api-key user company))))
-    <simple-card-page max-width= (if api-keys "60rem" "30rem")
-                      title= "Screenshotbot: API Keys" >
-      <div class= "card-header">
-        <div class= "d-flex flex-row justify-content-between">
-          <div class= "d-flex ">
-            <h3>API Keys</h3>
-          </div>
-          <div class= "d-flex align-items-center">
+    <dashboard-template title= "Screenshotbot: API Keys" >
+      <taskie-page-title title="API keys" >
             <form method= "post">
               <input type= "submit" formaction=create-api-key formmethod= "post"
-                     class= "btn btn-success" value= "New API Key" />
+                     class= "btn btn-success btn-sm" value= "New API Key" />
             </form>
-          </div>
-        </div>
+      </taskie-page-title>
 
+      ,(taskie-list
+        :items api-keys
+        :headers (list "API Key" "Secret" "Actions")
+        :empty-message "You haven't created an API Key yet"
+        :checkboxes nil
+        :row-generator (lambda (api-key)
+                         (let* ((coded-secret (format nil
+                                                      "~a~a"
+                                                      (str:repeat 36 "*")
+                                                      (str:substring  36 nil (api-key-secret-key api-key))))
+                                (delete-api-key (nibble ()
+                                                  (%confirm-delete api-key))))
 
+                           <taskie-row>
+                             <span class= "" >,(api-key-key api-key)</span>
+                             <span>,(progn coded-secret)</span>
 
-      </div>
-      ,(cond
-         (api-keys
-          (api-keys-table api-keys))
-         (t
-          <div class= "text-center mt-3 mb-3">
-
-            <p>
-              You don't have any API keys.
-            </p>
-
-            <p>
-              You will use an API key to upload screenshots with the <a href= "/documentation/api/command-line-interface" target= "_blank">Screenshotbot SDK</a>. You don't need an API key for web projects.
-            </p>
-          </div>))
-    </simple-card-page>))
+                             <span>
+                               <form style="display:inline-block" class= "ml-4" method= "post" >
+                                 <button type= "submit" formaction=delete-api-key
+                                        formmethod= "post"
+                                        class= "btn btn-link"
+                                        value= "Delete" >
+                                   <mdi name="delete" class= "text-danger" />
+                                 </button>
+                               </form>
+                             </span>
+                           </taskie-row>)))
+    </dashboard-template>))
 
 (defun api-keys-table (api-keys)
         <table class= "table table-hover">
@@ -107,26 +117,7 @@
         <tbody>
       ,@ (loop for api-key in api-keys
                collect
-               (let* ((api-key api-key)
-                      (coded-secret (format nil
-                                            "~a~a"
-                                            (str:repeat 36 "*")
-                                            (str:substring  36 nil (api-key-secret-key api-key))))
-                      (delete-api-key (nibble ()
-                                        (%confirm-delete api-key))))
-                 <tr class= "align-middle" >
-                   <td class= "" >,(api-key-key api-key)</td>
-                   <td>,(progn coded-secret)</td>
-
-                   <td>
-                     <form style="display:inline-block" class= "ml-4 float-end" method= "post" >
-                       <input type= "submit" formaction=delete-api-key
-                              formmethod= "post"
-                              class= "btn btn-danger"
-                              value= "Delete" />
-                     </form>
-                   </td>
-                 </tr>))
+               )
 
         </tbody>
 
