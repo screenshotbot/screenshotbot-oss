@@ -50,18 +50,20 @@
                           title= (or title "Screenshotbot: Settings")
                       >
 
-    <div class= "row" style= "min-height: 100vh" >
-      <div class= "col-md-2 border-right settings-nav-bar">
-        <ul class= "settings-nav" >
-          <settings-render-section title= "Account" section=nil />
-          <settings-render-section title= "VCS" section=:vcs />
-          <settings-render-section title= "Tasks" section=:tasks />
-        </ul>
-      </div>
+    <div class= "main-content">
+      <div class= "row" style= "min-height: 100vh" >
+        <div class= "col-md-2 border-right settings-nav-bar">
+          <ul class= "settings-nav" >
+            <settings-render-section title= "Account" section=nil />
+            <settings-render-section title= "VCS" section=:vcs />
+            <settings-render-section title= "Tasks" section=:tasks />
+          </ul>
+        </div>
 
-      <div class= "col-md-10">
-        <div class= "settings-content">
-          ,@children
+        <div class= "col-md-10">
+          <div class= "settings-conten">
+            ,@children
+          </div>
         </div>
       </div>
     </div>
