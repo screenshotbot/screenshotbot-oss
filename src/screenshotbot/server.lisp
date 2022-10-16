@@ -247,11 +247,13 @@
 Disallow: /n")
 
 (defmacro with-login ((&key (needs-login t) (signup nil)
+                            (company nil)
                          (alert nil)) &body body)
   ;; server-with-login is implemented in login/common.lisp
   `(server-with-login (lambda () ,@body)
                       :needs-login ,needs-login
                       :signup ,signup
+                      :company ,company
                       :alert ,alert))
 
 (defhandler (nil :uri "/") ()

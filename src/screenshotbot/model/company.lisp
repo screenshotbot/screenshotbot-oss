@@ -60,7 +60,8 @@
    #:default-slack-config
    #:jira-config
    #:add-company-run
-   #:company-owner))
+   #:company-owner
+   #:sso-auth-provider))
 (in-package :screenshotbot/model/company)
 
 (with-class-validation
@@ -115,6 +116,9 @@
       :initarg :singletonp
       :index-type unique-index
       :index-reader company-with-singletonp)
+     (sso-auth-provider
+      :initform nil
+      :accessor sso-auth-provider)
      (images
       :initarg :company-images
       :initform nil

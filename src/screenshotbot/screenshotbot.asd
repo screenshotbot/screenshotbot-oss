@@ -239,6 +239,10 @@
                  (:file "promote")
                  (:file "recorder-run" :depends-on ("promote"))
                  (:file "commit-graph")))
+   (:module "sso"
+    :serial t
+    :components ((:file "model")
+                 (:file "fake")))
    (:module "login"
     :serial t
     :components ((:file "common")

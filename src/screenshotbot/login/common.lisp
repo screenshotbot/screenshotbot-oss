@@ -32,7 +32,10 @@
                 #:timestamp-
                 #:timestamp>)
   (:import-from #:screenshotbot/model/company
+                #:sso-auth-provider
                 #:get-singleton-company)
+  (:import-from #:screenshotbot/sso/model
+                #:call-with-company-login)
   (:export
    #:*current-company-override*
    #:with-oauth-state-and-redirect
@@ -95,8 +98,15 @@
     (hex:safe-redirect "/")))
 
 
-(defun server-with-login (fn &key needs-login signup alert)
+(defun server-with-login (fn &key needs-login signup alert company)
   (cond
+    ((and
+      needs-login
+      company
+      (sso-auth-provider company))
+     (call-with-company-login (sso-auth-provider company)
+                              company
+                              fn))
     ((and needs-login (not (current-user)))
      (funcall
       (if signup #'signup-get #'signin-get)

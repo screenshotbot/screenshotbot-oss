@@ -14,6 +14,7 @@
                 #:report-num-changes)
   (:import-from #:util #:object-with-oid)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-company
                 #:recorder-run-channel
                 #:publicp)
   (:import-from #:bknr.datastore
@@ -35,7 +36,8 @@
    #:report-acceptable
    #:github-task
    #:report-num-changes
-   #:reports-for-run))
+   #:reports-for-run
+   #:report-company))
 (in-package :screenshotbot/model/report)
 
 (with-class-validation
@@ -76,6 +78,9 @@
   (and
    (can-view (report-run report) user)
    (can-view (report-previous-run report) user)))
+
+(defmethod report-company ((report report))
+  (recorder-run-company (report-run report)))
 
 (defmethod can-public-view ((report report))
   ;; The public can view any report associated with a public github

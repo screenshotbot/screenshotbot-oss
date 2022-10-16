@@ -43,6 +43,8 @@
                 #:oid-array)
   (:import-from #:screenshotbot/taskie
                 #:taskie-page-title)
+  (:import-from #:screenshotbot/model/report
+                #:report-company)
   (:export #:report-page #:report-link
            #:shared-report-page))
 (in-package :screenshotbot/dashboard/reports)
@@ -78,7 +80,8 @@
           </body>
           </html>)
          (t
-          (with-login (:needs-login (not (can-public-view report)))
+          (with-login (:needs-login (not (can-public-view report))
+                       :company (report-company report))
             (render-report-page report))))))))
 
 (defun expired-report ()
