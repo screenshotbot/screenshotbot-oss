@@ -23,6 +23,9 @@
   (:import-from #:util/object-id
                 #:oid-array)
   (:import-from #:screenshotbot/taskie
+                #:taskie-list
+                #:taskie-page-title
+                #:taskie-row
                 #:timeago)
   (:import-from #:nibble
                 #:nibble)
@@ -41,41 +44,32 @@
 
 (defun shares-page ()
   <settings-template>
-    <div class= "card mt-3">
-      <div class= "card-header">
-        <h3>Public Shared URLs</h3>
-        <p>Reports can be publicly shared from the report page. This is usually used to share reports with stakeholders who are not on Screenshotbot.</p>
+    <taskie-page-title title= "Public Shared URLs" >
+    </taskie-page-title>
 
-        <p>Keep track of all the shared URLs here, and revoke them if necessary.</p>
-      </div>
+       <p class= "mt-3 mb-2 text-muted" >Reports can be publicly shared from the report page. Use to share reports with stakeholders who are not on Screenshotbot.</p>
 
-      <div class= "card-body">
-        <table class= "table table-hover user-table align-items-center" >
-          <thead>
-            <tr>
-              <th>URL</th>
-              <th>Shared by</th>
-              <th>Expires</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+      <p class= "text-muted" >Keep track of all the shared URLs here, and revoke them if necessary.</p>
 
-          <tbody>
-            ,@ (loop for share in (shares-for-company (current-company))
-                     for url = (hex:make-full-url hunchentoot:*request*
-                                                  'shared-report-page
-                                                   :eoid (encrypt:encrypt-mongoid (oid-array share)))
-                     for expiry-date = (expiry-date share)
-                     for expiry-ts = (unless (str:emptyp expiry-date)
-                                       (local-time:parse-timestring expiry-date))
-                     collect
 
-                     (util:copying (share)
-                       <tr>
-                         <td><a href=url >,(reverse (str:shorten 40 (reverse url))) </a></td>
-                         <td>,(user-full-name (share-creator share))</td>
-                         <td>,(cond
-                                ((share-revoked-p share)
+
+    ,(taskie-list
+      :items (shares-for-company (current-company))
+      :headers '("URL" "Shared by" "Expires" "Actions")
+      :checkboxes nil
+      :empty-message "No shares yet. Create a new share from any report."
+      :row-generator (lambda (share)
+                       (let* ((url (hex:make-full-url hunchentoot:*request*
+                                                      'shared-report-page
+                                                      :eoid (encrypt:encrypt-mongoid (oid-array share))))
+                              (expiry-date (expiry-date share))
+                              (expiry-ts (unless (str:emptyp expiry-date)
+                                          (local-time:parse-timestring expiry-date))))
+                         <taskie-row>
+                         <span><a href=url >,(reverse (str:shorten 40 (reverse url))) </a></span>
+                         <span>,(user-full-name (share-creator share))</span>
+                         <span>,(cond
+                                  ((share-revoked-p share)
                                  <span class= "text-warning">Revoked</span>)
                                 ((null expiry-ts)
                                  "Never")
@@ -83,8 +77,8 @@
                                                         (local-time:now))
                                  <span>Expired ,(timeago :timestamp expiry-ts)</span>)
                                 (t
-                                 (timeago :timestamp expiry-ts))) </td>
-                         <td>
+                                 (timeago :timestamp expiry-ts))) </span>
+                         <span>
                            ,(cond
                               ((and expiry-ts
                                     (local-time:timestamp< expiry-ts
@@ -94,13 +88,9 @@
                                <a href= (nibble () (revoke-share share)) >Revoke</a>)
                               (t
                                <a href= (nibble () (undo-revoke-share share))>Undo Revoke</a>))
-                         </td>
-                       </tr>))
-          </tbody>
-
-        </table>
-      </div>
-    </div>
+                         </span>
+                         </taskie-row>
+                         )))
 
   </settings-template>)
 
