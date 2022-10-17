@@ -711,11 +711,12 @@
         (plump:make-text-node style (custom-css context))))))
 
 (defun safe-plump-serialize (&rest args)
-  (handler-bind ((plump-dom:invalid-xml-character
-                   (lambda (e)
-                     (declare (ignore e))
-                     (invoke-restart 'cl:continue))))
-   (apply #'plump:serialize args)))
+  (flet ((ignore-handler (e)
+           (declare (ignore e))
+           (invoke-restart 'cl:continue)))
+    (handler-bind ((plump-dom:invalid-xml-character #'ignore-handler)
+                   (plump-dom:discouraged-xml-character #'ignore-handler))
+      (apply #'plump:serialize args))))
 
 (with-auto-restart (:retries 3 :sleep 10)
   (defmethod load-url-into ((context context) snapshot url tmpdir
