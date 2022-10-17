@@ -35,8 +35,8 @@
         for j from 0 below n
         collect (nth j x)))
 
-(deftag taskie-page-title (children &key title)
-  <div class= "page-title-box main-content">
+(deftag taskie-page-title (children &key title class)
+  <div class= (format nil "page-title-box main-content ~a" class) >
     <h4 class= "page-title" >,(progn title)
     </h4>
 

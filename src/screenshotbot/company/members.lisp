@@ -29,6 +29,12 @@
                 #:with-transaction)
   (:import-from #:screenshotbot/ui/confirmation-page
                 #:confirmation-page)
+  (:import-from #:screenshotbot/taskie
+                #:taskie-list
+                #:taskie-row
+                #:taskie-page-title)
+  (:import-from #:screenshotbot/template
+                #:mdi)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/company/members)
 
@@ -56,6 +62,13 @@
    :no back
    <p>Remove ,(user-full-name user) from this Organization?</p>))
 
+(markup:deftag delete-button (&key action)
+  <form>
+    <button type= "submit" class="btn btn-link" value= "Delete" formaction=action >
+      <mdi name= "delete" class= "text-danger" />
+    </button>
+  </form>)
+
 (defun render-user-row (user company)
   (let* ((adminp (member user (company-admins company)))
          (can-delete-p
@@ -65,22 +78,21 @@
          (delete (nibble ()
                    (assert can-delete-p)
                    (delete-user user company))))
-    <tr class= "align-middle" >
-      <td >,(user-full-name user)</td>
-      <td>,(mailto (user-email user)) </td>
-      <td>
+    <taskie-row>
+      <span >,(user-full-name user)</span>
+      <span>,(mailto (user-email user)) </span>
+      <span>
         ,(cond
            (adminp
             "Admin")
            (t
             "Member"))
-      </td>
-      <td>
-        <form>
-          <input type= "submit" class="btn btn-danger" value= "Delete" formaction=delete disabled= (unless can-delete-p "disabled") />
-        </form>
-      </td>
-    </tr>))
+      </span>
+      <span>
+        ,(when can-delete-p
+           <delete-button action=delete />)
+      </span>
+    </taskie-row>))
 
 (defun delete-invite (invite company)
   (confirmation-page
@@ -92,45 +104,47 @@
    :no "/settings/members"
    <span>Delete invitation to ,(invite-email invite)?</span>))
 
+
 (defun render-invite-row (invite company)
-  (declare (ignore company))
   (let* ((delete (nibble ()
                    (delete-invite invite company))))
-    <tr class= "align-middle" >
-      <td><em>Unknown</em></td>
-      <td>,(mailto (invite-email invite)) </td>
-      <td>
+    <taskie-row>
+      <span><em>Unknown</em></span>
+      <span>,(mailto (invite-email invite)) </span>
+      <span>
         Invited
-      </td>
-      <td>
-        <form>
-          <input type= "submit" class="btn btn-danger" value= "Delete" formaction=delete  />
-        </form>
-      </td>
-    </tr>))
+      </span>
+      <span>
+        <delete-button action=delete />
+      </span>
+    </taskie-row>))
 
 (defun members-page ()
   (settings-template
    (let ((company (current-company)))
-     <div class= "card card-body shadow border-0 table-wrapper table-responsive mt-3" >
 
-       <table class="table user-table table-hover align-items-center" >
-         <thead>
-           <tr>
-             <th>Name</th>
-             <th>Email</th>
-             <th>Status</th>
-             <th></th>
-           </tr>
-         </thead>
+     <markup:merge-tag>
+       ,(taskie-page-title :title "Pending Invites")
 
-         <tbody>
-           ,@ (loop for invite in (company-invites company)
-                    collect (render-invite-row invite company))
-          ,@ (loop for user in (users-for-company company)
-                   collect (render-user-row user company))
-         </tbody>
+       ,(taskie-list
+         :headers '("Name" "Email" "Status" "Actions")
+         :items (company-invites company)
+         :checkboxes nil
+         :empty-message "No pending invites"
+         :row-generator (lambda (invite)
+                          (render-invite-row invite company)))
 
-       </table>
 
-     </div>)))
+       ,(taskie-page-title :title "Members" :class "pt-3")
+
+       ,(taskie-list
+         :headers '("Name" "Email" "Status" "Actions")
+         :items (users-for-company company)
+         :checkboxes nil
+         :empty-message "No users"
+         :row-generator (lambda (user)
+                          (render-user-row user company)))
+
+     </markup:merge-tag>
+
+)))
