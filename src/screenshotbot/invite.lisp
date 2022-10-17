@@ -162,7 +162,7 @@
 
     <div class= "card-footer">
       <a href= (make-url 'invite-page) class= "btn btn-primary" >Invite More People</a>
-      <a href= "/" class= "btn btn-secondary">Home</a>
+      <a href= "/settings/members" class= "ms-3" >Manage Invitations</a>
     </div>
   </simple-card-page>)
 

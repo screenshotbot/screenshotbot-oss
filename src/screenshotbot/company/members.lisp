@@ -124,7 +124,9 @@
    (let ((company (current-company)))
 
      <markup:merge-tag>
-       ,(taskie-page-title :title "Pending Invites")
+       ,(taskie-page-title
+         :title "Pending Invites"
+         <a href= "/invite" class= "btn btn-success btn-sm">Invite Member</a>)
 
        ,(taskie-list
          :headers '("Name" "Email" "Status" "Actions")
