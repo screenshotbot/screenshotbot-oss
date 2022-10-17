@@ -17,7 +17,7 @@ $section-blue: #3C42A7;
 @import "./bootstrap/scss/functions";
 @import "./bootstrap/scss/variables";
 $body-background: #f4f5f6;
-$card-border-color: darken($body-background, 5%);
+$card-border-color: darken($body-background, 10%);
 @import "./bootstrap/scss/bootstrap";
 
 @import "variables";
