@@ -22,6 +22,7 @@
         #:screenshotbot/model/channel
         #:screenshotbot/model/company)
   (:import-from #:screenshotbot/server
+                #:with-login
                 #:make-thread
                 #:defhandler)
   (:import-from #:util
@@ -83,7 +84,8 @@
 
 (defhandler (run-page :uri "/runs/:id" :method :get) (id name)
   (let* ((run (find-by-oid id 'recorder-run)))
-    (render-run-page run :name name)))
+    (with-login (:company (recorder-run-company run))
+     (render-run-page run :name name))))
 
 (deftag page-nav-dropdown (children &key title)
   (let ()
@@ -448,8 +450,8 @@
 (defhandler (run-delete-page :uri "/runs/:id" :method :delete :html nil) (id)
   (setf (hunchentoot:content-type*) "application/json")
   (let ((run (find-by-oid id 'recorder-run)))
-    (can-view! run)
-    (when run
+    (with-login (:company (recorder-run-company run))
+      (can-view! run)
       (cond
         ((or (activep run)
              (recorder-previous-run run))
