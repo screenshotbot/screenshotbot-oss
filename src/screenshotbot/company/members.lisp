@@ -16,6 +16,7 @@
                 #:user-full-name
                 #:current-company)
   (:import-from #:screenshotbot/model/company
+                #:company-admin-p
                 #:company-admins
                 #:company-owner
                 #:company-invites)
@@ -70,7 +71,7 @@
   </form>)
 
 (defun render-user-row (user company)
-  (let* ((adminp (member user (company-admins company)))
+  (let* ((adminp (company-admin-p company user))
          (can-delete-p
            (and
             (not adminp)
