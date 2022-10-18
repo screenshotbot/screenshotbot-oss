@@ -25,7 +25,8 @@
            #:app-template
            #:landing-template
            #:dashboard-head
-           #:*template-override*)
+           #:*template-override*
+           #:mailto)
   (:import-from #:screenshotbot/installation
                 #:installation)
   (:import-from #:screenshotbot/user-api
@@ -239,6 +240,9 @@
 
 (Defhandler (get-started :uri "/get-started") ()
   (hex:safe-redirect "/documentation/getting-started"))
+
+(deftag mailto (children)
+   <a href= (format nil "mailto:~a" (car children))>,@(progn children)</a>)
 
 
 (deftag landing-head (&key
