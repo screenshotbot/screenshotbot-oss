@@ -10,6 +10,8 @@
                 #:plugin
                 #:installation
                 #:plugins)
+  (:import-from #:screenshotbot/server
+                #:staging-p)
   (:export
    #:defsettings
    #:settings
@@ -30,6 +32,9 @@
           :initarg :title
           :accessor settings-title)
    (plugin :initarg :plugin)
+   (staging-p :initarg :staging-p
+              :initform nil
+              :reader settings-only-staging-p)
    (section :type symbol
             :initarg :section
             :accessor settings-section)
@@ -61,9 +66,15 @@
   nil)
 
 (defmethod all-settings ((installation installation))
-  (append
-   *settings*
-   (reverse
-    (loop for plugin in (plugins installation)
-          appending
-          (plugin-settings plugin)))))
+  (remove-if
+   (lambda (settings)
+     (and
+      (settings-only-staging-p (cdr settings))
+      (not (staging-p))))
+   (remove-if #'null
+    (append
+     *settings*
+     (reverse
+      (loop for plugin in (plugins installation)
+            appending
+            (plugin-settings plugin)))))))

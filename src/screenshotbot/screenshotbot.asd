@@ -305,6 +305,7 @@
                (:file "test-artifacts")
                (:file "test-diff-report")
                (:file "test-mailer")
+               (:file "test-settings-api")
                (:module "magick"
                 :components ((:file "test-magick-lw")
                              (:file "test-memory" :if-feature :lispworks)))
