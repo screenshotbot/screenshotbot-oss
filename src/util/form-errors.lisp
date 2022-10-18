@@ -29,30 +29,39 @@
        (update-form-values
         args)
        (dolist (err errors)
-         (when (consp err)
-           (destructuring-bind (name . msg) err
-             (let ((input ($ (mquery:namequery name))))
-               (assert input)
-               (mquery:remove-class input "is-valid")
-               (mquery:add-class input "is-invalid")
-               (let ((input-group (let ((parent (mquery:parent input)))
-                                    (when (mquery:has-class-p parent "input-group")
-                                      parent))))
-                 (when input-group
-                   (mquery:add-class input-group "has-validation"))
-                (setf (mquery:after
-                       (cond
-                         ((equal "checkbox" (mquery:attr input "type"))
-                          ;; for checkbox there's a label after the input form
-                          (mquery:after input))
-                         (input-group
-                          (car (last (xml-tag-children (mquery:parent input)))))
-                         (t
-                          input)))
-                      <div class= (if tooltip "invalid-tooltip" "invalid-feedback") >,(progn msg)</div>)))))))))
+         (cond
+           ((consp err)
+            (destructuring-bind (name . msg) err
+              (let ((input ($ (mquery:namequery name))))
+                (assert input)
+                (mquery:remove-class input "is-valid")
+                (mquery:add-class input "is-invalid")
+                (let ((input-group (let ((parent (mquery:parent input)))
+                                     (when (mquery:has-class-p parent "input-group")
+                                       parent))))
+                  (when input-group
+                    (mquery:add-class input-group "has-validation"))
+                  (setf (mquery:after
+                         (cond
+                           ((equal "checkbox" (mquery:attr input "type"))
+                            ;; for checkbox there's a label after the input form
+                            (mquery:after input))
+                           (input-group
+                            (car (last (xml-tag-children (mquery:parent input)))))
+                           (t
+                            input)))
+                        <div class= (if tooltip "invalid-tooltip" "invalid-feedback") >,(progn msg)</div>)))))
+           (t
+            ;; Add error message to a alert
+            (let ((alert ($ ".alert")))
+              (mquery:remove-class alert "d-none")
+              (mquery:mqappend alert
+                               <div>,(progn err)</div>))
+            ))))))
   (values html errors))
 
 (defmacro with-form-errors ((&rest args &key errors args-list was-validated tooltip &allow-other-keys) &body body)
+  "Update the body to add bootstrap based error validation to every field. Note that global errors, need a div with class `alert alert-danger`."
   (let* ((args (plist-alist args)))
     `(%with-form-errors (progn ,@body)
                         :errors ,errors
