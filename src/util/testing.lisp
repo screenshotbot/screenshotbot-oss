@@ -60,10 +60,25 @@
                                                :remote-addr "127.0.0.1")))
     ,@body))
 
+(let ((prepared nil))
+  (defun maybe-prepare-screenshot-assets (dir)
+    (unless prepared
+      (asdf:compile-system :screenshotbot.css-assets)
+      (copy-directory:copy
+       (asdf:system-relative-pathname :screenshotbot "static/assets/")
+       (path:catdir dir "assets/"))
+      (let ((default-css (path:catfile dir "assets/css/default.css")))
+        (ensure-directories-exist default-css)
+        (uiop:copy-file
+         (car (asdf:output-files 'asdf:compile-op :screenshotbot.css-assets))
+         default-css))
+      (setf prepared t))))
+
 (defun screenshot-static-page (project name content)
   (let ((output (asdf:system-relative-pathname project "static-web-output/")))
     (let ((output-file (path:catfile output (format nil "~a/index.html" name))))
       (ensure-directories-exist output-file)
+      (maybe-prepare-screenshot-assets output)
       (with-open-file (file output-file
                             :direction :output
                             :if-exists :supersede)

@@ -29,13 +29,7 @@
       (uiop:delete-directory-tree dir
                                   :validate (lambda (x)
                                               (declare (ignore x))
-                                              t))
-      (asdf:compile-system :screenshotbot.css-assets)
-      (let ((default-css (path:catfile dir "assets/css/default.css")))
-        (ensure-directories-exist default-css)
-        (uiop:copy-file
-         (car (asdf:output-files 'asdf:compile-op :screenshotbot.css-assets))
-         default-css)))))
+                                              t)))))
 
 (defun init ()
   #+ccl

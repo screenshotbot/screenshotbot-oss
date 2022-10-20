@@ -10,6 +10,8 @@
                 #:ensure-api-success)
   (:import-from #:util/digests
                 #:sha256-file)
+  (:import-from #:util/lru-cache
+                #:lru-cache)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
