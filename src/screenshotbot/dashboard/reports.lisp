@@ -61,15 +61,6 @@
     (t
      (let ((report (ignore-errors (find-by-oid id))))
        (cond
-         #-screenshotbot-oss
-         ((and
-           (staging-p)
-           (not report))
-          ;; TODO: T389
-          ;; We had a temporary bug where we sent out staging links in
-          ;; prod, handle this gracefully for now
-          (hunchentoot:redirect
-           (format nil "https://screenshotbot.io~a" (hunchentoot:script-name*))))
          ((not report)
           ;; We don't use template because this is messing up our Google
           ;; Analytics. This is most likely trigged by Microsoft Outlook's
