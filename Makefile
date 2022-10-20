@@ -285,7 +285,3 @@ src/java/libs: .PHONY
 
 upload-mac-intel-sdk:
 	ARCH="x86_64" make upload-sdk
-
-upload-screenshots: .PHONY
-	curl https://screenshotbot.io/recorder.sh | bash
-	~/screenshotbot/recorder --static-website src/screenshotbot/static-web-output/ --main-branch master --channel jenkins/screenshotbot
