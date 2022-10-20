@@ -76,7 +76,8 @@
 (defvar *hash-lock* (make-instance 'hash-lock))
 
 (with-auto-restart ()
- (defun send-remote-run (run &key (company (error "Must provide company")))
+  (defun send-remote-run (run &key (company (error "Must provide company"))
+                                (cleanup (lambda ())))
    (let* ((log-file (make-instance 'log-file))
           (remote-run (make-instance 'remote-run
                                       :company company
@@ -105,7 +106,10 @@
                        (with-transaction ()
                          (setf (remote-run-status remote-run) :running))
                        (let* ((ret (actually-run run stream)))
-                         (log:info "remote run done: ~a" ret)))))
+                         (log:info "remote run done: ~a" ret)))
+
+                      ;; todo: move to unwind-protect
+                      (funcall cleanup)))
                   (with-transaction ()
                     (setf (remote-run-status remote-run) :success))))
               :name (format nil "remote-replay-management-threads for ~a" (bknr.datastore:store-object-id remote-run)))))

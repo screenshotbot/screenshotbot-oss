@@ -38,7 +38,8 @@
    #:call-with-hosted-snapshot
    #:render-acceptor
    #:push-snapshot
-   #:with-hosted-snapshot)
+   #:with-hosted-snapshot
+   #:pop-snapshot)
   (:local-nicknames (#:a #:alexandria)
                     (#:replay #:screenshotbot/replay/core)))
 (in-package #:screenshotbot/replay/replay-acceptor)
