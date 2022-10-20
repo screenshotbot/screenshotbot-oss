@@ -61,6 +61,11 @@
                                  (when x
                                    (asdf:component-name x))))))))))))
 
+
+(defun screenshot-tests ()
+  "Tests that generate screenshots should always be run"
+  (list "screenshotbot/tests"))
+
 (defun load-systems ()
   (let ((systems (or
                   #+lispworks
@@ -70,7 +75,6 @@
                   (find-tests))))
     #-screenshotbot-oss
     (progn
-      (push "markup.test" systems)
       #-ccl
       (when (uiop:getenv "JENKINS_URL")
         (let ((files (uiop:read-file-lines "build/affected-files.txt")))
@@ -80,7 +84,9 @@
                          files)))))
     (log:info "Running the following tests: ~S" systems)
 
-    (dolist (system systems)
+    (dolist (system (union systems
+                           (screenshot-tests)
+                           :test #'string-equal))
       (log:info "Loading: ~s" system)
      (ql:quickload system))))
 
