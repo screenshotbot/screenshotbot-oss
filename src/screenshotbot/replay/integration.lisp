@@ -206,7 +206,7 @@ accessing the urls or sitemap slot."
          :merge-base (when request (replay:merge-base request))
          :branch-hash (when request (replay:branch-hash request))
          :github-repo (when request (replay:repo-url request))
-         :periodic-job-p (or (not request) (str:emptyp (replay:commit request)) t)
+         :periodic-job-p (or (not request) (str:emptyp (replay:commit request)))
          :is-trunk t
          :channel (channel run)))
     (retry-process-results ()
