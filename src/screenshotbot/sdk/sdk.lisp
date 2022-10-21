@@ -7,7 +7,6 @@
 (uiop:define-package :screenshotbot/sdk/sdk
   (:nicknames :screenshotbot-sdk)
   (:use #:cl
-        #:com.google.flag
         #:alexandria
         #:anaphora
         #:screenshotbot/sdk/flags)

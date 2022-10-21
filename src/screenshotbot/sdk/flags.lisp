@@ -6,12 +6,13 @@
 
 (uiop:define-package :screenshotbot/sdk/flags
   (:use #:cl
-        #:com.google.flag
         #:alexandria)
-  (:use-reexport
-   #:screenshotbot/sdk/common-flags)
   (:import-from #:com.google.flag
                 #:parse-string)
+  (:import-from #:screenshotbot/sdk/common-flags
+                #:define-flag)
+  (:use-reexport
+   #:screenshotbot/sdk/common-flags)
   (:export
    #:*directory*
    #:*verbose*

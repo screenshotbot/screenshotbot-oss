@@ -7,13 +7,27 @@
 (defpackage :screenshotbot/sdk/common-flags
   (:use #:cl
         #:com.google.flag)
+  (:shadow #:define-flag)
   (:export
    #:*verbose*
    #:*api-key*
    #:*api-secret*
    #:*hostname*
-   #:*help*))
+   #:*help*
+   #:*sdk-flags*
+   #:define-flag))
 (in-package :screenshotbot/sdk/common-flags)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *sdk-flags* (make-hash-table)))
+
+(defmacro define-flag (name &rest args
+     &key selector &allow-other-keys)
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (setf (gethash ,(intern (str:upcase selector) "KEYWORD") *sdk-flags*)
+           ',name)
+     (com.google.flag:define-flag ,name
+       ,@args)))
 
 (define-flag *verbose*
    :default-value nil
