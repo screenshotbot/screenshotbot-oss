@@ -65,6 +65,7 @@
 (defun screenshot-tests ()
   "Tests that generate screenshots should always be run"
   (list "screenshotbot/tests"
+        #-screenshotbot-oss
         "screenshotbot.pro/tests"))
 
 (defun load-systems ()
