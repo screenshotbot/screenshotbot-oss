@@ -35,8 +35,9 @@
 (markup:deftag img (&key src (alt "Image") srcset class style height width id loading)
   (let ((dims (image-dimensions src)))
     <:img src= (cdn-for-image-url src)  alt=alt srcset=srcset class=class style=style
-          height= (or height (first dims))
-          width= (or width (second dims)) id=id
+          width= (or width (first dims))
+          height= (or height (second dims))
+          id=id
           loading=loading
         />))
 

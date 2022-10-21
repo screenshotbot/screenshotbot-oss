@@ -22,7 +22,10 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:screenshot-static-page
+                #:with-fake-request)
+  (:import-from #:screenshotbot/user-api
+                #:signup-get))
 
 (util/fiveam:def-suite)
 
@@ -47,3 +50,12 @@
                       (error "should not get here: ~s" ret))))
              (bknr.datastore:delete-object company)))))
      (pass))))
+
+(test screenshot-test
+  (with-fake-request ()
+    (auth:with-sessions ()
+      (screenshot-static-page
+       :screenshotbot
+       "signup"
+       (markup:write-html
+        (signup-get))))))
