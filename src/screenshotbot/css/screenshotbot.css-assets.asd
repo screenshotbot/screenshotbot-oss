@@ -35,7 +35,8 @@
                              ("BUILD-UTILS:SCSS-FILE" "_select2.min")
                              ("BUILD-UTILS::CSS-FILE" "responsive.bootstrap4") ("BUILD-UTILS::CSS-FILE" "summernote-bs4") ("BUILD-UTILS:SCSS-FILE" "_bootstrap-datepicker.min") ("BUILD-UTILS:SCSS-FILE" "_bootstrap-timepicker.min") ("BUILD-UTILS::CSS-FILE" "britecharts.min") ("BUILD-UTILS:SCSS-FILE" "_jquery.toast.min") ("BUILD-UTILS::CSS-FILE" "simplemde.min") ("BUILD-UTILS::CSS-FILE" "fullcalendar.min") ("BUILD-UTILS::CSS-FILE" "buttons.bootstrap4")))  ("BUILD-UTILS:SCSS-FILE" "headroom-custom")
  ("BUILD-UTILS:SCSS-FILE" "default") ("BUILD-UTILS:SCSS-FILE" "variables")
-                ("BUILD-UTILS:SCSS-FILE" "avatar") ("BUILD-UTILS:SCSS-FILE" "breakpoints")
+               ("BUILD-UTILS:SCSS-FILE" "avatar") ("BUILD-UTILS:SCSS-FILE" "breakpoints")
+               ("BUILD-UTILS:SCSS-FILE" "pro-common")
                ("BUILD-UTILS:SCSS-FILE" "auth")))
 
 ;;(build-utils::get-css-component #P "~/builds/web/screenshotbot/static/assets/css/")

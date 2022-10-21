@@ -1,0 +1,12 @@
+/*
+ * Common logic that's both in OSS auth pages, and landing pages in
+ * Pro.  Caveat: As of now the landing pages in Pro are designed to
+ * font-size as 10px, whereas the dashboard pages are designed with
+ * 16px. We're not redesigning for this at the moment though.
+ */
+
+.navbar-brand img {
+    height: 3rem;
+    width: auto;
+    margin-right: 0.05em;
+}

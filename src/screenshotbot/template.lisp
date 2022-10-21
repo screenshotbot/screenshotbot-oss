@@ -245,7 +245,7 @@
    <a href= (format nil "mailto:~a" (car children))>,@(progn children)</a>)
 
 
-(deftag landing-head (&key
+(deftag landing-head (children &key
                       (style #-screenshotbot-oss
                              "/assets/css/extended-dashboard.css"
                              #+screenshotbot-oss
@@ -271,6 +271,7 @@
       <!-- App css -->
       <link href=style rel="stylesheet" type="text/css" id="light-style" />
       <selenium-css />
+      ,@children
   </head>)
 
 (defun screenshotbot/server:no-access-error-page ()

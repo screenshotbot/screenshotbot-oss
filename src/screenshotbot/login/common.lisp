@@ -207,7 +207,18 @@
 
 (markup:deftag auth-template (children &key body-class simple)
   <html lang= "en" >
-    <landing-head  />
+    <landing-head>
+      ,(progn
+         ;; this is required in the OSS version because of it's using
+         ;; a hacky mix of the pro and OSS dashboard css.
+         #+screenshotbot-oss
+         <style>
+           html {
+           font-size: 10px;
+           }
+         </style>)
+
+    </landing-head>
 
     ,(cond
        (simple
