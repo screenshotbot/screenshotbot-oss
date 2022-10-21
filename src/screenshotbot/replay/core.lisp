@@ -85,6 +85,9 @@
    (commit :initarg :commit
            :initform nil
            :reader commit)
+   (sdk-flags :initform nil
+              :initarg :sdk-flags
+              :reader snapshot-request-sdk-flags)
    (merge-base :initarg :merge-base
                :initform nil
                :reader merge-base)))
@@ -360,7 +363,7 @@
         dir))))
 
 (defun %lru-cache ()
-  (util:or-setf
+  (util/misc:or-setf
    *cache*
    (make-instance 'util/lru-cache:lru-cache
                   :dir (http-cache-dir)

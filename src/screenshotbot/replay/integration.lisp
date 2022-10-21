@@ -34,6 +34,7 @@
   (:import-from #:screenshotbot/replay/sitemap
                 #:parse-sitemap)
   (:import-from #:screenshotbot/replay/core
+                #:snapshot-request-sdk-flags
                 #:asset-file-name
                 #:context
                 #:write-replay-log
@@ -80,6 +81,10 @@
                 #:oid-array)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:screenshotbot/sdk/common-flags
+                #:*sdk-flags*)
+  (:import-from #:util/misc
+                #:?.)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
                     (#:integration #:screenshotbot/replay/integration)
@@ -185,6 +190,15 @@ accessing the urls or sitemap slot."
           if (<= hash sampling)
             collect (cons name url))))
 
+(def-easy-macro with-sdk-flags (&key flags &fn fn)
+  (loop for (key . value) in flags
+        for sym = (gethash key *sdk-flags*)
+        collect sym into symbols
+        collect value into values
+        finally (progv symbols values
+                  (funcall fn))))
+
+
 (defun process-results (run results)
   ;; The SDK has an ugly API when used from a non-SDK world
 
@@ -192,23 +206,31 @@ accessing the urls or sitemap slot."
       (let* ((api-key (make-transient-key :user (user run)
                                           :company (company run)))
              (request (integration:original-request run))
+
+             ;; There are two situations we could be here: we could be
+             ;; here from the static website code from the SDK, or we
+             ;; could be here from the web based replay jobs. We need
+             ;; to set the flags manually for the web-based replay
+             ;; jobs, but for the static website code, the
+             ;; `with-sdk-flags` will propagate the flags.
              (flags:*api-key* (api-key-key api-key))
              (flags:*api-secret* (api-key-secret-key api-key))
              (flags:*hostname* (host run))
-             (flags:*pull-request* (when request (replay:pull-request request)))
-             (flags:*main-branch* (when request (replay:main-branch request)))
-             (flags:*repo-url* (when request (replay:repo-url request))))
-        (make-directory-run
-         results
-         :repo (make-instance 'null-repo)
-         :branch "master"
-         :commit (when request (replay:commit request))
-         :merge-base (when request (replay:merge-base request))
-         :branch-hash (when request (replay:branch-hash request))
-         :github-repo (when request (replay:repo-url request))
-         :periodic-job-p (or (not request) (str:emptyp (replay:commit request)))
-         :is-trunk t
-         :channel (channel run)))
+             (flags:*pull-request* (?. replay:pull-request request))
+             (flags:*main-branch* (?. replay:main-branch request))
+             (flags:*repo-url* (?. replay:repo-url request)))
+        (with-sdk-flags (:flags (?. snapshot-request-sdk-flags request))
+          (make-directory-run
+           results
+           :repo (make-instance 'null-repo)
+           :branch "master"
+           :commit (when request (replay:commit request))
+           :merge-base (when request (replay:merge-base request))
+           :branch-hash (when request (replay:branch-hash request))
+           :github-repo (when request (replay:repo-url request))
+           :periodic-job-p (or (not request) (str:emptyp (replay:commit request)))
+           :is-trunk t
+           :channel (channel run))))
     (retry-process-results ()
       (process-results run results))))
 

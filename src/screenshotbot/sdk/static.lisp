@@ -12,6 +12,8 @@
                 #:sha256-file)
   (:import-from #:util/lru-cache
                 #:lru-cache)
+  (:import-from #:screenshotbot/sdk/common-flags
+                #:*sdk-flags*)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
@@ -130,6 +132,11 @@ upload blobs that haven't been uploaded before."
                       ;; yes, this inconsistency is intentional for now.
                       :mobile-emulation "Nexus 6P")))))
 
+(defun get-sdk-flags ()
+  (loop for key being the hash-keys of *sdk-flags*
+        using (hash-value sym)
+        collect (cons key (symbol-value sym))))
+
 (defun schedule-snapshot (snapshot)
   "Schedule a Replay build with the given snapshot"
   (setf (replay:tmpdir snapshot) nil) ;; hack for json encoding
@@ -143,6 +150,7 @@ upload blobs that haven't been uploaded before."
                                  :main-branch flags:*main-branch*
                                  :repo-url flags:*repo-url*
                                  :browser-configs (browser-configs)
+                                 :sdk-flags (get-sdk-flags)
                                  :commit commit
                                  :branch-hash branch-hash
                                  :merge-base (ignore-errors (git:merge-base repo branch-hash commit)))))
