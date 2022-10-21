@@ -286,6 +286,14 @@
    (:file "package")
    (:file "cleanup")))
 
+(defsystem :screenshotbot/testing-lib
+  :serial t
+  :depends-on (:screenshotbot
+               :util/fiveam
+               :util/testing
+               :alexandria
+               :fiveam-matchers)
+  :components ((:file "testing")))
 
 (defsystem :screenshotbot/tests
   :serial t
@@ -297,10 +305,10 @@
                :screenshotbot/replay-core
                :screenshotbot/webdriver
                :screenshotbot/replay
+               :screenshotbot/testing-lib
                :tmpdir
                :screenshotbot)
-  :components ((:file "testing")
-               (:file "factory")
+  :components ((:file "factory")
                (:file "test-server")
                (:file "test-artifacts")
                (:file "test-diff-report")

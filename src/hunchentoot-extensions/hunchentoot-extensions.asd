@@ -24,6 +24,10 @@
 (defsystem :hunchentoot-extensions/tests
   :serial t
   :depends-on (:hunchentoot-extensions
+               :lparallel
+               :util/request
+               :util/testing
+               :util/fiveam
                :fiveam)
   :components ((:file "test-acceptor-with-plugins")
                (:file "test-better-easy-handler")
