@@ -59,7 +59,7 @@
 
             <div class= "mb-3">
               <label for= "api-key" class= "form-label">Conduit API Key</label>
-              <input type= "text" class= "form-control" name= "api-key" placeholder= "*****" value= (conduit-api-key config) />
+              <input type= "password" class= "form-control" name= "api-key" placeholder= "*****" value= (conduit-api-key config) />
             </div>
 
           </div>
