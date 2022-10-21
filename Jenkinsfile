@@ -23,6 +23,7 @@ pipeline {
                 doCheckout()
                 cleanRepo()
                 sh "make test-ccl"
+                sh "make upload-screenshots-oss"
             }
         }
     }
