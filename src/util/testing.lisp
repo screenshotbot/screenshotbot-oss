@@ -63,15 +63,18 @@
 (let ((prepared nil))
   (defun maybe-prepare-screenshot-assets (dir)
     (unless prepared
-      (asdf:compile-system :screenshotbot.css-assets)
       (copy-directory:copy
        (asdf:system-relative-pathname :screenshotbot "static/assets/")
        (path:catdir dir "assets/"))
-      (let ((default-css (path:catfile dir "assets/css/default.css")))
-        (ensure-directories-exist default-css)
-        (uiop:copy-file
-         (car (asdf:output-files 'asdf:compile-op :screenshotbot.css-assets))
-         default-css))
+      (flet ((copy-css (target output)
+               (asdf:compile-system target)
+               (uiop:copy-file
+                (car (asdf:output-files 'asdf:compile-op target))
+                (path:catfile dir output))))
+        (copy-css :screenshotbot.css-assets "assets/css/default.css")
+        #-screenshotbot-oss
+        (copy-css :screenshotbot.pro.css/extended-dashboard
+                  "assets/css/extended-dashboard.css"))
       (setf prepared t))))
 
 (defun screenshot-static-page (project name content)
