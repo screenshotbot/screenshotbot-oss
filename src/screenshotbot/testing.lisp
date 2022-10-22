@@ -23,7 +23,15 @@
   (:import-from #:screenshotbot/login/common
                 #:*current-company-override*)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:util/object-id
+                #:oid-array)
+  (:import-from #:screenshotbot/model/image
+                #:with-local-image
+                #:image)
+  (:export
+   #:snap-image-blob
+   #:snap-all-images))
 
 (defmacro with-test-user ((&key (company (gensym "company"))
                                 (company-name "Dummy org")
@@ -51,3 +59,20 @@
                 (body)))))
          (t
           (body))))))
+
+
+(defun snap-image-blob (im1)
+  "Copy the givem image blob into the screenshot assets"
+  (let ((dir (asdf:system-relative-pathname
+              :screenshotbot
+              "static-web-output/image/blob/")))
+    (let ((output (path:catfile
+                   dir
+                   (format nil "~a/default.webp"
+                           (encrypt:encrypt-mongoid (oid-array im1))))))
+      (with-local-image (file im1)
+        (uiop:copy-file file (ensure-directories-exist output))))))
+
+(defun snap-all-images ()
+  (loop for image in (bknr.datastore:class-instances 'image)
+        do (snap-image-blob image)))

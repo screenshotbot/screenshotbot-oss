@@ -151,7 +151,7 @@
       <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
         <img src= (user-image-url user) alt="mdo" width="32" height="32" class="rounded-circle me-2">
           <strong class= "user-full-name" > ,(cond
-                      ((or (singletonp company) (personalp company))
+                      ((or (not company) (singletonp company) (personalp company))
                        (user-full-name user))
                       (t
                        (company-name company))) </strong>
