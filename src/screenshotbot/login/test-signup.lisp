@@ -25,7 +25,9 @@
                 #:screenshot-static-page
                 #:with-fake-request)
   (:import-from #:screenshotbot/user-api
-                #:signup-get))
+                #:signup-get)
+  (:import-from #:util/form-errors
+                #:with-form-errors))
 
 (util/fiveam:def-suite)
 
@@ -59,3 +61,16 @@
        "signup"
        (markup:write-html
         (signup-get))))))
+
+(test signup-error-screen
+  (with-fake-request ()
+    (auth:with-sessions ()
+      (screenshot-static-page
+       :screenshotbot
+       "signup-error-screen"
+       (markup:write-html
+        (with-form-errors (:errors `((:password . "Incorrect password"))
+                           :password "foo"
+                           :email "blah@gmail.com"
+                           :was-validated t)
+         (signup-get)))))))
