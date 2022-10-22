@@ -36,6 +36,7 @@
                 #:pull-request-url
                 #:company-runs)
   (:import-from #:util/testing
+                #:screenshot-static-page
                 #:with-fake-request)
   (:import-from #:markup
                 #:write-html)
@@ -95,16 +96,20 @@
 
 (test recent-runs
   (let ((*installation* (make-instance 'installation)))
-   (let ((runs (loop for i from 1 to 100 collect
-                                         (make-instance 'test-run))))
-     (let ((company (make-instance 'test-company :runs runs)))
-       (render-recent-runs runs
-                           :user *user*
-                           :check-access-p nil
-                           :script-name "/runs"
-                           :numbersp nil
-                           :company company)
-       (pass)))))
+    (with-fake-request ()
+      (auth:with-sessions ()
+       (let ((runs (loop for i from 1 to 100 collect
+                                             (make-instance 'test-run))))
+         (let ((company (make-instance 'test-company :runs runs)))
+           (screenshot-static-page
+            :screenshotbot
+            "recent-runs"
+            (render-recent-runs runs
+                                :user *user*
+                                :check-access-p nil
+                                :script-name "/runs"
+                                :numbersp nil
+                                :company company))))))))
 
 (defun profile-recent-runs (company email)
   (let* ((company (company-with-name company))

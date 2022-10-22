@@ -85,7 +85,10 @@
       (with-open-file (file output-file
                             :direction :output
                             :if-exists :supersede)
-        (write-string content file)
+        (let ((content (typecase content
+                         (string content)
+                         (t (markup:write-html content)))))
+         (write-string content file))
         (fiveam:pass "Screenshot written")))))
 
 (defmacro with-local-acceptor ((host &key prepare-acceptor-callback (acceptor (gensym))) (name &rest args) &body body)
