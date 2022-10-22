@@ -43,5 +43,4 @@
      (screenshot-static-page
       :screenshotbot
       "notices"
-      (dashboard-template
-       (user-notice-list :user user))))))
+      (dashboard-template)))))
