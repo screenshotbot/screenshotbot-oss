@@ -330,6 +330,7 @@
                              (:file "test-history")))
                (:module "login"
                 :components ((:file "test-github-oauth")
+                             (:file "test-login")
                              (:file "test-signup")
                              (:file "test-common")))
                (:module "model"
