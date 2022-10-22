@@ -327,7 +327,8 @@
                              (:file "test-api-keys")
                              (:file "test-image")
                              (:file "test-channels")
-                             (:file "test-history")))
+                             (:file "test-history")
+                             (:file "test-notices")))
                (:module "login"
                 :components ((:file "test-github-oauth")
                              (:file "test-login")
