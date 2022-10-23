@@ -81,10 +81,6 @@ ifeq ($(OS),Windows_NT)
 	LW_CORE="C:\Program Files\LispWorks\lispworks-8-0-0-x64-windows.exe"
 endif
 
-define clsql_check_tests
-	TMP=$(TMPFILE) && $1 | tee  $$TMP &&  ! ( grep  "total tests failed" $$TMP ) && grep "Finished Running Tests Against" $$TMP && rm $$TMP
-endef
-
 define ht_check_tests
 	TMP=$(TMPFILE) && $1 | tee  $$TMP &&  grep "all tests PASSED" $$TMP && rm $$TMP
 endef
@@ -167,19 +163,11 @@ clean-fasl: .PHONY
 clean: clean-fasl
 	rm -rf build
 
-clsql-tests-sbcl: $(sbcl)
-	$(call clsql_check_tests,$(SBCL_SCRIPT) scripts/run-clsql-tests.lisp)
-
-clsql-tests-lw: $(LW)
-	$(call clsql_check_tests,$(LW_SCRIPT) scripts/run-clsql-tests.lisp)
-
 hunchentoot-tests-sb: $(sbcl)
 	$(call ht_check_tests,$(SBCL_SCRIPT) scripts/run-hunchentoot-tests.lisp)
 
 hunchentoot-tests-lw: $(LW)
 	$(call ht_check_tests,$(LW_SCRIPT) scripts/run-hunchentoot-tests.lisp)
-
-clsql-tests: | clsql-tests-sbcl clsql-tests-lw
 
 screenshotbot-flow:
 
