@@ -47,8 +47,7 @@
                                 (script-name "/")) &body body)
  `(let* ((hunchentoot::*hunchentoot-stream*)
          (hunchentoot:*catch-errors-p* nil)
-         (hunchentoot:*acceptor* (make-instance ,acceptor
-                                                :db-config '(:mysqladmin nil)))
+         (hunchentoot:*acceptor* (make-instance ,acceptor))
          (hunchentoot:*reply* (make-instance 'hunchentoot:reply))
          (hunchentoot:*request* (make-instance 'custom-request
                                                :acceptor hunchentoot:*acceptor*
