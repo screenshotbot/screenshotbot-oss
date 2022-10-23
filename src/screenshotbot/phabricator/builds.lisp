@@ -15,35 +15,63 @@
   (:import-from #:util/phabricator/conduit
                 #:phab-instance
                 #:call-conduit)
+  (:import-from #:util/store
+                #:with-class-validation)
+  (:import-from #:screenshotbot/model/company
+                #:company)
+  (:import-from #:bknr.indices
+                #:unique-index)
+  (:import-from #:bknr.datastore
+                #:initialize-transient-instance)
+  (:import-from #:bknr.datastore
+                #:with-transaction)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/phabricator/builds)
 
-(defclass build-info (store-object)
-  ((diff :initarg :diff
-         :reader build-info-diff)
-   (revision :initarg :revision
-             :reader build-info-revision)
-   (target-phid :initarg :target-phid
-                :reader target-phid)
-   (build-phid :initarg :build-phid
-               :reader build-phid)
-   (company :initarg :company
-            :index-type hash-index
-            :index-reader build-infos-for-company)
-   (ts :initarg :ts
-       :reader ts))
-  (:metaclass persistent-class)
-  (:default-initargs :ts (get-universal-time)))
+(defvar *build-info-index* (make-hash-table :test #'equal))
 
-(defapi (nil :uri "/phabricator/update-build" :method :post)
+(with-class-validation
+ (defclass build-info (store-object)
+   ((diff :initarg :diff
+          :reader build-info-diff)
+    (revision :initarg :revision
+              :reader build-info-revision)
+    (target-phid :initarg :target-phid
+                 :accessor target-phid)
+    (build-phid :initarg :build-phid
+                :accessor build-phid)
+    (company :initarg :company
+             :reader company)
+    (ts :initarg :ts
+        :reader ts))
+   (:metaclass persistent-class)
+   (:default-initargs :ts (get-universal-time))))
+
+(defmethod initialize-transient-instance :after ((self build-info))
+  (setf (gethash (cons (company self)
+                       (build-info-diff self))
+                 *build-info-index*)
+        self))
+
+(defun find-build-info (company diff)
+  (gethash (cons company diff) *build-info-index*))
+
+(defapi (%update-build :uri "/phabricator/update-build" :method :post)
         ((diff :parameter-type 'integer) (revision :parameter-type 'integer) target-phid
          build-phid)
-  (make-instance 'build-info
-                 :diff diff
-                 :revision revision
-                 :target-phid target-phid
-                 :build-phid build-phid
-                 :company (current-company))
+  (let ((build-info (find-build-info (current-company) diff)))
+    (cond
+      (build-info
+       (with-transaction ()
+         (setf (target-phid build-info) target-phid
+               (build-phid build-info) build-phid)))
+      (t
+       (make-instance 'build-info
+                      :diff diff
+                      :revision revision
+                      :target-phid target-phid
+                      :build-phid build-phid
+                      :company (current-company)))))
   "OK")
 
 (defmethod sendmessage ((phab phab-instance) (self build-info) type)

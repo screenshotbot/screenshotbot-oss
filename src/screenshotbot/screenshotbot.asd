@@ -357,6 +357,8 @@
                              (:file "test-access-checks")
                              (:file "test-pull-request-promoter")
                              (:file "test-webhook")))
+               (:module "phabricator"
+                :components ((:file "test-builds")))
                (:module "replay"
                 :components ((:file "test-core")
                              (:file "test-sitemap")
