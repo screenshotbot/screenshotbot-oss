@@ -25,8 +25,6 @@
 
 (defun review-link (&key run)
   (cond
-    ((phabricator-diff-id run)
-     <a href= (pull-request-url run) >Revision</a>)
     ((pull-request-url run)
      <a href= (pull-request-url run)>Pull Request</a>)
     (t

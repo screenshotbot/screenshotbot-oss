@@ -22,8 +22,15 @@
                 #:conduit-api-key)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:screenshotbot/dashboard/review-link
+                #:review-link-impl)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run
+                #:phabricator-diff-id)
   (:export #:phabricator-plugin))
 (in-package :screenshotbot/phabricator/plugin)
+
+(markup:enable-reader)
 
 (defclass phabricator-plugin (plugin)
   ())
@@ -107,3 +114,13 @@ out the callsign of the repo."
                    (format nil "~a/r~a~a" phabricator-url callsign hash)
                    "#")))
             (t "#")))))))
+
+
+(defmethod review-link-impl ((repo phabricator-git-repo) (run recorder-run))
+  (let* ((company (company repo))
+         (config (phabricator-config-for-company company))
+         (phabricator-url (phabricator-url config)))
+    <a href= (format nil "~a/differential/diff/~a" phabricator-url
+              (phabricator-diff-id run)) >
+      Revision
+    </a>))
