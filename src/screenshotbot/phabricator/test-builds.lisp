@@ -4,6 +4,8 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/phabricator/builds
+                #:sendmessage
+                #:call-in-future
                 #:find-build-info
                 #:build-info
                 #:%update-build)
@@ -22,12 +24,19 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-    (let ((company (make-instance 'company)))
-     (&body))))
+  (cl-mock:with-mocks ()
+    (cl-mock:if-called 'call-in-future
+                       (lambda (fn)
+                         (funcall fn)))
+    (with-test-store ()
+      (let ((company (make-instance 'company)))
+       (&body)))))
 
 (test first-update
   (with-fixture state ()
+    (cl-mock:if-called 'sendmessage
+                       (lambda (&rest args)
+                         (error "should not be called")))
     (with-current-company (company)
       (%update-build
        :diff 123

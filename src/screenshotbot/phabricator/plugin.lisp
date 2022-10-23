@@ -27,7 +27,11 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run
                 #:phabricator-diff-id)
-  (:export #:phabricator-plugin))
+  (:import-from #:util/misc
+                #:?.)
+  (:export #:phabricator-plugin
+           #:phab-instance-for-company)
+  (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/phabricator/plugin)
 
 (markup:enable-reader)
@@ -93,27 +97,32 @@ out the callsign of the repo."
     :fields)
    :callsign))
 
-(defmethod commit-link ((repo phabricator-git-repo) hash)
-  (let* ((company (company repo))
-         (config (phabricator-config-for-company company))
-         (phabricator-url (phabricator-url config))
-         (conduit-api-key (conduit-api-key config)))
+(defun phab-instance-for-company (company)
+  (let* ((config (phabricator-config-for-company company))
+         (phabricator-url (?. phabricator-url config))
+         (conduit-api-key (?. conduit-api-key config)))
     (when (and phabricator-url
                conduit-api-key)
-      (let* ((phab-instance (make-instance 'phab-instance
-                                           :url phabricator-url
-                                           :api-key conduit-api-key))
-             (repos (get-repos company phab-instance)))
-        (multiple-value-bind (res parts)
-            (cl-ppcre:scan-to-strings "/([^/]*)[.]git$" (repo-link repo))
-          (declare (ignore res))
-          (cond
-            (res
-             (let ((callsign (get-callsign repos (elt parts 0))))
-               (if callsign
-                   (format nil "~a/r~a~a" phabricator-url callsign hash)
-                   "#")))
-            (t "#")))))))
+     (make-instance 'phab-instance
+                    :url phabricator-url
+                    :api-key conduit-api-key))))
+
+(defmethod commit-link ((repo phabricator-git-repo) hash)
+  (let* ((company (company repo))
+         (phabricator-url (phabricator-url
+                           (phabricator-config-for-company company))))
+    (a:when-let* ((phab-instance (phab-instance-for-company company))
+                  (repos (get-repos company phab-instance)))
+      (multiple-value-bind (res parts)
+          (cl-ppcre:scan-to-strings "/([^/]*)[.]git$" (repo-link repo))
+        (declare (ignore res))
+        (cond
+          (res
+           (let ((callsign (get-callsign repos (elt parts 0))))
+             (if callsign
+                 (format nil "~a/r~a~a" phabricator-url callsign hash)
+                 "#")))
+          (t "#"))))))
 
 
 (defmethod review-link-impl ((repo phabricator-git-repo) (run recorder-run))

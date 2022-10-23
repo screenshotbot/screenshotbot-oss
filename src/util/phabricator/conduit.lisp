@@ -11,7 +11,7 @@
            #:call-conduit
            #:url
            #:api-key
-           #:make-phab-instance-from-arcrc))
+           #:make-phab-instance-from-arcrcp))
 
 (defclass phab-instance ()
   ((url :initarg :url

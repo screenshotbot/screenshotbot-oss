@@ -25,6 +25,14 @@
                 #:initialize-transient-instance)
   (:import-from #:bknr.datastore
                 #:with-transaction)
+  (:import-from #:screenshotbot/async
+                #:with-screenshotbot-kernel)
+  (:import-from #:lparallel.promise
+                #:future)
+  (:import-from #:screenshotbot/phabricator/plugin
+                #:phab-instance-for-company)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/phabricator/builds)
 
@@ -56,22 +64,36 @@
 (defun find-build-info (company diff)
   (gethash (cons company diff) *build-info-index*))
 
+(def-easy-macro in-future (&fn fn)
+  (with-screenshotbot-kernel ()
+    (future
+      (funcall fn))))
+
 (defapi (%update-build :uri "/phabricator/update-build" :method :post)
         ((diff :parameter-type 'integer) (revision :parameter-type 'integer) target-phid
          build-phid)
-  (let ((build-info (find-build-info (current-company) diff)))
+  (let* ((company (current-company))
+         (build-info (find-build-info company diff)))
     (cond
       (build-info
        (with-transaction ()
          (setf (target-phid build-info) target-phid
                (build-phid build-info) build-phid)))
       (t
-       (make-instance 'build-info
-                      :diff diff
-                      :revision revision
-                      :target-phid target-phid
-                      :build-phid build-phid
-                      :company (current-company)))))
+       (setf build-info
+             (make-instance 'build-info
+                            :diff diff
+                            :revision revision
+                            :target-phid target-phid
+                            :build-phid build-phid
+                            :company company))))
+    (in-future ()
+      (a:when-let ((phab-instance (phab-instance-for-company company)))
+       (sendmessage
+        phab-instance
+        build-info
+        :pass))))
+
   "OK")
 
 (defmethod sendmessage ((phab phab-instance) (self build-info) type)
