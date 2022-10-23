@@ -336,6 +336,14 @@ table.taskie-list {
 
 }
 
+body.screenshotbot {
+    table.taskie-list {
+        tr {
+            transition: none !important;
+        }
+    }
+}
+
 .taskie-row {
 
     ul, li {
