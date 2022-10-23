@@ -14,6 +14,7 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:screenshotbot/api/image
+                #:prepare-upload-api-api-handler
                 #:prepare-upload-api
                 #:*use-blob-store-p*
                 #:*build-presigned-put*)
@@ -56,7 +57,7 @@
 (test simple-upload
   (with-fixture state ()
     (let ((resp (json:decode-json-from-string
-                 (prepare-upload-api
+                 (prepare-upload-api-api-handler
                   :hash "abcd"
                   :content-type "image/png"))))
       (is-true (assoc-value resp :success))
@@ -70,7 +71,7 @@
                               :company company
                               :verified-p t)))
      (let ((resp (json:decode-json-from-string
-                  (prepare-upload-api
+                  (prepare-upload-api-api-handler
                    :hash "abcd"
                    :content-type "image/png"))))
        (let ((response (assoc-value resp :response)))
@@ -83,7 +84,7 @@
                               :company company
                               :verified-p nil)))
      (let ((resp (json:decode-json-from-string
-                  (prepare-upload-api
+                  (prepare-upload-api-api-handler
                    :hash "abcd"
                    :content-type "image/png"))))
        (let ((response (assoc-value resp :response)))

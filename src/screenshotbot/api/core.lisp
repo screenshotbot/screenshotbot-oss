@@ -16,6 +16,8 @@
                 #:current-user)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:hunchentoot-extensions
+                #:make-name)
   (:export
    #:defapi
    #:result
@@ -84,11 +86,27 @@
     res))
 
 (defmacro defapi ((name &key uri method intern) params &body body)
-  (multiple-value-bind (body decls) (tcr.parse-declarations-1.0::parse-body body)
-    `(defhandler (,name :uri ,uri :method ,method :intern ,intern :html nil) ,params
-       ,@decls
-       (flet ((body () ,@body))
-         (%with-error-handling #'body)))))
+  (let* ((param-names (loop for param in params
+                            if (symbolp param)
+                              collect param
+                            else
+                              collect (car param)))
+         (name (or name (make-name uri method)))
+         (handler-name
+           (when name (intern (format nil "~a-API-HANDLER" name) (symbol-package name)) )))
+    (multiple-value-bind (body decls doc) (uiop:parse-body body)
+      `(progn
+         (defun ,name (&key ,@param-names)
+           ,doc
+           ,@decls
+           ,@body)
+         (defhandler (,handler-name :uri ,uri :method ,method :intern ,intern :html nil) ,params
+           ,@decls
+           (%with-error-handling
+            (lambda ()
+              (,name
+               ,@ (loop for name in param-names
+                        appending (list (intern (string name) "KEYWORD") name))))))))))
 
 (defclass result ()
   ((success :type boolean

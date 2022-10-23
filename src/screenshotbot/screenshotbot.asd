@@ -370,7 +370,8 @@
                (:module "email-tasks"
                 :components ((:file "test-task-integration")))
                (:module "api"
-                :components ((:file "test-image")
+                :components ((:file "test-core")
+                             (:file "test-image")
                              (:file "test-promote")
                              (:file "test-send-tasks")
                              (:file "test-recorder-runs")))
