@@ -36,6 +36,8 @@
                 #:get-singleton-company)
   (:import-from #:screenshotbot/sso/model
                 #:call-with-company-login)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export
    #:*current-company-override*
    #:with-oauth-state-and-redirect
@@ -48,7 +50,8 @@
    #:oauth-signin-link
    #:oauth-signup-link
    #:abstract-oauth-provider
-   #:after-create-user))
+   #:after-create-user
+   #:with-current-company))
 (in-package :screenshotbot/login/common)
 
 (markup:enable-reader)
@@ -151,27 +154,33 @@
       :key #'car)))
 
 (defun current-company (&key (user nil user-bound-p))
-  (typecase (installation)
-    (multi-org-feature
-     (cond
-       (*current-company-override*
-        *current-company-override*)
-       (user-bound-p
-        (let* ((company (auth:session-value :company)))
-          (if (and company (can-view company user))
-              company
-              (or
-               (most-recent-company (user-companies user))
-               (user-personal-company user)
-               (car (user-companies user))))))
-       ((not (logged-in-p))
-        nil)
-       ((boundp '*current-api-key*)
-        (api-key-company *current-api-key*))
-       (t
-        (current-company :user (current-user)))))
+  (cond
+    (*current-company-override*
+     *current-company-override*)
     (t
-     (get-singleton-company (installation)))))
+     (typecase (installation)
+       (multi-org-feature
+        (cond
+          (user-bound-p
+           (let* ((company (auth:session-value :company)))
+             (if (and company (can-view company user))
+                 company
+                 (or
+                  (most-recent-company (user-companies user))
+                  (user-personal-company user)
+                  (car (user-companies user))))))
+          ((not (logged-in-p))
+           nil)
+          ((boundp '*current-api-key*)
+           (api-key-company *current-api-key*))
+          (t
+           (current-company :user (current-user)))))
+       (t
+        (get-singleton-company (installation)))))))
+
+(def-easy-macro with-current-company (company &fn fn)
+  (let ((*current-company-override* company))
+    (funcall fn)))
 
 (defun logged-in-p ()
   (or
