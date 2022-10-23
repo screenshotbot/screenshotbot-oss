@@ -14,6 +14,8 @@
   (:import-from #:screenshotbot/user-api
                 #:*current-api-key*
                 #:current-user)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export
    #:defapi
    #:result
@@ -25,30 +27,38 @@
    #:api-response))
 (in-package :screenshotbot/api/core)
 
+(def-easy-macro with-api-key (&binding api-key &binding api-secret &fn fn)
+  (multiple-value-bind (key secret) (hunchentoot:authorization)
+    (cond
+      (key
+       (funcall fn key secret))
+      (t
+       (funcall fn (hunchentoot:parameter "api-key")
+                (hunchentoot:parameter "api-secret-key"))))))
+
 (defun %funcall-with-api-handling (fn)
   (log:trace "Got parameters: ~s" (hunchentoot:post-parameters hunchentoot:*request*))
-  (let ((api-key (hunchentoot:parameter "api-key"))
-        (api-secret-key (hunchentoot:parameter "api-secret-key"))
-        (testp (boundp '*current-api-key*)))
-    (let ((*current-api-key*
-           (if testp
-               *current-api-key* ;; only for tests
-               (%find-api-key  api-key))))
-      (unless *current-api-key*
-        (warn "No such API key: ~a" api-key)
-        (error 'api-error
+  (with-api-key (api-key api-secret-key)
+   (let ((testp (boundp '*current-api-key*)))
+     (let ((*current-api-key*
+             (if testp
+                 *current-api-key* ;; only for tests
+                 (%find-api-key  api-key))))
+       (unless *current-api-key*
+         (warn "No such API key: ~a" api-key)
+         (error 'api-error
                 :message (format nil "No such API key: ~a" api-key)))
-      (unless (current-user)
-       (error 'api-error
-              :message (format nil "API key appears to be invalid or non-existant, got: ~a" api-key)))
-      (unless (or
-               (not *current-api-key*) ;; setings api
-               (or testp
-                   (equal api-secret-key (api-key-secret-key *current-api-key*))))
-        (error 'api-error
-               :message "API secret key doesn't match what we have on record"))
-      (let ((res (funcall fn)))
-        res))))
+       (unless (current-user)
+         (error 'api-error
+                :message (format nil "API key appears to be invalid or non-existant, got: ~a" api-key)))
+       (unless (or
+                (not *current-api-key*) ;; setings api
+                (or testp
+                    (equal api-secret-key (api-key-secret-key *current-api-key*))))
+         (error 'api-error
+                :message "API secret key doesn't match what we have on record"))
+       (let ((res (funcall fn)))
+         res)))))
 
 (defun %with-error-handling (fn)
   (Setf (hunchentoot:header-out :content-type) "application/json")

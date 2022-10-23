@@ -15,6 +15,7 @@
   (:export #:phabricator-promoter))
 (in-package :screenshotbot/phabricator/diff-promoter)
 
+
 (defmethod diff-to-revision ((phab phab-instance) diff-id)
   (parse-integer
    (assoc-value

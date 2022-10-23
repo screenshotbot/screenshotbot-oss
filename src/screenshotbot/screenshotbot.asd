@@ -217,13 +217,6 @@
                  (:file "pull-request-promoter")
                  (:file "task-integration")
                  (:file "all")))
-   (:module "phabricator"
-    :serial t
-    :components ((:file "plugin")
-                 (:file "commenting-promoter")
-                 (:file "diff-promoter")
-                 (:file "settings")
-                 (:file "all")))
    (:module "gitlab"
     :serial t
     :components ((:file "repo")
@@ -239,6 +232,14 @@
                  (:file "promote")
                  (:file "recorder-run" :depends-on ("promote"))
                  (:file "commit-graph")))
+   (:module "phabricator"
+    :serial t
+    :components ((:file "plugin")
+                 (:file "builds")
+                 (:file "commenting-promoter")
+                 (:file "diff-promoter")
+                 (:file "settings")
+                 (:file "all")))
    (:module "sso"
     :serial t
     :components ((:file "model")
