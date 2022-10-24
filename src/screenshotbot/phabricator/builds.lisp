@@ -87,6 +87,7 @@
                             :target-phid target-phid
                             :build-phid build-phid
                             :company company))))
+
     (in-future ()
       (a:when-let ((phab-instance (phab-instance-for-company company)))
        (sendmessage
@@ -96,14 +97,22 @@
 
   "OK")
 
-(defmethod sendmessage ((phab phab-instance) (self build-info) type)
+(defmethod %send-message ((phab phab-instance)
+                          phid
+                          type)
   (let ((type (str:downcase type)))
-    (let ((args `(("buildTargetPHID" . ,(target-phid self))
+    (let ((args `(("buildTargetPHID" . ,phid)
                   ("type" . ,type))))
       (call-conduit
        phab
        "harbormaster.sendmessage"
        args))))
+
+(defmethod sendmessage ((phab phab-instance) (self build-info) type)
+  (%send-message
+   phab
+   (target-phid self)
+   type))
 
 #|
 (sendmessage *phab*
