@@ -39,7 +39,13 @@
     res))
 
 (defun ensure-slot-boundp (item slot)
-  (let ((items (if (listp item) item (list item))))
+  (let ((items (cond
+                 ((listp item)
+                  item)
+                 ((symbolp item)
+                  (bknr.datastore:class-instances item))
+                 (t
+                  (list item)))))
     (loop for item in items do
       (unless (slot-boundp item slot)
         (with-transaction ()

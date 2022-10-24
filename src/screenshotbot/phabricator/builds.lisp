@@ -33,6 +33,8 @@
                 #:phab-instance-for-company)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:screenshotbot/model/core
+                #:ensure-slot-boundp)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/phabricator/builds)
 
@@ -50,6 +52,9 @@
                 :accessor build-phid)
     (company :initarg :company
              :reader company)
+    (status :initarg :status
+            :initform nil
+            :accessor build-info-status)
     (ts :initarg :ts
         :reader ts))
    (:metaclass persistent-class)
@@ -89,11 +94,12 @@
                             :company company))))
 
     (in-future ()
-      (a:when-let ((phab-instance (phab-instance-for-company company)))
-       (sendmessage
-        phab-instance
-        build-info
-        :pass))))
+      (a:when-let ((phab-instance (phab-instance-for-company company))
+                   (type (build-info-status build-info)))
+        (%actually-update-status
+         phab-instance
+         build-info
+         type))))
 
   "OK")
 
@@ -114,8 +120,25 @@
    (target-phid self)
    type))
 
+(defmethod %actually-update-status ((phab phab-instance) (self build-info) type)
+  "Immediately send the Harbormaster message"
+  (%send-message phab
+                 (target-phid self)
+                 type))
+
+(defmethod update-status ((phab phab-instance) (self build-info) type)
+  (let ((prev-status (build-info-status self)))
+    (with-transaction ()
+      (setf (build-info-status self) type))
+    (cond
+      (prev-status
+       ;; when we get the update-build callback, we'll update the build
+       (%send-message phab (build-phid self) :restart))
+      (t
+       (%actually-update-status phab self type)))))
+
 #|
-(sendmessage *phab*
+(update-status *phab*
 (car (reverse (bknr.datastore:class-instances 'build-info)))
 
 :fail)
