@@ -229,6 +229,7 @@
                :alexandria
                :cl-json
                :pkg
+               :util/request
                :quri)
   :components ((:module "phabricator"
                 :components ((:file "conduit")))))
@@ -241,6 +242,7 @@
                :fiveam-matchers
                :easy-macros
                :util/digests
+               :util/phabricator
                :util/request
                :util/fiveam)
   :serial t
@@ -268,4 +270,6 @@
                              (:file "test-health-check")
                              (:file "test-mquery")
                              (:file "test-make-instance-with-accessors")
-                             (:file "test-digests")))))
+                             (:file "test-digests")))
+               (:module "phabricator"
+                :components ((:file "test-conduit")))))

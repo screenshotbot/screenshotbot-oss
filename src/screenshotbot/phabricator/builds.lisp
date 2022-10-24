@@ -1,3 +1,9 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 (defpackage :screenshotbot/phabricator/builds
   (:use #:cl)
   (:import-from #:screenshotbot/server
@@ -55,6 +61,9 @@
     (status :initarg :status
             :initform nil
             :accessor build-info-status)
+    (details :initarg :details
+             :initform nil
+             :accessor build-info-details)
     (ts :initarg :ts
         :reader ts))
    (:metaclass persistent-class)
@@ -99,47 +108,57 @@
         (%actually-update-status
          phab-instance
          build-info
-         type))))
+         type :details (build-info-details build-info)))))
 
   "OK")
 
 (defmethod %send-message ((phab phab-instance)
                           phid
-                          type)
+                          type &key unit)
+  ;;(check-type unit (or null string))
   (let ((type (str:downcase type)))
-    (let ((args `(("buildTargetPHID" . ,phid)
-                  ("type" . ,type))))
+    (let ((args `(,@ (when unit
+                       `(("unit" . ,unit)))
+                     ("receiver" . ,phid)
+                     ("type" . ,type))))
       (call-conduit
        phab
        "harbormaster.sendmessage"
        args))))
 
-(defmethod sendmessage ((phab phab-instance) (self build-info) type)
-  (%send-message
-   phab
-   (target-phid self)
-   type))
-
-(defmethod %actually-update-status ((phab phab-instance) (self build-info) type)
+(defmethod %actually-update-status ((phab phab-instance) (self build-info) type
+                                    &key details)
   "Immediately send the Harbormaster message"
+  (log:info "Updating: D~a" (build-info-revision self))
   (%send-message phab
                  (target-phid self)
-                 type))
+                 type
+                 :unit
+                 (list
+                  (a:alist-hash-table
+                   `(("name" . "Screenshot Tests")
+                     ("result" . ,(str:downcase type))
+                     ("details" . ,(or details "dummy tdetails"))
+                     ("format" . "remarkup"))))))
 
-(defmethod update-status ((phab phab-instance) (self build-info) type)
+(defmethod update-status ((phab phab-instance) (self build-info) type
+                          &key details)
   (let ((prev-status (build-info-status self)))
     (with-transaction ()
-      (setf (build-info-status self) type))
+      (setf (build-info-status self) type
+            (build-info-details self) details))
     (cond
       (prev-status
        ;; when we get the update-build callback, we'll update the build
        (%send-message phab (build-phid self) :restart))
       (t
-       (%actually-update-status phab self type)))))
+       (%actually-update-status phab self type :details details)))))
 
 #|
 (update-status *phab*
 (car (reverse (bknr.datastore:class-instances 'build-info)))
 
-:fail)
+:pass
+:details "https://www.google.com"
+)
 |#

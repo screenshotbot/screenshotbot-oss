@@ -1,10 +1,16 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 (defpackage :screenshotbot/phabricator/test-builds
   (:use #:cl
         #:fiveam)
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/phabricator/builds
-                #:sendmessage
+                #:%send-message
                 #:call-in-future
                 #:find-build-info
                 #:build-info
@@ -34,7 +40,7 @@
 
 (test first-update
   (with-fixture state ()
-    (cl-mock:if-called 'sendmessage
+    (cl-mock:if-called '%send-message
                        (lambda (&rest args)
                          (error "should not be called")))
     (with-current-company (company)
