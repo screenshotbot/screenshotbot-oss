@@ -46,12 +46,15 @@
 
 (defvar *build-info-index* (make-hash-table :test #'equal))
 
+(defvar *lock* (bt:make-recursive-lock))
+
+
 (with-class-validation
  (defclass build-info (store-object)
    ((diff :initarg :diff
           :reader build-info-diff)
     (revision :initarg :revision
-              :reader build-info-revision)
+              :accessor build-info-revision)
     (target-phid :initarg :target-phid
                  :accessor target-phid)
     (build-phid :initarg :build-phid
@@ -64,6 +67,11 @@
     (details :initarg :details
              :initform nil
              :accessor build-info-details)
+    (needs-sync-p :initform nil
+                  :accessor needs-sync-p
+                  :documentation "The status has been updated, but we've not synced to Phabricator yet,
+ because we haven't gotten a callback, or because we've sent out a
+ restart command and awaiting its response ")
     (ts :initarg :ts
         :reader ts))
    (:metaclass persistent-class)
@@ -83,33 +91,46 @@
     (future
       (funcall fn))))
 
+(defmacro if-setf (place expr)
+  `(let ((val ,expr))
+     (when val
+       (setf ,place val))))
+
+(defmethod make-or-update-build-info (company (diff number)
+                                      &key )
+  (bt:with-lock-held (*lock*)
+   (let ((build-info (find-build-info company diff)))
+     (cond
+       (build-info
+        (with-transaction ())
+        build-info)
+       (t
+        (make-instance 'build-info
+                       :diff diff
+                       :company company))))))
+
 (defapi (%update-build :uri "/phabricator/update-build" :method :post)
         ((diff :parameter-type 'integer) (revision :parameter-type 'integer) target-phid
          build-phid)
-  (let* ((company (current-company))
-         (build-info (find-build-info company diff)))
-    (cond
-      (build-info
-       (with-transaction ()
-         (setf (target-phid build-info) target-phid
-               (build-phid build-info) build-phid)))
-      (t
-       (setf build-info
-             (make-instance 'build-info
-                            :diff diff
-                            :revision revision
-                            :target-phid target-phid
-                            :build-phid build-phid
-                            :company company))))
-
+  (let* ((company (current-company)))
+    (assert company)
     (in-future ()
-      (a:when-let ((phab-instance (phab-instance-for-company company))
-                   (type (build-info-status build-info)))
-        (%actually-update-status
-         phab-instance
-         build-info
-         type :details (build-info-details build-info)))))
-
+      (bt:with-lock-held (*lock*)
+        (let ((build-info (make-or-update-build-info
+                           company diff)))
+          (with-transaction ()
+            (setf (build-info-revision build-info) revision)
+            (setf (target-phid build-info) target-phid)
+            (setf (build-phid build-info) build-phid))
+          (when (needs-sync-p build-info)
+            (let ((phab-instance (phab-instance-for-company company))
+                         (type (build-info-status build-info)))
+              (%actually-update-status
+               phab-instance
+               build-info
+               type :details (build-info-details build-info)))
+            (with-transaction ()
+              (setf (needs-sync-p build-info) nil)))))))
   "OK")
 
 (defmethod %send-message ((phab phab-instance)
@@ -126,8 +147,8 @@
        "harbormaster.sendmessage"
        args))))
 
-(defmethod %actually-update-status ((phab phab-instance) (self build-info) type
-                                    &key details)
+(defun %actually-update-status (phab  self type
+                                &key details)
   "Immediately send the Harbormaster message"
   (log:info "Updating: D~a" (build-info-revision self))
   (%send-message phab
@@ -141,18 +162,47 @@
                      ("details" . ,(or details "dummy tdetails"))
                      ("format" . "remarkup"))))))
 
-(defmethod update-status ((phab phab-instance) (self build-info) type
-                          &key details)
-  (let ((prev-status (build-info-status self)))
-    (with-transaction ()
-      (setf (build-info-status self) type
-            (build-info-details self) details))
-    (cond
-      (prev-status
-       ;; when we get the update-build callback, we'll update the build
-       (%send-message phab (build-phid self) :restart))
-      (t
-       (%actually-update-status phab self type :details details)))))
+(defun got-initial-callback-p (build-info)
+  (slot-boundp build-info 'build-phid))
+
+(defmethod update-diff-status (company (diff number)
+                               status &key details)
+  (bt:with-lock-held (*lock*)
+    (let ((build-info
+            (make-or-update-build-info
+             company diff))
+          (phab (phab-instance-for-company company)))
+      (let ((original-status (build-info-status build-info)))
+        (with-transaction ()
+          (setf (build-info-status build-info) status
+                (build-info-details build-info) details))
+        (flet ((update-needs-sync ()
+                 (with-transaction ()
+                   (setf (needs-sync-p build-info) t))))
+          (cond
+            ((needs-sync-p build-info)
+             ;; We don't need to do anything right now, we're still
+             ;; waiting a callback
+             (values))
+            ((and (not original-status)
+                  (got-initial-callback-p build-info))
+             ;; First time we're sending a message, but we already
+             ;; have a callback, so we can do this immediately.
+             (%actually-update-status phab build-info
+                                      status :details details)
+             )
+            ((got-initial-callback-p build-info)
+             ;; So needs-sync is nil, and we got an initial callback, so
+             ;; we can immediately send the message.
+             (send-restart phab build-info)
+             (update-needs-sync))
+            (t
+             ;; We haven't got even our first callback at this point,
+             ;; so we just update the needs-sync.
+             (update-needs-sync))))))))
+
+(defmethod send-restart ((phab phab-instance) (self build-info))
+  (%send-message phab (build-phid self) :restart))
 
 #|
 (update-status *phab*
