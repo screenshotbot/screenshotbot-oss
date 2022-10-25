@@ -225,6 +225,8 @@
                  (:file "settings")
                  (:file "merge-request-promoter")
                  (:file "all")))
+   (:module "promoter"
+    :components ((:file "async-promoter")))
    (:module "api"
     :serial t
     :components ((:file "core")
@@ -318,6 +320,8 @@
                (:module "magick"
                 :components ((:file "test-magick-lw")
                              (:file "test-memory" :if-feature :lispworks)))
+               (:module "promoter"
+                :components ((:file "test-async-promoter")))
                (:file "test-installation")
                (:file "test-assets")
                (:file "test-template")
