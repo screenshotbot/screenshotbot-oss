@@ -46,7 +46,7 @@
 
 (defvar *build-info-index* (make-hash-table :test #'equal))
 
-(defvar *lock* (bt:make-recursive-lock))
+(defvar *lock* (bt:make-lock))
 
 
 (with-class-validation
@@ -98,16 +98,15 @@
 
 (defmethod make-or-update-build-info (company (diff number)
                                       &key )
-  (bt:with-lock-held (*lock*)
-   (let ((build-info (find-build-info company diff)))
-     (cond
-       (build-info
-        (with-transaction ())
-        build-info)
-       (t
-        (make-instance 'build-info
-                       :diff diff
-                       :company company))))))
+  (let ((build-info (find-build-info company diff)))
+    (cond
+      (build-info
+       (with-transaction ())
+       build-info)
+      (t
+       (make-instance 'build-info
+                      :diff diff
+                      :company company)))))
 
 (defapi (%update-build :uri "/phabricator/update-build" :method :post)
         ((diff :parameter-type 'integer) (revision :parameter-type 'integer) target-phid
