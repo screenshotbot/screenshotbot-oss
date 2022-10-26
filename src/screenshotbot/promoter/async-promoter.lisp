@@ -35,7 +35,7 @@
 
 (def-easy-macro on-channel-thread (channel &fn fn)
   (with-screenshotbot-kernel ()
-    (asseret channel)
+    (assert channel)
     (hash-locked-future (channel *hash-lock*)
       (ignore-and-log-errors ()
         (funcall fn)))))
