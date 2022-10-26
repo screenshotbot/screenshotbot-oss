@@ -36,6 +36,9 @@
   nil)
 
 (defun register-promoter (name)
+  "Register a promoter. NAME is the class name for a promoter. Note that
+ if you need a custom function to create the promoter, consider using
+ PLUGIN-PROMOTER instead."
   (assert (symbolp name))
   (pushnew name *promoters*))
 

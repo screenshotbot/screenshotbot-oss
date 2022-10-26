@@ -314,6 +314,7 @@
   :components ((:file "factory")
                (:file "test-server")
                (:file "test-artifacts")
+               (:file "test-promote-api")
                (:file "test-diff-report")
                (:file "test-mailer")
                (:file "test-settings-api")
