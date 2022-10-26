@@ -246,13 +246,14 @@
 
 
 (deftag landing-head (children &key
+                      (title "Screenshotbot")
                       (style #-screenshotbot-oss
                              "/assets/css/extended-dashboard.css"
                              #+screenshotbot-oss
                              "/assets/css/default.css"))
   <head>
     <meta charset="utf-8" />
-    <title>Screenshotbot</title>
+    <title>,(progn title)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta content="Build Pixel Perfect Apps with Screenshot Tests" name="description" />
       <meta content="Modern Interpreters Inc." name="author" />
