@@ -78,10 +78,13 @@
    (:default-initargs :ts (get-universal-time))))
 
 (defmethod initialize-transient-instance :after ((self build-info))
-  (setf (gethash (cons (company self)
-                       (build-info-diff self))
-                 *build-info-index*)
-        self))
+  (when (and
+         (slot-boundp self 'company)
+         (slot-boundp self 'diff))
+   (setf (gethash (cons (company self)
+                        (build-info-diff self))
+                  *build-info-index*)
+         self)))
 
 (defun find-build-info (company diff)
   (gethash (cons company diff) *build-info-index*))
