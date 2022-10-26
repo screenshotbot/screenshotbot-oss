@@ -21,10 +21,24 @@
                 #:future)
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
+  (:import-from #:util/hash-lock
+                #:hash-locked-future
+                #:hash-lock)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:trigger-promoters-waiting-on-commit))
 (in-package :screenshotbot/promoter/async-promoter)
+
+(defvar *hash-lock* (make-instance 'hash-lock))
+
+(def-easy-macro on-channel-thread (channel &fn fn)
+  (with-screenshotbot-kernel ()
+    (asseret channel)
+    (hash-locked-future (channel *hash-lock*)
+      (ignore-and-log-errors ()
+        (funcall fn)))))
 
 (with-class-validation
  (defclass async-promoter (base-acceptable)
@@ -44,7 +58,5 @@
 (defmethod trigger-promoters-waiting-on-commit (channel commit)
   (loop for promoter in (remove-duplicates (promoters-waiting-on-commit commit))
         if (eql channel (channel promoter))
-          collect (with-screenshotbot-kernel ()
-                    (future
-                      (ignore-and-log-errors ()
-                        (on-commit-ready promoter))))))
+          collect (on-channel-thread (channel)
+                    (on-commit-ready promoter))))
