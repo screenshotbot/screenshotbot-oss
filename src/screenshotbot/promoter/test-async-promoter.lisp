@@ -12,6 +12,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/promoter/async-promoter
+                #:promoters-waiting-on-commit
                 #:on-commit-ready
                 #:trigger-promoters-waiting-on-commit
                 #:waiting-on-commit
@@ -20,13 +21,17 @@
                 #:with-transaction)
   (:import-from #:bknr.datastore
                 #:persistent-class)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/promoter/test-async-promoter)
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
+  (with-test-store (:globally t)
     (let ((channel (make-instance 'channel)))
       (&body))))
 
@@ -43,6 +48,8 @@
                                    :channel channel)))
       (with-transaction ()
         (setf (waiting-on-commit promoter) "abcd"))
+      (assert-that (remove-duplicates (promoters-waiting-on-commit channel "abcd"))
+                   (has-length 1))
       (is (eql nil (trigger-promoters-waiting-on-commit
                     channel
                     "foo")))
@@ -51,4 +58,14 @@
            channel
            "abcd")
         (is (equal "success!"
+
                    (lparallel:force future)))))))
+
+
+(test nil-commit-doesnt-fail
+  (with-fixture state ()
+    (let ((promoter (make-instance 'test-async-promoter
+                                   :channel channel
+                                   :waiting-on-commit nil)))
+      (assert-that (promoters-waiting-on-commit channel "abcd")
+                   (has-length 0)))))

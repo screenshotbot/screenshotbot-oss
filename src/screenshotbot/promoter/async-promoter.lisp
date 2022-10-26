@@ -26,6 +26,10 @@
   (:import-from #:util/hash-lock
                 #:hash-locked-future
                 #:hash-lock)
+  (:import-from #:bknr.datastore
+                #:class-instances)
+  (:import-from #:util/misc
+                #:?.)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:trigger-promoters-waiting-on-commit))
@@ -47,16 +51,20 @@
      :reader channel)
     (waiting-on-commit
      :initarg :waiting-on-commit
-     :accessor waiting-on-commit
-     :index-type hash-index
-     :index-initargs (:test #'equal)
-     :index-reader promoters-waiting-on-commit))
+     :accessor waiting-on-commit))
    (:metaclass persistent-class)))
+
+(defun promoters-waiting-on-commit (channel commit)
+  (loop for promoter in (class-instances 'async-promoter)
+        if (and
+            (slot-boundp promoter 'waiting-on-commit)
+            (eql channel (channel promoter))
+            (?. string-equal (waiting-on-commit promoter) commit))
+          collect promoter))
 
 (defgeneric on-commit-ready (promoter))
 
 (defmethod trigger-promoters-waiting-on-commit (channel commit)
-  (loop for promoter in (remove-duplicates (promoters-waiting-on-commit commit))
-        if (eql channel (channel promoter))
-          collect (on-channel-thread (channel)
-                    (on-commit-ready promoter))))
+  (loop for promoter in (promoters-waiting-on-commit channel commit)
+        collect (on-channel-thread (channel)
+                  (on-commit-ready promoter))))
