@@ -31,7 +31,8 @@
                 #:image)
   (:export
    #:snap-image-blob
-   #:snap-all-images))
+   #:snap-all-images
+   #:fix-timestamps))
 
 (defmacro with-test-user ((&key (company (gensym "company"))
                                 (company-name "Dummy org")
@@ -76,3 +77,9 @@
 (defun snap-all-images ()
   (loop for image in (bknr.datastore:class-instances 'image)
         do (snap-image-blob image)))
+
+(defun fix-timestamps (node)
+  (mquery:with-document (node)
+    (mquery:remove-class (mquery:$ "time") "timeago")
+    (dolist (time (mquery:$ "time"))
+     (setf (mquery:text time) "Some timestamp"))))

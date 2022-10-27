@@ -42,7 +42,9 @@
                 #:write-html)
   (:import-from #:screenshotbot/model/recorder-run
                 #:gitlab-merge-request-iid
-                #:phabricator-diff-id))
+                #:phabricator-diff-id)
+  (:import-from #:screenshotbot/testing
+                #:fix-timestamps))
 
 (util/fiveam:def-suite)
 
@@ -104,12 +106,13 @@
            (screenshot-static-page
             :screenshotbot
             "recent-runs"
-            (render-recent-runs runs
-                                :user *user*
-                                :check-access-p nil
-                                :script-name "/runs"
-                                :numbersp nil
-                                :company company))))))))
+            (fix-timestamps
+             (render-recent-runs runs
+                                 :user *user*
+                                 :check-access-p nil
+                                 :script-name "/runs"
+                                 :numbersp nil
+                                 :company company)))))))))
 
 (defun profile-recent-runs (company email)
   (let* ((company (company-with-name company))
