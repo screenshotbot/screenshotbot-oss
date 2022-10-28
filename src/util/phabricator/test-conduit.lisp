@@ -27,4 +27,8 @@
                ("car[1][deet]" . "bleh"))
              (serialize-params `(("foo" . "bar")
                                  ("car" . (,(a:plist-hash-table '("deet" "far"))
-                                           ,(a:plist-hash-table '("deet" "bleh")))))))))
+                                            ,(a:plist-hash-table '("deet" "bleh")))))))))
+
+(test serialize-number
+  (is (equal '(("revision_id" . 5996))
+             (serialize-params '(("revision_id" . 5996))))))
