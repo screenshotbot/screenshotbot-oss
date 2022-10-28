@@ -30,5 +30,5 @@
                                             ,(a:plist-hash-table '("deet" "bleh")))))))))
 
 (test serialize-number
-  (is (equal '(("revision_id" . 5996))
+  (is (equal '(("revision_id" . "5996" ))
              (serialize-params '(("revision_id" . 5996))))))
