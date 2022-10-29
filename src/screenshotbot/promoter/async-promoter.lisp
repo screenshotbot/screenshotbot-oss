@@ -78,8 +78,19 @@
             (typep promoter class))
           return promoter))
 
-(defgeneric on-commit-ready (promoter))
-(defgeneric on-promote (promoter))
+(defgeneric update-status (promoter)
+  (:documentation "Called when the state changes to push any updates to external
+ services."))
+
+(defgeneric on-commit-ready (promoter)
+  (:method (promoter))
+  (:method :after (promoter)
+    (update-status promoter)))
+
+(defgeneric on-promote (promoter)
+  (:method (promoter))
+  (:method :after (promoter)
+    (update-status promoter)))
 
 (defmethod trigger-promoters-waiting-on-commit (channel commit)
   (loop for promoter in (promoters-waiting-on-commit channel commit)

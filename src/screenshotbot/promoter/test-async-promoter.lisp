@@ -12,6 +12,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/promoter/async-promoter
+                #:update-status
                 #:call-on-channel-thread
                 #:on-promote
                 #:find-or-make-async-promoter
@@ -72,6 +73,8 @@
 (defmethod on-commit-ready ((self test-async-promoter))
   "success!")
 
+(defmethod update-status ((self test-async-promoter)))
+
 (test simple-callback
   (with-fixture state ()
     (let ((promoter (make-instance 'test-async-promoter
@@ -105,6 +108,8 @@
                    :transient t
                    :accessor promote-called))
   (:metaclass persistent-class))
+
+(defmethod update-status ((self dummy-async-promoter)))
 
 (defmethod on-promote ((self dummy-async-promoter))
   (incf (promote-called self)))
