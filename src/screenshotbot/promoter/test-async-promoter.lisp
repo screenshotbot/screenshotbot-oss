@@ -12,6 +12,11 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/promoter/async-promoter
+                #:call-on-channel-thread
+                #:on-promote
+                #:find-or-make-async-promoter
+                #:wrapper-promoter
+                #:make-sync-promoter
                 #:promoters-waiting-on-commit
                 #:on-commit-ready
                 #:trigger-promoters-waiting-on-commit
@@ -24,16 +29,41 @@
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:fiveam-matchers/core
+                #:is-not
+                #:equal-to
+                #:is-equal-to
+                #:has-typep
                 #:assert-that)
+  (:import-from #:bknr.datastore
+                #:persistent-class)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run)
+  (:import-from #:fiveam-matchers/described-as
+                #:described-as)
+  (:import-from #:fiveam-matchers/misc
+                #:is-null
+                #:is-not-null)
+  (:import-from #:bknr.datastore
+                #:class-instances)
+  (:import-from #:screenshotbot/promote-api
+                #:maybe-promote)
+  (:import-from #:bknr.datastore
+                #:with-transaction)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/promoter/test-async-promoter)
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store (:globally t)
-    (let ((channel (make-instance 'channel)))
-      (&body))))
+  (cl-mock:with-mocks ()
+    (cl-mock:if-called 'call-on-channel-thread
+                       (lambda (fn channel)
+                         (funcall fn)))
+    (with-test-store (:globally t)
+      (let* ((channel (make-instance 'channel))
+             (run (make-instance 'recorder-run
+                                 :channel channel)))
+        (&body)))))
 
 (defclass test-async-promoter (async-promoter)
   ()
@@ -45,7 +75,7 @@
 (test simple-callback
   (with-fixture state ()
     (let ((promoter (make-instance 'test-async-promoter
-                                   :channel channel)))
+                                   :run run)))
       (with-transaction ()
         (setf (waiting-on-commit promoter) "abcd"))
       (assert-that (remove-duplicates (promoters-waiting-on-commit channel "abcd"))
@@ -65,7 +95,68 @@
 (test nil-commit-doesnt-fail
   (with-fixture state ()
     (let ((promoter (make-instance 'test-async-promoter
-                                   :channel channel
+                                   :run run
                                    :waiting-on-commit nil)))
       (assert-that (promoters-waiting-on-commit channel "abcd")
                    (has-length 0)))))
+
+(defclass dummy-async-promoter (async-promoter)
+  ((promote-called :initform 0
+                   :transient t
+                   :accessor promote-called))
+  (:metaclass persistent-class))
+
+(defmethod on-promote ((self dummy-async-promoter))
+  (incf (promote-called self)))
+
+(defclass dummy-async-promoter-2 (async-promoter)
+  ()
+  (:metaclass persistent-class))
+
+(test wrapper
+  (with-fixture state ()
+    (let ((promoter (make-sync-promoter
+                     'dummy-async-promoter)))
+      (assert-that promoter
+                   (has-typep 'wrapper-promoter)))))
+
+(test find-or-make-async-promoter
+  (with-fixture state ()
+    (let ((promoter (find-or-make-async-promoter
+                     'dummy-async-promoter
+                     :run run)))
+      (assert-that promoter
+                   (has-typep 'dummy-async-promoter))
+      (assert-that (find-or-make-async-promoter
+                    'dummy-async-promoter
+                    :run run)
+                   (described-as "We should not create a new promoter"
+                     (is-equal-to promoter)))
+      (assert-that (find-or-make-async-promoter
+                    'dummy-async-promoter-2
+                    :run run)
+                   (is-not-null)
+                   (described-as "We should be filtering by the promoter name"
+                     (is-not (equal-to promoter)))))))
+
+(defun only-dummy-promoter ()
+  (car (class-instances 'dummy-async-promoter)))
+
+(test wrapper-callbacks
+  (with-fixture state ()
+    (let ((promoter (make-sync-promoter
+                     'dummy-async-promoter)))
+      (assert-that (only-dummy-promoter)
+                   (is-null))
+      (maybe-promote promoter run)
+
+      (assert-that (only-dummy-promoter)
+                   (is-not-null))
+
+      (assert-that (promote-called (only-dummy-promoter))
+                   (is-equal-to 1)))
+    (let ((promoter (make-sync-promoter
+                     'dummy-async-promoter)))
+      (maybe-promote promoter run)
+      (assert-that (promote-called (only-dummy-promoter))
+                   (is-equal-to 2)))))
