@@ -40,6 +40,8 @@
                 #:production-run-for)
   (:import-from #:bknr.datastore
                 #:with-transaction)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-merge-base)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:trigger-promoters-waiting-on-commit
@@ -63,7 +65,7 @@
      :reader promoter-run)
     (merge-base-run
      :initform nil
-     :reader merge-base-run)
+     :accessor merge-base-run)
     (waiting-on-commit
      :initarg :waiting-on-commit
      :accessor waiting-on-commit))
@@ -87,14 +89,16 @@
 
 (defmethod merge-base (promoter)
   "Find the merge-commit for this promoter. i.e. the commit that we're
- waiting for in order to do any work.")
+ waiting for in order to do any work."
+  (recorder-run-merge-base
+   (promoter-run promoter)))
 
 (defgeneric update-status (promoter)
   (:documentation "Called when the state changes to push any updates to external
  services."))
 
 (defun init-merge-base-run (promoter)
-  (let ((merge-base (merge-base promoter)))
+  (a:when-let ((merge-base (merge-base promoter)))
     (let ((base-run (production-run-for
                      (recorder-run-channel (promoter-run promoter))
                      :commit merge-base)))

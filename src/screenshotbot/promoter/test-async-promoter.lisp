@@ -51,6 +51,8 @@
                 #:maybe-promote)
   (:import-from #:bknr.datastore
                 #:with-transaction)
+  (:import-from #:screenshotbot/model/channel
+                #:production-run-for)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/promoter/test-async-promoter)
 
@@ -64,6 +66,7 @@
     (with-test-store (:globally t)
       (let* ((channel (make-instance 'channel))
              (run (make-instance 'recorder-run
+                                 :commit-hash "foobar"
                                  :channel channel)))
         (&body)))))
 
@@ -172,3 +175,17 @@
       (maybe-promote promoter run)
       (assert-that (promote-called (only-dummy-promoter))
                    (is-equal-to 2)))))
+
+(test wrapper-callbacks-when-merge-base-is-updated-later
+  (with-fixture state ()
+    (let ((promoter (find-or-make-async-promoter
+                     'dummy-async-promoter
+                     :run run))
+          (base-run (make-instance 'recorder-run
+                                   :channel channel)))
+      (on-promote promoter)
+      (cl-mock:if-called 'production-run-for
+                         (lambda (channel &key commit)
+                           base-run))
+
+      (on-commit-ready promoter))))
