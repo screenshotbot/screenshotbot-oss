@@ -19,6 +19,9 @@
   (:import-from #:screenshotbot/installation
                 #:installation-domain
                 #:installation)
+  (:import-from #:screenshotbot/promoter/async-promoter
+                #:on-promote
+                #:async-promoter)
   (:export
    #:commenting-promoter
    #:add-comment))

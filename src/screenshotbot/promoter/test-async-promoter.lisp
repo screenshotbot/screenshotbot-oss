@@ -12,6 +12,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/promoter/async-promoter
+                #:merge-base
                 #:update-status
                 #:call-on-channel-thread
                 #:on-promote
@@ -73,6 +74,9 @@
 (defmethod on-commit-ready ((self test-async-promoter))
   "success!")
 
+(defmethod merge-base ((self test-async-promoter))
+  "foobar")
+
 (defmethod update-status ((self test-async-promoter)))
 
 (test simple-callback
@@ -113,6 +117,9 @@
 
 (defmethod on-promote ((self dummy-async-promoter))
   (incf (promote-called self)))
+
+(defmethod merge-base ((self dummy-async-promoter))
+  "foobar")
 
 (defclass dummy-async-promoter-2 (async-promoter)
   ()
