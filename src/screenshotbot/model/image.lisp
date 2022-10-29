@@ -126,7 +126,8 @@
 ;; Some of these slots are limited to screenshotbot-oss. This is for
 ;; backward compatibility in the OSS version, where we don't have a
 ;; schema migration process.
-(with-transient-copy (transient-image abstract-image)
+(with-transient-copy (transient-image abstract-image
+                      :extra-transient-slots (#-screenshotbot-oss blob))
   (defclass image (object-with-oid)
     (#+screenshotbot-oss
      (link :initarg :link)
