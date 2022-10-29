@@ -19,7 +19,8 @@
    #:plugin-promoter
    #:list-promoters
    #:do-promotion-log
-   #:start-promotion-thread))
+   #:start-promotion-thread
+   #:unregister-promoter))
 (in-package :screenshotbot/promote-api)
 
 (defclass promoter ()
@@ -31,7 +32,6 @@
 
 (defvar *promoters* nil)
 
-
 (defmethod plugin-promoter ((plugin plugin))
   nil)
 
@@ -41,6 +41,11 @@
  PLUGIN-PROMOTER instead."
   (assert (symbolp name))
   (pushnew name *promoters*))
+
+(defun unregister-promoter (name)
+  "Unregister a promoter. This is only useful for updating an existing
+ promoter in a live image."
+  (removef *promoters* name))
 
 (defun list-promoters ()
   (restart-case

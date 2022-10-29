@@ -12,6 +12,8 @@
         #:screenshotbot/model/recorder-run
         #:screenshotbot/promote-api
         #:screenshotbot/phabricator/commenting-promoter)
+  (:import-from #:screenshotbot/phabricator/plugin
+                #:phabricator-plugin)
   (:export #:phabricator-promoter))
 (in-package :screenshotbot/phabricator/diff-promoter)
 
@@ -59,4 +61,7 @@
      (let ((revision (diff-to-revision phab (diff-id promoter))))
        (create-comment phab revision comment)))))
 
-(register-promoter 'phabricator-promoter)
+(unregister-promoter 'phabricator-promoter)
+
+(defmethod plugin-promoter ((plugin phabricator-plugin))
+  (make-instance 'phabricator-promoter))

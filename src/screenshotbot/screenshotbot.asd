@@ -363,7 +363,8 @@
                              (:file "test-pull-request-promoter")
                              (:file "test-webhook")))
                (:module "phabricator"
-                :components ((:file "test-builds")))
+                :components ((:file "test-builds")
+                             (:file "test-diff-promoter")))
                (:module "replay"
                 :components ((:file "test-core")
                              (:file "test-sitemap")
