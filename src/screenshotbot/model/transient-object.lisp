@@ -26,7 +26,7 @@
                           :index-values
                           :relaxed-object-reference))))
 
-(defmacro with-transient-copy ((transient-class parent-class)
+(defmacro with-transient-copy ((transient-class parent-class &key extra-transient-slots)
                                &body (class-def . class-def-rest))
   (assert (not class-def-rest))
   (destructuring-bind (keyword class-name parent-classes slot-defs &rest options)
@@ -42,7 +42,8 @@
          (id :initarg :id
              :accessor transient-object-original-id
              :documentation "The original id, for debugging purposes")
-         ,@(mapcar #'remove-index-args slot-defs)))
+         ,@(mapcar #'remove-index-args slot-defs)
+         ,@ extra-transient-slots))
 
       (with-class-validation
         (,keyword ,class-name (,@parent-classes ,parent-class)

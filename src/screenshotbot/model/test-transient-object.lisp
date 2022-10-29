@@ -21,6 +21,11 @@
   (:import-from #:util/object-id
                 #:oid-array
                 #:object-with-oid)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:does-not-have-item
+                #:has-item)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-transient-object)
 
@@ -69,3 +74,28 @@
   (with-fixture state ()
     (let ((obj (make-instance 'mem-obj-id :oid #(22 22))))
       (is (equalp #(22 22) (oid-array obj))))))
+
+(with-transient-copy (mem-obj-2 abstract-obj-2
+                                :extra-transient-slots (some-slot))
+  (defclass obj-2 (store-object)
+    ((value :initarg :value
+            :accessor obj-value))
+    (:metaclass persistent-class)))
+
+(test transient-slots
+  (with-fixture state ()
+    (assert-that (mapcar #'closer-mop:slot-definition-name
+                         (closer-mop:class-slots
+                          (closer-mop:ensure-finalized
+                           (find-class 'mem-obj-2))))
+                 (has-item 'some-slot))
+    (assert-that (mapcar #'closer-mop:slot-definition-name
+                         (closer-mop:class-slots
+                          (closer-mop:ensure-finalized
+                           (find-class 'abstract-obj-2))))
+                 (does-not-have-item 'some-slot))
+
+    (let ((obj (make-instance 'mem-obj-2)))
+      (finishes
+        (setf (slot-value obj 'some-slot) 2))
+      (is (eql 2 (slot-value obj 'some-slot))))))
