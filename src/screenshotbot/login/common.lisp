@@ -85,7 +85,7 @@
     <div class= "form-group mt-3 text-center mb-3">
       <a class= "btn btn-secondary" style= "width:100%"  href= (oauth-signup-link auth-provider redirect) >
         ,(oauth-logo-svg auth-provider)
-        <span class= "ms-1">Sign Up with ,(oauth-name auth-provider) </span>
+        <span class= "ms-1">,(oauth-name auth-provider) </span>
       </a>
     </div>)
 

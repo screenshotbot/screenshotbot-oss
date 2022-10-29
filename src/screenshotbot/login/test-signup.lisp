@@ -17,6 +17,7 @@
                 #:get-singleton-company
                 #:company)
   (:import-from #:screenshotbot/installation
+                #:standard-auth-provider
                 #:*installation*
                 #:installation)
   (:import-from #:util/store
@@ -27,7 +28,9 @@
   (:import-from #:screenshotbot/user-api
                 #:signup-get)
   (:import-from #:util/form-errors
-                #:with-form-errors))
+                #:with-form-errors)
+  (:import-from #:screenshotbot/login/github-oauth
+                #:github-oauth-provider))
 
 (util/fiveam:def-suite)
 
@@ -53,24 +56,54 @@
              (bknr.datastore:delete-object company)))))
      (pass))))
 
+(def-fixture screenshots (&key (providers (list (make-instance 'standard-auth-provider))))
+  (let ((*installation* (make-instance 'installation
+                                       :auth-providers providers)))
+    (with-fake-request ()
+      (auth:with-sessions ()
+       (&body)))))
+
 (test screenshot-test
-  (with-fake-request ()
-    (auth:with-sessions ()
-      (screenshot-static-page
-       :screenshotbot
-       "signup"
-       (markup:write-html
-        (signup-get))))))
+  (with-fixture screenshots ()
+    (screenshot-static-page
+     :screenshotbot
+     "signup-without-oauth"
+     (markup:write-html
+      (signup-get)))))
+
+(test screenshot-with-oauth
+  (with-fixture screenshots (:providers
+                             (list
+                              (make-instance 'standard-auth-provider)
+                              (make-instance 'github-oauth-provider
+                                             :client-id "foo"
+                                             :client-secret "bar")))
+    (screenshot-static-page
+     :screenshotbot
+     "signup"
+     (markup:write-html
+      (signup-get)))))
+
+(test screenshot-with-oauth-and-no-login
+  (with-fixture screenshots (:providers
+                             (list
+                              (make-instance 'github-oauth-provider
+                                             :client-id "foo"
+                                             :client-secret "bar")))
+    (screenshot-static-page
+     :screenshotbot
+     "signup-with-oauth-and-no-login"
+     (markup:write-html
+      (signup-get)))))
 
 (test signup-error-screen
-  (with-fake-request ()
-    (auth:with-sessions ()
-      (screenshot-static-page
-       :screenshotbot
-       "signup-error-screen"
-       (markup:write-html
-        (with-form-errors (:errors `((:password . "Incorrect password"))
-                           :password "foo"
-                           :email "blah@gmail.com"
-                           :was-validated t)
-         (signup-get)))))))
+  (with-fixture screenshots ()
+    (screenshot-static-page
+     :screenshotbot
+     "signup-error-screen"
+     (markup:write-html
+      (with-form-errors (:errors `((:password . "Incorrect password"))
+                         :password "foo"
+                         :email "blah@gmail.com"
+                         :was-validated t)
+        (signup-get))))))

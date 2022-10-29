@@ -213,6 +213,10 @@
         .was-validated .form-check-input:invalid ~ .form-check-label, .form-check-input.is-invalid ~ .form-check-label {
             color: black;
         }
+
+        .btn-primary {
+            margin-bottom: 5.8rem !important;
+        }
     }
 
     &.simple {
@@ -241,5 +245,25 @@
             width: 100vw;
             padding: 2em;
         }
+    }
+
+
+
+}
+
+.or-signup-with {
+    text-align: center;
+    text-transform: lowercase;
+    display: grid;
+    grid-template-columns: 1fr max-content 1fr;
+    align-items: center;
+
+    margin-bottom: 4rem;
+    grid-gap: 0.5rem;
+    color: #eee;
+    &::before, &::after {
+        content: '';
+        border-bottom: 1px solid #eee;
+        transform: translateY(-1px);
     }
 }

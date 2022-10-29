@@ -93,7 +93,13 @@
       <div class="form-group mb-0 text-center">
         <button class="btn btn-primary" type="submit" id= "sign-up-submit" > Sign Up </button>
       </div>
+
     </form>))
+
+(deftag or-signup-with ()
+    <div class= "or-signup-with" >
+        or Sign Up with
+    </div>)
 
 (deftag signup-get (&key invite-code plan (redirect "/")
                     alert)
@@ -117,12 +123,15 @@
                     <h4 class="text-dark-50 mt-0 font-weight-bold">Sign Up</h4>
                   </div>
 
-
-                  ,@ (loop for auth-provider in (auth-providers (installation))
-                           collect
-                           (auth-provider-signup-form auth-provider invite-code
-                                                      plan
-                                                      redirect))
+                  ,@ (let ((len (length (auth-providers (installation)))))
+                       (loop for auth-provider in (auth-providers (installation))
+                             for idx from 0
+                             collect
+                             (auth-provider-signup-form auth-provider invite-code
+                                                        plan
+                                                        redirect)
+                             if (and (eql idx 0) (> len 1))
+                               collect  <or-signup-with />))
                 </div> <!-- end card-body -->
               </div>
               <!-- end card -->
