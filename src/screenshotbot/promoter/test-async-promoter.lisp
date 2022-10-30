@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/user-api
+                #:pull-request-url
                 #:channel)
   (:import-from #:util/store
                 #:with-test-store)
@@ -70,7 +71,7 @@
 
 (util/fiveam:def-suite)
 
-(def-fixture state ()
+(def-fixture state (&key pull-request-url)
   (cl-mock:with-mocks ()
     (cl-mock:if-called 'call-on-channel-thread
                        (lambda (fn channel)
@@ -79,6 +80,7 @@
       (let* ((channel (make-instance 'channel))
              (run (make-instance 'recorder-run
                                  :commit-hash "foobar"
+                                 :pull-request pull-request-url
                                  :channel channel)))
         (&body)))))
 
@@ -152,6 +154,26 @@
                      'dummy-async-promoter)))
       (assert-that promoter
                    (has-typep 'wrapper-promoter)))))
+
+(test |wrapper doesn't initialize if not needed|
+  (with-fixture state ()
+    (let ((promoter (make-sync-promoter
+                     'dummy-async-promoter
+                     :only-if (lambda (run)
+                                (not (not (pull-request-url run)))))))
+      (maybe-promote promoter run)
+      (assert-that (class-instances 'dummy-async-promoter)
+                   (has-length 0)))))
+
+(test |wrapper does initialize if the only-if is true|
+  (with-fixture state (:pull-request-url "foobar")
+    (let ((promoter (make-sync-promoter
+                     'dummy-async-promoter
+                     :only-if (lambda (run)
+                                (not (not (pull-request-url run)))))))
+      (maybe-promote promoter run)
+      (assert-that (class-instances 'dummy-async-promoter)
+                   (has-length 1)))))
 
 (test find-or-make-async-promoter
   (with-fixture state ()

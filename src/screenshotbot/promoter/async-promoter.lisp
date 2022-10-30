@@ -144,24 +144,28 @@
 
 (defclass wrapper-promoter (promoter)
   ((class :initarg :class
-          :reader wrapper-promoter-class)))
+          :reader wrapper-promoter-class)
+   (only-if :initarg :only-if
+            :reader wrapper-promoter-only-if)))
 
 (defun find-or-make-async-promoter (type &key (run (error "needs run")))
   (or
    (find-async-promoter type run)
    (make-instance type :run run)))
 
-(defun make-sync-promoter (type)
+(defun make-sync-promoter (type &key (only-if (lambda (run) (declare (ignore run)) t)))
   (make-instance 'wrapper-promoter
+                 :only-if only-if
                  :class (not-null! (find-class type))))
 
 
 (defmethod maybe-promote ((promoter wrapper-promoter) run)
-  (let ((async-promoter (find-or-make-async-promoter
-                         (wrapper-promoter-class promoter)
-                         :run run)))
-    (on-channel-thread ((recorder-run-channel run))
-      (on-promote async-promoter))))
+  (when (funcall (wrapper-promoter-only-if promoter) run)
+    (let ((async-promoter (find-or-make-async-promoter
+                           (wrapper-promoter-class promoter)
+                           :run run)))
+      (on-channel-thread ((recorder-run-channel run))
+        (on-promote async-promoter)))))
 
 (defgeneric on-timeout (promoter))
 
