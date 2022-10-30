@@ -12,6 +12,10 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/promoter/async-promoter
+                #:on-timeout
+                #:timeout-job
+                #:cancel-timeout
+                #:set-timeout
                 #:merge-base
                 #:update-status
                 #:call-on-channel-thread
@@ -53,6 +57,14 @@
                 #:with-transaction)
   (:import-from #:screenshotbot/model/channel
                 #:production-run-for)
+  (:import-from #:bknr.datastore
+                #:class-instances)
+  (:import-from #:scheduled-jobs/model
+                #:scheduled-job-function
+                #:scheduled-job-args
+                #:scheduled-job)
+  (:import-from #:bknr.datastore
+                #:delete-object)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/promoter/test-async-promoter)
 
@@ -113,13 +125,19 @@
 (defclass dummy-async-promoter (async-promoter)
   ((promote-called :initform 0
                    :transient t
-                   :accessor promote-called))
+                   :accessor promote-called)
+   (timeout-called :initform 0
+                   :transient t
+                   :accessor timeout-called))
   (:metaclass persistent-class))
 
 (defmethod update-status ((self dummy-async-promoter)))
 
 (defmethod on-promote ((self dummy-async-promoter))
   (incf (promote-called self)))
+
+(defmethod on-timeout ((self dummy-async-promoter))
+  (incf (timeout-called self)))
 
 (defmethod merge-base ((self dummy-async-promoter))
   "foobar")
@@ -189,3 +207,67 @@
                            base-run))
 
       (on-commit-ready promoter))))
+
+(test |setting timeout|
+  (with-fixture state ()
+    (let ((promoter (find-or-make-async-promoter
+                     'dummy-async-promoter
+                     :run run)))
+      (finishes
+       (set-timeout promoter (* 5 60))))))
+
+(test cancels-timeout
+  (with-fixture state ()
+    (let ((promoter (find-or-make-async-promoter
+                     'dummy-async-promoter
+                     :run run)))
+      (set-timeout promoter 10)
+      (assert-that (class-instances 'scheduled-job)
+                   (has-length 1))
+      (cancel-timeout promoter)
+      (assert-that (timeout-job promoter)
+                   (is-null))
+      (assert-that (class-instances 'scheduled-job)
+                   (has-length 0)))))
+
+(test reseting-timeouts
+  (with-fixture state ()
+    (let ((promoter (find-or-make-async-promoter
+                     'dummy-async-promoter
+                     :run run)))
+      (set-timeout promoter 10)
+      (assert-that (class-instances 'scheduled-job)
+                   (has-length 1))
+      (set-timeout promoter 30)
+      (assert-that (class-instances 'scheduled-job)
+                   (has-length 1)))))
+
+(test scheduled-job-gets-deleted-when-promoter-is-deleted
+  (with-fixture state ()
+    (let ((promoter (find-or-make-async-promoter
+                     'dummy-async-promoter
+                     :run run)))
+      (set-timeout promoter 10)
+      (assert-that (class-instances 'scheduled-job)
+                   (has-length 1))
+      (delete-object promoter)
+      (assert-that (class-instances 'scheduled-job)
+                   (has-length 0)))))
+
+(test calling-the-scheduled-job
+  (with-fixture state ()
+    (let ((promoter (find-or-make-async-promoter
+                     'dummy-async-promoter
+                     :run run)))
+      (set-timeout promoter 10)
+      (assert-that (class-instances 'scheduled-job)
+                   (has-length 1))
+      (assert-that (timeout-job promoter)
+                   (is-not-null))
+      (let ((job (car (class-instances 'scheduled-job))))
+        (apply
+         (scheduled-job-function job)
+         (scheduled-job-args job))
+        (is (eql 1 (timeout-called promoter))))
+      (assert-that (timeout-job promoter)
+                   (is-null)))))

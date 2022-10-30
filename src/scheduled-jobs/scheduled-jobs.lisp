@@ -71,6 +71,7 @@ we're not looking in to what the object references."
    (stringp arg)
    (symbolp arg)
    (arrayp arg)
+   (numberp arg)
    (listp arg)
    (typep arg 'bknr.datastore:store-object)))
 

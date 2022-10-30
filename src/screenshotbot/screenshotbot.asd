@@ -82,6 +82,7 @@
                :sentry
                :server
                :auto-restart
+               :scheduled-jobs
                :serapeum
                :java.libs
                :util/form-state

@@ -42,10 +42,19 @@
                 #:with-transaction)
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run-merge-base)
+  (:import-from #:scheduled-jobs
+                #:make-scheduled-job)
+  (:import-from #:bknr.indices
+                #:destroy-object)
+  (:import-from #:bknr.datastore
+                #:store-object-id)
+  (:import-from #:bknr.datastore
+                #:store-object-with-id)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:trigger-promoters-waiting-on-commit
-   #:find-or-make-async-promoter))
+   #:find-or-make-async-promoter
+   #:set-timeout))
 (in-package :screenshotbot/promoter/async-promoter)
 
 (defvar *hash-lock* (make-instance 'hash-lock))
@@ -68,7 +77,11 @@
      :accessor merge-base-run)
     (waiting-on-commit
      :initarg :waiting-on-commit
-     :accessor waiting-on-commit))
+     :accessor waiting-on-commit)
+    (timeout-job
+     :initform nil
+     :relaxed-object-reference t
+     :accessor timeout-job))
    (:metaclass persistent-class)))
 
 (defun promoters-waiting-on-commit (channel commit)
@@ -148,4 +161,35 @@
                          (wrapper-promoter-class promoter)
                          :run run)))
     (on-channel-thread ((recorder-run-channel run))
-     (on-promote async-promoter))))
+      (on-promote async-promoter))))
+
+(defgeneric on-timeout (promoter))
+
+(defmethod %%timeout-callback ((promoter async-promoter))
+  (with-transaction ()
+    (setf (timeout-job promoter) nil))
+  (on-channel-thread ((recorder-run-channel (promoter-run promoter)))
+    (on-timeout promoter)))
+
+(defun %timeout-callback (promoter-id)
+  (let ((promoter (store-object-with-id promoter-id)))
+    (%%timeout-callback promoter)))
+
+(defmethod set-timeout ((self async-promoter) time)
+  (cancel-timeout self)
+  (let ((job (make-scheduled-job
+              :at (+ (get-universal-time) time)
+              :function '%timeout-callback
+              :args (list (store-object-id self)))))
+    (with-transaction ()
+      (setf (timeout-job self) job))))
+
+(defmethod cancel-timeout ((self async-promoter))
+  (a:when-let ((job (timeout-job self)))
+    (bknr.datastore:delete-object job)
+    (with-transaction ()
+      (setf (timeout-job self) nil))))
+
+(defmethod destroy-object :before ((self async-promoter))
+  (a:when-let ((job (timeout-job self)))
+   (bknr.datastore:delete-object job)))
