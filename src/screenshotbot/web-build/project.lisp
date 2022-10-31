@@ -90,6 +90,8 @@
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:installation-domain)
+  (:import-from #:screenshotbot/events
+                #:push-event)
   (:local-nicknames (#:a #:alexandria)
                     (#:integration #:screenshotbot/replay/integration)
                     (#:frontend #:screenshotbot/replay/frontend)
@@ -625,6 +627,7 @@
                                       :custom-css custom-css
                                       :browsers browsers
                                       :sitemap sitemap)))
+                 (push-event :new-web-build)
                  (update-scheduled-job project
                                        schedule-p
                                        cronexpr))

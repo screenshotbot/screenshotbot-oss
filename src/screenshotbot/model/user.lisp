@@ -34,6 +34,8 @@
   (:import-from #:util/store
                 #:with-class-validation
                 #:def-store-local)
+  (:import-from #:screenshotbot/events
+                #:push-event)
   (:export
    #:user
    #:email-confirmation-code
@@ -194,6 +196,7 @@
   (let ((user (apply #'make-instance 'user args)))
     (unless companies
       (initialize-companies-for-user user (installation)))
+    (push-event :user.created)
     user))
 
 (defmethod initialize-companies-for-user (user installation)

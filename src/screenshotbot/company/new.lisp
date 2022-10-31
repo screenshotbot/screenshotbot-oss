@@ -22,7 +22,9 @@
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:screenshotbot/ui
-                #:simple-card-page))
+                #:simple-card-page)
+  (:import-from #:screenshotbot/events
+                #:push-event))
 (in-package :screenshotbot/company/new)
 
 (markup:enable-reader)
@@ -101,6 +103,7 @@
             company
             (user-companies user)))
          (setf (current-company) company)
+         (push-event :company.new)
          (populate-company company)
          (hex:safe-redirect 'company-create-confirmation-page))))))
 
@@ -131,4 +134,5 @@
   (check-type company company)
   (can-view! company)
   (setf (current-company) company)
+  (push-event "company.switched")
   (hex:safe-redirect "/"))
