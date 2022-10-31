@@ -236,8 +236,7 @@
                 :components ((:file "conduit")))))
 
 (defsystem :util/clsql
-  :depends-on (:clsql
-               :clsql-local-time)
+  :depends-on (:clsql)
   :components ((:module "clsql"
                 :components ((:file "clsql")))))
 
