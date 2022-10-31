@@ -234,6 +234,12 @@
   :components ((:module "phabricator"
                 :components ((:file "conduit")))))
 
+(defsystem :util/clsql
+  :depends-on (:clsql
+               :clsql-local-time)
+  :components ((:module "clsql"
+                :components ((:file "clsql")))))
+
 (defsystem :util/tests
   :depends-on (:util
                :util/hash-lock

@@ -61,6 +61,13 @@
                       :output *standard-output*
                       :error-output *error-output*))
 
+(defsystem :screenshotbot/events
+  :serial t
+  :depends-on (:util/clsql
+               :util/misc
+               :atomics)
+  :components ((:file "events")))
+
 (defsystem :screenshotbot
   :serial t
   :author "Arnold Noronha <arnold@screenshotbot.io>"
@@ -310,6 +317,7 @@
                :screenshotbot/webdriver
                :screenshotbot/replay
                :screenshotbot/testing-lib
+               :screenshotbot/events
                :tmpdir
                :screenshotbot)
   :components ((:file "factory")
@@ -317,6 +325,7 @@
                (:file "test-artifacts")
                (:file "test-promote-api")
                (:file "test-diff-report")
+               (:file "test-events")
                (:file "test-mailer")
                (:file "test-settings-api")
                (:module "magick"
