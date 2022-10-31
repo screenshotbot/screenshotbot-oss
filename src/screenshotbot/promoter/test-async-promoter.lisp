@@ -31,8 +31,6 @@
                 #:async-promoter)
   (:import-from #:bknr.datastore
                 #:with-transaction)
-  (:import-from #:bknr.datastore
-                #:persistent-class)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:fiveam-matchers/core
@@ -42,7 +40,10 @@
                 #:has-typep
                 #:assert-that)
   (:import-from #:bknr.datastore
-                #:persistent-class)
+                #:persistent-class
+                #:class-instances
+                #:with-transaction
+                #:delete-object)
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run)
   (:import-from #:fiveam-matchers/described-as
@@ -50,22 +51,14 @@
   (:import-from #:fiveam-matchers/misc
                 #:is-null
                 #:is-not-null)
-  (:import-from #:bknr.datastore
-                #:class-instances)
   (:import-from #:screenshotbot/promote-api
                 #:maybe-promote)
-  (:import-from #:bknr.datastore
-                #:with-transaction)
   (:import-from #:screenshotbot/model/channel
                 #:production-run-for)
-  (:import-from #:bknr.datastore
-                #:class-instances)
   (:import-from #:scheduled-jobs/model
                 #:scheduled-job-function
                 #:scheduled-job-args
                 #:scheduled-job)
-  (:import-from #:bknr.datastore
-                #:delete-object)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/promoter/test-async-promoter)
 
