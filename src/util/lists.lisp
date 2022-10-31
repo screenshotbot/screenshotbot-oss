@@ -1,5 +1,7 @@
 (defpackage #:util/lists
   (:use #:cl)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export #:head
 	   #:tail))
 (in-package #:util/lists)
@@ -40,3 +42,17 @@ remaining elements (unfiltered)"
       ((eq list nil) nil)
       ((<= n 0) list)
       (t (tail (cdr list) (- n 1))))))
+
+(def-easy-macro with-batches (&binding batch
+                                       list &fn fn &key (batch-size 10)
+                                       &binding index)
+  (labels ((call-next (list ctr)
+             (multiple-value-bind (batch rest)
+                 (util/lists:head list batch-size)
+               (when batch
+                 (restart-case
+                     (funcall fn batch ctr)
+                   (restart-batch ()
+                     (call-next list ctr)))
+                 (call-next rest (+ ctr (length batch)))))))
+    (call-next list 0)))

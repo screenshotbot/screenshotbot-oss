@@ -16,6 +16,8 @@
                 #:*sql-stream*)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:util/lists
+                #:with-batches)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/events)
 
@@ -105,7 +107,8 @@
       (atomics:atomic-update *events* (lambda (old)
                                         (setf events old)
                                         nil))
-     (insert-events events db))))
+      (with-batches (events events :batch-size 1000)
+        (insert-events events db)))))
 
 (defmethod push-event (name &rest args)
   (apply #'push-event-impl *event-engine* name args))

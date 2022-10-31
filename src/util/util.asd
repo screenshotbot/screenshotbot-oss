@@ -47,6 +47,7 @@
   :depends-on ("hunchentoot"
                "markup"
                "nibble"
+               "easy-macros"
                "alexandria"
                "uuid"
                "clues"

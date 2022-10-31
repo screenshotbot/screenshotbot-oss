@@ -85,6 +85,8 @@
                 #:*sdk-flags*)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:util/lists
+                #:with-batches)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
                     (#:integration #:screenshotbot/replay/integration)
@@ -351,20 +353,6 @@ accessing the urls or sitemap slot."
                 oid
                 dest))
       :title title))))
-
-(def-easy-macro with-batches (&binding batch
-                                       list &fn fn &key (batch-size 10)
-                                       &binding index)
-  (labels ((call-next (list ctr)
-             (multiple-value-bind (batch rest)
-                 (util/lists:head list batch-size)
-               (when batch
-                 (restart-case
-                     (funcall fn batch ctr)
-                   (restart-batch ()
-                     (call-next list ctr)))
-                 (call-next rest (+ ctr (length batch)))))))
-    (call-next list 0)))
 
 (with-auto-restart ()
   (defun replay-job-from-snapshot (&key (snapshot (error "must provide snapshot"))
