@@ -13,7 +13,6 @@
                 #:event
                 #:insert-events
                 #:with-db
-                #:call-on-background
                 #:push-event
                 #:db-engine
                 #:*event-engine*)
@@ -32,10 +31,6 @@
 (def-fixture state ()
   (uiop:with-temporary-file (:pathname pathname)
    (cl-mock:with-mocks ()
-     (cl-mock:if-called 'call-on-background
-                        (lambda (fn)
-                          (funcall fn)))
-
      (setf *events* nil)
      (let* ((*event-engine*
               (make-instance 'db-engine

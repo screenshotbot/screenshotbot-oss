@@ -8,16 +8,15 @@
   (:use #:cl)
   (:import-from #:easy-macros
                 #:def-easy-macro)
-  (:import-from #:lparallel.promise
-                #:speculate)
-  (:import-from #:screenshotbot/async
-                #:with-screenshotbot-kernel)
   (:import-from #:clsql-sys
+                #:sql-ident
                 #:*sql-stream*)
   (:import-from #:util/cron
                 #:def-cron)
   (:import-from #:util/lists
                 #:with-batches)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/events)
 
@@ -46,11 +45,6 @@
     :type local-time:timestamp
     :initform (local-time:now))))
 
-(def-easy-macro on-background (&fn fn)
-  (with-screenshotbot-kernel ()
-    (speculate
-      (funcall fn))))
-
 (def-easy-macro with-db (&binding db engine &fn fn)
   (let ((db (clsql:connect (connection-spec engine)
                            :database-type (database-type engine)
@@ -77,7 +71,10 @@
   (when events
    (clsql:insert-records
     :into "event"
-    :attributes '("name" "extras" "created_at")
+    :attributes (loop for name in
+                      '("name" "extras" "created_at")
+                      collect
+                      (make-instance 'sql-ident :name name))
     :values (make-instance
              'sql-value-list
              :values
@@ -86,7 +83,14 @@
                    (list
                     (event-name ev)
                     (event-extras ev)
-                    (created-at ev))))
+                    (local-time:format-timestring
+                     nil (created-at ev) :format
+                     '((:year 4) "-"
+                       (:month  2) "-"
+                       (:day  2) " "
+                       (:hour 2) ":"
+                       (:min  2) ":"
+                       (:sec  2))))))
     :database db)))
 
 (defmethod push-event-impl ((engine db-engine) name &rest args)
@@ -102,16 +106,20 @@
   (values))
 
 (defmethod flush-events ((engine db-engine))
-  (with-db (db engine)
-    (let ((events))
-      (atomics:atomic-update *events* (lambda (old)
-                                        (setf events old)
-                                        nil))
-      (with-batches (events events :batch-size 1000)
-        (insert-events events db)))))
+  (when *events*
+   (with-db (db engine)
+     (let ((events))
+       (atomics:atomic-update *events* (lambda (old)
+                                         (setf events old)
+                                         nil))
+       (with-batches (events events :batch-size 1000)
+         (insert-events events db))))))
 
 (defmethod push-event (name &rest args)
   (apply #'push-event-impl *event-engine* name args))
 
 (def-cron flush-events (:step-min 1)
-  (flush-events *event-engine*))
+  (ignore-and-log-errors ()
+   (flush-events *event-engine*)))
+
+;; (push-event :test2)

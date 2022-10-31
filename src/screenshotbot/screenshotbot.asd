@@ -92,6 +92,7 @@
                :scheduled-jobs
                :serapeum
                :java.libs
+               :screenshotbot/events
                :util/form-state
                :util/hash-lock
                :util/request
