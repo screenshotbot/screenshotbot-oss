@@ -33,6 +33,8 @@
                 #:store-objects-with-class)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:screenshotbot/events
+                #:push-event)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -66,6 +68,7 @@
     (:metaclass persistent-class)))
 
 (defun transient-objects-for-before (before)
+  (push-event :image-comparison.load-transient)
   (let ((file (location-for-before-image before)))
     (when (path:-e file)
       (cl-store:restore file))))
