@@ -16,6 +16,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/user-api
+                #:channel
                 #:current-company
                 #:current-user
                 #:user)
@@ -42,6 +43,10 @@
                 #:report)
   (:import-from #:screenshotbot/task-integration-api
                 #:send-task)
+  (:import-from #:screenshotbot/mailer
+                #:send-mail)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/email-tasks/test-task-integration)
 
@@ -95,3 +100,20 @@
                (is (eql 1 (length calls)))
                (is (equal (list user2 company report)
                           (first calls)))))))))))
+
+
+(test send-email-to-user-happy-path
+  (with-test-store ()
+    (with-test-user (:user user :company company)
+      (let* ((channel (make-instance 'channel
+                                     :name "foobar"))
+             (run (make-instance 'recorder-run
+                                 :channel channel))
+             (report (make-instance 'report
+                                    :title "1 changes, 2 added"
+                                    :run run)))
+       (cl-mock:with-mocks ()
+         (cl-mock:if-called 'send-mail
+                            (lambda (&rest args)))
+         (finishes
+          (send-email-to-user user company report)))))))

@@ -37,6 +37,8 @@
                 #:emails-enabledp)
   (:import-from #:util/object-id
                 #:oid)
+  (:import-from #:screenshotbot/events
+                #:push-event)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/email-tasks/task-integration)
 
@@ -63,6 +65,7 @@
 
 (with-auto-restart ()
   (defun send-email-to-user (user company report)
+    (push-event :email-task-notification)
     (send-mail
      (mailer*)
      :to (user-email user)
