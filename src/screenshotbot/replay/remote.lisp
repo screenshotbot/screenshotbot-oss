@@ -24,6 +24,7 @@
   (:import-from #:bknr.datastore
                 #:store-object)
   (:import-from #:screenshotbot/user-api
+                #:company-name
                 #:user
                 #:can-view
                 #:%created-at)
@@ -101,7 +102,7 @@
                                                     :user-aborted))))
                   (with-transaction ()
                     (setf (remote-run-status remote-run) :queued))
-                  (with-event (:replay-job)
+                  (with-event (:replay-job :company (company-name company))
                    (with-open-file (stream (bknr.datastore:blob-pathname log-file) :direction :output)
                      (handler-bind ((error (lambda (e)
                                              (write-replay-log "Got condition: ~a" e))))

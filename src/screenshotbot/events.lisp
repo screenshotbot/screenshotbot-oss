@@ -119,9 +119,10 @@
 (defmethod push-event (name &rest args)
   (apply #'push-event-impl *event-engine* name args))
 
-(def-easy-macro with-event (name &fn fn)
+(def-easy-macro with-event (name &rest args &fn fn)
   (flet ((push-type (type)
-           (push-event (intern (format nil "~a.~a" name type) "KEYWORD"))))
+           (apply #'push-event (intern (format nil "~a.~a" name type) "KEYWORD")
+                  args)))
    (handler-bind ((error (lambda (e)
                            (declare (ignore e))
                            (push-type "FAILURE"))))
