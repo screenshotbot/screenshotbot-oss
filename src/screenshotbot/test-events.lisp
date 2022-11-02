@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/events
+                #:with-event
                 #:*events*
                 #:flush-events
                 #:event
@@ -73,4 +74,23 @@
     (with-db (db *event-engine*)
       (assert-that (row-count db)
                    (described-as "We shouln't insert again"
-                    (is-equal-to 1))))))
+                     (is-equal-to 1))))))
+
+(test with-event
+  (with-fixture state ()
+    (let ((events))
+     (cl-mock:if-called 'push-event
+                        (lambda (name)
+                          (push name events)))
+      (with-event (:test-stuff)
+        (values))
+      (is (equal '(:test-stuff.success)
+                 events))
+      (setf events nil)
+      (signals error
+        (with-event (:test-stuff)
+          (error "bad")))
+      (is (equal '(:test-stuff.failure)
+                 events))
+      (is (eql 2 (with-event (:test-stuff)
+                   2))))))

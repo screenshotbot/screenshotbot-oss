@@ -51,6 +51,8 @@
                 #:hash-lock)
   (:import-from #:util/threading
                 #:with-safe-interruptable)
+  (:import-from #:screenshotbot/events
+                #:with-event)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
                     (#:browser-config #:screenshotbot/replay/browser-config))
@@ -99,17 +101,18 @@
                                                     :user-aborted))))
                   (with-transaction ()
                     (setf (remote-run-status remote-run) :queued))
-                  (with-open-file (stream (bknr.datastore:blob-pathname log-file) :direction :output)
-                    (handler-bind ((error (lambda (e)
-                                                (write-replay-log "Got condition: ~a" e))))
-                     (with-hash-lock-held ((remote-run-company remote-run) *hash-lock*)
-                       (with-transaction ()
-                         (setf (remote-run-status remote-run) :running))
-                       (let* ((ret (actually-run run stream)))
-                         (log:info "remote run done: ~a" ret)))
+                  (with-event (:replay-job)
+                   (with-open-file (stream (bknr.datastore:blob-pathname log-file) :direction :output)
+                     (handler-bind ((error (lambda (e)
+                                             (write-replay-log "Got condition: ~a" e))))
+                       (with-hash-lock-held ((remote-run-company remote-run) *hash-lock*)
+                         (with-transaction ()
+                           (setf (remote-run-status remote-run) :running))
+                         (let* ((ret (actually-run run stream)))
+                           (log:info "remote run done: ~a" ret)))
 
-                      ;; todo: move to unwind-protect
-                      (funcall cleanup)))
+                       ;; todo: move to unwind-protect
+                       (funcall cleanup))))
                   (with-transaction ()
                     (setf (remote-run-status remote-run) :success))))
               :name (format nil "remote-replay-management-threads for ~a" (bknr.datastore:store-object-id remote-run)))))

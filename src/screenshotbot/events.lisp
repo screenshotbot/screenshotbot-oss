@@ -119,6 +119,17 @@
 (defmethod push-event (name &rest args)
   (apply #'push-event-impl *event-engine* name args))
 
+(def-easy-macro with-event (name &fn fn)
+  (flet ((push-type (type)
+           (push-event (intern (format nil "~a.~a" name type) "KEYWORD"))))
+   (handler-bind ((error (lambda (e)
+                           (declare (ignore e))
+                           (push-type "FAILURE"))))
+     (let ((ret (funcall fn)))
+       (push-type "SUCCESS")
+       ret))))
+
+
 (def-cron flush-events (:step-min 1)
   (ignore-and-log-errors ()
    (flush-events *event-engine*)))
