@@ -259,7 +259,9 @@
                :util/fiveam)
   :serial t
   :components ((:module "tests"
-                :components ((:file "test-ret-let")
+                :components ((:static-file "test-file" :type "txt")
+                             (:static-file "test-file-compressed" :type "txt.gz")
+                             (:file "test-ret-let")
                              (:file "test-misc")
                              (:file "test-request")
                              (:file "test-store")

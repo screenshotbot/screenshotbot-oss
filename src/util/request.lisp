@@ -51,26 +51,35 @@
 (defun http-request (url &rest args &key headers-as-hash-table
                                       want-string
                                       ensure-success
+                                      decode-content
+                                      additional-headers
+                                      accept-gzip
                                       want-stream
                                       (verify #-(or mswindows win32) :required
                                               #+(or mswindows win32) nil)
                      &allow-other-keys)
   (let* ((url (fix-bad-chars url))
          (args (a:remove-from-plist args :headers-as-hash-table
+                                    :accept-gzip
                                        :ensure-success
                                        :want-string
                                        #+ccl :connection-timeout
                                        #-lispworks :read-timeout)))
 
+    (when accept-gzip
+      (push
+       (cons :accept-encoding "gzip")
+       additional-headers))
     (when want-string
       (setf want-stream t))
 
     (multiple-value-bind (res status headers)
         (wrap-ssl-errors (:ensure-success ensure-success :want-stream want-stream)
          (apply #'drakma:http-request url
-                  :want-stream want-stream
-                  :verify verify
-                  args))
+                :want-stream want-stream
+                :additional-headers additional-headers
+                :verify verify
+                args))
       (flet ((maybe-ensure-success (&optional response)
                (declare (ignore response))
                (when (and ensure-success
