@@ -70,6 +70,8 @@
                "util/store"
                "util/misc"
                "util/random-port"
+               #+lispworks
+               "util/memory"
                "cl-cron")
   :serial t
   :components ((:file "ret-let")
@@ -95,9 +97,13 @@
                (:file "acceptor")
                (:file "mquery")
                (:file "form-errors")
-               (:file "debugger-hook")
-               #+lispworks
-               (:file "memory")))
+               (:file "debugger-hook")))
+
+#+lispworks
+(defsystem :util/memory
+    :serial t
+    :depends-on (:osicat)
+    :components ((:file "memory")))
 
 (defsystem :util/logrotate
   :serial t
@@ -275,6 +281,8 @@
                              (:file "test-mockable")
                              (:file "test-health-check")
                              (:file "test-mquery")
+                             #+ (and lispworks linux)
+                             (:file "test-memory")
                              (:file "test-make-instance-with-accessors")
                              (:file "test-digests")))
                (:module "phabricator"

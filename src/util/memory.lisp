@@ -1,6 +1,8 @@
 (defpackage :util/memory
   (:use #:cl)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:process-mem-usage))
 (in-package :util/memory)
 
 (defun safe-type-of (x)
@@ -49,6 +51,19 @@
         (incf curr (funcall weight-fn obj))
         (when (> curr pt)
           (return obj))))))
+
+(defun process-mem-usage ()
+  (let ((ret 0))
+    #+linux
+    (let ((pid (osicat-posix:getpid)))
+      (with-open-file (stream (format nil "/proc/~d/smaps" pid))
+        (loop for line = (read-line stream nil nil)
+              while line
+              for parts = (str:split ":" line)
+              do
+                 (when (string= "Pss" (first parts))
+                   (incf ret (parse-integer (str:trim (second parts))  :junk-allowed t))))))
+    ret))
 
 
 ;; (histogram)
