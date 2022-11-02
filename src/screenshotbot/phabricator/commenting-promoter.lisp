@@ -42,7 +42,7 @@
   (restart-case
       (let* ((channel (recorder-run-channel run))
              (merge-base (recorder-run-merge-base run))
-             (base-run (production-run- for channel :commit merge-base)))
+             (base-run (production-run-for channel :commit merge-base)))
         (flet ((comment (fmt &rest args)
                  (setf (promoter-comment promoter) (apply 'format nil fmt args))))
          (cond
