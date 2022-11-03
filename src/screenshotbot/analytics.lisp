@@ -106,8 +106,10 @@
   (when *event-engine*
     (let ((res
             (with-db (db *event-engine*)
-              (loop for ev in (append *events* (clsql:select 'analytics-event :database db
-                                                 :flatp t))
+              (loop for ev in (append *events*
+                                      (nreverse
+                                       (clsql:select 'analytics-event :database db
+                                         :flatp t)))
                     if (funcall keep-if ev)
                       collect (funcall function ev)))))
       (cond
