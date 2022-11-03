@@ -45,6 +45,8 @@
                 #:taskie-page-title)
   (:import-from #:screenshotbot/model/report
                 #:report-company)
+  (:import-from #:screenshotbot/events
+                #:push-event)
   (:export #:report-page #:report-link
            #:shared-report-page))
 (in-package :screenshotbot/dashboard/reports)
@@ -158,6 +160,7 @@
     </simple-card-page>))
 
 (defun submit-share-report (report expiry-date)
+  (push-event :share.create)
   (let ((errors))
     (flet ((check (field check message)
              (unless check
