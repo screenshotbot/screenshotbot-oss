@@ -15,17 +15,26 @@
                 #:with-fake-request)
   (:import-from #:util/store
                 #:with-test-store)
+  (:import-from #:screenshotbot/events
+                #:*event-engine*
+                #:db-engine)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-analytics)
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-   (let ((*events* nil)
-         (ev1 (make-instance 'analytics-event
-                              :session "foo")))
-     (&body))))
+  (uiop:with-temporary-file (:pathname pathname)
+    (with-test-store ()
+      (let* ((*event-engine*
+              (make-instance 'db-engine
+                             :connection-spec
+                             `(,(namestring pathname))
+                             :database-type :sqlite3)))
+        (let ((*events* nil)
+              (ev1 (make-instance 'analytics-event
+                                  :session "foo")))
+          (&body))))))
 
 (test preconditions
   (with-fixture state ()

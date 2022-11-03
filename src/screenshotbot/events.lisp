@@ -65,33 +65,46 @@
           do
              (format *sql-stream* ",")
         do
-        (clsql-sys::output-sql val database)))
+           (clsql-sys::output-sql val database)))
+
+(defun format-ts (ts)
+  (local-time:format-timestring
+   nil ts :format
+   '((:year 4) "-"
+     (:month  2) "-"
+     (:day  2) " "
+     (:hour 2) ":"
+     (:min  2) ":"
+     (:sec  2))))
+
+(defun insert-multiple-items (db events columns row-builder)
+  (when events
+    (clsql:insert-records
+     :into "event"
+     :attributes (loop for name in columns
+                       collect
+                       (make-instance 'sql-ident :name name))
+     :values (make-instance
+              'sql-value-list
+              :values
+              (loop for ev in events
+                    collect
+                    (loop for item in (funcall row-builder ev)
+                          if (typep item 'local-time:timestamp)
+                            collect (format-ts item)
+                          else
+                            collect item)))
+     :database db)))
 
 (defun insert-events (events db)
-  (when events
-   (clsql:insert-records
-    :into "event"
-    :attributes (loop for name in
-                      '("name" "extras" "created_at")
-                      collect
-                      (make-instance 'sql-ident :name name))
-    :values (make-instance
-             'sql-value-list
-             :values
-             (loop for ev in events
-                   collect
-                   (list
-                    (event-name ev)
-                    (event-extras ev)
-                    (local-time:format-timestring
-                     nil (created-at ev) :format
-                     '((:year 4) "-"
-                       (:month  2) "-"
-                       (:day  2) " "
-                       (:hour 2) ":"
-                       (:min  2) ":"
-                       (:sec  2))))))
-    :database db)))
+  (insert-multiple-items db
+                         events
+                         '("name" "extras" "created_at")
+                         (lambda (ev)
+                           (list
+                            (event-name ev)
+                            (event-extras ev)
+                            (created-at ev)))))
 
 (defmethod push-event-impl ((engine db-engine) name &rest args)
   (let ((ev (make-instance 'event
