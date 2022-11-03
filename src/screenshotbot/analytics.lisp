@@ -14,40 +14,44 @@
                 #:def-cron)
   (:import-from #:util/store
                 #:object-store)
+  (:import-from #:screenshotbot/events
+                #:*event-engine*
+                #:insert-multiple-items
+                #:db-engine
+                #:with-db)
+  (:import-from #:util/lists
+                #:with-batches)
+  (:import-from #:util/misc
+                #:?.)
   (:export #:push-analytics-event
            #:analytics-event-ts
            #:analytics-event-script-name
            #:map-analytics-events))
 (in-package :screenshotbot/analytics)
 
-(defvar *events-lock* (bt:make-lock))
 (defvar *events* nil)
 
-(defun analytics-log-file ()
-  (ensure-directories-exist
-   (path:catfile (object-store) "analytics/access-log")))
-
-(defclass analytics-event ()
+(clsql:def-view-class analytics-event ()
   ((ip-address
+    :initform nil
     :initarg :ip-address)
    (session
     :initarg :session
+    :initform nil
     :accessor event-session)
    (script-name
     :initarg :script-name
+    :initform nil
     :reader analytics-event-script-name)
    (query-string
     :initarg :query-string
     :initform nil)
-   (writtenp
-    :initarg :writtenp
-    :initform nil
-    :accessor writtenp)
    (ts :initform (get-universal-time)
        :initarg :ts
        :reader analytics-event-ts)
    (referrer :initarg :referrer)
-   (user-agent :initarg :user-agent)))
+   (user-agent :initarg :user-agent))
+  (:base-table "analytics"))
 
 (defun write-analytics-events ()
   ;; if we enter the debugger with the lock, then the website will be
@@ -57,73 +61,63 @@
 
 
 (defun make-digest (str)
-    (ironclad:digest-sequence
-     :sha256 (flexi-streams:string-to-octets str)))
+  (ironclad:byte-array-to-hex-string
+   (ironclad:digest-sequence
+    :sha256 (flexi-streams:string-to-octets str))))
 
 (defun hash-session-id (ev)
   (when (stringp (event-session ev))
     (setf (event-session ev)
           (make-digest (event-session ev)))))
 
+(defmethod write-analytics-events-to-engine ((engine null) events))
+
+(defmethod write-analytics-events-to-engine ((engine db-engine) events)
+  (with-db (db engine)
+    (with-batches (events events)
+      (insert-multiple-items db "analytics" events
+                             '("ip_address" "session" "script_name"
+                               "referrer"
+                               "user_agent"
+                               "query_string" "ts")
+                             (lambda (event)
+                               (list
+                                (slot-value event 'ip-address)
+                                (event-session event)
+                                (analytics-event-script-name event)
+                                (ignore-errors
+                                 (slot-value event 'referrer))
+                                (ignore-errors
+                                 (slot-value event 'user-agent))
+                                (slot-value event 'query-string)
+                                (local-time:universal-to-timestamp
+                                 (analytics-event-ts event))))))))
+
 (defun %write-analytics-events ()
   (let ((old-events (util/atomics:atomic-exchange *events* nil)))
-    (bt:with-lock-held (*events-lock*)
-     (with-open-file (s (analytics-log-file)
-                        :direction :output
-                        :if-exists :append
-                        :element-type '(unsigned-byte 8)
-                        :if-does-not-exist :create)
-       (dolist (ev (nreverse old-events))
-         (when (consp (event-session ev))
-           (setf (event-session ev) (car (event-session ev))))
-         (hash-session-id ev)
-         (setf (writtenp ev) t)
-         (cl-store:store ev s))
-       (finish-output s)))))
-
-(defun all-saved-analytics-events ()
-  (read-log-file (analytics-log-file)))
-
-(defun read-log-file (log-file)
-  (with-open-file (s log-file
-                   :direction :input
-                   :element-type '(unsigned-byte 8)
-                   :if-does-not-exist :create)
-    (nreverse
-     (loop for x = (ignore-errors
-                    (cl-store:restore s))
-           while x
-           collect x))))
+    (write-analytics-events-to-engine *event-engine*
+                                      old-events)))
 
 (defun all-analytics-events ()
   (map-analytics-events #'identity))
 
 (defun map-analytics-events (function &key (keep-if (lambda (x) (declare (ignore x)) t))
                                         limit)
-  (let ((count 0)
-        ret)
-    (declare (type fixnum count))
-    (flet ((keep-looking? ()
-             (or (null limit) (< count limit)))
-           (maybe-send (ev)
-             (when (funcall keep-if ev)
-               (incf count)
-               (hash-session-id ev)
-               (push (funcall function ev) ret))))
-      (iter (for ev in *events*)
-        (while (keep-looking?))
-        (maybe-send ev))
-      (flet ((process-log-file (log-file)
-               (iter (for ev in (read-log-file log-file))
-                 (while (keep-looking?))
-                 (maybe-send ev))))
-        (process-log-file (analytics-log-file))
-        (iter (for i from 0)
-          (while (keep-looking?))
-          (let ((log-file (format nil "~a.~d" (namestring (analytics-log-file)) i)))
-            (while (path:-e log-file))
-            (process-log-file log-file))))
-      (nreverse ret))))
+  (declare (ignore limit))
+  (when *event-engine*
+    (let ((res
+            (with-db (db *event-engine*)
+              (loop for ev in (append *events* (clsql:select 'analytics-event :database db
+                                                 :flatp t))
+                    if (funcall keep-if ev)
+                      collect (funcall function ev)))))
+      (cond
+        (limit
+         (loop for ev in res
+               for i below limit
+               collect ev))
+        (t
+         res)))))
 
 
 (defun push-analytics-event ()

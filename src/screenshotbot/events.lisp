@@ -77,10 +77,10 @@
      (:min  2) ":"
      (:sec  2))))
 
-(defun insert-multiple-items (db events columns row-builder)
+(defun insert-multiple-items (db table events columns row-builder)
   (when events
     (clsql:insert-records
-     :into "event"
+     :into table
      :attributes (loop for name in columns
                        collect
                        (make-instance 'sql-ident :name name))
@@ -98,6 +98,7 @@
 
 (defun insert-events (events db)
   (insert-multiple-items db
+                         "event"
                          events
                          '("name" "extras" "created_at")
                          (lambda (ev)
