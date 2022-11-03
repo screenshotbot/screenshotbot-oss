@@ -35,7 +35,7 @@
    #:fix-timestamps))
 
 (defmacro with-test-user ((&key (company (gensym "company"))
-                                (company-name "Dummy org")
+                                (company-name (string (gensym "dummy company")))
                                 (company-class '(quote company))
                              (user (gensym "user"))
                              (api-key (gensym "api-key"))
