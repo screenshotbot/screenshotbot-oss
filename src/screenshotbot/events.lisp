@@ -107,14 +107,12 @@
 
 (defmethod flush-events ((engine db-engine))
   (when *events*
-   (let ((events))
-     (atomics:atomic-update *events* (lambda (old)
-                                       (setf events old)
-                                       nil))
-     ;; if the connection fails, then we'll drop the events and that's okay
-     (with-db (db engine)
-      (with-batches (events events :batch-size 1000)
-        (insert-events events db))))))
+    (let ((events (util/atomics:atomic-exchange
+                   *events* nil)))
+      ;; if the connection fails, then we'll drop the events and that's okay
+      (with-db (db engine)
+        (with-batches (events events :batch-size 1000)
+          (insert-events events db))))))
 
 (defmethod push-event (name &rest args)
   (apply #'push-event-impl *event-engine* name args))

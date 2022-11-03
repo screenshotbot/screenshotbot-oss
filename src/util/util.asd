@@ -116,6 +116,11 @@
                :str)
   :components ((:file "misc")))
 
+(defsystem :util/atomics
+  :serial t
+  :depends-on (:atomics)
+  :components ((:file "atomics")))
+
 #+lispworks
 (defsystem :util/remote-debugging
   :serial t

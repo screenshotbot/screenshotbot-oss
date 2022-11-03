@@ -65,6 +65,7 @@
   :serial t
   :depends-on (:util/clsql
                :util/misc
+               :util/atomics
                :atomics)
   :components ((:file "events")))
 

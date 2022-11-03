@@ -56,15 +56,6 @@
     (%write-analytics-events)))
 
 
-(defmacro atomic-exchange (place new-val)
-  #-lispworks
-  `(bt:with-lock-held (*events-lock*)
-     (let ((old-value ,place))
-       (setf ,place ,new-val)
-       old-value))
-  #+lispworks
-  `(system:atomic-exchange ,place ,new-val))
-
 (defun make-digest (str)
     (ironclad:digest-sequence
      :sha256 (flexi-streams:string-to-octets str)))
@@ -75,7 +66,7 @@
           (make-digest (event-session ev)))))
 
 (defun %write-analytics-events ()
-  (let ((old-events (atomic-exchange *events* nil)))
+  (let ((old-events (util/atomics:atomic-exchange *events* nil)))
     (bt:with-lock-held (*events-lock*)
      (with-open-file (s (analytics-log-file)
                         :direction :output
@@ -143,11 +134,7 @@
                             :referrer (hunchentoot:referer)
                             :script-name (hunchentoot:script-name hunchentoot:*request*)
                             :query-string (hunchentoot:query-string*))))
-    #+lispworks
-    (system:atomic-push ev *events*) ;; micro optimization :/
-    #-lispworks
-    (bt:with-lock-held (*events-lock*)
-      (push ev *events*))))
+    (atomics:atomic-push ev *events*)))
 
 (def-cron write-analytics-events ()
   (write-analytics-events))
