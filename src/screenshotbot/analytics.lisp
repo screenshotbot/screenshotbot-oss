@@ -46,7 +46,7 @@
    (query-string
     :initarg :query-string
     :initform nil)
-   (ts :initform (get-universal-time)
+   (ts :initform (local-time:now)
        :initarg :ts
        :reader analytics-event-ts)
    (referrer :initarg :referrer)
@@ -90,8 +90,7 @@
                                 (ignore-errors
                                  (slot-value event 'user-agent))
                                 (slot-value event 'query-string)
-                                (local-time:universal-to-timestamp
-                                 (analytics-event-ts event))))))))
+                                (analytics-event-ts event)))))))
 
 (defun %write-analytics-events ()
   (let ((old-events (util/atomics:atomic-exchange *events* nil)))
