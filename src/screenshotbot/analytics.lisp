@@ -125,7 +125,8 @@
   (let ((ev (make-instance 'analytics-event
                             :ip-address (hunchentoot:real-remote-addr)
                             :user-agent (hunchentoot:user-agent)
-                            :session (car (auth:session-key (auth:current-session)))
+                            :session
+                               (make-digest (car (auth:session-key (auth:current-session))))
                             :referrer (hunchentoot:referer)
                             :script-name (hunchentoot:script-name hunchentoot:*request*)
                             :query-string (hunchentoot:query-string*))))
