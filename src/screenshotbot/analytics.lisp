@@ -48,7 +48,7 @@
     :initform nil)
    (ts :initform (local-time:now)
        :initarg :ts
-       :reader analytics-event-ts)
+       :accessor analytics-event-ts)
    (referrer :initarg :referrer)
    (user-agent :initarg :user-agent))
   (:base-table "analytics"))
@@ -100,6 +100,12 @@
 (defun all-analytics-events ()
   (map-analytics-events #'identity))
 
+(defun ensure-local-time-ts (ev)
+  (when (typep (analytics-event-ts ev) 'string)
+    (setf (analytics-event-ts ev)
+          (local-time:parse-timestring (str:replace-all " " "T" (analytics-event-ts ev)))))
+  ev)
+
 (defun map-analytics-events (function &key (keep-if (lambda (x) (declare (ignore x)) t))
                                         limit)
   (declare (ignore limit))
@@ -111,7 +117,7 @@
                                        (clsql:select 'analytics-event :database db
                                          :flatp t)))
                     if (funcall keep-if ev)
-                      collect (funcall function ev)))))
+                      collect (funcall function (ensure-local-time-ts ev))))))
       (cond
         (limit
          (loop for ev in res

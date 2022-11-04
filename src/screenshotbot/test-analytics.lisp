@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/analytics
+                #:analytics-event-ts
                 #:make-digest
                 #:map-analytics-events
                 #:push-analytics-event
@@ -25,12 +26,15 @@
   (:import-from #:fiveam-matchers/described-as
                 #:described-as)
   (:import-from #:fiveam-matchers/core
+                #:has-typep
                 #:is-not
                 #:assert-that)
   (:import-from #:fiveam-matchers/misc
                 #:is-null)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
+  (:import-from #:fiveam-matchers/every-item
+                #:every-item)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-analytics)
 
@@ -121,4 +125,15 @@
     (write-analytics-events)
     (is (equalp (list (make-digest "foo") (make-digest "foo") (make-digest "foo"))
                (map-analytics-events #'event-session
-                                       :limit 3)))))
+                                     :limit 3)))))
+
+(test serialized-timestamp-is-still-local-time
+  (with-fixture state ()
+    (push ev1 *events*)
+    (assert-that (mapcar #'analytics-event-ts (all-analytics-events))
+                 (described-as "Before pushing to DB, obviously timestamps haven't been serialized"
+                  (every-item (has-typep 'local-time:timestamp))))
+    (write-analytics-events)
+    (assert-that (mapcar #'analytics-event-ts (all-analytics-events))
+                 (described-as "After pushing to DB we deserialize timestamps"
+                  (every-item (has-typep 'local-time:timestamp))))))
