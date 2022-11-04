@@ -197,11 +197,15 @@
   (markup:write-html
     <landing-template>
       <section class="full-height">
-      <div class= "container">
+        <div class= "container mt-3">
 
+          <a href= "/"><img src= "/assets/images/logo-dark-scaled.webp" style=
+                            "max-height: 2em; width: auto; margin-bottom: 1em; margin-top: 2em; object-position: top 0 left -0.4rem" /></a>
+          <h1>The page you're looking for doesn't exist.</h1>
 
-      <h1>The page you're looking for doesn't exist.</h1>
-      <p>If this doesn't look right, mail me at <a href="mailto:arnold@screenshotbot.io">arnold@screenshotbot.io</a>, and I'll resolve it immediately.</p>
+          ,(progn
+             #-screenshotbot-oss
+             <p>If this doesn't look right, reach out at <a href="mailto:support@screenshotbot.io">support@screenshotbot.io</a>, and we'll resolve it immediately.</p>)
         </div>
       </section>
     </landing-template>))
