@@ -35,14 +35,12 @@
 
 (defclass event ()
   ((name :initarg :name
-         :type string
          :reader event-name)
    (extras :initarg :extras
            :initform nil
            :reader event-extras)
    (created-at
     :accessor created-at
-    :type local-time:timestamp
     :initform (local-time:now))))
 
 (def-easy-macro with-db (&binding db engine &fn fn)
