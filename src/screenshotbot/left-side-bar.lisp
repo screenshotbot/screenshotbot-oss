@@ -135,14 +135,10 @@
 
       ,(when user
          #-screenshotbot-oss
-         <li class= "nav-item"  >
-           <a href= "#" class= "nav-link text-white modal-link" data-href= "/ticket/create" >
-             <mdi name= "report" />
-             <span class= "text">Report Issue
-
-             </span>
-           </a>
-         </li>)
+         <left-nav-item href= "/ticket/create" image-class= "report"
+                        script-name=script-name >
+                        Report Issue
+         </left-nav-item>)
     </ul>
 
     <hr class= "mb-0" />
