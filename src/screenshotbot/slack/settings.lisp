@@ -28,6 +28,8 @@
                 #:slack-error)
   (:import-from #:screenshotbot/taskie
                 #:timeago)
+  (:import-from #:screenshotbot/ui/confirmation-page
+                #:confirmation-page)
   (:export #:post-settings-slack))
 (in-package :screenshotbot/slack/settings)
 
@@ -37,9 +39,17 @@
   (with-plugin (slack-plugin)
    (let* ((slack-config (find-or-create-slack-config company))
           (disconnect (nibble (:method :post)
-                        (with-transaction ()
-                          (setf (access-token slack-config) nil))
-                        (hex:safe-redirect "/settings/slack"))))
+                        (confirmation-page
+                         :yes (nibble ()
+                                (with-transaction ()
+                                  (setf (access-token slack-config) nil)
+                                  (hex:safe-redirect "/settings/slack")))
+                         :no "/settings/slack"
+                         <div>
+                           <p>Are you sure you want to disconnect the Slack connection?</p>
+
+                           <p>Reconnecting Slack will require access to your Slack workspace.</p>
+                         </div>))))
      (cond
        ((access-token slack-config)
         <div class= "form-group mb-3">
