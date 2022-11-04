@@ -29,8 +29,6 @@
                 #:trigger-promoters-waiting-on-commit
                 #:waiting-on-commit
                 #:async-promoter)
-  (:import-from #:bknr.datastore
-                #:with-transaction)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:fiveam-matchers/core
