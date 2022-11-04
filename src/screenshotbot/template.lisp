@@ -197,9 +197,11 @@
   (markup:write-html
     <landing-template>
       <section class="full-height">
-        <div class= "container">
-          <h1>The page you're looking for doesn't exist.</h1>
-          <p>If this doesn't look right, mail me at <a href="mailto:arnold@screenshotbot.io">arnold@screenshotbot.io</a>, and I'll resolve it immediately.</p>
+      <div class= "container">
+
+
+      <h1>The page you're looking for doesn't exist.</h1>
+      <p>If this doesn't look right, mail me at <a href="mailto:arnold@screenshotbot.io">arnold@screenshotbot.io</a>, and I'll resolve it immediately.</p>
         </div>
       </section>
     </landing-template>))

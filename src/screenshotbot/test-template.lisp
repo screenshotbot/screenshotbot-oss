@@ -20,7 +20,11 @@
                 #:assert-that)
   (:import-from #:screenshotbot/installation
                 #:installation
-                #:*installation*))
+                #:*installation*)
+  (:import-from #:screenshotbot/server
+                #:acceptor)
+  (:import-from #:util/testing
+                #:screenshot-static-page))
 
 (util/fiveam:def-suite)
 
@@ -48,3 +52,12 @@
    (assert-that
     (something-went-wrong)
     (is-string))))
+
+(test screenshot-404-page
+  (with-fixture state ()
+    (screenshot-static-page
+      :screenshotbot
+      "404-page"
+      (hunchentoot:acceptor-status-message
+       (make-instance 'acceptor)
+       404))))
