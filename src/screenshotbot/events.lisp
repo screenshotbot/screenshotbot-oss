@@ -48,6 +48,8 @@
 (def-easy-macro with-db (&binding db engine &fn fn)
   (let ((db (clsql:connect (connection-spec engine)
                            :database-type (database-type engine)
+                           :make-default nil
+                           :if-exists :new
                            :pool nil
                            :make-default nil)))
     (unwind-protect
@@ -143,7 +145,7 @@
        ret))))
 
 
-(def-cron flush-events (:step-min 1)
+(def-cron flush-events (:step-min 2)
   (ignore-and-log-errors ()
    (flush-events *event-engine*)))
 
