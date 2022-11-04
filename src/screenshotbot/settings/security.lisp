@@ -78,7 +78,7 @@
         </settings-card-body>
 
   <settings-card-footer >
-    <input type= "submit" class= "btn btn-danger float-right mb-3" value= "Change Password" >
+    <input type= "submit" class= "btn btn-danger float-right" value= "Change Password" >
     ,(when success
        <div class= "float-right" >Password was successfully changed</div>)
 
