@@ -390,6 +390,8 @@
                (:file "test-analytics")
                (:module "email-tasks"
                 :components ((:file "test-task-integration")))
+               (:module "settings"
+                :components ((:file "test-security")))
                (:module "api"
                 :components ((:file "test-core")
                              (:file "test-image")
