@@ -118,7 +118,7 @@
   :section nil
   :title "Security"
   :handler (lambda ()
-             (settings-security-page :success t)))
+             (settings-security-page)))
 
 (defun settings-security-page-post (current-password
                                     password
