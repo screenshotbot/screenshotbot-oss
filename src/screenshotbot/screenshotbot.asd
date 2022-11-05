@@ -314,6 +314,7 @@
                :util
                :util/fiveam
                :fiveam-matchers
+               :util/random-port
                :screenshotbot/utils
                :screenshotbot/replay-core
                :screenshotbot/webdriver

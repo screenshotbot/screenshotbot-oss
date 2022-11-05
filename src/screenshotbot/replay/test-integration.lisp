@@ -296,3 +296,28 @@
      :urls (list "https://www.google.com")
      :tmpdir tmpdir)
     (pass)))
+
+
+(def-fixture fake-acceptor (&rest options)
+  ;; We're using a hunchentoot server here since it's the most common
+  ;; use case. It also correctly works on both IPv6 and IPv4.
+  (let* ((port (random-port))
+         (acceptor (apply #'make-instance 'hunchentoot:acceptor :port
+                          port
+                          options)))
+    (unwind-protect
+         (progn
+           (hunchentoot:start acceptor)
+           (&body))
+      (hunchentoot:stop acceptor))))
+
+(test get-local-addr
+  (with-fixture fake-acceptor ()
+    (is (equal "127.0.0.1"
+               (get-local-addr "127.0.0.1" port)))))
+
+#+lispworks ;; currently breaking badly on SBCL and CCL
+(test get-local-addr-on-ipv6
+  (with-fixture fake-acceptor (:address "::1")
+    (is (equal "::1"
+               (get-local-addr "::1" port)))))

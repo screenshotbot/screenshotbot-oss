@@ -102,8 +102,14 @@
  (defun get-local-addr (host port)
    (let ((socket (usocket:socket-connect host port)))
      (unwind-protect
-          (str:join "." (loop for i across (usocket:get-local-name socket)
-                              collect (format nil "~d" i)))
+          (progn
+            #-lispworks
+            (let ((local-name (usocket:get-local-name socket)))
+              (str:join "." (loop for i across local-name
+                                  collect (format nil "~d" i))))
+            #+lispworks
+            (let ((local-name (comm:get-socket-address (usocket:socket socket))))
+              (comm:ip-address-string local-name)))
        (usocket:socket-close socket)))))
 
 #+nil
