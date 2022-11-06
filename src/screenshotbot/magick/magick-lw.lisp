@@ -13,6 +13,8 @@
                 #:abstract-magick)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:screenshotbot/events
+                #:push-event)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#-lispworks #:fli #:util/fake-fli))
@@ -360,6 +362,7 @@
 
 (def-easy-macro with-wand (&binding wand &key file from (alpha t) &fn fn)
   (init-magick-wand)
+  (push-event :magick.with-wand)
   (let ((wand (or from (new-magick-wand))))
     (unwind-protect
          (progn
@@ -387,6 +390,7 @@
        (destroy-magick-wand output)))))
 
 (defmethod compare-image-files ((magick magick-native) file1 file2)
+  (push-event :magick.compare-images-files)
   (with-wand (wand1 :file file1)
     (with-wand (wand2 :file file2)
       (compare-images wand1 wand2))))
@@ -394,6 +398,7 @@
 
 
 (defmethod convert-to-lossless-webp ((self magick-native) input output)
+  (push-event :magick.convert-to-lossless-webp)
   (with-wand (wand :file input)
     (check-boolean (magick-set-option wand "webp:lossless" "true") wand)
     (check-boolean (magick-strip-image wand) wand)
@@ -409,6 +414,7 @@
     (list width height)))
 
 (defmethod ping-image-metadata ((magick magick-native) file)
+  (push-event :magick.ping-image-metadata)
   (with-wand (wand)
     (check-boolean (magick-ping-image wand (namestring file))
                    wand)
@@ -439,6 +445,7 @@
 (defun map-non-alpha-pixels (wand fn &key (limit 1000))
   ;; for each pixel in wand that is not 100% transparent, call the
   ;; function, upto LIMIT times.
+  (push-event :magick.map-non-alpha)
   (let ((pxs (get-non-alpha-pixels wand :limit limit)))
     (loop for i below (car (array-dimensions pxs))
           do (funcall fn (aref pxs i 0) (aref pxs i 1)))))
