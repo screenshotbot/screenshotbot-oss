@@ -19,6 +19,8 @@
                 #:with-screenshotbot-kernel)
   (:import-from #:util/misc
                 #:safe-ensure-directories-exist)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:null-store
@@ -57,7 +59,8 @@
 (defmethod s3-store-update-remote ((store s3-store) file key)
   (with-screenshotbot-kernel ()
     (lparallel:speculate
-      (upload-file store file key))))
+      (ignore-and-log-errors ()
+       (upload-file store file key)))))
 
 (defmethod s3-store-update-remote ((store null-s3-store) file key)
   nil)
