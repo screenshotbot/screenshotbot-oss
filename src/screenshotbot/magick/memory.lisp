@@ -8,6 +8,8 @@
   (:use #:cl)
   (:import-from #:screenshotbot/events
                 #:push-event)
+  (:import-from #:util/cron
+                #:def-cron)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:update-magick-memory-methods))
@@ -41,12 +43,16 @@
   (ignore-errors
    (setf (gethash (fli:pointer-address mem) *allocs*)
          (make-instance 'allocation-info
-                         :size size))))
+                        :size size))))
+
+(defvar *unlogged-size* 0)
+
+(defun maybe-log (size)
+  (atomics:atomic-incf *unlogged-size* size))
 
 (defun malloc (size)
   (log:debug "Allocation ~d" size)
-  (when (> size (* 1024 1024))
-    (push-event :magick.allocation :size size))
+  (maybe-log size)
   (let ((mem (%malloc size)))
     (add-info mem size)
     mem))
@@ -70,6 +76,7 @@
 
 (defun realloc (ptr size)
   (log:info "Realloc ~d" size)
+  (maybe-log size)
   (let ((ret (%realloc ptr size)))
     (clear-info ptr)
     (add-info ret size)
@@ -96,3 +103,11 @@
      (ptr "screenshotbot_malloc")
      (ptr "screenshotbot_realloc")
      (ptr "screenshotbot_free"))))
+
+(defun flush-size ()
+  (let ((size (util/atomics:atomic-exchange *unlogged-size* 0)))
+    (unless (= size 0)
+      (push-event :magick.allocation :size size))))
+
+(def-cron flush-size ()
+  (flush-size))

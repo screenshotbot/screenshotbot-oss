@@ -7,6 +7,8 @@
 (defpackage :screenshotbot/magick/test-memory
   (:use #:cl
         #:fiveam)
+  (:import-from #:screenshotbot/magick/memory
+                #:flush-size)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#:fli #:util/fake-fli)))
@@ -58,4 +60,5 @@
 
 (test logging-allocation-happy-path
   (let ((mem (malloc (* 20 1024 1024))))
-    (free mem)))
+    (free mem))
+  (flush-size))
