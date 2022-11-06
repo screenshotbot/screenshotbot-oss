@@ -55,3 +55,7 @@
        (unwind-protect
             (is (not (fli:null-pointer-p mem)))
          (free mem))))))
+
+(test logging-allocation-happy-path
+  (let ((mem (malloc (* 20 1024 1024))))
+    (free mem)))

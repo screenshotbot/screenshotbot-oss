@@ -6,6 +6,8 @@
 
 (defpackage :screenshotbot/magick/memory
   (:use #:cl)
+  (:import-from #:screenshotbot/events
+                #:push-event)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:update-magick-memory-methods))
@@ -43,6 +45,8 @@
 
 (defun malloc (size)
   (log:debug "Allocation ~d" size)
+  (when (> size (* 1024 1024))
+    (push-event :magick.allocation :size size))
   (let ((mem (%malloc size)))
     (add-info mem size)
     mem))
