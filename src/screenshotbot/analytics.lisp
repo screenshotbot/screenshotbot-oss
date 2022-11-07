@@ -138,5 +138,5 @@
                             :query-string (hunchentoot:query-string*))))
     (atomics:atomic-push ev *events*)))
 
-(def-cron write-analytics-events ()
+(def-cron write-analytics-events (:step-min 10)
   (write-analytics-events))
