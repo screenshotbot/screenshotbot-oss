@@ -8,7 +8,9 @@
   (:use :cl
    :alexandria)
   (:export :jvm-init
-           :*libjvm*))
+           :*libjvm*
+           :free-memory
+           :total-memory))
 (in-package :jvm)
 
 #+lispworks
@@ -83,3 +85,17 @@
 
   #+(and :lispworks (not :screenshotbot-oss))
   (lw-ji:find-java-class "io.tdrhq.TdrhqS3"))
+
+#+lispworks
+(lw-ji:define-java-callers "java.lang.Runtime"
+  (get-runtime "getRuntime")
+  (%total-memory "totalMemory")
+  (%free-memory "freeMemory"))
+
+(defun total-memory ()
+  #+lispworks
+  (%total-memory (get-runtime)))
+
+(defun free-memory ()
+  #+lispworks
+  (%free-memory (get-runtime)))
