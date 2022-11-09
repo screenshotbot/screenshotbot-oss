@@ -49,7 +49,7 @@
                         (quri:uri-scheme (quri:uri url)))
      url)
     (t
-     (nibble ()
+     (nibble (:name :invalid-pull-request)
        (bad-url-page url)))))
 
 (defun review-link (&key run)
