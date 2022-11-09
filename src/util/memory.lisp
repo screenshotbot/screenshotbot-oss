@@ -68,3 +68,35 @@
 
 ;; (histogram)
 ;; (random-sample:random-sample (objects-of-type 'system:tlatter) 100)
+
+(fli:define-foreign-function fmemopen
+    ((buf :lisp-simple-1d-array)
+     (size :size-t)
+     (open-type (:reference-pass :ef-mb-string)))
+  :result-type :pointer)
+
+(fli:define-foreign-function fclose
+    ((buf :pointer))
+  :result-type :int)
+
+(fli:define-foreign-function (%malloc-info "malloc_info")
+    ((options :int)
+     (string :pointer))
+  :result-type :int)
+
+(defun malloc-info ()
+  (let* ((size 10240)
+         (str (make-array (+ 100 size)
+                          :element-type '(unsigned-byte 8)
+                          :allocation :pinnable)))
+    (let ((file (fmemopen str size "w")))
+      (unwind-protect
+           (let ((err (%malloc-info 0 file)))
+             (unless (= err 0)
+               (error "malloc-info failed ~a" err))
+             (flex:octets-to-string str
+                                    :end (position 0 str)))
+        (fclose file)))))
+
+
+(log:info "~a" (malloc-info))

@@ -15,6 +15,10 @@
                 #:channel-repo)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:nibble
+                #:nibble)
+  (:import-from #:screenshotbot/ui/simple-card-page
+                #:simple-card-page)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:review-link
@@ -23,10 +27,35 @@
 
 (markup:enable-reader)
 
+(defun bad-url-page (url)
+  <simple-card-page>
+    <div class= "card-header">
+      <h3>Invalid URL for Pull Request</h3>
+    </div>
+
+    <div class= "card-body">
+      <p>The Pull Request URL is passed using the <tt>--pull-request</tt> command line
+        argument. The provided URL <tt>,(progn url)</tt> appears to be invalid.</p>
+
+      <p>On most CI platforms (with an exception of Jenkins)
+        the pull request URL can be auto-detected correctly
+        and does not need to be provided. </p>
+    </div>
+  </simple-card-page>)
+
+(defun validate-url (url)
+  (cond
+    ((str:starts-with-p "http"
+                        (quri:uri-scheme (quri:uri url)))
+     url)
+    (t
+     (nibble ()
+       (bad-url-page url)))))
+
 (defun review-link (&key run)
   (cond
     ((pull-request-url run)
-     <a href= (pull-request-url run)>Pull Request</a>)
+     <a href= (validate-url (pull-request-url run)) >Pull Request</a>)
     (t
      (review-link-impl (?. channel-repo (recorder-run-channel run)) run))))
 

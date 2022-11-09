@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/memory
+                #:malloc-info
                 #:process-mem-usage)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-memory)
@@ -17,3 +18,7 @@
 
 (test process-mem-usage
   (is (> (process-mem-usage) 0)))
+
+(test malloc-info
+  (finishes
+    (malloc-info)))
