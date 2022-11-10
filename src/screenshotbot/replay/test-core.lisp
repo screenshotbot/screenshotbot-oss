@@ -205,3 +205,9 @@ background: url(shttps://google.com?f=1)
        "https://www.rollins.edu/academic-advising/images/Tres%20Loch.jpg"
        (fix-malformed-url
         "https://www.rollins.edu/academic-advising/images/Tres Loch.jpg"))))
+
+(test http-get-ignores-invalid-url
+  (with-fixture state ()
+    (is (equal
+         500
+         (nth-value 1 (http-get "http://127.0.0.1/????invalid"))))))

@@ -476,7 +476,13 @@
            (t
             ;; we're not cached yet
             (multiple-value-bind (stream %status %headers)
-                (http-get-without-cache url :force-binary t)
+                (handler-case
+                    (http-get-without-cache url :force-binary t)
+                  (puri:uri-parse-error (e)
+                    (write-replay-log "Invalid URL: ~a, will treat as 500" url)
+                    (values
+                     (make-string-input-stream "")
+                      500 (make-hash-table))))
               (with-open-file (output output :element-type '(unsigned-byte 8)
                                              :if-exists :supersede
                                              :direction :output)
