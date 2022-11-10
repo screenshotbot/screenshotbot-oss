@@ -21,11 +21,20 @@
   (:import-from #:screenshotbot/model/channel
                 #:all-active-runs)
   (:import-from #:util/object-id
+                #:find-by-oid
                 #:oid)
   (:import-from #:screenshotbot/dashboard/run-page
                 #:run-page)
   (:import-from #:screenshotbot/taskie
-                #:taskie-page-title))
+                #:taskie-page-title)
+  (:import-from #:screenshotbot/model/company
+                #:company)
+  (:import-from #:screenshotbot/user-api
+                #:recorder-run-screenshots
+                #:current-company
+                #:company-channels)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:active-run))
 (in-package :screenshotbot/dashboard/channels)
 
 (markup:enable-reader)
@@ -71,6 +80,34 @@
     Channel List <explain title= "Channels">,(explain-channels)</explain>
   </span>)
 
+(defun run-for-channel (&key channel company branch)
+  "Use this for external links that need to reference a specific channel.
+ We'll return the based run for the given arguments"
+  (let ((company (if (typep company 'company)
+                     company
+                     (find-by-oid company))))
+    (check-type company company)
+    (let ((channel (loop for c in (company-channels company)
+                         if (string-equal channel (channel-name c))
+                           return c)))
+      (let ((run (active-run channel branch)))
+        (when run
+          (can-view! run)
+          run)))))
+
+(defhandler (badge-handler :uri "/badge") (org channel branch)
+  (let ((run (run-for-channel
+              :channel channel
+              :company (or org (current-company))
+              :branch branch)))
+    (hex:safe-redirect
+     (hex:make-url
+      "https://img.shields.io/static/v1"
+      :label "Screenshotbot"
+      :message (if run (format nil "~a screenshots" (length (recorder-run-screenshots run)))
+                   "No active run for parameters")
+      :color (if run "green" "red")))))
+
 (defun %list-projects (&key
                          (user (current-user))
                          (company (current-company)))
@@ -90,6 +127,7 @@
                      :prev-link prev-link
                      :row-generator (lambda (channel)
                                  (channel-list-row :channel channel)))))))
+
 
 
 
