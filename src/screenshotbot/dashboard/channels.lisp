@@ -34,7 +34,9 @@
                 #:current-company
                 #:company-channels)
   (:import-from #:screenshotbot/model/recorder-run
-                #:active-run))
+                #:active-run)
+  (:import-from #:util/request
+                #:http-request))
 (in-package :screenshotbot/dashboard/channels)
 
 (markup:enable-reader)
@@ -95,18 +97,35 @@
           (can-view! run)
           run)))))
 
-(defhandler (badge-handler :uri "/badge") (org channel branch)
+(defvar *badge-cache* (make-hash-table :test #'equal))
+
+(defun badge-data (&key label message color)
+  (util:or-setf
+   (gethash (list :v1 label message color) *badge-cache*)
+   ;; TODO: use something like
+   ;; https://github.com/dsibilio/badge-maker. Easier to unit test
+   ;; that way.
+   (let ((url "https://img.shields.io/static/v1"))
+     (http-request
+      url
+      :parameters `(("label" . ,label)
+                    ("message" . ,message)
+                    ("color" . ,color))
+      :accept "image/svg+xml"
+      :want-string t))))
+
+(defhandler (badge-handler :uri "/badge" :html nil) (org channel branch)
   (let ((run (run-for-channel
               :channel channel
               :company (or org (current-company))
               :branch branch)))
-    (hex:safe-redirect
-     (hex:make-url
-      "https://img.shields.io/static/v1"
-      :label "Screenshotbot"
-      :message (if run (format nil "~a screenshots" (length (recorder-run-screenshots run)))
-                   "No active run for parameters")
-      :color (if run "green" "red")))))
+    (let ((data (badge-data
+                 :label "Screenshotbot"
+                 :message (if run (format nil "~a screenshots" (length (recorder-run-screenshots run)))
+                              "No active run for parameters")
+                 :color (if run "green" "red"))))
+      (setf (hunchentoot:content-type*) "image/svg+xml")
+      data)))
 
 (defun %list-projects (&key
                          (user (current-user))
