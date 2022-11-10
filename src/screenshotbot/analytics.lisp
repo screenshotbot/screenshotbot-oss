@@ -115,6 +115,8 @@
               (loop for ev in (append *events*
                                       (nreverse
                                        (clsql:select 'analytics-event :database db
+                                         :order-by (list
+                                                    (clsql:sql-expression :attribute "ts"))
                                          :flatp t)))
                     if (funcall keep-if ev)
                       collect (funcall function (ensure-local-time-ts ev))))))
