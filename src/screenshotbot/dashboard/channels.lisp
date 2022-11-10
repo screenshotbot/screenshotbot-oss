@@ -107,7 +107,7 @@
 
 (defun guess-channel-args (channel)
   (list
-   :company (oid (channel-company channel))
+   :org (oid (channel-company channel))
    :channel (channel-name channel)
    :branch (caar (all-active-runs channel))))
 
