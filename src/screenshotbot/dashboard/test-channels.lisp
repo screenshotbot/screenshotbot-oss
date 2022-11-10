@@ -10,6 +10,7 @@
           #:screenshotbot/user-api
           #:fiveam)
   (:import-from #:screenshotbot/dashboard/channels
+                #:single-channel-view
                 #:run-for-channel
                 #:%list-projects)
   (:import-from #:screenshotbot/factory
@@ -37,7 +38,9 @@
                 #:with-fake-request)
   (:import-from #:screenshotbot/user-api
                 #:can-view!
-                #:can-view))
+                #:can-view)
+  (:import-from #:screenshotbot/testing
+                #:screenshot-test))
 (in-package :screenshotbot/dashboard/test-channels)
 
 (util/fiveam:def-suite)
@@ -80,3 +83,7 @@
                       :company (oid company)
                       :branch "master")
      (is-not-null))))
+
+(screenshot-test channel-page
+  (with-fixture state ()
+    (single-channel-view channel)))
