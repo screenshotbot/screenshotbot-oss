@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/dashboard/explain
                 #:explain)
   (:import-from #:screenshotbot/model/channel
+                #:channel-company
                 #:all-active-runs)
   (:import-from #:util/object-id
                 #:find-by-oid
@@ -44,22 +45,71 @@
 (markup:enable-reader)
 
 (defun single-channel-view (channel)
-  <simple-card-page max-width="60em" >
-    <div class= "card-header">
-      <h3>,(channel-name channel)</h3>
+  <app-template >
+    <div class= "main-content">
+      <div class= "card-page-container mt-3 mx-auto" style= "max-width: 60em" >
+        <div class= "card">
+          <div class= "card-header">
+            <h3>,(channel-name channel)</h3>
+          </div>
+          <div class= "card-body">
+            <p>First seen: <timeago timestamp= (created-at channel) />
+            </p>
+            <p>Active run:
+              ,@ (or
+                  (loop for (branch . run) in (all-active-runs channel)
+                        collect
+                        <a href=(hex:make-url 'run-page :id (oid run)) >
+                          Run on ,(progn branch)
+                        </a>)
+                  (list "None"))
+            </p>
+          </div>
+        </div>
+
+        <div class= "card mt-3">
+          <div class= "card-header">
+            <h3>Build Badge</h3>
+          </div>
+
+          <div class= "card-body">
+            ,(let* ((args (guess-channel-args channel))
+                    (link (apply #'hex:make-full-url
+                                 hunchentoot:*request*
+                                 'channel-static-handler
+                                 args))
+                    (badge (apply #'hex:make-full-url
+                                  hunchentoot:*request*
+                                  'badge-handler
+                                  args)))
+               <markup:merge-tag>
+                 <a href=link >
+                   <img src= badge />
+                 </a>
+
+                 <p class= "mt-3" >To use this build badge, you can use the following template in a GitHub flavored markdown file. </p>
+
+
+                 <div>
+                   <tt>
+                     [![Screenshots](,(progn badge))](,(progn link))
+                   </tt>
+                 </div>
+               </markup:merge-tag>)
+
+
+          </div>
+        </div>
+
+      </div>
     </div>
-      <p>First seen: <timeago timestamp= (created-at channel) />
-      </p>
-      <p>Active run:
-        ,@ (or
-            (loop for (branch . run) in (all-active-runs channel)
-                  collect
-                  <a href=(hex:make-url 'run-page :id (oid run)) >
-                    Run on ,(progn branch)
-                  </a>)
-            (list "None"))
-      </p>
-  </simple-card-page>)
+  </app-template>)
+
+(defun guess-channel-args (channel)
+  (list
+   :company (oid (channel-company channel))
+   :channel (channel-name channel)
+   :branch (caar (all-active-runs channel))))
 
 (deftag channel-list-row (&key channel)
   (taskie-row :object channel

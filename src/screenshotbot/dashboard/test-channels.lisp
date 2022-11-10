@@ -86,4 +86,7 @@
 
 (screenshot-test channel-page
   (with-fixture state ()
+    (cl-mock:if-called 'oid
+                       (lambda (arg)
+                         "deadbeef"))
     (single-channel-view channel)))
