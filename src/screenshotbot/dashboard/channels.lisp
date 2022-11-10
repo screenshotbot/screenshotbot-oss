@@ -216,8 +216,6 @@
                                  (channel-list-row :channel channel)))))))
 
 
-
-
 (defhandler (projects-page :uri "/channels") ()
   (with-login ()
     (%list-projects)))

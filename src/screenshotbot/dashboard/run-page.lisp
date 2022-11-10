@@ -84,8 +84,14 @@
 
 (defhandler (run-page :uri "/runs/:id" :method :get) (id name)
   (let* ((run (find-by-oid id 'recorder-run)))
-    (with-login (:company (recorder-run-company run))
-     (render-run-page run :name name))))
+    (flet ((render ()
+             (render-run-page run :name name)))
+     (cond
+       ((can-public-view run)
+        (render))
+       (t
+        (with-login (:company (recorder-run-company run))
+          (render)))))))
 
 (deftag page-nav-dropdown (children &key title)
   (let ()
