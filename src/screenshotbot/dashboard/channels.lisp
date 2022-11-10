@@ -36,7 +36,9 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:active-run)
   (:import-from #:util/request
-                #:http-request))
+                #:http-request)
+  (:import-from #:screenshotbot/ui/simple-card-page
+                #:simple-card-page))
 (in-package :screenshotbot/dashboard/channels)
 
 (markup:enable-reader)
@@ -126,6 +128,22 @@
                  :color (if run "green" "red"))))
       (setf (hunchentoot:content-type*) "image/svg+xml")
       data)))
+
+(defhandler (channel-static-handler :uri "/active-run" :html nil) (org channel branch)
+  (let ((run (run-for-channel
+              :channel channel
+              :company (or org (current-company))
+              :branch branch)))
+    (cond
+      ((not run)
+       <simple-card-page>
+         <div class= "card-body">
+           No such channel or no active runs for this channel.
+         </div>
+       </simple-card-page>)
+      (t
+       (can-view! run)
+       (hex:safe-redirect 'run-page :id (oid run))))))
 
 (defun %list-projects (&key
                          (user (current-user))
