@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/request
+                #:fix-bad-chars
                 #:http-request
                 #:make-header-hash-table)
   (:import-from #:hunchentoot
@@ -112,3 +113,9 @@
                  (a:assoc-value headers :content-encoding)))
       (is
        (equal "32" (a:assoc-value headers :content-length))))))
+
+(test fix-bad-chars
+  (is (equal "https://www.google.com?foo=bar"
+             (fix-bad-chars "https://www.google.com?foo=bar")))
+    (is (equal "https://www.google.com?foo=bar%7Ccar"
+             (fix-bad-chars "https://www.google.com?foo=bar|car"))))
