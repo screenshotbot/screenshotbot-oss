@@ -25,6 +25,7 @@
                 #:no-access-error-page
                 #:acceptor)
   (:import-from #:util/testing
+                #:with-fake-request
                 #:screenshot-static-page)
   (:import-from #:screenshotbot/testing
                 #:screenshot-test))
@@ -67,4 +68,6 @@
 
 (screenshot-test no-access-error-page
   (with-fixture state ()
-    (no-access-error-page)))
+    (with-fake-request ()
+     (auth:with-sessions ()
+       (no-access-error-page)))))

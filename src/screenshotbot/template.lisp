@@ -282,16 +282,17 @@
   </head>)
 
 (defun screenshotbot/server:no-access-error-page ()
-  <html>
-    <landing-head />
-    <body>
-      <section>
-        <div class= "container full-height">
-          You do not have permission to access this page. If you think this is an error please reach out to <a href= "mailto:support@screenshotbot.io">support@screenshotbot.io</a>.
+  <dashboard-template>
+    <div class= "main-content">
+      <div class= "card-page-container mt-3 mx-auto">
+        <div class= "card">
+          <div class= "card-body">
+            You do not have permission to access this page. If you think this is an error please reach out to <a href= "mailto:support@screenshotbot.io">support@screenshotbot.io</a>.
+          </div>
         </div>
-      </section>
-    </body>
-  </html>)
+      </div>
+    </div>
+  </dashboard-template>)
 
 
 (deftag landing-template (body)
