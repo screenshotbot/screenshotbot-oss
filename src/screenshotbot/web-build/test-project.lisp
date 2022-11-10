@@ -78,8 +78,17 @@
           (scheduled-job-run-now project)))
       (is (equal nil calls)))))
 
+(def-fixture screenshots ()
+  (with-fake-request ()
+    (auth:with-sessions ()
+      (&body))))
+
 (screenshot-test web-build-new-form
   (with-fixture state ()
-    (with-fake-request ()
-      (auth:with-sessions ()
-        (form :submit "")))))
+    (with-fixture screenshots ()
+      (form :submit ""))))
+
+(screenshot-test web-form-with-exclusions
+  (with-fixture state ()
+    (with-fixture screenshots ()
+      (form :submit "" :exclusions "https://goog.gl/foo.txt"))))

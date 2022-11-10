@@ -68,6 +68,12 @@
   (:import-from #:screenshotbot/replay/services
                 #:selenium-server
                 #:call-with-selenium-server)
+  (:import-from #:fiveam-matchers/core
+                #:is-not
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:contains
+                #:has-item)
   (:local-nicknames (#:a #:alexandria)
                     (#:integration #:screenshotbot/replay/integration)
                     (#:run-builder #:screenshotbot/replay/run-builder)))
@@ -321,3 +327,17 @@
   (with-fixture fake-acceptor (:address "::1")
     (is (equal "::1"
                (get-local-addr "::1" port)))))
+
+(test exclusions-on-sitemap
+  (with-fixture state ()
+    (cl-mock:if-called 'integration::parse-sitemap
+                       (lambda (url)
+                         (list
+                          "https://example.com/google"
+                          "https://example.com/facebook")))
+    (let ((run (make-instance 'integration:run
+                              :sitemap "https://www.google.com/sitemap.xml"
+                              :exclusions (list ".*face.*"))))
+      (assert-that (mapcar #'car (integration::urls run))
+                   (is-not (has-item "/facebook"))
+                   (has-item "/google")))))

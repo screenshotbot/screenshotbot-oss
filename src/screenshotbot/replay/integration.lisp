@@ -133,6 +133,10 @@ too."
             :initform nil
             :reader sitemap
             :documentation "URL to a sitemap. If Provided the list of URLs are picked from the sitemap")
+   (exclusions :initarg :exclusions
+               :initform nil
+               :reader exclusions
+               :documentation "List of regular expressions as string")
    (sampling :initarg :sampling
              :initform 1
              :reader sampling
@@ -180,12 +184,17 @@ too."
 (defmethod urls ((run run))
   (or-setf
    (%urls run)
-   (and (sitemap run)
-        (loop for url in (parse-sitemap (sitemap run))
-              collect
-              (cons
-               (remove-base-url url)
-               url)))))
+   (let ((exclusions (mapcar #'cl-ppcre:create-scanner
+                             (exclusions run))))
+    (and (sitemap run)
+         (loop for url in (parse-sitemap (sitemap run))
+               unless (loop for exclusion in exclusions
+                            if (cl-ppcre:scan exclusion url)
+                              return t)
+               collect
+               (cons
+                (remove-base-url url)
+                url))))))
 
 (defmethod sampled-urls ((run run))
   "Determistically sample the list of URLS from run. Any

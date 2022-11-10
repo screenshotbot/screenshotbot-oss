@@ -17,6 +17,7 @@
   (:import-from #:bknr.indices
                 #:hash-index)
   (:import-from #:screenshotbot/template
+                #:mdi
                 #:app-template)
   (:import-from #:screenshotbot/server
                 #:with-login
@@ -125,6 +126,9 @@
             :index-reader web-projects-for-company)
    (remote-runs :initform nil
                 :accessor remote-runs)
+   (exclusions :initform nil
+               :initarg :exclusions
+               :accessor exclusions)
    (scheduled-job :initform nil
                   :initarg :scheduled-job
                   :accessor web-project-scheduled-job
@@ -375,6 +379,7 @@
                name
                urls
                custom-css
+               exclusions
                sitemap
                schedule-p
                cronexpr)
@@ -403,8 +408,27 @@
 
       <div class= "form-group mb-3">
         <label for= "sitemap" class= "form-label">Link to sitemap (optional)</label>
-        <input type= "text" id= "sitemap" name= "sitemap" class= "form-control"
+        <div class= "row">
+          <div class= "col-9">
+            <input type= "text" id= "sitemap" name= "sitemap" class= "form-control"
                value=sitemap />
+          </div>
+          <div class= "col-3">
+            <a href= "#" class= "btn btn-outline-secondary" style= "width: 100%"
+                    data-bs-toggle="collapse" data-bs-target= "#advanced-sitemap-options">
+              <mdi name= "add" />
+              Advanced
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class= (format nil "form-group mb-3 ~a ms-3" (when (str:emptyp exclusions) "collapse"))
+           id= "advanced-sitemap-options" >
+        <div class= "form-group mb-3">
+          <label for= "exclusions" class= "form-label">Exclude URLs that match</label>
+          <textarea class= "form-control" name= "exclusions" >,(progn exclusions)</textarea>
+        </div>
       </div>
 
       <div class= "form-group mb-3">
@@ -487,6 +511,7 @@
                                  :company company
                                  :sitemap (unless (str:emptyp (sitemap build))
                                             (sitemap build))
+                                 :exclusions (exclusions build)
                                  :urls (loop for url in (urls build)
                                              collect (cons url url))
                                  :custom-css (custom-css build)
@@ -518,12 +543,14 @@
                           urls
                           sitemap
                           schedule-p
+                          exclusions
                           cronexpr)
                    (form-submit :name name
                                 :urls urls
                                 :sitemap sitemap
                                 :schedule-p schedule-p
                                 :cronexpr cronexpr
+                                :exclusions exclusions
                                 :submit submit)))
     (form :submit submit)))
 
@@ -564,6 +591,7 @@
 (defun form-submit (&rest args &key name urls sitemap submit
                                  edit
                                  schedule-p
+                                 exclusions
                                  custom-css
                                  cronexpr
                                  (browsers (multiple-parameters "browsers")))
@@ -574,6 +602,7 @@
                    (push (cons field message) errors))))
           (check (not (str:emptyp name)) :name "Please provide a project name")
           (let ((urls (remove-if #'str:emptyp (mapcar #'str:trim (str:lines urls))))
+                (exclusions (remove-if #'str:emptyp (mapcar #'str:trim (str:lines exclusions))))
                 (sitemap (str:trim sitemap))
                 (browsers (loop for browser in browsers
                                 for obj = (store-object-with-id (parse-integer browser))
@@ -597,6 +626,16 @@
             (check (< (length browsers) 5)
                    :browsers
                    "Too many browsers selected")
+            (when exclusions
+              (check (not (str:emptyp sitemap))
+                     :exclusions
+                     "Exclusions are only available if you use a sitemap")
+              (loop for exclusion in exclusions
+                    for line from 1
+                    do
+                       (check (ignore-errors (cl-ppcre:create-scanner exclusion))
+                              :exclusions
+                              (format nil "Regular expression on line ~a could not be parsed" line))))
 
             (when schedule-p
               (handler-case
@@ -608,15 +647,18 @@
                            (fix-cron-message message))))))
             (cond
               (errors
-               (with-form-errors (:errors errors
-                                  :name name
-                                  :cronexpr cronexpr
-                                  :schedule-p :schedule-p
-                                  :urls (str:join #\Newline urls)
-                                  :sitemap sitemap
-                                  :was-validated t)
-                 (form :submit submit
-                       :browsers browsers)))
+               (let ((exclusions (str:join #\Newline exclusions)))
+                 (with-form-errors (:errors errors
+                                    :name name
+                                    :cronexpr cronexpr
+                                    :schedule-p :schedule-p
+                                    :urls (str:join #\Newline urls)
+                                    :sitemap sitemap
+                                    :exclusions exclusions
+                                    :was-validated t)
+                   (form :submit submit
+                         :exclusions exclusions
+                         :browsers browsers))))
               ((not edit)
                (let ((project
                       (make-instance 'web-project
@@ -624,6 +666,7 @@
                                       :company (current-company)
                                       :schedule-p schedule-p
                                       :urls urls
+                                      :exclusions exclusions
                                       :custom-css custom-css
                                       :browsers browsers
                                       :sitemap sitemap)))
@@ -639,6 +682,7 @@
                  (setf (urls edit) urls)
                  (setf (browsers edit) browsers)
                  (Setf (web-project-schedule-p edit) schedule-p)
+                 (setf (exclusions edit) exclusions)
                  (setf (custom-css edit) custom-css)
                  (setf (sitemap edit) sitemap))
                (update-scheduled-job edit
@@ -668,6 +712,7 @@
           (nibble (name urls sitemap
                         schedule-p
                         custom-css
+                        exclusions
                         cronexpr)
             (form-submit :name name
                          :urls urls
@@ -675,6 +720,7 @@
                          :edit build
                          :schedule-p schedule-p
                          :custom-css custom-css
+                         :exclusions exclusions
                          :cronexpr cronexpr
                          :submit submit)))
    (form :name (web-project-name build)
@@ -682,6 +728,7 @@
          :sitemap (sitemap build)
          :browsers (browsers build)
          :custom-css (custom-css build)
+         :exclusions (str:join #\Newline (exclusions build))
          :submit submit
          :schedule-p (web-project-schedule-p build)
          :cronexpr (a:when-let (scheduled-job
