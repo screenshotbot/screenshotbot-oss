@@ -10,6 +10,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/web-build/project
+                #:form
                 #:scheduled-job-run-now
                 #:actually-run-now
                 #:web-project-scheduled-job
@@ -19,6 +20,10 @@
                 #:object-destroyed-p)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:screenshotbot/testing
+                #:screenshot-test)
+  (:import-from #:util/testing
+                #:with-fake-request)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/web-build/test-project)
 
@@ -72,3 +77,9 @@
                 old-job))
           (scheduled-job-run-now project)))
       (is (equal nil calls)))))
+
+(screenshot-test web-build-new-form
+  (with-fixture state ()
+    (with-fake-request ()
+      (auth:with-sessions ()
+        (form :submit "")))))

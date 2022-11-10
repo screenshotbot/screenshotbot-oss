@@ -23,6 +23,7 @@
   (:import-from #:screenshotbot/login/common
                 #:*current-company-override*)
   (:import-from #:util/testing
+                #:screenshot-static-page
                 #:with-fake-request)
   (:import-from #:util/object-id
                 #:oid-array)
@@ -32,7 +33,8 @@
   (:export
    #:snap-image-blob
    #:snap-all-images
-   #:fix-timestamps))
+   #:fix-timestamps
+   #:screenshot-test))
 
 (defmacro with-test-user ((&key (company (gensym "company"))
                                 (company-name "dummy company")
@@ -83,3 +85,11 @@
     (mquery:remove-class (mquery:$ "time") "timeago")
     (dolist (time (mquery:$ "time"))
      (setf (mquery:text time) "Some timestamp"))))
+
+(defmacro screenshot-test (name &body body)
+  `(fiveam:test ,name
+     (screenshot-static-page
+      :screenshotbot
+      (str:downcase ,(string name))
+      (progn
+        ,@body))))
