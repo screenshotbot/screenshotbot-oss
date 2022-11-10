@@ -95,8 +95,16 @@
                      [![Screenshots](,(progn badge))](,(progn link))
                    </tt>
                  </div>
-               </markup:merge-tag>)
 
+                 <div class= "alert alert-warning mt-3">
+                   The badge works on private channels only if you are logged in, but
+                   will always work on public channel. GitHub renders
+                   the badges behind a proxy which might break the badges for
+                   private channels.
+                   Reach out to us if the badge doesn't render,
+                   and we'll help you fix it.
+                 </div>
+               </markup:merge-tag>)
 
           </div>
         </div>
