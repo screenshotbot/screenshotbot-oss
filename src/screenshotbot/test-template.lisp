@@ -22,9 +22,12 @@
                 #:installation
                 #:*installation*)
   (:import-from #:screenshotbot/server
+                #:no-access-error-page
                 #:acceptor)
   (:import-from #:util/testing
-                #:screenshot-static-page))
+                #:screenshot-static-page)
+  (:import-from #:screenshotbot/testing
+                #:screenshot-test))
 
 (util/fiveam:def-suite)
 
@@ -61,3 +64,7 @@
       (hunchentoot:acceptor-status-message
        (make-instance 'acceptor)
        404))))
+
+(screenshot-test no-access-error-page
+  (with-fixture state ()
+    (no-access-error-page)))
