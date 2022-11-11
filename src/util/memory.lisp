@@ -85,7 +85,7 @@
   :result-type :int)
 
 (defun malloc-info ()
-  (let* ((size 10240)
+  (let* ((size 202400)
          (str (make-array (+ 100 size)
                           :element-type '(unsigned-byte 8)
                           :allocation :pinnable)))
@@ -98,5 +98,4 @@
                                     :end (position 0 str)))
         (fclose file)))))
 
-
-(log:info "~a" (malloc-info))
+;; (format t "~a" (malloc-info))
