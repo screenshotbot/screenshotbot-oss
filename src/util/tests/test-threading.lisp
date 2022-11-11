@@ -9,10 +9,14 @@
         #:fiveam
         #:util/threading)
   (:import-from #:util/threading
+                #:*log-sentry-p*
+                #:ignore-error
                 #:%invoke-debugger
                 #:handle-error
                 #:*catch-errors-p*
                 #:funcall-with-sentry-logs)
+  (:import-from #:util/testing
+                #:with-global-binding)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-threading)
 
@@ -114,7 +118,7 @@
                               (setf debugger-hook-called-p :seen-1)))
         (restart-case
             (handle-error (make-instance 'error))
-          (cl:abort ()
+          (ignore-error ()
             (fail "got abort, when we shouldn't have")))
         (is-true debugger-hook-called-p)))))
 
@@ -130,15 +134,20 @@
                               (setf debugger-hook-called-p :seen)))
         (restart-case
             (handle-error (make-instance 'error))
-          (cl:abort ()
+          (ignore-error ()
             (setf abort-called-p t)))
         (is-false debugger-hook-called-p)
         (is-true abort-called-p)))))
 
-(test ensure-cl-abort-is-a-valid-restart
-  (let ((restart nil))
-    (let ((thread (bt:make-thread
-                   (lambda ()
-                     (setf restart (find-restart 'cl:abort))))))
-      (bt:join-thread thread)
-      (is-true restart))))
+
+(test ignore-and-log-errors-when-not-used-at-toplevel
+  (with-fixture state ()
+    (with-global-binding ((*log-sentry-p* nil))
+     (let ((called nil))
+       (let ((thread (bt:make-thread
+                      (lambda ()
+                        (ignore-and-log-errors ()
+                          (error "blah blah from test-threading"))
+                        (setf called t)))))
+         (bt:join-thread thread)
+         (is-true called))))))

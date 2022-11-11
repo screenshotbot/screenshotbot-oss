@@ -147,11 +147,14 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
      (%invoke-debugger e))
     (t
      (trivial-backtrace:print-backtrace e)
-     (invoke-restart 'cl:abort))))
+     (invoke-restart 'ignore-error))))
 
 (def-easy-macro ignore-and-log-errors (&fn fn)
-  (handler-bind ((error #'handle-error))
-    (funcall-with-sentry-logs fn)))
+  (restart-case
+      (handler-bind ((error #'handle-error))
+        (funcall-with-sentry-logs fn))
+    (ignore-error ()
+      (values))))
 
 (defun make-thread (body &rest args)
   (apply #'bt:make-thread
