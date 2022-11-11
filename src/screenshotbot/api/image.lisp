@@ -87,7 +87,8 @@
 (defun prepare-single-upload (hash content-type)
   (declare (ignore content-type))
   (let* ((image (find-image (current-company) hash))
-         (uploadp (not image))
+         (uploadp (or (not image)
+                      (not (verified-p image))))
          (image
            (or
             image
