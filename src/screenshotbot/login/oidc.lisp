@@ -29,6 +29,10 @@
                 #:after-create-user)
   (:import-from #:screenshotbot/installation
                 #:installation)
+  (:import-from #:nibble
+                #:nibble)
+  (:import-from #:screenshotbot/events
+                #:push-event)
   (:export
    #:client-id
    #:client-secret
@@ -88,10 +92,14 @@
 ;; (token-endpoint (make-instance 'oidc-provider :issuer "https://accounts.google.com"))
 
 (defmethod oauth-signin-link ((auth oidc-provider) redirect)
-  (make-oidc-auth-link auth redirect))
+  (nibble ()
+    (push-event :oauth.signin)
+    (hex:safe-redirect (make-oidc-auth-link auth redirect))))
 
 (defmethod oauth-signup-link ((auth oidc-provider) redirect)
-  (make-oidc-auth-link auth redirect))
+  (nibble ()
+    (push-event :oauth.signup)
+    (hex:safe-redirect (make-oidc-auth-link auth redirect))))
 
 
 (defmethod after-authentication ((auth oidc-provider) &key
