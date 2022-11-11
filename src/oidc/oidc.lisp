@@ -103,7 +103,8 @@
    (assoc-value (discover oidc) :end--session--endpoint)))
 
 (defun oauth-get-access-token (token-url &key client_id client_secret code
-                                                      redirect_uri)
+                                           redirect_uri)
+  (assert code)
   (with-open-stream (stream (dex:post token-url
                                       :want-stream t
                                       :headers `(("Accept" . "application/json"))
@@ -141,29 +142,37 @@
        (otherwise
         (error "Failed to make json request, status code ~a" status-code))))))
 
-(defmethod oidc-callback ((auth oidc) code redirect)
-  (let ((token (oauth-get-access-token
-                (token-endpoint auth)
-                :client_id (client-id auth)
-                 :client_secret (client-secret auth)
-                 :code code
-                 :redirect_uri (hex:make-full-url
-                                hunchentoot:*request*
-                                (oauth-callback auth)))))
-    (let ((user-info
-            (make-json-request (userinfo-endpoint auth)
-                               :method :post
-                               :content `(("access_token"
-                                           .
-                                           ,(access-token-str token))
-                                          ("alt" . "json")))))
-      (log:debug "Got user info ~S" user-info)
-      (after-authentication
-       auth
-       :user-id (assoc-value user-info :sub)
-       :email (assoc-value user-info :email)
-       :full-name (assoc-value user-info :name)
-       :avatar (assoc-value user-info :picture)))))
+(defmethod oidc-callback ((auth oidc) code redirect
+                          &key error
+                            (error-redirect "/"))
+  (cond
+    (code
+     (let ((token (oauth-get-access-token
+                   (token-endpoint auth)
+                   :client_id (client-id auth)
+                   :client_secret (client-secret auth)
+                   :code code
+                   :redirect_uri (hex:make-full-url
+                                  hunchentoot:*request*
+                                  (oauth-callback auth)))))
+       (let ((user-info
+               (make-json-request (userinfo-endpoint auth)
+                                  :method :post
+                                  :content `(("access_token"
+                                              .
+                                              ,(access-token-str token))
+                                             ("alt" . "json")))))
+         (log:debug "Got user info ~S" user-info)
+         (after-authentication
+          auth
+          :user-id (assoc-value user-info :sub)
+          :email (assoc-value user-info :email)
+          :full-name (assoc-value user-info :name)
+          :avatar (assoc-value user-info :picture)))))
+    (t
+     ;; error the OAuth flow, most likely
+     (warn "Oauth failed: ~a" error)
+     (hex:safe-redirect error-redirect :error error))))
 
 (defgeneric after-authentication (oidc &key
                                          user-id
@@ -171,15 +180,17 @@
                                          full-name
                                          avatar))
 
-(defmethod oidc-callback :after ((auth oidc) code redirect)
+(defmethod oidc-callback :after ((auth oidc) code redirect &key &allow-other-keys)
   (declare (ignore code))
   (hex:safe-redirect redirect))
 
-(defmethod make-oidc-auth-link ((oauth oidc) redirect)
+(defmethod make-oidc-auth-link ((oauth oidc) redirect
+                                &key (error-redirect "/"))
   (let* ((auth-uri (quri:uri (authorization-endpoint oauth)))
-         (redirect (nibble (code)
-                     (oidc-callback oauth code redirect))))
-
+         (redirect (nibble (code error)
+                     (oidc-callback oauth code redirect
+                                    :error error
+                                    :error-redirect error-redirect))))
     (setf (quri:uri-query-params auth-uri)
           `(("redirect_uri" . ,(hex:make-full-url hunchentoot:*request* (oauth-callback oauth)))
             ("client_id" . ,(client-id oauth))

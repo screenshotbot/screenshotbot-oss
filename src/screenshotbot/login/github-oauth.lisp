@@ -61,11 +61,16 @@
                              (access-token-callback #'process-access-token)
                              (scope "user:email"))
   (declare (ignore authorize-link)) ;; too lazy to figure out what this was
-  (let ((redirect (nibble:nibble (code)
-                    (%gh-oauth-callback
-                     github-oauth code
-                     redirect
-                     :access-token-callback access-token-callback))))
+  (let ((redirect (nibble:nibble (code error)
+                    (cond
+                      (code
+                       (%gh-oauth-callback
+                        github-oauth code
+                        redirect
+                        :access-token-callback access-token-callback))
+                      (t
+                       (warn "GitHub Oauth failed: ~a" error)
+                       (hex:safe-redirect "/signin" :error error))))))
     (format nil "https://github.com~a"
             (make-url "/login/oauth/authorize"
                       :client_id (client-id github-oauth)
