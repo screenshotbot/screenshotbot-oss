@@ -29,6 +29,10 @@
                 #:access-token-str
                 #:update-oidc-user
                 #:oauth-get-access-token)
+  (:import-from #:screenshotbot/events
+                #:push-event)
+  (:import-from #:nibble
+                #:nibble)
   (:export
    #:prepare-gh-user
    #:make-gh-oauth-link
@@ -80,13 +84,16 @@
                                      hunchentoot:*request*
                                      "/account/oauth-callback")))))
 
+(defun handle-github (event auth redirect)
+  (nibble ()
+    (push-event event)
+    (hex:safe-redirect (make-gh-oauth-link auth redirect))))
+
 (defmethod oauth-signin-link ((auth github-oauth-provider) redirect)
-  (declare (ignore auth))
-  (make-gh-oauth-link auth redirect))
+  (handle-github :github-oauth.signin auth redirect))
 
 (defmethod oauth-signup-link ((auth github-oauth-provider) redirect)
-  (declare (ignore auth))
-  (make-gh-oauth-link auth redirect))
+  (handle-github :github-oauth.signup auth redirect))
 
 (defun process-access-token (access-token)
   (let ((user (get-user-from-gh-access-token access-token)))
