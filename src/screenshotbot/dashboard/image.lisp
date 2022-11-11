@@ -97,8 +97,9 @@
 (defun build-resized-image (image size-name &key (type :webp))
   (with-magick-kernel ()
     (hash-locked-future ((list image size-name) *image-resize-lock*)
-      (%build-resized-image image size-name
-                            :type type))))
+      (ignore-errors ;; TODO(T433)
+        (%build-resized-image image size-name
+                              :type type)))))
 
 (defun handle-resized-image (image size &key warmup
                                           type)
