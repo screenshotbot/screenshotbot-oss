@@ -34,6 +34,10 @@
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:*installation*)
+  (:import-from #:util/testing
+                #:with-global-binding)
+  (:import-from #:util/threading
+                #:*log-sentry-p*)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-image)
 
@@ -41,7 +45,8 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (let ((*installation* (make-instance 'installation)))
+  (with-global-binding ((*installation* (make-instance 'installation))
+                        (*log-sentry-p* nil))
    (with-test-store (:globally t)
      (with-screenshotbot-kernel ()
        (let ((debug-tasks-p *debug-tasks-p*))

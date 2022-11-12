@@ -32,6 +32,8 @@
   (:import-from #:screenshotbot/async
                 #:with-magick-kernel
                 #:with-screenshotbot-kernel)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors)
   (:export
    #:handle-resized-image))
 (in-package :screenshotbot/dashboard/image)
@@ -97,7 +99,7 @@
 (defun build-resized-image (image size-name &key (type :webp))
   (with-magick-kernel ()
     (hash-locked-future ((list image size-name) *image-resize-lock*)
-      (ignore-errors ;; TODO(T433)
+      (ignore-and-log-errors ()
         (%build-resized-image image size-name
                               :type type)))))
 
