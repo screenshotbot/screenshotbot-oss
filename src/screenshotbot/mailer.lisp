@@ -6,6 +6,8 @@
 
 (uiop:define-package :screenshotbot/mailer
     (:use #:cl #:alexandria)
+    (:import-from #:util/threading
+                  #:ignore-and-log-errors)
   (:export
    #:noop-mailer
    #:smtp-mailer
@@ -62,9 +64,11 @@
   (declare (ignore mailer)))
 
 (defmethod send-mail ((mailer smtp-mailer)
+                      &rest args
                       &key from subject to html-message
                         reply-to
                         bcc)
+  (log:info "Sending mail ~S" args)
   (restart-case
       (unless util:*disable-emails*
        (cl-smtp:send-email
@@ -86,4 +90,5 @@
 (defmethod send-mail ((mailer background-mailer) &rest args)
   (util:make-thread
    (lambda ()
-     (apply #'send-mail (delegate mailer) args))))
+     (ignore-and-log-errors ()
+      (apply #'send-mail (delegate mailer) args)))))
