@@ -9,6 +9,8 @@
           #:fiveam
           #:alexandria)
   (:import-from #:screenshotbot/mailer
+                #:background-mailer
+                #:send-mail
                 #:parse-from
                 #:port
                 #:host
@@ -39,3 +41,16 @@
                (parse "Foo Goo<foo@goo.com>" nil)))
     (is (equal (list "foo@goo.com" "Foo Goo")
                (parse "Foo Goo <foo@goo.com>" nil)))))
+
+(defclass dummy-mailer ()
+  ())
+
+(defmethod send-mail ((mailer dummy-mailer) &rest args)
+  :pass)
+
+(test future-from-background-mailer
+  (let ((mailer (make-instance 'background-mailer
+                               :delegate (make-instance 'dummy-mailer))))
+    (is
+     (eql :pass
+          (lparallel:force (send-mail mailer :from "foo" :to "bar"))))))

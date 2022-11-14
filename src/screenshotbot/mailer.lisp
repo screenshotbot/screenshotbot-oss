@@ -8,6 +8,8 @@
     (:use #:cl #:alexandria)
     (:import-from #:util/threading
                   #:ignore-and-log-errors)
+    (:import-from #:screenshotbot/async
+                  #:sb/future)
   (:export
    #:noop-mailer
    #:smtp-mailer
@@ -113,7 +115,5 @@
       nil)))
 
 (defmethod send-mail ((mailer background-mailer) &rest args)
-  (util:make-thread
-   (lambda ()
-     (ignore-and-log-errors ()
-      (apply #'send-mail (delegate mailer) args)))))
+  (sb/future ()
+    (apply #'send-mail (delegate mailer) args)))
