@@ -729,44 +729,63 @@
 
 (with-auto-restart (:retries 3 :sleep 10)
   (defmethod load-url-into ((context context) snapshot url tmpdir
-                            &key actual-url)
+                            &rest args
+                            &key
+                              &allow-other-keys)
     (safe-interrupt-checkpoint)
     (with-open-stream (content (http-get url :force-string t
-                                  :force-binary nil))
-      (let ((html (plump:parse content)))
-        (process-node context html snapshot
-                      ;; If we pass an actual-url, then we should use the
-                      ;; actual URL to figure out where to fetch assets
-                      ;; from
-                      (or actual-url url))
-        (add-css context html)
+                                             :force-binary nil))
 
-        #+nil
-        (error "got html: ~a"
-               (with-output-to-string (s)
-                 (plump:serialize html s)))
-        (uiop:with-temporary-file (:direction :io :stream tmp :element-type '(unsigned-byte 8))
-          (let ((root-asset (call-with-fetch-asset
-                             context
-                             (lambda ()
-                               (log:debug "v2 of fetch asset")
-                               (safe-plump-serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
-                               (file-position tmp 0)
-                               (let ((headers (make-hash-table)))
-                                 (setf (gethash "content-type" headers)
-                                       "text/html; charset=UTF-8")
-                                 (setf (gethash "cache-control" headers)
-                                       "no-cache")
-                                 (values tmp 200 headers)))
-                             "html"
-                             tmpdir
-                             :url url
-                             :snapshot snapshot)))
-            (push (asset-file root-asset)
-                  (root-files snapshot))
-            (push root-asset
+      (apply
+       #'parse-after-fetching context
+       snapshot
+       url
+       tmpdir
+       :content content
+       args))))
+
+(with-auto-restart ()
+  (defmethod parse-after-fetching ((context context)
+                                   snapshot
+                                   url
+                                   tmpdir
+                                   &key actual-url
+                                     content)
+    (file-position content 0) ;; in case of a restart
+    (let ((html (plump:parse content)))
+      (process-node context html snapshot
+                    ;; If we pass an actual-url, then we should use the
+                    ;; actual URL to figure out where to fetch assets
+                    ;; from
+                    (or actual-url url))
+      (add-css context html)
+
+      #+nil
+      (error "got html: ~a"
+             (with-output-to-string (s)
+               (plump:serialize html s)))
+      (uiop:with-temporary-file (:direction :io :stream tmp :element-type '(unsigned-byte 8))
+        (let ((root-asset (call-with-fetch-asset
+                           context
+                           (lambda ()
+                             (log:debug "v2 of fetch asset")
+                             (safe-plump-serialize html (flexi-streams:make-flexi-stream tmp :element-type 'character :external-format :utf-8))
+                             (file-position tmp 0)
+                             (let ((headers (make-hash-table)))
+                               (setf (gethash "content-type" headers)
+                                     "text/html; charset=UTF-8")
+                               (setf (gethash "cache-control" headers)
+                                     "no-cache")
+                               (values tmp 200 headers)))
+                           "html"
+                           tmpdir
+                           :url url
+                           :snapshot snapshot)))
+          (push (asset-file root-asset)
+                (root-files snapshot))
+          (push root-asset
                 (assets snapshot))))
-        snapshot))))
+      snapshot)))
 
 (defmethod snapshot-asset-file ((snapshot snapshot)
                                 (asset asset))
