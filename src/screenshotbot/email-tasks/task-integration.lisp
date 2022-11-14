@@ -71,8 +71,9 @@
      :to (user-email user)
      :subject (format nil "Screenshots changed in ~a" (channel-name (recorder-run-channel (report-run report))))
      :from
-     #-screenshotbot-oss "Screenshotbot Notifications <notifications@screenshotbot.io>"
+     #-screenshotbot-oss "notifications@screenshotbot.io"
      #+screenshotbot-oss nil ;; default mailer setting
+     :display-name "Screenshotbot Notifications"
      :reply-to (progn
                  #-screenshotbot-oss "support@screenshotbot.io"
                  #+screenshotbot-oss nil)
