@@ -13,7 +13,8 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:define-channel
-   #:with-screenshotbot-kernel))
+   #:with-screenshotbot-kernel
+   #:sb/future))
 (in-package :screenshotbot/async)
 
 (defvar *kernel* nil)
@@ -70,6 +71,11 @@
           :lock *channel-lock*))
        (define-symbol-macro ,name
            (,fun)))))
+
+(def-easy-macro sb/future (&fn fn)
+  (with-screenshotbot-kernel ()
+    (lparallel:future
+      (funcall fn))))
 
 (defun shutdown ()
   "Safely shutdown the kernel. Called from server/setup.lisp."

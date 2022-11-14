@@ -330,6 +330,7 @@
                (:file "test-diff-report")
                (:file "test-events")
                (:file "test-mailer")
+               (:file "test-async")
                (:file "test-settings-api")
                (:module "magick"
                 :components ((:file "test-magick-lw")
