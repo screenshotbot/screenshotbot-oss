@@ -65,6 +65,25 @@
 (defmethod send-mail ((mailer noop-mailer) &key &allow-other-keys)
   (declare (ignore mailer)))
 
+(defun parse-from (from display-name)
+  "If the from is provides as Foo Bar <foo@bar>, parse out the from and
+ display-name from it. This is required for some SMTP servers, but not
+ all."
+  (cond
+    (display-name
+     (values from display-name))
+    (t
+     (multiple-value-bind (parse parts)
+         (cl-ppcre:scan-to-strings
+          "(.*)<(.*)>.*" from)
+       (cond
+         (parse
+          (values
+           (str:trim (elt parts 1))
+           (str:trim (elt parts 0))))
+         (t
+          (values from display-name)))))))
+
 (defmethod send-mail ((mailer smtp-mailer)
                       &rest args
                       &key from subject to html-message
@@ -73,21 +92,23 @@
                         bcc)
   (log:info "Sending mail ~S" args)
   (restart-case
-      (unless util:*disable-emails*
-       (cl-smtp:send-email
-        (host mailer)
-        (or from (from mailer))
-        to
-        subject
-        (util:html2text html-message)
-        :ssl (ssl mailer)
-        :bcc bcc
-        :port (port mailer)
-        :reply-to reply-to
-        :display-name display-name
-        :authentication (authentication mailer)
-        :port (port mailer)
-        :html-message (markup:write-html html-message)))
+      (multiple-value-bind (from display-name)
+          (parse-from from display-name)
+       (unless util:*disable-emails*
+         (cl-smtp:send-email
+          (host mailer)
+          (or from (from mailer))
+          to
+          subject
+          (util:html2text html-message)
+          :ssl (ssl mailer)
+          :bcc bcc
+          :port (port mailer)
+          :reply-to reply-to
+          :display-name display-name
+          :authentication (authentication mailer)
+          :port (port mailer)
+          :html-message (markup:write-html html-message))))
     (dont-send-the-mail ()
       nil)))
 
