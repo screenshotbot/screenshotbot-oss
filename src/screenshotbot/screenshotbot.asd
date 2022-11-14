@@ -132,6 +132,7 @@
    (:file "ignore-and-log-errors")
    (:file "analytics" :depends-on ("ignore-and-log-errors"))
    (:file "plugin")
+   (:file "async")
    (:file "mailer")
    (:module "magick"
     :components ((:file "magick")
@@ -140,7 +141,6 @@
                  (:file "magick-lw")))
    (:file "installation")
    (:file "server" :depends-on ("analytics"))
-   (:file "async")
    (:module "s3"
     :serial t
     :components ((:file "core")))
