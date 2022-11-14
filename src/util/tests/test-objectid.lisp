@@ -29,21 +29,21 @@
      (is (eql obj
               (find-by-oid (oid obj)))))))
 
-(defclass test-class (object-with-oid)
-  ((test-key :initarg :key
-             :index-type hash-index
-             :index-values all-test-classes))
-  (:metaclass persistent-class))
-
 (test indices-dont-fail
   (with-test-store ()
-    (let ((obj (make-instance 'test-class :key 2)))
-      (is (equal (list obj)
-                 (all-test-classes)))
-      (eval `(defclass test-class (object-with-oid)
-               ((test-key :initarg :key
-                          :index-type hash-index
-                          :index-values all-test-classes))
-               (:metaclass persistent-class)))
-      (is (equal (list obj)
-                 (all-test-classes))))))
+    (let ((name (intern "dummy-name")))
+      (unwind-protect
+           (let* ((expr `(defclass ,name (object-with-oid)
+                           ((test-key :initarg :key
+                                      :index-type hash-index
+                                      :index-values all-test-classes))
+                           (:metaclass persistent-class))))
+
+             (eval expr)
+             (let ((obj (make-instance name :key 2)))
+               (is (equal (list obj)
+                          (all-test-classes)))
+               (eval expr)
+               (is (equal (list obj)
+                          (all-test-classes))))))
+      (unintern name))))
