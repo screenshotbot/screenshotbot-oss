@@ -69,6 +69,7 @@
                "util/threading"
                "util/store"
                "util/misc"
+               "util/html2text"
                "util/random-port"
                #+lispworks
                "util/memory"
@@ -82,7 +83,6 @@
                (:file "bind-form")
                (:file "object-id")
                (:file "lists")
-               (:file "html2text")
                (:file "cdn")
                (:file "package")
                (:file "mockable")
@@ -98,6 +98,11 @@
                (:file "mquery")
                (:file "form-errors")
                (:file "debugger-hook")))
+
+(defsystem :util/html2text
+  :serial t
+  :depends-on (:html2text)
+  :components ((:file "html2text")))
 
 #+lispworks
 (defsystem :util/memory

@@ -17,10 +17,9 @@
 (markup:enable-reader)
 
 (test simple-check ()
-  (is (equal "hello world
-" (html2text <html><body>hello world</body></html>))))
+  (is (equal "hello world"
+             (html2text <html><body>hello world</body></html>))))
 
 (test with-utf-8 ()
-      (is (equal "hello हिन्दी,
-"
+      (is (equal "hello हिन्दी,"
                  (html2text <html><body>hello हिन्दी,</body></html>))))

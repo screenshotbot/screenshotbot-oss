@@ -45,6 +45,10 @@
 
 (register-tdrhq "plump" "aeea283021da94e9d30025f79c914b37fc522b75")
 
+;; html2text is not part of quicklisp
+(register-tdrhq "html2text"
+                "b5620fdd435df5254a713f3c10bd756632df3dce")
+
 ;; TODO: automatically generate hashes
 #+screenshotbot-oss
 (progn
