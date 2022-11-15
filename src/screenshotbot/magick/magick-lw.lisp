@@ -403,13 +403,15 @@
       (compare-images wand1 wand2))))
 
 
+(defun save-as-webp (wand output)
+  (check-boolean (magick-set-option wand "webp:lossless" "true") wand)
+  (check-boolean (magick-strip-image wand) wand)
+  (check-boolean (magick-write-image wand (namestring output)) wand))
 
 (defmethod convert-to-lossless-webp ((self magick-native) input output)
   (push-event :magick.convert-to-lossless-webp)
   (with-wand (wand :file input)
-    (check-boolean (magick-set-option wand "webp:lossless" "true") wand)
-    (check-boolean (magick-strip-image wand) wand)
-    (check-boolean (magick-write-image wand (namestring output)) wand)))
+    (save-as-webp wand output)))
 
 (setf *magick* (make-instance 'magick-native))
 
