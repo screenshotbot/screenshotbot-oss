@@ -27,6 +27,8 @@
                 #:secret)
   (:import-from #:screenshotbot/model/auto-cleanup
                 #:register-auto-cleanup)
+  (:import-from #:screenshotbot/events
+                #:with-event)
   (:export
    #:slack-token
    #:latest-slack-token
@@ -124,17 +126,18 @@
       (error 'slack-error :response response))))
 
 (defun slack-post-on-channel (&key channel text token company)
-  (let ((methods (slack-methods :token token)))
-   (let ((audit-log (make-instance 'post-on-channel-audit-log
-                                    :company company
-                                    :channel channel
-                                    :text text)))
-     (let ((builder (#_builder #,com.slack.api.methods.request.chat.ChatPostMessageRequest)))
-       (#_channel builder channel)
-       (#_text builder text)
-       (let ((response (#_chatPostMessage methods (#_build builder))))
-         (check-slack-ok response audit-log)
-         t)))))
+  (with-event (:slack)
+   (let ((methods (slack-methods :token token)))
+     (let ((audit-log (make-instance 'post-on-channel-audit-log
+                                     :company company
+                                     :channel channel
+                                     :text text)))
+       (let ((builder (#_builder #,com.slack.api.methods.request.chat.ChatPostMessageRequest)))
+         (#_channel builder channel)
+         (#_text builder text)
+         (let ((response (#_chatPostMessage methods (#_build builder))))
+           (check-slack-ok response audit-log)
+           t))))))
 
 (defhandler (nil :uri "/slack-app-redirect") (code state)
   (declare (ignore state))
