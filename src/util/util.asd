@@ -99,6 +99,15 @@
                (:file "form-errors")
                (:file "debugger-hook")))
 
+(defsystem :util/copy-file
+  :serial t
+  :depends-on (:uiop
+               #-lispworks
+               :osicat
+               #-lispworks
+               :util/fake-fli)
+  :components ((:file "copy-file")))
+
 (defsystem :util/html2text
   :serial t
   :depends-on (:html2text)
@@ -273,6 +282,7 @@
                              (:static-file "test-file-compressed" :type "txt.gz")
                              (:file "test-ret-let")
                              (:file "test-misc")
+                             (:file "test-copy-file")
                              (:file "test-request")
                              (:file "test-store")
                              (:file "test-hash-lock")

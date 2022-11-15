@@ -108,6 +108,7 @@
                :util.java
                :osicat
                :util/phabricator
+               :util/copy-file
                :hunchensocket
                :drakma
                :anaphora

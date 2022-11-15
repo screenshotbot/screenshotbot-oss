@@ -71,6 +71,8 @@
   (:import-from #:screenshotbot/s3/core
                 #:s3-store-fetch-remote
                 #:s3-store-update-remote)
+  (:import-from #:util/copy-file
+                #:copy-file-fast)
   ;; classes
   (:export
    #:image
@@ -538,7 +540,7 @@
       ;; many cases.
       (when pathname
         (assert (path:-e pathname))
-        (uiop:copy-file pathname image-file)
+        (copy-file-fast pathname image-file)
         (unless for-tests ;; todo: refactor better
          (s3-store-update-remote
           (installation-s3-store (installation))
