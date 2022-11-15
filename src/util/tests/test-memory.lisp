@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/memory
+                #:arena-size
                 #:malloc-info
                 #:process-mem-usage)
   (:local-nicknames (#:a #:alexandria)))
@@ -22,3 +23,9 @@
 (test malloc-info
   (finishes
     (malloc-info)))
+
+(test arena-size
+  (multiple-value-bind (arena hblkhd)
+      (arena-size)
+    (is (>= arena 0))
+    (is (>= hblkhd 0))))

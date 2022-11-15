@@ -84,6 +84,35 @@
      (string :pointer))
   :result-type :int)
 
+;; mallinfo2 is the same as mallinfo but uses :size-t. However, it's
+;; introduced in glibc 2.33, which is currently not what I'm using. In
+;; the future we can change this.
+(fli:define-c-struct mallinfo
+    (arena :int
+           :documentation "Non-mmaped space allocated (bytes)")
+  (ordblks :int)
+  (smblks :int)
+  (hblks :int
+         :documentation "Number of mmapped regions")
+  (hblkhd :int
+          :documentation "Space allocation in mmaped regions (bytes)")
+  (usmblks :int)
+  (fsmblks :int)
+  (uordblks :int)
+  (fordblks :int)
+  (keepcost :int))
+
+(fli:define-foreign-function mallinfo
+    ()
+  :result-type mallinfo)
+
+(defun arena-size ()
+  (fli:with-dynamic-foreign-objects ((mallinfo mallinfo))
+    (mallinfo :result-pointer mallinfo)
+    (values
+     (fli:foreign-slot-value mallinfo 'arena)
+     (fli:foreign-slot-value mallinfo 'hblkhd))))
+
 (defun malloc-info ()
   (let* ((size 202400)
          (str (make-array (+ 100 size)
