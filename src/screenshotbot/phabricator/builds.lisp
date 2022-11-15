@@ -114,6 +114,10 @@
 (defapi (%update-build :uri "/phabricator/update-build" :method :post)
         ((diff :parameter-type 'integer) (revision :parameter-type 'integer) target-phid
          build-phid)
+  (assert diff)
+  (assert revision)
+  (assert target-phid)
+  (assert build-phid)
   (let* ((company (current-company)))
     (assert company)
     (in-future ()
