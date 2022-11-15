@@ -270,6 +270,7 @@
                :util/hash-lock
                :util/health-check
                :util/lru-cache
+               :util/copy-file
                :fiveam-matchers
                :easy-macros
                :util/digests
