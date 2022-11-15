@@ -25,7 +25,8 @@
    #:magick-exception-message
    #:map-non-alpha-pixels
    #:get-non-alpha-pixels
-   #:ping-image-metadata))
+   #:ping-image-metadata
+   #:with-image-comparison))
 (in-package :screenshotbot/magick/magick-lw)
 
 (defclass magick-native (abstract-magick)
@@ -374,8 +375,9 @@
            (funcall fn wand))
       (destroy-magick-wand wand))))
 
-
-(defun compare-images (wand1 wand2)
+(def-easy-macro with-image-comparison (wand1 wand2 &key &binding result
+                                             &binding same-p
+                                             &fn fn)
   (assert (not (fli:null-pointer-p wand1)))
   (assert (not (fli:null-pointer-p wand2)))
   (multiple-value-bind (output difference)
@@ -385,9 +387,14 @@
        +root-mean-squared-error-metric+
        0.0d0)
     (unwind-protect
-         (= difference 0.0d0)
+         (let ((same-p (= difference 0.0d0)))
+           (funcall fn output same-p))
       (unless (fli:null-pointer-p output)
-       (destroy-magick-wand output)))))
+        (destroy-magick-wand output)))))
+
+(defun compare-images (wand1 wand2)
+  (with-image-comparison (wand1 wand2 :same-p same-p)
+    same-p))
 
 (defmethod compare-image-files ((magick magick-native) file1 file2)
   (push-event :magick.compare-images-files)
