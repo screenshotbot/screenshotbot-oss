@@ -2,7 +2,8 @@
   (:use #:cl)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:process-mem-usage))
+   #:process-mem-usage
+   #:arena-size))
 (in-package :util/memory)
 
 (defun safe-type-of (x)
