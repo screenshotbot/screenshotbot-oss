@@ -116,4 +116,5 @@
 
 (defmethod send-mail ((mailer background-mailer) &rest args)
   (sb/future ()
-    (apply #'send-mail (delegate mailer) args)))
+    (ignore-and-log-errors ()
+      (apply #'send-mail (delegate mailer) args))))
