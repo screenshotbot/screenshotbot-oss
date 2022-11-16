@@ -97,8 +97,6 @@
    #:mask-rect-top
    #:mask-rect-height)
   (:export
-   #:draw-rects-in-place
-   #:draw-masks-in-place
    #:image-dimensions
    #:dimension
    #:dimension-height
@@ -294,34 +292,6 @@
 (defmacro with-local-image ((file screenshot) &body body)
   `(flet ((body (,file) ,@body))
      (%with-local-image ,screenshot #'body)))
-
-(defun %draw-mask-rect-commands (masks &key color)
-  "Imagemagick commands to draw rectangles for the given masks"
-  `("-fill" ,color
-    "-stroke" ,color
-    ,@ (loop for mask in masks
-             appending
-             (list "-draw" (format nil "rectangle ~d,~d ~d,~d"
-                                   (mask-rect-left mask)
-                                   (mask-rect-top mask)
-                                   (+
-                                    (mask-rect-left mask)
-                                    (mask-rect-width mask))
-                                   (+
-                                    (mask-rect-top mask)
-                                    (mask-rect-height mask)))))))
-
-(defun draw-masks-in-place (image-file masks &key color)
-  (when masks
-    (uiop:with-temporary-file (:pathname tmp
-                               :directory (cl-fad:pathname-directory-pathname image-file))
-      (run-magick `("convert"
-                          ,(namestring image-file)
-                          ,@(%draw-mask-rect-commands masks :color color)
-                          ,(namestring tmp)))
-      (uiop:rename-file-overwriting-target
-       tmp image-file))))
-
 
 (defun draw-masks (wand masks)
   (assert (not masks)))

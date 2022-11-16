@@ -69,6 +69,21 @@
       (is-true
        (do-image-comparison (make-screenshot im1) (make-screenshot im2) out nil)))))
 
+(test do-image-comparison-with-masks
+  (with-fixture state ()
+    (is-true (uiop:file-exists-p im1))
+    (is-true (uiop:file-exists-p im2))
+    (uiop:with-temporary-file (:pathname out :type "webp")
+      (finishes
+        (do-image-comparison (make-screenshot im1) (make-screenshot im3) out
+          (list
+           (make-instance
+            'mask-rect
+            :top 3
+            :left 3
+            :width 10
+            :height 10)))))))
+
 (test find-image-comparison-on-images
   (with-fixture state ()
     (let ((before (make-image :pathname im1))

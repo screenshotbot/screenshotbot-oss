@@ -11,9 +11,12 @@
   (:import-from #:bknr.indices
                 #:hash-index)
   (:import-from #:screenshotbot/model/image
+                #:mask-rect-height
+                #:mask-rect-width
+                #:mask-rect-top
+                #:mask-rect-left
                 #:with-tmp-image-file
                 #:mask=
-                #:draw-masks-in-place
                 #:with-local-image
                 #:make-image
                 #:image)
@@ -221,3 +224,30 @@ If the images are identical, we return t, else we return NIL."
                                  (bknr.datastore:store-objects-with-class 'image-comparison))
         do
         (recreate-image-comparison image-comparison)))
+
+(defun %draw-mask-rect-commands (masks &key color)
+  "Imagemagick commands to draw rectangles for the given masks"
+  `("-fill" ,color
+    "-stroke" ,color
+    ,@ (loop for mask in masks
+             appending
+             (list "-draw" (format nil "rectangle ~d,~d ~d,~d"
+                                   (mask-rect-left mask)
+                                   (mask-rect-top mask)
+                                   (+
+                                    (mask-rect-left mask)
+                                    (mask-rect-width mask))
+                                   (+
+                                    (mask-rect-top mask)
+                                    (mask-rect-height mask)))))))
+
+(defun draw-masks-in-place (image-file masks &key color)
+  (when masks
+    (uiop:with-temporary-file (:pathname tmp
+                               :directory (cl-fad:pathname-directory-pathname image-file))
+      (run-magick `("convert"
+                          ,(namestring image-file)
+                          ,@(%draw-mask-rect-commands masks :color color)
+                          ,(namestring tmp)))
+      (uiop:rename-file-overwriting-target
+       tmp image-file))))
