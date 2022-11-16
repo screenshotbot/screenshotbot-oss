@@ -74,7 +74,7 @@
 (defun load-magick-native (&key force)
   (when force
     #+lispworks
-    (fli:disconnect-module :magicd-wand)
+    (fli:disconnect-module :magick-native)
     (setf *magick-native-loaded-p* nil))
   (util:or-setf
    *magick-native-loaded-p*
@@ -89,7 +89,6 @@
      (verify-magick)
      t)
    :thread-safe t))
-
 
 (fli:define-c-struct wand
     (dummy :int))

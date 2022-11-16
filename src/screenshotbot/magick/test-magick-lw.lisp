@@ -161,3 +161,8 @@
   (load-magick-native)
   (with-fixture state ()
     (is (= 1 (screenshotbot-verify-magick)))))
+
+(test force-reload-magick-native
+  (load-magick-native)
+  (finishes
+   (load-magick-native :force t)))
