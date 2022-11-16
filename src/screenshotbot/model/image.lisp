@@ -73,6 +73,8 @@
                 #:s3-store-update-remote)
   (:import-from #:util/copy-file
                 #:copy-file-fast)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   ;; classes
   (:export
    #:image
@@ -801,3 +803,18 @@ recognized the file, we'll return nil."
                  (with-transaction ()
                    (setf (slot-value image 'hash) hash))
                  hash)))))
+
+(defun img-tmp-dir ()
+  (ensure-directories-exist
+   (path:catdir
+    (bknr.datastore::store-directory
+     bknr.datastore:*store*)
+    "screenshotbot-tmp/")))
+
+(defmacro with-tmp-image-file (args &body body)
+  "Just like uiop:with-temporary-file, but uses a directory which is
+ suitable for use with make-image. i.e. it will be on the same
+ filesystem so we can hardlink instead of copying the image over if
+ needed."
+  `(uiop:with-temporary-file (:directory (img-tmp-dir) ,@args)
+     ,@body))

@@ -11,6 +11,7 @@
   (:import-from #:bknr.indices
                 #:hash-index)
   (:import-from #:screenshotbot/model/image
+                #:with-tmp-image-file
                 #:mask=
                 #:draw-masks-in-place
                 #:with-local-image
@@ -174,7 +175,7 @@ If the images are identical, we return t, else we return NIL."
     (or
      (bt:with-lock-held (*lock*)
        (find))
-     (uiop:with-temporary-file (:pathname p :type "webp" :prefix "comparison")
+     (with-tmp-image-file (:pathname p :type "webp" :prefix "comparison")
        (let ((identical-p (do-image-comparison
                             before
                             after

@@ -11,6 +11,7 @@
                 #:local-image
                 #:list-images)
   (:import-from #:screenshotbot/model/image
+                #:with-tmp-image-file
                 #:image-blob
                 #:make-image
                 #:find-image)
@@ -44,7 +45,7 @@
   (let ((hash md5))
     (let ((image (or
                   (find-image (company self) hash)
-                  (uiop:with-temporary-file (:pathname tmpfile)
+                  (with-tmp-image-file (:pathname tmpfile)
                     (delete-file tmpfile)
                     (funcall fetch tmpfile)
                     (make-image :company (company self)
