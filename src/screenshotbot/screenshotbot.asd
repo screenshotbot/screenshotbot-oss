@@ -32,34 +32,24 @@
           if (eql #\7 (elt name 0))
             return child)))
 
+(defun magick-wand-config (&optional ldflags-p)
+  (string-trim '(#\Space #\Newline)
+   (uiop:run-program `("MagickWand-config"
+                       ,(if ldflags-p "--ldflags" "--cflags"))
+                     :output 'string)))
+
+
 (defmethod perform ((o compile-op) (c lib-source-file))
-  (uiop:run-program `("gcc"
-                      "-shared"
-                      ,(namestring
-                        (component-pathname c))
-                      "-I"
-                      ,(cond
-                        ((uiop:os-windows-p)
-                         (namestring #P"C:/Program Files/ImageMagick-7.1.0-Q8/include/"))
-			            ((uiop:os-macosx-p)
-		                 (namestring #P"/opt/homebrew/include/ImageMagick-7/"))
-                        (t "/usr/local/include/ImageMagick-7/"))
-			          ;; It's super difficult to install the D8 version of imagemagick on Mac... maybe in the future
-                      "-D" ,(format nil "MAGICKCORE_QUANTUM_DEPTH=~a" (if (uiop:os-macosx-p) 16 8))
-                      "-D" ,(format nil "MAGICKCORE_HDRI_ENABLE=~a" (if (uiop:os-macosx-p) 1 0))
-                      "-Werror"
-                      "-Wall"
-                      ,@(cond
-                         ((uiop:os-windows-p)
-                          (list "-L" (namestring #P"C:/Program Files/ImageMagick-7.1.0-Q8/lib/") "-lCORE_RL_MagickWand_"))
-                         ((uiop:os-macosx-p)
-                          (list (format nil "-L~alib" (namestring (guess-mac-magick-location)))
-                                "-lMagickWand-7.Q16HDRI"))
-                         (t
-                          (list "-lMagickWand-7.Q8")))
-                      "-o" ,(namestring (car (output-files o c))))
-                      :output *standard-output*
-                      :error-output *error-output*))
+  (uiop:run-program
+   (format nil"gcc -shared ~a ~a -I -Werror -O2 -Wall ~a -o ~a"
+
+           (uiop:escape-shell-command (namestring
+                                       (component-pathname c)))
+           (magick-wand-config)
+           (magick-wand-config t)
+           (namestring (car (output-files o c))))
+   :output *standard-output*
+   :error-output *error-output*))
 
 (defsystem :screenshotbot/events
   :serial t

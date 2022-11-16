@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <MagickWand/MagickWand.h>
 
 typedef struct _pixel {
@@ -6,6 +7,22 @@ typedef struct _pixel {
         size_t y;
 } pixel;
 
+extern int screenshotbot_verify_magick() {
+		size_t depth;
+		GetMagickQuantumDepth(&depth);
+		if (MAGICKCORE_QUANTUM_DEPTH != depth) {
+				return -1;
+		}
+
+		const char* features = GetMagickFeatures();
+		char* feat = strstr(features, "HDRI");
+
+#if MAGICK_HDRI_ENABLED
+		return feat != NULL;
+#else
+		return feat == NULL;
+#endif
+}
 
 extern size_t screenshotbot_find_non_transparent_pixels(MagickWand* wand, pixel* output, size_t max) {
         max--;

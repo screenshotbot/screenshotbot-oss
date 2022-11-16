@@ -9,6 +9,8 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:load-magick-native
+                #:screenshotbot-verify-magick
                 #:with-image-comparison
                 #:ping-image-metadata
                 #:map-non-alpha-pixels
@@ -154,3 +156,8 @@
             (assert-that non-alphas
                          (described-as "We shouldn't have a background image in the comparison"
                            (equal-to 0)))))))))
+
+(test verify-magick-native
+  (load-magick-native)
+  (with-fixture state ()
+    (is (= 1 (screenshotbot-verify-magick)))))

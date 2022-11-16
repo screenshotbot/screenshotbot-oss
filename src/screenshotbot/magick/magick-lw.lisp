@@ -68,13 +68,27 @@
      (win-magick-lib "MagickWand"))
     (t "libMagickWand-7.Q8.so"))))
 
-;; (fli:disconnect-module :magicd-wand)
 
-(fli:register-module :magick-native
-                     :real-name
-                     (asdf:output-file
-                         'asdf:compile-op
-                          (asdf:find-component :screenshotbot '("magick" "magick-native"))))
+(defvar *magick-native-loaded-p* nil)
+
+(defun load-magick-native (&key force)
+  (when force
+    #+lispworks
+    (fli:disconnect-module :magicd-wand)
+    (setf *magick-native-loaded-p* nil))
+  (util:or-setf
+   *magick-native-loaded-p*
+   (progn
+     (fli:register-module
+      :magick-native
+      :real-name
+      (asdf:output-file
+       'asdf:compile-op
+       (asdf:find-component :screenshotbot '("magick" "magick-native"))))
+
+     (verify-magick)
+     t)
+   :thread-safe t))
 
 
 (fli:define-c-struct wand
@@ -402,6 +416,7 @@
   (format nil "~a" (* x 1024 1024)))
 
 (defun init-magick-wand ()
+  (load-magick-native)
   (unless *magick-wand-inited*
     (register-magick-wand)
     #+lispworks
@@ -548,9 +563,19 @@
      ((wand (:pointer wand))
       (output (:pointer pixel))
       (max :size-t))
-     :result-type :size-t)
+  :result-type :size-t)
 
-;; (fli:disconnect-module :magick-native)
+(fli:define-foreign-function screenshotbot-verify-magick
+    ()
+  :result-type :int)
+
+(defun verify-magick ()
+  (let ((ret (screenshotbot-verify-magick)))
+    (unless (= ret 1)
+      (error "The ImageMagick runtime does not match the configuration options that
+ Screenshotbot was compiled against. This might happen if you
+ recompiled or reinstalled ImageMagick, or switched the compiled
+ assets to a different machine. (Got result: ~a)" ret))))
 
 
 (defun map-non-alpha-pixels (wand fn &key (limit 1000))
