@@ -35,6 +35,10 @@
                 #:def-cron)
   (:import-from #:screenshotbot/events
                 #:push-event)
+  (:import-from #:screenshotbot/magick/magick-lw
+                #:with-image-comparison
+                #:with-wand
+                #:save-as-webp)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -126,51 +130,32 @@
   "Compares before-screenshot and after-screenshot, and saves the result image to P.
 
 If the images are identical, we return t, else we return NIL."
-  (with-local-image (before before-image)
-    (with-local-image (after after-image)
-      (let ((cmd (list
-                  "compare"
-                  "-metric" "RMSE"
-                  (namestring before)
-                  (namestring after)
-                  "-highlight-color" "red"
-                  "-lowlight-color" "none"
-                  "-compose" "src"
-                  (namestring p))))
-        (multiple-value-bind (out err ret)
-            (run-magick cmd
-                        :ignore-error-status t
-                        :output 'string
-                        :error-output 'string)
+  (with-local-image (before-file before-image)
+    (with-local-image (after-file after-image)
+      (with-wand (before :file before-file)
+        (with-wand (after :file after-file)
+          (with-image-comparison (before after
+                                  :result result
+                                  :same-p same-p
+                                  :highlight-color "red"
+                                  :lowlight-color "none")
 
-          (unless (member ret '(0 1))
-            (error "Got surprising error output from imagemagic compare: ~S~%args:~%~S~%stderr:~%~a~%stdout:~%~a" ret cmd err out))
-          (draw-masks-in-place p masks :color "rgba(255, 255, 0, 0.8)")
-          (log:info "Got return code: ~a with output `~a`, `~a`" ret out err)
-          (when (= ret 0)
-            (equal "0 (0)" (str:trim err))
 
-            ;; Slow version if we ever find that imagemagick's output
-            ;; is unreliable:
-            #+nil
-            (block check
-              (map-unequal-pixels
-               before-screenshot after-screenshot
-               (lambda (x y)
-                 (declare (ignore x y))
-                 (return-from check nil)))
-              t)))))))
+            (save-as-webp result p)
+
+            (draw-masks-in-place p masks :color "rgba(255, 255, 0, 0.8)")
+            same-p))))))
 
 (defun find-existing-image-comparison (before after masks)
   (flet ((find-in (list)
-          (loop for comparison in list
-                if (and (string= (oid after) (oid (image-comparison-after comparison)))
-                        (equal (length masks) (length (image-comparison-masks comparison)))
-                        (every #'identity
-                               (loop for x in masks
-                                     for y in (image-comparison-masks comparison)
-                                     collect (mask= x y))))
-                  return comparison)))
+           (loop for comparison in list
+                 if (and (string= (oid after) (oid (image-comparison-after comparison)))
+                         (equal (length masks) (length (image-comparison-masks comparison)))
+                         (every #'identity
+                                (loop for x in masks
+                                      for y in (image-comparison-masks comparison)
+                                      collect (mask= x y))))
+                   return comparison)))
     (or
      (find-in (%image-comparisons-for-before before))
      (let ((transient-image-comparisons (transient-objects-for-before before)))
@@ -189,7 +174,7 @@ If the images are identical, we return t, else we return NIL."
     (or
      (bt:with-lock-held (*lock*)
        (find))
-     (uiop:with-temporary-file (:pathname p :type "png" :prefix "comparison")
+     (uiop:with-temporary-file (:pathname p :type "webp" :prefix "comparison")
        (let ((identical-p (do-image-comparison
                             before
                             after

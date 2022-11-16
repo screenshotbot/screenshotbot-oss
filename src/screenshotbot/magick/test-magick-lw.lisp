@@ -9,6 +9,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:with-image-comparison
                 #:ping-image-metadata
                 #:map-non-alpha-pixels
                 #:magick-exception-message
@@ -23,6 +24,8 @@
                 #:convert-to-lossless-webp)
   (:import-from #:util/digests
                 #:md5-file)
+  (:import-from #:fiveam-matchers/described-as
+                #:described-as)
    (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/magick/test-magick-lw)
 
@@ -137,3 +140,17 @@
     (is (equal '(70 46 "WEBP")
                (ping-image-metadata (make-instance 'magick-native)
                                     rose-webp)))))
+
+(test no-background-in-compare
+  (with-fixture state ()
+    (with-wand (one :file rose)
+      (with-wand (two :file rose)
+        (with-image-comparison (one two :result result :same-p same-p)
+          (is-true same-p)
+          (let ((non-alphas 0))
+            (map-non-alpha-pixels result
+                                  (lambda (x y)
+                                    (incf non-alphas)))
+            (assert-that non-alphas
+                         (described-as "We shouldn't have a background image in the comparison"
+                           (equal-to 0)))))))))

@@ -26,7 +26,8 @@
    #:map-non-alpha-pixels
    #:get-non-alpha-pixels
    #:ping-image-metadata
-   #:with-image-comparison))
+   #:with-image-comparison
+   #:save-as-webp))
 (in-package :screenshotbot/magick/magick-lw)
 
 (defclass magick-native (abstract-magick)
@@ -118,6 +119,12 @@
      (value (:reference :ef-mb-string)))
   :result-type :boolean)
 
+(fli:define-foreign-function (magick-set-image-artifact "MagickSetImageArtifact")
+    ((wand (:pointer wand))
+     (artifact (:reference :ef-mb-string))
+     (value (:reference :ef-mb-string)))
+  :result-type :boolean)
+
 (fli:define-foreign-function (magick-write-image "MagickWriteImage")
     ((wand (:pointer wand))
      (file (:reference :ef-mb-string)))
@@ -140,6 +147,90 @@
   TimeResource
   WidthResource
   ListLengthResource)
+
+(fli:define-c-enum composite-operator
+    UndefinedCompositeOp
+  AlphaCompositeOp
+  AtopCompositeOp
+  BlendCompositeOp
+  BlurCompositeOp
+  BumpmapCompositeOp
+  ChangeMaskCompositeOp
+  ClearCompositeOp
+  ColorBurnCompositeOp
+  ColorDodgeCompositeOp
+  ColorizeCompositeOp
+  CopyBlackCompositeOp
+  CopyBlueCompositeOp
+  CopyCompositeOp
+  CopyCyanCompositeOp
+  CopyGreenCompositeOp
+  CopyMagentaCompositeOp
+  CopyAlphaCompositeOp
+  CopyRedCompositeOp
+  CopyYellowCompositeOp
+  DarkenCompositeOp
+  DarkenIntensityCompositeOp
+  DifferenceCompositeOp
+  DisplaceCompositeOp
+  DissolveCompositeOp
+  DistortCompositeOp
+  DivideDstCompositeOp
+  DivideSrcCompositeOp
+  DstAtopCompositeOp
+  DstCompositeOp
+  DstInCompositeOp
+  DstOutCompositeOp
+  DstOverCompositeOp
+  ExclusionCompositeOp
+  HardLightCompositeOp
+  HardMixCompositeOp
+  HueCompositeOp
+  InCompositeOp
+  IntensityCompositeOp
+  LightenCompositeOp
+  LightenIntensityCompositeOp
+  LinearBurnCompositeOp
+  LinearDodgeCompositeOp
+  LinearLightCompositeOp
+  LuminizeCompositeOp
+  MathematicsCompositeOp
+  MinusDstCompositeOp
+  MinusSrcCompositeOp
+  ModulateCompositeOp
+  ModulusAddCompositeOp
+  ModulusSubtractCompositeOp
+  MultiplyCompositeOp
+  NoCompositeOp
+  OutCompositeOp
+  OverCompositeOp
+  OverlayCompositeOp
+  PegtopLightCompositeOp
+  PinLightCompositeOp
+  PlusCompositeOp
+  ReplaceCompositeOp
+  SaturateCompositeOp
+  ScreenCompositeOp
+  SoftLightCompositeOp
+  SrcAtopCompositeOp
+  SrcCompositeOp
+  SrcInCompositeOp
+  SrcOutCompositeOp
+  SrcOverCompositeOp
+  ThresholdCompositeOp
+  VividLightCompositeOp
+  XorCompositeOp
+  StereoCompositeOp
+  FreezeCompositeOp
+  InterpolateCompositeOp
+  NegateCompositeOp
+  ReflectCompositeOp
+  SoftBurnCompositeOp
+  SoftDodgeCompositeOp
+  StampCompositeOp
+  RMSECompositeOp
+  SaliencyBlendCompositeOp
+  SeamlessBlendCompositeOp)
 
 (fli:define-c-enum exception-type
     UndefinedException
@@ -247,6 +338,11 @@
      (unwind-protect
           (fli:convert-from-foreign-string ret)
        (magick-relinquish-memory ret)))))
+
+(fli:define-foreign-function (magick-set-image-compose "MagickSetImageCompose")
+    ((wand (:pointer wand))
+     (compose composite-operator))
+  :result-type :boolean)
 
 (fli:define-foreign-function (magick-get-exception "MagickGetException")
     ((wand (:pointer wand))
@@ -377,9 +473,15 @@
 
 (def-easy-macro with-image-comparison (wand1 wand2 &key &binding result
                                              &binding same-p
+                                             (highlight-color "red")
+                                             (lowlight-color "none")
                                              &fn fn)
   (assert (not (fli:null-pointer-p wand1)))
   (assert (not (fli:null-pointer-p wand2)))
+  (check-boolean (magick-set-image-artifact wand1 "compare:lowlight-color" lowlight-color) wand1)
+  (check-boolean (magick-set-image-artifact wand1 "compare:highlight-color" highlight-color) wand1)
+  (check-boolean (magick-set-image-compose wand1  'SrcCompositeOp) wand1)
+
   (multiple-value-bind (output difference)
       (magick-compare-images
        wand1
