@@ -52,21 +52,14 @@
       (setf (uiop:getenv "Path") (format nil "~a;~a" (namestring *windows-magick-dir*) (uiop:getenv "Path")))
       (setf *path-setp* t)))
 
-  (when (uiop:os-windows-p)
-    (fli:register-module
-     :magick-core
-     :file-name (win-magick-lib "MagickCore")))
+  ;; There used to be code here that loaded the dependencies for
+  ;; MagickWand and MagickCore. At least on Linux, this appears to not
+  ;; be needed and our magick-native will correctly load the
+  ;; dependencies. TODO: Verify that this works on Window, and Mac and
+  ;; clear this TODO. If you do need to manually load the libraries on
+  ;; these platforms, use MagickWand-config to figure out the locations.
 
-  (fli:register-module
-   ;; TODO: typo in module name, we should fix when a restart is due.
-   :magicd-wand
-   :file-name
-   (cond
-    ((uiop:os-windows-p)
-     ;; TODO: if needed we can discover this from the registry, see the
-     ;; python wand code that does the same
-     (win-magick-lib "MagickWand"))
-    (t "libMagickWand-7.Q8.so"))))
+  (load-magick-native))
 
 
 (defvar *magick-native-loaded-p* nil)
@@ -415,7 +408,6 @@
   (format nil "~a" (* x 1024 1024)))
 
 (defun init-magick-wand ()
-  (load-magick-native)
   (unless *magick-wand-inited*
     (register-magick-wand)
     #+lispworks
