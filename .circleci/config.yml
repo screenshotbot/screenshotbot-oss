@@ -36,3 +36,7 @@ jobs:
             which MagickWand-config
             dpkg -S MagickWand-config
             CCL_DEFAULT_DIRECTORY=~/ccl make test-ccl
+      - run:
+          name: Upload assets for Screenshots
+          command: |
+            make upload-screenshots-oss
