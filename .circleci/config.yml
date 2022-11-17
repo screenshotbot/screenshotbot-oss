@@ -13,4 +13,5 @@ jobs:
           name: SBCL tests
           command: |
             export PATH=$PATH:/usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q*
+            dpkg -S MagickWand-config
             make test-sb
