@@ -472,7 +472,7 @@
              (when file
                (check-boolean (magick-read-image wand (namestring file)) wand)
                (when alpha
-                 (check-boolean (magick-set-image-alpha-channel wand 'OnAlphaChannel)
+                 (check-boolean (magick-set-image-alpha-channel wand 'SetAlphaChannel)
                                 wand)))
            (funcall fn wand))
       (destroy-magick-wand wand))))
