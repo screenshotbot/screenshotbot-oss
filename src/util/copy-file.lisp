@@ -9,7 +9,7 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:copy-file-fast)
-  #+sbcl
+  #-lispworks
   (:local-nicknames (#:fli #:util/fake-fli)))
 (in-package :util/copy-file)
 
