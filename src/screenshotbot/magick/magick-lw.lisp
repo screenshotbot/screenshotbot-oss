@@ -77,7 +77,7 @@
       :real-name
       (asdf:output-file
        'asdf:compile-op
-       (asdf:find-component :screenshotbot '("magick" "magick-native"))))
+       (asdf:find-component :screenshotbot.magick '("magick-native"))))
 
      (verify-magick)
      t)
