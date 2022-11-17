@@ -54,12 +54,30 @@
          (end (search " " str)))
     (subseq str 0 end)))
 
-(defun magick-wand-config (&optional ldflags-p)
-  (string-trim '(#\Space #\Newline)
+(defun %string-trim (str)
+  (String-trim '(#\Space #\Newline)
+               str))
+
+(defun magick-wand-config (arg)
+  (%string-trim
    (uiop:run-program `("MagickWand-config"
-                       ,(if ldflags-p "--ldflags" "--cflags"))
+                       ,arg)
                      :output 'string)))
 
+(defun init-features ()
+  (let ((version (%string-trim (uiop:run-program `("MagickWand-config"
+                                                   "--version")
+                                                 :output 'string))))
+    (flet ((add-feature (add remove)
+             (setf *features* (remove remove *features*))
+             (pushnew add *features*)))
+     (ecase (elt version 0)
+       (#\6
+        (add-feature :magick-6 :magick-7))
+       (#\7
+        (add-feature :magick-7 :magick-6))))))
+
+(init-features)
 
 (defmethod perform ((o compile-op) (c lib-source-file))
   (uiop:run-program
@@ -67,11 +85,13 @@
 
            (uiop:escape-shell-command (namestring
                                        (component-pathname c)))
-           (magick-wand-config)
-           (magick-wand-config t)
+           (magick-wand-config "--cflags")
+           (magick-wand-config "--ldflags")
            (namestring (car (output-files o c))))
    :output *standard-output*
    :error-output *error-output*))
+
+
 
 (defsystem :screenshotbot.magick
   :serial t
