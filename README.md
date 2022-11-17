@@ -4,7 +4,7 @@
 
 # Screenshotbot: Screenshot Testing Service
 
-[![Build Status](http://jenkins.tdrhq.com/buildStatus/icon?job=screenshotbot-oss)](http://jenkins.tdrhq.com/job/screenshotbot-oss/)
+[![tdrhq](https://circleci.com/gh/screenshotbot/screenshotbot-oss.svg?style=shield)](https://app.circleci.com/pipelines/github/screenshotbot/screenshotbot-oss?branch=main)
 [![Screenshots](https://screenshotbot.io/badge?org=5fd16bcf4f4b3822fd0000e1&channel=screenshotbot-oss&branch=master)](https://screenshotbot.io/active-run?org=5fd16bcf4f4b3822fd0000e1&channel=screenshotbot-oss&branch=master)
 
 
