@@ -98,6 +98,7 @@
   :depends-on ((:feature (:not :lispworks) :util/fake-fli)
                :easy-macros
                :screenshotbot/events
+               :serapeum
                :alexandria)
   :components ((:file "magick")
                (lib-source-file "magick-native")
