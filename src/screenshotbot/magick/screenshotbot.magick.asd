@@ -102,6 +102,8 @@
   :components ((:file "magick")
                (lib-source-file "magick-native")
                (:file "memory" :if-feature :lispworks)
+               (:file "ffi-7" :if-feature :magick-7)
+               (:file "ffi-6" :if-feature :magick-6)
                (:file "magick-lw")))
 
 (defsystem :screenshotbot.magick/tests

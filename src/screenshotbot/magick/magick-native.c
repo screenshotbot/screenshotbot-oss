@@ -12,8 +12,14 @@ typedef struct _pixel {
         size_t y;
 } pixel;
 
+#if MagickLibVersion >= 0x700
+#define IF7(v1,v2) v1
+#else
+#define IF7(v1,v2) v2
+#endif
+
 extern int screenshotbot_verify_magick(CompositeOperator srcCompositeOp,
-									   AlphaChannelOption onAlphaChannel) {
+									   IF7(AlphaChannelOption,AlphaChannelType) onAlphaChannel) {
 		size_t depth;
 		GetMagickQuantumDepth(&depth);
 		if (MAGICKCORE_QUANTUM_DEPTH != depth) {
@@ -24,7 +30,7 @@ extern int screenshotbot_verify_magick(CompositeOperator srcCompositeOp,
 				return -2;
 		}
 
-		if (onAlphaChannel != OnAlphaChannel) {
+		if (onAlphaChannel != SetAlphaChannel) {
 				return -3;
 		}
 
