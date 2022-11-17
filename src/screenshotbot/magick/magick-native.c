@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <string.h>
-#include <MagickWand/MagickWand.h>
+
+#if __has_include("MagickWand/MagickWand.h")
+# include <MagickWand/MagickWand.h>
+#else
+# include <wand/MagickWand.h>
+#endif
 
 typedef struct _pixel {
         size_t x;
