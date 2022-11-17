@@ -15,5 +15,6 @@ jobs:
             for dir in "/usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q*" ; do
                 export PATH=$PATH:$dir
             done
+            echo $PATH
             dpkg -S MagickWand-config
             make test-sb
