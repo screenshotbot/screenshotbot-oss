@@ -557,11 +557,14 @@
   :result-type :size-t)
 
 (fli:define-foreign-function screenshotbot-verify-magick
-    ()
+    ((src-composite-op composite-operator)
+     (on-alpha-channel alpha-channel-option))
   :result-type :int)
 
 (defun verify-magick ()
-  (let ((ret (screenshotbot-verify-magick)))
+  (let ((ret (screenshotbot-verify-magick
+              'SrcCompositeOp
+              'OnAlphaChannel)))
     (unless (= ret 1)
       (error "The ImageMagick runtime does not match the configuration options that
  Screenshotbot was compiled against. This might happen if you

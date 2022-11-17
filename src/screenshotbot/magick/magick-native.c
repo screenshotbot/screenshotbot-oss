@@ -12,11 +12,20 @@ typedef struct _pixel {
         size_t y;
 } pixel;
 
-extern int screenshotbot_verify_magick() {
+extern int screenshotbot_verify_magick(CompositeOperator srcCompositeOp,
+									   AlphaChannelOption onAlphaChannel) {
 		size_t depth;
 		GetMagickQuantumDepth(&depth);
 		if (MAGICKCORE_QUANTUM_DEPTH != depth) {
 				return -1;
+		}
+
+		if (srcCompositeOp != SrcCompositeOp) {
+				return -2;
+		}
+
+		if (onAlphaChannel != OnAlphaChannel) {
+				return -3;
 		}
 
 		const char* features = GetMagickFeatures();

@@ -9,6 +9,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:verify-magick
                 #:load-magick-native
                 #:screenshotbot-verify-magick
                 #:with-image-comparison
@@ -160,7 +161,8 @@
 (test verify-magick-native
   (load-magick-native)
   (with-fixture state ()
-    (is (= 1 (screenshotbot-verify-magick)))))
+    (finishes
+      (verify-magick))))
 
 (test force-reload-magick-native
   (load-magick-native)
