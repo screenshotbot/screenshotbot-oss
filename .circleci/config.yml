@@ -12,5 +12,5 @@ jobs:
       - run:
           name: SBCL tests
           command: |
-            eport PATH=$PATH:/usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q*
+            export PATH=$PATH:/usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q*
             make test-sb
