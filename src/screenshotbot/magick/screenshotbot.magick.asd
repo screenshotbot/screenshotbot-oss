@@ -26,6 +26,9 @@
   (let ((library-file-type
           (default-foreign-library-type)))
     (list (make-pathname :type library-file-type
+                         :name (format nil "~a~a"
+                                       (asdf:component-name c)
+                                       (magick-lib-suffix))
                          :defaults (asdf:component-pathname c)))))
 
 (defmethod perform ((o load-op) (c lib-source-file))
@@ -37,6 +40,19 @@
           for name = (car (last (pathname-directory child)))
           if (eql #\7 (elt name 0))
             return child)))
+
+(defun magick-lib-suffix ()
+  ;; I don't want to pull in cl-ppcre just for this...
+  (let* ((haystack (uiop:run-program `("MagickWand-config" "--libs")
+                                     :output 'string))
+         (needle "lMagickWand")
+         (pos
+           (search
+            needle
+            haystack))
+         (str (subseq haystack (+ pos (length needle))))
+         (end (search " " str)))
+    (subseq str 0 end)))
 
 (defun magick-wand-config (&optional ldflags-p)
   (string-trim '(#\Space #\Newline)
