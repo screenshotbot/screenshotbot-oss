@@ -70,11 +70,13 @@
 
 (defun load-systems ()
   (let ((systems (or
-                  #+lispworks
-                  (let ((pos (position "-system" system:*line-arguments-list* :test 'equal)))
+                  (let ((pos (position "-system" (uiop:raw-command-line-arguments) :test 'equal)))
                     (when pos
-                      (str:split "," (elt system:*line-arguments-list* (1+ pos)))))
-                  (find-tests))))
+                      (str:split "," (elt (uiop:raw-command-line-arguments) (1+ pos)))))
+                  (union
+                   (find-tests)
+                   (screenshot-tests)
+                   :test #'string-equal))))
     #-screenshotbot-oss
     (progn
       #-ccl
@@ -86,9 +88,7 @@
                          files)))))
     (log:info "Running the following tests: ~S" systems)
 
-    (dolist (system (union systems
-                           (screenshot-tests)
-                           :test #'string-equal))
+    (dolist (system systems)
       (log:info "Loading: ~s" system)
      (ql:quickload system))))
 
