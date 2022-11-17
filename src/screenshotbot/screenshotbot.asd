@@ -1,6 +1,7 @@
 (defpackage :screenshotbot-system
   (:use :cl
    :asdf))
+(in-package :screenshotbot-system)
 
 (defclass lib-source-file (c-source-file)
   ())
