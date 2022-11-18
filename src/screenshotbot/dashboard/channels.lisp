@@ -81,10 +81,15 @@
                     (badge (apply #'hex:make-full-url
                                   hunchentoot:*request*
                                   'badge-handler
-                                  args)))
+                                  args))
+                    (local-badge
+                      ;; A local-badge is better for screenshot tests
+                      (apply #'hex:make-url
+                             'badge-handler
+                             args)))
                <markup:merge-tag>
                  <a href=link >
-                   <img src= badge />
+                   <img src= local-badge />
                  </a>
 
                  <p class= "mt-3" >To use this build badge, you can use the following template in a GitHub flavored markdown file. </p>
