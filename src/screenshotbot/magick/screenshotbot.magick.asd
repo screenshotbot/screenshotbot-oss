@@ -41,9 +41,45 @@
           if (eql #\7 (elt name 0))
             return child)))
 
+(defun %path ()
+  (destructuring-bind (name sep dir-sep)
+      (if (uiop:os-windows-p)
+          (list "Path" ";" "\\")
+          (list "PATH" ":" "/"))
+   (let* ((parts
+            (uiop:call-function "str:split"
+                                sep
+                                (uiop:getenv name))))
+     (append
+      (loop for part in parts
+            if (uiop:call-function "str:ends-with-p"
+                                   dir-sep part)
+              collect part
+            else
+              collect (format nil "~a~a" part dir-sep))
+      (list
+       ;; Mac Homebrew default location
+       "/opt/homebrew/bin/"
+       ;; Debian 11 default location
+       "/usr/lib/x86_64-linux-gnu/ImageMagick-6.9.11/bin-q16/")))))
+
+(defun config-bin ()
+  (namestring
+   (let ((path (%path)))
+     (loop for dir in path
+           for file = (make-pathname
+                       :name "MagickWand-config"
+                       :type nil
+                       :defaults (pathname dir))
+           if (uiop:file-exists-p file)
+             return file
+           finally
+              (warn "Could not find MagickWand-config in the PATH, or in the guessed locations: ~S" path)
+              (return "MagickWand-config")))))
+
 (defun magick-lib-suffix ()
   ;; I don't want to pull in cl-ppcre just for this...
-  (let* ((haystack (uiop:run-program `("MagickWand-config" "--libs")
+  (let* ((haystack (uiop:run-program `(,(config-bin) "--libs")
                                      :output 'string))
          (needle "lMagickWand")
          (pos
@@ -60,12 +96,12 @@
 
 (defun magick-wand-config (arg)
   (%string-trim
-   (uiop:run-program `("MagickWand-config"
+   (uiop:run-program `(,(config-bin)
                        ,arg)
                      :output 'string)))
 
 (defun init-features ()
-  (let ((version (%string-trim (uiop:run-program `("MagickWand-config"
+  (let ((version (%string-trim (uiop:run-program `(,(config-bin)
                                                    "--version")
                                                  :output 'string))))
     (flet ((add-feature (add remove)
@@ -95,6 +131,7 @@
 
 (defsystem :screenshotbot.magick
   :serial t
+  :defsystem-depends-on (:str)
   :depends-on ((:feature (:not :lispworks) :util/fake-fli)
                :easy-macros
                :screenshotbot/events
