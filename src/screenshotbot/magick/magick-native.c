@@ -37,11 +37,20 @@ extern int screenshotbot_verify_magick(CompositeOperator srcCompositeOp,
 		const char* features = GetMagickFeatures();
 		char* feat = strstr(features, "HDRI");
 
-#if MAGICK_HDRI_ENABLED
-		return feat != NULL;
+
+#if MAGICKCORE_HDRI_ENABLE
+		int hdriMatches = (feat != NULL);
 #else
-		return feat == NULL;
+		int hdriMatches = (feat == NULL);
 #endif
+		if (!hdriMatches) {
+				printf("HDRI setting does not match, original: %d. Features `%s`",
+					   MAGICKCORE_HDRI_ENABLE,
+					   features);
+				return -4;
+		}
+
+		return 1;
 }
 
 extern size_t screenshotbot_find_non_transparent_pixels(MagickWand* wand, pixel* output, size_t max) {
