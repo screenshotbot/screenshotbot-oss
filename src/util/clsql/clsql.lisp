@@ -6,11 +6,16 @@
 (setf clsql:*default-caching* nil)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (pushnew (asdf:system-relative-pathname
-            :util/clsql
-            "clsql/")
-           clsql:*foreign-library-search-paths*
-           :test #'equal))
+  (flet ((%push (path)
+           (pushnew path
+                    clsql:*foreign-library-search-paths*
+                    :test #'equal)))
+    (%push (asdf:system-relative-pathname
+             :util/clsql
+             "clsql/"))
+
+    ;; Only for Homebrew on Mac. Technically only for ARM64.
+    (%push #p"/opt/homebrew/opt/mysql-client/lib/")))
 
 (eval-when (:compile-toplevel)
   (asdf:compile-system :clsql-mysql)
