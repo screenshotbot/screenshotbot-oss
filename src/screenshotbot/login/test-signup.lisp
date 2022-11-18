@@ -11,6 +11,7 @@
   (:Import-from #:screenshotbot/server
                 #:*disable-mail*)
   (:import-from #:screenshotbot/login/signup
+                #:render-signup-confirmation
                 #:signup-post)
   (:import-from #:screenshotbot/model/company
                 #:prepare-singleton-company
@@ -30,7 +31,9 @@
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:screenshotbot/login/github-oauth
-                #:github-oauth-provider))
+                #:github-oauth-provider)
+  (:import-from #:screenshotbot/testing
+                #:screenshot-test))
 
 (util/fiveam:def-suite)
 
@@ -107,3 +110,10 @@
                          :email "blah@gmail.com"
                          :was-validated t)
         (signup-get))))))
+
+(screenshot-test signup-confirmation-email
+  (with-fixture screenshots ()
+    (render-signup-confirmation
+     "Arnold"
+     "dfdsfs23rsfdsf"
+     :confirmation-link "https://example.com")))

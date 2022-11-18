@@ -248,25 +248,30 @@
 
 (defun render-signup-confirmation (first-name
                                    confirmation
-                                   &aux (confirmation-link
+                                   &key (confirmation-link
                                          (hex:make-full-url hunchentoot:*request*
                                                              'confirm-email
                                                              :id (oid confirmation)
                                                              :code (secret-code confirmation))))
-  <html>
-  <body>
-  <p>Hi ,(progn first-name),</p>
+   <html>
+     <body>
+       <p>Hi ,(progn first-name),</p>
 
-  <p>Thank you for setting up your Screenshotbot account.</p>
+       <p>Thank you for setting up your Screenshotbot account.</p>
 
-  <p>Please <a href=confirmation-link >click here</a> to confirm your email address, and I will assist you with regressions momentarily.</p>
+       <p>
+         Please <a href=confirmation-link >click here</a>
+         to confirm your email address.
+       </p>
 
-  <p>Your friendly neighborhood bot,<br />
-  Screenshotbot</p>
+       <p>
+         If you need help or support please reach out to
+         <a href= "mailto:support@screenshotbot.io">support@screenshotbot.io</a>
+       </p>
 
-  <p> (P.S. If you reply to this mail, one of our human support staff will be happy to respond!)</p>
+       <p>--Screenshotbot</p>
 
-  </body>
+     </body>
   </html>)
 
 (defun send-signup-confirmation (email first-name confirmation)
