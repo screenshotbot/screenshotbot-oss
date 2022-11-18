@@ -40,6 +40,7 @@
                 #:can-view!
                 #:can-view)
   (:import-from #:screenshotbot/testing
+                #:fix-timestamps
                 #:screenshot-test))
 (in-package :screenshotbot/dashboard/test-channels)
 
@@ -89,4 +90,5 @@
     (cl-mock:if-called 'oid
                        (lambda (arg)
                          "deadbeef"))
-    (single-channel-view channel)))
+    (fix-timestamps
+     (single-channel-view channel))))
