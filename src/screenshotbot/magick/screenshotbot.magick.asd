@@ -101,6 +101,9 @@
                      :output 'string)))
 
 (defun init-features ()
+  "If you're using these features, make sure that your files are compiled
+ with the right suffix, so that they can coexist in the same
+ repository build output. (see the example of magick-lw.lisp below)."
   (let ((version (%string-trim (uiop:run-program `(,(config-bin)
                                                    "--version")
                                                  :output 'string))))
@@ -142,7 +145,14 @@
                (:file "memory" :if-feature :lispworks)
                (:file "ffi-7" :if-feature :magick-7)
                (:file "ffi-6" :if-feature :magick-6)
-               (:file "magick-lw")))
+               (:file "magick-lw"
+                :output-files (compile-op (o c)
+                                          (let ((old (car (call-next-method))))
+                                            (list
+                                             (make-pathname
+                                              :name (format nil "magick-lw~a"
+                                                            (magick-lib-suffix))
+                                              :defaults old)))))))
 
 (defsystem :screenshotbot.magick/tests
   :serial t
