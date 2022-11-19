@@ -75,6 +75,8 @@
                 #:copy-file-fast)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:screenshotbot/events
+                #:push-event)
   ;; classes
   (:export
    #:image
@@ -578,6 +580,8 @@
       (compare-image-files (magick) file1 file2))))
 
 (defun images-equal-by-content-p (img1 img2 &key masks)
+  (push-event :images-equal-by-content
+              :img1 (oid img1))
   (with-hash-lock-held (img1 *content-equal-hash-lock*)
     (let ((existing-results (content-equal-results-for-image-1 img1)))
       (log:info "existing results: ~S" existing-results)
