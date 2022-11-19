@@ -15,4 +15,5 @@ RUN tar xvzf ccl.tar.gz
 RUN apt-get update && apt-get install -y openjdk-11-jdk-headless gcc make
 WORKDIR /app
 
-CMD /opt/software/ccl/lx86cl64 -l launch.lisp -- --object-store /data/ --start-slynk --slynk-port 4005 --slynk-loopback-interface 0.0.0.0
+ENTRYPOINT ["/opt/software/ccl/lx86cl64", "-l", "launch.lisp", "--"]
+CMD ["--object-store", "/data/", "--start-slynk", "--slynk-port", "4005", "--slynk-loopback-interface", "0.0.0.0"]

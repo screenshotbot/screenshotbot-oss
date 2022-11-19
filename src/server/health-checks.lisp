@@ -6,6 +6,7 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :server/health-checks)
 
+#+(and linux lispworks)
 (def-health-check test-compile-file-pathname ()
   (uiop:with-temporary-file (:pathname p :type "lisp")
     (assert (equal "64ufasl"
