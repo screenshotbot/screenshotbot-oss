@@ -39,6 +39,7 @@
 (defvar *remote-debugging-client-port*)
 (defvar *remote-debugging-password*)
 (defvar *slynk-loopback-interface*)
+(defvar *health-check*)
 
 (defparameter *options*
   `((*port* #+screenshotbot-oss "4091"
@@ -57,6 +58,7 @@
      #+screenshotbot-oss "~/.config/screenshotbot/object-store/"
      #-screenshotbot-oss "/data/arnold/object-store/" "" :params ("OBJECT-STORE"))
     (*verify-store* nil "")
+    (*health-check* nil "")
     #+lispworks
     (*profile-store* nil "When used with --verify-store, profiles the store load")
     (*verify-snapshots* nil "")
@@ -188,6 +190,12 @@
       :ssl ssl-ctx)))
   (log:info "Remote debugging server started"))
 
+(defun maybe-run-health-checks ()
+  (when *health-check*
+    (log:config :info)
+    (run-health-checks)
+    (uiop:quit 0)))
+
 (defun main (&key (enable-store t)
                (jvm t)
                acceptor)
@@ -232,6 +240,8 @@
               (run-health-checks)
               (uiop:quit 0))
 
+
+            (maybe-run-health-checks)
             #+nil
             (when *verify-snapshots*
               (log:config :info)
