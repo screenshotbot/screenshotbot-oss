@@ -17,6 +17,7 @@
     ;; Only for Homebrew on Mac. Technically only for ARM64.
     (%push #p"/opt/homebrew/opt/mysql-client/lib/")))
 
+#-screenshotbot-oss
 (eval-when (:compile-toplevel)
   (asdf:compile-system :clsql-mysql)
   (asdf:compile-system :clsql-sqlite3))
