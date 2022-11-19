@@ -60,8 +60,12 @@
       (list
        ;; Mac Homebrew default location
        "/opt/homebrew/bin/"
-       ;; Debian 11 default location
-       "/usr/lib/x86_64-linux-gnu/ImageMagick-6.9.11/bin-q16/")))))
+       )
+      (directory
+       ;; Debian 11 default location. This returns the file itself,
+       ;; but that's okay. The only caller of this will replace the
+       ;; :name part of the pathname.
+       "/usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q*/MagickWand-config")))))
 
 (defun config-bin ()
   (namestring
