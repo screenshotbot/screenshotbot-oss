@@ -64,10 +64,10 @@ a few command line tools (e.g. `imagemagic`) that we use,
 and we'll automatically pull in an Common Lisp dependencies with
 Quicklisp.
 
-*Update March 2022: We now require ImageMagick 7.1 to be
-installed. Screenshotbot uses the native libraries instead of the
-imagemagick command line. See the Dockerfile for how you can install
-it from source, it can be a bit tricky to get right.*
+*Update Now 2022: As of this time both ImageMagick 6 and 7 will work
+with Screenshotbot. The default Docker image uses 6, but if you are
+working with large number of images, we recommend compiling IM7 with
+QuantumDepth 8 and HDRI disabled.*
 
 ### Launch
 
