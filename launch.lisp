@@ -6,6 +6,7 @@
 
 
 (load "scripts/prepare-image")
+(load "scripts/init")
 
 #+ccl
 (ql:quickload "jvm")
