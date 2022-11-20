@@ -5,7 +5,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 sbcl=build/sbcl-console
-CACHE_KEY=5
+CACHE_KEY=6
 SBCL_CORE=sbcl
 CCL_DEFAULT_DIRECTORY?=/opt/software/ccl
 CCL_CORE=$(CCL_DEFAULT_DIRECTORY)/lx86cl64
@@ -23,6 +23,9 @@ endif
 
 LW_VERSION=8-0-0
 LW_PREFIX=/opt/software/lispworks
+QUICKLISP_DEPS=quicklisp/dists/quicklisp/distinfo.txt \
+    quicklisp/dists/quicklisp/releases.txt \
+	quicklisp/dists/quicklisp/systems.txt
 
 
 ifeq ($(UNAME),Linux)
@@ -67,7 +70,8 @@ DISTINFO=quicklisp/dists/quicklisp/distinfo.txt
 ARC=build/arc/bin/arc
 
 REVISION_ID=$(shell echo '{"ids":["$(DIFF_ID)"]}' | $(ARC) call-conduit differential.querydiffs -- | jq -r '.["response"]["$(DIFF_ID)"]["revisionID"]')
-IMAGE_DEPS=scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO) scripts/prepare-image.lisp scripts/init.lisp scripts/asdf.lisp
+QUICKLISP_DEPS=$(shell find quicklisp -name '*.txt') $(shell find quicklisp -name '*.lisp')
+IMAGE_DEPS=scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO) scripts/prepare-image.lisp scripts/init.lisp scripts/asdf.lisp $(QUICKLISP_DEPS)
 
 ifeq ($(UNAME),Linux)
 	LW_CORE=$(LW_PREFIX)/lispworks-$(LW_VERSION)-amd64-linux

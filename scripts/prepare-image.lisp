@@ -58,7 +58,70 @@
 #+lispworks
 (push 'use-utf-8-for-all-lisp-files system:*file-encoding-detection-algorithm*)
 
-(load "quicklisp/setup.lisp")
+(defun %read-version (file)
+  (let ((key "version: "))
+   (loop for line in (uiop:read-file-lines file)
+         if (string= key line :end2 (length key))
+           return (subseq line (length key)))))
+
+
+(defun init-quicklisp ()
+  (let ((version (%read-version "quicklisp/dists/quicklisp/distinfo.txt")))
+    (let ((quicklisp-loc (ensure-directories-exist
+                          (merge-pathnames
+                           (format nil "build/quicklisp/~a/" version)
+                           *cwd*)))
+          (src (merge-pathnames
+                "quicklisp/"
+                *cwd*)))
+      (flet ((safe-copy-file (path &optional (dest path))
+               (let ((src (merge-pathnames
+                           path
+                           "quicklisp/"))
+                     (dest (merge-pathnames
+                            dest
+                            quicklisp-loc)))
+                 (format t "Copying: ~a to ~a~%" src dest)
+
+                 (when (equal src dest)
+                   (error "Trying to overwrite the same file"))
+                 (unless (uiop:file-exists-p dest)
+                   (uiop:copy-file
+                    src
+                    (ensure-directories-exist
+                     dest))))))
+        (loop for name in
+                       (append (directory
+                                (merge-pathnames
+                                 "quicklisp/quicklisp/*.lisp"
+                                 *cwd*))
+                               (directory
+                                (merge-pathnames
+                                 "quicklisp/quicklisp/*.asd"
+                                 *cwd*)))
+              do (safe-copy-file name
+                                 (format nil "quicklisp/~a.~a"
+                                         (pathname-name name)
+                                         (pathname-type name))))
+        (loop for name in (directory
+                           (merge-pathnames
+                            "quicklisp/*.lisp"
+                            *cwd*))
+              do (safe-copy-file name
+                                 (format nil "~a.lisp"
+                                         (pathname-name name))))
+        (safe-copy-file "setup.lisp")
+        (safe-copy-file "quicklisp/version.txt")
+        (safe-copy-file "dists/quicklisp/distinfo.txt")
+        (safe-copy-file "dists/quicklisp/enabled.txt")
+        (safe-copy-file "dists/quicklisp/preference.txt")
+        (safe-copy-file "dists/quicklisp/releases.txt")
+        (safe-copy-file "dists/quicklisp/systems.txt"))
+      (load (merge-pathnames
+             "setup.lisp"
+             quicklisp-loc)))))
+
+(init-quicklisp)
 
 #+nil
 (ql:update-all-dists :prompt nil)
