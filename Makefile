@@ -5,8 +5,8 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 sbcl=build/sbcl-console
-CACHE_KEY=6
-SBCL_CORE=sbcl
+CACHE_KEY=7
+SBCL_CORE=sbcl --no-userinit
 CCL_DEFAULT_DIRECTORY?=/opt/software/ccl
 CCL_CORE=$(CCL_DEFAULT_DIRECTORY)/lx86cl64
 CCL_IMAGE=build/ccl-console
@@ -120,10 +120,9 @@ endif
 
 .PHONY:
 
-update-quicklisp: .PHONY $(sbcl)
+update-quicklisp: .PHONY
 	# $(sbcl) --eval '(load "quicklisp/setup.lisp")' --eval '(ql:update-client :prompt nil)'  --quit
-	$(MAKE) $(sbcl)
-	$(sbcl) --eval '(load "quicklisp/setup.lisp")' --eval '(ql:update-all-dists :prompt nil)' --quit
+	$(SBCL_CORE) --eval '(load "quicklisp/setup.lisp")' --eval '(ql:update-all-dists :prompt nil)' --quit
 
 start-dev: $(sbcl)
 	$(sbcl) --script ./start-dev.lisp
