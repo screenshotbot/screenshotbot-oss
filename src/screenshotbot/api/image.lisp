@@ -65,23 +65,6 @@
    (upload-url :type (or null string)
                :initarg :upload-url)))
 
-#+lispworks
-(lw-ji:define-java-callers     "io.tdrhq.TdrhqS3"
-  (build-presigned-put
-   "getPresignedPut")
-  (%get-etag "getEtag"))
-
-#-lispworks
-(defun build-presigned-put (bucket key)
-  (declare (ignore bucket key))
-  (error "build-presigned-put: unsupported on non-lispworks"))
-
-#-lispworks
-(defun %get-etag (&rest args)
-  (error "%get-etag: unsupported on non-lispworks"))
-
-(defvar *build-presigned-put* 'build-presigned-put)
-
 (defparameter *use-blob-store-p* t)
 
 (defun prepare-single-upload (hash content-type)
@@ -145,12 +128,6 @@
       (update-image image :pathname p)
       (verify-image image)
       "0")))
-
-(defun get-etag (bucket key)
-  (restart-case
-      (%get-etag bucket key)
-    (retry ()
-      (get-etag bucket key))))
 
 (defmethod verify-image ((image local-image))
   "local-images don't need verification"
