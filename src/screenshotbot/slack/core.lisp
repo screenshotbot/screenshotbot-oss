@@ -7,7 +7,6 @@
 (uiop:define-package :screenshotbot/slack/core
   (:use #:cl
         #:alexandria
-        #:util/java
         #:screenshotbot/user-api
         #:screenshotbot/model/company)
   (:import-from #:screenshotbot/slack/plugin
@@ -43,9 +42,6 @@
   (:export #:find-or-create-slack-config)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/slack/core)
-
-(named-readtables:in-readtable java-syntax)
-
 
 (defclass slack-token (store-object)
   ((access-token
@@ -106,13 +102,6 @@
 (define-condition slack-error (error)
   ((response :initarg :response
              :reader slack-error-response)))
-
-(defun slack-instance ()
-  (#_getInstance #,com.slack.api.Slack))
-
-(defun slack-methods (&key token)
-  (check-type token string)
-  (#_methods (slack-instance) token))
 
 (defmethod print-object ((e slack-error) out)
   (with-slots (response) e
