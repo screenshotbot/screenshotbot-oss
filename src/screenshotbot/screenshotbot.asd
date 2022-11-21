@@ -173,6 +173,12 @@
                  (:file "pull-request-promoter")
                  (:file "task-integration")
                  (:file "all")))
+   (:module "bitbucket"
+    :components ((:file "core")
+                 (:file "plugin")
+                 (:file "audit-log")
+                 (:file "settings")
+                 (:file "promoter")))
    (:module "gitlab"
     :serial t
     :components ((:file "repo")
@@ -294,6 +300,10 @@
                              (:file "test-channels")
                              (:file "test-history")
                              (:file "test-notices")))
+               (:module "bitbucket"
+                :components ((:file "test-audit-log")
+                             (:file "test-settings")
+                             (:file "test-promoter")))
                (:module "login"
                 :components ((:file "test-github-oauth")
                              (:file "test-login")
