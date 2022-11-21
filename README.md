@@ -35,26 +35,20 @@ commercial and open source implementations. We officially support
 SBCL, Clozure CL (CCL) and LispWorks, but the core features should work on
 any compliant Common Lisp.
 
-Certain features, such as the Slack integration, use third-party Java
-libraries. Java is not supported in SBCL, so if you need these
-integrations you should use either CCL or LispWorks. The integrations
-that we're still porting to OSS, mostly rely on Java, so if you want
-to be safe pick CCL.
+LispWorks is a commercial
+platform. [screenshotbot.io](https://screenshotbot.io) is powered by
+LispWorks. Technically, it's the platform that gets tested the most in
+our deployment.
 
-LispWorks is a commercial platform, and can get expensive. Contact us
-if you need pre-built binaries on LispWorks, but it'll come with
-additional licensing restrictions. SBCL is more performant that CCL,
-but we think CCL should satisfy your needs if you do need Java
-support. [screenshotbot.io](https://screenshotbot.io) is powered by
-LispWorks.
+*Update Nov 2022: We're switching our primary docker images from CCL
+to SBCL. Please let us know if you have any issues migrating your
+existing data.*
 
 ### OS
 
-Currently we primarily support Linux.
-
-In theory we should be able to work on Mac (easy) and Windows
-(harder). If you do go this route, you're on your own. But please send
-us pull requests :)
+Currently we support Linux, Mac and Windows. We use Linux in our
+production environments so it gets tested the most, but please reach
+out if you have bugs in either of these platforms.
 
 ### Dependencies
 
@@ -64,7 +58,7 @@ a few command line tools (e.g. `imagemagic`) that we use,
 and we'll automatically pull in an Common Lisp dependencies with
 Quicklisp.
 
-*Update Now 2022: As of this time both ImageMagick 6 and 7 will work
+*Update Nov 2022: As of this time both ImageMagick 6 and 7 will work
 with Screenshotbot. The default Docker image uses 6, but if you are
 working with large number of images, we recommend compiling IM7 with
 QuantumDepth 8 and HDRI disabled.*
