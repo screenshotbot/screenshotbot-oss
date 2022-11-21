@@ -69,14 +69,7 @@ QuantumDepth 8 and HDRI disabled.*
 ### Launch
 
 Once you've picked your implementation, you can use the implementation
-to load launch.lisp. For example, with CCL that looks like:
-
-```
- $ path/to/ccl/lx86cl64 -l launch.lisp
-```
-
-On SBCL:
-
+to load launch.lisp. For example, with SBCL that looks like:
 
 ```
 $ sbcl --script launch.lisp
