@@ -223,7 +223,6 @@
     :serial t
     :components ((:file "new")
                  (:file "members")))
-   #+ (or ccl lispworks)
    (:module "slack"
     :serial t
     :components ((:file "plugin")
@@ -340,7 +339,6 @@
                              (:file "test-sitemap")
                              (:file "test-integration")
                              (:file "test-replay-acceptor")))
-               #+ (or ccl lispworks)
                (:module "slack"
                 :components ((:file "test-settings")
                              (:file "test-task-integration")))
