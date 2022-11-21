@@ -41,8 +41,11 @@ LispWorks. Technically, it's the platform that gets tested the most in
 our deployment.
 
 *Update Nov 2022: We're switching our primary docker images from CCL
-to SBCL. Please let us know if you have any issues migrating your
-existing data.*
+to SBCL. SBCL is more performan and more stable than CCL. See this
+[migration
+guide](https://github.com/screenshotbot/screenshotbot-oss/wiki/Porting-from-CCL-to-SBCL)
+if you have an existing store. Let us know if you have any issues with
+this migration.*
 
 ### OS
 
