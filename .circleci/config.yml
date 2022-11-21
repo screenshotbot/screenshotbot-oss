@@ -26,16 +26,16 @@ jobs:
             dpkg -S MagickWand-config
             make test-sb
 
-      - run:
-          name: CCL tests
-          command: |
-            for dir in /usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q* ; do
-                export PATH=$PATH:$dir
-            done
-            echo $PATH
-            which MagickWand-config
-            dpkg -S MagickWand-config
-            CCL_DEFAULT_DIRECTORY=~/ccl make test-ccl
+      # - run:
+      #     name: CCL tests
+      #     command: |
+      #       for dir in /usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q* ; do
+      #           export PATH=$PATH:$dir
+      #       done
+      #       echo $PATH
+      #       which MagickWand-config
+      #       dpkg -S MagickWand-config
+      #       CCL_DEFAULT_DIRECTORY=~/ccl make test-ccl
       - run:
           name: Upload assets for Screenshots
           command: |
