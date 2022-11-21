@@ -208,7 +208,7 @@ most integrations here, but that will depend on community interest.
 | GitHub                | Supported    | Supported    | Mostly supported  | Supported                      |
 | GitLab                | Supported    | Supported    | Supported         | Supported                      |
 | Phabricator           | Supported    | Supported    | Supported         | Supported                      |
-| BitBucket             | Planned      | Planned      | Planned           | Supported                 |
+| BitBucket             | Supported    | Supported    | Supported         | Supported                 |
 | **Tasks Integration** |              |              |                   |                                |
 | Slack                 | Supported    | Supported    | Not Supported [1] | Supported                      |
 | Email                 | Supported    | Supported    | Supported         | Supported                      |
