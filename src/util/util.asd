@@ -162,6 +162,7 @@
   :serial t
   :depends-on (:bknr.datastore
                :util/misc
+               :tmpdir
                :str
                :local-time
                :copy-directory
