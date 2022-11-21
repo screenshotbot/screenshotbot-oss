@@ -114,9 +114,7 @@
         (safe-copy-file "quicklisp/version.txt")
         (safe-copy-file "dists/quicklisp/distinfo.txt")
         (safe-copy-file "dists/quicklisp/enabled.txt")
-        (safe-copy-file "dists/quicklisp/preference.txt")
-        (safe-copy-file "dists/quicklisp/releases.txt")
-        (safe-copy-file "dists/quicklisp/systems.txt"))
+        (safe-copy-file "dists/quicklisp/preference.txt"))
       (load (merge-pathnames
              "setup.lisp"
              quicklisp-loc)))))
