@@ -40,7 +40,8 @@
    #:slack-audit-logs-for-company
    #:post-on-channel-audit-log)
   ;; forward decls
-  (:export #:find-or-create-slack-config))
+  (:export #:find-or-create-slack-config)
+  (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/slack/core)
 
 (named-readtables:in-readtable java-syntax)
@@ -118,8 +119,8 @@
     (format out "Slack error with response: ~a" response)))
 
 (defun check-slack-ok (response &optional audit-log)
-  (unless (equal "true" (#_toString (#_isOk response)))
-    (let ((response (#_getError response)))
+  (unless (a:assoc-value response :ok)
+    (let ((response (a:assoc-value response :error)))
       (when audit-log
        (with-transaction ()
          (setf (audit-log-error audit-log) response)))
@@ -129,25 +130,32 @@
                         token
                         parameters
                         url)
-  (util/request:http-request
-   (format nil "https://slack.com~a" url)
-   :additional-headers `(("Authorization" . ,(format nil "Bearer ~a" token)))
-   :method method
-   :ensure-success t
-   :parameters parameters))
+  (multiple-value-bind (body ret)
+      (util/request:http-request
+       (format nil "https://slack.com~a" url)
+       :additional-headers (when token
+                             `(("Authorization" . ,(format nil "Bearer ~a" token))))
+       :method method
+       :ensure-success t
+       :parameters parameters
+       :want-string t)
+    (let ((body (json:decode-json-from-string body)))
+      (values
+       body
+       ret))))
 
 (defun slack-post-on-channel (&key channel text token company)
   (with-event (:slack)
-   (let ((methods (slack-methods :token token)))
-     (let ((audit-log (make-instance 'post-on-channel-audit-log
-                                     :company company
-                                     :channel channel
-                                     :text text)))
-       (slack-request
-        :url "/api/chat.postMessage"
-        :token token
-        :parameters `(("channel" . ,channel)
-                      ("text" . ,text)))))))
+   (let ((audit-log (make-instance 'post-on-channel-audit-log
+                                   :company company
+                                   :channel channel
+                                   :text text)))
+     (let ((response (slack-request
+                      :url "/api/chat.postMessage"
+                      :token token
+                      :parameters `(("channel" . ,channel)
+                                    ("text" . ,text)))))
+       (check-slack-ok response audit-log)))))
 
 (defhandler (nil :uri "/slack-app-redirect") (code state)
   (declare (ignore state))
@@ -156,26 +164,23 @@
      ((null code)
       (hex:safe-redirect "/settings/slack"))
      (t
-      (let ((builder (#_builder #,com.slack.api.methods.request.oauth.OAuthV2AccessRequest)))
-        (#_code builder code)
-        (#_clientId builder (client-id slack-plugin))
-        (#_clientSecret builder (client-secret slack-plugin))
-        (#_redirectUri builder
-                       (hex:make-full-url
-                        hunchentoot:*request*
-                        "/slack-app-redirect"))
-        (let* ((methods (#_methods (slack-instance)  (client-id slack-plugin)))
-               (response (#_oauthV2Access methods (#_build builder))))
-          (check-slack-ok response)
-          (let ((access-token (#_getAccessToken response)))
-            (let ((token (make-instance 'slack-token
-                                         :access-token access-token
-                                         :company (current-company))))
-              (with-transaction ()
-                (setf (access-token (find-or-create-slack-config (current-company)))
-                      token)))
+      (multiple-value-bind (response)
+          (slack-request
+           :url "/api/oauth.v2.access"
+           :parameters `(("client_id" . ,(client-id slack-plugin))
+                         ("client_secret" . ,(client-secret slack-plugin))
+                         ("code" . ,code)))
+        (check-slack-ok response)
+        (let ((access-token (assoc-value response :access--token)))
+          (assert access-token)
+          (let ((token (make-instance 'slack-token
+                                      :access-token access-token
+                                      :company (current-company))))
+            (with-transaction ()
+              (setf (access-token (find-or-create-slack-config (current-company)))
+                    token)))
 
-            (hex:safe-redirect "/settings/slack"))))))))
+          (hex:safe-redirect "/settings/slack")))))))
 
 ;; (slack-post-on-channel :channel "#random" :text "foobar2"
 ;;                        :methods (slack-methods :token "xoxb-1422927031269-1607469573089-WIpznshstwSK3yBTtnDhj4de"))
