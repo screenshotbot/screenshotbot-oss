@@ -4,8 +4,8 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/bitbucket/promoter
-  (:nicknames :screenshotbot/pro/bitbucket/promoter)
+(defpackage :screenshotbot/pro/bitbucket/promoter
+  (:nicknames :screenshotbot/bitbucket/promoter)
   (:use #:cl)
   (:import-from #:screenshotbot/promote-api
                 #:maybe-send-tasks
