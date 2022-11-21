@@ -301,7 +301,8 @@
                              (:file "test-history")
                              (:file "test-notices")))
                (:module "bitbucket"
-                :components ((:file "test-audit-log")
+                :components ((:static-file "error-response-1" :type "json")
+                             (:file "test-audit-log")
                              (:file "test-settings")
                              (:file "test-promoter")))
                (:module "login"
