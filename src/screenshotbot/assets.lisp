@@ -41,7 +41,9 @@
     (output-file)))
 
   (defhandler (nil :uri "/recorder-linux.sh") ()
-    (let ((util.cdn:*cdn-cache-key* (format nil "~d" (file-write-date (output-file)))))
+    (let ((util.cdn:*cdn-cache-key* (format nil "~d"
+                                            (ignore-errors
+                                             (file-write-date (output-file))))))
      (hunchentoot:redirect (util.cdn:make-cdn "/release/recorder-linux.sh"))))
 )
 

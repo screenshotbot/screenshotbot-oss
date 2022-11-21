@@ -108,7 +108,9 @@
 
 (defmethod artifact-link ((name string) &key (cdn t))
   (let ((file-name (artifact-file-name name)))
-    (let ((util.cdn:*cdn-cache-key* (file-write-date file-name)))
+    (let ((util.cdn:*cdn-cache-key*
+            (ignore-errors
+             (file-write-date file-name))))
       (let ((url (make-url 'artifact-get :name name)))
         (cond
           (cdn
