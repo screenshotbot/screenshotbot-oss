@@ -87,16 +87,6 @@ Nginx](https://github.com/screenshotbot/screenshotbot-oss/wiki/Configuring-Nginx
 or Apache reverse-proxy, and enable HTTPS. (We highly recommend using
 Certbot for free certificates).
 
-### Setting up java location
-
-By default we look for `libjvm.so` at
-`/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so`. For most
-Linux distributions except for Debian, this would be incorrect. You
-can configure this by passing the `--libjvm` command line argument.
-
-In the future, we'll do better at guessing locations of libjvm for
-different distributions.
-
 ### Configuration
 
 Screenshotbot has integrations with various external tools,
