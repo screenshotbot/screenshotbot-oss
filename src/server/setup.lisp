@@ -261,11 +261,6 @@
             (setup-log4cl-debugger-hook)
 
 
-            #+sbcl
-            (progn
-              (format t "Using file descriptor ~A~%" listen-fd)
-              (setf (hunchentoot-multi-acceptor:listen-fd *multi-acceptor*) listen-fd))
-
             ;; set this to t for 404 page. :/
             (setf hunchentoot:*show-lisp-errors-p* t)
 
