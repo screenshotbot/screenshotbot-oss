@@ -20,6 +20,8 @@
   (:import-from #:screenshotbot/git-repo
                 #:repo-link
                 #:generic-git-repo)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:bitbucket-plugin
@@ -29,11 +31,12 @@
    #:bitbucket-repo-link))
 (in-package :screenshotbot/bitbucket/plugin)
 
-(defclass bitbucket-plugin (plugin)
-  ((key :initarg :key
-        :reader bitbucket-plugin-key)
-   (secret :initarg :secret
-           :reader bitbucket-plugin-secret)))
+(with-class-validation
+ (defclass bitbucket-plugin (plugin)
+   ((key :initarg :key
+         :reader bitbucket-plugin-key)
+    (secret :initarg :secret
+            :reader bitbucket-plugin-secret))))
 
 (defun bitbucket-plugin (&key (installation (installation)))
   (find-plugin installation 'bitbucket-plugin))

@@ -25,6 +25,8 @@
                 #:uniq)
   (:import-from #:screenshotbot/model/auto-cleanup
                 #:register-auto-cleanup)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:audit-log
@@ -38,37 +40,40 @@
    #:access-token-audit-log-grant-type))
 (in-package :screenshotbot/bitbucket/audit-log)
 
-(defclass audit-log (store-object)
-  ((%company :initarg :company
-             :index-type hash-index
-             :index-reader %bitbucket-audit-logs-for-company)
-   (err :initarg :error
-        :initform nil
-        :accessor audit-log-error)
-   (error-response :initform nil
-                   :accessor audit-log-error-response)
-   (http-result-code :initform nil
-                     :accessor http-result-code)
-   (ts :initarg :ts
-       :reader %created-at))
-  (:default-initargs :ts (get-universal-time))
-  (:metaclass persistent-class))
+(with-class-validation
+ (defclass audit-log (store-object)
+   ((%company :initarg :company
+              :index-type hash-index
+              :index-reader %bitbucket-audit-logs-for-company)
+    (err :initarg :error
+         :initform nil
+         :accessor audit-log-error)
+    (error-response :initform nil
+                    :accessor audit-log-error-response)
+    (http-result-code :initform nil
+                      :accessor http-result-code)
+    (ts :initarg :ts
+        :reader %created-at))
+   (:default-initargs :ts (get-universal-time))
+   (:metaclass persistent-class)))
 
 (register-auto-cleanup 'audit-log :timestamp #'%created-at)
 
-(defclass build-status-audit-log (audit-log)
-  ((commit :initarg :commit
-           :reader build-status-audit-log-commit
-           :initform nil)
-   (full-name :initarg :full-name
-              :reader build-status-audit-log-full-name
-              :initform nil))
-  (:metaclass persistent-class))
+(with-class-validation
+ (defclass build-status-audit-log (audit-log)
+   ((commit :initarg :commit
+            :reader build-status-audit-log-commit
+            :initform nil)
+    (full-name :initarg :full-name
+               :reader build-status-audit-log-full-name
+               :initform nil))
+   (:metaclass persistent-class)))
 
-(defclass access-token-audit-log (audit-log)
-  ((grant-type :initarg :grant-type
-               :reader access-token-audit-log-grant-type))
-  (:metaclass persistent-class))
+(with-class-validation
+ (defclass access-token-audit-log (audit-log)
+   ((grant-type :initarg :grant-type
+                :reader access-token-audit-log-grant-type))
+   (:metaclass persistent-class)))
 
 (defun bitbucket-audit-logs-for-company (company)
   (let ((elems (%bitbucket-audit-logs-for-company company)))
