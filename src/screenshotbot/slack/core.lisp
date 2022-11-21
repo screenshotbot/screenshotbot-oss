@@ -125,6 +125,17 @@
          (setf (audit-log-error audit-log) response)))
       (error 'slack-error :response response))))
 
+(defun slack-request (&key (method :post)
+                        token
+                        parameters
+                        url)
+  (util/request:http-request
+   (format nil "https://slack.com~a" url)
+   :additional-headers `(("Authorization" . ,(format nil "Bearer ~a" token)))
+   :method method
+   :ensure-success t
+   :parameters parameters))
+
 (defun slack-post-on-channel (&key channel text token company)
   (with-event (:slack)
    (let ((methods (slack-methods :token token)))
@@ -132,12 +143,11 @@
                                      :company company
                                      :channel channel
                                      :text text)))
-       (let ((builder (#_builder #,com.slack.api.methods.request.chat.ChatPostMessageRequest)))
-         (#_channel builder channel)
-         (#_text builder text)
-         (let ((response (#_chatPostMessage methods (#_build builder))))
-           (check-slack-ok response audit-log)
-           t))))))
+       (slack-request
+        :url "/api/chat.postMessage"
+        :token token
+        :parameters `(("channel" . ,channel)
+                      ("text" . ,text)))))))
 
 (defhandler (nil :uri "/slack-app-redirect") (code state)
   (declare (ignore state))
