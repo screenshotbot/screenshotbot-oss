@@ -4,10 +4,10 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/pro/bitbucket/test-audit-log
+(defpackage :screenshotbot/bitbucket/test-audit-log
   (:use #:cl
         #:fiveam)
-  (:import-from #:screenshotbot/pro/bitbucket/audit-log
+  (:import-from #:screenshotbot/bitbucket/audit-log
                 #:audit-log-error
                 #:parse-error-response
                 #:audit-log)
@@ -16,7 +16,7 @@
   (:import-from #:screenshotbot/pro/bitbucket/core
                 #:bitbucket-error)
   (:local-nicknames (#:a #:alexandria)))
-(in-package :screenshotbot/pro/bitbucket/test-audit-log)
+(in-package :screenshotbot/bitbucket/test-audit-log)
 
 
 (util/fiveam:def-suite)

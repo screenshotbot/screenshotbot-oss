@@ -4,7 +4,8 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/pro/bitbucket/audit-log
+(defpackage :screenshotbot/bitbucket/audit-log
+  (:nicknames :screenshotbot/pro/bitbucket/audit-log)
   (:use #:cl)
   (:import-from #:bknr.indices
                 #:skip-list-index)
@@ -35,7 +36,7 @@
    #:http-result-code
    #:access-token-audit-log
    #:access-token-audit-log-grant-type))
-(in-package :screenshotbot/pro/bitbucket/audit-log)
+(in-package :screenshotbot/bitbucket/audit-log)
 
 (defclass audit-log (store-object)
   ((%company :initarg :company

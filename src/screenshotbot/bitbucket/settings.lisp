@@ -4,7 +4,8 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/pro/bitbucket/settings
+(defpackage :screenshotbot/bitbucket/settings
+  (:nicknames :screenshotbot/pro/bitbucket/settings)
   (:use #:cl)
   (:import-from #:screenshotbot/settings-api
                 #:settings-template
@@ -50,7 +51,7 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:refresh-token))
-(in-package :screenshotbot/pro/bitbucket/settings)
+(in-package :screenshotbot/bitbucket/settings)
 
 (markup:enable-reader)
 

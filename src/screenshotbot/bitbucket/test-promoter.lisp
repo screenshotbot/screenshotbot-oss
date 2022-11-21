@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/pro/bitbucket/test-promoter
+(defpackage :screenshotbot/bitbucket/test-promoter
   (:use #:cl
         #:fiveam)
   (:import-from #:util/store
@@ -34,7 +34,7 @@
   (:import-from #:screenshotbot/pro/bitbucket/core
                 #:bitbucket-error)
   (:local-nicknames (#:a #:alexandria)))
-(in-package :screenshotbot/pro/bitbucket/test-promoter)
+(in-package :screenshotbot/bitbucket/test-promoter)
 
 
 (util/fiveam:def-suite)
