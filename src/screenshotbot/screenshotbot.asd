@@ -41,6 +41,7 @@
                :auto-restart
                :scheduled-jobs
                :serapeum
+               #+(or ccl lispworks)
                :java.libs
                :screenshotbot/events
                :util/form-state
