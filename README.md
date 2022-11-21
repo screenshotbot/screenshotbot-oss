@@ -205,12 +205,12 @@ most integrations here, but that will depend on community interest.
 | OpenID Connect        | Supported    | Supported    | Supported         | Supported                      |
 | SAML                  | Via Keycloak | Via Keycloak | Via Keycloak      | Supported                      |
 | **VCS Integrations**  |              |              |                   |                                |
-| GitHub                | Supported    | Supported    | Mostly supported  | Supported                      |
+| GitHub                | Supported    | Supported    | Supported         | Supported                      |
 | GitLab                | Supported    | Supported    | Supported         | Supported                      |
 | Phabricator           | Supported    | Supported    | Supported         | Supported                      |
 | BitBucket             | Supported    | Supported    | Supported         | Supported                 |
 | **Tasks Integration** |              |              |                   |                                |
-| Slack                 | Supported    | Supported    | Not Supported [1] | Supported                      |
+| Slack                 | Supported    | Supported    | Supported         | Supported                      |
 | Email                 | Supported    | Supported    | Supported         | Supported                      |
 | Jira                  | Planned      | Planned      | Not supported [1] | Supported                      |
 | Trello                | Planned      | Planned      | Not supported [1] | Supported                      |
