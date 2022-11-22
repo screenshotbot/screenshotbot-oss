@@ -57,18 +57,7 @@
     #+lispworks
     (include-template-file)
 
-    #+ccl
-    (error "unimplemented")
-
-    #+sbcl
-    (sb-ext:save-lisp-and-die
-     output-file
-     :toplevel 'screenshotbot/sdk/main:main
-     :executable t
-     :save-runtime-options t)
-
-    #+lispworks
-    (deliver 'screenshotbot/sdk/main:main
+    (build-utils/deliver-script:default-deliver 'screenshotbot/sdk/main:main
               output-file
               5
               :keep-function-name t
@@ -97,5 +86,3 @@
   (t
    (safe-delete-file (output-file))
    (hcl:save-universal-from-script "src/screenshotbot/sdk/deliver-sdk.lisp")))
-
-(uiop:quit)

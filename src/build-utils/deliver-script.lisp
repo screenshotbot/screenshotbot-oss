@@ -11,7 +11,8 @@
   (:export
    #:deliver-so-script
    #:makeself-component
-   #:deliver-script))
+   #:deliver-script
+   #:default-deliver))
 (in-package :build-utils/deliver-script)
 
 (defclass deliver-script (source-file)
@@ -59,6 +60,10 @@
 
 (defmethod perform ((o load-op) (m makeself-component))
   t)
+
+(defun safe-delete-file (x)
+  (when (uiop:file-exists-p x)
+    (delete-file x)))
 
 (defun do-perform (tmpdir o m)
   (with-slots (archive label startup-component license) m
@@ -141,3 +146,41 @@
                     :directory (asdf:system-relative-pathname :build-utils "../../")
                     :output t
                     :error-output t))
+
+
+(defun default-deliver (fn-name output-file deliver-level &rest args)
+  #-lispworks
+  (declare (ignore args deliver-level))
+
+  #+ccl
+  (error "unimplemented")
+
+  #+sbcl
+  (sb-ext:save-lisp-and-die
+   output-file
+   :toplevel fn-name
+   :executable t
+   :save-runtime-options t)
+
+  #+lispworks
+  (apply #'lw:deliver fn-name
+         output-file
+         deliver-level
+         (append
+          args
+          (list
+           :keep-function-name t
+           #+mswindows :console #+mswindows :init
+           #+mswindows :startup-bitmap-file #+mswindows nil
+           :keep-debug-mode t
+           :keep-pretty-printer t
+           :keep-clos-object-printing t
+           :keep-lisp-reader t
+           ;; temporary: get the build green
+           :keep-eval t
+           :keep-symbols `(system:pipe-exit-status
+                           dspec:find-dspec-locations)
+           :packages-to-keep-symbol-names :all
+           :multiprocessing t)))
+
+  (uiop:quit))
