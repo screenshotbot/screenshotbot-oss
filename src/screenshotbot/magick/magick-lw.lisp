@@ -19,6 +19,8 @@
                 #:def-easy-macro)
   (:import-from #:screenshotbot/events
                 #:push-event)
+  (:import-from #:screenshotbot/magick/build
+                #:magick-lib-suffix)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#-lispworks #:fli #:util/fake-fli))
@@ -48,6 +50,7 @@
     (assert (path:-e ret))
     ret))
 
+
 (defvar *path-setp* nil)
 
 (defun register-magick-wand ()
@@ -56,15 +59,23 @@
       (setf (uiop:getenv "Path") (format nil "~a;~a" (namestring *windows-magick-dir*) (uiop:getenv "Path")))
       (setf *path-setp* t)))
 
-  ;; There used to be code here that loaded the dependencies for
-  ;; MagickWand and MagickCore. At least on Linux, this appears to not
-  ;; be needed and our magick-native will correctly load the
-  ;; dependencies. TODO: Verify that this works on Window, and Mac and
-  ;; clear this TODO. If you do need to manually load the libraries on
-  ;; these platforms, use MagickWand-config to figure out the locations.
+  (when (uiop:os-windows-p)
+    (fli:register-module
+     :magick-core
+     :file-name (win-magick-lib "MagickCore")))
+
+  (fli:register-module
+   ;; TODO: typo in module name, we should fix when a restart is due.
+   :magick-wand
+   :file-name
+   (cond
+    ((uiop:os-windows-p)
+     ;; TODO: if needed we can discover this from the registry, see the
+     ;; python wand code that does the same
+     (win-magick-lib "MagickWand"))
+    (t (format nil "libMagickWand~a.so" (magick-lib-suffix)))))
 
   (load-magick-native))
-
 
 (defvar *magick-native-loaded-p* nil)
 

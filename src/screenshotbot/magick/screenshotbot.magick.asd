@@ -10,6 +10,7 @@
   :depends-on ((:feature (:not :lispworks) :util/fake-fli)
                :easy-macros
                :screenshotbot/events
+               :screenshotbot.magick.build
                :serapeum
                :alexandria)
   :components ((:file "magick")
