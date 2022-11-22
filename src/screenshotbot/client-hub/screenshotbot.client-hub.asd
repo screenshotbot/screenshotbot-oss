@@ -15,7 +15,7 @@
                (:file "main")))
 
 (defsystem :screenshotbot.client-hub/deliver
-  :defsystem-depends-on (:screenshotbot/build-utils)
+  :defsystem-depends-on (:build-utils/deliver-script)
   :depends-on ()
-  :components (("screenshotbot/platform-asset:deliver-script"
+  :components (("build-utils/deliver-script:deliver-script"
                 "deliver-client-hub")))

@@ -17,3 +17,10 @@
                (:file "css-package")
                (:file "intellij-plugin")
                (:file "all")))
+
+(defsystem :build-utils/deliver-script
+  :serial t
+  :depends-on (:tmpdir
+               :alexandria
+               :str)
+  :components ((:file "deliver-script")))

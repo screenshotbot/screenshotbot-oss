@@ -71,12 +71,12 @@
 (defsystem :screenshotbot.sdk/deliver
   :author "Arnold Noronha <arnold@screenshotbot.io>"
   :license "Mozilla Public License, v 2.0"
-  :defsystem-depends-on (#:screenshotbot/build-utils)
+  :defsystem-depends-on (#:build-utils/deliver-script)
   :depends-on (:screenshotbot.sdk)
-  :components (("screenshotbot/platform-asset:deliver-script"
+  :components (("build-utils/deliver-script:deliver-script"
                 "deliver-sdk")
                #- (or mswindows win32)
-               ("screenshotbot/platform-asset:makeself-component" "installer"
+               ("build-utils/deliver-script:makeself-component" "installer"
                                    :depends-on ("deliver-sdk")
                                    :type "sh"
                                    :label "screenshotbot-installer"
@@ -86,5 +86,6 @@
 
 #+lispworks
 (defsystem :screenshotbot.sdk/deliver-java-so
-  :components (("screenshotbot/platform-asset:deliver-so-script"
+  :defsystem-depends-on (#:build-utils/deliver-script)
+  :components (("build-utils/deliver-script:deliver-so-script"
                 "deliver-java-so")))

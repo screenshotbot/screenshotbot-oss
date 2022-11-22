@@ -491,8 +491,3 @@
   :serial t
   :depends-on (:screenshotbot
                :screenshotbot/replay))
-
-(defsystem :screenshotbot/build-utils
-  :serial t
-  :depends-on (:cl-ppcre)
-  :components ((:file "platform-asset")))

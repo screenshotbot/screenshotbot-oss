@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/platform-asset
+(defpackage :build-utils/deliver-script
   (:use #:cl
         #:asdf)
   (:local-nicknames (#:a #:alexandria))
@@ -12,7 +12,7 @@
    #:deliver-so-script
    #:makeself-component
    #:deliver-script))
-(in-package :screenshotbot/platform-asset)
+(in-package :build-utils/deliver-script)
 
 (defclass deliver-script (source-file)
   ((type :initform "lisp")))
@@ -138,6 +138,6 @@
                             (asdf:component-pathname s))
                            (namestring
                             (car (output-files o s)))))
-                    :directory (asdf:system-relative-pathname :screenshotbot/build-utils "../../")
+                    :directory (asdf:system-relative-pathname :build-utils "../../")
                     :output t
                     :error-output t))
