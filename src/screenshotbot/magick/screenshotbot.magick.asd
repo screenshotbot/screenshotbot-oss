@@ -7,25 +7,30 @@
 (defsystem :screenshotbot.magick
   :serial t
   :defsystem-depends-on (:screenshotbot.magick.build)
-  :depends-on ((:feature (:not :lispworks) :util/fake-fli)
+  :depends-on (#-lispworks :util/fake-fli
                :easy-macros
                :screenshotbot/events
                :screenshotbot.magick.build
                :serapeum
                :alexandria)
   :components ((:file "magick")
+               ("screenshotbot/magick/build:magick-cl-source-file"
+                "memory"
+                :if-feature :lispworks)
                ("screenshotbot/magick/build:lib-source-file"
                 "magick-native")
-               (:file "memory" :if-feature :lispworks)
-               (:file "ffi-7" :if-feature :magick-7)
-               (:file "ffi-6" :if-feature :magick-6)
-               ("screenshotbot/magick/build:magick-cl-source-file" "magick-lw")))
+               ("screenshotbot/magick/build:magick-cl-source-file" "ffi-7")
+               ("screenshotbot/magick/build:magick-cl-source-file" "ffi-6")
+               ("screenshotbot/magick/build:magick-cl-source-file"
+                "magick-lw")))
 
 (defsystem :screenshotbot.magick/tests
   :serial t
+  :defsystem-depends-on (:screenshotbot.magick.build)
   :depends-on (:util/fiveam
                :fiveam-matchers
                :util/digests
                :screenshotbot.magick)
-  :components ((:file "test-magick-lw")
-               (:file "test-memory" :if-feature :lispworks)))
+  :components (("screenshotbot/magick/build:magick-cl-source-file" "test-magick-lw")
+               ("screenshotbot/magick/build:magick-cl-source-file"
+                "test-memory" :if-feature (:and :lispworks :linux))))

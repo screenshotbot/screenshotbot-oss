@@ -4,9 +4,11 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/magick/magick
+(defpackage :screenshotbot/magick/magick
   (:nicknames :screenshotbot/magick)
   (:use #:cl)
+  (:import-from #:screenshotbot/magick/build
+                #:magick-wand-config)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:run-magick
@@ -26,6 +28,14 @@
 
 (defvar *magick* (make-instance 'magick-cli))
 
+(defvar *prefix* nil)
+
+(defun prefix ()
+  (util:or-setf
+   *prefix*
+   (format nil "~a/"
+           (magick-wand-config "--prefix"))))
+
 (defun magick ()
   *magick*)
 
@@ -42,15 +52,13 @@
 
 (defun magick-prefix-uncached ()
   (cond
-   ((uiop:os-unix-p)
-    (multiple-value-bind (out err ret)
-        (uiop:run-program (list "which" "magick")
-                          :ignore-error-status t
-                          :output 'string)
-      (declare (ignore err))
+    ((uiop:os-unix-p)
+     (let ((magick (path:catfile (prefix) "bin/magick")))
       (cond
-       ((= 0 ret)
-        (list (str:trim out))))))
+        ((uiop:file-exists-p magick)
+         (list (namestring magick)))
+        (t
+         nil))))
    ((uiop:os-windows-p)
     (list "C:\\Program Files\\ImageMagick-7.1.0-Q8\\magick"))
    (t

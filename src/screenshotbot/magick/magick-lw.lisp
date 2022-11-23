@@ -80,6 +80,12 @@
 (defvar *magick-native-loaded-p* nil)
 
 (defun load-magick-native (&key force)
+  #-linux
+  (when force
+    ;; For some reason reloading magick-native will cause segfaults on
+    ;; mac tests.
+    (warn "Can't reload magick-native on Mac"))
+  #+linux
   (when force
     #+lispworks
     (fli:disconnect-module :magick-native)

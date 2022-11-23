@@ -113,7 +113,6 @@
                        (every-item
                         (starts-with "no decode delegate for"))))))))
 
-
 (test find-first-non-transparent
   (handler-bind ((error (lambda (E)
                           (trivial-backtrace:print-backtrace e))))
@@ -134,7 +133,6 @@
                  (map-non-alpha-pixels wand
                                        (lambda (i j)
                                          (return-from top (cons i j)))))))))))
-
 (test ping-image-metadata
   (with-fixture state ()
     (is (equal '(70 46 "PNG")
@@ -168,3 +166,8 @@
   (load-magick-native)
   (finishes
    (load-magick-native :force t)))
+
+;; Dummy test to look at the test output in builds to see which
+;; version of magick is being used.
+(test #+magick-6 using-magick-6 #+magick-7 using-magick7
+  (pass))

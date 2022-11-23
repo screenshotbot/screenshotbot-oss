@@ -99,6 +99,7 @@
            (let ((ret (fli:make-pointer :symbol-name name)))
              (assert (not (fli:null-pointer-p ret)))
              ret)))
+    #+lispworks
     (set-magick-memory-methods
      (ptr "screenshotbot_malloc")
      (ptr "screenshotbot_realloc")
