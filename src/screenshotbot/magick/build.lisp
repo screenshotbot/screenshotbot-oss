@@ -144,6 +144,7 @@
   (let ((old (car (call-next-method))))
     (list
      (make-pathname
-      :name (format nil "magick-lw~a"
+      :name (format nil "~a~a"
+                    (component-name c)
                     (magick-lib-suffix))
       :defaults old))))
