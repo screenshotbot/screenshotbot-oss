@@ -27,6 +27,10 @@
                 #:register-auto-cleanup)
   (:import-from #:util/store
                 #:with-class-validation)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:audit-log
@@ -37,7 +41,8 @@
    #:build-status-audit-log-full-name
    #:http-result-code
    #:access-token-audit-log
-   #:access-token-audit-log-grant-type))
+   #:access-token-audit-log-grant-type
+   #:with-audit-log))
 (in-package :screenshotbot/bitbucket/audit-log)
 
 (with-class-validation
@@ -99,3 +104,12 @@
         (setf (audit-log-error audit-log) message)
         (setf (audit-log-error-response audit-log) response))))
   (error 'bitbucket-error :audit-log audit-log))
+
+(def-easy-macro with-audit-log (&binding audit-log expr &fn fn)
+  (handler-bind ((error
+                   (lambda (e)
+                     (unless (audit-log-error expr)
+                       (with-transaction ()
+                         (setf (audit-log-error expr)
+                               (format nil "~a" e)))))))
+    (funcall fn expr)))

@@ -59,6 +59,7 @@
                 #:installation
                 #:installation-domain)
   (:import-from #:screenshotbot/pro/bitbucket/audit-log
+                #:with-audit-log
                 #:parse-error-response
                 #:http-result-code
                 #:audit-log-error-response
@@ -127,34 +128,34 @@
                      (refresh-token bitbucket-token))))
         (assert token)
         (let* ((commit (not-empty! (a:assoc-value args :commit)))
-               (full-name (not-empty! (a:assoc-value args :full-name)))
-               (audit-log (make-instance 'build-status-audit-log
-                                          :company company
-                                          :commit commit
-                                          :full-name full-name)))
-          (let* ((url (format nil "https://api.bitbucket.org/2.0/repositories/~a/commit/~a/statuses/build/"
-                              full-name
-                              commit)))
+               (full-name (not-empty! (a:assoc-value args :full-name))))
+          (with-audit-log (audit-log (make-instance 'build-status-audit-log
+                                                    :company company
+                                                    :commit commit
+                                                    :full-name full-name))
+           (let* ((url (format nil "https://api.bitbucket.org/2.0/repositories/~a/commit/~a/statuses/build/"
+                               full-name
+                               commit)))
 
-            (multiple-value-bind (stream result-code)
-                (util/request:http-request
-                 url
-                 :method :post
-                 :content-type "application/json"
-                 :want-stream t
-                 :additional-headers
-                 `(("Authorization" . ,(Format nil "Bearer ~a" token)))
-                 :force-binary nil
-                 :content (json:encode-json-to-string args))
-              (let ((ret (uiop:slurp-input-stream 'string stream)))
-                (cond
-                  ((http-success-response? result-code)
-                   (push-event :bitbucket.update-success)
-                   (log:info "Got bitbucket result: ~a" ret))
-                  (t ;; error
-                   (push-event :bitbucket.update-failure)
-                   (log:info "Got BitBucket response code: ~a" result-code)
-                   (parse-error-response ret result-code audit-log))))))))
+             (multiple-value-bind (stream result-code)
+                 (util/request:http-request
+                  url
+                  :method :post
+                  :content-type "application/json"
+                  :want-stream t
+                  :additional-headers
+                  `(("Authorization" . ,(Format nil "Bearer ~a" token)))
+                  :force-binary nil
+                  :content (json:encode-json-to-string args))
+               (let ((ret (uiop:slurp-input-stream 'string stream)))
+                 (cond
+                   ((http-success-response? result-code)
+                    (push-event :bitbucket.update-success)
+                    (log:info "Got bitbucket result: ~a" ret))
+                   (t ;; error
+                    (push-event :bitbucket.update-failure)
+                    (log:info "Got BitBucket response code: ~a" result-code)
+                    (parse-error-response ret result-code audit-log)))))))))
     (bitbucket-error (e)
       (values))))
 

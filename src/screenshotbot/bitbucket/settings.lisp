@@ -29,6 +29,7 @@
   (:import-from #:markup
                 #:deftag)
   (:import-from #:screenshotbot/pro/bitbucket/audit-log
+                #:with-audit-log
                 #:audit-log
                 #:access-token-audit-log-grant-type
                 #:access-token-audit-log
@@ -81,10 +82,10 @@
         :key #'bknr.datastore:store-object-id))
 
 (defun access-token-for-args (args &key company)
-  (let ((audit-log
-          (make-instance 'access-token-audit-log
-                          :company company
-                          :grant-type (a:assoc-value args "grant_type" :test #'string-equal))))
+  (with-audit-log (audit-log
+                   (make-instance 'access-token-audit-log
+                                  :company company
+                                  :grant-type (a:assoc-value args "grant_type" :test #'string-equal)))
     (let ((plugin (bitbucket-plugin)))
       (multiple-value-bind (stream result-code)
           (util/request:http-request
