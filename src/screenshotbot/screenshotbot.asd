@@ -135,6 +135,7 @@
                  (:file "test-object")
                  (:file "note")
                  (:file "all")))
+   (:file "audit-log")
    (:file "impersonation")
    (:file "diff-report")
    (:module "dashboard"

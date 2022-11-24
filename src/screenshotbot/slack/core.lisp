@@ -28,6 +28,12 @@
                 #:register-auto-cleanup)
   (:import-from #:screenshotbot/events
                 #:with-event)
+  (:import-from #:screenshotbot/audit-log
+                #:audit-log-error
+                #:base-audit-log
+                #:audit-logs-for-company)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:export
    #:slack-token
    #:latest-slack-token
@@ -37,54 +43,67 @@
    #:slack-methods
    #:audit-log
    #:slack-audit-logs-for-company
-   #:post-on-channel-audit-log)
+   #:post-on-channel-audit-log
+   #:audit-log-error)
   ;; forward decls
   (:export #:find-or-create-slack-config)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/slack/core)
 
-(defclass slack-token (store-object)
-  ((access-token
-    :initarg :access-token
-    :initform nil
-    :reader access-token)
-   (company
-    :initarg :company
-    :accessor slack-token-company
-    :index-type hash-index
-    :index-initargs (:test 'eql)
-    :index-reader slack-tokens-for-company)
-   (ts
-    :initform (get-universal-time)
-    :initarg :ts
-    :reader %created-at))
-  (:metaclass persistent-class))
+(with-class-validation
+ (defclass slack-token (store-object)
+   ((access-token
+     :initarg :access-token
+     :initform nil
+     :reader access-token)
+    (company
+     :initarg :company
+     :accessor slack-token-company
+     :index-type hash-index
+     :index-initargs (:test 'eql)
+     :index-reader slack-tokens-for-company)
+    (ts
+     :initform (get-universal-time)
+     :initarg :ts
+     :reader %created-at))
+   (:metaclass persistent-class)))
 
-(defclass audit-log (store-object)
-  ((company :initarg :company
-            :index-type hash-index
-            :index-reader %slack-audit-logs-for-company)
-   (err :initarg :error
-        :initform nil
-        :accessor audit-log-error))
-  (:metaclass persistent-class))
+(with-class-validation
+ (defclass audit-log (base-audit-log)
+   ((company :index-type hash-index
+             :index-reader %slack-audit-logs-for-company
+             :documentation "Deprecated slot for company")
+    (err :initform nil
+         :accessor %audit-log-error))
+   (:metaclass persistent-class)))
+
+(defmethod audit-log-error ((audit-log audit-log))
+  (or
+   (%audit-log-error audit-log)
+   (call-next-method)))
 
 (defun slack-audit-logs-for-company (company)
-  (let ((logs (%slack-audit-logs-for-company company)))
-    ;; the BKNR datastore indices is super buggy for this
-    ;; index. Probably because of the inheritence.
-    (let ((hash-table (make-hash-table)))
-      (loop for log in logs
-            unless (bknr.datastore::object-destroyed-p log)
-            do (setf (gethash log hash-table) t))
-      (sort (alexandria:hash-table-keys hash-table)
-            #'> :key #'bknr.datastore:store-object-id))))
+  (append
+   (audit-logs-for-company company 'audit-log)
+
+   ;; TODO: This is a migration, delete after thirty days!
+   (let ((logs (%slack-audit-logs-for-company company)))
+     ;; the BKNR datastore indices is super buggy for this
+     ;; index. Probably because of the inheritence.
+     (let ((hash-table (make-hash-table)))
+       (loop for log in logs
+             unless (bknr.datastore::object-destroyed-p log)
+               do (setf (gethash log hash-table) t))
+       (sort (alexandria:hash-table-keys hash-table)
+             #'> :key #'bknr.datastore:store-object-id)))))
 
 (defclass post-on-channel-audit-log (audit-log)
   ((slack-channel :initarg :channel
             :reader slack-channel)
    (text :initarg :text
-            :reader slack-text)
+         :reader slack-text)
+   ;; TODO: this is unnecessary, it's already available in
+   ;; base-audit-log.
    (ts :initarg :ts
        :reader %created-at))
   (:default-initargs :ts (get-universal-time))
