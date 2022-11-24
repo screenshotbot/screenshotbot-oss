@@ -87,7 +87,7 @@
                           :grant-type (a:assoc-value args "grant_type" :test #'string-equal))))
     (let ((plugin (bitbucket-plugin)))
       (multiple-value-bind (stream result-code)
-          (drakma:http-request
+          (util/request:http-request
            (format nil "https://bitbucket.org/site/oauth2/access_token")
            :parameters args
            :basic-authorization (list (bitbucket-plugin-key plugin)
