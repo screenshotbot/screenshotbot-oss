@@ -22,6 +22,7 @@
                 #:client-id
                 #:slack-plugin)
   (:import-from #:screenshotbot/slack/core
+                #:audit-log
                 #:audit-log-error
                 #:slack-channel
                 #:slack-error-response
@@ -32,6 +33,9 @@
                 #:confirmation-page)
   (:import-from #:screenshotbot/dashboard/paginated
                 #:paginated)
+  (:import-from #:screenshotbot/dashboard/audit-log
+                #:describe-audit-log
+                #:render-audit-logs)
   (:export #:post-settings-slack))
 (in-package :screenshotbot/slack/settings)
 
@@ -171,34 +175,14 @@
   </settings-template>))
 
 (deftag audit-logs ()
-  <div class= "card mt-3">
-    <div class= "card-header">
-      <h5>API Audit Logs</h5>
-    </div>
+  (render-audit-logs
+   :type 'audit-log
+   :company (current-company)
+   :subtitle "All API calls to Slack made by Screenshotbot in the last 30 days will be listed here"))
 
-  <div class= "card-body">
-    <p class= "text-muted">All API calls to Slack made by Screenshotbot in the last 30 days will be listed here.</p>
+(defmethod describe-audit-log ((self post-on-channel-audit-log))
+  <span>Posted on ,(slack-channel self)</span>)
 
-    <ul>
-      ,(paginated
-        (lambda (audit-log)
-          <li>,(render-audit-log audit-log)</li>)
-        :items (slack-audit-logs-for-company (current-company)))
-    </ul>
-  </div>
-  </div>)
-
-(defmethod render-audit-log ((self post-on-channel-audit-log))
-  (let ((timeago (timeago :timestamp (created-at self))))
-   (cond
-     ((audit-log-error self)
-      <span class= "text-danger" >Error trying to post to ,(slack-channel self): <b>,(audit-log-error self)</b>, tried ,(progn timeago) </span>)
-     (t
-      <span class= "text-success" >Posted on ,(slack-channel self) at ,(progn timeago) </span>))))
-
-(defmethod render-audit-log ((audit-log t))
-  (warn "missing renderer for audit-log ~a" audit-log)
-  (format nil "~a" audit-log))
 
 (defsettings slack
   :name "slack"

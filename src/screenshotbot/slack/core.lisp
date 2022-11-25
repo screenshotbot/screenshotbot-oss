@@ -82,9 +82,9 @@
    (%audit-log-error audit-log)
    (call-next-method)))
 
-(defun slack-audit-logs-for-company (company)
+(defmethod audit-logs-for-company :around (company (type (eql 'audit-log)))
   (append
-   (audit-logs-for-company company 'audit-log)
+   (call-next-method)
 
    ;; TODO: This is a migration, delete after thirty days!
    (let ((logs (%slack-audit-logs-for-company company)))
@@ -96,6 +96,9 @@
                do (setf (gethash log hash-table) t))
        (sort (alexandria:hash-table-keys hash-table)
              #'> :key #'bknr.datastore:store-object-id)))))
+
+(defun slack-audit-logs-for-company (company)
+  (audit-logs-for-company company 'audit-log))
 
 (defclass post-on-channel-audit-log (audit-log)
   ((slack-channel :initarg :channel

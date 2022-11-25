@@ -157,7 +157,8 @@
                  (:file "reports")
                  (:file "history")
                  (:file "mask-builder")
-                 (:file "site-admin")))
+                 (:file "site-admin")
+                 (:file "audit-log")))
    (:file "invite")
    (:file "image-comparison")
    (:module "github"

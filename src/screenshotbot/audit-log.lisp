@@ -24,7 +24,9 @@
                 #:ensure-slot-boundp)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:base-audit-log))
+   #:base-audit-log
+   #:audit-logs-for-company
+   #:audit-log-error))
 (in-package :screenshotbot/audit-log)
 
 (with-class-validation
@@ -42,7 +44,7 @@
 
 (register-auto-cleanup 'base-audit-log :timestamp #'%created-at)
 
-(defun audit-logs-for-company (company &optional type)
+(defmethod audit-logs-for-company (company type)
   (let ((elems (%audit-logs-for-company company)))
     (loop for log in (uniq (sort elems #'> :key 'bknr.datastore:store-object-id))
           if (or (not type)
