@@ -52,9 +52,12 @@
   (:import-from #:screenshotbot/template
                 #:mdi)
   (:import-from #:screenshotbot/github/audit-log
+                #:github-audit-log
                 #:github-audit-logs-for-company)
   (:import-from #:screenshotbot/dashboard/paginated
                 #:paginated)
+  (:import-from #:screenshotbot/dashboard/audit-log
+                #:render-audit-logs)
   (:export
    #:verified-repo-p))
 (in-package :screenshotbot/github/settings)
@@ -104,34 +107,6 @@
 
 (pushnew 'installation-delete-webhook
           *hooks*)
-
-(defun render-repo-list (access-token)
-  (let ((repos (read-repo-list access-token)))
-    <simple-card-page>
-      <div class= "card-header">
-        <h3>Install the Screenshotbot GitHub app</h3>
-      </div>
-
-      <div>
-        <p>
-          In order for Screenshotbot to be able to post build status (or "
-          GitHub Checks") to your pull requests, you need to install the app on your repositories.
-        </p>
-
-        <p>
-          Below we list all the repositories listed on your account.
-        </p>
-
-        <ul>
-          ,@ (loop for repo in repos collect
-                   <li><a href= (format nil "https://github.com/~a" repo)>,(progn repo)</a></li>)
-        </ul>
-      </div>
-
-      <div class= "card-footer">
-        <a href= "/settings/github" class= "btn btn-secondary" >Done</a>
-      </div>
-    </simple-card-page>))
 
 (defun verify-repo (repo access-token)
   (let ((errors))
@@ -281,29 +256,11 @@
       </div>
 
       ,(when (staging-p)
-         (render-audit-logs))
+         (render-audit-logs
+          :type 'github-audit-log
+          :subtitle "All API calls to GitHub made by Screenshotbot in the last 30 days will be listed here. This does not include OAuth calls since that's made on the user's behalf."))
     </settings-template>))
 
-(defmethod render-audit-log-item ((self t))
-  <span> [Missing renderer] Audit log item of type ,(type-of self) </span>)
-
-(deftag render-audit-logs ()
-  <div class= "card mt-3 audit-log-card" style= "max-width: 80em" >
-    <div class= "card-header">
-      <h5>API Audit Logs</h5>
-    </div>
-
-  <div class= "card-body">
-    <p class= "text-muted">All API calls to GitHub made by Screenshotbot in the last 30 days will be listed here. This does not include OAuth calls since that's made on the user's behalf.</p>
-
-    <ul>
-      ,(paginated
-        (lambda (x)
-          <li>,(render-audit-log-item x)</li>)
-        :items (github-audit-logs-for-company (current-company)))
-    </ul>
-  </div>
-  </div>)
 
 (defsettings settings-github-page
   :name "github"

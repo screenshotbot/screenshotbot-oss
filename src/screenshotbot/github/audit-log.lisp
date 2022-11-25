@@ -14,10 +14,12 @@
                 #:hash-index)
   (:import-from #:util/misc
                 #:uniq)
+  (:import-from #:screenshotbot/audit-log
+                #:base-audit-log)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/github/audit-log)
 
-(defclass github-audit-log (store-object)
+(defclass github-audit-log (base-audit-log)
   ((%company :initarg :company
              :index-type hash-index
              :index-reader %github-audit-logs-for-company)
@@ -32,7 +34,3 @@
        :reader %created-at))
   (:default-initargs :ts (get-universal-time))
   (:metaclass persistent-class))
-
-(defun github-audit-logs-for-company (company)
-  (let ((elems (%github-audit-logs-for-company company)))
-    (uniq (sort elems #'> :key 'bknr.datastore:store-object-id))))
