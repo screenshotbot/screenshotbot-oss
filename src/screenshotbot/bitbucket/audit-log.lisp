@@ -31,6 +31,10 @@
                 #:def-easy-macro)
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
+  (:import-from #:screenshotbot/audit-log
+                #:audit-log-error
+                #:audit-logs-for-company
+                #:base-audit-log)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:audit-log
@@ -46,13 +50,11 @@
 (in-package :screenshotbot/bitbucket/audit-log)
 
 (with-class-validation
- (defclass audit-log (store-object)
-   ((%company :initarg :company
-              :index-type hash-index
+ (defclass audit-log (base-audit-log)
+   ((%company :index-type hash-index
               :index-reader %bitbucket-audit-logs-for-company)
-    (err :initarg :error
-         :initform nil
-         :accessor audit-log-error)
+    (err :initform nil
+         :accessor %audit-log-error)
     (error-response :initform nil
                     :accessor audit-log-error-response)
     (http-result-code :initform nil
@@ -63,6 +65,12 @@
    (:metaclass persistent-class)))
 
 (register-auto-cleanup 'audit-log :timestamp #'%created-at)
+
+(defmethod audit-log-error ((self audit-log))
+  ;; For migration
+  (or
+   (%audit-log-error self)
+   (call-next-method)))
 
 (with-class-validation
  (defclass build-status-audit-log (audit-log)
@@ -81,8 +89,10 @@
    (:metaclass persistent-class)))
 
 (defun bitbucket-audit-logs-for-company (company)
-  (let ((elems (%bitbucket-audit-logs-for-company company)))
-    (uniq (sort elems #'> :key 'bknr.datastore:store-object-id))))
+  (append
+   (audit-logs-for-company company 'audit-log)
+   (let ((elems (%bitbucket-audit-logs-for-company company)))
+     (uniq (sort elems #'> :key 'bknr.datastore:store-object-id)))))
 
 (defun parse-error-response (response result-code audit-log)
   (let* ((response-obj (json:decode-json-from-string response))
