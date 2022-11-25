@@ -278,7 +278,7 @@ $(".async-fetch").map(function (idx, elm) {
 
 
 setupLiveOnAttach(".load-more-button", function () {
-    $(this).click(function () {
+    $(this).click(function (e) {
         var button = $(this);
         var link = $(button).data("load-more");
         console.log("Fetching next page");
@@ -306,9 +306,11 @@ setupLiveOnAttach(".load-more-button", function () {
             },
             error: function(data) {
                 setDisabled(false);
-                alert("Something went wrong");
+                alert("Something went wrong, please try refreshing the page");
             }
         });
+
+        e.preventDefault();
     });
 });
 
