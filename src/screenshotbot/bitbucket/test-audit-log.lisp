@@ -55,34 +55,3 @@
      (is (equal
           "key: Ensure this value has at most 40 characters (it has 44)."
           (audit-log-error audit-log))))))
-
-(define-condition test-error (error)
-  ())
-
-(test with-audit-log-propagates-error
-  (with-fixture state ()
-    (signals test-error
-     (with-audit-log (audit-log (make-instance 'audit-log))
-
-       (error 'test-error)))
-    (assert-that (class-instances 'audit-log)
-                 (has-length 1))
-    (let ((audit-log (car (class-instances 'audit-log))))
-      (assert-that (audit-log-error audit-log)
-                   (contains-string "TEST-ERROR")))
-    (assert-that (with-audit-log (audit-log (make-instance 'audit-log))
-                   :pass)
-                 (equal-to :pass))))
-
-(test if-error-is-already-set-dont-reset
-  (with-fixture state ()
-    (signals test-error
-     (with-audit-log (audit-log (make-instance 'audit-log))
-       (with-transaction ()
-        (setf (audit-log-error audit-log) "foobar"))
-       (error 'test-error)))
-    (assert-that (class-instances 'audit-log)
-                 (has-length 1))
-    (let ((audit-log (car (class-instances 'audit-log))))
-      (assert-that (audit-log-error audit-log)
-                   (equal-to "foobar")))))

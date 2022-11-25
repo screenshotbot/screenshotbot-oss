@@ -34,7 +34,8 @@
   (:import-from #:screenshotbot/audit-log
                 #:audit-log-error
                 #:audit-logs-for-company
-                #:base-audit-log)
+                #:base-audit-log
+                #:with-audit-log)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:audit-log
@@ -114,12 +115,3 @@
         (setf (audit-log-error audit-log) message)
         (setf (audit-log-error-response audit-log) response))))
   (error 'bitbucket-error :audit-log audit-log))
-
-(def-easy-macro with-audit-log (&binding audit-log expr &fn fn)
-  (handler-bind ((error
-                   (lambda (e)
-                     (unless (audit-log-error expr)
-                       (with-transaction ()
-                         (setf (audit-log-error expr)
-                               (format nil "~a" e)))))))
-    (funcall fn expr)))

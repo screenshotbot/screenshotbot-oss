@@ -22,11 +22,16 @@
                 #:uniq)
   (:import-from #:screenshotbot/model/core
                 #:ensure-slot-boundp)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
+  (:import-from #:bknr.datastore
+                #:with-transaction)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:base-audit-log
    #:audit-logs-for-company
-   #:audit-log-error))
+   #:audit-log-error
+   #:with-audit-log))
 (in-package :screenshotbot/audit-log)
 
 (with-class-validation
@@ -50,3 +55,12 @@
           if (or (not type)
                  (typep log type))
             collect log)))
+
+(def-easy-macro with-audit-log (&binding audit-log expr &fn fn)
+  (handler-bind ((error
+                   (lambda (e)
+                     (unless (audit-log-error expr)
+                       (with-transaction ()
+                         (setf (audit-log-error expr)
+                               (format nil "~a" e)))))))
+    (funcall fn expr)))

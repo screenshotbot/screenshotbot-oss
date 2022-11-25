@@ -293,6 +293,7 @@
                (:file "test-assets")
                (:file "test-template")
                (:file "test-taskie")
+               (:file "test-audit-log")
                (:module "dashboard"
                 :components ((:file "test-recent-runs")
                              (:file "test-review-link")
