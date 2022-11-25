@@ -330,7 +330,15 @@
         (lambda (obj)
           (when (and
                  (typep obj 'store-object)
-                 (not (bknr.datastore::object-destroyed-p obj))
+                 (not
+                  ;; Under certain circumstances (it looks like when I
+                  ;; update a class and there are deleted objects in
+                  ;; memory? Not sure), object-destroyed-p can fail on
+                  ;; actually destroyed objects. If that happens wrap
+                  ;; this next part in an ignore-errors. I don't want
+                  ;; to keep it by default since that's risky when
+                  ;; going about rewriting existing indices.
+                  (bknr.datastore::object-destroyed-p obj))
                  (ignore-errors
                   (store-object-id obj)))
             (push obj rest)))
