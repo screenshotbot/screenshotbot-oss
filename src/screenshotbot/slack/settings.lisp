@@ -30,6 +30,8 @@
                 #:timeago)
   (:import-from #:screenshotbot/ui/confirmation-page
                 #:confirmation-page)
+  (:import-from #:screenshotbot/dashboard/paginated
+                #:paginated)
   (:export #:post-settings-slack))
 (in-package :screenshotbot/slack/settings)
 
@@ -178,9 +180,10 @@
     <p class= "text-muted">All API calls to Slack made by Screenshotbot in the last 30 days will be listed here.</p>
 
     <ul>
-      ,@ (loop for audit-log in (slack-audit-logs-for-company (current-company))
-               collect
-               <li>,(render-audit-log audit-log)</li>)
+      ,(paginated
+        (lambda (audit-log)
+          <li>,(render-audit-log audit-log)</li>)
+        :items (slack-audit-logs-for-company (current-company)))
     </ul>
   </div>
   </div>)
