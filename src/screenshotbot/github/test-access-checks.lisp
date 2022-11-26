@@ -4,11 +4,14 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/github/test-access-checks
+(uiop:define-package :screenshotbot/github/test-access-checks
   (:use #:cl
         #:fiveam
         #:screenshotbot/github/access-checks
-        #:screenshotbot/user-api))
+        #:screenshotbot/user-api)
+  (:import-from #:screenshotbot/github/access-checks
+                #:repo-string-identifier))
+(in-package :screenshotbot/github/test-access-checks)
 
 (util/fiveam:def-suite)
 
@@ -43,3 +46,9 @@
         (make-instance 'github-repo
                         :link "git@github.com:tdrhq/web.git")
         "abcd12"))))
+
+(test repo-string-identifier
+  (is (equal "tdrhq/fast-example"
+             (repo-string-identifier "https://github.com/tdrhq/fast-example")))
+    (is (equal "tdrhq/fast-example"
+             (repo-string-identifier "git@github.com.com:tdrhq/fast-example"))))
