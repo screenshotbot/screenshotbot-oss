@@ -20,11 +20,15 @@
                 #:describe-audit-log)
   (:import-from #:screenshotbot/user-api
                 #:user-full-name)
+  (:import-from #:screenshotbot/model/core
+                #:ensure-slot-boundp)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:updated-check-run
    #:user-updated-check-run))
 (in-package :screenshotbot/github/audit-log)
+
+(markup:enable-reader)
 
 (defclass github-audit-log (base-audit-log)
   ((%company :initarg :company
@@ -43,17 +47,28 @@
   (:metaclass persistent-class))
 
 (defclass updated-check-run (github-audit-log)
-  ()
+  ((commit :initarg :commit
+           :reader commit))
   (:metaclass persistent-class))
 
+(markup:deftag commit-tag (children)
+  (let ((commit (markup:write-html (car children))))
+    <code title=commit >,(str:shorten 8 commit)</code>))
+
 (defmethod describe-audit-log ((self updated-check-run))
-  (format nil "Updated check run"))
+  <span>
+    Updated check run on commit <commit-tag>,(commit self)</commit-tag>
+  </span>)
 
 (defclass user-updated-check-run (github-audit-log)
   ((%%user :initarg :user
-           :reader %user))
+           :reader %user)
+   (commit :initarg :commit
+           :reader commit))
   (:metaclass persistent-class))
 
 (defmethod describe-audit-log ((self user-updated-check-run))
-  (format nil "Updated check run for review by ~a"
-          (user-full-name (%user self))))
+  <span>
+    Updated check run on commit <commit-tag>,(commit self)</commit-tag>
+    for review by ,(user-full-name (%user self))
+  </span>)

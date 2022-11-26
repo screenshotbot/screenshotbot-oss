@@ -81,7 +81,10 @@
     (let ((summary (format-updated-summary state (current-user))))
       (with-audit-log (audit-log (make-instance 'user-updated-check-run
                                                 :user (current-user)                                                :company
-                                                (report-company (acceptable-report acceptable))))
+                                                (report-company (acceptable-report acceptable))
+                                                :commit (recorder-run-commit
+                                                         (report-run
+                                                          (acceptable-report acceptable)))))
         (declare (ignore audit-log))
         (apply
          'github-update-pull-request
@@ -294,7 +297,8 @@
       (when (send-task-args promoter)
         (with-audit-log (updated-check-run
                          (make-instance 'updated-check-run
-                                        :company (recorder-run-company run)))
+                                        :company (recorder-run-company run)
+                                        :commit (recorder-run-commit run)))
           (declare (ignore updated-check-run))
           (apply 'github-update-pull-request
                  (send-task-args promoter))))
