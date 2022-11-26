@@ -255,10 +255,9 @@
         </div>
       </div>
 
-      ,(when (staging-p)
-         (render-audit-logs
-          :type 'github-audit-log
-          :subtitle "All API calls to GitHub made by Screenshotbot in the last 30 days will be listed here. This does not include OAuth calls since that's made on the user's behalf."))
+      ,(render-audit-logs
+        :type 'github-audit-log
+        :subtitle "All API calls to GitHub made by Screenshotbot in the last 30 days will be listed here. This does not include OAuth calls since that's made on the user's behalf.")
     </settings-template>))
 
 
