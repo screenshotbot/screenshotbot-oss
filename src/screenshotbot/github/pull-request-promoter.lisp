@@ -40,6 +40,14 @@
                 #:app-installed-p)
   (:import-from #:screenshotbot/github/access-checks
                 #:repo-string-identifier)
+  (:import-from #:screenshotbot/audit-log
+                #:with-audit-log)
+  (:import-from #:screenshotbot/model/report
+                #:acceptable-report
+                #:report-company)
+  (:import-from #:screenshotbot/github/audit-log
+                #:user-updated-check-run
+                #:updated-check-run)
   (:export
    #:pull-request-promoter
    #:pr-acceptable
@@ -54,8 +62,8 @@
   ())
 
 (defclass pr-acceptable (base-acceptable)
-  ((send-task-args :initarg :report
-               :accessor send-task-args))
+  ((send-task-args :accessor send-task-args
+                   :initarg :send-task-args))
   (:metaclass persistent-class))
 
 (defun format-updated-summary (state user)
@@ -71,21 +79,25 @@
 (defmethod (setf acceptable-state) :before (state (acceptable pr-acceptable))
   (let ((old-output (assoc-value (plist-alist (send-task-args acceptable)) :output)))
     (let ((summary (format-updated-summary state (current-user))))
-     (apply
-      'github-update-pull-request
-      :conclusion (ecase state
-                (:accepted
-                 "success")
-                (:rejected
-                 "failure"))
-      :output `(("title" .
-                         ,(format
-                           nil
-                           "~a, ~a"
-                           (assoc-value old-output "title" :test 'equal)
-                           summary))
-                ("summary" . ,(assoc-value old-output "summary" :test 'equal)))
-      (send-task-args acceptable)))))
+      (with-audit-log (audit-log (make-instance 'user-updated-check-run
+                                                :user (current-user)                                                :company
+                                                (report-company (acceptable-report acceptable))))
+        (declare (ignore audit-log))
+        (apply
+         'github-update-pull-request
+         :conclusion (ecase state
+                       (:accepted
+                        "success")
+                       (:rejected
+                        "failure"))
+         :output `(("title" .
+                            ,(format
+                              nil
+                              "~a, ~a"
+                              (assoc-value old-output "title" :test 'equal)
+                              summary))
+                   ("summary" . ,(assoc-value old-output "summary" :test 'equal)))
+         (send-task-args acceptable))))))
 
 (defclass check ()
   ((status :initarg :status
@@ -280,7 +292,11 @@
                              run)
   (restart-case
       (when (send-task-args promoter)
-        (apply 'github-update-pull-request
-               (send-task-args promoter)))
+        (with-audit-log (updated-check-run
+                         (make-instance 'updated-check-run
+                                        :company (recorder-run-company run)))
+          (declare (ignore updated-check-run))
+          (apply 'github-update-pull-request
+                 (send-task-args promoter))))
     (retry-pull-request-code ()
       (maybe-send-tasks promoter run))))

@@ -22,6 +22,7 @@
   (:import-from #:screenshotbot/api/promote
                 #:maybe-promote-run)
   (:import-from #:screenshotbot/github/pull-request-promoter
+                #:send-task-args
                 #:base-commit
                 #:promoter-result
                 #:check-status
@@ -40,7 +41,17 @@
   (:import-from #:screenshotbot/github/settings
                 #:verified-repo-p)
   (:import-from #:screenshotbot/github/pull-request-promoter
-                #:plugin-installed?))
+                #:plugin-installed?)
+  (:import-from #:screenshotbot/github/pr-checks
+                #:github-update-pull-request)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:screenshotbot/model/report
+                #:acceptable-state)
+  (:import-from #:screenshotbot/testing
+                #:with-test-user))
 
 (util/fiveam:def-suite)
 
@@ -227,3 +238,47 @@
                   :commit-hash "foo")))
        (maybe-promote promoter run)
        (is-true (report promoter))))))
+
+(test maybe-send-tasks-happy-path
+  (with-fixture state ()
+    (cl-mock:with-mocks ()
+      (let (calls)
+        (cl-mock:if-called 'github-update-pull-request
+                           (lambda (&rest args)
+                             (push args calls)))
+        (setf (send-task-args promoter) '(:dummy))
+        (let ((run (make-instance
+                    'recorder-run
+                    :channel (make-instance 'dummy-channel)
+                    :company company
+                    :pull-request "https://github.com/tdrhq/fast-example/pull/2"
+                    :screenshots (list (make-instance 'screenshot :name "foobar"))
+                    :merge-base "car"
+                    :commit-hash "foo")))
+          (maybe-send-tasks promoter run)
+          (assert-that calls
+                       (has-length 1)))))))
+
+(test setf-acceptable-state-happy-path
+  (with-fixture state ()
+    (with-test-user (:logged-in-p t)
+      (cl-mock:with-mocks ()
+        (let (calls)
+          (cl-mock:if-called 'github-update-pull-request
+                             (lambda (&rest args)
+                               (push args calls)))
+          (let* ((run (make-instance
+                       'recorder-run
+                       :channel (make-instance 'dummy-channel)
+                       :company company
+                       :pull-request "https://github.com/tdrhq/fast-example/pull/2"
+                       :screenshots (list (make-instance 'screenshot :name "foobar"))
+                       :merge-base "car"
+                       :commit-hash "foo"))
+                 (report (make-instance 'report :run run))
+                 (acceptable (make-instance 'pr-acceptable
+                                            :send-task-args nil
+                                            :report report)))
+            (setf (acceptable-state acceptable) :accepted)
+            (assert-that calls
+                         (has-length 1))))))))

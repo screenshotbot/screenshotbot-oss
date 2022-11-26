@@ -148,8 +148,6 @@
        (values (#_getStars repo)
                (#_getForks repo))))))
 
-
-
 (defun github-star-service ()
   (new-instance #,org.eclipse.egit.github.core.service.StargazerService
                 (github-client)))

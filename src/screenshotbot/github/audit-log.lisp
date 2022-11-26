@@ -16,7 +16,10 @@
                 #:uniq)
   (:import-from #:screenshotbot/audit-log
                 #:base-audit-log)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:updated-check-run
+   #:user-updated-check-run))
 (in-package :screenshotbot/github/audit-log)
 
 (defclass github-audit-log (base-audit-log)
@@ -33,4 +36,12 @@
    (ts :initarg :ts
        :reader %created-at))
   (:default-initargs :ts (get-universal-time))
+  (:metaclass persistent-class))
+
+(defclass updated-check-run (github-audit-log)
+  ()
+  (:metaclass persistent-class))
+
+(defclass user-updated-check-run (github-audit-log)
+  ((%%user :initarg :user))
   (:metaclass persistent-class))
