@@ -33,6 +33,8 @@
   (:import-from #:screenshotbot/gitlab/audit-logs
                 #:gitlab-audit-log
                 #:config-updated-audit-log)
+  (:import-from #:screenshotbot/dashboard/audit-log
+                #:render-audit-logs)
 
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/gitlab/settings)
