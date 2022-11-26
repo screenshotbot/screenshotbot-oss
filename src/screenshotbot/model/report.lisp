@@ -37,7 +37,8 @@
    #:github-task
    #:report-num-changes
    #:reports-for-run
-   #:report-company))
+   #:report-company
+   #:acceptable-report))
 (in-package :screenshotbot/model/report)
 
 (with-class-validation
@@ -92,7 +93,11 @@
     ((state :initform nil
             :initarg :state
             :documentation "One of NIL, :ACCEPTED, :REJECTED"
-            :reader acceptable-state))
+            :reader acceptable-state)
+     (report :initarg :report
+             :reader acceptable-report
+             :documentation "Keep track of the report, mostly for audit-log
+             purposes, which needs a reference to the company."))
     (:metaclass persistent-class)))
 
 (defmethod (setf acceptable-state) (state (acceptable base-acceptable))
