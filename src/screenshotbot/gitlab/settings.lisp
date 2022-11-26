@@ -20,6 +20,7 @@
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:screenshotbot/user-api
+                #:current-user
                 #:current-company)
   (:import-from #:util/misc
                 #:?.)
@@ -29,6 +30,10 @@
                 #:gitlab-repo)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:screenshotbot/gitlab/audit-logs
+                #:gitlab-audit-log
+                #:config-updated-audit-log)
+
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/gitlab/settings)
 
@@ -67,10 +72,13 @@
                      (or
                       (gitlab-settings-for-company company)
                       (make-instance 'gitlab-settings
-                                      :company company)))))
+                                     :company company)))))
      (with-transaction ()
        (setf (gitlab-url settings) gitlab-url)
        (setf (gitlab-token settings) token))
+     (make-instance 'config-updated-audit-log
+                    :company company
+                    :user (current-user))
      (hex:safe-redirect "/settings/gitlab"))))
 
 (defun save-settings (gitlab-url token)
@@ -121,8 +129,11 @@
             <input type= "submit" value= "Save" class= "btn btn-primary"/>
           </div>
         </div>
-            </form>
-      </settings-template>))
+      </form>
+
+      ,(render-audit-logs :type 'gitlab-audit-log
+                          :subtitle "All API calls made by Screenshotbot to GitLab in the last 30 days will be listed here.")
+    </settings-template>))
 
 (defsettings settings-gitlab-page
   :name "gitlab"

@@ -55,6 +55,8 @@
                 #:run-page)
   (:import-from #:util/object-id
                 #:oid)
+  (:import-from #:screenshotbot/audit-log
+                #:with-audit-log)
   (:export
    #:merge-request-promoter
    #:gitlab-acceptable))
@@ -163,15 +165,19 @@
   (assert
    (str:s-member (str:split ", " "pending, running, success, failed, canceled")
                  state))
-  (gitlab-request company
-                  (format nil "/projects/~a/statuses/~a"
-                          (urlencode:urlencode project-path)
-                          sha)
-                  :method :post
-                  :content `(("name" . ,name)
-                             ("target_url" . ,target-url)
-                             ("state" . ,state)
-                             ("description" . ,description))))
+  (with-audit-log (audit-log (make-instance 'update-status-audit-log
+                                            :company company
+                                            :commit sha))
+    (declare (ignore audit-log))
+    (gitlab-request company
+                    (format nil "/projects/~a/statuses/~a"
+                            (urlencode:urlencode project-path)
+                            sha)
+                    :method :post
+                    :content `(("name" . ,name)
+                               ("target_url" . ,target-url)
+                               ("state" . ,state)
+                               ("description" . ,description)))))
 
 (defmethod (setf acceptable-state) :before (state (acceptable gitlab-acceptable))
   (flet ((not-null! (x) (assert x) x))

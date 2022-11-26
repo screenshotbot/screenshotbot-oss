@@ -186,6 +186,7 @@
    (:module "gitlab"
     :serial t
     :components ((:file "repo")
+                 (:file "audit-logs")
                  (:file "plugin")
                  (:file "review-link")
                  (:file "settings")
