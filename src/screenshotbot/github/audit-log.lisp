@@ -16,6 +16,10 @@
                 #:uniq)
   (:import-from #:screenshotbot/audit-log
                 #:base-audit-log)
+  (:import-from #:screenshotbot/dashboard/audit-log
+                #:describe-audit-log)
+  (:import-from #:screenshotbot/user-api
+                #:user-full-name)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:updated-check-run
@@ -42,6 +46,14 @@
   ()
   (:metaclass persistent-class))
 
+(defmethod describe-audit-log ((self updated-check-run))
+  (format nil "Updated check run"))
+
 (defclass user-updated-check-run (github-audit-log)
-  ((%%user :initarg :user))
+  ((%%user :initarg :user
+           :reader %user))
   (:metaclass persistent-class))
+
+(defmethod describe-audit-log ((self user-updated-check-run))
+  (format nil "Updated check run for review by ~a"
+          (user-full-name (%user self))))
