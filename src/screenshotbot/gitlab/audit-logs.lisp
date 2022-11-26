@@ -13,6 +13,7 @@
   (:import-from #:bknr.datastore
                 #:persistent-class)
   (:import-from #:screenshotbot/dashboard/audit-log
+                #:commit-tag
                 #:describe-audit-log)
   (:import-from #:screenshotbot/user-api
                 #:user-full-name)
@@ -35,6 +36,11 @@
     ((commit :initarg :commit
              :reader %commit))
     (:metaclass persistent-class)))
+
+(defmethod describe-audit-log ((self update-status-audit-log))
+  <span>
+    Updated build status on commit <commit-tag>,(%commit self)</commit-tag>
+  </span>)
 
 (with-class-validation
   (defclass config-updated-audit-log (gitlab-audit-log)

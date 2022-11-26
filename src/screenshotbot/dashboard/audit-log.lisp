@@ -18,7 +18,8 @@
                 #:paginated)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:render-audit-logs))
+   #:render-audit-logs
+   #:commit-tag))
 (in-package :screenshotbot/dashboard/audit-log)
 
 (markup:enable-reader)
@@ -60,3 +61,7 @@
         </ul>
       </div>
     </div>))
+
+(markup:deftag commit-tag (children)
+  (let ((commit (markup:write-html (car children))))
+    <code title=commit >,(str:shorten 8 commit)</code>))

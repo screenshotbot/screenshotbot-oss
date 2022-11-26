@@ -17,6 +17,7 @@
   (:import-from #:screenshotbot/audit-log
                 #:base-audit-log)
   (:import-from #:screenshotbot/dashboard/audit-log
+                #:commit-tag
                 #:describe-audit-log)
   (:import-from #:screenshotbot/user-api
                 #:user-full-name)
@@ -50,10 +51,6 @@
   ((commit :initarg :commit
            :reader commit))
   (:metaclass persistent-class))
-
-(markup:deftag commit-tag (children)
-  (let ((commit (markup:write-html (car children))))
-    <code title=commit >,(str:shorten 8 commit)</code>))
 
 (defmethod describe-audit-log ((self updated-check-run))
   <span>
