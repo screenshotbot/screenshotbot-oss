@@ -186,9 +186,6 @@
   (github-repo-id (repo-link repo)))
 
 (defun repo-string-identifier (repo-url)
-  #+ (or ccl lispworks)
-  (#_generateId (github-repo-id repo-url))
-  #- (or ccl lispworks)
   (destructuring-bind (prefix org name)
       (str:rsplit "/" repo-url :limit 3)
     (format nil "~a/~a" org name)))
