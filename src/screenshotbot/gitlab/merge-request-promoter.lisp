@@ -57,6 +57,8 @@
                 #:oid)
   (:import-from #:screenshotbot/audit-log
                 #:with-audit-log)
+  (:import-from #:screenshotbot/gitlab/audit-logs
+                #:update-status-audit-log)
   (:export
    #:merge-request-promoter
    #:gitlab-acceptable))
