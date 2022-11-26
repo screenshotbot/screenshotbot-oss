@@ -185,7 +185,9 @@
 
 (defun repo-string-identifier (repo-url)
   (destructuring-bind (prefix org name)
-      (str:rsplit "/" (str:replace-all ":" "/" repo-url) :limit 3)
+      (str:rsplit "/" (str:replace-all ":" "/"
+                                       (cl-ppcre:regex-replace-all "[.]git$" repo-url ""))
+                  :limit 3)
     (format nil "~a/~a" org name)))
 
 (defun can-access-github-repo (github-link)

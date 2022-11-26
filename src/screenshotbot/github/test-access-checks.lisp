@@ -50,5 +50,7 @@
 (test repo-string-identifier
   (is (equal "tdrhq/fast-example"
              (repo-string-identifier "https://github.com/tdrhq/fast-example")))
-    (is (equal "tdrhq/fast-example"
-             (repo-string-identifier "git@github.com.com:tdrhq/fast-example"))))
+  (is (equal "tdrhq/fast-example"
+             (repo-string-identifier "git@github.com.com:tdrhq/fast-example")))
+  (is (equal "tdrhq/fast-example"
+             (repo-string-identifier "git@github.com.com:tdrhq/fast-example.git"))))
