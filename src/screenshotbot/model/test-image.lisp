@@ -55,6 +55,9 @@
                 #:s3-store-update-remote)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:util/object-id
+                #:oid-array
+                #:oid-arr)
   (:export))
 
 (util/fiveam:def-suite)
@@ -297,3 +300,9 @@
 
     (with-local-image (local-file img)
       (is (path:-e local-file)))))
+
+(test find-image-by-oid
+  (with-fixture state ()
+    (let ((img (make-image :pathname file)))
+      (is (eql img (find-image-by-oid (oid img))))
+      (is (eql img (find-image-by-oid (oid-array img)))))))

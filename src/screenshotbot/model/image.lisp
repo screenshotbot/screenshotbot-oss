@@ -180,7 +180,7 @@
   (check-imagep (find-by-oid oid)))
 
 (defmethod find-image-by-oid ((oid array))
-  (check-imagep (util/store::%find-by-oid oid)))
+  (check-imagep (util/object-id::%find-by-oid oid)))
 
 
 #|

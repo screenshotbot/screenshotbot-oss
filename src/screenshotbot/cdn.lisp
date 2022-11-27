@@ -47,7 +47,7 @@
   future. For instance, separate installations might have a different
   CDN."
   ;; si: screenshot-image
-  (let ((util.cdn:*cdn-cache-key* "si-2" ))
+  (let ((util.cdn:*cdn-cache-key* "si-3" ))
     (util.cdn:make-cdn url)))
 
 (defvar *dim-cache* (make-hash-table :test #'equal)
