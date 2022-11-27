@@ -16,10 +16,10 @@
                 #:chain
                 #:promise
                 #:force)
-  (:import-from #:util #:find-by-oid)
   (:import-from #:hunchentoot
                 #:handle-static-file)
   (:import-from #:screenshotbot/model/image
+                #:find-image-by-oid
                 #:with-local-image)
   (:import-from #:util/object-id
                 #:oid)
@@ -126,8 +126,7 @@
 (defhandler (image-blob-get :uri "/image/blob/:oid/default.webp") (oid size type)
   (let ((oid (encrypt:decrypt-mongoid oid)))
     (assert oid)
-    (let* ((image (find-by-oid oid)))
-      (check-type image image)
+    (let* ((image (find-image-by-oid oid)))
       (setf (hunchentoot:header-out :content-type) "image/png")
       (cond
         (size

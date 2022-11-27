@@ -50,6 +50,7 @@
                 #:ping-image-metadata
                 #:with-wand)
   (:import-from #:util/object-id
+                #:find-by-oid
                 #:oid-array)
   (:import-from #:util/digests
                 #:md5-file)
@@ -110,7 +111,8 @@
    #:image-filesystem-pathname
    #:update-image
    #:mask=
-   #:image-metadata))
+   #:image-metadata
+   #:find-image-by-oid))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -166,6 +168,20 @@
      (content-type :initarg :content-type
                    :reader image-content-type))
     (:metaclass persistent-class)))
+
+(defun imagep (image)
+  (typep image 'abstract-image))
+
+(defun check-imagep (image)
+  (assert (imagep image))
+  image)
+
+(defmethod find-image-by-oid ((oid string))
+  (check-imagep (find-by-oid oid)))
+
+(defmethod find-image-by-oid ((oid array))
+  (check-imagep (util/store::%find-by-oid oid)))
+
 
 #|
 

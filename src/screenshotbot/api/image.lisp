@@ -13,13 +13,13 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:util
-                #:find-by-oid
                 #:oid)
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:screenshotbot/user-api
                 #:current-company)
   (:import-from #:screenshotbot/model/image
+                #:find-image-by-oid
                 #:image-blob
                 #:update-image
                 #:make-image)
@@ -123,7 +123,7 @@
   `(%with-raw-post-data-as-tmp-file (lambda (,tmpfile) ,@body)))
 
 (defhandler (api-upload-image-blob :uri "/api/image/blob" :method :put) (oid)
-  (let ((image (find-by-oid oid)))
+  (let ((image (find-image-by-oid oid)))
     (with-raw-post-data-as-tmp-file (p)
       (update-image image :pathname p)
       (verify-image image)
