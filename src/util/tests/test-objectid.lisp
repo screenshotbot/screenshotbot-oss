@@ -79,5 +79,11 @@
                                               1 1 1 1)))))
     (is (equal "/foo/010101010101010101010101"
                (format nil "/foo/~a" oid)))
-    (is (equal "/foo/#S(OID :ARR #(1 1 1 1 1 1 1 1 1 1 1 1))"
+    (is (equal "/foo/010101010101010101010101"
+               (let ((*print-escape* t))
+                 ;; In prod, for whatever reason *print-escape* is on
+                 ;; globally. We still want to make sure
+                 ;; it's rendered as a string here.
+                 (format nil "/foo/~a" oid))))
+    (is (equal "/foo/#<OID 010101010101010101010101>"
                (format nil "/foo/~S" oid)))))

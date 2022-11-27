@@ -30,10 +30,9 @@
     ((or
       *print-readably*
       *print-escape*)
-     (call-next-method))
+     (format stream "#<OID ~a>" (fast-oid-str (oid-arr self))))
     (t
      (format stream (fast-oid-str (oid-arr self))))))
-
 
 (defmethod bknr.datastore::encode-object ((self oid) stream)
   ;; M for MongoId, O is being used!
