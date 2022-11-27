@@ -61,7 +61,7 @@
 (test encode-decode-oid
   (uiop:with-temporary-file (:stream s :element-type '(unsigned-byte 8)
                              :direction :io)
-    (let ((oid-arr (%make-oid)))
+    (let ((oid-arr (mongoid:oid)))
       (let ((oid (make-oid :arr oid-arr))
             (oid2 (make-oid :arr oid-arr)))
         (is (equalp oid oid2))

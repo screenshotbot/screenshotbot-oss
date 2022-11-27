@@ -35,7 +35,9 @@
     (make-oid :arr arr)))
 
 (defun %make-oid ()
-  (mongoid:oid))
+  (make-oid
+   :arr
+   (mongoid:oid)))
 
 (defindex +oid-index+ 'unique-index
   :test 'equalp
@@ -46,7 +48,7 @@
 (defclass object-with-oid (store-object)
   ((oid
     :initarg :oid
-    :reader oid-array
+    :reader oid-struct-or-array
     :index +oid-index+
     :index-reader %find-by-oid))
   (:metaclass persistent-class))
@@ -61,6 +63,12 @@
     (t
      (apply #'call-next-method obj :oid (%make-oid) args))))
 
+(defmethod oid-array ((self object-with-oid))
+  (let ((ret (oid-struct-or-array self)))
+    (cond
+      ((oid-p ret) (oid-arr ret))
+      (t ret))))
+
 (defclass object-with-unindexed-oid (store-object)
   ((oid
     :initform (%make-oid)
@@ -68,8 +76,12 @@
   (:metaclass persistent-class))
 
 (defun find-by-oid (oid &optional type)
-  (let* ((oid (mongoid:oid oid))
-         (obj (%find-by-oid oid)))
+  (let* ((arr (mongoid:oid oid))
+         (obj (or
+               (%find-by-oid
+                (make-oid :arr arr))
+               ;; For backward compatibility
+               (%find-by-oid arr))))
     (when type
       (unless (typep obj type)
         (error "Object ~s isn't of type ~s" obj type)))

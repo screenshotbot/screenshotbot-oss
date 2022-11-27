@@ -182,7 +182,6 @@
 (defmethod find-image-by-oid ((oid array))
   (check-imagep (util/object-id::%find-by-oid oid)))
 
-
 #|
 
 (loop for im in (bknr.datastore:class-instances 's3-blob)
