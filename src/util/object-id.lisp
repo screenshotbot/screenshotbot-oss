@@ -10,6 +10,7 @@
   (:import-from #:bknr.indices
                 #:unique-index)
   (:import-from #:util/store
+                #:location-for-oid
                 #:defindex)
   (:export #:object-with-oid
 	   #:object-with-unindexed-oid
@@ -76,7 +77,10 @@
   (:metaclass persistent-class))
 
 (defun find-by-oid (oid &optional type)
-  (let* ((arr (mongoid:oid oid))
+  "oid can be an array, a string, or an object of type OID"
+  (let* ((arr (if (oid-p oid)
+                  (oid-arr oid)
+                  (mongoid:oid oid)))
          (obj (or
                (%find-by-oid
                 (make-oid :arr arr))
@@ -135,3 +139,9 @@
 
 (defmethod oid (obj)
   (fast-oid-str (oid-array obj)))
+
+(defmethod location-for-oid ((root pathname) (oid oid) &key suffix)
+  (location-for-oid
+   root
+   (oid-arr oid)
+   :suffix suffix))

@@ -305,4 +305,5 @@
   (with-fixture state ()
     (let ((img (make-image :pathname file)))
       (is (eql img (find-image-by-oid (oid img))))
+      (is (eql 12 (length (oid-array img))))
       (is (eql img (find-image-by-oid (oid-array img)))))))

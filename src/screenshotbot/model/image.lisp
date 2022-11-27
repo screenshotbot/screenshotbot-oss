@@ -50,6 +50,7 @@
                 #:ping-image-metadata
                 #:with-wand)
   (:import-from #:util/object-id
+                #:%make-oid
                 #:find-by-oid
                 #:oid-array)
   (:import-from #:util/digests
@@ -180,7 +181,7 @@
   (check-imagep (find-by-oid oid)))
 
 (defmethod find-image-by-oid ((oid array))
-  (check-imagep (util/object-id::%find-by-oid oid)))
+  (check-imagep (find-by-oid oid)))
 
 #|
 
@@ -518,7 +519,7 @@
   (unless (or hash pathname)
     (error "Must provide at least one of hash or pathname"))
   (let* ((args (alexandria:remove-from-plist args :pathname :for-tests))
-         (oid (mongoid:oid))
+         (oid (%make-oid))
          (hash (cond
                  ((stringp hash)
                   (ironclad:hex-string-to-byte-array hash))
