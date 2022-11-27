@@ -63,6 +63,13 @@
     :index-reader %find-by-oid))
   (:metaclass persistent-class))
 
+(defun migrate-oids ()
+  (loop for obj in (class-instances 'object-with-oid)
+        do (with-slots (oid) obj
+             (unless (oid-p oid)
+               (assert (vectorp oid))
+               (with-transaction ()
+                (setf oid (make-oid :arr oid)))))))
 
 (defmethod initialize-instance :around ((obj object-with-oid)
                                         &rest args

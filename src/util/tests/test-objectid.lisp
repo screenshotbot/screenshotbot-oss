@@ -9,6 +9,10 @@
 	#:alexandria
         #:fiveam)
   (:import-from #:util/object-id
+                #:oid-arr
+                #:migrate-oids
+                #:oid-p
+                #:oid-struct-or-array
                 #:make-oid
                 #:%make-oid
 		#:object-with-oid
@@ -87,3 +91,19 @@
                  (format nil "/foo/~a" oid))))
     (is (equal "/foo/#<OID 010101010101010101010101>"
                (format nil "/foo/~S" oid)))))
+
+(test migrate-objects
+  (with-test-store ()
+    (let* ((oid-1 (mongoid:oid))
+           (oid-2 (%make-oid))
+           (obj1 (make-instance 'object-with-oid
+                                :oid oid-1))
+           (obj2 (make-instance 'object-with-oid
+                               :oid oid-2)))
+      (is (oid-p (oid-struct-or-array obj2)))
+      (is (not (oid-p (oid-struct-or-array obj1))))
+      (migrate-oids)
+      (is (oid-p (oid-struct-or-array obj2)))
+      (is (not (oid-p (oid-arr (oid-struct-or-array obj2)))))
+      (is (oid-p (oid-struct-or-array obj1)))
+      (is (not (oid-p (oid-arr (oid-struct-or-array obj1))))))))
