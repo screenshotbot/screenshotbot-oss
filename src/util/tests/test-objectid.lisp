@@ -70,3 +70,14 @@
         (file-position s 0)
         (let ((oid-read (decode s)))
           (is (equalp oid oid-read)))))))
+
+(test print-object-for-oid
+  (let ((oid (make-oid
+              :arr (make-array 12
+                          :initial-contents '(1 1 1 1
+                                              1 1 1 1
+                                              1 1 1 1)))))
+    (is (equal "/foo/010101010101010101010101"
+               (format nil "/foo/~a" oid)))
+    (is (equal "/foo/#S(OID :ARR #(1 1 1 1 1 1 1 1 1 1 1 1))"
+               (format nil "/foo/~S" oid)))))

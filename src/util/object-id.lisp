@@ -25,6 +25,16 @@
  this isn't being used but will be soon."
   (arr))
 
+(defmethod print-object ((self oid) stream)
+  (cond
+    ((or
+      *print-readably*
+      *print-escape*)
+     (call-next-method))
+    (t
+     (format stream (fast-oid-str (oid-arr self))))))
+
+
 (defmethod bknr.datastore::encode-object ((self oid) stream)
   ;; M for MongoId, O is being used!
   (bknr.datastore::%write-tag #\M stream)
@@ -53,6 +63,7 @@
     :index +oid-index+
     :index-reader %find-by-oid))
   (:metaclass persistent-class))
+
 
 (defmethod initialize-instance :around ((obj object-with-oid)
                                         &rest args
