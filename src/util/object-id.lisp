@@ -58,18 +58,18 @@
 (defclass object-with-oid (store-object)
   ((oid
     :initarg :oid
-    :reader oid-struct-or-array
+    :accessor oid-struct-or-array
     :index +oid-index+
     :index-reader %find-by-oid))
   (:metaclass persistent-class))
 
 (defun migrate-oids ()
   (loop for obj in (class-instances 'object-with-oid)
-        do (with-slots (oid) obj
-             (unless (oid-p oid)
+        do (let ((oid (oid-struct-or-array obj)))
+             (unless (or (stringp oid) (oid-p oid))
                (assert (vectorp oid))
                (with-transaction ()
-                (setf oid (make-oid :arr oid)))))))
+                (setf (oid-struct-or-array obj) (make-oid :arr (oid-array obj))))))))
 
 (defmethod initialize-instance :around ((obj object-with-oid)
                                         &rest args
@@ -85,6 +85,7 @@
   (let ((ret (oid-struct-or-array self)))
     (cond
       ((oid-p ret) (oid-arr ret))
+      ((stringp ret) (mongoid:oid ret))
       (t ret))))
 
 (defclass object-with-unindexed-oid (store-object)

@@ -9,6 +9,7 @@
 	#:alexandria
         #:fiveam)
   (:import-from #:util/object-id
+                #:fast-oid-str
                 #:oid-arr
                 #:migrate-oids
                 #:oid-p
@@ -96,14 +97,19 @@
   (with-test-store ()
     (let* ((oid-1 (mongoid:oid))
            (oid-2 (%make-oid))
+           (oid-3 (fast-oid-str (mongoid:oid)))
            (obj1 (make-instance 'object-with-oid
                                 :oid oid-1))
            (obj2 (make-instance 'object-with-oid
-                               :oid oid-2)))
+                                :oid oid-2))
+           (obj3 (make-instance 'object-with-oid
+                                :oid oid-3)))
       (is (oid-p (oid-struct-or-array obj2)))
+      (is (not (oid-p (oid-struct-or-array obj1))))
       (is (not (oid-p (oid-struct-or-array obj1))))
       (migrate-oids)
       (is (oid-p (oid-struct-or-array obj2)))
       (is (not (oid-p (oid-arr (oid-struct-or-array obj2)))))
       (is (oid-p (oid-struct-or-array obj1)))
-      (is (not (oid-p (oid-arr (oid-struct-or-array obj1))))))))
+      (is (not (oid-p (oid-arr (oid-struct-or-array obj1)))))
+      (is (oid-p (oid-struct-or-array obj1))))))
