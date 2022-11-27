@@ -9,6 +9,8 @@
 	#:alexandria
         #:fiveam)
   (:import-from #:util/object-id
+                #:make-oid
+                #:%make-oid
 		#:object-with-oid
                 #:oid
                 #:find-by-oid)
@@ -17,7 +19,15 @@
   (:import-from #:bknr.indices
                 #:hash-index)
   (:import-from #:bknr.datastore
-                #:persistent-class))
+                #:persistent-class)
+  (:import-from #:bknr.datastore
+                #:encode-object)
+  (:import-from #:bknr.datastore
+                #:decode-object)
+  (:import-from #:bknr.datastore
+                #:encode)
+  (:import-from #:bknr.datastore
+                #:decode))
 (in-package :util.model.test-object-id)
 
 (def-suite* :util.model.test-object-id)
@@ -47,3 +57,16 @@
                (is (equal (list obj)
                           (all-test-classes))))))
       (unintern name))))
+
+(test encode-decode-oid
+  (uiop:with-temporary-file (:stream s :element-type '(unsigned-byte 8)
+                             :direction :io)
+    (let ((oid-arr (%make-oid)))
+      (let ((oid (make-oid :arr oid-arr))
+            (oid2 (make-oid :arr oid-arr)))
+        (is (equalp oid oid2))
+        (encode oid s)
+        (is (= 13 (file-position s)))
+        (file-position s 0)
+        (let ((oid-read (decode s)))
+          (is (equalp oid oid-read)))))))

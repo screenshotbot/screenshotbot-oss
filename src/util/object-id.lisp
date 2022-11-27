@@ -19,6 +19,21 @@
        #:creation-time-from-oid))
 (in-package #:util/object-id)
 
+(defstruct oid
+  "An object to efficiently represent a Mongo Object-ID. As of 11/27/22,
+ this isn't being used but will be soon."
+  (arr))
+
+(defmethod bknr.datastore::encode-object ((self oid) stream)
+  ;; M for MongoId, O is being used!
+  (bknr.datastore::%write-tag #\M stream)
+  (write-sequence (oid-arr self) stream))
+
+(defmethod bknr.datastore::decode-object ((tag (eql #\M)) stream)
+  (let ((arr (make-array 12 :element-type '(unsigned-byte 8))))
+    (read-sequence arr stream)
+    (make-oid :arr arr)))
+
 (defun %make-oid ()
   (mongoid:oid))
 
