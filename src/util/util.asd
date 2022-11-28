@@ -59,7 +59,6 @@
                "cl-csv"
                "cl-smtp"
                "util/cron"
-               "cl-mongo-id"
                "drakma"
                "cl-json"
                "hunchentoot-extensions"
@@ -164,6 +163,7 @@
                :tmpdir
                :str
                :local-time
+               :cl-mongo-id
                :copy-directory
                :ironclad/core
                :cffi
