@@ -81,7 +81,6 @@
                (:file "emacs")
                (:file "cookies")
                (:file "bind-form")
-               (:file "object-id")
                (:file "lists")
                (:file "cdn")
                (:file "package")
@@ -169,10 +168,12 @@
                :ironclad/core
                :cffi
                :cl-cron)
-  :components (#-mswindows (lib-source-file "store-native")
-		#-mswindows
+  :components (#-mswindows
+               (lib-source-file "store-native")
+               #-mswindows
                (:file "file-lock")
-               (:file "store")))
+               (:file "store")
+               (:file "object-id")))
 
 (defsystem :util/lru-cache
   :serial t
