@@ -173,7 +173,8 @@
                #-mswindows
                (:file "file-lock")
                (:file "store")
-               (:file "object-id")))
+               (:file "object-id")
+               (:file "single")))
 
 (defsystem :util/lru-cache
   :serial t
