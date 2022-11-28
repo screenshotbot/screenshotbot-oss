@@ -160,22 +160,6 @@ $("#compare-runs").click(function () {
     location.href = "/runs/" + max + "/compare/" + min;
 });
 
-$(".card-delete-button").click(function () {
-    var id = $(this).closest("li").data("payment-method-id");
-    if (confirm("Do you really want to delete this payment method?")) {
-        $.ajax({
-            url: "/payment-methods/" + id,
-            type: "DELETE",
-            success: function () {
-                location.reload();
-            },
-            error: function() {
-                alert("Hmm, failed to delete. Ping arnold@screenshotbot.io");
-            }
-        });
-    }
-})
-
 $(function () {
     $(".github-test-connection").click(function () {
         var button = this;
