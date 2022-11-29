@@ -17,7 +17,9 @@
                                  title
                                  (max-width "30rem")
                                  script-name
-                          form-action)
+                                 stripe
+                                 form-action
+                                 form-id)
   (let* ((children (remove-if 'stringp children))
          (footer (if (mquery:has-class-p (last children) "card-footer")
                      (car (last children))
@@ -39,14 +41,14 @@
                     </div>
                     ,(progn footer)
                   </div>)))
-    <app-template title=title >
+    <app-template title=title stripe=stripe >
      <div class= "main-content" >
       <div class= "card-page-container mt-3 mx-auto"
            style= (when max-width
                    (format nil "max-width: ~a" max-width)) >
           ,(cond
              (form-action
-              <form action=form-action method= "POST" >
+              <form action=form-action id=form-id method= "POST" >
                 ,(progn inner)
               </form>)
              (t
