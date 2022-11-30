@@ -4,12 +4,13 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :util/tests/test-mock-recording
+(uiop:define-package :util/tests/test-mock-recording
     (:use #:cl
           #:fiveam
           #:alexandria)
   (:import-from #:util/mock-recording
                 #:with-recording))
+(in-package :util/tests/test-mock-recording)
 
 (util/fiveam:def-suite)
 
@@ -27,8 +28,7 @@
     (is (eql 10 (with-recording (foo p :record t)
                   (foo 3)
                   (foo 9))))
-    (let ((recording (read-from-string
-                      (uiop:read-file-string p))))
+    (let ((recording (cl-store:restore p)))
       (is (equal
            `(((3) . 4)
              ((9) . 10))

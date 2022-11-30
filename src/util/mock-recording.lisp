@@ -35,9 +35,7 @@
                                recording)
                          res)))
           (let ((res (funcall fn)))
-            (with-open-file (stream file :direction :output
-                                         :if-exists :supersede)
-              (cl-store:store (reverse recording) stream))
+            (cl-store:store (reverse recording) (pathname file))
             res))))
      (t
       (let ((recording (cl-store:restore (pathname file))))
