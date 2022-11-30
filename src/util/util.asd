@@ -193,7 +193,7 @@
                :fiveam
                :pkg
                :cl-mock
-               :cl-storeo
+               :cl-store
                :str)
   :serial t
   :components ((:file "fiveam")
