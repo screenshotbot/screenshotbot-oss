@@ -143,7 +143,8 @@
   :serial t
   :depends-on (:fiveam
                :util)
-  :components ((:file "testing")))
+  :components ((:file "testing")
+               (:file "recording")))
 
 (defsystem :util/random-port
   :serial t
