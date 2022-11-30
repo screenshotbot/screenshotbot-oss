@@ -37,10 +37,10 @@
           (let ((res (funcall fn)))
             (with-open-file (stream file :direction :output
                                          :if-exists :supersede)
-              (write (reverse recording) :stream stream))
+              (cl-store:store (reverse recording) stream))
             res))))
      (t
-      (let ((recording (read-from-string (uiop:read-file-string file))))
+      (let ((recording (cl-store:restore (pathname file))))
         (with-mocks ()
           (if-called mocked-function
                      (lambda (&rest args)
