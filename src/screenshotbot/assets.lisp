@@ -99,31 +99,36 @@ rm -f $INSTALLER
 
 
 (defmacro define-platform-asset (name)
-  `(progn
-     (flet ((generate ()
-              (uiop:with-staging-pathname (output
-                                           (artifact-file-name ,(format nil "~a.sh" name)))
-                (with-open-file (output output :direction :output
-                                               :if-exists :append)
-                  (write-string (generate-.sh ,name)
-                                output)))))
-       ,@ (loop for suffix in '("darwin" "linux")
-                collect
-                `(def-artifact-hook (',(intern name) ,(format nil "~a-~a"
-                                                              name suffix))
-                   (generate)))
-       (add-datastore-hook
-        #'generate
-          :immediate t))
+  (let ((generate-fn (intern (format nil "GENERATE-~a-PLATFORM-ASSETS" (string name)))))
+   `(progn
+      (flet ((generate ()
+               (uiop:with-staging-pathname (output
+                                            (artifact-file-name ,(format nil "~a.sh" name)))
+                 (with-open-file (output output :direction :output
+                                                :if-exists :append)
+                   (write-string (generate-.sh ,name)
+                                 output)))))
 
-     (defhandler (nil :uri ,(format nil "/~a.sh" name) :html nil) ()
-       (setf (hunchentoot:content-type*) "application/x-sh")
-       (hunchentoot:handle-static-file
-        (artifact-file-name (format nil "~a.sh" ,name))))
+        (defun ,generate-fn ()
+          (generate))
 
-     (defhandler (nil :uri ,(format nil "/~a.exe" name) :html nil) ()
-       (hunchentoot:redirect
-        (artifact-link ,(format nil "~a-win.exe" name) :cdn t)))))
+        ,@ (loop for suffix in '("darwin" "linux")
+                 collect
+                 `(def-artifact-hook (',(intern name) ,(format nil "~a-~a"
+                                                               name suffix))
+                    (generate)))
+        (add-datastore-hook
+         ',generate-fn
+         :immediate t))
+
+      (defhandler (nil :uri ,(format nil "/~a.sh" name) :html nil) ()
+        (setf (hunchentoot:content-type*) "application/x-sh")
+        (hunchentoot:handle-static-file
+         (artifact-file-name (format nil "~a.sh" ,name))))
+
+      (defhandler (nil :uri ,(format nil "/~a.exe" name) :html nil) ()
+        (hunchentoot:redirect
+         (artifact-link ,(format nil "~a-win.exe" name) :cdn t))))))
 
 ;; (call-hooks "recorder-linux")
 (define-platform-asset "recorder")
