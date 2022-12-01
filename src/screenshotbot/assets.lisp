@@ -99,7 +99,7 @@ rm -f $INSTALLER
 
 
 (defmacro define-platform-asset (name)
-  (let ((generate-fn (intern (format nil "GENERATE-~a-PLATFORM-ASSETS" (string name)))))
+  (let ((generate-fn (intern (format nil "GENERATE-~a-PLATFORM-ASSETS" (str:upcase name)))))
    `(progn
       (flet ((generate ()
                (uiop:with-staging-pathname (output
