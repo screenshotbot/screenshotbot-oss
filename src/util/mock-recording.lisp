@@ -15,6 +15,14 @@
    #:with-recording))
 (in-package :util/mock-recording)
 
+(defclass function-call ()
+  ((function-name :initarg :function-name
+             :reader function-name)
+   (arguments :initarg :arguments
+              :reader arguments)
+   (response :initarg :response
+             :reader response)))
+
 (defun call-with-recording (mocked-function file fn &key record skip-args)
   (ensure-directories-exist file)
   (flet ((remove-skip-args (args)
@@ -31,8 +39,11 @@
                        (log:debug "Bypassing any recorded values")
                        (let ((res
                                (call-previous)))
-                         (push (cons (remove-skip-args args) res)
-                               recording)
+                         (let ((function-call (make-instance 'function-call
+                                                             :function-name mocked-function
+                                                             :arguments (remove-skip-args args)
+                                                             :response res)))
+                           (push function-call recording))
                          res)))
           (let ((res (funcall fn)))
             (cl-store:store (reverse recording) (pathname file))
@@ -44,10 +55,10 @@
                      (lambda (&rest args)
                        (log:debug "Running recorded value")
                        (let ((next (pop recording)))
-                         (unless (equal (car next) (remove-skip-args args))
+                         (unless (equal (arguments next) (remove-skip-args args))
                            (error "Next args in recording is ~S but got ~S"
                                   (car next) args))
-                         (cdr next))))
+                         (response next))))
           (funcall fn)))))))
 
 (defmacro with-recording ((mocked-function file &key record skip-args) &body body)

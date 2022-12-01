@@ -9,6 +9,8 @@
           #:fiveam
           #:alexandria)
   (:import-from #:util/mock-recording
+                #:response
+                #:arguments
                 #:with-recording))
 (in-package :util/tests/test-mock-recording)
 
@@ -32,7 +34,10 @@
       (is (equal
            `(((3) . 4)
              ((9) . 10))
-           recording)))))
+           (loop for function-call in recording
+                 collect (cons
+                          (arguments function-call)
+                          (response function-call))))))))
 
 (test replay-mode
   (uiop:with-temporary-file (:pathname p)
