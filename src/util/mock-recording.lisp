@@ -59,7 +59,10 @@
                (let ((next (pop *recording*)))
                  (unless (equal (arguments next) (remove-skip-args args skip-args))
                    (error "Next args in recording is ~S but got ~S"
-                          (car next) args))
+                          (arguments next) args))
+                 (unless (eql (function-name next) mocked-function)
+                   (error "Function requested is ~a, but we recorded ~a"
+                          (function-name next)))
                  (response next)))))
 
 (defun track (mocked-function &rest args)

@@ -81,3 +81,18 @@
        (track 'bar)
        (is (equal 3 (foo 2)))
        (is (equal 5 (bar 3)))))))
+
+(test different-function-order
+    (uiop:with-temporary-file (:pathname p)
+    (with-recording (p :record t)
+      (track 'foo)
+      (track 'bar)
+      (is (equal 3 (foo 2)))
+      (is (equal 5 (bar 3))))
+    (let ((*ans* 20))
+     (with-recording (p)
+       (track 'foo)
+       (track 'bar)
+       (is (equal 3 (foo 2)))
+       (signals error
+         (foo 3))))))
