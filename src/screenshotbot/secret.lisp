@@ -17,7 +17,7 @@
 (defvar *secrets* nil)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defvar *secret-dtd* (asdf:system-relative-pathname :screenshotbot "secret-dtd.dtd")))
+  (defvar *secret-dtd* (asdf:system-relative-pathname :screenshotbot "dtd/secret.dtd")))
 
 (defvar *secret-file* (asdf:system-relative-pathname :screenshotbot "../../.secrets/secrets.xml"))
 

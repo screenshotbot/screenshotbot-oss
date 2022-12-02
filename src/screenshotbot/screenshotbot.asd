@@ -370,7 +370,7 @@
                :pkg
                :util/digests
                :bknr.impex)
-  :components ((:static-file "secret-dtd" :type "dtd")
+  :components ((:static-file "dtd/secret" :type "dtd")
                (:file "secret")
                (:file "artifacts-secrets")))
 
