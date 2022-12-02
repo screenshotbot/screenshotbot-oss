@@ -286,6 +286,7 @@
                (:file "test-diff-report")
                (:file "test-events")
                (:file "test-mailer")
+               (:file "test-secret")
                (:file "test-async")
                (:file "test-settings-api")
                (:module "promoter"
@@ -367,8 +368,10 @@
   :serial t
   :depends-on (:alexandria
                :pkg
-               :util/digests)
-  :components ((:file "secret")
+               :util/digests
+               :bknr.impex)
+  :components ((:static-file "secret-dtd" :type "dtd")
+               (:file "secret")
                (:file "artifacts-secrets")))
 
 
