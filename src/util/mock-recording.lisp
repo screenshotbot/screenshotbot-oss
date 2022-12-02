@@ -12,7 +12,8 @@
                 #:call-previous
                 #:if-called)
   (:export
-   #:with-recording))
+   #:with-recording
+   #:track))
 (in-package :util/mock-recording)
 
 (defclass function-call ()
@@ -68,11 +69,10 @@
     (t
      (apply 'track-during-replay mocked-function args))))
 
-(defun call-with-recording (mocked-function file fn &key record skip-args)
+(defun call-with-recording (file fn &key record)
   (ensure-directories-exist file)
   (let ((*recording-mode* record))
     (with-mocks ()
-      (track mocked-function :skip-args skip-args)
       (cond
         (record
          (let ((*recording* nil))
@@ -83,8 +83,7 @@
          (let ((*recording* (cl-store:restore (pathname file))))
            (funcall fn)))))))
 
-(defmacro with-recording ((mocked-function file &key record skip-args) &body body)
-  `(call-with-recording ',mocked-function ,file
+(defmacro with-recording ((file &key record) &body body)
+  `(call-with-recording ,file
                         (lambda () ,@body)
-                        :record ,record
-                        :skip-args ,skip-args))
+                        :record ,record))

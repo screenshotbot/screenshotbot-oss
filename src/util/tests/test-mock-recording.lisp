@@ -1,4 +1,5 @@
 ;;;; Copyright 2018-Present Modern Interpreters Inc.
+
 ;;;;
 ;;;; This Source Code Form is subject to the terms of the Mozilla Public
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +10,7 @@
           #:fiveam
           #:alexandria)
   (:import-from #:util/mock-recording
+                #:track
                 #:response
                 #:arguments
                 #:with-recording))
@@ -23,11 +25,18 @@
    *ans*
    (+  1 x)))
 
+(defun bar (x)
+  (or
+   *ans*
+   (+  2 x)))
+
 (test recording-mode
   (uiop:with-temporary-file (:pathname p)
-    (is (eql 3 (with-recording (foo p :record t)
+    (is (eql 3 (with-recording (p :record t)
+                 (track 'foo)
                  (foo 2))))
-    (is (eql 10 (with-recording (foo p :record t)
+    (is (eql 10 (with-recording (p :record t)
+                  (track 'foo)
                   (foo 3)
                   (foo 9))))
     (let ((recording (cl-store:restore p)))
@@ -41,16 +50,34 @@
 
 (test replay-mode
   (uiop:with-temporary-file (:pathname p)
-    (with-recording (foo p :record t)
+    (with-recording (p :record t)
+      (track 'foo)
       (let ((*ans* 9))
         (foo 3)))
-    (with-recording (foo p)
+    (with-recording (p)
+      (track 'foo)
       (is (eql 9 (foo 3))))))
 
 (test skip-args
   (uiop:with-temporary-file (:pathname p)
-    (with-recording (foo p :record t
-                     :skip-args (list 0))
+    (with-recording (p :record t)
+      (track 'foo :skip-args (list 0))
       (foo 3))
-    (with-recording (foo p :skip-args (list 0))
+    (with-recording (p)
+      (track 'foo :skip-args (list 0))
       (is (eql 4 (foo 30))))))
+
+
+(test multiple-functions
+  (uiop:with-temporary-file (:pathname p)
+    (with-recording (p :record t)
+      (track 'foo)
+      (track 'bar)
+      (is (equal 3 (foo 2)))
+      (is (equal 5 (bar 3))))
+    (let ((*ans* 20))
+     (with-recording (p)
+       (track 'foo)
+       (track 'bar)
+       (is (equal 3 (foo 2)))
+       (is (equal 5 (bar 3)))))))
