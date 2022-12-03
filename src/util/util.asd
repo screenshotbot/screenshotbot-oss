@@ -142,6 +142,7 @@
 (defsystem :util/testing
   :serial t
   :depends-on (:fiveam
+               :cl-mock
                :util)
   :components ((:file "testing")))
 

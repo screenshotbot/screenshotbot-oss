@@ -86,7 +86,11 @@
                             :if-exists :supersede)
         (let ((content (typecase content
                          (string content)
-                         (t (markup:write-html content)))))
+                         (t
+                          (cl-mock:with-mocks ()
+                            (cl-mock:if-called 'nibble:nibble-url (lambda (nibble)
+                                                                    "#"))
+                            (markup:write-html content))))))
          (write-string content file))
         (fiveam:pass "Screenshot written")))))
 

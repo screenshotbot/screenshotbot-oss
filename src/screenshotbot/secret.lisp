@@ -17,7 +17,7 @@
 (defvar *secrets* nil)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defvar *secret-dtd* (asdf:system-relative-pathname :screenshotbot "dtd/secret.dtd")))
+  (defparameter *secret-dtd* (asdf:system-relative-pathname :screenshotbot "dtd/secret.dtd")))
 
 (defvar *secret-file* (asdf:system-relative-pathname :screenshotbot "../../.secrets/secrets.xml"))
 
@@ -50,7 +50,6 @@
       (second
        (parse-xml-file file
                        (list (find-class 'secret)))))))
-
 
 (defmacro defsecret (name documentation)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
