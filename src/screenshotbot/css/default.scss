@@ -320,8 +320,22 @@ table.taskie-list {
         border-right: none;
     }
 
+    &.with-avatar th:first-child {
+        width: 2em;
+        border-right: none;
+    }
+
     &.checkboxes th:nth-child(2) {
         border-left: none;
+    }
+
+    &.with-avatar th:nth-child(2) {
+        border-left: none;
+    }
+
+    &.with-avatar td:first-child {
+        width: 2em;
+        padding: 0 1em;
     }
 
     th {

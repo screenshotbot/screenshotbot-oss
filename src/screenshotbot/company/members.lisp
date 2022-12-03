@@ -10,6 +10,7 @@
                 #:settings-template
                 #:defsettings)
   (:import-from #:screenshotbot/user-api
+                #:user-image-url
                 #:user-companies
                 #:current-user
                 #:user-email
@@ -80,6 +81,7 @@
                    (assert can-delete-p)
                    (delete-user user company))))
     <taskie-row>
+      <span><img class= "rounded-circle avatar" src= (user-image-url user) /></span>
       <span >,(user-full-name user)</span>
       <span>,(mailto (user-email user)) </span>
       <span>
@@ -141,7 +143,8 @@
        ,(taskie-page-title :title "Members" :class "pt-3")
 
        ,(taskie-list
-         :headers '("Name" "Email" "Status" "Actions")
+         :headers '("" "Name" "Email" "Status" "Actions")
+         :class "with-avatar"
          :items (users-for-company company)
          :checkboxes nil
          :empty-message "No users"

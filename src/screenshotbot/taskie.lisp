@@ -56,15 +56,17 @@
 
 (deftag taskie-list (children &key empty-message items row-generator
                      headers
+                     class
                      (checkboxes t)
                      next-link
                      prev-link)
   <markup:merge-tag>
-  <table class= (format nil "main-content taskie-list mt-3 mb-3 ~a ~a"
+  <table class= (format nil "main-content taskie-list mt-3 mb-3 ~a ~a ~a"
                       (if items
                           "nonempty"
                           "empty")
-                                  (if checkboxes "checkboxes")) >
+                      (if checkboxes "checkboxes")
+                      class) >
 
       <thead>
         <tr>
