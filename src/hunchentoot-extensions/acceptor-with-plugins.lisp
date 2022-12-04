@@ -50,6 +50,16 @@
                      :initarg :acceptor-plugins
                      :initform nil)))
 
+(defun register-plugin (acceptor name &rest args)
+  (loop for plugin in (acceptor-plugins acceptor)
+        if (typep plugin name)
+          return (values)
+        finally
+           (push (apply #'make-instance
+                        name
+                        args)
+                 (acceptor-plugins acceptor))))
+
 (defmacro declare-handler (name)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
     (setf (get ,name 'handlerp) t)))

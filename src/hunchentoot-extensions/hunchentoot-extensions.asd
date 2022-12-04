@@ -28,6 +28,7 @@
                :util/request
                :util/testing
                :util/fiveam
+               :fiveam-matchers
                :fiveam)
   :components ((:file "test-acceptor-with-plugins")
                (:file "test-better-easy-handler")

@@ -34,4 +34,5 @@
            #:fix-for-webp
            #:prepare-async-response
            #:handle-async-static-file
-           #:handle-async-error))
+           #:handle-async-error
+           #:register-plugin))
