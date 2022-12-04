@@ -138,10 +138,9 @@
                                      #P "pro/documentation/")))
 
 (defun prepare-acceptor-plugins (acceptor)
- (setf (hex:Acceptor-plugins acceptor)
-       (list *nibble-plugin*
-             #-screenshotbot-oss
-             *documentation-plugin*)))
+  (pushnew *nibble-plugin* (hex:acceptor-plugins acceptor))
+  #-screenshotbot-oss
+  (pushnew *documentation-plugin* (hex:acceptor-plugins acceptor)))
 
 (prepare-acceptor-plugins *acceptor*)
 
