@@ -115,16 +115,24 @@
 (defmethod dispatch-plugin-request ((plugin acceptor-plugin)
                                     request
                                     relative-script-name)
-  (loop for (handler-name plugin-name matcher handler) in *acceptor-plugins-table*
+  (loop for (nil plugin-name matcher handler) in *acceptor-plugins-table*
         if (and (eq plugin-name (acceptor-plugin-name plugin))
                 (cl-ppcre:scan matcher relative-script-name))
           do
              (progn
                (return
                  (let ((*acceptor-plugin* plugin))
-                  (funcall handler relative-script-name))))
+                   (process-plugin-request hunchentoot:*acceptor*
+                                           plugin
+                                           relative-script-name
+                                           handler))))
         finally
            (error "could not dispatch, technically a 404")))
+
+(defmethod process-plugin-request (acceptor (plugin acceptor-plugin)
+                                   relative-script-name
+                                   handler)
+  (funcall handler relative-script-name))
 
 (defmethod wrap-template (acceptor plugin output)
   output)
