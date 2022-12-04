@@ -61,9 +61,11 @@
 (defclass upload-response (api-response)
   ((type :initform "image")
    (id :type string
-       :initarg :id)
+       :initarg :id
+       :reader upload-response-id)
    (upload-url :type (or null string)
-               :initarg :upload-url)))
+               :initarg :upload-url
+               :reader upload-response-upload-url)))
 
 (defparameter *use-blob-store-p* t)
 

@@ -14,6 +14,8 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:screenshotbot/api/image
+                #:upload-response-upload-url
+                #:upload-response-id
                 #:prepare-upload-api-api-handler
                 #:prepare-upload-api
                 #:*use-blob-store-p*
@@ -47,46 +49,42 @@
   (let ((*installation* (make-instance 'my-installation)))
    (with-test-store ()
      (with-fake-request ()
-       (with-test-user (:company company
-                        :user user
-                        :api-key api-key)
-         (let ((*current-api-key* api-key)
-               (*build-presigned-put* (lambda (bucket key) "https://example.com")))
-           (&body)))))))
+       (auth:with-sessions ()
+        (with-test-user (:company company
+                         :user user
+                         :api-key api-key)
+          (let ((*current-api-key* api-key)
+                (*build-presigned-put* (lambda (bucket key) "https://example.com")))
+            (&body))))))))
 
 (test simple-upload
   (with-fixture state ()
-    (let ((resp (json:decode-json-from-string
-                 (prepare-upload-api-api-handler
-                  :hash "abcd"
-                  :content-type "image/png"))))
-      (is-true (assoc-value resp :success))
-      (let ((response (assoc-value resp :response)))
-        (is (not (str:emptyp (assoc-value response :id))))
-        (is-true (assoc-value response :upload-url))))))
+    (let ((response (prepare-upload-api
+                 :hash "abcd"
+                 :content-type "image/png")))
+      (is (not (str:emptyp (upload-response-id response))))
+      (is-true (upload-response-upload-url response)))))
 
 (test reupload-same-url
   (with-fixture state ()
     (let ((old-im (make-image :hash "abcd"
                               :company company
                               :verified-p t)))
-     (let ((resp (json:decode-json-from-string
-                  (prepare-upload-api-api-handler
-                   :hash "abcd"
-                   :content-type "image/png"))))
-       (let ((response (assoc-value resp :response)))
-         (is (equal (oid old-im) (assoc-value response :id)))
-         (is-false (assoc-value response :upload-url)))))))
+     (let ((response (prepare-upload-api
+                  :hash "abcd"
+                  :content-type "image/png")))
+       (is (equal (oid old-im)
+                  (upload-response-id response)))
+       (is-false (upload-response-upload-url response))))))
 
 (test reupload-unverified-image
   (with-fixture state ()
     (let ((old-im (make-image :hash "abcd"
                               :company company
                               :verified-p nil)))
-     (let ((resp (json:decode-json-from-string
-                  (prepare-upload-api-api-handler
-                   :hash "abcd"
-                   :content-type "image/png"))))
-       (let ((response (assoc-value resp :response)))
-         (is (not (equal (oid old-im) (assoc-value response :id))))
-         (is-true (assoc-value response :upload-url)))))))
+     (let ((response (prepare-upload-api
+                      :hash "abcd"
+                      :content-type "image/png")))
+       (is (not (equal (oid old-im)
+                       (upload-response-id response))))
+       (is-true (upload-response-upload-url response))))))

@@ -28,3 +28,6 @@
 (test dummy-with-int
   (is (equal "OK 3"
              (%dummy-with-int :name 3))))
+
+(define-condition my-error (error)
+  ())
