@@ -18,6 +18,8 @@
                 #:log-sentry)
   (:import-from #:hunchentoot-extensions
                 #:log-crash-extras)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export
    #:defhandler
    #:with-login
@@ -170,24 +172,27 @@
    (obj :initarg :obj
         :accessor error-obj)))
 
+(def-easy-macro with-warning-logger (&fn fn)
+  (let ((*warning-count* 0))
+    (handler-bind ((warning #'threading:log-sentry))
+      (funcall fn))))
+
+(def-easy-macro with-sentry-extras (&fn fn)
+  (let ((threading:*extras*
+              (list*
+               (lambda (e)
+                 (log-crash-extras hunchentoot:*acceptor* e))
+               threading:*extras*)))
+    (funcall fn)))
+
 (defun %handler-wrap (impl)
   (restart-case
-      (let ((*warning-count* 0))
-        (let ((threading:*extras*
-                (list*
-                 (lambda (e)
-                   (log-crash-extras hunchentoot:*acceptor* e))
-                 threading:*extras*)))
-         (handler-bind ((warning #'threading:log-sentry))
-           (let ((util.cdn:*cdn-domain*
-                   (unless (staging-p)
-                     *cdn-domain*)))
-             (auth:with-sessions ()
-               (push-analytics-event)
-               (handler-case
-                   (funcall impl)
-                 (no-access-error (e)
-                   (no-access-error-page))))))))
+      (with-sentry-extras ()
+       (with-warning-logger ()
+         (handler-case
+             (funcall impl)
+           (no-access-error (e)
+             (no-access-error-page)))))
     (retry-handler ()
       (%handler-wrap impl))))
 
@@ -216,19 +221,24 @@
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor acceptor) request)
   (declare (optimize (speed 3))
            (type hunchentoot:request request))
-  (let ((script-name (hunchentoot:script-name request)))
-    (cond
-      ((staging-p)
-       (setf (hunchentoot:header-out "Cache-Control") "no-cache"))
-      ((cl-ppcre:scan *asset-regex* script-name)
-       (setf (hunchentoot:header-out "Cache-Control") "max-age=3600000")))
-    (when (and
-           (str:starts-with-p "/assets" script-name)
-           (not *is-localhost*))
-      (setf (hunchentoot:header-out
-             "Access-Control-Allow-Origin")
-            "https://screenshotbot.io"))
-    (call-next-method)))
+  (auth:with-sessions ()
+    (push-analytics-event)
+    (let ((script-name (hunchentoot:script-name request))
+          (util.cdn:*cdn-domain*
+            (unless (staging-p)
+              *cdn-domain*)))
+      (cond
+        ((staging-p)
+         (setf (hunchentoot:header-out "Cache-Control") "no-cache"))
+        ((cl-ppcre:scan *asset-regex* script-name)
+         (setf (hunchentoot:header-out "Cache-Control") "max-age=3600000")))
+      (when (and
+             (str:starts-with-p "/assets" script-name)
+             (not *is-localhost*))
+        (setf (hunchentoot:header-out
+               "Access-Control-Allow-Origin")
+              "https://screenshotbot.io"))
+      (call-next-method))))
 
 (defhandler (nil :uri "/force-crash") ()
   (error "ouch"))
