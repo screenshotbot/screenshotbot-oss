@@ -172,11 +172,6 @@
    (obj :initarg :obj
         :accessor error-obj)))
 
-(def-easy-macro with-warning-logger (&fn fn)
-  (let ((*warning-count* 0))
-    (handler-bind ((warning #'threading:log-sentry))
-      (funcall fn))))
-
 (def-easy-macro with-sentry-extras (&fn fn)
   (let ((threading:*extras*
               (list*
@@ -188,11 +183,10 @@
 (defun %handler-wrap (impl)
   (restart-case
       (with-sentry-extras ()
-       (with-warning-logger ()
-         (handler-case
-             (funcall impl)
-           (no-access-error (e)
-             (no-access-error-page)))))
+       (handler-case
+           (funcall impl)
+         (no-access-error (e)
+           (no-access-error-page))))
     (retry-handler ()
       (%handler-wrap impl))))
 

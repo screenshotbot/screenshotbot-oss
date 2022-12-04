@@ -21,7 +21,8 @@
    #:*catch-errors-p*
    #:*log-sentry-p*
    #:*extras*
-   #:ignore-and-log-errors)
+   #:ignore-and-log-errors
+   #:*warning-count*)
 )
 (in-package :util/threading)
 

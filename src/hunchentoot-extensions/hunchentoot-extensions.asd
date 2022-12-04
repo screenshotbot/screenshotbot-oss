@@ -12,6 +12,7 @@
                :quri
                :easy-macros
                :do-urlencode
+               :util/threading
                :log4cl)
   :components ((:file "package")
                (:file "url")

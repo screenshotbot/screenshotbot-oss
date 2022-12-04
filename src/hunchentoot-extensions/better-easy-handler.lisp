@@ -227,6 +227,15 @@
   (loop for (k . v) in (call-next-method)
         collect (cons k (format nil "~a" v))))
 
+(defun %sentry-capture-error (condition &key extras)
+  (unless *disable-sentry*
+   (util/threading:log-sentry condition)))
+
+
+(easy-macros:def-easy-macro with-warning-logger (&fn fn)
+  (handler-bind ((warning #'util/threading:log-sentry))
+    (funcall fn)))
+
 #-screenshotbot-oss
 (defmethod hunchentoot:maybe-invoke-debugger :after (condition)
   (when (and hunchentoot:*catch-errors-p*
@@ -241,12 +250,8 @@
     ;; if we don't set sb-debug:*stack-top-hint* to NIL
     (let (#+sbcl (sb-debug:*stack-top-hint* nil))
       (unless (discard-condition-p condition)
-        (when (find-package :sentry-client)
-          (let ((capture-exception (find-symbol "CAPTURE-EXCEPTION" :sentry-client)))
-            (funcall capture-exception condition
-                     :extras
-                     (when (boundp 'hunchentoot:*acceptor*)
-                       (log-crash-extras hunchentoot:*acceptor* condition)))))))))
+        (%sentry-capture-error
+         condition)))))
 
 (defmethod hunchentoot:acceptor-log-access ((acceptor base-acceptor) &key return-code)
   "Default method for access logging.  It logs the information to the
@@ -344,3 +349,14 @@ Apache log analysis tools.)"
                              :http))))))
        (t
         (hunchentoot:redirect target))))))
+
+(defmethod hunchentoot:acceptor-dispatch-request :around ((acceptor base-acceptor) request)
+  (let ((util/threading:*warning-count* 0)
+        (util/threading:*extras*
+           (list*
+            (lambda (condition)
+              (when (boundp 'hunchentoot:*acceptor*)
+                (log-crash-extras acceptor condition)))
+            util/threading:*extras*)))
+   (with-warning-logger ()
+     (call-next-method))))
