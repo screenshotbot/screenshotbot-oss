@@ -181,14 +181,11 @@
     (funcall fn)))
 
 (defun %handler-wrap (impl)
-  (restart-case
-      (with-sentry-extras ()
-       (handler-case
-           (funcall impl)
-         (no-access-error (e)
-           (no-access-error-page))))
-    (retry-handler ()
-      (%handler-wrap impl))))
+  (with-sentry-extras ()
+    (handler-case
+        (funcall impl)
+      (no-access-error (e)
+        (no-access-error-page)))))
 
 
 (defmethod hunchentoot:start ((acceptor acceptor))

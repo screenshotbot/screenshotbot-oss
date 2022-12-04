@@ -351,12 +351,15 @@ Apache log analysis tools.)"
         (hunchentoot:redirect target))))))
 
 (defmethod hunchentoot:acceptor-dispatch-request :around ((acceptor base-acceptor) request)
-  (let ((util/threading:*warning-count* 0)
-        (util/threading:*extras*
-           (list*
-            (lambda (condition)
-              (when (boundp 'hunchentoot:*acceptor*)
-                (log-crash-extras acceptor condition)))
-            util/threading:*extras*)))
-   (with-warning-logger ()
-     (call-next-method))))
+  (restart-case
+      (let ((util/threading:*warning-count* 0)
+            (util/threading:*extras*
+              (list*
+               (lambda (condition)
+                 (when (boundp 'hunchentoot:*acceptor*)
+                   (log-crash-extras acceptor condition)))
+               util/threading:*extras*)))
+        (with-warning-logger ()
+          (call-next-method)))
+    (redispatch-request ()
+      (hunchentoot:acceptor-dispatch-request acceptor request))))
