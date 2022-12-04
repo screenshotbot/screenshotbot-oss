@@ -342,14 +342,17 @@ Apache log analysis tools.)"
                    (log-crash-extras acceptor condition)))
                util/threading:*extras*)))
         (with-warning-logger ()
-          (let ((response (call-next-method)))
-            (cond
-              ((markup:xml-tag-p response)
-               (setf (hunchentoot:content-type*) "text/html; charset=utf-8")
-               (setf (hunchentoot:header-out :last-modified)
-                     (hunchentoot::rfc-1123-date (get-universal-time)))
-               (markup:write-html response))
-              (t
-               response)))))
+          (call-next-method)))
     (redispatch-request ()
       (hunchentoot:acceptor-dispatch-request acceptor request))))
+
+(defmethod hunchentoot:acceptor-dispatch-request ((acceptor base-acceptor) request)
+  (let ((response (call-next-method)))
+    (cond
+      ((markup:xml-tag-p response)
+       (setf (hunchentoot:content-type*) "text/html; charset=utf-8")
+       (setf (hunchentoot:header-out :last-modified)
+             (hunchentoot::rfc-1123-date (get-universal-time)))
+       (markup:write-html response))
+      (t
+       response))))
