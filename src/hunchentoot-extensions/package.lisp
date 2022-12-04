@@ -8,6 +8,8 @@
   (:nicknames :hex)
   (:use #:cl
         #:alexandria)
+  (:import-from #:util/threading
+                #:*extras*)
   (:export #:base-acceptor
            #:better-easy-handler
            #:acceptor-funcall-handler

@@ -104,7 +104,7 @@
      (error 'api-error
             "provide either hash or hash-list argument"))))
 
-(defhandler (nil :uri "/api/prepare-upload" :method :post :html nil) (hash content-type)
+(defhandler (nil :uri "/api/prepare-upload" :method :post) (hash content-type)
   (prepare-upload-api :hash hash :content-type content-type))
 
 ;; I'm skeptical of the correctness of this, see D5631

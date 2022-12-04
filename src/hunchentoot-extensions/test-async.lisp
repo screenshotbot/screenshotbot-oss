@@ -37,7 +37,7 @@
 (defvar *tmp*)
 
 (defmacro defhandler ((uri) () &body body)
-  `(better-easy-handler (nil :uri ,uri :acceptor-names '(my-acceptor) :html nil) ()
+  `(better-easy-handler (nil :uri ,uri :acceptor-names '(my-acceptor)) ()
      ,@body))
 
 (def-fixture state ()

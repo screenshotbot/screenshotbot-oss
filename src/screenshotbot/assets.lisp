@@ -61,10 +61,10 @@
 (defmacro define-css (uri asdf-target)
   (let ((map-uri (format nil "~a.map" uri)))
    `(progn
-      (defhandler (nil :uri ,uri :html nil) ()
+      (defhandler (nil :uri ,uri) ()
         (setf (hunchentoot:content-type*)  "text/css; charset=utf-8")
         (handle-asdf-output 'asdf:compile-op  ,asdf-target))
-      (defhandler (nil :uri ,map-uri :html nil) ()
+      (defhandler (nil :uri ,map-uri) ()
         (handle-asdf-output 'asdf:compile-op ,asdf-target 1)))))
 
 
@@ -121,12 +121,12 @@ rm -f $INSTALLER
          ',generate-fn
          :immediate t))
 
-      (defhandler (nil :uri ,(format nil "/~a.sh" name) :html nil) ()
+      (defhandler (nil :uri ,(format nil "/~a.sh" name)) ()
         (setf (hunchentoot:content-type*) "application/x-sh")
         (hunchentoot:handle-static-file
          (artifact-file-name (format nil "~a.sh" ,name))))
 
-      (defhandler (nil :uri ,(format nil "/~a.exe" name) :html nil) ()
+      (defhandler (nil :uri ,(format nil "/~a.exe" name)) ()
         (hunchentoot:redirect
          (artifact-link ,(format nil "~a-win.exe" name) :cdn t))))))
 
@@ -155,11 +155,11 @@ rm -f $INSTALLER
 (defmacro define-js (url system)
   (let ((map-url (format nil "~a.map" url)))
    `(progn
-      (defhandler (nil :uri ,url :html nil) ()
+      (defhandler (nil :uri ,url) ()
         (setf (hunchentoot:content-type*) "application/javascript")
         (setf (hunchentoot:header-out :x-sourcemap) ,map-url)
         (handle-asdf-output 'asdf:compile-op ,system))
-      (defhandler (nil :uri ,map-url :html nil) ()
+      (defhandler (nil :uri ,map-url) ()
         (handle-asdf-output 'asdf:compile-op ,system 1)))))
 
 (define-js "/assets/js/dashboard.js" :screenshotbot.js-assets)

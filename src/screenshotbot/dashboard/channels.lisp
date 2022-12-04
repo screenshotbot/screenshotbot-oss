@@ -179,7 +179,7 @@
       :accept "image/svg+xml"
       :want-string t))))
 
-(defhandler (badge-handler :uri "/badge" :html nil) (org channel branch)
+(defhandler (badge-handler :uri "/badge") (org channel branch)
   (let ((run (run-for-channel
               :channel channel
               :company (or org (current-company))
@@ -192,7 +192,7 @@
       (setf (hunchentoot:content-type*) "image/svg+xml")
       data)))
 
-(defhandler (channel-static-handler :uri "/active-run" :html nil) (org channel branch)
+(defhandler (channel-static-handler :uri "/active-run") (org channel branch)
   (let ((run (run-for-channel
               :channel channel
               :company (or org (current-company))

@@ -100,7 +100,7 @@
            ,doc
            ,@decls
            ,@body)
-         (defhandler (,handler-name :uri ,uri :method ,method :intern ,intern :html nil) ,params
+         (defhandler (,handler-name :uri ,uri :method ,method :intern ,intern) ,params
            ,@decls
            (%with-error-handling
             (lambda ()

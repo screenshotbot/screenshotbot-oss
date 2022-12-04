@@ -153,7 +153,7 @@
       (t
        (cl-ppcre:scan-to-strings regex script-name)))))
 
-(defmacro better-easy-handler ((name &key uri method acceptor-names intern (html t)) params &body body)
+(defmacro better-easy-handler ((name &key uri method acceptor-names intern) params &body body)
   (unless uri
     ;; if we don't do this the whole site crashes.
     (setf uri "/nil"))
@@ -192,7 +192,7 @@
                                         collect `(unless ,param (setf ,param (elt args ,i)))))))
                  (%easy-handler-wrap
                   (lambda ()
-                    (progn ,@body)) :html ,html))
+                    (progn ,@body))))
                (when ',name
                  (setf (alexandria:assoc-value *url-list* ',name)
                        (make-instance 'url-handler
@@ -273,28 +273,10 @@ Apache log analysis tools.)"
           (hunchentoot:referer)
           (hunchentoot:user-agent)))
 
-(defun %easy-handler-wrap (body &key (html t))
-  (let* ((acceptor (hunchentoot:request-acceptor hunchentoot:*request*))
-         (body (lambda ()
-                 (acceptor-funcall-handler acceptor body))))
-    (cond
-      (html
-       (let ((res (funcall body)))
-         (setf (hunchentoot:content-type*) "text/html; charset=utf-8"
-               (hunchentoot:header-out :last-modified) (hunchentoot::rfc-1123-date (get-universal-time))
-               (hunchentoot:header-out :accept-ranges) "bytes")
-
-         (let ((out (hunchentoot:send-headers)))
-           (when out ;; head requests will have a nil stream
-             (markup:write-html-to-stream res (flexi-streams:make-flexi-stream out :external-format :utf8))
-             (finish-output out))
-           res)))
-      (t
-       (let ((res (funcall body)))
-         (unless (or
-                  hunchentoot::*headers-sent*)
-          (assert (Stringp res)))
-         res)))))
+(defun %easy-handler-wrap (body)
+  (declare (ignore html))
+  (let* ((acceptor (hunchentoot:request-acceptor hunchentoot:*request*)))
+    (acceptor-funcall-handler acceptor body)))
 
 (defun socket-detached-p ()
   "In some cases, we might detach the socket to asynchronously respond to the request"
@@ -360,6 +342,14 @@ Apache log analysis tools.)"
                    (log-crash-extras acceptor condition)))
                util/threading:*extras*)))
         (with-warning-logger ()
-          (call-next-method)))
+          (let ((response (call-next-method)))
+            (cond
+              ((markup:xml-tag-p response)
+               (setf (hunchentoot:content-type*) "text/html; charset=utf-8")
+               (setf (hunchentoot:header-out :last-modified)
+                     (hunchentoot::rfc-1123-date (get-universal-time)))
+               (markup:write-html response))
+              (t
+               response)))))
     (redispatch-request ()
       (hunchentoot:acceptor-dispatch-request acceptor request))))

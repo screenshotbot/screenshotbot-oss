@@ -191,12 +191,11 @@
 (defmethod hunchentoot:start ((acceptor acceptor))
   (call-next-method))
 
-(defmacro defhandler ((name &key uri method intern (html t)
+(defmacro defhandler ((name &key uri method intern
                               want-login) params &body body)
   (multiple-value-bind (body decls) (uiop:parse-body body)
     `(util:better-easy-handler (,name :uri ,uri :method ,method :acceptor-names '(screenshotbot-acceptor)
-                                      :intern ,intern
-                                      :html ,html)
+                                      :intern ,intern)
         ,params
         ,@ decls
        (%handler-wrap (lambda ()
@@ -241,7 +240,7 @@
   ;; just in case there are old nibble links lying around. Unlikely
   (hex:safe-redirect (format nil "/n/~a" nibble-id)))
 
-(defhandler (nil :uri "/robots.txt" :html nil) ()
+(defhandler (nil :uri "/robots.txt") ()
   (Setf (hunchentoot:header-out :content-type) "text/plain")
   "User-agent: *
 Disallow: /n")
