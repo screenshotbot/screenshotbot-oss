@@ -41,7 +41,8 @@
                                 (company-class '(quote company))
                              (user (gensym "user"))
                              (api-key (gensym "api-key"))
-                             (logged-in-p nil)) &body body)
+                             (logged-in-p nil)
+                             (fake-request-args nil)) &body body)
   `(let* ((,company (make-instance ,company-class
                                    :name ,company-name))
           (,user (make-user :companies (list ,company)))
@@ -55,7 +56,7 @@
                 (delete-object ,api-key))))
        (cond
          (,logged-in-p
-          (with-fake-request ()
+          (with-fake-request (,@fake-request-args)
             (auth:with-sessions ()
               (setf (current-user) ,user)
               (let ((*current-company-override* ,company))
