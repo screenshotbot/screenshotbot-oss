@@ -68,7 +68,6 @@
    #:confirmed-p
    #:email
    #:email-confirmations
-   #:stripe-customer
    #:password-hash
    #:notices
    #:users-for-company
