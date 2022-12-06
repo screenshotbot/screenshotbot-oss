@@ -6,9 +6,12 @@
 
 (defpackage :util/migrations
   (:use #:cl)
+  (:import-from #:bknr.datastore
+                #:with-transaction)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:ensure-symbol-in-package))
+   #:ensure-symbol-in-package
+   #:clone-slot))
 (in-package :util/migrations)
 
 (defvar *moved-syms* nil
@@ -62,3 +65,18 @@
        new-sym)
       (t
        (error 'symbol-in-both-packages)))))
+
+(defmacro clone-slot (class &key from to)
+  `(call-clone-slot ',class
+                    :from ',from
+                    :to ',to))
+
+(defun call-clone-slot (class &key from to)
+  (dolist (inst (bknr.datastore:class-instances class))
+    (cond
+      ((and
+        (not (slot-boundp inst to))
+        (slot-boundp inst from))
+       (with-transaction ()
+         (setf (slot-value inst to)
+               (slot-value inst from)))))))

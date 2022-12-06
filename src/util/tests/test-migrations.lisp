@@ -8,9 +8,16 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/migrations
+                #:clone-slot
                 #:*moved-syms*
                 #:symbol-in-both-packages
                 #:ensure-symbol-in-package)
+  (:import-from #:bknr.datastore
+                #:persistent-class)
+  (:import-from #:bknr.datastore
+                #:store-object)
+  (:import-from #:util/store
+                #:with-test-store)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/test-migrations)
 
@@ -97,3 +104,41 @@
      :new #:%dum2)
 
     (ensure-foo)))
+
+(defclass test-class (store-object)
+  ((foo :initarg :foo
+        :reader foo)
+   (%foo :reader %foo))
+  (:metaclass persistent-class))
+
+(def-fixture clone-state ()
+  (with-test-store ()
+    (&body)))
+
+(test clone-slot
+  (with-fixture clone-state ()
+    (let ((inst (make-instance 'test-class :foo "bar")))
+      (is (not (slot-boundp inst '%foo)))
+      (clone-slot test-class :from foo :to %foo)
+      (is (equal "bar"
+                 (%foo inst))))
+    (finishes
+      (clone-slot test-class :from foo :to %foo))
+    (let ((inst (make-instance 'test-class)))
+      (finishes
+        (clone-slot test-class :from foo :to %foo)))))
+
+(defclass test-class-2 (store-object)
+  ((foo :initarg :foo
+        :reader foo)
+   (%foo :reader %foo
+         :initarg :foo))
+  (:metaclass persistent-class))
+
+(test demonstrate-initarg-for-multiple-slots
+  "This test is just to give future-me some confidence that using the
+ same initarg for multiple slots works as expected."
+  (with-fixture clone-state ()
+    (let ((inst (make-instance 'test-class-2 :foo "bar")))
+      (is (equal "bar" (foo inst)))
+      (is (equal "bar" (%foo inst))))))
