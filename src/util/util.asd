@@ -175,7 +175,8 @@
                (:file "file-lock")
                (:file "store")
                (:file "object-id")
-               (:file "single")))
+               (:file "single")
+               (:file "migrations")))
 
 (defsystem :util/lru-cache
   :serial t
@@ -291,6 +292,7 @@
                              (:file "test-copy-file")
                              (:file "test-request")
                              (:file "test-store")
+                             (:file "test-migrations")
                              (:file "test-hash-lock")
                              (:file "test-threading")
                              (:file "test-cookies")

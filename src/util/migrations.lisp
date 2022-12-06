@@ -6,7 +6,9 @@
 
 (defpackage :util/migrations
   (:use #:cl)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:ensure-symbol-in-package))
 (in-package :util/migrations)
 
 (defvar *moved-syms* nil
