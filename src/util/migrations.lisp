@@ -67,6 +67,9 @@
        (error 'symbol-in-both-packages)))))
 
 (defmacro clone-slot (class &key from to)
+  ;; This code will do nothing if run from a bootup
+  ;; (i.e. before bknr.datastore has loaded). So it must be run as
+  ;; part of a live migration.
   `(call-clone-slot ',class
                     :from ',from
                     :to ',to))
