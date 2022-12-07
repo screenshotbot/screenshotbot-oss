@@ -34,9 +34,13 @@
 (define-condition symbol-in-both-packages (error)
   ())
 
+(defun find-symbol* (name package)
+  (when (find-package package)
+    (find-symbol name package)))
+
 (defun call-ensure-symbol-in-package (name old new)
-  (let ((old-sym (find-symbol (string name) old))
-        (new-sym (find-symbol (string name) new)))
+  (let ((old-sym (find-symbol* (string name) old))
+        (new-sym (find-symbol* (string name) new)))
     (pushnew (list old-sym new-sym)
              *moved-syms*
              :test #'equal)

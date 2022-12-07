@@ -30,12 +30,14 @@
          (package2 (make-package :%dum2)))
      (unwind-protect
           (&body)
-       (delete-package package)
-       (delete-package package2)))))
+       (ignore-errors
+        (delete-package package))
+       (ignore-errors
+        (delete-package package2))))))
 
 (defun ensure-foo ()
-  (is-false (find-symbol "FOO" :%dum1))
-  (is-true (find-symbol "FOO" :%dum2)))
+  (is-false (util/migrations::find-symbol* "FOO" :%dum1))
+  (is-true (util/migrations::find-symbol* "FOO" :%dum2)))
 
 (test simple-migration-when-symbol-does-not-exist
   "This is the situation of restarting an image with this migration."
@@ -53,6 +55,22 @@
          (find-package :%dum2)
          (symbol-package (uiop:find-symbol* :foo :%dum2))))))
 
+(test simple-migration-when-package-does-not-exist
+  (with-fixture state ()
+    (delete-package :%dum1)
+    (ensure-symbol-in-package
+     #:foo
+     :old #:%dum1
+     :new #:%dum2)
+    (is-true (uiop:find-symbol* :foo :%dum2))
+
+    (ensure-foo)
+
+    (is (eql
+         (find-package :%dum2)
+         (symbol-package (uiop:find-symbol* :foo :%dum2))))))
+
+
 
 (test simple-migration-when-symbol-is-in-old-package
   (with-fixture state ()
@@ -65,6 +83,7 @@
     (is (eql
          (find-package :%dum2)
          (symbol-package (uiop:find-symbol* :foo :%dum2))))))
+
 
 (test simple-migration-when-symbol-is-in-new-package
   (with-fixture state ()
