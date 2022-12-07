@@ -27,6 +27,10 @@
          :initform nil)
    (calledp :initform nil
             :accessor calledp)
+   (acceptor-plugin :initarg :acceptor-plugin
+                    :initform nil
+                    :reader nibble-acceptor-plugin
+                    :documentation "The plugin where this nibble was created from")
    (session :initarg :session)
    (user :initarg :user
          :initform nil
@@ -107,6 +111,8 @@
                                  :impl impl
                                  :name name
                                  :session (current-session)
+                                 :acceptor-plugin (when (boundp 'hex:*acceptor-plugin*)
+                                                    hex:*acceptor-plugin*)
                                  :user
                                  (cond
                                    ((boundp 'hunchentoot:*acceptor*)
@@ -177,7 +183,8 @@
                              (when (calledp nibble)
                                (error "Calling nibble multiple times"))
                              (setf (calledp nibble) t)))
-                         (apply impl args)))
+                         (let ((hex:*acceptor-plugin* (nibble-acceptor-plugin nibble)))
+                          (apply impl args))))
                  (cond
                    ((and (boundp 'hunchentoot:*request*) check-session-p)
                     ;; Before we call final-render, we should check

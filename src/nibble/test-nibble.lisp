@@ -64,3 +64,15 @@
                        "")))
          (is (str:ends-with-p "?_n=foobar"
                               (nibble-url  nibble))))))))
+
+(test acceptor-plugin-is-bound
+  (with-fixture state ()
+    (util/testing:with-fake-request ()
+      (auth:with-sessions ()
+        (let ((result))
+         (let ((nibble (let ((hex:*acceptor-plugin* :test))
+                         (nibble (:name :foobar)
+                           (setf result hex:*acceptor-plugin*)
+                           ""))))
+           (render-nibble plugin nibble)
+           (is (eql result :test))))))))
