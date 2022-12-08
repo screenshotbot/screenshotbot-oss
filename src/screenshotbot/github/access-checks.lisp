@@ -28,6 +28,8 @@
                 #:repo-link
                 #:commit-link
                 #:generic-git-repo)
+  (:import-from #:oidc/oidc
+                #:oauth-access-token)
   (:export
    #:github-repo
    #:github-user-service
@@ -40,7 +42,8 @@
    #:with-throttler
    #:throttler
    #:with-cache)
-  (:export #:fix-github-link))
+  (:export #:fix-github-link
+           #:github-api-request))
 (in-package :screenshotbot/github/access-checks)
 
 (import 'repo-name)
@@ -90,6 +93,28 @@
 
 (defsecret :github-api-secret
   "Github API secret key corresponding to :github-user")
+
+
+(defun github-api-request (url &key access-token)
+  (when (typep access-token 'oauth-access-token)
+    (setf access-token (oidc/oidc:access-token-str access-token)))
+  (multiple-value-bind (response code)
+      (util/request:http-request
+       (format nil "https://api.github.com~a" url)
+       :want-string t
+       :additional-headers `(("Accept" . "application/vnd.github+json")
+                             ("Authorization" . ,(format nil "Bearer ~a" access-token))
+                             ("X-GitHub-Api-Version" . "2022-11-28")))
+    (values
+     (cond
+       ((str:emptyp response)
+        ;; Some api requests don't return a body, we just use the
+        ;; response code.
+        nil)
+       (t
+        (json:decode-json-from-string
+         response)))
+     code)))
 
 (defun github-client (&key
                         oauth-token

@@ -7,6 +7,9 @@
                 #:java-list->list
                 #:new-instance)
   (:import-from #:screenshotbot/github/access-checks
+                #:github-api-request
+                #:get-repo-id
+                #:github-user-service
                 #:github-repo-id
                 #:github-client)
   (:import-from #:oidc/oidc
@@ -29,20 +32,21 @@
   #- (or ccl lispworks)
   t
   #+ (or ccl lispworks)
-  (let ((collab-service
-          (new-instance #,org.eclipse.egit.github.core.service.CollaboratorService
-                        (github-client :oauth-token
-                                       (access-token-str access-token)))))
-    (let ((collabp (#_isCollaborator
-                    collab-service
-                    (github-repo-id repo)
-                    "tdrhq")))
-      #+nil
-      (error "collaborators are : ~s"
-             (loop for user in
-                         (java-list->list (#_getCollaborators
-                                           collab-service
-                                           (github-repo-id repo)))
-                   collect
-                   (#_getLogin user)))
-      (equal "true" (#_toString collabp)))))
+  (let* ((client (github-client :oauth-token
+                                (access-token-str access-token)))
+         (user-service (github-user-service client))
+         (handle (#_getLogin (#_getUser user-service)))
+         (collab-service
+           (new-instance #,org.eclipse.egit.github.core.service.CollaboratorService
+                         client)))
+
+    (multiple-value-bind (response ret)
+        (github-api-request (format nil "/repos/~a/collaborators/~a"
+                                    (get-repo-id repo)
+                                    handle)
+                            :access-token access-token)
+      (unless (= ret 204)
+        (warn "not a collaborator: ~a" response))
+      (values
+       (= ret 204)
+       (a:assoc-value response :message)))))
