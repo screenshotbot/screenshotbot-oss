@@ -1,11 +1,11 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 (defpackage :screenshotbot/github/read-repos
   (:use #:cl)
-  #+ (or ccl lispworks)
-  (:import-from #:util/java
-                #:java-syntax
-                #:read-java-field
-                #:java-list->list
-                #:new-instance)
   (:import-from #:screenshotbot/github/access-checks
                 #:github-api-request
                 #:get-repo-id
@@ -14,35 +14,32 @@
                 #:github-client)
   (:import-from #:oidc/oidc
                 #:access-token-str)
-  #+ (or ccl lispworks)
-  (:import-from #:util/java/java
-                #:*bfalse*
-                #:*btrue*
-                #:java-equals)
   (:import-from #:screenshotbot/audit-log
                 #:with-audit-log)
   (:import-from #:screenshotbot/github/audit-log
                 #:check-collaborator)
   (:import-from #:screenshotbot/user-api
                 #:current-company)
+  (:import-from #:util/misc
+                #:not-null!)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:read-repo-list
    #:can-edit-repo))
 (in-package :screenshotbot/github/read-repos)
 
-#+ (or ccl lispworks)
-(named-readtables:in-readtable java-syntax)
+(defun whoami (access-token)
+  (let ((response (github-api-request "/user"
+                                      :access-token access-token)))
+    (not-null!
+     (a:assoc-value
+      response
+      :login))))
 
 (defun can-edit-repo (access-token repo
                       &key user company)
-  #- (or ccl lispworks)
-  t
-  #+ (or ccl lispworks)
-  (let* ((client (github-client :oauth-token
-                                (access-token-str access-token)))
-         (user-service (github-user-service client))
-         (handle (#_getLogin (#_getUser user-service))))
+  (let* ((access-token (access-token-str access-token))
+         (handle (whoami access-token)))
 
     (with-audit-log (log (make-instance 'check-collaborator :login handle
                                                             :user user
