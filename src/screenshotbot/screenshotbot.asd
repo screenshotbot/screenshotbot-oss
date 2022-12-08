@@ -334,6 +334,7 @@
                (:module "github"
                 :components ((:file "test-jwt-token")
                              (:file "test-app-installation")
+                             (:file "test-read-repos")
                              (:file "test-plugin")
                              (:file "test-access-checks")
                              (:file "test-pull-request-promoter")

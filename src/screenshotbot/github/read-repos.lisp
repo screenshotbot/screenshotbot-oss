@@ -38,7 +38,11 @@
 
 (defun can-edit-repo (access-token repo
                       &key user company)
-  (let* ((access-token (access-token-str access-token))
+  (let* ((access-token (cond
+                         ((stringp access-token)
+                          access-token)
+                         (t
+                          (access-token-str access-token))))
          (handle (whoami access-token)))
 
     (with-audit-log (log (make-instance 'check-collaborator :login handle

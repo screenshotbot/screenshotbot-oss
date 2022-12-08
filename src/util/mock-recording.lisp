@@ -22,7 +22,10 @@
    (arguments :initarg :arguments
               :reader arguments)
    (response :initarg :response
-             :reader response)))
+             :reader response)
+   (other-values :initarg :other-values
+                 :initform nil
+                 :reader other-values)))
 
 ;; Keeps track of the recording of each call
 (defvar *recording*)
@@ -38,13 +41,14 @@
              (lambda (&rest args)
                (log:debug "Bypassing any recorded values")
                (let ((res
-                       (call-previous)))
+                       (multiple-value-list (call-previous))))
                  (let ((function-call (make-instance 'function-call
                                                      :function-name mocked-function
                                                      :arguments (remove-skip-args args skip-args)
-                                                     :response res)))
+                                                     :response (car res)
+                                                     :other-values (cdr res))))
                    (push function-call *recording*))
-                 res))))
+                 (apply #'values res)))))
 
 (defun remove-skip-args (args skip-args)
   (loop for x in args
@@ -65,7 +69,9 @@
                  (unless (eql (function-name next) mocked-function)
                    (error "Function requested is ~a, but we recorded ~a"
                           (function-name next)))
-                 (response next)))))
+                 (apply #'values
+                        (response next)
+                        (other-values next))))))
 
 (defun track (mocked-function &rest args)
   (cond
