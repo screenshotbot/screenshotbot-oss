@@ -116,7 +116,9 @@
                      errors))))
       (check :repo (ignore-errors (github-repo-id repo))
              "Does not look like a valid GitHub repo")
-      (multiple-value-bind (can-edit-p message) (can-edit-repo access-token repo)
+      (multiple-value-bind (can-edit-p message) (can-edit-repo access-token repo
+                                                               :user (current-user)
+                                                               :company (current-company))
        (check :repo can-edit-p
               (format
                nil

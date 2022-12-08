@@ -13,6 +13,7 @@
   (:import-from #:bknr.indices
                 #:hash-index)
   (:import-from #:util/misc
+                #:?.
                 #:uniq)
   (:import-from #:screenshotbot/audit-log
                 #:base-audit-log)
@@ -26,7 +27,8 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:updated-check-run
-   #:user-updated-check-run))
+   #:user-updated-check-run
+   #:check-collaborator))
 (in-package :screenshotbot/github/audit-log)
 
 (markup:enable-reader)
@@ -68,4 +70,30 @@
   <span>
     Updated check run on commit <commit-tag>,(commit self)</commit-tag>
     for review by ,(user-full-name (%user self))
+  </span>)
+
+(defclass user-oauth-api-request (github-audit-log)
+  ((%%user :initarg :user
+           :initform nil
+           :reader %user))
+  (:metaclass persistent-class))
+
+(defmethod describe-audit-log :around ((self user-oauth-api-request))
+  <span>
+    ,(call-next-method)
+    (using <em>,(?. user-full-name (%user self))</em>'s temporary token)
+  </span>)
+
+(defclass check-collaborator (user-oauth-api-request)
+  ((github-login :initarg :login
+                 :initform nil
+                 :reader github-login)
+   (repo :initarg :repo
+         :initform nil
+         :reader github-repo))
+  (:metaclass persistent-class))
+
+(defmethod describe-audit-log ((self check-collaborator))
+  <span>
+    Checked if <code>,(github-login self)</code> is a collaborator on <code>,(github-repo self)</code>
   </span>)

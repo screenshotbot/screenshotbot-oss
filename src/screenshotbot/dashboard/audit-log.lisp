@@ -33,7 +33,7 @@
        ,(audit-log-error self), tried ,(progn timeago)
        </span>)
       (t
-       <span class= "text-success">
+       <span class= "">
          ,(describe-audit-log self) at ,(progn timeago)
        </span>))))
 
