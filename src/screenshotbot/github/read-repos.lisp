@@ -39,18 +39,23 @@
       :login))))
 
 (defun repo-collaborator-p (repo handle &key access-token
-                                          installation-token)
-  (multiple-value-bind (response ret)
-      (github-api-request (format nil "/repos/~a/collaborators/~a"
-                                  (get-repo-id repo)
-                                  handle)
-                          :access-token access-token
-                          :installation-token installation-token)
-    (unless (= ret 204)
-      (warn "not a collaborator: ~a" response))
-    (values
-     (= ret 204)
-     (a:assoc-value response :message))))
+                                          installation-token
+                                          company)
+  (with-audit-log (log (make-instance 'check-collaborator :login handle
+                                                          :company company
+                                                          :repo repo))
+    (declare (ignore log))
+    (multiple-value-bind (response ret)
+        (github-api-request (format nil "/repos/~a/collaborators/~a"
+                                    (get-repo-id repo)
+                                    handle)
+                            :access-token access-token
+                            :installation-token installation-token)
+      (unless (= ret 204)
+        (warn "not a collaborator: ~a" response))
+      (values
+       (= ret 204)
+       (a:assoc-value response :message)))))
 
 (defun can-edit-repo (access-token repo
                       &key user company)
@@ -60,11 +65,6 @@
                          (t
                           (access-token-str access-token))))
          (handle (whoami access-token)))
-
-    (with-audit-log (log (make-instance 'check-collaborator :login handle
-                                                            :user user
-                                                            :company company
-                                                            :repo repo))
-      (declare (ignore log))
-      (repo-collaborator-p repo handle
-                           :access-token access-token))))
+    (repo-collaborator-p repo handle
+                         :access-token access-token
+                         :company company)))

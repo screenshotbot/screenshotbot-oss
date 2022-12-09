@@ -160,7 +160,8 @@
   (multiple-value-bind (can-edit-p message)
       (repo-collaborator-p (format nil "https://github.com/~a" (repo-id self))
                            (installer-login self)
-                           :access-token access-token)
+                           :access-token access-token
+                           :company (company self))
     (cond
       (can-edit-p
        (with-transaction ()

@@ -84,7 +84,7 @@
     (using <em>,(?. user-full-name (%user self))</em>'s temporary token)
   </span>)
 
-(defclass check-collaborator (user-oauth-api-request)
+(defclass check-collaborator (github-audit-log)
   ((github-login :initarg :login
                  :initform nil
                  :reader github-login)
