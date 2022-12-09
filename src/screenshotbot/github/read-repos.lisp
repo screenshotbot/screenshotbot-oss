@@ -36,6 +36,18 @@
       response
       :login))))
 
+(defun repo-collaborator-p (repo handle &key access-token)
+  (multiple-value-bind (response ret)
+      (github-api-request (format nil "/repos/~a/collaborators/~a"
+                                  (get-repo-id repo)
+                                  handle)
+                          :access-token access-token)
+    (unless (= ret 204)
+      (warn "not a collaborator: ~a" response))
+    (values
+     (= ret 204)
+     (a:assoc-value response :message))))
+
 (defun can-edit-repo (access-token repo
                       &key user company)
   (let* ((access-token (cond
@@ -50,13 +62,5 @@
                                                             :company company
                                                             :repo repo))
       (declare (ignore log))
-      (multiple-value-bind (response ret)
-          (github-api-request (format nil "/repos/~a/collaborators/~a"
-                                      (get-repo-id repo)
-                                      handle)
-                              :access-token access-token)
-        (unless (= ret 204)
-          (warn "not a collaborator: ~a" response))
-        (values
-         (= ret 204)
-         (a:assoc-value response :message))))))
+      (repo-collaborator-p repo handle
+                           :access-token access-token))))
