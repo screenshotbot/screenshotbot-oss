@@ -118,6 +118,11 @@
 (pushnew 'installation-delete-webhook
           *hooks*)
 
+
+
+(deftag refresh ()
+  <a href= "javascript:window.location.reload()">Refresh</a>)
+
 (defun verify-repo (repo access-token)
   (let ((errors))
     (flet ((check (field test message)
@@ -269,6 +274,8 @@
                                          <span class= "text-danger">
                                            <mdi name= "error" />
                                            Verified, but app not installed
+                                           <refresh />
+
                                          </span>
                                        </td>
                                        <td>
