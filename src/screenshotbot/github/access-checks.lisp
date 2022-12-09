@@ -95,7 +95,8 @@
   "Github API secret key corresponding to :github-user")
 
 
-(defun github-api-request (url &key access-token)
+(defun github-api-request (url &key access-token
+                                 installation-token)
   (when (typep access-token 'oauth-access-token)
     (setf access-token (oidc/oidc:access-token-str access-token)))
   (multiple-value-bind (response code)
@@ -103,7 +104,12 @@
        (format nil "https://api.github.com~a" url)
        :want-string t
        :additional-headers `(("Accept" . "application/vnd.github+json")
-                             ("Authorization" . ,(format nil "Bearer ~a" access-token))
+                             ("Authorization" .
+                                              ,(cond
+                                                 (installation-token
+                                                  (format nil "token ~a" installation-token))
+                                                 (t
+                                                  (format nil "Bearer ~a" access-token))))
                              ("X-GitHub-Api-Version" . "2022-11-28")))
     (values
      (cond
