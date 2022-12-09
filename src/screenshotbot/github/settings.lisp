@@ -46,6 +46,7 @@
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:screenshotbot/github/access-checks
+                #:get-repo-id
                 #:repo-string-identifier
                 #:github-repo-id)
   (:import-from #:screenshotbot/github/app-installation
@@ -123,15 +124,22 @@
              (unless test
                (push (cons field message)
                      errors))))
-      (check :repo (ignore-errors (github-repo-id repo))
+      (check :repo
+             (and
+              (cl-ppcre:scan "https://github.com/.*/.*" repo)
+              (ignore-errors (get-repo-id repo)))
              "Does not look like a valid GitHub repo")
+      (check :repo
+             (not (str:s-member (verified-repos (current-company)) (get-repo-id repo)))
+             "We're already tracking a repo with that ID")
+
       (multiple-value-bind (can-edit-p message) (can-edit-repo access-token repo
                                                                :user (current-user)
                                                                :company (current-company))
-       (check :repo can-edit-p
-              (format
-               nil
-               "You don't seem to have access to this repository. Are you using the wrong GitHub account? (Github said: \"~a\")" message)))
+        (check :repo can-edit-p
+               (format
+                nil
+                "You don't seem to have access to this repository. Are you using the wrong GitHub account? (Github said: \"~a\")" message)))
       (cond
         (errors
          (with-form-errors (:was-validated t
