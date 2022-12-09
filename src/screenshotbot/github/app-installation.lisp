@@ -82,18 +82,20 @@
       installation))))
 
 (auto-restart:with-auto-restart ()
- (defun handle-webhook (json)
-   (let ((installation (a:assoc-value json :installation)))
-     (when installation
-       (let ((action (a:assoc-value json :action))
-             (installation-id (a:assoc-value installation :id)))
-         (when (and
-                (or
+  (defun handle-webhook (json)
+    (log:info "handle-webhook being called")
+    (let ((installation (a:assoc-value json :installation)))
+      (when installation
+        (let ((action (a:assoc-value json :action))
+              (installation-id (a:assoc-value installation :id)))
+          (when (or
                  (equal "created" action)
-                 (str:starts-with-p "installation_repositories." action)))
-           (update-app-installation installation-id))
-         (when (equal "deleted" action)
-           (delete-app-installation installation-id)))))))
+                 (a:assoc-value json :repositories--added)
+                 (a:assoc-value json :repositories--removed))
+            (log:info "Updating app installation")
+            (update-app-installation installation-id))
+          (when (equal "deleted" action)
+            (delete-app-installation installation-id)))))))
 
 (pushnew 'handle-webhook *hooks*)
 
