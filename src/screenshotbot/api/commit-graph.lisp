@@ -22,7 +22,7 @@
       (let* ((commit-graph (find-or-create-commit-graph
                             (current-company)
                             repo-url)))
-        (bt:with-lock-held ((lock commit-graph))
+        (bt:with-recursive-lock-held ((lock commit-graph))
           (let ((dag (commit-graph-dag commit-graph))
                 (new-dag (dag:read-from-stream (make-string-input-stream graph-json))))
             (dag:merge-dag dag new-dag)

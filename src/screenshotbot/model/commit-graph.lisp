@@ -59,7 +59,7 @@
                       :company company)))))
 
 (defmethod commit-graph-dag ((obj commit-graph))
-  (bt:with-lock-held ((lock obj))
+  (bt:with-recursive-lock-held ((lock obj))
    (cond
      ((not (path:-e (blob-pathname obj)))
       (make-instance 'dag:dag))
@@ -68,7 +68,7 @@
         (dag:read-from-stream s))))))
 
 (defmethod (setf commit-graph-dag) (dag (obj commit-graph))
-  (bt:with-lock-held ((lock obj))
+  (bt:with-recursive-lock-held ((lock obj))
     (with-open-file (s (blob-pathname obj) :if-does-not-exist :create
                                            :direction :output
                                            :if-exists :supersede)

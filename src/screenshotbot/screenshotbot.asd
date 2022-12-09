@@ -357,6 +357,7 @@
                 :components ((:file "test-security")))
                (:module "api"
                 :components ((:file "test-core")
+                             (:file "test-commit-graph")
                              (:file "test-image")
                              (:file "test-promote")
                              (:file "test-send-tasks")
