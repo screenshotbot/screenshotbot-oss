@@ -30,6 +30,7 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/github/read-repos
+                #:whoami
                 #:can-edit-repo
                 #:read-repo-list)
   (:import-from #:screenshotbot/ui/simple-card-page
@@ -88,7 +89,13 @@
                :index-type hash-index
                :index-reader %verified-repos-for-company)
      (repo-id :initarg :repo-id
-              :reader repo-id))
+              :reader repo-id)
+     (installer-login :initarg :installer-login
+                      :reader installer-login
+                      :documentation "The github login (e.g. tdrhq) of the person who installed this repo on
+ Screenshotbot. This is used later to verify that the app is installed by this person.")
+     (verified-p :initform nil
+                 :reader verified-p))
     (:metaclass persistent-class)))
 
 (defun installation-delete-webhook (json)
@@ -131,8 +138,9 @@
            (settings-github-page)))
         (t
          (make-instance 'verified-repo
-                         :company (current-company)
-                         :repo-id (repo-string-identifier repo))
+                        :installer-login (whoami access-token)
+                        :company (current-company)
+                        :repo-id (repo-string-identifier repo))
          (hex:safe-redirect "/settings/github"))))))
 
 (defun verified-repos (company)
