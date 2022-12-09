@@ -59,6 +59,8 @@
                 #:paginated)
   (:import-from #:screenshotbot/dashboard/audit-log
                 #:render-audit-logs)
+  (:import-from #:screenshotbot/ui/confirmation-page
+                #:confirmation-page)
   (:export
    #:verified-repo-p))
 (in-package :screenshotbot/github/settings)
@@ -156,6 +158,21 @@
   (str:s-member (verified-repos company)
                 (repo-string-identifier repo)))
 
+(defun remove-verification (verified-repo)
+  (let ((redirect "/settings/github"))
+   (confirmation-page
+    :yes (nibble ()
+           (bknr.datastore:delete-object verified-repo)
+           (hex:safe-redirect redirect))
+    :no redirect
+    <div>
+      <p>Removing verification does <b>not</b> uninstall the GitHub app.</p>
+
+      <p>Removing the verification prevents Screenshotbot from sending build statuses to GitHub.</p>
+
+      <p>Are you sure you want to remove this verification?</p>
+    </div>)))
+
 (defun settings-github-page ()
   (let* ((installation-id (installation-id (github-config (current-company))))
          access-token
@@ -193,7 +210,7 @@
             </div>
           </form>
 
-        ,(let ((verified-repos (verified-repos (current-company))))
+        ,(let ((verified-repos (%verified-repos-for-company (current-company))))
            (cond
              (verified-repos
               <div style="margin-top: 3em" >
@@ -210,42 +227,50 @@
                   <tbody>
 
                   ,@ (loop for repo in verified-repos
-                           for app-installed-p = (app-installed-p repo)
+                           for app-installed-p = (app-installed-p (repo-id repo))
                            collect
+                           (util:copying (repo)
+                             (let ((remove-verification (nibble ()
+                                                          (remove-verification repo))))
                                <tr>
                                  <td>
-                                   ,(progn repo)
+                                   ,(repo-id repo)
                                  </td>
-                                   ,(cond
-                                      (app-installed-p
-                                       <markup:merge-tag>
-                                         <td>
-                                           <span>
-                                             <span class= "text-success">
-                                               <mdi name= "done" /> Verified, and App is installed
-                                             </span>
+                                 ,(cond
+                                    (app-installed-p
+                                     <markup:merge-tag>
+                                       <td>
+                                         <span>
+                                           <span class= "text-success">
+                                             <mdi name= "done" /> Verified, and App is installed
                                            </span>
-                                         </td>
-                                         <td>
-                                           <a href= app-configuration-url >
-                                             Configure on GitHub
-                                           </a>
-                                         </td>
-                                       </markup:merge-tag>
-                                       )
-                                      (t
-                                       <markup:merge-tag>
-                                         <td>
-                                           <span class= "text-danger">
-                                             <mdi name= "error" />
-                                             Verified, but app not installed
-                                           </span>
-                                         </td>
-                                         <td>
-                                           <a href= app-configuration-url >Install App</a>
-                                         </td>
-                                       </markup:merge-tag>))
-                               </tr>)
+                                         </span>
+                                       </td>
+                                       <td>
+                                         <a href= app-configuration-url >
+                                           Configure on GitHub
+                                         </a>
+                                         ,(progn "|")
+                                         <a href= remove-verification >Remove</a>
+                                       </td>
+                                     </markup:merge-tag>
+                                     )
+                                    (t
+                                     <markup:merge-tag>
+                                       <td>
+                                         <span class= "text-danger">
+                                           <mdi name= "error" />
+                                           Verified, but app not installed
+                                         </span>
+                                       </td>
+                                       <td>
+                                         <a href= app-configuration-url >Install App</a>
+                                         ,(progn "|")
+                                         <a href= remove-verification >Remove</a>
+                                       </td>
+                                     </markup:merge-tag>))
+                               </tr>)))
+
                              </tbody>
                            </table>
               </div>)))
