@@ -45,7 +45,7 @@ re-recording this test.
 |#
 
 (defvar *access-token*
-  "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")
+  "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")
 
 (def-fixture state (name &key (record nil))
   (with-test-store ()

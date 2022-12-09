@@ -22,6 +22,8 @@
                 #:current-company)
   (:import-from #:util/misc
                 #:not-null!)
+  (:import-from #:screenshotbot/github/jwt-token
+                #:github-request)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:read-repo-list
@@ -36,12 +38,14 @@
       response
       :login))))
 
-(defun repo-collaborator-p (repo handle &key access-token)
+(defun repo-collaborator-p (repo handle &key access-token
+                                          installation-token)
   (multiple-value-bind (response ret)
       (github-api-request (format nil "/repos/~a/collaborators/~a"
                                   (get-repo-id repo)
                                   handle)
-                          :access-token access-token)
+                          :access-token access-token
+                          :installation-token installation-token)
     (unless (= ret 204)
       (warn "not a collaborator: ~a" response))
     (values
