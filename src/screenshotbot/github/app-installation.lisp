@@ -25,7 +25,8 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:github-get-access-token-for-installation
-   #:app-installed-p))
+   #:app-installed-p
+   #:*repo-added-hook*))
 (in-package :screenshotbot/github/app-installation)
 
 (defclass app-installation (store-object)
@@ -43,6 +44,8 @@
   (:metaclass persistent-class))
 
 (defvar *lock* (bt:make-lock))
+
+(defvar *repo-added-hook* nil)
 
 (auto-restart:with-auto-restart ()
  (defun update-app-installation (installation-id)
@@ -70,10 +73,14 @@
                                 collect (a:assoc-value repo :full--name))
                           do
                              (setf json-response ()))))
-         (with-transaction ()
-           (setf (app-installation-repos app-installation)
-                 repos)
-           (setf (updated-ts app-installation) (get-universal-time))))))))
+         (let ((old-repos (app-installation-repos app-installation)))
+          (with-transaction ()
+            (setf (app-installation-repos app-installation)
+                  repos)
+            (setf (updated-ts app-installation) (get-universal-time)))
+           (dolist (repo (set-difference repos old-repos :test #'equal))
+             (dolist (hook *repo-added-hook*)
+               (funcall hook repo)))))))))
 
 (defun delete-app-installation (installation-id)
   (let ((installation (app-installation-by-id installation-id)))

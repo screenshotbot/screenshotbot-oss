@@ -53,6 +53,7 @@
                 #:repo-string-identifier
                 #:github-repo-id)
   (:import-from #:screenshotbot/github/app-installation
+                #:*repo-added-hook*
                 #:github-get-access-token-for-installation
                 #:app-installation-id
                 #:app-installed-p)
@@ -128,22 +129,18 @@
 (pushnew 'installation-delete-webhook
           *hooks*)
 
-(defun repositories-added-webhook (json)
+(defun repo-added-hook (full-name)
   (ignore-and-log-errors ()
-    (a:when-let ((repositories-added (a:assoc-value json :repositories--added)))
-      (log:info "Got repos: ~S" repositories-added)
-      (loop for repository in repositories-added
-            for full-name = (a:assoc-value repository :full--name)
+    (log:info "Processing ~A" full-name)
+    (loop for verified-repo in (bknr.datastore:class-instances 'verified-repo)
+          if (string-equal full-name (repo-id verified-repo))
             do
-               (log:info "Processing ~A" full-name)
-               (loop for verified-repo in (bknr.datastore:class-instances 'verified-repo)
-                     if (string-equal full-name (repo-id verified-repo))
-                       do
-                     (maybe-verify-repo verified-repo))))))
+               (maybe-verify-repo verified-repo))))
 
-(pushnew 'repositories-added-webhook
-         *hooks*)
+(pushnew 'repo-added-hook *repo-added-hook*)
 
+;; TODO: remove
+(defun repositories-added-webhook (json))
 
 (deftag refresh (&key repo)
   (let* ((post (nibble ()
