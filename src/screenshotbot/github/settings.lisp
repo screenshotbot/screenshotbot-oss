@@ -13,6 +13,8 @@
         #:screenshotbot/user-api
         #:screenshotbot/settings-api)
   (:import-from #:screenshotbot/github/plugin
+                #:private-key
+                #:app-id
                 #:app-name
                 #:github-plugin)
   (:import-from #:screenshotbot/server
@@ -51,6 +53,8 @@
                 #:repo-string-identifier
                 #:github-repo-id)
   (:import-from #:screenshotbot/github/app-installation
+                #:github-get-access-token-for-installation
+                #:app-installation-id
                 #:app-installed-p)
   (:import-from #:screenshotbot/template
                 #:mdi)
@@ -63,6 +67,8 @@
                 #:render-audit-logs)
   (:import-from #:screenshotbot/ui/confirmation-page
                 #:confirmation-page)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors)
   (:export
    #:verified-repo-p))
 (in-package :screenshotbot/github/settings)
@@ -105,11 +111,12 @@
     (:metaclass persistent-class)))
 
 (defun installation-delete-webhook (json)
-  (let ((installation (a:assoc-value json :installation)))
-   (when (and (equal "deleted" (a:assoc-value json :action))
-              installation)
-     (let ((id (a:assoc-value installation :id)))
-       (delete-installation-by-id id)))))
+  (ignore-and-log-errors ()
+   (let ((installation (a:assoc-value json :installation)))
+     (when (and (equal "deleted" (a:assoc-value json :action))
+                installation)
+       (let ((id (a:assoc-value installation :id)))
+         (delete-installation-by-id id))))))
 
 (defun delete-installation-by-id (id)
   (log:info "Deleting by installation by id: ~a" id)
@@ -121,10 +128,35 @@
 (pushnew 'installation-delete-webhook
           *hooks*)
 
+(defun repositories-added-webhook (json)
+  (ignore-and-log-errors ()
+    (a:when-let ((repositories-added (a:assoc-value json :repositories--added)))
+      (log:info "Got repos: ~S" repositories-added)
+      (loop for repository in repositories-added
+            for full-name = (a:assoc-value repository :full--name)
+            do
+               (log:info "Processing ~A" full-name)
+               (loop for verified-repo in (bknr.datastore:class-instances 'verified-repo)
+                     if (string-equal full-name (repo-id verified-repo))
+                       do
+                     (maybe-verify-repo verified-repo))))))
+
+(pushnew 'repositories-added-webhook
+         *hooks*)
 
 
-(deftag refresh ()
-  <a href= "javascript:window.location.reload()">Refresh</a>)
+(deftag refresh (&key repo)
+  (let* ((post (nibble ()
+                 (maybe-verify-repo repo)
+                 (hex:safe-redirect "/settings/github")))
+         (form-id (format nil "a-~a" (random 10000000000)))
+         (href (format nil "javascript:document.getElementById(\"~a\").submit()"
+                       form-id)))
+    <form action=post method="POST"  class= "d-inline-block" id=form-id >
+      <a href=href >
+        <mdi name= "refresh" />
+      </a>
+    </form>))
 
 (defun verify-repo (repo access-token)
   (let ((errors))
@@ -153,23 +185,36 @@
                                 :installer-login (whoami access-token)
                                 :company (current-company)
                                 :repo-id (repo-string-identifier repo))))
-           (maybe-verify-repo verified-repo :access-token access-token))
+           (maybe-verify-repo verified-repo))
          (hex:safe-redirect "/settings/github"))))))
 
-(defmethod maybe-verify-repo ((self verified-repo) &key access-token)
-  (multiple-value-bind (can-edit-p message)
-      (repo-collaborator-p (format nil "https://github.com/~a" (repo-id self))
-                           (installer-login self)
-                           :access-token access-token
-                           :company (company self))
-    (cond
-      (can-edit-p
-       (with-transaction ()
-         (setf (verified-p self) t
-               (verification-failure-message self) nil)))
-      ((not (verified-p self))
-       (with-transaction ()
-         (setf (verification-failure-message self) message))))))
+(defmethod maybe-verify-repo ((self verified-repo))
+  (log:info "Verifying: ~a" (repo-id self))
+  (a:when-let ((installation-id (app-installation-id (repo-id self))))
+    (multiple-value-bind (can-edit-p message)
+        (repo-collaborator-p (format nil "https://github.com/~a" (repo-id self))
+                             (installer-login self)
+                             :installation-token
+                             (github-get-access-token-for-installation
+                              installation-id
+                              :app-id (app-id (github-plugin))
+                              :private-key (private-key (github-plugin)))
+                             :company (company self))
+      (cond
+        (can-edit-p
+         (log:info "Can edit the repository ~a" (repo-id self))
+         (with-transaction ()
+           (setf (verified-p self) t
+                 (verification-failure-message self) nil)))
+        ((not (verified-p self))
+         (with-transaction ()
+           (setf (verification-failure-message self) message)))
+        (t
+         ;; We can't re-verify, but the repository has been verified
+         ;; in the past so we don't change anything. This might happen
+         ;; because the GitHub user has been booted off the org, but
+         ;; that's fine.
+         (values))))))
 
 (defun verified-repos (company)
   (let ((repos (%verified-repos-for-company company)))
@@ -258,7 +303,7 @@
                            (util:copying (repo)
                              (let ((remove-verification (nibble ()
                                                           (remove-verification repo))))
-                               <tr>
+                               <tr class= "vertical-align-middle" >
                                  <td>
                                    ,(repo-id repo)
                                  </td>
@@ -279,6 +324,18 @@
                                            Configure on GitHub
                                          </a>
                                          ,(progn "|")
+                                         <a href= remove-verification >Remove</a>
+                                       </td>
+                                     </markup:merge-tag>)
+                                    ((and
+                                      app-installed-p
+                                      (not (verified-p repo))
+                                      (not (verification-failure-message repo)))
+                                     <markup:merge-tag>
+                                       <td>
+                                         <span>Awaiting verification <refresh repo=repo /></span>
+                                       </td>
+                                       <td>
                                          <a href= remove-verification >Remove</a>
                                        </td>
                                      </markup:merge-tag>)
@@ -308,7 +365,7 @@
                                          <span class= "text-danger">
                                            <mdi name= "error" />
                                            App not installed
-                                           <refresh />
+                                           <refresh repo=repo />
 
                                          </span>
                                        </td>
