@@ -99,6 +99,8 @@
                                  installation-token)
   (when (typep access-token 'oauth-access-token)
     (setf access-token (oidc/oidc:access-token-str access-token)))
+  (check-type access-token (or null string))
+  (assert (or access-token installation-token))
   (multiple-value-bind (response code)
       (util/request:http-request
        (format nil "https://api.github.com~a" url)

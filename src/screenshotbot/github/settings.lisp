@@ -30,6 +30,7 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/github/read-repos
+                #:repo-collaborator-p
                 #:whoami
                 #:can-edit-repo
                 #:read-repo-list)
@@ -98,7 +99,9 @@
                       :documentation "The github login (e.g. tdrhq) of the person who installed this repo on
  Screenshotbot. This is used later to verify that the app is installed by this person.")
      (verified-p :initform nil
-                 :reader verified-p))
+                 :accessor verified-p)
+     (verification-failure-message :initform nil
+                                   :accessor verification-failure-message))
     (:metaclass persistent-class)))
 
 (defun installation-delete-webhook (json)
@@ -138,13 +141,6 @@
              (not (str:s-member (verified-repos (current-company)) (get-repo-id repo)))
              "We're already tracking a repo with that ID")
 
-      (multiple-value-bind (can-edit-p message) (can-edit-repo access-token repo
-                                                               :user (current-user)
-                                                               :company (current-company))
-        (check :repo can-edit-p
-               (format
-                nil
-                "You don't seem to have access to this repository. Are you using the wrong GitHub account? (Github said: \"~a\")" message)))
       (cond
         (errors
          (with-form-errors (:was-validated t
@@ -152,11 +148,27 @@
                             :errors errors)
            (settings-github-page)))
         (t
-         (make-instance 'verified-repo
-                        :installer-login (whoami access-token)
-                        :company (current-company)
-                        :repo-id (repo-string-identifier repo))
+         (let ((verified-repo
+                 (make-instance 'verified-repo
+                                :installer-login (whoami access-token)
+                                :company (current-company)
+                                :repo-id (repo-string-identifier repo))))
+           (maybe-verify-repo verified-repo :access-token access-token))
          (hex:safe-redirect "/settings/github"))))))
+
+(defmethod maybe-verify-repo ((self verified-repo) &key access-token)
+  (multiple-value-bind (can-edit-p message)
+      (repo-collaborator-p (format nil "https://github.com/~a" (repo-id self))
+                           (installer-login self)
+                           :access-token access-token)
+    (cond
+      (can-edit-p
+       (with-transaction ()
+         (setf (verified-p self) t
+               (verification-failure-message self) nil)))
+      ((not (verified-p self))
+       (with-transaction ()
+         (setf (verification-failure-message self) message))))))
 
 (defun verified-repos (company)
   (let ((repos (%verified-repos-for-company company)))
@@ -250,7 +262,9 @@
                                    ,(repo-id repo)
                                  </td>
                                  ,(cond
-                                    (app-installed-p
+                                    ((and
+                                      app-installed-p
+                                      (verified-p repo))
                                      <markup:merge-tag>
                                        <td>
                                          <span>
@@ -266,14 +280,33 @@
                                          ,(progn "|")
                                          <a href= remove-verification >Remove</a>
                                        </td>
-                                     </markup:merge-tag>
-                                     )
-                                    (t
+                                     </markup:merge-tag>)
+                                    ((and
+                                      app-installed-p
+                                      (not (verified-p repo)))
+                                     <markup:merge-tag>
+                                       <td>
+                                         <span>
+                                           <span class= "text-danger">
+                                             <mdi name= "error" />Could not verify
+                                             (GitHub said: ,(verification-failure-message repo))
+                                           </span>
+                                         </span>
+                                       </td>
+                                       <td>
+                                         <a href= app-configuration-url >
+                                           Configure on GitHub
+                                         </a>
+                                         ,(progn "|")
+                                         <a href= remove-verification >Remove</a>
+                                       </td>
+                                     </markup:merge-tag>)
+                                    (t ;; (not app-installed-p)
                                      <markup:merge-tag>
                                        <td>
                                          <span class= "text-danger">
                                            <mdi name= "error" />
-                                           Verified, but app not installed
+                                           App not installed
                                            <refresh />
 
                                          </span>
