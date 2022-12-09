@@ -134,6 +134,10 @@ rm -f $INSTALLER
 (define-platform-asset "recorder")
 (define-platform-asset "selenium-proxy")
 
+(defhandler (recorder-incorrect :uri "/recorder") ()
+  (setf (hunchentoot:return-code*) 404)
+  "Page not found. Did you mean /recorder.sh? Or for Windows, this would be /recorder-win.exe")
+
 (defvar *lock* (bt:make-lock "assets-lock"))
 
 
