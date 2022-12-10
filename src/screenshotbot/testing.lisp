@@ -36,6 +36,8 @@
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:*installation*)
+  (:import-from #:screenshotbot/server
+                #:screenshotbot-template)
   (:export
    #:snap-image-blob
    #:snap-all-images
@@ -112,5 +114,7 @@
      (screenshot-static-page
       :screenshotbot
       (str:downcase ,(string name))
-      (progn
-        ,@body))))
+      (let ((core/ui/template:*app-template*
+              (make-instance 'screenshotbot-template)))
+       (progn
+         ,@body)))))

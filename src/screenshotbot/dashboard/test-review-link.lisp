@@ -20,6 +20,8 @@
                 #:with-sessions)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
+  (:import-from #:screenshotbot/server
+                #:screenshotbot-template)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-review-link)
 
@@ -38,4 +40,6 @@
        (screenshot-static-page
         :screenshotbot
         "bad-url-page"
-        (bad-url-page "git@dfd:foo/bar"))))))
+        (let ((core/ui/template:*app-template*
+                (make-instance 'screenshotbot-template)))
+         (bad-url-page "git@dfd:foo/bar")))))))

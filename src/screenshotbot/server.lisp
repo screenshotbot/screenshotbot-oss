@@ -20,6 +20,8 @@
                 #:log-crash-extras)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:core/ui/template
+                #:*app-template*)
   (:export
    #:defhandler
    #:with-login
@@ -93,6 +95,9 @@
   "Disable emails. In the future this should be part of NOOP-MAILER,
   but this is here because we have historical code using it. We might
   be able to remove it soon.")
+
+(defclass screenshotbot-template ()
+  ())
 
 (defun document-root ()
   (path:catdir *root* #p"static/"))
@@ -211,24 +216,25 @@
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor acceptor) request)
   (declare (optimize (speed 3))
            (type hunchentoot:request request))
-  (auth:with-sessions ()
-    (push-analytics-event)
-    (let ((script-name (hunchentoot:script-name request))
-          (util.cdn:*cdn-domain*
-            (unless (staging-p)
-              *cdn-domain*)))
-      (cond
-        ((staging-p)
-         (setf (hunchentoot:header-out "Cache-Control") "no-cache"))
-        ((cl-ppcre:scan *asset-regex* script-name)
-         (setf (hunchentoot:header-out "Cache-Control") "max-age=3600000")))
-      (when (and
-             (str:starts-with-p "/assets" script-name)
-             (not *is-localhost*))
-        (setf (hunchentoot:header-out
-               "Access-Control-Allow-Origin")
-              "https://screenshotbot.io"))
-      (call-next-method))))
+  (let ((*app-template* (make-instance 'screenshotbot-template)))
+   (auth:with-sessions ()
+     (push-analytics-event)
+     (let ((script-name (hunchentoot:script-name request))
+           (util.cdn:*cdn-domain*
+             (unless (staging-p)
+               *cdn-domain*)))
+       (cond
+         ((staging-p)
+          (setf (hunchentoot:header-out "Cache-Control") "no-cache"))
+         ((cl-ppcre:scan *asset-regex* script-name)
+          (setf (hunchentoot:header-out "Cache-Control") "max-age=3600000")))
+       (when (and
+              (str:starts-with-p "/assets" script-name)
+              (not *is-localhost*))
+         (setf (hunchentoot:header-out
+                "Access-Control-Allow-Origin")
+               "https://screenshotbot.io"))
+       (call-next-method)))))
 
 (defhandler (nil :uri "/force-crash") ()
   (error "ouch"))

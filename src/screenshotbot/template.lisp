@@ -34,6 +34,7 @@
   (:import-from #:markup
                 #:deftag)
   (:import-from #:screenshotbot/server
+                #:screenshotbot-template
                 #:acceptor
                 #:defhandler
                 #:staging-p
@@ -43,7 +44,9 @@
   (:import-from #:screenshotbot/user-api
                 #:user-email)
   (:import-from #:util
-                #:oid))
+                #:oid)
+  (:import-from #:core/ui/template
+                #:render-template))
 
 (markup:enable-reader)
 
@@ -305,3 +308,9 @@
       ,@body
     </body>
   </html>)
+
+(defmethod render-template ((self screenshotbot-template)
+                            children &key title stripe)
+  <app-template title=title stripe=stripe >
+    ,@children
+  </app-template>)

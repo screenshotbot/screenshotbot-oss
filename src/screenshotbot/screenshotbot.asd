@@ -41,6 +41,7 @@
                #-screenshotbot-oss
                :sentry
                :server
+               :core.ui
                :auto-restart
                :scheduled-jobs
                :serapeum

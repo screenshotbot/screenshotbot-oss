@@ -6,7 +6,7 @@
 
 (uiop:define-package :screenshotbot/ui/simple-card-page
   (:use #:cl #:alexandria)
-  (:import-from #:screenshotbot/template
+  (:import-from #:core/ui/template
                 #:app-template)
   (:export #:simple-card-page))
 (in-package :screenshotbot/ui/simple-card-page)
