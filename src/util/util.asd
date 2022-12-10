@@ -106,6 +106,12 @@
                :util/fake-fli)
   :components ((:file "copy-file")))
 
+(defsystem :util/timeago
+  :serial t
+  :depends-on (:markup
+               :local-time)
+  :components ((:file "timeago")))
+
 (defsystem :util/html2text
   :serial t
   :depends-on (:html2text)

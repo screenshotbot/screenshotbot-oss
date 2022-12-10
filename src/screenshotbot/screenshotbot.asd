@@ -30,6 +30,7 @@
                :cl-store
                :core.installation
                :encrypt
+               :util/timeago
                :iterate
                :pkg
                #-lispworks
