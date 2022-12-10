@@ -51,6 +51,7 @@
   (:import-from #:screenshotbot/model/report
                 #:acceptable-state)
   (:import-from #:screenshotbot/testing
+                #:with-installation
                 #:with-test-user))
 
 (util/fiveam:def-suite)
@@ -87,23 +88,24 @@
 
 
 (def-fixture state (&key (run-retriever 'my-run-retriever))
-  (with-test-store ()
-   (cl-mock:with-mocks ()
-     (cl-mock:if-called 'verified-repo-p
-                         (lambda (repo company)
-                           t))
-     (cl-mock:if-called 'app-installed-p
-                         (lambda (repo)
-                           t))
-     (let ((company (make-instance 'company))
-           (promoter (make-instance 'pull-request-promoter
-                                     :app-id "dummy-app-id"
-                                     :private-key "dummy-private-key"
-                                     :pull-request-info
-                                     (make-instance 'pull-request-info)
-                                     :run-retriever
-                                     (make-instance run-retriever))))
-       (&body)))))
+  (with-installation ()
+   (with-test-store ()
+     (cl-mock:with-mocks ()
+       (cl-mock:if-called 'verified-repo-p
+                          (lambda (repo company)
+                            t))
+       (cl-mock:if-called 'app-installed-p
+                          (lambda (repo)
+                            t))
+       (let ((company (make-instance 'company))
+             (promoter (make-instance 'pull-request-promoter
+                                      :app-id "dummy-app-id"
+                                      :private-key "dummy-private-key"
+                                      :pull-request-info
+                                      (make-instance 'pull-request-info)
+                                      :run-retriever
+                                      (make-instance run-retriever))))
+         (&body))))))
 
 (test run-without-pr-does-not-create-report
   (with-fixture state ()
@@ -188,38 +190,40 @@
          (is (cl-ppcre:scan ".*rebasing*" (check-title check))))))))
 
 (test check-result-for-diff-report
-  (with-test-store ()
-    (let ((empty-run (make-instance 'recorder-run))
-          (empty-report (make-instance 'diff-report :added nil
-                                                   :deleted nil
-                                                   :changes nil)))
-     (let ((check (make-check-result-from-diff-report
-                   (make-instance 'pull-request-promoter)
-                   empty-report
-                   empty-run nil)))
-       (is (eql :success (check-status check)))
-       (is (equal "No screenshots changed"
-                  (check-title check)))))))
+  (with-installation ()
+   (with-test-store ()
+     (let ((empty-run (make-instance 'recorder-run))
+           (empty-report (make-instance 'diff-report :added nil
+                                                     :deleted nil
+                                                     :changes nil)))
+       (let ((check (make-check-result-from-diff-report
+                     (make-instance 'pull-request-promoter)
+                     empty-report
+                     empty-run nil)))
+         (is (eql :success (check-status check)))
+         (is (equal "No screenshots changed"
+                    (check-title check))))))))
 
 (test check-result-for-unempty-diff-report
-  (with-test-store ()
-    (let ((diff-report (make-instance
-                        'diff-report
+  (with-installation ()
+   (with-test-store ()
+     (let ((diff-report (make-instance
+                         'diff-report
                          :added nil
                          :deleted nil
                          :changes (list
                                    (make-instance
                                     'change
-                                     :before (make-instance 'screenshot :name "foo")
-                                     :after (make-instance 'screenshot :name "foo"))))))
-      (let ((run (make-instance 'recorder-run
-                                :channel (make-instance 'dummy-channel))))
-       (let ((check (make-check-result-from-diff-report
-                     (make-instance 'pull-request-promoter)
-                     diff-report
-                     run run)))
-         (is (eql :action_required(check-status check)))
-         (is (cl-ppcre:scan "1 change.*" (check-title check))))))))
+                                    :before (make-instance 'screenshot :name "foo")
+                                    :after (make-instance 'screenshot :name "foo"))))))
+       (let ((run (make-instance 'recorder-run
+                                 :channel (make-instance 'dummy-channel))))
+         (let ((check (make-check-result-from-diff-report
+                       (make-instance 'pull-request-promoter)
+                       diff-report
+                       run run)))
+           (is (eql :action_required(check-status check)))
+           (is (cl-ppcre:scan "1 change.*" (check-title check)))))))))
 
 (test report-has-acceptable
   (with-fixture state ()

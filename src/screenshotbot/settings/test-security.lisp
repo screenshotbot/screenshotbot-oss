@@ -8,6 +8,7 @@
   (:import-from #:screenshotbot/settings/security
                 #:settings-security-page)
   (:import-from #:screenshotbot/testing
+                #:with-installation
                 #:with-test-user)
   (:import-from #:bknr.datastore
                 #:with-transaction)
@@ -18,12 +19,13 @@
 (util/fiveam:def-suite)
 
 (def-fixture state (&key oauth)
-  (with-test-store ()
-    (with-test-user (:user user :logged-in-p t)
-      (unless oauth
-        (with-transaction ()
-         (setf (auth:user-password user) "foobar")))
-      (&body))))
+  (with-installation ()
+   (with-test-store ()
+     (with-test-user (:user user :logged-in-p t)
+       (unless oauth
+         (with-transaction ()
+           (setf (auth:user-password user) "foobar")))
+       (&body)))))
 
 (test simple-screenshot
   (with-fixture state ()

@@ -17,7 +17,6 @@
 (ql:quickload "server/slynk")
 (ql:quickload "screenshotbot/all")
 
-
 (screenshotbot/config:load-config)
 
 (unless (member "compile" (uiop:command-line-arguments) :test 'string=)

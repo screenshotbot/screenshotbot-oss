@@ -88,7 +88,7 @@
   ())
 
 
-(defvar *installation* (make-instance 'installation))
+(defvar *installation*)
 
 (defun installation ()
   *installation*)

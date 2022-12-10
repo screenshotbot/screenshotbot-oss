@@ -40,6 +40,7 @@
                 #:can-view!
                 #:can-view)
   (:import-from #:screenshotbot/testing
+                #:with-installation
                 #:fix-timestamps
                 #:screenshot-test))
 (in-package :screenshotbot/dashboard/test-channels)
@@ -53,7 +54,7 @@
   (list (make-instance 'test-channel)))
 
 (test simple-view
-  (let ((*installation* (make-instance 'installation)))
+  (with-installation ()
    (let ((user (make-instance 'test-user))
          (company (make-instance 'company-with-channels)))
      (finishes
@@ -61,23 +62,23 @@
                       :company company)))))
 
 (def-fixture state ()
-  (cl-mock:with-mocks ()
-   (with-test-store ()
-     (let* ((company (make-instance 'company))
-            (channel (find-or-create-channel company "foobar"))
-            (run (make-instance 'recorder-run
-                                :channel channel
-                                :company company))
-            (channel-2 (find-or-create-channel company "foobar-2")))
-       (setf (active-run channel "master") run)
-       (cl-mock:if-called 'can-view!
-                          (lambda (x) t))
-       (with-fake-request ()
-         (auth:with-sessions ()
-           (&body)))))))
+  (with-installation ()
+   (cl-mock:with-mocks ()
+     (with-test-store ()
+       (let* ((company (make-instance 'company))
+              (channel (find-or-create-channel company "foobar"))
+              (run (make-instance 'recorder-run
+                                  :channel channel
+                                  :company company))
+              (channel-2 (find-or-create-channel company "foobar-2")))
+         (setf (active-run channel "master") run)
+         (cl-mock:if-called 'can-view!
+                            (lambda (x) t))
+         (with-fake-request ()
+           (auth:with-sessions ()
+             (&body))))))))
 
 (test run-for-channel
-  (pass)
   (with-fixture state ()
     (assert-that
      (run-for-channel :channel "foobar"

@@ -32,6 +32,8 @@
                 #:access-token)
   (:import-from #:screenshotbot/model/channel
                 #:channel)
+  (:import-from #:screenshotbot/testing
+                #:with-installation)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/slack/test-task-integration)
 
@@ -39,26 +41,27 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-   (let ((posts))
-     (cl-mock:with-mocks ()
-       (if-called 'slack-post-on-channel
-                   (lambda (&rest args)
-                     (push args posts)))
-       (let* ((company (make-instance 'company))
-              (channel (make-instance 'channel :name "foobar"))
-              (report (make-instance 'report :channel channel))
-              (self (make-instance 'slack-task-integration
-                                    :company company))
-              (slack-token (make-instance 'slack-token
-                                           :access-token "Foobar")))
+  (with-installation ()
+   (with-test-store ()
+     (let ((posts))
+       (cl-mock:with-mocks ()
+         (if-called 'slack-post-on-channel
+                    (lambda (&rest args)
+                      (push args posts)))
+         (let* ((company (make-instance 'company))
+                (channel (make-instance 'channel :name "foobar"))
+                (report (make-instance 'report :channel channel))
+                (self (make-instance 'slack-task-integration
+                                     :company company))
+                (slack-token (make-instance 'slack-token
+                                            :access-token "Foobar")))
 
-         (let ((slack-config (find-or-create-slack-config company)))
-           (with-transaction ()
-             (setf (access-token slack-config) slack-token)
-             (setf (default-slack-config company) slack-config)
-             (setf (enabledp slack-config) t)))
-         (&body))))))
+           (let ((slack-config (find-or-create-slack-config company)))
+             (with-transaction ()
+               (setf (access-token slack-config) slack-token)
+               (setf (default-slack-config company) slack-config)
+               (setf (enabledp slack-config) t)))
+           (&body)))))))
 
 (test preconditions
   (with-fixture state ()

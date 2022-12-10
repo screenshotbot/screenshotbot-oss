@@ -14,6 +14,8 @@
                 #:with-fake-request)
   (:import-from #:util/form-errors
                 #:with-form-errors)
+  (:import-from #:screenshotbot/testing
+                #:with-installation)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/login/test-login)
 
@@ -21,23 +23,25 @@
 (util/fiveam:def-suite)
 
 (test login-screenshot-test
-  (with-fake-request ()
-    (auth:with-sessions ()
-      (screenshot-static-page
-       :screenshotbot
-       "login"
-       (markup:write-html
-        (signin-get))))))
+  (with-installation ()
+   (with-fake-request ()
+     (auth:with-sessions ()
+       (screenshot-static-page
+        :screenshotbot
+        "login"
+        (markup:write-html
+         (signin-get)))))))
 
 (test login-error-screen
-  (with-fake-request ()
-    (auth:with-sessions ()
-      (screenshot-static-page
-       :screenshotbot
-       "login-error-screen"
-       (markup:write-html
-        (with-form-errors (:errors `((:password . "Incorrect password"))
-                           :password "foo"
-                           :email "blah@gmail.com"
-                           :was-validated t)
-         (signin-get)))))))
+  (with-installation ()
+   (with-fake-request ()
+     (auth:with-sessions ()
+       (screenshot-static-page
+        :screenshotbot
+        "login-error-screen"
+        (markup:write-html
+         (with-form-errors (:errors `((:password . "Incorrect password"))
+                            :password "foo"
+                            :email "blah@gmail.com"
+                            :was-validated t)
+           (signin-get))))))))

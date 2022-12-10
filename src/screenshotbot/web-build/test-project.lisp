@@ -21,6 +21,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/testing
+                #:with-installation
                 #:screenshot-test)
   (:import-from #:util/testing
                 #:with-fake-request)
@@ -31,12 +32,13 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-    (cl-mock:with-mocks ()
-      (let* ((company (make-instance 'company))
-             (project (make-instance 'web-project :name "foobar"
-                                     :company company)))
-       (&body)))))
+  (with-installation ()
+   (with-test-store ()
+     (cl-mock:with-mocks ()
+       (let* ((company (make-instance 'company))
+              (project (make-instance 'web-project :name "foobar"
+                                                   :company company)))
+         (&body))))))
 
 (test update-scheduled-job
   (with-fixture state ()

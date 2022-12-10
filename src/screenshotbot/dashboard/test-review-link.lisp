@@ -18,6 +18,8 @@
                 #:screenshot-static-page)
   (:import-from #:auth
                 #:with-sessions)
+  (:import-from #:screenshotbot/testing
+                #:with-installation)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-review-link)
 
@@ -30,9 +32,10 @@
                (has-typep 'nibble:nibble)))
 
 (test bad-url-page
-  (with-fake-request ()
-    (with-sessions ()
-     (screenshot-static-page
-      :screenshotbot
-      "bad-url-page"
-      (bad-url-page "git@dfd:foo/bar")))))
+  (with-installation ()
+   (with-fake-request ()
+     (with-sessions ()
+       (screenshot-static-page
+        :screenshotbot
+        "bad-url-page"
+        (bad-url-page "git@dfd:foo/bar"))))))

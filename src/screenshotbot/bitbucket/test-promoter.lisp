@@ -33,6 +33,8 @@
                 #:bitbucket-audit-logs-for-company)
   (:import-from #:screenshotbot/pro/bitbucket/core
                 #:bitbucket-error)
+  (:import-from #:screenshotbot/testing
+                #:with-installation)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/bitbucket/test-promoter)
 
@@ -40,24 +42,25 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-    (let* ((channel (make-instance 'channel :name "channel-0"))
-           (company (make-instance 'company))
-           (bitbucket-token (make-instance 'bitbucket-token
+  (with-installation ()
+   (with-test-store ()
+     (let* ((channel (make-instance 'channel :name "channel-0"))
+            (company (make-instance 'company))
+            (bitbucket-token (make-instance 'bitbucket-token
                                             :refresh-token "fake-refresh-token"
                                             :company company))
-           (check (make-instance 'check
-                                 :title "No screenshots changed"
-                                 :status :success)))
-      (cl-mock:with-mocks ()
-        (if-called 'bitbucket-settings-for-company
+            (check (make-instance 'check
+                                  :title "No screenshots changed"
+                                  :status :success)))
+       (cl-mock:with-mocks ()
+         (if-called 'bitbucket-settings-for-company
                     (lambda (c)
                       (assert (eql c company))
                       (list bitbucket-token)))
-        (if-called 'util/request:http-request
+         (if-called 'util/request:http-request
                     (lambda (&rest args)
                       (error "Unimplemented http-request mock for args ~a" args)))
-        (&body)))))
+         (&body))))))
 
 (test make-task-args-happy-path
   (with-fixture state ()

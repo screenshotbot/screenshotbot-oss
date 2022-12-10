@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/testing
+                #:with-installation
                 #:with-test-user)
   (:import-from #:screenshotbot/user-api
                 #:unaccepted-invites)
@@ -29,18 +30,19 @@
 (util/fiveam:def-suite)
 
 (test notices-screenshot-test
-  (with-test-store ()
-   (with-test-user (:user user
-                    :company company
-                    :logged-in-p t)
-     (with-transaction ()
-       (setf (unaccepted-invites user)
-             (list
-              (make-instance 'invite
-                             :code "dfd"
-                             :used-p nil
-                             :company company))))
-     (screenshot-static-page
-      :screenshotbot
-      "notices"
-      (dashboard-template)))))
+  (with-installation ()
+   (with-test-store ()
+     (with-test-user (:user user
+                      :company company
+                      :logged-in-p t)
+       (with-transaction ()
+         (setf (unaccepted-invites user)
+               (list
+                (make-instance 'invite
+                               :code "dfd"
+                               :used-p nil
+                               :company company))))
+       (screenshot-static-page
+        :screenshotbot
+        "notices"
+        (dashboard-template))))))

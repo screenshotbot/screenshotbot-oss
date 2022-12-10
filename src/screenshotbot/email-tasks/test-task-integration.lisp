@@ -33,6 +33,7 @@
   (:import-from #:screenshotbot/login/common
                 #:*current-company-override*)
   (:import-from #:screenshotbot/testing
+                #:with-installation
                 #:with-test-user)
   (:import-from #:screenshotbot/email-tasks/task-integration
                 #:email-task-integration
@@ -56,20 +57,21 @@
   ())
 
 (test preconditions
-  (with-test-store ()
-    (with-fake-request ()
-     (auth:with-sessions ()
-       (let* ((*installation* (make-instance 'multi-installation)))
-         (with-test-user (:company company
-                          :user user)
-           (setf (current-user) user)
-           (setf (current-company) company)
-           (screenshot-static-page
-            :screenshotbot
-            "email-settings-page"
-            (markup:write-html
-             (get-email-settings)))
-           (pass)))))))
+  (with-installation ()
+   (with-test-store ()
+     (with-fake-request ()
+       (auth:with-sessions ()
+         (let* ((*installation* (make-instance 'multi-installation)))
+           (with-test-user (:company company
+                            :user user)
+             (setf (current-user) user)
+             (setf (current-company) company)
+             (screenshot-static-page
+              :screenshotbot
+              "email-settings-page"
+              (markup:write-html
+               (get-email-settings)))
+             (pass))))))))
 
 (test only-sends-to-enabled-users
   (with-test-store ()
