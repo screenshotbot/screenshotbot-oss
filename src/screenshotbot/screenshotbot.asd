@@ -28,6 +28,7 @@
                :lparallel
                (:feature (:not :screenshotbot-oss) :documentation-plugin)
                :cl-store
+               :core.installation
                :encrypt
                :iterate
                :pkg

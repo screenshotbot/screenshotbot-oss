@@ -10,6 +10,9 @@
     (:use #:cl #:screenshotbot/plugin)
   (:import-from #:screenshotbot/mailer
                 #:noop-mailer)
+  (:import-from #:core/installation/installation
+                #:*installation*
+                #:abstract-installation)
   (:export
    #:installation
    #:plugin
@@ -32,7 +35,7 @@
    #:null-s3-store))
 (in-package :screenshotbot/installation)
 
-(defclass installation ()
+(defclass installation (abstract-installation)
   ((plugins :initform nil
             :initarg :plugins
             :accessor plugins)
@@ -86,9 +89,6 @@
 
 (defclass null-s3-store ()
   ())
-
-
-(defvar *installation*)
 
 (defun installation ()
   *installation*)
