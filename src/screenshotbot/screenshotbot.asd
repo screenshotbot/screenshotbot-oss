@@ -278,6 +278,7 @@
                :screenshotbot/testing-lib
                :screenshotbot/events
                :tmpdir
+               :cl-mock
                :screenshotbot)
   :components ((:file "factory")
                (:file "test-server")
@@ -289,6 +290,7 @@
                (:file "test-secret")
                (:file "test-async")
                (:file "test-settings-api")
+               (:file "test-config")
                (:module "promoter"
                 :components ((:file "test-async-promoter")))
                (:file "test-installation")

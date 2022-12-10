@@ -48,7 +48,8 @@
        (let ((*package* (find-package :screenshotbot/config)))
          (load config.lisp)))
       (t
-       (log:info "No config.lisp found")))))
+       (log:info "No config.lisp found")
+       (setf (installation) (make-instance 'installation))))))
 
 ;;;; I suppose I'm misusing the screenshotbot/config package for bot
 ;;;; this file and for the package the config.lisp is loaded from. In
