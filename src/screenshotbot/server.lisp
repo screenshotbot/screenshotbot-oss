@@ -108,6 +108,14 @@
   (:default-initargs
    :name 'screenshotbot-acceptor))
 
+(defmethod hunchentoot:acceptor-request-class ((self acceptor))
+  "TODO: this can be moved to :default-initargs. This is easier for
+ temporary migration."
+  'request)
+
+(defclass request (hunchentoot:request)
+  ())
+
 #-screenshotbot-oss
 (defclass sb-documentation-plugin (documentation-plugin:documentation-plugin)
   ())
