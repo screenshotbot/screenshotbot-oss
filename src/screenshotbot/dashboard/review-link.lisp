@@ -17,7 +17,7 @@
                 #:?.)
   (:import-from #:nibble
                 #:nibble)
-  (:import-from #:screenshotbot/ui/simple-card-page
+  (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
   (:local-nicknames (#:a #:alexandria))
   (:export

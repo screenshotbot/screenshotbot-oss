@@ -8,7 +8,7 @@
   (:use #:cl #:alexandria)
   (:export #:confirmation-page
            #:confirmation-modal)
-  (:import-from #:screenshotbot/ui/simple-card-page
+  (:import-from #:core/ui/simple-card-page
                 #:simple-card-page))
 (in-package :screenshotbot/ui/confirmation-page)
 

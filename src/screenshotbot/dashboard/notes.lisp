@@ -6,7 +6,6 @@
 
 (defpackage :screenshotbot/dashboard/notes
   (:use #:cl
-        #:screenshotbot/ui/simple-card-page
         #:screenshotbot/template)
   (:import-from #:nibble
                 #:nibble)
@@ -14,6 +13,8 @@
                 #:form-state-initargs
                 #:read-form-state
                 #:form-state-class)
+  (:import-from #:core/ui/simple-card-page
+                #:simple-card-page)
   (:import-from #:screenshotbot/model/note
                 #:message
                 #:find-notes-for

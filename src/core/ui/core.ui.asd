@@ -7,4 +7,5 @@
 (defsystem :core.ui
   :serial t
   :depends-on (:markup)
-  :components ((:file "template")))
+  :components ((:file "template")
+               (:file "simple-card-page")))

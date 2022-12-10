@@ -36,7 +36,7 @@
                 #:whoami
                 #:can-edit-repo
                 #:read-repo-list)
-  (:import-from #:screenshotbot/ui/simple-card-page
+  (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
   (:import-from #:util/store
                 #:with-class-validation)

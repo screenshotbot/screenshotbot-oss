@@ -110,7 +110,6 @@
    (:file "taskie")
    (:module "ui"
     :components ((:file "core")
-                 (:file "simple-card-page")
                  (:file "confirmation-page")
                  (:file "all")))
    (:file "artifacts")

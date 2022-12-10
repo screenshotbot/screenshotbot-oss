@@ -21,7 +21,7 @@
                 #:browser-name)
   (:import-from #:nibble
                 #:nibble)
-  (:import-from #:screenshotbot/ui/simple-card-page
+  (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
   (:import-from #:util/form-state
                 #:form-state-apply-edits

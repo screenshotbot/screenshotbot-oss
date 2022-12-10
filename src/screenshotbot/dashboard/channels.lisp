@@ -38,7 +38,7 @@
                 #:active-run)
   (:import-from #:util/request
                 #:http-request)
-  (:import-from #:screenshotbot/ui/simple-card-page
+  (:import-from #:core/ui/simple-card-page
                 #:simple-card-page))
 (in-package :screenshotbot/dashboard/channels)
 

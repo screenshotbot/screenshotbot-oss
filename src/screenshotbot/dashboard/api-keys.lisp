@@ -16,7 +16,8 @@
                 #:mdi
                 #:dashboard-template)
   (:import-from #:screenshotbot/ui
-                #:confirmation-page
+                #:confirmation-page)
+  (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
   (:import-from #:screenshotbot/server
                 #:with-login)

@@ -8,7 +8,6 @@
   (:use #:cl
         #:alexandria
         #:nibble
-        #:screenshotbot/ui
         #:screenshotbot/user-api
         #:util/form-errors
         #:screenshotbot/installation
@@ -31,6 +30,8 @@
                 #:timeago)
   (:import-from #:screenshotbot/ui/confirmation-page
                 #:confirmation-page)
+  (:import-from #:core/ui/simple-card-page
+                #:simple-card-page)
   (:import-from #:screenshotbot/dashboard/paginated
                 #:paginated)
   (:import-from #:screenshotbot/dashboard/audit-log

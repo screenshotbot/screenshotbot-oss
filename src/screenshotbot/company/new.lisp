@@ -21,7 +21,7 @@
   (:import-from #:hex #:make-url)
   (:import-from #:util/form-errors
                 #:with-form-errors)
-  (:import-from #:screenshotbot/ui
+  (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
   (:import-from #:screenshotbot/events
                 #:push-event))

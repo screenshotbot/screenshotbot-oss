@@ -19,7 +19,7 @@
                 #:with-transaction)
   (:import-from #:screenshotbot/model/core
                 #:generate-api-secret)
-  (:import-from #:screenshotbot/ui
+  (:import-from #:core/ui/simple-card-page
                 #:simple-card-page))
 (in-package :screenshotbot/dashboard/site-admin)
 

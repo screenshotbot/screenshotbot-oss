@@ -4,12 +4,12 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/ui/simple-card-page
+(uiop:define-package :core/ui/simple-card-page
   (:use #:cl #:alexandria)
   (:import-from #:core/ui/template
                 #:app-template)
   (:export #:simple-card-page))
-(in-package :screenshotbot/ui/simple-card-page)
+(in-package :core/ui/simple-card-page)
 
 (markup:enable-reader)
 
