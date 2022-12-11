@@ -94,6 +94,7 @@
 
 (defun (setf current-user) (user)
   (setf (auth:session-value :user) user)
+  (setf (auth:request-user hunchentoot:*request*) user)
   user)
 
 (defun needs-user! ()
@@ -121,17 +122,15 @@
 
 
 (defun current-user ()
-  (anaphora:acond
-    ((and
-      (boundp 'hunchentoot:*request*)
-      (auth:request-user hunchentoot:*request*))
-     anaphora:it)
-    ((logged-in-p)
-      (cond
-        (t
-         (let ((user (auth:session-value :user)))
-           (check-type user user)
-           user))))))
+  (and
+   (boundp 'hunchentoot:*request*)
+   (auth:request-user hunchentoot:*request*)))
+
+(defmethod auth:authenticate-request ((request screenshotbot/server:request))
+  (unless (auth:request-user request) ;; Might happen in tests
+    (alexandria:when-let ((user (auth:session-value :user)))
+      (check-type user user)
+      (setf (auth:request-user request) user))))
 
 (defmethod nibble:nibble-current-user ((acceptor screenshotbot/server:acceptor))
   (current-user))

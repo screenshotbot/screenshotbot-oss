@@ -167,12 +167,16 @@ this would be a problem."
             (session-domain session2))))
 
 (defun %with-sessions (body)
-  (let ((*current-session* (%current-session)))
-    (unless *current-session*
-      (setf *current-session* (%make-session))
-      (set-session *current-session*)
-      (assert *current-session*))
-    (funcall body)))
+  (cond
+    ((boundp '*current-session*)
+     (funcall body))
+    (t
+     (let ((*current-session* (%current-session)))
+       (unless *current-session*
+         (setf *current-session* (%make-session))
+         (set-session *current-session*)
+         (assert *current-session*))
+       (funcall body)))))
 
 (defmacro with-sessions (() &body body)
   "Inside of this macro CURRENT-SESSION will always return a non-nil

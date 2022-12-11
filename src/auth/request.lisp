@@ -24,5 +24,6 @@
 (defmethod hunchentoot:acceptor-dispatch-request :around
     (acceptor
      (request authenticated-request))
-  (authenticate-request request)
-  (call-next-method))
+  (auth:with-sessions ()
+    (authenticate-request request)
+    (call-next-method)))
