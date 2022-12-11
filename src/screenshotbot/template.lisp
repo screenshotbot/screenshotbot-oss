@@ -10,7 +10,8 @@
           #:alexandria
           #:screenshotbot/cdn
           #:screenshotbot/user-api)
-  (:use-reexport #:screenshotbot/cdn)
+  (:use-reexport #:screenshotbot/cdn
+                 #:core/ui/mdi)
   (:export #:selenium-css
            #:mdi
            #:landing-head
@@ -58,9 +59,6 @@
 (defmethod render-extra-scripts ((installation installation))
   nil)
 
-
-(deftag mdi (&key name class)
-  <i class= (format nil "material-icons ~a" class) >,(progn name)</i>)
 
 (deftag selenium-css ()
   (when *seleniump*

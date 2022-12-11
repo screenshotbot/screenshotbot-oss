@@ -4,9 +4,13 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defsystem :core.ui
-  :serial t
-  :depends-on (:markup)
-  :components ((:file "template")
-               (:file "simple-card-page")
-               (:file "mdi")))
+(defpackage :core/ui/mdi
+  (:use #:cl)
+  (:export
+   #:mdi))
+(in-package :core/ui/mdi)
+
+(markup:enable-reader)
+
+(markup:deftag mdi (&key name class)
+  <i class= (format nil "material-icons ~a" class) >,(progn name)</i>)
