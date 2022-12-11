@@ -81,8 +81,7 @@
    (with-fake-request ()
      (auth:with-sessions ()
        (with-test-user (:company company
-                        :user user
-                        :api-key api-key)
+                        :user user)
          (let* ((channel (make-instance 'test-channel :name "foo"))
                 (run1 (make-instance 'recorder-run
                                       :channel channel
@@ -106,8 +105,7 @@
              (push channel (company-channels company))
              (push run1 (company-runs company))
              (push run2 (company-runs company)))
-           (let ((*current-api-key* api-key))
-             (&body))))))))
+           (&body)))))))
 
 (defun %maybe-promote-run (run channel &key (wait-timeout 1))
   (maybe-promote-run run

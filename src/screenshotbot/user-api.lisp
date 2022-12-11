@@ -43,7 +43,6 @@
    #:channel-active-run
    #:company-name
    #:screenshot-name
-   #:*current-api-key*
    #:company-reports
    #:created-at
    #:report-num-changes

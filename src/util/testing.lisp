@@ -24,7 +24,7 @@
 (defun in-test-p ()
   *in-test-p*)
 
-(defclass custom-request (hunchentoot:request)
+(defclass custom-request (auth:authenticated-request)
   ((additional-post-params :initform nil)))
 
 (defmethod (setf hunchentoot:post-parameter) (val (request custom-request) key)

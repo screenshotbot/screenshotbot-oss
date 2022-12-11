@@ -79,8 +79,7 @@
                                         :trunkp t
                                         :company company)))
              (is (eql 'github-create-issue *create-issue-fn*))
-             (let ((*current-api-key* api-key)
-                   (*create-issue-fn* (lambda (repo title body)
+             (let ((*create-issue-fn* (lambda (repo title body)
                                         "http://foo/1")))
                (&body)))))))))
 

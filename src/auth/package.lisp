@@ -40,4 +40,5 @@
            #:authenticate-request
            #:authenticated-request
            #:find-user-session-value-by-hash
-           #:request-user))
+           #:request-user
+           #:request-account))

@@ -121,15 +121,17 @@
 
 
 (defun current-user ()
-  (when (logged-in-p)
-    (cond
-      ((and (boundp '*current-api-key*)
-            *current-api-key*)
-       (api-key-user *current-api-key*))
-      (t
-       (let ((user (auth:session-value :user)))
-         (check-type user user)
-         user)))))
+  (anaphora:acond
+    ((and
+      (boundp 'hunchentoot:*request*)
+      (auth:request-user hunchentoot:*request*))
+     anaphora:it)
+    ((logged-in-p)
+      (cond
+        (t
+         (let ((user (auth:session-value :user)))
+           (check-type user user)
+           user))))))
 
 (defmethod nibble:nibble-current-user ((acceptor screenshotbot/server:acceptor))
   (current-user))
@@ -154,7 +156,11 @@
       :key #'car)))
 
 (defun current-company (&key (user nil user-bound-p))
-  (cond
+  (anaphora:acond
+    ((and
+      (boundp 'hunchentoot:*request*)
+      (auth:request-account hunchentoot:*request*))
+     anaphora:it)
     (*current-company-override*
      *current-company-override*)
     (t
@@ -171,8 +177,6 @@
                   (car (user-companies user))))))
           ((not (logged-in-p))
            nil)
-          ((boundp '*current-api-key*)
-           (api-key-company *current-api-key*))
           (t
            (current-company :user (current-user)))))
        (t
@@ -183,9 +187,7 @@
     (funcall fn)))
 
 (defun logged-in-p ()
-  (or
-   (when (auth:session-value :user) t)
-   (boundp '*current-api-key*)))
+  (auth:session-value :user))
 
 
 (defun %with-oauth-state-and-redirect (state body)

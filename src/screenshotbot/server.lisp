@@ -54,7 +54,8 @@
    #:no-access-error-page
    #:*init-hooks*
    #:register-init-hook
-   #:call-init-hooks)
+   #:call-init-hooks
+   #:request)
   (:local-nicknames (#:threading #:util/threading)))
 (in-package :screenshotbot/server)
 

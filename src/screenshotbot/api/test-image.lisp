@@ -9,8 +9,6 @@
         #:alexandria
         #:bknr.datastore
         #:fiveam)
-  (:import-from #:screenshotbot/user-api
-                #:*current-api-key*)
   (:import-from #:util
                 #:oid)
   (:import-from #:screenshotbot/api/image
@@ -52,9 +50,9 @@
        (auth:with-sessions ()
         (with-test-user (:company company
                          :user user
-                         :api-key api-key)
-          (let ((*current-api-key* api-key)
-                (*build-presigned-put* (lambda (bucket key) "https://example.com")))
+                         :api-key api-key
+                         :logged-in-p t)
+          (let ((*build-presigned-put* (lambda (bucket key) "https://example.com")))
             (&body))))))))
 
 (test simple-upload

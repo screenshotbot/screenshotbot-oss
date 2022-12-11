@@ -40,7 +40,6 @@
    #:user
    #:email-confirmation-code
    #:user-notice)
-  (:export #:*current-api-key*)
   (:export
    #:arnold
    #:user-with-email
@@ -74,8 +73,6 @@
    #:default-company
    #:make-user))
 (in-package :screenshotbot/model/user)
-
-(defvar *current-api-key*)
 
 (def-store-local *lowercase-email-map*
     (make-hash-table :test #'equal)

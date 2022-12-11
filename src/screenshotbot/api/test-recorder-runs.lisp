@@ -62,8 +62,7 @@
              (setf (current-user) user)
              (assert (logged-in-p))
              (assert (current-user))
-             (let ((*current-api-key* api-key))
-               (&body)))))))))
+             (&body))))))))
 
 (defun serial-recorder-run-post (&rest args)
   (multiple-value-bind (val verify)

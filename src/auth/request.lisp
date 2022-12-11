@@ -12,7 +12,12 @@
 (defclass authenticated-request (hunchentoot:request)
   ((user :initarg :user
          :initform nil
-         :accessor request-user)))
+         :accessor request-user)
+   (account :initarg :account
+            :initform nil
+            :accessor request-account
+            :documentation "In screenshotbot this is called a `company`. But this is any account
+ object that the user is accessing.")))
 
 (defmethod authenticate-request (request))
 
