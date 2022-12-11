@@ -113,7 +113,7 @@
  temporary migration."
   'request)
 
-(defclass request (hunchentoot:request)
+(defclass request (auth:authenticated-request)
   ())
 
 #-screenshotbot-oss
