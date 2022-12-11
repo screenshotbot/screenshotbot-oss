@@ -21,6 +21,8 @@
                 #:*in-test-p*
                 #:ensure-private-ip
                 #:artifact-link)
+  (:import-from #:screenshotbot/testing
+                #:with-installation)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-artifacts)
 
@@ -32,18 +34,19 @@
     (assert (not (boundp '*object-store*)))
     (let ((old-secret (secret :artifact-upload-key))
           (old-hooks *artifact-hooks*))
-      (unwind-protect
-           (progn
-             (setf *object-store* (namestring dir))
-             (setf old-hooks *artifact-hooks*)
-             (setf *in-test-p* t)
-             (setf (secret :artifact-upload-key) "foobar")
-             (with-local-acceptor (host) ('screenshotbot/server:acceptor)
-               (&body)))
-        (setf (secret :artifact-upload-key) old-secret)
-        (setf *in-test-p* nil)
-        (setf *artifact-hooks* old-hooks)
-        (makunbound '*object-store*)))))
+      (with-installation (:globally t)
+       (unwind-protect
+            (progn
+              (setf *object-store* (namestring dir))
+              (setf old-hooks *artifact-hooks*)
+              (setf *in-test-p* t)
+              (setf (secret :artifact-upload-key) "foobar")
+              (with-local-acceptor (host) ('screenshotbot/server:acceptor)
+                (&body)))
+         (setf (secret :artifact-upload-key) old-secret)
+         (setf *in-test-p* nil)
+         (setf *artifact-hooks* old-hooks)
+         (makunbound '*object-store*))))))
 
 (test upload-and-download ()
   (with-fixture state ()

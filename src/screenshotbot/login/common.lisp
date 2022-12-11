@@ -129,14 +129,38 @@
   (unless (auth:request-user request) ;; Might happen in tests
     (alexandria:when-let ((user (auth:session-value :user)))
       (check-type user user)
-      (setf (auth:request-user request) user))))
+      (setf (auth:request-user request) user)))
+  (unless (auth:request-account request)
+    (alexandria:when-let ((company
+                           (typecase (installation)
+                             (multi-org-feature
+                              (cond
+                                ((not (logged-in-p))
+                                 nil)
+                                (t
+                                 (guess-best-company
+                                  (auth:session-value :company)
+                                  (auth:request-user request)))))
+                             (t
+                              (get-singleton-company (installation))))))
+      (setf (auth:request-account request) company))))
+
+(defun guess-best-company (company user)
+  (when user
+   (if (and company (can-view company user))
+       company
+       (or
+        (most-recent-company (user-companies user))
+        (user-personal-company user)
+        (car (user-companies user))))))
 
 (defmethod nibble:nibble-current-user ((acceptor screenshotbot/server:acceptor))
   (current-user))
 
-(defun (Setf current-company) (company)
+(defun (setf current-company) (company)
   (can-view! company)
-  (setf (auth:session-value :company) company))
+  (setf (auth:session-value :company) company
+        (auth:request-account hunchentoot:*request*) company))
 
 (defun most-recent-company (companies)
   "Returns the most recently updated company in the list. If none are
@@ -153,30 +177,10 @@
     #'timestamp>
       :key #'car)))
 
-(defun current-company (&key (user nil user-bound-p))
-  (anaphora:acond
-    ((and
+(defun current-company ()
+  (and
       (boundp 'hunchentoot:*request*)
-      (auth:request-account hunchentoot:*request*))
-     anaphora:it)
-    (t
-     (typecase (installation)
-       (multi-org-feature
-        (cond
-          (user-bound-p
-           (let* ((company (auth:session-value :company)))
-             (if (and company (can-view company user))
-                 company
-                 (or
-                  (most-recent-company (user-companies user))
-                  (user-personal-company user)
-                  (car (user-companies user))))))
-          ((not (logged-in-p))
-           nil)
-          (t
-           (current-company :user (current-user)))))
-       (t
-        (get-singleton-company (installation)))))))
+      (auth:request-account hunchentoot:*request*)))
 
 (defun logged-in-p ()
   (auth:session-value :user))

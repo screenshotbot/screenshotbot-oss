@@ -37,8 +37,8 @@
 
 (hex:declare-handler 'run-page)
 
-(defun find-recent-runs (&key user user-id)
-  (company-runs (current-company :user user)))
+(defun find-recent-runs ()
+  (company-runs (current-company)))
 
 (deftag conditional-commit (&key repo hash)
 
@@ -136,7 +136,7 @@
 (defun %recent-runs ()
   (needs-user!)
 
-  (let ((runs (find-recent-runs :user (current-user))))
+  (let ((runs (find-recent-runs)))
     (render-recent-runs runs)))
 
 (defhandler (recent-runs :uri "/runs") ()

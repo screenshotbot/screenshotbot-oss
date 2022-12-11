@@ -60,6 +60,7 @@
                                         :company company
                                         :hash "foo2")))
              (setf (current-user) user)
+             (setf (current-company) company)
              (assert (logged-in-p))
              (assert (current-user))
              (&body))))))))

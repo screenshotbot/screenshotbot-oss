@@ -23,6 +23,8 @@
   (:import-from #:screenshotbot/model/user
                 #:user-personal-company
                 #:make-user)
+  (:import-from #:screenshotbot/login/common
+                #:guess-best-company)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/login/test-common)
 
@@ -42,7 +44,7 @@
     (let ((*installation* (make-instance 'installation)))
       (prepare-singleton-company)
       (is-true (get-singleton-company *installation*))
-      (is-true (current-company)))))
+      (is-true (guess-best-company nil (make-instance 'user))))))
 
 (defclass multi-org (multi-org-feature
                      installation)
@@ -53,7 +55,4 @@
     (let* ((*installation* (make-instance 'multi-org))
            (user (make-user))
            (company (user-personal-company user)))
-      (cl-mock:answer
-          (auth:session-value :company)
-        company)
-      (is (eql company (current-company :user user)) ))) ())
+      (is (eql company (guess-best-company company user)) ))) ())
