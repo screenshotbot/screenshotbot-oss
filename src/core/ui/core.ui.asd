@@ -9,4 +9,5 @@
   :depends-on (:markup)
   :components ((:file "template")
                (:file "simple-card-page")
-               (:file "mdi")))
+               (:file "mdi")
+               (:file "paginated")))

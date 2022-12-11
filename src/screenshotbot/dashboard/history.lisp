@@ -25,7 +25,7 @@
                 #:oid)
   (:import-from #:screenshotbot/dashboard/compare
                 #:comparison-modal)
-  (:import-from #:screenshotbot/dashboard/paginated
+  (:import-from #:core/ui/paginated
                 #:paginated)
   (:import-from #:screenshotbot/user-api
                 #:screenshot-name)

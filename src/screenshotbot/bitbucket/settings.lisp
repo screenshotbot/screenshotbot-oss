@@ -39,7 +39,7 @@
                 #:build-status-audit-log-commit
                 #:build-status-audit-log-full-name
                 #:build-status-audit-log)
-  (:import-from #:screenshotbot/dashboard/paginated
+  (:import-from #:core/ui/paginated
                 #:paginated)
   (:import-from #:screenshotbot/taskie
                 #:timeago)

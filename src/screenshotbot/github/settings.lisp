@@ -62,7 +62,7 @@
   (:import-from #:screenshotbot/github/audit-log
                 #:github-audit-log
                 #:github-audit-logs-for-company)
-  (:import-from #:screenshotbot/dashboard/paginated
+  (:import-from #:core/ui/paginated
                 #:paginated)
   (:import-from #:screenshotbot/dashboard/audit-log
                 #:render-audit-logs)

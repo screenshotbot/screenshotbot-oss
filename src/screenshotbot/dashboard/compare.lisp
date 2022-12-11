@@ -44,7 +44,7 @@
                 #:draw-masks-in-place)
   (:import-from #:screenshotbot/magick
                 #:run-magick)
-  (:import-from #:screenshotbot/dashboard/paginated
+  (:import-from #:core/ui/paginated
                 #:paginated)
   (:import-from #:bknr.datastore
                 #:store-object)

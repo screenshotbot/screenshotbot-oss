@@ -4,14 +4,13 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/dashboard/paginated
+(defpackage :core/ui/paginated
   (:use #:cl)
   (:import-from #:nibble
                 #:nibble)
-  (:local-nicknames (#:a #:alexandria))
   (:export
    #:paginated))
-(in-package :screenshotbot/dashboard/paginated)
+(in-package :core/ui/paginated)
 
 (markup:enable-reader)
 
@@ -20,7 +19,7 @@
                        (empty-view)
                        (num 24)
                        (items nil)
-                       (iterator nil))
+j                       (iterator nil))
   "Creates a paginated view. If no element matches, then we return
 NIL, which can be used as a way of determining whether to render an
 empty message."

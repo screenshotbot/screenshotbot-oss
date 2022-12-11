@@ -32,7 +32,7 @@
                 #:confirmation-page)
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
-  (:import-from #:screenshotbot/dashboard/paginated
+  (:import-from #:core/ui/paginated
                 #:paginated)
   (:import-from #:screenshotbot/dashboard/audit-log
                 #:describe-audit-log

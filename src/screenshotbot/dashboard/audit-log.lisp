@@ -14,7 +14,7 @@
                 #:timeago)
   (:import-from #:markup
                 #:deftag)
-  (:import-from #:screenshotbot/dashboard/paginated
+  (:import-from #:core/ui/paginated
                 #:paginated)
   (:local-nicknames (#:a #:alexandria))
   (:export

@@ -34,7 +34,7 @@
                 #:ui/div)
   (:import-from #:bknr.datastore
                 #:store-object-id)
-  (:import-from #:screenshotbot/dashboard/paginated
+  (:import-from #:core/ui/paginated
                 #:paginated)
   (:import-from #:screenshotbot/model/report
                 #:reports-for-run)
