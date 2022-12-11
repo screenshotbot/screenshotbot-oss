@@ -81,6 +81,8 @@
             (with-fake-request (,@fake-request-args)
               (auth:with-sessions ()
                 (setf (current-user) ,user)
+                (setf (auth:request-account hunchentoot:*request*)
+                      ,company)
                 (let ((*current-company-override* ,company))
                   (body)))))
            (t

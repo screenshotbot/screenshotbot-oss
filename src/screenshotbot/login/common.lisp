@@ -50,8 +50,7 @@
    #:oauth-signin-link
    #:oauth-signup-link
    #:abstract-oauth-provider
-   #:after-create-user
-   #:with-current-company))
+   #:after-create-user))
 (in-package :screenshotbot/login/common)
 
 (markup:enable-reader)
@@ -160,8 +159,6 @@
       (boundp 'hunchentoot:*request*)
       (auth:request-account hunchentoot:*request*))
      anaphora:it)
-    (*current-company-override*
-     *current-company-override*)
     (t
      (typecase (installation)
        (multi-org-feature
@@ -180,10 +177,6 @@
            (current-company :user (current-user)))))
        (t
         (get-singleton-company (installation)))))))
-
-(def-easy-macro with-current-company (company &fn fn)
-  (let ((*current-company-override* company))
-    (funcall fn)))
 
 (defun logged-in-p ()
   (auth:session-value :user))

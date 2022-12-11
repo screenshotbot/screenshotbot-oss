@@ -23,8 +23,6 @@
   (:import-from #:screenshotbot/model/user
                 #:user-personal-company
                 #:make-user)
-  (:import-from #:screenshotbot/login/common
-                #:with-current-company)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/login/test-common)
 
@@ -59,12 +57,3 @@
           (auth:session-value :company)
         company)
       (is (eql company (current-company :user user)) ))) ())
-
-(test with-current-company
-  (with-fixture state ()
-    ;; Make sure we don't accidently use a with-fake-request in the
-    ;; fixture in the future.
-    (is (not (boundp 'hunchentoot:*request*)))
-    (let ((company (make-instance 'company)))
-      (with-current-company (company)
-        (is (eql company (current-company)))))))

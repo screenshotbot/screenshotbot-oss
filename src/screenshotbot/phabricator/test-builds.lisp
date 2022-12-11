@@ -27,12 +27,12 @@
                 #:class-instances)
   (:import-from #:screenshotbot/model/company
                 #:company)
-  (:import-from #:screenshotbot/login/common
-                #:with-current-company)
   (:import-from #:screenshotbot/phabricator/plugin
                 #:phab-instance-for-company)
   (:import-from #:util/phabricator/conduit
                 #:phab-instance)
+  (:import-from #:hunchentoot
+                #:*request*)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/phabricator/test-builds)
 
@@ -50,31 +50,31 @@
         (cl-mock:if-called 'phab-instance-for-company
                            (lambda (company)
                              (make-instance 'phab-instance)))
-        (&body)))))
+        (with-fake-request ()
+          (setf (auth:request-account *request*) company)
+          (&body))))))
 
 (test first-update
   (with-fixture state ()
     (cl-mock:if-called '%send-message
                        (lambda (&rest args)
                          (error "should not be called")))
-    (with-current-company (company)
-      (%update-build
-       :diff 123
-       :revision 321
-       :target-phid "foobar"
-       :build-phid "carbar"))
+    (%update-build
+     :diff 123
+     :revision 321
+     :target-phid "foobar"
+     :build-phid "carbar")
     (let ((info (car (class-instances 'build-info))))
       (is (eql company
                (company info)))
       (is (eql info
                (find-build-info company 123)))
 
-      (with-current-company (company)
-       (%update-build
-        :diff 123
-        :revision 321
-        :target-phid "new-foo"
-        :build-phid "new-car"))
+      (%update-build
+       :diff 123
+       :revision 321
+       :target-phid "new-foo"
+       :build-phid "new-car")
       (is (equal (list info) (class-instances 'build-info))))))
 
 (defun get-only-build-info ()
@@ -101,12 +101,11 @@
                                       (build-phid self)))
                            (push type res))
                          :at-start t)
-      (with-current-company (company)
-        (%update-build
-         :diff 123
-         :revision 321
-         :target-phid "foobar"
-         :build-phid "carbar"))
+      (%update-build
+       :diff 123
+       :revision 321
+       :target-phid "foobar"
+       :build-phid "carbar")
       (is (equal '(:pass) res)))))
 
 (test update-status-after-callback
@@ -118,12 +117,11 @@
       (cl-mock:if-called 'send-restart
                          (lambda (&rest args)
                            (error "send-restart should not be called")))
-      (with-current-company (company)
-        (%update-build
-         :diff 123
-         :revision 321
-         :target-phid "foobar"
-         :build-phid "carbar"))
+      (%update-build
+       :diff 123
+       :revision 321
+       :target-phid "foobar"
+       :build-phid "carbar")
 
 
       ;; We'll immediately send the message in this case
@@ -140,12 +138,11 @@
       (cl-mock:if-called 'send-restart
                          (lambda (&rest args)
                            (error "send-restart should not be called")))
-      (with-current-company (company)
-        (%update-build
-         :diff 123
-         :revision 321
-         :target-phid "foobar"
-         :build-phid "carbar"))
+      (%update-build
+       :diff 123
+       :revision 321
+       :target-phid "foobar"
+       :build-phid "carbar")
 
 
       ;; We'll immediately send the message in this case
@@ -176,12 +173,11 @@
                          (lambda (&rest args)
                            (error "send-restart should not be called"))
                          :at-start t)
-      (with-current-company (company)
-        (%update-build
-         :diff 123
-         :revision 321
-         :target-phid "foobar2"
-         :build-phid "carbar2"))
+      (%update-build
+       :diff 123
+       :revision 321
+       :target-phid "foobar2"
+       :build-phid "carbar2")
       (is (equal '(:pass) res))
       (is-false (needs-sync-p (get-only-build-info)))
       (is (equal "foobar2" (target-phid (get-only-build-info))))

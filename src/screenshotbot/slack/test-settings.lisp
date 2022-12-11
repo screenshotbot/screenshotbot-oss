@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/slack/test-settings
+(defpackage :screenshotbot/slack/test-settings
   (:use #:cl
         #:alexandria
         #:bknr.datastore
@@ -21,6 +21,7 @@
                 #:*installation*
                 #:installation
                 #:multi-org-feature))
+(in-package :screenshotbot/slack/test-settings)
 
 (util/fiveam:def-suite)
 
@@ -37,13 +38,9 @@
                                      :access-token "foo"
                                      :company company
                                      :ts 34)))
-         (unwind-protect
-              (let ((*current-company-override* company))
-                (&body))
-           (when (default-slack-config company)
-             (delete-object (default-slack-config company)))
-           (delete-object company)
-           (delete-object token)))))))
+         (setf (auth:request-account hunchentoot:*request*)
+               company)
+         (&body))))))
 
 (test posting-when-nothing-is-available ()
   (with-fixture state ()
