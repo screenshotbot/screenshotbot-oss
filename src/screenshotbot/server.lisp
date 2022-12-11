@@ -114,7 +114,8 @@
  temporary migration."
   'request)
 
-(defclass request (auth:authenticated-request)
+(defclass request (auth:authenticated-request
+                   hunchensocket::websocket-request)
   ())
 
 #-screenshotbot-oss
