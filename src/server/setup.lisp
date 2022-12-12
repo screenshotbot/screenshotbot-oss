@@ -12,6 +12,8 @@
                 #:run-health-checks)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:lparallel.kernel
+                #:*lisp-exiting-p*)
   (:export #:main
            #:register-acceptor
            #:slynk-loop
@@ -198,12 +200,32 @@
     (run-health-checks)
     (uiop:quit 0)))
 
-(def-easy-macro with-lparallel-kernel (&fn fn)
-  (setf lparallel:*kernel* (lparallel:make-kernel 100))
-  (unwind-protect
-       (funcall fn)
-    (log:info "Shutting down lparallel")
-    (lparallel:end-kernel :wait t)))
+(define-condition dummy-signal ())
+
+(def-easy-macro with-hidden-warnings (&fn fn)
+  (let ((old *error-output*))
+   (with-output-to-string (out)
+     (setf *error-output* out)
+     (unwind-protect
+          (funcall fn)
+       (setf *error-output* old)))))
+
+(def-easy-macro with-lparallel-kernel (&key (threads 100)
+                                            &fn fn)
+  (let ((shutting-down-p nil))
+    (flet ((context (fn)
+             (handler-bind ((simple-warning (lambda (w)
+                                              (when shutting-down-p
+                                                (muffle-warning w)))))
+               (funcall fn))))
+      (setf lparallel:*kernel* (lparallel:make-kernel threads
+                                                      :context #'context))
+      (unwind-protect
+           (funcall fn)
+        (log:info "lparallel: shutting down")
+        (setf shutting-down-p t)
+        (lparallel:end-kernel :wait t)
+        (log:info "lparallel: shutdown complete")))))
 
 (defun main (&key (enable-store t)
                (jvm t)

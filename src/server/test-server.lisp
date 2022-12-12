@@ -9,14 +9,22 @@
         #:fiveam)
   (:import-from #:server
                 #:with-lparallel-kernel)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :server/test-server)
 
 (util/fiveam:def-suite)
 
 (test with-lparallel-kernel
-  (let (val)
-   (with-lparallel-kernel ()
-     (setf val (lparallel:force
-                (lparallel:future :done))))
+  (let (val warning)
+    (with-lparallel-kernel ()
+      (setf val (lparallel:force
+                 (lparallel:future :done))))
     (is (eql :done val))))
+
+(test with-lparallel-kernel-when-no-jobs-were-created
+  (let (val warning)
+    (with-lparallel-kernel ()
+      nil)
+    (pass)))
