@@ -200,8 +200,6 @@
     (run-health-checks)
     (uiop:quit 0)))
 
-(define-condition dummy-signal ())
-
 (def-easy-macro with-hidden-warnings (&fn fn)
   (let ((old *error-output*))
    (with-output-to-string (out)
