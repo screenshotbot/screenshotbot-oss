@@ -10,6 +10,8 @@
         #:server/interrupts)
   (:import-from #:util/health-check
                 #:run-health-checks)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export #:main
            #:register-acceptor
            #:slynk-loop
@@ -196,13 +198,20 @@
     (run-health-checks)
     (uiop:quit 0)))
 
+(def-easy-macro with-lparallel-kernel (&fn fn)
+  (setf lparallel:*kernel* (lparallel:make-kernel 100))
+  (unwind-protect
+       (funcall fn)
+    (log:info "Shutting down lparallel")
+    (lparallel:end-kernel :wait t)))
+
 (defun main (&key (enable-store t)
                (jvm t)
                acceptor)
   "Called from launch scripts, either web-bin or launch.lisp"
 
   (unwind-on-interrupt ()
-      (progn
+      (with-lparallel-kernel ()
         (let ((args #-lispworks (cons "<arg0>"(uiop:command-line-arguments))
                     #+lispworks sys:*line-arguments-list*))
           (log:info "CLI args: ~s" args)

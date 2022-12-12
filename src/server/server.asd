@@ -20,6 +20,8 @@
                #+lispworks
                "util/remote-debugging"
                "bordeaux-threads"
+               "lparallel"
+               "easy-macros"
                "util/health-check"
                "bknr.datastore"
                "hunchentoot-multi-acceptor")
@@ -46,4 +48,5 @@
   :components ((:file "slynk-preparer")))
 
 (defsystem :server/tests
-    :depends-on (:server))
+  :depends-on (:server)
+  :components ((:file "test-server")))
