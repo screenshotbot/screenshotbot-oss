@@ -89,7 +89,7 @@
                              args)))
                <markup:merge-tag>
                  <a href=link >
-                   <img src= local-badge />
+                   <:img src= local-badge />
                  </a>
 
                  <p class= "mt-3" >To use this build badge, you can use the following template in a GitHub flavored markdown file. </p>
