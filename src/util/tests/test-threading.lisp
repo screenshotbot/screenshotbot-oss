@@ -41,7 +41,7 @@
 (test safe-interrupt
   (with-fixture state ()
    (let* ((ctr 0)
-          (max-ctr 10)
+          (max-ctr 100)
           (callback-called-p nil)
           (thread (bt:make-thread
                    (lambda ()
