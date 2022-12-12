@@ -12,9 +12,11 @@
                 #:noop-mailer)
   (:import-from #:core/installation/installation
                 #:*installation*
-                #:abstract-installation)
+                #:abstract-installation
+                #:installation-domain)
   (:export
    #:installation
+   #:installation-domain
    #:plugin
    #:find-plugin
    #:with-plugin
@@ -39,9 +41,6 @@
   ((plugins :initform nil
             :initarg :plugins
             :accessor plugins)
-   (domain :initarg :domain
-           :initform "https://screenshotbot.example.com"
-           :accessor installation-domain)
    (mailer :initform (make-instance 'noop-mailer)
            :initarg :mailer
            :accessor mailer)

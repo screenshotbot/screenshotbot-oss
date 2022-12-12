@@ -8,7 +8,8 @@
   (:use #:cl)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:abstract-installation))
+   #:abstract-installation
+   #:installation-domain))
 (in-package :core/installation/installation)
 
 (util/migrations:ensure-symbol-in-package
@@ -17,7 +18,14 @@
  :new #:core/installation/installation)
 (export '*installation*)
 
+(util/migrations:ensure-symbol-in-package
+ #:domain
+ :old #:screenshotbot/installation
+ :new #:core/installation/installation)
+
 (defclass abstract-installation ()
-  ())
+  ((domain :initarg :domain
+           :initform "https://example.com"
+           :reader installation-domain)))
 
 (defvar *installation*)
