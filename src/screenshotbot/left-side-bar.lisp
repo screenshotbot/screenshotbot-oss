@@ -128,7 +128,7 @@
 
       ,(progn
          #-screenshotbot-oss
-         <left-nav-item href= "/billing/stripe" image-class= "payment"
+         <left-nav-item href= "/billing/dashboard" image-class= "payment"
                         script-name=script-name >
            Billing
          </left-nav-item>)
