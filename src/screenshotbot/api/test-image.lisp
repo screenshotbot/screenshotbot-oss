@@ -47,13 +47,12 @@
   (let ((*installation* (make-instance 'my-installation)))
    (with-test-store ()
      (with-fake-request ()
-       (auth:with-sessions ()
-        (with-test-user (:company company
-                         :user user
-                         :api-key api-key
-                         :logged-in-p t)
-          (let ((*build-presigned-put* (lambda (bucket key) "https://example.com")))
-            (&body))))))))
+       (with-test-user (:company company
+                        :user user
+                        :api-key api-key
+                        :logged-in-p t)
+         (let ((*build-presigned-put* (lambda (bucket key) "https://example.com")))
+           (&body)))))))
 
 (test simple-upload
   (with-fixture state ()
