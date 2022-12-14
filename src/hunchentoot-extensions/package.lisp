@@ -38,4 +38,5 @@
            #:handle-async-static-file
            #:handle-async-error
            #:register-plugin
-           #:process-plugin-request))
+           #:process-plugin-request
+           #:dispatch-plugin-request))
