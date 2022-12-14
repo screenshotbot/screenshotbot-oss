@@ -179,10 +179,12 @@
 
 (defun get-repo-stars (org repo)
   (with-throttler (*github-throttler*)
-   (let ((service (github-repo-service)))
-     (let ((repo (#_getRepository service org repo)))
-       (values (#_getStars repo)
-               (#_getForks repo))))))
+    (let ((res (github-api-request
+                (format nil "/repos/~a/~a" org repo)
+                :access-token (secret :github-api-secret))))
+      (values
+       (alexandria:assoc-value res :stargazers--count)
+       (alexandria:assoc-value res :forks--count)))))
 
 (defun github-star-service ()
   (new-instance #,org.eclipse.egit.github.core.service.StargazerService

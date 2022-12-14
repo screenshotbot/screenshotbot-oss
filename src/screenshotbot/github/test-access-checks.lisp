@@ -10,7 +10,11 @@
         #:screenshotbot/github/access-checks
         #:screenshotbot/user-api)
   (:import-from #:screenshotbot/github/access-checks
-                #:repo-string-identifier))
+                #:get-repo-stars
+                #:repo-string-identifier)
+  (:import-from #:util/mock-recording
+                #:track
+                #:with-recording))
 (in-package :screenshotbot/github/test-access-checks)
 
 (util/fiveam:def-suite)
@@ -54,3 +58,10 @@
              (repo-string-identifier "git@github.com.com:tdrhq/fast-example")))
   (is (equal "tdrhq/fast-example"
              (repo-string-identifier "git@github.com.com:tdrhq/fast-example.git"))))
+
+(test get-repo-stars ()
+  (with-recording ((asdf:system-relative-pathname :screenshotbot "github/fixture/get-repo-stars.rec"))
+    (track 'github-api-request :skip-args '(2))
+    (is (equal (list 42 2)
+               (multiple-value-list
+                (get-repo-stars "tdrhq" "slite"))))))
