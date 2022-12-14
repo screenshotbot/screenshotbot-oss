@@ -30,6 +30,8 @@
                 #:generic-git-repo)
   (:import-from #:oidc/oidc
                 #:oauth-access-token)
+  (:import-from #:screenshotbot/events
+                #:push-event)
   (:export
    #:github-repo
    #:github-user-service
@@ -128,6 +130,7 @@
                         oauth-token
                         installation-id)
   (declare (ignore repo))
+  (push-event :github.github-client-requested)
   (let ((client (new-instance #,org.eclipse.egit.github.core.client.GitHubClient
                               ))
         (token (or oauth-token installation-id)))
