@@ -40,13 +40,9 @@
   (:import-from #:screenshotbot/events
                 #:push-event)
   (:import-from #:screenshotbot/magick/magick-lw
-                #:check-boolean
-                #:magick-crop-image
-                #:magick-get-image-height
-                #:magick-get-image-width
+                #:compare-wands
                 #:with-image-comparison
-                #:with-wand
-                #:save-as-webp)
+                #:with-wand)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -131,33 +127,6 @@
 (def-cron make-old-transient (:minute 45 :hour 22)
   (make-old-transient))
 
-(defun limit-size-for-webp (wand)
-  (let ((+max-dim+ 16383))
-   (let ((width (magick-get-image-width wand))
-         (height (magick-get-image-height wand)))
-     (when (or
-            (> width +max-dim+)
-            (> height +max-dim+))
-       (check-boolean
-        (magick-crop-image wand
-                           (min width +max-dim+)
-                           (min height +max-dim+)
-                           0
-                           0)
-        wand)))))
-
-(defun compare-wands (before after p)
-  ;; Limit the size of the before and after wands before doing the
-  ;; comparison
-  (limit-size-for-webp before)
-  (limit-size-for-webp after)
-  (with-image-comparison (before after
-                          :result result
-                          :same-p same-p
-                          :highlight-color "red"
-                          :lowlight-color "none")
-    (save-as-webp result p)
-    same-p))
 
 (defun do-image-comparison (before-image
                             after-image

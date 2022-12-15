@@ -33,7 +33,8 @@
    #:get-non-alpha-pixels
    #:ping-image-metadata
    #:with-image-comparison
-   #:save-as-webp))
+   #:save-as-webp
+   #:with-pixel-wand))
 (in-package :screenshotbot/magick/magick-lw)
 
 (defclass magick-native (abstract-magick)
@@ -107,6 +108,9 @@
 (fli:define-c-struct wand
     (dummy :int))
 
+(fli:define-c-struct pixel-wand
+  (dummy :int))
+
 (fli:define-foreign-function (magick-wand-genesis "MagickWandGenesis")
     ()
   :result-type :int)
@@ -142,6 +146,21 @@
      (x :size-t)
      (y :size-t))
   :result-type :boolean)
+
+(fli:define-foreign-function (magick-new-image "MagickNewImage")
+    ((wand (:pointer wand))
+     (columns :size-t)
+     (rows :size-t)
+     (pixel-wand (:pointer pixel-wand)))
+  :result-type :boolean)
+
+(fli:define-foreign-function (new-pixel-wand "NewPixelWand")
+    ()
+  :result-type (:pointer pixel-wand))
+
+(fli:define-foreign-function (clear-pixel-wand "ClearPixelWand")
+    ((pixel-wand (:pointer pixel-wand)))
+  :result-type :void)
 
 (fli:define-foreign-function (magick-ping-image "MagickPingImage")
     ((wand (:pointer wand))
@@ -304,7 +323,7 @@
 (defun update-resource-limits ()
   (loop for (name value) in `((AreaResource 3000000)
                               (DiskResource ,(* 1000 1024 1024))
-                              (WidthResource 10000)
+                              (WidthResource 20000)
                               (HeightResource 40000)
                               (ListLengthResource ,(* 10000 1024  1024))
                               (MemoryResource ,(* 2000 1024 1024)))
@@ -325,6 +344,7 @@
                                 wand)))
            (funcall fn wand))
       (destroy-magick-wand wand))))
+
 
 (def-easy-macro with-image-comparison (wand1 wand2 &key &binding result
                                              &binding same-p
@@ -444,3 +464,39 @@
                     (setf (aref ret i 1) (fli:foreign-slot-value output #-lispworks 'pixel 'y))
                     (fli:incf-pointer output))
            ret))))))
+
+(defun limit-size-for-webp (wand)
+  (let ((+max-dim+ 16383))
+    (let ((width (magick-get-image-width wand))
+          (height (magick-get-image-height wand)))
+      (when (or
+             (> width +max-dim+)
+             (> height +max-dim+))
+        (let ((width (min width +max-dim+))
+              (height (min height +max-dim+)))
+          (check-boolean
+           (magick-crop-image wand
+                              width
+                              height
+                              0
+                              0)
+           wand))))))
+
+(defun compare-wands (before after p)
+  ;; Limit the size of the before and after wands before doing the
+  ;; comparison
+  (limit-size-for-webp before)
+  (limit-size-for-webp after)
+  (with-image-comparison (before after
+                          :result result
+                          :same-p same-p
+                          :highlight-color "red"
+                          :lowlight-color "none")
+    (save-as-webp result p)
+    same-p))
+
+(def-easy-macro with-pixel-wand (&binding pixel-wand &fn fn)
+  (let ((pwand (new-pixel-wand)))
+    (unwind-protect
+         (funcall fn pwand)
+      (clear-pixel-wand pwand))))

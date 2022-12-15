@@ -9,6 +9,10 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:magick-new-image
+                #:with-pixel-wand
+                #:compare-wands
+                #:magick-set-size
                 #:verify-magick
                 #:load-magick-native
                 #:screenshotbot-verify-magick
@@ -29,6 +33,8 @@
                 #:md5-file)
   (:import-from #:fiveam-matchers/described-as
                 #:described-as)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
    (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/magick/test-magick-lw)
 
@@ -171,3 +177,39 @@
 ;; version of magick is being used.
 (test #+magick-6 using-magick-6 #+magick-7 using-magick7
   (pass))
+
+(def-easy-macro with-large-wand (&binding wand &key (height 16385)  &fn fn)
+  (with-wand (wand)
+    (with-pixel-wand (pwand)
+      (check-boolean
+       (magick-new-image wand
+                         1 height
+                         pwand)
+       wand))
+    (funcall fn wand)))
+
+#-screenshotbot-oss
+(test large-image
+  "If this test fails, definitely look at the global policy.xml for the
+ given ImageMagick version. Currently, we can't override the
+ resource:height policy, which by default is set to 16KP, at least on
+ ImageMagick 6. On IM7, it appears to be set to 300KP, which I'm not
+ sure if I changed myself in my local instance. On the docker
+ instances it doesn't look like the height policy is set, and I'm too
+ lazy to figure out what the default is. "
+  (with-large-wand (before)
+    (with-large-wand (after)
+      (uiop:with-temporary-file (:pathname output :type "webp")
+        ;; This does not work in Magick-6. I don't know why. Ideally
+        ;; I'd like to make it work, but for now I'll just disable
+        ;; this test. Essentially, expect compare-wands to fail on
+        ;; large images in magic-6.
+        (finishes
+         (compare-wands before after output))))))
+
+(test small-image-comparison-happy-path
+  (with-large-wand (before :height 20)
+    (with-large-wand (after :height 20)
+      (uiop:with-temporary-file (:pathname output :type "webp")
+        (finishes
+         (compare-wands before after output))))))
