@@ -335,7 +335,6 @@
     <div class= "async-fetch spinner-border" role= "status" data-check-nibble=data-check-nibble />))
 
 
-
 (defun warmup-comparison-images (run previous-run)
   (make-thread
    (lambda ()
@@ -356,8 +355,11 @@
                        (progn
                          (log:info "Warming up compare image ~d of ~d (~a)" i (length changes)
                                    (screenshot-name after))
-                         (prepare-image-comparison image-comparison-job :size nil
-                                                                        :warmup t))))))
+                         (restart-case
+                             (prepare-image-comparison image-comparison-job :size nil
+                                                                            :warmup t)
+                           (ignore-this-image ()
+                             nil)))))))
        (retry-warmup-thread ()
          (warmup-comparison-images run previous-run))))
    :name "warmup-comparison-images"))
