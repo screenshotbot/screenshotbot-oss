@@ -12,6 +12,7 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/model/image-comparison
+                #:compare-wands
                 #:find-old-image-comparisons
                 #:image-comparison
                 #:do-image-comparison)
@@ -35,6 +36,12 @@
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:*installation*)
+  (:import-from #:screenshotbot/magick/magick-lw
+                #:magick-write-image
+                #:magick-read-image
+                #:check-boolean
+                #:magick-set-size
+                #:with-wand)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#:fli #:util/fake-fli)))
@@ -163,3 +170,15 @@
             (is (equal (list cmp-1)
                        (find-old-image-comparisons)))
             (pass)))))))
+
+(def-easy-macro with-large-wand (&binding wand &fn fn)
+  (with-wand (wand)
+    (check-boolean (magick-set-size wand 1 16385) wand)
+    (check-boolean (magick-read-image wand "xc:white") wand)
+    (funcall fn wand)))
+
+(test large-image
+  (with-large-wand (before)
+    (with-large-wand (after)
+      (uiop:with-temporary-file (:pathname output :type "webp")
+        (compare-wands before after output)))))

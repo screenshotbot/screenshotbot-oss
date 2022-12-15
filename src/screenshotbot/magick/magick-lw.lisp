@@ -128,6 +128,21 @@
      (filename (:reference-pass :ef-mb-string)))
   :result-type :boolean)
 
+(fli:define-foreign-function (magick-set-size "MagickSetSize")
+    ((wand :pointer)
+     (cols :size-t)
+     (rows :size-t))
+  :result-type :boolean
+  :documentation "Only used for tests")
+
+(fli:define-foreign-function (magick-crop-image "MagickCropImage")
+    ((Wand :pointer)
+     (width :size-t)
+     (height :size-t)
+     (x :size-t)
+     (y :size-t))
+  :result-type :boolean)
+
 (fli:define-foreign-function (magick-ping-image "MagickPingImage")
     ((wand (:pointer wand))
      (filename (:reference-pass :ef-mb-string)))
@@ -137,7 +152,7 @@
   ((wand (:pointer wand))
    (reference-wand (:pointer wand))
    (metric metric-type)
-   (output (:reference-return :double)))
+   (onutput (:reference-return :double)))
   :result-type (:pointer wand))
 
 (fli:define-foreign-function (magick-set-option "MagickSetOption")
