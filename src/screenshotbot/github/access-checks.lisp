@@ -234,21 +234,10 @@
                  (new-instance #,java.util.HashMap))))
 
 (defmethod public-repo-p ((repo github-repo))
-  (when (and
-         (secret :github-user)
-         (secret :github-api-secret))
-   (let ((repo-id (github-repo-id repo)))
-     (handler-case
-         (progn
-           (with-throttler (*github-throttler*)
-             (#_getRepository (github-repo-service
-                               (github-client))
-                              repo-id))
-           t)
-       #+lispworks
-       (lw-ji:java-method-exception (e)
-         nil)))))
-
+  (when (secret :github-api-secret)
+   (let ((repo-id (get-repo-id (repo-link repo))))
+     (apply #'get-repo-stars
+            (str:split "/" repo-id)))))
 
 (defun github-integration-test ()
   (let ((repo (make-instance 'github-repo :link "https://github.com/tdrhq/screenshotbot-example")))

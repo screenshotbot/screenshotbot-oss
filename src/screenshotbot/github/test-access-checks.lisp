@@ -10,11 +10,18 @@
         #:screenshotbot/github/access-checks
         #:screenshotbot/user-api)
   (:import-from #:screenshotbot/github/access-checks
+                #:get-repo-id
                 #:get-repo-stars
                 #:repo-string-identifier)
   (:import-from #:util/mock-recording
                 #:track
-                #:with-recording))
+                #:with-recording)
+  (:import-from #:cl-mock
+                #:answer)
+  (:import-from #:screenshotbot/git-repo
+                #:public-repo-p)
+  (:import-from #:screenshotbot/secret
+                #:secret))
 (in-package :screenshotbot/github/test-access-checks)
 
 (util/fiveam:def-suite)
@@ -65,3 +72,21 @@
     (is (equal (list 42 2)
                (multiple-value-list
                 (get-repo-stars "tdrhq" "slite"))))))
+
+(test public-repo-p
+  (cl-mock:with-mocks ()
+    (answer (secret :github-api-secret) "secret")
+    (answer (get-repo-stars "foo" "bar")
+      20)
+    (is-true
+     (public-repo-p (make-instance 'github-repo
+                                   :link "git@github.com:foo/bar")))))
+
+(test public-repo-not-public
+  (cl-mock:with-mocks ()
+    (answer (secret :github-api-secret) "secret")
+    (answer (get-repo-stars "foo" "bar")
+      nil)
+    (is-false
+     (public-repo-p (make-instance 'github-repo
+                                   :link "git@github.com:foo/bar")))))
