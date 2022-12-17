@@ -44,6 +44,8 @@
                 #:http-request)
   (:import-from #:util/misc
                 #:or-setf)
+  (:import-from #:screenshotbot/sdk/version-check
+                #:remote-supports-basic-auth-p)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags))
   (:export
    #:single-directory-run
@@ -110,10 +112,17 @@
       :method method
       :want-stream t
       :method method
-      :parameters (apply 'list
-                          (cons "api-key" *api-key*)
-                          (cons "api-secret-key" *api-secret*)
-                          parameters)))))
+      :basic-authorization (when (remote-supports-basic-auth-p)
+                             (list
+                              *api-key*
+                              *api-secret*))
+      :parameters (cond
+                    ((remote-supports-basic-auth-p)
+                     parameters)
+                    (t (list*
+                        (cons "api-key" *api-key*)
+                        (cons "api-secret-key" *api-secret*)
+                        parameters)))))))
 
 (defun request (api &key (method :post)
                       parameters)

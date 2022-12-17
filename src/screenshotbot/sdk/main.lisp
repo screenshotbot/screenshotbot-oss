@@ -14,6 +14,8 @@
   (:import-from #:util/threading
                 #:*extras*
                 #:funcall-with-sentry-logs)
+  (:import-from #:screenshotbot/sdk/version-check
+                #:with-version-check)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
@@ -47,14 +49,17 @@
        (sdk:run-ios-multi-dir-toplevel))
       (flags:*static-website*
        (sdk:parse-org-defaults)
-       (static:record-static-website flags:*static-website*))
+       (with-version-check ()
+        (static:record-static-website flags:*static-website*)))
       (flags:*firebase-output*
        (firebase:with-firebase-output (flags:*firebase-output*)
          (sdk:parse-org-defaults)
-         (sdk:run-prepare-directory-toplevel)))
+         (with-version-check ()
+          (sdk:run-prepare-directory-toplevel))))
       (t
        (sdk:parse-org-defaults)
-       (sdk:run-prepare-directory-toplevel)))))
+       (with-version-check ()
+        (sdk:run-prepare-directory-toplevel))))))
 
 (defun main (&rest args)
   (uiop:setup-command-line-arguments)

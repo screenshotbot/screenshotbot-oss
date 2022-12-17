@@ -24,6 +24,12 @@
 
 (defvar *remote-version* *api-version*)
 
+(defun remote-supports-basic-auth-p ()
+  "Prior to this version, the auth was passed as http parameters. That
+wasn't great for security since it might mean the plain-text secret
+might get logged in the webserver logs."
+  (>= *remote-version* 2))
+
 (defun get-version (hostname)
   (log:info "Getting remote version")
   (multiple-value-bind (body ret)
@@ -43,7 +49,7 @@
     (when (/= *remote-version* *api-version*)
       (log:warn "Server is running API version ~a, but this client uses version ~a. ~%
 
-This is most likely supported, however, it's more likely to be have
+This is most likely supported, however, it's more likely to have
 bugs. If you're using OSS Screenshotbot, we suggest upgrading.
 "
                 *remote-version*

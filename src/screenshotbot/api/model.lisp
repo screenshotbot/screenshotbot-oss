@@ -16,7 +16,7 @@
 
 (in-package :screenshotbot/api/model)
 
-(defvar *api-version* 1)
+(defvar *api-version* 2)
 
 (defclass version ()
   ((version :initarg :version
@@ -24,11 +24,6 @@
             :json-type :number
             :reader version-number))
   (:metaclass json-serializable-class))
-
-(defmethod encode-tree (object)
-  (let ((ret (make-hash-table :test #'equal)))
-    (setf (gethash "_type" ret) (stringize (type-of object)) )
-    ret))
 
 (defmethod encode-json (object)
   (with-output-to-string (out)

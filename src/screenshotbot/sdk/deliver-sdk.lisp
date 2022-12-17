@@ -64,6 +64,7 @@
               #+mswindows :console #+mswindows :init
               #+mswindows :startup-bitmap-file #+mswindows nil
               :keep-debug-mode t
+              :keep-clos :meta-object-slots
               :keep-pretty-printer t
               :keep-clos-object-printing t
               :keep-lisp-reader t
