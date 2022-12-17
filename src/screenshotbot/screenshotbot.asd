@@ -29,6 +29,7 @@
                (:feature (:not :screenshotbot-oss) :documentation-plugin)
                :cl-store
                :core.installation
+               :json-mop
                :encrypt
                :util/timeago
                :iterate
@@ -81,6 +82,7 @@
                ;;:cljwt-custom ;; custom comes from clath, for rs-256
                :do-urlencode
                :screenshotbot.magick
+               :screenshotbot/api-model
                :nibble
                :cl-json)
   :components
@@ -360,6 +362,7 @@
                 :components ((:file "test-security")))
                (:module "api"
                 :components ((:file "test-core")
+                             (:file "test-model")
                              (:file "test-commit-graph")
                              (:file "test-image")
                              (:file "test-promote")
@@ -485,6 +488,12 @@
   :components ((:module "hub"
                 :components ((:file "server")
                              (:file "container")))))
+
+(defsystem :screenshotbot/api-model
+  :serial t
+  :depends-on (:json-mop)
+  :components ((:module "api"
+                :components ((:file "model")))))
 
 (defsystem :screenshotbot/webdriver
   :serial t
