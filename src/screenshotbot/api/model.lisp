@@ -16,7 +16,7 @@
 
 (in-package :screenshotbot/api/model)
 
-(defvar *api-version* 2)
+(defparameter *api-version* 2)
 
 (defclass version ()
   ((version :initarg :version
