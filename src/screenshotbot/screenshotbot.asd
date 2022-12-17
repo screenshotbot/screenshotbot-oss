@@ -200,6 +200,7 @@
    (:module "api"
     :serial t
     :components ((:file "core")
+                 (:file "version")
                  (:file "image")
                  (:file "promote")
                  (:file "recorder-run" :depends-on ("promote"))

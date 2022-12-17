@@ -10,12 +10,12 @@
                           #:json-serializable-class)
             (:local-nicknames (#:a #:alexandria))
             (:export
-             #:encode-json))
+             #:encode-json
+             #:*api-version*))
 
 (in-package :screenshotbot/api/model)
 
 (defvar *api-version* 1)
-
 
 (defclass version ()
   ((version :initarg :version
