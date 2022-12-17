@@ -17,6 +17,8 @@
                 #:http-request)
   (:import-from #:screenshotbot/sdk/common-flags
                 #:*hostname*)
+  (:import-from #:util/health-check
+                #:def-health-check)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-version-check))
@@ -55,3 +57,7 @@ bugs. If you're using OSS Screenshotbot, we suggest upgrading.
                 *remote-version*
                 *api-version*))
     (funcall fn)))
+
+
+(def-health-check verify-can-decode-json ()
+  (eql 10 (version-number (decode-json "{\"version\":10}" 'version))))

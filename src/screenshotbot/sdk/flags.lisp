@@ -43,7 +43,8 @@
    #:*override-commit-hash*
    #:*selenium-hub*
    #:*selenium-hub-port*
-   #:*firebase-output*))
+   #:*firebase-output*
+   #:*self-test*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -201,3 +202,10 @@
  up  the files from Google Cloud when we're done. We use the `gcloud`
  command line tool so you must have already called
  activate-service-account before this step.")
+
+(define-flag *self-test*
+  :selector "self-test"
+  :default-value nil
+  :type boolean
+  :help "Run self-diagnostic tools to ensure that this CLI can work on your
+machine.")

@@ -16,6 +16,8 @@
                 #:funcall-with-sentry-logs)
   (:import-from #:screenshotbot/sdk/version-check
                 #:with-version-check)
+  (:import-from #:util/health-check
+                #:run-health-checks)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
@@ -44,6 +46,8 @@
        (help))
       (flags:*help*
        (help))
+      (flags:*self-test*
+       (uiop:quit (if (run-health-checks) 0 1)))
       (flags:*ios-multi-dir*
        (sdk:parse-org-defaults)
        (sdk:run-ios-multi-dir-toplevel))
@@ -55,7 +59,7 @@
        (firebase:with-firebase-output (flags:*firebase-output*)
          (sdk:parse-org-defaults)
          (with-version-check ()
-          (sdk:run-prepare-directory-toplevel))))
+           (sdk:run-prepare-directory-toplevel))))
       (t
        (sdk:parse-org-defaults)
        (with-version-check ()

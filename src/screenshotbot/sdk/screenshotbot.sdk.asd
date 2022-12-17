@@ -22,6 +22,7 @@
                #-screenshotbot-oss
                :sentry
                :cl-store
+               :util/health-check
                :nyaml
                :cl-fad
                :cxml

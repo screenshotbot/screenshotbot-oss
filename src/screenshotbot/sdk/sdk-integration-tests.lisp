@@ -86,7 +86,13 @@
     (assert (not (= res 0)))
     (assert (= 1 res))))
 
+(defun run-self-tests ()
+  (log:info "Running self tests")
+  (run (list *sdk* "--self-testx")))
+
 (defun run-tests ()
+  (run-self-tests)
+
   (with-repo
     (test-crash)
     ;; veryfy we're correctly cloning the repo
