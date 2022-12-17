@@ -11,7 +11,8 @@
             (:local-nicknames (#:a #:alexandria))
             (:export
              #:encode-json
-             #:*api-version*))
+             #:*api-version*
+             #:version-number))
 
 (in-package :screenshotbot/api/model)
 
@@ -20,7 +21,8 @@
 (defclass version ()
   ((version :initarg :version
             :json-key "version"
-            :json-type :number))
+            :json-type :number
+            :reader version-number))
   (:metaclass json-serializable-class))
 
 (defmethod encode-tree (object)
