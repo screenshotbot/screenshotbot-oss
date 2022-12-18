@@ -10,6 +10,8 @@
                 #:push-event)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:util/misc
+                #:make-mp-hash-table)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:update-magick-memory-methods))
@@ -19,7 +21,7 @@
   ((size :initarg :size
          :reader allocation-info-size)))
 
-(defvar *allocs* (make-hash-table))
+(defvar *allocs* (make-mp-hash-table))
 
 (defun get-total-allocs ()
   (loop for info being the hash-values of *allocs*

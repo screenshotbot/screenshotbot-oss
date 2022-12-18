@@ -41,10 +41,12 @@
                 #:def-easy-macro)
   (:import-from #:screenshotbot/model/core
                 #:ensure-slot-boundp)
+  (:import-from #:util/misc
+                #:make-mp-hash-table)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/phabricator/builds)
 
-(defvar *build-info-index* (make-hash-table :test #'equal))
+(defvar *build-info-index* (make-mp-hash-table :test #'equal))
 
 (defvar *lock* (bt:make-lock))
 

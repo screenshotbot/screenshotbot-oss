@@ -12,7 +12,8 @@
    #:or-setf
    #:not-null!
    #:uniq
-   #:safe-ensure-directories-exist))
+   #:safe-ensure-directories-exist
+   #:make-mp-hash-table))
 (in-package :util/misc)
 
 
@@ -119,3 +120,8 @@ In the error case, it's hard to distinguish between a real error (e.g.
         num)
        (t
         (error "could not parse size suffix: ~a in ~a" suffix size))))))
+
+(defun make-mp-hash-table (&rest args)
+  (apply #'make-hash-table
+         #+sbcl :synchronized #+sbcl t
+         args))

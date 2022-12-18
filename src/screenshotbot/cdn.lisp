@@ -11,6 +11,8 @@
                 #:*magick*)
   (:import-from #:screenshotbot/server
                 #:document-root)
+  (:import-from #:util/misc
+                #:make-mp-hash-table)
   (:export #:script #:link #:img
            #:make-image-cdn-url
            #:img-with-fallback))
@@ -50,7 +52,7 @@
   (let ((util.cdn:*cdn-cache-key* "si-3" ))
     (util.cdn:make-cdn url)))
 
-(defvar *dim-cache* (make-hash-table :test #'equal)
+(defvar *dim-cache* (make-mp-hash-table :test #'equal)
   "Cache of image dimensions for every possible image.")
 
 (defun image-dimensions (url)

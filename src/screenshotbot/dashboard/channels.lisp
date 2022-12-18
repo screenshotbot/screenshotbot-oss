@@ -39,7 +39,9 @@
   (:import-from #:util/request
                 #:http-request)
   (:import-from #:core/ui/simple-card-page
-                #:simple-card-page))
+                #:simple-card-page)
+  (:import-from #:util/misc
+                #:make-mp-hash-table))
 (in-package :screenshotbot/dashboard/channels)
 
 (markup:enable-reader)
@@ -162,7 +164,7 @@
           (can-view! run)
           run)))))
 
-(defvar *badge-cache* (make-hash-table :test #'equal))
+(defvar *badge-cache* (make-mp-hash-table :test #'equal))
 
 (defun badge-data (&key label message color)
   (util:or-setf

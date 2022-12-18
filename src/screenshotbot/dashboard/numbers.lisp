@@ -15,6 +15,8 @@
                 #:company)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:util/misc
+                #:make-mp-hash-table)
   (:export #:numbers-section))
 (in-package :screenshotbot/dashboard/numbers)
 
@@ -44,7 +46,7 @@
       </div>
     </div>))
 
-(defvar *cache* (make-hash-table :test #'eql))
+(defvar *cache* (make-mp-hash-table :test #'eql))
 
 (deftag numbers-section (&key company)
   (or

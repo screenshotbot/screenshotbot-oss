@@ -20,6 +20,8 @@
                 #:company)
   (:import-from #:util/store
                 #:with-class-validation)
+  (:import-from #:util/misc
+                #:make-mp-hash-table)
   (:export
    #:api-key
    #:%find-api-key
@@ -62,7 +64,7 @@
       :initform nil))
     (:metaclass persistent-class)))
 
-(defvar *transient-keys* (make-hash-table :test #'equal))
+(defvar *transient-keys* (make-mp-hash-table :test #'equal))
 
 (defclass transient-api-key ()
   ((api-key

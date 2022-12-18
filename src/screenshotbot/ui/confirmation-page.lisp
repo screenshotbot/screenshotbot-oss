@@ -9,7 +9,8 @@
   (:export #:confirmation-page
            #:confirmation-modal)
   (:import-from #:core/ui/simple-card-page
-                #:simple-card-page))
+                #:simple-card-page
+                #:confirmation-page))
 (in-package :screenshotbot/ui/confirmation-page)
 
 (markup:enable-reader)
