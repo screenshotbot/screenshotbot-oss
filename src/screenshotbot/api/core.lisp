@@ -64,28 +64,28 @@
   (authenticate-api-request hunchentoot:*request*)
   (funcall fn))
 
-(defun %with-error-handling (fn)
-  (Setf (hunchentoot:header-out :content-type) "application/json")
-  (let ((res
-          (json:encode-json-to-string
-           (handler-case
-               (handler-bind ((error (lambda (e)
-                                       (trivial-backtrace:print-backtrace e))))
-                (make-instance 'result
-                               :success t
-                               :response
-                               (%funcall-with-api-handling fn)))
-             (api-error (e)
-               (log:warn "API error: ~a" (api-error-msg e))
-               (make-instance 'error-result
-                               :success nil
-                               :error (princ-to-string e)))
-             (error (e)
-               (log:warn "Error: ~a" e)
-               (make-instance 'error-result
-                               :success nil
-                               :error "Internal error, please contact support@screenshotbot.io"))))))
-    res))
+(def-easy-macro with-error-handling (&fn fn)
+  "Converts internal errors into a JSON renderable object.
+
+It should be safe to mock call-with-error-handling to just call
+function fn for the purpose of tests."
+  (handler-case
+      (handler-bind ((error (lambda (e)
+                              (trivial-backtrace:print-backtrace e))))
+        (make-instance 'result
+                       :success t
+                       :response
+                       (%funcall-with-api-handling fn)))
+    (api-error (e)
+      (log:warn "API error: ~a" (api-error-msg e))
+      (make-instance 'error-result
+                     :success nil
+                     :error (princ-to-string e)))
+    (error (e)
+      (log:warn "Error: ~a" e)
+      (make-instance 'error-result
+                     :success nil
+                     :error "Internal error, please contact support@screenshotbot.io"))))
 
 (defmacro defapi ((name &key uri method intern) params &body body)
   (let* ((param-names (loop for param in params
@@ -104,11 +104,12 @@
            ,@body)
          (defhandler (,handler-name :uri ,uri :method ,method :intern ,intern) ,params
            ,@decls
-           (%with-error-handling
-            (lambda ()
-              (,name
-               ,@ (loop for name in param-names
-                        appending (list (intern (string name) "KEYWORD") name))))))))))
+           (setf (hunchentoot:header-out :content-type) "application/json")
+           (json:encode-json-to-string
+            (with-error-handling ()
+             (,name
+              ,@ (loop for name in param-names
+                       appending (list (intern (string name) "KEYWORD") name))))))))))
 
 (defclass result ()
   ((success :type boolean
