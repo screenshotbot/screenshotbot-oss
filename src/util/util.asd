@@ -150,7 +150,8 @@
   :depends-on (:fiveam
                :cl-mock
                :util)
-  :components ((:file "testing")))
+  :components ((:file "pipe-stream")
+               (:file "testing")))
 
 (defsystem :util/random-port
   :serial t
@@ -300,6 +301,7 @@
                              (:file "test-store")
                              (:file "test-migrations")
                              (:file "test-hash-lock")
+                             (:file "test-pipe-stream")
                              (:file "test-threading")
                              (:file "test-cookies")
                              (:file "test-fiveam")
