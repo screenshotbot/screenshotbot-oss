@@ -32,6 +32,8 @@
                 #:oauth-access-token)
   (:import-from #:screenshotbot/events
                 #:push-event)
+  (:import-from #:screenshotbot/model/channel
+                #:github-get-canonical-repo)
   (:export
    #:github-repo
    #:github-user-service
@@ -250,7 +252,7 @@
 (defun get-repo-id (repo)
   (cl-ppcre:regex-replace-all
    "^(git@github.com:|https://github.com/)([^.]*)([.]git)?$"
-   repo
+   (github-get-canonical-repo repo)
    "\\2"))
 
 (defmethod commit-link ((repo github-repo) hash)
