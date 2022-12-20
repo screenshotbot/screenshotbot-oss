@@ -47,7 +47,7 @@
                   "bitbucket.org"
                   "github.com")))
    (cl-ppcre:regex-replace-all
-    (format nil "^(ssh://)?git@~a:" host)
+    (format nil "^(ssh://)?git@~a[:/]" host)
     (cl-ppcre:regex-replace-all
      "https://api."
      (cl-ppcre:regex-replace-all "[.]git$" repo "")

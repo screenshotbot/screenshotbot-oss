@@ -56,4 +56,7 @@
   (is (equal "https://github.com/foo/bar"
              (github-get-canonical-repo "git@github.com:foo/bar.git")))
   (is (equal "https://github.com/foo/bar"
-             (github-get-canonical-repo "ssh://git@github.com:foo/bar.git"))))
+             (github-get-canonical-repo "ssh://git@github.com:foo/bar.git")))
+  ;; This one is a hack to deal with people using an incorrect repo URL
+  (is (equal "https://github.com/foo/bar"
+             (github-get-canonical-repo "ssh://git@github.com/foo/bar.git"))))
