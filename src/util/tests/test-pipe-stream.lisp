@@ -29,11 +29,26 @@
 (test eof
   (with-fixture state ()
     (write-sequence #(1 2 3) stream)
+    (close stream)
     (pass)
     (let ((seq (make-array 4 :element-type 'flex:octet
                            :initial-element 42)))
       (eql 3 (read-sequence seq stream))
       (is (equalp #(1 2 3 42) seq)))))
+
+(test read-write-from-multiple-threads
+  (with-fixture state ()
+    (let ((thread (bt:make-thread
+                   (lambda ()
+                     (loop for i from 0 to 1000
+                           do (write-byte 1 stream))
+                     (finish-output stream)
+                     (close stream)))))
+      (finishes
+       (loop for i from 0 to 1000
+             do (assert (eql 1 (read-byte stream)))))
+      ;;(is (eql :eof (read-byte stream nil :eof)))
+      (bt:join-thread thread))))
 
 (test closes-stream
   (with-fixture state ()
