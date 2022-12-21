@@ -23,6 +23,7 @@ repositories {
 }
 
 dependencies {
+    implementation files('libs/lispcalls.jar')
 }
 
 signing {
