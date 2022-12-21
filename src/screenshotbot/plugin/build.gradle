@@ -15,8 +15,8 @@ apply plugin: "java-gradle-plugin"
 apply plugin: 'maven-publish'
 
 
-group 'io.screenshotbot.sdk'
-version '0.1.0'
+group 'io.screenshotbot'
+version '0.1.1'
 
 repositories {
     mavenCentral()
