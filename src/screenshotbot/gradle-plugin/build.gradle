@@ -1,0 +1,39 @@
+buildscript {
+    repositories {
+        jcenter()
+        google()
+        mavenLocal()
+    }
+}
+
+plugins {
+    id 'java'
+    id 'signing'
+}
+
+apply plugin: "java-gradle-plugin"
+apply plugin: 'maven-publish'
+
+
+group 'io.screenshotbot.sdk'
+version '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+}
+
+signing {
+    useGpgCmd()
+}
+
+gradlePlugin {
+    plugins {
+        simplePlugin {
+            id = 'io.screenshotbot.plugin'
+            implementationClass = "io.screenshotbot.plugin.ScreenshotbotPlugin"
+        }
+    }
+}
