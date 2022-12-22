@@ -30,6 +30,12 @@ signing {
     useGpgCmd()
 }
 
+jar {
+    from {
+        zipTree("libs/lispcalls.jar")
+    }
+}
+
 gradlePlugin {
     plugins {
         simplePlugin {

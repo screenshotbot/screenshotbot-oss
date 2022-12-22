@@ -32,7 +32,8 @@
      (make-pathname :type "lwheap"
                     :defaults output))))
 
-(defclass deliver-so-script (source-file)
+
+(defclass deliver-so-script (deliver-script)
   ((type :initform "lisp")))
 
 (defmethod output-type ((self deliver-so-script))
@@ -42,6 +43,9 @@
   "so")
 
 (defmethod perform ((o load-op) (s deliver-script))
+  t)
+
+(defmethod perform ((o load-op) (s deliver-so-script))
   t)
 
 (defclass makeself-component (source-file)
@@ -138,11 +142,11 @@
                                 "--script"))
                             (t (error "Unimplemented for CL implementation")))
 
-                          (list
-                           (namestring
-                            (asdf:component-pathname s))
-                           (namestring
-                            (car (output-files o s)))))
+                            (list
+                             (namestring
+                              (asdf:component-pathname s))
+                             (namestring
+                              (car (output-files o s)))))
                     :directory (asdf:system-relative-pathname :build-utils "../../")
                     :output t
                     :error-output t))
