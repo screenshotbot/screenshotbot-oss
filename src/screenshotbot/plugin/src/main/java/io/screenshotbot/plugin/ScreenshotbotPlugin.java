@@ -58,7 +58,9 @@ public class ScreenshotbotPlugin implements Plugin<Project>{
                 project.getTasks().register(name,
                                             RecordFacebookTask.class)
                     .configure((it) -> {
-                            it.init(variant, screenshotbotExtension);
+                            it.init(variant,
+                                    androidExtension,
+                                    screenshotbotExtension);
                         });
             });
     }
