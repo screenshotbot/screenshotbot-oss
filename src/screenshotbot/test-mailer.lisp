@@ -9,6 +9,7 @@
           #:fiveam
           #:alexandria)
   (:import-from #:screenshotbot/mailer
+                #:fix-email-list
                 #:background-mailer
                 #:send-mail
                 #:parse-from
@@ -54,3 +55,16 @@
     (is
      (eql :pass
           (lparallel:force (send-mail mailer :from "foo" :to "bar"))))))
+
+
+(test fix-email-list
+  (is (equal "arnold@screenshotbot.io"
+             (fix-email-list "Arnold Noronha <arnold@screenshotbot.io>")))
+  (is (equal "arnold@screenshotbot.io"
+             (fix-email-list "arnold@screenshotbot.io")))
+  (is (equal (list "arnold@screenshotbot.io")
+             (fix-email-list (list "Arnold Noronha <arnold@screenshotbot.io>"))))
+    (is (equal (list "arnold@screenshotbot.io")
+             (fix-email-list (list "arnold@screenshotbot.io"))))
+  (is (equal nil
+             (fix-email-list nil))))

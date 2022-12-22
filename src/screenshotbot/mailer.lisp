@@ -86,6 +86,14 @@
          (t
           (values from display-name)))))))
 
+(defun fix-email-list (emails)
+  (cond
+    ((listp emails)
+     (loop for email in emails
+           collect (parse-from email nil)))
+    (t
+     (parse-from emails nil))))
+
 (defmethod send-mail ((mailer smtp-mailer)
                       &rest args
                       &key from subject to html-message
@@ -100,11 +108,11 @@
          (cl-smtp:send-email
           (host mailer)
           (or from (from mailer))
-          to
+          (fix-email-list to)
           subject
           (util:html2text html-message)
           :ssl (ssl mailer)
-          :bcc bcc
+          :bcc (fix-email-list bcc)
           :port (port mailer)
           :reply-to reply-to
           :display-name display-name
