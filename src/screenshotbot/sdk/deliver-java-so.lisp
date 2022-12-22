@@ -1,6 +1,6 @@
 (in-package :cl-user)
 
-(ql:quickload :screenshotbot.sdk)
+(ql:quickload :screenshotbot.sdk/library)
 
 (defun output-file ()
   (car (asdf:output-files

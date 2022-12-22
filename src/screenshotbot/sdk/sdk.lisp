@@ -4,7 +4,7 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/sdk/sdk
+(defpackage :screenshotbot/sdk/sdk
   (:nicknames :screenshotbot-sdk)
   (:use #:cl
         #:alexandria
@@ -17,8 +17,6 @@
                 #:get-commit
                 #:write-to-stream
                 #:read-from-stream)
-  (:import-from #:screenshotbot/sdk/help
-                #:help)
   (:import-from #:screenshotbot/sdk/bundle
                 #:image-stream
                 #:md5-sum

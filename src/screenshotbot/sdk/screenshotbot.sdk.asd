@@ -4,9 +4,7 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defsystem :screenshotbot.sdk
-  :author "Arnold Noronha <arnold@screenshotbot.io>"
-  :license "Mozilla Public License, v 2.0"
+(defsystem :screenshotbot.sdk/library
   :serial t
   :depends-on (:dexador
                :com.google.flag
@@ -14,25 +12,24 @@
                :ironclad/core
                :hunchentoot
                :cl-json
+               :cxml
                :log4cl
-               :util/random-port
                :util/request
                :easy-macros
                :screenshotbot.sdk/common-flags
                #-screenshotbot-oss
                :sentry
-               :cl-store
+               :alexandria
+               :auto-restart
+               :util/misc
                :util/health-check
-               :nyaml
                :cl-fad
-               :cxml
                :zip
                :trivial-garbage
                :tmpdir
                :imago
                :imago/pngload
                :md5
-               :screenshotbot/replay-core
                :screenshotbot/api-model
                :dag
                :anaphora
@@ -44,9 +41,24 @@
                (:file "firebase")
                (:file "android")
                (:file "git")
-               (:file "help")
-               (:file "sdk")
-               (:file "static")
+               (:file "sdk")))
+
+(defsystem :screenshotbot.sdk/static
+  :serial t
+  :depends-on (:screenshotbot.sdk/library
+               :nyaml
+               :util/random-port
+               :cl-store
+               :screenshotbot/replay-core)
+  :components ((:file "static")))
+
+(defsystem :screenshotbot.sdk
+  :serial t
+  :author "Arnold Noronha <arnold@screenshotbot.io>"
+  :license "Mozilla Public License, v 2.0"
+  :depends-on (:screenshotbot.sdk/library
+               :screenshotbot.sdk/static)
+  :components ((:file "help")
                (:file "main")))
 
 (defsystem :screenshotbot.sdk/common-flags
