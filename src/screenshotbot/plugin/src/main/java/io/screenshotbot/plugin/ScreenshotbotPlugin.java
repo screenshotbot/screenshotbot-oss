@@ -37,7 +37,7 @@ public class ScreenshotbotPlugin implements Plugin<Project>{
         if (plugins.hasPlugin("com.facebook.testing.screenshot")) {
             extensions.configure(TestedExtension.class,
                                  (androidExtension) -> {
-                                     generateFacebookTasks(androidExtension);
+                                     generateFacebookTasks(project, androidExtension);
                                  });
         }
     }
@@ -54,9 +54,21 @@ public class ScreenshotbotPlugin implements Plugin<Project>{
         }
     }
 
-    public void generateFacebookTasks(TestedExtension androidExtension) {
+    private String capitalize(String input) {
+        return input.substring(0, 1).toUpperCase() +
+            input.substring(1);
+    }
+
+    public void generateFacebookTasks(Project project, TestedExtension androidExtension) {
         androidExtension.getTestVariants().all((variant) -> {
-                println("variant: " + variant.toString());
+                // Create a screenshotbot task
+                var name = "recordScreenshotbot" + capitalize(variant.getName());
+                println("creating task: " + name);
+                project.getTasks().register(name,
+                                            RecordFacebookTask.class)
+                    .configure((it) -> {
+                            it.init(variant, screenshotbotExtension);
+                        });
             });
     }
 }
