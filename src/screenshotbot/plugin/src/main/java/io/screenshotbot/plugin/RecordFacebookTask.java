@@ -12,6 +12,7 @@ public class RecordFacebookTask extends DefaultTask {
     }
 
     public void init(TestVariant variant, ScreenshotbotPlugin.Extension extension) {
+        dependsOn(variant.getConnectedInstrumentTestProvider());
     }
 
     @TaskAction
