@@ -15,6 +15,8 @@
 
 (compile 'main)
 
+(compile 'simple-test)
+
 (lw-ji:setup-deliver-dynamic-library-for-java)
 
 (defun deliver-main ()
@@ -32,6 +34,6 @@
               :keep-clos-object-printing t
               :keep-symbols `(system:pipe-exit-status
                               simple-test)
-              :multiprocessing t)))
+              :multiprocessing nil)))
 
 (deliver-main)
