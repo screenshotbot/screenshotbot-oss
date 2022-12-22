@@ -11,6 +11,10 @@ plugins {
     id 'signing'
 }
 
+repositories {
+    google()
+}
+
 apply plugin: "java-gradle-plugin"
 apply plugin: 'maven-publish'
 
@@ -23,6 +27,7 @@ repositories {
 }
 
 dependencies {
+    implementation "com.android.tools.build:gradle:7.1.0"
     implementation files('libs/lispcalls.jar')
 }
 
