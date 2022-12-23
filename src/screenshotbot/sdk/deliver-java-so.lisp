@@ -27,7 +27,6 @@
     (deliver 'main
               output-file
               5
-              :keep-function-name t
               #+mswindows :console #+mswindows :init
               #+mswindows :startup-bitmap-file #+mswindows nil
               :image-type :dll

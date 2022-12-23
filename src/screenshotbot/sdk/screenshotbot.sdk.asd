@@ -41,7 +41,9 @@
                (:file "firebase")
                (:file "android")
                (:file "git")
-               (:file "sdk")))
+               (:file "sdk")
+               #+lispworks
+               (:file "gradle")))
 
 (defsystem :screenshotbot.sdk/static
   :serial t
@@ -102,5 +104,6 @@
 #+lispworks
 (defsystem :screenshotbot.sdk/deliver-java-so
   :defsystem-depends-on (#:build-utils/deliver-script)
+  :depends-on (#:screenshotbot.sdk/library)
   :components (("build-utils/deliver-script:deliver-so-script"
                 "deliver-java-so")))

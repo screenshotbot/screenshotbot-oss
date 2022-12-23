@@ -29,7 +29,11 @@ public class RecordFacebookTask extends DefaultTask {
           androidExtension.getAdbOptions().getInstallOptions()
          */
 
+        SbNative.callFn("screenshotbot/sdk/gradle::record-facebook-task",
+                        androidExtension.getAdbExe().toString());
         ScreenshotbotPlugin.println("hello world: " +
                                     androidExtension.getAdbExe().toString());
+
+
     }
 }
