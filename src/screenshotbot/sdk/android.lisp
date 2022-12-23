@@ -175,10 +175,14 @@ These older versions use a different metadata format and are currently
                                        :direction :output
                                        :element-type 'flexi-streams:octet)
               (imago:write-png im p)
-              (make-instance 'streamed-image
-                              :name name
-                              :stream (open p :direction :input
-                                              :element-type 'flexi-streams:octet)))))))
+              (make-bundle-image bundle name p))))))
+
+(defmethod make-bundle-image ((bundle image-bundle) name p)
+  "Create an image object for the given name and pathname."
+  (make-instance 'streamed-image
+                 :name name
+                 :stream (open p :direction :input
+                                 :element-type 'flexi-streams:octet)))
 
 (defmethod list-images ((bundle multi-metadata-bundle))
   (loop for image-bundle in (image-bundles bundle)
