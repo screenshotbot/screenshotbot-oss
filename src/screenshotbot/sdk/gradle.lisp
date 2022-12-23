@@ -6,6 +6,10 @@
 
 (defpackage :screenshotbot/sdk/gradle
   (:use #:cl)
+  (:import-from #:screenshotbot/sdk/adb-puller
+                #:pull-file
+                #:external-data-dir
+                #:adb-puller)
   (:export
    #:main))
 (in-package :screenshotbot/sdk/gradle)
@@ -18,8 +22,20 @@
      (lw:deliver-keep-symbol-names ',name)
      (lw:deliver-keep-symbols ',name)))
 
-(def-ext-fun record-facebook-task (adb)
-  (format t "Got adb ~A~%" adb))
+(def-ext-fun record-facebook-task (adb package)
+  (let ((adb (make-instance 'adb-puller :exec adb)))
+    (let* ((sdcard (external-data-dir adb))
+           (metadata (path:catfile
+                      sdcard "screenshots/"
+                      (format nil "~a/" package)
+                      "screenshots-default/metadata.json")))
+      (uiop:with-temporary-file (:prefix "metadata" :type "xml"
+                                 :pathname p)
+        (pull-file
+         adb
+         metadata
+         p)
+        (log:info "Retrieved metadata.json")))))
 
 (defun read-sym (a)
   (find-symbol
