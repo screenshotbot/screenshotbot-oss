@@ -7,11 +7,18 @@ import org.gradle.api.tasks.TaskAction;
 import com.android.build.gradle.api.*;
 import com.android.build.gradle.*;
 import org.gradle.api.*;
+import org.gradle.process.*;
+import javax.inject.Inject;
 
 public class RecordFacebookTask extends DefaultTask {
 
     private TestedExtension androidExtension;
-    public RecordFacebookTask() {
+
+    private ExecOperations execOperations;
+
+    @Inject
+    public RecordFacebookTask(ExecOperations execOperations) {
+        this.execOperations = execOperations;
         setGroup("Screenshotbot Tasks");
     }
 
@@ -29,7 +36,7 @@ public class RecordFacebookTask extends DefaultTask {
           androidExtension.getAdbOptions().getInstallOptions()
          */
 
-        SbNative.callFn("screenshotbot/sdk/gradle::record-facebook-task",
+        SbNative.callFn(execOperations, "record-facebook-task",
                         androidExtension.getAdbExe().toString());
         ScreenshotbotPlugin.println("hello world: " +
                                     androidExtension.getAdbExe().toString());

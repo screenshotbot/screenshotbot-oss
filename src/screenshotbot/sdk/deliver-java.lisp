@@ -5,31 +5,18 @@
 (defun output-file ()
   (car (asdf:output-files
         'asdf:compile-op
-         (asdf:find-component :screenshotbot.sdk/deliver-java-so "deliver-java-so"))))
-
-(defun main ())
-
-(defun simple-test (str)
-  (format t "in here ~%")
-  (length str))
-
-(compile 'main)
-
-(compile 'simple-test)
-
-(lw-ji:setup-deliver-dynamic-library-for-java)
+         (asdf:find-component :screenshotbot.sdk/deliver-java "deliver-java"))))
 
 (defun deliver-main ()
   (let ((output-file (output-file)))
     (ensure-directories-exist output-file)
-    (lw-ji:setup-deliver-dynamic-library-for-java)
 
-    (deliver 'main
+    (deliver 'screenshotbot/sdk/gradle:main
               output-file
               5
               #+mswindows :console #+mswindows :init
               #+mswindows :startup-bitmap-file #+mswindows nil
-              :image-type :dll
+              :packages-to-keep-symbol-names :all
               :keep-clos-object-printing t
               :keep-symbols `(system:pipe-exit-status
                               simple-test)

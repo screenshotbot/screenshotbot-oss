@@ -102,8 +102,8 @@
                                    :startup-component "installer")))
 
 #+lispworks
-(defsystem :screenshotbot.sdk/deliver-java-so
+(defsystem :screenshotbot.sdk/deliver-java
   :defsystem-depends-on (#:build-utils/deliver-script)
   :depends-on (#:screenshotbot.sdk/library)
-  :components (("build-utils/deliver-script:deliver-so-script"
-                "deliver-java-so")))
+  :components (("build-utils/deliver-script:deliver-script"
+                "deliver-java")))
