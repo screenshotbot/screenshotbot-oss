@@ -17,6 +17,7 @@ public class RecordFacebookTask extends DefaultTask {
     private ExecOperations execOperations;
     private TestVariant variant;
     private String testApplicationId;
+    private ScreenshotbotPlugin.Extension extension;
 
     @Inject
     public RecordFacebookTask(ExecOperations execOperations) {
@@ -30,6 +31,7 @@ public class RecordFacebookTask extends DefaultTask {
         //dependsOn(variant.getConnectedInstrumentTestProvider());
         this.androidExtension = androidExtension;
         this.variant = variant;
+        this.extension = extension;
 
     }
 
@@ -40,9 +42,15 @@ public class RecordFacebookTask extends DefaultTask {
           androidExtension.getAdbOptions().getInstallOptions()
          */
 
+        String channel = extension.getChannel();
+        if (channel == null) {
+            channel = variant.getApplicationId();
+        }
+
         SbNative.callFn(execOperations, "record-facebook-task",
                         androidExtension.getAdbExe().toString(),
-                        variant.getApplicationId());
+                        variant.getApplicationId(),
+                        channel);
         ScreenshotbotPlugin.println("hello world: " +
                                     androidExtension.getAdbExe().toString()
                                     );

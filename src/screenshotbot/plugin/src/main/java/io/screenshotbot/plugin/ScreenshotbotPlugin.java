@@ -8,6 +8,14 @@ import com.lispworks.LispCalls;
 public class ScreenshotbotPlugin implements Plugin<Project>{
 
     public static class Extension {
+        private String channel;
+        public void setChannel(String channel) {
+            this.channel = channel;
+        }
+
+        public String getChannel() {
+            return channel;
+        }
     }
 
     private Extension screenshotbotExtension;

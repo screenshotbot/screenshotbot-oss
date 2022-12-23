@@ -77,7 +77,7 @@ the situation that this is empty.")
      (lw:deliver-keep-symbol-names ',name)
      (lw:deliver-keep-symbols ',name)))
 
-(def-ext-fun record-facebook-task (adb package)
+(def-ext-fun record-facebook-task (adb package channel)
   (let ((adb (make-instance 'adb-puller :exec adb)))
     (let* ((sdcard (external-data-dir adb))
            (metadata (path:catfile
@@ -103,7 +103,7 @@ the situation that this is empty.")
                                          :tmpdir tmpdir)))
               (sdk:parse-org-defaults)
               (let ((flags:*main-branch* "master"))
-                (single-directory-run bundle :channel "foo")))))))))
+                (single-directory-run bundle :channel channel)))))))))
 
 (defun read-sym (a)
   (find-symbol
