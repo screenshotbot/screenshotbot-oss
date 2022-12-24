@@ -16,6 +16,27 @@ public class ScreenshotbotPlugin implements Plugin<Project>{
         public String getChannel() {
             return channel;
         }
+
+        private String mApiKey;
+
+        public void setApiKey(String apiKey) {
+            mApiKey = apiKey;
+        }
+
+        public String getApiKey() {
+            return mApiKey;
+        }
+
+        private String mApiSecret;
+
+        public void setApiSecret(String apiSecret) {
+            mApiSecret = apiSecret;
+        }
+
+        public String getApiSecret() {
+            return mApiSecret;
+        }
+
     }
 
     private Extension screenshotbotExtension;

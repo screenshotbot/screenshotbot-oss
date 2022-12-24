@@ -32,7 +32,13 @@ public class RecordFacebookTask extends DefaultTask {
         this.androidExtension = androidExtension;
         this.variant = variant;
         this.extension = extension;
+    }
 
+    public String ensureString(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s;
     }
 
     @TaskAction
@@ -50,7 +56,9 @@ public class RecordFacebookTask extends DefaultTask {
         SbNative.callFn(execOperations, "record-facebook-task",
                         androidExtension.getAdbExe().toString(),
                         variant.getApplicationId(),
-                        channel);
+                        channel,
+                        ensureString(extension.getApiKey()),
+                        ensureString(extension.getApiSecret()));
         ScreenshotbotPlugin.println("hello world: " +
                                     androidExtension.getAdbExe().toString()
                                     );

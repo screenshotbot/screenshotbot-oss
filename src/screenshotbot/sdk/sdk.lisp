@@ -355,12 +355,16 @@ error."
    fn
    (%read-directory-from-args)))
 
+(defun emptify (s)
+  "If the string is empty, return nil"
+  (if (str:emptyp s) nil s))
+
 (defun parse-api-key-from-environment ()
   (setf *api-key*
-        (or *api-key*
+        (or (emptify *api-key*)
             (uiop:getenv "SCREENSHOTBOT_API_KEY")))
   (setf *api-secret*
-        (or *api-secret*
+        (or (emptify *api-secret*)
             (uiop:getenv "SCREENSHOTBOT_API_SECRET")))
 
   (alexandria:when-let (hostname (uiop:getenv "SCREENSHOTBOT_API_HOSTNAME"))

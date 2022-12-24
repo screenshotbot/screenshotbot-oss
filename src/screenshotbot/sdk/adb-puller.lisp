@@ -9,7 +9,8 @@
   (:export
    #:external-data-dir
    #:pull-file
-   #:remote-file-exists-p))
+   #:remote-file-exists-p
+   #:pull-directory))
 (in-package :screenshotbot/sdk/adb-puller)
 
 (defclass adb-puller ()
@@ -62,6 +63,37 @@
                            "pull"
                            (android-namestring remote)
                            (namestring local)))))))
+
+(defmethod pull-directory ((self adb-puller)
+                           remote
+                           local)
+  (let ((remote-tar (cl-ppcre:regex-replace-all
+                     "/$"
+                     (namestring remote)
+                     ".zip" )))
+    (exec-adb self
+              (list
+               "shell"
+               "zip"
+               "-r"
+               remote-tar
+               (namestring remote))
+              :output 'string
+              :error-output 'string)
+    (uiop:with-temporary-file (:pathname p :type "zip")
+      (pull-file self
+                 remote-tar
+                 p)
+      (log:info "Untarring the archive")
+      (let ((zipfile (zip:open-zipfile p)))
+        (zip:do-zipfile-entries (name entry zipfile)
+          (with-open-file (output (ensure-directories-exist (path:catfile local name))
+                                  :direction :output
+                                  :element-type 'flex:octet)
+            (zip:zipfile-entry-contents entry output))))
+      (log:info "Cleaning up temporary tar file"))
+    (exec-adb self
+              (list "shell" "rm" remote-tar))))
 
 (defmethod external-data-dir ((self adb-puller))
   (format nil "~a/"

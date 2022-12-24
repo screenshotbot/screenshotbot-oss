@@ -13,6 +13,7 @@ public class SbNative {
         var ret = execOperations.exec((execSpec) -> {
                 execSpec.setExecutable(getExe());
                 execSpec.args(args);
+                execSpec.setStandardOutput(System.out);
             });
         ret.assertNormalExitValue();
     }

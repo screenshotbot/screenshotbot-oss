@@ -69,6 +69,10 @@ the situation that this is empty.")
           cache-file)
          (read-cache))))))
 
+(defun prepare-image ()
+  (log:config :sane :immediate-flush t)
+  (log:config :info))
+
 (defmacro def-ext-fun (name args &body body)
   `(progn
      (defun ,name ,args
@@ -77,7 +81,9 @@ the situation that this is empty.")
      (lw:deliver-keep-symbol-names ',name)
      (lw:deliver-keep-symbols ',name)))
 
-(def-ext-fun record-facebook-task (adb package channel)
+(def-ext-fun record-facebook-task (adb package channel
+                                       api-key
+                                       api-secret)
   (let ((adb (make-instance 'adb-puller :exec adb)))
     (let* ((sdcard (external-data-dir adb))
            (metadata (path:catfile
@@ -101,8 +107,10 @@ the situation that this is empty.")
                                          :tests-run-id (str:trim (uiop:read-file-string test-run-id))
                                          :adb adb
                                          :tmpdir tmpdir)))
-              (sdk:parse-org-defaults)
-              (let ((flags:*main-branch* "master"))
+              (let ((flags:*main-branch* "master")
+                    (flags:*api-key* api-key)
+                    (flags:*api-secret* api-secret))
+                (sdk:parse-org-defaults)
                 (single-directory-run bundle :channel channel)))))))))
 
 (defun read-sym (a)
@@ -112,10 +120,12 @@ the situation that this is empty.")
 
 (defun main ()
   (uiop:setup-command-line-arguments)
+  (prepare-image)
+
   (let ((args (cdr
                #+lispworks system:*line-arguments-list*
                #-lispworks (uiop:command-line-arguments))))
-    (format t "Got args: ~S~%" args)
+    (format t "Got args2: ~S~%" args)
     (apply (read-sym (car args))
            (cdr args)))
   (uiop:quit 0))

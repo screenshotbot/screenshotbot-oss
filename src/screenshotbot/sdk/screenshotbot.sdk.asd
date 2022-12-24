@@ -41,10 +41,16 @@
                (:file "firebase")
                (:file "android")
                (:file "git")
-               (:file "sdk")
-               (:file "adb-puller")
+               (:file "sdk")))
+
+(defsystem :screenshotbot.sdk/gradle
+  :serial t
+  :depends-on (:screenshotbot.sdk/library
+               :tar/extract)
+  :components ((:file "adb-puller")
                #+lispworks
                (:file "gradle")))
+
 
 (defsystem :screenshotbot.sdk/static
   :serial t
@@ -105,6 +111,6 @@
 #+lispworks
 (defsystem :screenshotbot.sdk/deliver-java
   :defsystem-depends-on (#:build-utils/deliver-script)
-  :depends-on (#:screenshotbot.sdk/library)
+  :depends-on (#:screenshotbot.sdk/gradle)
   :components (("build-utils/deliver-script:deliver-script"
                 "deliver-java")))
