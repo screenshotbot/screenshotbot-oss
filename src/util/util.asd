@@ -271,7 +271,8 @@
                :util/request
                :quri)
   :components ((:module "phabricator"
-                :components ((:file "conduit")))))
+                :components ((:file "conduit")
+                             (:file "harbormaster")))))
 
 (defsystem :util/clsql
   :depends-on (:clsql)
@@ -324,4 +325,5 @@
                              (:file "test-make-instance-with-accessors")
                              (:file "test-digests")))
                (:module "phabricator"
-                :components ((:file "test-conduit")))))
+                :components ((:file "test-conduit")
+                             (:file "test-harbormaster")))))

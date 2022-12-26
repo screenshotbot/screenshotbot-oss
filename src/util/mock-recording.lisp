@@ -13,7 +13,8 @@
                 #:if-called)
   (:export
    #:with-recording
-   #:track))
+   #:track
+   #:recording-mode-p))
 (in-package :util/mock-recording)
 
 (defclass function-call ()
@@ -72,6 +73,9 @@
                  (apply #'values
                         (response next)
                         (other-values next))))))
+
+(defun recording-mode-p ()
+  *recording-mode*)
 
 (defun track (mocked-function &rest args)
   (cond
