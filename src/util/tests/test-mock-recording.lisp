@@ -30,6 +30,9 @@
    *ans*
    (+  2 x)))
 
+(defun zoidberg (x)
+  (+ (bar x) 3))
+
 (test recording-mode
   (uiop:with-temporary-file (:pathname p)
     (is (eql 3 (with-recording (p :record t)
@@ -83,7 +86,7 @@
        (is (equal 5 (bar 3)))))))
 
 (test different-function-order
-    (uiop:with-temporary-file (:pathname p)
+  (uiop:with-temporary-file (:pathname p)
     (with-recording (p :record t)
       (track 'foo)
       (track 'bar)
@@ -96,3 +99,14 @@
        (is (equal 3 (foo 2)))
        (signals error
          (foo 3))))))
+
+(test nested-function-order
+  (uiop:with-temporary-file (:pathname p)
+    (with-recording (p :record t)
+      (track 'bar)
+      (track 'zoidberg)
+      (is (equal 6 (zoidberg 1))))
+    (with-recording (p)
+      (track 'bar)
+      (track 'zoidberg)
+      (is (equal 6 (zoidberg 1))))))

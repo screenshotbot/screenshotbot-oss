@@ -37,18 +37,24 @@
 ;; Are we in recording or replay mode? If unbound, we are in neither!
 (defvar *recording-mode*)
 
+(defvar *in-recorded-function-p* nil
+  "True if we're already inside a recorded function (for instance, nested
+tracked functions. In this case we shouldn't record any nested functions.")
+
 (defun track-during-recording (mocked-function &key skip-args)
   (if-called mocked-function
              (lambda (&rest args)
                (log:debug "Bypassing any recorded values")
-               (let ((res
-                       (multiple-value-list (call-previous))))
+               (let ((res (multiple-value-list
+                           (let ((*in-recorded-function-p* t))
+                            (call-previous)))))
                  (let ((function-call (make-instance 'function-call
                                                      :function-name mocked-function
                                                      :arguments (remove-skip-args args skip-args)
                                                      :response (car res)
                                                      :other-values (cdr res))))
-                   (push function-call *recording*))
+                   (unless *in-recorded-function-p*
+                     (push function-call *recording*)))
                  (apply #'values res)))))
 
 (defun remove-skip-args (args skip-args)
@@ -69,7 +75,8 @@
                           (arguments next) args))
                  (unless (eql (function-name next) mocked-function)
                    (error "Function requested is ~a, but we recorded ~a"
-                          (function-name next)))
+                          (function-name next)
+                          mocked-function))
                  (apply #'values
                         (response next)
                         (other-values next))))))
