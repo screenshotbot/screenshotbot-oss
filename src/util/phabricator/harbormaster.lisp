@@ -13,7 +13,8 @@
                 #:assoc-value)
   (:export
    #:download-file
-   #:upload-file))
+   #:upload-file
+   #:create-artifact))
 (in-package :util/phabricator/harbormaster)
 
 (defmethod upload-file ((phab phab-instance) pathname
@@ -52,3 +53,18 @@
                                         (flex:make-flexi-stream
                                          stream
                                          :external-format :latin-1))))))
+
+(defmethod create-artifact ((phab phab-instance)
+                            phid
+                            file
+                            &key (name (error "must provide artifact name")))
+  (let ((file-phid (upload-file phab file)))
+    (let ((data (make-hash-table :test #'equal)))
+      (setf (gethash "filePHID" data) file-phid)
+      (call-conduit
+       phab
+       "harbormaster.createartifact"
+       `(("buildTargetPHID" . ,phid)
+         ("artifactKey" . ,name)
+         ("artifactType" . "file")
+         ("artifactData" . ,data))))))
