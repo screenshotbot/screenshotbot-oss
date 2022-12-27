@@ -52,10 +52,12 @@
 
 (test create-artifact
   (with-fixture state ("create-artifact")
-   (uiop:with-temporary-file (:pathname p :stream s)
-     (write-string "hello world" s)
-     (finish-output s)
-     (finishes
-       (create-artifact phab
-                        "PHID-HMBT-6fznwctbnptklhw36y63"
-                        p :name "Test Artifact 7")))))
+    (track 'call-conduit
+           :skip-args '(0))
+    (uiop:with-temporary-file (:pathname p :stream s)
+      (write-string "hello world" s)
+      (finish-output s)
+      (finishes
+        (create-artifact phab
+                         "PHID-HMBT-6fznwctbnptklhw36y63"
+                         p :name "Test Artifact 70")))))
