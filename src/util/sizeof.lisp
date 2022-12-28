@@ -7,7 +7,11 @@
 (defpackage :util/sizeof
   (:use #:cl)
   (:export
-   #:sizeof))
+   #:sizeof
+   #:def-int-type
+   #:def-uint-type)
+  (:local-nicknames #-lispworks
+                    (:fli #:util/fake-fli)))
 (in-package :util/sizeof)
 
 (defun sizeof (type &key imports)
@@ -38,3 +42,26 @@ return 0;
        (uiop:run-program
         (list (namestring output))
         :output 'string)))))
+
+
+(defmacro %def-int-type (name type &key imports
+                                      (prefix ""))
+  (let ((size (sizeof type :imports imports)))
+    (flet ((get-type (type)
+             (intern
+              (format nil "~a~a"
+                      (string prefix)
+                      (string type))
+              (symbol-package type))))
+     `(fli:define-c-typedef ,name
+          ,(ecase size
+             (8 (get-type :int64))
+             (4 (get-type :int32))
+             (2 (get-type :int16))
+             (1 (get-type :int8)))))))
+
+(defmacro def-int-type (&rest args)
+  `(%def-int-type ,@args))
+
+(defmacro def-uint-type (&rest args)
+  `(%def-int-type ,@args :prefix "U"))
