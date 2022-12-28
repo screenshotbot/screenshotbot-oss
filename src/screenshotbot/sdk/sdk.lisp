@@ -44,6 +44,8 @@
                 #:or-setf)
   (:import-from #:screenshotbot/sdk/version-check
                 #:remote-supports-basic-auth-p)
+  (:import-from #:util/health-check
+                #:def-health-check)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags))
   (:export
    #:single-directory-run
@@ -547,3 +549,7 @@ error."
   (prepare-directory
    (lambda (directory)
      (single-directory-run directory :channel *channel*))))
+
+(def-health-check verify-https-works ()
+  (util/request:http-request "https://screenshotbot.io/api/version"
+                             :ensure-success t))
