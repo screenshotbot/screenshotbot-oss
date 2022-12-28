@@ -221,6 +221,12 @@
                (:file "digests" :if-feature (:and :lispworks (:or :linux :darwin :mswindows)))
                (:file "digests-non-lw" :if-feature (:not (:and :lispworks (:or :linux :darwin :mswindows))))))
 
+(defsystem :util/sizeof
+  :serial t
+  :depends-on (#-lispworks
+               :util/fake-fli)
+  :components ((:file "sizeof")))
+
 (defsystem :util/threading
   :depends-on (:bordeaux-threads
                :mailbox
@@ -288,6 +294,7 @@
                :fiveam-matchers
                :easy-macros
                :util/digests
+               :util/sizeof
                :util/phabricator
                :util/request
                :util/fiveam)
@@ -308,6 +315,7 @@
                              (:file "test-fiveam")
                              (:file "test-testing")
                              (:file "test-lists")
+                             (:file "test-sizeof")
                              (:file "test-models")
                              (:file "test-cdn")
                              (:file "test-bind-form")
