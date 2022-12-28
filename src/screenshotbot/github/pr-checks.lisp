@@ -20,6 +20,8 @@
                 #:github-request)
   (:import-from #:screenshotbot/github/app-installation
                 #:github-get-access-token-for-installation)
+  (:import-from #:screenshotbot/events
+                #:with-event)
   (:export
    #:github-service
    #:github-update-pull-request))
@@ -83,16 +85,17 @@
                                                     head-sha)
   (assert (member status (list nil :queued :in-progress :completed)))
   (log:debug "Updating pull request on ~s" full-name)
-  (github-create-check-run
-   full-name
-   :name check-name
-   :head-sha head-sha
-   :conclusion conclusion
-   :details-url details-url
-   :output output
-   :status (when status (str:replace-all "-" "_" (str:downcase status)))
-   :installation-token
-   (github-get-access-token-for-installation
-    installation-id
-    :app-id app-id
-    :private-key private-key)))
+  (with-event (:github.create-check-run)
+    (github-create-check-run
+     full-name
+     :name check-name
+     :head-sha head-sha
+     :conclusion conclusion
+     :details-url details-url
+     :output output
+     :status (when status (str:replace-all "-" "_" (str:downcase status)))
+     :installation-token
+     (github-get-access-token-for-installation
+      installation-id
+      :app-id app-id
+      :private-key private-key))))
