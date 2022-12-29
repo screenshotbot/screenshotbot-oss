@@ -2,14 +2,14 @@ version: "3.9"
 services:
   screenshotbot:
     build:
-      context: ${SB_OSS_CONTEXT}
-      dockerfile: ${SB_OSS_DOCKERFILE}
+      context: ${SB_OSS_CONTEXT-.}
+      dockerfile: ${SB_OSS_DOCKERFILE-Dockerfile}
 
     ports:
       - "4091:4091"
     volumes:
       - screenshotbot-oss:/data
-      - ${SB_OSS_CONTEXT}:/app
+      - ${SB_OSS_CONTEXT-.}:/app
       - screenshotbot-build:/app/build
 
 volumes:

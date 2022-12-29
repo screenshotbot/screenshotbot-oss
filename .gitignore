@@ -41,3 +41,4 @@ tmp-upload
 .secrets
 .qlot
 .vagrant
+.env
