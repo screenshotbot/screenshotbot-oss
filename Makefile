@@ -258,21 +258,7 @@ actually-land:
 	$(ARC) land  --
 
 src/java/libs: .PHONY
-	# This is manually run, not meant to run during build
-	rm -rf $@
-	mkdir -p $@
-	cd java && ./gradlew build makeClasspath
-	cp scripts/java-jar-prefix.txt $@/java.libs.asd
-
-	for x in `cat java/build/libs/classpath.txt` ; do \
-		if [ -f $$x ] ; then \
-			cp $$x $@/ ; \
-            echo "(build-utils:jar-file \"$$(basename $$x .jar)\")" >> $@/java.libs.asd ; \
-		fi ; \
-	done
-
-	echo "))" >> $@/java.libs.asd
-
+	cd src/java && make libs
 
 upload-mac-intel-sdk:
 	ARCH="x86_64" make upload-sdk
