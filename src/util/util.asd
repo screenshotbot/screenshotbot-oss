@@ -250,6 +250,10 @@
   :serial t
   :components ((:file "request")))
 
+(defsystem :util/disk-size
+  :depends-on (:util/sizeof)
+  :components ((:file "disk-size")))
+
 (defsystem :util/health-check
   :depends-on (:str
                :alexandria)
@@ -295,6 +299,7 @@
                :easy-macros
                :util/digests
                :util/sizeof
+               :util/disk-size
                :util/phabricator
                :util/request
                :util/fiveam)
@@ -317,6 +322,7 @@
                              (:file "test-lists")
                              (:file "test-sizeof")
                              (:file "test-models")
+                             (:file "test-disk-size")
                              (:file "test-cdn")
                              (:file "test-bind-form")
                              (:file "test-lru-cache")

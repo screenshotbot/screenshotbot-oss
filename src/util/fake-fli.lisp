@@ -20,7 +20,8 @@
    #:incf-pointer
    #:malloc
    #:free
-   #:dereference))
+   #:dereference
+   #:with-coerced-pointer))
 (in-package :util/fake-fli)
 
 (defun fix-type (x &key (allow-count t))
@@ -153,3 +154,7 @@
 
 (Defun free (obj)
   (cffi:foreign-free obj))
+
+(defmacro with-coerced-pointer ((output &key type) input &body body)
+  `(let ((,output ,input))
+     ,@body))
