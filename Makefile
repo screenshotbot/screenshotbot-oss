@@ -145,13 +145,13 @@ tests:| show-info clean-sys-index test-parts selenium-tests conditional-copybara
 test-parts: test-sb test-lw test-ccl test-store
 
 test-sb: submodule $(sbcl) build/affected-files.txt
-	$(sbcl) --script ./jenkins.lisp
+	$(sbcl) --script ./scripts/jenkins.lisp
 
 test-ccl: submodule $(CCL_IMAGE)
-	$(CCL_SCRIPT) ./jenkins.lisp
+	$(CCL_SCRIPT) ./scripts/jenkins.lisp
 
 test-lw: submodule $(LW) build/affected-files.txt
-	$(LW_SCRIPT) ./jenkins.lisp
+	$(LW_SCRIPT) ./scripts/jenkins.lisp
 
 test-store: submodule $(LW)
 	$(LW_SCRIPT) ./run-store-tests.lisp
@@ -184,10 +184,10 @@ screenshotbot-flow:
 bknr-tests-lw:
 
 screenshotbot-tests: $(LW) .PHONY
-	$(LW_SCRIPT) ./jenkins.lisp -system screenshotbot/tests,screenshotbot.pro/tests,screenshotbot.sdk/tests
+	$(LW_SCRIPT) ./scripts/jenkins.lisp -system screenshotbot/tests,screenshotbot.pro/tests,screenshotbot.sdk/tests
 
 sdk-tests: $(LW) .PHONY
-	$(LW_SCRIPT) ./jenkins.lisp -system screenshotbot.sdk/tests -no-jvm
+	$(LW_SCRIPT) ./scripts/jenkins.lisp -system screenshotbot.sdk/tests -no-jvm
 
 $(LW): build $(IMAGE_DEPS)
 	echo in here
