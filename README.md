@@ -139,11 +139,11 @@ JAR files from Common Lisp code. We will officially support ABCL in a
 future release)
 
 To create a binary on a specific platform, call the script
-`build-cli.lisp`. For instance, if you're using SBCL to build the CLI,
+`scripts/build-cli.lisp`. For instance, if you're using SBCL to build the CLI,
 it will look like:
 
 ```
- $ sbcl --script build-cli.lisp
+ $ sbcl --script scripts/build-cli.lisp
 ```
 
 This will generate a screenshotbot-cli executable script. Copy it to a
