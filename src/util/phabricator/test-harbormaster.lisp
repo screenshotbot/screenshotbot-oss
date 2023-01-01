@@ -91,4 +91,5 @@
       (finishes
         (create-artifact phab
                          "PHID-HMBT-6fznwctbnptklhw36y63"
-                         p :name "Test Artifact 76")))))
+                         p :name (format nil "Test Artifact ~a"
+                                         (timestamp-to-universal (local-time:now))))))))
