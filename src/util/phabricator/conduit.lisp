@@ -56,6 +56,7 @@
             (format nil "~a/api/~a" (url phab) name)
             :method :post
             :want-string t
+            :form-data t
             :parameters `(("params" . ,(json:encode-json-to-string params))
                           ("output" . "json")
                           ("__conduit__" . "1")))))
