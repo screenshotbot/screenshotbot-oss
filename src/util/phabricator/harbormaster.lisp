@@ -53,7 +53,8 @@
     (let ((phid (file-allocate phab (file-length stream) :name name)))
       (cond
         (phid
-         (upload-file-chunked phab phid stream))
+         (upload-file-chunked phab phid stream)
+         phid)
         (t
          (let ((arr (make-array (file-length stream)
                                 :element-type 'flex:octet)))

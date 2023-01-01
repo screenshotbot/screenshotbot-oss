@@ -22,7 +22,9 @@
                 #:track
                 #:with-recording)
   (:import-from #:cl-mock
-                #:answer))
+                #:answer)
+  (:import-from #:local-time
+                #:timestamp-to-universal))
 (in-package :util/phabricator/test-harbormaster)
 
 (util/fiveam:def-suite)
@@ -72,8 +74,9 @@
         (loop for i from 0 below (* 10 1000)
               do (write-sequence buf stream))
         (finish-output stream)
-        (let ((phid (upload-file phab large-file :name (format nil "unnamed ~a"
-                                                               (local-time:now)))))
+        (let ((phid (upload-file phab large-file
+                                 :name (format nil "unnamed ~a"
+                                               (timestamp-to-universal (local-time:now))))))
           (is (eql uploaded 10000000)))))))
 
 (test create-artifact
