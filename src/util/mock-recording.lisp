@@ -70,13 +70,14 @@ tracked functions. In this case we shouldn't record any nested functions.")
                (let ((next (pop *recording*)))
                  (unless next
                    (error "No more recorded calls"))
-                 (unless (equalp (arguments next) (remove-skip-args args skip-args))
-                   (error "Next args in recording is ~S but got ~S"
-                          (arguments next) args))
                  (unless (eql (function-name next) mocked-function)
                    (error "Function requested is ~a, but we recorded ~a"
                           (function-name next)
                           mocked-function))
+                 (let ((args (remove-skip-args args skip-args)))
+                  (unless (equalp (arguments next) args)
+                    (error "Next args in recording is ~S but got ~S"
+                           (arguments next) args)))
                  (apply #'values
                         (response next)
                         (other-values next))))))
