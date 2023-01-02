@@ -208,6 +208,8 @@ background: url(shttps://google.com?f=1)
 
 (test http-get-ignores-invalid-url
   (with-fixture state ()
-    (is (equal
-         500
-         (nth-value 1 (http-get "http://127.0.0.1/????invalid"))))))
+    (multiple-value-bind (stream ret) (http-get "http://127.0.0.1/????invalid")
+      (close stream)
+      (is (equal
+           500
+           ret)))))
