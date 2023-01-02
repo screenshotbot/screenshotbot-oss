@@ -14,6 +14,7 @@
   :serial t
   :defsystem-depends-on (:trivial-features)
   :depends-on (:clsql
+               :util/clsql
                :util/misc
                :util/atomics
                :atomics)
