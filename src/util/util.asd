@@ -70,8 +70,7 @@
                "util/misc"
                "util/html2text"
                "util/random-port"
-               #+lispworks
-               "util/memory"
+               (:feature (:and :lispworks (:or :darwin :linux)) "util/memory")
                "cl-cron")
   :serial t
   :components ((:file "ret-let")
@@ -99,6 +98,7 @@
 
 (defsystem :util/copy-file
   :serial t
+  :defsystem-depends-on (:trivial-features)
   :depends-on (:uiop
                #-lispworks
                :osicat
@@ -120,7 +120,7 @@
 #+lispworks
 (defsystem :util/memory
     :serial t
-    :depends-on (:osicat)
+    :depends-on ((:feature :linux :osicat))
     :components ((:file "memory")))
 
 (defsystem :util/logrotate
@@ -285,7 +285,8 @@
                              (:file "harbormaster")))))
 
 (defsystem :util/clsql
-  :depends-on (:clsql)
+  :depends-on (:clsql
+	       :trivial-features)
   :components ((:module "clsql"
                 :components ((:file "clsql")))))
 

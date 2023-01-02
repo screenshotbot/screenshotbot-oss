@@ -23,9 +23,9 @@
 
 (defun default-foreign-library-type ()
   "Returns string naming default library type for platform"
-  #+(or win32 win64 cygwin mswindows windows) "dll"
+  #+(or win32 win64 cygwin windows) "dll"
   #+(or macosx darwin ccl-5.0) "dylib"
-  #-(or win32 win64 cygwin mswindows windows macosx darwin ccl-5.0) "so"
+  #-(or win32 win64 cygwin windows macosx darwin ccl-5.0) "so"
 )
 
 (defmethod output-files ((o compile-op) (c lib-source-file))
@@ -46,6 +46,10 @@
           for name = (car (last (pathname-directory child)))
           if (eql #\7 (elt name 0))
             return child)))
+
+(defun windows-path ()
+   (fad:pathname-directory-pathname
+    (car (directory #P"C:/Program Files/ImageMagick-*-Q8/configure.xml"))))
 
 (defun %path ()
   (destructuring-bind (name sep dir-sep)
@@ -73,7 +77,13 @@
        ;; :name part of the pathname.
        "/usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q*/MagickWand-config")))))
 
+(defun guess-include-dir ()
+  (path:catdir (windows-path) "include/"))
+
 (defun config-bin ()
+  #+windows
+  (error "MagickWand-config not supported on Windows")
+  #-windows
   (namestring
    (let ((path (%path)))
      (loop for dir in path
@@ -88,7 +98,10 @@
               (return "MagickWand-config")))))
 
 (defun magick-lib-suffix ()
+  #+windows
+  ".Q8"
   ;; I don't want to pull in cl-ppcre just for this...
+  #-windows
   (let* ((haystack (uiop:run-program `(,(config-bin) "--libs")
                                      :output 'string))
          (needle "lMagickWand")
@@ -114,6 +127,9 @@
   "If you're using these features, make sure that your files are compiled
  with the right suffix, so that they can coexist in the same
  repository build output. (see the example of magick-lw.lisp below)."
+  #+windows
+  (pushnew :magick-7 *features*)
+  #-windows
   (let ((version (%string-trim (uiop:run-program `(,(config-bin)
                                                    "--version")
                                                  :output 'string))))
@@ -134,8 +150,14 @@
 
            (uiop:escape-shell-command (namestring
                                        (component-pathname c)))
+           #-windows
            (magick-wand-config "--cflags")
+           #-windows
            (magick-wand-config "--ldflags")
+           #+windows
+           (format nil "-DQUANTUM_DEPTH=8 -DHDRI=0 -I~a" (uiop:escape-shell-token (namestring (guess-include-dir))))
+           #+windows
+           (format nil " -lCORE_RL_MagickWand_ -lCORE_RL_MagickCore_ -L~a" (uiop:escape-shell-token (namestring (windows-path))))
            (namestring (car (output-files o c))))
    :output *standard-output*
    :error-output *error-output*))

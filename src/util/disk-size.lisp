@@ -13,14 +13,17 @@
                     (:fli #:util/fake-fli)))
 (in-package :util/disk-size)
 
+#+linux
 (def-uint-type fsblkcnt-t
   "fsblkcnt_t"
   :imports ("sys/statvfs.h"))
 
+#+linux
 (def-uint-type fsfilcnt-t
   "fsfilcnt_t"
   :imports ("sys/statvfs.h"))
 
+#+linux
 (fli:define-c-struct statvfs
     (bsize :unsigned-long)
   (frsize :unsigned-long)
@@ -35,17 +38,22 @@
   ;; sizeof!
   )
 
+#+linux
 (defconstant +statvfs-size+
   #. (+ 8 ;; extra buf, why not
         (sizeof "struct statvfs" :imports '("sys/statvfs.h"))))
 
 
+#+linux
 (fli:define-foreign-function (statvfs "statvfs")
     ((path (:reference-pass :ef-mb-string))
      (buf (:pointer statvfs)))
   :result-type :int)
 
 (defun free-space (pathname)
+  #-linux
+  10
+  #+linux
   (fli:with-dynamic-foreign-objects ((output :char :nelems +statvfs-size+))
     (fli:with-coerced-pointer (output :type 'statvfs) output
       (statvfs (namestring pathname) output)

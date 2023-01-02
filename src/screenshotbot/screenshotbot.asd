@@ -12,7 +12,8 @@
 
 (defsystem :screenshotbot/events
   :serial t
-  :depends-on (:util/clsql
+  :defsystem-depends-on (:trivial-features)
+  :depends-on (:clsql
                :util/misc
                :util/atomics
                :atomics)
@@ -22,6 +23,7 @@
   :serial t
   :author "Arnold Noronha <arnold@screenshotbot.io>"
   :license "Mozilla Public License, v 2.0"
+  :defsystem-depends-on (:trivial-features)
   :depends-on (:util
                :markup
                :gravatar
@@ -61,7 +63,7 @@
                :screenshotbot.css-assets
                :screenshotbot/secrets
                :util.java
-               :osicat
+	       (:feature (:not :windows) :osicat)
                :util/phabricator
                :util/copy-file
                :hunchensocket
@@ -289,7 +291,7 @@
                (:file "test-artifacts")
                (:file "test-promote-api")
                (:file "test-diff-report")
-               (:file "test-events")
+               (:file "test-events" :if-feature (:not :windows))
                (:file "test-mailer")
                (:file "test-secret")
                (:file "test-async")
@@ -356,7 +358,7 @@
                (:module "slack"
                 :components ((:file "test-settings")
                              (:file "test-task-integration")))
-               (:file "test-analytics")
+               (:file "test-analytics" :if-feature (:not :windows))
                (:module "email-tasks"
                 :components ((:file "test-task-integration")))
                (:module "settings"

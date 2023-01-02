@@ -25,6 +25,9 @@
 (defun copy-file-fast (src dest)
   "Copies the file from src to dest, if it's possible to use a hard link
  then it will do so."
+  #+windows
+  (uiop:copy-file src dest)
+  #-windows
   (let ((ret (link (namestring src) (namestring dest))))
     (unless (= ret 0)
       (let* ((errno #+lispworks (lw:errno-value)
