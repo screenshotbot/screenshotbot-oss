@@ -29,7 +29,7 @@
       (write-file src "hello world")
       (&body))))
 
-#+lispworks
+#+(and linux lispworks)
 (defun inode (file)
   (sys:file-stat-inode
    (sys:get-file-stat file)))
@@ -39,13 +39,14 @@
     (copy-file-fast src dest)
     (is (equal "hello world"
                (uiop:read-file-string dest)))
-    #+lispworks
+    #+(and linux lispworks)
     (is (eql (inode src) (inode dest)))))
 
 (test if-dest-exists-we-fail
   ;; This guards against the possibility that both src and dest point
   ;; to the same file. If that happens, then we'll rewrite the file,
   ;; and during the rewrite the file might be in a bad state.
+  #-windows
   (with-fixture state ()
     (write-file dest "foo")
     (signals error

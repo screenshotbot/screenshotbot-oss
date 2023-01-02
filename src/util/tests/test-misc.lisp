@@ -62,6 +62,7 @@
         (has-length 0))))))
 
 (test safe-ensure-directories-exist-when-actually-cant-write-dir
+  #-windows
   (signals
       file-error
     (safe-ensure-directories-exist "/foo/car/bar.txt")))
