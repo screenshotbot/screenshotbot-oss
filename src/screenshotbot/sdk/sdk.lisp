@@ -482,8 +482,8 @@ error."
                    (subseq dir-parts 0 (length parent-parts))))
     (let ((res (make-pathname
                 :directory
-                `(:relative ,@(subseq dir-parts (length parent-parts))))
-               ))
+                `(:relative ,@(subseq dir-parts (length parent-parts)))
+                :defaults #P"./")))
       (log:debug "Relative path parts: ~S" (pathname-directory res))
       (log:debug "Relative path is: ~S" res)
       res)))
