@@ -17,7 +17,10 @@
   (:import-from #:screenshotbot/sdk/version-check
                 #:with-version-check)
   (:import-from #:util/health-check
+                #:def-health-check
                 #:run-health-checks)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
@@ -63,32 +66,51 @@
       (t
        (sdk:parse-org-defaults)
        (with-version-check ()
-        (sdk:run-prepare-directory-toplevel))))))
+         (sdk:run-prepare-directory-toplevel))))))
 
-(defun main (&rest args)
-  (uiop:setup-command-line-arguments)
-  #-screenshotbot-oss
+(def-easy-macro with-sentry (&key (on-error (lambda ()
+                                              (uiop:quit 1)))
+                                  (stream
+                                   #+lispworks
+                                   (system:make-stderr-stream)
+                                   #-lispworks
+                                   *standard-output*)
+                                  &fn fn)
   (sentry-client:initialize-sentry-client
    sentry:*dsn*)
   (let ((error-handler (lambda (e)
-                         (format t "~%~a~%~%" e)
+                         (format stream "~%~a~%~%" e)
                          #+lispworks
-                         (dbg:output-backtrace (if flags:*verbose* :bug-form :brief))
+                         (dbg:output-backtrace (if flags:*verbose* :bug-form :brief)
+                                               :stream stream)
                          #-lispworks
-                         (trivial-backtrace:print-backtrace einteg)
+                         (trivial-backtrace:print-backtrace einteg stream)
                          #-screenshotbot-oss
                          (util/threading:log-sentry e)
-                         (uiop:quit 1))))
-    (handler-bind ((warning (lambda (warning)
-                              (let ((msg (princ-to-string warning)))
-                                ;; This warning is not very actionable
-                                ;; for end-users, so let's muffle it
-                                #+lispworks
-                                (when (str:containsp "output-wait is not implemented" msg)
-                                  (muffle-warning warning)))))
-                   #+lispworks
+                         (funcall on-error))))
+    (handler-bind (#+lispworks
                    (error error-handler))
-      (apply '%main args)))
+      (funcall fn))))
+
+(defun main (&rest args)
+  (uiop:setup-command-line-arguments)
+
+  (with-sentry ()
+    (apply '%main args))
+
   #-sbcl
   (log4cl::exit-hook)
   (uiop:quit 0))
+
+#-screenshotbot-oss
+(def-health-check sentry-logger ()
+  (let ((out-stream (make-string-output-stream)))
+    (restart-case
+        (with-sentry (:on-error (lambda ()
+                                  (invoke-restart 'expected))
+                      :stream out-stream)
+          (error "health-check for sdk"))
+     (expected ()
+       nil))
+    (assert (cl-ppcre:scan ".*CALL-WITH-SENTRY.*"
+                           (get-output-stream-string out-stream)))))
