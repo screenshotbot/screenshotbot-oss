@@ -113,9 +113,10 @@ rm -f $INSTALLER
           (generate))
 
         ,@ (loop for suffix in '("darwin" "linux")
+                 for full-name = (format nil "~a-~a"
+                                         name suffix)
                  collect
-                 `(def-artifact-hook (',(intern name) ,(format nil "~a-~a"
-                                                               name suffix))
+                 `(def-artifact-hook (',(intern full-name) ,full-name)
                     (generate)))
         (add-datastore-hook
          ',generate-fn
