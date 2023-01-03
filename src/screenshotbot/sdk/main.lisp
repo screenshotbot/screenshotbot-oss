@@ -77,7 +77,7 @@
                                    *standard-output*)
                                   &fn fn)
   (sentry-client:initialize-sentry-client
-   sentry:*dsn*)
+   sentry:*dsn* :client-class 'sentry:delivered-client)
   (let ((error-handler (lambda (e)
                          (format stream "~%~a~%~%" e)
                          #+lispworks

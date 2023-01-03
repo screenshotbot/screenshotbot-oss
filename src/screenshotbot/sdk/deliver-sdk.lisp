@@ -61,15 +61,14 @@
               output-file
               5
               :keep-function-name t
+              :keep-debug-mode nil
               #+mswindows :console #+mswindows :init
               #+mswindows :startup-bitmap-file #+mswindows nil
-              :keep-debug-mode t
               :keep-clos :meta-object-slots
               :keep-pretty-printer t
               :keep-clos-object-printing t
               :keep-lisp-reader t
               ;; temporary: get the build green
-              :keep-eval t
               :keep-symbols `(system:pipe-exit-status
                               dspec:find-dspec-locations)
               :packages-to-keep-symbol-names :all
