@@ -92,6 +92,7 @@
                      :direction :output)
       (write-string "hello2" output)
       (finish-output output)
+      (close output)
 
       (is
        (equal
