@@ -95,12 +95,10 @@ The current implementation has limited functionality with what you can
   ;; the HTTP response.
   (unwind-protect
        (let ((stream (flex:make-flexi-stream
-                      (response-stream async-response))))
-         (format stream "HTTP/1.1 ~a Internal Server Error~C~C" code
-                 #\Return #\Linefeed)
-         (format stream "Content-Length: ~a~C~C~C~C" (length message)
-                 #\Return #\Linefeed
-                 #\Return #\Linefeed)
+                      (response-stream async-response)
+                      :external-format (flex:make-external-format :latin-1 :eol-style :crlf))))
+         (format stream "HTTP/1.1 ~a Internal Server Error~%" code)
+         (format stream "Content-Length: ~a~%~%" (length message))
          (format stream "~a" message)
          (finish-output stream))
     (cleanup async-response)))
