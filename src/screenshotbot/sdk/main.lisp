@@ -15,6 +15,7 @@
                 #:*extras*
                 #:funcall-with-sentry-logs)
   (:import-from #:screenshotbot/sdk/version-check
+                #:*client-version*
                 #:with-version-check)
   (:import-from #:util/health-check
                 #:def-health-check
@@ -35,7 +36,7 @@
   (log:config :sane :immediate-flush t)
   (log:config :info)
 
-  (log:info "Screenshotbot SDK v2.4.3")
+  (log:info "Screenshotbot SDK v~a" *client-version*)
   (let ((unrecognized   (parse-command-line (cdr (command-line)))))
     (when flags:*verbose*
       (log:config :debug))

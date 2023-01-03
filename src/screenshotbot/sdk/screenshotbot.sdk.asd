@@ -6,6 +6,7 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
+  :version "2.4.4"
   :depends-on (:dexador
                :com.google.flag
                :pkg

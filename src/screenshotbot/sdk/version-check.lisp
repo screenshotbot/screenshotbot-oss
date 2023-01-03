@@ -21,8 +21,13 @@
                 #:def-health-check)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:with-version-check))
+   #:with-version-check
+   #:*client-version*))
 (in-package :screenshotbot/sdk/version-check)
+
+(defparameter *client-version* (asdf:system-version
+                                (asdf:find-system :screenshotbot.sdk/library))
+  "The client version. Note that is different from the *api-version*.")
 
 (defvar *remote-version* *api-version*)
 
