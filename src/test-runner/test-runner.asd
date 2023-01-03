@@ -4,6 +4,7 @@
   ;; before we can load any test deps with
   ;; dspect:*redefinition-action*.
   :depends-on (:jvm
+               :trivial-features
                :fiveam
                :testing)
   :components ((:file "test-runner")))

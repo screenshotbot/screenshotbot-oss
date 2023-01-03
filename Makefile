@@ -158,7 +158,7 @@ test-store: submodule $(LW)
 
 build: | build/cache-key $(DISTINFO)
 # build/build? Temporary fix for LW8-darwin
-	mkdir -p build
+	mkdir -pf build
 
 clean-fasl: .PHONY
 	find src -name *.64ufasl -delete

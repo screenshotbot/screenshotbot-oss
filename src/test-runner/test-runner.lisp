@@ -16,8 +16,10 @@
 (defun hide-outputs ()
   (setf fiveam:*test-dribble* *standard-output*)
   #-ccl ;; for some reason breaks some tests on ccl
-  (let ((null-file (open (if (uiop:os-windows-p) "nul" "/dev/null") :direction :output
-                                                                    :if-exists :append)))
+  (let ((null-file
+          (open "build/test-logs"
+                :direction :output
+                :if-exists :supersede)))
     (setf *standard-output* null-file)
     (setf *error-output* null-file)
     (setf *trace-output* null-file)
