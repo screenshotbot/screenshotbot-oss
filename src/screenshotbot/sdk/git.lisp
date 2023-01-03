@@ -7,6 +7,8 @@
 (uiop:define-package :screenshotbot/sdk/git
   (:use #:cl
         #:alexandria)
+  (:import-from #:util/health-check
+                #:def-health-check)
   (:export
    #:null-repo
    #:git-repo
@@ -90,3 +92,7 @@
 
 (defmethod rev-parse ((repo null-repo) branch)
   nil)
+
+
+(def-health-check verify-git-is-present ()
+  (uiop:run-program (list "git" "--help")))
