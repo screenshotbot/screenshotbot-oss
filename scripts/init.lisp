@@ -34,6 +34,10 @@
 (register-tdrhq "cmd"  "29f1267d141b5117dc742bce74340711c99076f3")
 (register-tdrhq "opticl" "a33e3411d28ebff4b29a59a3619884c0f54ff586")
 
+(when (uiop:os-windows-p)
+  ;; Disable mmap since it causes issues with long file names.
+  (register-tdrhq "pngload" "63382b67d637479cbfbc3876281070151b641594"))
+
 (quick-patch:register "https://github.com/tdrhq/cl-plus-ssl"
                             "306b17bbae07a01fb32ecb50f83ed1bd9cbed04e")
 
