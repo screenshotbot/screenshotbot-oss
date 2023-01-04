@@ -59,8 +59,8 @@
      (upload-artifact #+darwin "recorder-darwin"
                       #+linux "recorder-linux"
                       #+(or win32 mswindows) "recorder-win"
-                      #+mswindows :compress #+mswindows t
-                      output-file))))
+                      output-file
+                      #+mswindows :compress #+mswindows t))))
 
 (defun upload-fasl (op system)
   (let ((op (or op 'asdf:compile-bundle-op)))
