@@ -77,6 +77,7 @@
                                    #-lispworks
                                    *standard-output*)
                                   &fn fn)
+  #-screenshotbot-oss
   (sentry-client:initialize-sentry-client
    sentry:*dsn* :client-class 'sentry:delivered-client)
   (let ((error-handler (lambda (e)
