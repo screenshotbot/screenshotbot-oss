@@ -20,6 +20,7 @@
                :screenshotbot.sdk/common-flags
                #-screenshotbot-oss
                :sentry
+               :sentry-client
                :alexandria
                :auto-restart
                :util/misc
