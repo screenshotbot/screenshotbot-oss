@@ -6,6 +6,8 @@
                 #:secret)
   (:import-from #:util/digests
                 #:md5-file)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export #:upload-fasl
            #:upload-sdk
            #:deploy-fasls-main
@@ -15,20 +17,32 @@
 (defun md5-hex (f)
   (ironclad:byte-array-to-hex-string (md5-file f)))
 
-(defun upload-artifact (name filename)
+(def-easy-macro with-compression (&binding filename filename &key compress &fn fn)
+  (cond
+    (compress
+     (uiop:with-temporary-file (:type "gz" :pathname p)
+       (gzip-stream:gzip filename p)
+       (fn p)))
+    (t
+     (fn filename))))
+
+(defun upload-artifact (name filename &key compress)
   (log:info "Uploading via scp")
   (log:info "Upload done")
-  (multiple-value-bind (result code)
-      (drakma:http-request "https://screenshotbot.io/intern/artifact/upload"
-                           :method :put
-                           :force-binary t
-                           :parameters `(("name" . ,name)
-                                         ("hash" . ,(md5-hex filename))
-                                         ("upload-key" . ,(secret :artifact-upload-key)))
-                           :content (pathname filename))
-    (log:info "Got image upload response: ~s" (flexi-streams:octets-to-string result))
-    (unless (eql 200 code)
-      (error "Failed to upload image: code ~a" code))))
+  (let ((hash (md5-hex filename)))
+   (with-compression (filename filename :compress compress)
+     (multiple-value-bind (result code)
+         (drakma:http-request "https://screenshotbot.io/intern/artifact/upload"
+                              :method :put
+                              :force-binary t
+                              :parameters `(("name" . ,name)
+                                            ("hash" . ,hash)
+                                            ("upload-key" . ,(secret :artifact-upload-key))
+                                            ("compressed" . ,(if compress "true")))
+                              :content (pathname filename))
+       (log:info "Got image upload response: ~s" (flexi-streams:octets-to-string result))
+       (unless (eql 200 code)
+         (error "Failed to upload image: code ~a" code))))))
 
 (defun upload-sdk (&key only-build)
   (asdf:compile-system :screenshotbot.sdk/deliver)
@@ -45,6 +59,7 @@
      (upload-artifact #+darwin "recorder-darwin"
                       #+linux "recorder-linux"
                       #+(or win32 mswindows) "recorder-win"
+                      #+mswindows :compress #+mswindows t
                       output-file))))
 
 (defun upload-fasl (op system)

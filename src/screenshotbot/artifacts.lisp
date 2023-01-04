@@ -80,18 +80,33 @@
 (defun md5-hex (f)
   (ironclad:byte-array-to-hex-string (md5:md5sum-file f)))
 
-(defhandler (nil :uri "/intern/artifact/upload" :method :put) (name hash upload-key)
+(def-easy-macro with-staging-decompression (&binding file-name file-name &key compress
+                                                     &fn fn)
+  (cond
+    (compress
+     (uiop:with-temporary-file (:type "gz" :pathname p)
+       (fn p)
+       (gzip-stream:gunzip p file-name)))
+    (t
+     (fn file-name))))
+
+(defhandler (nil :uri "/intern/artifact/upload" :method :put) (name hash upload-key
+                                                                    compressed)
   (assert name)
   (assert (secret :artifact-upload-key))
   (ensure-private-ip)
   (assert (equal upload-key (secret :artifact-upload-key)))
-  (let ((file-name (artifact-file-name name)))
-    (hex:write-postdata-to-file file-name)
+  (uiop:with-staging-pathname (file-name (artifact-file-name name))
+
+    (with-staging-decompression (file-name
+                                 file-name
+                                 :compress (string-equal "true" compressed))
+      (hex:write-postdata-to-file file-name))
     (assert (equal
              (md5-hex file-name)
-             hash))
-    (call-hooks name)
-    "OK"))
+             hash)))
+  (call-hooks name)
+  "OK")
 
 
 (defun artifact-file-name (name)

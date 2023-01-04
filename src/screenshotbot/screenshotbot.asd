@@ -79,6 +79,7 @@
                :cl-cron
                :cl-interpol
                :dns-client
+               :gzip-stream
                :zs3
                :random-sample
                :pem
@@ -401,6 +402,7 @@
                :flexi-streams
                :ironclad
                :screenshotbot/secrets
+               :gzip-stream
                :md5
                :log4cl
                :cl-fad
