@@ -27,14 +27,14 @@
      (fn filename))))
 
 (defun upload-artifact (name filename &key compress)
-  (log:info "Uploading via scp")
-  (log:info "Upload done")
+  (log:info "Uploading via asset")
   (let ((hash (md5-hex filename)))
    (with-compression (filename filename :compress compress)
      (multiple-value-bind (result code)
          (drakma:http-request "https://screenshotbot.io/intern/artifact/upload"
                               :method :put
                               :force-binary t
+                              :write-timeout 75
                               :parameters `(("name" . ,name)
                                             ("hash" . ,hash)
                                             ("upload-key" . ,(secret :artifact-upload-key))
@@ -42,7 +42,8 @@
                               :content (pathname filename))
        (log:info "Got image upload response: ~s" (flexi-streams:octets-to-string result))
        (unless (eql 200 code)
-         (error "Failed to upload image: code ~a" code))))))
+         (error "Failed to upload image: code ~a" code)))))
+  (log:info "Upload done"))
 
 (defun upload-sdk (&key only-build)
   (asdf:compile-system :screenshotbot.sdk/deliver)
@@ -58,7 +59,7 @@
     (unless only-build
      (upload-artifact #+darwin "recorder-darwin"
                       #+linux "recorder-linux"
-                      #+(or win32 mswindows) "recorder-win"
+                      #+(or win32 mswindows) "recorder-win.exe"
                       output-file
                       #+mswindows :compress #+mswindows t))))
 
