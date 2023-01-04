@@ -84,9 +84,12 @@
                                                      &fn fn)
   (cond
     (compress
-     (uiop:with-temporary-file (:type "gz" :pathname p)
-       (fn p)
-       (gzip-stream:gunzip p file-name)))
+     (let ((gz-file (format nil "~a.gz" (namestring file-name))))
+       (fn gz-file)
+       ;; Using chipz etc are super slow :/
+       (uiop:run-program
+        (list "gunzip" "--synchronous" "-f"
+              (uiop:escape-shell-token gz-file)))))
     (t
      (fn file-name))))
 
@@ -96,6 +99,7 @@
   (assert (secret :artifact-upload-key))
   (ensure-private-ip)
   (assert (equal upload-key (secret :artifact-upload-key)))
+  (log:info "Uploading artifact: ~a" name)
   (uiop:with-staging-pathname (file-name (artifact-file-name name))
 
     (with-staging-decompression (file-name
@@ -105,6 +109,7 @@
     (assert (equal
              (md5-hex file-name)
              hash)))
+  (log:info "artifact uploaded")
   (call-hooks name)
   "OK")
 
