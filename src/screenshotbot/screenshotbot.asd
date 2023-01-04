@@ -402,6 +402,7 @@
                :flexi-streams
                :ironclad
                :screenshotbot/secrets
+               :easy-macros
                :gzip-stream
                :md5
                :log4cl
