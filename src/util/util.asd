@@ -180,6 +180,7 @@
                (lib-source-file "store-native")
                #-mswindows
                (:file "file-lock")
+               (:file "store-version")
                (:file "store")
                (:file "object-id")
                (:file "single")
@@ -312,6 +313,7 @@
                              (:file "test-misc")
                              (:file "test-copy-file")
                              (:file "test-request")
+                             (:file "test-store-version")
                              (:file "test-store")
                              (:file "test-migrations")
                              (:file "test-hash-lock")

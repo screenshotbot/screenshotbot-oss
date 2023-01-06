@@ -11,6 +11,8 @@
         #:util/file-lock)
   (:import-from #:bknr.datastore
                 #:close-store)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -81,24 +83,28 @@
   (list (make-instance 'bknr.datastore:store-object-subsystem)
         (make-instance 'bknr.datastore:blob-subsystem)))
 
-(defun prepare-store-for-test (&key (dir "~/test-store/"))
-  (make-instance 'safe-mp-store
+(defun prepare-store-for-test (&key (dir "~/test-store/")
+                                 (store-class 'safe-mp-store))
+  (assert store-class)
+  (make-instance store-class
                  :directory dir
                  :subsystems (store-subsystems)))
 
-(defmacro with-test-store ((&key (globally nil)) &body body)
-  `(call-with-test-store (lambda () ,@body)
-                         :globally ,globally))
+(def-easy-macro with-test-store (&key (globally nil)
+                                      (store-class 'safe-mp-store)
+                                      &fn body)
+  (%%call-with-test-store body :globally globally :store-class store-class))
 
-(defun call-with-test-store (fn &key (cleanup t)
-                                  (globally nil))
+(defun %%call-with-test-store (fn &key (cleanup t)
+                                  (globally nil)
+                                  store-class)
   (when (boundp 'bknr.datastore:*store*)
     (error "Don't run this test in a live program with an existing store"))
   (flet ((inner-work ()
            (flet ((all-objects ()
                     (bknr.datastore:all-store-objects)))
              (tmpdir:with-tmpdir (dir)
-               (prepare-store-for-test :dir dir)
+               (prepare-store-for-test :dir dir :store-class store-class)
                (setf util/store:*object-store* (namestring dir))
                (assert bknr.datastore:*store*)
                (assert (null (all-objects)))
@@ -117,7 +123,8 @@
                    ;; Look at the associated test. This is the only way I know
                    ;; of to clean up the indices. I wish there were a better
                    ;; solution.
-                   (call-with-test-store (lambda ()) :cleanup nil)))))))
+                   (%%call-with-test-store (lambda ()) :cleanup nil
+                                           :store-class store-class)))))))
     (cond
       (globally
        (unwind-protect
