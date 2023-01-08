@@ -19,6 +19,8 @@
                 #:sha256-file)
   (:import-from #:util/lru-cache
                 #:with-cache-file)
+  (:import-from #:util/http-cache
+                #:parse-max-age)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:rewrite-css-urls
@@ -385,17 +387,6 @@
                  :reader request-time)
    (headers :initarg :headers
             :reader remote-response-headers)))
-
-(defun parse-max-age (cache-control)
-  (let ((parts (str:split "," cache-control)))
-    (or
-     (loop for part in parts
-           do
-              (destructuring-bind (key &optional value) (str:split "=" (str:trim part))
-                (when (string-equal "max-age" key)
-                  (return
-                    (parse-integer value)))))
-     0)))
 
 (defmethod max-age ((self remote-response))
   (let ((cache-control (gethash "cache-control" (remote-response-headers self))))

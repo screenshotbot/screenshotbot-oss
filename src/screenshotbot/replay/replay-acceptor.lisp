@@ -14,7 +14,6 @@
                 #:asset-response-headers
                 #:http-header-value
                 #:http-header-name
-                #:parse-max-age
                 #:asset-file-name
                 #:asset-file
                 #:assets
@@ -34,6 +33,8 @@
                 #:company)
   (:import-from #:util/object-id
                 #:find-by-oid)
+  (:import-from #:util/http-cache
+                #:parse-max-age)
   (:export
    #:call-with-hosted-snapshot
    #:render-acceptor

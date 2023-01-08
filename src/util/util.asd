@@ -250,7 +250,8 @@
   :depends-on (:drakma
                :easy-macros)
   :serial t
-  :components ((:file "request")))
+  :components ((:file "http-cache")
+               (:file "request")))
 
 (defsystem :util/disk-size
   :depends-on (:util/sizeof)
