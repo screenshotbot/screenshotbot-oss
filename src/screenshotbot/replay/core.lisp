@@ -371,14 +371,6 @@
                   :dir (http-cache-dir)
                   :max-size "2GB")))
 
-(defun read-file (file)
-  (with-open-file (s file :direction :input)
-    (read s)))
-
-(defun write-to-file (form file)
-  (with-open-file (s file :direction :output :if-exists :supersede)
-    (write form :stream s)))
-
 (defclass remote-response ()
   ((status :initarg :status
            :reader remote-response-status)
