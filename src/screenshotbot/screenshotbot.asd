@@ -429,6 +429,7 @@
                :util/digests
                :util/cron
                :screenshotbot/hub
+               :http-proxy
                :auto-restart
                :dexador
                :drakma

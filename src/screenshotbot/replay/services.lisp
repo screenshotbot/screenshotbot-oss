@@ -75,9 +75,11 @@
                                  ((equal "safari" type)
                                   (cond
                                     ((equal "thecharmer" (uiop:hostname))
-                                     "192.168.1.119:3128")
+                                     "172.17.0.1:3129")
                                     (t
                                      "192.168.1.120:3128")))
+                                 ((equal "thecharmer" (uiop:hostname))
+                                  "172.17.0.1:3129")
                                  (t
                                   ;; docker
                                   "squid:3128"))

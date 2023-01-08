@@ -27,6 +27,8 @@
                 #:def-cron)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:http-proxy/server
+                #:http-proxy)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:*proxy-port*
@@ -44,10 +46,20 @@
               :initform (pathname *screenshot-proxy-cache*))
    (hub :initarg :hub
         :initform (hub)
-        :reader replay-proxy-hub))
+        :reader replay-proxy-hub)
+   (http-proxy :initarg :http-proxy
+               :initform (make-instance 'http-proxy
+                                        :port 3129)
+               :reader http-proxy))
   (:default-initargs :name 'replay-proxy)
   (:documentation "Even though this is called 'replay' it refers to a Selenium proxy,
  with some added functinality for screenshots."))
+
+(defmethod hunchentoot:start :before ((self replay-proxy))
+  (hunchentoot:start (http-proxy self)))
+
+(defmethod hunchentoot:stop :after ((self replay-proxy) &key &allow-other-keys)
+  (hunchentoot:stop (http-proxy self)))
 
 (defun linode? ()
   #-screenshotbot-oss
