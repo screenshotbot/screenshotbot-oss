@@ -170,6 +170,7 @@
                :util/misc
                :tmpdir
                :str
+               :easy-macros
                :local-time
                :cl-mongo-id
                :copy-directory
