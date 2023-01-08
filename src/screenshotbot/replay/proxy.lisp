@@ -28,6 +28,7 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:http-proxy/server
+                #:allowedp
                 #:http-proxy)
   (:local-nicknames (#:a #:alexandria))
   (:export
@@ -40,6 +41,18 @@
 (defvar *screenshot-proxy-cache*
   "~/screenshot-proxy-cache/")
 
+(defvar *lock* (bt:make-lock))
+
+(defclass custom-http-proxy (http-proxy)
+  ((allowed-hosts :initform nil
+                  :accessor allowed-hosts)))
+
+(defmethod allowedp ((self custom-http-proxy)
+                     host)
+  (let ((host (car (str:split ":" host))))
+    (bt:with-lock-held (*lock*)
+     (str:s-member (allowed-hosts self) host))))
+
 (defclass replay-proxy (hunchentoot:easy-acceptor)
   ((cache-dir :initarg :cache-dir
               :reader cache-dir
@@ -48,7 +61,7 @@
         :initform (hub)
         :reader replay-proxy-hub)
    (http-proxy :initarg :http-proxy
-               :initform (make-instance 'http-proxy
+               :initform (make-instance 'custom-http-proxy
                                         :port 3129)
                :reader http-proxy))
   (:default-initargs :name 'replay-proxy)
@@ -149,15 +162,23 @@
 (def-proxy-handler (nil :uri "/wd/hub") ()
   (error "Unimpl"))
 
+(defun add-remote-to-proxy-acl ()
+  ;; Note that we're using remote-addr, and not real-remote-addr. If
+  ;; the incoming request was being forwarded from somewhere, then you
+  ;; need to specify that directly.
+  (let ((host (hunchentoot:remote-addr hunchentoot:*request*)))
+    (bt:with-lock-held (*lock*)
+      (pushnew host
+               (allowed-hosts (http-proxy hunchentoot:*acceptor*))))))
+
 (def-proxy-handler (nil :uri "/wd/hub/session" :method :post) ()
+  (add-remote-to-proxy-acl)
   (let ((content (hunchentoot:raw-post-data
                   :force-text t)))
     (let ((hub (replay-proxy-hub hunchentoot:*acceptor*)))
       (request-session-and-respond
        hub
        content))))
-
-
 
 (def-proxy-handler (nil :uri (lambda (request)
                                (let ((script-name (hunchentoot:script-name request)))

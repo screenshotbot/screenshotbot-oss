@@ -70,13 +70,18 @@ for the content."
       (write-sequence data out-stream)
       (values ret headers))))
 
+(defmethod allowedp ((self http-proxy) host)
+  t)
+
 (defmethod hunchentoot:acceptor-dispatch-request ((self http-proxy)
                                                   request)
   (cond
-    ((member (hunchentoot:request-method request)
-             '(:connect :post :put :delete))
+    ((or
+      (member (hunchentoot:request-method request)
+              '(:connect :post :put :delete))
+      (not (allowedp self (hunchentoot:host request))))
      (setf (hunchentoot:return-code hunchentoot:*reply*) 403)
-     "Only GET requests are allowed with this proxy")
+     "Access denied for this request from http-proxy")
     (t
      (assert (eql :get (hunchentoot:request-method request)))
      (let ((uri (quri:merge-uris
@@ -103,12 +108,13 @@ for the content."
                     unless
                     (member key *bad-headers*)
                     do (setf (hunchentoot:header-out key) value))
+              (setf (hunchentoot:header-out :x-screenshotbot-relay) "1")
               (setf (hunchentoot:return-code hunchentoot:*reply*) ret)))
            (log:info "Finished streaming response for ~a" uri))))))
 )
 
 #+nil
-(setf *acceptor* (make-instance 'http-proxy :port 3127))
+(defvar *acceptor* (make-instance 'http-proxy :port 3127))
 
 #+nil
 (hunchentoot:start *acceptor*)
