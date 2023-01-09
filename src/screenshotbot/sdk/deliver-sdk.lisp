@@ -57,6 +57,9 @@
     #+lispworks
     (include-template-file)
 
+    (setf asdf:*central-registry* nil)
+    (setf ql:*local-project-directories* nil)
+
     (build-utils/deliver-script:default-deliver 'screenshotbot/sdk/main:main
               output-file
               5
