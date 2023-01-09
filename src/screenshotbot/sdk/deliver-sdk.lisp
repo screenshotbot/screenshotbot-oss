@@ -60,6 +60,10 @@
     (setf asdf:*central-registry* nil)
     (setf ql:*local-project-directories* nil)
 
+    ;; Causes a warning early on from cl+ssl not finding libcrypto or
+    ;; some such.
+    (lw:undefine-action "When starting image" "Reset cl-mongo-id state")
+
     (build-utils/deliver-script:default-deliver 'screenshotbot/sdk/main:main
               output-file
               5
