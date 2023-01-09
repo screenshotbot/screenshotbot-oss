@@ -70,7 +70,9 @@
 
 (defun assert-commit (commit line)
   (unless (eql 40 (length commit))
-    (error "~a does not look like a valid Git commit SHA1 string, read from `~a`" line)))
+    (error "`~a` does not look like a valid Git commit SHA1 string, read from `~a`"
+           commit
+           line)))
 
 
 (defmethod read-graph ((repo git-repo))
