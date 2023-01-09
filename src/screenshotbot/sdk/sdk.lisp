@@ -175,7 +175,8 @@ error."
           :parameters parameters
           :content-type "application/octet-stream"
           :content-length file-length
-          :content stream)
+          :content stream
+          :read-timeout 40)
 
          (log:debug "Got image upload response: ~s" result)
          (unless (eql 200 code)
