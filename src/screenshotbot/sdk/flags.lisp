@@ -44,7 +44,8 @@
    #:*selenium-hub*
    #:*selenium-hub-port*
    #:*firebase-output*
-   #:*self-test*))
+   #:*self-test*
+   #:*commit-limit*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -209,3 +210,18 @@
   :type boolean
   :help "Run self-diagnostic tools to ensure that this CLI can work on your
 machine.")
+
+(define-flag *commit-limit*
+  :selector "commit-limit"
+  :default-value nil
+  :type (or null integer)
+  :help "Limit the number of commits for which we upload commit hashes. This is
+useful for large repositories (about > 10000 commits). For large
+repositories, sending all the commit hashes will time out. The
+uploaded graph is merged with the graph that the server already knows
+of.
+
+You should set this high enough so that Screenshotbot always has the
+entire commit graph from the previous promoted run to the new run. A
+value of about 1000 should be safe and relatively fast for most
+people.")

@@ -16,7 +16,8 @@
    #:git-repo
    #:rev-parse
    #:merge-base
-   #:current-commit))
+   #:current-commit)
+  (:local-nicknames (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/git)
 
 (defun git-root ()
@@ -78,7 +79,10 @@
 (defmethod read-graph ((repo git-repo))
   (let ((lines (nreverse (str:lines
                           ($ (git-command repo)
-                            "log" "--all" "--pretty=%H %P")))))
+                            "log" "--all"
+                            (when flags:*commit-limit*
+                              (format nil "--max-count=~a" flags:*commit-limit*))
+                            "--pretty=%H %P")))))
     (let ((dag (make-instance 'dag:dag)))
       (dolist (line lines)
         (destructuring-bind (sha &rest parents) (str:split " " (str:trim line))
