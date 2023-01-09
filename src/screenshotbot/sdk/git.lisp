@@ -81,7 +81,7 @@
                             "log" "--all" "--pretty=%H %P")))))
     (let ((dag (make-instance 'dag:dag)))
       (dolist (line lines)
-        (destructuring-bind (sha &rest parents) (str:split " " line)
+        (destructuring-bind (sha &rest parents) (str:split " " (str:trim line))
           (assert-commit sha line)
           (loop for parent in parents do
             (assert-commit parent line))
