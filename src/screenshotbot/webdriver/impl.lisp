@@ -69,6 +69,7 @@
   (declare (ignore dimensions))
   (let ((options `(("args" . ("--no-sandbox"
                               "--disable-gpu"
+                              "--deterministic-mode"
                               "--hide-scrollbars"
                               ,(format nil "--proxy-server=~a" (driver-proxy driver)))))))
     (when mobile-emulation
