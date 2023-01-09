@@ -140,13 +140,12 @@ tree. This version uses the Kahn's algorithm instead of DFS"
        (json:encode-json
         `((:commits .
                     ,(loop for node-id in sorted-nodes
-                           collect
-                           (let ((commit (gethash node-id commit-map)))
-                             (unless commit
-                               (error "Could not find node for id ~a" node-id))
-                             `((:sha . ,(sha commit))
-                               (:author . ,(author commit))
-                               (:parents . ,(parents commit))))))
+                           for commit = (gethash node-id commit-map)
+                           if commit
+                             collect
+                           `((:sha . ,(sha commit))
+                             (:author . ,(author commit))
+                             (:parents . ,(parents commit)))))
           (:dummy . "0"))
         stream))
       (:binary

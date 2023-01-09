@@ -89,6 +89,25 @@
                  (assoc-value (json:decode-json-from-string json)
                               :commits))))))
 
+(test serialize-incomplete-graph
+  (with-fixture state ()
+    (add-edge "cc" (list "aa" "dd"))
+    (let ((json (with-output-to-string (s)
+                  (write-to-stream dag s))))
+      (is (equal `(((:sha . "bb")
+                    (:author . "Arnold Noronha <arnold@tdrhq.com>")
+                    (:parents . nil))
+                   ((:sha . "aa")
+                    (:author . "Arnold Noronha <arnold@tdrhq.com>")
+                    (:parents . ,(list "bb")))
+                   ((:sha . "cc")
+                    (:author . "Arnold Noronha <arnold@tdrhq.com>")
+                    (:parents . ,(list "aa" "dd"))))
+                 (assoc-value (json:decode-json-from-string json)
+                              :commits)))
+      (let ((dag (read-from-stream (make-string-input-stream json))))
+        (is (typep dag 'dag))))))
+
 (test serialize-binary
   (with-fixture state ()
     (let ((output (flex:with-output-to-sequence (s)
