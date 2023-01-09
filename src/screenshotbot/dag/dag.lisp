@@ -9,6 +9,8 @@
 (define-condition node-already-exists (error)
   ())
 
+(defvar *magic* (flex:string-to-octets "bdag" :external-format :latin1))
+
 (defclass commit ()
   ((sha :initarg :sha
         :accessor sha)
@@ -130,35 +132,71 @@ tree. This version uses the Kahn's algorithm instead of DFS"
     rL))
 
 
-(defmethod write-to-stream ((dag dag) stream)
-  (let ((sorted-nodes (safe-topological-sort (digraph dag)))
+(defmethod write-to-stream ((dag dag) stream &key (format :json))
+  (let ((sorted-nodes (reverse (safe-topological-sort (digraph dag))))
         (commit-map (commit-map dag)))
-    (json:encode-json
-     `((:commits .
-                 ,(reverse
-                  (loop for node-id in sorted-nodes
-                        collect
-                        (let ((commit (gethash node-id commit-map)))
-                          (unless commit
-                            (error "Could not find node for id ~a" node-id))
-                          `((:sha . ,(sha commit))
-                            (:author . ,(author commit))
-                            (:parents . ,(parents commit)))))))
-      (:dummy . "0"))
-    stream))
+    (ecase format
+      (:json
+       (json:encode-json
+        `((:commits .
+                    ,(loop for node-id in sorted-nodes
+                           collect
+                           (let ((commit (gethash node-id commit-map)))
+                             (unless commit
+                               (error "Could not find node for id ~a" node-id))
+                             `((:sha . ,(sha commit))
+                               (:author . ,(author commit))
+                               (:parents . ,(parents commit))))))
+          (:dummy . "0"))
+        stream))
+      (:binary
+       (write-sequence
+        *magic*
+        stream)
+       (write-byte 0 stream)
+       (let ((version 1))
+         (write-byte version stream))
+       (encode-integer (length sorted-nodes) stream)
+       (dolist (node-id sorted-nodes)
+         (let ((commit (gethash node-id commit-map)))
+           ;; TODO: can be further optimized to use integers, but this
+           ;; should do for now
+           (encode (sha commit) stream)
+           (encode (author commit) stream)
+           (encode (parents commit) stream))))))
   (finish-output stream))
 
-(defun read-from-stream (stream)
+(defun read-from-stream (stream &key (format :json))
   (let ((dag (make-instance 'dag :pathname (or
                                             (ignore-errors
                                              (pathname stream))
                                             "Stream not pointing to file"))))
-    (let ((data (json:decode-json stream)))
-      (loop for commit in (assoc-value data :commits) do
-        (add-commit dag
-         (apply 'make-instance 'commit
-                (alist-plist commit))))
-      dag)))
+    (ecase format
+     (:json
+      (let ((data (json:decode-json stream)))
+        (loop for commit in (assoc-value data :commits) do
+          (add-commit dag
+                      (apply 'make-instance 'commit
+                             (alist-plist commit))))
+        dag))
+     (:binary
+      (let ((magic (make-array 4 :element-type '(unsigned-byte 8))))
+        (read-sequence magic stream)
+        (assert (equalp magic *magic*)))
+      ;; version
+      (read-byte stream)
+      (let ((version (read-byte stream)))
+        (assert (= 1 version)))
+      (let ((length (decode stream)))
+        (dotimes (i length)
+          (let ((sha (decode stream))
+                (author (decode stream))
+                (parents (decode stream)))
+            (add-commit dag
+                        (make-instance 'commit
+                                       :sha sha
+                                       :author author
+                                       :parents parents)))))))))
 
 (defmethod merge-dag ((dag dag) (from-dag dag))
   (dolist (node-id (safe-topological-sort (digraph from-dag)))

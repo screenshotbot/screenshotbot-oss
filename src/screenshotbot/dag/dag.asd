@@ -8,6 +8,7 @@
   :serial t
   :depends-on (:graph
                :pkg
+               :bknr.datastore
                :ironclad)
   :components ((:file "package")
                (:file "dag")))

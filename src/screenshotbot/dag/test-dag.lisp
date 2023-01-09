@@ -15,7 +15,9 @@
                 #:get-commit
                 #:commit
                 #:node-already-exists
-                #:add-commit))
+                #:add-commit)
+  (:import-from #:flexi-streams
+                #:with-output-to-sequence))
 
 (in-package :screenshotbot.dag.test-dag)
 
@@ -86,6 +88,14 @@
                     (:parents . ,(list "bb"))))
                  (assoc-value (json:decode-json-from-string json)
                               :commits))))))
+
+(test serialize-binary
+  (with-fixture state ()
+    (let ((output (flex:with-output-to-sequence (s)
+                    (write-to-stream dag s :format :binary))))
+      (let ((read-dag
+              (read-from-stream (flex:make-in-memory-input-stream output)
+                                :format :binary)))))))
 
 (test read
   (with-fixture state ()

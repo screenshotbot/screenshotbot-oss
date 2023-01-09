@@ -7,6 +7,18 @@
 (defpackage :dag
   (:use #:cl
         #:alexandria)
+  (:import-from #:bknr.datastore
+                #:encode-integer)
+  (:import-from #:bknr.datastore
+                #:%decode-integer)
+  (:import-from #:bknr.datastore
+                #:encode-object)
+  (:import-from #:bknr.datastore
+                #:decode)
+  (:import-from #:bknr.datastore
+                #:encode-string)
+  (:import-from #:bknr.datastore
+                #:encode)
   (:export #:dag
            #:add-commit
            #:commit
