@@ -18,6 +18,8 @@
                 #:company)
   (:import-from #:util/store
                 #:with-class-validation)
+  (:import-from #:util/cron
+                #:def-cron)
   (:export
    #:commit-graph
    #:repo-url
@@ -26,6 +28,8 @@
    #:find-or-create-commit-graph
    #:commit-graph-dag))
 (in-package :screenshotbot/model/commit-graph)
+
+(defvar *flush-lock* (bt:make-lock "dag-flush-lock"))
 
 (with-class-validation
   (defclass commit-graph (bknr.datastore:blob)
@@ -38,7 +42,13 @@
               :initform nil)
      (lock :initform (bt:make-recursive-lock)
            :transient t
-           :accessor lock))
+           :accessor lock)
+     (dag :initform nil
+          :transient t
+          :accessor %commit-graph-dag)
+     (needs-flush-p :initform nil
+                    :transient t
+                    :accessor needs-flush-p))
     (:metaclass persistent-class)))
 
 (defmethod find-commit-graph ((company company) (url string))
@@ -59,19 +69,36 @@
                       :company company)))))
 
 (defmethod commit-graph-dag ((obj commit-graph))
-  (bt:with-recursive-lock-held ((lock obj))
-   (cond
-     ((not (path:-e (blob-pathname obj)))
-      (make-instance 'dag:dag))
-     (t
-      (with-open-file (s (blob-pathname obj) :direction :input)
-        (dag:read-from-stream s))))))
+  (util:or-setf
+   (%commit-graph-dag obj)
+   (bt:with-recursive-lock-held ((lock obj))
+     (cond
+       ((not (path:-e (blob-pathname obj)))
+        (make-instance 'dag:dag))
+       (t
+        (with-open-file (s (blob-pathname obj) :direction :input)
+          (dag:read-from-stream s)))))))
 
 (defmethod (setf commit-graph-dag) (dag (obj commit-graph))
+  (setf (%commit-graph-dag obj) dag)
+  (setf (needs-flush-p obj) t))
+
+(defmethod flush-dag ((obj commit-graph))
   (bt:with-recursive-lock-held ((lock obj))
-    (with-open-file (s (blob-pathname obj) :if-does-not-exist :create
-                                           :direction :output
-                                           :if-exists :supersede)
-      (dag:write-to-stream dag s)
-      (finish-output s)
-      (log:info "Updated commit graph in ~s" (blob-pathname obj)))))
+    (let ((dag (%commit-graph-dag obj)))
+     (with-open-file (s (blob-pathname obj) :if-does-not-exist :create
+                                            :direction :output
+                                            :if-exists :supersede)
+       (dag:write-to-stream dag s)
+       (finish-output s)
+       (log:info "Updated commit graph in ~s" (blob-pathname obj)))))
+  (setf (needs-flush-p obj) nil))
+
+(defun flush-dags ()
+  (bt:with-lock-held (*flush-lock*)
+    (loop for commit-graph in (bknr.datastore:class-instances 'commit-graph)
+          if (needs-flush-p commit-graph)
+            do (flush-dag commit-graph))))
+
+(def-cron flush-dags (:step-min 5)
+  (flush-dags))
