@@ -28,6 +28,7 @@
 (defun commit-node-id (x)
   "The node id used for cl-graph queries."
   (check-type x string)
+  (assert (> (length x) 0))
   (assert x)
   (let ((arr
           (ironclad:hex-string-to-byte-array x)))
@@ -132,14 +133,14 @@ tree. This version uses the Kahn's algorithm instead of DFS"
 (defmethod write-to-stream ((dag dag) stream)
   (let ((sorted-nodes (safe-topological-sort (digraph dag)))
         (commit-map (commit-map dag)))
-   (json:encode-json
-    `((:commits .
-                ,(reverse
+    (json:encode-json
+     `((:commits .
+                 ,(reverse
                   (loop for node-id in sorted-nodes
                         collect
                         (let ((commit (gethash node-id commit-map)))
                           (unless commit
-                            (error "Internal error: could not find node for id ~a" node-id))
+                            (error "Could not find node for id ~a" node-id))
                           `((:sha . ,(sha commit))
                             (:author . ,(author commit))
                             (:parents . ,(parents commit)))))))

@@ -9,6 +9,8 @@
         #:alexandria)
   (:import-from #:util/health-check
                 #:def-health-check)
+  (:import-from #:dag
+                #:ordered-commits)
   (:export
    #:null-repo
    #:git-repo
@@ -66,6 +68,11 @@
                              :error-output *error-output*)))
     (str:trim out)))
 
+(defun assert-commit (commit line)
+  (unless (eql 40 (length commit))
+    (error "~a does not look like a valid Git commit SHA1 string, read from `~a`" line)))
+
+
 (defmethod read-graph ((repo git-repo))
   (let ((lines (nreverse (str:lines
                           ($ (git-command repo)
@@ -73,6 +80,9 @@
     (let ((dag (make-instance 'dag:dag)))
       (dolist (line lines)
         (destructuring-bind (sha &rest parents) (str:split " " line)
+          (assert-commit sha line)
+          (loop for parent in parents do
+            (assert-commit parent line))
           (dag:add-commit dag (make-instance 'dag:commit
                                              :sha sha
                                              :parents parents))))
@@ -96,3 +106,11 @@
 
 (def-health-check verify-git-is-present ()
   (uiop:run-program (list "git" "--help")))
+
+(def-health-check verify-can-read-a-git-commit-graph ()
+  (tmpdir:with-tmpdir (dir)
+    (let ((*error-output* ))
+     ($ "git" "clone" "https://github.com/tdrhq/tiny-test-repo" dir))
+    (let ((repo (make-instance 'git-repo :dir dir)))
+      (let ((dag (read-graph repo)))
+        (assert (> (length (dag:ordered-commits dag)) 0))))))
