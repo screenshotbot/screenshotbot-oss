@@ -196,7 +196,8 @@ tree. This version uses the Kahn's algorithm instead of DFS"
                         (make-instance 'commit
                                        :sha sha
                                        :author author
-                                       :parents parents)))))))))
+                                       :parents parents)))))
+      dag))))
 
 (defmethod merge-dag ((dag dag) (from-dag dag))
   (dolist (node-id (safe-topological-sort (digraph from-dag)))

@@ -95,7 +95,8 @@
                     (write-to-stream dag s :format :binary))))
       (let ((read-dag
               (read-from-stream (flex:make-in-memory-input-stream output)
-                                :format :binary)))))))
+                                :format :binary)))
+        (is (typep read-dag 'dag))))))
 
 (test read
   (with-fixture state ()
