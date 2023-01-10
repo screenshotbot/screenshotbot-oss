@@ -23,6 +23,8 @@
                 #:parse-max-age)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:util/request
+                #:engine)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:rewrite-css-urls
@@ -157,6 +159,11 @@
                     are served before taking screenshots.")))
 
 (defvar *request-counter-lock* (bt:make-lock "request-counter-lock"))
+
+(defclass request-engine (engine)
+  ())
+
+(defvar *request-engine* (make-instance 'request-engine))
 
 (defmethod call-with-request-counter ((snapshot snapshot) fn)
   (unwind-protect
@@ -346,7 +353,8 @@
                                          :want-stream t :force-binary force-binary
                                          :read-timeout *timeout*
                                          :accept "image/webp,*/*"
-                                         :connection-timeout *timeout*))
+                                         :connection-timeout *timeout*
+                                         :engine *request-engine*))
           (let ((response-headers (remove :content-security-policy response-headers
                                           :key #'car)))
             (push `(:x-original-url . ,(quri:render-uri url)) response-headers)

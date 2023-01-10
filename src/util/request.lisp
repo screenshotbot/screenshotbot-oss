@@ -5,7 +5,8 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:http-request
-   #:http-success-response?))
+   #:http-success-response?
+   #:engine))
 (in-package :util/request)
 
 (defun http-success-response? (response-code)
