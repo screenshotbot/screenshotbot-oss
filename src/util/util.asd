@@ -251,7 +251,8 @@
                :easy-macros)
   :serial t
   :components ((:file "http-cache")
-               (:file "request")))
+               (:file "request")
+               (:file "engines")))
 
 (defsystem :util/disk-size
   :depends-on (:util/sizeof)
