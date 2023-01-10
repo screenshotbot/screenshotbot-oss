@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:+empty-headers+
                 #:%lru-cache
                 #:*cache*
                 #:fix-malformed-url
@@ -92,7 +93,7 @@ background: url(shttps://google.com?f=1)
                            (flexi-streams:make-in-memory-input-stream
                             #())
                            200
-                           (make-hash-table :test #'equal))))
+                           +empty-headers+)))
 
      (let* ((snapshot (make-instance 'snapshot :tmpdir tmpdir))
             (rand (random 10000000000))
@@ -123,7 +124,7 @@ background: url(shttps://google.com?f=1)
                             (flexi-streams:string-to-octets
                              "<html><body></body></html>"))
                            200
-                           (make-hash-table :test #'equal))))
+                           +empty-headers+)))
 
      (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
        ;; Just verifying that on Windows, we don't keep any stale file descriptors around
@@ -139,7 +140,7 @@ background: url(shttps://google.com?f=1)
                             (flexi-streams:string-to-octets
                              "<html><body></body></html>"))
                            200
-                           (make-hash-table :test #'equal))))
+                           +empty-headers+)))
 
      (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
        (load-url-into context snapshot (quri:uri "https://screenshotbot.io/") tmpdir))
@@ -170,9 +171,7 @@ background: url(shttps://google.com?f=1)
                              "<html><body>©</body></html>"
                              :external-format :utf-8))
                            200
-                           (a:plist-hash-table
-                            `("content-type" "text/html; charset=utf-8")
-                            :test #'equal))))
+                           `((:content-type . "text/html; charset=utf-8")))))
 
      (with-open-stream (content (http-get "https://example.com" :force-string t
                                                                 :force-binary nil))
@@ -183,8 +182,7 @@ background: url(shttps://google.com?f=1)
 
 (test guess-external-format
   (flet ((make-info (content-type)
-           (let ((map (make-hash-table :test #'equal)))
-             (setf (gethash "content-type" map) content-type)
+           (let ((map `((:content-type . ,content-type))))
              (make-instance 'remote-response
                              :headers map))))
     (is (equal :utf-8
