@@ -60,7 +60,6 @@ use stream pools.")
                               url &rest args &key headers-as-hash-table
                                                want-string
                                                ensure-success
-                                               decode-content
                                                additional-headers
                                                accept-gzip
                                                want-stream
