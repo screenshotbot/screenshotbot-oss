@@ -48,23 +48,31 @@
         (comm:socket-create-error (e)
           (handle-error e)))))))
 
-(defun http-request (url &rest args &key headers-as-hash-table
-                                      want-string
-                                      ensure-success
-                                      decode-content
-                                      additional-headers
-                                      accept-gzip
-                                      want-stream
-                                      (verify #-(or mswindows win32) :required
-                                              #+(or mswindows win32) nil)
-                     &allow-other-keys)
+(defclass engine ()
+  ())
+
+(defvar *engine* (make-instance 'engine)
+  "Default request engine. Does not cache, does not use cookies, does not
+use stream pools.")
+
+(defmethod http-request-impl ((engine engine)
+                              url &rest args &key headers-as-hash-table
+                                               want-string
+                                               ensure-success
+                                               decode-content
+                                               additional-headers
+                                               accept-gzip
+                                               want-stream
+                                               (verify #-(or mswindows win32) :required
+                                                       #+(or mswindows win32) nil)
+                              &allow-other-keys)
   (let* ((url (fix-bad-chars url))
          (args (a:remove-from-plist args :headers-as-hash-table
                                     :accept-gzip
-                                       :ensure-success
-                                       :want-string
-                                       #+ccl :connection-timeout
-                                       #-lispworks :read-timeout)))
+                                    :ensure-success
+                                    :want-string
+                                    #+ccl :connection-timeout
+                                    #-lispworks :read-timeout)))
 
     (when accept-gzip
       (push
@@ -75,11 +83,11 @@
 
     (multiple-value-bind (res status headers)
         (wrap-ssl-errors (:ensure-success ensure-success :want-stream want-stream)
-         (apply #'drakma:http-request url
-                :want-stream want-stream
-                :additional-headers additional-headers
-                :verify verify
-                args))
+          (apply #'drakma:http-request url
+                 :want-stream want-stream
+                 :additional-headers additional-headers
+                 :verify verify
+                 args))
       (flet ((maybe-ensure-success (&optional response)
                (declare (ignore response))
                (when (and ensure-success
@@ -108,6 +116,12 @@
               (make-header-hash-table headers))
              (t
               headers))))))))
+
+(defun http-request (url &rest args &key (engine *engine*) &allow-other-keys)
+  (apply #'http-request-impl
+         engine
+         url
+         (a:remove-from-plist args :engine)))
 
 (defun make-header-hash-table (headers)
   (let ((ret (make-hash-table :test #'equal)))
