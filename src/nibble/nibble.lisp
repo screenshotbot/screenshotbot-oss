@@ -192,9 +192,7 @@
                     (let ((current-session (current-session)))
                       (cond
                         ((not (auth:session= session current-session))
-                         (error "Incorrect session, got ~A, expected ~A"
-                                session
-                                current-session))
+                         (render-incorrect-session plugin))
                         ((let ((nibble-user (nibble-user nibble)))
                            (and
                             ;; if the nibble was created when they
@@ -210,6 +208,16 @@
                          (final-render)))))
                    (t
                     (final-render)))))))))))))
+
+(defmethod render-incorrect-session ((plugin nibble-plugin))
+  <html>
+    <body>
+      <h1>You cannot view this page.</h1>
+      <p>This URL is tied to a specific browser and user. You should not share this URL, or copy-and-paste
+        it into another browser.</p>
+      <a href= "/">Go back</a>
+    </body>
+  </html>)
 
 (defun nibble-full-url (nibble)
   (apply #'hex:make-full-url
