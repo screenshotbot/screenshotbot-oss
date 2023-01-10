@@ -24,6 +24,7 @@
   (:import-from #:alexandria
                 #:assoc-value)
   (:import-from #:util/request
+                #:http-request-impl
                 #:engine)
   (:import-from #:util/engines
                 #:handle-misbehaving-engine)
@@ -282,10 +283,8 @@
          (url (str:replace-all "]" "%5D" url)))
     url))
 
-(defun http-get-without-cache (url &key (force-binary t)
-                                     (force-string nil))
-  (declare (ignore force-string))
-
+(defmethod http-request-impl ((engine request-engine)
+                              url &rest args)
   (let* ((url (fix-malformed-url url))
          (url (quri:uri url))
          (scheme (quri:uri-scheme url)))
@@ -305,18 +304,24 @@
        (write-replay-log "Fetching: ~a" url)
 
        (multiple-value-bind (remote-stream status response-headers)
-           (util/request:http-request (format nil "~a" url)
-                                      :want-stream t :force-binary force-binary
-                                      :read-timeout *timeout*
-                                      :accept "image/webp,*/*"
-                                      :connection-timeout *timeout*
-                                      :engine *request-engine*)
+           (call-next-method)
          (let ((response-headers (remove :content-security-policy response-headers
                                          :key #'car)))
            (push `(:x-original-url . ,(quri:render-uri url)) response-headers)
            (values remote-stream status response-headers))))
       (t
        (error "unsupported scheme: ~a" scheme)))))
+
+(defun http-get-without-cache (url &key (force-binary t)
+                                     (force-string nil))
+  (declare (ignore force-string))
+
+  (util/request:http-request (format nil "~a" url)
+                             :want-stream t :force-binary force-binary
+                             :read-timeout *timeout*
+                             :accept "image/webp,*/*"
+                             :connection-timeout *timeout*
+                             :engine *request-engine*))
 
 (defvar *cache* nil)
 
