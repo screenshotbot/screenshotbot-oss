@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:remove-unwanted-headers
                 #:+empty-headers+
                 #:%lru-cache
                 #:*cache*
@@ -211,3 +212,20 @@ background: url(shttps://google.com?f=1)
       (is (equal
            500
            ret)))))
+
+(test remove-unwanted-headers
+  (is (equal
+       `((:foo . "bar"))
+       (remove-unwanted-headers
+        `((:x-foo-bar . "bleh")
+          (:foo . "bar")))))
+  (is (equal
+       `((:foo . "bar"))
+       (remove-unwanted-headers
+        `((:alt-svc . "bleh")
+          (:foo . "bar")))))
+    (is (equal
+       `((:foo . "bar"))
+       (remove-unwanted-headers
+        `((:content-security-policy . "bleh")
+          (:foo . "bar"))))))

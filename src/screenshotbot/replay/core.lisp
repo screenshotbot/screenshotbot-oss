@@ -283,6 +283,20 @@
          (url (str:replace-all "]" "%5D" url)))
     url))
 
+(defun remove-unwanted-headers (response-headers)
+  (remove-if
+   (lambda (key)
+     (or
+      (member key '(:content-security-policy
+                    ;; The next two are just not
+                    ;; needed, so we'll let them be
+                    ;; GC-ed earlier
+                    :connection
+                    :alt-svc))
+      (char-equal #\x (elt (string key) 0))))
+   response-headers
+   :key #'car))
+
 (defmethod http-request-impl ((engine request-engine)
                               url &rest args)
   (let* ((url (fix-malformed-url url))
@@ -305,8 +319,8 @@
 
        (multiple-value-bind (remote-stream status response-headers)
            (call-next-method)
-         (let ((response-headers (remove :content-security-policy response-headers
-                                         :key #'car)))
+         (let ((response-headers
+                 (remove-unwanted-headers response-headers)))
            (push `(:x-original-url . ,(quri:render-uri url)) response-headers)
            (values remote-stream status response-headers))))
       (t
