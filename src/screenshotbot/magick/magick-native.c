@@ -166,10 +166,17 @@ screenshotbot_find_non_transparent_pixels_with_masks
 						}
 
                         Quantum px = PixelGetAlphaQuantum(row[x]);
+
 						/*
-						 * Currently the yellow that's drawn as part of the mask is ~204.
+						 * Currently the yellow that's drawn as part
+						 * of the mask is ~204.  However, we also need
+						 * to deal with a situation that the yellow is
+						 * overlaid on the red pixel. So even though
+						 * this function is named "get_non_alpha",
+						 * it's actually "get_non_alpha" where green
+						 * is 0.
 						 */
-                        if (px == MAX_QUANTUM) {
+                        if (px == MAX_QUANTUM && PixelGetGreenQuantum(row[x]) == 0) {
                                 output[ret].x = x;
                                 output[ret].y = y;
                                 ret++;

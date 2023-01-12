@@ -144,9 +144,11 @@
         (equal (cons 20 30)
                transparent-pixel-for-null)))
      (is
-      (equal (cons 0 0)
+      ;; Is this going to be constant? I hope so. If this changes with
+      ;; ImageMagick version, then just replace this, okay?
+      (equal (cons 244 38)
              (block top
-               (with-wand (wand :file rose)
+               (with-wand (wand :file "logo:")
                  (map-non-alpha-pixels wand
                                        (lambda (i j)
                                          (return-from top (cons i j)))))))))))
@@ -253,7 +255,7 @@
        (screenshotbot-set-pixel
         wand
         pixel
-        "rgba(10,10,10,1.0)")
+        "rgba(10,0,0,1.0)")
        wand))
     (&body)))
 
