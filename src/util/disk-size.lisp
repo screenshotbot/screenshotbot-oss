@@ -58,8 +58,6 @@
     (fli:with-coerced-pointer (output :type 'statvfs) output
       (statvfs (namestring pathname) output)
       (* (fli:foreign-slot-value output
-                                 #-lispworks 'statvfs
                                  'bavail)
          (fli:foreign-slot-value output
-                                 #-lispworks 'statvfs
                                  'bsize)))))

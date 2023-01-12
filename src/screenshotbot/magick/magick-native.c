@@ -158,7 +158,7 @@ screenshotbot_find_non_transparent_pixels_with_masks
 
 						if (nextMask < numLocalMasks) {
 								if (x >= tmp[nextMask].x) {
-										x = _max(x, tmp[nextMask].x + tmp[nextMask].width - 1);
+										x = _max(x, tmp[nextMask].x + tmp[nextMask].width) - 1;
 										nextMask++;
 										//printf("Set x to %d\n", x);
 										continue;

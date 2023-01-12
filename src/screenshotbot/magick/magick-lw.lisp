@@ -493,7 +493,6 @@
                  (flet ((set-slot (name value)
                           (declare (inline))
                           (setf (fli:foreign-slot-value ptr
-                                                        #-lispworks 'native-mask
                                                         name)
                                 value)))
                    (set-slot 'x (mask-rect-left mask))
@@ -509,8 +508,8 @@
          (let ((ret (make-array (list size 2))))
            (loop for i below size
                  do
-                    (setf (aref ret i 0) (fli:foreign-slot-value output #-lispworks 'pixel 'x))
-                    (setf (aref ret i 1) (fli:foreign-slot-value output #-lispworks 'pixel 'y))
+                    (setf (aref ret i 0) (fli:foreign-slot-value output 'x))
+                    (setf (aref ret i 1) (fli:foreign-slot-value output 'y))
                     (fli:incf-pointer output))
            ret))))))
 

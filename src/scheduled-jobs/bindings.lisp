@@ -56,9 +56,9 @@
       expr
       fli-cron-expr
       err)
-     (unless (fli:null-pointer-p (fli:dereference err #-lispworks '(:pointer :char)))
+     (unless (fli:null-pointer-p (fli:dereference err))
        (error 'invalid-cron-expr :message
-               (fli:convert-from-foreign-string (fli:dereference err #-lispworks '(:pointer :char)))))
+               (fli:convert-from-foreign-string (fli:dereference err))))
      (let ((ret (make-instance 'cron-expr
                                 :fli-cron-expr fli-cron-expr)))
 

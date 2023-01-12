@@ -230,8 +230,8 @@
 (def-easy-macro with-pixel (&binding pixel x y &fn fn)
   (fli:with-dynamic-foreign-objects
       ((pixel pixel))
-    (setf (fli:foreign-slot-value pixel #-lispworks 'pixel 'x) x)
-    (setf (fli:foreign-slot-value pixel #-lispworks 'pixel 'y) y)
+    (setf (fli:foreign-slot-value pixel 'x) x)
+    (setf (fli:foreign-slot-value pixel 'y) y)
     (funcall fn pixel)))
 
 (def-fixture get-non-alpha ()
@@ -401,6 +401,41 @@
     (let ((res (get-non-alpha-pixels wand
                                      :masks
                                      (list
+                                      (make-instance 'simple-mask
+                                                     :left 0
+                                                     :top 0
+                                                     :width 10
+                                                     :height 100)))))
+      (is (equalp (list 1 2)
+                  (array-dimensions res))))))
+
+
+(test get-non-alpha-with-masks-right-border-is-exclusive-even-with-overlaps ()
+  (with-fixture get-non-alpha ()
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list
+                                      (make-instance 'simple-mask
+                                                          :left 0
+                                                          :top 0
+                                                          :width 11
+                                                          :height 30)
+                                      (make-instance 'simple-mask
+                                                     :left 3
+                                                     :top 0
+                                                     :width 5
+                                                     :height 30)))))
+      (is (equalp (list 0 2)
+                  (array-dimensions res))))
+
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list
+                                      (make-instance 'simple-mask
+                                                     :left 3
+                                                     :top 0
+                                                     :width 5
+                                                     :height 30)
                                       (make-instance 'simple-mask
                                                      :left 0
                                                      :top 0

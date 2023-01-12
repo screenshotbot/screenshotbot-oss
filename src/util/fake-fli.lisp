@@ -27,6 +27,27 @@
    #:copy-pointer))
 (in-package :util/fake-fli)
 
+(defvar *type-map* (trivial-garbage:make-weak-hash-table :weakness :key
+                                                         #+sbcl
+                                                                   :synchronized
+                                                         #+sbcl
+                                                         t))
+
+(defun make-typed-pointer (&key ptr type)
+  (let ((ptr (cffi:make-pointer (cffi:pointer-address ptr))))
+    (setf (gethash ptr *type-map*) type)
+    ptr))
+
+
+
+(defun typed-pointer-type (ptr)
+  (or
+   (gethash ptr *type-map*)
+   :void))
+
+(defun typed-pointer-ptr (ptr)
+  ptr)
+
 (defun fix-type (x &key (allow-count t))
   "Returns two values the converted type, and the count, in case of an array"
   #+nil(log:info "fixing type: ~S" x)
@@ -138,13 +159,16 @@
   (cffi:null-pointer-p x))
 
 (defun make-pointer (&key address type)
-  (declare (ignore type))
-  (cffi:make-pointer address))
+  (make-typed-pointer
+   :ptr
+   (cffi:make-pointer address)
+   :type type))
 
 (defmacro %with-dynamic-foreign-objects (((output type &key (nelems 1) (fill 0))) &body body)
   ;; fill is ignored!
   `(cffi:with-foreign-object (,output ',type ,nelems)
-     ,@body))
+     (let ((,output (make-typed-pointer :ptr ,output :type ',type)))
+      ,@body)))
 
 (defmacro with-dynamic-foreign-objects (exprs &body body)
   (cond
@@ -155,24 +179,39 @@
     (t
      `(progn ,@body))))
 
-(defmacro foreign-slot-value (obj type slot)
-  `(cffi:foreign-slot-value ,obj ,type ,slot))
+(defmacro foreign-slot-value (obj slot)
+  `(cffi:foreign-slot-value (typed-pointer-ptr ,obj)
+                            (typed-pointer-type ,obj)
+                            ,slot))
 
-(defun incf-pointer (pointer)
-  `(cffi:inc-pointer ,pointer))
+(defmacro incf-pointer (pointer)
+  `(setf
+    ,pointer
+    (let ((pointer ,pointer))
+     (make-typed-pointer
+      :ptr (cffi:inc-pointer (typed-pointer-ptr pointer)
+                                 (cffi:foreign-type-size (typed-pointer-type pointer)))
+      :type (typed-pointer-type pointer)))))
 
 (defun copy-pointer (pointer)
-  (cffi:make-pointer (cffi:pointer-address pointer)))
+  (make-typed-pointer
+   :ptr (typed-pointer-ptr pointer)
+   :type (typed-pointer-type pointer)))
 
-(defun dereference (obj type)
-  (cffi:mem-ref obj type))
+(defun dereference (obj)
+  (cffi:mem-ref (typed-pointer-ptr obj) (typed-pointer-type obj)))
 
 (defun malloc (&key type)
-  (cffi:foreign-alloc (fix-type type :allow-count nil)))
+  (make-typed-pointer
+   :ptr (cffi:foreign-alloc (fix-type type :allow-count nil))
+   :type type))
 
 (Defun free (obj)
-  (cffi:foreign-free obj))
+  (cffi:foreign-free
+   (typed-pointer-ptr obj)))
 
 (defmacro with-coerced-pointer ((output &key type) input &body body)
-  `(let ((,output ,input))
+  `(let ((,output (make-typed-pointer
+                   :ptr (typed-pointer-ptr ,output)
+                   :type ,type)))
      ,@body))
