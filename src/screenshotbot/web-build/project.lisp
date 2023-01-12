@@ -303,6 +303,21 @@
     (can-view! remote-run)
     (remote-run-logs remote-run)))
 
+(defun make-cancel-nibble (run)
+  (nibble (:name :interrupt-web-project)
+    (let ((back "/web-projects"))
+      (confirmation-modal
+       :yes
+       (nibble (:name :interrupt-web-project-confirm)
+         #+lispworks
+         (multiple-value-bind (thread-id thread)
+             (run-thread-id run)
+           (declare (ignore thread-id))
+           (when thread
+             (safe-interrupt thread)))
+         (hex:safe-redirect back))
+       <span>Interrupt job?</span>))))
+
 (markup:deftag render-runs (&key runs)
   <markup:merge-tag>
     ,(taskie-list
@@ -322,37 +337,28 @@
                         </span>
                         <span>
 
-                        ,(let ((cancel (util:copying (run)
-                                (nibble (:name :interrupt-web-project)
-                                  (let ((back "/web-projects"))
-                                    (confirmation-modal
-                                     :yes
-                                     (nibble (:name :interrupt-web-project-confirm)
-                                       #+lispworks
-                                       (multiple-value-bind (thread-id thread)
-                                           (run-thread-id run)
-                                         (declare (ignore thread-id))
-                                         (when thread
-                                           (safe-interrupt thread)))
-                                       (hex:safe-redirect back))
-                                     <span>Interrupt job?</span>))))))
-                             (cond
-                            ((donep run)
-                             (case (remote-run-status run)
-                               (:success
-                                "Finished")
-                               (:user-aborted
-                                "Aborted by user")
-                               (otherwise
-                                "Unknown error")))
-                            (t
-                             (case (remote-run-status run)
-                               (:unknown
-                                "Unknown state")
-                               (:queued
-                                "Queued")
-                               (otherwise
-                                <span>Running <a href= "#" class= "modal-link" data-href=cancel >Cancel</a> </span>)))))
+                        ,(cond
+                           ((donep run)
+                            (case (remote-run-status run)
+                              (:success
+                               "Finished")
+                              (:user-aborted
+                               "Aborted by user")
+                              (otherwise
+                               "Unknown error")))
+                           (t
+                            (case (remote-run-status run)
+                              (:unknown
+                               "Unknown state")
+                              (:queued
+                               "Queued")
+                              (otherwise
+                               <span>
+                                 Running
+                                 <a href= "#" class= "modal-link" data-href= (make-cancel-nibble run) >
+                                   Cancel
+                                 </a>
+                               </span>))))
                         </span>
                         )))
   </markup:merge-tag>)
