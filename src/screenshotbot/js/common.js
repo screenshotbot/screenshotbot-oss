@@ -128,6 +128,7 @@ function prepareReportJs () {
 
         var translate = { x: 0, y: 0 };
         var zoom = 1;
+        var masks = [];
 
         function loadIntoImage(data) {
             img.on("load", function () {
@@ -151,6 +152,7 @@ function prepareReportJs () {
             var background = new Image();
             background.src = data.background;
             zoomToLink = data.zoomTo;
+            masks = data.masks;
 
             var canvasEl = canvas.get(0);
 
@@ -179,6 +181,17 @@ function prepareReportJs () {
                     }
                 }
 
+                function forwardMap(pos) {
+                    function m(x, t) {
+                        return t + zoom * x;
+                    }
+
+                    return {
+                        x: m(pos.x, translate.x),
+                        y: m(pos.y, translate.y),
+                    }
+                }
+
                 var imTopLeft = reverseMap({x: 0, y: 0});
                 var imBottomRight = reverseMap({
                     x : canvasEl.width,
@@ -200,6 +213,21 @@ function prepareReportJs () {
                                   0, 0,
                                   canvasEl.width,
                                   canvasEl.height);
+                    for (var mask of masks) {
+                        ctx.beginPath();
+
+                        var maskPos = forwardMap({
+                            x: mask.left,
+                            y: mask.top,
+                        });
+
+                        ctx.rect(maskPos.x,
+                                 maskPos.y,
+                                 mask.width * zoom,
+                                 mask.height * zoom);
+                        ctx.fillStyle = "rgba(255, 255, 0, 0.8)";
+                        ctx.fill();
+                    }
                 }
                 ctx.globalAlpha = 0.2;
                 doDraw(background);

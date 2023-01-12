@@ -290,13 +290,16 @@
           (:zoom-to . ,(nibble-url (nibble (:name :zoom) (random-zoom-to-on-result
                                                           image-comparison))))
           (:src . ,(image-public-url (image-comparison-result image-comparison) :size size))
-          (:background . ,(image-public-url (screenshot-image (before-image self)) :size size))))))))
+          (:background . ,(image-public-url (screenshot-image (before-image self)) :size size))
+          (:masks .
+                  ,(image-comparison-masks image-comparison))))))))
 
 
 (defun random-zoom-to-on-result (image-comparison)
   (setf (hunchentoot:content-type*) "application/json")
   (with-local-image (file (image-comparison-result image-comparison))
     (with-wand (wand :file file)
+      (log:debug"random-zoom-to-on-result on ~a" file)
       (let ((pxs (get-non-alpha-pixels wand
                                        :masks (image-comparison-masks image-comparison))))
         (let ((i (random (car (array-dimensions pxs)))))
