@@ -297,7 +297,8 @@
   (setf (hunchentoot:content-type*) "application/json")
   (with-local-image (file (image-comparison-result image-comparison))
     (with-wand (wand :file file)
-      (let ((pxs (get-non-alpha-pixels wand)))
+      (let ((pxs (get-non-alpha-pixels wand
+                                       :masks (image-comparison-masks image-comparison))))
         (let ((i (random (car (array-dimensions pxs)))))
           (let ((dims (image-dimensions (image-comparison-result image-comparison))))
             (json:encode-json-to-string

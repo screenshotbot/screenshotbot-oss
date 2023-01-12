@@ -66,6 +66,7 @@
             :reader image-comparison-after
             :relaxed-object-reference t)
      (masks :initarg :masks
+            :initform nil
             :reader image-comparison-masks)
      (identical-p :initform nil
                   :accessor identical-p
