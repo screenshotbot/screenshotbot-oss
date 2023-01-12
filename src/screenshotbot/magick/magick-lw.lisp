@@ -479,39 +479,45 @@
     (loop for i below (car (array-dimensions pxs))
           do (funcall fn (aref pxs i 0) (aref pxs i 1)))))
 
+(def-easy-macro with-native-masks (&binding native-masks masks &fn fn)
+  (fli:with-dynamic-foreign-objects ((native-masks native-mask :nelems (1+ (length masks))))
+    (let ((ptr (fli:copy-pointer native-masks)))
+      (loop for mask in masks
+            do
+               (progn
+                 (setf (fli:foreign-slot-value ptr 'x) (ceiling (mask-rect-left mask)))
+                 (setf (fli:foreign-slot-value ptr 'y)  (ceiling (mask-rect-top mask)))
+                 (setf (fli:foreign-slot-value ptr 'width) (floor (mask-rect-width mask)))
+                 (setf (fli:foreign-slot-value ptr 'height) (floor (mask-rect-height mask)))
+                 (fli:incf-pointer ptr))))
+    (fn native-masks)))
+
 (defun get-non-alpha-pixels (wand &key (limit 1000)
                                     masks)
   (declare (optimize (Debug 3) (speed 0)))
+  (log:info "Got masks: ~S" (loop for mask in masks
+                                  collect (list
+                                           (mask-rect-left mask)
+                                           (mask-rect-top mask)
+                                           (mask-rect-width mask)
+                                           (mask-rect-height mask))))
   (with-magick-gatekeeper ()
-   (when (magick-get-image-alpha-channel wand)
-     (fli:with-dynamic-foreign-objects
-         ((output pixel :nelems limit)
-          (native-masks native-mask :nelems (length masks)))
-       (let ((ptr (fli:copy-pointer native-masks)))
-        (loop for mask in masks
-              do
-                 (flet ((set-slot (name value)
-                          (declare (inline))
-                          (setf (fli:foreign-slot-value ptr
-                                                        name)
-                                value)))
-                   (set-slot 'x (mask-rect-left mask))
-                   (set-slot 'y (mask-rect-top mask))
-                   (set-slot 'width (mask-rect-width mask))
-                   (set-slot 'height (mask-rect-height mask))
-                   (fli:incf-pointer ptr))))
-       (let ((size (screenshotbot-find-non-transparent-pixels-with-masks
-                    wand
-                    native-masks
-                    (length masks)
-                    output limit)))
-         (let ((ret (make-array (list size 2))))
-           (loop for i below size
-                 do
-                    (setf (aref ret i 0) (fli:foreign-slot-value output 'x))
-                    (setf (aref ret i 1) (fli:foreign-slot-value output 'y))
-                    (fli:incf-pointer output))
-           ret))))))
+    (when (magick-get-image-alpha-channel wand)
+      (with-native-masks (native-masks masks)
+       (fli:with-dynamic-foreign-objects
+           ((output pixel :nelems limit))
+         (let ((size (screenshotbot-find-non-transparent-pixels-with-masks
+                      wand
+                      native-masks
+                      (length masks)
+                      output limit)))
+           (let ((ret (make-array (list size 2))))
+             (loop for i below size
+                   do
+                      (setf (aref ret i 0) (fli:foreign-slot-value output 'x))
+                      (setf (aref ret i 1) (fli:foreign-slot-value output 'y))
+                      (fli:incf-pointer output))
+             ret)))))))
 
 (defun limit-size-for-webp (wand)
   (let ((+max-dim+ 16383))
