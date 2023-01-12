@@ -9,6 +9,14 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:pixel-set-color
+                #:pixel-set-alpha
+                #:set-wand-alpha-channel
+                #:get-non-alpha-pixels
+                #:y
+                #:pixel
+                #:x
+                #:screenshotbot-set-pixel
                 #:magick-new-image
                 #:with-pixel-wand
                 #:compare-wands
@@ -35,7 +43,9 @@
                 #:described-as)
   (:import-from #:easy-macros
                 #:def-easy-macro)
-   (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria)
+                    #-lispworks
+                    (#:fli #:util/fake-fli)))
 (in-package :screenshotbot/magick/test-magick-lw)
 
 
@@ -212,4 +222,35 @@
     (with-large-wand (after :height 20)
       (uiop:with-temporary-file (:pathname output :type "webp")
         (finishes
-         (compare-wands before after output))))))
+          (compare-wands before after output))))))
+
+(def-easy-macro with-pixel (&binding pixel x y &fn fn)
+  (fli:with-dynamic-foreign-objects
+      ((pixel pixel))
+    (setf (fli:foreign-slot-value pixel #-lispworks 'pixel 'x) x)
+    (setf (fli:foreign-slot-value pixel #-lispworks 'pixel 'y) y)
+    (funcall fn pixel)))
+
+(test get-non-alpha-pixels ()
+  (with-wand (after)
+    (with-pixel-wand (pwand)
+      (pixel-set-color pwand "none")
+      (check-boolean
+       (magick-new-image after
+                         40 20
+                         pwand)
+       after)
+      (set-wand-alpha-channel after))
+    (with-pixel (pixel 10 19)
+      (check-boolean
+       (screenshotbot-set-pixel
+        after
+        pixel
+        "rgba(10,10,10,1.0)")
+       after))
+    (let ((res (get-non-alpha-pixels after)))
+      (is (equalp (list 1 2)
+                  (array-dimensions res)))
+      (is
+       (equalp #2A((10 19))
+               res)))))

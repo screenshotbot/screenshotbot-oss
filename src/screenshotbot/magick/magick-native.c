@@ -53,7 +53,57 @@ extern int screenshotbot_verify_magick(CompositeOperator srcCompositeOp,
 		return 1;
 }
 
-extern size_t screenshotbot_find_non_transparent_pixels(MagickWand* wand, pixel* output, size_t max) {
+struct mask {
+		size_t x;
+		size_t y;
+		size_t width;
+		size_t height;
+};
+
+/*
+ * Set a pixel color. This is only really useful for tests.
+ */
+extern MagickBooleanType
+screenshotbot_set_pixel(
+		MagickWand *wand,
+		const pixel *ppixel, // pointer just for FLI simplicity
+		const char* color) {
+		PixelIterator *iterator = NewPixelIterator(wand);
+		MagickBooleanType ret = MagickFalse;
+		size_t height = MagickGetImageHeight(wand);
+		pixel pixel = *ppixel;
+
+		if (pixel.y >= height) {
+				printf("Invalid height: %zu\n", pixel.y);
+				goto cleanup;
+		}
+
+		size_t width;
+		PixelWand** row;
+		for (int y = 0; y <= pixel.y; y++) {
+				row = PixelGetNextIteratorRow(iterator, &width);
+		}
+
+		if (pixel.x >= width) {
+				printf("Invalid width: %zu out of %zu\n", pixel.x, width);
+				goto cleanup;
+		}
+
+		ret = PixelSetColor(row[pixel.x], color);
+		if (!ret) {
+				printf("PixelSetColor failed\n");
+				goto cleanup;
+		}
+
+		ret = PixelSyncIterator(iterator);
+cleanup:
+		DestroyPixelIterator(iterator);
+		return ret;
+}
+
+extern size_t
+screenshotbot_find_non_transparent_pixels_with_masks
+(MagickWand* wand, struct mask* masks, size_t numMasks, pixel* output, size_t max) {
         max--;
         PixelIterator* iterator = NewPixelIterator(wand);
         size_t ret = 0;
@@ -78,4 +128,13 @@ extern size_t screenshotbot_find_non_transparent_pixels(MagickWand* wand, pixel*
         cleanup:
         DestroyPixelIterator(iterator);
         return ret;
+}
+
+extern size_t screenshotbot_find_non_transparent_pixels(MagickWand* wand, pixel* output, size_t max) {
+		return screenshotbot_find_non_transparent_pixels_with_masks(
+				wand,
+				NULL,
+				0,
+				output,
+				max);
 }

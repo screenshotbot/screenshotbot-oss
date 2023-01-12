@@ -21,7 +21,9 @@
    #:malloc
    #:free
    #:dereference
-   #:with-coerced-pointer))
+   #:with-coerced-pointer
+   #:*null-pointer*
+   #:make-pointer))
 (in-package :util/fake-fli)
 
 (defun fix-type (x &key (allow-count t))
@@ -134,6 +136,9 @@
 (defun null-pointer-p (x)
   (cffi:null-pointer-p x))
 
+(defun make-pointer (&key address type)
+  (declare (ignore type))
+  (cffi:make-pointer address))
 
 (defmacro with-dynamic-foreign-objects (((output type &key (nelems 1) (fill 0))) &body body)
   ;; fill is ignored!

@@ -34,7 +34,8 @@
    #:ping-image-metadata
    #:with-image-comparison
    #:save-as-webp
-   #:with-pixel-wand))
+   #:with-pixel-wand
+   #:screenshotbot-set-pixel))
 (in-package :screenshotbot/magick/magick-lw)
 
 (defclass magick-native (abstract-magick)
@@ -105,6 +106,8 @@
      t)
    :thread-safe t))
 
+;; (load-magick-native :force t)
+
 (fli:define-c-struct wand
     (dummy :int))
 
@@ -157,6 +160,16 @@
 (fli:define-foreign-function (new-pixel-wand "NewPixelWand")
     ()
   :result-type (:pointer pixel-wand))
+
+(fli:define-foreign-function (pixel-set-alpha "PixelSetAlpha")
+    ((pwand (:pointer pixel-wand))
+     (alpha :double))
+  :result-type :void)
+
+(fli:define-foreign-function (pixel-set-color "PixelSetColor")
+    ((pwand (:pointer pixel-wand))
+     (color (:reference-pass :ef-mb-string)))
+  :result-type :boolean)
 
 (fli:define-foreign-function (clear-pixel-wand "ClearPixelWand")
     ((pixel-wand (:pointer pixel-wand)))
@@ -340,10 +353,13 @@
              (when file
                (check-boolean (magick-read-image wand (namestring file)) wand)
                (when alpha
-                 (check-boolean (magick-set-image-alpha-channel wand 'SetAlphaChannel)
-                                wand)))
+                (set-wand-alpha-channel wand)))
            (funcall fn wand))
       (destroy-magick-wand wand))))
+
+(defun set-wand-alpha-channel (wand)
+  (check-boolean (magick-set-image-alpha-channel wand 'SetAlphaChannel)
+                 wand))
 
 
 (def-easy-macro with-image-comparison (wand1 wand2 &key &binding result
@@ -418,11 +434,24 @@
     (x :size-t)
   (y :size-t))
 
+(fli:define-c-struct native-mask
+    (x :size-t)
+  (y :size-t)
+  (width :size-t)
+  (height :size-t))
 
-(fli:define-foreign-function screenshotbot-find-non-transparent-pixels
-     ((wand (:pointer wand))
-      (output (:pointer pixel))
-      (max :size-t))
+(fli:define-foreign-function screenshotbot-set-pixel
+    ((wand (:pointer wand))
+     (pixel (:pointer pixel))
+     (color (:reference-pass :ef-mb-string)))
+  :result-type :boolean)
+
+(fli:define-foreign-function screenshotbot-find-non-transparent-pixels-with-masks
+    ((wand (:pointer wand))
+     (masks (:pointer native-mask))
+     (num-masks :size-t)
+     (output (:pointer pixel))
+     (max :size-t))
   :result-type :size-t)
 
 (fli:define-foreign-function screenshotbot-verify-magick
@@ -455,8 +484,11 @@
    (when (magick-get-image-alpha-channel wand)
      (fli:with-dynamic-foreign-objects
          ((output pixel :nelems limit))
-       (let ((size (screenshotbot-find-non-transparent-pixels
-                    wand output limit)))
+       (let ((size (screenshotbot-find-non-transparent-pixels-with-masks
+                    wand
+                    (fli:make-pointer :address 0 :type 'native-mask)
+                    0
+                    output limit)))
          (let ((ret (make-array (list size 2))))
            (loop for i below size
                  do
