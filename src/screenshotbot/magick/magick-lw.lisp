@@ -10,7 +10,8 @@
         #+magick-7
         #:screenshotbot/magick/ffi-7
         #+magick-6
-        #:screenshotbot/magick/ffi-6)
+        #:screenshotbot/magick/ffi-6
+        #:screenshotbot/mask-rect-api)
   (:import-from #:screenshotbot/magick
                 #:with-magick-gatekeeper
                 #:*magick*
@@ -478,16 +479,32 @@
     (loop for i below (car (array-dimensions pxs))
           do (funcall fn (aref pxs i 0) (aref pxs i 1)))))
 
-(defun get-non-alpha-pixels (wand &key (limit 1000))
+(defun get-non-alpha-pixels (wand &key (limit 1000)
+                                    masks)
   (declare (optimize (Debug 3) (speed 0)))
   (with-magick-gatekeeper ()
    (when (magick-get-image-alpha-channel wand)
      (fli:with-dynamic-foreign-objects
-         ((output pixel :nelems limit))
+         ((output pixel :nelems limit)
+          (native-masks native-mask :nelems (length masks)))
+       (let ((ptr (fli:copy-pointer native-masks)))
+        (loop for mask in masks
+              do
+                 (flet ((set-slot (name value)
+                          (declare (inline))
+                          (setf (fli:foreign-slot-value ptr
+                                                        #-lispworks 'native-mask
+                                                        name)
+                                value)))
+                   (set-slot 'x (mask-rect-left mask))
+                   (set-slot 'y (mask-rect-top mask))
+                   (set-slot 'width (mask-rect-width mask))
+                   (set-slot 'height (mask-rect-height mask))
+                   (fli:incf-pointer ptr))))
        (let ((size (screenshotbot-find-non-transparent-pixels-with-masks
                     wand
-                    (fli:make-pointer :address 0 :type 'native-mask)
-                    0
+                    native-masks
+                    (length masks)
                     output limit)))
          (let ((ret (make-array (list size 2))))
            (loop for i below size

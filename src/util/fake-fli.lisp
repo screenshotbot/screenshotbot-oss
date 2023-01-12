@@ -23,7 +23,8 @@
    #:dereference
    #:with-coerced-pointer
    #:*null-pointer*
-   #:make-pointer))
+   #:make-pointer
+   #:copy-pointer))
 (in-package :util/fake-fli)
 
 (defun fix-type (x &key (allow-count t))
@@ -140,16 +141,28 @@
   (declare (ignore type))
   (cffi:make-pointer address))
 
-(defmacro with-dynamic-foreign-objects (((output type &key (nelems 1) (fill 0))) &body body)
+(defmacro %with-dynamic-foreign-objects (((output type &key (nelems 1) (fill 0))) &body body)
   ;; fill is ignored!
   `(cffi:with-foreign-object (,output ',type ,nelems)
      ,@body))
+
+(defmacro with-dynamic-foreign-objects (exprs &body body)
+  (cond
+    (exprs
+     `(%with-dynamic-foreign-objects (,(car exprs))
+        (with-dynamic-foreign-objects ,(cdr exprs)
+          ,@body)))
+    (t
+     `(progn ,@body))))
 
 (defmacro foreign-slot-value (obj type slot)
   `(cffi:foreign-slot-value ,obj ,type ,slot))
 
 (defun incf-pointer (pointer)
   `(cffi:inc-pointer ,pointer))
+
+(defun copy-pointer (pointer)
+  (cffi:make-pointer (cffi:pointer-address pointer)))
 
 (defun dereference (obj type)
   (cffi:mem-ref obj type))

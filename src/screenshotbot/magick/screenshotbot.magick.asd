@@ -7,12 +7,13 @@
 (defsystem :screenshotbot.magick
   :serial t
   :defsystem-depends-on (:screenshotbot.magick.build)
-  :depends-on (#-lispworks :util/fake-fli
-               :easy-macros
-               :screenshotbot/events
-               :screenshotbot.magick.build
-               :serapeum
-               :alexandria)
+  :depends-on (#-lispworks #:util/fake-fli
+               #:easy-macros
+               #:screenshotbot/events
+               #:screenshotbot/mask-rect-api
+               #:screenshotbot.magick.build
+               #:serapeum
+               #:alexandria)
   :components ((:file "magick")
                ("screenshotbot/magick/build:magick-cl-source-file"
                 "memory"

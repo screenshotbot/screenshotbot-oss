@@ -33,7 +33,6 @@
   :depends-on (:util
                :markup
                :gravatar
-               :screenshotbot/mask-rect-api
                :lparallel
                (:feature (:not :screenshotbot-oss) :documentation-plugin)
                :cl-store

@@ -7,7 +7,8 @@
 (defpackage :screenshotbot/magick/test-magick-lw
   (:use #:cl
         #:fiveam
-        #:fiveam-matchers)
+        #:fiveam-matchers
+        #:screenshotbot/mask-rect-api)
   (:import-from #:screenshotbot/magick/magick-lw
                 #:pixel-set-color
                 #:pixel-set-alpha
@@ -231,26 +232,202 @@
     (setf (fli:foreign-slot-value pixel #-lispworks 'pixel 'y) y)
     (funcall fn pixel)))
 
-(test get-non-alpha-pixels ()
-  (with-wand (after)
+(def-fixture get-non-alpha ()
+  #+nil
+  (progn
+    (asdf:perform
+     'asdf:load-op
+     (asdf:find-component :screenshotbot.magick "magick-native"))
+    (load-magick-native :force t))
+  (with-wand (wand)
     (with-pixel-wand (pwand)
       (pixel-set-color pwand "none")
       (check-boolean
-       (magick-new-image after
-                         40 20
+       (magick-new-image wand
+                         40 30
                          pwand)
-       after)
-      (set-wand-alpha-channel after))
+       wand)
+      (set-wand-alpha-channel wand))
     (with-pixel (pixel 10 19)
       (check-boolean
        (screenshotbot-set-pixel
-        after
+        wand
         pixel
         "rgba(10,10,10,1.0)")
-       after))
-    (let ((res (get-non-alpha-pixels after)))
+       wand))
+    (&body)))
+
+(test get-non-alpha-pixels ()
+  (with-fixture get-non-alpha ()
+    (let ((res (get-non-alpha-pixels wand)))
       (is (equalp (list 1 2)
                   (array-dimensions res)))
       (is
        (equalp #2A((10 19))
                res)))))
+
+(defclass simple-mask ()
+  ((left :initarg :left
+         :reader mask-rect-left)
+   (top :initarg :top
+        :reader mask-rect-top)
+   (width :initarg :width
+          :reader mask-rect-width)
+   (height :initarg :height
+           :reader mask-rect-height)))
+
+(test get-non-alpha-with-masks ()
+  (with-fixture get-non-alpha ()
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list (make-instance 'simple-mask
+                                                          :left 0
+                                                          :top 0
+                                                          :height 3
+                                                          :width 3)))))
+      (is (equalp (list 1 2)
+                  (array-dimensions res)))
+      (is
+       (equalp #2A((10 19))
+               res)))))
+
+
+(test get-non-alpha-with-masks-covering-change ()
+  (with-fixture get-non-alpha ()
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list (make-instance 'simple-mask
+                                                          :left 9
+                                                          :top 18
+                                                          :height 6
+                                                          :width 6)))))
+      (is (equalp (list 0 2)
+                  (array-dimensions res)))
+      (pass))))
+
+(test get-non-alpha-with-two-masks ()
+  (with-fixture get-non-alpha ()
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list
+                                      (make-instance 'simple-mask
+                                                          :left 0
+                                                          :top 0
+                                                          :height 3
+                                                          :width 3)
+                                      (make-instance 'simple-mask
+                                                          :left 9
+                                                          :top 18
+                                                          :height 6
+                                                          :width 6)))))
+      (is (equalp (list 0 2)
+                  (array-dimensions res))))))
+
+(test get-non-alpha-with-masks-that-extend-the-space ()
+  (with-fixture get-non-alpha ()
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list
+                                      (make-instance 'simple-mask
+                                                          :left 0
+                                                          :top 0
+                                                          :height 300
+                                                          :width 300)))))
+      (is (equalp (list 0 2)
+                  (array-dimensions res))))))
+
+(test get-non-alpha-with-masks-left-border-is-included ()
+  (with-fixture get-non-alpha ()
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list
+                                      (make-instance 'simple-mask
+                                                          :left 10
+                                                          :top 0
+                                                          :height 300
+                                                          :width 300)))))
+      (is (equalp (list 0 2)
+                  (array-dimensions res))))
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list
+                                      (make-instance 'simple-mask
+                                                     :left 11
+                                                     :top 0
+                                                     :height 300
+                                                     :width 300)))))
+      (is (equalp (list 1 2)
+                  (array-dimensions res))))))
+
+(test get-non-alpha-with-masks-top-border-is-included ()
+  (with-fixture get-non-alpha ()
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list
+                                      (make-instance 'simple-mask
+                                                          :left 0
+                                                          :top 19
+                                                          :height 300
+                                                          :width 300)))))
+      (is (equalp (list 0 2)
+                  (array-dimensions res))))
+
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list
+                                      (make-instance 'simple-mask
+                                                     :left 0
+                                                     :top 20
+                                                     :height 300
+                                                     :width 300)))))
+      (is (equalp (list 1 2)
+                  (array-dimensions res))))))
+
+(test get-non-alpha-with-masks-right-border-is-exclusive ()
+  (with-fixture get-non-alpha ()
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list
+                                      (make-instance 'simple-mask
+                                                          :left 0
+                                                          :top 0
+                                                          :width 11
+                                                          :height 30)))))
+      (is (equalp (list 0 2)
+                  (array-dimensions res))))
+
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list
+                                      (make-instance 'simple-mask
+                                                     :left 0
+                                                     :top 0
+                                                     :width 10
+                                                     :height 100)))))
+      (is (equalp (list 1 2)
+                  (array-dimensions res))))))
+
+
+(test get-non-alpha-with-masks-bottom-border-is-exclusive ()
+  (with-fixture get-non-alpha ()
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list
+                                      (make-instance 'simple-mask
+                                                          :left 0
+                                                          :top 0
+                                                          :width 11
+                                                          :height 20)))))
+      (is (equalp (list 0 2)
+                  (array-dimensions res))))
+
+    (let ((res (get-non-alpha-pixels wand
+                                     :masks
+                                     (list
+                                      (make-instance 'simple-mask
+                                                     :left 0
+                                                     :top 0
+                                                     :width 11
+                                                     :height 19)))))
+      (is (equalp (list 1 2)
+                  (array-dimensions res))))))
