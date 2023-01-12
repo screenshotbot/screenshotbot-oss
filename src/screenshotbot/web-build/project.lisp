@@ -39,6 +39,8 @@
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:screenshotbot/user-api
+                #:can-view
+                #:user
                 #:can-view!
                 #:current-user
                 #:created-at
@@ -71,6 +73,7 @@
   (:import-from #:screenshotbot/model/user
                 #:user-with-email)
   (:import-from #:util/object-id
+                #:oid
                 #:find-by-oid)
   (:import-from #:util/threading
                 #:safe-interrupt)
@@ -93,6 +96,8 @@
                 #:installation-domain)
   (:import-from #:screenshotbot/events
                 #:push-event)
+  (:import-from #:bknr.datastore
+                #:store-object-id)
   (:local-nicknames (#:a #:alexandria)
                     (#:integration #:screenshotbot/replay/integration)
                     (#:frontend #:screenshotbot/replay/frontend)
@@ -149,6 +154,11 @@
                :reader %created-at))
   (:metaclass persistent-class)
   (:default-initargs :created-at (get-universal-time)))
+
+(defmethod can-view ((web-project web-project) (user user))
+  (let ((company (company web-project)))
+    (assert company)
+    (can-view company user)))
 
 (defmethod push-remote-run (build remote-run)
   (with-transaction ()
@@ -213,6 +223,14 @@
              (format nil "~a browsers"
                      (length (browsers build)))))))
 
+(defhandler (web-project-recent-runs :uri "/web-projects/:id/recent-runs")
+            (id)
+  (let ((id (parse-integer id)))
+   (let ((web-project (store-object-with-id id)))
+     (check-type web-project web-project)
+     (can-view! web-project)
+     (view-build web-project))))
+
 (defhandler (nil :uri "/web-projects") ()
   (with-login ()
     (app-template
@@ -237,7 +255,8 @@
                           (taskie-row
                            :object build
                            <span>
-                             <a href=(nibble () (view-build build)) >
+                           <a href= (hex:make-url 'web-project-recent-runs
+                                                  :id (store-object-id build)) >
                                ,(web-project-name build)
                              </a>
                            </span>
@@ -277,6 +296,12 @@
     <render-runs runs=(remote-runs build) />
   </app-template>)
 
+(defhandler (remote-run-logs-handler :uri "/web-project-runs/:oid/logs")
+            (oid)
+  (let ((remote-run (util:find-by-oid oid)))
+    (check-type remote-run remote-run)
+    (can-view! remote-run)
+    (remote-run-logs remote-run)))
 
 (markup:deftag render-runs (&key runs)
   <markup:merge-tag>
@@ -289,8 +314,8 @@
                        (taskie-row
                         :object run
                         <span>
-                        <a href= (nibble (:name :remote-job-logs)
-                                   (remote-run-logs run))
+                        <a href= (hex:make-url 'remote-run-logs-handler
+                                               :oid (oid run))
                         >
                         ,(timeago :timestamp (created-at run))
                         </a>
