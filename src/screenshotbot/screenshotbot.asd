@@ -20,6 +20,11 @@
                :atomics)
   :components ((:file "events")))
 
+(defsystem :screenshotbot/mask-rect-api
+  :serial t
+  :depends-on ()
+  :components ((:file "mask-rect-api")))
+
 (defsystem :screenshotbot
   :serial t
   :author "Arnold Noronha <arnold@screenshotbot.io>"
@@ -28,6 +33,7 @@
   :depends-on (:util
                :markup
                :gravatar
+               :screenshotbot/mask-rect-api
                :lparallel
                (:feature (:not :screenshotbot-oss) :documentation-plugin)
                :cl-store

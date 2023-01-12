@@ -10,6 +10,7 @@
         #:screenshotbot/model/view
         #:screenshotbot/magick
         #:screenshotbot/model/core
+        #:screenshotbot/mask-rect-api
         #:screenshotbot/screenshot-api)
   (:import-from #:util
                 #:make-url
