@@ -534,7 +534,7 @@ function prepareReportJs () {
                     }
                 },
                 error: function () {
-                    alert("Something went wrong");
+                    alert("We couldn't find changed pixels! This is likely a bug on our end.");
                     zoomToChange.prop("disabled", false);
                     zoomToChangeSpinner.hide();
                 }
