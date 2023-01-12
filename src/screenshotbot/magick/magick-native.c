@@ -18,6 +18,8 @@ typedef struct _pixel {
 #define IF7(v1,v2) v2
 #endif
 
+#define MAX_QUANTUM ((1 << MAGICKCORE_QUANTUM_DEPTH) - 1)
+
 extern int screenshotbot_verify_magick(CompositeOperator srcCompositeOp,
 									   IF7(AlphaChannelOption,AlphaChannelType) onAlphaChannel) {
 		size_t depth;
@@ -164,7 +166,10 @@ screenshotbot_find_non_transparent_pixels_with_masks
 						}
 
                         Quantum px = PixelGetAlphaQuantum(row[x]);
-                        if (px > 100) {
+						/*
+						 * Currently the yellow that's drawn as part of the mask is ~204.
+						 */
+                        if (px == MAX_QUANTUM) {
                                 output[ret].x = x;
                                 output[ret].y = y;
                                 ret++;
