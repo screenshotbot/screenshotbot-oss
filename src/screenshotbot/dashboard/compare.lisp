@@ -292,7 +292,9 @@
           (:src . ,(image-public-url (image-comparison-result image-comparison) :size size))
           (:background . ,(image-public-url (screenshot-image (before-image self)) :size size))
           (:masks .
-                  ,(image-comparison-masks image-comparison))))))))
+                  ,(or
+                    (image-comparison-masks image-comparison)
+                    #()))))))))
 
 
 (defun random-zoom-to-on-result (image-comparison)
