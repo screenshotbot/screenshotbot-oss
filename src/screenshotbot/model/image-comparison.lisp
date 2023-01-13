@@ -150,7 +150,9 @@ If the images are identical, we return t, else we return NIL."
                                        :in-place-p (str:s-member
                                                     (list
                                                      ;; Modern Interpreters Inc.
-                                                     "5fd16bcf4f4b3822fd0000e1")
+                                                     "5fd16bcf4f4b3822fd0000e1"
+                                                     ;; Rollins
+                                                     "622b7f178cf1c4cd0711c074")
                                                     (?. oid (company after-image))))))
             same-p))))))
 
