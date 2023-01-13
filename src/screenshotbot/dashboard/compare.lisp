@@ -95,6 +95,8 @@
                 #:can-edit!)
   (:import-from #:screenshotbot/dashboard/review-link
                 #:review-link)
+  (:import-from #:screenshotbot/cdn
+                #:make-image-cdn-url)
   (:export
    #:diff-report
    #:render-acceptable
@@ -289,8 +291,8 @@
               (bknr.datastore:store-object-id image-comparison)))
           (:zoom-to . ,(nibble-url (nibble (:name :zoom) (random-zoom-to-on-result
                                                           image-comparison))))
-          (:src . ,(image-public-url (image-comparison-result image-comparison) :size size))
-          (:background . ,(image-public-url (screenshot-image (before-image self)) :size size))
+          (:src . ,(make-image-cdn-url (image-public-url (image-comparison-result image-comparison) :size size)))
+          (:background . ,(make-image-cdn-url (image-public-url (screenshot-image (before-image self)) :size size)))
           (:masks .
                   ,(or
                     (loop for mask in (image-comparison-masks image-comparison)
