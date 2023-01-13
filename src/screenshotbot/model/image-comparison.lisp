@@ -140,7 +140,7 @@ If the images are identical, we return t, else we return NIL."
     (with-local-image (after-file after-image)
       (with-wand (before :file before-file)
         (with-wand (after :file after-file)
-          (let ((same-p (compare-wands before after p)))
+          (let ((same-p (compare-wands before after p :in-place-p nil)))
             same-p))))))
 
 (defun find-existing-image-comparison (before after masks)

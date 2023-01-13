@@ -146,7 +146,7 @@
 
 (defmethod perform ((o compile-op) (c lib-source-file))
   (uiop:run-program
-   (format nil"gcc -shared ~a ~a -I -Werror -O2 -Wall ~a -o ~a"
+   (format nil"gcc -std=c99 -fPIC -shared ~a ~a -I -Werror -O2 -Wall ~a -o ~a"
 
            (uiop:escape-shell-command (namestring
                                        (component-pathname c)))

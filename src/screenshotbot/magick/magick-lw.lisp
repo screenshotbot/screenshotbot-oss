@@ -354,9 +354,14 @@
              (when file
                (check-boolean (magick-read-image wand (namestring file)) wand)
                (when alpha
-                (set-wand-alpha-channel wand)))
+                 (set-wand-alpha-channel wand)))
            (funcall fn wand))
       (destroy-magick-wand wand))))
+
+(fli:define-foreign-function screenshotbot-inplace-compare
+    ((dest (:pointer wand))
+     (src (:pointer wand)))
+  :result-type :int)
 
 (defun set-wand-alpha-channel (wand)
   (check-boolean (magick-set-image-alpha-channel wand 'SetAlphaChannel)
@@ -365,26 +370,35 @@
 
 (def-easy-macro with-image-comparison (wand1 wand2 &key &binding result
                                              &binding same-p
+                                             in-place-p
                                              (highlight-color "red")
                                              (lowlight-color "none")
                                              &fn fn)
   (assert (not (fli:null-pointer-p wand1)))
   (assert (not (fli:null-pointer-p wand2)))
-  (check-boolean (magick-set-image-artifact wand1 "compare:lowlight-color" lowlight-color) wand1)
-  (check-boolean (magick-set-image-artifact wand1 "compare:highlight-color" highlight-color) wand1)
-  (check-boolean (magick-set-image-compose wand1  'SrcCompositeOp) wand1)
 
-  (multiple-value-bind (output difference)
-      (magick-compare-images
-       wand1
-       wand2
-       'RootMeanSquaredErrorMetric
-       0.0d0)
-    (unwind-protect
-         (let ((same-p (= difference 0.0d0)))
-           (funcall fn output same-p))
-      (unless (fli:null-pointer-p output)
-        (destroy-magick-wand output)))))
+  (cond
+    (in-place-p
+     (set-wand-alpha-channel wand1)
+     (let ((res (screenshotbot-inplace-compare wand1 wand2)))
+       (when (< res 0)
+         (error "Error calling inplace-compare: ~a" res))
+       (funcall fn wand1 (= res 0))))
+    (t
+     (check-boolean (magick-set-image-artifact wand1 "compare:lowlight-color" lowlight-color) wand1)
+     (check-boolean (magick-set-image-artifact wand1 "compare:highlight-color" highlight-color) wand1)
+     (check-boolean (magick-set-image-compose wand1  'SrcCompositeOp) wand1)
+     (multiple-value-bind (output difference)
+         (magick-compare-images
+          wand1
+          wand2
+          'RootMeanSquaredErrorMetric
+          0.0d0)
+       (unwind-protect
+            (let ((same-p (= difference 0.0d0)))
+              (funcall fn output same-p))
+         (unless (fli:null-pointer-p output)
+           (destroy-magick-wand output)))))))
 
 (defun compare-images (wand1 wand2)
   (with-image-comparison (wand1 wand2 :same-p same-p)
@@ -536,7 +550,7 @@
                               0)
            wand))))))
 
-(defun compare-wands (before after p)
+(defun compare-wands (before after p &key in-place-p)
   ;; Limit the size of the before and after wands before doing the
   ;; comparison
   (limit-size-for-webp before)
@@ -544,6 +558,7 @@
   (with-image-comparison (before after
                           :result result
                           :same-p same-p
+                          :in-place-p in-place-p
                           :highlight-color "red"
                           :lowlight-color "none")
     (save-as-webp result p)

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #if __has_include("MagickWand/MagickWand.h")
 # include <MagickWand/MagickWand.h>
@@ -136,6 +137,10 @@ inline int _max(int a, int b) {
         return (a > b ? a : b);
 }
 
+inline int _min(int a, int b) {
+        return (a < b ? a : b);
+}
+
 extern size_t
 screenshotbot_find_non_transparent_pixels_with_masks
 (MagickWand* wand, struct mask* masks, size_t numMasks, pixel* output, size_t max) {
@@ -202,4 +207,122 @@ extern size_t screenshotbot_find_non_transparent_pixels(MagickWand* wand, pixel*
                 0,
                 output,
                 max);
+}
+
+static void draw_red(PixelWand* wand) {
+		PixelSetAlphaQuantum(wand, QuantumRange);
+		PixelSetRedQuantum(wand, QuantumRange);
+		PixelSetGreenQuantum(wand, 0);
+		PixelSetBlueQuantum(wand, 0);
+}
+
+static void draw_transparent(PixelWand* wand) {
+		PixelSetAlphaQuantum(wand, 0);
+		PixelSetRedQuantum(wand, 0);
+		PixelSetGreenQuantum(wand, 0);
+		PixelSetBlueQuantum(wand, 0);
+}
+
+
+static bool fill_row_with_red(int start, PixelWand** drow, size_t dwidth) {
+		for (int i = start; i < dwidth; i++) {
+				draw_red(drow[i]);
+		}
+		return start < dwidth;
+}
+
+static bool inplace_compare_rows(PixelWand** drow, PixelWand** srow,
+								 size_t dwidth,
+								 size_t swidth) {
+		//fprintf(stderr, "inplace compare rows of width: %zu, %zu\n", dwidth, swidth);
+		int x;
+		bool changed = false;
+
+#define CQ(name,i) (name(drow[i]) == name(srow[i]))
+
+		for (x = 0; x < _min(dwidth, swidth); x++) {
+				if (CQ(PixelGetAlphaQuantum, x) &&
+					CQ(PixelGetRedQuantum, x) &&
+					CQ(PixelGetBlueQuantum, x) &&
+					CQ(PixelGetGreenQuantum, x)) {
+						draw_transparent(drow[x]);
+				} else {
+						draw_red(drow[x]);
+						changed = true;
+				}
+		}
+
+		if (fill_row_with_red(x, drow, dwidth)) {
+				changed = true;
+		}
+
+		return changed;
+}
+
+
+/*
+ * Compares dest to src, while modifying dest.  returns 0 if no
+ * changes were detected. -1 on error, and 1 on success.
+ */
+extern int screenshotbot_inplace_compare(MagickWand* dest,
+										 MagickWand* src) {
+		PixelIterator* diter = NULL;
+		PixelIterator* siter = NULL;
+		int changed = 0;
+
+
+		diter = NewPixelIterator(dest);
+		if (!diter) {
+				changed = -1;
+				goto cleanup;
+		}
+
+		siter = NewPixelIterator(src);
+		if (!siter) {
+				changed = -1;
+				goto cleanup;
+		}
+
+		int processedRows = 0;
+		//fprintf(stderr, "iterating through the inplace rows\n");
+		while (true) {
+				processedRows++;
+				//fprintf(stderr, "Processing row: %d\n", processedRows);
+				size_t dwidth = 0;
+				PixelWand** drow = PixelGetNextIteratorRow(diter, &dwidth);
+
+				size_t swidth = 0;
+				PixelWand** srow = PixelGetNextIteratorRow(siter, &swidth);
+
+				if (!drow) {
+						//fprintf(stderr, "Reached end at %d\n", processedRows);
+						break;
+				} else if (srow) {
+						if (inplace_compare_rows(drow, srow, dwidth, swidth)) {
+								changed = 1;
+						}
+				} else {
+						if (fill_row_with_red(0, drow, dwidth)) {
+								changed = 1;
+						}
+				}
+
+				// We always have to sync, since we're writing
+				// transparent pixels too.
+				if (!PixelSyncIterator(diter)) {
+						//fprintf(stderr, "Failed to sync iterator\n");
+						changed = -1;
+						goto cleanup;
+				}
+		}
+
+
+		MagickSetImageColorspace(dest, RGBColorspace);
+
+cleanup:
+		fprintf(stderr, "Cleanup\n");
+		if (diter) DestroyPixelIterator(diter);
+		if (siter) DestroyPixelIterator(siter);
+		return changed;
+		//return -processedRows;
 }
