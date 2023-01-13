@@ -213,6 +213,9 @@ function prepareReportJs () {
                                   0, 0,
                                   canvasEl.width,
                                   canvasEl.height);
+                }
+
+                function drawMasks() {
                     for (var mask of masks) {
                         ctx.beginPath();
 
@@ -229,10 +232,12 @@ function prepareReportJs () {
                         ctx.fill();
                     }
                 }
+
                 ctx.globalAlpha = 0.2;
                 doDraw(background);
                 ctx.globalAlpha = 1;
                 doDraw(image)
+                drawMasks();
             }
 
             function fixMaxTranslation () {
