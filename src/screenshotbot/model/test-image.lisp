@@ -307,3 +307,27 @@
       (is (eql img (find-image-by-oid (oid img))))
       (is (eql 12 (length (oid-array img))))
       (is (eql img (find-image-by-oid (oid-array img)))))))
+
+(test negative-width-for-mask-rect
+  (with-fixture state ()
+   (let ((mask-rect (make-instance 'mask-rect
+                                   :top 0
+                                   :left 10
+                                   :width -5
+                                   :height 5)))
+     (is (eql 0 (mask-rect-top mask-rect)))
+     (is (eql 5 (mask-rect-left mask-rect)))
+     (is (eql 5 (mask-rect-width mask-rect)))
+     (is (eql 5 (mask-rect-height mask-rect))))))
+
+(test negative-height-for-mask-rect
+  (with-fixture state ()
+   (let ((mask-rect (make-instance 'mask-rect
+                                   :top 0
+                                   :left 10
+                                   :width 5
+                                   :height -5)))
+     (is (eql -5 (mask-rect-top mask-rect)))
+     (is (eql 10 (mask-rect-left mask-rect)))
+     (is (eql 5 (mask-rect-width mask-rect)))
+     (is (eql 5 (mask-rect-height mask-rect))))))

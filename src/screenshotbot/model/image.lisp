@@ -222,10 +222,28 @@
      (left :initarg :left
            :accessor mask-rect-left)
      (height :initarg :height
-             :accessor mask-rect-height)
+             :accessor %mask-rect-height)
      (width :initarg :width
-            :accessor mask-rect-width))
+            :accessor %mask-rect-width))
     (:metaclass persistent-class)))
+
+(defmethod mask-rect-top :around ((mask abstract-mask-rect))
+  (let ((top (call-next-method)))
+   (min
+    top
+    (+ top (%mask-rect-height mask)))))
+
+(defmethod mask-rect-left :around ((mask abstract-mask-rect))
+  (let ((left (call-next-method)))
+    (min
+     left
+     (+ left (%mask-rect-width mask)))))
+
+(defmethod mask-rect-height ((mask abstract-mask-rect))
+  (abs (%mask-rect-height mask)))
+
+(defmethod mask-rect-width ((mask abstract-mask-rect))
+  (abs (%mask-rect-width mask)))
 
 (defmethod mask= ((a abstract-mask-rect) (b abstract-mask-rect))
   (or
