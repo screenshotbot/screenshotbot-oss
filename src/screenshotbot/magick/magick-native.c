@@ -107,7 +107,7 @@ static int _mask_cmp(const void* p1, const void* p2) {
 		const struct mask* m1 = (struct mask*) p1;
 		const struct mask* m2 = (struct mask*) p2;
 
-		return m2->x - m1->x;
+		return m1->x - m2->x;
 }
 
 static int in_range(int x, int start, int width) {

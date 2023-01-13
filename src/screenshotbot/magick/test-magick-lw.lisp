@@ -234,7 +234,7 @@
     (setf (fli:foreign-slot-value pixel 'y) y)
     (funcall fn pixel)))
 
-(def-fixture get-non-alpha ()
+(def-fixture get-non-alpha (&key (width 40) (height 30) (default-mark t))
   #+nil
   (progn
     (asdf:perform
@@ -246,18 +246,21 @@
       (pixel-set-color pwand "none")
       (check-boolean
        (magick-new-image wand
-                         40 30
+                         width height
                          pwand)
        wand)
       (set-wand-alpha-channel wand))
-    (with-pixel (pixel 10 19)
-      (check-boolean
-       (screenshotbot-set-pixel
-        wand
-        pixel
-        "rgba(10,0,0,1.0)")
-       wand))
-    (&body)))
+    (flet ((mark-pixel (x y)
+             (with-pixel (pixel x y)
+               (check-boolean
+                (screenshotbot-set-pixel
+                 wand
+                 pixel
+                 "rgba(10,0,0,1.0)")
+                wand))))
+      (when default-mark
+       (mark-pixel 10 19))
+      (&body))))
 
 (test get-non-alpha-pixels ()
   (with-fixture get-non-alpha ()
@@ -468,3 +471,25 @@
                                                      :height 19)))))
       (is (equalp (list 1 2)
                   (array-dimensions res))))))
+
+(test complex-case-from-prod
+  (with-fixture get-non-alpha (:width 1500 :height 55)
+    (let ((masks '((1243 22 9 26)
+                   (1244 45 39 10)
+                   (1280 18 8 31)
+                   (1432 20 5 23)
+                   (1479 21 8 21)
+                   (1316 41 28 14)
+                   (1437 52 46 10))))
+      (mark-pixel 1261 50)
+      (let ((res (get-non-alpha-pixels wand
+                                       :masks
+                                       (loop for mask in masks
+                                             collect
+                                             (make-instance 'simple-mask
+                                                            :left (first mask)
+                                                            :top (second mask)
+                                                            :width (third mask)
+                                                            :height (fourth mask))))))
+        (is (equalp #2A((10 19))
+                    res))))))

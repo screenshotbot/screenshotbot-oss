@@ -293,7 +293,12 @@
           (:background . ,(image-public-url (screenshot-image (before-image self)) :size size))
           (:masks .
                   ,(or
-                    (image-comparison-masks image-comparison)
+                    (loop for mask in (image-comparison-masks image-comparison)
+                          collect
+                          `((:left . ,(mask-rect-left mask))
+                            (:top . ,(mask-rect-top mask))
+                            (:width . ,(mask-rect-width mask))
+                            (:height . ,(mask-rect-height mask))))
                     #()))))))))
 
 
