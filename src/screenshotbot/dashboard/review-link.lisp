@@ -22,7 +22,9 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:review-link
-   #:review-link-impl))
+   #:review-link-impl
+   #:reunder-pull-request-link
+   #:describe-pull-request))
 (in-package :screenshotbot/dashboard/review-link)
 
 (markup:enable-reader)
@@ -55,9 +57,17 @@
 (defun review-link (&key run)
   (cond
     ((pull-request-url run)
-     <a href= (validate-url (pull-request-url run)) >Pull Request</a>)
+     (render-pull-request-link
+      (?. channel-repo (recorder-run-channel run))
+      run))
     (t
      (review-link-impl (?. channel-repo (recorder-run-channel run)) run))))
 
 (defmethod review-link-impl (repo run)
   nil)
+
+(defmethod render-pull-request-link (repo run)
+  <a href= (validate-url (pull-request-url run)) >,(describe-pull-request repo run)</a>)
+
+(defmethod describe-pull-request (repo run)
+  "Pull Request")

@@ -273,6 +273,7 @@
         if (eql id (model-id run))
           return run))
 
+
 (defmethod can-view ((company company) user)
   (member company (user-companies user)))
 
