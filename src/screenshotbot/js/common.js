@@ -633,3 +633,10 @@ setupLiveOnAttach(".modal-link", function () {
         e.preventDefault();
     });
 });
+
+
+function setUrlParameter(key, value) {
+    var url = new URL(window.location);
+    url.searchParams.set(key, value);
+    history.replaceState(null, null, url.href);
+}

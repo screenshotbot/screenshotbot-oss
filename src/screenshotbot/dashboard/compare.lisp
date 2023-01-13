@@ -615,11 +615,13 @@
            (added-groups (added-groups report))
            (deleted-groups (deleted-groups report))
            (default-type
-             (cond
-               (changes-groups "changes")
-               (added-groups "added")
-               (deleted-groups "deleted")
-               (t "changes"))))
+             (or
+               (hunchentoot:parameter "type")
+               (cond
+                  (changes-groups "changes")
+                  (added-groups "added")
+                  (deleted-groups "deleted")
+                  (t "changes")))))
       <markup:merge-tag>
 
       <div class= "mt-3 d-flex  flex-wrap justify-content-between compare-header" >

@@ -35,19 +35,24 @@ setupLiveOnAttach(".search", function () {
 
 
 setupLiveOnAttach("ul.report-selector > li > a", function () {
-    $(this).click(function (e) {
+    var currentState = history.state;
+    var type = $(this).data("type");
+
+    function switchTab() {
         var $ul = $(this).closest("ul");
         $ul.find("a").removeClass("active");
         $(this).addClass("active");
         var $target = $($ul.data("target"));
-
-        var type = $(this).data("type");
-
         var args = $target.data("args");
 
         args["type"] = type;
+        setUrlParameter("type", type);
 
         updateAjaxResults($target);
+    }
+
+    $(this).click(function (e) {
+        switchTab.call(this);
 
         e.preventDefault();
     });
