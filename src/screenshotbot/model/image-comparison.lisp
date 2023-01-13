@@ -43,6 +43,10 @@
                 #:compare-wands
                 #:with-image-comparison
                 #:with-wand)
+  (:import-from #:util/misc
+                #:?.)
+  (:import-from #:screenshotbot/model/company
+                #:company)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -136,11 +140,18 @@
   "Compares before-screenshot and after-screenshot, and saves the result image to P.
 
 If the images are identical, we return t, else we return NIL."
+  (declare (ignore masks)) ;; We used to draw the masks earlier, we don't now.
   (with-local-image (before-file before-image)
     (with-local-image (after-file after-image)
       (with-wand (before :file before-file)
         (with-wand (after :file after-file)
-          (let ((same-p (compare-wands before after p :in-place-p nil)))
+          (let ((same-p (compare-wands before after p
+                                       ;; Slowly deploying the in-place-p change
+                                       :in-place-p (str:s-member
+                                                    (list
+                                                     ;; Modern Interpreters Inc.
+                                                     "5fd16bcf4f4b3822fd0000e1")
+                                                    (?. oid (company after-image))))))
             same-p))))))
 
 (defun find-existing-image-comparison (before after masks)

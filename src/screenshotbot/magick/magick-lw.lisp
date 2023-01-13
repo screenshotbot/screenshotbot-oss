@@ -379,6 +379,7 @@
 
   (cond
     (in-place-p
+     (log:info "Using in-place image comparison")
      (set-wand-alpha-channel wand1)
      (let ((res (screenshotbot-inplace-compare wand1 wand2)))
        (when (< res 0)

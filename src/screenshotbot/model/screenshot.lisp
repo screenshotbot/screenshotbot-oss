@@ -31,6 +31,8 @@
   (:import-from #:util/store
                 #:with-class-validation
                 #:def-store-local)
+  (:import-from #:screenshotbot/model/company
+                #:company)
   (:export
    #:constant-string
    #:get-constant
@@ -97,6 +99,9 @@
       :initform nil
       :accessor screenshot-masks))
     (:metaclass persistent-class)))
+
+(defmethod company ((self screenshot))
+  (company (screenshot-image self)))
 
 (defclass fake-screenshot (abstract-screenshot)
   ((name :initarg :name
