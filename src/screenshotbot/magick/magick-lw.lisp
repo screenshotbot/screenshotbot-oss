@@ -380,11 +380,27 @@
   (cond
     (in-place-p
      (log:info "Using in-place image comparison")
-     (set-wand-alpha-channel wand1)
-     (let ((res (screenshotbot-inplace-compare wand1 wand2)))
-       (when (< res 0)
-         (error "Error calling inplace-compare: ~a" res))
-       (funcall fn wand1 (= res 0))))
+
+     (flet ((inner (wand1 wand2)
+              (set-wand-alpha-channel wand1)
+              (let ((res (screenshotbot-inplace-compare wand1 wand2)))
+                (when (< res 0)
+                  (error "Error calling inplace-compare: ~a" res))
+                (funcall fn wand1 (= res 0)))))
+       (cond
+         ((and
+           (<
+            (magick-get-image-height wand1)
+            (magick-get-image-height wand2))
+           (<
+            (magick-get-image-width wand1)
+            (magick-get-image-width wand2)))
+          ;; if both the dimensions of wand1 are smaller than wand2, then
+          ;; we swap them. Otherwise we might have a situation where a
+          ;; larger image in both dimensions won't detect a change.
+          (inner wand2 wand1))
+         (t
+          (inner wand1 wand2)))))
     (t
      (check-boolean (magick-set-image-artifact wand1 "compare:lowlight-color" lowlight-color) wand1)
      (check-boolean (magick-set-image-artifact wand1 "compare:highlight-color" highlight-color) wand1)

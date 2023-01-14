@@ -234,13 +234,20 @@
     (setf (fli:foreign-slot-value pixel 'y) y)
     (funcall fn pixel)))
 
-(def-fixture get-non-alpha (&key (width 40) (height 30) (default-mark t))
-  #+nil
-  (progn
-    (asdf:perform
-     'asdf:load-op
-     (asdf:find-component :screenshotbot.magick "magick-native"))
-    (load-magick-native :force t))
+(defun  mark-pixel (wand x y)
+  (with-pixel (pixel x y)
+    (check-boolean
+     (screenshotbot-set-pixel
+      wand
+      pixel
+      "rgba(10,0,0,1.0)")
+     wand)))
+
+(def-easy-macro with-single-pixel-image (&key &binding wand
+                                              width
+                                              height
+                                              default-mark
+                                              &fn fn)
   (with-wand (wand)
     (with-pixel-wand (pwand)
       (pixel-set-color pwand "none")
@@ -250,17 +257,20 @@
                          pwand)
        wand)
       (set-wand-alpha-channel wand))
-    (flet ((mark-pixel (x y)
-             (with-pixel (pixel x y)
-               (check-boolean
-                (screenshotbot-set-pixel
-                 wand
-                 pixel
-                 "rgba(10,0,0,1.0)")
-                wand))))
-      (when default-mark
-       (mark-pixel 10 19))
-      (&body))))
+    (when default-mark
+      (mark-pixel wand 10 19))
+    (fn wand)))
+
+(def-fixture get-non-alpha (&key (width 40) (height 30) (default-mark t))
+  #+nil
+  (progn
+    (asdf:perform
+     'asdf:load-op
+     (asdf:find-component :screenshotbot.magick "magick-native"))
+    (load-magick-native :force t))
+  (with-single-pixel-image (:wand wand :height height :width width
+                            :default-mark t)
+    (&body)))
 
 (test get-non-alpha-pixels ()
   (with-fixture get-non-alpha ()
@@ -481,7 +491,7 @@
                    (1479 21 8 21)
                    (1316 41 28 14)
                    (1437 52 46 10))))
-      (mark-pixel 1261 50)
+      (mark-pixel wand 1261 50)
       (let ((res (get-non-alpha-pixels wand
                                        :masks
                                        (loop for mask in masks
@@ -493,3 +503,17 @@
                                                             :height (fourth mask))))))
         (is (equalp #2A((10 19))
                     res))))))
+
+(test in-place-comparison
+  (with-single-pixel-image (:wand wand :height 30 :width 30)
+    (with-single-pixel-image (:wand wand2 :height 50 :width 50)
+      (with-image-comparison (wand wand2 :in-place-p t
+                                         :same-p same-p)
+        (is-false same-p)))))
+
+(test in-place-comparison-reverse-order
+  (with-single-pixel-image (:wand wand2 :height 30 :width 30)
+    (with-single-pixel-image (:wand wand :height 50 :width 50)
+      (with-image-comparison (wand wand2 :in-place-p t
+                                         :same-p same-p)
+        (is-false same-p)))))
