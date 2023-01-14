@@ -77,14 +77,17 @@
 (defun ensure-db ()
   (util:or-setf
    *db*
-   (sqlite:connect
-    (ensure-directories-exist
-     (path:catfile (object-store) "sqlite/image-comparisons.db")))
+   (let ((db
+          (sqlite:connect
+           (ensure-directories-exist
+            (path:catfile (object-store) "sqlite/image-comparisons.db")))))
+     (prepare-schema db)
+     db)
    :thread-safe t))
 
-(defun prepare-schema ()
+(defun prepare-schema (db)
   (sqlite:execute-non-query
-   *db*
+   db
    ;; before, after, and result are OIDs to images represented as
    ;; strings.
    "create table if not exists comparisons
@@ -93,9 +96,20 @@
       identical_p int,
       result text not null)")
   (sqlite:execute-non-query
-   *db*
+   db
    "create unique index if not exists comparisons_image_lookup
     on comparisons (before, after, masks)"))
+
+(defun render-masks (masks)
+  "Create a rendering of masks for use as a key in the sqlite table."
+  (with-output-to-string (out)
+    (loop for mask in masks
+          do (format out
+                     "(~a ~a ~a ~a)"
+                     (mask-rect-left mask)
+                     (mask-rect-top mask)
+                     (mask-rect-width mask)
+                     (mask-rect-height mask)))))
 
 (with-transient-copy (transient-image-comparison abstract-image-comparison)
   (defclass image-comparison (store-object)
@@ -118,6 +132,40 @@
              :accessor image-comparison-result
              :documentation "The final image object"))
     (:metaclass persistent-class)))
+
+(defmethod sqlite-write-comparison ((self abstract-image-comparison))
+  (sqlite:execute-non-query
+   (ensure-db)
+   "insert or replace into comparisons
+      (before, after, masks, identical_p, result)
+ values (?, ?, ?, ?, ?)
+"
+   (oid (image-comparison-before self))
+   (oid (image-comparison-after self))
+   (render-masks (image-comparison-masks self))
+   (if (identical-p self) 1 0)
+   (oid (image-comparison-result self)))
+  self)
+
+;; (mapc #'sqlite-write-comparison (bknr.datastore::class-instances 'image-comparison))
+
+(defun sqlite-read-comparison (before after masks)
+  (multiple-value-bind (identical-as-num result-oid)
+      (sqlite:execute-one-row-m-v
+       (ensure-db)
+         "select identical_p, result from comparisons where
+    before = ? and after = ? and masks = ?"
+         (oid before)
+         (oid after)
+         (render-masks masks))
+    (when identical-as-num
+      (assert (member identical-as-num '(0 1)))
+      (make-instance 'transient-image-comparison
+                     :before before
+                     :after after
+                     :masks masks
+                     :identical-p (= 1 identical-as-num)
+                     :result (util:find-by-oid result-oid)))))
 
 (defun transient-objects-for-before (before)
   (push-event :image-comparison.load-transient)
@@ -219,7 +267,7 @@ If the images are identical, we return t, else we return NIL."
   returns true if the images are completely identical, or nil
   otherwise"
   (flet ((find ()
-           (find-existing-image-comparison before after masks)))
+           (sqlite-read-comparison before after masks)))
     (or
      (bt:with-lock-held (*lock*)
        (find))
@@ -236,12 +284,13 @@ If the images are identical, we return t, else we return NIL."
               (find)
               (progn
                 (log:info "making new image-comparison")
-                (make-instance 'image-comparison
-                               :before before
-                               :after after
-                               :masks masks
-                               :identical-p identical-p
-                               :result image))))))))))
+                (sqlite-write-comparison
+                 (make-instance 'transient-image-comparison
+                                :before before
+                                :after after
+                                :masks masks
+                                :identical-p identical-p
+                                :result image)))))))))))
 
 (with-auto-restart ()
   (defmethod recreate-image-comparison ((self image-comparison))

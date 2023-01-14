@@ -107,7 +107,9 @@
       ;; this will create a new image-comparison
       (let ((result (find-image-comparison-on-images before after nil)))
         (is-true result)
-        (is (eql result (find-image-comparison-on-images before after nil)))))))
+        ;; We used to test that this object is the same as before, but
+        ;; with sqlite that might no longer be the case.
+        (is-true (find-image-comparison-on-images before after nil))))))
 
 
 (test find-existing-image-comparison
