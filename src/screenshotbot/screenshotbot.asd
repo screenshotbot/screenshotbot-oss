@@ -88,6 +88,7 @@
                :sqlite
                :zs3
                :random-sample
+               :gatekeeper
                :pem
                ;;:cljwt-custom ;; custom comes from clath, for rs-256
                :do-urlencode
