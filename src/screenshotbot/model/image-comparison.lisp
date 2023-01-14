@@ -69,8 +69,9 @@
     (setf *db* nil)))
 
 #+lispworks
-(lw:define-action "Delivery Actions" "Clean image-comparison db"
-  'clean-db)
+(ignore-errors ;; When loading this as a fasl in a delivered image, this throws
+ (lw:define-action "Delivery Actions" "Clean image-comparison db"
+   'clean-db))
 
 (add-datastore-cleanup-hook 'clean-db)
 
