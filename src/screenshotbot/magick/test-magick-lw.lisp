@@ -10,6 +10,10 @@
         #:fiveam-matchers
         #:screenshotbot/mask-rect-api)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:magick-get-image-width
+                #:magick-get-image-height
+                #:resize-image
+                #:save-as-webp
                 #:pixel-set-color
                 #:pixel-set-alpha
                 #:set-wand-alpha-channel
@@ -517,3 +521,24 @@
       (with-image-comparison (wand wand2 :in-place-p t
                                          :same-p same-p)
         (is-false same-p)))))
+
+(test resize-never-upsizes-webp
+  (with-single-pixel-image (:wand wand :height 10 :width 10)
+    (uiop:with-temporary-file (:pathname input :type "webp")
+      (save-as-webp wand input)
+      (uiop:with-temporary-file (:pathname dest :type "webp")
+        (resize-image input :output dest :size "30x20")
+        (with-wand (res :file dest)
+          (is (eql 10 (magick-get-image-height res)))
+          (is (eql 10 (magick-get-image-width res))))))))
+
+
+(test resize-never-upsizes-png
+  (with-single-pixel-image (:wand wand :height 10 :width 10)
+    (uiop:with-temporary-file (:pathname input :type "png")
+      (save-as-webp wand input)
+      (uiop:with-temporary-file (:pathname dest :type "webp")
+        (resize-image input :output dest :size "30x20")
+        (with-wand (res :file dest)
+          (is (eql 10 (magick-get-image-height res)))
+          (is (eql 10 (magick-get-image-width res))))))))

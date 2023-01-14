@@ -613,11 +613,14 @@
            (> height old-height))
           ;; The image is already an appropriate size and format, just
           ;; hardlink it
+          (if (path:-e output)
+              (delete-file output))
           (copy-file-fast input output))
          (t
           ;; We really have to do the resize...
           (let ((scale (min (/ width old-width)
-                            (/ height old-height))))
+                            (/ height old-height)
+                            1)))
            (check-boolean
             (screenshotbot-resize
              wand
