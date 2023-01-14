@@ -125,6 +125,9 @@
       :documentation "deprecated list of images. do not use."))
     (:metaclass persistent-class)))
 
+(defmethod print-object ((self company) out)
+  (format out "#<COMPANY ~a>" (company-name self)))
+
 (let ((lock (bt:make-lock "jira-config")))
   (defmethod jira-config ((company company))
     "For historical reasons, our company links to the jira config. We'll get rid of this in a future version"

@@ -15,8 +15,21 @@
                 #:persistent-class)
   (:import-from #:bknr.indices
                 #:unique-index)
+  (:import-from #:bknr.datastore
+                #:with-transaction)
+  (:import-from #:bknr.datastore
+                #:class-instances)
   (:export
-   #:check))
+   #:check
+   #:create
+   #:show
+   #:insert-acl
+   #:enable
+   #:disable
+   #:normalize-object
+   #:allow
+   #:deny
+   #:show-all))
 (in-package :gatekeeper/gatekeeper)
 
 (with-class-validation
@@ -25,13 +38,21 @@
            :reader gk-name
            :index-type unique-index
            :index-initargs (:test 'equal)
-           :index-reader gk-with-name)
+           :index-reader %gk-with-name)
      (default-value :initform nil
                     :initarg :default
                     :accessor gk-default-value)
      (access-controls :initform nil
                       :accessor access-controls))
     (:metaclass persistent-class)))
+
+(defun gk-with-name (name)
+  (%gk-with-name (string name)))
+
+(defun gk-with-name! (name)
+  (let ((ret (gk-with-name name)))
+    (assert ret)
+    ret))
 
 (with-class-validation
   (defclass access-control (store-object)
@@ -44,7 +65,7 @@
     (:metaclass persistent-class)))
 
 (defun check (name object &key default)
-  (let ((gk (gk-with-name (string name))))
+  (let ((gk (gk-with-name name)))
     (cond
       (gk
        (loop for acl in (access-controls gk)
@@ -54,3 +75,63 @@
                 (return (gk-default-value gk))))
       (t
        default))))
+
+(defun create (name &key default)
+  (make-instance
+   'gatekeeper :name (string name) :default default))
+
+(defun enable (name &key (default t))
+  (let ((gk (gk-with-name! name)))
+   (with-transaction ()
+     (setf (gk-default-value gk) default))))
+
+(defun disable (name)
+  (enable name :default nil))
+
+(defun show-gk (gk)
+  (cond
+    (gk
+     (format t "~a~%" (gk-name gk))
+     (format t "  Default value: ~a~%" (gk-default-value gk))
+     (format t "  ~a ACL items~%" (length (access-controls gk)))
+     (loop for acl in (access-controls gk)
+           do
+              (format t "  | ~a: ~s~%"
+                      (string (acl-type acl))
+                      (access-control-objects acl))))
+    (t
+     (log:info "No such gk"))))
+
+(defun show (name)
+  (let ((gk (gk-with-name (string name))))
+    (show-gk gk)))
+
+(defun show-all ()
+  (loop for gk in (class-instances 'gatekeeper)
+        if (ignore-errors (gk-name gk))
+        do (show-gk gk)))
+
+
+(defmethod normalize-object (obj)
+  obj)
+
+(defmethod normalize-object :around (obj)
+  (let ((ret (call-next-method)))
+    (when (or (null ret) (keywordp ret))
+      (error "~a could not be normalized" ret))
+    ret))
+
+(defun push-acl (name type obj)
+  (let ((gk (gk-with-name! name)))
+    (let ((acl (make-instance 'access-control
+                              :type type
+                              :objects (list (normalize-object obj)))))
+      (with-transaction ()
+
+        (push acl (access-controls gk))))))
+
+(defun allow (name obj)
+  (push-acl name :allow obj))
+
+(defun deny (name obj)
+  (push-acl name :deny obj))
