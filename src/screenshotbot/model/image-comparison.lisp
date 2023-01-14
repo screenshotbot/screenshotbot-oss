@@ -148,8 +148,6 @@
    (oid (image-comparison-result self)))
   self)
 
-;; (mapc #'sqlite-write-comparison (bknr.datastore::class-instances 'image-comparison))
-
 (defun sqlite-read-comparison (before after masks)
   (multiple-value-bind (identical-as-num result-oid)
       (sqlite:execute-one-row-m-v
