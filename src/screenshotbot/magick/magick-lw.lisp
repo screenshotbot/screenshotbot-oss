@@ -604,7 +604,7 @@
          (mapcar 'parse-integer (str:split "x" size)))
         (t size))
     (with-wand (wand :file input)
-      (let ((old-width (magick-get-image-height wand))
+      (let ((old-width (magick-get-image-width wand))
             (old-height (magick-get-image-height wand)))
        (cond
          ((and

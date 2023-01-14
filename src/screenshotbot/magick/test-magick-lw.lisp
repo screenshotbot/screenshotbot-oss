@@ -542,3 +542,13 @@
         (with-wand (res :file dest)
           (is (eql 10 (magick-get-image-height res)))
           (is (eql 10 (magick-get-image-width res))))))))
+
+(test scales-both-dimensions
+  (with-single-pixel-image (:wand wand :height 10 :width 30)
+    (uiop:with-temporary-file (:pathname input :type "webp")
+      (save-as-webp wand input)
+      (uiop:with-temporary-file (:pathname dest :type "webp")
+        (resize-image input :output dest :size "5x5")
+        (with-wand (res :file dest)
+          (is (eql 2 (magick-get-image-height res)))
+          (is (eql 5 (magick-get-image-width res))))))))
