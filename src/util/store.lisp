@@ -32,12 +32,16 @@
    #:validate-class
    #:with-class-validation
    #:def-store-local
-   #:location-for-oid))
+   #:location-for-oid
+   #:add-datastore-cleanup-hook))
 (in-package :util/store)
 
 (defvar *object-store*)
 
 (defvar *datastore-hooks* nil)
+
+(defvar *datastore-cleanup-hooks* nil)
+
 (defvar *calledp* nil)
 
 (defun add-datastore-hook (fn &key immediate)
@@ -49,9 +53,15 @@
    (immediate
     (funcall fn))))
 
+(defun add-datastore-cleanup-hook (fn)
+  (pushnew fn *datastore-cleanup-hooks*))
+
 (defun dispatch-datastore-hooks ()
   (mapc 'funcall *datastore-hooks*)
   (setf *calledp* t))
+
+(defun dispatch-datastore-cleanup-hooks ()
+  (mapc 'funcall *datastore-cleanup-hooks*))
 
 (defun object-store ()
   (let* ((dir *object-store*)
@@ -73,6 +83,9 @@
           (make-instance 'file-lock
                          :file (path:catfile directory
                                              "store.lock")))))
+
+(defmethod bknr.datastore::close-store-object :before ((store safe-mp-store))
+  (dispatch-datastore-cleanup-hooks))
 
 #-mswindows
 (defmethod bknr.datastore::close-store-object :after ((store safe-mp-store))

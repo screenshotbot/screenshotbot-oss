@@ -30,6 +30,8 @@
                 #:oid
                 #:oid-array)
   (:import-from #:util/store
+                #:add-datastore-cleanup-hook
+                #:object-store
                 #:location-for-oid)
   (:import-from #:bknr.datastore
                 #:class-instances)
@@ -59,6 +61,42 @@
 
 (defvar *lock* (bt:make-lock "image-comparison"))
 
+(defvar *db* nil)
+
+(defun clean-db ()
+  (when *db*
+    (sqlite:disconnect *db*)
+    (setf *db* nil)))
+
+#+lispworks
+(lw:define-action "Delivery Actions" "Clean image-comparison db"
+  'clean-db)
+
+(add-datastore-cleanup-hook 'clean-db)
+
+(defun ensure-db ()
+  (util:or-setf
+   *db*
+   (sqlite:connect
+    (ensure-directories-exist
+     (path:catfile (object-store) "sqlite/image-comparisons.db")))
+   :thread-safe t))
+
+(defun prepare-schema ()
+  (sqlite:execute-non-query
+   *db*
+   ;; before, after, and result are OIDs to images represented as
+   ;; strings.
+   "create table if not exists comparisons
+     (before text not null, after text not null,
+      masks text not null,
+      identical_p int,
+      result text not null)")
+  (sqlite:execute-non-query
+   *db*
+   "create unique index if not exists comparisons_image_lookup
+    on comparisons (before, after, masks)"))
+
 (with-transient-copy (transient-image-comparison abstract-image-comparison)
   (defclass image-comparison (store-object)
     ((before :initarg :before
@@ -77,7 +115,8 @@
                   :initarg :identical-p
                   :documentation "A result inducating that the images differ only in exif data")
      (result :initarg :result
-             :accessor image-comparison-result))
+             :accessor image-comparison-result
+             :documentation "The final image object"))
     (:metaclass persistent-class)))
 
 (defun transient-objects-for-before (before)

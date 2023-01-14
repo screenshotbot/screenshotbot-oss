@@ -14,6 +14,8 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:screenshotbot/model/image-comparison
+                #:ensure-db
+                #:*db*
                 #:find-old-image-comparisons
                 #:image-comparison
                 #:do-image-comparison)
@@ -63,6 +65,14 @@
                                         :name "foobar"
                                         :image image))))
              (&body))))))))
+
+(test ensure-db-multiple-times
+  (with-fixture state ()
+    (finishes (ensure-db)))
+  (is (eql nil *db*))
+  (with-fixture state ()
+    (finishes
+     (ensure-db))))
 
 (test do-image-comparison
   (with-fixture state ()
