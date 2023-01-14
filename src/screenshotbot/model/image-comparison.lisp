@@ -166,55 +166,10 @@
                      :identical-p (= 1 identical-as-num)
                      :result (util:find-by-oid result-oid)))))
 
-(defun transient-objects-for-before (before)
-  (push-event :image-comparison.load-transient)
-  (let ((file (location-for-before-image before)))
-    (when (path:-e file)
-      (cl-store:restore file))))
-
-(defmethod make-transient-clone ((self image-comparison))
-  (make-instance
-   'transient-image-comparison
-    :before (make-transient-clone (image-comparison-before self))
-    :after (make-transient-clone (image-comparison-after self))
-    :masks (mapcar #'make-transient-clone (image-comparison-masks self))
-    :identical-p (identical-p self)
-    :result (make-transient-clone (image-comparison-result self))))
-
-(defmethod location-for-before-image ((self image))
-  (location-for-oid #P "cl-store/image-comparisons/"
-                    (oid-array self)))
-
-(defmethod make-transient ((self image-comparison))
-  "Persist the image comparison to disk, and delete the bknr object"
-  (let ((old (transient-objects-for-before (image-comparison-before self))))
-    (let ((filename (location-for-before-image (image-comparison-before self))))
-      (uiop:with-staging-pathname (filename)
-        (cl-store:store (list* (make-transient-clone self)
-                               old)
-                        filename))
-      (assert (path:-e (location-for-before-image (image-comparison-before self))))
-      (log:info "Deleting: ~s" self)
-      (bknr.datastore:delete-object self))))
-
-;; (make-transient (bknr.datastore:store-object-with-id 701037))
-
-
-(defun find-old-image-comparisons ()
-  "Finds old BKNR objects that haven't been touched in a while. It uses
- the timestamp of te result image to determine if they have been
- created a while ago, so it's not 100% accurate, but good enough."
-  (let ((threshold (- (get-universal-time) (* 2 24 30 3600))))
-   (loop for ic in (store-objects-with-class 'image-comparison)
-         for result = (image-comparison-result ic)
-         if (with-local-image (file result)
-              (assert (path:-e file))
-              (< (file-write-date file) threshold))
-           collect ic)))
-
 (defun make-old-transient ()
-  (mapc #'make-transient (find-old-image-comparisons)))
+  (values))
 
+;; TODO: remove
 (def-cron make-old-transient (:minute 45 :hour 22)
   (make-old-transient))
 
@@ -241,21 +196,6 @@ If the images are identical, we return t, else we return NIL."
                                                      "622b7f178cf1c4cd0711c074")
                                                     (?. oid (company after-image))))))
             same-p))))))
-
-(defun find-existing-image-comparison (before after masks)
-  (flet ((find-in (list)
-           (loop for comparison in list
-                 if (and (string= (oid after) (oid (image-comparison-after comparison)))
-                         (equal (length masks) (length (image-comparison-masks comparison)))
-                         (every #'identity
-                                (loop for x in masks
-                                      for y in (image-comparison-masks comparison)
-                                      collect (mask= x y))))
-                   return comparison)))
-    (or
-     (find-in (%image-comparisons-for-before before))
-     (let ((transient-image-comparisons (transient-objects-for-before before)))
-       (find-in transient-image-comparisons)))))
 
 (defmethod find-image-comparison-on-images ((before image)
                                             (after image)

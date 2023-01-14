@@ -16,7 +16,6 @@
   (:import-from #:screenshotbot/model/image-comparison
                 #:ensure-db
                 #:*db*
-                #:find-old-image-comparisons
                 #:image-comparison
                 #:do-image-comparison)
   (:import-from #:screenshotbot/model/image
@@ -29,10 +28,7 @@
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
   (:import-from #:screenshotbot/model/image-comparison
-                #:transient-objects-for-before
-                #:make-transient
                 #:%image-comparisons-for-before
-                #:find-existing-image-comparison
                 #:find-image-comparison-on-images)
   (:import-from #:screenshotbot/installation
                 #:installation
@@ -112,72 +108,9 @@
         (is-true (find-image-comparison-on-images before after nil))))))
 
 
-(test find-existing-image-comparison
-  (with-fixture state ()
-    (let ((before (make-image :pathname im1))
-          (after (make-image :pathname im2)))
-      (is (null (find-existing-image-comparison before after nil)))
-      (let ((expected (make-instance 'image-comparison
-                                      :before before
-                                      :after after
-                                      :masks nil)))
-        (is (eql expected (find-existing-image-comparison
-                           before after nil)))))))
-
-(test find-existing-image-comparison-transient
-  (with-fixture state ()
-    (let ((before (make-image :pathname im1))
-          (after (make-image :pathname im2)))
-      (is (null (find-existing-image-comparison before after nil)))
-      (let ((expected (make-instance 'image-comparison
-                                      :before before
-                                      :after after
-                                      :result (make-image :pathname im3)
-                                      :identical-p t
-                                      :masks (list
-                                              (make-instance 'mask-rect
-                                                             :left 0
-                                                             :top 0
-                                                             :width 10
-                                                             :height 10)))))
-        (is (equal 1 (length (%image-comparisons-for-before before))))
-        (make-transient expected)
-        (is (equal 1 (length (transient-objects-for-before before))))
-        (is (equal 0 (length (%image-comparisons-for-before before))))))))
-
 (def-easy-macro with-file-copy (&binding result file &fn fn)
   (uiop:with-temporary-file (:pathname res :stream s)
     (close s)
     (delete-file res)
     (fad:copy-file file res)
     (funcall fn (namestring res))))
-
-#+lispworks
-(fli:define-c-struct timeval
-    (sec  :long
-          :initarg :sec)
-  (usec :long
-        :initarg :usec))
-
-#+lispworks
-(fli:define-foreign-function utimes
-    ((filename (:reference-pass :ef-mb-string))
-     (times (:c-array timeval 2)))
-  :result-type :int)
-
-#+(and :lispworks (not :mswindows))
-(test find-old-image-comparisons
-  (with-fixture state ()
-    (fli:with-dynamic-foreign-objects ((times timeval :nelems 2 :fill 0))
-      (with-file-copy (file-1 im1)
-        (with-file-copy (file-2 im2)
-          (let* ((im-1 (make-image :pathname file-1))
-                 (cmp-1 (make-instance 'image-comparison
-                                       :result im-1))
-                 (cmp-2 (make-instance 'image-comparison
-                                       :result (make-image :pathname file-2))))
-            (with-local-image (pathname im-1)
-              (utimes (namestring pathname) times))
-            (is (equal (list cmp-1)
-                       (find-old-image-comparisons)))
-            (pass)))))))
