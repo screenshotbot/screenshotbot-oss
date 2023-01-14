@@ -13,6 +13,7 @@
                #:screenshotbot/mask-rect-api
                #:screenshotbot.magick.build
                #:serapeum
+               #:util/copy-file
                #:alexandria)
   :components ((:file "magick")
                ("screenshotbot/magick/build:magick-cl-source-file"

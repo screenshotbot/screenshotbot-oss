@@ -34,6 +34,10 @@
                 #:with-screenshotbot-kernel)
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
+  (:import-from #:screenshotbot/user-api
+                #:current-company)
+  (:import-from #:screenshotbot/magick/magick-lw
+                #:resize-image)
   (:export
    #:handle-resized-image))
 (in-package :screenshotbot/dashboard/image)
@@ -88,12 +92,18 @@
               (unless (uiop:file-exists-p output-file)
                 (with-local-image (input image)
                   (uiop:with-staging-pathname (output-file)
-                    (run-magick
-                     (list "convert" input
-                           "-resize"
-                           (format nil "~a>" size)
-                           "-strip"
-                           output-file)))))
+                    (cond
+                      ((gk:check :native-image-resize (current-company) :default t)
+                       (resize-image input
+                                     :output output-file
+                                     :size size))
+                      (t
+                       (run-magick
+                        (list "convert" input
+                              "-resize"
+                              (format nil "~a>" size)
+                              "-strip"
+                              output-file)))))))
               (respond output-file)))))))))
 
 (defun build-resized-image (image size-name &key (type :webp))

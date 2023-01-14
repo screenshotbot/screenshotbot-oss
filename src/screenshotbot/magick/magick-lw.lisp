@@ -22,6 +22,8 @@
                 #:push-event)
   (:import-from #:screenshotbot/magick/build
                 #:magick-lib-suffix)
+  (:import-from #:util/copy-file
+                #:copy-file-fast)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#-lispworks #:fli #:util/fake-fli))
@@ -428,8 +430,9 @@
       (compare-images wand1 wand2))))
 
 
-(defun save-as-webp (wand output)
-  (check-boolean (magick-set-option wand "webp:lossless" "true") wand)
+(defun save-as-webp (wand output &key (lossless t))
+  (when lossless
+   (check-boolean (magick-set-option wand "webp:lossless" "true") wand))
   (check-boolean (magick-strip-image wand) wand)
   (check-boolean (magick-write-image wand (namestring output)) wand))
 
@@ -455,12 +458,13 @@
     (list
      (magick-get-image-width wand)
      (magick-get-image-height wand)
-     (let ((format (magick-get-image-format wand)))
-       (unwind-protect
-            (fli:convert-from-foreign-string format)
-         (magick-relinquish-memory format))))))
+     (get-image-format wand))))
 
-
+(defun get-image-format (wand)
+  (let ((format (magick-get-image-format wand)))
+    (unwind-protect
+         (fli:convert-from-foreign-string format)
+      (magick-relinquish-memory format))))
 
 (fli:define-c-struct pixel
     (x :size-t)
@@ -586,3 +590,39 @@
     (unwind-protect
          (funcall fn pwand)
       (clear-pixel-wand pwand))))
+
+(fli:define-foreign-function screenshotbot-resize
+    ((wand (:pointer wand))
+     (width :size-t)
+     (height :size-t))
+  :result-type :boolean)
+
+(defun resize-image (input &key output size)
+  (destructuring-bind (width height)
+      (cond
+        ((stringp size)
+         (mapcar 'parse-integer (str:split "x" size)))
+        (t size))
+    (with-wand (wand :file input)
+      (let ((old-width (magick-get-image-height wand))
+            (old-height (magick-get-image-height wand)))
+       (cond
+         ((and
+           (string-equal (get-image-format wand) "webp")
+           (> width old-width)
+           (> height old-height))
+          ;; The image is already an appropriate size and format, just
+          ;; hardlink it
+          (copy-file-fast input output))
+         (t
+          ;; We really have to do the resize...
+          (let ((scale (min (/ width old-width)
+                            (/ height old-height))))
+           (check-boolean
+            (screenshotbot-resize
+             wand
+             (ceiling (* scale old-width))
+             (ceiling (* scale old-height)))
+            wand))
+          (save-as-webp wand output
+                        :lossless nil)))))))

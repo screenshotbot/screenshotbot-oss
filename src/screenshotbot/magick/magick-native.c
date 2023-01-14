@@ -326,3 +326,20 @@ cleanup:
 		return changed;
 		//return -processedRows;
 }
+
+
+extern MagickBooleanType
+screenshotbot_resize(MagickWand *wand,
+                     size_t width,
+                     size_t height) {
+        return MagickResizeImage(
+                wand,
+                width,
+                height,
+                /* this is the only reason we're compiling this */
+                LanczosFilter
+#if MagickLibVersion < 0x700
+				,1.0
+#endif
+		 );
+}
