@@ -186,44 +186,6 @@
      (setf (recorder-previous-run run) nil))
     (setf (active-run channel branch) previous-run)))
 
-(defun migrate-recorder-runs ()
-  (flet ((listify (X)
-           (if (listp x) x (list x))))
-   (let ((all-runs (store-objects-with-class 'recorder-run)))
-     (ensure-slot-boundp all-runs 'screenshots)
-     (loop for run in all-runs
-           do
-              (let* ((screenshots (remove-if 'null (listify (recorder-run-screenshots run))))
-                     (screenshots (mapcar 'screenshot-get-canonical screenshots)))
-                (log:info "Checking: ~S" run)
-                (unless (equal (recorder-run-screenshots run)
-                               screenshots)
-                  (log:info "updating screenshots for: ~S" run)
-                  (with-transaction ()
-                    (setf (recorder-run-screenshots run) screenshots))))))))
-
-
-#+nil ;; needs screenshot.lisp to be loaded
-(defun migrate-delete-unused-screenshots ()
-  (let ((used (make-hash-table :test 'eql))
-        (ctr 0))
-    (loop for run in (store-objects-with-class 'recorder-run)
-          do
-             (let ((screenshots (recorder-run-screenshots run)))
-               (loop for s in screenshots do
-                 (setf (gethash s used) t))))
-    (loop for s in (store-objects-with-class 'screenshotbot/model/screenshot:screenshot)
-          do
-             (progn
-               (unless (gethash s used)
-                 (log:info "Deleting (~a) ~S" ctr s)
-                 (bknr.datastore:delete-object s)
-                 (incf ctr))))
-    ctr))
-
-;; (migrate-recorder-runs)
-;; (migrate-delete-unused-screenshots)
-
 (defmethod model-id ((inst store-object))
   (store-object-id inst))
 
