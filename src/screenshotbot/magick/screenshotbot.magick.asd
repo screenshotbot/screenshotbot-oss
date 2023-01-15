@@ -16,9 +16,6 @@
                #:util/copy-file
                #:alexandria)
   :components ((:file "magick")
-               ("screenshotbot/magick/build:magick-cl-source-file"
-                "memory"
-                :if-feature :lispworks)
                ("screenshotbot/magick/build:lib-source-file"
                 "magick-native")
                ("screenshotbot/magick/build:magick-cl-source-file" "ffi-7")
@@ -33,6 +30,4 @@
                :fiveam-matchers
                :util/digests
                :screenshotbot.magick)
-  :components (("screenshotbot/magick/build:magick-cl-source-file" "test-magick-lw")
-               ("screenshotbot/magick/build:magick-cl-source-file"
-                "test-memory" :if-feature (:and :lispworks :linux))))
+  :components (("screenshotbot/magick/build:magick-cl-source-file" "test-magick-lw")))

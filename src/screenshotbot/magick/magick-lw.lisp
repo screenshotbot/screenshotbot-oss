@@ -294,8 +294,6 @@
 (defun init-magick-wand ()
   (unless *magick-wand-inited*
     (register-magick-wand)
-    #+lispworks
-    (screenshotbot/magick/memory:update-magick-memory-methods)
     (magick-wand-genesis)
     (update-resource-limits)
     (setf *magick-wand-inited* t)))
