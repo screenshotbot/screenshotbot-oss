@@ -9,6 +9,25 @@
 ;;; ...
 ;;; restarts mal richtig machen
 
+#+lispworks
+(defvar *global-lock* (mp:make-lock :sharing t :recursivep t)
+  "A global lock that will lock all writes while classes/indexes are
+being reinitialized")
+
+(defmacro with-sharing-lock (&body body)
+  #+lispworks
+  `(mp:with-sharing-lock (*global-lock*)
+     ,@body)
+  #-lispworks
+  `(progn ,@body))
+
+(defmacro with-exclusive-lock (&body body)
+  #+lispworks
+  `(mp:with-exclusive-lock (*global-lock*)
+    ,@body)
+  #-lispworks
+  `(progn ,@body))
+
 (defclass indexed-class (standard-class)
   ((indices :initarg :indices :initform nil
 	    :accessor indexed-class-indices)
@@ -234,8 +253,9 @@ also index subclasses of the class to which the slot belongs, default is T")
 
 #+(or allegro lispworks)
 (defmethod finalize-inheritance :after ((class indexed-class))
-  (compute-class-indices class (indexed-class-index-definitions class))
-  (reinitialize-class-indices class))
+  (with-exclusive-lock
+    (compute-class-indices class (indexed-class-index-definitions class))
+    (reinitialize-class-indices class)))
 
 (defun validate-index-declaration (class indices)
   (dolist (index indices)
@@ -253,13 +273,15 @@ also index subclasses of the class to which the slot belongs, default is T")
 
 #+(or allegro cmu openmcl sbcl lispworks)
 (defmethod initialize-instance :after ((class indexed-class) &key)
-  (compute-class-indices class (indexed-class-index-definitions class))
-  (reinitialize-class-indices class))
+  (with-exclusive-lock
+    (compute-class-indices class (indexed-class-index-definitions class))
+    (reinitialize-class-indices class)))
 
 #+(or allegro cmu openmcl sbcl lispworks)
 (defmethod reinitialize-instance :after ((class indexed-class) &key)
-  (compute-class-indices class (indexed-class-index-definitions class))
-  (reinitialize-class-indices class))
+  (with-exclusive-lock
+    (compute-class-indices class (indexed-class-index-definitions class))
+    (reinitialize-class-indices class)))
 
 (defmethod reinitialize-class-indices
     ((class indexed-class))
@@ -362,80 +384,82 @@ also index subclasses of the class to which the slot belongs, default is T")
 (defvar *indices-remove-p* t)
 
 (defmethod make-instance :around ((class indexed-class) &key)
-  (let* ((*in-make-instance-p* t)
-	 (object (call-next-method))
-	 (added-indices)
-	 (error t))
-    (unwind-protect
-	 (progn
-	   (dolist (index (mapcar #'index-holder-index (indexed-class-indices class)))
-	     (index-add index object)
-	     (push index added-indices))
-	   (setf error nil)
-	   object)
-      (when error
-	(dolist (index added-indices)
-	  (index-remove index object))))
-    object))
+  (with-sharing-lock
+   (let* ((*in-make-instance-p* t)
+	      (object (call-next-method))
+	      (added-indices)
+	      (error t))
+     (unwind-protect
+	      (progn
+	        (dolist (index (mapcar #'index-holder-index (indexed-class-indices class)))
+	          (index-add index object)
+	          (push index added-indices))
+	        (setf error nil)
+	        object)
+       (when error
+	     (dolist (index added-indices)
+	       (index-remove index object))))
+     object)))
 
 
 (defmethod (setf slot-value-using-class) :around
     (newvalue (class indexed-class) object (slot index-effective-slot-definition))
   (declare (ignore newvalue))
 
-  (when (eql (slot-definition-name slot) 'destroyed-p)
-    (return-from slot-value-using-class  (call-next-method)))
+  (with-sharing-lock
+    (when (eql (slot-definition-name slot) 'destroyed-p)
+      (return-from slot-value-using-class  (call-next-method)))
 
-  (when *in-make-instance-p*
-    (return-from slot-value-using-class (call-next-method)))
+    (when *in-make-instance-p*
+      (return-from slot-value-using-class (call-next-method)))
 
-  (let* ((indices (index-effective-slot-definition-indices slot))
-	 (slot-name (slot-definition-name slot))
-	 (previous-slot-boundp (slot-boundp object slot-name))
-	 (previous-slot-value (when previous-slot-boundp
-				(slot-value object slot-name))))
+    (let* ((indices (index-effective-slot-definition-indices slot))
+	       (slot-name (slot-definition-name slot))
+	       (previous-slot-boundp (slot-boundp object slot-name))
+	       (previous-slot-value (when previous-slot-boundp
+				                  (slot-value object slot-name))))
 
-    #+nil
-    (format t "indices ~A~%" indices)
-
-    (when (and previous-slot-boundp
-	       *indices-remove-p*)
-      (let ((changed-indices)
-	    (error t))
-	(unwind-protect
-	     (progn
-	       (dolist (index indices)
-		 (index-remove index object)
-		 (push index changed-indices))
-	       (setf error nil))
-	  (when error
-	    (dolist (index changed-indices)
-	      (index-add index object))))))
-
-    (let ((result (call-next-method)))
       #+nil
-      (format t "set slot ~A of ~a to ~A, value is ~a~%"
-	      (slot-definition-name slot)
-	      object newvalue
-	      (slot-value object (slot-definition-name slot)))
+      (format t "indices ~A~%" indices)
 
-      (when (slot-boundp object (slot-definition-name slot))
-	(let ((error t)
-	      (changed-indices nil))
-	  (unwind-protect
-	       (progn
-		 (dolist (index indices)
-		   (index-add index object)
-		   (push index changed-indices))
-		 (setf error nil))
-	    (when error
-	      (dolist (index changed-indices)
-		(index-remove index object))
-	      (let ((*indices-remove-p* nil))
-		(if previous-slot-boundp
-		    (setf (slot-value object slot-name) previous-slot-value)
-		    (slot-makunbound object slot-name)))))))
-      result)))
+      (when (and previous-slot-boundp
+	             *indices-remove-p*)
+        (let ((changed-indices)
+	          (error t))
+	      (unwind-protect
+	           (progn
+	             (dolist (index indices)
+		           (index-remove index object)
+		           (push index changed-indices))
+	             (setf error nil))
+	        (when error
+	          (dolist (index changed-indices)
+	            (index-add index object))))))
+
+      (let ((result (call-next-method)))
+        #+nil
+        (format t "set slot ~A of ~a to ~A, value is ~a~%"
+	            (slot-definition-name slot)
+	            object newvalue
+	            (slot-value object (slot-definition-name slot)))
+
+        (when (slot-boundp object (slot-definition-name slot))
+	      (let ((error t)
+	            (changed-indices nil))
+	        (unwind-protect
+	             (progn
+		           (dolist (index indices)
+		             (index-add index object)
+		             (push index changed-indices))
+		           (setf error nil))
+	          (when error
+	            (dolist (index changed-indices)
+		          (index-remove index object))
+	            (let ((*indices-remove-p* nil))
+		          (if previous-slot-boundp
+		              (setf (slot-value object slot-name) previous-slot-value)
+		              (slot-makunbound object slot-name)))))))
+        result))))
 
 (defmethod slot-makunbound-using-class
     ((class indexed-class) object (slot index-effective-slot-definition))
@@ -491,7 +515,8 @@ also index subclasses of the class to which the slot belongs, default is T")
   (setf (slot-value object 'destroyed-p) t))
 
 (defmethod destroy-object ((object t))
-  (destroy-object-with-class (class-of object) object))
+  (with-sharing-lock
+    (destroy-object-with-class (class-of object) object)))
 
 (defmethod object-destroyed-p ((object t))
   (and object
