@@ -166,35 +166,36 @@ also index subclasses of the class to which the slot belongs, default is T")
 (defmethod compute-effective-slot-definition :around ((class indexed-class)
 						                              name direct-slots)
   (declare (ignore name))
-  (let* ((normal-slot (call-next-method))
-	     (direct-slots (remove-if-not #'(lambda (slot)
-					                      (typep slot 'index-direct-slot-definition))
-				                      direct-slots))
-	     (direct-slot (first direct-slots)))
-    (when (and (typep normal-slot 'index-effective-slot-definition)
-	           direct-slot
-	           (or (not (index-direct-slot-definition-class direct-slot))
-		           (eql (index-direct-slot-definition-class direct-slot) class)))
-      (setf (index-direct-slot-definition-class direct-slot) class)
-      (with-slots (index index-type index-initargs index-subclasses index-keys
-			       index-reader index-values index-mapvalues index-var) direct-slot
-	    (when (or index index-type)
-	      (let* ((name (slot-definition-name direct-slot))
-		         (index-object (make-index-object :index index
-						                          :type index-type
-						                          :initargs index-initargs
-						                          :reader index-reader
-						                          :keys index-keys
-						                          :values index-values
-						                          :mapvalues index-mapvalues
-						                          :var index-var
-						                          :slots (list name))))
-	        (when index-object
-	          (push (make-index-holder :class class :slots (list name)
-				                       :name name :index index-object
-				                       :index-subclasses index-subclasses)
-		            (indexed-class-indices class)))))))
-    normal-slot))
+  (with-exclusive-lock
+   (let* ((normal-slot (call-next-method))
+	      (direct-slots (remove-if-not #'(lambda (slot)
+					                       (typep slot 'index-direct-slot-definition))
+				                       direct-slots))
+	      (direct-slot (first direct-slots)))
+     (when (and (typep normal-slot 'index-effective-slot-definition)
+	            direct-slot
+	            (or (not (index-direct-slot-definition-class direct-slot))
+		            (eql (index-direct-slot-definition-class direct-slot) class)))
+       (setf (index-direct-slot-definition-class direct-slot) class)
+       (with-slots (index index-type index-initargs index-subclasses index-keys
+			        index-reader index-values index-mapvalues index-var) direct-slot
+	     (when (or index index-type)
+	       (let* ((name (slot-definition-name direct-slot))
+		          (index-object (make-index-object :index index
+						                           :type index-type
+						                           :initargs index-initargs
+						                           :reader index-reader
+						                           :keys index-keys
+						                           :values index-values
+						                           :mapvalues index-mapvalues
+						                           :var index-var
+						                           :slots (list name))))
+	         (when index-object
+	           (push (make-index-holder :class class :slots (list name)
+				                        :name name :index index-object
+				                        :index-subclasses index-subclasses)
+		             (indexed-class-indices class)))))))
+     normal-slot)))
 
 (defmethod compute-class-indices ((class indexed-class) class-indices)
   (unless (class-finalized-p class)
