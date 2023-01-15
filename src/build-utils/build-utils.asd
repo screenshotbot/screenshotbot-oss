@@ -8,6 +8,7 @@
   :serial t
   :depends-on (:tmpdir
                :alexandria
+               :parenscript ;; for js-package
                :str)
   :components ((:file "wild-module")
                (:file "common")

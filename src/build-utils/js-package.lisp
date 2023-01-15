@@ -14,7 +14,8 @@
            #:js-system
            #:js-library
            #:js-file
-           #:js-file))
+           #:js-file
+           #:ps-file))
 (in-package :build-utils/js-package)
 
 (defclass web-asset ()
@@ -30,12 +31,19 @@
   ()
   (:default-initargs :type "js"))
 
+(defclass ps-file (asdf:static-file)
+  ()
+  (:default-initargs :type "lisp"))
+
 (defmethod js-lib-input-files ((o compile-op) (m module))
   (loop for x in (component-children m) appending
         (js-lib-input-files o x)))
 
 (defmethod js-lib-input-files ((o compile-op) (j js-file))
   (asdf:input-files o j))
+
+(defmethod js-lib-input-files ((o compile-op) (p ps-file))
+  (asdf:output-files o p))
 
 (defmethod js-lib-input-files ((o compile-op) (j js-library))
   (call-next-method))
@@ -50,6 +58,18 @@
    ;; okay, where does this go?
    (format nil "~a.js" (string-downcase (component-name j)))
    (format nil "~a.js.map" (string-downcase (component-name j)))))
+
+(defmethod asdf:output-files ((o compile-op) (p ps-file))
+  (list
+   (format nil "~a.js" (string-downcase (component-name p)))))
+
+(defmethod asdf:perform ((o compile-op) (p ps-file))
+  (uiop:with-staging-pathname (output-file (asdf:output-file o p))
+   (with-open-file (out output-file :direction :output
+                                    :if-exists :supersede)
+     (write-string
+      (ps:ps-compile-file (car (asdf:input-files o p)))
+      out))))
 
 (defmethod asdf:perform ((o compile-op) (j js-system))
   (restart-case
