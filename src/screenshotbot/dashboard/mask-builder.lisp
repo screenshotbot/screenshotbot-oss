@@ -28,7 +28,8 @@
 
 (markup:enable-reader)
 
-(defun mask-editor (channel screenshot &key (redirect "/"))
+(defun mask-editor (channel screenshot &key (redirect "/")
+                                         overlay)
   (with-login ()
    (let* ((dim (image-dimensions screenshot))
           (mask (assoc-value (masks channel) (screenshot-name screenshot) :test 'equal))
@@ -46,7 +47,6 @@
                   (hex:safe-redirect redirect))))
      <app-template>
        <form action=save method= "POST" id= "mask-editor-form" >
-
          <div class= "page-title-box main-content" >
            <h4 class= "page-title" >Edit Masks</h4>
 
@@ -85,8 +85,11 @@
            <img id= "mask-editor-image"
                 src=(image-public-url (screenshot-image screenshot))
                 style= "display:none" />
+           ,(when overlay
+              <img id= "mask-editor-overlay"
+                   src= (image-public-url overlay)
+                   style= "display:none" />)
            <script src= "/assets/js/fabric.min.js" />
          </div>
        </form>
-
      </app-template>)))

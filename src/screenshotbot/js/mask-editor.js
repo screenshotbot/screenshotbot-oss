@@ -39,13 +39,27 @@ $(function () {
         console.log("Setting up mask editor");
         var canvas = new fabric.Canvas("mask-editor");
         var img = document.getElementById("mask-editor-image");
+        var overlay = document.getElementById("mask-editor-overlay");
         var imgInstance = new fabric.Image(img, {
             left: 0,
             top: 0,
             opacity: 0.7,
             selectable: false,
         });
+
+
         canvas.add(imgInstance);
+
+        if (overlay) {
+            var overlayInstance = new fabric.Image(overlay, {
+                left: 0,
+                top: 0,
+                selectable: false,
+            });
+            canvas.add(overlayInstance);
+        }
+
+
         canvas.on('selection:created', function (options) {
             console.log("options: ", options);
         });
@@ -66,7 +80,7 @@ $(function () {
                 {
                     lockRotation: true,
                     centeredRotation: true,
-                    fill: "#ff0000aa",
+                    fill: "#ffff00aa",
                 }
             ));
 

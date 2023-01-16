@@ -499,6 +499,13 @@
 
   </markup:merge-tag>)))
 
+(defun make-overlay-image (before after)
+  (let ((image-comparison-job (make-instance 'image-comparison-job
+     :before-image before
+     :after-image after)))
+     (image-comparison-result
+      (prepare-image-comparison-file image-comparison-job))))
+
 (defun render-change-group (group run script-name &key search)
   <div class= "col-12">
   <div class= "card mb-3">
@@ -531,7 +538,8 @@
           </li>
           <li>
             <a href= (nibble (:name :mask-editor) (mask-editor (recorder-run-channel run) s
-               :redirect script-name))
+               :redirect script-name
+               :overlay (make-overlay-image x s)))
                >
               Edit Masks
             </a>
