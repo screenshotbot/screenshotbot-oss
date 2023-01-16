@@ -73,6 +73,8 @@
              <p>
                Any modifications to the mask will only affect future runs. Existing runs and reports will not be affected.
              </p>
+
+             <p>Use <code>Alt+Mouse</code> to pan, and <code>Mousewheel</code> to zoom.</p>
            </div>
 
 
