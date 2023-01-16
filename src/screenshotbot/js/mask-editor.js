@@ -74,7 +74,7 @@ $(function () {
         var isDragging = false;
 
         canvas.on('mouse:down', function (opt) {
-            if (opt.e.altKey !== true) {
+            if (opt.e.altKey === true) {
                 console.log(opt);
                 var point = getOriginalPoint(canvas, opt.pointer);
                 startX = point.x;
@@ -209,7 +209,7 @@ function enableZoomOnCanvas(canvas) {
 function enablePanningOnCanvas(canvas) {
     canvas.on('mouse:down', function(opt) {
         var evt = opt.e;
-        if (evt.altKey === true) {
+        if (evt.altKey !== true) {
             this.isDragging = true;
             this.selection = false;
             this.lastPosX = evt.clientX;

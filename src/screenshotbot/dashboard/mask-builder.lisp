@@ -67,14 +67,14 @@
 
            <div class= "info-box text-muted" style= "max-width: 50em" >
              <p class= "mt-3 text-muted" >
-               Masks specifies areas of the image that won't count towards screenshot comparison. For instance, you may use this to mask out animations and timestamps. Draw rectangles in the image below to specify the masked area.
+               Masks specifies areas of the image that won't count towards screenshot comparison. For instance, you may use this to mask out animations and timestamps. Use <code>Alt+Mouse</code> or <code>Option+Mouse</code> to draw rectangles in the image below to specify the masked area.
              </p>
 
              <p>
                Any modifications to the mask will only affect future runs. Existing runs and reports will not be affected.
              </p>
 
-             <p>Use <code>Alt+Mouse</code> to pan, and <code>Mousewheel</code> to zoom.</p>
+             <p>Use <code>Mousewheel</code> to zoom, and drag with the mouse to pan.</p>
            </div>
 
 
