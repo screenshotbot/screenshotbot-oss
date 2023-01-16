@@ -66,10 +66,18 @@ $(function () {
 
         var startX, startY;
         var isDragging = false;
+
+        function getOriginalPoint(point) {
+            var matrix = canvas.viewportTransform;
+            var inverse = fabric.util.invertTransform(matrix);
+            return fabric.util.transformPoint(point, inverse);
+        }
+
         canvas.on('mouse:down', function (e) {
             console.log(e);
-            startX = e.pointer.x;
-            startY = e.pointer.y;
+            var point = getOriginalPoint(e.pointer);
+            startX = point.x;
+            startY = point.y;
             isDragging = true;
         });
 
@@ -111,7 +119,8 @@ $(function () {
 
             isDragging = false;
             console.log(e);
-            var x = e.pointer.x, y = e.pointer.y;
+            var point = getOriginalPoint(e.pointer);
+            var x = point.x, y = point.y;
             console.log("will draw on: ", startX, startY, x, y);
 
             var rect = addRect({
@@ -152,5 +161,17 @@ $(function () {
             console.log("here we go...");
             return true;
         });
+
+        canvas.on('mouse:wheel', function(opt) {
+            var delta = opt.e.deltaY;
+            var zoom = canvas.getZoom();
+            zoom *= 0.999 ** delta;
+            if (zoom > 20) zoom = 20;
+            if (zoom < 0.01) zoom = 0.01;
+            canvas.setZoom(zoom);
+            opt.e.preventDefault();
+            opt.e.stopPropagation();
+        });
+
     }
 });
