@@ -1,3 +1,9 @@
+function getOriginalPoint(canvas, point) {
+    var matrix = canvas.viewportTransform;
+    var inverse = fabric.util.invertTransform(matrix);
+    return fabric.util.transformPoint(point, inverse);
+}
+
 
 $(function () {
     if ($("#mask-editor").length > 0) {
@@ -67,16 +73,10 @@ $(function () {
         var startX, startY;
         var isDragging = false;
 
-        function getOriginalPoint(point) {
-            var matrix = canvas.viewportTransform;
-            var inverse = fabric.util.invertTransform(matrix);
-            return fabric.util.transformPoint(point, inverse);
-        }
-
         canvas.on('mouse:down', function (opt) {
             if (opt.e.altKey !== true) {
                 console.log(opt);
-                var point = getOriginalPoint(opt.pointer);
+                var point = getOriginalPoint(canvas, opt.pointer);
                 startX = point.x;
                 startY = point.y;
                 isDragging = true;
@@ -121,7 +121,7 @@ $(function () {
 
             isDragging = false;
             console.log(e);
-            var point = getOriginalPoint(e.pointer);
+            var point = getOriginalPoint(canvas, e.pointer);
             var x = point.x, y = point.y;
             console.log("will draw on: ", startX, startY, x, y);
 
@@ -164,20 +164,46 @@ $(function () {
             return true;
         });
 
-        canvas.on('mouse:wheel', function(opt) {
-            var delta = opt.e.deltaY;
-            var zoom = canvas.getZoom();
-            zoom *= 0.999 ** delta;
-            if (zoom > 20) zoom = 20;
-            if (zoom < 0.01) zoom = 0.01;
-            canvas.setZoom(zoom);
-            opt.e.preventDefault();
-            opt.e.stopPropagation();
-        });
-
+        enableZoomOnCanvas(canvas);
         enablePanningOnCanvas(canvas);
     }
 });
+
+function enableZoomOnCanvas(canvas) {
+    canvas.on('mouse:wheel', function(opt) {
+        console.log("on wheel", opt);
+        var e = opt.e;
+        var delta = e.deltaY * 0.001;
+        var vpt = this.viewportTransform;
+        var zoom0 = vpt[0];
+        var zoom = zoom0 - delta;
+
+        if (zoom > 20) zoom = 20;
+        if (zoom < 0.1) zoom = 0.1;
+
+
+        // The original code used offset{X|Y}
+        var canvasPos = getOriginalPoint(canvas, opt.pointer);
+
+
+
+        console.log("old values", vpt, canvasPos, zoom, zoom0);
+
+        // We come to do this solution with some simple Matrix algebra
+        vpt[4] = (zoom0 - zoom) * canvasPos.x + vpt[4];
+        vpt[5] = (zoom0 - zoom) * canvasPos.y + vpt[5];
+        vpt[0] = zoom;
+        vpt[3] = zoom;
+        console.log("before zoom", vpt);
+        //canvas.setZoom(zoom);
+        //console.log("after zoom", vpt);
+
+        this.requestRenderAll();
+        e.preventDefault();
+
+
+    });
+}
 
 
 function enablePanningOnCanvas(canvas) {
