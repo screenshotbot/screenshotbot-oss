@@ -20,7 +20,9 @@
   (:import-from #:screenshotbot/model/image
                 #:dimension-height
                 #:dimension-width
-                #:image-dimensions))
+                #:image-dimensions)
+  (:import-from #:core/ui/mdi
+                #:mdi))
 (in-package :screenshotbot/dashboard/mask-builder)
 
 
@@ -44,27 +46,47 @@
                   (hex:safe-redirect redirect))))
      <app-template>
        <form action=save method= "POST" id= "mask-editor-form" >
-         <h1>Edit Masks</h1>
 
-         <p>
-           Masks specifies areas of the image that won't count towards screenshot comparison. For instance, you may use this to mask out animations and timestamps. Draw rectangles in the image below to specify the masked area.
-         </p>
+         <div class= "page-title-box main-content" >
+           <h4 class= "page-title" >Edit Masks</h4>
 
-         <p>
-           Any modifications to the mask will only affect future runs. Existing runs and reports will not be affected.
-         </p>
+           <div class= "float-end" >
+             <input type= "hidden" name= "json" value= "" />
+             <a href= "#" id= "clear-masks" class= "btn btn-danger btn-sm">
+               <mdi name= "delete_sweep" />
+               Clear All
+             </a>
+             <a href= "javascript:window.history.back()" class= "btn btn-sm btn-secondary">
+               Discard Changes
+             </a>
+             <input type= "submit" id= "save-masks" class= "btn btn-primary btn-sm" value = "Save Masks" />
 
-         <canvas id= "mask-editor" width= (dimension-width dim) height= (dimension-height dim)
-                 data-rects= (json:encode-json-to-string (coerce mask 'vector )) />
-         <img id= "mask-editor-image"
-              src=(image-public-url (screenshot-image screenshot))
-              style= "display:none" />
-         <script src= "/assets/js/fabric.min.js" />
+           </div>
+         </div>
+         <div class= "main-content pb-3" >
 
-         <div class= "mt-3" >
-           <input type= "hidden" name= "json" value= "" />
-           <input type= "submit" id= "save-masks" class= "btn btn-primary" value = "Save Masks" />
-           <a href= "#" id= "clear-masks" class= "btn btn-danger">Clear Masks</a>
+           <div class= "info-box text-muted" style= "max-width: 50em" >
+             <p class= "mt-3 text-muted" >
+               Masks specifies areas of the image that won't count towards screenshot comparison. For instance, you may use this to mask out animations and timestamps. Draw rectangles in the image below to specify the masked area.
+             </p>
+
+             <p>
+               Any modifications to the mask will only affect future runs. Existing runs and reports will not be affected.
+             </p>
+           </div>
+
+
+
+           <div class= "mt-3 mb-3" >
+           </div>
+
+           <canvas id= "mask-editor" width= (dimension-width dim) height= (dimension-height dim)
+                   data-rects= (json:encode-json-to-string (coerce mask 'vector )) />
+           <img id= "mask-editor-image"
+                src=(image-public-url (screenshot-image screenshot))
+                style= "display:none" />
+           <script src= "/assets/js/fabric.min.js" />
          </div>
        </form>
+
      </app-template>)))
