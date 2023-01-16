@@ -36,7 +36,7 @@ $card-border-color: darken($body-background, 10%);
 @import "pro-common";
 @import "auth";
 @import "billing";
-
+@import "mask-builder";
 
 body {
     font-family: Roboto, "sans-serif";

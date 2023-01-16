@@ -38,7 +38,8 @@
                ("BUILD-UTILS:SCSS-FILE" "avatar") ("BUILD-UTILS:SCSS-FILE" "breakpoints")
                ("BUILD-UTILS:SCSS-FILE" "pro-common")
                ("BUILD-UTILS:SCSS-FILE" "auth")
-               ("build-utils:scss-file" "billing")))
+               ("build-utils:scss-file" "billing")
+               ("build-utils:scss-file" "mask-builder")))
 
 ;;(build-utils::get-css-component #P "~/builds/web/screenshotbot/static/assets/css/")
 

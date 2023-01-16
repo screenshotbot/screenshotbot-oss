@@ -80,8 +80,17 @@
            <div class= "mt-3 mb-3" >
            </div>
 
-           <canvas id= "mask-editor" width= (dimension-width dim) height= (dimension-height dim)
-                   data-rects= (json:encode-json-to-string (coerce mask 'vector )) />
+
+             <canvas id= "mask-editor" width=(dimension-width dim) height= (dimension-height dim)
+                     data-rects= (json:encode-json-to-string (coerce mask 'vector ))
+                     style= "max-width: 100%; max-height: 100%"
+                     />
+             <style>
+               .canvas-container {
+                 aspect-ratio: ,(dimension-width dim) / ,(dimension-height dim);
+               }
+             </style>
+
            <img id= "mask-editor-image"
                 src=(image-public-url (screenshot-image screenshot))
                 style= "display:none" />
