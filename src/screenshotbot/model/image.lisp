@@ -48,6 +48,8 @@
   (:import-from #:auto-restart
                 #:with-auto-restart)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:get-non-alpha-pixels
+                #:with-image-comparison
                 #:ping-image-metadata
                 #:with-wand)
   (:import-from #:util/object-id
@@ -434,67 +436,6 @@
   (read-sequence (buffer self) (%stream self))
   (buffer self))
 
-(defun map-unequal-pixels-stream (stream1 stream2 fn &key masks)
-  "Map unequal pixels assuming both streams refer to images with the same dimensions"
-  (loop while (has-more-pixels-p stream1)
-        for i = (pos-y stream1)
-        for j = (pos-x stream1)
-        for pix1 = (read-next-pixel stream1)
-        for pix2 = (read-next-pixel stream2)
-        if (not (equalp pix1 pix2))
-          do
-             ;; inefficient way to check if pixel is masked
-             (loop for mask in masks
-                   if (px-in-mask-p i j mask)
-                     do (return nil)
-                   finally
-                      (funcall fn i j))))
-
-(defun map-unequal-pixels-arr (arr1 arr2 fn &key masks)
-  (let* ((dim1 (array-dimensions arr1))
-         (dim2 (array-dimensions arr2))
-         (height (max (car dim1) (car dim2)))
-         (width (max (cadr dim1) (cadr dim2))))
-
-    (flet ((make-expanded (x)
-             (make-instance 'image-stream-expanded-canvas
-                             :delegate x
-                             :width width
-                             :height height)))
-     (map-unequal-pixels-stream
-      (make-expanded
-       (make-instance 'image-array-stream
-                       :arr arr1))
-      (make-expanded
-       (make-instance 'image-array-stream
-                       :arr arr2))
-      fn
-      :masks masks))))
-
-(defun map-unequal-pixels (img1 img2 fn &key masks)
-  (restart-case
-      (with-local-image (file1 img1)
-        (with-local-image (file2 img2)
-          (map-unequal-pixels-on-file file1 file2 fn :masks masks)))
-    (retry-map-unequal-pixels ()
-      (map-unequal-pixels img1 img2 fn :masks masks))))
-
-(defun map-unequal-pixels-on-file (file1 file2 fn &key masks)
-  (flet ((make-image-stream (file)
-           (let ((dim (image-file-dimensions  file1)))
-             (make-instance 'image-magick-stream
-                             :file file
-                             :width (dimension-width dim)
-                             :height (dimension-height dim)))))
-    (let ((stream1 (make-image-stream file1))
-          (stream2 (make-image-stream file2)))
-      (unwind-protect
-           (map-unequal-pixels-stream
-            stream1
-            stream2
-            fn :masks masks)
-        (cleanup-image-stream stream1)
-        (cleanup-image-stream stream2)))))
 
 #+screenshotbot-oss
 (defmethod maybe-rewrite-image-blob ((image image))
@@ -617,38 +558,20 @@
 (defun images-equal-by-content-p (img1 img2 &key masks)
   (push-event :images-equal-by-content
               :img1 (oid img1))
-  (with-hash-lock-held (img1 *content-equal-hash-lock*)
-    (let ((existing-results (content-equal-results-for-image-1 img1)))
-      (log:info "existing results: ~S" existing-results)
-      (loop for result in existing-results
-            if (and (eql img2 (image-2 result))
-                    (equal masks (masks result)))
-              do (return (result result))
-            finally
-               (return
-                 (flet ((save-result (result)
-                          (make-instance 'content-equal-result
-                                          :image-1 img1
-                                          :image-2 img2
-                                          :masks masks
-                                          :result result)
-                          result))
-                   (save-result
-                    (cond
-                      ((null masks)
-                       (images-equal-by-magick img1 img2))
-                      (t
-                       (let ((resp t))
-                         (log:info "[slow-path] checking images ~s, ~s with masks ~s" img1 img2 masks)
-                         (signal 'slow-image-comparison)
-                         (map-unequal-pixels img1 img2
-                                             (lambda (i j)
-                                               (declare (optimize (speed 3)
-                                                                  (safety 0)))
-                                               (declare (ignore i j))
-                                               (Setf resp nil))
-                                             :masks masks)
-                         resp))))))))))
+  (log:info "[slow-path] checking images ~s, ~s with masks ~s" img1 img2 masks)
+  (signal 'slow-image-comparison)
+  (with-local-image (file1 img1)
+    (with-local-image (file2 img2)
+      (with-wand (wand1 :file file1)
+        (with-wand (wand2 :file file2)
+          (with-image-comparison (wand1 wand2
+                                  :result result)
+            (eql
+             0
+             (first (array-dimensions (get-non-alpha-pixels
+                                       result
+                                       :limit 10
+                                       :masks masks))))))))))
 
 (defun image= (img1 img2 masks)
   "Check if the two images have the same contents. Looks at both file
