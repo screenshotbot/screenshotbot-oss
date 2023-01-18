@@ -108,6 +108,35 @@
                                               :height 100 :width 104)))
          (&body))))))
 
+(test image-comparison-is-cached ()
+  (with-fixture state ()
+    (let ((got-signal nil))
+     (handler-bind ((slow-image-comparison
+                      (lambda (e)
+                        (setf got-signal t))))
+       (is-true (image= img img2 (list rect)))
+       (is-true got-signal)))
+    (handler-bind ((slow-image-comparison
+                    (lambda (e)
+                      (fail "Should not get slow-image-comparison"))))
+      (is-true (image= img img2 (list rect))))))
+
+(test image-comparison-is-cached-for-unequal ()
+  (with-fixture state ()
+    (let ((img (make-magick-test-image "rose:"))
+          (img2 (make-magick-test-image "wizard:")))
+      (let ((got-signal nil))
+        (handler-bind ((slow-image-comparison
+                         (lambda (e)
+                           (setf got-signal t))))
+          (is-false (image= img img2 (list rect)))
+          (is-true got-signal)))
+      (handler-bind ((slow-image-comparison
+                       (lambda (e)
+                         (fail "Should not get slow-image-comparison"))))
+        (is-false (image= img img2 (list rect)))))))
+
+
 (test simple-compare ()
   (with-fixture state ()
     (is-true (image= img img nil))

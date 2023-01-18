@@ -558,20 +558,37 @@
 (defun images-equal-by-content-p (img1 img2 &key masks)
   (push-event :images-equal-by-content
               :img1 (oid img1))
-  (log:info "[slow-path] checking images ~s, ~s with masks ~s" img1 img2 masks)
-  (signal 'slow-image-comparison)
-  (with-local-image (file1 img1)
-    (with-local-image (file2 img2)
-      (with-wand (wand1 :file file1)
-        (with-wand (wand2 :file file2)
-          (with-image-comparison (wand1 wand2
-                                  :result result)
-            (eql
-             0
-             (first (array-dimensions (get-non-alpha-pixels
-                                       result
-                                       :limit 10
-                                       :masks masks))))))))))
+  (with-hash-lock-held (img1 *content-equal-hash-lock*)
+    (let ((existing-results (content-equal-results-for-image-1 img1)))
+      (log:info "existing results: ~S" existing-results)
+      (loop for result in existing-results
+            if (and (eql img2 (image-2 result))
+                    (equal masks (masks result)))
+              do (return (result result))
+            finally
+               (return
+                 (flet ((save-result (result)
+                          (make-instance 'content-equal-result
+                                          :image-1 img1
+                                          :image-2 img2
+                                          :masks masks
+                                          :result result)
+                          result))
+                   (log:info "[slow-path] checking images ~s, ~s with masks ~s" img1 img2 masks)
+                   (signal 'slow-image-comparison)
+                   (save-result
+                    (with-local-image (file1 img1)
+                      (with-local-image (file2 img2)
+                        (with-wand (wand1 :file file1)
+                          (with-wand (wand2 :file file2)
+                            (with-image-comparison (wand1 wand2
+                                                    :result result)
+                              (eql
+                               0
+                               (first (array-dimensions (get-non-alpha-pixels
+                                                         result
+                                                         :limit 10
+                                                         :masks masks))))))))))))))))
 
 (defun image= (img1 img2 masks)
   "Check if the two images have the same contents. Looks at both file
