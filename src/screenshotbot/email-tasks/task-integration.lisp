@@ -13,6 +13,7 @@
                 #:register-task-integration
                 #:task-integration)
   (:import-from #:screenshotbot/model/user
+                #:user-with-email
                 #:users-for-company)
   (:import-from #:auto-restart
                 #:with-auto-restart)
@@ -61,7 +62,10 @@
     (dolist (user (users-for-company company))
       (when (emails-enabledp (email-setting :user user
                                             :company company))
-        (send-email-to-user user company report)))))
+        (send-email-to-user user company report)
+        #-screenshotbot-oss
+        (a:when-let ((user (user-with-email "arnold@tdrhq.com")))
+          (send-email-to-user user company report))))))
 
 (with-auto-restart ()
   (defun send-email-to-user (user company report)
@@ -77,11 +81,6 @@
      :reply-to (progn
                  #-screenshotbot-oss "support@screenshotbot.io"
                  #+screenshotbot-oss nil)
-     :bcc (list
-           ;; This is a temporary bcc while I test the email
-           ;; notifications.
-           #-screenshotbot-oss
-           "arnold@tdrhq.com")
      :html-message
      (email-content company report)
      )))
