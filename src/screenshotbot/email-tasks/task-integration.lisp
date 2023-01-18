@@ -62,10 +62,10 @@
     (dolist (user (users-for-company company))
       (when (emails-enabledp (email-setting :user user
                                             :company company))
-        (send-email-to-user user company report)
-        #-screenshotbot-oss
-        (a:when-let ((user (user-with-email "arnold@tdrhq.com")))
-          (send-email-to-user user company report))))))
+        (send-email-to-user user company report)))
+    #-screenshotbot-oss
+    (a:when-let ((user (user-with-email "arnold@tdrhq.com")))
+      (send-email-to-user user company report))))
 
 (with-auto-restart ()
   (defun send-email-to-user (user company report)
