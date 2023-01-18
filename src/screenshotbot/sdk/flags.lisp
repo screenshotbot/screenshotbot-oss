@@ -213,7 +213,7 @@ machine.")
 
 (define-flag *commit-limit*
   :selector "commit-limit"
-  :default-value nil
+  :default-value 1000
   :type (or null integer)
   :help "Limit the number of commits for which we upload commit hashes. This is
 useful for large repositories (about > 10000 commits). For large
