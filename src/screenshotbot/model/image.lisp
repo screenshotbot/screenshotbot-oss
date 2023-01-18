@@ -789,11 +789,11 @@ recognized the file, we'll return nil."
     (local-time:timestamp+ midpoint delta :day)))
 
 
-(defun all-soft-expired-images ()
+(defun all-soft-expired-images (&key (months 3))
   (let ((now (local-time:now)))
     (loop for im in (class-instances 'image)
           if (local-time:timestamp<
-              (soft-expiration-time im)
+              (soft-expiration-time im :months months)
               now)
             collect im)))
 
