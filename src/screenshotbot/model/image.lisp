@@ -582,12 +582,13 @@
                         (with-wand (wand1 :file file1)
                           (with-wand (wand2 :file file2)
                             (with-image-comparison (wand1 wand2
+                                                    :in-place-p t
                                                     :result result)
                               (eql
                                0
                                (first (array-dimensions (get-non-alpha-pixels
                                                          result
-                                                         :limit 10
+                                                         :limit 1
                                                          :masks masks))))))))))))))))
 
 (defun image= (img1 img2 masks)
