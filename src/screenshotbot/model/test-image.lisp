@@ -9,6 +9,8 @@
         #:fiveam
         #:screenshotbot/model/image)
   (:import-from #:screenshotbot/model/image
+                #:all-soft-expired-images
+                #:soft-expiration-time
                 #:image-filesystem-pathname
                 #:image
                 #:local-image
@@ -56,6 +58,8 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:util/object-id
+                #:make-oid
+                #:%make-oid
                 #:oid-array
                 #:oid-arr)
   (:export))
@@ -281,3 +285,20 @@
      (is (eql 10 (mask-rect-left mask-rect)))
      (is (eql 5 (mask-rect-width mask-rect)))
      (is (eql 5 (mask-rect-height mask-rect))))))
+
+
+(test soft-expiration-time
+  ;; The date this oid was generated Jan 18th, 2023
+  (let ((today (local-time:parse-timestring "2023-01-18T00:00:00Z"))
+        (oid (make-oid :arr (mongoid:oid "63c82a1bf6fe3c0c419f630a"))))
+    (let ((expiry (soft-expiration-time oid)))
+      (is (local-time:timestamp<
+               expiry
+               (local-time:timestamp+ today 124 :day)))
+      (is (local-time:timestamp>
+           expiry
+           (local-time:timestamp+ today 58 :day))))))
+
+(test all-soft-expired-images-happy-path
+  (with-fixture state ()
+    (is-false (all-soft-expired-images))))

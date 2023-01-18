@@ -27,6 +27,7 @@
                 #:verified-p ;; todo: remove, will cause conflict
                 #:image-oid-cache)
   (:import-from #:bknr.datastore
+                #:class-instances
                 #:with-transaction
                 #:store-object
                 #:persistent-class)
@@ -53,6 +54,8 @@
                 #:ping-image-metadata
                 #:with-wand)
   (:import-from #:util/object-id
+                #:oid-arr
+                #:oid-p
                 #:%make-oid
                 #:find-by-oid
                 #:oid-array)
@@ -771,3 +774,27 @@ recognized the file, we'll return nil."
  needed."
   `(uiop:with-temporary-file (:directory (img-tmp-dir) ,@args)
      ,@body))
+
+(defun soft-expiration-time (image &key (months 3))
+  (let* ((oid (cond
+                ((oid-p image)
+                 image)
+                (t
+                 (oid image :stringp nil))))
+         (delta (- (mod (aref (oid-arr oid) 11) 64) 32))
+         (oid-time (local-time:unix-to-timestamp
+                    (mongoid:get-timestamp (oid-arr oid))))
+         (midpoint (local-time:timestamp+
+                     oid-time (* months 30) :day)))
+    (local-time:timestamp+ midpoint delta :day)))
+
+
+(defun all-soft-expired-images ()
+  (let ((now (local-time:now)))
+    (loop for im in (class-instances 'image)
+          if (local-time:timestamp<
+              (soft-expiration-time im)
+              now)
+            collect im)))
+
+;;(length (all-soft-expired-images))
