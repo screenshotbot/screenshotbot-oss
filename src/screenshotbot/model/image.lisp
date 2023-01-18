@@ -560,18 +560,20 @@
   (push-event :images-equal-by-content
               :img1 (oid img1))
   (with-hash-lock-held (img1 *content-equal-hash-lock*)
-    (let ((existing-results (content-equal-results-for-image-1 img1)))
+    (let ((existing-results (content-equal-results-for-image-1 (oid img1 :stringp nil))))
       (log:info "existing results: ~S" existing-results)
       (loop for result in existing-results
-            if (and (eql img2 (image-2 result))
+            if (and (equalp
+                     (oid img2 :stringp nil)
+                     (image-2 result))
                     (equal masks (masks result)))
               do (return (result result))
             finally
                (return
                  (flet ((save-result (result)
                           (make-instance 'content-equal-result
-                                          :image-1 img1
-                                          :image-2 img2
+                                          :image-1 (oid img1 :stringp nil)
+                                          :image-2 (oid img2 :stringp nil)
                                           :masks masks
                                           :result result)
                           result))
