@@ -528,6 +528,7 @@
   (defclass content-equal-result (store-object)
     ((image-1 :initarg :image-1
               :index-type hash-index
+              :index-initargs (:test #'equalp)
               :index-reader content-equal-results-for-image-1)
      (image-2 :initarg :image-2
               :reader image-2)

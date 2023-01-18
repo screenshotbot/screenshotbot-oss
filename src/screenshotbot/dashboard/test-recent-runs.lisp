@@ -64,7 +64,8 @@
 
 (defvar *channel* (make-instance 'test-channel))
 
-(defmethod util:oid ((run test-run))
+(defmethod util:oid ((run test-run) &key (stringp t))
+  (assert stringp)
   "foobar")
 
 (defmethod channel-name ((channel test-channel))

@@ -153,10 +153,16 @@
      (- (get-universal-time)
         (* days 24 3600))))
 
-(defgeneric oid (obj))
+(defgeneric oid (obj &key stringp))
 
-(defmethod oid (obj)
-  (fast-oid-str (oid-array obj)))
+(defmethod oid (obj &key (stringp t))
+  "Returns the oid of the object. If :STRINGP is T, then we convert the
+oid to a string. Otherwise we return the OID object as is."
+  (cond
+    (stringp
+     (fast-oid-str (oid-array obj)))
+    (t
+     (oid-struct-or-array obj))))
 
 (defmethod location-for-oid ((root pathname) (oid oid) &key suffix)
   (location-for-oid

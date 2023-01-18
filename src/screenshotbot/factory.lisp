@@ -16,6 +16,8 @@
           #:screenshotbot/api-key-api)
   (:import-from #:screenshotbot/github/access-checks
                 #:github-repo)
+  (:import-from #:util/object-id
+                #:make-oid)
   (:export #:test-user
            #:test-company
            #:test-screenshot
@@ -30,8 +32,15 @@
   ((api-keys :initarg :api-keys
              :initform nil)))
 
-(defmethod util:oid ((u test-user))
-  "2sfsfsfsdfdsf")
+(defmethod util:oid ((u test-user) &key (stringp t))
+  (cond
+    (stringp
+     "2sfsfsfsdfdsf")
+    (t
+     (make-oid
+      :arr #(0 0 0 0
+             0 0 0 0
+             0 0 0 0)))))
 
 (defmethod user-email ((u test-user))
   "dummy@example.com")
