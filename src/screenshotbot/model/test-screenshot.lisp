@@ -18,7 +18,11 @@
                 #:with-test-store)
   (:import-from #:screenshotbot/installation
                 #:installation
-                #:*installation*))
+                #:*installation*)
+  (:import-from #:screenshotbot/model/image
+                #:image=)
+  (:import-from #:util/object-id
+                #:oid))
 
 (util/fiveam:def-suite)
 
@@ -106,3 +110,16 @@
               (make-screenshot :name "foo" :masks mask3)))
      (is (not (eql (make-screenshot :name "foo" :masks mask1)
                    (make-screenshot :name "foo" :masks mask2)))))))
+
+
+(test image-slot-can-be-oid-or-not
+  (with-test-store ()
+    (let ((img (make-instance 'image)))
+      (let ((s1 (make-instance 'screenshot
+                               :name "bleh"
+                               :image img)))
+        (is (eql img (screenshot-image s1))))
+      (let ((s1 (make-instance 'screenshot
+                               :name "bleh"
+                               :image (oid img :stringp nil))))
+        (is (eql img (screenshot-image s1)))))))

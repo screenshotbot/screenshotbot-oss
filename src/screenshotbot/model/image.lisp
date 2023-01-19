@@ -54,6 +54,7 @@
                 #:ping-image-metadata
                 #:with-wand)
   (:import-from #:util/object-id
+                #:oid
                 #:oid-arr
                 #:oid-p
                 #:%make-oid
@@ -187,6 +188,9 @@
   (check-imagep (find-by-oid oid)))
 
 (defmethod find-image-by-oid ((oid array))
+  (check-imagep (find-by-oid oid)))
+
+(defmethod find-image-by-oid ((oid oid))
   (check-imagep (find-by-oid oid)))
 
 #|

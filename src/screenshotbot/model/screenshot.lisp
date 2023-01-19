@@ -24,6 +24,7 @@
                 #:screenshot-get-canonical
                 #:recorder-run-screenshots)
   (:import-from #:screenshotbot/model/image
+                #:find-image-by-oid
                 #:image=
                 #:image-metadata
                 #:%with-local-image
@@ -33,6 +34,8 @@
                 #:def-store-local)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:util/object-id
+                #:oid-p)
   (:export
    #:constant-string
    #:get-constant
@@ -93,12 +96,20 @@
      (image
       :initarg :image
       :initform nil
-      :accessor screenshot-image)
+      :reader screenshot-image)
      (masks
       :initarg :masks
       :initform nil
       :accessor screenshot-masks))
     (:metaclass persistent-class)))
+
+(defmethod screenshot-image :around ((self screenshot))
+  (let ((obj (call-next-method self)))
+    (cond
+      ((oid-p obj)
+       (find-image-by-oid obj))
+      (t
+       obj))))
 
 (defmethod company ((self screenshot))
   (company (screenshot-image self)))
