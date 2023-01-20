@@ -107,8 +107,7 @@
   ev)
 
 (defun map-analytics-events (function &key (keep-if (lambda (x) (declare (ignore x)) t))
-                                        limit)
-  (declare (ignore limit))
+                                        (limit 10000))
   (when *event-engine*
     (let ((res
             (with-db (db *event-engine*)
@@ -117,6 +116,7 @@
                                        (clsql:select 'analytics-event :database db
                                          :order-by (list
                                                     (clsql:sql-expression :attribute "ts"))
+                                         :limit limit
                                          :flatp t)))
                     if (funcall keep-if ev)
                       collect (funcall function (ensure-local-time-ts ev))))))
