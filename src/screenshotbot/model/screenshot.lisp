@@ -9,6 +9,7 @@
         #:alexandria
         #:screenshotbot/screenshot-api)
   (:import-from #:bknr.datastore
+                #:with-transaction
                 #:decode
                 #:decode-object
                 #:encode
@@ -25,6 +26,7 @@
   (:import-from #:screenshotbot/model/channel
                 #:channel-promoted-runs)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run
                 #:screenshot-get-canonical
                 #:recorder-run-screenshots)
   (:import-from #:screenshotbot/model/image
@@ -44,6 +46,8 @@
   (:import-from #:screenshotbot/model/screenshot-key
                 #:screenshot-masks
                 #:ensure-screenshot-key)
+  (:import-from #:alexandria
+                #:when-let)
   (:export
    #:constant-string
    #:get-constant
@@ -131,7 +135,8 @@
   (screenshot-masks (screenshot-key self)))
 
 (defmethod screenshot-image ((self lite-screenshot))
-  (find-image-by-oid (image-oid self)))
+  (when-let ((oid (image-oid self)))
+   (find-image-by-oid oid)))
 
 (defmethod encode-object ((self lite-screenshot) stream)
   (bknr.datastore::%write-tag #\S stream)
@@ -329,3 +334,49 @@
    :lang (screenshot-lang screenshot)
    :device (screenshot-device screenshot)
    :masks (screenshot-masks screenshot)))
+
+(defun remake-screenshot (screenshot)
+  (make-screenshot
+   :name (screenshot-name screenshot)
+   :lang (screenshot-lang screenshot)
+   :device (screenshot-device screenshot)
+   :masks (screenshot-masks screenshot)
+   :image (screenshot-image screenshot)))
+
+;; Migration
+(defun remake-all-screenshots ()
+  (flet ((safe-remake-screenshot (s)
+           (cond
+             ((or (numberp s)
+                  (and
+                   (screenshot-image s)
+                   (symbolp (screenshot-image s))))
+              (log:warn "ignoring screenshot: ~a" s)
+              s)
+             (t
+              (remake-screenshot s)))))
+   (loop for run in (bknr.datastore:store-objects-with-class 'recorder-run)
+         do
+            (log:info "Running: ~a" run)
+            (restart-case
+                (let ((new-screenshots (mapcar #'safe-remake-screenshot
+                                               (recorder-run-screenshots run))))
+                  (with-transaction ()
+                    (setf (recorder-run-screenshots run) new-screenshots)))
+              (ignore-this-run ()
+                (values))
+              (delete-this-run ()
+                (bknr.datastore:delete-object run))))))
+
+;; Migration (used with the top one)
+(defun delete-unused-screenshots ()
+  (let ((seen (make-hash-table)))
+    (loop for run in (bknr.datastore:store-objects-with-class 'recorder-run)
+          do
+             (loop for s in (recorder-run-screenshots run)
+                   do
+                      (setf (Gethash s seen) t)))
+    (loop for screenshot in (bknr.datastore:store-objects-with-class 'screenshot)
+          unless (gethash screenshot seen)
+            do (bknr.datastore:delete-object screenshot))
+    seen))

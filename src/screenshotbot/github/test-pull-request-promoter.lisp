@@ -52,7 +52,9 @@
                 #:acceptable-state)
   (:import-from #:screenshotbot/testing
                 #:with-installation
-                #:with-test-user))
+                #:with-test-user)
+  (:import-from #:bknr.indices
+                #:object-destroyed-p))
 
 (util/fiveam:def-suite)
 
@@ -76,7 +78,6 @@
          :initform (make-instance 'dummy-repo)
          :accessor channel-repo))
   (:metaclass persistent-class))
-
 
 (defmethod repo-link ((repo dummy-repo))
   "https://github.com/foo/bar.git")
