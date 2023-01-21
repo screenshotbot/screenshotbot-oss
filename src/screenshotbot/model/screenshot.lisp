@@ -9,6 +9,10 @@
         #:alexandria
         #:screenshotbot/screenshot-api)
   (:import-from #:bknr.datastore
+                #:decode
+                #:decode-object
+                #:encode
+                #:encode-object
                 #:persistent-class
                 #:store-object
                 #:delete-object
@@ -36,6 +40,9 @@
                 #:company)
   (:import-from #:util/object-id
                 #:oid-p)
+  (:import-from #:screenshotbot/model/screenshot-key
+                #:screenshot-masks
+                #:ensure-screenshot-key)
   (:export
    #:constant-string
    #:get-constant
@@ -102,6 +109,25 @@
       :initform nil
       :accessor screenshot-masks))
     (:metaclass persistent-class)))
+
+(defclass lite-screenshot ()
+  ((%screenshot-key :initarg :screenshot-key
+                   :reader screenshot-key)
+   (%image-oid :initarg :image-oid
+               :reader image-oid))
+  (:documentation "A lightweight screenshot"))
+
+(defmethod encode-object ((self lite-screenshot) stream)
+  (bknr.datastore::%write-tag #\S stream)
+  (encode (screenshot-key self) stream)
+  (encode (image-oid self) stream))
+
+(defmethod decode-object ((tag (eql #\S)) stream)
+  (let ((key (decode stream))
+        (oid (decode stream)))
+   (make-instance 'lite-screenshot
+                  :screenshot-key key
+                  :image-oid oid)))
 
 (defmethod screenshot-image :around ((self screenshot))
   (let ((obj (call-next-method self)))
@@ -267,3 +293,19 @@
 
 (defmethod image-metadata ((self screenshot))
   (image-metadata (screenshot-image self)))
+
+
+(defun make-screenshot-from-key (key image)
+  (make-instance 'fake-screenshot
+                 :name (screenshot-name key)
+                 :lang (screenshot-lang key)
+                 :device (screenshot-device key)
+                 :masks (screenshot-masks key)
+                 :image image))
+
+(defun make-key-from-screenshot (screenshot)
+  (ensure-screenshot-key
+   :name (screenshot-name screenshot)
+   :lang (screenshot-lang screenshot)
+   :device (screenshot-device screenshot)
+   :masks (screenshot-masks screenshot)))

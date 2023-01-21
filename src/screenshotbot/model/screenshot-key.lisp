@@ -15,14 +15,13 @@
                 #:persistent-class)
   (:import-from #:screenshotbot/model/image
                 #:mask=)
-  (:import-from #:screenshotbot/model/screenshot
-                #:screenshot-masks
-                #:fake-screenshot)
   (:import-from #:screenshotbot/user-api
                 #:screenshot-name)
   (:import-from #:screenshotbot/report-api
                 #:screenshot-device
-                #:screenshot-lang))
+                #:screenshot-lang)
+  (:export
+   #:screenshot-masks))
 (in-package :screenshotbot/model/screenshot-key)
 
 (defvar *lock* (bt:make-lock))
@@ -72,18 +71,3 @@
                      :lang lang
                      :device device
                      :masks masks)))))
-
-(defun make-screenshot-from-key (key image)
-  (make-instance 'fake-screenshot
-                 :name (screenshot-name key)
-                 :lang (screenshot-lang key)
-                 :device (screenshot-device key)
-                 :masks (screenshot-masks key)
-                 :image image))
-
-(defun make-key-from-screenshot (screenshot)
-  (ensure-screenshot-key
-   :name (screenshot-name screenshot)
-   :lang (screenshot-lang screenshot)
-   :device (screenshot-device screenshot)
-   :masks (screenshot-masks screenshot)))

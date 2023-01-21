@@ -10,12 +10,12 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/screenshot
-                #:make-screenshot)
+                #:make-screenshot
+                #:make-key-from-screenshot
+                #:make-screenshot-from-key)
   (:import-from #:screenshotbot/model/screenshot-key
-                #:make-screenshot-from-key
                 #:ensure-screenshot-key
-                #:screenshot-key
-                #:make-key-from-screenshot)
+                #:screenshot-key)
   (:import-from #:screenshotbot/user-api
                 #:screenshot-name)
   (:import-from #:fiveam-matchers/core

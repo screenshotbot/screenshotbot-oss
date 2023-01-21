@@ -22,7 +22,14 @@
   (:import-from #:screenshotbot/model/image
                 #:image=)
   (:import-from #:util/object-id
-                #:oid))
+                #:oid)
+  (:import-from #:screenshotbot/model/screenshot
+                #:lite-screenshot)
+  (:import-from #:screenshotbot/model/screenshot-key
+                #:ensure-screenshot-key)
+  (:import-from #:bknr.datastore
+                #:decode
+                #:encode))
 
 (util/fiveam:def-suite)
 
@@ -123,3 +130,15 @@
                                :name "bleh"
                                :image (oid img :stringp nil))))
         (is (eql img (screenshot-image s1)))))))
+
+(test encode-lite-screenshot
+  (with-test-store ()
+    (let ((stream (flex:make-in-memory-output-stream))
+          (img (make-instance 'image)))
+     (let ((screenshot (make-instance 'lite-screenshot
+                                      :screenshot-key (ensure-screenshot-key
+                                                       :name "foobar")
+                                      :image-oid (oid img :stringp nil))))
+       (encode screenshot stream)
+       (let ((decoded (decode (flex:make-in-memory-input-stream
+                               (flex:get-output-stream-sequence  stream))))))))))
