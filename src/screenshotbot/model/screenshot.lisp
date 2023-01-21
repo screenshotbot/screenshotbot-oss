@@ -39,6 +39,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:util/object-id
+                #:oid
                 #:oid-p)
   (:import-from #:screenshotbot/model/screenshot-key
                 #:screenshot-masks
@@ -110,12 +111,27 @@
       :accessor screenshot-masks))
     (:metaclass persistent-class)))
 
-(defclass lite-screenshot ()
+(defclass lite-screenshot (abstract-screenshot)
   ((%screenshot-key :initarg :screenshot-key
                    :reader screenshot-key)
    (%image-oid :initarg :image-oid
                :reader image-oid))
   (:documentation "A lightweight screenshot"))
+
+(defmethod screenshot-name ((self lite-screenshot))
+  (screenshot-name  (screenshot-key self)))
+
+(defmethod screenshot-lang ((self lite-screenshot))
+  (screenshot-lang (screenshot-key self)))
+
+(defmethod screenshot-device ((self lite-screenshot))
+  (screenshot-device (screenshot-key self)))
+
+(defmethod screenshot-masks ((self lite-screenshot))
+  (screenshot-masks (screenshot-key self)))
+
+(defmethod screenshot-image ((self lite-screenshot))
+  (find-image-by-oid (image-oid self)))
 
 (defmethod encode-object ((self lite-screenshot) stream)
   (bknr.datastore::%write-tag #\S stream)
@@ -207,11 +223,15 @@
       (constant-string (constant-string-string name))
       (string name))))
 
-(defun make-screenshot (&rest args)
-  (let* ((screenshot (apply 'make-instance 'fake-screenshot args))
-         (canonical (screenshot-get-canonical screenshot)))
-    (or canonical
-        (apply 'make-instance 'screenshot args))))
+(defun make-screenshot (&rest args &key image &allow-other-keys)
+  (let ((screenshot-key (apply
+                         #'ensure-screenshot-key
+                         (remove-from-plist args :image))))
+    (make-instance 'lite-screenshot
+                   :screenshot-key screenshot-key
+                   :image-oid
+                   (when image
+                    (oid image :stringp nil)))))
 
 
 (defmethod can-view ((screenshot screenshot) user)
