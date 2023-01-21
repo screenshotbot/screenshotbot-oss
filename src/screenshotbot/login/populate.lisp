@@ -68,8 +68,7 @@
                                :run run-2
                                :previous-run run
                                :title "1 screenshots changed [demo]")))
-          (with-transaction ()
-           (pushnew report (company-reports company))))))))
+          (add-company-report company report))))))
 
 ;; (populate-company (user-personal-company (arnold)))
 

@@ -61,7 +61,8 @@
    #:jira-config
    #:add-company-run
    #:company-owner
-   #:sso-auth-provider))
+   #:sso-auth-provider
+   #:add-company-report))
 (in-package :screenshotbot/model/company)
 
 (with-class-validation
@@ -316,3 +317,9 @@
 
 (defmethod company-admin-p ((company company) user)
   (member user (company-admins company)))
+
+(deftransaction
+    add-company-report (company report)
+    (check-type company company)
+    (check-type report store-object)
+    (push report (company-reports company)))

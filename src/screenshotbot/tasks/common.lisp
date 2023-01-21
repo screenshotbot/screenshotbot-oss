@@ -21,7 +21,9 @@
   (:import-from #:screenshotbot/compare
                 #:warmup-comparison-images)
   (:import-from #:screenshotbot/diff-report
-                #:diff-report-title))
+                #:diff-report-title)
+  (:import-from #:screenshotbot/model/company
+                #:add-company-report))
 (in-package :screenshotbot/tasks/common)
 
 (defclass noop-task-integration (task-integration)
@@ -84,9 +86,9 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
                                                            :num-changes (length (diff-report-changes diff-report))
                                                            :previous-run previous-run
                                                            :title (diff-report-title diff-report))))
-                                (with-transaction ()
-                                 (push report
-                                       (company-reports (recorder-run-company run))))
+                                (add-company-report
+                                 (recorder-run-company run)
+                                 report)
                                 report)))
                  ;; This is only used by the frontend when viewed
                  ;; by the user, it's not used in the promotion
