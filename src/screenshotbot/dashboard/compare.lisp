@@ -97,6 +97,8 @@
                 #:review-link)
   (:import-from #:screenshotbot/cdn
                 #:make-image-cdn-url)
+  (:import-from #:screenshotbot/model/screenshot
+                #:abstract-screenshot)
   (:export
    #:diff-report
    #:render-acceptable
@@ -244,8 +246,8 @@
     the resulting image and other context from this object")))
 
 
-(defmethod find-image-comparison ((before-screenshot screenshot)
-                                  (after-screenshot screenshot))
+(defmethod find-image-comparison ((before-screenshot abstract-screenshot)
+                                  (after-screenshot abstract-screenshot))
   ;; second level of caching, we're going to look through the
   ;; datastore to see if there are any previous images
   (let ((before (screenshot-image before-screenshot))
