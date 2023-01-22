@@ -242,7 +242,7 @@
 (defmethod can-view ((screenshot screenshot) user)
   (can-view (screenshot-image screenshot) user))
 
-(defmethod %with-local-image ((screenshot screenshot) fn)
+(defmethod %with-local-image ((screenshot abstract-screenshot) fn)
   (%with-local-image (screenshot-image screenshot) fn))
 
 (defun get-screenshot-history (channel screenshot-name &key (iterator nil))
@@ -316,7 +316,7 @@
                    finally
                       (return (values result result-runs))))))))))
 
-(defmethod image-metadata ((self screenshot))
+(defmethod image-metadata ((self abstract-screenshot))
   (image-metadata (screenshot-image self)))
 
 
