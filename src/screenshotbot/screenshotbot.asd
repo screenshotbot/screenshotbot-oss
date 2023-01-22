@@ -263,7 +263,8 @@
    (:module "admin"
     :serial t
     :components ((:file "core")
-                 (:file "index")))
+                 (:file "index")
+                 (:file "site-info")))
    (:module "tasks"
     :serial t
     :components ((:file "common")))
