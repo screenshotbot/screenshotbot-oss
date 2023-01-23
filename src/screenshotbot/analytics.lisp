@@ -110,23 +110,24 @@
                                         (limit 10000))
   (when *event-engine*
     (let ((res
-            (with-db (db *event-engine*)
-              (loop for ev in (append *events*
-                                      (nreverse
-                                       (clsql:select 'analytics-event :database db
-                                         :order-by (list
-                                                    (clsql:sql-expression :attribute "ts"))
-                                         :limit limit
-                                         :flatp t)))
-                    if (funcall keep-if ev)
-                      collect (funcall function (ensure-local-time-ts ev))))))
-      (cond
-        (limit
-         (loop for ev in res
-               for i below limit
-               collect ev))
-        (t
-         res)))))
+            (flet ((call-on (events)
+                     (loop for ev in events
+                           while (> limit 0)
+                           if (funcall keep-if ev)
+                             collect (progn
+                                       (decf limit)
+                                       (funcall function (ensure-local-time-ts ev))))))
+              (append
+               (call-on *events*)
+               (call-on
+                (with-db (db *event-engine*)
+                  (clsql:select 'analytics-event :database db
+                    :order-by (list
+                               (make-instance
+                                'clsql:sql :string "ts desc"))
+                    :limit 20000
+                    :flatp t)))))))
+      res)))
 
 
 (defun push-analytics-event ()

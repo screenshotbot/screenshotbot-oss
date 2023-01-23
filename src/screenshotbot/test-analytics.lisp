@@ -94,7 +94,8 @@
         (push-analytics-event)
         (is (eql 1 (length *events*)))
         (write-analytics-events)
-        (is (eql 1 (length (all-analytics-events))))))))
+        (assert-that (all-analytics-events)
+                     (has-length 1))))))
 
 (test push-a-lot-of-analytics-events
   (with-fixture state ()
