@@ -33,7 +33,8 @@
    #:with-class-validation
    #:def-store-local
    #:location-for-oid
-   #:add-datastore-cleanup-hook))
+   #:add-datastore-cleanup-hook
+   #:*snapshot-hooks*))
 (in-package :util/store)
 
 (defvar *object-store*)
@@ -43,6 +44,10 @@
 (defvar *datastore-cleanup-hooks* nil)
 
 (defvar *calledp* nil)
+
+(defvar *snapshot-hooks* nil
+  "A snapshot hook is called with two arguments: the store, and the path
+to the directory that was just snapshotted.")
 
 (defun add-datastore-hook (fn &key immediate)
   "Add a hook, if :immediate is set, and the store is already active the
@@ -490,7 +495,15 @@ set-differences on O and the returned value from this."
                             ;; already be here.
                             :if-exists :supersede)
         (write-string comment file))
-      (car directories))))
+
+      (let ((dir (car directories)))
+        (dispatch-snapshot-hooks dir)
+        dir))))
+
+(defun dispatch-snapshot-hooks (dir)
+  (loop for hook in *snapshot-hooks* do
+    (log:info "Calling snapshot hook: ~a" hook)
+    (funcall hook *store* dir)))
 
 (defun verify-old-class (class-name slots)
   #+nil(log:info "Verifying: ~S: ~S " class-name slots)

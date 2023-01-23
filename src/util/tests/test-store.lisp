@@ -9,6 +9,8 @@
           #:fiveam
           #:alexandria)
     (:import-from #:util/store
+                  #:*snapshot-hooks*
+                  #:dispatch-snapshot-hooks
                   #:location-for-oid
                   #:def-store-local
                   #:find-any-refs
@@ -218,3 +220,12 @@
         (error (e)
           (is (str:containsp "Can not get slot NAME of destroyed"
                              (format nil "~a" e))))))))
+
+(test dispatch-snapshot-hooks
+  (with-test-store ()
+   (let (ret)
+     (flet ((hook (store dir)
+              (push dir ret)))
+       (let ((*snapshot-hooks* (list #'hook)))
+         (dispatch-snapshot-hooks :foo))
+       (is (equal (list :foo) ret))))))
