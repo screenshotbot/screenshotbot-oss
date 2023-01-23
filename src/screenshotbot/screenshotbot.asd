@@ -107,7 +107,8 @@
    (:file "server" :depends-on ("analytics"))
    (:module "s3"
     :serial t
-    :components ((:file "core")))
+    :components ((:file "core")
+                 (:file "backup")))
    (:file "cdn")
    (:file "user-api")
    (:file "notice-api")
