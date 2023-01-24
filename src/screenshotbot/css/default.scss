@@ -641,6 +641,8 @@ body.dashboard {
             letter-spacing: 0.03333333em;
             font-size: 1rem;
             width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     }
 
