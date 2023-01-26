@@ -113,7 +113,7 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
   (sentry-client:capture-exception condition :extras (build-extras condition)))
 
 (defmethod log-sentry (condition)
-  (when hunchentoot:*catch-errors-p*
+  (when *catch-errors-p*
     (%log-sentry condition)))
 
 (defmethod log-sentry :around ((warning warning))
