@@ -168,6 +168,7 @@
   :serial t
   :depends-on (:bknr.datastore
                :util/misc
+               :util/cron
                :tmpdir
                :str
                :easy-macros
