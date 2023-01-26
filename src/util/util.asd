@@ -185,7 +185,8 @@
                (:file "store")
                (:file "object-id")
                (:file "single")
-               (:file "migrations")))
+               (:file "migrations")
+               (:file "delayed-accessors")))
 
 (defsystem :util/lru-cache
   :serial t
@@ -313,6 +314,7 @@
                 :components ((:static-file "test-file" :type "txt")
                              (:static-file "test-file-compressed" :type "txt.gz")
                              (:file "test-ret-let")
+                             (:file "test-delayed-accessors")
                              (:file "test-misc")
                              (:file "test-copy-file")
                              (:file "test-request")
