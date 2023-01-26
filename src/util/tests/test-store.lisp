@@ -229,3 +229,8 @@
        (let ((*snapshot-hooks* (list #'hook)))
          (dispatch-snapshot-hooks :foo))
        (is (equal (list :foo) ret))))))
+
+(test safe-snapshot-happy-path
+  (with-test-store ()
+    (let ((*snapshot-hooks* nil))
+      (util:safe-snapshot "dummy"))))

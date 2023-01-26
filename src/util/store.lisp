@@ -484,7 +484,9 @@ set-differences on O and the returned value from this."
 
 (defun safe-snapshot (&optional (comment "default-comment"))
   (let ((directories (fad:list-directory *object-store*)))
-    (snapshot)
+    (log:info "Going into snapshot, write access will be locked")
+    (time
+     (snapshot))
     (let* ((new-directories (fad:list-directory *object-store*))
            (directories (set-difference new-directories directories :test #'equal)))
       (assert (= 1 (length directories)))
