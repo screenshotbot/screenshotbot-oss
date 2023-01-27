@@ -1,5 +1,7 @@
 (defpackage :screenshotbot/sdk/sdk-integration-tests
   (:use #:cl)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/sdk/sdk-integration-tests)
 
@@ -86,12 +88,38 @@
     (assert (not (= res 0)))
     (assert (= 1 res))))
 
+(defun test-large-file ()
+  (log:info "Running Large file test")
+  (uiop:with-temporary-file (:pathname p :stream s :element-type '(unsigned-byte 8))
+    (let ((buff (make-array 1024 :element-type '(unsigned-byte 8)
+                            :initial-element 0)))
+      (loop for i from 0 below (* 15 1024)
+            do
+               (write-sequence buff s))
+      (finish-output s)
+      (let ((res (util/request:http-request
+                  (format nil "~a/api/upload-test"
+                          (or
+                           (uiop:getenv "SCREENSHOTBOT_API_HOSTNAME")
+                           "https://screenshotot.io"))
+                  :basic-authorization (list
+                                        (uiop:getenv "SCREENSHOTBOT_API_KEY")
+                                        (uiop:getenv "SCREENSHOTBOT_API_SECRET"))
+                  :method :put
+                  :content p
+                  :want-string t)))
+       (assert
+        (equal
+         15728640 (assoc-value (json:decode-json-from-string res) :response)))))))
+
 (defun run-self-tests ()
   (log:info "Running self tests")
   (run (list *sdk* "--self-testx")))
 
 (defun run-tests ()
   (run-self-tests)
+
+  (test-large-file)
 
   (with-repo
     (test-crash)
