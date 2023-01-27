@@ -395,7 +395,7 @@ pull-request looks incorrect."
    (flet ((validp (url)
             (str:starts-with-p "https://" url)))
      (unless (validp *pull-request*)
-       (warn "The --pull-request argument you provided was invalid: `~a`. We're ignoring this."
+       (warn "The --pull-request argument you provided was invalid: `~a`. We're ignoring this.~%"
              *pull-request*)
        (setf *pull-request* nil)))))
 
