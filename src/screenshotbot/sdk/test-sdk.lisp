@@ -9,6 +9,7 @@
    :alexandria
         :fiveam)
   (:import-from #:screenshotbot/sdk/sdk
+                #:validate-pull-request
                 #:backoff
                 #:parse-environment
                 #:%read-directory-from-args
@@ -152,3 +153,18 @@
 (test backoff-happy-path
   (is (eql 20 (backoff 1)))
   (is (eql 60 (backoff 100))))
+
+(test validate-pull-request
+  (with-fixture state ()
+    (flet ((%run (url)
+             (setf flags:*pull-request* url)
+             (validate-pull-request)
+             flags:*pull-request*))
+      (handler-case
+          (%run nil)
+        (simple-warning ()
+          (fail "Saw warning for nil")))
+      (signals simple-warning
+        (%run "git@github.com:trhq/fast-example.git"))
+      (is (equal nil (%run "git@github.com:tdrhq/fast-example.git")))
+      (is (equal "https://github.com/tdrhq/fast-example/pulls/1" (%run "https://github.com/tdrhq/fast-example/pulls/1"))))))

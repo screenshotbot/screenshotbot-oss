@@ -57,7 +57,8 @@
    #:run-ios-multi-dir-toplevel
    #:run-prepare-directory-toplevel
    #:absolute-pathname
-   #:update-commit-graph))
+   #:update-commit-graph
+   #:validate-pull-request))
 
 (in-package :screenshotbot/sdk/sdk)
 
@@ -384,12 +385,28 @@ error."
       (t
        (error "Could not guess the main branch, please use --main-branch argument")))))
 
+(defun validate-pull-request ()
+  "One of our customers is using an incorrect --pull-request arg. The
+incorrect arg breaks some logic, and additionally is not required
+since we can determine the pull-request from the environment. We can
+do a quick sanity check, and recover with a warning if the
+pull-request looks incorrect."
+  (when *pull-request*
+   (flet ((validp (url)
+            (str:starts-with-p "https://" url)))
+     (unless (validp *pull-request*)
+       (warn "The --pull-request argument you provided was invalid: `~a`. We're ignoring this."
+             *pull-request*)
+       (setf *pull-request* nil)))))
+
 
 (defun parse-environment ()
   (parse-api-key-from-environment)
 
   (when *branch*
     (error "--branch is no longer supported, please use --main-branch instead"))
+
+  (validate-pull-request)
 
   (unless *pull-request*
     (setf *pull-request*
