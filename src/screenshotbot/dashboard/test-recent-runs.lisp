@@ -41,6 +41,7 @@
   (:import-from #:markup
                 #:write-html)
   (:import-from #:screenshotbot/model/recorder-run
+                #:%pull-request-url
                 #:gitlab-merge-request-iid
                 #:phabricator-diff-id)
   (:import-from #:screenshotbot/testing

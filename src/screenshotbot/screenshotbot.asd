@@ -186,6 +186,7 @@
                  (:file "webhook")
                  (:file "jwt-token")
                  (:file "access-checks")
+                 (:file "review-link")
                  (:file "app-installation")
                  (:file "pr-checks" :depends-on ("access-checks"))
                  (:file "read-repos")
@@ -196,6 +197,7 @@
    (:module "bitbucket"
     :components ((:file "core")
                  (:file "plugin")
+                 (:file "review-link")
                  (:file "audit-log")
                  (:file "settings")
                  (:file "promoter")))
@@ -330,6 +332,7 @@
                 :components ((:static-file "error-response-1" :type "json")
                              (:file "test-plugin")
                              (:file "test-audit-log")
+                             (:file "test-review-link")
                              (:file "test-settings")
                              (:file "test-promoter")))
                (:module "login"
@@ -360,6 +363,7 @@
                              (:file "test-plugin")
                              (:file "test-access-checks")
                              (:file "test-pull-request-promoter")
+                             (:file "test-review-link")
                              (:file "test-webhook")))
                (:module "phabricator"
                 :components ((:file "test-builds")

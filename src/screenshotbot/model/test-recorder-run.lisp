@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:pull-request-id
                 #:convert-old-promotion-logs
                 #:transient-promotion-log
                 #:promotion-log
@@ -57,3 +58,10 @@
 
     (convert-old-promotion-logs)
     (is (equal "zoidberg" (uiop:read-file-string (blob-pathname (promotion-log run)))))))
+
+(test pull-request-id
+  (with-fixture state ()
+    (let ((run2 (make-instance 'recorder-run
+                               :pull-request "https://foo/bar/20")))
+      (is (eql nil (pull-request-id run)))
+      (is (eql 20 (pull-request-id run2))))))

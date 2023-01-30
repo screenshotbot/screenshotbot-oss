@@ -34,6 +34,8 @@
                 #:oid-array)
   (:import-from #:screenshotbot/model/view
                 #:can-edit)
+  (:import-from #:alexandria
+                #:when-let)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -68,7 +70,8 @@
   (:export
    #:periodic-job-p
    #:override-commit-hash
-   #:unpromote-run))
+   #:unpromote-run
+   #:pull-request-id))
 (in-package :screenshotbot/model/recorder-run)
 
 (with-class-validation
@@ -176,6 +179,12 @@
      :initform nil
      :accessor %created-at))
    (:metaclass has-created-at)))
+
+(defmethod pull-request-id (run)
+  (when-let ((url (pull-request-url run)))
+    (when-let ((part (last (str:split "/" url))))
+      (parse-integer (car part)))))
+
 
 (defun unpromote-run (run)
   (let ((previous-run (recorder-previous-run run))

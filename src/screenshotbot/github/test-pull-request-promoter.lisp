@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/github/test-pull-request-promoter
+(defpackage :screenshotbot/github/test-pull-request-promoter
   (:use #:cl
         #:alexandria
         #:bknr.datastore
@@ -14,11 +14,13 @@
         #:screenshotbot/compare
         #:screenshotbot/diff-report
         #:screenshotbot/github/access-checks
-        #:screenshotbot/model/recorder-run
         #:screenshotbot/promote-api
         #:screenshotbot/model/channel
         #:screenshotbot/git-repo
         #:fiveam)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run
+                #:pull-request-url)
   (:import-from #:screenshotbot/api/promote
                 #:maybe-promote-run)
   (:import-from #:screenshotbot/github/pull-request-promoter
@@ -55,6 +57,7 @@
                 #:with-test-user)
   (:import-from #:bknr.indices
                 #:object-destroyed-p))
+(in-package :screenshotbot/github/test-pull-request-promoter)
 
 (util/fiveam:def-suite)
 

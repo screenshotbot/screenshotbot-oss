@@ -60,3 +60,8 @@
   ;; This one is a hack to deal with people using an incorrect repo URL
   (is (equal "https://github.com/foo/bar"
              (github-get-canonical-repo "ssh://git@github.com/foo/bar.git"))))
+
+(test github-get-canonical-repo-for-bitbucket
+  (is (equal "https://bitbucket.org/tdrhq/fast-example"
+             (github-get-canonical-repo
+              "git@bitbucket.org:tdrhq/fast-example.git"))))
