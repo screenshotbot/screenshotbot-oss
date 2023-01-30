@@ -183,7 +183,8 @@
 (defmethod pull-request-id (run)
   (when-let ((url (pull-request-url run)))
     (when-let ((part (last (str:split "/" url))))
-      (parse-integer (car part)))))
+      (ignore-errors
+       (parse-integer (car part))))))
 
 
 (defun unpromote-run (run)
