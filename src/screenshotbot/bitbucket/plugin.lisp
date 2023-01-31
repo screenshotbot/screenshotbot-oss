@@ -68,9 +68,9 @@
 (defmethod describe-pull-request ((repo bitbucket-repo) run)
   (let ((url (pull-request-url run)))
     (multiple-value-bind (all parts)
-        (cl-ppcre:scan-to-strings ".*/(pull-requests/(\\d)*)$" url)
+        (cl-ppcre:scan-to-strings ".*/pull-requests/((\\d)*)$" url)
       (cond
         (all
-         (elt parts 0))
+         (format nil "Pull ~a" (elt parts 0)))
         (t
          (call-next-method))))))

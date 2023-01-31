@@ -26,7 +26,7 @@
       (is (equal "Pull Request"
                  (describe-pull-request repo (make-instance 'recorder-run
                                                             :pull-request-url "https://google.com"))))
-      (is (equal "pull-requests/2"
+      (is (equal "Pull 2"
                  (describe-pull-request repo
                                         (make-instance 'recorder-run
                                                        :pull-request "https://bitbucket.org/tdrhq/fast-example/pull-requests/2")))))))
