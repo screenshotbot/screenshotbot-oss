@@ -11,9 +11,11 @@
         #:screenshotbot/report-api
         #:screenshotbot/model/view)
   (:import-from #:screenshotbot/user-api
+                #:channel
                 #:report-num-changes)
   (:import-from #:util #:object-with-oid)
   (:import-from #:screenshotbot/model/recorder-run
+                #:pull-request-id
                 #:recorder-run-company
                 #:recorder-run-channel
                 #:publicp)
@@ -25,6 +27,12 @@
                 #:hash-index)
   (:import-from #:util/store
                 #:with-class-validation)
+  (:import-from #:screenshotbot/model/company
+                #:company)
+  (:import-from #:bknr.datastore
+                #:class-instances)
+  (:import-from #:util/misc
+                #:?.)
   (:export
    #:report
    #:report-run
@@ -99,6 +107,19 @@
              :documentation "Keep track of the report, mostly for audit-log
              purposes, which needs a reference to the company."))
     (:metaclass persistent-class)))
+
+
+(defmethod find-acceptables (channel
+                             &key (pull-request-id nil pull-request-provided-p))
+  (loop for acc in (class-instances 'base-acceptable)
+        for report = (acceptable-report acc)
+        for this-channel = (report-channel report)
+        if (and
+            (eql this-channel channel)
+            (or (not pull-request-provided-p)
+                (equal pull-request-id
+                       (?. pull-request-id (report-run report)))))
+          collect acc))
 
 (defmethod (setf acceptable-state) (state (acceptable base-acceptable))
   (assert (member state (list nil :accepted :rejected)))
