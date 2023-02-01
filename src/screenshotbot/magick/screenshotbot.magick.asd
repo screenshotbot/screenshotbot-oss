@@ -10,6 +10,7 @@
   :depends-on (#-lispworks #:util/fake-fli
                #:easy-macros
                #:screenshotbot/events
+               #:trivial-features
                #:screenshotbot/mask-rect-api
                #:screenshotbot.magick.build
                #:serapeum

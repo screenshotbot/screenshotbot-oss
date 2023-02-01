@@ -51,6 +51,15 @@
    (fad:pathname-directory-pathname
     (car (directory #P"C:/Program Files/ImageMagick-*-Q8/configure.xml"))))
 
+(defun arch ()
+  (or
+   #+arm64 ;; typical Mac M1 Docker
+   "aarch64"
+   #+x86-64
+   "x86_64"
+   ;; We could just always use * here as a wildcard.
+   "*"))
+
 (defun %path ()
   (destructuring-bind (name sep dir-sep)
       (if (uiop:os-windows-p)
@@ -75,7 +84,9 @@
        ;; Debian 11 default location. This returns the file itself,
        ;; but that's okay. The only caller of this will replace the
        ;; :name part of the pathname.
-       "/usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q*/MagickWand-config")))))
+       (format nil 
+               "/usr/lib/~a-linux-gnu/ImageMagick-*/bin-q*/MagickWand-config"
+               (arch)))))))
 
 (defun guess-include-dir ()
   (path:catdir (windows-path) "include/"))
