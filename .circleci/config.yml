@@ -1,59 +1,55 @@
 version: 2
 
-workflows:
+jobs:
   tests:
-    jobs:
-      build:
-        docker:
-          - image: cimg/base:2021.04
-        steps:
-          - checkout
-          - run: &install_deps
-              name: Install Deps
-              command: sudo apt-get update && sudo apt-get install -y imagemagick build-essential openjdk-11-jdk-headless sbcl libmagickwand-dev libssh2-1-dev
-          - run:
-              name: Install CCL
-              command: |
-                cd ~/
-                curl -L https://github.com/Clozure/ccl/releases/download/v1.12.1/ccl-1.12.1-linuxx86.tar.gz --output ccl.tar.gz
-                tar xvzf ccl.tar.gz
-                ls ~/
-          - run:
-              name: SBCL tests
-              command: |
-                for dir in /usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q* ; do
-                    export PATH=$PATH:$dir
-                done
-                echo $PATH
-                which MagickWand-config
-                dpkg -S MagickWand-config
-                make test-sb
+    docker:
+      - image: cimg/base:2021.04
+    steps:
+      - checkout
+      - run: &install_deps
+          name: Install Deps
+          command: sudo apt-get update && sudo apt-get install -y imagemagick build-essential openjdk-11-jdk-headless sbcl libmagickwand-dev libssh2-1-dev
+      - run:
+          name: Install CCL
+          command: |
+            cd ~/
+            curl -L https://github.com/Clozure/ccl/releases/download/v1.12.1/ccl-1.12.1-linuxx86.tar.gz --output ccl.tar.gz
+            tar xvzf ccl.tar.gz
+            ls ~/
+      - run:
+          name: SBCL tests
+          command: |
+            for dir in /usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q* ; do
+                export PATH=$PATH:$dir
+            done
+            echo $PATH
+            which MagickWand-config
+            dpkg -S MagickWand-config
+            make test-sb
 
-          # - run:
-          #     name: CCL tests
-          #     command: |
-          #       for dir in /usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q* ; do
-          #           export PATH=$PATH:$dir
-          #       done
-          #       echo $PATH
-          #       which MagickWand-config
-          #       dpkg -S MagickWand-config
-          #       CCL_DEFAULT_DIRECTORY=~/ccl make test-ccl
-          - run:
-              name: Upload assets for Screenshots
-              command: |
-                make upload-screenshots-oss
+      # - run:
+      #     name: CCL tests
+      #     command: |
+      #       for dir in /usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q* ; do
+      #           export PATH=$PATH:$dir
+      #       done
+      #       echo $PATH
+      #       which MagickWand-config
+      #       dpkg -S MagickWand-config
+      #       CCL_DEFAULT_DIRECTORY=~/ccl make test-ccl
+      - run:
+          name: Upload assets for Screenshots
+          command: |
+            make upload-screenshots-oss
 
   launch:
-    jobs:
-      build:
-        docker:
-          - image: cimg/base:2021.04
-        steps:
-          - checkout
-          - run:
-              <<: *install_deps
-          - run:
-              name: Launch Screenshotbot
-              command: |
-                sbcl --script launch.lisp -- --verify
+    docker:
+      - image: cimg/base:2021.04
+    steps:
+      - checkout
+      - run:
+          <<: *install_deps
+      - run:
+          name: Launch Screenshotbot
+          command: |
+            sbcl --script launch.lisp -- --verify
