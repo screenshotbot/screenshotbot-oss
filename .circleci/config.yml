@@ -1,11 +1,12 @@
 version: 2
+
 jobs:
-  build:
+  tests:
     docker:
       - image: cimg/base:2021.04
     steps:
       - checkout
-      - run:
+      - run: &install_deps
           name: Install Deps
           command: sudo apt-get update && sudo apt-get install -y imagemagick build-essential openjdk-11-jdk-headless sbcl libmagickwand-dev libssh2-1-dev
       - run:
@@ -40,3 +41,15 @@ jobs:
           name: Upload assets for Screenshots
           command: |
             make upload-screenshots-oss
+
+  launch:
+    docker:
+      - image: cimg/base:2021.04
+    steps:
+      - checkout
+      - run:
+          <<: *install_deps
+      - run:
+          name: Launch Screenshotbot
+          command: |
+            sbcl --script launch.lisp -- --verify
