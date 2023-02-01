@@ -52,7 +52,7 @@ jobs:
       - run:
           name: Launch Screenshotbot
           command: |
-            sbcl --script launch.lisp -- --verify
+            sbcl --script launch.lisp --verify-store
 
 workflows:
   tests:
