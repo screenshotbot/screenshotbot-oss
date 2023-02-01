@@ -108,10 +108,13 @@
          (pos
            (search
             needle
-            haystack))
-         (str (subseq haystack (+ pos (length needle))))
-         (end (search " " str)))
-    (subseq str 0 end)))
+            haystack)))
+
+    (unless pos
+      (error "Could not find lMagickWand in the output of MagickWand-config --libs: ~a" haystack))
+    (let* ((str (subseq haystack (+ pos (length needle))))
+           (end (search " " str)))
+      (subseq str 0 end))))
 
 (defun %string-trim (str)
   (String-trim '(#\Space #\Newline)
