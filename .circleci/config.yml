@@ -58,5 +58,6 @@ workflows:
   tests:
     jobs:
       - build
-    launch:
+  launch:
+    jobs:
       - launch
