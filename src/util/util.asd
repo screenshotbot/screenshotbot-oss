@@ -235,6 +235,7 @@
   :depends-on (:bordeaux-threads
                :mailbox
                :str
+               :trivial-backtrace
                #-screenshotbot-oss
                :sentry
                :trivial-garbage
