@@ -52,6 +52,7 @@ jobs:
       - run:
           name: Launch Screenshotbot
           command: |
+            mkdir -p ~/.config/screenshotbot/object-store/current/
             sbcl --script launch.lisp --verify-store
 
 workflows:
