@@ -1,10 +1,13 @@
 version: 2
-
-default: &default
-  - checkout
-  - run:
-      name: Install Deps
-      command: sudo apt-get update && sudo apt-get install -y imagemagick build-essential openjdk-11-jdk-headless sbcl libmagickwand-dev libssh2-1-dev
+jobs:
+  build:
+    docker:
+      - image: cimg/base:2021.04
+    steps:
+      - checkout
+      - run:
+          name: Install Deps
+          command: sudo apt-get update && sudo apt-get install -y imagemagick build-essential openjdk-11-jdk-headless sbcl libmagickwand-dev libssh2-1-dev
       - run:
           name: Install CCL
           command: |
@@ -12,13 +15,6 @@ default: &default
             curl -L https://github.com/Clozure/ccl/releases/download/v1.12.1/ccl-1.12.1-linuxx86.tar.gz --output ccl.tar.gz
             tar xvzf ccl.tar.gz
             ls ~/
-
-jobs:
-  tests:
-    docker:
-      - image: cimg/base:2021.04
-    steps:
-      <<: *default
       - run:
           name: SBCL tests
           command: |
