@@ -57,5 +57,5 @@
 (in-package :screenshotbot/user-api)
 
 
-(declaim (ftype current-user))
-(declaim (ftype signup-get))
+(declaim (ftype (function ()) current-user))
+(declaim (ftype (function (&key &allow-other-keys)) signup-get))
