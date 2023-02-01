@@ -147,7 +147,10 @@
      ((uiop:os-macosx-p)
       (rel "darwin/dart-sass/sass"))
      ((uiop:os-unix-p)
-      (rel "dart-sass/sass"))
+      (or
+       #+arm64
+       (rel "linux-arm64/dart-sass/sass")
+       (rel "dart-sass/sass")))
      ((uiop:os-windows-p)
       ;; choco install sass
       "sass")

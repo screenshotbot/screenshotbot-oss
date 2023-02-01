@@ -23,5 +23,6 @@
   :serial t
   :depends-on (:tmpdir
                :alexandria
+               :trivial-features
                :str)
   :components ((:file "deliver-script")))
