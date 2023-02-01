@@ -234,6 +234,7 @@
 (defsystem :util/threading
   :depends-on (:bordeaux-threads
                :mailbox
+               :str
                #-screenshotbot-oss
                :sentry
                :trivial-garbage
