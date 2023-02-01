@@ -3,26 +3,26 @@
 (in-package :screenshotbot-system.js-assets)
 
 (defsystem :screenshotbot.js-assets/split
-  :class build-utils:js-library
+  :class "build-utils:js-library"
   :defsystem-depends-on (:build-utils)
   :components (("build-utils:js-file" "split")))
 
 (defsystem screenshotbot.js-assets/headroom
-  :class build-utils:js-library
+  :class "build-utils:js-library"
   :defsystem-depends-on (:build-utils)
   :depends-on ()
   :components ((:module "vendor"
                 :components (("build-utils:js-file" "headroom")))))
 
 (defsystem screenshotbot.js-assets/common
-  :class build-utils:js-library
+  :class "build-utils:js-library"
   :defsystem-depends-on (:build-utils)
   :depends-on ()
   :components (("build-utils:js-file" "common")))
 
 
 (defsystem screenshotbot.js-assets
-  :class build-utils:js-system
+  :class "build-utils:js-system"
   :serial t
   :defsystem-depends-on (:build-utils)
   :depends-on (
