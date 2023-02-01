@@ -1,7 +1,7 @@
 version: 2
 
 jobs:
-  tests:
+  build:
     docker:
       - image: cimg/base:2021.04
     steps:
@@ -53,3 +53,10 @@ jobs:
           name: Launch Screenshotbot
           command: |
             sbcl --script launch.lisp -- --verify
+
+workflows:
+  tests:
+    jobs:
+      - build
+    launch:
+      - launch
