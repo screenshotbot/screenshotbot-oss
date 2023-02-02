@@ -11,7 +11,6 @@
         #:screenshotbot/report-api
         #:screenshotbot/model/view)
   (:import-from #:screenshotbot/user-api
-                #:channel
                 #:report-num-changes)
   (:import-from #:util #:object-with-oid)
   (:import-from #:screenshotbot/model/recorder-run
