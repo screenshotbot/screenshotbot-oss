@@ -63,15 +63,18 @@
     (t
      (let ((report (ignore-errors (find-by-oid id))))
        (cond
-         ((not report)
+         ((or
+           (not report)
+           (not (typep report 'report)))
+          (warn "Invalid report link")
           ;; We don't use template because this is messing up our Google
           ;; Analytics. This is most likely trigged by Microsoft Outlook's
           ;; preview.
-          <html>
-          <body>
-          Invalid Report link, <a href= "/report">Click here to view recent reports</a>
-          </body>
-          </html>)
+          <simple-card-page>
+            <div>
+              Invalid Report link. <a href= "/report">Click here to view recent reports.</a>
+            </div>
+          </simple-card-page>)
          (t
           (with-login (:needs-login (not (can-public-view report))
                        :company (report-company report))
