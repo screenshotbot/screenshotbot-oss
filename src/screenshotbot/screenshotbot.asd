@@ -177,6 +177,7 @@
                  (:file "audit-log")))
    (:file "invite")
    (:file "image-comparison")
+   (:file "abstract-pr-promoter")
    (:module "github"
     :serial t
     :components ((:file "plugin")

@@ -20,7 +20,8 @@
         #:screenshotbot/github/access-checks
         #:screenshotbot/github/github-installation
         #:screenshotbot/model/user
-        #:screenshotbot/model/company)
+        #:screenshotbot/model/company
+        #:screenshotbot/abstract-pr-promoter)
   (:nicknames #:sb.pr #:screenshotbot.pr)
   (:import-from #:util #:oid)
   (:import-from #:bknr.datastore
@@ -48,18 +49,14 @@
   (:import-from #:screenshotbot/github/audit-log
                 #:user-updated-check-run
                 #:updated-check-run)
+  (:import-from #:screenshotbot/abstract-pr-promoter
+                #:abstract-pr-promoter)
   (:export
    #:pull-request-promoter
    #:pr-acceptable
    #:format-updated-summary))
 (in-package :screenshotbot/github/pull-request-promoter)
 (in-package :screenshotbot.pr)
-
-(defclass pull-request-info ()
-  ())
-
-(defclass run-retriever ()
-  ())
 
 (defclass pr-acceptable (base-acceptable)
   ((send-task-args :accessor send-task-args
@@ -102,42 +99,9 @@
                    ("summary" . ,(assoc-value old-output "summary" :test 'equal)))
          (send-task-args acceptable))))))
 
-(defclass check ()
-  ((status :initarg :status
-           :accessor check-status)
-   (report :initarg :report
-           :accessor report)
-   (title :initarg :title
-          :accessor check-title)
-   (details-url :initarg :details-url
-                :initform nil
-                :accessor details-url)
-   (summary :initarg :summary
-            :initform nil
-            :accessor check-summary)))
 
-(defmethod retrieve-run ((retriever run-retriever)
-                         channel
-                         base-commit)
-  ;; TODO: try for a few minutes
-  (production-run-for channel :commit base-commit))
-
-
-(defclass pull-request-promoter (promoter)
-  ((report :accessor report
-           :initform nil)
-   (base-commit :accessor base-commit
-               :initform nil)
-   (pull-request-info :accessor pull-request-info
-                      :initarg :pull-request-info
-                      :initform (make-instance 'pull-request-info))
-   (run-retriever :accessor run-retriever
-                  :initarg :run-retriever
-                  :initform (make-instance 'run-retriever))
-   (result :accessor promoter-result)
-   (send-task-args :accessor send-task-args
-                   :initform nil)
-   (app-id :initarg :app-id
+(defclass pull-request-promoter (abstract-pr-promoter)
+  ((app-id :initarg :app-id
            :accessor app-id)
    (private-key :initarg :private-key
                 :accessor private-key)))
@@ -162,125 +126,47 @@
                         repo)
   (typep repo 'github-repo))
 
-(defmacro p (x)
-  `(let ((ret ,x))
-     (log:info "For ~S got: ~a" ',x ret)
-     ret))
+(defmethod repo-full-name (repo)
+  (multiple-value-bind (full parts)
+      (cl-ppcre:scan-to-strings "^https://.*/(.*/.*)$"
+                                (github-get-canonical-repo
+                                 (repo-link repo)))
+    (assert full)
+    (elt parts 0)))
 
-(defmethod maybe-promote ((promoter pull-request-promoter)
-                          run)
-  (let* ((repo (channel-repo (recorder-run-channel run)))
-         (repo-url (repo-link repo))
-         (company (recorder-run-company run)))
-    (cond
-      ((and
-        (valid-repo? promoter repo)
-        (plugin-installed? promoter company repo-url)
-        (not (equal (recorder-run-merge-base run)
-                    (recorder-run-commit run))))
-       (multiple-value-bind (full parts)
-           (cl-ppcre:scan-to-strings "^https://.*/(.*/.*)$"
-                                     (github-get-canonical-repo
-                                      (repo-link repo)))
-         (assert full)
-         (let* ((full-name (elt parts 0)))
-           (setf (base-commit promoter)
-                 (recorder-run-merge-base run))
 
-           (do-promotion-log :info "Base commit is: ~S" (base-commit promoter))
-           (let ((base-run (retrieve-run
-                            (run-retriever promoter)
-                            (recorder-run-channel run)
-                            (base-commit  promoter))))
-             (setf (promoter-result promoter)
-                   (cond
-                     ((null (base-commit promoter))
-                      (make-instance 'check
-                                      :status :failure
-                                      :title "Base SHA not available for comparison, please check CI setup"
-                                      :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
-                     ((null base-run)
-                      (make-instance 'check
-                                      :status :failure
-                                      :title "Cannot generate Screenshotbot report, try rebasing"
-                                      :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
-                     (t
-                      (make-check-result-from-diff-report
-                       promoter
-                       (make-diff-report run base-run)
-                       run
-                       base-run))))
-             (setf (send-task-args promoter)
-                   (let ((check (promoter-result promoter)))
-                     (make-task-args promoter
-                                     run
-                                     full-name
-                                     check)))
-             (let ((send-task-args (send-task-args promoter)))
-              (when (report promoter)
-                (with-transaction ()
-                  (setf
-                   (send-task-args
-                    (report-acceptable (report promoter)))
-                   send-task-args))))))))
-      (t
-       #+nil
-       (cerror "continue" "not promoting for ~a" promoter)
-       (log:info "Initial checks failed, not going through pull-request-promoter")))))
+(defmethod make-task-args :before (promoter
+                                   run
+                                   (repo string)
+                                   check)
+  ;; This is to ensure that all tests are using the proper repo
+  ;; object, and not a string.
+  (error "We expect repo to a repo object"))
+
+(defmethod maybe-promote ((promoter pull-request-promoter) run)
+  (call-next-method))
 
 (defmethod make-task-args ((promoter pull-request-promoter)
                            run
-                           full-name
+                           (repo github-repo)
                            check)
-  (let ((repo-url (repo-link (channel-repo (recorder-run-channel run)))))
-   (list :app-id (app-id promoter)
-         :private-key (private-key promoter)
-         :full-name full-name
-         :check-name (format nil "Screenshotbot Changes: ~a "
-                             (channel-name (recorder-run-channel run)))
-         :output `(("title" . ,(check-title check))
-                   ("summary" . ,(check-summary check)))
-         :status :completed
-         :details-url (details-url check)
-         :installation-id (app-installation-id (repo-string-identifier repo-url))
-         :conclusion (str:downcase (check-status (promoter-result promoter)))
-         :head-sha (or
-                    (override-commit-hash run)
-                    (recorder-run-commit run)))))
+  (let ((repo-url (repo-link (channel-repo (recorder-run-channel run))))
+        (full-name (repo-full-name repo)))
+    (list :app-id (app-id promoter)
+          :private-key (private-key promoter)
+          :full-name full-name
+          :check-name (format nil "Screenshotbot Changes: ~a "
+                              (channel-name (recorder-run-channel run)))
+          :output `(("title" . ,(check-title check))
+                    ("summary" . ,(check-summary check)))
+          :status :completed
+          :details-url (details-url check)
+          :installation-id (app-installation-id (repo-string-identifier repo-url))
+          :conclusion (str:downcase (check-status (promoter-result promoter)))
+          :head-sha (or
+                     (override-commit-hash run)
+                     (recorder-run-commit run)))))
 
-(defun make-check-result-from-diff-report (promoter diff-report run base-run)
-  (flet ((make-details-url (&rest args)
-           (format nil
-                   "~a~a"
-                   (installation-domain (installation))
-                   (apply #'hex:make-url args))))
-   (cond
-     ((diff-report-empty-p diff-report)
-      (make-instance 'check
-                      :status :success
-                      :title "No screenshots changed"
-                      :summary "No action required on your part"
-                      :details-url
-                      (make-details-url 'run-page
-                                         :id (oid run))))
-     (t
-      (let ((report (make-instance 'report
-                                    :run run
-                                    :previous-run base-run
-                                    :channel (when run (recorder-run-channel run))
-                                    :title  (diff-report-title diff-report))))
-        (with-transaction ()
-          (setf (report-acceptable report)
-                (make-acceptable promoter report)))
-        (with-transaction ()
-          (setf (report promoter)
-                report))
-        (make-instance 'check
-                        :status :action_required
-                        :title (diff-report-title diff-report)
-                        :summary "Please verify that the images look reasonable to you"
-                        :details-url (make-details-url 'report-page
-                                                        :id (oid report))))))))
 
 (defmethod make-acceptable ((promoter pull-request-promoter) report)
   (make-instance 'pr-acceptable

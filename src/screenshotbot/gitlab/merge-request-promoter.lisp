@@ -204,23 +204,22 @@
 
 (defmethod make-task-args ((promoter merge-request-promoter)
                            run
-                           full-name
+                           repo
                            check)
-  (let* ((repo (channel-repo (recorder-run-channel run))))
-    (list
-     :company (company repo)
-     :project-path (project-path repo)
-     :sha (recorder-run-commit run)
-     :state (ecase (check-status check)
-              (:success "success")
-              (:failure "failed")
-              (:action_required "failed"))
-     :target-url (or
-                  (details-url check)
-                  (format nil "~a~a"
-                          (installation-domain (installation))
-                          (hex:make-url 'run-page :id (oid run))))
-     :description (check-title check))))
+  (list
+   :company (company repo)
+   :project-path (project-path repo)
+   :sha (recorder-run-commit run)
+   :state (ecase (check-status check)
+            (:success "success")
+            (:failure "failed")
+            (:action_required "failed"))
+   :target-url (or
+                (details-url check)
+                (format nil "~a~a"
+                        (installation-domain (installation))
+                        (hex:make-url 'run-page :id (oid run))))
+   :description (check-title check)))
 
 (auto-restart:with-auto-restart ()
   (defmethod maybe-send-tasks ((promoter merge-request-promoter) run)

@@ -30,8 +30,9 @@
                 #:check-status
                 #:check-title
                 #:retrieve-run
-                #:make-check-result-from-diff-report
                 #:report)
+  (:import-from #:screenshotbot/abstract-pr-promoter
+                #:make-check-result-from-diff-report)
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/screenshot

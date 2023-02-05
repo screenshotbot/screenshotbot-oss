@@ -35,6 +35,8 @@
                 #:bitbucket-error)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
+  (:import-from #:screenshotbot/pro/bitbucket/plugin
+                #:bitbucket-repo)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/bitbucket/test-promoter)
 
@@ -62,15 +64,20 @@
                       (error "Unimplemented http-request mock for args ~a" args)))
          (&body))))))
 
+(defun make-test-repo ()
+  (make-instance 'bitbucket-repo
+                 :link "https://bitbucket.org/tdrhq/dummy"))
+
 (test make-task-args-happy-path
   (with-fixture state ()
     (let* ((run (make-instance 'recorder-run :channel channel))
            (promoter (make-instance 'bitbucket-promoter)))
       (let ((result (make-task-args promoter
                               run
-                              "foobar"
+                              (make-test-repo)
                               check)))
-        (is (equal "SUCCESSFUL" (a:assoc-value result :state)))))))
+        (is (equal "SUCCESSFUL" (a:assoc-value result :state)))
+        (is (equal "tdrhq/dummy" (a:assoc-value result :full-name)))))))
 
 (test make-task-args-override-commit-hash
   (with-fixture state ()
@@ -81,7 +88,7 @@
           (promoter (make-instance 'bitbucket-promoter)))
       (let ((result (make-task-args promoter
                               run
-                              "foobar"
+                              (make-test-repo)
                               check)))
         (is (equal "foobar" (a:assoc-value result :commit)))))))
 
@@ -93,7 +100,7 @@
           (promoter (make-instance 'bitbucket-promoter)))
       (let ((result (make-task-args promoter
                               run
-                              "foobar"
+                              (make-test-repo)
                               check)))
         (is (equal "zoidberg" (a:assoc-value result :commit)))))))
 

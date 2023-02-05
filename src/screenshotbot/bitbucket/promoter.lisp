@@ -181,9 +181,10 @@
       (t
        (ironclad:byte-array-to-hex-string (md5:md5sum-string old-key))))))
 
+
 (defmethod make-task-args ((promoter bitbucket-promoter)
                            run
-                           full-name
+                           (repo bitbucket-repo)
                            check)
   (let ((channel-name (channel-name (recorder-run-channel run))))
    (flet ((make-details-url (&rest args)
@@ -192,7 +193,8 @@
                     (installation-domain (installation))
                     (apply #'hex:make-url args))))
      `((:key . ,(make-key channel-name))
-       (:full-name . ,full-name)
+       ;; TODO: refactor repo-full-name to not use GitHub specific code.
+       (:full-name . ,(screenshotbot/github/pull-request-promoter::repo-full-name repo))
        (:commit . ,(or
                     (nullify (override-commit-hash run))
                     (recorder-run-commit run)))
