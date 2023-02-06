@@ -230,8 +230,8 @@
                acceptor)
   "Called from launch scripts, either web-bin or launch.lisp"
 
-  (unwind-on-interrupt ()
-      (with-lparallel-kernel ()
+  (with-lparallel-kernel ()
+    (unwind-on-interrupt ()
         (let ((args #-lispworks (cons "<arg0>"(uiop:command-line-arguments))
                     #+lispworks sys:*line-arguments-list*))
           (log:info "CLI args: ~s" args)
@@ -284,7 +284,7 @@
               (setf acceptor *multi-acceptor*))
             #+lispworks
             (when jvm
-             (jvm:jvm-init))
+              (jvm:jvm-init))
             (setup-appenders)
 
             (setup-log4cl-debugger-hook)
@@ -296,7 +296,7 @@
             (setf hunchentoot:*rewrite-for-session-urls* nil)
 
             (when enable-store
-             (util/store:prepare-store))
+              (util/store:prepare-store))
 
             (cl-cron:start-cron)
 
@@ -311,40 +311,40 @@
 
             (setup-appenders :clear t)
 
-            (log:info "Now we wait indefinitely for shutdown notifications"))))
+            (log:info "Now we wait indefinitely for shutdown notifications")))
 
-    ;; unwind if an interrupt happens
-    (log:config :sane :immediate-flush t)
-    (log:config :info)
-    (log:info "SHUTTING DOWN~%")
-    (finish-output t)
-    (log:info "Shutting down cron")
-    (cl-cron:stop-cron)
-    (log:info "Shutting down hunchentoot")
-    (hunchentoot:stop acceptor)
+      ;; unwind if an interrupt happens
+      (log:config :sane :immediate-flush t)
+      (log:config :info)
+      (log:info "SHUTTING DOWN~%")
+      (finish-output t)
+      (log:info "Shutting down cron")
+      (cl-cron:stop-cron)
+      (log:info "Shutting down hunchentoot")
+      (hunchentoot:stop acceptor)
 
-    (log:info "Calling shutdown hooks")
-    (mapc 'funcall *shutdown-hooks*)
+      (log:info "Calling shutdown hooks")
+      (mapc 'funcall *shutdown-hooks*)
 
-    ;;;; Don't snapshot the store, if the process is killed while the
-    ;;;; snapshot is happening, we have to manually recover the store
-    ;; (bknr.datastore:snapshot)
+;;;; Don't snapshot the store, if the process is killed while the
+;;;; snapshot is happening, we have to manually recover the store
+      ;; (bknr.datastore:snapshot)
 
-    (when enable-store
-      (bknr.datastore:close-store))
+      (when enable-store
+        (bknr.datastore:close-store))
 
-    #+lispworks
-    (when *remote-debugging-process*
-      (comm:server-terminate *remote-debugging-process*))
+      #+lispworks
+      (when *remote-debugging-process*
+        (comm:server-terminate *remote-debugging-process*))
 
-    (log:info "Shutting down slynk")
-    (slynk-teardown *slynk-preparer*)
-    (log:info "All services down")
-    #+lispworks
-    (wait-for-processes)
-    (log:info "All threads before exiting: ~s" (bt:all-threads))
-    (log4cl:flush-all-appenders)
-    (log4cl:stop-hierarchy-watcher-thread)))
+      (log:info "Shutting down slynk")
+      (slynk-teardown *slynk-preparer*)
+      (log:info "All services down")
+      #+lispworks
+      (wait-for-processes)
+      (log:info "All threads before exiting: ~s" (bt:all-threads))
+      (log4cl:flush-all-appenders)
+      (log4cl:stop-hierarchy-watcher-thread))))
 
 #+lispworks
 (defun wait-for-processes ()
