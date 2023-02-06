@@ -73,15 +73,18 @@
                 #:bitbucket-error)
   (:import-from #:screenshotbot/events
                 #:push-event)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/bitbucket/promoter)
 
-(defclass bitbucket-acceptable (base-acceptable)
-  ((send-task-args :initarg :report
-                   :accessor send-task-args)
-   (%company :initarg :company
-             :reader company))
-  (:metaclass persistent-class))
+(with-class-validation
+ (defclass bitbucket-acceptable (base-acceptable)
+   ((send-task-args :initarg :report
+                    :accessor send-task-args)
+    (%company :initarg :company
+              :reader company))
+   (:metaclass persistent-class)))
 
 
 (defclass bitbucket-promoter (pull-request-promoter)

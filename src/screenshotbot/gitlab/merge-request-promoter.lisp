@@ -59,6 +59,8 @@
                 #:with-audit-log)
   (:import-from #:screenshotbot/gitlab/audit-logs
                 #:update-status-audit-log)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:export
    #:merge-request-promoter
    #:gitlab-acceptable))
@@ -141,14 +143,15 @@
 (defun comment (promoter message)
   (push message (comments promoter)))
 
-(defclass gitlab-acceptable (base-acceptable)
-  ((report :initarg :report
-           :accessor acceptable-report)
-   (company :initarg :company
-            :accessor acceptable-company)
-   (send-task-args :accessor send-task-args)
-   (discussion-id :accessor discussion-id))
-  (:metaclass bknr.datastore:persistent-class))
+(with-class-validation
+ (defclass gitlab-acceptable (base-acceptable)
+   ((report :initarg :report
+            :accessor acceptable-report)
+    (company :initarg :company
+             :accessor acceptable-company)
+    (send-task-args :accessor send-task-args)
+    (discussion-id :accessor discussion-id))
+   (:metaclass bknr.datastore:persistent-class)))
 
 (defmethod make-acceptable((promoter merge-request-promoter) report)
   (make-instance 'gitlab-acceptable

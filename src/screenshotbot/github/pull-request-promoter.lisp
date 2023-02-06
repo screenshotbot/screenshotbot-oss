@@ -51,6 +51,8 @@
                 #:updated-check-run)
   (:import-from #:screenshotbot/abstract-pr-promoter
                 #:abstract-pr-promoter)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:export
    #:pull-request-promoter
    #:pr-acceptable
@@ -58,10 +60,11 @@
 (in-package :screenshotbot/github/pull-request-promoter)
 (in-package :screenshotbot.pr)
 
-(defclass pr-acceptable (base-acceptable)
-  ((send-task-args :accessor send-task-args
-                   :initarg :send-task-args))
-  (:metaclass persistent-class))
+(with-class-validation
+ (defclass pr-acceptable (base-acceptable)
+   ((send-task-args :accessor send-task-args
+                    :initarg :send-task-args))
+   (:metaclass persistent-class)))
 
 (defun format-updated-summary (state user)
   (let ((summary
