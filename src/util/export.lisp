@@ -7,7 +7,11 @@
 (defpackage :util/export
   (:use #:cl)
   (:import-from #:bknr.datastore
-                #:encode))
+                #:encode)
+  (:import-from #:bknr.datastore
+                #:decode)
+  (:import-from #:bknr.datastore
+                #:with-transaction))
 (in-package :util/export)
 
 (defmethod export-slots (class (slot-name symbol))
@@ -15,14 +19,18 @@
         if (slot-boundp obj slot-name)
         collect (list
                  (bknr.datastore:store-object-id obj)
+                 (string slot-name)
                  (slot-value obj slot-name))))
 
-(defmethod export-slots (class (slot-name string))
+(defmethod find-slot (class (slot-name string))
   (loop for slot in (closer-mop:class-slots (find-class class))
         for slot-def-name = (closer-mop:slot-definition-name slot)
         if (string-equal slot-def-name slot-name)
           ;; Convert name to symbol :/
-          return (export-slots class slot-def-name)))
+          return slot-def-name))
+
+(defmethod export-slots (class (slot-name string))
+  (export-slots class (find-slot class slot-name)))
 
 (defmethod export-slots-to-file (class slot-name file)
   (with-open-file (stream file :direction :output
@@ -31,8 +39,32 @@
      (export-slots class slot-name)
      stream)))
 
+(defun import-slots (slots)
+  (loop for (id slot-name res) in slots
+        for obj = (bknr.datastore:store-object-with-id id)
+        do (import-slot-for-obj obj
+                                (find-slot (type-of obj) slot-name)
+                                res)))
+
+(defun import-slot-for-obj (obj slot-def-name res)
+  (log:info "importing ~a ~a" obj slot-def-name)
+  (restart-case
+      (cond
+        ((slot-boundp obj slot-def-name)
+         (error "Slot already bound for ~a" obj))
+        (t
+         (with-transaction ()
+           (setf (slot-value obj slot-def-name) res))))
+    (continue ()
+      nil)))
+
+(defmethod import-slots-from-file (class slot-name file)
+  (with-open-file (stream file :direction :input
+                                :element-type 'flex:octet)
+    (import-slots (decode stream))))
+
+
 #+nil
-(export-slots-to-file
- 'screenshotbot/bitbucket/promoter::pr-acceptable
- "send-task-args"
- "/home/arnold/builds/web/slots.obj")
+(export-slots
+ 'screenshotbot/bitbucket/promoter::bitbucket-acceptable
+ "send-task-args")
