@@ -27,6 +27,8 @@
                 #:installation)
   (:import-from #:util/store
                 #:with-class-validation)
+  (:import-from #:alexandria
+                #:when-let)
   (:export
    #:company
    #:company-reports
@@ -299,7 +301,8 @@
   (values))
 
 (defun prepare-singleton-company ()
-  (prepare-singleton-company-for-installation (installation)))
+  (when-let (installation (ignore-errors (installation)))
+   (prepare-singleton-company-for-installation installation)))
 
 (defmethod get-singleton-company ((installation installation))
   (cached-singleton-company installation))

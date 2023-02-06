@@ -187,7 +187,8 @@
                (:file "object-id")
                (:file "single")
                (:file "migrations")
-               (:file "delayed-accessors")))
+               (:file "delayed-accessors")
+               (:file "export")))
 
 (defsystem :util/lru-cache
   :serial t

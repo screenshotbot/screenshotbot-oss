@@ -28,4 +28,7 @@
            :initform "https://example.com"
            :reader installation-domain)))
 
+(defmethod installation-domain ((self null))
+  nil)
+
 (defvar *installation*)
