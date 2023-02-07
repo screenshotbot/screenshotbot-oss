@@ -165,7 +165,7 @@
           :status :completed
           :details-url (details-url check)
           :installation-id (app-installation-id (repo-string-identifier repo-url))
-          :conclusion (str:downcase (check-status (promoter-result promoter)))
+          :conclusion (str:downcase (check-status check))
           :head-sha (or
                      (override-commit-hash run)
                      (recorder-run-commit run)))))

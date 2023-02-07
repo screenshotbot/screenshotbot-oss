@@ -49,7 +49,6 @@
    #:retrieve-run
    #:send-task-args
    #:run-retriever
-   #:promoter-result
    #:valid-repo?
    #:plugin-installed?
    #:make-acceptable
@@ -96,8 +95,6 @@
    (run-retriever :accessor run-retriever
                   :initarg :run-retriever
                   :initform (make-instance 'run-retriever))
-   (result :accessor promoter-result
-           :documentation "A CHECK object that is the result of the promotion step")
    (send-task-args :accessor send-task-args
                    :initform nil)))
 
@@ -131,30 +128,29 @@
                         (run-retriever promoter)
                         (recorder-run-channel run)
                         (base-commit  promoter))))
-         (setf (promoter-result promoter)
-               (cond
-                 ((null (base-commit promoter))
-                  (make-instance 'check
-                                 :status :failure
-                                 :title "Base SHA not available for comparison, please check CI setup"
-                                 :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
-                 ((null base-run)
-                  (make-instance 'check
-                                 :status :failure
-                                 :title "Cannot generate Screenshotbot report, try rebasing"
-                                 :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
-                 (t
-                  (make-check-result-from-diff-report
-                   promoter
-                   (make-diff-report run base-run)
-                   run
-                   base-run))))
-         (setf (send-task-args promoter)
-               (let ((check (promoter-result promoter)))
+         (let ((check (cond
+                        ((null (base-commit promoter))
+                         (make-instance 'check
+                                        :status :failure
+                                        :title "Base SHA not available for comparison, please check CI setup"
+                                        :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
+                        ((null base-run)
+                         (make-instance 'check
+                                        :status :failure
+                                        :title "Cannot generate Screenshotbot report, try rebasing"
+                                        :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
+                        (t
+                         (make-check-result-from-diff-report
+                          promoter
+                          (make-diff-report run base-run)
+                          run
+                          base-run)))))
+           (setf (send-task-args promoter)
                  (make-task-args promoter
                                  run
                                  repo
                                  check)))
+
          (let ((send-task-args (send-task-args promoter)))
            (when (report promoter)
              (with-transaction ()

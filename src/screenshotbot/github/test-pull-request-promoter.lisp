@@ -26,12 +26,12 @@
   (:import-from #:screenshotbot/github/pull-request-promoter
                 #:send-task-args
                 #:base-commit
-                #:promoter-result
                 #:check-status
                 #:check-title
                 #:retrieve-run
                 #:report)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:make-task-args
                 #:make-check-result-from-diff-report)
   (:import-from #:util/store
                 #:with-test-store)
@@ -165,9 +165,14 @@
                         :company company
                         :channel (make-instance 'dummy-channel)
                         :merge-base "dfdfdf"
-                        :commit-hash "car")))
-     (let ((run (make-instance
-                 'recorder-run
+                        :commit-hash "car"))
+          (check))
+      (cl-mock:if-called 'make-task-args
+                         (lambda (promoter run repo %check)
+                           (declare (ignore promoter run repo))
+                           (setf check %check)))
+      (let ((run (make-instance
+                  'recorder-run
                   :company company
                   :channel (make-instance 'dummy-channel)
                   :pull-request "https://github.com/tdrhq/fast-example/pull/2"
@@ -175,8 +180,7 @@
                   :commit-hash "foo")))
        (maybe-promote promoter run)
        (is (equal "car" (base-commit promoter)))
-       (let ((check (promoter-result promoter)))
-         (is (eql :success (check-status check))))))))
+       (is (eql :success (check-status check)))))))
 
 (test without-a-base-run-we-get-an-error
   (with-fixture state ()
@@ -187,12 +191,16 @@
                   :company company
                   :pull-request "https://github.com/tdrhq/fast-example/pull/2"
                   :merge-base "car"
-                  :commit-hash "foo")))
+                  :commit-hash "foo"))
+           (check))
+       (cl-mock:if-called 'make-task-args
+                          (lambda (promoter run repo %check)
+                            (declare (ignore promoter run repo))
+                            (setf check %check)))
        (maybe-promote promoter run)
        (is (equal "car" (base-commit promoter)))
-       (let ((check (promoter-result promoter)))
-         (is (eql :failure (check-status check)))
-         (is (cl-ppcre:scan ".*rebasing*" (check-title check))))))))
+       (is (eql :failure (check-status check)))
+       (is (cl-ppcre:scan ".*rebasing*" (check-title check)))))))
 
 (test check-result-for-diff-report
   (with-installation ()
