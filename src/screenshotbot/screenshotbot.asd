@@ -319,6 +319,7 @@
                (:file "test-template")
                (:file "test-taskie")
                (:file "test-audit-log")
+               (:file "test-abstract-pr-promoter")
                (:module "dashboard"
                 :components ((:file "test-recent-runs")
                              (:file "test-review-link")
