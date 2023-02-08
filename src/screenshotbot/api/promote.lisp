@@ -108,7 +108,7 @@
   (let ((msg (apply #'format nil fmt args)))
    (log :info "~a" msg))
   (when *promotion-log-stream*
-    (format *promotion-log-stream* "~a: " level)
+    (format *promotion-log-stream* "~a: ~a:" level (local-time:now))
     (apply #'format *promotion-log-stream*
              fmt args)
     (format *promotion-log-stream* "~%")))
