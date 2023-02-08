@@ -6,8 +6,29 @@
 
 (defpackage :screenshotbot/test-abstract-pr-promoter
   (:use #:cl
-        #:fiveam))
+        #:fiveam)
+  (:import-from #:screenshotbot/abstract-pr-promoter
+                #:retrieve-run
+                #:run-retriever)
+  (:import-from #:util/store
+                #:with-test-store)
+  (:import-from #:screenshotbot/user-api
+                #:channel)
+  (:import-from #:util/testing
+                #:with-global-binding))
 (in-package :screenshotbot/test-abstract-pr-promoter)
 
 
 (util/fiveam:def-suite)
+
+(def-fixture state ()
+  (with-test-store ()
+    (with-global-binding ((lparallel:*kernel* (lparallel:make-kernel 2)))
+     (let ((channel (make-instance 'channel)))
+       (&body)))))
+
+(test simple-run-retriever-test
+  (with-fixture state ()
+    (let ((retriever (make-instance 'run-retriever
+                                    :sleep-fn #'identity)))
+      (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd")))))))

@@ -39,6 +39,8 @@
                 #:recorder-run-company)
   (:import-from #:screenshotbot/events
                 #:push-event)
+  (:import-from #:lparallel.promise
+                #:future)
   (:export
    #:check
    #:check-status
@@ -75,14 +77,22 @@
             :accessor check-summary)))
 
 (defclass run-retriever ()
-  ())
+  ((sleep-fn :initarg :sleep-fn
+             :reader sleep-fn
+             :initform #'sleep)))
 
 
 (defmethod retrieve-run ((retriever run-retriever)
                          channel
                          base-commit)
-  ;; TODO: try for a few minutes
-  (production-run-for channel :commit base-commit))
+  (lparallel:future
+    (loop for i from 0 to 10
+          for run = (production-run-for channel :commit base-commit)
+          if run
+            return run
+          else do
+            (log:info "Waiting 30s before checking again")
+            (funcall (sleep-fn retriever) 30))))
 
 
 
@@ -132,10 +142,11 @@
              (recorder-run-merge-base run))
 
        (do-promotion-log :info "Base commit is: ~S" (base-commit promoter))
-       (let ((base-run (retrieve-run
-                        (run-retriever promoter)
-                        (recorder-run-channel run)
-                        (base-commit  promoter))))
+       (let ((base-run (lparallel:force
+                        (retrieve-run
+                         (run-retriever promoter)
+                         (recorder-run-channel run)
+                         (base-commit  promoter)))))
          (flet ((make-failure-check (&rest args)
                   (apply #'make-instance 'check
                          :status :failure

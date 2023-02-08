@@ -89,7 +89,8 @@
 (defmethod retrieve-run ((retriever my-run-retriever)
                          channel base-commit)
   (is (equal "car" base-commit))
-  *base-run*)
+  (lparallel:delay
+   *base-run*))
 
 
 (def-fixture state (&key (run-retriever 'my-run-retriever))
