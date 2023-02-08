@@ -109,6 +109,12 @@
                             repo
                             check))
 
+(defun make-details-url (&rest args)
+  (format nil
+          "~a~a"
+          (installation-domain (installation))
+          (apply #'hex:make-url args)))
+
 (defmethod maybe-promote ((promoter abstract-pr-promoter)
                           run)
   (let* ((repo (channel-repo (recorder-run-channel run)))
@@ -128,28 +134,35 @@
                         (run-retriever promoter)
                         (recorder-run-channel run)
                         (base-commit  promoter))))
-         (let ((check (cond
-                        ((null (base-commit promoter))
-                         (make-instance 'check
-                                        :status :failure
-                                        :title "Base SHA not available for comparison, please check CI setup"
-                                        :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
-                        ((null base-run)
-                         (make-instance 'check
-                                        :status :failure
-                                        :title "Cannot generate Screenshotbot report, try rebasing"
-                                        :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
-                        (t
-                         (make-check-result-from-diff-report
-                          promoter
-                          (make-diff-report run base-run)
-                          run
-                          base-run)))))
-           (setf (send-task-args promoter)
-                 (make-task-args promoter
-                                 run
-                                 repo
-                                 check)))
+         (flet ((make-failure-check (&rest args)
+                  (apply #'make-instance 'check
+                         :status :failure
+                         :details-url (make-details-url 'screenshotbot/dashboard/run-page:run-page
+                                                        :id (oid run))
+                         args)))
+          (let ((check (cond
+                         ((null (base-commit promoter))
+                          (do-promotion-log :info "No base-commit provided in run")
+                          (make-failure-check
+                           :title "Base SHA not available for comparison, please check CI setup"
+                           :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
+                         ((null base-run)
+                          (do-promotion-log :info "Could not find base-run")
+                          (make-failure-check
+                           :title "Cannot generate Screenshotbot report, try rebasing"
+                           :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
+                         (t
+                          (do-promotion-log :info "Base run is available, preparing notification from diff-report")
+                          (make-check-result-from-diff-report
+                           promoter
+                           (make-diff-report run base-run)
+                           run
+                           base-run)))))
+            (setf (send-task-args promoter)
+                  (make-task-args promoter
+                                  run
+                                  repo
+                                  check))))
 
          (let ((send-task-args (send-task-args promoter)))
            (when (report promoter)
@@ -165,35 +178,30 @@
 
 
 (defun make-check-result-from-diff-report (promoter diff-report run base-run)
-  (flet ((make-details-url (&rest args)
-           (format nil
-                   "~a~a"
-                   (installation-domain (installation))
-                   (apply #'hex:make-url args))))
-   (cond
-     ((diff-report-empty-p diff-report)
-      (make-instance 'check
-                      :status :success
-                      :title "No screenshots changed"
-                      :summary "No action required on your part"
-                      :details-url
-                      (make-details-url 'screenshotbot/dashboard/run-page:run-page
-                                         :id (oid run))))
-     (t
-      (let ((report (make-instance 'report
-                                    :run run
-                                    :previous-run base-run
-                                    :channel (when run (recorder-run-channel run))
-                                    :title  (diff-report-title diff-report))))
-        (with-transaction ()
-          (setf (report-acceptable report)
-                (make-acceptable promoter report)))
-        (with-transaction ()
-          (setf (report promoter)
-                report))
-        (make-instance 'check
-                        :status :action_required
-                        :title (diff-report-title diff-report)
-                        :summary "Please verify that the images look reasonable to you"
-                        :details-url (make-details-url 'screenshotbot/dashboard/reports:report-page
-                                                        :id (oid report))))))))
+  (cond
+    ((diff-report-empty-p diff-report)
+     (make-instance 'check
+                    :status :success
+                    :title "No screenshots changed"
+                    :summary "No action required on your part"
+                    :details-url
+                    (make-details-url 'screenshotbot/dashboard/run-page:run-page
+                                      :id (oid run))))
+    (t
+     (let ((report (make-instance 'report
+                                  :run run
+                                  :previous-run base-run
+                                  :channel (when run (recorder-run-channel run))
+                                  :title  (diff-report-title diff-report))))
+       (with-transaction ()
+         (setf (report-acceptable report)
+               (make-acceptable promoter report)))
+       (with-transaction ()
+         (setf (report promoter)
+               report))
+       (make-instance 'check
+                      :status :action_required
+                      :title (diff-report-title diff-report)
+                      :summary "Please verify that the images look reasonable to you"
+                      :details-url (make-details-url 'screenshotbot/dashboard/reports:report-page
+                                                     :id (oid report)))))))
