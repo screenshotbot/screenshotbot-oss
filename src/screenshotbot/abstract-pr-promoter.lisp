@@ -37,6 +37,8 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run-merge-base
                 #:recorder-run-company)
+  (:import-from #:screenshotbot/events
+                #:push-event)
   (:export
    #:check
    #:check-status
@@ -147,6 +149,7 @@
                            :title "Base SHA not available for comparison, please check CI setup"
                            :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
                          ((null base-run)
+                          (push-event :promoter.no-base-run :oid (oid run))
                           (do-promotion-log :info "Could not find base-run")
                           (make-failure-check
                            :title "Cannot generate Screenshotbot report, try rebasing"
