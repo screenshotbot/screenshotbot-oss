@@ -53,6 +53,8 @@
                 #:abstract-pr-promoter)
   (:import-from #:util/store
                 #:with-class-validation)
+  (:import-from #:screenshotbot/github/plugin
+                #:github-plugin)
   (:export
    #:pull-request-promoter
    #:pr-acceptable
@@ -104,15 +106,10 @@
 
 
 (defclass pull-request-promoter (abstract-pr-promoter)
-  ((app-id :initarg :app-id
-           :accessor app-id)
-   (private-key :initarg :private-key
-                :accessor private-key)))
+  ())
 
 (defmethod plugin-promoter ((plugin github-plugin))
-  (make-instance 'pull-request-promoter
-                  :app-id (app-id plugin)
-                  :private-key (private-key plugin)))
+  (make-instance 'pull-request-promoter))
 
 (defmethod plugin-installed? ((promoter pull-request-promoter)
                                company
@@ -147,9 +144,10 @@
                            check)
   (let* ((repo (channel-repo (recorder-run-channel run)))
          (repo-url (repo-link repo))
-         (full-name (repo-full-name repo)))
-    (list :app-id (app-id promoter)
-          :private-key (private-key promoter)
+         (full-name (repo-full-name repo))
+         (github-plugin (github-plugin)))
+    (list :app-id (app-id github-plugin)
+          :private-key (private-key github-plugin)
           :full-name full-name
           :check-name (format nil "Screenshotbot Changes: ~a "
                               (channel-name (recorder-run-channel run)))

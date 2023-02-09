@@ -60,7 +60,9 @@
   (:import-from #:bknr.indices
                 #:object-destroyed-p)
   (:import-from #:cl-mock
-                #:answer))
+                #:answer)
+  (:import-from #:screenshotbot/github/plugin
+                #:github-plugin))
 (in-package :screenshotbot/github/test-pull-request-promoter)
 
 (util/fiveam:def-suite)
@@ -106,10 +108,12 @@
        (cl-mock:if-called 'app-installed-p
                           (lambda (repo)
                             t))
+       (cl-mock:answer (github-plugin)
+         (make-instance 'github-plugin
+                        :app-id "dummy-app-id"
+                        :private-key "dummy-private-key"))
        (let ((company (make-instance 'company))
              (promoter (make-instance 'pull-request-promoter
-                                      :app-id "dummy-app-id"
-                                      :private-key "dummy-private-key"
                                       :pull-request-info
                                       (make-instance 'pull-request-info)
                                       :run-retriever
