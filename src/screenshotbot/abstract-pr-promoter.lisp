@@ -212,9 +212,7 @@
         (with-transaction ()
           (setf (report-acceptable report)
                 (make-acceptable promoter report)))
-        (with-transaction ()
-          (setf (report promoter)
-                report))
+        (setf (report promoter) report)
         (make-check-for-report
          report
          :status :action_required
