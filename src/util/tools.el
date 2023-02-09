@@ -41,12 +41,14 @@ nil)")
   )
 
 (defun arnold--lisp-mode-hook ()
+
   (hs-minor-mode t)
   (save-excursion
     (goto-char 0)
     (hs-hide-block)
     (search-forward "(")
-    (hs-hide-block)))
+    (hs-hide-block))
+  )
 
 (add-hook 'lisp-mode-hook
           'arnold--lisp-mode-hook)

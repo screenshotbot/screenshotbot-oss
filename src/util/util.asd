@@ -279,7 +279,8 @@
   :components ((:file "hash-lock")))
 
 (defsystem :util/lparallel
-  :depends-on (:lparallel)
+  :depends-on (:lparallel
+               :easy-macros)
   :serial t
   :components ((:file "lparallel")))
 
