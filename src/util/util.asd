@@ -149,6 +149,8 @@
   :serial t
   :depends-on (:fiveam
                :cl-mock
+               :lparallel
+               :easy-macros
                :util)
   :components ((:file "pipe-stream")
                (:file "testing")))
@@ -276,6 +278,11 @@
   :serial t
   :components ((:file "hash-lock")))
 
+(defsystem :util/lparallel
+  :depends-on (:lparallel)
+  :serial t
+  :components ((:file "lparallel")))
+
 (defsystem :util/fake-fli
   :depends-on (:cffi
                :str)
@@ -302,6 +309,7 @@
 (defsystem :util/tests
   :depends-on (:util
                :util/hash-lock
+               :util/lparallel
                :util/health-check
                :util/lru-cache
                :util/copy-file
@@ -325,6 +333,7 @@
                              (:file "test-store-version")
                              (:file "test-store")
                              (:file "test-migrations")
+                             (:file "test-lparallel")
                              (:file "test-hash-lock")
                              (:file "test-pipe-stream")
                              (:file "test-threading")

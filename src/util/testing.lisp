@@ -10,13 +10,16 @@
                 #:nibble-plugin)
   (:import-from #:hunchentoot
                 #:acceptor)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-fake-request
    #:in-test-p
    #:screenshot-static-page
    #:with-local-acceptor
-   #:with-global-binding))
+   #:with-global-binding
+   #:with-global-kernel))
 (in-package :util/testing)
 
 (defvar *in-test-p* nil)
@@ -175,3 +178,10 @@
          (setf (symbol-value sym) old-val))
         (t
          (makunbound sym))))))
+
+
+(def-easy-macro with-global-kernel (&key (count 2)  &fn fn)
+  (with-global-binding ((lparallel:*kernel* (lparallel:make-kernel count)))
+    (unwind-protect
+         (funcall fn)
+      (lparallel:end-kernel :wait t))))
