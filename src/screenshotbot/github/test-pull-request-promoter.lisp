@@ -38,6 +38,7 @@
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
   (:import-from #:screenshotbot/diff-report
+                #:make-diff-report
                 #:change)
   (:import-from #:screenshotbot/github/app-installation
                 #:app-installed-p)
@@ -57,7 +58,9 @@
                 #:with-installation
                 #:with-test-user)
   (:import-from #:bknr.indices
-                #:object-destroyed-p))
+                #:object-destroyed-p)
+  (:import-from #:cl-mock
+                #:answer))
 (in-package :screenshotbot/github/test-pull-request-promoter)
 
 (util/fiveam:def-suite)
@@ -207,37 +210,42 @@
   (with-installation ()
    (with-test-store ()
      (let ((empty-run (make-instance 'recorder-run))
+           (another-empty-run (make-instance 'recorder-run))
            (empty-report (make-instance 'diff-report :added nil
                                                      :deleted nil
                                                      :changes nil)))
        (let ((check (make-check-result-from-diff-report
                      (make-instance 'pull-request-promoter)
-                     empty-report
-                     empty-run nil)))
+                     empty-run another-empty-run)))
          (is (eql :success (check-status check)))
          (is (equal "No screenshots changed"
                     (check-title check))))))))
 
 (test check-result-for-unempty-diff-report
-  (with-installation ()
-   (with-test-store ()
-     (let ((diff-report (make-instance
-                         'diff-report
-                         :added nil
-                         :deleted nil
-                         :changes (list
-                                   (make-instance
-                                    'change
-                                    :before (make-instance 'screenshot :name "foo")
-                                    :after (make-instance 'screenshot :name "foo"))))))
-       (let ((run (make-instance 'recorder-run
-                                 :channel (make-instance 'dummy-channel))))
-         (let ((check (make-check-result-from-diff-report
-                       (make-instance 'pull-request-promoter)
-                       diff-report
-                       run run)))
-           (is (eql :action_required(check-status check)))
-           (is (cl-ppcre:scan "1 change.*" (check-title check)))))))))
+  (cl-mock:with-mocks ()
+   (with-installation ()
+     (with-test-store ()
+       (let ((diff-report (make-instance
+                           'diff-report
+                           :added nil
+                           :deleted nil
+                           :changes (list
+                                     (make-instance
+                                      'change
+                                      :before (make-instance 'screenshot :name "foo")
+                                      :after (make-instance 'screenshot :name "foo"))))))
+         (let ((run (make-instance 'recorder-run
+                                   :channel (make-instance 'dummy-channel)))
+               (another-run (make-instance 'recorder-run
+                                           :channel (make-instance 'dummy-channel))))
+           (answer (make-diff-report run another-run)
+             diff-report)
+
+           (let ((check (make-check-result-from-diff-report
+                         (make-instance 'pull-request-promoter)
+                         run another-run)))
+             (is (eql :action_required(check-status check)))
+             (is (cl-ppcre:scan "1 change.*" (check-title check))))))))))
 
 (test report-has-acceptable
   (with-fixture state ()

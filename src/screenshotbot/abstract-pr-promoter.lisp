@@ -11,6 +11,8 @@
                 #:do-promotion-log
                 #:promoter)
   (:import-from #:screenshotbot/report-api
+                #:report-previous-run
+                #:report-run
                 #:report-acceptable
                 #:report)
   (:import-from #:screenshotbot/model/channel
@@ -169,7 +171,6 @@
                           (do-promotion-log :info "Base run is available, preparing notification from diff-report")
                           (make-check-result-from-diff-report
                            promoter
-                           (make-diff-report run base-run)
                            run
                            base-run)))))
             (setf (send-task-args promoter)
@@ -191,31 +192,41 @@
        (log:info "Initial checks failed, not going through pull-request-promoter")))))
 
 
-(defun make-check-result-from-diff-report (promoter diff-report run base-run)
-  (cond
-    ((diff-report-empty-p diff-report)
-     (make-instance 'check
-                    :status :success
-                    :title "No screenshots changed"
-                    :summary "No action required on your part"
-                    :details-url
-                    (make-details-url 'screenshotbot/dashboard/run-page:run-page
-                                      :id (oid run))))
-    (t
-     (let ((report (make-instance 'report
-                                  :run run
-                                  :previous-run base-run
-                                  :channel (when run (recorder-run-channel run))
-                                  :title  (diff-report-title diff-report))))
-       (with-transaction ()
-         (setf (report-acceptable report)
-               (make-acceptable promoter report)))
-       (with-transaction ()
-         (setf (report promoter)
-               report))
-       (make-instance 'check
-                      :status :action_required
-                      :title (diff-report-title diff-report)
-                      :summary "Please verify that the images look reasonable to you"
-                      :details-url (make-details-url 'screenshotbot/dashboard/reports:report-page
-                                                     :id (oid report)))))))
+(defun make-check-result-from-diff-report (promoter run base-run)
+  (let ((diff-report (make-diff-report run base-run)))
+   (cond
+     ((diff-report-empty-p diff-report)
+      (make-instance 'check
+                     :status :success
+                     :title "No screenshots changed"
+                     :summary "No action required on your part"
+                     :details-url
+                     (make-details-url 'screenshotbot/dashboard/run-page:run-page
+                                       :id (oid run))))
+     (t
+      (let ((report (make-instance 'report
+                                   :run run
+                                   :previous-run base-run
+                                   :channel (when run (recorder-run-channel run))
+                                   :title  (diff-report-title diff-report))))
+        (with-transaction ()
+          (setf (report-acceptable report)
+                (make-acceptable promoter report)))
+        (with-transaction ()
+          (setf (report promoter)
+                report))
+        (make-check-for-report
+         report
+         :status :action_required
+         :summary "Please verify that the images look reasonable to you"))))))
+
+(defun make-check-for-report (report &key status (summary ""))
+  (make-instance
+   'check
+   :status status
+   :title (diff-report-title (make-diff-report
+                              (report-run report)
+                              (report-previous-run report)))
+   :summary summary
+   :details-url (make-details-url 'screenshotbot/dashboard/reports:report-page
+                                  :id (oid report))))
