@@ -101,7 +101,7 @@
                   (format nil "~a/api/upload-test"
                           (or
                            (uiop:getenv "SCREENSHOTBOT_API_HOSTNAME")
-                           "https://screenshotot.io"))
+                           "https://screenshotbot.io"))
                   :basic-authorization (list
                                         (uiop:getenv "SCREENSHOTBOT_API_KEY")
                                         (uiop:getenv "SCREENSHOTBOT_API_SECRET"))
