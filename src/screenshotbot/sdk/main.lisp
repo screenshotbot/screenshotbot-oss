@@ -80,19 +80,26 @@
   #-screenshotbot-oss
   (sentry-client:initialize-sentry-client
    sentry:*dsn* :client-class 'sentry:delivered-client)
-  (let ((error-handler (lambda (e)
-                         (format stream "~%~a~%~%" e)
-                         #+lispworks
-                         (dbg:output-backtrace (if flags:*verbose* :bug-form :brief)
-                                               :stream stream)
-                         #-lispworks
-                         (trivial-backtrace:print-backtrace einteg stream)
-                         #-screenshotbot-oss
-                         (util/threading:log-sentry e)
-                         (funcall on-error))))
-    (handler-bind (#+lispworks
-                   (error error-handler))
-      (funcall fn))))
+  (let ((*extras* (list*
+                   (lambda (e)
+                     (declare (ignore e))
+                     `(("api_hostname" . ,flags:*hostname*)
+                       ;; Note that api-key is not meant to be secret
+                       ("api_id" . ,flags:*api-key*)))
+                   *extras*)))
+   (let ((error-handler (lambda (e)
+                          (format stream "~%~a~%~%" e)
+                          #+lispworks
+                          (dbg:output-backtrace (if flags:*verbose* :bug-form :brief)
+                                                :stream stream)
+                          #-lispworks
+                          (trivial-backtrace:print-backtrace einteg stream)
+                          #-screenshotbot-oss
+                          (util/threading:log-sentry e)
+                          (funcall on-error))))
+     (handler-bind (#+lispworks
+                    (error error-handler))
+       (funcall fn)))))
 
 (defun main (&rest args)
   (uiop:setup-command-line-arguments)
