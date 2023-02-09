@@ -172,8 +172,8 @@
                         :commit-hash "car"))
           (check))
       (cl-mock:if-called 'make-task-args
-                         (lambda (promoter run repo %check)
-                           (declare (ignore promoter run repo))
+                         (lambda (promoter run %check)
+                           (declare (ignore promoter run))
                            (setf check %check)))
       (let ((run (make-instance
                   'recorder-run
@@ -198,8 +198,8 @@
                   :commit-hash "foo"))
            (check))
        (cl-mock:if-called 'make-task-args
-                          (lambda (promoter run repo %check)
-                            (declare (ignore promoter run repo))
+                          (lambda (promoter run %check)
+                            (declare (ignore promoter run))
                             (setf check %check)))
        (maybe-promote promoter run)
        (is (equal "car" (base-commit promoter)))

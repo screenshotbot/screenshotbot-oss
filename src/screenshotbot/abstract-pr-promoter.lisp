@@ -120,7 +120,6 @@
 
 (defgeneric make-task-args (promoter
                             run
-                            repo
                             check))
 
 (defun make-details-url (&rest args)
@@ -176,7 +175,6 @@
             (setf (send-task-args promoter)
                   (make-task-args promoter
                                   run
-                                  repo
                                   check))))
 
          (let ((send-task-args (send-task-args promoter)))

@@ -138,23 +138,16 @@
     (elt parts 0)))
 
 
-(defmethod make-task-args :before (promoter
-                                   run
-                                   (repo string)
-                                   check)
-  ;; This is to ensure that all tests are using the proper repo
-  ;; object, and not a string.
-  (error "We expect repo to a repo object"))
 
 (defmethod maybe-promote ((promoter pull-request-promoter) run)
   (call-next-method))
 
 (defmethod make-task-args ((promoter pull-request-promoter)
                            run
-                           (repo github-repo)
                            check)
-  (let ((repo-url (repo-link (channel-repo (recorder-run-channel run))))
-        (full-name (repo-full-name repo)))
+  (let* ((repo (channel-repo (recorder-run-channel run)))
+         (repo-url (repo-link repo))
+         (full-name (repo-full-name repo)))
     (list :app-id (app-id promoter)
           :private-key (private-key promoter)
           :full-name full-name

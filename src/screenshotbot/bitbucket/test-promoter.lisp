@@ -46,7 +46,8 @@
 (def-fixture state ()
   (with-installation ()
    (with-test-store ()
-     (let* ((channel (make-instance 'channel :name "channel-0"))
+     (let* ((channel (make-instance 'channel :name "channel-0"
+                                    :github-repo "https://bitbucket.org/tdrhq/dummy"))
             (company (make-instance 'company))
             (bitbucket-token (make-instance 'bitbucket-token
                                             :refresh-token "fake-refresh-token"
@@ -64,17 +65,12 @@
                       (error "Unimplemented http-request mock for args ~a" args)))
          (&body))))))
 
-(defun make-test-repo ()
-  (make-instance 'bitbucket-repo
-                 :link "https://bitbucket.org/tdrhq/dummy"))
-
 (test make-task-args-happy-path
   (with-fixture state ()
     (let* ((run (make-instance 'recorder-run :channel channel))
            (promoter (make-instance 'bitbucket-promoter)))
       (let ((result (make-task-args promoter
                               run
-                              (make-test-repo)
                               check)))
         (is (equal "SUCCESSFUL" (a:assoc-value result :state)))
         (is (equal "tdrhq/dummy" (a:assoc-value result :full-name)))))))
@@ -87,9 +83,8 @@
                                :commit-hash "zoidberg"))
           (promoter (make-instance 'bitbucket-promoter)))
       (let ((result (make-task-args promoter
-                              run
-                              (make-test-repo)
-                              check)))
+                                    run
+                                    check)))
         (is (equal "foobar" (a:assoc-value result :commit)))))))
 
 (test make-task-args-no-commit-hash
@@ -99,9 +94,8 @@
                                :commit-hash "zoidberg"))
           (promoter (make-instance 'bitbucket-promoter)))
       (let ((result (make-task-args promoter
-                              run
-                              (make-test-repo)
-                              check)))
+                                    run
+                                    check)))
         (is (equal "zoidberg" (a:assoc-value result :commit)))))))
 
 (test send-build-status-makes-audit-log

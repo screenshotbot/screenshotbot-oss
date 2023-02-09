@@ -36,6 +36,7 @@
                 #:override-commit-hash
                 #:recorder-run-company)
   (:import-from #:screenshotbot/user-api
+                #:channel-repo
                 #:current-user
                 #:recorder-run-channel
                 #:channel-name
@@ -187,9 +188,10 @@
 
 (defmethod make-task-args ((promoter bitbucket-promoter)
                            run
-                           (repo bitbucket-repo)
                            check)
-  (let ((channel-name (channel-name (recorder-run-channel run))))
+  (let* ((channel (recorder-run-channel run))
+         (repo (channel-repo channel))
+         (channel-name (channel-name channel)))
    (flet ((make-details-url (&rest args)
             (format nil
                     "~a~a"
