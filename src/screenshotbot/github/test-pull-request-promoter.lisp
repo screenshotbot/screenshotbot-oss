@@ -35,7 +35,6 @@
                 #:push-remote-check
                 #:check-status
                 #:pr-merge-base
-                #:make-task-args
                 #:make-check-result-from-diff-report)
   (:import-from #:util/store
                 #:with-test-store)

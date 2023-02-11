@@ -69,11 +69,9 @@
    #:valid-repo?
    #:plugin-installed?
    #:make-acceptable
-   #:make-task-args
    #:pr-merge-base
    #:format-updated-summary
    #:abstract-pr-promoter
-   #:two-stage-promoter
    #:abstract-pr-acceptable
    #:make-promoter-for-acceptable))
 (in-package :screenshotbot/abstract-pr-promoter)
@@ -142,18 +140,11 @@
    (send-task-args :accessor send-task-args
                    :initform nil)))
 
-(defclass two-stage-promoter (abstract-pr-promoter)
-  ())
-
 (defgeneric valid-repo? (promoter repo))
 
 (defgeneric plugin-installed? (promoter company repo-url))
 
 (defgeneric make-acceptable (promoter report))
-
-(defgeneric make-task-args (promoter
-                            run
-                            check))
 
 (defmethod pr-merge-base ((promoter abstract-pr-promoter) run)
   (recorder-run-merge-base run))
@@ -168,21 +159,6 @@
                                run
                                check)
   (:documentation "Push the CHECK to the corresponding run remotely "))
-
-(defmethod push-remote-check ((promoter two-stage-promoter)
-                              run
-                              check)
-  (let ((send-task-args (make-task-args promoter
-                                        run
-                                        check)))
-    (setf (send-task-args promoter)
-          send-task-args)
-    (when (report check)
-      (with-transaction ()
-        (setf
-         (send-task-args
-          (report-acceptable (report check)))
-         send-task-args)))))
 
 (defgeneric make-promoter-for-acceptable (acceptable))
 

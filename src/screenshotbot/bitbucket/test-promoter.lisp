@@ -16,8 +16,7 @@
                 #:make-key
                 #:bitbucket-promoter)
   (:import-from #:screenshotbot/github/pull-request-promoter
-                #:check
-                #:make-task-args)
+                #:check)
   (:import-from #:screenshotbot/user-api
                 #:channel)
   (:import-from #:screenshotbot/model/company

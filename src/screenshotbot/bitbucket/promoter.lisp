@@ -18,7 +18,6 @@
                 #:make-promoter-for-acceptable
                 #:abstract-pr-acceptable
                 #:push-remote-check
-                #:two-stage-promoter
                 #:format-updated-summary
                 #:check-title
                 #:check-summary
@@ -26,7 +25,6 @@
                 #:details-url
                 #:send-task-args
                 #:check-status
-                #:make-task-args
                 #:valid-repo?
                 #:plugin-installed?)
   (:import-from #:screenshotbot/pro/bitbucket/settings

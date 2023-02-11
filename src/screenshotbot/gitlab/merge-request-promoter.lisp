@@ -44,7 +44,6 @@
                 #:abstract-pr-acceptable
                 #:push-remote-check
                 #:format-updated-summary
-                #:make-task-args
                 #:valid-repo?
                 #:send-task-args
                 #:check-status

@@ -54,7 +54,6 @@
                 #:check-user
                 #:push-remote-check
                 #:abstract-pr-acceptable
-                #:two-stage-promoter
                 #:abstract-pr-promoter)
   (:import-from #:util/store
                 #:with-class-validation)
