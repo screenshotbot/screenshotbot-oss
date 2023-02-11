@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/model/channel
                 #:production-run-for)
   (:import-from #:screenshotbot/user-api
+                #:current-user
                 #:user-email
                 #:user-full-name
                 #:recorder-run-commit
@@ -50,6 +51,10 @@
                 #:store-object)
   (:import-from #:bknr.datastore
                 #:persistent-class)
+  (:import-from #:screenshotbot/model/report
+                #:acceptable-report
+                #:acceptable-state
+                #:base-acceptable)
   (:export
    #:check
    #:check-status
@@ -68,7 +73,9 @@
    #:pr-merge-base
    #:format-updated-summary
    #:abstract-pr-promoter
-   #:two-stage-promoter))
+   #:two-stage-promoter
+   #:abstract-pr-acceptable
+   #:make-promoter-for-acceptable))
 (in-package :screenshotbot/abstract-pr-promoter)
 
 (defun format-updated-summary (state user)
@@ -117,7 +124,9 @@
             (log:info "Waiting 30s before checking again")
             (funcall (sleep-fn retriever) 30))))
 
-
+(defclass abstract-pr-acceptable (base-acceptable)
+  ()
+  (:metaclass persistent-class))
 
 (defclass abstract-pr-promoter (promoter)
   ((pull-request-info :accessor pull-request-info
@@ -170,6 +179,17 @@
          (send-task-args
           (report-acceptable (report check)))
          send-task-args)))))
+
+(defgeneric make-promoter-for-acceptable (acceptable))
+
+(defmethod (setf acceptable-state) :after (state (self abstract-pr-acceptable))
+  (push-remote-check
+   (make-promoter-for-acceptable self)
+   (report-run (acceptable-report self))
+   (make-check-for-report
+    (acceptable-report self)
+    :status state
+    :user (current-user))))
 
 (defmethod maybe-promote ((promoter abstract-pr-promoter)
                           run)
@@ -246,17 +266,25 @@
          :status :action_required
          :summary "Please verify that the images look reasonable to you"))))))
 
-(defun make-check-for-report (report &key status (summary ""))
-  (make-instance
-   'check
-   :status status
-   :report report
-   :title (diff-report-title (make-diff-report
-                              (report-run report)
-                              (report-previous-run report)))
-   :summary summary
-   :details-url (make-details-url 'screenshotbot/dashboard/reports:report-page
-                                  :id (oid report))))
+(defun make-check-for-report (report &key status (summary "") user)
+  (let* ((title (diff-report-title (make-diff-report
+                                    (report-run report)
+                                    (report-previous-run report))))
+         (title (cond
+                  (user
+                   (format nil "~a, ~a"
+                           title
+                           (format-updated-summary status user)))
+                  (t
+                   title))))
+   (make-instance
+    'check
+    :status status
+    :report report
+    :title title
+    :summary summary
+    :details-url (make-details-url 'screenshotbot/dashboard/reports:report-page
+                                   :id (oid report)))))
 
 (defmethod maybe-send-tasks ((promoter abstract-pr-promoter) run)
   (values))

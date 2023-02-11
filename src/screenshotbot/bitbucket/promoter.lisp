@@ -15,6 +15,9 @@
                 #:bitbucket-repo
                 #:bitbucket-plugin)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:make-promoter-for-acceptable
+                #:abstract-pr-acceptable
+                #:push-remote-check
                 #:two-stage-promoter
                 #:format-updated-summary
                 #:check-title
@@ -82,7 +85,7 @@
 (in-package :screenshotbot/bitbucket/promoter)
 
 (with-class-validation
- (defclass bitbucket-acceptable (base-acceptable)
+ (defclass bitbucket-acceptable (abstract-pr-acceptable)
    ((send-task-args :initarg :report
                     :accessor send-task-args)
     (%company :initarg :company
@@ -90,9 +93,12 @@
    (:metaclass persistent-class)))
 
 
-(defclass bitbucket-promoter (two-stage-promoter)
+(defclass bitbucket-promoter (abstract-pr-promoter)
   ((plugin :initarg :plugin
            :reader plugin)))
+
+(defmethod make-promoter-for-acceptable ((self bitbucket-acceptable))
+  (make-instance 'bitbucket-promoter))
 
 (defmethod plugin-installed? ((promoter bitbucket-promoter)
                               company
@@ -104,34 +110,25 @@
                   :company (recorder-run-company (report-run report))
                   :report report))
 
-(Defmethod (setf acceptable-state) :before (state (self bitbucket-acceptable))
-  (send-build-status
-   (company self)
-   (remove-duplicates
-    (list*
-     (cons :state (ecase state
-                    (:accepted "SUCCESSFUL")
-                    (:rejected "FAILED")))
-     (cons :description
-           (format nil "~a, ~a"
-                   (a:assoc-value (send-task-args self) :description)
-                   (format-updated-summary state (current-user))))
-     (Send-task-args self))
-    :from-end t
-    :key #'car)))
-
+(defmethod (setf acceptable-state) :before (state (self bitbucket-acceptable))
+  "TODO: delete"
+  (values))
 
 (defmethod valid-repo? ((promoter bitbucket-promoter)
                         repo)
   (typep repo 'bitbucket-repo))
 
-(defun send-build-status (company args)
+(defmethod push-remote-check ((promoter bitbucket-promoter)
+                              run
+                              check)
   "Send the build status. Log any error message, but don't propagate the errors"
   (handler-case
-      (let* ((bitbucket-token (not-null! (car (bitbucket-settings-for-company company))))
+      (let* ((company (recorder-run-company run))
+             (bitbucket-token (not-null! (car (bitbucket-settings-for-company company))))
              (token (get-access-token-from-refresh-token
                      company
-                     (refresh-token bitbucket-token))))
+                     (refresh-token bitbucket-token)))
+             (args (make-build-status-args run check)))
         (assert token)
         (let* ((commit (not-empty! (a:assoc-value args :commit)))
                (full-name (not-empty! (a:assoc-value args :full-name))))
@@ -167,10 +164,7 @@
 
 (auto-restart:with-auto-restart ()
   (defmethod maybe-send-tasks ((promoter bitbucket-promoter) run)
-    (let ((company (recorder-run-company run)))
-      (a:when-let (args (send-task-args promoter))
-       (send-build-status company
-                          args)))))
+    (values)))
 
 
 (defmethod plugin-promoter ((plugin bitbucket-plugin))
@@ -189,9 +183,8 @@
        (ironclad:byte-array-to-hex-string (md5:md5sum-string old-key))))))
 
 
-(defmethod make-task-args ((promoter bitbucket-promoter)
-                           run
-                           check)
+(defun make-build-status-args (run
+                               check)
   (let* ((channel (recorder-run-channel run))
          (repo (channel-repo channel))
          (channel-name (channel-name channel)))
@@ -209,7 +202,10 @@
        (:state . ,(ecase (check-status check)
                     (:success "SUCCESSFUL")
                     (:failure "FAILED")
-                    (:action_required "FAILED")))
+                    (:accepted "SUCCESSFUL")
+                    (:rejected "FAILED")
+                    (:action_required "FAILED")
+                    (:action-required "FAILED")))
        (:name . ,(format nil "Screenshots for ~a" channel-name))
        (:url . ,(or (details-url check)
                     (make-details-url 'run-page :id (oid run))))

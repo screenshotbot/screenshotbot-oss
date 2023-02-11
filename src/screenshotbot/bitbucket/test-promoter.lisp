@@ -12,8 +12,8 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run)
   (:import-from #:screenshotbot/pro/bitbucket/promoter
+                #:make-build-status-args
                 #:make-key
-                #:send-build-status
                 #:bitbucket-promoter)
   (:import-from #:screenshotbot/github/pull-request-promoter
                 #:check
@@ -39,6 +39,11 @@
                 #:bitbucket-repo)
   (:import-from #:screenshotbot/promote-api
                 #:maybe-promote)
+  (:import-from #:screenshotbot/abstract-pr-promoter
+                #:push-remote-check
+                #:check)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/bitbucket/test-promoter)
 
@@ -51,6 +56,9 @@
      (let* ((channel (make-instance 'channel :name "channel-0"
                                     :github-repo "https://bitbucket.org/tdrhq/dummy"))
             (company (make-instance 'company))
+            (run (make-instance 'recorder-run :company company
+                                :commit-hash "abcd"
+                                :channel channel))
             (bitbucket-token (make-instance 'bitbucket-token
                                             :refresh-token "fake-refresh-token"
                                             :company company))
@@ -71,9 +79,7 @@
   (with-fixture state ()
     (let* ((run (make-instance 'recorder-run :channel channel))
            (promoter (make-instance 'bitbucket-promoter)))
-      (let ((result (make-task-args promoter
-                              run
-                              check)))
+      (let ((result (make-build-status-args run check)))
         (is (equal "SUCCESSFUL" (a:assoc-value result :state)))
         (is (equal "tdrhq/dummy" (a:assoc-value result :full-name)))))))
 
@@ -84,9 +90,7 @@
                                :override-commit-hash "foobar"
                                :commit-hash "zoidberg"))
           (promoter (make-instance 'bitbucket-promoter)))
-      (let ((result (make-task-args promoter
-                                    run
-                                    check)))
+      (let ((result (make-build-status-args run check)))
         (is (equal "foobar" (a:assoc-value result :commit)))))))
 
 (test make-task-args-no-commit-hash
@@ -95,29 +99,45 @@
                                :channel channel
                                :commit-hash "zoidberg"))
           (promoter (make-instance 'bitbucket-promoter)))
-      (let ((result (make-task-args promoter
-                                    run
-                                    check)))
+      (let ((result (make-build-status-args run check)))
         (is (equal "zoidberg" (a:assoc-value result :commit)))))))
+
+(test make-task-args-for-every-version-of-state
+  (with-fixture state ()
+    (dolist (state (list :accepted :rejected :success :failure :action_required :action-required))
+     (let ((run (make-instance 'recorder-run
+                               :channel channel
+                               :commit-hash "zoidberg"))
+           (promoter (make-instance 'bitbucket-promoter))
+           (check (make-instance 'check
+                                 :status state
+                                 :title "foobar")))
+       (let ((result (make-build-status-args run check)))
+         (is (equal "zoidberg" (a:assoc-value result :commit)))
+         (is (str:s-member (list "SUCCESSFUL" "FAILED" "PENDING")
+                           (assoc-value result :state))))))))
 
 (test send-build-status-makes-audit-log
   (with-fixture state ()
     (if-called 'get-access-token-from-refresh-token
-                (lambda (company token)
-                  (assert (equal "fake-refresh-token" token))
-                  "fake-access-token"))
+               (lambda (company token)
+                 (assert (equal "fake-refresh-token" token))
+                 "fake-access-token"))
     (if-called 'util/request:http-request
-                (lambda (url &key &allow-other-keys)
-                  (assert (str:ends-with-p "statuses/build/" url))
-                  (values
-                   (make-string-input-stream
-                    (json:encode-json-to-string
-                     `((:key . "screenshotbot--blehbleh"))))
-                   204))
-                :at-start t)
-    (send-build-status company
-                       `((:commit . "abcd")
-                         (:full-name . "tdrhq/fast-example")))
+               (lambda (url &key &allow-other-keys)
+                 (assert (str:ends-with-p "statuses/build/" url))
+                 (values
+                  (make-string-input-stream
+                   (json:encode-json-to-string
+                    `((:key . "screenshotbot--blehbleh"))))
+                  204))
+               :at-start t)
+    (push-remote-check
+     (make-instance 'bitbucket-promoter)
+     run
+     (make-instance 'check
+                    :title "hello"
+                    :status :success))
     (is (eql 1 (length (bitbucket-audit-logs-for-company company))))
     (let ((audit-log (car (bitbucket-audit-logs-for-company company))))
       (is (eql nil (audit-log-error audit-log)))
@@ -145,9 +165,11 @@
 }")
                    401))
                 :at-start t)
-    (send-build-status company
-                       `((:commit . "abcd")
-                         (:full-name . "tdrhq/fast-example")))
+    (push-remote-check
+     (make-instance 'bitbucket-promoter)
+     run (make-instance 'check
+                        :status :success
+                        :title "hello"))
     (is (eql 1 (length (bitbucket-audit-logs-for-company company))))
     (let ((audit-log (car (bitbucket-audit-logs-for-company company))))
      (is (not (str:emptyp (audit-log-error audit-log)))))))
