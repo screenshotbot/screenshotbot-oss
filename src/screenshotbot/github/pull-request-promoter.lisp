@@ -50,6 +50,7 @@
                 #:user-updated-check-run
                 #:updated-check-run)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:two-stage-promoter
                 #:abstract-pr-promoter)
   (:import-from #:util/store
                 #:with-class-validation)
@@ -95,7 +96,7 @@
          (send-task-args acceptable))))))
 
 
-(defclass pull-request-promoter (abstract-pr-promoter)
+(defclass pull-request-promoter (two-stage-promoter)
   ())
 
 (defmethod plugin-promoter ((plugin github-plugin))

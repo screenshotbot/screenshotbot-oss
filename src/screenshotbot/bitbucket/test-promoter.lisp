@@ -37,6 +37,8 @@
                 #:with-installation)
   (:import-from #:screenshotbot/pro/bitbucket/plugin
                 #:bitbucket-repo)
+  (:import-from #:screenshotbot/promote-api
+                #:maybe-promote)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/bitbucket/test-promoter)
 
@@ -158,3 +160,12 @@
                 (md5:md5sum-string (format nil "screenshotbot--~a" name)))
                (make-key name)))
     (is (<= (length (make-key name)) 40))))
+
+(test maybe-promote-happy-path
+  (with-fixture state ()
+    (let ((run (make-instance 'recorder-run :company company
+                                            :channel channel
+                                            :pull-request "https://bitbucket.com/tdrhq/fast-example/pull-request/20"))
+          (promoter (make-instance 'bitbucket-promoter)))
+      (finishes
+        (maybe-promote promoter run)))))

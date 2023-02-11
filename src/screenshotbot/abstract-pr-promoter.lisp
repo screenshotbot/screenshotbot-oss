@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/abstract-pr-promoter
   (:use #:cl)
   (:import-from #:screenshotbot/promote-api
+                #:maybe-send-tasks
                 #:maybe-promote
                 #:do-promotion-log
                 #:promoter)
@@ -66,7 +67,8 @@
    #:make-task-args
    #:pr-merge-base
    #:format-updated-summary
-   #:abstract-pr-promoter))
+   #:abstract-pr-promoter
+   #:two-stage-promoter))
 (in-package :screenshotbot/abstract-pr-promoter)
 
 (defun format-updated-summary (state user)
@@ -127,6 +129,9 @@
    (send-task-args :accessor send-task-args
                    :initform nil)))
 
+(defclass two-stage-promoter (abstract-pr-promoter)
+  ())
+
 (defgeneric valid-repo? (promoter repo))
 
 (defgeneric plugin-installed? (promoter company repo-url))
@@ -145,6 +150,26 @@
           "~a~a"
           (installation-domain (installation))
           (apply #'hex:make-url args)))
+
+(defgeneric push-remote-check (promoter-or-acceptable
+                               run
+                               check)
+  (:documentation "Push the CHECK to the corresponding run remotely "))
+
+(defmethod push-remote-check ((promoter two-stage-promoter)
+                              run
+                              check)
+  (let ((send-task-args (make-task-args promoter
+                                        run
+                                        check)))
+    (setf (send-task-args promoter)
+          send-task-args)
+    (when (report check)
+      (with-transaction ()
+        (setf
+         (send-task-args
+          (report-acceptable (report check)))
+         send-task-args)))))
 
 (defmethod maybe-promote ((promoter abstract-pr-promoter)
                           run)
@@ -188,21 +213,12 @@
                            promoter
                            run
                            base-run)))))
-            (let ((send-task-args (make-task-args promoter
-                                                  run
-                                                  check)))
-              (setf (send-task-args promoter)
-                    send-task-args)
-              (when (report check)
-                (with-transaction ()
-                  (setf
-                   (send-task-args
-                    (report-acceptable (report check)))
-                   send-task-args))))))))
+            (push-remote-check promoter run check)))))
       (t
        #+nil
        (cerror "continue" "not promoting for ~a" promoter)
        (log:info "Initial checks failed, not going through pull-request-promoter")))))
+
 
 
 (defun make-check-result-from-diff-report (promoter run base-run)
@@ -241,3 +257,6 @@
    :summary summary
    :details-url (make-details-url 'screenshotbot/dashboard/reports:report-page
                                   :id (oid report))))
+
+(defmethod maybe-send-tasks ((promoter abstract-pr-promoter) run)
+  (values))

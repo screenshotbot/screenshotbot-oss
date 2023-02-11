@@ -70,7 +70,7 @@
 
 (named-readtables:in-readtable java-syntax)
 
-(defclass merge-request-promoter (abstract-pr-promoter)
+(defclass merge-request-promoter (two-stage-promoter)
   ((comments :initform nil
              :accessor comments)
    (report :initform nil

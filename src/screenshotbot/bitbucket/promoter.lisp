@@ -15,6 +15,7 @@
                 #:bitbucket-repo
                 #:bitbucket-plugin)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:two-stage-promoter
                 #:format-updated-summary
                 #:check-title
                 #:check-summary
@@ -89,7 +90,7 @@
    (:metaclass persistent-class)))
 
 
-(defclass bitbucket-promoter (abstract-pr-promoter)
+(defclass bitbucket-promoter (two-stage-promoter)
   ((plugin :initarg :plugin
            :reader plugin)))
 
@@ -170,6 +171,7 @@
       (a:when-let (args (send-task-args promoter))
        (send-build-status company
                           args)))))
+
 
 (defmethod plugin-promoter ((plugin bitbucket-plugin))
   (make-instance 'bitbucket-promoter
