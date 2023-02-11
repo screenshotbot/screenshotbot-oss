@@ -24,12 +24,16 @@
   (:import-from #:screenshotbot/api/promote
                 #:maybe-promote-run)
   (:import-from #:screenshotbot/github/pull-request-promoter
+                #:make-github-args
                 #:send-task-args
                 #:check-status
                 #:check-title
                 #:retrieve-run
                 #:report)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check
+                #:push-remote-check
+                #:check-status
                 #:pr-merge-base
                 #:make-task-args
                 #:make-check-result-from-diff-report)
@@ -64,7 +68,11 @@
   (:import-from #:screenshotbot/github/plugin
                 #:github-plugin)
   (:import-from #:bknr.datastore
-                #:class-instances))
+                #:class-instances)
+  (:import-from #:alexandria
+                #:plist-alist
+                #:alist-plist
+                #:assoc-value))
 (in-package :screenshotbot/github/test-pull-request-promoter)
 
 (util/fiveam:def-suite)
@@ -114,6 +122,8 @@
          (make-instance 'github-plugin
                         :app-id "dummy-app-id"
                         :private-key "dummy-private-key"))
+       (cl-mock:if-called 'github-update-pull-request
+                          (lambda (&rest args)))
        (let ((company (make-instance 'company))
              (promoter (make-instance 'pull-request-promoter
                                       :pull-request-info
@@ -186,7 +196,7 @@
                         :merge-base "dfdfdf"
                         :commit-hash "car"))
           (check))
-      (cl-mock:if-called 'make-task-args
+      (cl-mock:if-called 'push-remote-check
                          (lambda (promoter run %check)
                            (declare (ignore promoter run))
                            (setf check %check)))
@@ -197,9 +207,10 @@
                   :pull-request "https://github.com/tdrhq/fast-example/pull/2"
                   :merge-base "car"
                   :commit-hash "foo")))
-       (maybe-promote promoter run)
-       (is (equal "car" (pr-merge-base promoter run)))
-       (is (eql :success (check-status check)))))))
+        (maybe-promote promoter run)
+        (is-true check)
+        (is (equal "car" (pr-merge-base promoter run)))
+        (is (eql :success (check-status check)))))))
 
 (test without-a-base-run-we-get-an-error
   (with-fixture state ()
@@ -212,11 +223,12 @@
                   :merge-base "car"
                   :commit-hash "foo"))
            (check))
-       (cl-mock:if-called 'make-task-args
+       (cl-mock:if-called 'push-remote-check
                           (lambda (promoter run %check)
                             (declare (ignore promoter run))
                             (setf check %check)))
        (maybe-promote promoter run)
+       (is-true check)
        (is (equal "car" (pr-merge-base promoter run)))
        (is (eql :failure (check-status check)))
        (is (cl-ppcre:scan ".*rebasing*" (check-title check)))))))
@@ -286,7 +298,8 @@
       (let (calls)
         (cl-mock:if-called 'github-update-pull-request
                            (lambda (&rest args)
-                             (push args calls)))
+                             (push args calls))
+                           :at-start t)
         (setf (send-task-args promoter) '(:dummy))
         (let ((run (make-instance
                     'recorder-run
@@ -296,7 +309,9 @@
                     :screenshots (list (make-instance 'screenshot :name "foobar"))
                     :merge-base "car"
                     :commit-hash "foo")))
-          (maybe-send-tasks promoter run)
+          (push-remote-check promoter run (make-instance 'check
+                                                         :status :accepted
+                                                         :title "foobar"))
           (assert-that calls
                        (has-length 1)))))))
 
@@ -307,7 +322,8 @@
         (let (calls)
           (cl-mock:if-called 'github-update-pull-request
                              (lambda (&rest args)
-                               (push args calls)))
+                               (push args calls))
+                             :at-start t)
           (let* ((run (make-instance
                        'recorder-run
                        :channel (make-instance 'dummy-channel)
@@ -316,10 +332,33 @@
                        :screenshots (list (make-instance 'screenshot :name "foobar"))
                        :merge-base "car"
                        :commit-hash "foo"))
-                 (report (make-instance 'report :run run))
+                 (report (make-instance 'report :run run
+                                        :previous-run (make-instance 'recorder-run)))
                  (acceptable (make-instance 'pr-acceptable
                                             :send-task-args nil
                                             :report report)))
             (setf (acceptable-state acceptable) :accepted)
             (assert-that calls
                          (has-length 1))))))))
+
+
+(test make-github-for-every-version-of-state
+  (with-fixture state ()
+
+    (dolist (state (list :accepted :rejected :success :failure :action_required :action-required))
+      (let* ((channel (make-instance 'channel
+                                     :name "test-channel"
+                                     :github-repo "https://github.com/tdrhq/fast-example"))
+            (run (make-instance 'recorder-run
+                                :channel channel
+                                :commit-hash "zoidberg"))
+            (promoter (make-instance 'pull-request-promoter))
+            (check (make-instance 'check
+                                  :status state
+                                  :title "foobar")))
+       (let ((result (plist-alist (make-github-args run check))))
+         (is (equal "zoidberg" (assoc-value result :head-sha)))
+         ;; See: https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28
+         (is (str:s-member (list "action_required" "cancelled" "failure" "neutral"
+                                 "success" "skipped" "stale" "timed_out")
+                           (assoc-value result :conclusion))))))))

@@ -37,6 +37,7 @@
                (:feature (:not :screenshotbot-oss) :documentation-plugin)
                :cl-store
                :core.installation
+               :trivia
                :json-mop
                :encrypt
                :util/timeago

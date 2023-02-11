@@ -94,6 +94,10 @@
 (defclass check ()
   ((status :initarg :status
            :accessor check-status)
+   (user :initarg :user
+         :initform nil
+         :reader check-user
+         :documentation "The user who initiated this check")
    (report :initarg :report
            :initform nil
            :accessor report)
@@ -280,6 +284,7 @@
    (make-instance
     'check
     :status status
+    :user user
     :report report
     :title title
     :summary summary

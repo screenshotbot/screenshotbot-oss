@@ -50,6 +50,10 @@
                 #:user-updated-check-run
                 #:updated-check-run)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:make-promoter-for-acceptable
+                #:check-user
+                #:push-remote-check
+                #:abstract-pr-acceptable
                 #:two-stage-promoter
                 #:abstract-pr-promoter)
   (:import-from #:util/store
@@ -61,45 +65,24 @@
    #:pr-acceptable
    #:format-updated-summary))
 (in-package :screenshotbot/github/pull-request-promoter)
-(in-package :screenshotbot.pr)
 
 (with-class-validation
- (defclass pr-acceptable (base-acceptable)
+ (defclass pr-acceptable (abstract-pr-acceptable)
    ((send-task-args :accessor send-task-args
                     :initarg :send-task-args))
    (:metaclass persistent-class)))
 
 (defmethod (setf acceptable-state) :before (state (acceptable pr-acceptable))
-  (let ((old-output (assoc-value (plist-alist (send-task-args acceptable)) :output)))
-    (let ((summary (format-updated-summary state (current-user))))
-      (with-audit-log (audit-log (make-instance 'user-updated-check-run
-                                                :user (current-user)                                                :company
-                                                (report-company (acceptable-report acceptable))
-                                                :commit (recorder-run-commit
-                                                         (report-run
-                                                          (acceptable-report acceptable)))))
-        (declare (ignore audit-log))
-        (apply
-         'github-update-pull-request
-         :conclusion (ecase state
-                       (:accepted
-                        "success")
-                       (:rejected
-                        "failure"))
-         :output `(("title" .
-                            ,(format
-                              nil
-                              "~a, ~a"
-                              (assoc-value old-output "title" :test 'equal)
-                              summary))
-                   ("summary" . ,(assoc-value old-output "summary" :test 'equal)))
-         (send-task-args acceptable))))))
+  (values))
 
 
-(defclass pull-request-promoter (two-stage-promoter)
+(defclass pull-request-promoter (abstract-pr-promoter)
   ())
 
 (defmethod plugin-promoter ((plugin github-plugin))
+  (make-instance 'pull-request-promoter))
+
+(defmethod make-promoter-for-acceptable ((self pr-acceptable))
   (make-instance 'pull-request-promoter))
 
 (defmethod plugin-installed? ((promoter pull-request-promoter)
@@ -130,9 +113,25 @@
 (defmethod maybe-promote ((promoter pull-request-promoter) run)
   (call-next-method))
 
-(defmethod make-task-args ((promoter pull-request-promoter)
-                           run
-                           check)
+(defmethod push-remote-check ((promoter pull-request-promoter)
+                              run check)
+  (let ((args (make-github-args run check))
+        (audit-log-args (list
+                         :company (recorder-run-company run)
+                         :commit (recorder-run-commit run))))
+    (with-audit-log (updated-check-run
+                     (trivia:match (check-user check)
+                       (nil
+                        (apply #'make-instance 'updated-check-run
+                               audit-log-args))
+                       (user
+                        (apply #'make-instance 'user-updated-check-run
+                               :user user
+                               audit-log-args))))
+      (declare (ignore updated-check-run))
+      (apply #'github-update-pull-request args))))
+
+(defun make-github-args (run check)
   (let* ((repo (channel-repo (recorder-run-channel run)))
          (repo-url (repo-link repo))
          (full-name (repo-full-name repo))
@@ -146,8 +145,18 @@
                     ("summary" . ,(check-summary check)))
           :status :completed
           :details-url (details-url check)
+          :status (if (eql (check-status check) :pending)
+                      "pending"
+                      "completed")
           :installation-id (app-installation-id (repo-string-identifier repo-url))
-          :conclusion (str:downcase (check-status check))
+          :conclusion (unless (eql (check-status check) :pending)
+                        (ecase (check-status check)
+                          (:accepted "success")
+                          (:rejected "failure")
+                          (:success "success")
+                          (:failure "failure")
+                          (:action-required "action_required")
+                          (:action_required "action_required")))
           :head-sha (or
                      (override-commit-hash run)
                      (recorder-run-commit run)))))
@@ -164,14 +173,5 @@
 
 (defmethod maybe-send-tasks ((promoter pull-request-promoter)
                              run)
-  (restart-case
-      (when (send-task-args promoter)
-        (with-audit-log (updated-check-run
-                         (make-instance 'updated-check-run
-                                        :company (recorder-run-company run)
-                                        :commit (recorder-run-commit run)))
-          (declare (ignore updated-check-run))
-          (apply 'github-update-pull-request
-                 (send-task-args promoter))))
-    (retry-pull-request-code ()
-      (maybe-send-tasks promoter run))))
+  "TODO: delete"
+  (values))
