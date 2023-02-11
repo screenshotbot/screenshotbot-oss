@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/gitlab/merge-request-promoter
+                #:gitlab-acceptable
+                #:post-build-status
                 #:merge-request-promoter)
   (:import-from #:util/store
                 #:with-test-store)
@@ -40,7 +42,11 @@
   (:import-from #:screenshotbot/installation
                 #:installation)
   (:import-from #:screenshotbot/gitlab/plugin
-                #:gitlab-plugin))
+                #:gitlab-plugin)
+  (:import-from #:screenshotbot/report-api
+                #:report)
+  (:import-from #:screenshotbot/model/report
+                #:acceptable-state))
 (in-package :screenshotbot/gitlab/test-merge-request-promoter)
 
 
@@ -59,26 +65,32 @@
 
 (def-fixture state ()
   (with-test-store ()
-    (with-installation (:installation
-                        (make-instance 'installation
-                                       :plugins
-                                       (list
-                                        (make-instance 'gitlab-plugin))))
-     (let* ((company (make-instance 'company))
-            (channel (make-instance 'channel
-                                    :company company
-                                    :github-repo "https://gitlab.com/tdrhq/fast-example"))
-            (settings (make-instance 'gitlab-settings
-                                     :company company
-                                     :url "https://gitlab.com"
-                                     :token "foobar"))
-            (run (make-instance 'recorder-run :company company
-                                              :commit-hash "baa"
-                                              :merge-base "aaa"
-                                              :channel channel
-                                              :merge-request-iid 7))
-            (*base-run* (make-instance 'recorder-run :company company)))
-       (&body)))))
+    (cl-mock:with-mocks ()
+     (with-installation (:installation
+                         (make-instance 'installation
+                                        :plugins
+                                        (list
+                                         (make-instance 'gitlab-plugin))))
+       (let* ((company (make-instance 'company))
+              (channel (make-instance 'channel
+                                      :company company
+                                      :github-repo "https://gitlab.com/tdrhq/fast-example"))
+              (settings (make-instance 'gitlab-settings
+                                       :company company
+                                       :url "https://gitlab.com"
+                                       :token "foobar"))
+              (run (make-instance 'recorder-run :company company
+                                                :commit-hash "baa"
+                                                :merge-base "aaa"
+                                                :channel channel
+                                                :merge-request-iid 7))
+              (another-run (make-instance' recorder-run))
+              (*base-run* (make-instance 'recorder-run :company company))
+              (last-build-status))
+         (cl-mock:if-called 'post-build-status
+                            (lambda (&rest args)
+                              (setf last-build-status args)))
+         (&body))))))
 
 (test valid-repo
   (with-fixture state ()
@@ -104,4 +116,15 @@
                                    :run-retriever (make-instance 'my-run-retriever))))
       (finishes
         (maybe-promote promoter run))
-      (is (not (null (send-task-args promoter)))))))
+      (is (not (null last-build-status))))))
+
+
+(test update-acceptable-state
+  (with-fixture state ()
+    (let* ((report (make-instance 'report
+                                  :run run
+                                  :previous-run another-run))
+           (acceptable (make-instance 'gitlab-acceptable
+                                      :report report)))
+      (setf (acceptable-state acceptable)
+            :accepted))))

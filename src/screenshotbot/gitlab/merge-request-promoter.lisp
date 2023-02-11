@@ -40,6 +40,9 @@
   (:import-from #:screenshotbot/dashboard/reports
                 #:report-link)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:make-promoter-for-acceptable
+                #:abstract-pr-acceptable
+                #:push-remote-check
                 #:format-updated-summary
                 #:make-task-args
                 #:valid-repo?
@@ -70,7 +73,7 @@
 
 (named-readtables:in-readtable java-syntax)
 
-(defclass merge-request-promoter (two-stage-promoter)
+(defclass merge-request-promoter (abstract-pr-promoter)
   ((comments :initform nil
              :accessor comments)
    (report :initform nil
@@ -145,7 +148,7 @@
   (push message (comments promoter)))
 
 (with-class-validation
- (defclass gitlab-acceptable (base-acceptable)
+ (defclass gitlab-acceptable (abstract-pr-acceptable)
    ((report :initarg :report
             :accessor acceptable-report)
     (company :initarg :company
@@ -186,29 +189,18 @@
                                ("description" . ,description)))))
 
 (defmethod (setf acceptable-state) :before (state (acceptable gitlab-acceptable))
-  (flet ((not-null! (x) (assert x) x))
-   (let* ((report (acceptable-report acceptable))
-          (run (report-run report))
-          (send-task-args (send-task-args acceptable))
-          (repo (channel-repo (recorder-run-channel run))))
+  "TODO: delete")
 
-     (let ((old-description (getf send-task-args :description))
-           (summary (format-updated-summary state (current-user))))
-      (apply #'post-build-status
-               :state (ecase state
-                        (:accepted "success")
-                        (:rejected "failed"))
-               :description (format nil "~a, ~a" old-description summary)
-               send-task-args)))))
+(defmethod make-promoter-for-acceptable ((self gitlab-acceptable))
+  (make-instance 'merge-request-promoter))
 
 (defmethod valid-repo? ((promoter merge-request-promoter)
                         repo)
   (typep repo 'gitlab-repo))
 
 
-(defmethod make-task-args ((promoter merge-request-promoter)
-                           run
-                           check)
+(defmethod make-gitlab-args (run
+                             check)
   (let ((repo (channel-repo (recorder-run-channel run))))
    (list
     :company (company repo)
@@ -216,8 +208,12 @@
     :sha (recorder-run-commit run)
     :state (ecase (check-status check)
              (:success "success")
+             (:accepted "success")
+             (:rejected "failed")
+             (:pending "pending")
              (:failure "failed")
-             (:action_required "failed"))
+             (:action_required "failed")
+             (:action-required "failed"))
     :target-url (or
                  (details-url check)
                  (format nil "~a~a"
@@ -225,10 +221,14 @@
                          (hex:make-url 'run-page :id (oid run))))
     :description (check-title check))))
 
+(defmethod push-remote-check ((promoter merge-request-promoter)
+                              run check)
+  (let ((args (make-gitlab-args run check)))
+    (apply #'post-build-status args)))
+
 (auto-restart:with-auto-restart ()
   (defmethod maybe-send-tasks ((promoter merge-request-promoter) run)
-    (alexandria:when-let (args (send-task-args promoter))
-      (apply #'post-build-status args))))
+    (values)))
 
 
 (register-promoter 'merge-request-promoter)
