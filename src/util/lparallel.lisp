@@ -9,7 +9,8 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:export
-   #:bind-future))
+   #:bind-future
+   #:immediate-promise))
 (in-package :util/lparallel)
 
 (defvar *sleep-time* 1)
@@ -18,6 +19,11 @@
   (lparallel:future
     (let ((res (lparallel:force promise)))
       (funcall fn res))))
+
+(defun immediate-promise (val)
+  (let ((promise (lparallel:promise)))
+    (lparallel:fulfill promise val)
+    promise))
 
 (defun wait-for-many (promises)
   "Wait for any of the promises to be fulfilled. If something is already

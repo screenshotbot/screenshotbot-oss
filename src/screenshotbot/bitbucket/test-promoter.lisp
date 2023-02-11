@@ -103,7 +103,7 @@
 
 (test make-task-args-for-every-version-of-state
   (with-fixture state ()
-    (dolist (state (list :accepted :rejected :success :failure :action_required :action-required))
+    (dolist (state (list :accepted :rejected :success :failure :action_required :action-required :pending))
      (let ((run (make-instance 'recorder-run
                                :channel channel
                                :commit-hash "zoidberg"))
@@ -113,7 +113,7 @@
                                  :title "foobar")))
        (let ((result (make-build-status-args run check)))
          (is (equal "zoidberg" (a:assoc-value result :commit)))
-         (is (str:s-member (list "SUCCESSFUL" "FAILED" "PENDING")
+         (is (str:s-member (list "SUCCESSFUL" "FAILED" "INPROGRESS")
                            (assoc-value result :state))))))))
 
 (test send-build-status-makes-audit-log

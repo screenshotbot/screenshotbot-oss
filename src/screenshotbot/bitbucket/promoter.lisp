@@ -202,6 +202,7 @@
                     (:failure "FAILED")
                     (:accepted "SUCCESSFUL")
                     (:rejected "FAILED")
+                    (:pending "INPROGRESS")
                     (:action_required "FAILED")
                     (:action-required "FAILED")))
        (:name . ,(format nil "Screenshots for ~a" channel-name))

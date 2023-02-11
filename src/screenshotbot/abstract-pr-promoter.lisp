@@ -55,6 +55,8 @@
                 #:acceptable-report
                 #:acceptable-state
                 #:base-acceptable)
+  (:import-from #:util/lparallel
+                #:immediate-promise)
   (:export
    #:check
    #:check-status
@@ -117,14 +119,17 @@
 (defmethod retrieve-run ((retriever run-retriever)
                          channel
                          base-commit)
-  (lparallel:future
-    (loop for i from 0 to 10
-          for run = (production-run-for channel :commit base-commit)
-          if run
-            return run
-          else do
-            (log:info "Waiting 30s before checking again")
-            (funcall (sleep-fn retriever) 30))))
+  (labels ((produce (retries)
+             (let ((run (production-run-for channel :commit base-commit)))
+               (cond
+                 (run
+                  (immediate-promise run))
+                 ((>= retries 0)
+                  (lparallel:future
+                    (log:info "Waiting 30s before checking again")
+                    (funcall (sleep-fn retriever) 30)
+                    (lparallel:chain (produce (1- retries)))))))))
+    (produce 10)))
 
 (defclass abstract-pr-acceptable (base-acceptable)
   ()
@@ -184,36 +189,47 @@
                     (recorder-run-commit run))))
 
        (do-promotion-log :info "Base commit is: ~S" (pr-merge-base promoter run))
-       (let ((base-run (lparallel:force
-                        (retrieve-run
-                         (run-retriever promoter)
-                         (recorder-run-channel run)
-                         (pr-merge-base promoter run)))))
+       (let ((base-run-promise (retrieve-run
+                                (run-retriever promoter)
+                                (recorder-run-channel run)
+                                (pr-merge-base promoter run))))
          (flet ((make-failure-check (&rest args)
                   (apply #'make-instance 'check
                          :status :failure
                          :details-url (make-details-url 'screenshotbot/dashboard/run-page:run-page
                                                         :id (oid run))
                          args)))
-          (let ((check (cond
-                         ((null (pr-merge-base promoter run))
-                          (do-promotion-log :info "No base-commit provided in run")
-                          (make-failure-check
-                           :title "Base SHA not available for comparison, please check CI setup"
-                           :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
-                         ((null base-run)
-                          (push-event :promoter.no-base-run :oid (oid run))
-                          (do-promotion-log :info "Could not find base-run")
-                          (make-failure-check
-                           :title "Cannot generate Screenshotbot report, try rebasing"
-                           :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
-                         (t
-                          (do-promotion-log :info "Base run is available, preparing notification from diff-report")
-                          (make-check-result-from-diff-report
-                           promoter
-                           run
-                           base-run)))))
-            (push-remote-check promoter run check)))))
+           (unless (lparallel:fulfilledp base-run-promise)
+             (do-promotion-log :info "Base commit is not available yet, waiting for upto 5 minutes")
+             (push-remote-check
+              promoter
+              run
+              (make-instance 'check
+                             :status :pending
+                             :details-url (make-details-url 'screenshotbot/dashboard/run-page:run-page
+                                                        :id (oid run))
+                             :title (format nil "Waiting for screenshots on ~a to be available"
+                                            (str:substring 0 4 (pr-merge-base promoter run))))))
+           (let* ((base-run (lparallel:force base-run-promise))
+                  (check (cond
+                           ((null (pr-merge-base promoter run))
+                            (do-promotion-log :info "No base-commit provided in run")
+                            (make-failure-check
+                             :title "Base SHA not available for comparison, please check CI setup"
+                             :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
+                           ((null base-run)
+                            (push-event :promoter.no-base-run :oid (oid run))
+                            (do-promotion-log :info "Could not find base-run")
+                            (make-failure-check
+                             :title "Cannot generate Screenshotbot report, try rebasing"
+                             :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
+                           (t
+                            (do-promotion-log :info "Base run is available, preparing notification from diff-report")
+                            (make-check-result-from-diff-report
+                             promoter
+                             run
+                             base-run)))))
+             (push-remote-check promoter run check)))))
       (t
        #+nil
        (cerror "continue" "not promoting for ~a" promoter)

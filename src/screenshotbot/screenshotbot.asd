@@ -34,6 +34,7 @@
                :markup
                :gravatar
                :lparallel
+               :util/lparallel
                (:feature (:not :screenshotbot-oss) :documentation-plugin)
                :cl-store
                :core.installation
