@@ -8,6 +8,8 @@
     (:use #:cl #:alexandria)
   (:import-from #:screenshotbot/server
                 #:*root*)
+  (:import-from #:util/request
+                #:http-request)
   (:export
    #:github-request
    #:github-create-jwt-token))
@@ -48,11 +50,11 @@
   (when (and parameters (eql method :get))
     (error "parameters not supported with :GET"))
   (multiple-value-bind (s res)
-      (dex:request
+      (http-request
        (format nil "https://api.github.com~a" url)
-       :want-stream t
        :method method
-       :headers
+       :want-string t
+       :additional-headers
        `(("Accept" . "application/vnd.github.v3+json")
          ("Authorization"
           .
@@ -66,8 +68,7 @@
        :content (if json-parameters
                     (json:encode-json-to-string parameters)
                     parameters))
-    (with-open-stream (s s)
-      (unless (or (eql res 200) (eql res 201))
-        (error "Got bad github error code: ~a (~S)" res
-               (ignore-errors (json:decode-json s))))
-      (json:decode-json s))))
+    (unless (or (eql res 200) (eql res 201))
+      (error "Got bad github error code: ~a (~S)" res
+             (ignore-errors (json:decode-json-from-string s))))
+    (json:decode-json-from-string s)))

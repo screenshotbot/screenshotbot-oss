@@ -62,7 +62,8 @@
             :parameters `(("name" . ,name)
                           ("head_sha" . ,head-sha)
                           ("external_id" . ,(or external-id "internal"))
-                          ("conclusion" . ,(or conclusion ""))
+                          ,@ (when conclusion
+                               `(("conclusion" . ,conclusion)))
                           ,@ (if details-url
                                  `(("details_url" . ,details-url)))
                           ("status" . ,(or status ""))

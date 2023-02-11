@@ -130,6 +130,13 @@
       (declare (ignore updated-check-run))
       (apply #'github-update-pull-request args))))
 
+#+nil
+(let ((run (bknr.datastore:store-object-with-id 1440544)))
+  (push-remote-check (make-instance 'pull-request-promoter)
+                     run (make-instance 'check
+                                        :status :pending
+                                        :title "doing stuff")))
+
 (defun make-github-args (run check)
   (let* ((repo (channel-repo (recorder-run-channel run)))
          (repo-url (repo-link repo))
@@ -142,11 +149,10 @@
                               (channel-name (recorder-run-channel run)))
           :output `(("title" . ,(check-title check))
                     ("summary" . ,(check-summary check)))
-          :status :completed
           :details-url (details-url check)
           :status (if (eql (check-status check) :pending)
-                      "pending"
-                      "completed")
+                      :in-progress
+                      :completed)
           :installation-id (app-installation-id (repo-string-identifier repo-url))
           :conclusion (unless (eql (check-status check) :pending)
                         (ecase (check-status check)

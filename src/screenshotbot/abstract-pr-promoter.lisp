@@ -107,7 +107,7 @@
                 :initform nil
                 :accessor details-url)
    (summary :initarg :summary
-            :initform nil
+            :initform "NA"
             :accessor check-summary)))
 
 (defclass run-retriever ()
