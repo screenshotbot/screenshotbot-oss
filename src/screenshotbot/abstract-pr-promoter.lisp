@@ -18,6 +18,8 @@
   (:import-from #:screenshotbot/model/channel
                 #:production-run-for)
   (:import-from #:screenshotbot/user-api
+                #:user-email
+                #:user-full-name
                 #:recorder-run-commit
                 #:recorder-run-channel
                 #:channel-repo)
@@ -43,6 +45,10 @@
                 #:push-event)
   (:import-from #:lparallel.promise
                 #:future)
+  (:import-from #:bknr.datastore
+                #:store-object)
+  (:import-from #:bknr.datastore
+                #:persistent-class)
   (:export
    #:check
    #:check-status
@@ -58,8 +64,19 @@
    #:plugin-installed?
    #:make-acceptable
    #:make-task-args
-   #:pr-merge-base))
+   #:pr-merge-base
+   #:format-updated-summary))
 (in-package :screenshotbot/abstract-pr-promoter)
+
+(defun format-updated-summary (state user)
+  (let ((summary
+          (str:downcase (string state))))
+    (when user
+      (setf summary (format nil "~a by ~a"
+                            summary
+                            (or
+                             (user-full-name user)
+                             (user-email user)))))))
 
 (defclass pull-request-info ()
   ())

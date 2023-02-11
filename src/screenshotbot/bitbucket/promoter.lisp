@@ -6,26 +6,25 @@
 
 (defpackage :screenshotbot/pro/bitbucket/promoter
   (:nicknames :screenshotbot/bitbucket/promoter)
-  (:use #:cl)
+  (:use #:cl
+        #:screenshotbot/abstract-pr-promoter)
   (:import-from #:screenshotbot/promote-api
                 #:maybe-send-tasks
                 #:plugin-promoter)
   (:import-from #:screenshotbot/pro/bitbucket/plugin
                 #:bitbucket-repo
                 #:bitbucket-plugin)
-  (:import-from #:screenshotbot/github/pull-request-promoter
+  (:import-from #:screenshotbot/abstract-pr-promoter
                 #:format-updated-summary
                 #:check-title
                 #:check-summary
                 #:make-acceptable
-                #:pr-acceptable
                 #:details-url
                 #:send-task-args
                 #:check-status
                 #:make-task-args
                 #:valid-repo?
-                #:plugin-installed?
-                #:pull-request-promoter)
+                #:plugin-installed?)
   (:import-from #:screenshotbot/pro/bitbucket/settings
                 #:get-access-token-from-refresh-token
                 #:refresh-token
@@ -76,6 +75,8 @@
                 #:push-event)
   (:import-from #:util/store
                 #:with-class-validation)
+  (:import-from #:screenshotbot/abstract-pr-promoter
+                #:abstract-pr-promoter)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/bitbucket/promoter)
 
@@ -88,7 +89,7 @@
    (:metaclass persistent-class)))
 
 
-(defclass bitbucket-promoter (pull-request-promoter)
+(defclass bitbucket-promoter (abstract-pr-promoter)
   ((plugin :initarg :plugin
            :reader plugin)))
 

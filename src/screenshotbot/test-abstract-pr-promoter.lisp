@@ -8,11 +8,13 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:format-updated-summary
                 #:retrieve-run
                 #:run-retriever)
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/user-api
+                #:user
                 #:channel)
   (:import-from #:util/testing
                 #:with-global-binding))
@@ -32,3 +34,17 @@
     (let ((retriever (make-instance 'run-retriever
                                     :sleep-fn #'identity)))
       (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd")))))))
+
+
+(test format-updated-summary
+  (with-fixture state ()
+    (let ((user (make-instance 'user
+                               :full-name "Arnold Noronha")))
+      (is (equal "accepted by Arnold Noronha"
+                 (format-updated-summary
+                  :accepted user))))
+    (let ((user (make-instance 'user
+                               :email "arnold@screenshotbot.io")))
+      (is (equal "rejected by arnold@screenshotbot.io"
+                 (format-updated-summary
+                  :rejected user))))))
