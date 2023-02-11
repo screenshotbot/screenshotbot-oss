@@ -8,6 +8,7 @@
   (:use #:cl
         #:alexandria
         #:screenshotbot/promote-api
+        #:screenshotbot/abstract-pr-promoter
         #:util/java
         #:screenshotbot/model/channel
         #:screenshotbot/compare
@@ -38,7 +39,7 @@
                 #:gitlab-settings-for-company)
   (:import-from #:screenshotbot/dashboard/reports
                 #:report-link)
-  (:import-from #:screenshotbot/github/pull-request-promoter
+  (:import-from #:screenshotbot/abstract-pr-promoter
                 #:format-updated-summary
                 #:make-task-args
                 #:valid-repo?
@@ -69,7 +70,7 @@
 
 (named-readtables:in-readtable java-syntax)
 
-(defclass merge-request-promoter (pull-request-promoter)
+(defclass merge-request-promoter (abstract-pr-promoter)
   ((comments :initform nil
              :accessor comments)
    (report :initform nil

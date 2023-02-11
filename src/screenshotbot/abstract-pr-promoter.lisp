@@ -65,7 +65,8 @@
    #:make-acceptable
    #:make-task-args
    #:pr-merge-base
-   #:format-updated-summary))
+   #:format-updated-summary
+   #:abstract-pr-promoter))
 (in-package :screenshotbot/abstract-pr-promoter)
 
 (defun format-updated-summary (state user)
