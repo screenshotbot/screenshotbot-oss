@@ -50,7 +50,6 @@
    #:check-title
    #:details-url
    #:check-summary
-   #:base-commit
    #:pull-request-info
    #:retrieve-run
    #:send-task-args
@@ -58,7 +57,8 @@
    #:valid-repo?
    #:plugin-installed?
    #:make-acceptable
-   #:make-task-args))
+   #:make-task-args
+   #:pr-merge-base))
 (in-package :screenshotbot/abstract-pr-promoter)
 
 (defclass pull-request-info ()
@@ -101,8 +101,6 @@
 (defclass abstract-pr-promoter (promoter)
   ((report :accessor report
            :initform nil)
-   (base-commit :accessor base-commit
-               :initform nil)
    (pull-request-info :accessor pull-request-info
                       :initarg :pull-request-info
                       :initform (make-instance 'pull-request-info))
@@ -122,6 +120,9 @@
                             run
                             check))
 
+(defmethod pr-merge-base ((promoter abstract-pr-promoter) run)
+  (recorder-run-merge-base run))
+
 (defun make-details-url (&rest args)
   (format nil
           "~a~a"
@@ -139,15 +140,13 @@
         (plugin-installed? promoter company repo-url)
         (not (equal (recorder-run-merge-base run)
                     (recorder-run-commit run))))
-       (setf (base-commit promoter)
-             (recorder-run-merge-base run))
 
-       (do-promotion-log :info "Base commit is: ~S" (base-commit promoter))
+       (do-promotion-log :info "Base commit is: ~S" (pr-merge-base promoter run))
        (let ((base-run (lparallel:force
                         (retrieve-run
                          (run-retriever promoter)
                          (recorder-run-channel run)
-                         (base-commit  promoter)))))
+                         (pr-merge-base promoter run)))))
          (flet ((make-failure-check (&rest args)
                   (apply #'make-instance 'check
                          :status :failure
@@ -155,7 +154,7 @@
                                                         :id (oid run))
                          args)))
           (let ((check (cond
-                         ((null (base-commit promoter))
+                         ((null (pr-merge-base promoter run))
                           (do-promotion-log :info "No base-commit provided in run")
                           (make-failure-check
                            :title "Base SHA not available for comparison, please check CI setup"

@@ -25,12 +25,12 @@
                 #:maybe-promote-run)
   (:import-from #:screenshotbot/github/pull-request-promoter
                 #:send-task-args
-                #:base-commit
                 #:check-status
                 #:check-title
                 #:retrieve-run
                 #:report)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:pr-merge-base
                 #:make-task-args
                 #:make-check-result-from-diff-report)
   (:import-from #:util/store
@@ -130,7 +130,7 @@
                                    :commit-hash "foo")))
       (maybe-promote promoter run)
       (is-false (report promoter))
-      (is (equal "car"(base-commit promoter))))))
+      (is (equal "car" (pr-merge-base promoter run))))))
 
 (test bitbucket-repo-doesnt-cause-promoter-to-crash
   (with-fixture state ()
@@ -187,7 +187,7 @@
                   :merge-base "car"
                   :commit-hash "foo")))
        (maybe-promote promoter run)
-       (is (equal "car" (base-commit promoter)))
+       (is (equal "car" (pr-merge-base promoter run)))
        (is (eql :success (check-status check)))))))
 
 (test without-a-base-run-we-get-an-error
@@ -206,7 +206,7 @@
                             (declare (ignore promoter run))
                             (setf check %check)))
        (maybe-promote promoter run)
-       (is (equal "car" (base-commit promoter)))
+       (is (equal "car" (pr-merge-base promoter run)))
        (is (eql :failure (check-status check)))
        (is (cl-ppcre:scan ".*rebasing*" (check-title check)))))))
 
