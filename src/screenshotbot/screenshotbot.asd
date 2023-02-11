@@ -292,6 +292,7 @@
                :util/fiveam
                :fiveam-matchers
                :util/random-port
+               :trivia
                :screenshotbot/utils
                :screenshotbot/replay-core
                :screenshotbot/webdriver

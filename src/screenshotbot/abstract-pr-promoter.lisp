@@ -68,6 +68,7 @@
   ((status :initarg :status
            :accessor check-status)
    (report :initarg :report
+           :initform nil
            :accessor report)
    (title :initarg :title
           :accessor check-title)
@@ -99,9 +100,7 @@
 
 
 (defclass abstract-pr-promoter (promoter)
-  ((report :accessor report
-           :initform nil)
-   (pull-request-info :accessor pull-request-info
+  ((pull-request-info :accessor pull-request-info
                       :initarg :pull-request-info
                       :initform (make-instance 'pull-request-info))
    (run-retriever :accessor run-retriever
@@ -171,18 +170,17 @@
                            promoter
                            run
                            base-run)))))
-            (setf (send-task-args promoter)
-                  (make-task-args promoter
-                                  run
-                                  check))))
-
-         (let ((send-task-args (send-task-args promoter)))
-           (when (report promoter)
-             (with-transaction ()
-               (setf
-                (send-task-args
-                 (report-acceptable (report promoter)))
-                send-task-args))))))
+            (let ((send-task-args (make-task-args promoter
+                                                  run
+                                                  check)))
+              (setf (send-task-args promoter)
+                    send-task-args)
+              (when (report check)
+                (with-transaction ()
+                  (setf
+                   (send-task-args
+                    (report-acceptable (report check)))
+                   send-task-args))))))))
       (t
        #+nil
        (cerror "continue" "not promoting for ~a" promoter)
@@ -209,7 +207,6 @@
         (with-transaction ()
           (setf (report-acceptable report)
                 (make-acceptable promoter report)))
-        (setf (report promoter) report)
         (make-check-for-report
          report
          :status :action_required
@@ -219,6 +216,7 @@
   (make-instance
    'check
    :status status
+   :report report
    :title (diff-report-title (make-diff-report
                               (report-run report)
                               (report-previous-run report)))

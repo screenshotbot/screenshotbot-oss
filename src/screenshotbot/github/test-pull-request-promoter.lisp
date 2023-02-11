@@ -62,7 +62,9 @@
   (:import-from #:cl-mock
                 #:answer)
   (:import-from #:screenshotbot/github/plugin
-                #:github-plugin))
+                #:github-plugin)
+  (:import-from #:bknr.datastore
+                #:class-instances))
 (in-package :screenshotbot/github/test-pull-request-promoter)
 
 (util/fiveam:def-suite)
@@ -118,7 +120,16 @@
                                       (make-instance 'pull-request-info)
                                       :run-retriever
                                       (make-instance run-retriever))))
-         (&body))))))
+         (flet ((the-only-report ()
+                  (let ((reports (class-instances 'report)))
+                    (trivia:match reports
+                      (nil
+                       nil)
+                      ((list report)
+                       report)
+                      (t
+                       (error "Expected to have only one report but got: ~a" reports))))))
+          (&body)))))))
 
 (test run-without-pr-does-not-create-report
   (with-fixture state ()
@@ -129,7 +140,7 @@
                                    :merge-base "car"
                                    :commit-hash "foo")))
       (maybe-promote promoter run)
-      (is-false (report promoter))
+      (is-false (the-only-report))
       (is (equal "car" (pr-merge-base promoter run))))))
 
 (test bitbucket-repo-doesnt-cause-promoter-to-crash
@@ -267,7 +278,7 @@
                   :merge-base "car"
                   :commit-hash "foo")))
        (maybe-promote promoter run)
-       (is-true (report promoter))))))
+       (is-true (the-only-report))))))
 
 (test maybe-send-tasks-happy-path
   (with-fixture state ()
