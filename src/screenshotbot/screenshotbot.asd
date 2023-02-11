@@ -368,6 +368,8 @@
                              (:file "test-pull-request-promoter")
                              (:file "test-review-link")
                              (:file "test-webhook")))
+               (:module "gitlab"
+                :components ((:file "test-merge-request-promoter")))
                (:module "phabricator"
                 :components ((:file "test-builds")
                              (:file "test-diff-promoter")))
