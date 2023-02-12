@@ -52,6 +52,7 @@
   (:import-from #:bknr.datastore
                 #:persistent-class)
   (:import-from #:screenshotbot/model/report
+                #:acceptable-reviewer
                 #:acceptable-report
                 #:acceptable-state
                 #:base-acceptable)
@@ -167,14 +168,17 @@
 
 (defgeneric make-promoter-for-acceptable (acceptable))
 
-(defmethod (setf acceptable-state) :after (state (self abstract-pr-acceptable))
+(defmethod (setf acceptable-state) :after (state (self abstract-pr-acceptable)
+                                           &key user)
   (push-remote-check
    (make-promoter-for-acceptable self)
    (report-run (acceptable-report self))
    (make-check-for-report
     (acceptable-report self)
     :status state
-    :user (current-user))))
+    :user user))
+  (with-transaction ()
+    (setf (acceptable-reviewer self) user)))
 
 (defmethod maybe-promote ((promoter abstract-pr-promoter)
                           run)

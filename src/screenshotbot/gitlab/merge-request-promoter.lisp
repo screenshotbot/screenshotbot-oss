@@ -187,9 +187,6 @@
                                ("state" . ,state)
                                ("description" . ,description)))))
 
-(defmethod (setf acceptable-state) :before (state (acceptable gitlab-acceptable))
-  "TODO: delete")
-
 (defmethod make-promoter-for-acceptable ((self gitlab-acceptable))
   (make-instance 'merge-request-promoter))
 

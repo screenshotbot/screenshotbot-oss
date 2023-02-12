@@ -121,10 +121,10 @@
 
 (deftag render-acceptable (&key acceptable)
   (let ((accept (nibble (redirect :name :accept)
-                  (setf (acceptable-state acceptable) :accepted)
+                  (setf (acceptable-state acceptable :user (current-user)) :accepted)
                   (hex:safe-redirect redirect)))
         (reject (nibble (redirect :name :reject)
-                  (setf (acceptable-state acceptable) :rejected)
+                  (setf (acceptable-state acceptable :user (current-user)) :rejected)
                   (hex:safe-redirect redirect)))
         (btn-class
           (ecase (acceptable-state acceptable)

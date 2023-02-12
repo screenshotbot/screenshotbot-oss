@@ -71,9 +71,6 @@
                     :initarg :send-task-args))
    (:metaclass persistent-class)))
 
-(defmethod (setf acceptable-state) :before (state (acceptable pr-acceptable))
-  (values))
-
 
 (defclass pull-request-promoter (abstract-pr-promoter)
   ())

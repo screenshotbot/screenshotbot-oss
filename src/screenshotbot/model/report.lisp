@@ -45,7 +45,8 @@
    #:report-num-changes
    #:reports-for-run
    #:report-company
-   #:acceptable-report))
+   #:acceptable-report
+   #:acceptable-reviewer))
 (in-package :screenshotbot/model/report)
 
 (with-class-validation
@@ -104,7 +105,11 @@
      (report :initarg :report
              :reader acceptable-report
              :documentation "Keep track of the report, mostly for audit-log
-             purposes, which needs a reference to the company."))
+             purposes, which needs a reference to the company.")
+     (%user :initarg :user
+            :initform nil
+            :accessor acceptable-reviewer
+            :documentation "The reviewer who last updated the state"))
     (:metaclass persistent-class)))
 
 
@@ -120,8 +125,9 @@
                        (?. pull-request-id (report-run report)))))
           collect acc))
 
-(defmethod (setf acceptable-state) (state (acceptable base-acceptable))
+(defmethod (setf acceptable-state) (state (acceptable base-acceptable) &key user)
   (assert (member state (list nil :accepted :rejected)))
   (with-transaction ()
     (setf (slot-value acceptable 'state)
-          state)))
+          state)
+    (setf (acceptable-reviewer acceptable) user)))

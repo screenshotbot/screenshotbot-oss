@@ -108,10 +108,6 @@
                   :company (recorder-run-company (report-run report))
                   :report report))
 
-(defmethod (setf acceptable-state) :before (state (self bitbucket-acceptable))
-  "TODO: delete"
-  (values))
-
 (defmethod valid-repo? ((promoter bitbucket-promoter)
                         repo)
   (typep repo 'bitbucket-repo))
