@@ -14,6 +14,8 @@
         #:screenshotbot/phabricator/commenting-promoter)
   (:import-from #:screenshotbot/phabricator/plugin
                 #:phabricator-plugin)
+  (:import-from #:util/phabricator/conduit
+                #:make-phab-instance-from-arcrc)
   (:export #:phabricator-promoter))
 (in-package :screenshotbot/phabricator/diff-promoter)
 
@@ -24,7 +26,7 @@
     (cdar
      (cdar
       (call-conduit phab "differential.querydiffs"
-                    `(("ids[0]" . ,diff-id)))))
+                    `(("ids" . ,(vector diff-id))))))
     :revision-+id+)))
 
 (defmethod create-comment ((phab phab-instance) revision-id message)
@@ -33,7 +35,7 @@
                   ("message" . ,message))))
 
 #+nil
-(diff-to-revision *phab* 7821)
+(diff-to-revision (make-phab-instance-from-arcrc "https://phabricator.tdrhq.com/") 7821)
 #+nil
 (create-comment *phab* 3498 "hello world")
 
