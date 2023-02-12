@@ -213,8 +213,6 @@
                  (:file "settings")
                  (:file "merge-request-promoter")
                  (:file "all")))
-   (:module "promoter"
-    :components ((:file "async-promoter")))
    (:module "api"
     :serial t
     :components ((:file "core")
@@ -315,8 +313,6 @@
                (:file "test-async")
                (:file "test-settings-api")
                (:file "test-config")
-               (:module "promoter"
-                :components ((:file "test-async-promoter")))
                (:file "test-installation")
                (:file "test-assets")
                (:file "test-template")

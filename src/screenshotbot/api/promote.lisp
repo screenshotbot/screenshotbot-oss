@@ -24,8 +24,6 @@
                 #:*init-hooks*)
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
-  (:import-from #:screenshotbot/promoter/async-promoter
-                #:trigger-promoters-waiting-on-commit)
   (:export
    #:with-promotion-log
    #:default-promoter
@@ -232,10 +230,7 @@
               (log :error "No branch set, not promoting"))
              (t
               (maybe-promote-run-on-branch run channel run-branch
-                                           :wait-timeout wait-timeout)))))
-
-        (trigger-promoters-waiting-on-commit
-         channel (recorder-run-commit run)))
+                                           :wait-timeout wait-timeout))))))
     (retry-promote ()
       (apply 'maybe-promote-run run args))))
 
