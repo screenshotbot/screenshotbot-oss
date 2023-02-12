@@ -212,8 +212,7 @@ If the images are identical, we return t, else we return NIL."
                             after
                             p
                             masks)))
-         (let* ((image (make-image :pathname p
-                                   :content-type "image/png")))
+         (let* ((image (make-image :pathname p)))
            (bt:with-lock-held (*lock*)
              (or
               (find)

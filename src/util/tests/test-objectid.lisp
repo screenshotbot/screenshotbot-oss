@@ -32,7 +32,11 @@
   (:import-from #:bknr.datastore
                 #:encode)
   (:import-from #:bknr.datastore
-                #:decode))
+                #:decode)
+  (:import-from #:fiveam-matchers/lists
+                #:contains)
+  (:import-from #:bknr.datastore
+                #:class-instances))
 (in-package :util.model.test-object-id)
 
 (def-suite* :util.model.test-object-id)
@@ -113,3 +117,14 @@
       (is (oid-p (oid-struct-or-array obj1)))
       (is (not (oid-p (oid-arr (oid-struct-or-array obj1)))))
       (is (oid-p (oid-struct-or-array obj1))))))
+
+
+(test object-ids-are-maintained
+  (let ((oid))
+   (tmpdir:with-tmpdir (dir)
+     (with-test-store (:dir dir)
+       (setf oid (oid (make-instance 'object-with-oid))))
+     (with-test-store (:dir dir)
+       (is (equalp oid
+                   (oid (car
+                         (class-instances 'object-with-oid)))))))))
