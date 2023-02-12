@@ -19,6 +19,7 @@
   (:import-from #:util/phabricator/conduit
                 #:make-phab-instance-from-arcrc)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-title
                 #:make-promoter-for-acceptable
                 #:details-url
                 #:check-status
@@ -97,7 +98,10 @@
      (:failed "fail")
      (:action_required "fail")
      (:action-required "fail"))
-   :details (details-url check)))
+   :details
+   (format nil "~a~%~a"
+           (check-title check)
+           (details-url check))))
 
 (defmethod make-promoter-for-acceptable ((self diff-acceptable))
   (make-instance 'phabricator-promoter))
