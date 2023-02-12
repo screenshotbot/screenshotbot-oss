@@ -84,7 +84,7 @@
   (with-fixture state ()
 
     (cl-mock:if-called '%actually-update-status
-                       (lambda (phab self type &key details)
+                       (lambda (phab self &key status-map)
                          (error "Should not be called")))
 
     (update-diff-status company 123
@@ -94,12 +94,12 @@
 
     (let ((res))
       (cl-mock:if-called '%actually-update-status
-                         (lambda (phab self type &key details)
+                         (lambda (phab self &key status-map)
                            (is (equal "foobar"
                                       (target-phid self)))
                            (is (equal "carbar"
                                       (build-phid self)))
-                           (push type res))
+                           (push (second (first status-map)) res))
                          :at-start t)
       (%update-build
        :diff 123
@@ -112,8 +112,8 @@
   (with-fixture state ()
     (let ((res nil))
       (cl-mock:if-called '%actually-update-status
-                         (lambda (phab self type &key details)
-                           (push type res)))
+                         (lambda (phab self &key status-map)
+                           (push (second (car status-map)) res)))
       (cl-mock:if-called 'send-restart
                          (lambda (&rest args)
                            (error "send-restart should not be called")))
@@ -133,8 +133,8 @@
   (with-fixture state ()
     (let ((res nil))
       (cl-mock:if-called '%actually-update-status
-                         (lambda (phab self type &key details)
-                           (push type res)))
+                         (lambda (phab self &key status-map)
+                           (push (second (car status-map)) res)))
       (cl-mock:if-called 'send-restart
                          (lambda (&rest args)
                            (error "send-restart should not be called")))
@@ -150,7 +150,7 @@
       (is (equal '(:fail) res))
 
       (cl-mock:if-called '%actually-update-status
-                         (lambda (phab self type &key details)
+                         (lambda (phab self &key status-map)
                            (error "should not be called"))
                          :at-start t)
       (let ((res))
@@ -166,8 +166,8 @@
       (setf res nil)
 
       (cl-mock:if-called '%actually-update-status
-                         (lambda (phab self type &key details)
-                           (push type res))
+                         (lambda (phab self &key status-map)
+                           (push (second (first status-map)) res))
                          :at-start t)
       (cl-mock:if-called 'send-restart
                          (lambda (&rest args)

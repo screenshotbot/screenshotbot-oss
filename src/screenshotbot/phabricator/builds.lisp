@@ -43,13 +43,14 @@
                 #:ensure-slot-boundp)
   (:import-from #:util/misc
                 #:make-mp-hash-table)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/phabricator/builds)
 
 (defvar *build-info-index* (make-mp-hash-table :test #'equal))
 
 (defvar *lock* (bt:make-lock))
-
 
 (with-class-validation
  (defclass build-info (store-object)
@@ -65,10 +66,15 @@
              :reader company)
     (status :initarg :status
             :initform nil
-            :accessor build-info-status)
+            :documentation "DEPRECATED")
     (details :initarg :details
              :initform nil
-             :accessor build-info-details)
+             :documentation "DEPRECATED")
+    (status-map :initarg status-map
+                :initform nil
+                :accessor build-info-status-map
+                :documentation "A list of lists: each item having three values: the channel name,
+the status, and the details")
     (needs-sync-p :initform nil
                   :accessor needs-sync-p
                   :documentation "The status has been updated, but we've not synced to Phabricator yet,
@@ -135,11 +141,11 @@
             (setf (build-phid build-info) build-phid))
           (when (needs-sync-p build-info)
             (let ((phab-instance (phab-instance-for-company company))
-                         (type (build-info-status build-info)))
+                  (status-map (build-info-status-map build-info)))
               (%actually-update-status
                phab-instance
                build-info
-               type :details (build-info-details build-info)))
+               :status-map status-map))
             (with-transaction ()
               (setf (needs-sync-p build-info) nil)))))))
   "OK")
@@ -158,42 +164,54 @@
        "harbormaster.sendmessage"
        args))))
 
-(defun %actually-update-status (phab  self type
-                                &key details)
+(defun %actually-update-status (phab  self
+                                &key status-map)
   "Immediately send the Harbormaster message"
   (log:info "Updating: D~a" (build-info-revision self))
-  (%send-message phab
-                 (target-phid self)
-                 type
-                 :unit
-                 (list
-                  (a:alist-hash-table
-                   `(("name" . "Screenshot Tests")
-                     ("result" . ,(str:downcase type))
-                     ("details" . ,(or details "dummy tdetails"))
-                     ("format" . "remarkup"))))))
+  (let ((types (mapcar #'cadr status-map)))
+    (let ((fail-count (count "fail" types :test #'equal))
+          (work-count (count "work" types :test #'equal)))
+     (%send-message phab
+                    (target-phid self)
+                    (cond
+                      ((not (zerop fail-count))
+                       "fail")
+                      ((zerop (zerop work-count))
+                       "work")
+                      (t
+                       "pass"))
+                    :unit
+                    (loop for (name type details) in status-map
+                          collect
+                          (a:alist-hash-table
+                           `(("name" . ,name)
+                             ("result" . ,(str:downcase type))
+                             ("details" . ,(or details "dummy tdetails"))
+                             ("format" . "remarkup"))))))))
 
 (defun got-initial-callback-p (build-info)
   (slot-boundp build-info 'build-phid))
 
-(defmethod update-diff-status (company (diff string) status &key details)
+(defmethod update-diff-status (company (diff string) status &key details (name "Screenshot Tests"))
   (update-diff-status
    company
    (parse-integer diff)
    status
-   :details details))
+   :details details
+   :name name))
 
 (defmethod update-diff-status (company (diff number)
-                               status &key details)
+                               status &key details (name "Screenshot Tests"))
   (bt:with-lock-held (*lock*)
     (let ((build-info
             (make-or-update-build-info
              company diff))
           (phab (phab-instance-for-company company)))
-      (let ((original-status (build-info-status build-info)))
+      (let ((original-status-map (build-info-status-map build-info)))
         (with-transaction ()
-          (setf (build-info-status build-info) status
-                (build-info-details build-info) details))
+          (setf (assoc-value (build-info-status-map build-info) name
+                             :test #'equal)
+                (list status details)))
         (flet ((update-needs-sync ()
                  (with-transaction ()
                    (setf (needs-sync-p build-info) t))))
@@ -202,13 +220,13 @@
              ;; We don't need to do anything right now, we're still
              ;; waiting a callback
              (values))
-            ((and (not original-status)
+            ((and (not original-status-map)
                   (got-initial-callback-p build-info))
              ;; First time we're sending a message, but we already
              ;; have a callback, so we can do this immediately.
-             (%actually-update-status phab build-info
-                                      status :details details)
-             )
+             (%actually-update-status
+              phab build-info
+              :status-map (build-info-status-map build-info)))
             ((got-initial-callback-p build-info)
              ;; So needs-sync is nil, and we got an initial callback, so
              ;; we can immediately send the message.
