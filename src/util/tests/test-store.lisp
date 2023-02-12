@@ -234,3 +234,9 @@
   (with-test-store ()
     (let ((*snapshot-hooks* nil))
       (util:safe-snapshot "dummy"))))
+
+(test |body get's called :/|
+  (let ((calledp nil))
+    (with-test-store ()
+      (setf calledp t))
+    (is-true calledp)))

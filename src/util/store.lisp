@@ -110,39 +110,51 @@ to the directory that was just snapshotted.")
 
 (def-easy-macro with-test-store (&key (globally nil)
                                       (store-class 'safe-mp-store)
+                                      dir
                                       &fn body)
-  (%%call-with-test-store body :globally globally :store-class store-class))
+  (%%call-with-test-store body :globally globally :store-class store-class
+                          :dir dir))
 
 (defun %%call-with-test-store (fn &key (cleanup t)
                                   (globally nil)
-                                  store-class)
+                                    store-class
+                                    dir)
   (when (boundp 'bknr.datastore:*store*)
     (error "Don't run this test in a live program with an existing store"))
   (flet ((inner-work ()
-           (flet ((all-objects ()
-                    (bknr.datastore:all-store-objects)))
-             (tmpdir:with-tmpdir (dir)
-               (prepare-store-for-test :dir dir :store-class store-class)
-               (setf util/store:*object-store* (namestring dir))
-               (assert bknr.datastore:*store*)
-               (assert (null (all-objects)))
-               (unwind-protect
-                    (progn
-                      (funcall fn)
-                      #+nil
-                      (let ((objs (all-objects)))
-                        (when objs
-                          (error "At the end of the test some objects were not deleted: ~s" objs))))
-                 (let ((store *store*))
-                   (close-store)
-                   (bknr.datastore::close-store-object store))
+           (labels ((all-objects ()
+                      (bknr.datastore:all-store-objects))
+                    (maybe-ensure-empty ()
+                      (unless dir
+                        (assert (null (all-objects)))))
+                    (call-with-dir (dir)
+                      (prepare-store-for-test :dir dir :store-class store-class)
+                      (setf util/store:*object-store* (namestring dir))
+                      (assert bknr.datastore:*store*)
+                      (maybe-ensure-empty)
+                      (unwind-protect
+                           (progn
+                             (funcall fn)
+                             #+nil
+                             (let ((objs (all-objects)))
+                               (when objs
+                                 (error "At the end of the test some objects were not deleted: ~s" objs))))
+                        (let ((store *store*))
+                          (close-store)
+                          (bknr.datastore::close-store-object store))
 
-                 (when cleanup
-                   ;; Look at the associated test. This is the only way I know
-                   ;; of to clean up the indices. I wish there were a better
-                   ;; solution.
-                   (%%call-with-test-store (lambda ()) :cleanup nil
-                                           :store-class store-class)))))))
+                        (when cleanup
+                          ;; Look at the associated test. This is the only way I know
+                          ;; of to clean up the indices. I wish there were a better
+                          ;; solution.
+                          (%%call-with-test-store (lambda ()) :cleanup nil
+                                                              :store-class store-class)))))
+             (cond
+               (dir
+                (call-with-dir dir))
+               (t
+                (tmpdir:with-tmpdir (dir)
+                  (call-with-dir dir)))))))
     (cond
       (globally
        (unwind-protect
