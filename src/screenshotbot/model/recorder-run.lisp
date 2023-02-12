@@ -111,7 +111,7 @@
      :initarg :github-repo
      :accessor github-repo)
     (cleanp
-     :initarg cleanp)
+     :initarg :cleanp)
     (activep
      :initarg :activep
      :initform nil)
@@ -223,9 +223,6 @@
     (when channel
       (bt:with-lock-held (*lock*)
         (pushnew run (channel-runs channel))))))
-
-(defmethod initialize-instance :after ((run recorder-run) &key channel user previous-run activep &allow-other-keys)
-  (declare (ignore previous-run user channel)))
 
 (defmethod can-view ((run recorder-run) user)
   (can-view (recorder-run-channel run) user))

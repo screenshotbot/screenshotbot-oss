@@ -25,7 +25,7 @@
     (let ((repo (make-instance 'bitbucket-repo)))
       (is (equal "Pull Request"
                  (describe-pull-request repo (make-instance 'recorder-run
-                                                            :pull-request-url "https://google.com"))))
+                                                            :pull-request "https://google.com"))))
       (is (equal "Pull 2"
                  (describe-pull-request repo
                                         (make-instance 'recorder-run

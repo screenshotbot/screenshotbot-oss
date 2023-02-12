@@ -83,7 +83,7 @@
                                                 :commit-hash "baa"
                                                 :merge-base "aaa"
                                                 :channel channel
-                                                :merge-request-iid 7))
+                                                :gitlab-merge-request-iid 7))
               (another-run (make-instance' recorder-run))
               (*base-run* (make-instance 'recorder-run :company company))
               (last-build-status))
