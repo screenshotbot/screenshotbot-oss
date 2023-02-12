@@ -88,7 +88,7 @@
                                            :companies (list company)))
                     (user2 (make-instance 'user
                                            :companies (list company)))
-                    (report (make-instance 'report :company company)))
+                    (report (make-instance 'report)))
                (is (equal (list user1 user2)
                           (users-for-company company)))
                (with-transaction ()
