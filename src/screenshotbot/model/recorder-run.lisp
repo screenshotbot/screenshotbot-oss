@@ -83,6 +83,8 @@
   ((oid-array :initarg :oid-array
               :reader oid-array)))
 
+(defvar *lock* (bt:make-lock))
+
 (with-class-validation
  (defclass recorder-run (object-with-oid)
    ((channel
@@ -199,30 +201,28 @@
 (defmethod model-id ((inst store-object))
   (store-object-id inst))
 
-(let ((lock (bt:make-lock)))
-  (defmethod promotion-log ((run recorder-run))
-    (cond
-      ((%promotion-log run)
-       (flet ((val () (%promotion-log run)))
-         (or
-          (val)
-          (bt:with-lock-held (lock)
-            (or
-             (val)
-             (with-transaction ()
-               (setf (%promotion-log run)
-                     (make-instance 'promotion-log))))))))
-      (t
-       (make-instance 'transient-promotion-log
-                      :oid-array (oid-array run))))))
+(defmethod promotion-log ((run recorder-run))
+  (cond
+    ((%promotion-log run)
+     (flet ((val () (%promotion-log run)))
+       (or
+        (val)
+        (bt:with-lock-held (*lock*)
+          (or
+           (val)
+           (with-transaction ()
+             (setf (%promotion-log run)
+                   (make-instance 'promotion-log))))))))
+    (t
+     (make-instance 'transient-promotion-log
+                    :oid-array (oid-array run)))))
 
 ;; (loop for run in (store-objects-with-class 'recorder-run) if (recorder-run-channel run) do (pushnew run (channel-runs (recorder-run-channel run))))
-(let ((lock (bt:make-lock)))
- (defmethod bknr.datastore:initialize-transient-instance :after ((run recorder-run))
-   (let ((channel (recorder-run-channel run)))
-     (when channel
-       (bt:with-lock-held (lock)
-        (pushnew run (channel-runs channel)))))))
+(defmethod bknr.datastore:initialize-transient-instance :after ((run recorder-run))
+  (let ((channel (recorder-run-channel run)))
+    (when channel
+      (bt:with-lock-held (*lock*)
+        (pushnew run (channel-runs channel))))))
 
 (defmethod can-view ((run recorder-run) user)
   (can-view (recorder-run-channel run) user))
