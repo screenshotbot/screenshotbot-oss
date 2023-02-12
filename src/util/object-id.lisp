@@ -61,8 +61,7 @@
     :accessor oid-struct-or-array
     :index +oid-index+
     :index-reader %find-by-oid))
-  (:metaclass persistent-class)
-  (:default-initargs :oid (%make-oid)))
+  (:metaclass persistent-class))
 
 (defun migrate-oids ()
   (loop for obj in (class-instances 'object-with-oid)
@@ -71,6 +70,16 @@
                (assert (vectorp oid))
                (with-transaction ()
                 (setf (oid-struct-or-array obj) (make-oid :arr (oid-array obj))))))))
+
+(defmethod initialize-instance :around ((obj object-with-oid)
+                                        &rest args
+                                        &key oid
+                                        &allow-other-keys)
+  (cond
+    (oid
+     (call-next-method))
+    (t
+     (apply #'call-next-method obj :oid (%make-oid) args))))
 
 (defmethod oid-array ((self object-with-oid))
   (let ((ret (oid-struct-or-array self)))

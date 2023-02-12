@@ -36,7 +36,8 @@
   (with-test-store (:globally t)
     (with-test-user (:company company :user user
                      :logged-in-p t)
-      (let ((report (make-instance 'report)))
+      (let ((report (make-instance 'report
+                                   :company company)))
        (&body)))))
 
 (test submit-share-report
