@@ -39,6 +39,12 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:phabricator-diff-id
                 #:recorder-run-company)
+  (:import-from #:screenshotbot/user-api
+                #:channel-name)
+  (:import-from #:screenshotbot/model/report
+                #:report-channel)
+  (:import-from #:screenshotbot/report-api
+                #:report)
   (:export #:phabricator-promoter))
 (in-package :screenshotbot/phabricator/diff-promoter)
 
@@ -98,6 +104,7 @@
      (:failed "fail")
      (:action_required "fail")
      (:action-required "fail"))
+   :name (channel-name (report-channel (report check)))
    :details
    (format nil "~a~%~a"
            (check-title check)

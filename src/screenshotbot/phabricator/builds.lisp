@@ -176,7 +176,7 @@ the status, and the details")
                     (cond
                       ((not (zerop fail-count))
                        "fail")
-                      ((zerop (zerop work-count))
+                      ((not (zerop work-count))
                        "work")
                       (t
                        "pass"))
