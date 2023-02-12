@@ -88,8 +88,11 @@
                   *build-info-index*)
          self)))
 
-(defun find-build-info (company diff)
+(defmethod find-build-info (company diff)
   (gethash (cons company diff) *build-info-index*))
+
+(defmethod find-build-info (company (diff string))
+  (find-build-info company (parse-integer diff)))
 
 (def-easy-macro in-future (&fn fn)
   (with-screenshotbot-kernel ()
@@ -172,6 +175,13 @@
 
 (defun got-initial-callback-p (build-info)
   (slot-boundp build-info 'build-phid))
+
+(defmethod update-diff-status (company (diff string) status &key details)
+  (update-diff-status
+   company
+   (parse-integer diff)
+   status
+   :details details))
 
 (defmethod update-diff-status (company (diff number)
                                status &key details)

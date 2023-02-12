@@ -13,9 +13,31 @@
         #:screenshotbot/promote-api
         #:screenshotbot/phabricator/commenting-promoter)
   (:import-from #:screenshotbot/phabricator/plugin
+                #:phab-instance-for-company
+                #:phabricator-git-repo
                 #:phabricator-plugin)
   (:import-from #:util/phabricator/conduit
                 #:make-phab-instance-from-arcrc)
+  (:import-from #:screenshotbot/abstract-pr-promoter
+                #:make-promoter-for-acceptable
+                #:details-url
+                #:check-status
+                #:push-remote-check
+                #:plugin-installed?
+                #:make-acceptable
+                #:abstract-pr-acceptable
+                #:valid-repo?
+                #:abstract-pr-promoter)
+  (:import-from #:bknr.datastore
+                #:persistent-class)
+  (:import-from #:screenshotbot/phabricator/builds
+                #:update-diff-status
+                #:target-phid
+                #:build-phid
+                #:find-build-info)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:phabricator-diff-id
+                #:recorder-run-company)
   (:export #:phabricator-promoter))
 (in-package :screenshotbot/phabricator/diff-promoter)
 
@@ -39,22 +61,49 @@
 #+nil
 (create-comment *phab* 3498 "hello world")
 
-(defclass phabricator-promoter (commenting-promoter)
+(defclass phabricator-promoter (abstract-pr-promoter)
   ((phab :accessor phab)
    (diff-id :accessor diff-id)))
 
+(defclass diff-acceptable (abstract-pr-acceptable)
+  ()
+  (:metaclass persistent-class))
+
 (defmethod maybe-promote ((promoter phabricator-promoter) run)
-  (when (phabricator-diff-id run)
-    (call-next-method)))
+  (call-next-method))
+
+(defmethod valid-repo? ((promoter phabricator-promoter) (repo phabricator-git-repo))
+  t)
+
+(defmethod valid-repo? ((promoter phabricator-promoter) repo)
+  nil)
+
+(defmethod make-acceptable ((promoter phabricator-promoter) report)
+  (make-instance 'diff-acceptable
+                 :report report))
+
+(defmethod plugin-installed? ((promoter phabricator-promoter) company repo-url)
+  (let ((ret (phabricator-config-for-company company)))
+    ret))
+
+(defmethod push-remote-check ((promoter phabricator-promoter) run check)
+  (update-diff-status
+   (recorder-run-company run)
+   (phabricator-diff-id run)
+   (ecase (check-status check)
+     (:accepted "pass")
+     (:rejected "fail")
+     (:success "pass")
+     (:failed "fail")
+     (:action_required "fail")
+     (:action-required "fail"))
+   :details (details-url check)))
+
+(defmethod make-promoter-for-acceptable ((self diff-acceptable))
+  (make-instance 'phabricator-promoter))
 
 (defmethod maybe-send-tasks ((promoter phabricator-promoter) run)
-  (when (phabricator-diff-id run)
-    (let ((config (phabricator-config-for-company (recorder-run-company run))))
-      (setf (phab promoter) (make-instance 'phab-instance
-                                            :url (phabricator-url config)
-                                            :api-key (conduit-api-key config)))
-      (setf (diff-id promoter) (phabricator-diff-id run)))
-    (call-next-method)))
+  (values))
 
 (defmethod add-comment ((promoter phabricator-promoter) comment)
   (let ((phab (phab promoter)))
