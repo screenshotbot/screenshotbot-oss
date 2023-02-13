@@ -229,7 +229,6 @@
     :serial t
     :components ((:file "plugin")
                  (:file "builds")
-                 (:file "commenting-promoter")
                  (:file "diff-promoter")
                  (:file "settings")
                  (:file "all")))

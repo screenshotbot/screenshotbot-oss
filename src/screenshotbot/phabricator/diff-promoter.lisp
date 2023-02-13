@@ -10,8 +10,7 @@
         #:util/phabricator/conduit
         #:screenshotbot/model/company
         #:screenshotbot/model/recorder-run
-        #:screenshotbot/promote-api
-        #:screenshotbot/phabricator/commenting-promoter)
+        #:screenshotbot/promote-api)
   (:import-from #:screenshotbot/phabricator/plugin
                 #:phab-instance-for-company
                 #:phabricator-git-repo
