@@ -10,6 +10,7 @@
                 #:*dtd*
                 #:defapi)
   (:import-from #:screenshotbot/model/failed-run
+                #:failed-runs-for-company
                 #:failed-run-commit
                 #:failed-run-channel
                 #:failed-run)
@@ -31,6 +32,13 @@
   (:element "failed-run")
   (:metaclass bknr.impex:xml-class))
 
+(defclass impex-failed-runs ()
+  ((runs :initarg :runs
+         :element "failed-run"))
+  (:dtd-name *dtd*)
+  (:element "failed-runs")
+  (:metaclass bknr.impex:xml-class))
+
 (defun parse-body (class-name)
   (let ((body (hunchentoot:raw-post-data :force-text t)))
     (uiop:with-temporary-file (:stream s :pathname p :direction :output)
@@ -41,14 +49,26 @@
        p
        (list (find-class class-name))))))
 
+(defun to-impex (ret)
+  (make-instance 'impex-failed-run
+                 :id (bknr.datastore:store-object-id ret)
+                 :channel (failed-run-channel ret)
+                 :commit (failed-run-commit ret)))
+
 (defapi (nil :uri "/api/failed-run" :method :put :type :v2) ()
+  (assert (current-company))
   (let ((input (parse-body 'impex-failed-run)))
     (let ((ret
             (make-instance 'failed-run
                            :channel (failed-run-channel input)
                            :company (current-company)
                            :commit (failed-run-commit input))))
-      (make-instance 'impex-failed-run
-                     :id (bknr.datastore:store-object-id ret)
-                     :channel (failed-run-channel ret)
-                     :commit (failed-run-commit ret)))))
+      (to-impex ret))))
+
+(defapi (nil :uri "/api/failed-run" :method :get :type :v2) ()
+  (let ((runs (failed-runs-for-company (current-company))))
+    (let ((runs (loop for run in runs
+                      collect (to-impex run))))
+      (make-instance
+       'impex-failed-runs
+       :runs runs))))

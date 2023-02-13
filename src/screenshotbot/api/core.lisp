@@ -79,7 +79,7 @@ function fn for the purpose of tests."
         (make-instance 'result
                        :success t
                        :response
-                       (%funcall-with-api-handling fn)))
+                       (fn)))
     (api-error (e)
       (log:warn "API error: ~a" (api-error-msg e))
       (make-instance 'error-result
@@ -99,6 +99,7 @@ function fn for the purpose of tests."
       (make-instance 'error-result
                      :success nil
                      :error (princ-to-string e)))
+    #+nil
     (error (e)
       (setf (hunchentoot:return-code*) 500)
       (make-instance 'error-result
@@ -125,9 +126,11 @@ function fn for the purpose of tests."
          (defhandler (,handler-name :uri ,uri :method ,method :intern ,intern) ,params
            ,@decls
            (flet ((ret ()
-                    (,name
-                     ,@ (loop for name in param-names
-                              appending (list (intern (string name) "KEYWORD") name)))))
+                    (%funcall-with-api-handling
+                     (lambda ()
+                      (,name
+                       ,@ (loop for name in param-names
+                                appending (list (intern (string name) "KEYWORD") name)))))))
              (ecase ,type
                (:v1
                 (setf (hunchentoot:header-out :content-type) "application/json")
@@ -143,7 +146,7 @@ function fn for the purpose of tests."
   (setf (hunchentoot:header-out :content-type) "applicaton/xml")
   (with-output-to-string (out)
     (bknr.impex:write-to-xml ret
-                             :name "result"
+                             :name nil
                              :output out)))
 
 (defclass result ()
