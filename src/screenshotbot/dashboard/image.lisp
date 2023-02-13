@@ -92,18 +92,9 @@
               (unless (uiop:file-exists-p output-file)
                 (with-local-image (input image)
                   (uiop:with-staging-pathname (output-file)
-                    (cond
-                      ((gk:check :native-image-resize (current-company) :default t)
-                       (resize-image input
-                                     :output output-file
-                                     :size size))
-                      (t
-                       (run-magick
-                        (list "convert" input
-                              "-resize"
-                              (format nil "~a>" size)
-                              "-strip"
-                              output-file)))))))
+                    (resize-image input
+                                  :output output-file
+                                  :size size))))
               (respond output-file)))))))))
 
 (defun build-resized-image (image size-name &key (type :webp))
