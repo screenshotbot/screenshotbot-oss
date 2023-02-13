@@ -1,0 +1,4 @@
+<!ELEMENT failed-run (channel, commit) >
+<!ATTLIST failed-run id CDATA #IMPLIED>
+<!ELEMENT channel #PCDATA>
+<!ELEMENT commit #PCDATA>

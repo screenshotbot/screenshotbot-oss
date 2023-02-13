@@ -163,7 +163,7 @@
 
     (dolist (attr attrs)
       (importer-add-attribute handler instance attr))
-    
+
     (push instance (importer-parent-elts handler))))
 
 (defmethod sax:characters ((handler xml-class-importer) data)
@@ -186,7 +186,7 @@
 
     (when parent
       (importer-add-element handler parent qname final))
-    
+
     (setf (importer-root-elt handler) final)))
 
 (defun parse-xml-file (xml-file classes &key (recoder #'cxml::rod-string)

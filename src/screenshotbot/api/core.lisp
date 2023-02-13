@@ -27,8 +27,12 @@
    #:id
    #:type
    #:api-result
-   #:api-response))
+   #:api-response
+   #:*dtd*))
 (in-package :screenshotbot/api/core)
+
+(defparameter *dtd*
+  (asdf:system-relative-pathname :screenshotbot "dtd/api.dtd"))
 
 (def-easy-macro with-api-key (&binding api-key &binding api-secret &fn fn)
   (multiple-value-bind (key secret) (hunchentoot:authorization)
@@ -81,13 +85,30 @@ function fn for the purpose of tests."
       (make-instance 'error-result
                      :success nil
                      :error (princ-to-string e)))
+    #+ni
     (error (e)
       (log:warn "Error: ~a" e)
       (make-instance 'error-result
                      :success nil
                      :error "Internal error, please contact support@screenshotbot.io"))))
 
-(defmacro defapi ((name &key uri method intern) params &body body)
+(def-easy-macro with-v2-error-handling (&fn fn)
+  (handler-case
+      (fn)
+    (api-error (e)
+      (setf (hunchentoot:return-code*) 400)
+      (make-instance 'error-result
+                     :success nil
+                     :error (princ-to-string e)))
+    (error (e)
+      (setf (hunchentoot:return-code*) 500)
+      (make-instance 'error-result
+                     :success nil
+                     :error "Internal error, please contact support@screenshotbot.io"))))
+
+(defmacro defapi ((name &key uri method intern
+                          (type :v1))
+                  params &body body)
   (let* ((param-names (loop for param in params
                             if (symbolp param)
                               collect param
@@ -104,12 +125,27 @@ function fn for the purpose of tests."
            ,@body)
          (defhandler (,handler-name :uri ,uri :method ,method :intern ,intern) ,params
            ,@decls
-           (setf (hunchentoot:header-out :content-type) "application/json")
-           (json:encode-json-to-string
-            (with-error-handling ()
-             (,name
-              ,@ (loop for name in param-names
-                       appending (list (intern (string name) "KEYWORD") name))))))))))
+           (flet ((ret ()
+                    (,name
+                     ,@ (loop for name in param-names
+                              appending (list (intern (string name) "KEYWORD") name)))))
+             (ecase ,type
+               (:v1
+                (setf (hunchentoot:header-out :content-type) "application/json")
+                (json:encode-json-to-string
+                 (with-error-handling ()
+                  (ret))))
+               (:v2
+                (write-xml-output
+                 (with-v2-error-handling ()
+                  (ret)))))))))))
+
+(defun write-xml-output (ret)
+  (setf (hunchentoot:header-out :content-type) "applicaton/xml")
+  (with-output-to-string (out)
+    (bknr.impex:write-to-xml ret
+                             :name "result"
+                             :output out)))
 
 (defclass result ()
   ((success :type boolean

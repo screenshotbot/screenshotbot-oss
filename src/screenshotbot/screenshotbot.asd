@@ -33,6 +33,7 @@
   :depends-on (:util
                :markup
                :gravatar
+               :bknr.impex
                :lparallel
                :util/lparallel
                (:feature (:not :screenshotbot-oss) :documentation-plugin)
@@ -99,7 +100,8 @@
                :nibble
                :cl-json)
   :components
-  ((:file "injector")
+  ((:static-file "dtd/api" :type "dtd")
+   (:file "injector")
    (:file "ignore-and-log-errors")
    (:file "analytics" :depends-on ("ignore-and-log-errors"))
    (:file "plugin")
@@ -137,6 +139,7 @@
                  (:file "transient-object")
                  (:file "auto-cleanup")
                  (:file "company")
+                 (:file "failed-run")
                  (:file "sharing")
                  (:file "user")
                  (:file "invite")
@@ -217,6 +220,7 @@
     :serial t
     :components ((:file "core")
                  (:file "version")
+                 (:file "failed-run")
                  (:file "image")
                  (:file "promote")
                  (:file "recorder-run" :depends-on ("promote"))
