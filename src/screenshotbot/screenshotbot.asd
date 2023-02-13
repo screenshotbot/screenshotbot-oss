@@ -338,6 +338,7 @@
                              (:file "test-promoter")))
                (:module "login"
                 :components ((:file "test-github-oauth")
+                             (:file "test-populate")
                              (:file "test-login")
                              (:file "test-signup")
                              (:file "test-common")))
