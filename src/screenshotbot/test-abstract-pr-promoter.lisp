@@ -8,6 +8,14 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:format-check-title
+                #:make-check-for-report
+                #:check-title
+                #:previous-review
+                #:make-acceptable
+                #:promoter-pull-id
+                #:check-status
+                #:make-check-result-from-diff-report
                 #:check
                 #:plugin-installed?
                 #:valid-repo?
@@ -35,7 +43,15 @@
                 #:has-typep
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
-                #:contains))
+                #:contains)
+  (:import-from #:screenshotbot/model/report
+                #:base-acceptable)
+  (:import-from #:screenshotbot/dashboard/compare
+                #:diff-report-empty-p)
+  (:import-from #:cl-mock
+                #:answer)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string))
 (in-package :screenshotbot/test-abstract-pr-promoter)
 
 
@@ -47,17 +63,20 @@
 (def-fixture state ()
   (with-test-store ()
     (with-global-binding ((lparallel:*kernel* (lparallel:make-kernel 2)))
-      (with-installation (:globally t)
-        (let* ((company (make-instance 'company))
-               (channel (make-instance 'channel
-                                       :company company
-                                       :github-repo "https://mysite.git/foo.git"))
-               (run (make-instance 'recorder-run
-                                   :company company
-                                   :channel channel
-                                   :commit-hash "car"))
-               (another-run (make-instance 'recorder-run)))
-         (&body))))))
+      (cl-mock:with-mocks ()
+       (with-installation (:globally t)
+         (let* ((company (make-instance 'company))
+                (channel (make-instance 'channel
+                                        :company company
+                                        :github-repo "https://mysite.git/foo.git"))
+                (run (make-instance 'recorder-run
+                                    :company company
+                                    :channel channel
+                                    :commit-hash "car"))
+                (user (make-instance 'user
+                                     :full-name "Arnold"))
+                (another-run (make-instance 'recorder-run)))
+           (&body)))))))
 
 (test simple-run-retriever-test
   (with-fixture state ()
@@ -132,3 +151,45 @@
                    (contains (has-typep 'check)
                              (has-typep 'check)))
       (is-true done))))
+
+(test previously-accepted-pr
+  (with-fixture state ()
+    (let* ((old-user (make-instance 'user))
+           (old-acc (make-instance 'base-acceptable
+                                   :state :rejected
+                                   :user old-user))
+           (promoter (make-instance 'test-promoter)))
+      (answer (promoter-pull-id promoter run)
+        20)
+      (answer (make-acceptable promoter report)
+        (make-instance 'base-acceptable))
+      (cl-mock:if-called 'diff-report-empty-p
+        (lambda (diff-report)
+          nil))
+      (answer (previous-review promoter run)
+        (make-instance 'base-acceptable
+                       :state :rejected
+                       :user user))
+      (let ((check
+              (make-check-result-from-diff-report
+               promoter
+               run
+               another-run)))
+        (is (eql :rejected (check-status check)))
+        (assert-that (check-title check)
+                     (contains-string "previously rejected by Arnold"))))))
+
+(test make-check-for-report
+  (with-fixture state ()
+    (is (equal "1 changes, accepted by Arnold"
+               (format-check-title "1 changes"
+                                   :status :accepted
+                                   :user user)))
+    (is (equal "1 changes, previously rejected by Arnold"
+               (format-check-title "1 changes"
+                                   :status :rejected
+                                   :previousp t
+                                   :user user)))
+    (is (equal "1 changes"
+               (format-check-title "1 changes"
+                                   :status :success)))))

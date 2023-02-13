@@ -64,6 +64,8 @@
                 #:update-status-audit-log)
   (:import-from #:util/store
                 #:with-class-validation)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:gitlab-merge-request-iid)
   (:export
    #:merge-request-promoter
    #:gitlab-acceptable))
@@ -125,7 +127,10 @@
                                                 (urlencode:urlencode project-path)
                                                 mr-id)))))
               (make-instance 'merge-request
-                              :base-sha (assoc-value (assoc-value res :diff--refs) :base--sha )))))))))
+                             :base-sha (assoc-value (assoc-value res :diff--refs) :base--sha )))))))))
+
+(defmethod promoter-pull-id ((promoter merge-request-promoter) run)
+  (gitlab-merge-request-iid run))
 
 ;; TODO: cleanup
 (defmethod maybe-promote ((promoter merge-request-promoter) run)

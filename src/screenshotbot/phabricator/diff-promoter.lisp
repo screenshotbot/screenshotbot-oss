@@ -19,6 +19,7 @@
   (:import-from #:util/phabricator/conduit
                 #:make-phab-instance-from-arcrc)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:promoter-pull-id
                 #:check-title
                 #:make-promoter-for-acceptable
                 #:details-url
@@ -32,6 +33,7 @@
   (:import-from #:bknr.datastore
                 #:persistent-class)
   (:import-from #:screenshotbot/phabricator/builds
+                #:build-info-revision
                 #:update-diff-status
                 #:target-phid
                 #:build-phid
@@ -46,6 +48,8 @@
                 #:report-channel)
   (:import-from #:screenshotbot/report-api
                 #:report)
+  (:import-from #:alexandria
+                #:when-let)
   (:export #:phabricator-promoter))
 (in-package :screenshotbot/phabricator/diff-promoter)
 
@@ -118,6 +122,14 @@
 
 (defmethod maybe-send-tasks ((promoter phabricator-promoter) run)
   (values))
+
+;; TODO: also add a `previous-reviews :before` to wait until the run
+;; gets a revision ID.
+(defmethod promoter-pull-id ((promoter phabricator-promoter) run)
+  (when-let ((build-info (find-build-info
+                          (recorder-run-company run)
+                          (phabricator-diff-id run))))
+    (build-info-revision build-info)))
 
 (defmethod add-comment ((promoter phabricator-promoter) comment)
   (let ((phab (phab promoter)))

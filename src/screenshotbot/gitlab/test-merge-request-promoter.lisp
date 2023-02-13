@@ -28,6 +28,7 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:promoter-pull-id
                 #:retrieve-run
                 #:valid-repo?
                 #:plugin-installed?
@@ -128,3 +129,8 @@
                                       :report report)))
       (setf (acceptable-state acceptable)
             :accepted))))
+
+(test gitlab-promoter-pull-request
+  (with-fixture state ()
+    (let* ((promoter (make-instance 'merge-request-promoter)))
+      (is (equal 7 (promoter-pull-id promoter run))))))

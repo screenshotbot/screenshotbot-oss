@@ -39,6 +39,7 @@
   (:import-from #:screenshotbot/promote-api
                 #:maybe-promote)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:promoter-pull-id
                 #:push-remote-check
                 #:check)
   (:import-from #:alexandria
@@ -190,3 +191,10 @@
           (promoter (make-instance 'bitbucket-promoter)))
       (finishes
         (maybe-promote promoter run)))))
+
+
+(test bitbucket-promoter-pull-id
+  (with-fixture state ()
+   (let ((run (make-instance 'recorder-run :pull-request "https://bitbucket.com/tdrhq/fast-example/pull-request/20")))
+     (is (equal "https://bitbucket.com/tdrhq/fast-example/pull-request/20"
+                (promoter-pull-id (make-instance 'bitbucket-promoter) run))))))

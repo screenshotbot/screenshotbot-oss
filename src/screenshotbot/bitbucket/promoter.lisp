@@ -15,6 +15,7 @@
                 #:bitbucket-repo
                 #:bitbucket-plugin)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:promoter-pull-id
                 #:make-promoter-for-acceptable
                 #:abstract-pr-acceptable
                 #:push-remote-check
@@ -37,6 +38,7 @@
                 #:override-commit-hash
                 #:recorder-run-company)
   (:import-from #:screenshotbot/user-api
+                #:pull-request-url
                 #:channel-repo
                 #:current-user
                 #:recorder-run-channel
@@ -178,6 +180,9 @@
        old-key)
       (t
        (ironclad:byte-array-to-hex-string (md5:md5sum-string old-key))))))
+
+(defmethod promoter-pull-id ((promoter bitbucket-promoter) run)
+  (pull-request-url run))
 
 
 (defun make-build-status-args (run

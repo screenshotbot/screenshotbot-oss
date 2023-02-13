@@ -235,9 +235,10 @@
 (test check-result-for-diff-report
   (with-installation ()
    (with-test-store ()
-     (let ((empty-run (make-instance 'recorder-run))
-           (another-empty-run (make-instance 'recorder-run))
-           (empty-report (make-instance 'diff-report :added nil
+     (let* ((company (make-instance 'company))
+            (empty-run (make-instance 'recorder-run :company company))
+            (another-empty-run (make-instance 'recorder-run :company company))
+            (empty-report (make-instance 'diff-report :added nil
                                                      :deleted nil
                                                      :changes nil)))
        (let ((check (make-check-result-from-diff-report
@@ -251,7 +252,8 @@
   (cl-mock:with-mocks ()
    (with-installation ()
      (with-test-store ()
-       (let ((diff-report (make-instance
+       (let ((company (make-instance 'company))
+             (diff-report (make-instance
                            'diff-report
                            :added nil
                            :deleted nil
@@ -261,8 +263,10 @@
                                       :before (make-instance 'screenshot :name "foo")
                                       :after (make-instance 'screenshot :name "foo"))))))
          (let ((run (make-instance 'recorder-run
+                                   :company company
                                    :channel (make-instance 'dummy-channel)))
                (another-run (make-instance 'recorder-run
+                                           :company company
                                            :channel (make-instance 'dummy-channel))))
            (answer (make-diff-report run another-run)
              diff-report)

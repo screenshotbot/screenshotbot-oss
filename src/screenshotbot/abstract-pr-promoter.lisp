@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/model/channel
                 #:production-run-for)
   (:import-from #:screenshotbot/user-api
+                #:created-at
                 #:current-user
                 #:user-email
                 #:user-full-name
@@ -41,6 +42,7 @@
   (:import-from #:screenshotbot/git-repo
                 #:repo-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:channel-runs
                 #:recorder-run-merge-base
                 #:recorder-run-company)
   (:import-from #:screenshotbot/events
@@ -53,11 +55,17 @@
                 #:persistent-class)
   (:import-from #:screenshotbot/model/report
                 #:acceptable-reviewer
+                #:reports-for-run
                 #:acceptable-report
                 #:acceptable-state
                 #:base-acceptable)
   (:import-from #:util/lparallel
                 #:immediate-promise)
+  (:import-from #:local-time
+                #:timestamp-
+                #:timestamp<)
+  (:import-from #:alexandria
+                #:when-let)
   (:export
    #:check
    #:check-status
@@ -76,7 +84,8 @@
    #:format-updated-summary
    #:abstract-pr-promoter
    #:abstract-pr-acceptable
-   #:make-promoter-for-acceptable))
+   #:make-promoter-for-acceptable
+   #:promoter-pull-id))
 (in-package :screenshotbot/abstract-pr-promoter)
 
 (defun format-updated-summary (state user)
@@ -237,7 +246,44 @@
        (cerror "continue" "not promoting for ~a" promoter)
        (log:info "Initial checks failed, not going through pull-request-promoter")))))
 
+(defgeneric promoter-pull-id (promoter run)
+  (:documentation "Get a unique identifier identify the pull request for this run. This
+might be a Pull Request URL, or a Merge Request IID, or a Phabricator
+Revision. It will be tested with EQUAL"))
 
+(defun review-status (run)
+  (loop for report in (reports-for-run run)
+        for acceptable = (report-acceptable report)
+        if (and acceptable (acceptable-state acceptable)
+                (acceptable-reviewer acceptable))
+          return acceptable))
+
+(defmethod previous-review (promoter run)
+  (when (gk:check :auto-review-pr (recorder-run-company run) :default t)
+    (when-let ((pull-id (promoter-pull-id promoter run)))
+      (do-promotion-log :info "Looking for previous reports on ~a" pull-id)
+      (let ((cut-off (timestamp- (local-time:now) 30 :day))
+            (channel (recorder-run-channel run)))
+        (loop for previous-run in (channel-runs channel)
+              while (timestamp< cut-off (created-at previous-run))
+              for acceptable
+                =
+                (flet ((p (x message)
+                         (do-promotion-log :info "For ~a: ~a: Got ~a" previous-run message x)
+                         x))
+                  (and
+                   (not (eql previous-run run))
+                   (timestamp< (created-at previous-run)
+                               (created-at run))
+                   (equal (promoter-pull-id promoter previous-run) pull-id)
+                   (p (diff-report-empty-p
+                       (make-diff-report run previous-run))
+                      "Check if diff-report is empty")
+                   (p
+                    (review-status previous-run)
+                    "Check if report is accepted or rejected")))
+              if acceptable
+                return acceptable)))))
 
 (defun make-check-result-from-diff-report (promoter run base-run)
   (let ((diff-report (make-diff-report run base-run)))
@@ -256,25 +302,51 @@
                                    :previous-run base-run
                                    :channel (when run (recorder-run-channel run))
                                    :title  (diff-report-title diff-report))))
-        (with-transaction ()
-          (setf (report-acceptable report)
-                (make-acceptable promoter report)))
-        (make-check-for-report
-         report
-         :status :action_required
-         :summary "Please verify that the images look reasonable to you"))))))
+        (flet ((setup-acceptable (&rest args)
+                 (with-transaction ()
+                   (setf (report-acceptable report)
+                         (apply #'make-acceptable promoter report
+                                args)))))
+          (trivia:match (previous-review promoter run)
+           (nil
+            (do-promotion-log :info "Did not find any previous reviewed reports")
+            (setup-acceptable)
+            (make-check-for-report
+             report
+             :status :action_required
+             :summary "Please verify that the images look reasonable to you"))
+           (acceptable
+            (do-promotion-log :info "Found a previous review: ~a" acceptable)
+            (setup-acceptable
+             :state (acceptable-state acceptable)
+             :user (acceptable-reviewer acceptable))
+            (make-check-for-report
+             report
+             :status (acceptable-state acceptable)
+             :user (acceptable-reviewer acceptable)
+             :previousp t
+             :summary "An identical run was previously reviewed on this Pull Request")))))))))
 
-(defun make-check-for-report (report &key status (summary "") user)
+(defun format-check-title (title &key user previousp status)
+  (cond
+    (user
+     (format nil "~a, ~a~a"
+             title
+             (if previousp "previously " "")
+             (format-updated-summary status user)))
+    (t
+     title)))
+
+(defun make-check-for-report (report &key status (summary "") user
+                                       previousp)
   (let* ((title (diff-report-title (make-diff-report
                                     (report-run report)
                                     (report-previous-run report))))
-         (title (cond
-                  (user
-                   (format nil "~a, ~a"
-                           title
-                           (format-updated-summary status user)))
-                  (t
-                   title))))
+         (title (format-check-title
+                 title
+                 :user user
+                 :previousp previousp
+                 :status status)))
    (make-instance
     'check
     :status status

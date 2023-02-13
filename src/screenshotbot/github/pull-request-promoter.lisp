@@ -59,6 +59,8 @@
                 #:with-class-validation)
   (:import-from #:screenshotbot/github/plugin
                 #:github-plugin)
+  (:import-from #:screenshotbot/user-api
+                #:pull-request-url)
   (:export
    #:pull-request-promoter
    #:pr-acceptable
@@ -126,6 +128,10 @@
                                audit-log-args))))
       (declare (ignore updated-check-run))
       (apply #'github-update-pull-request args))))
+
+(defmethod promoter-pull-id ((promoter pull-request-promoter)
+                             run)
+  (pull-request-url run))
 
 #+nil
 (let ((run (bknr.datastore:store-object-with-id 1440544)))
