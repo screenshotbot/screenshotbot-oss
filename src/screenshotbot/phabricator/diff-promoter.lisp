@@ -86,9 +86,11 @@
 (defmethod valid-repo? ((promoter phabricator-promoter) repo)
   nil)
 
-(defmethod make-acceptable ((promoter phabricator-promoter) report)
-  (make-instance 'diff-acceptable
-                 :report report))
+(defmethod make-acceptable ((promoter phabricator-promoter) report
+                            &rest args)
+  (apply #'make-instance 'diff-acceptable
+         :report report
+         args))
 
 (defmethod plugin-installed? ((promoter phabricator-promoter) company repo-url)
   (let ((ret (phabricator-config-for-company company)))

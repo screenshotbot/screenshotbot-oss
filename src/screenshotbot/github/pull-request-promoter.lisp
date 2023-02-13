@@ -164,9 +164,11 @@
                      (recorder-run-commit run)))))
 
 
-(defmethod make-acceptable ((promoter pull-request-promoter) report)
-  (make-instance 'pr-acceptable
-                 :report report))
+(defmethod make-acceptable ((promoter pull-request-promoter) report
+                            &rest args)
+  (apply #'make-instance 'pr-acceptable
+         :report report
+         args))
 
 (defmethod notify-pr ((acceptable pr-acceptable)
                       &key title

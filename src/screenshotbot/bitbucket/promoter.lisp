@@ -103,10 +103,13 @@
                               repo-url)
   (bitbucket-settings-for-company company))
 
-(defmethod make-acceptable ((promoter bitbucket-promoter) report)
-  (make-instance 'bitbucket-acceptable
-                  :company (recorder-run-company (report-run report))
-                  :report report))
+(defmethod make-acceptable ((promoter bitbucket-promoter) report
+                            &rest args)
+  (apply #'make-instance
+         'bitbucket-acceptable
+         :company (recorder-run-company (report-run report))
+         :report report
+         args))
 
 (defmethod valid-repo? ((promoter bitbucket-promoter)
                         repo)

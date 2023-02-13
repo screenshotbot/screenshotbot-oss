@@ -156,10 +156,12 @@
     (discussion-id :accessor discussion-id))
    (:metaclass bknr.datastore:persistent-class)))
 
-(defmethod make-acceptable((promoter merge-request-promoter) report)
-  (make-instance 'gitlab-acceptable
-                  :company (recorder-run-company (report-run report))
-                  :report report))
+(defmethod make-acceptable((promoter merge-request-promoter) report
+                           &rest args)
+  (apply #'make-instance 'gitlab-acceptable
+         :company (recorder-run-company (report-run report))
+         :report report
+         args))
 
 (defun post-build-status (&key
                             company

@@ -150,7 +150,7 @@
 
 (defgeneric plugin-installed? (promoter company repo-url))
 
-(defgeneric make-acceptable (promoter report))
+(defgeneric make-acceptable (promoter report &rest args))
 
 (defmethod pr-merge-base ((promoter abstract-pr-promoter) run)
   (recorder-run-merge-base run))
