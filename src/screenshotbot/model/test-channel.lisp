@@ -14,7 +14,11 @@
   (:import-from #:screenshotbot/model/channel
                 #:get-full-repo-from-repo)
   (:import-from #:util/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that))
 
 (util/fiveam:def-suite)
 
@@ -61,3 +65,13 @@
 (test get-full-repo-from-repo
   (is (equal "foo/bar"
              (get-full-repo-from-repo "git@github.com:foo/bar.git"))))
+
+
+(test channel-print-object
+  (with-fixture state ()
+    (is (equal "#<CHANNEL foobar>"
+               (prin1-to-string
+                (make-instance 'channel
+                               :name "foobar"))))
+    (assert-that (prin1-to-string (make-instance 'channel))
+                 (contains-string "CHANNEL"))))

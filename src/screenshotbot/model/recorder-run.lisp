@@ -31,6 +31,7 @@
                 #:location-for-oid
                 #:with-class-validation)
   (:import-from #:util/object-id
+                #:oid
                 #:oid-array)
   (:import-from #:screenshotbot/model/view
                 #:can-edit)
@@ -181,6 +182,9 @@
      :initform nil
      :accessor %created-at))
    (:metaclass has-created-at)))
+
+(defmethod print-object ((o recorder-run) stream)
+  (format stream "#<RECORDER-RUN ~a>" (oid o)))
 
 (defmethod pull-request-id (run)
   (when-let ((url (pull-request-url run)))

@@ -124,6 +124,9 @@
      :accessor %created-at))
    (:metaclass persistent-class)))
 
+(defmethod print-object ((self channel) stream)
+  (format stream "#<CHANNEL ~a>" (ignore-errors (channel-name self))))
+
 (defmethod channel-company ((channel channel))
   (company channel))
 
