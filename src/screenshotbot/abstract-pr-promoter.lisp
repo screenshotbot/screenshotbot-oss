@@ -141,7 +141,7 @@
                     (log:info "Waiting 30s before checking again")
                     (funcall (sleep-fn retriever) 30)
                     (lparallel:chain (produce (1- retries)))))))))
-    (produce 10)))
+    (produce 20)))
 
 (defclass abstract-pr-acceptable (base-acceptable)
   ()
@@ -227,8 +227,9 @@
                              :title (format nil "Waiting for screenshots on ~a to be available"
                                             (str:substring 0 4 (pr-merge-base promoter run))))))
            (let* ((base-run (lparallel:force base-run-promise))
+                  (merge-base (pr-merge-base promoter run))
                   (check (cond
-                           ((null (pr-merge-base promoter run))
+                           ((null merge-base)
                             (do-promotion-log :info "No base-commit provided in run")
                             (make-failure-check
                              :title "Base SHA not available for comparison, please check CI setup"
@@ -237,7 +238,7 @@
                             (push-event :promoter.no-base-run :oid (oid run))
                             (do-promotion-log :info "Could not find base-run")
                             (make-failure-check
-                             :title "Cannot generate Screenshotbot report, try rebasing"
+                             :title (format nil "Could not find a run for commit ~a, try rebasing" merge-base)
                              :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
                            (t
                             (do-promotion-log :info "Base run is available, preparing notification from diff-report")
