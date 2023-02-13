@@ -187,10 +187,7 @@ If the images are identical, we return t, else we return NIL."
       (with-wand (before :file before-file)
         (with-wand (after :file after-file)
           (let ((same-p (compare-wands before after p
-                                       :in-place-p
-                                       (gk:check :inplace-compare
-                                                 (company after-image)
-                                                 :default t))))
+                                       :in-place-p t)))
             same-p))))))
 
 (defmethod find-image-comparison-on-images ((before image)
