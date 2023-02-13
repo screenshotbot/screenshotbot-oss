@@ -176,9 +176,7 @@
    (make-check-for-report
     (acceptable-report self)
     :status state
-    :user user))
-  (with-transaction ()
-    (setf (acceptable-reviewer self) user)))
+    :user user)))
 
 (defmethod maybe-promote ((promoter abstract-pr-promoter)
                           run)
