@@ -88,6 +88,8 @@
    #:promoter-pull-id))
 (in-package :screenshotbot/abstract-pr-promoter)
 
+(defvar *logs* nil)
+
 (defun format-updated-summary (state user)
   (let ((summary
           (str:downcase (string state))))
@@ -174,6 +176,9 @@
                                run
                                check)
   (:documentation "Push the CHECK to the corresponding run remotely "))
+
+(defmethod push-remote-check :before (promoter run check)
+  (atomics:atomic-push (list run check) *logs*))
 
 (defgeneric make-promoter-for-acceptable (acceptable))
 
