@@ -13,6 +13,8 @@
                 #:close-store)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:bknr.datastore
+                #:without-sync)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -134,7 +136,8 @@ to the directory that was just snapshotted.")
                       (maybe-ensure-empty)
                       (unwind-protect
                            (progn
-                             (funcall fn)
+                             (without-sync ()
+                              (funcall fn))
                              #+nil
                              (let ((objs (all-objects)))
                                (when objs
