@@ -55,7 +55,7 @@
                  :channel (failed-run-channel ret)
                  :commit (failed-run-commit ret)))
 
-(defapi (nil :uri "/api/failed-run" :method :put :type :v2) ()
+(defapi (nil :uri "/api/v2/failed-run" :method :put :type :v2) ()
   (assert (current-company))
   (let ((input (parse-body 'impex-failed-run)))
     (let ((ret
@@ -65,7 +65,7 @@
                            :commit (failed-run-commit input))))
       (to-impex ret))))
 
-(defapi (nil :uri "/api/failed-run" :method :get :type :v2) ()
+(defapi (nil :uri "/api/v2/failed-run" :method :get :type :v2) ()
   (let ((runs (failed-runs-for-company (current-company))))
     (let ((runs (loop for run in runs
                       collect (to-impex run))))
