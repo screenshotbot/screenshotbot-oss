@@ -37,7 +37,6 @@
            (make-instance 'local-image
                           :hash (md5sum-file (path:catfile (document-root)
                                                                path))
-                          :content-type "image/png"
                           :url (str:concat "/" (namestring path))))
          (create-run (&key image commit)
            (let ((response (%recorder-run-post
