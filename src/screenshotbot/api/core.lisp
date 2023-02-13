@@ -85,7 +85,6 @@ function fn for the purpose of tests."
       (make-instance 'error-result
                      :success nil
                      :error (princ-to-string e)))
-    #+ni
     (error (e)
       (log:warn "Error: ~a" e)
       (make-instance 'error-result
