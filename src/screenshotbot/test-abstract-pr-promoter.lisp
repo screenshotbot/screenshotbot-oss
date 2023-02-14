@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:warn-if-not-merge-base
                 #:format-check-title
                 #:make-check-for-report
                 #:check-title
@@ -35,6 +36,9 @@
   (:import-from #:screenshotbot/promote-api
                 #:maybe-promote)
   (:import-from #:screenshotbot/model/recorder-run
+                #:compared-against
+                #:merge-base-failed-warning
+                #:recorder-run-warnings
                 #:recorder-run)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
@@ -56,7 +60,9 @@
   (:import-from #:screenshotbot/git-repo
                 #:get-parent-commit)
   (:import-from #:screenshotbot/model/failed-run
-                #:failed-run))
+                #:failed-run)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length))
 (in-package :screenshotbot/test-abstract-pr-promoter)
 
 
@@ -77,10 +83,13 @@
                 (run (make-instance 'recorder-run
                                     :company company
                                     :channel channel
-                                    :commit-hash "car"))
+                                    :commit-hash "car"
+                                    :merge-base "foo"))
                 (user (make-instance 'user
                                      :full-name "Arnold"))
-                (another-run (make-instance 'recorder-run)))
+                (another-run (make-instance 'recorder-run
+                                            :commit-hash "foo"))
+                (promoter (make-instance 'test-promoter)))
            (&body)))))))
 
 (test simple-run-retriever-test
@@ -210,3 +219,27 @@
     (is (equal "1 changes"
                (format-check-title "1 changes"
                                    :status :success)))))
+
+(test warn-if-not-merge-base
+  (with-fixture state ()
+    (let ((another-run (make-instance 'recorder-run
+                                      :commit-hash "bleh")))
+      (warn-if-not-merge-base
+       promoter
+       run
+       another-run)
+      (assert-that (recorder-run-warnings run)
+                   (contains
+                    (has-typep 'merge-base-failed-warning)))
+      (assert-that (mapcar #'compared-against (recorder-run-warnings run))
+                   (contains
+                    another-run)))))
+
+(test warn-if-not-merge-base-does-nothing-in-the-good-path
+  (with-fixture state ()
+    (warn-if-not-merge-base
+     promoter
+     run
+     another-run)
+    (assert-that (recorder-run-warnings run)
+                 (has-length 0))))

@@ -43,6 +43,9 @@
                 #:get-parent-commit
                 #:repo-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run
+                #:recorder-run-warnings
+                #:merge-base-failed-warning
                 #:channel-runs
                 #:recorder-run-merge-base
                 #:recorder-run-company)
@@ -256,6 +259,7 @@
                              :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
                            (t
                             (do-promotion-log :info "Base run is available, preparing notification from diff-report")
+                            (warn-if-not-merge-base promoter run base-run)
                             (make-check-result-from-diff-report
                              promoter
                              run
@@ -265,6 +269,17 @@
        #+nil
        (cerror "continue" "not promoting for ~a" promoter)
        (log:info "Initial checks failed, not going through pull-request-promoter")))))
+
+(defmethod warn-if-not-merge-base ((promoter abstract-pr-promoter)
+                                   (run recorder-run)
+                                   (base-run recorder-run))
+  "If the base run we're using is not the merge-base, add a warning"
+  (unless (equal (pr-merge-base promoter run)
+                 (recorder-run-commit base-run))
+    (with-transaction ()
+      (push (make-instance 'merge-base-failed-warning
+                           :compared-against base-run)
+            (recorder-run-warnings run)))))
 
 (defgeneric promoter-pull-id (promoter run)
   (:documentation "Get a unique identifier identify the pull request for this run. This

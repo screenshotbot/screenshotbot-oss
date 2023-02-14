@@ -37,6 +37,8 @@
                 #:can-edit)
   (:import-from #:alexandria
                 #:when-let)
+  (:import-from #:screenshotbot/model/core
+                #:non-root-object)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -72,7 +74,9 @@
    #:periodic-job-p
    #:override-commit-hash
    #:unpromote-run
-   #:pull-request-id))
+   #:pull-request-id
+   #:render-run-warning
+   #:compared-against))
 (in-package :screenshotbot/model/recorder-run)
 
 (with-class-validation
@@ -178,6 +182,11 @@
      :accessor override-commit-hash
      :documentation "Override the pull request commit hash that will be
     used to update the Pull Request (either GitHub or Bitbucket)")
+    (%warnings
+     :initform nil
+     :accessor recorder-run-warnings
+     :documentation "A list of warning objects that will be rendered whenever the run or an
+associated report is rendered.")
     (created-at
      :initform nil
      :accessor %created-at))
@@ -271,3 +280,15 @@
                     (bknr.datastore:delete-object promotion-log))
                 (ignore-this-blob ()
                   (values))))))
+
+(defgeneric render-run-warning (run warning)
+  (:method (run warning)
+    nil))
+
+(with-class-validation
+ (defclass merge-base-failed-warning (non-root-object)
+   ((%compared-against :initarg :compared-against
+                       :reader compared-against))
+   (:metaclass persistent-class)
+   (:documentation "A warning that when making a pull request comparison, we didn't
+compare against the actual merge base.")))

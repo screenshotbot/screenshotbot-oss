@@ -18,7 +18,8 @@
    #:ensure-slot-boundp
    #:generate-api-key
    #:generate-api-secret
-   #:%created-at))
+   #:%created-at
+   #:non-root-object))
 (in-package :screenshotbot/model/core)
 
 (defclass has-created-at (persistent-class)
@@ -81,4 +82,9 @@
   (let* ((types (mapcar 'type-of (bknr.datastore:all-store-objects)))
          (names (remove-duplicates types)))
     (loop for name in names do
-          (format t "~a: ~a~%" name (count name types)))))
+      (format t "~a: ~a~%" name (count name types)))))
+
+(defclass non-root-object (store-object)
+  ()
+  (:metaclass persistent-class)
+  (:documentation "An object that is safe to garbage collect if it's no longer reachable"))
