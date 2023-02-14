@@ -46,7 +46,8 @@
    #:*firebase-output*
    #:*self-test*
    #:*commit-limit*
-   #:*mark-failed*))
+   #:*mark-failed*
+   #:*versionp*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -55,6 +56,12 @@
   :selector "directory"
   :type string
   :help "Directory of images")
+
+(define-flag *versionp*
+  :default-value nil
+  :selector "version"
+  :type boolean
+  :help "Show the version of this SDK and exit")
 
 (define-flag *org-defaults*
   :default-value nil

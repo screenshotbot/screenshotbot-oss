@@ -53,6 +53,9 @@
        (uiop:quit 1))
       (flags:*help*
        (help))
+      (flags:*versionp*
+       ;; We've already printed the version by this point
+       nil)
       (flags:*self-test*
        (uiop:quit (if (run-health-checks) 0 1)))
       (flags:*mark-failed*
