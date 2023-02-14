@@ -112,14 +112,23 @@
         (equal
          15728640 (assoc-value (json:decode-json-from-string res) :response)))))))
 
+(defun test-mark-failed ()
+  (log:info "## TESTING --mark-failed")
+  (with-repo
+   (run (list *sdk*
+              "--mark-failed"
+              "--channel=foo"))))
+
 (defun run-self-tests ()
   (log:info "Running self tests")
-  (run (list *sdk* "--self-testx")))
+  (run (list *sdk* "--self-test")))
 
 (defun run-tests ()
   (run-self-tests)
 
   (test-large-file)
+
+  (test-mark-failed)
 
   (with-repo
     (test-crash)

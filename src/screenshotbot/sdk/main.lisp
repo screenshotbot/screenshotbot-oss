@@ -22,6 +22,8 @@
                 #:run-health-checks)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:screenshotbot/sdk/failed-run
+                #:mark-failed)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
@@ -47,11 +49,16 @@
     (cond
       (unrecognized
        (format t "Unrecognized arguments: ~a~%" (Str:join " " unrecognized))
-       (help))
+       (help)
+       (uiop:quit 1))
       (flags:*help*
        (help))
       (flags:*self-test*
        (uiop:quit (if (run-health-checks) 0 1)))
+      (flags:*mark-failed*
+       (sdk:parse-org-defaults)
+       (with-version-check ()
+         (mark-failed)))
       (flags:*ios-multi-dir*
        (sdk:parse-org-defaults)
        (sdk:run-ios-multi-dir-toplevel))

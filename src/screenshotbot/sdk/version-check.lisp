@@ -22,7 +22,8 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-version-check
-   #:*client-version*))
+   #:*client-version*
+   #:*remote-version*))
 (in-package :screenshotbot/sdk/version-check)
 
 (defparameter *client-version* (asdf:system-version

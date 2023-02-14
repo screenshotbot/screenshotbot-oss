@@ -46,6 +46,8 @@
                 #:remote-supports-basic-auth-p)
   (:import-from #:util/health-check
                 #:def-health-check)
+  (:import-from #:screenshotbot/api/model
+                #:encode-json)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags))
   (:export
    #:single-directory-run
@@ -103,7 +105,8 @@
 
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
   (defun %request (api &key (method :post)
-                         parameters)
+                         parameters
+                         content)
     ;; TODO: we're losing the response code here, we need to do
     ;; something with it.
     (uiop:slurp-input-stream
@@ -117,6 +120,7 @@
                              (list
                               *api-key*
                               *api-secret*))
+      :content content
       :parameters (cond
                     ((remote-supports-basic-auth-p)
                      parameters)
@@ -126,12 +130,15 @@
                         parameters)))))))
 
 (defun request (api &key (method :post)
-                      parameters)
+                      parameters
+                      content)
   (log:debug "Making API request: ~S" api)
   (when (and (eql method :get) parameters)
     (error "Can't use :get with parameters"))
   (let ((json (%request api :method method
-                        :parameters parameters)))
+                            :parameters parameters
+                            :content (when (eql :put method)
+                                       (encode-json content)))))
     (handler-case
         (let ((result (json:decode-json-from-string json)))
           (ensure-api-success result))

@@ -45,7 +45,8 @@
    #:*selenium-hub-port*
    #:*firebase-output*
    #:*self-test*
-   #:*commit-limit*))
+   #:*commit-limit*
+   #:*mark-failed*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -225,3 +226,15 @@ You should set this high enough so that Screenshotbot always has the
 entire commit graph from the previous promoted run to the new run. A
 value of about 1000 should be safe and relatively fast for most
 people.")
+
+(define-flag *mark-failed*
+  :selector "mark-failed"
+  :default-value nil
+  :type boolean
+  :help "Mark this run as failed. This might happen if the build step that
+generates the screenshots failed.
+
+You don't need to call this, but if you do we can use the information
+to show more appropriate information on Pull Requests. For instance,
+if you have a Pull Request based off of a failing commit, we can find
+the last green commit to make our screenshot report.")
