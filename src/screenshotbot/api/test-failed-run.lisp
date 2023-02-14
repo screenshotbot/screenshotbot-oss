@@ -8,10 +8,10 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/api/failed-run
+                #:failed-run-dto
                 #:%list-failed-runs
                 #:parse-body
-                #:%put-failed-run
-                #:impex-failed-run)
+                #:%put-failed-run)
   (:import-from #:cl-mock
                 #:answer)
   (:import-from #:util/store
@@ -27,12 +27,12 @@
    (with-test-store ()
      (&body))))
 
-(test simple-pus-list
+(test simple-put-list
   (with-fixture state ()
-   (let ((failed-run-dto (make-instance 'impex-failed-run
+   (let ((failed-run-dto (make-instance 'failed-run-dto
                                         :channel "bleh"
                                         :commit "foo")))
-     (answer (parse-body 'impex-failed-run)
+     (answer (parse-body 'failed-run-dto)
        failed-run-dto)
      (with-test-user (:logged-in-p t)
        (finishes
