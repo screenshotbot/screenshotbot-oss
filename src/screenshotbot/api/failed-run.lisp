@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/api/failed-run
   (:use #:cl)
   (:import-from #:screenshotbot/api/core
+                #:api-error
                 #:*dtd*
                 #:defapi)
   (:import-from #:screenshotbot/model/failed-run
@@ -15,39 +16,34 @@
                 #:failed-run-channel
                 #:failed-run)
   (:import-from #:screenshotbot/user-api
-                #:current-company))
+                #:current-company)
+  (:import-from #:json-mop
+                #:json-serializable-class))
 (in-package :screenshotbot/api/failed-run)
-
 
 (defclass impex-failed-run ()
   ((id :initarg :id
-       :attribute "id")
+       :json-type :number
+       :json-key "id")
    (channel :initarg :channel
-            :element "channel"
+            :json-key "channel"
+            :json-type :string
             :reader failed-run-channel)
    (commit :initarg :commit
-           :element "commit"
+           :json-key "commit"
+           :json-type :string
            :reader failed-run-commit))
-  (:dtd-name *dtd*)
-  (:element "failed-run")
-  (:metaclass bknr.impex:xml-class))
+  (:metaclass json-serializable-class))
 
 (defclass impex-failed-runs ()
   ((runs :initarg :runs
-         :element "failed-run"))
-  (:dtd-name *dtd*)
-  (:element "failed-runs")
-  (:metaclass bknr.impex:xml-class))
+         :json-key "failed-runs"
+         :json-type (:list impex-failed-run)))
+  (:metaclass json-serializable-class))
 
 (defun parse-body (class-name)
   (let ((body (hunchentoot:raw-post-data :force-text t)))
-    (uiop:with-temporary-file (:stream s :pathname p :direction :output)
-      (write-string body s)
-      (finish-output s)
-      (log:info "Got: ~a" (uiop:read-file-string p))
-      (bknr.impex:parse-xml-file
-       p
-       (list (find-class class-name))))))
+    (json-mop:json-to-clos body class-name)))
 
 (defun to-impex (ret)
   (make-instance 'impex-failed-run
@@ -55,7 +51,7 @@
                  :channel (failed-run-channel ret)
                  :commit (failed-run-commit ret)))
 
-(defapi (nil :uri "/api/v2/failed-run" :method :put :type :v2) ()
+(defapi (nil :uri "/api/v2/failed-run" :method :put) ()
   (assert (current-company))
   (let ((input (parse-body 'impex-failed-run)))
     (let ((ret
@@ -65,10 +61,7 @@
                            :commit (failed-run-commit input))))
       (to-impex ret))))
 
-(defapi (nil :uri "/api/v2/failed-run" :method :get :type :v2) ()
+(defapi (nil :uri "/api/v2/failed-run" :method :get) ()
   (let ((runs (failed-runs-for-company (current-company))))
-    (let ((runs (loop for run in runs
-                      collect (to-impex run))))
-      (make-instance
-       'impex-failed-runs
-       :runs runs))))
+    (loop for run in runs
+          collect (to-impex run))))

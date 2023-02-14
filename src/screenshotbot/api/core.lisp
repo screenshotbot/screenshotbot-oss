@@ -91,21 +91,6 @@ function fn for the purpose of tests."
                      :success nil
                      :error "Internal error, please contact support@screenshotbot.io"))))
 
-(def-easy-macro with-v2-error-handling (&fn fn)
-  (handler-case
-      (fn)
-    (api-error (e)
-      (setf (hunchentoot:return-code*) 400)
-      (make-instance 'error-result
-                     :success nil
-                     :error (princ-to-string e)))
-    #+nil
-    (error (e)
-      (setf (hunchentoot:return-code*) 500)
-      (make-instance 'error-result
-                     :success nil
-                     :error "Internal error, please contact support@screenshotbot.io"))))
-
 (defmacro defapi ((name &key uri method intern
                           (type :v1))
                   params &body body)
@@ -131,23 +116,15 @@ function fn for the purpose of tests."
                       (,name
                        ,@ (loop for name in param-names
                                 appending (list (intern (string name) "KEYWORD") name)))))))
-             (ecase ,type
-               (:v1
-                (setf (hunchentoot:header-out :content-type) "application/json")
-                (json:encode-json-to-string
-                 (with-error-handling ()
-                  (ret))))
-               (:v2
-                (write-xml-output
-                 (with-v2-error-handling ()
-                  (ret)))))))))))
+             (setf (hunchentoot:header-out :content-type) "application/json")
+             (json:encode-json-to-string
+              (with-error-handling ()
+                (ret)))))))))
 
 (defun write-xml-output (ret)
   (setf (hunchentoot:header-out :content-type) "applicaton/xml")
   (with-output-to-string (out)
-    (bknr.impex:write-to-xml ret
-                             :name nil
-                             :output out)))
+    (json-mop:encode ret out)))
 
 (defclass result ()
   ((success :type boolean
