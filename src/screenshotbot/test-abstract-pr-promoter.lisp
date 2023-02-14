@@ -27,6 +27,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/user-api
+                #:channel-repo
                 #:user
                 #:channel)
   (:import-from #:util/testing
@@ -51,7 +52,11 @@
   (:import-from #:cl-mock
                 #:answer)
   (:import-from #:fiveam-matchers/strings
-                #:contains-string))
+                #:contains-string)
+  (:import-from #:screenshotbot/git-repo
+                #:get-parent-commit)
+  (:import-from #:screenshotbot/model/failed-run
+                #:failed-run))
 (in-package :screenshotbot/test-abstract-pr-promoter)
 
 
@@ -80,6 +85,18 @@
 
 (test simple-run-retriever-test
   (with-fixture state ()
+    (let ((retriever (make-instance 'run-retriever
+                                    :sleep-fn #'identity)))
+      (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd")))))))
+
+(test run-retriever-when-commit-has-failed
+  (with-fixture state ()
+    (cl-mock:answer (channel-repo channel) :git-repo)
+    (cl-mock:answer (get-parent-commit :git-repo "abcd")
+      "foobar")
+    (make-instance 'failed-run
+                   :channel channel
+                   :commit "abcd")
     (let ((retriever (make-instance 'run-retriever
                                     :sleep-fn #'identity)))
       (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd")))))))

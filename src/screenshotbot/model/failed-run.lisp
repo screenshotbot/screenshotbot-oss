@@ -13,7 +13,10 @@
   (:import-from #:util/store
                 #:with-class-validation)
   (:import-from #:bknr.indices
-                #:hash-index))
+                #:hash-index)
+  (:local-nicknames (#:channel #:screenshotbot/model/channel))
+  (:export
+   #:run-failed-on-commit-p))
 (in-package :screenshotbot/model/failed-run)
 
 (with-class-validation
@@ -32,3 +35,10 @@
          :reader created-at))
    (:default-initargs :created-at (get-universal-time))
    (:metaclass persistent-class)))
+
+(defmethod run-failed-on-commit-p ((channel channel:channel)
+                                   (commit string))
+  (loop for failed-run in (failed-runs-for-channel channel)
+        if (equal (failed-run-commit failed-run)
+                  commit)
+          return t))

@@ -40,6 +40,7 @@
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:screenshotbot/git-repo
+                #:get-parent-commit
                 #:repo-link)
   (:import-from #:screenshotbot/model/recorder-run
                 #:channel-runs
@@ -66,6 +67,10 @@
                 #:timestamp<)
   (:import-from #:alexandria
                 #:when-let)
+  (:import-from #:anaphora
+                #:it)
+  (:import-from #:screenshotbot/model/failed-run
+                #:run-failed-on-commit-p)
   (:export
    #:check
    #:check-status
@@ -131,17 +136,26 @@
 (defmethod retrieve-run ((retriever run-retriever)
                          channel
                          base-commit)
-  (labels ((produce (retries)
-             (let ((run (production-run-for channel :commit base-commit)))
-               (cond
-                 (run
-                  (immediate-promise run))
-                 ((>= retries 0)
-                  (lparallel:future
-                    (log:info "Waiting 30s before checking again")
-                    (funcall (sleep-fn retriever) 30)
-                    (lparallel:chain (produce (1- retries)))))))))
-    (produce 20)))
+  (labels ((produce (base-commit retries)
+             (anaphora:acond
+               ((null base-commit)
+                (immediate-promise nil))
+               ((production-run-for channel :commit base-commit)
+                (immediate-promise it))
+               ((run-failed-on-commit-p channel base-commit)
+                (log:info "The base commit has failed, let's look for its ancestor")
+                (let ((repo (channel-repo channel)))
+                  (let ((base-commit (get-parent-commit repo base-commit)))
+                    (produce base-commit
+                             ;; Keep the retries the same, since we
+                             ;; aren't doing a timeout at this point.
+                             retries))))
+               ((>= retries 0)
+                (lparallel:future
+                  (log:info "Waiting 30s before checking again")
+                  (funcall (sleep-fn retriever) 30)
+                  (lparallel:chain (produce base-commit (1- retries))))))))
+    (produce base-commit 20)))
 
 (defclass abstract-pr-acceptable (base-acceptable)
   ()
