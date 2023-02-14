@@ -16,9 +16,12 @@
                 #:failed-run-channel
                 #:failed-run)
   (:import-from #:screenshotbot/user-api
+                #:channel-name
                 #:current-company)
   (:import-from #:json-mop
                 #:json-serializable-class)
+  (:import-from #:screenshotbot/model/company
+                #:find-or-create-channel)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/failed-run)
 
@@ -29,7 +32,7 @@
 (defun to-dto (ret)
   (make-instance 'dto:failed-run
                  :id (bknr.datastore:store-object-id ret)
-                 :channel (failed-run-channel ret)
+                 :channel (channel-name (failed-run-channel ret))
                  :commit (failed-run-commit ret)))
 
 (defapi (%put-failed-run :uri "/api/failed-run" :method :put) ()
@@ -37,7 +40,9 @@
   (let ((input (parse-body 'dto:failed-run)))
     (let ((ret
             (make-instance 'failed-run
-                           :channel (dto:failed-run-channel input)
+                           :channel (find-or-create-channel
+                                     (current-company)
+                                     (dto:failed-run-channel input))
                            :company (current-company)
                            :commit (dto:failed-run-commit input))))
       (to-dto ret))))

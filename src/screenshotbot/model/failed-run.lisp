@@ -19,11 +19,16 @@
 (with-class-validation
  (defclass failed-run (store-object)
    ((channel :initarg :channel
-             :reader failed-run-channel)
+             :reader failed-run-channel
+             :index-type hash-index
+             :index-reader failed-runs-for-channel)
     (%company :initarg :company
               :reader failed-run-company
               :index-type hash-index
               :index-reader failed-runs-for-company)
     (commit :initarg :commit
-            :reader failed-run-commit))
+            :reader failed-run-commit)
+    (%ts :initarg :created-at
+         :reader created-at))
+   (:default-initargs :created-at (get-universal-time))
    (:metaclass persistent-class)))

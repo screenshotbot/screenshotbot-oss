@@ -17,6 +17,8 @@
                 #:with-test-store)
   (:import-from #:screenshotbot/testing
                 #:with-test-user)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/test-failed-run)
 
@@ -37,6 +39,7 @@
      (with-test-user (:logged-in-p t)
        (finishes
          (%put-failed-run))
-       (is (eql 1 (length (%list-failed-runs)))))
+       (is (eql 1 (length (%list-failed-runs))))
+       (is (equal "bleh" (dto:failed-run-channel (car (%list-failed-runs))))))
      (with-test-user (:logged-in-p t :company-name "two")
        (is (eql 0 (length (%list-failed-runs))))))))
