@@ -12,7 +12,10 @@
             (:export
              #:encode-json
              #:*api-version*
-             #:version-number))
+             #:version-number
+             #:failed-run
+             #:failed-run-channel
+             #:failed-run-commit))
 
 (in-package :screenshotbot/api/model)
 
@@ -31,3 +34,17 @@
 
 (defmethod decode-json (json type)
   (json-mop:json-to-clos json type))
+
+(defclass failed-run ()
+  ((id :initarg :id
+       :json-type :number
+       :json-key "id")
+   (channel :initarg :channel
+            :json-key "channel"
+            :json-type :string
+            :reader failed-run-channel)
+   (commit :initarg :commit
+           :json-key "commit"
+           :json-type :string
+           :reader failed-run-commit))
+  (:metaclass json-serializable-class))

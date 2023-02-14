@@ -8,7 +8,6 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/api/failed-run
-                #:failed-run-dto
                 #:%list-failed-runs
                 #:parse-body
                 #:%put-failed-run)
@@ -17,7 +16,8 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/testing
-                #:with-test-user))
+                #:with-test-user)
+  (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/test-failed-run)
 
 (util/fiveam:def-suite)
@@ -29,10 +29,10 @@
 
 (test simple-put-list
   (with-fixture state ()
-   (let ((failed-run-dto (make-instance 'failed-run-dto
+   (let ((failed-run-dto (make-instance 'dto:failed-run
                                         :channel "bleh"
                                         :commit "foo")))
-     (answer (parse-body 'failed-run-dto)
+     (answer (parse-body 'dto:failed-run)
        failed-run-dto)
      (with-test-user (:logged-in-p t)
        (finishes
