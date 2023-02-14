@@ -325,6 +325,7 @@
                (:module "dashboard"
                 :components ((:file "test-recent-runs")
                              (:file "test-review-link")
+                             (:file "test-run-page")
                              (:file "test-compare")
                              (:file "test-reports")
                              (:file "test-api-keys")
