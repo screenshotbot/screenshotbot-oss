@@ -391,6 +391,7 @@
                (:module "api"
                 :components ((:file "test-core")
                              (:file "test-model")
+                             (:file "test-failed-run")
                              (:file "test-commit-graph")
                              (:file "test-image")
                              (:file "test-promote")
