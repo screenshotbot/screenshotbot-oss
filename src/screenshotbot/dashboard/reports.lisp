@@ -126,12 +126,13 @@
        <section class= "full-height">
          ,(render-notes :for report)
 
-       ,@(render-warnings (report-run report))
 
        <render-diff-report run= (report-run report) to= (report-previous-run report)
        acceptable= (report-acceptable report)
                            more= (remove-if #'null (more-links-for-report report))
-       re-run=#'re-run />
+                           re-run=#'re-run >
+       ,@(render-warnings (report-run report))
+       </render-diff-report>
        </section>
        </app-template>))))
 

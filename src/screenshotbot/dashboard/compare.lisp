@@ -612,7 +612,7 @@
     ,@body
   </a>)
 
-(deftag render-diff-report (&key run to
+(deftag render-diff-report (children &key run to
                             more
                             acceptable
                             (re-run nil))
@@ -698,6 +698,8 @@
       </div>
 
       </div>
+
+      ,@children
 
       <div class= "report-result mt-3"
            data-update= (nibble (:name :u-r-res) (report-result run
