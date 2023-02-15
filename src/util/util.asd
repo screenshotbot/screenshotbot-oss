@@ -307,6 +307,13 @@
   :components ((:module "clsql"
                 :components ((:file "clsql")))))
 
+(defsystem :util/logger
+  :depends-on (:log4cl
+               :easy-macros
+               :alexandria
+               :bordeaux-threads)
+  :components ((:file "logger")))
+
 (defsystem :util/tests
   :depends-on (:util
                :util/hash-lock
@@ -320,6 +327,7 @@
                :util/sizeof
                :util/disk-size
                :util/phabricator
+               :util/logger
                :util/request
                :util/fiveam)
   :serial t
@@ -328,6 +336,7 @@
                              (:static-file "test-file-compressed" :type "txt.gz")
                              (:file "test-ret-let")
                              (:file "test-delayed-accessors")
+                             (:file "test-logger")
                              (:file "test-misc")
                              (:file "test-copy-file")
                              (:file "test-request")
