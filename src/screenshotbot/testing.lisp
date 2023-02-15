@@ -118,5 +118,5 @@
       (str:downcase ,(string name))
       (let ((core/ui/template:*app-template*
               (make-instance 'screenshotbot-template)))
-       (progn
-         ,@body)))))
+        (progn
+          ,@body)))))

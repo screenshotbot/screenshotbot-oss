@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/testing
+                #:fix-timestamps
                 #:with-test-user
                 #:screenshot-test
                 #:snap-all-images)
@@ -59,7 +60,8 @@
 (screenshot-test simple-run-page-screenshots
   (with-fixture state ()
     (snap-all-images)
-    (render-run-page run)))
+    (fix-timestamps
+     (render-run-page run))))
 
 (screenshot-test run-page-with-warnings
   (with-fixture state ()
@@ -68,4 +70,5 @@
             (list (make-instance 'merge-base-failed-warning
                                  :compared-against another-run))))
     (snap-all-images)
-    (render-run-page run)))
+    (fix-timestamps
+     (render-run-page run))))
