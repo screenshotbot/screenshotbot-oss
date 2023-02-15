@@ -128,7 +128,6 @@
 
        ,@(render-warnings (report-run report))
 
-
        <render-diff-report run= (report-run report) to= (report-previous-run report)
        acceptable= (report-acceptable report)
                            more= (remove-if #'null (more-links-for-report report))

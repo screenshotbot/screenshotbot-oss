@@ -65,6 +65,9 @@
                 #:can-edit)
   (:import-from #:alexandria
                 #:when-let)
+  (:import-from #:screenshotbot/dashboard/review-link
+                #:review-link
+                #:describe-pull-request)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -319,14 +322,15 @@
              collect x))))
 
 (defmethod render-run-warning (run (warning merge-base-failed-warning))
-  (flet ((link (hash)
-           (commit-link (channel-repo (recorder-run-channel run))
-                        hash)))
-    <div class= "alert alert-danger mt-2">
-      <strong class= "pe-1" >Caution!</strong>
-      <span>The <a href= (link (recorder-run-commit run))>merge base</a> for this run had a failing build, we instead compared it with a run from <a href= (link (recorder-run-commit (compared-against warning)))>this commit</a>.
-      </span>
-    </div>))
+  (let ((repo (channel-repo (recorder-run-channel run))))
+   (flet ((link (hash)
+            (commit-link repo
+                         hash)))
+     <div class= "alert alert-warning mt-2">
+       <strong class= "pe-1" >Caution!</strong>
+       <span>The <a href= (link (recorder-run-commit run))>merge base</a> for ,(review-link :run run) had a failing build. Screenshotbot used <a href= (link (recorder-run-commit (compared-against warning)))>this commit</a> to generate reports for this run. Consider rebasing to avoid this message.
+       </span>
+     </div>)))
 
 (defun render-warnings (run)
   (when-let ((warnings (recorder-run-warnings run)))
