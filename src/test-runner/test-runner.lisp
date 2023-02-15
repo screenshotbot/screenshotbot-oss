@@ -8,6 +8,7 @@
    #:image-main))
 (in-package :test-runner/test-runner)
 
+(defvar *test-trace-io* nil)
 (defun init-jvm-for-ccl ()
   (progn
   (funcall (find-symbol "JVM-INIT" "JVM"))
@@ -15,6 +16,7 @@
 
 (defun hide-outputs ()
   (setf fiveam:*test-dribble* *standard-output*)
+  (setf *test-trace-io* *trace-output*)
   #-ccl ;; for some reason breaks some tests on ccl
   (let ((null-file
           (open "build/test-logs"
@@ -98,7 +100,18 @@
   (unless (equal "1" (uiop:getenv "TDRHQ_TEST_DEBUG"))
     (hide-outputs)))
 
+#+lispworks
+(defun debugger-hook (condition old-hook)
+  "On LW <= 8.0.1 there's a bug that causes LW to crash when a thread
+fails."
+  (format *test-trace-io* "A background thread crashed:~%")
+  (dbg:output-backtrace :brief *test-trace-io*)
+  (invoke-restart 'cl:abort))
+
 (defun call-with-main-wrapper (fn)
+
+  #+lispworks
+  (setf *debugger-hook* 'debugger-hook)
 
   (tmpdir:with-tmpdir (tmpdir)
     ;; on CCL, the JVM is already loaded before the main systems
