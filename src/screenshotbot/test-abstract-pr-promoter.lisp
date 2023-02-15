@@ -32,6 +32,7 @@
                 #:user
                 #:channel)
   (:import-from #:util/testing
+                #:with-global-kernel
                 #:with-global-binding)
   (:import-from #:screenshotbot/promote-api
                 #:maybe-promote)
@@ -73,7 +74,7 @@
 
 (def-fixture state ()
   (with-test-store ()
-    (with-global-binding ((lparallel:*kernel* (lparallel:make-kernel 2)))
+    (with-global-kernel ()
       (cl-mock:with-mocks ()
        (with-installation (:globally t)
          (let* ((company (make-instance 'company))
@@ -156,11 +157,9 @@
                                     :run-retriever (make-instance 'controlled-run-retreiver
                                                                   :promise promise)))
            (done nil)
-           (thread (bt:make-thread
-                    (lambda ()
-                      (maybe-promote promoter run)
-                      (setf done t))
-                    :name "pending-state")))
+           (thread (lparallel:future
+                     (maybe-promote promoter run)
+                     (setf done t))))
       (loop until (checks promoter)
             for i from 0 to 100
             do (sleep 0.1))
@@ -171,7 +170,7 @@
       (lparallel:fulfill
           promise
         another-run)
-      (bt:join-thread thread)
+      (lparallel:force thread)
 
       (assert-that (checks promoter)
                    (contains (has-typep 'check)
