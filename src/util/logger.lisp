@@ -33,3 +33,10 @@
     (format stream "~a: " level)
     (apply #'format stream message args)
     (format stream "~%")))
+
+(defmethod format-log  ((logger null)
+                        level
+                        message
+                        &rest args)
+  ;; Sanity check to make sure our format args are correct in tests
+  (apply #'format nil message args))

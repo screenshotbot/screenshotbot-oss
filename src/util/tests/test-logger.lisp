@@ -31,3 +31,9 @@
                    (contains-string (format nil "hello world 1~%")))
       (assert-that (uiop:read-file-string p)
                    (contains-string "second")))))
+
+(test nil-logger
+  (is (equal
+       "hello world 1"
+       (format-log nil
+                   :info "hello world ~a" 1))))
