@@ -103,8 +103,8 @@
      :initarg :commit-hash
      :initform nil
      :accessor recorder-run-commit)
+    #+screenshotbot-oss
     (promotion-log
-     :initform nil
      :accessor %promotion-log)
     (build-url
      :initform nil
@@ -214,20 +214,8 @@ associated report is rendered.")
   (store-object-id inst))
 
 (defmethod promotion-log ((run recorder-run))
-  (cond
-    ((%promotion-log run)
-     (flet ((val () (%promotion-log run)))
-       (or
-        (val)
-        (bt:with-lock-held (*lock*)
-          (or
-           (val)
-           (with-transaction ()
-             (setf (%promotion-log run)
-                   (make-instance 'promotion-log))))))))
-    (t
-     (make-instance 'transient-promotion-log
-                    :oid-array (oid-array run)))))
+  (make-instance 'transient-promotion-log
+                 :oid-array (oid-array run)))
 
 ;; (loop for run in (store-objects-with-class 'recorder-run) if (recorder-run-channel run) do (pushnew run (channel-runs (recorder-run-channel run))))
 (defmethod bknr.datastore:initialize-transient-instance :after ((run recorder-run))
@@ -262,6 +250,7 @@ associated report is rendered.")
                      (oid-array self))))
 
 ;; Migration
+#+screenshotbot-oss
 (defun convert-old-promotion-logs ()
   (loop for run in (bknr.datastore:store-objects-with-class 'recorder-run)
         for promotion-log = (%promotion-log run)

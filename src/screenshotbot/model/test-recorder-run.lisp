@@ -9,7 +9,6 @@
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
                 #:pull-request-id
-                #:convert-old-promotion-logs
                 #:transient-promotion-log
                 #:promotion-log
                 #:recorder-run)
@@ -35,29 +34,12 @@
      (&body))))
 
 
-(test promotion-log-object-for-old-object
-  (with-fixture state ()
-    (with-transaction ()
-     (setf (slot-value run 'promotion-log) promotion-log))
-    (assert-that (promotion-log run)
-                (equal-to promotion-log))))
-
 (test promotion-log-for-new
   (with-fixture state ()
     (assert-that (promotion-log run)
                  (has-typep 'transient-promotion-log))
     (is (pathnamep
          (blob-pathname (promotion-log run))))))
-
-(test convert-old-promotion-logs
-  (with-fixture state ()
-    (with-transaction ()
-      (setf (slot-value run 'promotion-log) promotion-log))
-    (with-open-file (out (blob-pathname (promotion-log run)) :direction :output)
-      (write-string "zoidberg" out))
-
-    (convert-old-promotion-logs)
-    (is (equal "zoidberg" (uiop:read-file-string (blob-pathname (promotion-log run)))))))
 
 (test pull-request-id
   (with-fixture state ()
