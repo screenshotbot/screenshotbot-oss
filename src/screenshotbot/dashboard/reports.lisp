@@ -47,6 +47,8 @@
                 #:report-company)
   (:import-from #:screenshotbot/events
                 #:push-event)
+  (:import-from #:screenshotbot/dashboard/run-page
+                #:render-warnings)
   (:export #:report-page #:report-link
            #:shared-report-page))
 (in-package :screenshotbot/dashboard/reports)
@@ -118,18 +120,15 @@
           </div>
           </section>)
 
-       ,(when nil
-          <section class= "mt-3" >
-          <div class= "alert alert-info">
-          Hover on the image on the left to visualize the difference!
-          </div>
-          </section>)
-
        ,(when alert
           alert)
 
        <section class= "full-height">
-       ,(render-notes :for report)
+         ,(render-notes :for report)
+
+       ,@(render-warnings (report-run report))
+
+
        <render-diff-report run= (report-run report) to= (report-previous-run report)
        acceptable= (report-acceptable report)
                            more= (remove-if #'null (more-links-for-report report))

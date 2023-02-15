@@ -322,9 +322,9 @@
   (flet ((link (hash)
            (commit-link (channel-repo (recorder-run-channel run))
                         hash)))
-    <div class= "alert alert-danger">
-      <strong class= "pe-1" >Warning!</strong>
-      <span>This <a href= (link (recorder-run-commit run))>merge base</a> for this run had a failing build, we instead compared it with the run from <a href= (link (recorder-run-commit (compared-against warning)))>this commit</a>.
+    <div class= "alert alert-danger mt-2">
+      <strong class= "pe-1" >Caution!</strong>
+      <span>The <a href= (link (recorder-run-commit run))>merge base</a> for this run had a failing build, we instead compared it with a run from <a href= (link (recorder-run-commit (compared-against warning)))>this commit</a>.
       </span>
     </div>))
 
