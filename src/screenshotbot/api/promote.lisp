@@ -41,10 +41,6 @@
   promotions will fail. Setting this to true will temporarily let you
   fix the promotion.")
 
-#+lispworks
-(lw-ji:define-java-callers "com.tdrhq.Github"
-  (%gh-get-user "getUsername"))
-
 (defvar *current-promotion-stream* nil)
 
 (defclass promotion-appender (log4cl:stream-appender)
