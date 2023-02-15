@@ -16,13 +16,17 @@
   (:import-from #:screenshotbot/user-api
                 #:channel)
   (:import-from #:screenshotbot/model/recorder-run
+                #:merge-base-failed-warning
+                #:recorder-run-warnings
                 #:recorder-run)
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
   (:import-from #:screenshotbot/dashboard/run-page
-                #:render-run-page))
+                #:render-run-page)
+  (:import-from #:bknr.datastore
+                #:with-transaction))
 (in-package :screenshotbot/dashboard/test-run-page)
 
 (util/fiveam:def-suite)
@@ -47,10 +51,21 @@
                                    :company company
                                    :channel channel
                                    :company company
-                                   :screenshots (list (make-screenshot im1)))))
+                                   :screenshots (list (make-screenshot im1))))
+               (another-run (make-instance 'recorder-run
+                                           :commit-hash "foo")))
           (&body))))))
 
 (screenshot-test simple-run-page-screenshots
   (with-fixture state ()
+    (snap-all-images)
+    (render-run-page run)))
+
+(screenshot-test run-page-with-warnings
+  (with-fixture state ()
+    (with-transaction ()
+      (setf (recorder-run-warnings run)
+            (list (make-instance 'merge-base-failed-warning
+                                 :compared-against another-run))))
     (snap-all-images)
     (render-run-page run)))

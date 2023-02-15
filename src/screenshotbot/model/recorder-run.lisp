@@ -75,7 +75,6 @@
    #:override-commit-hash
    #:unpromote-run
    #:pull-request-id
-   #:render-run-warning
    #:compared-against))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -280,10 +279,6 @@ associated report is rendered.")
                     (bknr.datastore:delete-object promotion-log))
                 (ignore-this-blob ()
                   (values))))))
-
-(defgeneric render-run-warning (run warning)
-  (:method (run warning)
-    nil))
 
 (with-class-validation
  (defclass merge-base-failed-warning (non-root-object)

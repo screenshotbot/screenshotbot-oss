@@ -43,6 +43,9 @@
   (:import-from #:screenshotbot/model/image
                 #:image-dimensions)
   (:import-from #:screenshotbot/model/recorder-run
+                #:compared-against
+                #:merge-base-failed-warning
+                #:recorder-run-warnings
                 #:override-commit-hash)
   (:import-from #:screenshotbot/installation
                 #:installation)
@@ -60,6 +63,8 @@
                 #:?.)
   (:import-from #:screenshotbot/model/view
                 #:can-edit)
+  (:import-from #:alexandria
+                #:when-let)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -313,6 +318,23 @@
                (equal filter (funcall (row-filter-key row-filter) x)))
              collect x))))
 
+(defmethod render-run-warning (run (warning merge-base-failed-warning))
+  (flet ((link (hash)
+           (commit-link (channel-repo (recorder-run-channel run))
+                        hash)))
+    <div class= "alert alert-danger">
+      <strong class= "pe-1" >Warning!</strong>
+      <span>This <a href= (link (recorder-run-commit run))>merge base</a> for this run had a failing build, we instead compared it with the run from <a href= (link (recorder-run-commit (compared-against warning)))>this commit</a>.
+      </span>
+    </div>))
+
+(defun render-warnings (run)
+  (when-let ((warnings (recorder-run-warnings run)))
+    (loop for warning in warnings
+          collect
+          (render-run-warning run warning))))
+
+
 
 (defun render-run-page (run &rest filters &key name)
   (can-view! run)
@@ -357,6 +379,8 @@
           </div>
 
         </div>
+
+          ,@(render-warnings run)
 
           ,(when-let (reports (reports-for-run run))
              <div class= "alert alert-info mt-2" >

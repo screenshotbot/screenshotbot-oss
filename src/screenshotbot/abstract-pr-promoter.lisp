@@ -155,7 +155,7 @@
                              retries))))
                ((>= retries 0)
                 (lparallel:future
-                  (log:info "Waiting 30s before checking again")
+                  (log:info "Waiting 30s before checking again for ~a" base-commit)
                   (funcall (sleep-fn retriever) 30)
                   (lparallel:chain (produce base-commit (1- retries))))))))
     (produce base-commit 20)))
