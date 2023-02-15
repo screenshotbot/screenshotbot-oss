@@ -158,7 +158,7 @@
                   (log:info "Waiting 30s before checking again for ~a" base-commit)
                   (funcall (sleep-fn retriever) 30)
                   (lparallel:chain (produce base-commit (1- retries))))))))
-    (produce base-commit 20)))
+    (produce base-commit 10)))
 
 (defclass abstract-pr-acceptable (base-acceptable)
   ()
