@@ -68,6 +68,8 @@
   (:import-from #:screenshotbot/dashboard/review-link
                 #:review-link
                 #:describe-pull-request)
+  (:import-from #:core/ui/simple-card-page
+                #:simple-card-page)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -206,14 +208,14 @@
 
 (deftag advanced-run-page (&key run alert)
   (let ((repo (channel-repo (recorder-run-channel run))))
-    <app-template>
-      ,(when alert
-      <div class="alert alert-info mt-3">,(progn alert)</div>)
-      <div class="card mt-3 shadow" style="max-width: 50em">
+    <simple-card-page max-width= "40rem" >
         <div class="card-header">
-          <h2>Debug Run Information</h2>
+          <h3>Debug Run Information</h3>
         </div>
         <div class="card-body">
+          ,(when alert
+             <div class="alert alert-info mt-3">,(progn alert)</div>)
+
           <ul>
             <li>Repo url: ,(github-repo run)</li>
             <li>Commit: ,(commit :repo repo :hash (recorder-run-commit run)) </li>
@@ -266,9 +268,7 @@
       </form>
         </div>
 
-        </div>
-
-    </app-template>))
+    </simple-card-page>))
 
 (defmethod extra-advanced-options (run)
   )
