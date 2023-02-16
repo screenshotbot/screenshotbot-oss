@@ -129,14 +129,14 @@
 (defmethod maybe-promote ((promoter delegating-promoter) run)
   (restart-case
       (dolist (delegate (delegates promoter))
-        (log :info "Delegating to promoter ~s" delegate)
+        (format-log run :info "Delegating to promoter ~s" delegate)
         (ignore-and-log-errors ()
           (maybe-promote delegate run)))
     (dangerous-restart-all-promotions ()
       (maybe-promote promoter run))))
 
 (defmethod maybe-promote :before (promoter run)
-  (log :info "Running promoter: ~s on ~s" promoter run))
+  (format-log run :info "Running promoter: ~s on ~s" promoter run))
 
 (defmethod maybe-send-tasks ((promoter delegating-promoter) run)
   (dolist (delegate (delegates promoter))

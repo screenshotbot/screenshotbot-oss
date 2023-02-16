@@ -59,7 +59,8 @@
   ())
 
 (defmethod retrieve-run ((retriever my-run-retriever)
-                         channel base-commit)
+                         channel base-commit
+                         logger)
   (is (equal "aaa" base-commit))
   (lparallel:delay
    *base-run*))

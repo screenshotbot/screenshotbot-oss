@@ -72,6 +72,8 @@
 (defvar *lock* (bt:make-lock))
 (defvar *cv* (bt:make-condition-variable))
 
+(defconstant +empty-logger+ nil)
+
 (def-fixture state ()
   (with-test-store (:globally t)
     (with-global-kernel ()
@@ -97,7 +99,8 @@
   (with-fixture state ()
     (let ((retriever (make-instance 'run-retriever
                                     :sleep-fn #'identity)))
-      (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd")))))))
+      (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd"
+                                                    +empty-logger+)))))))
 
 (test run-retriever-when-commit-has-failed
   (with-fixture state ()
@@ -109,7 +112,8 @@
                    :commit "abcd")
     (let ((retriever (make-instance 'run-retriever
                                     :sleep-fn #'identity)))
-      (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd")))))))
+      (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd"
+                                                    +empty-logger+)))))))
 
 
 (test format-updated-summary
@@ -141,7 +145,8 @@
 
 (defmethod retrieve-run ((self controlled-run-retreiver)
                          channel
-                         base-commit)
+                         base-commit
+                         logger)
   (%promise self))
 
 (defmethod valid-repo? ((self test-promoter) repo)

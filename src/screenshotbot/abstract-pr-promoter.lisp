@@ -139,7 +139,8 @@
 
 (defmethod retrieve-run ((retriever run-retriever)
                          channel
-                         base-commit)
+                         base-commit
+                         logger)
   (labels ((produce (base-commit retries)
              (anaphora:acond
                ((null base-commit)
@@ -147,7 +148,7 @@
                ((production-run-for channel :commit base-commit)
                 (immediate-promise it))
                ((run-failed-on-commit-p channel base-commit)
-                (log:info "The base commit has failed, let's look for its ancestor")
+                (format-log logger :info "The base commit has failed, let's look for its ancestor")
                 (let ((repo (channel-repo channel)))
                   (let ((base-commit (get-parent-commit repo base-commit)))
                     (produce base-commit
@@ -156,7 +157,7 @@
                              retries))))
                ((>= retries 0)
                 (lparallel:future
-                  (log:info "Waiting 30s before checking again for ~a" base-commit)
+                  (format-log logger :info "Waiting 30s before checking again for ~a" base-commit)
                   (funcall (sleep-fn retriever) 30)
                   (lparallel:chain (produce base-commit (1- retries))))))))
     (produce base-commit 10)))
@@ -228,7 +229,9 @@
        (let ((base-run-promise (retrieve-run
                                 (run-retriever promoter)
                                 (recorder-run-channel run)
-                                (pr-merge-base promoter run))))
+                                (pr-merge-base promoter run)
+                                ;; We're using the run as a logger!
+                                (identity run))))
          (flet ((make-failure-check (&rest args)
                   (apply #'make-instance 'check
                          :status :failure
