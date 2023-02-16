@@ -24,6 +24,15 @@
                 #:*init-hooks*)
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
+  (:import-from #:util/misc
+                #:make-mp-hash-table)
+  (:import-from #:util/logger
+                #:logger
+                #:format-log)
+  (:import-from #:bknr.datastore
+                #:blob-pathname)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:promotion-log)
   (:export
    #:with-promotion-log
    #:default-promoter
@@ -41,93 +50,60 @@
   promotions will fail. Setting this to true will temporarily let you
   fix the promotion.")
 
-(defvar *current-promotion-stream* nil)
+(defvar *current-logger* nil)
 
-(defclass promotion-appender (log4cl:stream-appender)
-  ())
+(defvar *loggers* (make-mp-hash-table
+                   #+lispworks
+                   :weak-kind
+                   #+lispworks
+                   :key)
+  "A mapping from runs to a util/logger:LOGGER instance")
 
-(defun setup-promotion-logger ()
-  (let ((logger (log4cl:make-logger)))
-    (let ((appender (make-instance 'promotion-appender
-                                   :immediate-flush t
-                                   :filter 4
-                                   :layout (make-instance
-                                            'log4cl:pattern-layout
-                                            :conversion-pattern
-                                            (log4cl::figure-out-pattern :oneline t :time t :file t))                                   )))
-      (log4cl:add-appender logger appender)
-      (log4cl:add-appender (log4cl:make-logger :promote) appender)
-      appender)))
 
 (defun log (level message &rest args)
   (cond
-    (*promotion-log-stream*
-     (format *promotion-log-stream* "~a " level)
-     (apply #'format *promotion-log-stream*
-              message
-              args)
-     (format *promotion-log-stream* "~%"))
+    (*current-logger*
+     (apply #'format-log *current-logger* level
+            message args))
     (t
      (warn "Attempted to call promotion log when no promotion is running: ~a" message))))
 
+(defmethod promotion-logger ((run recorder-run))
+  (util:or-setf
+   (gethash run *loggers*)
+   (make-instance 'logger
+                  :file (blob-pathname
+                         (promotion-log run)))
+   :thread-safe t))
 
-(defvar *promotion-appender* (setup-promotion-logger))
-
-(register-init-hook 'setup-promotion-logger
-                     #'setup-promotion-logger)
-
-(defvar *promotion-log-stream* nil)
+(defmethod format-log ((run recorder-run)
+                       level message &rest args)
+  (let ((logger (promotion-logger run)))
+    (apply #'format-log
+           logger
+           level
+           message
+           args)))
 
 (defun %with-promotion-log (run fn)
-  (with-open-file (s
-                   (bknr.datastore:blob-pathname
-                    (promotion-log run))
-                   :direction :output
-                   :if-exists :append
-                   :if-does-not-exist :create)
-    (let ((*current-promotion-stream* s)
-          (*promotion-log-stream* s))
-      (unwind-protect
-           (progn
-             ;;(format *current-promotion-stream* "BEGIN~%")
-             (log :info "Beginning promotion: ~S" s)
-             (funcall fn))
-        (log :info "End promotion")
-        (finish-output s)))))
+  (let ((*current-logger* run))
+    (unwind-protect
+         (progn
+           ;;(format *current-promotion-stream* "BEGIN~%")
+           (log :info "Beginning promotion: ~S" run)
+           (funcall fn))
+      (log :info "End promotion"))))
 
 ;; In order to this this, you need
 ;;
 
 (defun do-promotion-log (level fmt &rest args)
   (let ((msg (apply #'format nil fmt args)))
-   (log :info "~a" msg))
-  (when *promotion-log-stream*
-    (format *promotion-log-stream* "~a: ~a: " level
-            (local-time:format-timestring
-             nil
-             (local-time:now)
-             :format local-time:+asctime-format+))
-    (apply #'format *promotion-log-stream*
-             fmt args)
-    (format *promotion-log-stream* "~%")))
+   (log :info "~a" msg)))
 
 (defmacro with-promotion-log ((run) &body body)
   `(%with-promotion-log ,run (lambda () ,@body)))
 
-
-
-;; don't run this multiple times!
-
- (let (stream)
-  (defun null-stream ()
-    (or stream
-        (setf stream (open "/dev/null" :direction :output
-                           :if-exists :overwrite)))))
-
-(defmethod log4cl:appender-stream ((appender promotion-appender))
-  (or
-   *current-promotion-stream*
-   (null-stream)))
 
 (defun fix-github-link (repo)
   (cond

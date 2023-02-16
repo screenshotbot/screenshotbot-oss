@@ -73,7 +73,7 @@
 (defvar *cv* (bt:make-condition-variable))
 
 (def-fixture state ()
-  (with-test-store ()
+  (with-test-store (:globally t)
     (with-global-kernel ()
       (cl-mock:with-mocks ()
        (with-installation (:globally t)
@@ -150,6 +150,8 @@
 (defmethod plugin-installed? ((self test-promoter) company repo-url)
   t)
 
+
+
 (test updates-pending-state
   (with-fixture state ()
     (let* ((promise (lparallel:promise))
@@ -176,6 +178,7 @@
                    (contains (has-typep 'check)
                              (has-typep 'check)))
       (is-true done))))
+
 
 (test previously-accepted-pr
   (with-fixture state ()

@@ -74,6 +74,8 @@
                 #:it)
   (:import-from #:screenshotbot/model/failed-run
                 #:run-failed-on-commit-p)
+  (:import-from #:util/logger
+                #:format-log)
   (:export
    #:check
    #:check-status
@@ -221,7 +223,7 @@
         (not (equal (recorder-run-merge-base run)
                     (recorder-run-commit run))))
 
-       (do-promotion-log :info "Base commit is: ~S" (pr-merge-base promoter run))
+       (format-log run :info "Base commit is: ~S" (pr-merge-base promoter run))
        (let ((base-run-promise (retrieve-run
                                 (run-retriever promoter)
                                 (recorder-run-channel run)
@@ -233,7 +235,7 @@
                                                         :id (oid run))
                          args)))
            (unless (lparallel:fulfilledp base-run-promise)
-             (do-promotion-log :info "Base commit is not available yet, waiting for upto 5 minutes")
+             (format-log run :info "Base commit is not available yet, waiting for upto 5 minutes")
              (push-remote-check
               promoter
               run
@@ -247,18 +249,18 @@
                   (merge-base (pr-merge-base promoter run))
                   (check (cond
                            ((null merge-base)
-                            (do-promotion-log :info "No base-commit provided in run")
+                            (format-log run :info "No base-commit provided in run")
                             (make-failure-check
                              :title "Base SHA not available for comparison, please check CI setup"
                              :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
                            ((null base-run)
                             (push-event :promoter.no-base-run :oid (oid run))
-                            (do-promotion-log :info "Could not find base-run")
+                            (format-log run :info "Could not find base-run")
                             (make-failure-check
                              :title (format nil "Could not find a run for commit ~a, try rebasing" merge-base)
                              :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
                            (t
-                            (do-promotion-log :info "Base run is available, preparing notification from diff-report")
+                            (format-log run :info "Base run is available, preparing notification from diff-report")
                             (warn-if-not-merge-base promoter run base-run)
                             (make-check-result-from-diff-report
                              promoter
@@ -296,7 +298,7 @@ Revision. It will be tested with EQUAL"))
 (defmethod previous-review (promoter run)
   (when (gk:check :auto-review-pr (recorder-run-company run) :default t)
     (when-let ((pull-id (promoter-pull-id promoter run)))
-      (do-promotion-log :info "Looking for previous reports on ~a" pull-id)
+      (format-log run :info "Looking for previous reports on ~a" pull-id)
       (let ((cut-off (timestamp- (local-time:now) 30 :day))
             (channel (recorder-run-channel run)))
         (loop for previous-run in (channel-runs channel)
@@ -304,7 +306,7 @@ Revision. It will be tested with EQUAL"))
               for acceptable
                 =
                 (flet ((p (x message)
-                         (do-promotion-log :info "For ~a: ~a: Got ~a" previous-run message x)
+                         (format-log run :info "For ~a: ~a: Got ~a" previous-run message x)
                          x))
                   (and
                    (not (eql previous-run run))
@@ -344,14 +346,14 @@ Revision. It will be tested with EQUAL"))
                                 args)))))
           (trivia:match (previous-review promoter run)
            (nil
-            (do-promotion-log :info "Did not find any previous reviewed reports")
+            (format-log run :info "Did not find any previous reviewed reports")
             (setup-acceptable)
             (make-check-for-report
              report
              :status :action_required
              :summary "Please verify that the images look reasonable to you"))
            (acceptable
-            (do-promotion-log :info "Found a previous review: ~a" acceptable)
+            (format-log run :info "Found a previous review: ~a" acceptable)
             (setup-acceptable
              :state (acceptable-state acceptable)
              :user (acceptable-reviewer acceptable))

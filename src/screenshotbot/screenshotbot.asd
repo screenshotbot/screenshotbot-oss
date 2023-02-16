@@ -34,6 +34,7 @@
                :markup
                :gravatar
                :bknr.impex
+               :util/logger
                :lparallel
                :util/lparallel
                (:feature (:not :screenshotbot-oss) :documentation-plugin)

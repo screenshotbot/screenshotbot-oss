@@ -22,7 +22,8 @@
 (def-easy-macro with-logger-stream (logger &binding stream &fn fn)
   (with-slots (file lock) logger
    (bt:with-lock-held (lock)
-     (with-open-file (stream file :if-exists :append :direction :output)
+     (with-open-file (stream file :if-exists :append :direction :output
+                             :if-does-not-exist :create)
        (fn stream)))))
 
 (defmethod format-log  ((logger logger)

@@ -153,23 +153,3 @@
 
     (is-true (activep run2))
     (is-false (activep run1))))
-
-#+nil
-(test promotion-log-is-set-up
-  (with-fixture state ()
-    (with-promotion-log (run1)
-      (log:info "hello world"))
-    (log4cl:flush-all-appenders)
-    (is (str:containsp "Beginning promotion"
-                       (uiop:read-file-string
-                        (bknr.datastore:blob-pathname
-                         (promotion-log run1)))))))
-
-
-(test do-promotion-log
-  (finishes (do-promotion-log :info "hello world"))
-  (uiop:with-temporary-file (:stream s :pathname p :direction :io)
-    (let ((*promotion-log-stream* s))
-      (do-promotion-log :info "hello world")
-      (finish-output s)
-      (is (str:containsp "hello world" (uiop:read-file-string p))))))
