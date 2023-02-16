@@ -88,10 +88,11 @@
                               repo-url)
   (cond
     ((not (verified-repo-p repo-url company))
-     (do-promotion-log :error "Repo ~a not verified" repo-url)
+     (log:info "Repo ~a not verified" repo-url)
      nil)
     ((not (app-installed-p (repo-string-identifier repo-url)))
-     (do-promotion-log :error "The Screenshotbot app is not installed on ~a" repo-url))
+     (log:info "The Screenshotbot app is not installed on ~a" repo-url)
+     nil)
     (t t)))
 
 (defmethod valid-repo? ((promoter pull-request-promoter)

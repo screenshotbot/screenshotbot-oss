@@ -35,8 +35,7 @@
                 #:promotion-log)
   (:export
    #:with-promotion-log
-   #:default-promoter
-   #:do-promotion-log)
+   #:default-promoter)
   ;; forward decls
   (:export
    #:recorder-run-verify
@@ -97,13 +96,9 @@
 ;; In order to this this, you need
 ;;
 
-(defun do-promotion-log (level fmt &rest args)
-  (let ((msg (apply #'format nil fmt args)))
-   (log :info "~a" msg)))
 
 (defmacro with-promotion-log ((run) &body body)
   `(%with-promotion-log ,run (lambda () ,@body)))
-
 
 (defun fix-github-link (repo)
   (cond

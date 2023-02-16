@@ -9,7 +9,6 @@
   (:import-from #:screenshotbot/promote-api
                 #:maybe-send-tasks
                 #:maybe-promote
-                #:do-promotion-log
                 #:promoter)
   (:import-from #:screenshotbot/report-api
                 #:report-previous-run
