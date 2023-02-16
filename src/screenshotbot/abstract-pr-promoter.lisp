@@ -217,12 +217,14 @@
          (repo-url (repo-link repo))
          (company (recorder-run-company run)))
     (cond
-      ((and
-        (valid-repo? promoter repo)
-        (plugin-installed? promoter company repo-url)
-        (not (equal (recorder-run-merge-base run)
-                    (recorder-run-commit run))))
-
+      ((not (valid-repo? promoter repo))
+       (format-log run :info "Not a valid repo for this promoter"))
+      ((not (plugin-installed? promoter company repo-url))
+       (format-log run :info "Plugin is not installed for this company/repository"))
+      ((equal (recorder-run-merge-base run)
+              (recorder-run-commit run))
+       (format-log run :info "Ignoring since the merge-base is same as the commit-hash"))
+      (t
        (format-log run :info "Base commit is: ~S" (pr-merge-base promoter run))
        (let ((base-run-promise (retrieve-run
                                 (run-retriever promoter)
@@ -266,11 +268,7 @@
                              promoter
                              run
                              base-run)))))
-             (push-remote-check promoter run check)))))
-      (t
-       #+nil
-       (cerror "continue" "not promoting for ~a" promoter)
-       (log:info "Initial checks failed, not going through pull-request-promoter")))))
+             (push-remote-check promoter run check))))))))
 
 (defmethod warn-if-not-merge-base ((promoter abstract-pr-promoter)
                                    (run recorder-run)
