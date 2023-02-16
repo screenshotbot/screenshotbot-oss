@@ -25,6 +25,11 @@
 (defclass promoter ()
   ())
 
+(defmethod print-object ((promoter promoter)
+                         out)
+  (format out "#<~a>"
+          (string (type-of promoter))))
+
 (defgeneric maybe-send-tasks (promoter run))
 
 (defgeneric maybe-promote (promoter run))
