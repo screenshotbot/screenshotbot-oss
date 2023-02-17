@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/api/core
+                #:error-result-stacktrace
                 #:with-error-handling
                 #:with-api-key
                 #:defapi)
@@ -14,6 +15,8 @@
                 #:equal-to)
   (:import-from #:fiveam-matchers/described-as
                 #:described-as)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/api/test-core)
 
@@ -66,10 +69,15 @@
       (if-called 'sentry-client:capture-exception
                  (lambda (e)
                    (setf calledp t)))
-      (finishes
-        (with-error-handling ()
-          (error 'my-error)))
-      (assert-that calledp
-       (described-as
-           "capture-exception should've been called"
-           (equal-to t))))))
+      (let ((message
+              (with-error-handling ()
+                (error 'my-error))))
+
+        #+lispworks
+        (assert-that (error-result-stacktrace message)
+                     (contains-string "FIVEAM" ))
+
+        (assert-that calledp
+                     (described-as
+                         "capture-exception should've been called"
+                       (equal-to t)))))))

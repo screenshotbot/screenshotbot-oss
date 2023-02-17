@@ -73,24 +73,30 @@
 
 It should be safe to mock call-with-error-handling to just call
 function fn for the purpose of tests."
-  (handler-case
-      (handler-bind ((error (lambda (e)
-                              (trivial-backtrace:print-backtrace e))))
-        (make-instance 'result
-                       :success t
-                       :response
-                       (fn)))
-    (api-error (e)
-      (log:warn "API error: ~a" (api-error-msg e))
-      (make-instance 'error-result
-                     :success nil
-                     :error (princ-to-string e)))
-    (error (e)
-      (log:warn "Error: ~a" e)
-      (sentry-client:capture-exception e)
-      (make-instance 'error-result
-                     :success nil
-                     :error "Internal error, please contact support@screenshotbot.io"))))
+  (block error-handling
+    (flet ((%trace ()
+             (with-output-to-string (out)
+               #+lispworks
+               (dbg:output-backtrace :brief out))))
+     (handler-bind ((api-error (lambda (e)
+                                 (log:warn "API error: ~a" (api-error-msg e))
+                                 (return-from error-handling
+                                   (make-instance 'error-result
+                                                  :success nil
+                                                  :stacktrace (%trace)
+                                                  :error (princ-to-string e)))))
+                    (error  (lambda (e)
+                              (log:warn "Error: ~a" e)
+                              (sentry-client:capture-exception e)
+                              (return-from error-handling
+                                (make-instance 'error-result
+                                               :success nil
+                                               :stacktrace (%trace)
+                                               :error "Internal error, please contact support@screenshotbot.io")))))
+       (make-instance 'result
+                      :success t
+                      :response
+                      (fn))))))
 
 (defmacro defapi ((name &key uri method intern
                           (type :v1))
@@ -134,7 +140,9 @@ function fn for the purpose of tests."
    (response :initarg :response)))
 
 (defclass error-result (result)
-  ((error :initarg :error)))
+  ((error :initarg :error)
+   (stacktrace :initarg :stacktrace
+               :reader error-result-stacktrace)))
 
 (define-condition api-error (error)
   ((message :initarg :message
