@@ -2,6 +2,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/api/core
+                #:api-error
+                #:error-result-message
                 #:error-result-stacktrace
                 #:with-error-handling
                 #:with-api-key
@@ -76,8 +78,30 @@
         #+lispworks
         (assert-that (error-result-stacktrace message)
                      (contains-string "FIVEAM" ))
-
+        (assert-that (error-result-message message)
+                     (contains-string "Internal error"))
         (assert-that calledp
                      (described-as
                          "capture-exception should've been called"
                        (equal-to t)))))))
+
+
+(test api-error-is-propagated-but-not-logged
+  (with-mocks ()
+    (let ((calledp nil))
+      (if-called 'sentry-client:capture-exception
+                 (lambda (e)
+                   (setf calledp t)))
+      (let ((message
+              (with-error-handling ()
+                (error 'api-error :message "bleh bleh"))))
+
+        #+lispworks
+        (assert-that (error-result-stacktrace message)
+                     (contains-string "FIVEAM" ))
+        (assert-that (error-result-message message)
+                     (equal-to "bleh bleh"))
+        (assert-that calledp
+                     (described-as
+                         "capture-exception should not be called"
+                       (equal-to nil)))))))

@@ -92,7 +92,9 @@ function fn for the purpose of tests."
                                 (make-instance 'error-result
                                                :success nil
                                                :stacktrace (%trace)
-                                               :error "Internal error, please contact support@screenshotbot.io")))))
+                                               :error (format nil
+                                                              "Internal error, please contact support@screenshotbot.io: ~a"
+                                                              (princ-to-string e)))))))
        (make-instance 'result
                       :success t
                       :response
@@ -140,7 +142,8 @@ function fn for the purpose of tests."
    (response :initarg :response)))
 
 (defclass error-result (result)
-  ((error :initarg :error)
+  ((error :initarg :error
+          :reader error-result-message)
    (stacktrace :initarg :stacktrace
                :reader error-result-stacktrace)))
 
