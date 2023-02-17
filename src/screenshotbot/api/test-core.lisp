@@ -2,11 +2,18 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/api/core
+                #:with-error-handling
                 #:with-api-key
                 #:defapi)
   (:import-from #:cl-mock
+                #:if-called
                 #:answer
                 #:with-mocks)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that
+                #:equal-to)
+  (:import-from #:fiveam-matchers/described-as
+                #:described-as)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/api/test-core)
 
@@ -52,3 +59,17 @@
     (with-api-key (key secret)
       (is (equal "foo" key))
       (is (equal "bar" secret)))))
+
+(test internal-error-gets-logged
+  (with-mocks ()
+    (let ((calledp nil))
+      (if-called 'sentry-client:capture-exception
+                 (lambda (e)
+                   (setf calledp t)))
+      (finishes
+        (with-error-handling ()
+          (error 'my-error)))
+      (assert-that calledp
+       (described-as
+           "capture-exception should've been called"
+           (equal-to t))))))

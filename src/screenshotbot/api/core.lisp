@@ -87,6 +87,7 @@ function fn for the purpose of tests."
                      :error (princ-to-string e)))
     (error (e)
       (log:warn "Error: ~a" e)
+      (sentry-client:capture-exception e)
       (make-instance 'error-result
                      :success nil
                      :error "Internal error, please contact support@screenshotbot.io"))))
@@ -147,6 +148,9 @@ function fn for the purpose of tests."
 
 (defapi (nil :uri "/api/test-error") ()
   (error 'api-error :message "Foo"))
+
+(defapi (nil :uri "/api/test-internal-error") ()
+  (error "bad stuff"))
 
 (defclass api-result () ())
 
