@@ -91,9 +91,15 @@
    (format stream "#<API-ERROR ~a>" message)))
 
 (defun ensure-api-success (result)
-  (awhen (assoc-value result :error)
-    (log:error "API error: ~a" it)
-    (error 'api-error :message it))
+  (let ((indent "    "))
+   (awhen (assoc-value result :error)
+     (log:error "API error: ~a" it)
+     (when-let ((stacktrace (assoc-value result :stacktrace)))
+      (log:error "Server stack trace: ~%~a~a"
+                 indent
+                 (str:join (format nil "~%~a" indent)
+                           (str:lines stacktrace))))
+     (error 'api-error :message it)))
   (assoc-value result :response))
 
 (defun backoff (num)
