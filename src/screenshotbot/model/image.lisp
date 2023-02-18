@@ -121,7 +121,8 @@
    #:mask=
    #:image-metadata
    #:find-image-by-oid
-   #:base-image-comparer))
+   #:base-image-comparer
+   #:dimension=))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -670,6 +671,13 @@
            :reader dimension-height)
    (width :initarg :width
           :reader dimension-width)))
+
+(defmethod dimension= (dim1 dim2)
+  (and
+   (eql (dimension-height dim1)
+        (dimension-height dim2))
+   (eql (dimension-width dim1)
+        (dimension-width dim2))))
 
 (def-store-local *metadata-cache* (make-hash-table))
 

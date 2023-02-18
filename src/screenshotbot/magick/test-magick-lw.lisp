@@ -10,6 +10,7 @@
         #:fiveam-matchers
         #:screenshotbot/mask-rect-api)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:with-pixel
                 #:magick-get-image-width
                 #:magick-get-image-height
                 #:resize-image
@@ -230,13 +231,6 @@
       (uiop:with-temporary-file (:pathname output :type "webp")
         (finishes
           (compare-wands before after output))))))
-
-(def-easy-macro with-pixel (&binding pixel x y &fn fn)
-  (fli:with-dynamic-foreign-objects
-      ((pixel pixel))
-    (setf (fli:foreign-slot-value pixel 'x) x)
-    (setf (fli:foreign-slot-value pixel 'y) y)
-    (funcall fn pixel)))
 
 (defun  mark-pixel (wand x y)
   (with-pixel (pixel x y)

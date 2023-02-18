@@ -9,10 +9,76 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run)
   (:import-from #:screenshotbot/model/image
+                #:dimension=
+                #:image-dimensions
+                #:with-local-image
+                #:image=
                 #:base-image-comparer)
+  (:import-from #:screenshotbot/magick/magick-lw
+                #:get-non-alpha-pixels
+                #:magick-get-image-width
+                #:magick-get-image-height
+                #:with-wand
+                #:with-image-comparison)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
+  (:import-from #:screenshotbot/async
+                #:with-magick-kernel)
+  (:import-from #:lparallel
+                #:future
+                #:force)
   (:export
    #:make-image-comparer))
 (in-package :screenshotbot/model/image-comparer)
 
 (defmethod make-image-comparer (run)
   (make-instance 'base-image-comparer))
+
+(defclass threshold-comparer (base-image-comparer)
+  ((threshold :initarg :threshold
+              :reader compare-threshold)))
+
+(defmethod image= ((self threshold-comparer)
+                   image1
+                   image2
+                   masks)
+  (or
+   (call-next-method)
+
+   (and
+    (dimension=
+     (image-dimensions image1)
+     (image-dimensions image2))
+    (compare-with-threshold
+     self
+     image1
+     image2
+     masks))))
+
+(defmethod compare-with-threshold ((self threshold-comparer)
+                                   image1
+                                   image2
+                                   masks)
+  (with-local-image (file1 image1)
+    (with-local-image (file2 image2)
+      (with-magick-kernel ()
+       (force
+        (future
+          (with-wand (before :file file1)
+            (let ((limit (floor (* (compare-threshold self)
+                                   (magick-get-image-height before)
+                                   (magick-get-image-width before)))))
+              (with-wand (after :file file2)
+                (with-image-comparison (before after
+                                        :result result
+                                        :in-place-p t)
+                  (let ((bad-pixels (get-non-alpha-pixels
+                                     result
+                                     ;; Why +2 instead of +1? I think it might
+                                     ;; be a bug somewhere in
+                                     ;; get-non-alpha-pixels, but +2 works for
+                                     ;; now.
+                                     :limit (+ 2 limit)
+                                     :masks masks)))
+                    (let ((bad-pixel-count (first (array-dimensions bad-pixels))))
+                      (<= bad-pixel-count limit)))))))))))))

@@ -355,6 +355,7 @@
                              (:file "test-recorder-run")
                              (:file "test-screenshot")
                              (:file "test-screenshot-key")
+                             (:file "test-image-comparer")
                              (:file "test-user")
                              (:file "test-channel")
                              (:file "test-company")

@@ -38,7 +38,8 @@
    #:with-image-comparison
    #:save-as-webp
    #:with-pixel-wand
-   #:screenshotbot-set-pixel))
+   #:screenshotbot-set-pixel
+   #:with-pixel))
 (in-package :screenshotbot/magick/magick-lw)
 
 (defclass magick-native (abstract-magick)
@@ -467,6 +468,13 @@
 (fli:define-c-struct pixel
     (x :size-t)
   (y :size-t))
+
+(def-easy-macro with-pixel (&binding pixel x y &fn fn)
+  (fli:with-dynamic-foreign-objects
+      ((pixel pixel))
+    (setf (fli:foreign-slot-value pixel 'x) x)
+    (setf (fli:foreign-slot-value pixel 'y) y)
+    (funcall fn pixel)))
 
 (fli:define-c-struct native-mask
     (x :size-t)
