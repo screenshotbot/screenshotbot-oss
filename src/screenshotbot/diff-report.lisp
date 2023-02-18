@@ -16,6 +16,8 @@
                 #:screenshot-image)
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot-masks)
+  (:import-from #:screenshotbot/model/image-comparer
+                #:make-image-comparer)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:change
@@ -172,7 +174,7 @@
                     to-names names
                     :key #'screenshot-name
                     :test #'equal)
-          :changes (%find-changes names to-names)))
+          :changes (%find-changes (make-image-comparer run) names to-names)))
     (retry-make-diff-report ()
       (make-diff-report run to))))
 
@@ -181,7 +183,7 @@
    (gethash (list run to :v3) *cache*)
    (%make-diff-report run to)))
 
-(defun %find-changes (names to-names)
+(defmethod %find-changes (image-comparer names to-names)
   (let ((hash-table (make-hash-table :test #'equal)))
     (loop for x in to-names
           do
@@ -190,10 +192,12 @@
           for x = (gethash (screenshot-name s1) hash-table)
           if (and
               x
-              (not (image= (screenshot-image s1)
-                           (Screenshot-image x)
-                           ;; always use the new mask
-                           (screenshot-masks s1))))
+              (not (image=
+                    image-comparer
+                    (screenshot-image s1)
+                    (Screenshot-image x)
+                    ;; always use the new mask
+                    (screenshot-masks s1))))
             collect
             (make-instance 'change
                             :before s1

@@ -152,6 +152,7 @@
                  (:file "channel")
                  (:file "screenshot-key")
                  (:file "failed-run")
+                 (:file "image-comparer")
                  (:file "screenshot")
                  (:file "api-key")
                  (:file "commit-graph")

@@ -120,7 +120,8 @@
    #:update-image
    #:mask=
    #:image-metadata
-   #:find-image-by-oid))
+   #:find-image-by-oid
+   #:base-image-comparer))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -601,7 +602,10 @@
                                                          :limit 1
                                                          :masks masks))))))))))))))))
 
-(defun image= (img1 img2 masks)
+(defclass base-image-comparer ()
+  ())
+
+(defmethod image= ((self base-image-comparer) img1 img2 masks)
   "Check if the two images have the same contents. Looks at both file
   hash and image contents"
   (assert (image-hash img1))

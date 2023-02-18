@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/model/image)
   (:import-from #:screenshotbot/model/image
+                #:base-image-comparer
                 #:all-soft-expired-images
                 #:soft-expiration-time
                 #:image-filesystem-pathname
@@ -66,6 +67,13 @@
 
 (util/fiveam:def-suite)
 
+(defun %%image= (&rest args)
+  "For all of these tests, we're only concerned with the version that
+uses the base-image-comparer."
+  (apply #'image=
+         (make-instance 'base-image-comparer)
+         args))
+
 (defun static-asset (file)
   (asdf:system-relative-pathname :screenshotbot
                                  (path:catfile "static/" file)))
@@ -118,12 +126,14 @@
      (handler-bind ((slow-image-comparison
                       (lambda (e)
                         (setf got-signal t))))
-       (is-true (image= img img2 (list rect)))
+       (is-true (%%image=
+                 img img2 (list rect)))
        (is-true got-signal)))
     (handler-bind ((slow-image-comparison
                     (lambda (e)
                       (fail "Should not get slow-image-comparison"))))
-      (is-true (image= img img2 (list rect))))))
+      (is-true (%%image=
+                img img2 (list rect))))))
 
 (test image-comparison-is-cached-for-unequal ()
   (with-fixture state ()
@@ -133,20 +143,23 @@
         (handler-bind ((slow-image-comparison
                          (lambda (e)
                            (setf got-signal t))))
-          (is-false (image= img img2 (list rect)))
+          (is-false (%%image=
+                     img img2 (list rect)))
           (is-true got-signal)))
       (handler-bind ((slow-image-comparison
                        (lambda (e)
                          (fail "Should not get slow-image-comparison"))))
-        (is-false (image= img img2 (list rect)))))))
+        (is-false (%%image=
+                   img img2 (list rect)))))))
 
 
 (test simple-compare ()
   (with-fixture state ()
-    (is-true (image= img img nil))
-    (is-true (image= img img-copy nil))
-    (is-false (image= img img2 nil))
-    (is-true (image= img img2 (list rect)))))
+    (is-true (%%image=
+              img img nil))
+    (is-true (%%image= img img-copy nil))
+    (is-false (%%image= img img2 nil))
+    (is-true (%%image= img img2 (list rect)))))
 
 (defun make-magick-test-image (name)
   (uiop:with-temporary-file (:pathname p :type "webp")
@@ -165,13 +178,13 @@
       (run-magick (list "convert" "rose:" png))
       (uiop:with-temporary-file (:pathname webp :type "webp")
         (run-magick (list "convert" "rose:" "-define" "webp:lossless=true" webp))
-        (is-true (image=
+        (is-true (%%image=
                   (make-test-image png)
                   (make-test-image webp)
                   nil)))
       (uiop:with-temporary-file (:pathname webp :type "webp")
         (run-magick (list "convert" "wizard:" "-define" "webp:lossless=true" webp))
-        (is-false (image=
+        (is-false (%%image=
                   (make-test-image png)
                   (make-test-image webp)
                   nil))))))

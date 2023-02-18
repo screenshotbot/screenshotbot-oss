@@ -30,7 +30,9 @@
   (:import-from #:screenshotbot/user-api
                 #:screenshot-name)
   (:import-from #:screenshotbot/model/image
-                #:image=))
+                #:image=)
+  (:import-from #:screenshotbot/model/image-comparer
+                #:make-image-comparer))
 (in-package :screenshotbot/dashboard/history)
 
 
@@ -38,16 +40,19 @@
 
 (defun render-single-screenshot (r s &key previous-screenshot
                                        channel)
-  (let ((toggle-id (format nil "compare-~a" (random 1000000)))
-        (name-change-p (and
-                        previous-screenshot
-                        (not (string= (screenshot-name s)
-                                      (screenshot-name previous-screenshot)))))
-        (image-change-p (and
+  (let* ((image-comparer (make-image-comparer r))
+         (toggle-id (format nil "compare-~a" (random 1000000)))
+         (name-change-p (and
                          previous-screenshot
-                         (not (image= (screenshot-image s)
-                                      (screenshot-image previous-screenshot)
-                                      nil)))))
+                         (not (string= (screenshot-name s)
+                                       (screenshot-name previous-screenshot)))))
+         (image-change-p (and
+                          previous-screenshot
+                          (not (image=
+                                image-comparer
+                                (screenshot-image s)
+                                (screenshot-image previous-screenshot)
+                                nil)))))
    (cond
      (s
       <div class= "mb-4" >

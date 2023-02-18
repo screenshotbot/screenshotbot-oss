@@ -30,6 +30,7 @@
                 #:screenshot-get-canonical
                 #:recorder-run-screenshots)
   (:import-from #:screenshotbot/model/image
+                #:base-image-comparer
                 #:find-image-by-oid
                 #:image=
                 #:image-metadata
@@ -48,6 +49,8 @@
                 #:ensure-screenshot-key)
   (:import-from #:alexandria
                 #:when-let)
+  (:import-from #:screenshotbot/model/image-comparer
+                #:make-image-comparer)
   (:export
    #:constant-string
    #:get-constant
@@ -258,6 +261,9 @@
              (when run
                (loop for s in (recorder-run-screenshots run)
                      if (image=
+                         ;; We are doing the fast comparison here,
+                         ;; since this is only for history purposes.
+                         (make-instance 'base-image-comparer)
                          (screenshot-image s)
                          (screenshot-image screenshot)
                          nil)
@@ -269,7 +275,9 @@
                    (setf prev-run (funcall get-next-promoted-run)))
                  (iterator ()
                    (when run
-                     (let ((prev-screenshot
+                     (let ((image-comparer
+                             (make-image-comparer run))
+                           (prev-screenshot
                              (when screenshot
                                (or
                                 (find-in-run prev-run
@@ -291,11 +299,13 @@
                            ((and
                              (string= (screenshot-name screenshot)
                                       (screenshot-name prev-screenshot))
-                             (image= (screenshot-image screenshot)
-                                     (screenshot-image prev-screenshot)
-                                     ;; TODO: should we use masks here?
-                                     ;; Probably not.
-                                     nil))
+                             (image=
+                              image-comparer
+                              (screenshot-image screenshot)
+                              (screenshot-image prev-screenshot)
+                              ;; TODO: should we use masks here?
+                              ;; Probably not.
+                              nil))
                             (bump prev-screenshot)
                             ;; Tail call optimize the next call
                             (iterator))
