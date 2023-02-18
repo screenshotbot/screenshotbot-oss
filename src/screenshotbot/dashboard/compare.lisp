@@ -40,8 +40,7 @@
                 #:image-dimensions
                 #:map-unequal-pixels
                 #:image-blob
-                #:rect-as-list
-                #:draw-masks-in-place)
+                #:rect-as-list)
   (:import-from #:screenshotbot/magick
                 #:run-magick)
   (:import-from #:core/ui/paginated

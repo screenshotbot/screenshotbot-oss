@@ -340,9 +340,6 @@
   `(flet ((body (,file) ,@body))
      (%with-local-image ,screenshot #'body)))
 
-(defun draw-masks (wand masks)
-  (assert (not masks)))
-
 (defun px-in-mask-p (i j mask)
   (declare (optimize (speed 3) (safety 0))
            (type fixnum i j))
