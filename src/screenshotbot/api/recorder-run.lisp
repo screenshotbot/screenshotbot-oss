@@ -185,23 +185,18 @@ promotion thread starts. Used by the API and by Replay"
     (bt:with-lock-held ((channel-lock channel))
       (bt:condition-notify (channel-cv channel)))))
 
-(let ((sem #+lispworks (mp:make-semaphore :name "promoter semaphore" :count 10)))
-  (defun start-promotion-thread (run)
-    #+lispworks
-    (mp:semaphore-acquire sem)
-    (let ((channel (recorder-run-channel run)))
-     (unwind-protect
-          (with-promotion-log (run)
-            (unwind-protect
-                 (let ((promoter (make-instance 'default-promoter)))
-                   (maybe-promote promoter run)
-                   (maybe-send-tasks promoter run))
-              (with-transaction ()
-                (setf (promotion-complete-p run) t))
-              (bt:with-lock-held ((channel-lock channel))
-                (bt:condition-notify (channel-cv channel)))))
-       #+lispworks
-       (mp:semaphore-release sem)))))
+(defun start-promotion-thread (run)
+  (let ((channel (recorder-run-channel run)))
+    (unwind-protect
+         (with-promotion-log (run)
+           (unwind-protect
+                (let ((promoter (make-instance 'default-promoter)))
+                  (maybe-promote promoter run)
+                  (maybe-send-tasks promoter run))
+             (with-transaction ()
+               (setf (promotion-complete-p run) t))
+             (bt:with-lock-held ((channel-lock channel))
+               (bt:condition-notify (channel-cv channel))))))))
 
 (defun screenshot-records-api-to-internal (company channel screenshot-records)
   "Convert the json list of screenshot-records to a list of SCREENSHOT
