@@ -21,7 +21,24 @@
              #:screenshot-image-id
              #:screenshot-lang
              #:screenshot-device
-             #:screenshot-list))
+             #:screenshot-list
+             #:run
+             #:run-id
+             #:run-channel
+             #:run-screenshots
+             #:run-commit
+             #:should-create-github-issue-p
+             #:trunkp
+             #:periodic-job-p
+             #:cleanp
+             #:pull-request-url
+             #:main-branch-hash
+             #:merge-base
+             #:commit
+             #:main-branch
+             #:gitlab-merge-request-iid
+             #:phabricator-diff-id
+             #:run-repo))
 
 (in-package :screenshotbot/api/model)
 
@@ -75,6 +92,72 @@
            :json-type :string
            :json-key "device"
            :reader screenshot-device))
+  (:metaclass json-serializable-class))
+
+(defclass run ()
+  ((id :initarg :id
+       :json-key "id"
+       :json-type :string
+       :reader run-id)
+   (channel :initarg :channel
+            :json-key "channel"
+            :json-type :string
+            :reader run-channel)
+   (screenshots :initarg :screenshots
+                :json-key "screenshots"
+                :json-type (:list screenshot)
+                :reader run-screenshots)
+   (commit :initarg :commit
+           :json-key "commit"
+           :json-type :string
+           :reader run-commit)
+   (create-github-issue :initarg :create-github-issue
+                        :json-key "shouldCreateGithubIssue"
+                        :json-type :boolea
+                        :reader should-create-github-issue-p)
+   (trunkp :initarg :trunkp
+           :json-key "isTrunk"
+           :json-type :boolean
+           :reader trunkp)
+   (periodic-job-p
+    :initarg :periodic-job-p
+    :json-key "isPeriodicJob"
+    :json-type :boolean
+    :reader periodic-job-p)
+   (cleanp
+    :initarg :cleanp
+    :json-key "isClean"
+    :json-type :boolean
+    :reader cleanp)
+   (pull-request-url :initarg :pull-request
+                     :json-key "pullRequestUrl"
+                     :json-type :string
+                     :reader pull-request-url)
+   (main-branch-hash :initarg :main-branch-hash
+                    :json-key "mainBranchCommit"
+                    :json-type :string
+                     :reader main-branch-hash)
+   (merge-base :initarg :merge-base
+               :json-key "mergeBase"
+               :json-type :string
+               :reader merge-base)
+   (main-branch :initarg :main-branch
+                :json-key "mainBranch"
+                :json-type :string
+                :reader main-branch)
+   (phabrictor-diff-id :initarg :phabricator-diff-id
+                       :json-key "phabricatorDiff"
+                       :json-type :number
+                       :reader phabricator-diff-id)
+   (gitlab-merge-request-iid :initarg :gitlab-merge-request-iid
+                             :json-key "gitlabMergeRequestIID"
+                             :json-type :number
+                             :reader gitlab-merge-request-iid)
+   (repo :initarg :repo
+         :json-key "repo"
+         :json-type :string
+         ;; Internally this is github-repo :/
+         :reader run-repo))
   (:metaclass json-serializable-class))
 
 (defmethod json-mop:json-to-clos ((items vector) (class (eql 'screenshot-list))
