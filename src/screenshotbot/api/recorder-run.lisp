@@ -87,7 +87,7 @@
 
     (log:info "Got commit as: ~a, clean:~a trunk:~a" commit is-clean is-trunk)
 
-    (multiple-value-bind (resp recorder-run channel-obj)
+    (multiple-value-bind (resp recorder-run)
         (apply '%recorder-run-post
          :channel channel
          :screenshot-records screenshot-records
@@ -102,7 +102,7 @@
       (flet ((promotion ()
                (declare (optimize (debug 3) (speed 0)))
                (log:info "Being promotion logic")
-               (start-promotion-thread channel-obj recorder-run)
+               (start-promotion-thread recorder-run)
                (time
                 (warmup-image-caches recorder-run))))
         (cond
@@ -186,10 +186,10 @@ promotion thread starts. Used by the API and by Replay"
       (bt:condition-notify (channel-cv channel)))))
 
 (let ((sem #+lispworks (mp:make-semaphore :name "promoter semaphore" :count 10)))
-  (defun start-promotion-thread (channel run)
+  (defun start-promotion-thread (run)
     #+lispworks
     (mp:semaphore-acquire sem)
-    (let ((channel (or channel (recorder-run-channel run))))
+    (let ((channel (recorder-run-channel run)))
      (unwind-protect
           (with-promotion-log (run)
             (unwind-protect
