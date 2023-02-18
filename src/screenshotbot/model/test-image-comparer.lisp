@@ -40,16 +40,16 @@
                                           (width 10)
                                           &fn fn)
   (uiop:with-temporary-file (:pathname p :type "webp")
-    (let ((default-pixel (new-pixel-wand)))
-      (pixel-set-color default-pixel "none")
-      (with-wand (wand)
-        (magick-new-image wand width height default-pixel)
-        (loop for (x y) in pixels
-              do
-                 (with-pixel (pixel x y)
-                   (screenshotbot-set-pixel wand pixel color)))
-        (save-as-webp wand p)
-        (fn p)))))
+    (with-wand (wand)
+     (let ((default-pixel (new-pixel-wand)))
+       (pixel-set-color default-pixel "none")
+       (magick-new-image wand width height default-pixel)
+       (loop for (x y) in pixels
+             do
+                (with-pixel (pixel x y)
+                  (screenshotbot-set-pixel wand pixel color)))
+       (save-as-webp wand p)
+       (fn p)))))
 
 (def-fixture state (&key (threshold 0))
   (with-test-store ()
