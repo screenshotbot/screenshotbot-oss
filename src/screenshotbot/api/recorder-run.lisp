@@ -99,19 +99,23 @@
                appending
                (let ((field (car field)))
                 (list field (hunchentoot:parameter (str:downcase (string field)))))))
-      (flet ((promotion ()
-               (declare (optimize (debug 3) (speed 0)))
-               (log:info "Being promotion logic")
-               (start-promotion-thread recorder-run)
-               (time
-                (warmup-image-caches recorder-run))))
-        (cond
-          (*synchronous-promotion*
-           (promotion))
-          (t
-           (make-thread #'promotion
-                        :name (format nil "Promotion ~a" channel)))))
+      (after-run-created recorder-run)
       resp)))
+
+(defun after-run-created (recorder-run)
+  (flet ((promotion ()
+           (declare (optimize (debug 3) (speed 0)))
+           (log:info "Being promotion logic")
+           (start-promotion-thread recorder-run)
+           (time
+            (warmup-image-caches recorder-run))))
+    (cond
+      (*synchronous-promotion*
+       (promotion))
+      (t
+       (make-thread
+        #'promotion
+        :name (format nil "Promotion ~a" (recorder-run-channel recorder-run)))))))
 
 (defun warmup-image-caches (run)
   (log:info "Warming up small screenshots for ~s" run)
