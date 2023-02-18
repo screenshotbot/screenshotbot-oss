@@ -40,6 +40,7 @@
    (with-global-kernel ()
      (let ((f1 (future 2))
            (p1 (lparallel:promise)))
+       (force f1)
        (let ((results))
          (future
            (while-promises (f1 p1)
