@@ -36,7 +36,8 @@
   (:import-from #:screenshotbot/installation
                 #:*installation*
                 #:installation
-                #:multi-org-feature))
+                #:multi-org-feature)
+  (:local-nicknames (#:dto #:screenshotbot/api/model)))
 
 (util/fiveam:def-suite)
 
@@ -78,9 +79,10 @@
         (serial-recorder-run-post
          :channel "foobar"
          :screenshot-records
-         `(((:foo . "bar")
-            (:name . "img1")
-            (:image-id . ,(oid img1)))))
+         (list
+          (make-instance 'dto:screenshot
+                         :name "img1"
+                         :image-id (oid img1))))
       (pass))))
 
 (defun test-adds-channel-mask ()

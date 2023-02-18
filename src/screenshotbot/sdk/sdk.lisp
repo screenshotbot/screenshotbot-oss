@@ -48,7 +48,8 @@
                 #:def-health-check)
   (:import-from #:screenshotbot/api/model
                 #:encode-json)
-  (:local-nicknames (#:flags #:screenshotbot/sdk/flags))
+  (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
+                    (#:dto #:screenshotbot/api/model))
   (:export
    #:single-directory-run
    #:*request*
@@ -208,6 +209,16 @@ error."
   (setf (assoc-value response :name) key)
   response)
 
+(defun build-screenshot-objects (images metadata-provider)
+  (loop for im in images
+        collect
+        (let ((name (assoc-value im :name)))
+          (make-instance 'dto:screenshot
+                         :name name
+                         :image-id (assoc-value im :id)
+                         :lang (screenshot-lang metadata-provider name)
+                         :device (screenshot-device metadata-provider name)))))
+
 (defun make-run (images &rest args
                  &key repo
                    channel
@@ -226,12 +237,7 @@ error."
   (restart-case
    (flet ((bool (x) (if x "true" "false")))
      (let ((records (json:encode-json-to-string
-                     (loop for im in images collect
-                           (let ((name (assoc-value im :name)))
-                            `(("name" . ,name)
-                              ("imageId" . ,(assoc-value im :id))
-                              ("lang" . ,(screenshot-lang metadata-provider name))
-                              ("device" . ,(screenshot-device metadata-provider name))))))))
+                     (build-screenshot-objects images metadata-provider))))
        (log:debug "records: ~s" records)
        (let* ((branch-hash (if has-branch-hash-p branch-hash (rev-parse repo branch)))
               (commit (if has-commit-p commit (current-commit repo)))

@@ -24,7 +24,8 @@
                 #:run-response-id)
   (:import-from #:util/digests
                 #:md5-file)
-  (:export #:populate-company))
+  (:export #:populate-company)
+  (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/login/populate)
 
 (defun md5sum-file (file)
@@ -44,8 +45,10 @@
                             :company company
                             :github-repo nil
                             :screenshot-records (list
-                                                 `((:name . "image1")
-                                                   (:image-id . ,(oid image))))
+                                                 (make-instance
+                                                  'dto:screenshot
+                                                  :name "image1"
+                                                  :image-id (oid image)))
                             :commit commit
                             :branch "master"
                             :is-trunk t

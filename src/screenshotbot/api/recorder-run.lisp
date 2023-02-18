@@ -38,7 +38,8 @@
    #:%recorder-run-post
    #:run-response-id
    #:start-promotion-thread
-   #:prepare-recorder-run))
+   #:prepare-recorder-run)
+  (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/recorder-run)
 
 
@@ -79,7 +80,9 @@
                                                      (is-trunk :parameter-type 'js-boolean)
                                                      (periodic-job-p :parameter-type 'js-boolean)
                                                      (is-clean :parameter-type 'js-boolean))
-  (let ((screenshot-records (json:decode-json-from-string screenshot-records)))
+  (let ((screenshot-records (json-mop:json-to-clos
+                             screenshot-records
+                             'dto:screenshot-list)))
     (log:info "creating run for ~a" channel)
 
     (log:info "Got commit as: ~a, clean:~a trunk:~a" commit is-clean is-trunk)
@@ -205,10 +208,10 @@ promotion thread starts. Used by the API and by Replay"
   objects"
   (loop for rec in screenshot-records
         collect
-        (let ((name (assoc-value rec :name))
-              (image-id (assoc-value rec :image-id))
-              (lang (assoc-value rec :lang))
-              (device (assoc-value rec :device)))
+        (let ((name (dto:screenshot-name rec))
+              (image-id (dto:screenshot-image-id rec))
+              (lang (dto:screenshot-lang rec))
+              (device (dto:screenshot-device rec)))
           (assert name)
           (assert image-id)
           (let ((image (find-image-by-id company image-id)))

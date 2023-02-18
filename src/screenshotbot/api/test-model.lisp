@@ -2,9 +2,16 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/api/model
+                #:screenshot
+                #:screenshot-list
                 #:decode-json
                 #:encode-json
-                #:version))
+                #:version)
+  (:import-from #:fiveam-matchers/lists
+                #:contains)
+  (:import-from #:fiveam-matchers/core
+                #:has-typep
+                #:assert-that))
 (in-package :screenshotbot/api/test-model)
 
 (util/fiveam:def-suite)
@@ -33,3 +40,11 @@
                       'version)))
     (is (typep ret 'version))
     (is (equal 2 (slot-value ret 'version)))))
+
+
+(test parse-screenshot-list
+  (assert-that
+   (json-mop:json-to-clos
+    "[{\"name\":\"bleh\"}] "
+    'screenshot-list)
+   (contains (has-typep 'screenshot))))
