@@ -111,9 +111,9 @@
     (let ((dto (json-mop:json-to-clos body 'dto:run)))
       (destructuring-bind (resp run channel)
           (%put-run (current-company) dto)
-        (declare (ignore channel))
+        (declare (ignore resp channel))
         (after-run-created run)
-        resp))))
+        (run-to-dto run)))))
 
 (defun after-run-created (recorder-run)
   (flet ((promotion ()
