@@ -113,7 +113,7 @@
                 :reader run-screenshots)
    (commit :initarg :commit-hash
            :json-key "commit"
-           :json-type :string
+           :json-type (or null :string)
            :reader run-commit)
    (create-github-issue :initarg :create-github-issue-p
                         :json-key "shouldCreateGithubIssue"
@@ -135,42 +135,42 @@
     :reader cleanp)
    (pull-request-url :initarg :pull-request
                      :json-key "pullRequestUrl"
-                     :json-type :string
+                     :json-type (or null :string)
                      :reader pull-request-url)
    (main-branch-hash :initarg :main-branch-hash
                      :json-key "mainBranchCommit"
-                     :json-type :string
+                     :json-type (or null :string)
                      :reader main-branch-hash)
    (override-commit-hash :initarg :override-commit-hash
                          :json-key "overrideCommitHash"
-                         :json-type :string
+                         :json-type (or null :string)
                          :reader override-commit-hash)
    (build-url :initarg :build-url
               :json-key "buildUrl"
-              :json-type :string
+              :json-type (or null :string)
               :reader build-url)
    (merge-base :initarg :merge-base
                :json-key "mergeBase"
-               :json-type :string
+               :json-type (or null :string)
                :reader merge-base)
    (main-branch :initarg :main-branch
                 :json-key "mainBranch"
-                :json-type :string
+                :json-type (or null :string)
                 :reader main-branch)
    (phabrictor-diff-id :initarg :phabricator-diff-id
                        :json-key "phabricatorDiff"
-                       :json-type :number
+                       :json-type (or null :number)
                        :reader phabricator-diff-id)
    (gitlab-merge-request-iid :initarg :gitlab-merge-request-iid
                              :json-key "gitlabMergeRequestIID"
-                             :json-type :number
+                             :json-type (or null :number)
                              :reader gitlab-merge-request-iid)
    (repo :initarg :github-repo
          :json-key "repo"
-         :json-type :string
+         :json-type (or null :string)
          ;; Internally this is github-repo :/
          :reader run-repo))
-  (:metaclass json-serializable-class))
+  (:metaclass ext-json-serializable-class))
 
 (defmethod json-mop:json-to-clos ((items vector) (class (eql 'screenshot-list))
                                   &rest initargs)
