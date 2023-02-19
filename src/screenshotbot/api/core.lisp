@@ -19,6 +19,8 @@
                 #:def-easy-macro)
   (:import-from #:hunchentoot-extensions
                 #:make-name)
+  (:import-from #:util/json-mop
+                #:ext-json-serializable-class)
   (:export
    #:defapi
    #:result
@@ -101,8 +103,11 @@ function fn for the purpose of tests."
                       (fn))))))
 
 (defmacro defapi ((name &key uri method intern
-                          (type :v1))
+                          (type :v1)
+                          (use-yason nil)
+                          (listp nil))
                   params &body body)
+  (declare (ignore type))
   (let* ((param-names (loop for param in params
                             if (symbolp param)
                               collect param
@@ -126,9 +131,19 @@ function fn for the purpose of tests."
                        ,@ (loop for name in param-names
                                 appending (list (intern (string name) "KEYWORD") name)))))))
              (setf (hunchentoot:header-out :content-type) "application/json")
-             (json:encode-json-to-string
+             (,(cond
+                 (use-yason
+                  `(lambda (obj)
+                     (with-output-to-string (out)
+                       (yason:encode obj out))))
+                 (t
+                  'json:encode-json-to-string))
               (with-error-handling ()
-                (ret)))))))))
+                (let ((obj (ret)))
+                  (or
+                   obj
+                   (when ,listp
+                     #())))))))))))
 
 (defun write-xml-output (ret)
   (setf (hunchentoot:header-out :content-type) "applicaton/xml")
@@ -137,15 +152,25 @@ function fn for the purpose of tests."
 
 (defclass result ()
   ((success :type boolean
-           :initform t
-           :initarg :success)
-   (response :initarg :response)))
+            :initform t
+            :json-key "success"
+            :json-type :bool
+            :initarg :success)
+   (response :initarg :response
+             :json-key "response"
+             :json-type (or null :any)))
+  (:metaclass ext-json-serializable-class))
 
 (defclass error-result (result)
   ((error :initarg :error
-          :reader error-result-message)
+          :reader error-result-message
+          :json-key "error"
+          :json-type :string)
    (stacktrace :initarg :stacktrace
-               :reader error-result-stacktrace)))
+               :reader error-result-stacktrace
+               :json-key "stacktrace"
+               :json-type (or null :string)))
+  (:metaclass ext-json-serializable-class))
 
 (define-condition api-error (error)
   ((message :initarg :message

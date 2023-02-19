@@ -35,7 +35,8 @@
                  :channel (channel-name (failed-run-channel ret))
                  :commit (failed-run-commit ret)))
 
-(defapi (%put-failed-run :uri "/api/failed-run" :method :put) ()
+(defapi (%put-failed-run :uri "/api/failed-run" :method :put
+         :use-yason t) ()
   (assert (current-company))
   (let ((input (parse-body 'dto:failed-run)))
     (let ((ret
@@ -47,7 +48,9 @@
                            :commit (dto:failed-run-commit input))))
       (to-dto ret))))
 
-(defapi (%list-failed-runs :uri "/api/failed-run" :method :get) ()
+(defapi (%list-failed-runs :uri "/api/failed-run" :method :get
+                           :use-yason t
+                           :listp t) ()
   (let ((runs (failed-runs-for-company (current-company))))
     (loop for run in runs
           collect (to-dto run))))

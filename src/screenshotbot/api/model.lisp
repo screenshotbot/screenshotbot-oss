@@ -65,17 +65,17 @@
 
 (defclass failed-run ()
   ((id :initarg :id
-       :json-type :number
+       :json-type (or null :number)
        :json-key "id")
    (channel :initarg :channel
             :json-key "channel"
-            :json-type :string
+            :json-type (or null :string)
             :reader failed-run-channel)
    (commit :initarg :commit
            :json-key "commit"
-           :json-type :string
+           :json-type (or null :string)
            :reader failed-run-commit))
-  (:metaclass json-serializable-class))
+  (:metaclass ext-json-serializable-class))
 
 (defclass screenshot ()
   ((name :initarg :name
