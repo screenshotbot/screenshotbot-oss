@@ -117,21 +117,21 @@
            :reader run-commit)
    (create-github-issue :initarg :create-github-issue-p
                         :json-key "shouldCreateGithubIssue"
-                        :json-type :boolea
+                        :json-type :bool
                         :reader should-create-github-issue-p)
    (trunkp :initarg :trunkp
            :json-key "isTrunk"
-           :json-type :boolean
+           :json-type :bool
            :reader trunkp)
    (periodic-job-p
     :initarg :periodic-job-p
     :json-key "isPeriodicJob"
-    :json-type :boolean
+    :json-type :bool
     :reader periodic-job-p)
    (cleanp
     :initarg :cleanp
     :json-key "isClean"
-    :json-type :boolean
+    :json-type :bool
     :reader cleanp)
    (pull-request-url :initarg :pull-request
                      :json-key "pullRequestUrl"
