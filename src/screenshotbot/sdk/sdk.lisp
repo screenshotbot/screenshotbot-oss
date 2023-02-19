@@ -223,7 +223,6 @@ error."
                  &key repo
                    channel
                    pull-request
-                   (gitp t)
                    branch
                    (branch-hash nil has-branch-hash-p)
                    (commit nil has-commit-p)
@@ -233,7 +232,6 @@ error."
                    create-github-issue
                    (metadata-provider  (make-instance 'metadata-provider))
                    is-trunk)
-  (declare (ignore gitp))
   (restart-case
    (flet ((bool (x) (if x "true" "false")))
      (let ((records (json:encode-json-to-string
