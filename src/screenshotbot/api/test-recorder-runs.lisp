@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/server
                 #:logged-in-p)
   (:import-from #:screenshotbot/api/recorder-run
+                #:api-run-put
                 #:make-screenshot-for-channel
                 #:*synchronous-promotion*
                 #:*synchronous-promotion*
@@ -37,6 +38,13 @@
                 #:*installation*
                 #:installation
                 #:multi-org-feature)
+  (:import-from #:cl-mock
+                #:answer)
+  (:import-from #:util/object-id
+                #:%make-oid
+                #:make-oid)
+  (:import-from #:screenshotbot/user-api
+                #:current-company)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 
 (util/fiveam:def-suite)
@@ -49,22 +57,23 @@
   (let ((*installation* (make-instance 'my-installation)))
    (with-test-store ()
      (with-fake-request ()
-       (auth:with-sessions ()
-         (with-test-user (:company company
-                          :user user)
-           (let* ((*synchronous-promotion* t)
-                  (api-key (make-instance 'api-key :user user :company company))
-                  (img1 (make-instance 'image
+       (cl-mock:with-mocks ()
+        (auth:with-sessions ()
+          (with-test-user (:company company
+                           :user user)
+            (let* ((*synchronous-promotion* t)
+                   (api-key (make-instance 'api-key :user user :company company))
+                   (img1 (make-instance 'image
                                         :company company
                                         :hash "foo1"))
-                  (img2 (make-instance 'image
+                   (img2 (make-instance 'image
                                         :company company
                                         :hash "foo2")))
-             (setf (current-user) user)
-             (setf (current-company) company)
-             (assert (logged-in-p))
-             (assert (current-user))
-             (&body))))))))
+              (setf (current-user) user)
+              (setf (current-company) company)
+              (assert (logged-in-p))
+              (assert (current-user))
+              (&body)))))))))
 
 (defun serial-recorder-run-post (&rest args)
   (multiple-value-bind (val verify)
@@ -107,3 +116,19 @@
   ;; there was a time when *screenshot-cache* was not being cleaned up
   ;; properly between tests
   (test-adds-channel-mask))
+
+(test recorder-run-put-happy-path
+  (with-fixture state ()
+    (let ((dto (make-instance 'dto:run
+                              :commit-hash "bleh"
+                              :channel "blah"
+                              :screenshots (list
+                                            (make-instance 'dto:screenshot
+                                                           :image-id (oid img1)
+                                                           :name "bleh")))))
+      (answer (hunchentoot:raw-post-data :force-text t)
+        (with-output-to-string (out)
+          (yason:encode dto out)))
+      (answer (current-company)
+        company)
+     (api-run-put))))

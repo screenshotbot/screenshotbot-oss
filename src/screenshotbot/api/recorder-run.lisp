@@ -109,9 +109,11 @@
 (defapi (api-run-put :uri "/api/run" :method :put :use-yason t) ()
   (let ((body (hunchentoot:raw-post-data :force-text t)))
     (let ((dto (json-mop:json-to-clos body 'dto:run)))
-      (let ((run (%put-run (current-company) dto)))
+      (destructuring-bind (resp run channel)
+          (%put-run (current-company) dto)
+        (declare (ignore channel))
         (after-run-created run)
-        (run-to-dto run)))))
+        resp))))
 
 (defun after-run-created (recorder-run)
   (flet ((promotion ()

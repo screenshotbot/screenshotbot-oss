@@ -120,21 +120,25 @@
            :reader run-commit)
    (create-github-issue :initarg :create-github-issue-p
                         :json-key "shouldCreateGithubIssue"
+                        :initform nil
                         :json-type :bool
                         :reader should-create-github-issue-p)
    (trunkp :initarg :trunkp
            :json-key "isTrunk"
            :json-type :bool
+           :initform nil
            :reader trunkp)
    (periodic-job-p
     :initarg :periodic-job-p
     :json-key "isPeriodicJob"
     :json-type :bool
+    :initform nil
     :reader periodic-job-p)
    (cleanp
     :initarg :cleanp
     :json-key "isClean"
     :json-type :bool
+    :initform nil
     :reader cleanp)
    (pull-request-url :initarg :pull-request
                      :json-key "pullRequestUrl"
@@ -164,6 +168,7 @@
    (main-branch :initarg :main-branch
                 :json-key "mainBranch"
                 :json-type (or null :string)
+                :initform nil
                 :reader main-branch)
    (phabrictor-diff-id :initarg :phabricator-diff-id
                        :json-key "phabricatorDiff"
