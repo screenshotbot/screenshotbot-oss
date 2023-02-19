@@ -23,8 +23,7 @@
   (:export
    #:with-version-check
    #:*client-version*
-   #:*remote-version*
-   #:remote-supports-put-run))
+   #:*remote-version*))
 (in-package :screenshotbot/sdk/version-check)
 
 (defparameter *client-version* (asdf:system-version
@@ -38,9 +37,6 @@
 wasn't great for security since it might mean the plain-text secret
 might get logged in the webserver logs."
   (>= *remote-version* 2))
-
-(defun remote-supports-put-run ()
-  (>= *remote-version* 4))
 
 (defun get-version (hostname)
   (log:info "Getting remote version")
