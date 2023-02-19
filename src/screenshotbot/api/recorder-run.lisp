@@ -63,12 +63,12 @@
                  (or (caddr x) 'identity))))
        (nil-if-empty (x) (if (str:emptyp x) nil x)))
  (defparameter *run-meta-fields* (mapcar #'fix `((:pull-request nil ,#'nil-if-empty)
-                                                 :branch-hash
+                                                 (:branch-hash :main-branch-hash)
                                                  :build-url
                                                  :merge-base
                                                  :override-commit-hash
                                                  (:commit :commit-hash ,#'nil-if-empty)
-                                                 (:branch nil ,#'nil-if-empty)
+                                                 (:main-branch nil ,#'nil-if-empty)
                                                  (:phabricator-diff-id nil ,#'nil-if-empty)
                                                  (:gitlab-merge-request-iid nil ,#'nil-if-empty)
                                                  (:github-repo nil ,#'nil-if-empty)))))
@@ -146,36 +146,56 @@
            (ignore pull-request))
   (apply
    'values
-   (flet ((nil-if-empty (x) (if (str:emptyp x) nil x)))
-    (let* ((channel (find-or-create-channel company channel))
-           (run (apply 'make-instance 'recorder-run
-                               :channel channel
-                               :company company
-                               :create-github-issue-p create-github-issue-p
-                               :screenshots (screenshot-records-api-to-internal
-                                             company
-                                             channel
-                                             screenshot-records)
-                               :periodic-job-p periodic-job-p
-                               :cleanp is-clean
-                               :trunkp is-trunk
-                               (loop for field in *run-meta-fields*
-                                     appending
-                                     (destructuring-bind (arg field-name fn) field
-                                      (list field-name
-                                            (funcall fn (getf args arg))))))))
+   (let ((dto-run (apply 'make-instance 'dto:run
+                         :channel channel
+                         :create-github-issue-p create-github-issue-p
+                         :screenshots screenshot-records
+                         :periodic-job-p periodic-job-p
+                         :cleanp is-clean
+                         :trunkp is-trunk
+                         (loop for field in *run-meta-fields*
+                               appending
+                               (destructuring-bind (arg field-name fn) field
+                                 (list field-name
+                                       (funcall fn (getf args arg))))))))
+     (%put-run company dto-run))))
 
-      (with-transaction ()
-        (setf (channel-branch channel) branch))
-      (with-transaction ()
-        (setf (github-repo channel)
-              (nil-if-empty github-repo)))
-      (prepare-recorder-run :run run)
-      (list
-       (make-instance 'create-run-response
-                       :id (store-object-id run))
-       run
-       channel)))))
+(defmethod %put-run (company (run dto:run))
+  (let* ((channel (find-or-create-channel company (dto:run-channel run)))
+         (screenshots (screenshot-records-api-to-internal
+                       company
+                       channel
+                       (dto:run-screenshots run)))
+         (recorder-run (make-instance
+                        'recorder-run
+                        :company company
+                        :channel channel
+                        :screenshots screenshots
+                        :commit-hash (dto:run-commit run)
+                        :create-github-issue-p (dto:should-create-github-issue-p run)
+                        :trunkp (dto:trunkp run)
+                        :periodic-job-p (dto:periodic-job-p run)
+                        :cleanp (dto:cleanp run)
+                        :pull-request (dto:pull-request-url run)
+                        :branch (dto:main-branch-hash run)
+                        :override-commit-hash (dto:override-commit-hash run)
+                        :build-url (dto:build-url run)
+                        :merge-base (dto:merge-base run)
+                        :phabricator-diff-id (dto:phabricator-diff-id run)
+                        :gitlab-merge-request-iid (dto:gitlab-merge-request-iid run)
+                        :github-repo (dto:run-repo run))))
+
+    (with-transaction ()
+      (setf (channel-branch channel) (dto:main-branch run)))
+    (with-transaction ()
+      (setf (github-repo channel)
+            (dto:run-repo run)))
+    (prepare-recorder-run :run recorder-run)
+    (list
+     (make-instance 'create-run-response
+                    :id (store-object-id recorder-run))
+     recorder-run
+     channel)))
 
 (defun prepare-recorder-run (&key (run (error "must provide run")))
   "Common preparation steps for a recorder-run, even before the

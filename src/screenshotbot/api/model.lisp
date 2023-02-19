@@ -38,7 +38,9 @@
              #:main-branch
              #:gitlab-merge-request-iid
              #:phabricator-diff-id
-             #:run-repo))
+             #:run-repo
+             #:build-url
+             #:override-commit-hash))
 
 (in-package :screenshotbot/api/model)
 
@@ -107,11 +109,11 @@
                 :json-key "screenshots"
                 :json-type (:list screenshot)
                 :reader run-screenshots)
-   (commit :initarg :commit
+   (commit :initarg :commit-hash
            :json-key "commit"
            :json-type :string
            :reader run-commit)
-   (create-github-issue :initarg :create-github-issue
+   (create-github-issue :initarg :create-github-issue-p
                         :json-key "shouldCreateGithubIssue"
                         :json-type :boolea
                         :reader should-create-github-issue-p)
@@ -134,9 +136,17 @@
                      :json-type :string
                      :reader pull-request-url)
    (main-branch-hash :initarg :main-branch-hash
-                    :json-key "mainBranchCommit"
-                    :json-type :string
+                     :json-key "mainBranchCommit"
+                     :json-type :string
                      :reader main-branch-hash)
+   (override-commit-hash :initarg :override-commit-hash
+                         :json-key "overrideCommitHash"
+                         :json-type :string
+                         :reader override-commit-hash)
+   (build-url :initarg :build-url
+              :json-key "buildUrl"
+              :json-type :string
+              :reader build-url)
    (merge-base :initarg :merge-base
                :json-key "mergeBase"
                :json-type :string
@@ -153,7 +163,7 @@
                              :json-key "gitlabMergeRequestIID"
                              :json-type :number
                              :reader gitlab-merge-request-iid)
-   (repo :initarg :repo
+   (repo :initarg :github-repo
          :json-key "repo"
          :json-type :string
          ;; Internally this is github-repo :/
