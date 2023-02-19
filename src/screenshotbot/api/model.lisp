@@ -66,14 +66,17 @@
 (defclass failed-run ()
   ((id :initarg :id
        :json-type (or null :number)
+       :initform nil
        :json-key "id")
    (channel :initarg :channel
             :json-key "channel"
             :json-type (or null :string)
+            :initform nil
             :reader failed-run-channel)
    (commit :initarg :commit
            :json-key "commit"
            :json-type (or null :string)
+           :initform nil
            :reader failed-run-commit))
   (:metaclass ext-json-serializable-class))
 
@@ -136,22 +139,27 @@
    (pull-request-url :initarg :pull-request
                      :json-key "pullRequestUrl"
                      :json-type (or null :string)
+                     :initform nil
                      :reader pull-request-url)
    (main-branch-hash :initarg :main-branch-hash
                      :json-key "mainBranchCommit"
                      :json-type (or null :string)
+                     :initform nil
                      :reader main-branch-hash)
    (override-commit-hash :initarg :override-commit-hash
                          :json-key "overrideCommitHash"
                          :json-type (or null :string)
+                         :initform nil
                          :reader override-commit-hash)
    (build-url :initarg :build-url
               :json-key "buildUrl"
               :json-type (or null :string)
+              :initform nil
               :reader build-url)
    (merge-base :initarg :merge-base
                :json-key "mergeBase"
                :json-type (or null :string)
+               :initform nil
                :reader merge-base)
    (main-branch :initarg :main-branch
                 :json-key "mainBranch"
@@ -160,14 +168,17 @@
    (phabrictor-diff-id :initarg :phabricator-diff-id
                        :json-key "phabricatorDiff"
                        :json-type (or null :number)
+                       :initform nil
                        :reader phabricator-diff-id)
    (gitlab-merge-request-iid :initarg :gitlab-merge-request-iid
                              :json-key "gitlabMergeRequestIID"
                              :json-type (or null :number)
+                             :initform nil
                              :reader gitlab-merge-request-iid)
    (repo :initarg :github-repo
          :json-key "repo"
          :json-type (or null :string)
+         :initform nil
          ;; Internally this is github-repo :/
          :reader run-repo))
   (:metaclass ext-json-serializable-class))
