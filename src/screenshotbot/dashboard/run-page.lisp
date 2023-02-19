@@ -284,7 +284,6 @@
                              (lambda ()
                                (log:info "Starting re-run promotion thread")
                                (start-promotion-thread
-                                (recorder-run-channel run)
                                 run)))
                             (hex:safe-redirect 'run-page
                                                 :id (oid run))))
