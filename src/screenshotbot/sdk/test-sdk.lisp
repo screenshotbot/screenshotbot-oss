@@ -9,6 +9,8 @@
    :alexandria
         :fiveam)
   (:import-from #:screenshotbot/sdk/sdk
+                #:make-run
+                #:request
                 #:validate-pull-request
                 #:backoff
                 #:parse-environment
@@ -30,6 +32,15 @@
                 #:md5-file)
   (:import-from #:util/testing
                 #:with-local-acceptor)
+  (:import-from #:cl-mock
+                #:answer
+                #:if-called)
+  (:import-from #:screenshotbot/sdk/git
+                #:cleanp
+                #:repo-link
+                #:merge-base
+                #:current-commit
+                #:rev-parse)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:a #:alexandria)))
 (in-package :screenshotbot/sdk/test-sdk)
@@ -168,3 +179,20 @@
         (%run "git@github.com:trhq/fast-example.git"))
       (is (equal nil (%run "git@github.com:tdrhq/fast-example.git")))
       (is (equal "https://github.com/tdrhq/fast-example/pulls/1" (%run "https://github.com/tdrhq/fast-example/pulls/1"))))))
+
+
+(test make-run-happy-path
+  "Does not test much, sadly"
+  (with-fixture state ()
+    (if-called 'request
+               (lambda (uri &key parameterS)
+                 nil))
+    (let ((repo :dummy-repo))
+      (answer (rev-parse repo "main") "abcd")
+      (answer (current-commit repo) "bdfd")
+      (answer (merge-base "abcd" "bdfd" "abcd"))
+      (answer (repo-link repo) "https://github.com/tdrhq/fast-example")
+      (answer (cleanp repo) t)
+      (make-run `(((:id . "foo")))
+                :branch "main"
+                :repo repo))))
