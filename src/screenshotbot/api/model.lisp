@@ -8,6 +8,8 @@
             (:use #:cl)
             (:import-from #:json-mop
                           #:json-serializable-class)
+            (:import-from #:util/json-mop
+                          #:ext-json-serializable-class)
             (:local-nicknames (#:a #:alexandria))
             (:export
              #:encode-json
@@ -86,15 +88,15 @@
              :reader screenshot-image-id)
    (lang :initarg :lang
          :initform nil
-         :json-type :string
+         :json-type (or null :string)
          :json-key "lang"
          :reader screenshot-lang)
    (device :initarg :device
            :initform nil
-           :json-type :string
+           :json-type (or null :string)
            :json-key "device"
            :reader screenshot-device))
-  (:metaclass json-serializable-class))
+  (:metaclass ext-json-serializable-class))
 
 (defclass run ()
   ((id :initarg :id

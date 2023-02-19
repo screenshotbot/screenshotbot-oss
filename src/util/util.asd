@@ -314,6 +314,11 @@
                :bordeaux-threads)
   :components ((:file "logger")))
 
+(defsystem :util/json-mop
+  :depends-on (:json-mop)
+  :serial t
+  :components ((:file "json-mop")))
+
 (defsystem :util/tests
   :depends-on (:util
                :util/hash-lock
@@ -328,6 +333,7 @@
                :util/disk-size
                :util/phabricator
                :util/logger
+               :util/json-mop
                :util/request
                :util/fiveam)
   :serial t
@@ -342,6 +348,7 @@
                              (:file "test-request")
                              (:file "test-store-version")
                              (:file "test-store")
+                             (:file "test-json-mop")
                              (:file "test-migrations")
                              (:file "test-lparallel")
                              (:file "test-hash-lock")

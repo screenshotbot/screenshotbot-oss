@@ -10,8 +10,11 @@
   (:import-from #:fiveam-matchers/lists
                 #:contains)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
                 #:has-typep
-                #:assert-that))
+                #:assert-that)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string))
 (in-package :screenshotbot/api/test-model)
 
 (util/fiveam:def-suite)
@@ -48,3 +51,14 @@
     "[{\"name\":\"bleh\"}] "
     'screenshot-list)
    (contains (has-typep 'screenshot))))
+
+
+(test can-encode-null-screenshot
+  (let ((screenshot (make-instance 'screenshot
+                                   :name "foo"
+                                   :image-id "bleh"
+                                   :lang nil)))
+    (let ((str (with-output-to-string (out)
+                 (yason:encode screenshot out))))
+      (assert-that str
+                   (contains-string "\"lang\":null")))))

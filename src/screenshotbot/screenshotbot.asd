@@ -527,7 +527,8 @@
 
 (defsystem :screenshotbot/api-model
   :serial t
-  :depends-on (:json-mop)
+  :depends-on (:json-mop
+               :util/json-mop)
   :components ((:module "api"
                 :components ((:file "model")))))
 
