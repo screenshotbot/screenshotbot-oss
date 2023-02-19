@@ -193,6 +193,7 @@
       (answer (merge-base "abcd" "bdfd" "abcd"))
       (answer (repo-link repo) "https://github.com/tdrhq/fast-example")
       (answer (cleanp repo) t)
-      (make-run `(((:id . "foo")))
-                :branch "main"
-                :repo repo))))
+      (finishes
+       (make-run `(((:id . "foo")))
+                 :branch "main"
+                 :repo repo)))))

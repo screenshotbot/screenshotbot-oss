@@ -234,33 +234,50 @@ error."
                    is-trunk)
   (restart-case
    (flet ((bool (x) (if x "true" "false")))
-     (let ((records (json:encode-json-to-string
-                     (build-screenshot-objects images metadata-provider))))
-       (log:debug "records: ~s" records)
+     (let ((screenshots (build-screenshot-objects images metadata-provider)))
+       ;;(log:debug "records: ~s" screenshots)
        (let* ((branch-hash (if has-branch-hash-p branch-hash (rev-parse repo branch)))
               (commit (if has-commit-p commit (current-commit repo)))
               (merge-base (if has-merge-base-p merge-base (merge-base repo branch-hash commit)))
               (github-repo (if has-github-repo-p
                                github-repo
                                (repo-link repo)))
+              (run (make-instance 'dto:run
+                                  :channel channel
+                                  :screenshots screenshots
+                                  :main-branch branch
+                                  :main-branch-hash branch-hash
+                                  :github-repo github-repo
+                                  :merge-base merge-base
+                                  :periodic-job-p periodic-job-p
+                                  :build-url *build-url*
+                                  :pull-request pull-request
+                                  :commit-hash commit
+                                  :override-commit-hash flags:*override-commit-hash*
+                                  :create-github-issue-p create-github-issue
+                                  :cleanp (cleanp repo)
+                                  :gitlab-merge-request-iid *gitlab-merge-request-iid*
+                                  :phabricator-diff-id *phabricator-diff-id*
+                                  :trunkp is-trunk))
               (response (request "/api/run"
-                                :parameters `(("channel" . ,channel)
-                                              ("screenshot-records" . ,records)
-                                              ("branch" . ,branch)
-                                              ("branch-hash" . ,branch-hash)
-                                              ("github-repo" . ,github-repo)
-                                              ("merge-base" . ,merge-base)
-                                              ("periodic-job-p" . ,(bool periodic-job-p))
-                                              ("build-url" . ,*build-url*)
-                                              ("pull-request" . ,pull-request)
-                                              ("commit" . ,commit)
-                                              ("override-commit-hash" . ,flags:*override-commit-hash*)
-                                              ("create-github-issue" . ,(bool create-github-issue))
-                                              ("is-clean" . ,(bool (cleanp repo)))
-                                              ("gitlab-merge-request-iid" .
-                                                                          ,*gitlab-merge-request-iid*)
-                                              ("phabricator-diff-id" . ,*phabricator-diff-id*)
-                                              ("is-trunk" . ,(bool is-trunk))))))
+                                 :parameters `(("channel" . ,(dto:run-channel run))
+                                               ("screenshot-records" . ,(json:encode-json-to-string
+                                                                         (dto:run-screenshots run)))
+                                               ("branch" . ,(dto:main-branch run))
+                                               ("branch-hash" . ,(dto:main-branch-hash run))
+                                               ("github-repo" . ,(dto:run-repo run))
+                                               ("merge-base" . ,(dto:merge-base run))
+                                               ("periodic-job-p" . ,(bool (dto:periodic-job-p run)))
+                                               ("build-url" . ,(dto:build-url run))
+                                               ("pull-request" . ,(dto:pull-request-url run))
+                                               ("commit" . ,(dto:run-commit run))
+                                               ("override-commit-hash" . ,(dto:override-commit-hash run))
+                                               ("create-github-issue" . ,(bool (dto:should-create-github-issue-p run)))
+                                               ("is-clean" . ,(bool (cleanp repo)))
+                                               ("gitlab-merge-request-iid" .
+                                                                           ,(dto:gitlab-merge-request-iid run))
+                                               ("phabricator-diff-id" . ,(dto:phabricator-diff-id run))
+                                               ("is-trunk" . ,(bool (dto:trunkp run)))))))
          ;; what to do with response?
          response)))
     (retry-run ()
