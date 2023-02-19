@@ -107,7 +107,7 @@
                  :id (oid run)))
 
 (defapi (api-run-put :uri "/api/run" :method :put :use-yason t) ()
-  (let ((body (hunchentoot:raw-post-data :want-string t)))
+  (let ((body (hunchentoot:raw-post-data :force-text t)))
     (let ((dto (json-mop:json-to-clos body 'dto:run)))
       (let ((run (%put-run (current-company) dto)))
         (after-run-created run)
