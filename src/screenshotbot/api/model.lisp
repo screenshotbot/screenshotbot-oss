@@ -117,6 +117,7 @@
    (commit :initarg :commit-hash
            :json-key "commit"
            :json-type (or null :string)
+           :initform nil
            :reader run-commit)
    (create-github-issue :initarg :create-github-issue-p
                         :json-key "shouldCreateGithubIssue"

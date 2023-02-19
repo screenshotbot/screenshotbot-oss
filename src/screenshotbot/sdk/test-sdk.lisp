@@ -42,7 +42,8 @@
                 #:current-commit
                 #:rev-parse)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
-                    (#:a #:alexandria)))
+                    (#:a #:alexandria)
+                    (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/test-sdk)
 
 (util/fiveam:def-suite)
@@ -185,8 +186,8 @@
   "Does not test much, sadly"
   (with-fixture state ()
     (if-called 'request
-               (lambda (uri &key parameterS)
-                 nil))
+               (lambda (uri &key method content)
+                 (is-true (typep content 'dto:run))))
     (let ((repo :dummy-repo))
       (answer (rev-parse repo "main") "abcd")
       (answer (current-commit repo) "bdfd")
@@ -194,6 +195,7 @@
       (answer (repo-link repo) "https://github.com/tdrhq/fast-example")
       (answer (cleanp repo) t)
       (finishes
-       (make-run `(((:id . "foo")))
+        (make-run `(((:id . "foo")
+                     (:name . "car")))
                  :branch "main"
                  :repo repo)))))
