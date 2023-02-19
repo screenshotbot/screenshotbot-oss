@@ -102,6 +102,17 @@
       (after-run-created recorder-run)
       resp)))
 
+(defun run-to-dto (run)
+  (make-instance 'dto:run
+                 :id (oid run)))
+
+(defapi (api-run-put :uri "/api/run" :method :put) ()
+  (let ((body (hunchentoot:raw-post-data :want-string t)))
+    (let ((dto (json-mop:json-to-clos body 'dto:run)))
+      (let ((run (%put-run (current-company) dto)))
+        (after-run-created run)
+        (run-to-dto run)))))
+
 (defun after-run-created (recorder-run)
   (flet ((promotion ()
            (declare (optimize (debug 3) (speed 0)))
