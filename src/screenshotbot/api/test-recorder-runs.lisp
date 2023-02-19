@@ -45,6 +45,8 @@
                 #:make-oid)
   (:import-from #:screenshotbot/user-api
                 #:current-company)
+  (:import-from #:screenshotbot/model/image
+                #:make-image)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 
 (util/fiveam:def-suite)
@@ -52,6 +54,10 @@
 (defclass my-installation (multi-org-feature
                            installation)
   ())
+
+(defun fix (name)
+  (asdf:system-relative-pathname :screenshotbot
+                                 (path:catfile "fixture/" name)))
 
 (def-fixture state ()
   (let ((*installation* (make-instance 'my-installation)))
@@ -63,12 +69,8 @@
                            :user user)
             (let* ((*synchronous-promotion* t)
                    (api-key (make-instance 'api-key :user user :company company))
-                   (img1 (make-instance 'image
-                                        :company company
-                                        :hash "foo1"))
-                   (img2 (make-instance 'image
-                                        :company company
-                                        :hash "foo2")))
+                   (img1 (make-image :company company :pathname (fix "rose.png")))
+                   (img2 (make-image :company company :pathname (fix "wizard.png"))))
               (setf (current-user) user)
               (setf (current-company) company)
               (assert (logged-in-p))
