@@ -99,6 +99,15 @@
 
 (defvar *logs* nil)
 
+(defun print-logs (&key (substring ""))
+  (loop for log in *logs*
+        if (str:containsp substring (check-title (second log)))
+          do
+             (format t "~a: ~a (at ~a)~%"
+                     (recorder-run-company (first log))
+                     (check-title (second log))
+                     (created-at (first log)))))
+
 (defun format-updated-summary (state user)
   (let ((summary
           (str:downcase (string state))))
