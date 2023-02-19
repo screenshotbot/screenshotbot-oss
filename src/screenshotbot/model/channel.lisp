@@ -180,6 +180,9 @@
 (defmethod (setf active-run) ((run recorder-run) (channel channel) (branch string))
   (%set-active-run channel branch run))
 
+(defmethod (setf active-run) ((run recorder-run) (channel channel) (branch null))
+  (values))
+
 (defmethod active-run ((channel channel) branch)
   (assoc-value (all-active-runs channel)
                branch :test 'equal))
