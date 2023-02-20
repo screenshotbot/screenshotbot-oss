@@ -108,6 +108,7 @@
      (:rejected "fail")
      (:success "pass")
      (:failed "fail")
+     (:pending "work")
      (:action_required "fail")
      (:action-required "fail"))
    :name (channel-name (recorder-run-channel run))
