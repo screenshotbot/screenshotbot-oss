@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/factory
+(uiop:define-package :screenshotbot/factory
     (:use #:cl
           #:alexandria
           #:screenshotbot/template
@@ -18,6 +18,8 @@
                 #:github-repo)
   (:import-from #:util/object-id
                 #:make-oid)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:compare-threshold)
   (:export #:test-user
            #:test-company
            #:test-screenshot
@@ -27,6 +29,7 @@
            #:test-api-key
            #:*user*
            #:*company*))
+(in-package :screenshotbot/factory)
 
 (defclass test-user ()
   ((api-keys :initarg :api-keys
@@ -68,7 +71,9 @@
            :initarg :commit
            :accessor recorder-run-commit)
    (%created-at :initform (get-universal-time)
-                :accessor %created-at)))
+                :accessor %created-at)
+   (threshold :initform nil
+              :accessor compare-threshold)))
 
 
 (defclass test-image ()

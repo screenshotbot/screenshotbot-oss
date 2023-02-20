@@ -75,7 +75,8 @@
    #:override-commit-hash
    #:unpromote-run
    #:pull-request-id
-   #:compared-against))
+   #:compared-against
+   #:compare-threshold))
 (in-package :screenshotbot/model/recorder-run)
 
 (with-class-validation
@@ -181,6 +182,12 @@
      :accessor override-commit-hash
      :documentation "Override the pull request commit hash that will be
     used to update the Pull Request (either GitHub or Bitbucket)")
+    (%compare-threshold
+     :initform nil
+     :initarg :compare-threshold
+     :accessor compare-threshold
+     :documentation "The comparison threshold in terms of fraction of pixels changed. If
+NIL or 0, this will use exact pixel comparisons.")
     (%warnings
      :initform nil
      :accessor recorder-run-warnings

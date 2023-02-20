@@ -197,7 +197,8 @@
                         :merge-base (dto:merge-base run)
                         :phabricator-diff-id (dto:phabricator-diff-id run)
                         :gitlab-merge-request-iid (dto:gitlab-merge-request-iid run)
-                        :github-repo (dto:run-repo run))))
+                        :github-repo (dto:run-repo run)
+                        :compare-threshold (dto:compare-threshold run))))
 
     (with-transaction ()
       (setf (channel-branch channel) (dto:main-branch run)))

@@ -42,7 +42,8 @@
              #:phabricator-diff-id
              #:run-repo
              #:build-url
-             #:override-commit-hash))
+             #:override-commit-hash
+             #:compare-threshold))
 
 (in-package :screenshotbot/api/model)
 
@@ -186,7 +187,12 @@
          :json-type (or null :string)
          :initform nil
          ;; Internally this is github-repo :/
-         :reader run-repo))
+         :reader run-repo)
+   (compare-threshold :initarg :compare-threshold
+                      :json-key "compareThreshold"
+                      :json-type (or null :number)
+                      :initform nil
+                      :reader compare-threshold))
   (:metaclass ext-json-serializable-class))
 
 (defmethod json-mop:json-to-clos ((items vector) (class (eql 'screenshot-list))

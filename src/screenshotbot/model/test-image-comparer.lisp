@@ -18,9 +18,12 @@
                 #:pixel-set-color
                 #:new-pixel-wand)
   (:import-from #:screenshotbot/model/image
+                #:base-image-comparer
                 #:make-image
                 #:image=)
   (:import-from #:screenshotbot/model/image-comparer
+                #:compare-threshold
+                #:make-image-comparer
                 #:threshold-comparer)
   (:import-from #:util/store
                 #:with-test-store)
@@ -30,7 +33,13 @@
                 #:*magick-kernel*
                 #:with-magick-kernel)
   (:import-from #:util/testing
-                #:with-global-binding))
+                #:with-global-binding)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run)
+  (:import-from #:fiveam-matchers/core
+                #:is-equal-to
+                #:has-typep
+                #:assert-that))
 (in-package :screenshotbot/model/test-image-comparer)
 
 (util/fiveam:def-suite)
@@ -131,3 +140,27 @@
           (make-image :pathname f1)
           (make-image :pathname f2)
           nil))))))
+
+(test make-image-comparer-when-no-threshold
+  (with-fixture state ()
+    (assert-that
+     (make-image-comparer (make-instance 'recorder-run))
+     (has-typep 'base-image-comparer))))
+
+(test make-image-comparer-when-zero-threshold
+  (with-fixture state ()
+    (assert-that
+     (make-image-comparer (make-instance 'recorder-run
+                                         :compare-threshold 0.0))
+     (has-typep 'base-image-comparer))))
+
+(test make-image-comparer-when-non-zero-threshold
+  (with-fixture state ()
+    (let ((comparer (make-image-comparer (make-instance 'recorder-run
+                                         :compare-threshold 0.001))))
+      (assert-that
+       comparer
+       (has-typep 'threshold-comparer))
+      (assert-that
+       (compare-threshold comparer)
+       (is-equal-to 0.001)))))

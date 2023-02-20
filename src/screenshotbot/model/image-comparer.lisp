@@ -27,16 +27,26 @@
   (:import-from #:lparallel
                 #:future
                 #:force)
+  (:local-nicknames (#:recorder-run #:screenshotbot/model/recorder-run))
   (:export
    #:make-image-comparer))
 (in-package :screenshotbot/model/image-comparer)
 
-(defmethod make-image-comparer (run)
-  (make-instance 'base-image-comparer))
-
 (defclass threshold-comparer (base-image-comparer)
   ((threshold :initarg :threshold
               :reader compare-threshold)))
+
+(defmethod make-image-comparer (run)
+  (let ((threshold (recorder-run:compare-threshold run)))
+    (cond
+      ((and threshold
+            (numberp threshold)
+            (> threshold 0))
+       (make-instance 'threshold-comparer
+                      :threshold threshold))
+      (t
+       (make-instance 'base-image-comparer)))))
+
 
 (defmethod image= ((self threshold-comparer)
                    image1
