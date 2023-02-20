@@ -41,11 +41,12 @@
                     (make-instance 'test-recorder-run
                                     :commit "three"))))
     (lambda ()
-      (values
-       (list (pop screenshots)
-             (pop runs)
-             (car screenshots))
-       screenshots))))
+      (when screenshots
+        (values
+         (list (pop screenshots)
+               (pop runs)
+               (car screenshots))
+         screenshots)))))
 
 (test simple-render-history
   (let ((ctr 0))

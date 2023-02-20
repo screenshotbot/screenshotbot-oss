@@ -102,6 +102,7 @@
       (lambda (args)
         (destructuring-bind (run screenshot previous-screenshot)
             args
+          (assert run)
           (render-single-screenshot screenshot run
                                     :previous-screenshot previous-screenshot
                                     :channel channel)))
