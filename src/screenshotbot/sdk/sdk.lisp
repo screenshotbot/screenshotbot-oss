@@ -41,6 +41,7 @@
   (:import-from #:util/request
                 #:http-request)
   (:import-from #:util/misc
+                #:?.
                 #:or-setf)
   (:import-from #:screenshotbot/sdk/version-check
                 #:remote-supports-put-run
@@ -260,7 +261,7 @@ error."
                                 :create-github-issue-p create-github-issue
                                 :cleanp (cleanp repo)
                                 :gitlab-merge-request-iid *gitlab-merge-request-iid*
-                                :phabricator-diff-id *phabricator-diff-id*
+                                :phabricator-diff-id (?. parse-integer *phabricator-diff-id*)
                                 :trunkp is-trunk)))
        (if (remote-supports-put-run)
            (put-run run)
