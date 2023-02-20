@@ -49,6 +49,8 @@
                 #:def-health-check)
   (:import-from #:screenshotbot/api/model
                 #:encode-json)
+  (:import-from #:util/json-mop
+                #:json-mop-to-string)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:dto #:screenshotbot/api/model))
   (:export
@@ -145,9 +147,8 @@
     (error "Can't use :get with parameters"))
   (let ((json (%request api :method method
                             :parameters parameters
-                            :content (when (eql :put method)
-                                       (with-output-to-string (out)
-                                        (yason:encode content out))))))
+                            :content (json-mop-to-string
+                                       content))))
     (handler-case
         (let ((result (json:decode-json-from-string json)))
           (ensure-api-success result))

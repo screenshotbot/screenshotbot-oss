@@ -9,7 +9,9 @@
   (:import-from #:json-mop
                 #:to-lisp-value
                 #:to-json-value
-                #:json-type))
+                #:json-type)
+  (:export
+   #:json-mop-to-string))
 (in-package :util/json-mop)
 
 (defclass ext-json-serializable-class (json-mop:json-serializable-class)
@@ -59,3 +61,8 @@
 (defmethod to-lisp-value (value
                           (type nullable))
   (to-lisp-value value (nullable-type type)))
+
+
+(defun json-mop-to-string (obj)
+  (with-output-to-string (out)
+    (yason:encode obj out)))

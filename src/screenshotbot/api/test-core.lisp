@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/api/core
+                #:result
                 #:api-error
                 #:error-result-message
                 #:error-result-stacktrace
@@ -19,6 +20,8 @@
                 #:described-as)
   (:import-from #:fiveam-matchers/strings
                 #:contains-string)
+  (:import-from #:util/json-mop
+                #:json-mop-to-string)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/api/test-core)
 
@@ -105,3 +108,8 @@
                      (described-as
                          "capture-exception should not be called"
                        (equal-to nil)))))))
+
+
+(test api-result-can-be-encoded
+  (assert-that (json-mop-to-string (make-instance 'result :success t))
+               (contains-string "success")))

@@ -20,6 +20,7 @@
   (:import-from #:hunchentoot-extensions
                 #:make-name)
   (:import-from #:util/json-mop
+                #:json-mop-to-string
                 #:ext-json-serializable-class)
   (:export
    #:defapi
@@ -133,9 +134,7 @@ function fn for the purpose of tests."
              (setf (hunchentoot:header-out :content-type) "application/json")
              (,(cond
                  (use-yason
-                  `(lambda (obj)
-                     (with-output-to-string (out)
-                       (yason:encode obj out))))
+                  'json-mop-to-string)
                  (t
                   'json:encode-json-to-string))
               (with-error-handling ()
