@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/server
                 #:logged-in-p)
   (:import-from #:screenshotbot/api/recorder-run
+                #:warmup-image-caches
                 #:api-run-put
                 #:make-screenshot-for-channel
                 #:*synchronous-promotion*
@@ -39,6 +40,7 @@
                 #:installation
                 #:multi-org-feature)
   (:import-from #:cl-mock
+                #:if-called
                 #:answer)
   (:import-from #:util/object-id
                 #:%make-oid
@@ -128,9 +130,12 @@
                                             (make-instance 'dto:screenshot
                                                            :image-id (oid img1)
                                                            :name "bleh")))))
+      (if-called 'warmup-image-caches
+                 (lambda (run)))
       (answer (hunchentoot:raw-post-data :force-text t)
         (with-output-to-string (out)
           (yason:encode dto out)))
       (answer (current-company)
         company)
-     (api-run-put))))
+      (finishes
+       (api-run-put)))))
