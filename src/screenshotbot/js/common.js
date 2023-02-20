@@ -25,7 +25,7 @@ function callLiveOnAttach(nodes) {
 
 function prepareReportJs () {
     setupLiveOnAttach(".change-image-left", function () {
-        console.log("Setting up mouseover", this);
+        //console.log("Setting up mouseover", this);
         var img = $(this);
         var oldSrc = $(this).attr("src");
         var newImg = $(this).closest(".change-image-row")
@@ -36,9 +36,7 @@ function prepareReportJs () {
             return $(img).closest("picture").find("source[type='image/webp'");
         }
 
-        console.log("first");
         var oldWebpSrcset = findSourceTag(this).attr("srcset");
-        console.log("second");
         var newWebpSrcset = findSourceTag(newImg).attr("srcset");
 
         var isTouching = false;
@@ -567,7 +565,7 @@ function prepareReportJs () {
         ".image-comparison-wrapper",
         function () {
             var img = $(this);
-            console.log("Setting up image comparison on: ", img);
+            //console.log("Setting up image comparison on: ", img);
             setupImageComparison.call(img);
         });
 }

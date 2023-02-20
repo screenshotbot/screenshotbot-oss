@@ -285,8 +285,10 @@ setupLiveOnAttach(".load-more-button", function () {
                 callLiveOnAttach(children);
                 var bb = button.closest(".baguetteBox");
                 button.parent().remove();
-                baguetteBox.destroy("#" + bb.attr("id"));
-                prepareBaguetteBox(bb);
+                if (bb.length > 0) {
+                    baguetteBox.destroy("#" + bb.attr("id"));
+                    prepareBaguetteBox(bb);
+                }
             },
             error: function(data) {
                 setDisabled(false);
