@@ -224,6 +224,18 @@ error."
                          :lang (screenshot-lang metadata-provider name)
                          :device (screenshot-device metadata-provider name)))))
 
+(defun safe-parse-int (str)
+  (cond
+    ((not str)
+     nil)
+    ((stringp str)
+     (unless (str:emptyp str)
+       (parse-integer str :junk-allowed t)))
+    ((numberp str)
+     str)
+    (t
+     (error "Not a type that can be convered to integer: ~s" str))))
+
 (defun make-run (images &rest args
                  &key repo
                    channel
@@ -260,8 +272,8 @@ error."
                                 :override-commit-hash flags:*override-commit-hash*
                                 :create-github-issue-p create-github-issue
                                 :cleanp (cleanp repo)
-                                :gitlab-merge-request-iid *gitlab-merge-request-iid*
-                                :phabricator-diff-id (?. parse-integer *phabricator-diff-id*)
+                                :gitlab-merge-request-iid (safe-parse-int *gitlab-merge-request-iid*)
+                                :phabricator-diff-id (safe-parse-int *phabricator-diff-id*)
                                 :trunkp is-trunk)))
        (if (remote-supports-put-run)
            (put-run run)
