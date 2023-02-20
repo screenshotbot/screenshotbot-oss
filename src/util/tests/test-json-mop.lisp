@@ -10,6 +10,7 @@
   (:import-from #:util/json-mop
                 #:ext-json-serializable-class)
   (:import-from #:fiveam-matchers/core
+                #:has-typep
                 #:assert-that)
   (:import-from #:fiveam-matchers/strings
                 #:contains-string))
@@ -50,3 +51,7 @@
     (finishes
       (json-mop:json-to-clos (%encode obj)
                              'simple-obj))))
+
+(test ensure-parent-class
+  (assert-that (make-instance 'simple-obj)
+               (has-typep 'json-mop:json-serializable)))
