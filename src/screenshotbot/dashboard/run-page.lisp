@@ -43,6 +43,7 @@
   (:import-from #:screenshotbot/model/image
                 #:image-dimensions)
   (:import-from #:screenshotbot/model/recorder-run
+                #:compare-threshold
                 #:compared-against
                 #:merge-base-failed-warning
                 #:recorder-run-warnings
@@ -231,6 +232,7 @@
             <li>Periodic job?: ,(if (periodic-job-p run) "true" "false")</li>
             <li>Number of screenshots: ,(length (recorder-run-screenshots run))</li>
             <li>Total run size: ,(run-size run)kB</li>
+            <li>Comparison threshold: ,(compare-threshold run)</li>
 
             <li>Screenshots that are above 16k dimensions: ,(length (screenshots-above-16k-dim run))
 
