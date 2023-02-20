@@ -9,6 +9,8 @@
         #:fiveam
         #:util/threading)
   (:import-from #:util/threading
+                #:build-extras
+                #:with-extras
                 #:*log-sentry-p*
                 #:ignore-error
                 #:%invoke-debugger
@@ -17,6 +19,10 @@
                 #:funcall-with-sentry-logs)
   (:import-from #:util/testing
                 #:with-global-binding)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:contains)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-threading)
 
@@ -151,3 +157,25 @@
                         (setf called t)))))
          (bt:join-thread thread)
          (is-true called))))))
+
+
+(test with-extras
+  (with-fixture state ()
+   (let ((body-called-p nil))
+     (with-extras (("name" "bleh"))
+       (setf body-called-p t)
+       (assert-that
+        (build-extras nil)
+        (contains '("name" . "bleh"))))
+     (is-true body-called-p))))
+
+(test extras-are-bound-late
+  (with-fixture state ()
+    (let ((count 0))
+      (with-extras (("name" count))
+        (incf count)
+        (assert-that (build-extras nil)
+                     (contains '("name" . "1")))
+        (incf count)
+        (assert-that (build-extras nil)
+                     (contains '("name" . "2")))))))

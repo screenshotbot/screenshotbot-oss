@@ -22,7 +22,8 @@
    #:*log-sentry-p*
    #:*extras*
    #:ignore-and-log-errors
-   #:*warning-count*)
+   #:*warning-count*
+   #:with-extras)
 )
 (in-package :util/threading)
 
@@ -107,6 +108,31 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
   (ignore-errors
    (loop for extra in *extras*
          appending (ignore-errors (funcall extra condition)))))
+
+(defmacro %with-single-extra ((name expr) &body body)
+  `(call-with-single-extra ,name (lambda ()
+                                   ,expr)
+                           (lambda ()
+                             ,@body)))
+
+(defun call-with-single-extra (name builder body)
+  (let ((*extras* (list*
+                   (lambda (e)
+                     (declare (ignore e))
+                     (list
+                      (cons name (format nil "~a" (funcall builder)))))
+                   *extras*)))
+    (funcall body)))
+
+(defmacro with-extras ((&rest pairs) &body body)
+  (cond
+     ((not pairs)
+      `(progn ,@body))
+     (t
+      `(%with-single-extra ,(car pairs)
+         (with-extras ,(cdr pairs)
+           ,@body)))))
+
 
 (defun %log-sentry (condition)
   #-screenshotbot-oss
