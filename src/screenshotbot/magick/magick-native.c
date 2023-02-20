@@ -183,8 +183,10 @@ screenshotbot_find_non_transparent_pixels_with_masks
                          * is 0.
                          */
                         if (px == MAX_QUANTUM && PixelGetGreenQuantum(row[x]) == 0) {
-                                output[ret].x = x;
-                                output[ret].y = y;
+                                if (output) {
+                                        output[ret].x = x;
+                                        output[ret].y = y;
+                                }
                                 ret++;
 
                                 if (ret >= max) {
