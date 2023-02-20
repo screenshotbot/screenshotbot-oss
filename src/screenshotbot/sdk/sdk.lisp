@@ -147,8 +147,9 @@
     (error "Can't use :get with parameters"))
   (let ((json (%request api :method method
                             :parameters parameters
-                            :content (json-mop-to-string
-                                       content))))
+                            :content (when (eql :put method)
+                                       (json-mop-to-string
+                                        content)))))
     (handler-case
         (let ((result (json:decode-json-from-string json)))
           (ensure-api-success result))
