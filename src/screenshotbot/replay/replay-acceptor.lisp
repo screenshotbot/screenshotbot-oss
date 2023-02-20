@@ -159,13 +159,14 @@
 
 (defun handle-asset-modified (snapshot asset)
   (flet ((fix-input-file (f)
-           (cond
-             ((uiop:file-exists-p f)
-              f)
-             (t
-              ;; hack: please remove
-              (make-pathname :type "tmp"
-                             :defaults f))))
+           (ensure-directories-exist
+            (cond
+              ((uiop:file-exists-p f)
+               f)
+              (t
+               ;; hack: please remove
+               (make-pathname :type "tmp"
+                              :defaults f)))))
          (set-minimum-cache ()
            (set-cache-control 300)))
     (set-minimum-cache)
