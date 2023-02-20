@@ -267,6 +267,7 @@ error."
                                 :merge-base merge-base
                                 :periodic-job-p periodic-job-p
                                 :build-url *build-url*
+                                :compare-threshold flags:*compare-threshold*
                                 :pull-request pull-request
                                 :commit-hash commit
                                 :override-commit-hash flags:*override-commit-hash*

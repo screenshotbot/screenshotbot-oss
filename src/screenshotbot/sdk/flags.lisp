@@ -47,7 +47,8 @@
    #:*self-test*
    #:*commit-limit*
    #:*mark-failed*
-   #:*versionp*))
+   #:*versionp*
+   #:*compare-threshold*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -245,3 +246,24 @@ You don't need to call this, but if you do we can use the information
 to show more appropriate information on Pull Requests. For instance,
 if you have a Pull Request based off of a failing commit, we can find
 the last green commit to make our screenshot report.")
+
+(define-flag *compare-threshold*
+  :selector "compare-threshold"
+  :default-value nil
+  :type (or null double-float)
+  :help "Fraction of pixels that can be different for Screenshotbot to consider
+the screenshots to be the same. (between 0.0 and 1.0)
+
+We don't recommend using this unless absolutely required. Flaky
+screenshots are harder to maintain long term. Using this argument can
+also slow down the processig of your reports significantly.
+
+If not specified, or if specified by 0.0, we'll consider screenshots
+equal only if they are identical by file content. (e.g. any changes in
+encoding, or EXIF data will cause a screenshot change.)
+
+Keep in mind that this value will typically be very low. e.g., a
+1000x1000 image, using 0.001 threshold would still allow for 1000
+pixel changes which might be too high for most practical uses. You
+probably want to choose this so that no more than 10-20 pixels are
+allowed to be different at a time.")
