@@ -75,7 +75,7 @@
        (force
         (future
           (with-wand (before :file file1)
-            (let ((limit (floor (* (compare-threshold self)
+            (let ((limit (floor (* (min 1.0 (compare-threshold self))
                                    (magick-get-image-height before)
                                    (magick-get-image-width before)))))
               (with-wand (after :file file2)
