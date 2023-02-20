@@ -6,5 +6,6 @@
   :depends-on (:jvm
                :trivial-features
                :fiveam
+               :sentry
                :testing)
   :components ((:file "test-runner")))

@@ -14,6 +14,8 @@
   (funcall (find-symbol "JVM-INIT" "JVM"))
   (setf *debugger-hook* nil)))
 
+(setf sentry:*disabledp* t)
+
 (defun hide-outputs ()
   (setf fiveam:*test-dribble* *standard-output*)
   (setf *test-trace-io* *trace-output*)
