@@ -68,6 +68,7 @@
                 #:timestamp-
                 #:timestamp<)
   (:import-from #:alexandria
+                #:when-let*
                 #:when-let)
   (:import-from #:anaphora
                 #:it)
@@ -146,29 +147,39 @@
              :initform #'sleep)))
 
 
+(defun find-last-green-run (channel commit &key (depth 100))
+  (when commit
+   (or
+    (production-run-for channel :commit commit)
+    (when (> depth 0)
+      (when-let* ((repo (channel-repo channel))
+                  (parent-commit (get-parent-commit repo commit)))
+        (find-last-green-run
+         channel
+         parent-commit
+         :depth (1- depth)))))))
+
 (defmethod retrieve-run ((retriever run-retriever)
                          channel
                          base-commit
                          logger)
-  (labels ((produce (base-commit retries)
+  (labels ((failover ()
+             (immediate-promise (find-last-green-run channel base-commit)))
+           (produce (base-commit retries)
              (anaphora:acond
                ((null base-commit)
                 (immediate-promise nil))
                ((production-run-for channel :commit base-commit)
                 (immediate-promise it))
                ((run-failed-on-commit-p channel base-commit)
-                (format-log logger :info "The base commit has failed, let's look for its ancestor")
-                (let ((repo (channel-repo channel)))
-                  (let ((base-commit (get-parent-commit repo base-commit)))
-                    (produce base-commit
-                             ;; Keep the retries the same, since we
-                             ;; aren't doing a timeout at this point.
-                             retries))))
+                (failover))
                ((>= retries 0)
                 (lparallel:future
                   (format-log logger :info "Waiting 30s before checking again for ~a" base-commit)
                   (funcall (sleep-fn retriever) 30)
-                  (lparallel:chain (produce base-commit (1- retries))))))))
+                  (lparallel:chain (produce base-commit (1- retries)))))
+               (t
+                (failover)))))
     (produce base-commit 10)))
 
 (defclass abstract-pr-acceptable (base-acceptable)

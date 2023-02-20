@@ -8,6 +8,9 @@
     (:use #:cl #:alexandria)
   (:import-from #:screenshotbot/user-api
                 #:commit-link)
+  (:import-from #:alexandria
+                #:when-let
+                #:when-let*)
   (:export
    #:generic-git-repo
    #:commit-graph
@@ -36,8 +39,8 @@
                               commit)
   (declare (optimize (debug 3)))
   (assert commit)
-  (let* ((dag (commit-graph-dag (commit-graph repo))))
-    (let ((commit (dag:get-commit dag commit)))
+  (when-let* ((dag (commit-graph-dag (commit-graph repo))))
+    (when-let ((commit (dag:get-commit dag commit)))
       (car (dag:parents commit)))))
 
 (defmethod repo-ancestor-p ((repo generic-git-repo)
