@@ -74,6 +74,7 @@
                 #:record-screenshot
                 #:all-screenshots)
   (:import-from #:util/threading
+                #:with-extras
                 #:safe-interrupt-checkpoint)
   (:import-from #:screenshotbot/replay/proxy
                 #:ensure-proxy)
@@ -421,34 +422,36 @@ accessing the urls or sitemap slot."
      "png")))
 
 (with-auto-restart ()
- (defun schedule-replay-job (run)
-   (tmpdir:with-tmpdir (tmpdir)
-     (handler-bind ((dex:http-request-failed
-                      (lambda (e)
-                        (write-replay-log "HTTP request failed: ~a~%" (type-of e))))
-                    (cl+ssl::hostname-verification-error
-                      (lambda (e)
-                        (write-replay-log "SSL error: ~S~%" e))))
-      (let* ((urls (sampled-urls run))
-             (snapshot (make-instance 'snapshot :tmpdir tmpdir))
-             (context (make-instance 'context
-                                      :custom-css (custom-css run)))
-             (count (length urls)))
-        (loop for (nil . url) in urls
-              for i from 1
-              do
-                 (restart-case
-                     (progn
-                       (log:info "Loading ~a/~a" i count)
-                       (load-url-into context snapshot url tmpdir))
-                   (ignore-this-url ()
-                     (values))))
-        (let ((results (replay-job-from-snapshot
-                        :snapshot snapshot
-                        :urls urls
-                        :tmpdir tmpdir
-                        :run run)))
-          (process-results run results)))))))
+  (defun schedule-replay-job (run)
+    (with-extras (("run" run)
+                  ("company" (company run)))
+     (tmpdir:with-tmpdir (tmpdir)
+       (handler-bind ((dex:http-request-failed
+                        (lambda (e)
+                          (write-replay-log "HTTP request failed: ~a~%" (type-of e))))
+                      (cl+ssl::hostname-verification-error
+                        (lambda (e)
+                          (write-replay-log "SSL error: ~S~%" e))))
+         (let* ((urls (sampled-urls run))
+                (snapshot (make-instance 'snapshot :tmpdir tmpdir))
+                (context (make-instance 'context
+                                        :custom-css (custom-css run)))
+                (count (length urls)))
+           (loop for (nil . url) in urls
+                 for i from 1
+                 do
+                    (restart-case
+                        (progn
+                          (log:info "Loading ~a/~a" i count)
+                          (load-url-into context snapshot url tmpdir))
+                      (ignore-this-url ()
+                        (values))))
+           (let ((results (replay-job-from-snapshot
+                           :snapshot snapshot
+                           :urls urls
+                           :tmpdir tmpdir
+                           :run run)))
+             (process-results run results))))))))
 
 #+nil
 (schedule-replay-job (make-instance 'run
