@@ -20,6 +20,8 @@
                 #:with-class-validation)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:alexandria
+                #:when-let)
   (:export
    #:commit-graph
    #:repo-url
@@ -99,6 +101,13 @@
     (loop for commit-graph in (bknr.datastore:class-instances 'commit-graph)
           if (needs-flush-p commit-graph)
             do (flush-dag commit-graph))))
+
+(defmethod check-integrity ((commit-graph commit-graph))
+  (when-let ((dag (%commit-graph-dag commit-graph)))
+    (dag:check-integrity dag)))
+
+(defun check-integrity-for-all ()
+  (mapc #'check-integrity (bknr.datastore:class-instances 'commit-graph)))
 
 (def-cron flush-dags (:step-min 5)
   (flush-dags))

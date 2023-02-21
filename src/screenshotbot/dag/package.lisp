@@ -30,5 +30,6 @@
            #:read-from-stream
            #:ordered-commits
            #:sha
-           #:author))
+           #:author
+           #:check-integrity))
 (in-package :dag)

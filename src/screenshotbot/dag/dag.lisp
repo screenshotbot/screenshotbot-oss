@@ -48,6 +48,16 @@
    (pathname :initarg :pathname
              :documentation "For debugging only")))
 
+(defmethod all-commits ((dag dag))
+  (loop for commit being the hash-values of (commit-map dag)
+        collect commit))
+
+(defmethod check-integrity ((dag dag))
+  (loop for commit in (all-commits dag)
+        unless commit
+          do
+             (error "nil commit in (all-commits) for ~a" dag)))
+
 (defmethod ordered-commits ((dag dag))
   (let ((sorted (safe-topological-sort (digraph dag))))
     (loop for id in sorted
