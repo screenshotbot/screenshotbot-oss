@@ -117,6 +117,12 @@
                         repo)
   (typep repo 'bitbucket-repo))
 
+(defun build-status-url (full-name commit)
+  "See https://developer.atlassian.com/cloud/bitbucket/rest/api-group-commit-statuses/"
+  (format nil "https://api.bitbucket.org/2.0/repositories/~a/commit/~a/statuses/build/"
+          full-name
+          commit))
+
 (defmethod push-remote-check ((promoter bitbucket-promoter)
                               run
                               check)
@@ -135,10 +141,9 @@
                                                     :company company
                                                     :commit commit
                                                     :full-name full-name))
-           (let* ((url (format nil "https://api.bitbucket.org/2.0/repositories/~a/commit/~a/statuses/build/"
-                               full-name
-                               commit)))
-
+           (let* ((url (build-status-url
+                        full-name
+                        commit)))
              (multiple-value-bind (stream result-code)
                  (util/request:http-request
                   url
