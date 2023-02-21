@@ -19,6 +19,8 @@
                 #:encode-string)
   (:import-from #:bknr.datastore
                 #:encode)
+  (:import-from #:alexandria
+                #:curry)
   (:export #:dag
            #:add-commit
            #:commit

@@ -122,12 +122,19 @@ have a partial graph."
                                           node-id
                                           (commit-node-id p)))))))))
 
-(defmethod safe-topological-sort (digraph)
+(defmethod full-commit-on-graph-p ((dag dag) node-id)
+  "Not all nodes in the graph are \"complete\". Some nodes are referenced
+by other nodes, but are not themselves available. This returns if the
+node-id is a valid full node on the graph."
+  (gethash node-id (commit-map dag)))
+
+(defmethod safe-topological-sort (dag)
   "This is modified from GRAPH. Sadly that library uses recursion for
 some of their graph algorithms, which doesn't work nicely for a 'deep'
 tree. This version uses the Kahn's algorithm instead of DFS"
   (declare (optimize (speed 3) (debug 0)))
-  (let* ((rL nil)
+  (let* ((digraph (digraph dag))
+         (rL nil)
          (out-degrees (make-hash-table)))
     (loop for x in (graph::nodes digraph) do
           (setf (gethash x out-degrees) (length (graph::neighbors digraph x))))
@@ -144,11 +151,11 @@ tree. This version uses the Kahn's algorithm instead of DFS"
               (assert (>= (gethash m out-degrees) 0))
               (when (eql (gethash m out-degrees) 0)
                 (push m S)))))))
-    rL))
-
+    (remove-if-not (curry #'full-commit-on-graph-p dag)
+                   rL)))
 
 (defmethod write-to-stream ((dag dag) stream &key (format :json))
-  (let ((sorted-nodes (reverse (safe-topological-sort (digraph dag))))
+  (let ((sorted-nodes (reverse (safe-topological-sort dag)))
         (commit-map (commit-map dag)))
     (ecase format
       (:json
@@ -214,7 +221,7 @@ tree. This version uses the Kahn's algorithm instead of DFS"
       dag))))
 
 (defmethod merge-dag ((dag dag) (from-dag dag))
-  (dolist (node-id (safe-topological-sort (digraph from-dag)))
+  (dolist (node-id (safe-topological-sort from-dag))
     (unless (gethash node-id (commit-map dag))
       (let ((commit (gethash node-id (commit-map from-dag))))
         (assert commit)

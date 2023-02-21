@@ -192,14 +192,14 @@ for you."
         (add-edge "bb" nil :dag dag)
         (add-edge "aa" "bb" :dag dag)
         #+nil
-        (assert-that (car (safe-topological-sort (digraph dag)))
+        (assert-that (car (safe-topological-sort dag))
                      (has-typep 'commit))
-        (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort (digraph dag))))))
+        (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort dag)))))
           (assert-that commits
                        (contains "aa" "bb")))
         (add-edge "cc" "bb" :dag dag)
         (add-edge "dd" (list "aa" "cc") :dag dag)
-        (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort (digraph dag))))))
+        (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort  dag)))))
           (assert-that commits
                        (has-any
                         (contains "dd" "cc" "aa" "bb" )
@@ -223,11 +223,33 @@ for you."
                 (gethash id (commit-map dag))))
          (add-edge (ll "bb") nil :dag dag)
          (add-edge (ll "aa") (ll "bb") :dag dag)
-         (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort (digraph dag))))))
+         (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort dag)))))
            (assert-that commits
                         (contains (ll "aa") (ll "bb"))))
          (add-edge (ll "cc") (ll "bb") :dag dag)
          (add-edge (ll "dd") (list (ll "aa") (ll "cc")) :dag dag)
-         (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort (digraph dag))))))
+         (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort dag)))))
            (assert-that commits
                         (contains (ll "dd") (ll "cc") (ll "aa") (ll "bb") ))))))))
+
+(test topo-sort-on-incomplete-graph
+  (with-fixture state ()
+    (let ((dag (make-instance 'dag)))
+      (flet ((find-commit (id)
+               (gethash id (commit-map dag))))
+        (add-edge "aa" "bb" :dag dag)
+        (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort dag)))))
+          (assert-that commits
+                       (contains "aa")))))))
+
+(test merge-incomplete-graph-to-empty-graph
+  (with-fixture state ()
+    (let ((dag (make-instance 'dag))
+          (old-dag (make-instance 'dag)))
+      (flet ((find-commit (id)
+               (gethash id (commit-map old-dag))))
+        (add-edge "aa" "bb" :dag dag)
+        (merge-dag old-dag dag)
+        (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort old-dag)))))
+          (assert-that commits
+                       (contains "aa")))))))
