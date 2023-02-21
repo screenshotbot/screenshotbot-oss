@@ -103,6 +103,7 @@
             do (flush-dag commit-graph))))
 
 (defmethod check-integrity ((commit-graph commit-graph))
+  (declare (optimize (debug 3) (speed 0)))
   (when-let ((dag (%commit-graph-dag commit-graph)))
     (dag:check-integrity dag)))
 

@@ -53,10 +53,15 @@
         collect commit))
 
 (defmethod check-integrity ((dag dag))
-  (loop for commit in (all-commits dag)
-        unless commit
-          do
-             (error "nil commit in (all-commits) for ~a" dag)))
+  (log:info "Checking integrity of: ~a" dag)
+  (dolist (commit (all-commits dag))
+    (unless commit
+      (error "nil commit in (all-commits) for ~a" dag))
+    (dolist (parent (parents commit))
+      (unless (gethash (commit-node-id parent) (commit-map dag))
+        (cerror "continue" "Could not find a parent commit ~a in map. This might happen if we only
+have a partial graph."
+                parent)))))
 
 (defmethod ordered-commits ((dag dag))
   (let ((sorted (safe-topological-sort (digraph dag))))
