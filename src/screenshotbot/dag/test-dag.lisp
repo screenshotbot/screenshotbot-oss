@@ -10,6 +10,11 @@
         #:alexandria
         #:fiveam)
   (:import-from #:dag
+                #:commit-map
+                #:digraph
+                #:commit-node-id
+                #:node-id
+                #:safe-topological-sort
                 #:dag
                 #:merge-dag
                 #:get-commit
@@ -17,7 +22,13 @@
                 #:node-already-exists
                 #:add-commit)
   (:import-from #:flexi-streams
-                #:with-output-to-sequence))
+                #:with-output-to-sequence)
+  (:import-from #:fiveam-matchers/core
+                #:has-typep
+                #:has-any
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:contains))
 
 (in-package :screenshotbot.dag.test-dag)
 
@@ -25,7 +36,7 @@
 
 (def-fixture state ()
   (let ((dag (make-instance 'dag)))
-    (flet ((add-edge (from to)
+    (flet ((add-edge (from to &key (dag dag))
              (add-commit dag (make-instance 'commit :sha from :parents (cond
                                                                          ((listp to)
                                                                           to)
@@ -160,3 +171,63 @@
   (with-fixture state ()
     (is (equal '((#xaa #xbb))
                 (gethash #xaa (graph::node-h (dag::digraph dag)))))))
+
+(test merge-existing-commits
+  (with-fixture state ()
+   (let ((dag1 (make-instance 'dag))
+         (dag2 (make-instance 'dag)))
+     (add-edge "bb" nil :dag dag1)
+     (add-edge "bb" nil :dag dag2)
+     (add-edge "aa" "bb" :dag dag1)
+     (add-edge "cc" "bb" :dag dag2)
+     (merge-dag dag1 dag2))))
+
+(test document-the-right-order-topo-sort
+  "Oldest first? Or newest first? You'll always wonder, so here's a test
+for you."
+  (with-fixture state ()
+    (let ((dag (make-instance 'dag)))
+      (flet ((find-commit (id)
+               (gethash id (commit-map dag))))
+        (add-edge "bb" nil :dag dag)
+        (add-edge "aa" "bb" :dag dag)
+        #+nil
+        (assert-that (car (safe-topological-sort (digraph dag)))
+                     (has-typep 'commit))
+        (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort (digraph dag))))))
+          (assert-that commits
+                       (contains "aa" "bb")))
+        (add-edge "cc" "bb" :dag dag)
+        (add-edge "dd" (list "aa" "cc") :dag dag)
+        (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort (digraph dag))))))
+          (assert-that commits
+                       (has-any
+                        (contains "dd" "cc" "aa" "bb" )
+                      (contains "dd" "aa" "cc" "bb" ))))))))
+
+
+(test document-the-right-order-topo-sort-long-names
+  "Oldest first? Or newest first? You'll always wonder, so here's a test
+for you."
+  (flet ((ll (name)
+           (let ((name (str:join "" (list name name))))
+            (str:join ""
+                      (list name name name name name
+                            name name name name name
+                            name name name name name
+                            name name name name name)))))
+    (assert (not (typep (commit-node-id (ll "aa")) 'fixnum)))
+    (with-fixture state ()
+      (let ((dag (make-instance 'dag)))
+       (flet ((find-commit (id)
+                (gethash id (commit-map dag))))
+         (add-edge (ll "bb") nil :dag dag)
+         (add-edge (ll "aa") (ll "bb") :dag dag)
+         (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort (digraph dag))))))
+           (assert-that commits
+                        (contains (ll "aa") (ll "bb"))))
+         (add-edge (ll "cc") (ll "bb") :dag dag)
+         (add-edge (ll "dd") (list (ll "aa") (ll "cc")) :dag dag)
+         (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort (digraph dag))))))
+           (assert-that commits
+                        (contains (ll "dd") (ll "cc") (ll "aa") (ll "bb") ))))))))
