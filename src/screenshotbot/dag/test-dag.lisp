@@ -25,7 +25,7 @@
 
 (def-fixture state ()
   (let ((dag (make-instance 'dag)))
-    (flet ((add-edge (from to)
+    (flet ((add-edge (from to &key (dag dag))
              (add-commit dag (make-instance 'commit :sha from :parents (cond
                                                                          ((listp to)
                                                                           to)
@@ -156,7 +156,18 @@
                              collect (assoc-value x :sha))))
       (is (equal final-order commits)))))
 
+
 (test add-edge-directly-from-graph
   (with-fixture state ()
     (is (equal '((#xaa #xbb))
                 (gethash #xaa (graph::node-h (dag::digraph dag)))))))
+
+(test merge-existing-commits
+  (with-fixture state ()
+   (let ((dag1 (make-instance 'dag))
+         (dag2 (make-instance 'dag)))
+     (add-edge "bb" nil :dag dag1)
+     (add-edge "bb" nil :dag dag2)
+     (add-edge "aa" "bb" :dag dag1)
+     (add-edge "cc" "bb" :dag dag2)
+     (merge-dag dag1 dag2))))
