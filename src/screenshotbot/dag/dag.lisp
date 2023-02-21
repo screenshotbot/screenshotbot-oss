@@ -48,12 +48,8 @@
    (pathname :initarg :pathname
              :documentation "For debugging only")))
 
-(defmethod all-commits ((dag dag))
-  (loop for commit being the hash-values of (commit-map dag)
-        collect commit))
-
 (defmethod ordered-commits ((dag dag))
-  (let ((sorted (safe-topological-sort dag)))
+  (let ((sorted (safe-topological-sort (digraph dag))))
     (loop for id in sorted
           collect (gethash id (commit-map dag)))))
 
@@ -90,7 +86,6 @@
    sha-old))
 
 (defmethod add-commit ((dag dag) (commit  commit))
-  (declare (optimize (debug 3) (speed 0)))
   (assert commit)
   (let ((map (commit-map dag))
         (node-id (commit-node-id (sha commit))))
@@ -112,12 +107,12 @@
                                           node-id
                                           (commit-node-id p)))))))))
 
-(defmethod safe-topological-sort (dag)
+(defmethod safe-topological-sort (digraph)
   "This is modified from GRAPH. Sadly that library uses recursion for
 some of their graph algorithms, which doesn't work nicely for a 'deep'
 tree. This version uses the Kahn's algorithm instead of DFS"
-  (let* ((digraph (digraph dag))
-         (rL nil)
+  (declare (optimize (speed 3) (debug 0)))
+  (let* ((rL nil)
          (out-degrees (make-hash-table)))
     (loop for x in (graph::nodes digraph) do
           (setf (gethash x out-degrees) (length (graph::neighbors digraph x))))
@@ -134,17 +129,18 @@ tree. This version uses the Kahn's algorithm instead of DFS"
               (assert (>= (gethash m out-degrees) 0))
               (when (eql (gethash m out-degrees) 0)
                 (push m S)))))))
-    (loop for l in rL
-          collect (gethash l (commit-map dag)))))
+    rL))
 
 
 (defmethod write-to-stream ((dag dag) stream &key (format :json))
-  (let ((sorted-commits (reverse (safe-topological-sort dag))))
+  (let ((sorted-nodes (reverse (safe-topological-sort (digraph dag))))
+        (commit-map (commit-map dag)))
     (ecase format
       (:json
        (json:encode-json
         `((:commits .
-                    ,(loop for commit in sorted-commits
+                    ,(loop for node-id in sorted-nodes
+                           for commit = (gethash node-id commit-map)
                            if commit
                              collect
                            `((:sha . ,(sha commit))
@@ -159,13 +155,14 @@ tree. This version uses the Kahn's algorithm instead of DFS"
        (write-byte 0 stream)
        (let ((version 1))
          (write-byte version stream))
-       (encode-integer (length sorted-commits) stream)
-       (dolist (commit sorted-commits)
-         ;; TODO: can be further optimized to use integers, but this
-         ;; should do for now
-         (encode (sha commit) stream)
-         (encode (author commit) stream)
-         (encode (parents commit) stream)))))
+       (encode-integer (length sorted-nodes) stream)
+       (dolist (node-id sorted-nodes)
+         (let ((commit (gethash node-id commit-map)))
+           ;; TODO: can be further optimized to use integers, but this
+           ;; should do for now
+           (encode (sha commit) stream)
+           (encode (author commit) stream)
+           (encode (parents commit) stream))))))
   (finish-output stream))
 
 (defun read-from-stream (stream &key (format :json))
@@ -202,10 +199,9 @@ tree. This version uses the Kahn's algorithm instead of DFS"
       dag))))
 
 (defmethod merge-dag ((dag dag) (from-dag dag))
-  (let ((existing (make-hash-table :test #'equal)))
-    (loop for commit in (all-commits dag)
-          do (setf (gethash (sha commit) existing) t))
-    (dolist (commit (safe-topological-sort from-dag))
-      (unless (gethash (sha commit) existing)
-        (add-commit dag commit))
-      (assert (gethash (commit-node-id (sha commit)) (commit-map dag))))))
+  (dolist (node-id (safe-topological-sort (digraph from-dag)))
+    (unless (gethash node-id (commit-map dag))
+      (let ((commit (gethash node-id (commit-map from-dag))))
+        (assert commit)
+        (add-commit dag commit)
+        (assert (gethash node-id (commit-map dag)))))))
