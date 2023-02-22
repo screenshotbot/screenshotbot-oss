@@ -95,7 +95,8 @@
                 ("api_id"  flags:*api-key*)
                 ("features" *features*)
                 ("channel" flags:*channel*)
-                ("build-url" flags:*build-url*))
+                ("build-url" flags:*build-url*)
+                ("hostname" (uiop:hostname)))
    (let ((error-handler (lambda (e)
                           (format stream "~%~a~%~%" e)
                           #+lispworks
