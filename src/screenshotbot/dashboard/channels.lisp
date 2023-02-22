@@ -191,6 +191,7 @@
                  :message (if run (format nil "~a screenshots" (length (recorder-run-screenshots run)))
                               "No active run for parameters")
                  :color (if run "green" "red"))))
+      (setf (hunchentoot:header-out :cache-control) "max-age=600")
       (setf (hunchentoot:content-type*) "image/svg+xml")
       data)))
 
