@@ -55,3 +55,19 @@
 (test ensure-parent-class
   (assert-that (make-instance 'simple-obj)
                (has-typep 'json-mop:json-serializable)))
+
+(defclass simple-list-slot ()
+  ((list :initarg :list
+         :json-key "first"
+         :json-type (:list :string)
+         :accessor arg1))
+  (:metaclass ext-json-serializable-class))
+
+(test ensure-can-encode-empty-list
+  (let ((obj (make-instance 'simple-list-slot)))
+    (finishes (json-mop:json-to-clos (%encode obj)
+                                     'simple-list-slot)))
+  (let ((obj (make-instance 'simple-list-slot
+                            :list nil)))
+    (finishes (json-mop:json-to-clos (%encode obj)
+                                     'simple-list-slot))))

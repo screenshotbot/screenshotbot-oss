@@ -62,6 +62,16 @@
                           (type nullable))
   (to-lisp-value value (nullable-type type)))
 
+;; Note that this changes the behavior of json-mop everywhere.. not
+;; just when using with ext-json-serializable-class.
+(defmethod to-json-value :around ((value null) (json-type cons))
+  "Return the homogeneous sequence VALUE"
+  (cond
+    ((member (first json-type)
+             '(:list :vector))
+     #())
+    (t
+     (call-next-method))))
 
 (defun json-mop-to-string (obj)
   (with-output-to-string (out)

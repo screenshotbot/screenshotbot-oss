@@ -126,4 +126,3 @@
                         (when *encode-unbound-slots*
                           (encode-object-element it nil)))))))))
   object)
-
