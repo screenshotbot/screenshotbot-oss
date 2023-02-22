@@ -27,13 +27,19 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:fiveam-matchers/described-as
+                #:described-as)
+  (:import-from #:fiveam-matchers/core
+                #:equal-to
+                #:assert-that))
 
 (util/fiveam:def-suite)
 
 (defclass dummy-repo ()
   ((commits :initform `(("master" . "car2")
                         ("new-master" . "bar")
+                        ("force-master" . "qux")
                         ("bar" . "car2")
                         ("car2" . "car")))))
 
@@ -76,36 +82,42 @@
 (defmethod repo-left-ancestor-p ((repo dummy-repo) commit1 commit2)
   (equal commit1 (merge-base repo commit1 commit2)))
 
+
+
+
 (def-fixture state ()
   (with-test-store ()
    (with-fake-request ()
      (auth:with-sessions ()
        (with-test-user (:company company
                         :user user)
-         (let* ((channel (make-instance 'test-channel :name "foo"))
-                (run1 (make-instance 'recorder-run
-                                      :channel channel
-                                      :github-repo "foo"
-                                      :commit-hash "car"
-                                      :cleanp t
-                                      :branch "master"
-                                      :branch-hash "car"
-                                      :trunkp t
-                                      :company company))
-                (run2 (make-instance 'recorder-run
-                                      :channel channel
-                                      :github-repo "foo"
-                                      :commit-hash "car2"
-                                      :cleanp t
-                                      :branch "master"
-                                      :branch-hash "car2"
-                                      :trunkp t
-                                      :company company)))
+         (let* ((channel (make-instance 'test-channel :name "foo")))
            (with-transaction ()
-             (push channel (company-channels company))
-             (push run1 (company-runs company))
-             (push run2 (company-runs company)))
-           (&body)))))))
+             (push channel (company-channels company)))
+           (flet ((make-run (&rest args)
+                    (let ((run (apply #'make-instance
+                                  'recorder-run
+                                  (append
+                                   args
+                                   (list
+                                    :channel channel
+                                    :github-repo "foo"
+                                    :commit-hash nil
+                                    :cleanp t
+                                    :branch "master"
+                                    :branch-hash "car"
+                                    :trunkp t
+                                    :company company)))))
+                      (with-transaction ()
+                        (push run (company-runs company)))
+                      run)))
+            (let* ((run1 (make-run :commit-hash "car"
+                                   :branch "master"
+                                   :branch-hash "car"))
+                   (run2 (make-run :commit-hash "car2"
+                                   :branch "master"
+                                   :branch-hash "car2")))
+              (&body)))))))))
 
 (defun %maybe-promote-run (run channel &key (wait-timeout 1))
   (maybe-promote-run run
@@ -153,3 +165,22 @@
 
     (is-true (activep run2))
     (is-false (activep run1))))
+
+(test unrelated-branch
+  "If somebody `git push -f`-ed a new commit, then we'll get into this
+situation. Can also happen on a developer branch."
+  (with-fixture state ()
+    (%maybe-promote-run run1 channel :wait-timeout 0)
+    (let ((new-master-run (make-run :branch "master"
+                                    :commit-hash "qux"
+                                    :branch-hash "qux")))
+      (%maybe-promote-run run2 channel :wait-timeout 0)
+      (assert-that (activep run2)
+                   (described-as "Sanity check"
+                     (equal-to t)))
+
+      (log:info "Starting next run")
+      (%maybe-promote-run new-master-run channel :wait-timeout 0)
+
+      (is-true (activep run2))
+      (is-false (activep new-master-run)))))
