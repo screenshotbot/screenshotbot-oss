@@ -130,5 +130,5 @@
           (error "health-check for sdk"))
      (expected ()
        nil))
-    (assert (cl-ppcre:scan ".*CALL-WITH-SENTRY.*"
+    (assert (cl-ppcre:scan ".*RUN-HEALTH-CHECKS.*"
                            (get-output-stream-string out-stream)))))
