@@ -236,6 +236,10 @@ error."
     (t
      (error "Not a type that can be convered to integer: ~s" str))))
 
+(define-condition empty-run-error (error)
+  ()
+  (:report "No screenshots were detected in this this run"))
+
 (defun make-run (images &rest args
                  &key repo
                    channel
@@ -250,35 +254,38 @@ error."
                    (metadata-provider  (make-instance 'metadata-provider))
                    is-trunk)
   (restart-case
-   (let ((screenshots (build-screenshot-objects images metadata-provider)))
-     ;;(log:info "screenshot records: ~s" screenshots)
-     (let* ((branch-hash (if has-branch-hash-p branch-hash (rev-parse repo branch)))
-            (commit (if has-commit-p commit (current-commit repo)))
-            (merge-base (if has-merge-base-p merge-base (merge-base repo branch-hash commit)))
-            (github-repo (if has-github-repo-p
-                             github-repo
-                             (repo-link repo)))
-            (run (make-instance 'dto:run
-                                :channel channel
-                                :screenshots screenshots
-                                :main-branch branch
-                                :main-branch-hash branch-hash
-                                :github-repo github-repo
-                                :merge-base merge-base
-                                :periodic-job-p periodic-job-p
-                                :build-url *build-url*
-                                :compare-threshold flags:*compare-threshold*
-                                :pull-request pull-request
-                                :commit-hash commit
-                                :override-commit-hash flags:*override-commit-hash*
-                                :create-github-issue-p create-github-issue
-                                :cleanp (cleanp repo)
-                                :gitlab-merge-request-iid (safe-parse-int *gitlab-merge-request-iid*)
-                                :phabricator-diff-id (safe-parse-int *phabricator-diff-id*)
-                                :trunkp is-trunk)))
-       (if (remote-supports-put-run)
-           (put-run run)
-           (put-run-via-old-api run))))
+      (progn
+        (unless images
+          (error 'empty-run-error))
+        (let ((screenshots (build-screenshot-objects images metadata-provider)))
+          ;;(log:info "screenshot records: ~s" screenshots)
+         (let* ((branch-hash (if has-branch-hash-p branch-hash (rev-parse repo branch)))
+                (commit (if has-commit-p commit (current-commit repo)))
+                (merge-base (if has-merge-base-p merge-base (merge-base repo branch-hash commit)))
+                (github-repo (if has-github-repo-p
+                                 github-repo
+                                 (repo-link repo)))
+                (run (make-instance 'dto:run
+                                    :channel channel
+                                    :screenshots screenshots
+                                    :main-branch branch
+                                    :main-branch-hash branch-hash
+                                    :github-repo github-repo
+                                    :merge-base merge-base
+                                    :periodic-job-p periodic-job-p
+                                    :build-url *build-url*
+                                    :compare-threshold flags:*compare-threshold*
+                                    :pull-request pull-request
+                                    :commit-hash commit
+                                    :override-commit-hash flags:*override-commit-hash*
+                                    :create-github-issue-p create-github-issue
+                                    :cleanp (cleanp repo)
+                                    :gitlab-merge-request-iid (safe-parse-int *gitlab-merge-request-iid*)
+                                    :phabricator-diff-id (safe-parse-int *phabricator-diff-id*)
+                                    :trunkp is-trunk)))
+           (if (remote-supports-put-run)
+               (put-run run)
+               (put-run-via-old-api run)))))
     (retry-run ()
       (apply 'make-run images
              args))))

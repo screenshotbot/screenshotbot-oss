@@ -9,6 +9,7 @@
    :alexandria
         :fiveam)
   (:import-from #:screenshotbot/sdk/sdk
+                #:empty-run-error
                 #:make-run
                 #:request
                 #:validate-pull-request
@@ -199,3 +200,11 @@
                      (:name . "car")))
                  :branch "main"
                  :repo repo)))))
+
+(test make-run-on-empty-directory-crashes-appropriately
+  (with-fixture state  ()
+    (if-called 'request
+               (lambda (&rest args)
+                 (error "should not be called")))
+    (signals empty-run-error
+      (make-run nil :branch "main"))))
