@@ -10,6 +10,7 @@
         #:alexandria
         #:fiveam)
   (:import-from #:dag
+                #:ordered-commits
                 #:commit-map
                 #:digraph
                 #:commit-node-id
@@ -253,3 +254,11 @@ for you."
         (let ((commits (mapcar #'sha (mapcar #'find-commit (safe-topological-sort old-dag)))))
           (assert-that commits
                        (contains "aa")))))))
+
+(test ordered-commits
+  "This is being called from the SDK"
+  (with-fixture state ()
+    (let ((dag (make-instance 'dag)))
+      (add-edge "aa" "bb" :dag dag)
+      (assert-that (mapcar #'sha (ordered-commits dag))
+                   (contains "aa")))))

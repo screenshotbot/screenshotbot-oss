@@ -64,7 +64,7 @@ have a partial graph."
                 parent)))))
 
 (defmethod ordered-commits ((dag dag))
-  (let ((sorted (safe-topological-sort (digraph dag))))
+  (let ((sorted (safe-topological-sort dag)))
     (loop for id in sorted
           collect (gethash id (commit-map dag)))))
 
