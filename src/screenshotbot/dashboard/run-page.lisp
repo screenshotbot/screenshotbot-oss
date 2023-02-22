@@ -81,7 +81,7 @@
            #:start-review-enabled-p))
 (in-package :screenshotbot/dashboard/run-page)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defvar *create-issue-popup* nil
   "On the non-OSS Screenshotbot, we have a feature to Jira tasks
@@ -322,16 +322,29 @@
                (equal filter (funcall (row-filter-key row-filter) x)))
              collect x))))
 
+(deftag warning-alert (children)
+  <div class= "alert alert-warning mt-2">
+    <strong class= "pe-1" >Caution!</strong>
+    ,@children
+  </div>)
+
 (defmethod render-run-warning (run (warning merge-base-failed-warning))
   (let ((repo (channel-repo (recorder-run-channel run))))
    (flet ((link (hash)
             (commit-link repo
                          hash)))
-     <div class= "alert alert-warning mt-2">
-       <strong class= "pe-1" >Caution!</strong>
+     <warning-alert>
        <span>The <a href= (link (recorder-run-commit run))>merge base</a> for ,(review-link :run run) had a failing build. Screenshotbot used <a href= (link (recorder-run-commit (compared-against warning)))>this commit</a> to generate reports for this run. Consider rebasing to avoid this message.
        </span>
-     </div>)))
+     </warning-alert>)))
+
+(defmethod render-run-warning (run (warning not-fast-forward-promotion-warning))
+  (when-let ((previous-run (recorder-previous-run run)))
+    <warning-alert>
+      <span>
+        This run was not a fast-forward of the commit from the <a href= (run-link previous-run)>previous promoted run</a>. This might be the result of rewriting Git history with <tt>git push -f</tt>, or because of an incorrect invocation of the CLI tool on a developer device.
+      </span>
+    </warning-alert>))
 
 (defun render-warnings (run)
   (when-let ((warnings (recorder-run-warnings run)))
@@ -411,7 +424,10 @@
      :filter (lambda (screenshot)
                (or (null query)
                    (str:contains? query (screenshot-name screenshot)
-                                  :ignore-case t))))))
+      :ignore-case t))))))
+
+(defun run-link (run)
+  (make-url 'run-page :id (oid run)))
 
 (defun run-page-contents (run channel screenshots &key (filter #'identity))
   <div class= "baguetteBox" id= (format nil "a-~a" (random 10000000)) >
@@ -436,7 +452,7 @@
 
               <li>
                 <a href= (nibble () (mask-editor (recorder-run-channel run) screenshot
-                   :redirect (make-url 'run-page :id (oid run))))
+                   :redirect (run-link run)))
                    >Edit Masks</a>
 
               </li>

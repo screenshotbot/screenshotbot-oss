@@ -76,7 +76,8 @@
    #:unpromote-run
    #:pull-request-id
    #:compared-against
-   #:compare-threshold))
+   #:compare-threshold
+   #:not-fast-forward-promotion-warning))
 (in-package :screenshotbot/model/recorder-run)
 
 (with-class-validation
@@ -283,3 +284,9 @@ associated report is rendered.")
    (:metaclass persistent-class)
    (:documentation "A warning that when making a pull request comparison, we didn't
 compare against the actual merge base.")))
+
+(with-class-validation
+  (defclass not-fast-forward-promotion-warning (non-root-object)
+    ()
+    (:metaclass persistent-class)
+    (:documentation "A warning that this was not a fast-forward when the run was promoted")))
