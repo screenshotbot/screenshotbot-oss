@@ -12,6 +12,7 @@
   (:import-from #:screenshotbot/sdk/sdk
                 #:chdir-for-bin)
   (:import-from #:util/threading
+                #:with-extras
                 #:*extras*
                 #:funcall-with-sentry-logs)
   (:import-from #:screenshotbot/sdk/version-check
@@ -90,13 +91,11 @@
   #-screenshotbot-oss
   (sentry-client:initialize-sentry-client
    sentry:*dsn* :client-class 'sentry:delivered-client)
-  (let ((*extras* (list*
-                   (lambda (e)
-                     (declare (ignore e))
-                     `(("api_hostname" . ,flags:*hostname*)
-                       ;; Note that api-key is not meant to be secret
-                       ("api_id" . ,flags:*api-key*)))
-                   *extras*)))
+  (with-extras (("api_hostname" flags:*hostname*)
+                ("api_id"  flags:*api-key*)
+                ("features" *features*)
+                ("channel" flags:*channel*)
+                ("build-url" flags:*build-url*))
    (let ((error-handler (lambda (e)
                           (format stream "~%~a~%~%" e)
                           #+lispworks
