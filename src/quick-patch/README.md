@@ -29,9 +29,6 @@ maybe you're just using an init file. In either case, before you start
 loading other quicklisp projects, you want to do:
 
 ```
-;; Sorry, not in quicklisp yet, but this is kind of proving the
-;; point of why we need this, yeah?
-
 (ql:quickload :quick-patch)
 ```
 
