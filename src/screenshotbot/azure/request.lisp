@@ -27,6 +27,16 @@ https://learn.microsoft.com/en-us/rest/api/azure/devops/build/status/get?view=az
                  :json-type :string))
   (:metaclass ext-json-serializable-class))
 
+(defclass build-definition-reference ()
+  ((name :json-key "name"
+         :json-type :string
+         :reader name)
+   (id :json-key "id"
+       :json-type :number
+       :reader id))
+  (:metaclass ext-json-serializable-class))
+
+
 (defvar *token* nil)
 
 (defclass azure ()
@@ -43,6 +53,7 @@ https://learn.microsoft.com/en-us/rest/api/azure/devops/build/status/get?view=az
 
 (defun azure-request (azure url &key
                                   method
+                                  response-type
                                   content)
   (multiple-value-bind (response code)
       (http-request
@@ -61,7 +72,7 @@ https://learn.microsoft.com/en-us/rest/api/azure/devops/build/status/get?view=az
       ((<= 400 code 510)
        (format t "Got failure: ~a" response))
       (t
-       response))))
+       (json-mop:json-to-clos response response-type)))))
 
 (defun queue-build (azure &key
                       uri
@@ -75,11 +86,18 @@ https://learn.microsoft.com/en-us/rest/api/azure/devops/build/status/get?view=az
      :method :post
      :content body)))
 
+(defclass list-definitions-response ()
+  ((value :json-type (:list build-definition-reference)
+          :json-key "value"
+          :reader build-definitions))
+  (:metaclass ext-json-serializable-class))
+
 (defun list-definitions (azure)
   (azure-request
    azure
    "build/definitions"
-   :method :get))
+   :method :get
+   :response-type 'list-definitions-response))
 
 
 #+nil
