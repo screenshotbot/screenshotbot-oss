@@ -32,58 +32,52 @@
                 #:described-as)
   (:import-from #:fiveam-matchers/core
                 #:equal-to
-                #:assert-that))
+                #:assert-that)
+  (:import-from #:screenshotbot/git-repo
+                #:generic-git-repo
+                #:commit-graph)
+  (:import-from #:screenshotbot/sdk/git
+                #:git-repo))
 
 (util/fiveam:def-suite)
 
-(defclass dummy-repo ()
-  ((commits :initform `(("master" . "car2")
-                        ("new-master" . "bar")
-                        ("force-master" . "qux")
-                        ("bar" . "car2")
-                        ("car2" . "car")))))
+(defun make-dag (commits)
+  (let ((dag (make-instance 'dag:dag)))
+    (loop for (key . parent) in commits
+          do
+             (dag:add-commit dag
+                             (make-instance 'dag:commit
+                                            :sha key
+                                            :parents (list
+                                                      parent))))
+    dag))
+
+(defparameter *tree* `(("a4" . "a2")
+                       ("a5" . "a3")
+                       ("a7" . "a6")
+                       ("a3" . "a2")
+                       ("a2" . "a1")))
+
+(defclass dummy-repo (generic-git-repo)
+  ((commits :initform *tree*)
+   (dag :initform (make-dag *tree*)
+        :reader repo-dag)))
+
+(defclass test-commit-graph ()
+  ((dag :initarg :dag
+        :reader commit-graph-dag)))
+
+(defmethod commit-graph ((repo dummy-repo))
+  (make-instance 'test-commit-graph
+                 :dag (repo-dag repo)))
 
 (defclass test-channel (channel)
-  ()
+  ((%repo :initform (make-instance 'dummy-repo)
+          :reader channel-repo))
   (:metaclass persistent-class))
-
-(defmethod channel-repo ((c test-channel))
-  (make-instance 'dummy-repo))
 
 (defmethod public-repo-p ((repo dummy-repo))
   nil)
-
-(defmethod get-parent-commit ((repo dummy-repo) commit)
-  (with-slots (commits) repo
-    (assoc-value commits commit :test #'equal)))
-
-(defmethod merge-base ((repo dummy-repo) commit1 commit2)
-  (flet ((one-way (commit1 commit2)
-           (let (seen)
-             (labels ((dfs (commit)
-                        (when commit
-                          (push commit seen)
-                          (dfs (get-parent-commit repo commit)))))
-               (dfs commit1))
-             (labels ((dfs (commit)
-                        (when commit
-                          (cond
-                            ((str:s-member seen commit)
-                             commit)
-                            (t
-                             (dfs  (get-parent-commit repo commit)))))))
-               (dfs commit2)))))
-    (or (one-way commit1 commit2)
-        (one-way commit2 commit1))))
-
-(defmethod repo-ancestor-p ((repo dummy-repo) commit1 commit2)
-  (equal commit1 (merge-base repo commit1 commit2)))
-
-(defmethod repo-left-ancestor-p ((repo dummy-repo) commit1 commit2)
-  (equal commit1 (merge-base repo commit1 commit2)))
-
-
-
 
 (def-fixture state ()
   (with-test-store ()
@@ -105,18 +99,18 @@
                                     :commit-hash nil
                                     :cleanp t
                                     :branch "master"
-                                    :branch-hash "car"
+                                    :branch-hash "a1"
                                     :trunkp t
                                     :company company)))))
                       (with-transaction ()
                         (push run (company-runs company)))
                       run)))
-            (let* ((run1 (make-run :commit-hash "car"
+            (let* ((run1 (make-run :commit-hash "a1"
                                    :branch "master"
-                                   :branch-hash "car"))
-                   (run2 (make-run :commit-hash "car2"
+                                   :branch-hash "a1"))
+                   (run2 (make-run :commit-hash "a2"
                                    :branch "master"
-                                   :branch-hash "car2")))
+                                   :branch-hash "a2")))
               (&body)))))))))
 
 (defun %maybe-promote-run (run channel &key (wait-timeout 1))
@@ -172,8 +166,8 @@ situation. Can also happen on a developer branch."
   (with-fixture state ()
     (%maybe-promote-run run1 channel :wait-timeout 0)
     (let ((new-master-run (make-run :branch "master"
-                                    :commit-hash "qux"
-                                    :branch-hash "qux")))
+                                    :commit-hash "a6"
+                                    :branch-hash "a6")))
       (%maybe-promote-run run2 channel :wait-timeout 0)
       (assert-that (activep run2)
                    (described-as "Sanity check"
