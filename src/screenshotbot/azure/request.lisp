@@ -27,21 +27,33 @@ https://learn.microsoft.com/en-us/rest/api/azure/devops/build/status/get?view=az
                  :json-type :string))
   (:metaclass ext-json-serializable-class))
 
-(defvar *token*)
+(defvar *token* nil)
 
-(defun azure-request (url &key (token *token*) organization project
-                            method
-                            content)
+(defclass azure ()
+  ((token :initarg :token
+          :reader token)
+   (organization :initarg :organization
+                 :reader organization)
+   (project :initarg :project
+            :reader project)))
+
+(defvar *test-azure* (make-instance 'azure :token *token*
+                                           :organization "testsbot"
+                                           :project "fast-example"))
+
+(defun azure-request (azure url &key
+                                  method
+                                  content)
   (multiple-value-bind (response code)
       (http-request
        (format nil "https://dev.azure.com/~a/~a/_apis/~a?api-version=7.0"
-               organization
-               project
+               (organization azure)
+               (project azure)
                url)
        :content (with-output-to-string (out)
                   (yason:encode content out))
        :content-type "application/json"
-       :basic-authorization (list "" token)
+       :basic-authorization (list "" (token azure))
        :accept "application/json"
        :method method
        :want-string t)
@@ -51,35 +63,24 @@ https://learn.microsoft.com/en-us/rest/api/azure/devops/build/status/get?view=az
       (t
        response))))
 
-(defun queue-build (&key
-                      token
-                      organization
-                      project
+(defun queue-build (azure &key
                       uri
                       result)
   (let ((body (make-instance 'devops-build
                              :uri "https://screenshotbot.io/runs"
                              :build-result "succeeded")))
     (azure-request
+     azure
      "build/builds"
-     :token token
-     :organization organization
-     :project project
      :method :post
      :content body)))
 
-(defun list-definitions (&key token
-                           organization
-                           project)
+(defun list-definitions (azure)
   (azure-request
+   azure
    "build/definitions"
-   :token token
-   :organization organization
-   :project project
    :method :get))
 
 
 #+nil
-(format t "~a"(list-definitions :token *token*
-                                :organization "testsbot"
-                                :project "fast-example"))
+(format t "~a"(list-definitions *test-azure*))
