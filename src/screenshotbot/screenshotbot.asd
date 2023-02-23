@@ -202,6 +202,9 @@
                  (:file "pull-request-promoter")
                  (:file "task-integration")
                  (:file "all")))
+   (:module "azure"
+    :serial t
+    :components ((:file "request")))
    (:module "bitbucket"
     :components ((:file "core")
                  (:file "plugin")
