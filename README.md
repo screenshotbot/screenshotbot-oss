@@ -5,7 +5,7 @@
 # Screenshotbot: Screenshot Testing Service
 
 [![tdrhq](https://circleci.com/gh/screenshotbot/screenshotbot-oss.svg?style=shield)](https://app.circleci.com/pipelines/github/screenshotbot/screenshotbot-oss?branch=main)
-[![Screenshots](https://screenshotbot.io/badge?org=5fd16bcf4f4b3822fd0000e1&channel=screenshotbot-oss&branch=master)](https://screenshotbot.io/active-run?org=5fd16bcf4f4b3822fd0000e1&channel=screenshotbot-oss&branch=master)
+[![Screenshots](https://screenshotbot.io/badge?org=5fd16bcf4f4b3822fd0000e1&channel=screenshotbot-oss&branch=master&cache-key=2)](https://screenshotbot.io/active-run?org=5fd16bcf4f4b3822fd0000e1&channel=screenshotbot-oss&branch=master)
 
 
 Screenshotbot is a Screenshot Testing service. Screenshotbot will
