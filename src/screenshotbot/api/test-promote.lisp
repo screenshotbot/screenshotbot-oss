@@ -31,13 +31,19 @@
   (:import-from #:fiveam-matchers/described-as
                 #:described-as)
   (:import-from #:fiveam-matchers/core
+                #:has-typep
                 #:equal-to
                 #:assert-that)
   (:import-from #:screenshotbot/git-repo
                 #:generic-git-repo
                 #:commit-graph)
   (:import-from #:screenshotbot/sdk/git
-                #:git-repo))
+                #:git-repo)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:not-fast-forward-promotion-warning
+                #:recorder-run-warnings)
+  (:import-from #:fiveam-matchers/lists
+                #:contains))
 
 (util/fiveam:def-suite)
 
@@ -176,5 +182,9 @@ situation. Can also happen on a developer branch."
       (log:info "Starting next run")
       (%maybe-promote-run new-master-run channel :wait-timeout 0)
 
-      (is-true (activep run2))
-      (is-false (activep new-master-run)))))
+      (is-false (activep run2))
+      (is-true (activep new-master-run))
+
+      (assert-that (recorder-run-warnings new-master-run)
+                   (contains
+                    (has-typep 'not-fast-forward-promotion-warning))))))

@@ -32,6 +32,8 @@
   (:import-from #:bknr.datastore
                 #:blob-pathname)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-warnings
+                #:not-fast-forward-promotion-warning
                 #:promotion-log)
   (:export
    #:with-promotion-log
@@ -228,13 +230,6 @@
        (log :info  "not promoting run because it's not production run"))
       ((not (recorder-run-branch-hash run))
        (log :error  "branch-hash not present in run"))
-      ((and (not *disable-ancestor-checks-p*)
-            previous-run
-            (not (in-branch-p (recorder-run-commit previous-run)
-                              branch)))
-       (log :error "The previous commit ~a is no longer in branch ~a"
-                  (recorder-run-commit previous-run)
-                  branch))
       ((not (in-branch-p (recorder-run-commit run) branch))
        (log :error "The commit ~a is not in branch ~a"
                   (recorder-run-commit run)
@@ -247,13 +242,12 @@
             (string= (recorder-run-commit previous-run)
                      (recorder-run-commit run)))
        (log :info "The current promoted run is already on the same commit"))
-      ((and (not *disable-ancestor-checks-p*)
-            previous-run
-            (not (channel-ancestorp
-                  channel
-                  (recorder-run-commit previous-run)
-                  (recorder-run-commit run))))
-       (log :info "Previous run is not an on an ancestor commit. This is usually a race condition, but is okay."))
+      ((and previous-run  #| TAG, see below |#
+            (channel-ancestorp
+             channel
+             (recorder-run-commit run)
+             (recorder-run-commit previous-run)))
+       (log:info  "The current run is an ancestor of the previous run, skipping promotion"))
       (t
        (cond
          ((not (if previous-run
@@ -261,8 +255,22 @@
                    t))
           (log :error "Another run got promoted while we were debating this one."))
          (t
+          (when previous-run
+            ;; Because of the check on line marked `TAG`, we know run
+            ;; is not an ancestor of previous-run. If the other
+            ;; direction is also not true, then we apply the warning
+            (unless (channel-ancestorp
+                     channel
+                     (recorder-run-commit previous-run)
+                     (recorder-run-commit run))
+              (add-not-fast-forward-promotion-warning run)))
           (finalize-promotion run previous-run
                               channel branch)))))))
+
+(defun add-not-fast-forward-promotion-warning (run)
+  (with-transaction ()
+    (push (make-instance 'not-fast-forward-promotion-warning)
+          (recorder-run-warnings run))))
 
 (defmethod wait-for-run ((channel channel) commit
                      &optional (amount 15) (unit :minute))
