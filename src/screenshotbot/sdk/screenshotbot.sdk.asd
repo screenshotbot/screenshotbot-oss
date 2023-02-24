@@ -6,7 +6,7 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
-  :version "2.5.5"
+  :version "2.5.6"
   :depends-on (:dexador
                :com.google.flag
                :pkg
@@ -42,6 +42,7 @@
                (:file "bundle")
                (:file "firebase")
                (:file "android")
+               (:file "env")
                (:file "git")
                (:file "sdk")
                (:file "failed-run")))

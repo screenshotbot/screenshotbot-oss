@@ -36,8 +36,6 @@
                 #:cleanp
                 #:repo-link
                 #:merge-base)
-  (:import-from #:uiop
-                #:getenv)
   (:import-from #:util/request
                 #:http-request)
   (:import-from #:util/misc
@@ -53,7 +51,8 @@
   (:import-from #:util/json-mop
                 #:json-mop-to-string)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
-                    (#:dto #:screenshotbot/api/model))
+                    (#:dto #:screenshotbot/api/model)
+                    (#:e #:screenshotbot/sdk/env))
   (:export
    #:single-directory-run
    #:*request*
@@ -429,15 +428,15 @@ error."
   "If the string is empty, return nil"
   (if (str:emptyp s) nil s))
 
-(defun parse-api-key-from-environment ()
+(defun parse-api-key-from-environment (env)
   (setf *api-key*
         (or (emptify *api-key*)
-            (uiop:getenv "SCREENSHOTBOT_API_KEY")))
+            (e:api-key env)))
   (setf *api-secret*
         (or (emptify *api-secret*)
-            (uiop:getenv "SCREENSHOTBOT_API_SECRET")))
+            (e:api-secret env)))
 
-  (alexandria:when-let (hostname (uiop:getenv "SCREENSHOTBOT_API_HOSTNAME"))
+  (alexandria:when-let (hostname (e:api-hostname env))
     (setf flags:*hostname* hostname)))
 
 (defun guess-master-branch (repo)
@@ -465,34 +464,37 @@ pull-request looks incorrect."
              *pull-request*)
        (setf *pull-request* nil)))))
 
-
 (defun parse-environment ()
-  (parse-api-key-from-environment)
+  (let ((env (e:make-env-reader)))
+    (parse-api-key-from-environment env)
 
-  (when *branch*
-    (error "--branch is no longer supported, please use --main-branch instead"))
+    (when *branch*
+      (error "--branch is no longer supported, please use --main-branch instead"))
 
-  (validate-pull-request)
+    (validate-pull-request)
 
-  (unless *pull-request*
-    (setf *pull-request*
-          (or
-           (uiop:getenv "CIRCLE_PULL_REQUEST")
-           (ignore-errors ;; temporary, until we're sure this works correctly
-            (if-let ((repo-url (getenv "BITRISEIO_PULL_REQUEST_REPOSITORY_URL"))
-                     (pull-id (getenv "BITRISE_PULL_REQUEST")))
-              (link-to-github-pull-request repo-url pull-id))))))
+    (or-setf *build-url*
+             (e:build-url env))
 
-  (or-setf
-   flags:*override-commit-hash*
-   (unless (str:emptyp *pull-request*)
-     (or
-      (uiop:getenv "CIRCLE_SHA1")
-      (uiop:getenv "BITRISE_GIT_COMMIT"))))
+    (or-setf *repo-url*
+             (e:repo-url env))
 
-  (unless *main-branch*
-    (setf *main-branch*
-          (guess-master-branch (git-repo)))))
+    (unless *pull-request*
+      (setf *pull-request*
+            (e:pull-request-url env)))
+
+    (when (equal "unnamed-channel" *channel*)
+      (when-let ((channel (e:guess-channel-name env)))
+        (setf *channel* channel)))
+
+    (or-setf
+     flags:*override-commit-hash*
+     (unless (str:emptyp *pull-request*)
+       (e:sha1 env)))
+
+    (unless *main-branch*
+      (setf *main-branch*
+            (guess-master-branch (git-repo))))))
 
 (defun link-to-github-pull-request (repo-url pull-id)
   (let ((key (cond
@@ -505,43 +507,13 @@ pull-request looks incorrect."
            key
            pull-id)))
 
-(defun parse-build-url ()
-  (setf *build-url*
-        (or *build-url*
-            (uiop:getenv "BUILD_URL") ;; jenkins
-            (uiop:getenv "CIRCLE_BUILD_URL")
-            (uiop:getenv "BITRISE_BUILD_URL"))))
-
-(defun maybe-parse-netlify-environment ()
-  (when (equal "true" (uiop:getenv "NETLIFY"))
-    (log:info "Looks like we're running in Netlify")
-    (setf *repo-url*
-          (uiop:getenv "REPOSITORY_URL"))
-    (let ((build-id (uiop:getenv "BUILD_ID"))
-          (site-name (uiop:getenv "SITE_NAME")))
-      (setf *build-url*
-            (format nil "https://app.netlify.com/sites/~a/deploys/~a"
-                    site-name
-                    build-id)))
-    (let ((pull-request-p (equal "true" (uiop:getenv "PULL_REQUEST"))))
-      (when pull-request-p
-        (let ((review-id (uiop:getenv "REVIEW_ID")))
-          (setf *pull-request*
-                (link-to-github-pull-request
-                 *repo-url*
-                 review-id)))))
-    (when (equal "unnamed-channel" *channel*)
-      (setf *channel*
-            (uiop:getenv "SITE_NAME")))))
 
 (defun parse-org-defaults ()
-  (parse-build-url)
   (parse-environment)
   (when (str:emptyp *api-key*)
     (error "No --api-key provided"))
-  (when( str:emptyp *api-secret*)
+  (when(str:emptyp *api-secret*)
     (error "No --api-secret provided"))
-  (maybe-parse-netlify-environment)
   (when *org-defaults*
    (ecase (intern (str:upcase *org-defaults*) "KEYWORD")
      (nil
