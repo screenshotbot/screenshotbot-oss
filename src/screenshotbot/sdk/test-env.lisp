@@ -33,16 +33,19 @@
   (&body))
 
 (test base-reader
-  (finishes (test-happy-fns (make-instance 'env-reader))))
+  (finishes (test-happy-fns (make-instance 'env-reader :overrides nil))))
 
 (test circleci
-  (finishes (test-happy-fns (make-instance 'circleci-env-reader))))
+  (finishes (test-happy-fns (make-instance 'circleci-env-reader
+                                           :overrides nil))))
 
 (test bitrise
-  (finishes (test-happy-fns (make-instance 'bitrise-env-reader))))
+  (finishes (test-happy-fns (make-instance 'bitrise-env-reader
+                                           :overrides nil))))
 
 (test netlify
-  (finishes (test-happy-fns (make-instance 'netlify-env-reader))))
+  (finishes (test-happy-fns (make-instance 'netlify-env-reader
+                                           :overrides nil))))
 
 (test bitrise-pull-request-url
   (is (equal "https://bitbucket.com/fast-example/pull-requests/2"

@@ -25,7 +25,6 @@
 
 (defclass base-env-reader ()
   ((overrides :initarg :overrides
-              :initform nil
               :reader overrides))
   (:documentation "Reads the environment to get some information about the current build"))
 
@@ -33,7 +32,7 @@
   ())
 
 (defmethod getenv ((self base-env-reader) name)
-  (or
+  (if (slot-boundp self 'overrides)
    (assoc-value (overrides self)
                 name :test #'string=)
    (uiop:getenv name)))
