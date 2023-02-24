@@ -154,10 +154,40 @@
 (defmethod sha1 ((self bitrise-env-reader))
   (getenv self "BITRISE_GIT_COMMIT"))
 
+(defclass azure-env-reader (base-env-reader)
+  ())
+
+(defmethod getenv ((self azure-env-reader) name)
+  "Make it convenient to copy paste environment variables from Azure docs"
+  (call-next-method
+   self
+   (str:upcase (str:replace-all "." "_" name))))
+
+(defmethod validp ((self azure-env-reader))
+  (getenv self "Build.BuildId"))
+
+(defmethod pull-request-url ((self azure-env-reader))
+  (when-let ((repo-url (getenv self "System.PullRequest.SourceRepositoryURI"))
+             (pull-id (getenv self "System.PullRequest.PullRequestId")))
+   (format nil "~a/pullrequest/~a"
+           repo-url
+           pull-id)))
+
+(defmethod sha1 ((self azure-env-reader))
+  (getenv self "Build.SourceVersion"))
+
+(defmethod build-url ((self azure-env-reader))
+  ;; This does not return an HTTPS url sadly...
+  (getenv self "Build.BuildUri"))
+
+(defmethod repo-url ((self azure-env-reader))
+  (getenv self "Build.Repository.Uri"))
+
 (defun make-env-reader ()
   (loop for option in '(circleci-env-reader
                         bitrise-env-reader
-                        netlify-env-reader)
+                        netlify-env-reader
+                        azure-env-reader)
         for env = (make-instance option)
         if (validp env)
           return env

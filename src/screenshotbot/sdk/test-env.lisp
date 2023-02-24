@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/sdk/env)
   (:import-from #:screenshotbot/sdk/env
+                #:azure-env-reader
                 #:validp
                 #:netlify-env-reader
                 #:bitrise-env-reader
@@ -53,3 +54,7 @@
               (make-instance 'bitrise-env-reader
                              :overrides `(("GIT_REPOSITORY_URL" . "https://bitbucket.com/fast-example")
                                           ("BITRISE_PULL_REQUEST" . "2")))))))
+
+(test azure
+  (finishes (test-happy-fns (make-instance 'azure-env-reader
+                                           :overrides nil))))
