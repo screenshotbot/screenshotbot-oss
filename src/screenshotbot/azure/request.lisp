@@ -12,36 +12,6 @@
                 #:http-request))
 (in-package :screenshotbot/azure/request)
 
-#|
-Documentation
-https://learn.microsoft.com/en-us/rest/api/azure/devops/build/status/get?view=azure-devops-rest-7.0
-|#
-
-
-(defclass devops-build ()
-  ((uri :initarg :uri
-        :json-key "uri"
-        :json-type :string)
-   (build-result :initarg :build-result
-                 :json-key "result"
-                 :json-type :string))
-  (:metaclass ext-json-serializable-class))
-
-(defclass build-definition-reference ()
-  ((name :json-key "name"
-         :json-type :string
-         :initarg :name
-         :reader name)
-   (id :json-key "id"
-       :json-type :number
-       :reader id)
-   (description :json-key "description"
-                :json-type (or null :string)
-                :initarg :description)
-   (repository :json-key "repository"
-               :json-type (or null build-repository)
-               :initarg :repository))
-  (:metaclass ext-json-serializable-class))
 
 (defclass git-status-context ()
   ((genre :initform "screenshotbot"
@@ -65,12 +35,6 @@ https://learn.microsoft.com/en-us/rest/api/azure/devops/build/status/get?view=az
    (target-url :initarg :target-url
                :json-key "targetUrl"
                :json-type :string))
-  (:metaclass ext-json-serializable-class))
-
-(defclass build-repository ()
-  ((name :json-type :string
-         :json-key "name"
-         :initarg :name))
   (:metaclass ext-json-serializable-class))
 
 
@@ -122,40 +86,6 @@ https://learn.microsoft.com/en-us/rest/api/azure/devops/build/status/get?view=az
        (t
         (json-mop:json-to-clos response response-type))))))
 
-(defun queue-build (azure &key
-                      uri
-                      result)
-  (let ((body (make-instance 'devops-build
-                             :uri "https://screenshotbot.io/runs"
-                             :build-result "succeeded")))
-    (azure-request
-     azure
-     "build/builds"
-     :method :post
-     :content body
-     :parameters `(("sourceBuildId" . "5")))))
-
-(defclass list-definitions-response ()
-  ((value :json-type (:list build-definition-reference)
-          :json-key "value"
-          :reader build-definitions))
-  (:metaclass ext-json-serializable-class))
-
-(defun list-definitions (azure)
-  (azure-request
-   azure
-   "build/definitions"
-   :method :get
-   :response-type 'list-definitions-response))
-
-(defun create-definition (azure build-definition)
-  (azure-request
-   azure
-   "build/definitions"
-   :method :post
-   :response-type 'build-definition-reference
-   :content build-definition))
-
 (defmethod create-pull-request-status (azure status
                                        &key repository-id
                                          pull-request-id)
@@ -175,9 +105,6 @@ https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies?view=az
 |#
 
 #+nil
-(queue-build *test-azure*)
-
-#+nil
 (create-pull-request-status
  *test-azure*
  (make-instance 'pull-request-status
@@ -188,12 +115,3 @@ https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies?view=az
                                         :name "foobar"))
  :repository-id "fast-example"
  :pull-request-id 1)
-
-#+nil
-(create-definition *test-azure*
-                   (make-instance 'build-definition-reference
-                                  :name "test-foo"
-                                  :description "this is a sample job"
-                                  :))
-#+nil
-(format t "~a"(list-definitions *test-azure*))
