@@ -48,21 +48,27 @@
   (with-fixture state ()
    (let* ((ctr 0)
           (max-ctr 100)
-          (callback-called-p nil)
-          (thread (bt:make-thread
-                   (lambda ()
-                     (with-safe-interruptable (:on-quit (lambda ()
-                                                          (setf callback-called-p t)))
-                       (loop for i below max-ctr
-                             do
-                                (incf ctr)
-                                (safe-interrupt-checkpoint)
-                                (sleep 0.1)))))))
-     (safe-interrupt thread)
-     (bt:join-thread thread)
-     (is-true callback-called-p)
-     (is (< ctr (/ max-ctr 2)))
-     (pass))))
+          (lock (bt:make-lock))
+          (cv (bt:make-condition-variable))
+          (callback-called-p nil))
+
+     (bt:with-lock-held (lock)
+      (let ((thread (bt:make-thread
+                     (lambda ()
+                       (with-safe-interruptable (:on-quit (lambda ()
+                                                            (setf callback-called-p t)))
+                         (bt:condition-notify cv)
+                         (loop for i below max-ctr
+                               do
+                                  (incf ctr)
+                                  (safe-interrupt-checkpoint)
+                                  (sleep 0.1)))))))
+        (bt:condition-wait cv lock)
+        (safe-interrupt thread)
+        (bt:join-thread thread)
+        (is-true callback-called-p)
+        (is (< ctr (/ max-ctr 2)))
+        (pass))))))
 
 (def-fixture sentry-mocks ()
   (cl-mock:with-mocks ()

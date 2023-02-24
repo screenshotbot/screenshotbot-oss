@@ -13,6 +13,8 @@
 
 
 (defvar *mailboxes* (trivial-garbage:make-weak-hash-table
+                     #+sbcl
+                     :synchronized #+sbcl t
                      :weakness :key))
 
 (defun process-mailbox (process)
