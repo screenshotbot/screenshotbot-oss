@@ -9,7 +9,8 @@
   (:import-from #:markup
                 #:xml-tag-children)
   (:export #:with-form-errors
-           #:update-form-values))
+           #:update-form-values
+           #:with-error-builder))
 (in-package :util/form-errors)
 
 (markup:enable-reader)
@@ -70,3 +71,24 @@
                         :args (list ,@(loop for x in args collect
                                             `(cons ,(car x) ,(cdr x))))
                         :args-list ,args-list)))
+
+(defmacro with-error-builder ((&key (check (error "must provide :check function name"))
+                                 (errors (error "must provide a variable for the errors"))
+                                 form-builder
+                                 form-args
+                                 success)
+                              &body body)
+  `(let ((,errors nil))
+     (flet ((,check (field expr value)
+              (unless expr
+                (push (cons field value)
+                      ,errors))))
+       ,@body
+       (cond
+         (,errors
+          (with-form-errors (:errors ,errors
+                             ,@form-args
+                             :was-validated t)
+            ,form-builder))
+         (t
+          ,success)))))
