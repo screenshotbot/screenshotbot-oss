@@ -106,7 +106,8 @@
         (create-pull-request-status
          azure
          (make-instance 'pull-request-status
-                        :description (check-title check)
+                        :description (format nil "Screenshotbot: ~a"
+                                             (check-title check))
                         :state (ecase (check-status check)
                                  (:accepted +succeeded+)
                                  (:rejected +failed+)
