@@ -188,7 +188,8 @@ most integrations here, but that will depend on community interest.
 | GitHub                | Supported    | Supported    | Supported         | Supported                      |
 | GitLab                | Supported    | Supported    | Supported         | Supported                      |
 | Phabricator           | Supported    | Supported    | Supported         | Supported                      |
-| BitBucket             | Supported    | Supported    | Supported         | Supported                 |
+| BitBucket             | Supported    | Supported    | Supported         | Supported                      |
+| Azure DevOps          | Supported    | Supported    | Supported         | Supported                      |
 | **Tasks Integration** |              |              |                   |                                |
 | Slack                 | Supported    | Supported    | Supported         | Supported                      |
 | Email                 | Supported    | Supported    | Supported         | Supported                      |
