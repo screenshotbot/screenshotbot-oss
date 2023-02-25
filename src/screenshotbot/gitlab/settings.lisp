@@ -41,6 +41,8 @@
 
 (markup:enable-reader)
 
+(defvar +unchanged+ "unchanged")
+
 (with-class-validation
  (defclass gitlab-settings (store-object)
    ((%company :initarg :company
@@ -103,9 +105,15 @@
          (finish-save-settings gitlab-url token))))))
 
 (defun settings-page ()
-  (let ((settings (gitlab-settings-for-company (current-company)))
-        (save (nibble (gitlab-url token)
-                (save-settings gitlab-url token))))
+  (let* ((settings (gitlab-settings-for-company (current-company)))
+         (current-token (?. gitlab-token settings))
+         (save (nibble (gitlab-url token)
+                 (let ((token (cond
+                                ((equal token +unchanged+)
+                                 current-token)
+                                (t
+                                 token))))
+                  (save-settings gitlab-url token)))))
     <settings-template>
       <form action=save method= "POST" >
         <div class= "card mt-3" style= "max-width: 80em">
@@ -123,7 +131,7 @@
               <div class= "mb-3">
                 <label for= "token" class= "form-label">Personal Access Token</label>
                 <input id= "token" type= "password" name= "token" class= "form-control"
-                       value= (?. gitlab-token settings) />
+                       value= (when settings +unchanged+) />
               </div>
           </div>
 
