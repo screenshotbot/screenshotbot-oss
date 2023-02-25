@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/azure/plugin
   (:use #:cl)
   (:import-from #:screenshotbot/plugin
+                #:plugin-parse-repo
                 #:plugin)
   (:import-from #:bknr.datastore
                 #:persistent-class)
@@ -19,12 +20,17 @@
   (:import-from #:screenshotbot/installation
                 #:find-plugin
                 #:installation)
+  (:import-from #:alexandria
+                #:when-let)
+  (:import-from #:screenshotbot/git-repo
+                #:generic-git-repo)
   (:export
    #:azure-plugin
    #:azure-server
    #:azure-settings
    #:azure-access-token
-   #:azure-settings-for-company))
+   #:azure-settings-for-company
+   #:azure-git-repo))
 (in-package :screenshotbot/azure/plugin)
 
 (defclass azure-plugin (plugin)
@@ -43,7 +49,17 @@
                :initarg :company))
     (:metaclass persistent-class)))
 
+(defclass azure-git-repo (generic-git-repo)
+  ())
 
+(defmethod plugin-parse-repo ((plugin azure-plugin)
+                              company
+                              repo-url)
+  (when-let ((settings (azure-settings-for-company company)))
+    (let ((hostname (quri:uri-host (quri:uri (azure-server settings)))))
+      (when (str:containsp hostname repo-url)
+        (make-instance 'azure-git-repo
+                       :link repo-url)))))
 
 (defun azure-plugin (&key (installation (installation)))
   (find-plugin installation 'azure-plugin))

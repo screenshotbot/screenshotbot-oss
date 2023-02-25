@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/api/test-promote
+(defpackage :screenshotbot/api/test-promote
   (:use #:cl
         #:alexandria
         #:bknr.datastore
@@ -19,11 +19,8 @@
         #:screenshotbot/model/api-key)
   (:import-from #:bknr.datastore
                 #:persistent-class)
-
   (:import-from #:screenshotbot/testing
                 #:with-test-user)
-  (:import-from #:screenshotbot/api/promote
-                #:*promotion-log-stream*)
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:util/testing
@@ -44,6 +41,7 @@
                 #:recorder-run-warnings)
   (:import-from #:fiveam-matchers/lists
                 #:contains))
+(in-package :screenshotbot/api/test-promote)
 
 (util/fiveam:def-suite)
 

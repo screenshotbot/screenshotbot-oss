@@ -206,7 +206,8 @@
     :serial t
     :components ((:file "request")
                  (:file "plugin")
-                 (:file "settings")))
+                 (:file "settings")
+                 (:file "promoter")))
    (:module "bitbucket"
     :components ((:file "core")
                  (:file "plugin")
@@ -382,7 +383,8 @@
                (:module "gitlab"
                 :components ((:file "test-merge-request-promoter")))
                (:module "azure"
-                :components ((:file "test-settings")))
+                :components ((:file "test-plugin")
+                             (:file "test-settings")))
                (:module "phabricator"
                 :components ((:file "test-builds")
                              (:file "test-diff-promoter")))
