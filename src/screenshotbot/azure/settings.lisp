@@ -5,7 +5,8 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/azure/settings
-  (:use #:cl)
+  (:use #:cl
+        #:screenshotbot/azure/plugin)
   (:import-from #:screenshotbot/azure/plugin
                 #:azure-plugin)
   (:import-from #:screenshotbot/settings-api
@@ -13,13 +14,6 @@
                 #:defsettings)
   (:import-from #:nibble
                 #:nibble)
-  (:import-from #:util/store
-                #:with-class-validation)
-  (:import-from #:bknr.indices
-                #:unique-index)
-  (:import-from #:bknr.datastore
-                #:persistent-class
-                #:store-object)
   (:import-from #:util/form-errors
                 #:with-error-builder)
   (:import-from #:screenshotbot/user-api
@@ -29,25 +23,11 @@
   (:import-from #:bknr.datastore
                 #:delete-object)
   (:import-from #:core/ui/simple-card-page
-                #:confirmation-page)
-  (:import-from #:bknr.datastore
-                #:delete-object))
+                #:confirmation-page))
 (in-package :screenshotbot/azure/settings)
 
 (named-readtables:in-readtable markup:syntax)
 
-(with-class-validation
-  (defclass azure-settings (store-object)
-    ((%server :initarg :server
-              :reader azure-server)
-     (%personal-access-token
-      :initarg :access-token
-      :reader azure-access-token)
-     (%company :reader company
-               :index-type unique-index
-               :index-reader azure-settings-for-company
-               :initarg :company))
-    (:metaclass persistent-class)))
 
 (defun go-home ()
   (hex:safe-redirect "/settings/azure"))

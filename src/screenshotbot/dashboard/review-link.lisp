@@ -47,7 +47,9 @@
 (defmethod review-link-impl (repo run)
   nil)
 
-(defgeneric get-canonical-pull-request-url (repo pull-request-id))
+(defgeneric get-canonical-pull-request-url (repo pull-request-id)
+  (:method (repo pull-request-id)
+    "#"))
 
 (defmethod render-pull-request-link (repo run)
   (let ((href (get-canonical-pull-request-url
