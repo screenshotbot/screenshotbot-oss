@@ -16,33 +16,45 @@
   (:import-from #:screenshotbot/phabricator/plugin
                 #:phabricator-plugin)
   (:import-from #:bknr.datastore
-                #:with-transaction))
+                #:with-transaction)
+  (:import-from #:util/misc
+                #:?.)
+  (:import-from #:screenshotbot/model/company
+                #:conduit-api-key))
 (in-package :screenshotbot/phabricator/settings)
 
 (markup:enable-reader)
 
+(defvar +unchanged+ "unchanged")
+
 (deftag phabricator-settings-template ()
   (let* ((config (phabricator-config-for-company (current-company)))
+         (current-api-key (?. conduit-api-key config))
          (submit (nibble (url api-key)
-                   (let ((errors))
-                     (flet ((check (field test message)
-                              (unless test
-                                (push (cons field message)
-                                      errors))))
-                       (check :url (not (str:emptyp url))
-                              "Please provide a URL for phabricator")
-                       (check :api-key (not (str:emptyp api-key))
-                              "Please provide an API Key for Conduit")
-                       (cond
-                         (errors
-                          (with-form-errors (:errors errors :url url :api-key api-key
-                                             :was-validated t)
-                            (phabricator-settings-template)))
-                         (t
-                          (with-transaction ()
-                            (setf (phabricator-url config) url)
-                            (setf (conduit-api-key config) api-key))
-                          (phabricator-settings-template))))))))
+                   (let ((api-key (cond
+                                    ((equal api-key +unchanged+)
+                                     current-api-key)
+                                    (t
+                                     api-key))))
+                    (let ((errors))
+                      (flet ((check (field test message)
+                               (unless test
+                                 (push (cons field message)
+                                       errors))))
+                        (check :url (not (str:emptyp url))
+                               "Please provide a URL for phabricator")
+                        (check :api-key (not (str:emptyp api-key))
+                               "Please provide an API Key for Conduit")
+                        (cond
+                          (errors
+                           (with-form-errors (:errors errors :url url :api-key api-key
+                                              :was-validated t)
+                             (phabricator-settings-template)))
+                          (t
+                           (with-transaction ()
+                             (setf (phabricator-url config) url)
+                             (setf (conduit-api-key config) api-key))
+                           (phabricator-settings-template)))))))))
     <settings-template>
       <form action= submit method= "POST" >
         <div class= "card mt-3">
@@ -59,7 +71,7 @@
 
             <div class= "mb-3">
               <label for= "api-key" class= "form-label">Conduit API Key</label>
-              <input type= "password" class= "form-control" name= "api-key" placeholder= "*****" value= (conduit-api-key config) />
+              <input type= "password" class= "form-control" name= "api-key" placeholder= "*****" value= (when (conduit-api-key config) +unchanged+) />
             </div>
 
           </div>
