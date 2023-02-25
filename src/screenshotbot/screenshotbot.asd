@@ -384,7 +384,8 @@
                 :components ((:file "test-merge-request-promoter")))
                (:module "azure"
                 :components ((:file "test-plugin")
-                             (:file "test-settings")))
+                             (:file "test-settings")
+                             (:file "test-promoter")))
                (:module "phabricator"
                 :components ((:file "test-builds")
                              (:file "test-diff-promoter")))

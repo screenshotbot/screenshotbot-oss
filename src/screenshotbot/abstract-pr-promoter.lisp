@@ -196,7 +196,9 @@
    (send-task-args :accessor send-task-args
                    :initform nil)))
 
-(defgeneric valid-repo? (promoter repo))
+(defgeneric valid-repo? (promoter repo)
+  (:method (promoter repo)
+    nil))
 
 (defgeneric plugin-installed? (promoter company repo-url))
 
