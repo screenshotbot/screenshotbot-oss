@@ -28,6 +28,8 @@
 
 (named-readtables:in-readtable markup:syntax)
 
+(defvar +default-hostname+ "https://dev.azure.com")
+
 
 (defun go-home ()
   (hex:safe-redirect "/settings/azure"))
@@ -89,8 +91,8 @@
               </label>
 
               <input type= "text" class= "form-control" name= "server"
-                     value= (?. azure-server settings)
-                     placeholder= "https://dev.azure.com" />
+                     value= (or (?. azure-server settings) +default-hostname+)
+                     placeholder= +default-hostname+ />
             </div>
 
             <div class= "mb-3">
