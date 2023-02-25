@@ -27,6 +27,10 @@
   (:import-from #:util/misc
                 #:?.)
   (:import-from #:bknr.datastore
+                #:delete-object)
+  (:import-from #:core/ui/simple-card-page
+                #:confirmation-page)
+  (:import-from #:bknr.datastore
                 #:delete-object))
 (in-package :screenshotbot/azure/settings)
 
@@ -45,6 +49,9 @@
                :initarg :company))
     (:metaclass persistent-class)))
 
+(defun go-home ()
+  (hex:safe-redirect "/settings/azure"))
+
 (defun finalize-settings (server access-token)
   (let ((existing (azure-settings-for-company (current-company))))
     (when existing
@@ -53,7 +60,7 @@
                    :company (current-company)
                    :access-token access-token
                    :server server))
-  (hex:safe-redirect "/settings/azure"))
+  (go-home))
 
 (defun save-settings (server access-token)
   (with-error-builder (:check check
@@ -69,6 +76,14 @@
            "Could not parse URI provided")
     (check :access-token (not (str:emptyp access-token))
            "Personal access token cannot be empty")))
+
+(defun disconnect-azure ()
+  (confirmation-page
+   :yes (nibble ()
+          (?. delete-object (azure-settings-for-company (current-company)))
+          (go-home))
+   :no (nibble () (go-home))
+   <span>Are you sure you want to clear the access token information? Re-enabling it might require special permissions on your Azure installation.</span>))
 
 (defun azure-settings-page ()
   (let* ((settings (azure-settings-for-company (current-company)))
@@ -111,6 +126,10 @@
 
           <div class= "card-footer">
             <input type= "submit" class= "btn btn-primary" value= "Save" />
+            ,(when settings
+               <a href= (nibble () (disconnect-azure)) class= "btn btn-danger" >
+                 Disconnect
+               </a>)
           </div>
         </div>
       </form>
