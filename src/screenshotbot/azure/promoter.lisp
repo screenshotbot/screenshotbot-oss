@@ -77,16 +77,15 @@
          args))
 
 (defun parse-org-and-project (url hostname)
-  (let ((hostname (quri:uri-host (quri:uri hostname))))
-   (let* ((parts (str:split "/" url))
-          (host-pos (loop for part in parts
-                          for i from 0
-                          if (str:containsp hostname part)
-                            return i)))
-     (values
-      (elt parts (+ host-pos 1))
-      (elt parts (+ host-pos 2))
-      (car (last parts))))))
+  (let* ((parts (str:split "/" url))
+         (host-pos (loop for part in parts
+                         for i from 0
+                         if (str:containsp hostname part)
+                           return i)))
+    (values
+     (elt parts (+ host-pos 1))
+     (elt parts (+ host-pos 2))
+     (car (last parts)))))
 
 (defvar +succeeded+ "succeeded")
 (defvar +failed+ "failed")
@@ -98,27 +97,28 @@
                    (recorder-run-company run))))
     (multiple-value-bind (org project repo)
         (parse-org-and-project (github-repo run)
-                               (azure-server settings))
-     (let ((azure (make-instance 'azure
-                                 :token (azure-access-token settings)
-                                 :organization org
-                                 :project project)))
-       (create-pull-request-status
-        azure
-        (make-instance 'pull-request-status
-                       :description (check-title check)
-                       :state (ecase (check-status check)
-                                (:accepted +succeeded+)
-                                (:rejected +failed+)
-                                (:success +succeeded+)
-                                (:failure +failed+)
-                                (:action_required +failed+)
-                                (:action-required +failed+))
-                       :target-url (details-url check)
-                       :context (make-instance 'git-status-context
-                                               :name (channel-name (recorder-run-channel run))))
-        :repository-id repo
-        :pull-request-id (pull-request-id run))))))
+                               (azure-hostname settings))
+      (let ((azure (make-instance 'azure
+                                  :hostname (azure-hostname settings)
+                                  :token (azure-access-token settings)
+                                  :organization org
+                                  :project project)))
+        (create-pull-request-status
+         azure
+         (make-instance 'pull-request-status
+                        :description (check-title check)
+                        :state (ecase (check-status check)
+                                 (:accepted +succeeded+)
+                                 (:rejected +failed+)
+                                 (:success +succeeded+)
+                                 (:failure +failed+)
+                                 (:action_required +failed+)
+                                 (:action-required +failed+))
+                        :target-url (details-url check)
+                        :context (make-instance 'git-status-context
+                                                :name (channel-name (recorder-run-channel run))))
+         :repository-id repo
+         :pull-request-id (pull-request-id run))))))
 
 (defmethod make-promoter-for-acceptable ((acceptable azure-acceptable))
   (make-instance 'azure-promoter))

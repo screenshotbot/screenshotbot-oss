@@ -30,7 +30,8 @@
    #:azure-settings
    #:azure-access-token
    #:azure-settings-for-company
-   #:azure-git-repo))
+   #:azure-git-repo
+   #:azure-hostname))
 (in-package :screenshotbot/azure/plugin)
 
 (defclass azure-plugin (plugin)
@@ -48,6 +49,9 @@
                :index-reader azure-settings-for-company
                :initarg :company))
     (:metaclass persistent-class)))
+
+(defmethod azure-hostname ((self azure-settings))
+  (quri:uri-host (quri:uri (azure-server self))))
 
 (defclass azure-git-repo (generic-git-repo)
   ())

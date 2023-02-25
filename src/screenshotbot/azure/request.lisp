@@ -43,6 +43,9 @@
 (defclass azure ()
   ((token :initarg :token
           :reader token)
+   (hostname :initarg :hostname
+             :initform "dev.azure.com"
+             :reader hostname)
    (organization :initarg :organization
                  :reader organization)
    (project :initarg :project
@@ -66,7 +69,8 @@
     (log:info "Sending body: ~a" content)
     (multiple-value-bind (response code headers)
        (http-request
-        (format nil "https://dev.azure.com/~a/~a/_apis/~a?api-version=7.0"
+        (format nil "https://~a/~a/~a/_apis/~a?api-version=7.0"
+                (hostname azure)
                 (organization azure)
                 (project azure)
                 url)
