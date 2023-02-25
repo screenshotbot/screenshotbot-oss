@@ -22,6 +22,7 @@
       (let* ((commit-graph (find-or-create-commit-graph
                             (current-company)
                             repo-url)))
+        (log:info "got graph: ~a" graph-json)
         (bt:with-recursive-lock-held ((lock commit-graph))
           (let ((dag (commit-graph-dag commit-graph))
                 (new-dag (dag:read-from-stream (make-string-input-stream graph-json))))

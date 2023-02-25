@@ -204,7 +204,9 @@
                  (:file "all")))
    (:module "azure"
     :serial t
-    :components ((:file "request")))
+    :components ((:file "request")
+                 (:file "plugin")
+                 (:file "settings")))
    (:module "bitbucket"
     :components ((:file "core")
                  (:file "plugin")
@@ -379,6 +381,8 @@
                              (:file "test-webhook")))
                (:module "gitlab"
                 :components ((:file "test-merge-request-promoter")))
+               (:module "azure"
+                :components ((:file "test-settings")))
                (:module "phabricator"
                 :components ((:file "test-builds")
                              (:file "test-diff-promoter")))
