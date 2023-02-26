@@ -541,6 +541,16 @@ the slots are read from the snapshot and ignored."
         :report "Delete the object."
         (delete-object object)))))
 
+(define-condition encoding-destroyed-object (error)
+  ((id :initarg :id)
+   (slot :initarg :slot)
+   (container :initarg :container))
+  (:report (lambda (e out)
+             (with-slots (slot container id) e
+               (format out
+                       "Encoding reference to destroyed object with ID ~A from slot ~A of object ~A with ID ~A."
+                       id slot (type-of container) (store-object-id container))))))
+
 (defmethod encode-object ((object store-object) stream)
   (if (object-destroyed-p object)
       (let* ((*indexed-class-override* t)
@@ -564,8 +574,10 @@ the slots are read from the snapshot and ignored."
               (%write-tag #\o stream)
               (%encode-integer id stream))
             ;; the slot can't contain references to deleted objects, throw an error
-            (error "Encoding reference to destroyed object with ID ~A from slot ~A of object ~A with ID ~A."
-                   id slot (type-of container) (store-object-id container))))
+            (error 'encoding-destroyed-object
+                   :id id
+                   :slot slot
+                   :container container)))
 
       ;; Go ahead and serialize the object reference
       (progn (%write-tag #\o stream)
