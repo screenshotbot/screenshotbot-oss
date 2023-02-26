@@ -566,18 +566,22 @@ the slots are read from the snapshot and ignored."
           (%encode-integer id stream)
           (return-from encode-object))
 
-        (if *current-slot-relaxed-p*
-            ;; the slot can contain references to deleted objects, just warn
-            (progn
-              (warn "Encoding reference to destroyed object with ID ~A from slot ~A of object ~A with ID ~A."
-                    id slot (type-of container) (store-object-id container))
-              (%write-tag #\o stream)
-              (%encode-integer id stream))
-            ;; the slot can't contain references to deleted objects, throw an error
-            (error 'encoding-destroyed-object
-                   :id id
-                   :slot slot
-                   :container container)))
+        (flet ((encode-relaxed ()
+                 (warn "Encoding reference to destroyed object with ID ~A from slot ~A of object ~A with ID ~A."
+                       id slot (type-of container) (store-object-id container))
+                 (%write-tag #\o stream)
+                 (%encode-integer id stream)))
+          (if *current-slot-relaxed-p*
+             ;; the slot can contain references to deleted objects, just warn
+              (encode-relaxed)
+              ;; the slot can't contain references to deleted objects, throw an error
+              (restart-case
+                  (error 'encoding-destroyed-object
+                         :id id
+                         :slot slot
+                         :container container)
+                (encode-relaxed-slot ()
+                  (encode-relaxed))))))
 
       ;; Go ahead and serialize the object reference
       (progn (%write-tag #\o stream)
