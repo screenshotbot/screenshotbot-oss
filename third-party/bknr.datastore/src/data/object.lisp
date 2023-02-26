@@ -581,7 +581,10 @@ the slots are read from the snapshot and ignored."
                          :slot slot
                          :container container)
                 (encode-relaxed-slot ()
-                  (encode-relaxed))))))
+                  (encode-relaxed))
+                (make-slot-unbound-and-encode-relaxed ()
+                  (encode-relaxed)
+                  (slot-makunbound container slot))))))
 
       ;; Go ahead and serialize the object reference
       (progn (%write-tag #\o stream)
