@@ -98,6 +98,8 @@
                 #:push-event)
   (:import-from #:bknr.datastore
                 #:store-object-id)
+  (:import-from #:alexandria
+                #:when-let)
   (:local-nicknames (#:a #:alexandria)
                     (#:integration #:screenshotbot/replay/integration)
                     (#:frontend #:screenshotbot/replay/frontend)
@@ -619,6 +621,11 @@
     </p>
   </explain>)
 
+(defun validate-url (url)
+  (when-let ((uri (quri:uri url)))
+    (and
+     (quri:uri-scheme uri))))
+
 (defun form-submit (&rest args &key name urls sitemap submit
                                  edit
                                  schedule-p
@@ -649,6 +656,11 @@
             (check browsers
                    :browsers
                    "Please select at least one browser")
+
+            (loop for url in urls
+                  do (check (validate-url url)
+                            :urls
+                            (format nil "Invalid URL: ~a" url)))
             (check (or
                     (str:emptyp sitemap)
                     (null urls))
