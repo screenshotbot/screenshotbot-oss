@@ -15,6 +15,14 @@
                 #:def-easy-macro)
   (:import-from #:bknr.datastore
                 #:without-sync)
+  (:import-from #:bknr.datastore
+                #:store-transaction-log-stream)
+  (:import-from #:bknr.datastore
+                #:store-transaction-log-pathname)
+  (:import-from #:bknr.datastore
+                #:close-transaction-log-stream)
+  (:import-from #:bknr.datastore
+                #:close-transaction-log-stream)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -81,7 +89,9 @@ to the directory that was just snapshotted.")
      path)))
 
 (defclass safe-mp-store (bknr.datastore:mp-store)
-  (#-mswindows lock))
+  (#-mswindows lock
+   #-mswindows
+   (transaction-log-lock :initform nil)))
 
 #-mswindows
 (defmethod initialize-instance :before ((store safe-mp-store) &key directory &allow-other-keys)
@@ -90,6 +100,26 @@ to the directory that was just snapshotted.")
           (make-instance 'file-lock
                          :file (path:catfile directory
                                              "store.lock")))))
+
+#-mswindows
+(defmethod store-transaction-log-stream :before ((store safe-mp-store))
+  (with-slots (transaction-log-lock) store
+    (unless transaction-log-lock
+     (setf transaction-log-lock
+           (make-instance 'file-lock
+                          :file
+                          (ensure-directories-exist
+                           (make-pathname
+                            :type "lock"
+                            :name "transaction-log-lock"
+                            :defaults
+                            (store-transaction-log-pathname store))))))))
+
+#-mswindows
+(defmethod close-transaction-log-stream :after ((store safe-mp-store))
+  (with-slots (transaction-log-lock) store
+    (when transaction-log-lock
+     (release-file-lock transaction-log-lock))))
 
 (defmethod bknr.datastore::close-store-object :before ((store safe-mp-store))
   (dispatch-datastore-cleanup-hooks))
