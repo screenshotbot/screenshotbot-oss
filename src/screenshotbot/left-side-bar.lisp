@@ -86,7 +86,7 @@
   <hr class= "mt-0" >
 
     <ul class="nav nav-pills flex-column ps-3 pe-3">
-      <left-nav-item href= "/runs" image-class= "play_circle"
+      <left-nav-item href= "/runs" image-class= "play_arrow"
                      script-name=script-name >
          Recent Runs
         </left-nav-item>
@@ -109,7 +109,7 @@
     <hr />
 
     <ul class="nav nav-pills flex-column mb-auto ps-3 pe-3">
-      <left-nav-item href= "/documentation" image-class= "tungsten" target= "_blank"
+      <left-nav-item href= "/documentation" image-class= "menu_book" target= "_blank"
                      script-name=script-name >
         Documentation
   </left-nav-item>
