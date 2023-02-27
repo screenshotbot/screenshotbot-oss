@@ -105,21 +105,24 @@ to the directory that was just snapshotted.")
 (defmethod store-transaction-log-stream :before ((store safe-mp-store))
   (with-slots (transaction-log-lock) store
     (unless transaction-log-lock
-     (setf transaction-log-lock
-           (make-instance 'file-lock
-                          :file
-                          (ensure-directories-exist
-                           (make-pathname
-                            :type "lock"
-                            :name "transaction-log-lock"
-                            :defaults
+      (log:info "Opening transaction log lock")
+      (setf transaction-log-lock
+            (make-instance 'file-lock
+                           :file
+                           (ensure-directories-exist
+                            (make-pathname
+                             :type "lock"
+                             :name "transaction-log-lock"
+                             :defaults
                             (store-transaction-log-pathname store))))))))
 
 #-mswindows
 (defmethod close-transaction-log-stream :after ((store safe-mp-store))
   (with-slots (transaction-log-lock) store
     (when transaction-log-lock
-     (release-file-lock transaction-log-lock))))
+      (log:info "Closing transaction log lock")
+      (release-file-lock transaction-log-lock)
+      (setf transaction-log-lock nil))))
 
 (defmethod bknr.datastore::close-store-object :before ((store safe-mp-store))
   (dispatch-datastore-cleanup-hooks))
