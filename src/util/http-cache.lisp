@@ -23,5 +23,6 @@
               (destructuring-bind (key &optional value) (str:split "=" (str:trim part))
                 (when (string-equal "max-age" key)
                   (return
-                    (parse-integer value)))))
+                    ;; Sometimes you'll see things like 30s
+                    (parse-integer value :junk-allowed t)))))
      0)))
