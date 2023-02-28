@@ -36,17 +36,27 @@
   (tmpdir:with-tmpdir (dir)
     (let ((file (path:catfile dir "test.lock")))
      (let ((lock (make-instance 'file-lock :file file
-                                           :shared t)))
+                                           :sharedp t)))
        (let ((lock-2 (make-instance 'file-lock :file file
-                                               :shared t)))
+                                               :sharedp t)))
          (finishes (release-file-lock lock-2)))
        (finishes (release-file-lock lock))))))
+
+(test acquire-lock-after-unlocking
+  (tmpdir:with-tmpdir (dir)
+    (let ((file (path:catfile dir "test.lock")))
+     (let ((lock (make-instance 'file-lock :file file)))
+       (release-file-lock lock)
+       (let ((lock-2 (make-instance 'file-lock :file file
+                                               :timeout 5)))
+         (release-file-lock lock-2)
+         (pass))))))
 
 (test write-lock-after-shared-lock
   (tmpdir:with-tmpdir (dir)
     (let ((file (path:catfile dir "test.lock")))
      (let ((lock (make-instance 'file-lock :file file
-                                           :shared t)))
+                                           :sharedp t)))
        (signals could-not-get-lock
          (make-instance 'file-lock :file file
                         :timeout -10))

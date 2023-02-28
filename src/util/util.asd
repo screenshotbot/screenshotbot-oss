@@ -178,11 +178,10 @@
                :cl-mongo-id
                :copy-directory
                :ironclad/core
+               (:feature (:not :lispworks) :util/fake-fli)
                :cffi
                :cl-cron)
-  :components (#-mswindows
-               (lib-source-file "store-native")
-               (:file "file-lock")
+  :components ((:file "file-lock")
                (:file "store-version")
                (:file "store")
                (:file "object-id")
@@ -366,7 +365,9 @@
                              (:file "test-lru-cache")
                              (:file "test-objectid")
                              (:file "test-file-lock"
-                                    :if-feature (:not :windows))
+                              :if-feature (:and
+                                           :lispworks
+                                           (:not :windows)))
                              #-(or darwin mswindows)
                              (:file "test-html2text")
                              (:file "test-mockable")
