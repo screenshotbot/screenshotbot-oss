@@ -243,6 +243,28 @@ application that makes this difficult.
 We might reject large new features if we think it adds too much
 maintenance overhead for us. Bug-fixes are always welcome.
 
+## Open Source Support
+
+We want the Open Source version of Screenshotbot to be successful. That being
+said, we are a very small company, so it's difficult for us to dedicate
+a lot of resources specifically for keeping Open Source supported across multiple
+platforms, multiple deployment styles, etc.
+
+You can help us! Just be patient with us when we ask for specifics about your installation.
+Send us any feedback---good, bad or neutral---to arnold@screenshotbot.io.
+Get other
+teams to use Screenshotbot, either open-source or paid. The more users we have the
+easier it is for us to catch bugs early and stream-line the open source experience.
+
+Give us a star on GitHub!
+
+We aren't currently accepting donations, but consider convincing your
+team to pay us for support. If you're a small team or an individual
+developer, just send us an email and we'll make sure you have a plan
+you can afford. Most of our code is open-source, so by paying us
+you're directly supporting our open-source contributions.
+
+
 ## Authors
 
 Screenshotbot is built and maintained by Arnold Noronha
