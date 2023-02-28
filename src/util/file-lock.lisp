@@ -46,9 +46,7 @@
   (when acquire
     (acquire-file-lock self
                        :timeout timeout
-                       :sharedp sharedp))
-
-  (log:info "Waiting for file lock: ~a" file))
+                       :sharedp sharedp)))
 
 (defmethod file-handle ((self file-lock))
   #+lispworks
@@ -68,6 +66,7 @@
 (defmethod acquire-file-lock ((self file-lock) &key (sharedp nil)
                                                  (timeout 600))
   (ensure-stream self)
+  (log:info "Waiting for file lock: ~a" (filename self))
   (let ((start-time (get-universal-time)))
     (loop for res = (flock
                      (file-handle self)
