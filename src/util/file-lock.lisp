@@ -36,36 +36,56 @@
 
 (defclass file-lock ()
   ((file :initarg :file)
-   (fd :initform -1)))
+   (fd :initform nil)
+   (shared :initform nil
+           :initarg :shared)
+   (timeout :initarg :timeout
+            :initform 600)))
 
 (cffi:defcfun ("util_store_file_lock" %util-store-file-lock) :int
+  (filename :string))
+
+(cffi:defcfun ("util_store_file_lock_shared" %util-store-file-lock-shared) :int
   (filename :string))
 
 (cffi:defcfun "util_store_file_unlock" :int
   (fd :int))
 
 ;; just in case we want to interrupt the lock process
-(defun util-store-file-lock (fd)
-  (%util-store-file-lock fd))
+(defun util-store-file-lock (file &key shared)
+  (cond
+    (shared
+     (%util-store-file-lock-shared file))
+    (t
+     (%util-store-file-lock file))))
 
 (define-condition lock-not-held (error)
   ()
   (:report "Attempting to unlock a lock that is not being held"))
 
+(define-condition could-not-get-lock (error)
+  ()
+  (:report "Could not get lock"))
+
 (defmethod initialize-instance :after ((file-lock file-lock) &key file)
   (register-native)
-  (with-slots (fd) file-lock
-    (log:info "Waiting for file lock: ~a" file)
+  (let ((start-time (get-universal-time)))
+   (with-slots (fd shared timeout) file-lock
+     (log:info "Waiting for file lock: ~a" file)
 
-    (loop for res = (util-store-file-lock (uiop:native-namestring file))
-          while (< res 0)
-          do (progn
-               (log:info "Could not get file lock ~a, will try again in 5 seconds" file)
-               (sleep 5))
-          finally
-             (progn
-               (setf fd res)
-               (log:info "Got file lock")))))
+     (loop for res = (util-store-file-lock (uiop:native-namestring file)
+                                           :shared shared)
+           while (< res 0)
+           do (progn
+                (when (> (get-universal-time)
+                         (+ start-time timeout))
+                  (error 'could-not-get-lock))
+                (log:info "Could not get file lock ~a, will try again in 5 seconds" file)
+                (sleep 5))
+           finally
+              (progn
+                (setf fd res)
+                (log:info "Got file lock"))))))
 
 (defmethod release-file-lock ((file-lock file-lock))
   (with-slots (fd) file-lock
