@@ -39,6 +39,10 @@
 (defun util-store-file-lock (fd)
   (%util-store-file-lock fd))
 
+(define-condition lock-not-held (error)
+  ()
+  (:report "Attempting to unlock a lock that is not being held"))
+
 (defmethod initialize-instance :after ((file-lock file-lock) &key file)
   (with-slots (fd) file-lock
     (log:info "Waiting for file lock: ~a" file)
@@ -55,6 +59,9 @@
 
 (defmethod release-file-lock ((file-lock file-lock))
   (with-slots (fd) file-lock
+    (unless fd
+      (error 'lock-not-held))
     (unless (eql 0
                  (util-store-file-unlock fd))
-      (log:error "Could not unlock lock"))))
+      (warn "Could not unlock file lock"))
+    (setf fd nil)))
