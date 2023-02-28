@@ -322,7 +322,6 @@ extern int screenshotbot_inplace_compare(MagickWand* dest,
 		MagickSetImageColorspace(dest, RGBColorspace);
 
 cleanup:
-		fprintf(stderr, "Cleanup\n");
 		if (diter) DestroyPixelIterator(diter);
 		if (siter) DestroyPixelIterator(siter);
 		return changed;
