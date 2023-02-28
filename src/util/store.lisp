@@ -115,7 +115,6 @@ to the directory that was just snapshotted.")
                              (ensure-directories-exist
                               (make-pathname
                                :type "lock"
-                               :name "transaction-log-lock"
                                :defaults
                                (store-transaction-log-pathname store)))))))))
 
