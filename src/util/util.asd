@@ -182,7 +182,6 @@
                :cl-cron)
   :components (#-mswindows
                (lib-source-file "store-native")
-               #-mswindows
                (:file "file-lock")
                (:file "store-version")
                (:file "store")
@@ -336,6 +335,7 @@
                :util/json-mop
                :util/request
                :util/fiveam)
+  :defsystem-depends-on (:trivial-features)
   :serial t
   :components ((:module "tests"
                 :components ((:static-file "test-file" :type "txt")
@@ -365,8 +365,8 @@
                              (:file "test-bind-form")
                              (:file "test-lru-cache")
                              (:file "test-objectid")
-			     #-mswindows
-                             (:file "test-file-lock")
+                             (:file "test-file-lock"
+                                    :if-feature (:not :windows))
                              #-(or darwin mswindows)
                              (:file "test-html2text")
                              (:file "test-mockable")

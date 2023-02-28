@@ -7,7 +7,6 @@
 (defpackage :util/store
   (:use #:cl
         #:bknr.datastore
-        #-mswindows
         #:util/file-lock)
   (:import-from #:bknr.datastore
                 #:close-store)
@@ -91,34 +90,30 @@ to the directory that was just snapshotted.")
      path)))
 
 (defclass safe-mp-store (bknr.datastore:mp-store)
-  (#-mswindows lock
-   #-mswindows
+  (lock
    (transaction-log-lock :initform nil)))
 
-#-mswindows
 (defmethod initialize-instance :before ((store safe-mp-store) &key directory &allow-other-keys)
   (with-slots (lock) store
     (setf lock
-          (make-instance 'file-lock
-                         :file (path:catfile directory
-                                             "store.lock")))))
+          (make-file-lock
+           :file (path:catfile directory
+                               "store.lock")))))
 
-#-mswindows
 (defmethod store-transaction-log-stream :before ((store safe-mp-store))
   (with-slots (transaction-log-lock) store
     (unless transaction-log-lock
       (when *enable-txn-log-lock*
         (log:info "Opening transaction log lock")
         (setf transaction-log-lock
-              (make-instance 'file-lock
-                             :file
-                             (ensure-directories-exist
-                              (make-pathname
-                               :type "lock"
-                               :defaults
-                               (store-transaction-log-pathname store)))))))))
+              (make-file-lock
+               :file
+               (ensure-directories-exist
+                (make-pathname
+                 :type "lock"
+                 :defaults
+                 (store-transaction-log-pathname store)))))))))
 
-#-mswindows
 (defmethod close-transaction-log-stream :after ((store safe-mp-store))
   (with-slots (transaction-log-lock) store
     (when transaction-log-lock
@@ -129,7 +124,6 @@ to the directory that was just snapshotted.")
 (defmethod bknr.datastore::close-store-object :before ((store safe-mp-store))
   (dispatch-datastore-cleanup-hooks))
 
-#-mswindows
 (defmethod bknr.datastore::close-store-object :after ((store safe-mp-store))
   (with-slots (lock) store
     (release-file-lock lock)))

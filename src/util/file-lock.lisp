@@ -10,7 +10,8 @@
   (:export
    #:util-store-file-lock
    #:release-file-lock
-   #:file-lock))
+   #:file-lock
+   #:make-file-lock))
 (in-package :util/file-lock)
 
 (defvar *loaded* nil)
@@ -95,3 +96,15 @@
                  (util-store-file-unlock fd))
       (warn "Could not unlock file lock"))
     (setf fd nil)))
+
+(defclass noop-file-lock ()
+  ((file :initarg :file)))
+
+(defmethod release-file-lock ((self noop-file-lock))
+  (values))
+
+(defun make-file-lock (&key (file (error "must provide filename")))
+  #+windows
+  (make-instance 'noop-file-lock :file file)
+  #-windows
+  (make-instance 'file-lock :file file))
