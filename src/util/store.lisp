@@ -59,6 +59,8 @@
   "A snapshot hook is called with two arguments: the store, and the path
 to the directory that was just snapshotted.")
 
+(defvar *enable-txn-log-lock* nil)
+
 (defun add-datastore-hook (fn &key immediate)
   "Add a hook, if :immediate is set, and the store is already active the
  callback is called immediately."
@@ -105,16 +107,17 @@ to the directory that was just snapshotted.")
 (defmethod store-transaction-log-stream :before ((store safe-mp-store))
   (with-slots (transaction-log-lock) store
     (unless transaction-log-lock
-      (log:info "Opening transaction log lock")
-      (setf transaction-log-lock
-            (make-instance 'file-lock
-                           :file
-                           (ensure-directories-exist
-                            (make-pathname
-                             :type "lock"
-                             :name "transaction-log-lock"
-                             :defaults
-                            (store-transaction-log-pathname store))))))))
+      (when *enable-txn-log-lock*
+        (log:info "Opening transaction log lock")
+        (setf transaction-log-lock
+              (make-instance 'file-lock
+                             :file
+                             (ensure-directories-exist
+                              (make-pathname
+                               :type "lock"
+                               :name "transaction-log-lock"
+                               :defaults
+                               (store-transaction-log-pathname store)))))))))
 
 #-mswindows
 (defmethod close-transaction-log-stream :after ((store safe-mp-store))
