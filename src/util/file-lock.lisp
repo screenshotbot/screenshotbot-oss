@@ -13,17 +13,26 @@
    #:file-lock))
 (in-package :util/file-lock)
 
-#-buck
-(let ((output (asdf:output-file 'asdf:compile-op
-                                 (asdf:find-component :util/store "store-native"))))
-  #-lispworks
-  (cffi:load-foreign-library
-   output)
-  #+lispworks
-  (fli:register-module
-   :store-native
-   :real-name output))
+(defvar *loaded* nil)
 
+(defun register-native (&key force)
+  (when force
+    (setf *loaded* nil))
+  (unless *loaded*
+    (let ((output (asdf:output-file 'asdf:compile-op
+                                    (asdf:find-component :util/store "store-native"))))
+
+      #-lispworks
+      (cffi:load-foreign-library
+       output)
+      #+lispworks
+      (progn
+        (when force
+          (fli:disconnect-module :store-native))
+        (fli:register-module
+         :store-native
+         :real-name output))
+      (setf *loaded* t))))
 
 (defclass file-lock ()
   ((file :initarg :file)
@@ -44,6 +53,7 @@
   (:report "Attempting to unlock a lock that is not being held"))
 
 (defmethod initialize-instance :after ((file-lock file-lock) &key file)
+  (register-native)
   (with-slots (fd) file-lock
     (log:info "Waiting for file lock: ~a" file)
 
