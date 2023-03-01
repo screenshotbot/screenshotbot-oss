@@ -236,7 +236,6 @@
                     #+lispworks sys:*line-arguments-list*))
           (log:info "CLI args: ~s" args)
 
-
           (multiple-value-bind (vars vals matched dispatch rest)
               (cl-cli:parse-cli args
                                 *options*)
@@ -339,12 +338,12 @@
 
       (log:info "Shutting down slynk")
       (slynk-teardown *slynk-preparer*)
-      (log:info "All services down")
-      #+lispworks
-      (wait-for-processes)
-      (log:info "All threads before exiting: ~s" (bt:all-threads))
-      (log4cl:flush-all-appenders)
-      (log4cl:stop-hierarchy-watcher-thread))))
+      (log:info "All services down")))
+  #+lispworks
+  (wait-for-processes)
+  (log:info "All threads before exiting: ~s" (bt:all-threads))
+  (log4cl:flush-all-appenders)
+  (log4cl:stop-hierarchy-watcher-thread))
 
 #+lispworks
 (defun wait-for-processes ()
@@ -353,12 +352,14 @@
            (set-difference (mp:list-all-processes) mp:*initial-processes*))
           (processes
            (loop for p in processes
-              unless (member (mp:process-name p)
-                             '("Hierarchy Watcher"
-                               "The idle process"
-                               "Initial delivery process"
-                               "Restart Function Process")
-                             :test 'string=)
+                 unless (or
+                         (eql p (mp:get-current-process))
+                         (member (mp:process-name p)
+                                 '("Hierarchy Watcher"
+                                   "The idle process"
+                                   "Initial delivery process"
+                                   "Restart Function Process")
+                                 :test 'string=))
               collect p)))
 
      (cond
