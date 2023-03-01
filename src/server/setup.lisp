@@ -299,6 +299,8 @@
 
             (cl-cron:start-cron)
 
+            (log:info "Store is prepared, moving on...")
+
             (cond
               (*shell*
                (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))

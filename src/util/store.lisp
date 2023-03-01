@@ -26,6 +26,8 @@
                 #:make-file-lock)
   (:import-from #:bknr.datastore
                 #:store-directory)
+  (:import-from #:bknr.datastore
+                #:restore-transaction-log)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -98,7 +100,10 @@ to the directory that was just snapshotted.")
 
 (defmethod initialize-instance :before ((store safe-mp-store) &key directory &allow-other-keys))
 
-(defmethod store-transaction-log-stream :before ((store safe-mp-store))
+(defmethod restore-transaction-log :before ((store safe-mp-store)
+                                            transaction-log
+                                            &key until)
+  (declare (ignore until))
   (with-slots (transaction-log-lock) store
     (unless transaction-log-lock
       (when *enable-txn-log-lock*
@@ -112,7 +117,11 @@ to the directory that was just snapshotted.")
                  :defaults
                  (store-transaction-log-pathname store)))))))))
 
-(defmethod close-transaction-log-stream :after ((store safe-mp-store))
+
+(defmethod bknr.datastore::close-store-object :before ((store safe-mp-store))
+  (dispatch-datastore-cleanup-hooks))
+
+(defmethod bknr.datastore::close-store-object :after ((store safe-mp-store))
   (with-slots (transaction-log-lock) store
     (when transaction-log-lock
       (log:info "Closing transaction log lock")
@@ -121,11 +130,6 @@ to the directory that was just snapshotted.")
         (ignore-release-file-lock ()
           (values)))
       (setf transaction-log-lock nil))))
-
-(defmethod bknr.datastore::close-store-object :before ((store safe-mp-store))
-  (dispatch-datastore-cleanup-hooks))
-
-(defmethod bknr.datastore::close-store-object :after ((store safe-mp-store)))
 
 (defun store-subsystems ()
   (list (make-instance 'bknr.datastore:store-object-subsystem)

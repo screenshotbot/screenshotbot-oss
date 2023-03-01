@@ -769,6 +769,13 @@ pathname until a non-existant directory name has been found."
 (defun restore (&optional until)
   (restore-store *store* :until until))
 
+
+(defmethod restore-transaction-log ((store store) transaction-log &key until)
+  (when (probe-file transaction-log)
+    (report-progress "loading transaction log ~A~%" transaction-log)
+    (setf (store-transaction-run-time store) 0)
+    (load-transaction-log transaction-log :until until)))
+
 (defmethod restore-store ((store store) &key until)
   (ensure-store-random-state store)
   (report-progress "restoring ~A~%" store)
@@ -789,10 +796,7 @@ pathname until a non-existant directory name has been found."
                      (when *store-debug*
                        (report-progress "Restoring the subsystem ~A of ~A~%" subsystem store))
                      (restore-subsystem store subsystem :until until))
-                   (when (probe-file transaction-log)
-                     (report-progress "loading transaction log ~A~%" transaction-log)
-                     (setf (store-transaction-run-time store) 0)
-                     (load-transaction-log transaction-log :until until))
+                   (restore-transaction-log store transaction-log :until until)
                    (setf error nil))
               (when error
                 (dolist (subsystem (store-subsystems store))

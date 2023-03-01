@@ -73,18 +73,21 @@
                      (logior
                       (if sharedp lock-sh lock-ex)
                       lock-nb))
-         while (< res 0)
-         do (progn
-              (when (> (get-universal-time)
-                       (+ start-time timeout))
-                (error 'could-not-get-lock))
-              (log:info "Could not get file lock ~a, will try again: ~a"
-                        (get-unix-error)
-                        (filename self))
-              (sleep 5))
-         finally
-            (progn
-              (log:info "Got file lock")))))
+          for ctr from 0
+          while (< res 0)
+          do (progn
+               (when (> (get-universal-time)
+                        (+ start-time timeout))
+                 (error 'could-not-get-lock))
+               (when (= 0 (mod ctr 25))
+                 (log:info "Could not get file lock ~a, will try again on ~a: ~a"
+                           (get-unix-error)
+                           (bt:current-thread)
+                           (filename self)))
+               (sleep 0.2))
+          finally
+             (progn
+               (log:info "Got file lock")))))
 
 (defmethod release-file-lock ((self file-lock))
   (unless (file-lock-stream self)
