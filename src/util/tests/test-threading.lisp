@@ -57,7 +57,8 @@
                      (lambda ()
                        (with-safe-interruptable (:on-quit (lambda ()
                                                             (setf callback-called-p t)))
-                         (bt:condition-notify cv)
+                         (bt:with-lock-held (lock)
+                           (bt:condition-notify cv))
                          (loop for i below max-ctr
                                do
                                   (incf ctr)
