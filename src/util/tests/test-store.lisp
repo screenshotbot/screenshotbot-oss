@@ -9,6 +9,7 @@
           #:fiveam
           #:alexandria)
     (:import-from #:util/store
+                  #:with-snapshot-lock
                   #:*snapshot-hooks*
                   #:dispatch-snapshot-hooks
                   #:location-for-oid
@@ -30,7 +31,9 @@
   (:import-from #:bknr.indices
                 #:hash-index)
   (:import-from #:bknr.datastore
-                #:delete-object))
+                #:delete-object)
+  (:import-from #:bknr.datastore
+                #:*store*))
 (in-package :util/tests/test-store)
 
 
@@ -240,3 +243,10 @@
     (with-test-store ()
       (setf calledp t))
     (is-true calledp)))
+
+(test snapshot-lock
+  (with-test-store ()
+    (is
+     (eql :foo
+      (with-snapshot-lock (*store*)
+        :foo)))))

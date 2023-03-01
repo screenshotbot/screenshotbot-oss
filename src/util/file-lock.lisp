@@ -109,10 +109,12 @@
 (defmethod release-file-lock ((self noop-file-lock))
   (values))
 
-(defun make-file-lock (&key (file (error "must provide filename")))
+(defun make-file-lock (&rest args &key (file (error "must provide filename"))
+                       &allow-other-keys)
+  (declare (ignorable file))
   (cond
     #+(or (not :lispworks) windows)
     (t
      (make-instance 'noop-file-lock :file file))
     (t
-     (make-instance 'file-lock :file file))))
+     (apply #'make-instance 'file-lock args))))

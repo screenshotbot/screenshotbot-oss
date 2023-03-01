@@ -22,6 +22,10 @@
                 #:close-transaction-log-stream)
   (:import-from #:bknr.datastore
                 #:close-transaction-log-stream)
+  (:import-from #:util/file-lock
+                #:make-file-lock)
+  (:import-from #:bknr.datastore
+                #:store-directory)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -58,7 +62,7 @@
   "A snapshot hook is called with two arguments: the store, and the path
 to the directory that was just snapshotted.")
 
-(defvar *enable-txn-log-lock* nil)
+(defparameter *enable-txn-log-lock* t)
 
 (defun add-datastore-hook (fn &key immediate)
   "Add a hook, if :immediate is set, and the store is already active the
@@ -90,15 +94,9 @@ to the directory that was just snapshotted.")
      path)))
 
 (defclass safe-mp-store (bknr.datastore:mp-store)
-  (lock
-   (transaction-log-lock :initform nil)))
+  ((transaction-log-lock :initform nil)))
 
-(defmethod initialize-instance :before ((store safe-mp-store) &key directory &allow-other-keys)
-  (with-slots (lock) store
-    (setf lock
-          (make-file-lock
-           :file (path:catfile directory
-                               "store.lock")))))
+(defmethod initialize-instance :before ((store safe-mp-store) &key directory &allow-other-keys))
 
 (defmethod store-transaction-log-stream :before ((store safe-mp-store))
   (with-slots (transaction-log-lock) store
@@ -118,15 +116,16 @@ to the directory that was just snapshotted.")
   (with-slots (transaction-log-lock) store
     (when transaction-log-lock
       (log:info "Closing transaction log lock")
-      (release-file-lock transaction-log-lock)
+      (restart-case
+          (release-file-lock transaction-log-lock)
+        (ignore-release-file-lock ()
+          (values)))
       (setf transaction-log-lock nil))))
 
 (defmethod bknr.datastore::close-store-object :before ((store safe-mp-store))
   (dispatch-datastore-cleanup-hooks))
 
-(defmethod bknr.datastore::close-store-object :after ((store safe-mp-store))
-  (with-slots (lock) store
-    (release-file-lock lock)))
+(defmethod bknr.datastore::close-store-object :after ((store safe-mp-store)))
 
 (defun store-subsystems ()
   (list (make-instance 'bknr.datastore:store-object-subsystem)
@@ -144,7 +143,19 @@ to the directory that was just snapshotted.")
                                       dir
                                       &fn body)
   (%%call-with-test-store body :globally globally :store-class store-class
-                          :dir dir))
+                               :dir dir))
+
+(def-easy-macro with-snapshot-lock (store  &fn fn)
+  (log:info "Waiting for store snapshot lock")
+  (let ((file-lock (make-file-lock
+                    :file (path:catfile
+                           (store-directory store)
+                           "snapshot.lock")
+                    ;; Fail immediately if we can't get the lock
+                    :timeout -10)))
+    (unwind-protect
+         (funcall fn)
+      (release-file-lock file-lock))))
 
 (defun %%call-with-test-store (fn &key (cleanup t)
                                   (globally nil)
@@ -525,6 +536,14 @@ set-differences on O and the returned value from this."
        (loop for x being the hash-keys of ret
              collect x)
        #'< :key #'bknr.datastore:store-object-id))))
+
+(defmethod bknr.datastore::snapshot-store :around ((store safe-mp-store))
+  (with-snapshot-lock (store)
+    (call-next-method)))
+
+(defmethod bknr.datastore::restore-store :around ((store safe-mp-store) &key until)
+  (with-snapshot-lock (store)
+    (call-next-method)))
 
 (defun safe-snapshot (&optional (comment "default-comment"))
   (let ((directories (fad:list-directory *object-store*)))
