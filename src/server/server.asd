@@ -48,5 +48,9 @@
   :components ((:file "slynk-preparer")))
 
 (defsystem :server/tests
-  :depends-on (:server)
-  :components ((:file "test-server")))
+  :depends-on (:server
+               :cl-mock
+               :util/fiveam
+               :server/slynk)
+  :components ((:file "test-server")
+               (:file "test-slynk-preparer")))

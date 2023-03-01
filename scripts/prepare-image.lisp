@@ -7,6 +7,10 @@
 #+lispworks
 (require "java-interface" )
 
+;; For SBCL, if you don't have SBCL_HOME set, then we won't be able to require this later.
+#+sbcl
+(require "sb-introspect")
+
 #+lispworks
 (progn
   (lw:set-default-character-element-type 'character))
