@@ -183,11 +183,35 @@
 (defmethod repo-url ((self azure-env-reader))
   (getenv self "Build.Repository.Uri"))
 
+;; https://buildkite.com/docs/pipelines/environment-variables
+(defclass buildkite-env-reader (base-env-reader)
+  ())
+
+(defmethod validp ((self buildkite-env-reader))
+  (getenv self "BUILDKITE_BUILD_ID"))
+
+(defmethod pull-request-url ((self  buildkite-env-reader))
+  (when-let ((repo-url (getenv self "BUILDKITE_REPO"))
+             (pull-id (getenv self "BUILDKITE_PULL_REQUEST")))
+   (format nil "~a/pull/~a"
+           repo-url
+           pull-id)))
+
+(defmethod sha1 ((self buildkite-env-reader))
+  (getenv self "BUILDKITE_COMMIT"))
+
+(defmethod build-url ((self buildkite-env-reader))
+  (getenv self "BUILDKITE_BUILD_URL"))
+
+(defmethod repo-url ((Self buildkite-env-reader))
+  (getenv self "BUILDKITE_REPO"))
+
 (defun make-env-reader ()
   (loop for option in '(circleci-env-reader
                         bitrise-env-reader
                         netlify-env-reader
-                        azure-env-reader)
+                        azure-env-reader
+                        buildkite-env-reader)
         for env = (make-instance option)
         if (validp env)
           return env

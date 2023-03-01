@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/sdk/env)
   (:import-from #:screenshotbot/sdk/env
+                #:buildkite-env-reader
                 #:azure-env-reader
                 #:validp
                 #:netlify-env-reader
@@ -57,4 +58,8 @@
 
 (test azure
   (finishes (test-happy-fns (make-instance 'azure-env-reader
+                                           :overrides nil))))
+
+(test buildkite
+  (finishes (test-happy-fns (make-instance 'buildkite-env-reader
                                            :overrides nil))))
