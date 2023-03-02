@@ -100,10 +100,7 @@ to the directory that was just snapshotted.")
 
 (defmethod initialize-instance :before ((store safe-mp-store) &key directory &allow-other-keys))
 
-(defmethod restore-transaction-log :before ((store safe-mp-store)
-                                            transaction-log
-                                            &key until)
-  (declare (ignore until))
+(defun ensure-transaction-log-lock (store)
   (with-slots (transaction-log-lock) store
     (unless transaction-log-lock
       (when *enable-txn-log-lock*
@@ -117,11 +114,7 @@ to the directory that was just snapshotted.")
                  :defaults
                  (store-transaction-log-pathname store)))))))))
 
-
-(defmethod bknr.datastore::close-store-object :before ((store safe-mp-store))
-  (dispatch-datastore-cleanup-hooks))
-
-(defmethod bknr.datastore::close-store-object :after ((store safe-mp-store))
+(defun clear-transaction-log-lock (store)
   (with-slots (transaction-log-lock) store
     (when transaction-log-lock
       (log:info "Closing transaction log lock")
@@ -130,6 +123,19 @@ to the directory that was just snapshotted.")
         (ignore-release-file-lock ()
           (values)))
       (setf transaction-log-lock nil))))
+
+(defmethod restore-transaction-log :before ((store safe-mp-store)
+                                            transaction-log
+                                            &key until)
+  (declare (ignore until))
+  (ensure-transaction-log-lock store))
+
+
+(defmethod bknr.datastore::close-store-object :before ((store safe-mp-store))
+  (dispatch-datastore-cleanup-hooks))
+
+(defmethod bknr.datastore::close-store-object :after ((store safe-mp-store))
+  (clear-transaction-log-lock store))
 
 (defun store-subsystems ()
   (list (make-instance 'bknr.datastore:store-object-subsystem)
@@ -543,7 +549,10 @@ set-differences on O and the returned value from this."
 
 (defmethod bknr.datastore::snapshot-store :around ((store safe-mp-store))
   (with-snapshot-lock (store)
-    (call-next-method)))
+    (clear-transaction-log-lock store)
+    (let ((ret (call-next-method)))
+      (ensure-transaction-log-lock store)
+      ret)))
 
 (defmethod bknr.datastore::restore-store :around ((store safe-mp-store) &key until)
   (with-snapshot-lock (store)
