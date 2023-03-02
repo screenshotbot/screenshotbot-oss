@@ -80,7 +80,11 @@
     (*remote-debugging-password*
      nil
      "A password required for a client to connect"
-     :params ("REMOTE-DEBUGGING-CLIENT"))))
+     :params ("REMOTE-DEBUGGING-CLIENT"))
+    (*debugger*
+     nil
+     "Enable the debugger on the main thread, this lets us debug issues with loading snapshots and transaction logs."
+     :params ("DEBUGGER"))))
 
 (defclass my-acceptor (hunchentoot-multi-acceptor:multi-acceptor)
   ())
@@ -178,6 +182,7 @@
   )
 
 (defvar *remote-debugging-process* nil)
+(defvar *debugger* nil)
 
 #+lispworks
 (defun start-remote-debugging-client (port)
@@ -220,130 +225,151 @@
                                                       :context #'context))
       (unwind-protect
            (funcall fn)
-        (log:info "lparallel: shutting down")
+        (format t "lparallel: shutting down~%")
         (setf shutting-down-p t)
         (lparallel:end-kernel :wait t)
-        (log:info "lparallel: shutdown complete")))))
+        (format t "lparallel: shutdown complete~%")))))
+
+(def-easy-macro maybe-with-debugger (&fn fn)
+  (handler-bind ((error (lambda (e)
+                          (format t "Got error: ~a (*debugger* is set to ~a)" e
+                                  *debugger*)
+                          #+lispworks
+                          (dbg:output-backtrace :brief)
+                          ;; So by this point, *debugger* is most
+                          ;; likely already read from the command line
+                          ;; options
+                          (unless *debugger*
+                            (invoke-restart 'cl:abort)))))
+    (fn)))
+
+(def-easy-macro with-slynk (&fn fn)
+  (when *start-slynk*
+    (slynk-prepare *slynk-preparer*))
+  (unwind-protect
+       (fn)
+    (format t "Shutting down slynk~%")
+    (slynk-teardown *slynk-preparer*)))
+
+(def-easy-macro with-running-acceptor (acceptor &fn fn)
+  (hunchentoot:start acceptor)
+  (unwind-protect
+       (fn)
+    (format t "Shutting down hunchentoot~%")
+    (hunchentoot:stop acceptor)))
 
 (defun main (&key (enable-store t)
                (jvm t)
                acceptor)
   "Called from launch scripts, either web-bin or launch.lisp"
 
-  (with-lparallel-kernel ()
-    (unwind-on-interrupt ()
-        (let ((args #-lispworks (cons "<arg0>"(uiop:command-line-arguments))
-                    #+lispworks sys:*line-arguments-list*))
-          (log:info "CLI args: ~s" args)
+  (maybe-with-debugger ()
+   (with-lparallel-kernel ()
+     (let ((args #-lispworks (cons "<arg0>"(uiop:command-line-arguments))
+                 #+lispworks sys:*line-arguments-list*))
+       (format t "CLI args: ~s~%" args)
 
-          (multiple-value-bind (vars vals matched dispatch rest)
-              (cl-cli:parse-cli args
-                                *options*)
-            (declare (ignore matched dispatch rest))
-            (loop for var in vars
-                  for val in vals
-                  do (setf (symbol-value var) val))
+       (multiple-value-bind (vars vals matched dispatch rest)
+           (cl-cli:parse-cli args
+                             *options*)
+         (declare (ignore matched dispatch rest))
+         (loop for var in vars
+               for val in vals
+               do (setf (symbol-value var) val))
 
-            (when *start-slynk*
-              (slynk-prepare *slynk-preparer*))
+         (with-slynk ()
+           (unwind-on-interrupt ()
+               #+lispworks
+             (when *remote-debugging-client-port*
+               (start-remote-debugging-client
+                *remote-debugging-client-port*))
 
-            #+lispworks
-            (when *remote-debugging-client-port*
-              (start-remote-debugging-client
-               *remote-debugging-client-port*))
+             (when *verify-store*
+               (log:config :info)
+               (time
+                (cond
+                  #+lispworks
+                  (*profile-store*
+                   (hcl:profile
+                    (util/store:verify-store)))
+                  (t
+                   (util/store:verify-store))))
 
-            (when *verify-store*
-              (log:config :info)
-              (time
-               (cond
-                 #+lispworks
-                 (*profile-store*
-                  (hcl:profile
-                   (util/store:verify-store)))
-                 (t
-                  (util/store:verify-store))))
-
-              (log:info "Done verifying store")
-              (log:info "Running health checks...")
-              (run-health-checks)
-              (uiop:quit 0))
-
-
-            (maybe-run-health-checks)
-            #+nil
-            (when *verify-snapshots*
-              (log:config :info)
-              (util:verify-snapshots)
-              (uiop:quit 0))
-
-            (log:info "The port is now ~a" *port*)
-
-            (unless acceptor
-              (init-multi-acceptor)
-              (setf acceptor *multi-acceptor*))
-            #+lispworks
-            (when jvm
-              (jvm:jvm-init))
-            (setup-appenders)
-
-            (setup-log4cl-debugger-hook)
+               (log:info "Done verifying store")
+               (log:info "Running health checks...")
+               (run-health-checks)
+               (uiop:quit 0))
 
 
-            ;; set this to t for 404 page. :/
-            (setf hunchentoot:*show-lisp-errors-p* t)
+             (maybe-run-health-checks)
+             #+nil
+             (when *verify-snapshots*
+               (log:config :info)
+               (util:verify-snapshots)
+               (uiop:quit 0))
 
-            (setf hunchentoot:*rewrite-for-session-urls* nil)
+             (log:info "The port is now ~a" *port*)
 
-            (when enable-store
-              (util/store:prepare-store))
+             #+lispworks
+             (when jvm
+               (jvm:jvm-init))
+             (setup-appenders)
 
-            (cl-cron:start-cron)
+             (setup-log4cl-debugger-hook)
 
-            (log:info "Store is prepared, moving on...")
 
-            (cond
-              (*shell*
-               (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
-              (t
-               (hunchentoot:start acceptor)))
+             ;; set this to t for 404 page. :/
+             (setf hunchentoot:*show-lisp-errors-p* t)
 
-            (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
-                      (hunchentoot:acceptor-port acceptor))
+             (setf hunchentoot:*rewrite-for-session-urls* nil)
 
-            (setup-appenders :clear t)
+             (when enable-store
+               (util/store:prepare-store))
 
-            (log:info "Now we wait indefinitely for shutdown notifications")))
+             (cl-cron:start-cron)
 
-      ;; unwind if an interrupt happens
-      (log:config :sane :immediate-flush t)
-      (log:config :info)
-      (log:info "SHUTTING DOWN~%")
-      (finish-output t)
-      (log:info "Shutting down cron")
-      (cl-cron:stop-cron)
-      (log:info "Shutting down hunchentoot")
-      (hunchentoot:stop acceptor)
+             (log:info "Store is prepared, moving on...")
 
-      (log:info "Calling shutdown hooks")
-      (mapc 'funcall *shutdown-hooks*)
+             (cond
+               (*shell*
+                (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
+               (t
+                (unless acceptor
+                  (init-multi-acceptor)
+                  (setf acceptor *multi-acceptor*))
+                (with-running-acceptor (acceptor)
+                  (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
+                            (hunchentoot:acceptor-port acceptor))
+                  (setup-appenders :clear t)
+
+                  (log:info "Now we wait indefinitely for shutdown notifications")
+                  (loop (sleep 60)))))))))
+
+     ;; unwind if an interrupt happens
+     (log:config :sane :immediate-flush t)
+     (log:config :info)
+     (format t "SHUTTING DOWN~%")
+     (finish-output t)
+     (format t "Shutting down cron~%")
+     (cl-cron:stop-cron)
+     (format t "Calling shutdown hooks~%")
+     (mapc 'funcall *shutdown-hooks*)
 
 ;;;; Don't snapshot the store, if the process is killed while the
 ;;;; snapshot is happening, we have to manually recover the store
-      ;; (bknr.datastore:snapshot)
+     ;; (bknr.datastore:snapshot)
 
-      (when enable-store
-        (bknr.datastore:close-store))
+     (when enable-store
+       (bknr.datastore:close-store))
 
-      #+lispworks
-      (when *remote-debugging-process*
-        (comm:server-terminate *remote-debugging-process*))
+     #+lispworks
+     (when *remote-debugging-process*
+       (comm:server-terminate *remote-debugging-process*))
 
-      (log:info "Shutting down slynk")
-      (slynk-teardown *slynk-preparer*)
-      (log:info "All services down")))
+     (format t "All services down~%")))
   #+lispworks
   (wait-for-processes)
-  (log:info "All threads before exiting: ~s" (bt:all-threads))
+  (format t "All threads before exiting: ~s~%" (bt:all-threads))
   (log4cl:flush-all-appenders)
   (log4cl:stop-hierarchy-watcher-thread))
 
