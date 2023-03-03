@@ -234,6 +234,7 @@
            (bknr.datastore:delete-object verified-repo)
            (hex:safe-redirect redirect))
     :no redirect
+    :danger t
     <div>
       <p>Removing verification does <b>not</b> uninstall the GitHub app.</p>
 

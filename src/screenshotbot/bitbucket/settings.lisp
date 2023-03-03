@@ -165,6 +165,7 @@
     (confirmation-page
      :yes actually-disconnect
      :no "/settings/bitbucket"
+     :danger t
      <p>Are you sure you want to disconnect BitBucket? Reconnecting it will require access to your organization BitBucket account.</p>)))
 
 (defun settings-bitbucket-page ()

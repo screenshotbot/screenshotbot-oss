@@ -65,6 +65,7 @@
           (?. delete-object (azure-settings-for-company (current-company)))
           (go-home))
    :no (nibble () (go-home))
+   :danger t
    <span>Are you sure you want to clear the access token information? Re-enabling it might require special permissions on your Azure installation.</span>))
 
 (defun azure-settings-page ()
