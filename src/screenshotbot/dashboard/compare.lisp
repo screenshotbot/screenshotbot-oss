@@ -803,16 +803,12 @@
 
 (Deftag screenshot-box (&key screenshot title)
   (let ((dimensions (ignore-errors (image-dimensions (screenshot-image screenshot)))))
-    <div class= "mt-4" >
-      <div class= "screenshot-header">
-        <h4>,(progn title) </h4>
-      </div>
-
-    <picture-with-img
-      class= "mt-2"
-      image= (screenshot-image screenshot)
-      dimensions=dimensions
-      alt=title />
+    <div class= "mt-1" >
+      <picture-with-img
+        class= "mt-2"
+        image= (screenshot-image screenshot)
+        dimensions=dimensions
+        alt=title />
     </div>))
 
 (defun no-screenshots ()
