@@ -10,6 +10,9 @@
           #:screenshotbot/user-api
           #:fiveam)
   (:import-from #:screenshotbot/dashboard/channels
+                #:confirm-delete
+                #:channel-deleted-confirmation
+                #:perform-delete
                 #:single-channel-view
                 #:run-for-channel
                 #:%list-projects)
@@ -93,3 +96,15 @@
                          "deadbeef"))
     (fix-timestamps
      (single-channel-view channel))))
+
+(test delete-channel
+  (with-fixture state ()
+    (perform-delete channel)))
+
+(screenshot-test channel-deleted-confirmation
+  (with-fixture state ()
+    (channel-deleted-confirmation)))
+
+(screenshot-test confirm-channel-deletion
+  (with-fixture state ()
+    (confirm-delete channel)))

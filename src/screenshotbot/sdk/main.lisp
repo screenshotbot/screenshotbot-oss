@@ -53,6 +53,7 @@
        (help)
        (uiop:quit 1))
       (flags:*help*
+       (sleep 30)
        (help))
       (flags:*versionp*
        ;; We've already printed the version by this point
@@ -69,7 +70,7 @@
       (flags:*static-website*
        (sdk:parse-org-defaults)
        (with-version-check ()
-        (static:record-static-website flags:*static-website*)))
+         (static:record-static-website flags:*static-website*)))
       (flags:*firebase-output*
        (firebase:with-firebase-output (flags:*firebase-output*)
          (sdk:parse-org-defaults)

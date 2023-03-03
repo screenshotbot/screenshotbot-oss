@@ -400,7 +400,7 @@ itself,"
            (push (intern (symbol-name arg) :keyword) result))
          (push arg result))))))
 
-(defmacro deftransaction (name (&rest args) &rest body)
+(defmacro deftransaction (name (&rest args) &body body)
   "Define a transaction function tx-NAME and a function NAME executing
 tx-NAME in the context of the current store. The arguments to NAME
 will be serialized to the transaction-log, and must be supported by

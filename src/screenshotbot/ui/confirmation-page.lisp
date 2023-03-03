@@ -15,11 +15,12 @@
 
 (markup:enable-reader)
 
-(markup:deftag confirmation-page (children &key  yes no)
+(markup:deftag confirmation-page (children &key  yes no
+                                  (danger nil))
   <simple-card-page>
     <p>,@(progn children)</p>
     <div class= "card-footer">
-      <a href= yes class="btn btn-primary" >Yes</a>
+      <a href= yes class= (format nil "btn ~a" (if danger "btn-danger" "btn-primary")) >Yes</a>
       <a href= no class= "btn btn-secondary">No</a>
     </div>
   </simple-card-page>)

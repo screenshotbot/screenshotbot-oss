@@ -319,7 +319,9 @@
     (push run (company-runs company)))
 
 (defmethod company-admin-p ((company company) user)
-  (member user (company-admins company)))
+  (or
+   (eql user (company-owner company))
+   (member user (company-admins company))))
 
 (deftransaction
     add-company-report (company report)

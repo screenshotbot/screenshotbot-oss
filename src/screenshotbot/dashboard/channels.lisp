@@ -29,8 +29,11 @@
   (:import-from #:screenshotbot/taskie
                 #:taskie-page-title)
   (:import-from #:screenshotbot/model/company
+                #:company-admin-p
                 #:company)
   (:import-from #:screenshotbot/user-api
+                #:recorder-run-channel
+                #:company-runs
                 #:recorder-run-screenshots
                 #:current-company
                 #:company-channels)
@@ -39,20 +42,28 @@
   (:import-from #:util/request
                 #:http-request)
   (:import-from #:core/ui/simple-card-page
+                #:confirmation-page
                 #:simple-card-page)
   (:import-from #:util/misc
-                #:make-mp-hash-table))
+                #:make-mp-hash-table)
+  (:import-from #:bknr.datastore
+                #:deftransaction)
+  (:import-from #:bknr.datastore
+                #:deftransaction)
+  (:import-from #:screenshotbot/model/report
+                #:report-channel))
 (in-package :screenshotbot/dashboard/channels)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defun single-channel-view (channel)
   <app-template >
     <div class= "main-content">
       <div class= "card-page-container mt-3 mx-auto" style= "max-width: 60em" >
         <div class= "card">
-          <div class= "card-header">
+          <div class= "card-header d-flex justify-content-between">
             <h3>,(channel-name channel)</h3>
+            <a href= (nibble () (confirm-delete channel)) class= "btn btn-danger">Delete</a>
           </div>
           <div class= "card-body">
             <p>First seen: <timeago timestamp= (created-at channel) />
@@ -119,6 +130,45 @@
       </div>
     </div>
   </app-template>)
+
+(defun confirm-delete (channel)
+  (cond
+    ((company-admin-p (channel-company channel)
+                      (current-user))
+     (confirmation-page
+      :yes (nibble ()
+             (perform-delete channel)
+             (channel-deleted-confirmation))
+      :no (nibble ()
+            (simple-confirmation-page channel))
+      :danger t
+      <span>Deleting this channel will delete all associated runs and reports. This cannot be
+        undone. Are you sure you want to continue?</span>))
+    (t
+     <simple-card-page>
+       <span>You must be a company admin to delete channels.</span>
+     </simple-card-page>)))
+
+(defun channel-deleted-confirmation ()
+  <simple-card-page>
+    <span>Channel deleted. <a href= "/channels">Back to channels</a></span>
+  </simple-card-page>)
+
+(deftransaction perform-delete (channel)
+  (check-type channel channel)
+  ;; Deleting a channel is an expensive operation, and we're blocking all transactions
+  ;; in the meantime.
+  (let ((company (company channel)))
+    (setf (company-runs company)
+          (remove channel (company-runs company)
+                  :key #'recorder-run-channel))
+    (setf (company-reports company)
+          (remove channel (company-reports company)
+                  :key #'report-channel))
+    (setf (company-channels company)
+          (remove channel (company-channels company)))
+
+    (setf (company channel) nil)))
 
 (defun guess-channel-args (channel)
   (list
