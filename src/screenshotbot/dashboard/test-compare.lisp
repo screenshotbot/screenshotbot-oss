@@ -94,3 +94,31 @@
          :screenshotbot
          "report-page"
          (render-report-page report :skip-access-checks t))))))
+
+
+(test report-with-only-added-screenshots
+  (with-fixture state ()
+    (with-test-user (:user user
+                     :company company
+                     :logged-in-p t)
+      (let* ((channel (make-instance 'channel
+                                     :company company
+                                     :name "bleh"
+                                     :github-repo "git@github.com:a/b.gitq"))
+             (one (make-instance 'recorder-run
+                                 :channel channel
+                                 :company company
+                                 :screenshots nil))
+             (two (make-instance 'recorder-run
+                                 :channel channel
+                                 :company company
+                                 :screenshots (list (make-screenshot im2))))
+             (report (make-instance 'report
+                                    :title "foobar"
+                                    :run one
+                                    :previous-run two)))
+        (snap-all-images)
+        (screenshot-static-page
+         :screenshotbot
+         "report-page-only-added-screenshots"
+         (render-report-page report :skip-access-checks t))))))
