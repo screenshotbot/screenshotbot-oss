@@ -29,6 +29,8 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
             fn();
         }
     }
+    $(canvasEl).unbind();
+
     var translate = { x: 0, y: 0 };
     var zoom = 1;
     var masks = [];
@@ -206,6 +208,7 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
     }
 
     var mouseDownTimer;
+
     $(canvasEl).on("mousedown", onMouseDown);
 
     function getEventPositionOnCanvas(e) {
@@ -507,6 +510,92 @@ function prepareReportJs () {
             setupImageComparison.call(img);
         });
 }
+
+$(document).on("click", "a.screenshot-run-image", function (e) {
+    e.preventDefault();
+    var modal = $($(this).data("target"));
+    var canvas = $("canvas", modal);
+
+    var src = canvas.data("src");
+    canvas.data("image-number", $(this).data("image-number"));
+
+    (new Modal(modal.get(0), {})).show();
+});
+
+$(document).on("show.bs.modal", ".single-screenshot-modal", function () {
+    console.log("callback called");
+    var title = $(this).find(".modal-title");
+    var canvas = $(this).find("canvas");
+    var next = $(this).find(".next");
+    var prev = $(this).find(".previous");
+    var page = $(this).find(".page-num");
+
+    next.unbind();
+    prev.unbind();
+
+    function fetchData() {
+        var n = $(canvas).data("image-number");
+        var src = $(canvas).data("src");
+        $.ajax({
+            url: src,
+            data: {
+                n: n,
+            },
+            error: function () {
+                swAlert("Something went wrong, please try refreshing the page");
+            },
+            success: function (data) {
+                updateData(data);
+            }
+
+        });
+    }
+
+    function updateData(data) {
+        $(title).text(data.title);
+        loadIntoCanvas(canvas.get(0),
+                       [{
+                           alpha: 1,
+                           src: data.src,
+                       }],
+                       [], {});
+    }
+
+    function setEnabled(link, enabled) {
+        if (enabled) {
+            link.removeClass("disabled");
+        } else {
+            link.addClass("disabled");
+        }
+    }
+
+    function updateN(fn) {
+        var num = $(canvas).data("image-number");
+        var length = $(canvas).data("length");
+        num = fn(num);
+
+        page.html("" + (num + 1) + "/" + length);
+
+        setEnabled(prev, num > 0);
+        setEnabled(next, num < length - 1);
+
+        $(canvas).data("image-number", num);
+        fetchData();
+    }
+
+    next.on("click", function () {
+        updateN((n) => n+1);
+    });
+
+    prev.on("click", function () {
+        updateN((n) => n-1);
+    });
+
+    // Hacky way of making sure both the initializer and the Next/prev
+    // use the same code paths.
+    updateN((x) => x);
+});
+
 
 prepareReportJs();
 

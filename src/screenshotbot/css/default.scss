@@ -962,3 +962,20 @@ table.git-graph {
         background-color: $gray-500;
     }
 }
+
+.single-screenshot-modal {
+    .modal-title {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        max-height: 90vh;
+    }
+
+    canvas {
+        background: url("/assets/images/img-background.png");
+        background-repeat: repeat;
+        width: 100%;
+        object-fit: cover;
+        object-position: 0 0;
+    }
+}
