@@ -29,6 +29,9 @@
   (:import-from #:screenshotbot/report-api
                 #:render-diff-report)
   (:import-from #:screenshotbot/dashboard/run-page
+                #:modal-id
+                #:render-modal
+                #:screenshots-viewer
                 #:run-row-filter
                 #:page-nav-dropdown
                 #:row-filter
@@ -403,7 +406,7 @@
   </app-template>)
 
 (deftag progress-img (&key (alt "Image Difference") src class)
-  "An <img> with a progress indicator for the image loading."
+  "An IMG with a progress indicator for the image loading."
 
   <div class= (format nil  "progress-image-wrapper ~a" class) >
   <div class= "alert alert-danger images-identical" style= "display:none" >
@@ -773,28 +776,44 @@
        </div>))))
 
 (defun render-single-group-list (groups &key search)
-  (paginated
-   (lambda (group)
-     <div class= "col-md-6">
-     <div class= "card mb-3">
-     ,(maybe-tabulate
-       (loop for group-item in (group-items group)
-             for screenshot = (actual-item group-item)
-             collect
-             (make-instance
-              'tab
-              :title (get-tab-title screenshot)
-              :content
-              <screenshot-box  screenshot=screenshot title= (group-title group) /> ))
-       :header <h4 class= "screenshot-title" >,(highlight-search-term search (group-title group)) </h4>)
-     </div>
-     </div>)
-   :num 12
-   :filter (lambda (group)
-             (group-matches-p group search))
+  (let* ((filter (lambda (group)
+                   (group-matches-p group search)))
+         (screenshots-viewer (make-instance 'screenshots-viewer
+                                            :screenshots groups
+                                            :filter filter
+                                            :mapper (lambda (group)
+                                                      (actual-item (car (group-items group)))))))
+    <div>
+      ,(render-modal screenshots-viewer)
 
-   :items groups
-   :empty-view (no-screenshots)))
+      ,(paginated
+        (lambda (group i)
+          <div class= "col-md-6">
+            <div class= "card mb-3">
+              ,(maybe-tabulate
+                (loop for group-item in (group-items group)
+                      for screenshot = (actual-item group-item)
+                      collect
+                      (make-instance
+                       'tab
+                       :title (get-tab-title screenshot)
+                       :content
+                       <a href= "#"
+                          class= "screenshot-run-image"
+                          data-image-number=i
+                          data-target= (format nil "#~a" (modal-id screenshots-viewer)) >
+
+                         <screenshot-box  screenshot=screenshot title= (group-title group) />
+                       </a>))
+                :header <h4 class= "screenshot-title" >,(highlight-search-term search (group-title group)) </h4>)
+            </div>
+          </div>)
+        :num 12
+        :filter filter
+        :items groups
+        :pass-index-p t
+        :empty-view (no-screenshots))
+    </div>))
 
 (Deftag screenshot-box (&key screenshot title)
   (let ((dimensions (ignore-errors (image-dimensions (screenshot-image screenshot)))))

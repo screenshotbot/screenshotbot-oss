@@ -431,107 +431,126 @@
 (defun make-id ()
   (format nil "a-~a" (random 10000000)))
 
+(defclass screenshots-viewer ()
+  ((screenshots :initarg :screenshots
+                :reader screenshots-viewer-screenshots)
+   (filter :initarg :filter
+           :reader screenshots-viewer-filter)
+   (mapper :initarg :mapper
+           :initform #'identity
+           :reader screenshots-viewer-mapper
+           :documentation "map the object in the list to get the screenshot")
+   (modal-id :initform (make-id)
+             :reader modal-id)))
+
+(defmethod filtered-screenshots ((self screenshots-viewer))
+  (remove-if-not (screenshots-viewer-filter self)
+                 (screenshots-viewer-screenshots self)))
+
+(defmethod render-modal ((self screenshots-viewer))
+  (let ((get-ith-image (nibble (n)
+                         (setf (hunchentoot:content-type*) "application/json")
+                         (let ((screenshot (funcall
+                                            (screenshots-viewer-mapper self)
+                                            (elt (filtered-screenshots self) (parse-integer n)))))
+                           (json:encode-json-to-string
+                            `((:src . ,(image-public-url
+                                        (screenshot-image screenshot)
+                                        ;; todo: full-page
+                                        :type :webp))
+                              (:title . ,(screenshot-name screenshot))))))))
+    <div class= "modal fade single-screenshot-modal" id= (modal-id self) tabindex= "-1" role= "dialog"
+         aria-hidden= "true" >
+      <div class= "modal-dialog modal-fullscreen-lg-down " role= "document">
+        <div class= "modal-content">
+          <div class= "modal-header">
+            <h5 class= "modal-title"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class= "modal-body">
+
+            <div class= "d-flex justify-content-between mb-2 align-items-center">
+              <a href= "#" class= "btn previous"><mdi name= "navigate_before"/>Previous</a>
+              <span class= "page-num" />
+              <a href= "#" class= "btn next">Next<mdi name= "navigate_next" /></a>
+            </div>
+            <:canvas
+              data-length= (length (filtered-screenshots self))
+              data-src=get-ith-image />
+          </div>
+        </div>
+      </div>
+    </div>))
+
 
 (defun run-page-contents (run channel screenshots &key (filter #'identity))
-  (flet ((filtered-screenshots ()
-           ;; Better to recompute when needed than keeping all the
-           ;; conses around in closures.
-           (remove-if-not filter screenshots)))
-   (let ((details-modal-id (make-id))
-         (get-ith-image (nibble (n)
-                          (setf (hunchentoot:content-type*) "application/json")
-                          (let ((screenshot (elt (filtered-screenshots) (parse-integer n))))
-                            (json:encode-json-to-string
-                             `((:src . ,(image-public-url
-                                         (screenshot-image screenshot)
-                                         ;; todo: full-page
-                                         :type :webp))
-                               (:title . ,(screenshot-name screenshot))))))))
-     <div id= (make-id) >
-       <div class= "modal fade single-screenshot-modal" id=details-modal-id tabindex= "-1" role= "dialog"
-            aria-hidden= "true" >
-         <div class= "modal-dialog modal-fullscreen-lg-down " role= "document">
-           <div class= "modal-content">
-             <div class= "modal-header">
-               <h5 class= "modal-title"></h5>
-               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  (let ((screenshots-viewer (make-instance 'screenshots-viewer
+                                           :screenshots screenshots
+                                           :filter filter)))
+   <div id= (make-id) >
+     ,(render-modal screenshots-viewer)
+     ,(paginated
+       (lambda (screenshot i)
+         (let* ((name-parts (str:rsplit "--" (screenshot-name screenshot) :limit 2)))
+           <div class= " col-sm-12 col-md-4 col-lg-3 mb-1 mt-2">
+             <div class="card">
+               <div class="card-body">
+                 <div class= "screenshot-header" >
+                   <h4 class= "screenshot-title" >,(car name-parts)</h4>
+                   ,(when (cadr name-parts)
+                      <h6>,(cadr name-parts)</h6>)
+                   <ul class= "screenshot-options-menu">
+                     <li>
+                       <a href= (make-url 'history-page :channel (store-object-id channel)
+                                                                                          :screenshot-name (screenshot-name screenshot))
+                          >
+                         History
+                       </a>
+                     </li>
+
+                     <li>
+                       <a href= (nibble () (mask-editor (recorder-run-channel run) screenshot
+                          :redirect (run-link run)))
+                          >Edit Masks</a>
+
+                     </li>
+
+                     ,(when *create-issue-popup*
+                        <li>
+                          <a target= "_blank"
+                             href= (nibble ()
+                                             (funcall *create-issue-popup* run screenshot)) >
+                            Create Issue
+                          </a>
+                        </li>)
+                   </ul>
+                 </div>
+                 <a href= (image-public-url (screenshot-image screenshot) :size :full-page :type "webp") title= (screenshot-name screenshot)
+                    class= "screenshot-run-image"
+                    data-image-number=i
+                    data-target= (format nil "#~a" (modal-id screenshots-viewer))>
+                   ,(let ((dimensions (ignore-errors (image-dimensions (screenshot-image screenshot)))))
+                      <picture class="">
+                        <source srcset= (image-public-url (screenshot-image screenshot) :size :small :type :webp) />
+                        <:img
+                          class= "screenshot-image run-page-image"
+                          src= (image-public-url (screenshot-image screenshot)  :size :small
+                                                                              :type :png)
+                          width= (?. dimension-width dimensions)
+                          height= (?. dimension-height dimensions)
+                          />
+                      </picture>)
+                 </a>
+               </div> <!-- end card-body-->
              </div>
 
-             <div class= "modal-body">
-
-               <div class= "d-flex justify-content-between mb-2 align-items-center">
-                 <a href= "#" class= "btn previous"><mdi name= "navigate_before"/>Previous</a>
-                 <span class= "page-num" />
-                 <a href= "#" class= "btn next">Next<mdi name= "navigate_next" /></a>
-               </div>
-               <:canvas
-                 data-length= (length (filtered-screenshots))
-                 data-src=get-ith-image />
-             </div>
-           </div>
-         </div>
-       </div>
-       ,(paginated
-         (lambda (screenshot i)
-           (let* ((name-parts (str:rsplit "--" (screenshot-name screenshot) :limit 2)))
-             <div class= " col-sm-12 col-md-4 col-lg-3 mb-1 mt-2">
-               <div class="card">
-                 <div class="card-body">
-                   <div class= "screenshot-header" >
-                     <h4 class= "screenshot-title" >,(car name-parts)</h4>
-                     ,(when (cadr name-parts)
-                        <h6>,(cadr name-parts)</h6>)
-                     <ul class= "screenshot-options-menu">
-                       <li>
-                         <a href= (make-url 'history-page :channel (store-object-id channel)
-                                                                                            :screenshot-name (screenshot-name screenshot))
-                            >
-                           History
-                         </a>
-                       </li>
-
-                       <li>
-                         <a href= (nibble () (mask-editor (recorder-run-channel run) screenshot
-                            :redirect (run-link run)))
-                            >Edit Masks</a>
-
-                       </li>
-
-                       ,(when *create-issue-popup*
-                          <li>
-                            <a target= "_blank"
-                               href= (nibble ()
-                                               (funcall *create-issue-popup* run screenshot)) >
-                              Create Issue
-                            </a>
-                          </li>)
-                     </ul>
-                   </div>
-                   <a href= (image-public-url (screenshot-image screenshot) :size :full-page :type "webp") title= (screenshot-name screenshot)
-                      class= "screenshot-run-image"
-                      data-image-number=i
-                      data-target= (format nil "#~a" details-modal-id)>
-                     ,(let ((dimensions (ignore-errors (image-dimensions (screenshot-image screenshot)))))
-                        <picture class="">
-                          <source srcset= (image-public-url (screenshot-image screenshot) :size :small :type :webp) />
-                          <:img
-                            class= "screenshot-image run-page-image"
-                            src= (image-public-url (screenshot-image screenshot)  :size :small
-                                                                                :type :png)
-                            width= (?. dimension-width dimensions)
-                            height= (?. dimension-height dimensions)
-                            />
-                        </picture>)
-                   </a>
-                 </div> <!-- end card-body-->
-               </div>
-
-             </div>))
-         :pass-index-p t
-         :items screenshots
-         :filter filter
-         :empty-view  <p class= "text-muted" >No screenshots found</p>)
-     </div>)))
+           </div>))
+       :pass-index-p t
+       :items screenshots
+       :filter filter
+       :empty-view  <p class= "text-muted" >No screenshots found</p>)
+   </div>))
 
 (defclass js-api-result () ())
 
