@@ -23,7 +23,7 @@ function callLiveOnAttach(nodes) {
     });
 }
 
-function loadIntoCanvas(canvasEl, data, callbacks) {
+function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
     function callCallback(fn) {
         if (fn) {
             fn();
@@ -33,13 +33,12 @@ function loadIntoCanvas(canvasEl, data, callbacks) {
     var zoom = 1;
     var masks = [];
 
-    console.log("Loading into canvas", data);
-    var image = new Image();
-    image.src = data.src;
-
-    var background = new Image();
-    background.src = data.background;
-    masks = data.masks;
+    var images = [];
+    for (let layer of layers) {
+        var im = new Image();
+        im.src = layer.src;
+        images.push(im);
+    }
 
     var ctx = canvasEl.getContext('2d');
 
@@ -118,10 +117,12 @@ function loadIntoCanvas(canvasEl, data, callbacks) {
             }
         }
 
-        ctx.globalAlpha = 0.2;
-        doDraw(background);
-        ctx.globalAlpha = 1;
-        doDraw(image)
+
+        for(let i in layers) {
+            ctx.globalAlpha = layers[i].alpha || 1;
+            doDraw(images[i]);
+        }
+
         drawMasks();
     }
 
@@ -151,17 +152,21 @@ function loadIntoCanvas(canvasEl, data, callbacks) {
 
     function onEitherImageLoad() {
         imageLoadCounter ++;
-        if (imageLoadCounter == 2) {
+        if (imageLoadCounter == images.length) {
             callCallback(callbacks.onImagesLoaded);
+
+            // The last image determines the canvas size.
+            var image = images[images.length - 1];
+
             canvasEl.height = image.height;
             canvasEl.width = image.width;
             scheduleDraw();
         }
     }
 
-    image.onload = onEitherImageLoad;
-    background.onload = onEitherImageLoad;
-
+    for (let im of images) {
+        im.onload = onEitherImageLoad;
+    }
     var dragStart = { x: 0, y: 0, translateX: 0, translateY: 0 };
 
     function onMouseDown(e) {
@@ -430,7 +435,17 @@ function prepareReportJs () {
                 loading.hide();
                 img.show();
                 zoomToLink = data.zoomTo;
-                loadIntoCanvas(canvas.get(0), data, {
+                console.log("Loading into canvas", data);
+                loadIntoCanvas(canvas.get(0),
+                               [{
+                                   alpha: 0.2,
+                                   src: data.background,
+                               },
+                                {
+                                    alpha: 1,
+                                    src: data.src,
+                                }],
+                               data.masks, {
                     onImagesLoaded: function () {
                         zoomToChange.prop("disabled", false);
                     },
