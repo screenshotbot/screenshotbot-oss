@@ -116,9 +116,7 @@ function prepareReportJs () {
         var zoomToChangeSpinner = $(zoomToChange).find(".spinner-border");
 
         var src = img.data("src");
-        if (!canvas.get(0)) {
-            resetImageZoom(img);
-        }
+        resetImageZoom(img);
 
         zoomToChange.prop("disabled", true);
         loading.show();
@@ -127,20 +125,6 @@ function prepareReportJs () {
         var translate = { x: 0, y: 0 };
         var zoom = 1;
         var masks = [];
-
-        function loadIntoImage(data) {
-            img.on("load", function () {
-                zoomToChange.prop("disabled", false);
-            });
-
-            if (data.identical) {
-                $(".images-identical", wrapper).show();
-            }
-            console.log("Comparison result" ,data);
-            img.attr("src", data.src);
-            img.css("background-image", "url(\"" + data.src + '")');
-            img.css("background-repeat", "no-repeat");
-        }
 
         function loadIntoCanvas(data) {
             console.log("Loading into canvas", data);
@@ -442,85 +426,16 @@ function prepareReportJs () {
             success: function (data) {
                 loading.hide();
                 img.show();
-                if (canvas.get(0)) {
-                    loadIntoCanvas(data);
-                } else {
-                    loadIntoImage(data);
-                }
+                loadIntoCanvas(data);
             },
             error: function () {
                 swAlert("Network request failed! This could be because we're still processing the image. Please try again in a minute");
             }
         });
 
-        function zoomToChangeForImg(data) {
-            console.log("got data", data);
-            // let's begin an animation to (data.x, data.y)
-
-            // TODO: auto calculate maxScale
-            var maxScale = 10;
-
-            var zoom = 400;
-
-            var clientWidth = img.get(0).naturalWidth;
-            var clientHeight = img.get(0).naturalHeight;
-
-            console.log("clientWidth/Height", clientWidth, clientHeight);
-            console.log("width/height", img.width(), img.height());
-
-            // Percent X, and percent y
-            var pX = data.x / data.width;
-            var pY = data.y / data.height;
-
-            console.log("pX, pY", pX, pY);
-
-
-            // what's the percentage of the image that's shown
-            // in the final position? This is straightforward:
-            var pFinalWidth = 100 / zoom;
-            var pFinalHeight = 100 / zoom;
-
-            console.log("pFinalWidth/Height", pFinalWidth, pFinalHeight);
-
-            // So we can now calculate the left and top in
-            // percentages of the image.
-            var pLeft = pX - pFinalWidth / 2;
-            var pTop = pY - pFinalHeight / 2;
-
-            console.log("pLeft/Top", pLeft, pTop);
-
-            // And we can use that to bring it back to pixel
-            // land:
-            var finalLeft = - (pX * zoom / 100 - 0.5) * img.width();
-            var finalTop = - (pY * zoom / 100 - 0.5) * img.height();
-
-            console.log("finalLeft/Top", finalLeft, finalTop);
-            zoomToChangeSpinner.hide();
-
-            img.animate(
-                {
-                    "background-size": zoom + "%",
-                    "background-position-x": finalLeft + "px",
-                    "background-position-y": finalTop + "px",
-                },
-                {
-                    duration: 2000,
-                    complete: function() {
-                        zoomToChange.prop("disabled", false);
-                    }
-                }
-            );
-
-        }
-
         zoomToChange.on("click", function (e) {
             console.log("zoom to change clicked");
             // move the image out of the way
-
-            if (!canvas.get(0)) {
-                img.css("object-position", "10000px 10000px");
-                img.css("background-size", "100%");
-            }
 
             zoomToChange.prop("disabled", true);
             zoomToChangeSpinner.show();
@@ -528,13 +443,8 @@ function prepareReportJs () {
             $.ajax({
                 url: zoomToLink,
                 success: function(data) {
-                    if (canvas.get(0)) {
-                        var event = new CustomEvent("zoomToChange", { detail: data });
-                        canvas.get(0).dispatchEvent(event);
-                    } else {
-                        console.log("Using legacy zoom to change");
-                        zoomToChangeForImg(data);
-                    }
+                    var event = new CustomEvent("zoomToChange", { detail: data });
+                    canvas.get(0).dispatchEvent(event);
                 },
                 error: function () {
                     alert("We couldn't find changed pixels! This is likely a bug on our end.");

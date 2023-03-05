@@ -423,18 +423,13 @@
       Loading (this could take upto 30s in some cases)
     </div>
 
-  ,(cond
-     ((hunchentoot:parameter "old-compare")
-      <:img data-src= src
-            class= "bg-primary image-comparison-modal-image" alt=alt />)
-     (t
-      <div>
-        <div class= "alert alert-info">
-          <strong>New interactive comparisons!</strong> Use your mouse to pan through the image. Use the <strong>mouse wheel</strong> to zoom into a location.
-        </div>
-        <:canvas data-src=src
-                 class= "image-comparison-modal-image" />
-      </div>))
+    <div>
+      <div class= "alert alert-info">
+        <strong>New interactive comparisons!</strong> Use your mouse to pan through the image. Use the <strong>mouse wheel</strong> to zoom into a location.
+      </div>
+      <:canvas data-src=src
+               class= "image-comparison-modal-image" />
+    </div>
   </div>)
 
 (deftag zoom-to-change-button ()
