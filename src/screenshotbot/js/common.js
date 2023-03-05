@@ -23,6 +23,307 @@ function callLiveOnAttach(nodes) {
     });
 }
 
+function loadIntoCanvas(canvasEl, data, callbacks) {
+    function callCallback(fn) {
+        if (fn) {
+            fn();
+        }
+    }
+    var translate = { x: 0, y: 0 };
+    var zoom = 1;
+    var masks = [];
+
+    console.log("Loading into canvas", data);
+    var image = new Image();
+    image.src = data.src;
+
+    var background = new Image();
+    background.src = data.background;
+    masks = data.masks;
+
+    var ctx = canvasEl.getContext('2d');
+
+    var drawTimeout = null;
+    function scheduleDraw() {
+        if (!drawTimeout) {
+            drawTimeout = setTimeout(function () {
+                drawTimeout = null;
+                draw();
+            }, 16);
+        }
+    }
+
+    function draw() {
+        //fixMaxTranslation();
+        // x* = t + sx. x = (x* - t) / s
+        function reverseMap(pos) {
+            function r(x_star, t) {
+                return (x_star - t) / zoom;
+            }
+            return {
+                x: r(pos.x, translate.x),
+                y: r(pos.y, translate.y)
+            }
+        }
+
+        function forwardMap(pos) {
+            function m(x, t) {
+                return t + zoom * x;
+            }
+
+            return {
+                x: m(pos.x, translate.x),
+                y: m(pos.y, translate.y),
+            }
+        }
+
+        var imTopLeft = reverseMap({x: 0, y: 0});
+        var imBottomRight = reverseMap({
+            x : canvasEl.width,
+            y: canvasEl.height
+        });
+        ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+        /*
+          console.log("Source prop", translate, imTopLeft.x, imTopLeft.y,
+          imBottomRight.x - imTopLeft.x,
+          imBottomRight.y - imTopLeft.y);
+        */
+
+        function doDraw(image) {
+            ctx.drawImage(image,
+                          imTopLeft.x, imTopLeft.y,
+                          imBottomRight.x - imTopLeft.x,
+                          imBottomRight.y - imTopLeft.y,
+                          0, 0,
+                          canvasEl.width,
+                          canvasEl.height);
+        }
+
+        function drawMasks() {
+            for (var mask of masks) {
+                ctx.beginPath();
+
+                var maskPos = forwardMap({
+                    x: mask.left,
+                    y: mask.top,
+                });
+
+                ctx.rect(maskPos.x,
+                         maskPos.y,
+                         mask.width * zoom,
+                         mask.height * zoom);
+                ctx.fillStyle = "rgba(255, 255, 0, 0.8)";
+                ctx.fill();
+            }
+        }
+
+        ctx.globalAlpha = 0.2;
+        doDraw(background);
+        ctx.globalAlpha = 1;
+        doDraw(image)
+        drawMasks();
+    }
+
+    function fixMaxTranslation () {
+        var rect = canvasEl.getBoundingClientRect();
+        var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
+
+        if (translate.x >  rect.width * scale / 2) {
+            translate.x = rect.width * scale / 2;
+        }
+
+        if (translate.y > rect.height * scale / 2) {
+            translate.y = rect.height * scale / 2;
+        }
+
+        if (translate.x + canvasEl.width < rect.width * scale / 2) {
+            translate.x = rect.width * scale / 2 - canvasEl.width;
+        }
+
+        if (translate.y + canvasEl.height < rect.height * scale / 2) {
+            translate.y = rect.height * scale / 2 - canvasEl.height;
+        }
+
+    }
+
+    var imageLoadCounter = 0;
+
+    function onEitherImageLoad() {
+        imageLoadCounter ++;
+        if (imageLoadCounter == 2) {
+            callCallback(callbacks.onImagesLoaded);
+            canvasEl.height = image.height;
+            canvasEl.width = image.width;
+            scheduleDraw();
+        }
+    }
+
+    image.onload = onEitherImageLoad;
+    background.onload = onEitherImageLoad;
+
+    var dragStart = { x: 0, y: 0, translateX: 0, translateY: 0 };
+
+    function onMouseDown(e) {
+        if (e.which != 1) {
+            return;
+        }
+
+        var isDragging = true;
+        dragStart = getEventPositionOnCanvas(e);
+        dragStart.translateX = translate.x;
+        dragStart.translateY = translate.y;
+
+        // Only start moving after 250ms. In the meantime, if
+        // we double-click, then we'll cancel this
+        var timer = setTimeout(function () {
+            document.addEventListener("mousemove", onMouseMove);
+        }, 100)
+
+        function onMouseMove(e) {
+            var pos = getEventPositionOnCanvas(e);
+            if (isDragging) {
+                translate.x = pos.x - dragStart.x + dragStart.translateX;
+                translate.y = pos.y - dragStart.y + dragStart.translateY;
+                scheduleDraw();
+            }
+        }
+
+        function onMouseEnd(e) {
+            isDragging = false;
+            clearTimeout(timer);
+            document.removeEventListener("mousemove", onMouseMove);
+            document.removeEventListener("mouseup", onMouseEnd);
+        }
+
+
+        document.addEventListener("mouseup", onMouseEnd);
+    }
+
+    var mouseDownTimer;
+    $(canvasEl).on("mousedown", onMouseDown);
+
+    function getEventPositionOnCanvas(e) {
+        var rect = canvasEl.getBoundingClientRect();
+        // Since we're using `cover` as object-fit, the scale
+        // will be the higher of these two
+        var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
+
+        /*console.log("here's what we're looking at", rect.width, canvasEl.width, translate.x);
+          console.log("here's what we're looking at", rect.height, canvasEl.height, translate.y);
+          console.log("But got scale", scale);*/
+        var thisX = (e.clientX - rect.left) * scale;
+        var thisY = (e.clientY - rect.top) * scale;
+
+        return {
+            x: thisX,
+            y: thisY,
+        };
+    }
+
+    function getEventPositionOnImage(e) {
+        var canvasPos = getEventPositionOnCanvas(e);
+        return {
+            x: (canvasPos.x - translate.x) / zoom,
+            y: (canvasPos.y - translate.y) / zoom,
+        };
+    }
+
+    function onZoomWheel(e) {
+        var change = e.originalEvent.deltaY * 0.0005;
+        var zoom0 = zoom;
+
+        zoom -= change;
+        if (zoom > 5) {
+            zoom = 5;
+        }
+
+        if (zoom < 0.1) {
+            zoom = 0.1;
+        }
+        //console.log("new zoom is", zoom);
+
+        // But I want the mouse to be on the same location
+        // that we started with. For this we need to move translate.x
+
+
+
+        var canvasPos = getEventPositionOnCanvas(e);
+
+        translate = {
+            x: canvasPos.x - (zoom/zoom0) * (canvasPos.x - translate.x),
+            y: canvasPos.y - (zoom/zoom0) * (canvasPos.y - translate.y)
+        }
+
+        scheduleDraw();
+        e.preventDefault();
+
+    }
+
+    $(canvasEl).on("wheel", function (e) {
+        onZoomWheel(e);
+    });
+
+    $(canvasEl).dblclick(function (e) {
+        var imPos = getEventPositionOnImage(e);
+        zoomToImagePx(imPos);
+        e.preventDefault();
+    });
+
+    function animateTo(newTranslate, newZoom, callback) {
+        var oldTranslate = translate;
+        var oldZoom = zoom;
+        $(canvasEl).animate(
+            {fake:100},
+            {
+                duration: 1000,
+                complete: callback,
+                progress: function (animation, progress) {
+                    translate = {
+                        x: (1-progress) * oldTranslate.x + progress * newTranslate.x,
+                        y: (1-progress) * oldTranslate.y + progress * newTranslate.y
+                    }
+
+                    zoom = (1-progress)*oldZoom + progress * newZoom;
+                    scheduleDraw();
+                },
+            });
+    }
+
+    function zoomToImagePx(data) {
+        console.log("data", data);
+        var rect = canvasEl.getBoundingClientRect();
+        var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
+
+        var zoom = 4;
+        var outputPixel = { x : scale * rect.width / 2, y: scale * rect.height / 2}
+        /*
+          The final position is t + sx for image position
+          x. We want x to map to outputPixel. So we can get t
+          = outputPixel - sx.
+        */
+
+        var newTranslate = {
+            x: outputPixel.x - zoom * data.x,
+            y: outputPixel.y - zoom * data.y,
+        }
+
+        console.log("redrawing ", translate, zoom);
+        animateTo(newTranslate, zoom, function () {
+            console.log("animation done");
+            callCallback(callbacks.onZoomComplete);
+        });
+    }
+
+    $(canvasEl).on("zoomToChange", function (e) {
+        console.log("zoomToChange", e);
+        var data = e.originalEvent.detail;
+
+        zoomToImagePx(data);
+    });
+}
+
+
 function prepareReportJs () {
     setupLiveOnAttach(".change-image-left", function () {
         //console.log("Setting up mouseover", this);
@@ -122,311 +423,22 @@ function prepareReportJs () {
         loading.show();
         img.hide();
 
-        var translate = { x: 0, y: 0 };
-        var zoom = 1;
-        var masks = [];
-
-        function loadIntoCanvas(data) {
-            console.log("Loading into canvas", data);
-            var image = new Image();
-            image.src = data.src;
-
-            var background = new Image();
-            background.src = data.background;
-            zoomToLink = data.zoomTo;
-            masks = data.masks;
-
-            var canvasEl = canvas.get(0);
-
-            var ctx = canvasEl.getContext('2d');
-
-            var drawTimeout = null;
-            function scheduleDraw() {
-                if (!drawTimeout) {
-                    drawTimeout = setTimeout(function () {
-                        drawTimeout = null;
-                        draw();
-                    }, 16);
-                }
-            }
-
-            function draw() {
-                //fixMaxTranslation();
-                // x* = t + sx. x = (x* - t) / s
-                function reverseMap(pos) {
-                    function r(x_star, t) {
-                        return (x_star - t) / zoom;
-                    }
-                    return {
-                        x: r(pos.x, translate.x),
-                        y: r(pos.y, translate.y)
-                    }
-                }
-
-                function forwardMap(pos) {
-                    function m(x, t) {
-                        return t + zoom * x;
-                    }
-
-                    return {
-                        x: m(pos.x, translate.x),
-                        y: m(pos.y, translate.y),
-                    }
-                }
-
-                var imTopLeft = reverseMap({x: 0, y: 0});
-                var imBottomRight = reverseMap({
-                    x : canvasEl.width,
-                    y: canvasEl.height
-                });
-                ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-
-                /*
-                console.log("Source prop", translate, imTopLeft.x, imTopLeft.y,
-                            imBottomRight.x - imTopLeft.x,
-                            imBottomRight.y - imTopLeft.y);
-                */
-
-                function doDraw(image) {
-                    ctx.drawImage(image,
-                                  imTopLeft.x, imTopLeft.y,
-                                  imBottomRight.x - imTopLeft.x,
-                                  imBottomRight.y - imTopLeft.y,
-                                  0, 0,
-                                  canvasEl.width,
-                                  canvasEl.height);
-                }
-
-                function drawMasks() {
-                    for (var mask of masks) {
-                        ctx.beginPath();
-
-                        var maskPos = forwardMap({
-                            x: mask.left,
-                            y: mask.top,
-                        });
-
-                        ctx.rect(maskPos.x,
-                                 maskPos.y,
-                                 mask.width * zoom,
-                                 mask.height * zoom);
-                        ctx.fillStyle = "rgba(255, 255, 0, 0.8)";
-                        ctx.fill();
-                    }
-                }
-
-                ctx.globalAlpha = 0.2;
-                doDraw(background);
-                ctx.globalAlpha = 1;
-                doDraw(image)
-                drawMasks();
-            }
-
-            function fixMaxTranslation () {
-                var rect = canvasEl.getBoundingClientRect();
-                var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
-
-                if (translate.x >  rect.width * scale / 2) {
-                    translate.x = rect.width * scale / 2;
-                }
-
-                if (translate.y > rect.height * scale / 2) {
-                    translate.y = rect.height * scale / 2;
-                }
-
-                if (translate.x + canvasEl.width < rect.width * scale / 2) {
-                    translate.x = rect.width * scale / 2 - canvasEl.width;
-                }
-
-                if (translate.y + canvasEl.height < rect.height * scale / 2) {
-                    translate.y = rect.height * scale / 2 - canvasEl.height;
-                }
-
-            }
-
-            var imageLoadCounter = 0;
-
-            function onEitherImageLoad() {
-                imageLoadCounter ++;
-                if (imageLoadCounter == 2) {
-                    zoomToChange.prop("disabled", false);
-                    canvasEl.height = image.height;
-                    canvasEl.width = image.width;
-                    scheduleDraw();
-                }
-            }
-
-            image.onload = onEitherImageLoad;
-            background.onload = onEitherImageLoad;
-
-            var dragStart = { x: 0, y: 0, translateX: 0, translateY: 0 };
-
-            function onMouseDown(e) {
-                if (e.which != 1) {
-                    return;
-                }
-
-                var isDragging = true;
-                dragStart = getEventPositionOnCanvas(e);
-                dragStart.translateX = translate.x;
-                dragStart.translateY = translate.y;
-
-                // Only start moving after 250ms. In the meantime, if
-                // we double-click, then we'll cancel this
-                var timer = setTimeout(function () {
-                    document.addEventListener("mousemove", onMouseMove);
-                }, 100)
-
-                function onMouseMove(e) {
-                    var pos = getEventPositionOnCanvas(e);
-                    if (isDragging) {
-                        translate.x = pos.x - dragStart.x + dragStart.translateX;
-                        translate.y = pos.y - dragStart.y + dragStart.translateY;
-                        scheduleDraw();
-                    }
-                }
-
-                function onMouseEnd(e) {
-                    isDragging = false;
-                    clearTimeout(timer);
-                    document.removeEventListener("mousemove", onMouseMove);
-                    document.removeEventListener("mouseup", onMouseEnd);
-                }
-
-
-                document.addEventListener("mouseup", onMouseEnd);
-            }
-
-            var mouseDownTimer;
-            canvas.on("mousedown", onMouseDown);
-
-            function getEventPositionOnCanvas(e) {
-                var rect = canvasEl.getBoundingClientRect();
-                // Since we're using `cover` as object-fit, the scale
-                // will be the higher of these two
-                var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
-
-                /*console.log("here's what we're looking at", rect.width, canvasEl.width, translate.x);
-                console.log("here's what we're looking at", rect.height, canvasEl.height, translate.y);
-                console.log("But got scale", scale);*/
-                var thisX = (e.clientX - rect.left) * scale;
-                var thisY = (e.clientY - rect.top) * scale;
-
-                return {
-                    x: thisX,
-                    y: thisY,
-                };
-            }
-
-            function getEventPositionOnImage(e) {
-                var canvasPos = getEventPositionOnCanvas(e);
-                return {
-                    x: (canvasPos.x - translate.x) / zoom,
-                    y: (canvasPos.y - translate.y) / zoom,
-                };
-            }
-
-            function onZoomWheel(e) {
-                var change = e.originalEvent.deltaY * 0.0005;
-                var zoom0 = zoom;
-
-                zoom -= change;
-                if (zoom > 5) {
-                    zoom = 5;
-                }
-
-                if (zoom < 0.1) {
-                    zoom = 0.1;
-                }
-                //console.log("new zoom is", zoom);
-
-                // But I want the mouse to be on the same location
-                // that we started with. For this we need to move translate.x
-
-
-
-                var canvasPos = getEventPositionOnCanvas(e);
-
-                translate = {
-                    x: canvasPos.x - (zoom/zoom0) * (canvasPos.x - translate.x),
-                    y: canvasPos.y - (zoom/zoom0) * (canvasPos.y - translate.y)
-                }
-
-                scheduleDraw();
-                e.preventDefault();
-
-            }
-
-            canvas.on("wheel", function (e) {
-                onZoomWheel(e);
-            });
-
-            canvas.dblclick(function (e) {
-                var imPos = getEventPositionOnImage(e);
-                zoomToImagePx(imPos);
-                e.preventDefault();
-            });
-
-            function animateTo(newTranslate, newZoom, callback) {
-                var oldTranslate = translate;
-                var oldZoom = zoom;
-                canvas.animate(
-                    {fake:100},
-                    {
-                        duration: 1000,
-                        complete: callback,
-                        progress: function (animation, progress) {
-                            translate = {
-                                x: (1-progress) * oldTranslate.x + progress * newTranslate.x,
-                                y: (1-progress) * oldTranslate.y + progress * newTranslate.y
-                            }
-
-                            zoom = (1-progress)*oldZoom + progress * newZoom;
-                            scheduleDraw();
-                        },
-                });
-            }
-
-            function zoomToImagePx(data) {
-                console.log("data", data);
-                var rect = canvasEl.getBoundingClientRect();
-                var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
-
-                var zoom = 4;
-                var outputPixel = { x : scale * rect.width / 2, y: scale * rect.height / 2}
-                /*
-                  The final position is t + sx for image position
-                  x. We want x to map to outputPixel. So we can get t
-                  = outputPixel - sx.
-                */
-
-                var newTranslate = {
-                    x: outputPixel.x - zoom * data.x,
-                    y: outputPixel.y - zoom * data.y,
-                }
-
-                console.log("redrawing ", translate, zoom);
-                animateTo(newTranslate, zoom, function () {
-                    console.log("animation done");
-                    zoomToChange.prop("disabled", false);
-                });
-                zoomToChangeSpinner.hide();
-            }
-
-            canvas.on("zoomToChange", function (e) {
-                console.log("zoomToChange", e);
-                var data = e.originalEvent.detail;
-
-                zoomToImagePx(data);
-            });
-        }
 
         $.ajax({
             url: src,
             success: function (data) {
                 loading.hide();
                 img.show();
-                loadIntoCanvas(data);
+                zoomToLink = data.zoomTo;
+                loadIntoCanvas(canvas.get(0), data, {
+                    onImagesLoaded: function () {
+                        zoomToChange.prop("disabled", false);
+                    },
+                    onZoomComplete: function () {
+                        zoomToChange.prop("disabled", false);
+                    },
+                });
+
             },
             error: function () {
                 swAlert("Network request failed! This could be because we're still processing the image. Please try again in a minute");
@@ -445,6 +457,7 @@ function prepareReportJs () {
                 success: function(data) {
                     var event = new CustomEvent("zoomToChange", { detail: data });
                     canvas.get(0).dispatchEvent(event);
+                    zoomToChangeSpinner.hide();
                 },
                 error: function () {
                     alert("We couldn't find changed pixels! This is likely a bug on our end.");
