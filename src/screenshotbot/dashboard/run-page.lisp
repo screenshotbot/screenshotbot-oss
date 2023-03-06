@@ -461,7 +461,7 @@
                               (:title . ,(screenshot-name screenshot))))))))
     <div class= "modal fade single-screenshot-modal" id= (modal-id self) tabindex= "-1" role= "dialog"
          aria-hidden= "true" >
-      <div class= "modal-dialog modal-fullscreen-lg-down " role= "document">
+      <div class= "modal-dialog modal-fullscreen " role= "document">
         <div class= "modal-content">
           <div class= "modal-header">
             <h5 class= "modal-title"></h5>
