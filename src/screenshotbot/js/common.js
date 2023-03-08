@@ -23,6 +23,8 @@ function callLiveOnAttach(nodes) {
     });
 }
 
+let _identity = new DOMMatrixReadOnly([1,0,0,1,0,0]);
+
 function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
     function callCallback(fn) {
         if (fn) {
@@ -30,6 +32,23 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
         }
     }
     $(canvasEl).unbind();
+
+    function getResizeObserver() {
+        return $(canvasEl).data("resize-observer");
+    }
+
+    function setResizeObserver(observer) {
+        $(canvasEl).data("resize-observer", observer);
+    }
+
+    if (getResizeObserver()) {
+        getResizeObserver().disconnect();
+        setResizeObserver(null);
+    }
+
+    /* If the window is resized, or image is reloated, this is the, first translation
+       that happens independently of mouse zooms etc. */
+    var coreTranslation = _identity;
 
     var translate = { x: 0, y: 0 };
     var zoom = 1;
@@ -52,16 +71,24 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
             }, 16);
         }
     }
+    function updateTransform () {
+        var mat = new DOMMatrixReadOnly([zoom, 0, 0, zoom, translate.x, translate.y]);
+        var res = mat.multiply(coreTranslation);
+        //console.log("new transform", res);
+        ctx.setTransform(res);
+    }
+
+    function clearCtx() {
+        ctx.setTransform(_identity);
+        ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+        updateTransform();
+    }
 
     function draw() {
         //fixMaxTranslation();
         // x* = t + sx. x = (x* - t) / s
 
-        ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-
-        function updateTransform () {
-            ctx.setTransform(zoom, 0, 0, zoom, translate.x, translate.y);
-        }
+        clearCtx();
 
         function doDraw(image) {
             ctx.drawImage(image,
@@ -128,9 +155,34 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
             canvasEl.height = image.height;
             canvasEl.width = image.width;
 
+            updateCoreTranslation();
+
             scheduleDraw();
         }
     }
+
+    function updateCoreTranslation() {
+
+        let rect = ctx.canvas.getBoundingClientRect();
+        let scrollWidth = rect.width;
+        let scrollHeight = rect.height;
+
+        coreTranslation = calcCoreTransform(scrollWidth,
+                                            scrollHeight,
+                                            canvasEl.width,
+                                            canvasEl.height);
+        console.log("got core translation", coreTranslation,
+                    " for ", scrollWidth, scrollHeight, canvasEl.width,
+                   canvasEl.height);
+        scheduleDraw();
+    }
+
+
+    setResizeObserver(new ResizeObserver((entries) => {
+        updateCoreTranslation();
+    }));
+
+    getResizeObserver().observe(canvasEl);
 
     for (let im of images) {
         im.onload = onEitherImageLoad;
