@@ -56,45 +56,15 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
     function draw() {
         //fixMaxTranslation();
         // x* = t + sx. x = (x* - t) / s
-        function reverseMap(pos) {
-            function r(x_star, t) {
-                return (x_star - t) / zoom;
-            }
-            return {
-                x: r(pos.x, translate.x),
-                y: r(pos.y, translate.y)
-            }
-        }
 
-        function forwardMap(pos) {
-            function m(x, t) {
-                return t + zoom * x;
-            }
-
-            return {
-                x: m(pos.x, translate.x),
-                y: m(pos.y, translate.y),
-            }
-        }
-
-        var imTopLeft = reverseMap({x: 0, y: 0});
-        var imBottomRight = reverseMap({
-            x : canvasEl.width,
-            y: canvasEl.height
-        });
         ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
 
-        /*
-          console.log("Source prop", translate, imTopLeft.x, imTopLeft.y,
-          imBottomRight.x - imTopLeft.x,
-          imBottomRight.y - imTopLeft.y);
-        */
+        function updateTransform () {
+            ctx.setTransform(zoom, 0, 0, zoom, translate.x, translate.y);
+        }
 
         function doDraw(image) {
             ctx.drawImage(image,
-                          imTopLeft.x, imTopLeft.y,
-                          imBottomRight.x - imTopLeft.x,
-                          imBottomRight.y - imTopLeft.y,
                           0, 0,
                           canvasEl.width,
                           canvasEl.height);
@@ -104,21 +74,17 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
             for (var mask of masks) {
                 ctx.beginPath();
 
-                var maskPos = forwardMap({
-                    x: mask.left,
-                    y: mask.top,
-                });
-
-                ctx.rect(maskPos.x,
-                         maskPos.y,
-                         mask.width * zoom,
-                         mask.height * zoom);
+                ctx.rect(mask.left,
+                         mask.top,
+                         mask.width,
+                         mask.height);
                 ctx.fillStyle = "rgba(255, 255, 0, 0.8)";
                 ctx.fill();
             }
         }
 
 
+        updateTransform();
         for(let i in layers) {
             ctx.globalAlpha = layers[i].alpha || 1;
             doDraw(images[i]);
@@ -161,6 +127,7 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
 
             canvasEl.height = image.height;
             canvasEl.width = image.width;
+
             scheduleDraw();
         }
     }
