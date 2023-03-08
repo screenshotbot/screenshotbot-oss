@@ -23,6 +23,8 @@ function callLiveOnAttach(nodes) {
     });
 }
 
+let _identity = new DOMMatrixReadOnly([1,0,0,1,0,0]);
+
 function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
     function callCallback(fn) {
         if (fn) {
@@ -31,8 +33,38 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
     }
     $(canvasEl).unbind();
 
-    var translate = { x: 0, y: 0 };
-    var zoom = 1;
+    function getResizeObserver() {
+        return $(canvasEl).data("resize-observer");
+    }
+
+    function setResizeObserver(observer) {
+        $(canvasEl).data("resize-observer", observer);
+    }
+
+    if (getResizeObserver()) {
+        getResizeObserver().disconnect();
+        setResizeObserver(null);
+    }
+
+    /* If the window is resized, or image is reloated, this is the, first translation
+       that happens independently of mouse zooms etc. */
+    var coreTranslation = _identity;
+
+    var transform = new DOMMatrix([1, 0, 0, 1, 0, 0]);
+
+    function setZoom(z) {
+        transform.a = z;
+        transform.d = z;
+    }
+
+    function getZoom() {
+        return transform.a;
+    }
+
+    function setTranslate(x, y) {
+        transform.e = x;
+        transform.f = y;
+    }
 
     var images = [];
     for (let layer of layers) {
@@ -52,16 +84,24 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
             }, 16);
         }
     }
+    function updateTransform () {
+        var mat = transform;
+        var res = mat.multiply(coreTranslation);
+        //console.log("new transform", res);
+        ctx.setTransform(res);
+    }
+
+    function clearCtx() {
+        ctx.setTransform(_identity);
+        ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+        updateTransform();
+    }
 
     function draw() {
         //fixMaxTranslation();
         // x* = t + sx. x = (x* - t) / s
 
-        ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-
-        function updateTransform () {
-            ctx.setTransform(zoom, 0, 0, zoom, translate.x, translate.y);
-        }
+        clearCtx();
 
         function doDraw(image) {
             ctx.drawImage(image,
@@ -97,20 +137,20 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
         var rect = canvasEl.getBoundingClientRect();
         var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
 
-        if (translate.x >  rect.width * scale / 2) {
-            translate.x = rect.width * scale / 2;
+        if (transform.e >  rect.width * scale / 2) {
+            transform.e = rect.width * scale / 2;
         }
 
-        if (translate.y > rect.height * scale / 2) {
-            translate.y = rect.height * scale / 2;
+        if (transform.f > rect.height * scale / 2) {
+            transform.f = rect.height * scale / 2;
         }
 
-        if (translate.x + canvasEl.width < rect.width * scale / 2) {
-            translate.x = rect.width * scale / 2 - canvasEl.width;
+        if (transform.e + canvasEl.width < rect.width * scale / 2) {
+            transform.e = rect.width * scale / 2 - canvasEl.width;
         }
 
-        if (translate.y + canvasEl.height < rect.height * scale / 2) {
-            translate.y = rect.height * scale / 2 - canvasEl.height;
+        if (transform.f + canvasEl.height < rect.height * scale / 2) {
+            transform.f = rect.height * scale / 2 - canvasEl.height;
         }
 
     }
@@ -128,9 +168,34 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
             canvasEl.height = image.height;
             canvasEl.width = image.width;
 
+            updateCoreTranslation();
+
             scheduleDraw();
         }
     }
+
+    function updateCoreTranslation() {
+
+        let rect = ctx.canvas.getBoundingClientRect();
+        let scrollWidth = rect.width;
+        let scrollHeight = rect.height;
+
+        coreTranslation = calcCoreTransform(scrollWidth,
+                                            scrollHeight,
+                                            canvasEl.width,
+                                            canvasEl.height);
+        /*console.log("got core translation", coreTranslation,
+                    " for ", scrollWidth, scrollHeight, canvasEl.width,
+                   canvasEl.height); */
+        scheduleDraw();
+    }
+
+
+    setResizeObserver(new ResizeObserver((entries) => {
+        updateCoreTranslation();
+    }));
+
+    getResizeObserver().observe(canvasEl);
 
     for (let im of images) {
         im.onload = onEitherImageLoad;
@@ -144,8 +209,8 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
 
         var isDragging = true;
         dragStart = getEventPositionOnCanvas(e);
-        dragStart.translateX = translate.x;
-        dragStart.translateY = translate.y;
+        dragStart.translateX = transform.e;
+        dragStart.translateY = transform.f;
 
         // Only start moving after 250ms. In the meantime, if
         // we double-click, then we'll cancel this
@@ -156,8 +221,8 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
         function onMouseMove(e) {
             var pos = getEventPositionOnCanvas(e);
             if (isDragging) {
-                translate.x = pos.x - dragStart.x + dragStart.translateX;
-                translate.y = pos.y - dragStart.y + dragStart.translateY;
+                transform.e = pos.x - dragStart.x + dragStart.translateX;
+                transform.f = pos.y - dragStart.y + dragStart.translateY;
                 scheduleDraw();
             }
         }
@@ -183,9 +248,6 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
         // will be the higher of these two
         var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
 
-        /*console.log("here's what we're looking at", rect.width, canvasEl.width, translate.x);
-          console.log("here's what we're looking at", rect.height, canvasEl.height, translate.y);
-          console.log("But got scale", scale);*/
         var thisX = (e.clientX - rect.left) * scale;
         var thisY = (e.clientY - rect.top) * scale;
 
@@ -197,23 +259,21 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
 
     function getEventPositionOnImage(e) {
         var canvasPos = getEventPositionOnCanvas(e);
-        return {
-            x: (canvasPos.x - translate.x) / zoom,
-            y: (canvasPos.y - translate.y) / zoom,
-        };
+        return transform.inverse().multiply(canvasPos);
     }
 
     function onZoomWheel(e) {
         var change = e.originalEvent.deltaY * 0.0005;
-        var zoom0 = zoom;
+        var zoom0 = getZoom();
 
-        zoom -= change;
-        if (zoom > 5) {
-            zoom = 5;
+        setZoom(getZoom() - change);
+
+        if (getZoom() > 5) {
+            setZoom(5);
         }
 
-        if (zoom < 0.1) {
-            zoom = 0.1;
+        if (getZoom() < 0.1) {
+            setZoom(0.1);
         }
         //console.log("new zoom is", zoom);
 
@@ -224,10 +284,13 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
 
         var canvasPos = getEventPositionOnCanvas(e);
 
-        translate = {
-            x: canvasPos.x - (zoom/zoom0) * (canvasPos.x - translate.x),
-            y: canvasPos.y - (zoom/zoom0) * (canvasPos.y - translate.y)
+        var zoom = getZoom();
+        var translate = {
+            x: canvasPos.x - (zoom/zoom0) * (canvasPos.x - transform.e),
+            y: canvasPos.y - (zoom/zoom0) * (canvasPos.y - transform.f)
         }
+
+        setTranslate(translate.x, translate.y);
 
         scheduleDraw();
         e.preventDefault();
@@ -244,21 +307,16 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
         e.preventDefault();
     });
 
-    function animateTo(newTranslate, newZoom, callback) {
-        var oldTranslate = translate;
-        var oldZoom = zoom;
+    function animateTo(newTransform, callback) {
+        console.log("animating to: ", newTransform);
+        var oldTransform = transform;
         $(canvasEl).animate(
             {fake:100},
             {
                 duration: 1000,
                 complete: callback,
                 progress: function (animation, progress) {
-                    translate = {
-                        x: (1-progress) * oldTranslate.x + progress * newTranslate.x,
-                        y: (1-progress) * oldTranslate.y + progress * newTranslate.y
-                    }
-
-                    zoom = (1-progress)*oldZoom + progress * newZoom;
+                    transform = animateTransform(oldTransform, newTransform, progress);
                     scheduleDraw();
                 },
             });
@@ -269,21 +327,16 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
         var rect = canvasEl.getBoundingClientRect();
         var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
 
-        var zoom = 4;
-        var outputPixel = { x : scale * rect.width / 2, y: scale * rect.height / 2}
-        /*
-          The final position is t + sx for image position
-          x. We want x to map to outputPixel. So we can get t
-          = outputPixel - sx.
-        */
+        var newTransform = calcTransformForCenter(
+            rect.width,
+            rect.height,
+            canvasEl.width,
+            canvasEl.height,
+            data.x,
+            data.y,
+            4 /* new zoom */);
 
-        var newTranslate = {
-            x: outputPixel.x - zoom * data.x,
-            y: outputPixel.y - zoom * data.y,
-        }
-
-        console.log("redrawing ", translate, zoom);
-        animateTo(newTranslate, zoom, function () {
+        animateTo(newTransform, function () {
             console.log("animation done");
             callCallback(callbacks.onZoomComplete);
         });
