@@ -33,7 +33,6 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
 
     var translate = { x: 0, y: 0 };
     var zoom = 1;
-    var masks = [];
 
     var images = [];
     for (let layer of layers) {
