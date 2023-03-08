@@ -20,22 +20,12 @@
   :depends-on ()
   :components (("build-utils:js-file" "common")))
 
-(defsystem screenshotbot.js-assets/package
-  :depends-on (:parenscript)
-  :components ((:file "package")))
-
-(defsystem screenshotbot.js-assets/lisp
-  :depends-on (:screenshotbot.js-assets/package
-               :3d-matrices)
-  :serial t
-  :components ((:file "lisp-stubs")
-               (:file "common-ps")))
 
 (defsystem screenshotbot.js-assets
   :class "build-utils:js-system"
   :serial t
   :defsystem-depends-on (:build-utils)
-  :depends-on (:screenshotbot.js-assets/package
+  :depends-on (
                #-screenshotbot-oss
                :sentry-js
                :bootstrap5-js
@@ -50,8 +40,6 @@
                              ("build-utils:js-file" "aos")))
                ("build-utils:js-file" "jquery.timeago")
                ("build-utils:js-file" "default")
-               ("build-utils:js-file" "js-stubs")
-               ("build-utils:ps-file" "common-ps")
                ("build-utils:js-file" "common")
                ("build-utils:js-file" "runs")
                ("build-utils:js-file" "mask-editor")
@@ -61,10 +49,3 @@
                ("build-utils:js-file" "acceptance")
                ("build-utils:js-file" "git-graph")
                ("build-utils:ps-file" "dummy")))
-
-
-(defsystem screenshotbot.js-assets/tests
-  :serial t
-  :depends-on (:screenshotbot.js-assets/lisp
-               :util/fiveam)
-  :components ((:file "test-common-ps")))
