@@ -33,6 +33,8 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
     }
     $(canvasEl).unbind();
 
+    let imgSize = {};
+
     function getResizeObserver() {
         return $(canvasEl).data("resize-observer");
     }
@@ -87,7 +89,7 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
     function updateTransform () {
         var mat = transform;
         var res = mat.multiply(coreTranslation);
-        //console.log("new transform", res);
+        console.log("new transform", res);
         ctx.setTransform(res);
     }
 
@@ -104,10 +106,8 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
         clearCtx();
 
         function doDraw(image) {
-            ctx.drawImage(image,
-                          0, 0,
-                          canvasEl.width,
-                          canvasEl.height);
+            ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(image, 0, 0);
         }
 
         function drawMasks() {
@@ -165,8 +165,10 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
             // The last image determines the canvas size.
             var image = images[images.length - 1];
 
-            canvasEl.height = image.height;
-            canvasEl.width = image.width;
+            imgSize = {
+                height: image.height,
+                width: image.width,
+            }
 
             updateCoreTranslation();
 
@@ -182,8 +184,8 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
 
         coreTranslation = calcCoreTransform(scrollWidth,
                                             scrollHeight,
-                                            canvasEl.width,
-                                            canvasEl.height);
+                                            imgSize.width,
+                                            imgSize.height);
         /*console.log("got core translation", coreTranslation,
                     " for ", scrollWidth, scrollHeight, canvasEl.width,
                    canvasEl.height); */
@@ -192,6 +194,17 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
 
 
     setResizeObserver(new ResizeObserver((entries) => {
+        setTimeout(function () {
+            let rect = ctx.canvas.getBoundingClientRect();
+            if (canvasEl.width !== rect.width) {
+                canvasEl.width = rect.width;
+            }
+
+            if (canvasEl.height !== rect.height) {
+                canvasEl.height = rect.height;
+            }
+        }, 0);
+
         updateCoreTranslation();
     }));
 
@@ -330,8 +343,8 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
         var newTransform = calcTransformForCenter(
             rect.width,
             rect.height,
-            canvasEl.width,
-            canvasEl.height,
+            imgSize.width,
+            imgSize.height,
             data.x,
             data.y,
             4 /* new zoom */);
