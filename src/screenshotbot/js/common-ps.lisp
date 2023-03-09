@@ -3,7 +3,25 @@
 ;; These are all utility functions for canvas, in particular
 ;; loadIntoCanvas, for testability reasons.
 
-(defparameter *min-zoom* 0.1)
+(defparameter *min-zoom* 0.2
+  "min-zoom is interesting. Let's call this z_0 for now.
+
+It's not the minimum zoom level. Instead, it's saying that for a given dimention (width or height), it's saying that the number of pixels the rendered image took divided by the client dimenion is greater than z_0.
+
+Let's do some math. If M is the final transformation matrix:
+
+|| M[w 0 0] - M[0 0 0] || >= z_o * w_c
+
+Where w_c is the client width, and w is the image width.
+
+This gives us
+|| M[w 0 0] || >= z_0 *w_c
+
+or, simply:
+z*w >= z_0 * w_c
+
+So we know, z >= z_0 * w_c / w.
+")
 
 (defmacro with-css-zoom-calcs (&body body)
   `(flet ((zor (x y)
@@ -24,7 +42,9 @@
            (z (max
                (min w-ratio
                     h-ratio)
-               *min-zoom*)))
+               ;; See documentation for *min-zoom*
+               (* w-ratio *min-zoom*)
+               (* h-ratio *min-zoom*))))
       (flet ((calc-t (client-dim dim)
                (/ (- client-dim (* z dim)) 2)))
         (let ((tx (calc-t client-width width))
