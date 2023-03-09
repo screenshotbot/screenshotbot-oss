@@ -36,17 +36,18 @@
   (is
    (m=
     (mat
-     2 0 0
-     0 2 0
+     1 0 0
+     0 1 0
      0 0 1)
+    ;; CSS cover will zoom this to 2
     (calc-core-transform 20 40 10 20))))
 
 (test calc-core-transform-with-not-enough-height
   (is
    (m=
     (mat
-     1 0 5 ;; translate the x by 5
-     0 1 0
+     0.5 0 2.5 ;; translate the x by 5
+     0 0.5 0
      0 0 1)
     (calc-core-transform 20 20 10 20))))
 
@@ -63,18 +64,18 @@
   (is
    (m=
     (mat
-     1 0 0
-     0 1 5
+     0.5 0 0
+     0 0.5 2.5
      0 0 1)
     ;; css zoom will be 1
     (calc-core-transform 20 20 20 10))))
 
-(test calc-core-transform-with-not-enough-height-2
+(test calc-core-transform-with-not-enough-height
   (let ((*min-zoom* 0.5))
    (is
     (m=
      (mat
-      0.5 0 7.5 ;; translate the x by 5
+      0.5 0 2.5 ;; translate the x by 5
       0 0.5 0
       0 0 1)
      (calc-core-transform 20 20 10 2000)))))

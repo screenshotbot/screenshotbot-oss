@@ -11,22 +11,25 @@
                 y
                 x)))
      (let* ((client-width (zor client-width width))
-            (client-height (zor client-height height)))
-       ,@body)))
+            (client-height (zor client-height height))
+            (w-ratio (/ client-width width))
+            (h-ratio (/ client-height height)))
+       (let ((css-zoom (max w-ratio h-ratio) #| object-fit: cover |#))
+         ,@body))))
 
 (defun calc-core-transform (client-width
                             client-height
                             width
                             height)
   (with-css-zoom-calcs
-    (let* ((w-ratio (/ client-width width))
-           (h-ratio (/ client-height height))
-           (z (max
-               (min w-ratio
-                    h-ratio)
-               *min-zoom*)))
+    (let ((z (max
+              (/ (min w-ratio
+                      h-ratio)
+                 css-zoom)
+              *min-zoom*)))
       (flet ((calc-t (client-dim dim)
-               (/ (- client-dim (* z dim)) 2)))
+               (/ (/ (- client-dim (* z dim css-zoom)) 2)
+                  css-zoom)))
         (let ((tx (calc-t client-width width))
               (ty (calc-t client-height height)))
           (make-matrix
@@ -79,9 +82,11 @@ Once we have t, we can construct our final matrix.
                                    client-height
                                    width
                                    height))
-           (d (3d-vectors:vec3 (/ client-width 2)
-                               (/ client-height 2)
-                               0))
+           (d (v*
+               (/ 1 css-zoom)
+               (3d-vectors:vec3 (/ client-width 2)
+                                (/ client-height 2)
+                                0)))
           (tt (v- d
                   (v* zoom (m* C (3d-vectors:vec3 x y 0))))))
      (make-matrix

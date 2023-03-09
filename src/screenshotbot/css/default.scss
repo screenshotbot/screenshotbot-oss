@@ -468,7 +468,7 @@ body > section:nth-child(2) {
 canvas.image-comparison-modal-image {
     height: 100%;
     width: 100%;
-    object-fit: none;
+    object-fit: cover;
     object-position: 0 0;
 }
 
@@ -975,7 +975,7 @@ table.git-graph {
         background: url("/assets/images/img-background.png");
         background-repeat: repeat;
         width: 100%;
-        object-fit: none;
+        object-fit: cover;
         object-position: 0 0;
         max-height: 100%;
     }
