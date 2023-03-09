@@ -35,6 +35,8 @@
                 #:find-by-oid)
   (:import-from #:util/http-cache
                 #:parse-max-age)
+  (:import-from #:util/misc
+                #:make-mp-hash-table)
   (:export
    #:call-with-hosted-snapshot
    #:render-acceptor
@@ -55,9 +57,9 @@
 (defclass render-acceptor (hunchentoot:easy-acceptor
                            cached-404-acceptor)
   ((snapshots :reader acceptor-snapshots
-              :initform (make-hash-table :test #'equal))
+              :initform (make-mp-hash-table :test #'equal))
    (asset-maps :reader asset-maps
-               :initform (make-hash-table)
+               :initform (make-mp-hash-table)
                :documentation "For each snapshot, a map from filename to asset")
    (snapshots-company
     :initform nil
@@ -97,7 +99,7 @@
         (acons
          snapshot company
          (snapshots-company acceptor)))
-  (let ((asset-map (make-hash-table :test #'equal)))
+  (let ((asset-map (make-mp-hash-table :test #'equal)))
     (dolist (asset (assets snapshot))
       (setf (gethash (asset-file-name asset) asset-map) asset))
     (setf (gethash snapshot (asset-maps acceptor))
