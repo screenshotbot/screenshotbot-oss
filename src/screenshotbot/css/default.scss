@@ -461,16 +461,13 @@ body > section:nth-child(2) {
 }
 
 .image-comparison-modal-image {
-    max-width: 100%;
-    max-height: 70vh;
+    height: 70vh;
+    width: 100%;
 }
 
-canvas.image-comparison-modal-image {
-    height: 100%;
-    width: 100%;
-    object-fit: cover;
-    object-position: 0 0;
+.image-comparison-modal-image {
 }
+
 
 .change-image-row-triple {
     img {
@@ -975,8 +972,26 @@ table.git-graph {
         background: url("/assets/images/img-background.png");
         background-repeat: repeat;
         width: 100%;
-        object-fit: cover;
+        object-fit: none;
         object-position: 0 0;
         max-height: 100%;
     }
+
+    .modal-body-content {
+        height: 100%;
+        display: flex;
+        flex-flow: column;
+
+        .content-header {
+            flex: 0 1 auto;
+        }
+
+        .canvas-container {
+            flex: 1 1 auto;
+        }
+    }
+}
+
+.canvas-container {
+    overflow: hidden;
 }

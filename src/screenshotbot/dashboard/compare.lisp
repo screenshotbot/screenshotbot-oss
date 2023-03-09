@@ -430,8 +430,8 @@
       <div class= "alert alert-info">
         <strong>New interactive comparisons!</strong> Use your mouse to pan through the image. Use the <strong>mouse wheel</strong> to zoom into a location.
       </div>
-      <:canvas data-src=src
-               class= "image-comparison-modal-image" />
+      <div class= "canvas-container image-comparison-modal-image"
+           data-src=src />
     </div>
   </div>)
 

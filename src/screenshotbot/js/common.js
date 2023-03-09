@@ -25,26 +25,35 @@ function callLiveOnAttach(nodes) {
 
 let _identity = new DOMMatrixReadOnly([1,0,0,1,0,0]);
 
-function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
+function updateResizeObserver(el, obs) {
+    var key = "r-obs";
+    var prevObserver = $(el).data(key);
+    if (prevObserver) {
+        prevObserver.disconnect();
+    }
+    $(el).data(key, obs);
+    obs.observe(el);
+}
+
+function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
+    console.log("loadIntoCanvas", canvasContainer, layers);
     function callCallback(fn) {
         if (fn) {
             fn();
         }
     }
-    $(canvasEl).unbind();
 
-    function getResizeObserver() {
-        return $(canvasEl).data("resize-observer");
-    }
+    updateResizeObserver(canvasContainer, new ResizeObserver((entries) => {
+        scheduleDraw();
+    }));
 
-    function setResizeObserver(observer) {
-        $(canvasEl).data("resize-observer", observer);
-    }
+    var $canvas = $("<canvas />");
+    var canvasEl = $canvas.get(0);
 
-    if (getResizeObserver()) {
-        getResizeObserver().disconnect();
-        setResizeObserver(null);
-    }
+    $(canvasContainer).empty();
+    canvasContainer.appendChild(canvasEl);
+
+    let imgSize = {};
 
     /* If the window is resized, or image is reloated, this is the, first translation
        that happens independently of mouse zooms etc. */
@@ -94,20 +103,16 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
     function clearCtx() {
         ctx.setTransform(_identity);
         ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+        updateCoreTransform();
         updateTransform();
     }
 
     function draw() {
-        //fixMaxTranslation();
-        // x* = t + sx. x = (x* - t) / s
-
         clearCtx();
 
         function doDraw(image) {
-            ctx.drawImage(image,
-                          0, 0,
-                          canvasEl.width,
-                          canvasEl.height);
+            ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(image, 0, 0);
         }
 
         function drawMasks() {
@@ -165,37 +170,35 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
             // The last image determines the canvas size.
             var image = images[images.length - 1];
 
-            canvasEl.height = image.height;
-            canvasEl.width = image.width;
-
-            updateCoreTranslation();
-
+            imgSize = {
+                height: image.height,
+                width: image.width,
+            }
             scheduleDraw();
         }
     }
 
-    function updateCoreTranslation() {
+    function updateCoreTransform() {
 
-        let rect = ctx.canvas.getBoundingClientRect();
+        let rect = canvasContainer.getBoundingClientRect();
         let scrollWidth = rect.width;
         let scrollHeight = rect.height;
 
+        if (canvasEl.height != scrollHeight ||
+            canvasEl.width != scrollWidth) {
+            canvasEl.height = scrollHeight;
+            canvasEl.width = scrollWidth;
+        }
+
         coreTranslation = calcCoreTransform(scrollWidth,
                                             scrollHeight,
-                                            canvasEl.width,
-                                            canvasEl.height);
+                                            imgSize.width,
+                                            imgSize.height);
         /*console.log("got core translation", coreTranslation,
                     " for ", scrollWidth, scrollHeight, canvasEl.width,
                    canvasEl.height); */
-        scheduleDraw();
     }
 
-
-    setResizeObserver(new ResizeObserver((entries) => {
-        updateCoreTranslation();
-    }));
-
-    getResizeObserver().observe(canvasEl);
 
     for (let im of images) {
         im.onload = onEitherImageLoad;
@@ -330,8 +333,8 @@ function loadIntoCanvas(canvasEl, layers, masks, callbacks) {
         var newTransform = calcTransformForCenter(
             rect.width,
             rect.height,
-            canvasEl.width,
-            canvasEl.height,
+            imgSize.width,
+            imgSize.height,
             data.x,
             data.y,
             4 /* new zoom */);
@@ -433,7 +436,7 @@ function prepareReportJs () {
     function setupImageComparison() {
         var modal = this;
         var img = $(".image-comparison-modal-image", this);
-        var canvas = $("canvas.image-comparison-modal-image",this);
+        var canvasContainer = $(".canvas-container",this);
 
         var wrapper = $(img).closest(".progress-image-wrapper");
         var loading = $(wrapper).find(".loading");
@@ -458,7 +461,7 @@ function prepareReportJs () {
                 img.show();
                 zoomToLink = data.zoomTo;
                 console.log("Loading into canvas", data);
-                loadIntoCanvas(canvas.get(0),
+                loadIntoCanvas(canvasContainer.get(0),
                                [{
                                    alpha: 0.2,
                                    src: data.background,
@@ -493,7 +496,7 @@ function prepareReportJs () {
                 url: zoomToLink,
                 success: function(data) {
                     var event = new CustomEvent("zoomToChange", { detail: data });
-                    canvas.get(0).dispatchEvent(event);
+                    $("canvas", canvasContainer).get(0).dispatchEvent(event);
                     zoomToChangeSpinner.hide();
                 },
                 error: function () {
@@ -508,11 +511,6 @@ function prepareReportJs () {
 
         $(modal).on("hide.bs.modal", function () {
             zoomToChange.off("click");
-            canvas.off("wheel");
-            canvas.off("mousedown");
-            canvas.off("mousemove");
-            canvas.off("mouseup");
-            canvas.off("zoomToChange");
         });
 
     }
@@ -533,7 +531,7 @@ function prepareReportJs () {
 $(document).on("click", "a.screenshot-run-image", function (e) {
     e.preventDefault();
     var modal = $($(this).data("target"));
-    var canvas = $("canvas", modal);
+    var canvas = $(".canvas-container", modal);
 
     var src = canvas.data("src");
     canvas.data("image-number", $(this).data("image-number"));
@@ -544,7 +542,7 @@ $(document).on("click", "a.screenshot-run-image", function (e) {
 $(document).on("show.bs.modal", ".single-screenshot-modal", function () {
     console.log("callback called");
     var title = $(this).find(".modal-title");
-    var canvas = $(this).find("canvas");
+    var canvas = $(this).find(".canvas-container");
     var next = $(this).find(".next");
     var prev = $(this).find(".previous");
     var page = $(this).find(".page-num");

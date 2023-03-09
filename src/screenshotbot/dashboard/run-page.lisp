@@ -469,15 +469,17 @@
           </div>
 
           <div class= "modal-body">
-
-            <div class= "d-flex justify-content-between mb-2 align-items-center">
-              <a href= "#" class= "btn previous"><mdi name= "navigate_before"/>Previous</a>
-              <span class= "page-num" />
-              <a href= "#" class= "btn next">Next<mdi name= "navigate_next" /></a>
+            <div class= "modal-body-content">
+              <div class= "d-flex justify-content-between mb-2 align-items-center content-header">
+                <a href= "#" class= "btn previous"><mdi name= "navigate_before"/>Previous</a>
+                <span class= "page-num" />
+                <a href= "#" class= "btn next">Next<mdi name= "navigate_next" /></a>
+              </div>
+              <div class= "canvas-container "
+                   data-length= (length (filtered-screenshots self))
+                   data-src=get-ith-image >
+              </div>
             </div>
-            <:canvas
-              data-length= (length (filtered-screenshots self))
-              data-src=get-ith-image />
           </div>
         </div>
       </div>
