@@ -258,8 +258,13 @@
 
 (defhandler (nil :uri "/robots.txt") ()
   (Setf (hunchentoot:header-out :content-type) "text/plain")
-  "User-agent: *
-Disallow: /n")
+  (cond
+    ((staging-p)
+     "User-agent: *
+Disallow: /")
+    (t
+     "User-agent: *
+Disallow: /n")))
 
 (defmacro with-login ((&key (needs-login t) (signup nil)
                             (company nil)
