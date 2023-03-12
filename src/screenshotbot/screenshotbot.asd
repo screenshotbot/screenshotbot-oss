@@ -40,6 +40,7 @@
                (:feature (:not :screenshotbot-oss) :documentation-plugin)
                :cl-store
                :core.installation
+               :fset
                :trivia
                :json-mop
                :encrypt

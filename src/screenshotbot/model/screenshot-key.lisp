@@ -48,6 +48,24 @@
       :accessor screenshot-masks))
     (:metaclass persistent-class)))
 
+(defmethod fset:compare ((a screenshot-key)
+                         (b screenshot-key))
+  (let ((a-name (screenshot-name a))
+        (b-name (screenshot-name b)))
+    (cond
+      ((eql a b)
+       :equal)
+      ((string< a-name b-name)
+       :less)
+      ((string> a-name b-name)
+       :greater)
+      (t
+       (fset:compare-slots
+        a b
+        #'screenshot-lang
+        #'screenshot-device
+        #'screenshot-masks)))))
+
 (defun ensure-screenshot-key (&key name lang device masks)
   (flet ((find-existing ()
            (loop for key in (screenshot-keys-for-name name)
