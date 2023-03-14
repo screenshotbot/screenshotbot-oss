@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/model/screenshot-map
+                #:to-map
                 #:screenshot-map-to-list
                 #:make-screenshot-map)
   (:import-from #:fiveam-matchers/lists
@@ -127,3 +128,13 @@
                (list (make-screenshot :image im-1 :name "one")
                      (make-screenshot :image im-2 :name "two")))))
       (is (eql m1 m2)))))
+
+(test to-map-is-cached
+  (with-fixture state ()
+    (let ((m1 (make-screenshot-map
+               channel
+               (list screenshot-1
+                     screenshot-2))))
+      (is
+       (eql (to-map m1)
+            (to-map m1))))))

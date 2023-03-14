@@ -30,7 +30,9 @@
                :index-type hash-index
                :index-reader screenshot-maps-for-channel)
      (screenshots :initarg :screenshots
-                  :reader screenshots))
+                  :reader screenshots)
+     (map :transient t
+          :initform nil))
     (:metaclass persistent-class)))
 
 (defmethod screenshot-map-to-list ((self screenshot-map))
@@ -45,10 +47,13 @@
                (fset:with map (screenshot-key (first list))
                           (screenshot-image (first list)))))))
 
-(defmethod screenshot-map ((self screenshot-map))
-  (make-set
-   (screenshots self)))
+(defmethod to-map ((self screenshot-map))
+  (util:or-setf
+   (slot-value self 'map)
+   (make-set
+    (screenshots self))))
 
+(defun build-from-best ())
 
 (defun make-screenshot-map (channel screenshots)
   (let ((prev (car (last (screenshot-maps-for-channel channel)))))
@@ -56,7 +61,7 @@
       ((and
         prev
         (fset:equal?
-         (screenshot-map prev)
+         (to-map prev)
          (make-set screenshots)))
        prev)
       (t
