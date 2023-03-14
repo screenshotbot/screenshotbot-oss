@@ -125,6 +125,12 @@
                :reader image-oid))
   (:documentation "A lightweight screenshot"))
 
+(defmethod fset:compare ((one lite-screenshot) (two lite-screenshot))
+  (fset:compare-slots
+   one two
+   #'screenshot-key
+   #'image-oid))
+
 (defmethod screenshot-name ((self lite-screenshot))
   (screenshot-name  (screenshot-key self)))
 

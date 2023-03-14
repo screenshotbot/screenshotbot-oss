@@ -11,6 +11,7 @@
    #:screenshot-image
    #:local-image
    #:history-page
+   #:screenshot-key
    #:get-screenshot-history))
 (in-package :screenshotbot/screenshot-api)
 

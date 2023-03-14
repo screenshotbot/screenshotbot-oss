@@ -175,6 +175,7 @@
                :str
                :easy-macros
                :local-time
+               :fset
                :cl-mongo-id
                :copy-directory
                :ironclad/core

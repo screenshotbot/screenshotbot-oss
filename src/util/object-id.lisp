@@ -25,6 +25,11 @@
  this isn't being used but will be soon."
   (arr))
 
+(defmethod fset:compare ((a oid) (b oid))
+  (fset:compare-slots
+   a b
+   #'oid-arr))
+
 (defmethod print-object ((self oid) stream)
   (cond
     ((or
