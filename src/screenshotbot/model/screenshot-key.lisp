@@ -48,6 +48,9 @@
       :accessor screenshot-masks))
     (:metaclass persistent-class)))
 
+(defmethod print-object ((self screenshot-key) out)
+  (format out "#<KEY ~a>" (screenshot-name self)))
+
 (defmethod fset:compare ((a screenshot-key)
                          (b screenshot-key))
   (let ((a-name (screenshot-name a))

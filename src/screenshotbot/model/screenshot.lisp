@@ -46,6 +46,7 @@
                 #:oid-p)
   (:import-from #:screenshotbot/model/screenshot-key
                 #:screenshot-masks
+                #:screenshot-key
                 #:ensure-screenshot-key)
   (:import-from #:alexandria
                 #:when-let)
@@ -237,10 +238,14 @@
       (constant-string (constant-string-string name))
       (string name))))
 
-(defun make-screenshot (&rest args &key image &allow-other-keys)
-  (let ((screenshot-key (apply
-                         #'ensure-screenshot-key
-                         (remove-from-plist args :image))))
+(defun make-screenshot (&rest args &key image key &allow-other-keys)
+  (let ((screenshot-key
+          (cond
+            (key key)
+            (t
+             (apply
+              #'ensure-screenshot-key
+              (remove-from-plist args :image))))))
     (make-instance 'lite-screenshot
                    :screenshot-key screenshot-key
                    :image-oid
