@@ -26,6 +26,10 @@
    #:screenshot-map-as-list))
 (in-package :screenshotbot/model/screenshot-map)
 
+(defparameter *delta-factor* 0.5
+  "If the delta of a new map with a previous map is above this factor,
+  then we'll not parent it.")
+
 (with-class-validation
   (defclass screenshot-map (store-object)
     ((%channel :initarg :channel
@@ -131,10 +135,7 @@
        prev)
       ((and
         prev
-        ;; TODO: = is bad: if every screenshot has changed, this this
-        ;; will still use the previous map. The current tests will
-        ;; break, so this is for another diff.
-        (<= delta-size (length screenshots)))
+        (< delta-size (* *delta-factor* (length screenshots))))
        (make-from-previous screenshots
                            prev
                            channel))

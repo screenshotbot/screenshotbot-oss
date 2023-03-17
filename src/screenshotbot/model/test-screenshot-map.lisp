@@ -20,6 +20,7 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/model/screenshot-map
+                #:*delta-factor*
                 #:screenshots
                 #:make-from-previous
                 #:deleted
@@ -227,47 +228,54 @@
 
 (test recreated-screenshot-with-deleted-uneql-objects
   (with-fixture state ()
-    (let ((m1 (make-screenshot-map
-               channel
-               (list screenshot-1
-                     screenshot-2)))
-          (m2 (make-screenshot-map
-               channel
-               (list (make-instance 'lite-screenshot
-                                    :screenshot-key screenshot-key-1-copy
-                                    :image-oid (oid im-1 :stringp nil))))))
-      (is (not (eql m2 m1)))
-      (let ((map-2 (to-map m2))
-            (map-1 (to-map m1)))
-        (is (fset:equal?
-             map-2
-             (fset:map-intersection map-2 map-1)))
-        (let ((diff (fset:map-difference-2 map-2 map-1)))
-          (is (eql 0 (fset:size diff))))
-        (let ((diff (fset:map-difference-2 map-1 map-2)))
-          (is (eql 1 (fset:size diff))))
+    (let ((*delta-factor* 100))
+     (let* ((screenshot-3 (make-screenshot
+                           :key (ensure-screenshot-key :name "foobar")
+                           :image im-1))
+            (m1 (make-screenshot-map
+                 channel
+                 (list screenshot-1
+                       screenshot-2
+                       screenshot-3)))
+            (m2 (make-screenshot-map
+                 channel
+                 (list (make-instance 'lite-screenshot
+                                      :screenshot-key screenshot-key-1-copy
+                                      :image-oid (oid im-1 :stringp nil))))))
+       (is (not (eql m2 m1)))
+       (let ((map-2 (to-map m2))
+             (map-1 (to-map m1)))
+         (is (fset:equal?
+              map-2
+              (fset:map-intersection map-2 map-1)))
+         (let ((diff (fset:map-difference-2 map-2 map-1)))
+           (is (eql 0 (fset:size diff))))
+         (let ((diff (fset:map-difference-2 map-1 map-2)))
+           (is (eql 2 (fset:size diff))))
 
-        ;; All of the above tests should go through even if we don't use
-        ;; the same map core. So now, we ensure that we're actually
-        ;; using the same core. The two maps have different
-        ;; screenshot-keys, so we want to make sure the new map has the
-        ;; same screenshot-key's as the first.
-        (let ((keys-1 (set-to-list (fset:domain map-1)))
-              (keys-2 (set-to-list (fset:domain map-2))))
+         ;; All of the above tests should go through even if we don't use
+         ;; the same map core. So now, we ensure that we're actually
+         ;; using the same core. The two maps have different
+         ;; screenshot-keys, so we want to make sure the new map has the
+         ;; same screenshot-key's as the first.
+         (let ((keys-1 (set-to-list (fset:domain map-1)))
+               (keys-2 (set-to-list (fset:domain map-2))))
 
-          (assert-that (deleted m2)
-                       (described-as
-                           "We expect the deleted slot to be set"
-                         (contains
-                          (screenshot-key screenshot-2))))
+           (assert-that (deleted m2)
+                        (described-as
+                            "We expect the deleted slot to be set"
+                          (contains
+                           (screenshot-key screenshot-2)
+                           (screenshot-key screenshot-3))))
 
-          (assert-that keys-1
-                       (contains
-                        (screenshot-key screenshot-2)
-                        (screenshot-key screenshot-1)))
-          (assert-that keys-2
-                       (contains
-                        (screenshot-key screenshot-1))))))))
+           (assert-that keys-1
+                        (contains
+                         (screenshot-key screenshot-2)
+                         (screenshot-key screenshot-1)
+                         (screenshot-key screenshot-3)))
+           (assert-that keys-2
+                        (contains
+                         (screenshot-key screenshot-1)))))))))
 
 (test make-from-previous
   (with-fixture state ()
