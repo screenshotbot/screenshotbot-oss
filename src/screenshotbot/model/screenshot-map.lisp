@@ -77,7 +77,8 @@
          (t
           screenshots))))))
 
-(defmethod make-from-previous (screenshots (previous screenshot-map))
+(defmethod make-from-previous (screenshots (previous screenshot-map)
+                               channel)
   (let* ((map (make-set screenshots))
          (old-map (to-map previous))
          (added (fset:map-difference-2
@@ -86,6 +87,7 @@
                    (fset:domain old-map)
                    (fset:domain map))))
     (make-instance 'screenshot-map
+                   :channel channel
                    :screenshots
                    (fset:reduce (lambda (list key val)
                                   (list*
@@ -100,32 +102,43 @@
                                          deleted :initial-value nil)
                    :previous previous)))
 
-(defmethod make-from-previous (screenshots (previous null))
+(defmethod make-from-previous (screenshots (previous null)
+                               channel)
   (make-instance 'screenshot-map
+                 :channel channel
                  :screenshots screenshots))
 
+(defun pick-best-existing-map (channel screenshots)
+  "Returns two values: the best previous map, or NIL if none, and the
+  size of the delta between the previous map and this new map."
+  (let ((this-map (make-set screenshots)))
+   (let ((prev (car (last (screenshot-maps-for-channel channel)))))
+     (when prev
+       (let ((prev-map (to-map prev)))
+         ;; This next step is computing |A-B| + |B-A|, where A and B
+         ;; are the *set* of pairs.
+         (multiple-value-bind (diff-1 diff-2)
+             (fset:map-difference-2 this-map prev-map)
+           (values prev
+                   (+ (fset:size diff-1)
+                      (fset:size diff-2)))))))))
 
 (defun make-screenshot-map (channel screenshots)
-  (let ((prev (car (last (screenshot-maps-for-channel channel)))))
-    (let ((this-set (make-set screenshots)))
-     (cond
-       ((and
-         prev
-         (fset:equal?
-          (to-map prev)
-          this-set))
-        prev)
-       ((and
-         prev
-         (not (eql
-               0
-               (fset:size
-                (fset:map-intersection
-                 (to-map prev)
-                 this-set)))))
-        (make-from-previous screenshots
-                            prev))
-       (t
-        (make-instance 'screenshot-map
-                       :channel channel
-                       :screenshots screenshots))))))
+  (multiple-value-bind (prev delta-size)
+      (pick-best-existing-map channel screenshots)
+    (cond
+      ((and prev (zerop delta-size))
+       prev)
+      ((and
+        prev
+        ;; TODO: = is bad: if every screenshot has changed, this this
+        ;; will still use the previous map. The current tests will
+        ;; break, so this is for another diff.
+        (<= delta-size (length screenshots)))
+       (make-from-previous screenshots
+                           prev
+                           channel))
+      (t
+       (make-instance 'screenshot-map
+                      :channel channel
+                      :screenshots screenshots)))))

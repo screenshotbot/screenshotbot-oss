@@ -272,9 +272,9 @@
 (test make-from-previous
   (with-fixture state ()
     (let* ((m1 (make-from-previous (list screenshot-1)
-                                   nil))
+                                   nil channel))
            (m2 (make-from-previous (list screenshot-1 screenshot-2)
-                                   m1)))
+                                   m1 channel)))
       (assert-that (screenshots m1)
                    (contains
                     (satisfying (screenshot= screenshot-1 *))))
@@ -285,9 +285,9 @@
 (test make-from-previous-with-deleted-items
   (with-fixture state ()
     (let* ((m1 (make-from-previous (list screenshot-1)
-                                   nil))
+                                   nil channel))
            (m2 (make-from-previous (list screenshot-2)
-                                   m1)))
+                                   m1 channel)))
       (assert-that (screenshots m1)
                    (contains
                     (satisfying (screenshot= screenshot-1 *))))
