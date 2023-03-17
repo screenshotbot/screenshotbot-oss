@@ -21,6 +21,8 @@
                 #:screenshot-image)
   (:import-from #:screenshotbot/model/screenshot-key
                 #:screenshot-key)
+  (:import-from #:util/lists
+                #:head)
   (:export
    #:screenshot-map
    #:screenshot-map-as-list))
@@ -29,6 +31,14 @@
 (defparameter *delta-factor* 0.5
   "If the delta of a new map with a previous map is above this factor,
   then we'll not parent it.")
+
+(defparameter *lookback-count* 5
+  "The number of recent screenshot-maps to look into to determine the
+  best parent for a new map. TODO: We could use a precomputed
+  _filtered_ map to actually do the comparisons, which would avoid the
+  cost if the lookback is very large.")
+
+(defconstant +inf+ 1000000)
 
 (with-class-validation
   (defclass screenshot-map (store-object)
@@ -116,16 +126,29 @@
   "Returns two values: the best previous map, or NIL if none, and the
   size of the delta between the previous map and this new map."
   (let ((this-map (make-set screenshots)))
-   (let ((prev (car (last (screenshot-maps-for-channel channel)))))
-     (when prev
-       (let ((prev-map (to-map prev)))
-         ;; This next step is computing |A-B| + |B-A|, where A and B
-         ;; are the *set* of pairs.
-         (multiple-value-bind (diff-1 diff-2)
-             (fset:map-difference-2 this-map prev-map)
-           (values prev
+    (labels ((compute-cost (prev)
+               (let ((prev-map (to-map prev)))
+                 ;; This next step is computing |A-B| + |B-A|, where A and B
+                 ;; are the *set* of pairs.
+                 (multiple-value-bind (diff-1 diff-2)
+                     (fset:map-difference-2 this-map prev-map)
                    (+ (fset:size diff-1)
-                      (fset:size diff-2)))))))))
+                      (fset:size diff-2)))))
+             (find-best-in (potentials)
+               (cond
+                 ((null potentials)
+                  (values nil +inf+))
+                 (t
+                  (destructuring-bind (this . rest) potentials
+                   (multiple-value-bind (next-best next-best-cost)
+                       (find-best-in rest)
+                     (let ((cost (compute-cost this)))
+                       (cond
+                         ((< cost next-best-cost)
+                          (values this cost))
+                         (t
+                          (values next-best next-best-cost))))))))))
+      (find-best-in (head (screenshot-maps-for-channel channel) *lookback-count*)))))
 
 (defun make-screenshot-map (channel screenshots)
   (multiple-value-bind (prev delta-size)

@@ -20,6 +20,8 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/model/screenshot-map
+                #:*lookback-count*
+                #:pick-best-existing-map
                 #:*delta-factor*
                 #:screenshots
                 #:make-from-previous
@@ -45,7 +47,9 @@
   (:import-from #:fiveam-matchers/described-as
                 #:described-as)
   (:import-from #:fiveam-matchers/satisfying
-                #:satisfying))
+                #:satisfying)
+  (:import-from #:fiveam-matchers/misc
+                #:is-null))
 (in-package :screenshotbot/model/test-screenshot-map)
 
 
@@ -306,3 +310,22 @@
                    (contains
                     (is-equal-to
                      (screenshot-key screenshot-1)))))))
+
+(test pick-best-existing-map
+  (with-fixture state ()
+    (let* ((m1 (make-from-previous (list screenshot-1) nil channel))
+           (m2 (make-from-previous (list screenshot-2) nil channel)))
+      (assert-that (pick-best-existing-map channel
+                                           (list screenshot-1))
+                   (is-equal-to
+                    m1))
+      (assert-that (pick-best-existing-map channel
+                                           (list screenshot-2))
+                   (is-equal-to
+                    m2))
+      (assert-that
+       (let ((*lookback-count* 1))
+         (pick-best-existing-map channel
+                                 (list screenshot-1)))
+       (is-equal-to
+        m2)))))
