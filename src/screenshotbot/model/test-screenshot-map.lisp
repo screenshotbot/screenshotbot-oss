@@ -20,6 +20,8 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/model/screenshot-map
+                #:screenshots
+                #:make-from-previous
                 #:deleted
                 #:to-map
                 #:screenshot-map-to-list
@@ -27,6 +29,7 @@
   (:import-from #:fiveam-matchers/lists
                 #:contains)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
                 #:assert-that
                 #:matchesp
                 #:matcher)
@@ -36,9 +39,12 @@
   (:import-from #:util/object-id
                 #:oid)
   (:import-from #:screenshotbot/screenshot-api
+                #:screenshot-image
                 #:make-screenshot)
   (:import-from #:fiveam-matchers/described-as
-                #:described-as))
+                #:described-as)
+  (:import-from #:fiveam-matchers/satisfying
+                #:satisfying))
 (in-package :screenshotbot/model/test-screenshot-map)
 
 
@@ -67,7 +73,9 @@
 
 (defun screenshot= (s1 s2)
   (and
-
+   (eql :equal
+        (fset:compare (screenshot-key s1)
+                      (screenshot-key s2)))
    (eql (screenshot-image s1)
         (screenshot-image s2))))
 
@@ -260,3 +268,33 @@
           (assert-that keys-2
                        (contains
                         (screenshot-key screenshot-1))))))))
+
+(test make-from-previous
+  (with-fixture state ()
+    (let* ((m1 (make-from-previous (list screenshot-1)
+                                   nil))
+           (m2 (make-from-previous (list screenshot-1 screenshot-2)
+                                   m1)))
+      (assert-that (screenshots m1)
+                   (contains
+                    (satisfying (screenshot= screenshot-1 *))))
+      (assert-that (screenshots m2)
+                   (contains
+                    (satisfying (screenshot= screenshot-2 *)))))))
+
+(test make-from-previous-with-deleted-items
+  (with-fixture state ()
+    (let* ((m1 (make-from-previous (list screenshot-1)
+                                   nil))
+           (m2 (make-from-previous (list screenshot-2)
+                                   m1)))
+      (assert-that (screenshots m1)
+                   (contains
+                    (satisfying (screenshot= screenshot-1 *))))
+      (assert-that (screenshots m2)
+                   (contains
+                    (satisfying (screenshot= screenshot-2 *))))
+      (assert-that (deleted m2)
+                   (contains
+                    (is-equal-to
+                     (screenshot-key screenshot-1)))))))

@@ -100,6 +100,10 @@
                                          deleted :initial-value nil)
                    :previous previous)))
 
+(defmethod make-from-previous (screenshots (previous null))
+  (make-instance 'screenshot-map
+                 :screenshots screenshots))
+
 
 (defun make-screenshot-map (channel screenshots)
   (let ((prev (car (last (screenshot-maps-for-channel channel)))))
