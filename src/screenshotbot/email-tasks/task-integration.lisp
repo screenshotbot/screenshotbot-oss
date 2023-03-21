@@ -72,10 +72,15 @@
 
 (defun include-arnold (users)
   "Include Arnold in the list of users"
-  (union
-   (a:when-let ((user (user-with-email "arnold@tdrhq.com")))
-     (list user))
-   users))
+  (cond
+    #-screenshotbot-oss
+    (t
+     (union
+      (a:when-let ((user (user-with-email "arnold@tdrhq.com")))
+        (list user))
+      users))
+    (t
+     users)))
 
 (defun users-to-email (channel)
   "Who should we email when this channel changes? Returns a list of users."
