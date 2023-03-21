@@ -24,6 +24,7 @@
                 #:installation
                 #:mailer*)
   (:import-from #:screenshotbot/user-api
+                #:can-view
                 #:user-email
                 #:channel-name
                 #:recorder-run-channel
@@ -50,6 +51,8 @@
                 #:single-channel-page)
   (:import-from #:bknr.datastore
                 #:store-object-id)
+  (:import-from #:alexandria
+                #:curry)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/email-tasks/task-integration)
 
@@ -79,7 +82,9 @@
   (let ((company (channel-company channel)))
     (include-arnold
      (union
-      (channel-subscribers channel)
+      (remove-if-not
+       (curry #'can-view channel)
+       (channel-subscribers channel))
       (remove-if-not
        (lambda (user)
          (emails-enabledp (email-setting :user user

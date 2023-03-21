@@ -28,6 +28,7 @@
                 #:installation
                 #:*installation*)
   (:import-from #:screenshotbot/model/user
+                #:make-user
                 #:users-for-company
                 #:user-personal-company)
   (:import-from #:screenshotbot/login/common
@@ -156,6 +157,24 @@
            (push user (channel-subscribers channel)))
          (assert-that (users-to-email channel)
                       (contains user)))))))
+
+(test users-to-email-will-not-include-users-removed-from-company
+  (with-fixture state ()
+    (let* ((*installation* (make-instance 'multi-installation)))
+      (let ((user-2 (make-user)))
+        (with-test-user (:user user :company company)
+          ;; user-2 is not part of company, probably because they were
+          ;; removed from the company
+          (let ((channel (make-instance 'channel :company company)))
+            (assert-that (users-to-email channel)
+                         (contains user))
+            (disable-emails user company)
+            (is (equal nil (users-to-email channel)))
+            (with-transaction ()
+              (setf (channel-subscribers channel)
+                    (list user user-2)))
+            (assert-that (users-to-email channel)
+                         (contains user))))))))
 
 (screenshot-test email-for-report-notification
   (with-fixture state ()
