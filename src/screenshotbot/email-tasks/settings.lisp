@@ -106,7 +106,7 @@
 
                 ,(cond
                    ((personalp company)
-                    "your organization")
+                    "my organization")
                    (t
                     (company-name company)))
               </label>
