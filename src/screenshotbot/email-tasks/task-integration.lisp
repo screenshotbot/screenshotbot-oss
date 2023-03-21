@@ -40,6 +40,11 @@
                 #:oid)
   (:import-from #:screenshotbot/events
                 #:push-event)
+  (:import-from #:screenshotbot/model/channel
+                #:channel-subscribers
+                #:channel-company)
+  (:import-from #:screenshotbot/model/report
+                #:report-channel)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/email-tasks/task-integration)
 
@@ -57,14 +62,28 @@
   ;; email task-integration.
   t)
 
+(defun include-arnold (users)
+  "Include Arnold in the list of users"
+  (union
+   (a:when-let ((user (user-with-email "arnold@tdrhq.com")))
+     (list user))
+   users))
+
+(defun users-to-email (channel)
+  "Who should we email when this channel changes? Returns a list of users."
+  (let ((company (channel-company channel)))
+    (include-arnold
+     (union
+      (channel-subscribers channel)
+      (remove-if-not
+       (lambda (user)
+         (emails-enabledp (email-setting :user user
+                                         :company company)))
+       (users-for-company company))))))
+
 (defmethod send-task ((self email-task-integration) report)
   (let ((company (task-integration-company self)))
-    (dolist (user (users-for-company company))
-      (when (emails-enabledp (email-setting :user user
-                                            :company company))
-        (send-email-to-user user company report)))
-    #-screenshotbot-oss
-    (a:when-let ((user (user-with-email "arnold@tdrhq.com")))
+    (dolist (user (users-to-email (report-channel report)))
       (send-email-to-user user company report))))
 
 (with-auto-restart ()

@@ -36,6 +36,7 @@
                 #:with-installation
                 #:with-test-user)
   (:import-from #:screenshotbot/email-tasks/task-integration
+                #:users-to-email
                 #:email-task-integration
                 #:send-email-to-user)
   (:import-from #:bknr.datastore
@@ -48,6 +49,14 @@
                 #:send-mail)
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:contains)
+  (:import-from #:bknr.datastore
+                #:with-transaction)
+  (:import-from #:screenshotbot/model/channel
+                #:channel-subscribers)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/email-tasks/test-task-integration)
 
@@ -56,9 +65,13 @@
 (defclass multi-installation (installation multi-org-feature)
   ())
 
+(def-fixture state ()
+  (with-test-store ()
+    (&body)))
+
 (test preconditions
   (with-installation ()
-   (with-test-store ()
+   (with-fixture state ()
      (with-fake-request ()
        (auth:with-sessions ()
          (let* ((*installation* (make-instance 'multi-installation)))
@@ -73,8 +86,15 @@
                (get-email-settings)))
              (pass))))))))
 
+(defun disable-emails (user1 company)
+  (with-transaction ()
+    (setf
+     (emails-enabledp
+      (email-setting :user user1 :company company))
+     nil)))
+
 (test only-sends-to-enabled-users
-  (with-test-store ()
+  (with-fixture state ()
     (with-fake-request ()
       (auth:with-sessions ()
         (let* ((*installation* (make-instance 'multi-installation)))
@@ -84,18 +104,16 @@
                                  (lambda (&rest args)
                                    (push args calls)))
              (let* ((company (make-instance 'company :name "foo"))
+                    (channel (make-instance 'channel :company company))
                     (user1 (make-instance 'user
                                            :companies (list company)))
                     (user2 (make-instance 'user
                                            :companies (list company)))
-                    (report (make-instance 'report)))
+                    (report (make-instance 'report
+                                           :channel channel)))
                (is (equal (list user1 user2)
                           (users-for-company company)))
-               (with-transaction ()
-                 (setf
-                  (emails-enabledp
-                   (email-setting :user user1 :company company))
-                  nil))
+               (disable-emails user1 company)
                (send-task (make-instance 'email-task-integration
                                           :company company)
                           report)
@@ -105,7 +123,7 @@
 
 
 (test send-email-to-user-happy-path
-  (with-test-store ()
+  (with-fixture state ()
     (with-test-user (:user user :company company)
       (let* ((channel (make-instance 'channel
                                      :name "foobar"))
@@ -118,4 +136,18 @@
          (cl-mock:if-called 'send-mail
                             (lambda (&rest args)))
          (finishes
-          (send-email-to-user user company report)))))))
+           (send-email-to-user user company report)))))))
+
+(test users-to-email-will-include-subscribers
+  (with-fixture state ()
+    (with-test-user (:user user :company company)
+      (let* ((*installation* (make-instance 'multi-installation)))
+       (let ((channel (make-instance 'channel :company company)))
+         (assert-that (users-to-email channel)
+                      (contains user))
+         (disable-emails user company)
+         (is (equal nil (users-to-email channel)))
+         (with-transaction ()
+           (push user (channel-subscribers channel)))
+         (assert-that (users-to-email channel)
+                      (contains user)))))))
