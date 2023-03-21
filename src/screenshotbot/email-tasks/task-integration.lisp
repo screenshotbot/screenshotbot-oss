@@ -44,11 +44,16 @@
                 #:channel-subscribers
                 #:channel-company)
   (:import-from #:screenshotbot/model/report
+                #:report-company
                 #:report-channel)
+  (:import-from #:screenshotbot/dashboard/channels
+                #:single-channel-page)
+  (:import-from #:bknr.datastore
+                #:store-object-id)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/email-tasks/task-integration)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defclass email-task-integration (task-integration)
   ()
@@ -82,12 +87,11 @@
        (users-for-company company))))))
 
 (defmethod send-task ((self email-task-integration) report)
-  (let ((company (task-integration-company self)))
-    (dolist (user (users-to-email (report-channel report)))
-      (send-email-to-user user company report))))
+  (dolist (user (users-to-email (report-channel report)))
+    (send-email-to-user user report)))
 
 (with-auto-restart ()
-  (defun send-email-to-user (user company report)
+  (defun send-email-to-user (user report)
     (push-event :email-task-notification)
     (send-mail
      (mailer*)
@@ -101,26 +105,34 @@
                  #-screenshotbot-oss "support@screenshotbot.io"
                  #+screenshotbot-oss nil)
      :html-message
-     (email-content company report)
-     )))
+     (email-content report))))
 
-(defun email-content (company report)
-  <html>
-    <body>
-      <p>
-        <a href= (report-link report) >
-          ,(report-title report)
-        </a>
-      </p>
+(defun email-content (report)
+  (let ((company (report-company report))
+        (channel (report-channel report)))
+    <html>
+      <body>
+        <p>
+          <a href= (report-link report) >
+            ,(report-title report)
+          </a>
+        </p>
 
-      <p style= "color: #222" >
-        To stop receiving email notifications for reports
-        <a href= (format nil
-                  "~a/settings/email-tasks?company=~a"
-                  (installation-domain (installation))
-                  (oid company))
-           >click here</a>.
-        You can respond to this email for support from Screenshotbot staff.
-      </p>
-    </body>
-  </html>)
+        <p style= "color: #222" >
+          Screenshotbot sends email notifications on main or release branches. Update your global preferences for
+          email notifications by           <a href= (format nil
+                    "~a/settings/email-tasks?company=~a"
+                    (installation-domain (installation))
+                                                        (oid company))
+                                                                                                                                                  >clicking here</a>.
+
+          You can enable emails for specific channels by subscribing
+          to them. Manage your subscription to <tt>,(channel-name channel)</tt>
+          by <a href= (hex:make-full-url hunchentoot:*request* 'single-channel-page :id (store-object-id channel)) >clicking here</a>.
+        </p>
+
+        <p style= "color: #222">
+          You can respond to this email for support from Screenshotbot staff.
+        </p>
+      </body>
+    </html>))
