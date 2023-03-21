@@ -33,6 +33,7 @@
                 #:company-admin-p
                 #:company)
   (:import-from #:screenshotbot/user-api
+                #:can-view!
                 #:recorder-run-channel
                 #:company-runs
                 #:recorder-run-screenshots
@@ -56,15 +57,15 @@
   (:import-from #:alexandria
                 #:removef)
   (:import-from #:bknr.datastore
-                #:with-transaction))
+                #:with-transaction)
+  (:import-from #:bknr.datastore
+                #:store-object-with-id)
+  (:import-from #:bknr.datastore
+                #:store-object-id))
 (in-package :screenshotbot/dashboard/channels)
 
 (named-readtables:in-readtable markup:syntax)
 
-(defun go-back (channel)
-  (hex:safe-redirect
-   (nibble ()
-     (single-channel-view channel))))
 
 (deftag subscription-card (&key channel)
   (let ((subscribe (nibble (:method :post)
@@ -100,6 +101,18 @@
 
       </div>
     </div>))
+
+(defhandler (single-channel-page :uri "/channels/:id") (id)
+  (let* ((id (parse-integer id))
+         (channel (store-object-with-id id)))
+    (check-type channel channel)
+    (can-view! channel)
+    (single-channel-view channel)))
+
+(defun go-back (channel)
+  (hex:safe-redirect
+   (hex:make-url
+    'single-channel-page :id (store-object-id channel))))
 
 (defun single-channel-view (channel)
   <app-template >
@@ -223,8 +236,9 @@
 
 (deftag channel-list-row (&key channel)
   (taskie-row :object channel
-              (ui/a :href (nibble ()
-                            (single-channel-view channel))
+              (ui/a :href (hex:make-url
+                           'single-channel-page
+                           :id (store-object-id channel))
                     (channel-name channel))
               (taskie-timestamp :timestamp (created-at channel))))
 
