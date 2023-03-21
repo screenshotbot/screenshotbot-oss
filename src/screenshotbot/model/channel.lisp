@@ -56,7 +56,8 @@
    #:masks
    #:channel-cv
    #:channel-lock
-   #:all-active-runs)
+   #:all-active-runs
+   #:channel-subscribers)
 
   ;; forward decls
   (:export
@@ -115,6 +116,9 @@
      :initform (bt:make-lock)
      :transient t
      :reader channel-promotion-lock)
+    (%subscribers
+     :initform nil
+     :accessor channel-subscribers)
     (cv
      :initform (bt:make-condition-variable :name "channel-cv")
      :transient t

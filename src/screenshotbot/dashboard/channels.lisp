@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/dashboard/explain
                 #:explain)
   (:import-from #:screenshotbot/model/channel
+                #:channel-subscribers
                 #:channel-company
                 #:all-active-runs)
   (:import-from #:util/object-id
@@ -51,10 +52,54 @@
   (:import-from #:bknr.datastore
                 #:deftransaction)
   (:import-from #:screenshotbot/model/report
-                #:report-channel))
+                #:report-channel)
+  (:import-from #:alexandria
+                #:removef)
+  (:import-from #:bknr.datastore
+                #:with-transaction))
 (in-package :screenshotbot/dashboard/channels)
 
 (named-readtables:in-readtable markup:syntax)
+
+(defun go-back (channel)
+  (hex:safe-redirect
+   (nibble ()
+     (single-channel-view channel))))
+
+(deftag subscription-card (&key channel)
+  (let ((subscribe (nibble (:method :post)
+                     (with-transaction ()
+                       (pushnew (current-user)
+                                (channel-subscribers channel)))
+                     (go-back channel)))
+        (subscribedp (member (current-user) (channel-subscribers channel)))
+        (unsubscribe (nibble (:method :post)
+                       (with-transaction ()
+                         (removef (channel-subscribers channel)
+                                  (current-user)))
+                       (go-back channel))))
+    <div class= "card mt-3">
+      <div class= "card-body">
+
+        ,(cond
+           (subscribedp
+            <markup:merge-tag>
+              <p>You are subscribed to this channel, and will always get notified by email when then screenshots change on the main branch.</p>
+              <form action=unsubscribe method= "post">
+                <input type= "submit" class= "btn btn-warning" value= "Unsubscribe" />
+              </form>
+            </markup:merge-tag>)
+           (t
+            <markup:merge-tag>
+              <p>You are <b>not</b> subscribed to this channel, and might not get notified when screenshots change on the main branch.</p>
+
+              <form action=subscribe method= "post">
+                <input type= "submit" class= "btn btn-secondary" value = "Subscribe" />
+              </form>
+            </markup:merge-tag>))
+
+      </div>
+    </div>))
 
 (defun single-channel-view (channel)
   <app-template >
@@ -80,12 +125,12 @@
           </div>
         </div>
 
-        <div class= "card mt-3">
-          <div class= "card-header">
-            <h3>Build Badge</h3>
-          </div>
+        <subscription-card channel=channel />
 
+        <div class= "card mt-3">
           <div class= "card-body">
+            <h4 class= "card-title mb-2" >Build Badge</h4>
+
             ,(let* ((args (guess-channel-args channel))
                     (link (apply #'hex:make-full-url
                                  hunchentoot:*request*
