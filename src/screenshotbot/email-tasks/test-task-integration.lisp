@@ -159,15 +159,14 @@
 
 (screenshot-test email-for-report-notification
   (with-fixture state ()
-    (with-fake-request ()
-     (with-test-user (:user user :company company)
-       (let* ((channel (make-instance 'channel
-                                      :name "foobar"))
-              (run (make-instance 'recorder-run
-                                  :company company
-                                  :channel channel))
-              (report (make-instance 'report
-                                     :title "1 changes, 2 added"
-                                     :channel channel
-                                     :run run)))
-         (email-content report))))))
+    (with-test-user (:user user :company company)
+      (let* ((channel (make-instance 'channel
+                                     :name "foobar"))
+             (run (make-instance 'recorder-run
+                                 :company company
+                                 :channel channel))
+             (report (make-instance 'report
+                                    :title "1 changes, 2 added"
+                                    :channel channel
+                                    :run run)))
+        (email-content report)))))

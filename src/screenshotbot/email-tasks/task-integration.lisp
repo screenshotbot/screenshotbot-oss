@@ -107,6 +107,11 @@
      :html-message
      (email-content report))))
 
+(defun %make-full-url (&rest args)
+  (format nil "~a~a"
+          (installation-domain (installation))
+          (apply #'hex:make-url args)))
+
 (defun email-content (report)
   (let ((company (report-company report))
         (channel (report-channel report)))
@@ -120,15 +125,13 @@
 
         <p style= "color: #222" >
           Screenshotbot sends email notifications on main or release branches. Update your global preferences for
-          email notifications by           <a href= (format nil
-                    "~a/settings/email-tasks?company=~a"
-                    (installation-domain (installation))
-                                                        (oid company))
-                                                                                                                                                  >clicking here</a>.
+          email notifications by           <a href= (%make-full-url
+                    "/settings/email-tasks"
+                    :company (oid company)) >clicking here</a>.
 
           You can enable emails for specific channels by subscribing
           to them. Manage your subscription to <tt>,(channel-name channel)</tt>
-          by <a href= (hex:make-full-url hunchentoot:*request* 'single-channel-page :id (store-object-id channel)) >clicking here</a>.
+          by <a href= (%make-full-url 'single-channel-page :id (store-object-id channel)) >clicking here</a>.
         </p>
 
         <p style= "color: #222">
