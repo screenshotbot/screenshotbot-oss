@@ -435,7 +435,12 @@
   ((screenshots :initarg :screenshots
                 :reader screenshots-viewer-screenshots)
    (filter :initarg :filter
+           :initform #'identity
            :reader screenshots-viewer-filter)
+   (navigationp :initarg :navigationp
+                :initform t
+                :documentation "Whether to show the Prev/Next bar"
+                :reader navigationp)
    (mapper :initarg :mapper
            :initform #'identity
            :reader screenshots-viewer-mapper
@@ -470,11 +475,12 @@
 
           <div class= "modal-body">
             <div class= "modal-body-content">
-              <div class= "d-flex justify-content-between mb-2 align-items-center content-header">
-                <a href= "#" class= "btn previous"><mdi name= "navigate_before"/>Previous</a>
-                <span class= "page-num" />
-                <a href= "#" class= "btn next">Next<mdi name= "navigate_next" /></a>
-              </div>
+              ,(when (navigationp self)
+                 <div class= "d-flex justify-content-between mb-2 align-items-center content-header">
+                   <a href= "#" class= "btn previous"><mdi name= "navigate_before"/>Previous</a>
+                   <span class= "page-num" />
+                   <a href= "#" class= "btn next">Next<mdi name= "navigate_next" /></a>
+                 </div>)
               <div class= "canvas-container "
                    data-length= (length (filtered-screenshots self))
                    data-src=get-ith-image >

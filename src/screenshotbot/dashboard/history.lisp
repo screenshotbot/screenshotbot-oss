@@ -12,6 +12,9 @@
         #:screenshotbot/template
         #:screenshotbot/screenshot-api)
   (:import-from #:screenshotbot/dashboard/run-page
+                #:modal-id
+                #:render-modal
+                #:screenshots-viewer
                 #:commit)
   (:import-from #:bknr.datastore
                 #:store-object-with-id)
@@ -35,12 +38,14 @@
                 #:make-image-comparer))
 (in-package :screenshotbot/dashboard/history)
 
-
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defun render-single-screenshot (r s &key previous-screenshot
                                        channel)
-  (let* ((image-comparer (make-image-comparer r))
+  (let* ((screenshots-viewer (make-instance 'screenshots-viewer
+                                            :navigationp nil
+                                            :screenshots (list s)))
+         (image-comparer (make-image-comparer r))
          (toggle-id (format nil "compare-~a" (random 1000000)))
          (name-change-p (and
                          previous-screenshot
@@ -85,7 +90,12 @@
 
       </ul>
       </div>
-      <a href= (image-public-url (screenshot-image s) :size :full-page) title= "Full screenshot">
+      ,(render-modal screenshots-viewer)
+      <a href= (image-public-url (screenshot-image s) :size :full-page)
+         class= "screenshot-run-image"
+         title= "Full screenshot"
+         data-image-number=0
+         data-target= (format nil "#~a" (modal-id screenshots-viewer)) >
       <img class= "screenshot-image" src=(image-public-url (screenshot-image s) :size :small) />
       </a>
 
@@ -96,16 +106,19 @@
       </div>))))
 
 (markup:deftag render-history (&key screenshot-name channel)
-  <div class= "baguetteBox" >
+  <div>
     <h1>Promotion History for ,(progn screenshot-name)</h1>
     ,(paginated
       (lambda (args)
         (destructuring-bind (run screenshot previous-screenshot)
             args
           (assert run)
-          (render-single-screenshot screenshot run
-                                    :previous-screenshot previous-screenshot
-                                    :channel channel)))
+          <div>
+            ,(render-single-screenshot screenshot run
+                                       :previous-screenshot previous-screenshot
+                                       :channel channel)
+          </div>))
+
       :num 12
       :iterator (get-screenshot-history channel screenshot-name :iterator t))
   </div>)
