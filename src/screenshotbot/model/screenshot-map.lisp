@@ -122,25 +122,34 @@
                  :channel channel
                  :screenshots screenshots))
 
+(defun compute-cost (this-map prev-map)
+  ;; This next step is computing the cost of the delta needed to
+  ;; represent the difference between this-map and prev-map. This is
+  ;; |A-B| + |D(B) - D(A)|, where D(X) is the domain of
+  ;; X. fset:map-difference returns two maps
+  (multiple-value-bind (diff-1 diff-2)
+      (fset:map-difference-2 this-map prev-map)
+    (+ (fset:size diff-1)
+       (fset:size diff-2)
+       ;; If the value for a given key is changed, then it will be
+       ;; present in both |A-B| and |B-A|, so we need to account for
+       ;; that.
+       (-
+        (fset:size (fset:intersection
+                    (fset:domain diff-1)
+                    (fset:domain diff-2)))))))
+
 (defun pick-best-existing-map (channel screenshots)
   "Returns two values: the best previous map, or NIL if none, and the
   size of the delta between the previous map and this new map."
   (let ((this-map (make-set screenshots)))
-    (labels ((compute-cost (prev)
-               (let ((prev-map (to-map prev)))
-                 ;; This next step is computing |A-B| + |B-A|, where A and B
-                 ;; are the *set* of pairs.
-                 (multiple-value-bind (diff-1 diff-2)
-                     (fset:map-difference-2 this-map prev-map)
-                   (+ (fset:size diff-1)
-                      (fset:size diff-2)))))
-             (find-best-in (potentials)
+    (labels ((find-best-in (potentials)
                (cond
                  ((null potentials)
                   (values nil +inf+))
                  (t
                   (destructuring-bind (this . rest) potentials
-                    (let ((cost (compute-cost this)))
+                    (let ((cost (compute-cost this-map (to-map this))))
                       (cond
                         ((zerop cost)
                          ;; Short circuit, we don't need to find a better map

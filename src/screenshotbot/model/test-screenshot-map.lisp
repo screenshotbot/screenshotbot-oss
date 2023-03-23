@@ -20,6 +20,7 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/model/screenshot-map
+                #:compute-cost
                 #:*lookback-count*
                 #:pick-best-existing-map
                 #:*delta-factor*
@@ -329,3 +330,30 @@
                                  (list screenshot-1)))
        (is-equal-to
         m2)))))
+
+(test compute-cost
+  (with-fixture state ()
+    (let* ((one (fset:with
+                 (fset:empty-map)
+                 (ensure-screenshot-key :name "foo")
+                 :one))
+           (two (fset:with
+                 (fset:empty-map)
+                 (ensure-screenshot-key :name "bar")
+                 :two))
+           (three (fset:with
+                   (fset:empty-map)
+                   (ensure-screenshot-key :name "foo")
+                   :two))
+           (four (fset:with
+                  three
+                  (ensure-screenshot-key :name "bar")
+                  :two)))
+      (is (eql 2 (compute-cost one two)))
+      (is (eql 1 (compute-cost one three)))
+      (is (eql 2 (compute-cost two one)))
+      (is (eql 1 (compute-cost three one)))
+      (is (eql 2 (compute-cost one four)))
+      (is (eql 2 (compute-cost four one)))
+      (is (eql 1 (compute-cost two four)))
+      (is (eql 1 (compute-cost four two))))))
