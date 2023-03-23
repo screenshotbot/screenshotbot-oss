@@ -140,14 +140,19 @@
                   (values nil +inf+))
                  (t
                   (destructuring-bind (this . rest) potentials
-                   (multiple-value-bind (next-best next-best-cost)
-                       (find-best-in rest)
-                     (let ((cost (compute-cost this)))
-                       (cond
-                         ((< cost next-best-cost)
-                          (values this cost))
-                         (t
-                          (values next-best next-best-cost))))))))))
+                    (let ((cost (compute-cost this)))
+                      (cond
+                        ((zerop cost)
+                         ;; Short circuit, we don't need to find a better map
+                         (values this cost))
+                        (t
+                         (multiple-value-bind (next-best next-best-cost)
+                             (find-best-in rest)
+                           (cond
+                             ((< cost next-best-cost)
+                              (values this cost))
+                             (t
+                              (values next-best next-best-cost))))))))))))
       (find-best-in (head (screenshot-maps-for-channel channel) *lookback-count*)))))
 
 (defun make-screenshot-map (channel screenshots)
