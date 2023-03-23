@@ -53,7 +53,6 @@
        (help)
        (uiop:quit 1))
       (flags:*help*
-       (sleep 30)
        (help))
       (flags:*versionp*
        ;; We've already printed the version by this point
