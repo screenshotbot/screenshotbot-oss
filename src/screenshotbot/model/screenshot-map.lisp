@@ -106,24 +106,18 @@ will not consider it as a possibility.")
                           (screenshot-image (first list)))))))
 
 (defmethod to-map ((self screenshot-map))
-  (util:or-setf
-   (slot-value self 'map)
-   (let ((screenshots
-           (make-set
-            (screenshots self))))
-     (let ((previous (previous self)))
-       (cond
-         (previous
-          (let ((previous-set (to-map previous)))
-            (let ((previous-set (fset:restrict-not
-                                 previous-set
-                                 (fset:convert 'fset:set
-                                               (deleted self)))))
-             (fset:map-union
-              previous-set
-              screenshots))))
-         (t
-          screenshots))))))
+  (memoized-reduce (lambda (self previous-set)
+                     (let ((previous-set (fset:restrict-not
+                                          previous-set
+                                          (fset:convert 'fset:set
+                                                        (deleted self)))))
+                       (fset:map-union
+                        previous-set
+                        (make-set
+                         (screenshots self)))))
+                   self
+                   (fset:empty-map)
+                   'map))
 
 (defmethod make-from-previous (screenshots (previous screenshot-map)
                                channel)
