@@ -126,6 +126,12 @@
                :reader image-oid))
   (:documentation "A lightweight screenshot"))
 
+(defmethod screenshot-key ((screenshot screenshot))
+  (ensure-screenshot-key :name (screenshot-name screenshot)
+                         :lang (screenshot-lang screenshot)
+                         :device (screenshot-device screenshot)
+                         :masks (screenshot-masks screenshot)))
+
 (defmethod fset:compare ((one lite-screenshot) (two lite-screenshot))
   (fset:compare-slots
    one two

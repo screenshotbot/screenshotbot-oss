@@ -10,6 +10,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/screenshot
+                #:screenshot
                 #:lite-screenshot)
   (:import-from #:screenshotbot/model/screenshot-key
                 #:screenshot-key)
@@ -383,3 +384,20 @@
       (is (eql 2 (slot-value one 'chain-cost)))
       (is (eql 3 (slot-value two 'chain-cost)))
       (is (eql 5 (slot-value three 'chain-cost))))))
+
+(test non-lite-screenshots-are-supported
+  "this is just a convenience to make migrations easy, if we need to
+delete this test in the future, it might be okay."
+  (with-fixture state ()
+    (let* ((screenshot-1-old-style (make-instance 'screenshot
+                                                  :name "one"
+                                                  :image im-1))
+           (one (make-screenshot-map channel
+                                     (list
+                                      screenshot-1-old-style)))
+           (two (make-screenshot-map channel
+                                     (list
+                                      screenshot-1))))
+      (is (eql :equal (fset:compare (screenshot-key screenshot-1-old-style)
+                                    (screenshot-key screenshot-1))))
+      (is (eql one two)))))
