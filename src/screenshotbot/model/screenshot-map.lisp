@@ -28,10 +28,6 @@
    #:screenshot-map-as-list))
 (in-package :screenshotbot/model/screenshot-map)
 
-(defparameter *delta-factor* 0.5
-  "If the delta of a new map with a previous map is above this factor,
-  then we'll not parent it.")
-
 (defparameter *lookback-count* 5
   "The number of recent screenshot-maps to look into to determine the
   best parent for a new map. TODO: We could use a precomputed
@@ -186,7 +182,10 @@ will not consider it as a possibility.")
                          (multiple-value-bind (next-best next-best-cost)
                              (find-best-in rest)
                            (cond
-                             ((< cost next-best-cost)
+                             ((and
+                               (< cost next-best-cost)
+                               (<= (+ cost (chain-cost this))
+                                   (* *max-chain-cost-factor* (fset:size this-map))))
                               (values this cost))
                              (t
                               (values next-best next-best-cost))))))))))))
@@ -198,9 +197,7 @@ will not consider it as a possibility.")
     (cond
       ((and prev (zerop delta-size))
        prev)
-      ((and
-        prev
-        (< delta-size (* *delta-factor* (length screenshots))))
+      (prev
        (make-from-previous screenshots
                            prev
                            channel))
