@@ -31,7 +31,9 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run))
 
 (util/fiveam:def-suite)
 
@@ -61,23 +63,23 @@
                                            ;; hitting github
                                            :github-repo "https://github.com/tdrhq/screenshotbot-example"
                                            :branch "master"))
-                  (run1 (make-instance 'recorder-run
-                                        :channel channel
-                                        :company company
-                                        :commit-hash "car"
-                                        :cleanp t
-                                        :trunkp t))
+                  (run1 (make-recorder-run
+                         :channel channel
+                         :company company
+                         :commit-hash "car"
+                         :cleanp t
+                         :trunkp t))
                   (screenshot (make-instance 'screenshot
                                               :run nil
                                               :name "foo"))
-                  (run2 (make-instance 'recorder-run
-                                        :channel channel
-                                        :commit-hash "car2"
-                                        :cleanp t
-                                        :screenshots (list screenshot)
-                                        :previous-run run1
-                                        :trunkp t
-                                        :company company)))
+                  (run2 (make-recorder-run
+                         :channel channel
+                         :commit-hash "car2"
+                         :cleanp t
+                         :screenshots (list screenshot)
+                         :previous-run run1
+                         :trunkp t
+                         :company company)))
              (is (eql 'github-create-issue *create-issue-fn*))
              (let ((*create-issue-fn* (lambda (repo title body)
                                         "http://foo/1")))

@@ -14,6 +14,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:recorder-run))
 (in-package :screenshotbot/bitbucket/test-plugin)
 
@@ -24,9 +25,9 @@
   (with-test-store ()
     (let ((repo (make-instance 'bitbucket-repo)))
       (is (equal "Pull Request"
-                 (describe-pull-request repo (make-instance 'recorder-run
-                                                            :pull-request "https://google.com"))))
+                 (describe-pull-request repo (make-recorder-run
+                                              :pull-request "https://google.com"))))
       (is (equal "Pull 2"
                  (describe-pull-request repo
-                                        (make-instance 'recorder-run
-                                                       :pull-request "https://bitbucket.org/tdrhq/fast-example/pull-requests/2")))))))
+                                        (make-recorder-run
+                                         :pull-request "https://bitbucket.org/tdrhq/fast-example/pull-requests/2")))))))

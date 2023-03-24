@@ -81,7 +81,8 @@
    #:compared-against
    #:compare-threshold
    #:not-fast-forward-promotion-warning
-   #:run-screenshot-map))
+   #:run-screenshot-map
+   #:make-recorder-run))
 (in-package :screenshotbot/model/recorder-run)
 
 (with-class-validation
@@ -204,7 +205,13 @@ associated report is rendered.")
     (created-at
      :initform nil
      :accessor %created-at))
-   (:metaclass has-created-at)))
+   (:metaclass has-created-at)
+   (:default-initargs :screenshot-map (error "need screenshot-map"))))
+
+(defun make-recorder-run (&rest args &key screenshots channel &allow-other-keys)
+  (apply #'make-instance 'recorder-run
+         :screenshot-map (make-screenshot-map channel screenshots)
+         args))
 
 (defmethod print-object ((o recorder-run) stream)
   (format stream "#<RECORDER-RUN ~a>" (oid o)))

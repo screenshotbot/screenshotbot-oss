@@ -14,6 +14,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:recorder-run)
   (:import-from #:screenshotbot/model/channel
                 #:channel)
@@ -26,20 +27,20 @@
 (def-fixture state ()
   (with-test-store ()
     (let* ((channel (make-instance 'channel))
-           (run (make-instance 'recorder-run
-                               :channel channel
-                               :pull-request "https://github.com/tdrhq/fast-example/pulls/20"))
+           (run (make-recorder-run
+                 :channel channel
+                 :pull-request "https://github.com/tdrhq/fast-example/pulls/20"))
            (report (make-instance 'report :run run
                                   :channel channel))
            (channel2 (make-instance 'channel))
-           (run2 (make-instance 'recorder-run
-                                :channel channel2
-                                :pull-request "https://github.com/tdrhq/blah/pulls/20"))
+           (run2 (make-recorder-run
+                  :channel channel2
+                  :pull-request "https://github.com/tdrhq/blah/pulls/20"))
            (report2 (make-instance 'report :run run
                                            :channel channel2))
-           (run3 (make-instance 'recorder-run
-                                :channel channel
-                                :pull-request "https://github.com/tdrhq/fast-example/pulls/21"))
+           (run3 (make-recorder-run
+                  :channel channel
+                  :pull-request "https://github.com/tdrhq/fast-example/pulls/21"))
            (report3 (make-instance 'report :run run3
                                    :channel channel)))
      (&body))))

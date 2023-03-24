@@ -19,6 +19,7 @@
         #:screenshotbot/git-repo
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:recorder-run
                 #:pull-request-url)
   (:import-from #:screenshotbot/api/promote
@@ -144,11 +145,11 @@
 (test run-without-pr-does-not-create-report
   (with-fixture state ()
     (let* ((*base-run* nil)
-           (run (make-instance 'recorder-run
-                                   :company company
-                                   :channel (make-instance 'dummy-channel)
-                                   :merge-base "car"
-                                   :commit-hash "foo")))
+           (run (make-recorder-run
+                 :company company
+                 :channel (make-instance 'dummy-channel)
+                 :merge-base "car"
+                 :commit-hash "foo")))
       (maybe-promote promoter run)
       (is-false (the-only-report))
       (is (equal "car" (pr-merge-base promoter run))))))
@@ -160,11 +161,11 @@
            (channel (let ((channel (make-instance 'dummy-channel)))
                       (setf (channel-repo channel) repo)
                       channel))
-           (run (make-instance 'recorder-run
-                                :company company
-                                :channel channel
-                                :merge-base "car"
-                                :commit-hash "foo")))
+           (run (make-recorder-run
+                 :company company
+                 :channel channel
+                 :merge-base "car"
+                 :commit-hash "foo")))
       (maybe-promote promoter run))))
 
 (test plugin-installed?
@@ -189,8 +190,7 @@
 
 (test run-with-pr-creates-a-report
   (with-fixture state ()
-    (let ((*base-run* (make-instance
-                       'recorder-run
+    (let ((*base-run* (make-recorder-run
                         :company company
                         :channel (make-instance 'dummy-channel)
                         :merge-base "dfdfdf"
@@ -200,8 +200,7 @@
                          (lambda (promoter run %check)
                            (declare (ignore promoter run))
                            (setf check %check)))
-      (let ((run (make-instance
-                  'recorder-run
+      (let ((run (make-recorder-run
                   :company company
                   :channel (make-instance 'dummy-channel)
                   :pull-request "https://github.com/tdrhq/fast-example/pull/2"
@@ -215,8 +214,7 @@
 (test without-a-base-run-we-get-an-error
   (with-fixture state ()
     (let ((*base-run* nil))
-     (let ((run (make-instance
-                 'recorder-run
+     (let ((run (make-recorder-run
                   :channel (make-instance 'dummy-channel)
                   :company company
                   :pull-request "https://github.com/tdrhq/fast-example/pull/2"
@@ -237,8 +235,8 @@
   (with-installation ()
    (with-test-store ()
      (let* ((company (make-instance 'company))
-            (empty-run (make-instance 'recorder-run :company company))
-            (another-empty-run (make-instance 'recorder-run :company company))
+            (empty-run (make-recorder-run :company company))
+            (another-empty-run (make-recorder-run :company company))
             (empty-report (make-instance 'diff-report :added nil
                                                      :deleted nil
                                                      :changes nil)))
@@ -263,12 +261,12 @@
                                       'change
                                       :before (make-instance 'screenshot :name "foo")
                                       :after (make-instance 'screenshot :name "foo"))))))
-         (let ((run (make-instance 'recorder-run
+         (let ((run (make-recorder-run
                                    :company company
                                    :channel (make-instance 'dummy-channel)))
-               (another-run (make-instance 'recorder-run
-                                           :company company
-                                           :channel (make-instance 'dummy-channel))))
+               (another-run (make-recorder-run
+                             :company company
+                             :channel (make-instance 'dummy-channel))))
            (answer (make-diff-report run another-run)
              diff-report)
 
@@ -280,13 +278,11 @@
 
 (test report-has-acceptable
   (with-fixture state ()
-    (let ((*base-run* (make-instance
-                       'recorder-run
+    (let ((*base-run* (make-recorder-run
                         :company company
                         :channel (make-instance 'dummy-channel)
                         :commit-hash "car")))
-     (let ((run (make-instance
-                 'recorder-run
+     (let ((run (make-recorder-run
                   :channel (make-instance 'dummy-channel)
                   :company company
                   :pull-request "https://github.com/tdrhq/fast-example/pull/2"
@@ -305,8 +301,7 @@
                              (push args calls))
                            :at-start t)
         (setf (send-task-args promoter) '(:dummy))
-        (let ((run (make-instance
-                    'recorder-run
+        (let ((run (make-recorder-run
                     :channel (make-instance 'dummy-channel)
                     :company company
                     :pull-request "https://github.com/tdrhq/fast-example/pull/2"
@@ -328,8 +323,7 @@
                              (lambda (&rest args)
                                (push args calls))
                              :at-start t)
-          (let* ((run (make-instance
-                       'recorder-run
+          (let* ((run (make-recorder-run
                        :channel (make-instance 'dummy-channel)
                        :company company
                        :pull-request "https://github.com/tdrhq/fast-example/pull/2"
@@ -337,7 +331,7 @@
                        :merge-base "car"
                        :commit-hash "foo"))
                  (report (make-instance 'report :run run
-                                        :previous-run (make-instance 'recorder-run)))
+                                        :previous-run (make-recorder-run)))
                  (acceptable (make-instance 'pr-acceptable
                                             :send-task-args nil
                                             :report report)))
@@ -353,9 +347,9 @@
       (let* ((channel (make-instance 'channel
                                      :name "test-channel"
                                      :github-repo "https://github.com/tdrhq/fast-example"))
-            (run (make-instance 'recorder-run
-                                :channel channel
-                                :commit-hash "zoidberg"))
+            (run (make-recorder-run
+                  :channel channel
+                  :commit-hash "zoidberg"))
             (promoter (make-instance 'pull-request-promoter))
             (check (make-instance 'check
                                   :status state

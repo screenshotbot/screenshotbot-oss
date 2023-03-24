@@ -30,7 +30,9 @@
                 #:ensure-screenshot-key)
   (:import-from #:bknr.datastore
                 #:decode
-                #:encode))
+                #:encode)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run))
 
 (util/fiveam:def-suite)
 
@@ -53,19 +55,19 @@
 (test theres-runs-but-none-of-this-name
   (with-fixture state ()
     (with-fixture history-fixture ()
-      (let* ((run1 (make-instance 'recorder-run
-                                   :screenshots (list
-                                                 (make-instance 'screenshot
-                                                                 :name "foo"
-                                                                 :image im1))
-                                   :channel channel))
-             (run2 (make-instance 'recorder-run
-                                   :screenshots (list
-                                                 (make-instance 'screenshot
-                                                                 :name "foo"
-                                                                 :image im2))
-                                   :previous-run run1
-                                   :channel channel)))
+      (let* ((run1 (make-recorder-run
+                    :screenshots (list
+                                  (make-instance 'screenshot
+                                                 :name "foo"
+                                                 :image im1))
+                    :channel channel))
+             (run2 (make-recorder-run
+                    :screenshots (list
+                                  (make-instance 'screenshot
+                                                 :name "foo"
+                                                 :image im2))
+                    :previous-run run1
+                    :channel channel)))
         (is-true (recorder-run-screenshots run1))
         (setf (active-run channel "master") run2)
         (is-true channel)
@@ -81,19 +83,19 @@
 (test in-history-we-also-pull-renamed-screenshots
   (with-fixture state ()
     (with-fixture history-fixture ()
-      (let* ((run1 (make-instance 'recorder-run
-                                   :screenshots (list
-                                                 (make-instance 'screenshot
-                                                                 :name "bar"
-                                                                 :image im1))
-                                   :channel channel))
-             (run2 (make-instance 'recorder-run
-                                   :screenshots (list
-                                                 (make-instance 'screenshot
-                                                                 :name "foo"
-                                                                 :image im1))
-                                   :previous-run run1
-                                   :channel channel)))
+      (let* ((run1 (make-recorder-run
+                    :screenshots (list
+                                  (make-instance 'screenshot
+                                                 :name "bar"
+                                                 :image im1))
+                    :channel channel))
+             (run2 (make-recorder-run
+                    :screenshots (list
+                                  (make-instance 'screenshot
+                                                 :name "foo"
+                                                 :image im1))
+                    :previous-run run1
+                    :channel channel)))
         (setf (active-run channel "master") run2)
         (is (equal (list
                     (car (recorder-run-screenshots run2))

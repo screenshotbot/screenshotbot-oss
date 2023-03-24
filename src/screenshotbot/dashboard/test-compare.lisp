@@ -26,6 +26,7 @@
                 #:snap-image-blob
                 #:with-test-user)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:recorder-run)
   (:import-from #:screenshotbot/dashboard/reports
                 #:render-report-page)
@@ -77,14 +78,14 @@
                                      :company company
                                      :name "bleh"
                                      :github-repo "git@github.com:a/b.gitq"))
-             (one (make-instance 'recorder-run
-                                 :channel channel
-                                 :company company
-                                 :screenshots (list (make-screenshot im1))))
-             (two (make-instance 'recorder-run
-                                 :channel channel
-                                 :company company
-                                 :screenshots (list (make-screenshot im2))))
+             (one (make-recorder-run
+                   :channel channel
+                   :company company
+                   :screenshots (list (make-screenshot im1))))
+             (two (make-recorder-run
+                   :channel channel
+                   :company company
+                   :screenshots (list (make-screenshot im2))))
              (report (make-instance 'report
                                     :title "foobar"
                                     :run one
@@ -105,14 +106,14 @@
                                      :company company
                                      :name "bleh"
                                      :github-repo "git@github.com:a/b.gitq"))
-             (one (make-instance 'recorder-run
-                                 :channel channel
-                                 :company company
-                                 :screenshots nil))
-             (two (make-instance 'recorder-run
-                                 :channel channel
-                                 :company company
-                                 :screenshots (list (make-screenshot im2))))
+             (one (make-recorder-run
+                   :channel channel
+                   :company company
+                   :screenshots nil))
+             (two (make-recorder-run
+                   :channel channel
+                   :company company
+                   :screenshots (list (make-screenshot im2))))
              (report (make-instance 'report
                                     :title "foobar"
                                     :run one

@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:pull-request-id
                 #:transient-promotion-log
                 #:promotion-log
@@ -29,7 +30,7 @@
 
 (def-fixture state ()
   (with-test-store ()
-    (let ((run (make-instance 'recorder-run))
+    (let ((run (make-recorder-run))
           (promotion-log (make-instance 'promotion-log)))
      (&body))))
 
@@ -43,7 +44,7 @@
 
 (test pull-request-id
   (with-fixture state ()
-    (let ((run2 (make-instance 'recorder-run
-                               :pull-request "https://foo/bar/20")))
+    (let ((run2 (make-recorder-run
+                 :pull-request "https://foo/bar/20")))
       (is (eql nil (pull-request-id run)))
       (is (eql 20 (pull-request-id run2))))))

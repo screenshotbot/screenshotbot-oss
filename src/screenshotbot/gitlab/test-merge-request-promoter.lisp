@@ -21,6 +21,7 @@
                 #:channel-repo
                 #:channel)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:recorder-run-merge-base
                 #:recorder-run)
   (:import-from #:screenshotbot/promote-api
@@ -81,13 +82,13 @@
                                        :company company
                                        :url "https://gitlab.com"
                                        :token "foobar"))
-              (run (make-instance 'recorder-run :company company
+              (run (make-recorder-run :company company
                                                 :commit-hash "baa"
                                                 :merge-base "aaa"
                                                 :channel channel
                                                 :gitlab-merge-request-iid 7))
-              (another-run (make-instance' recorder-run))
-              (*base-run* (make-instance 'recorder-run :company company))
+              (another-run (make-recorder-run))
+              (*base-run* (make-recorder-run :company company))
               (last-build-status))
          (cl-mock:if-called 'post-build-status
                             (lambda (&rest args)

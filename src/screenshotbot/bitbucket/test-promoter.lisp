@@ -10,6 +10,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:recorder-run)
   (:import-from #:screenshotbot/pro/bitbucket/promoter
                 #:make-build-status-args
@@ -56,9 +57,9 @@
      (let* ((channel (make-instance 'channel :name "channel-0"
                                     :github-repo "https://bitbucket.org/tdrhq/dummy"))
             (company (make-instance 'company))
-            (run (make-instance 'recorder-run :company company
-                                :commit-hash "abcd"
-                                :channel channel))
+            (run (make-recorder-run :company company
+                                    :commit-hash "abcd"
+                                    :channel channel))
             (bitbucket-token (make-instance 'bitbucket-token
                                             :refresh-token "fake-refresh-token"
                                             :company company))
@@ -77,7 +78,7 @@
 
 (test make-task-args-happy-path
   (with-fixture state ()
-    (let* ((run (make-instance 'recorder-run :channel channel))
+    (let* ((run (make-recorder-run :channel channel))
            (promoter (make-instance 'bitbucket-promoter)))
       (let ((result (make-build-status-args run check)))
         (is (equal "SUCCESSFUL" (a:assoc-value result :state)))
@@ -85,19 +86,19 @@
 
 (test make-task-args-override-commit-hash
   (with-fixture state ()
-    (let ((run (make-instance 'recorder-run
-                               :channel channel
-                               :override-commit-hash "foobar"
-                               :commit-hash "zoidberg"))
+    (let ((run (make-recorder-run
+                :channel channel
+                :override-commit-hash "foobar"
+                :commit-hash "zoidberg"))
           (promoter (make-instance 'bitbucket-promoter)))
       (let ((result (make-build-status-args run check)))
         (is (equal "foobar" (a:assoc-value result :commit)))))))
 
 (test make-task-args-no-commit-hash
   (with-fixture state ()
-    (let ((run (make-instance 'recorder-run
-                               :channel channel
-                               :commit-hash "zoidberg"))
+    (let ((run (make-recorder-run
+                :channel channel
+                :commit-hash "zoidberg"))
           (promoter (make-instance 'bitbucket-promoter)))
       (let ((result (make-build-status-args run check)))
         (is (equal "zoidberg" (a:assoc-value result :commit)))))))
@@ -105,9 +106,9 @@
 (test make-task-args-for-every-version-of-state
   (with-fixture state ()
     (dolist (state (list :accepted :rejected :success :failure :action_required :action-required :pending))
-     (let ((run (make-instance 'recorder-run
-                               :channel channel
-                               :commit-hash "zoidberg"))
+     (let ((run (make-recorder-run
+                 :channel channel
+                 :commit-hash "zoidberg"))
            (promoter (make-instance 'bitbucket-promoter))
            (check (make-instance 'check
                                  :status state
@@ -185,9 +186,9 @@
 
 (test maybe-promote-happy-path
   (with-fixture state ()
-    (let ((run (make-instance 'recorder-run :company company
-                                            :channel channel
-                                            :pull-request "https://bitbucket.com/tdrhq/fast-example/pull-request/20"))
+    (let ((run (make-recorder-run :company company
+                                  :channel channel
+                                  :pull-request "https://bitbucket.com/tdrhq/fast-example/pull-request/20"))
           (promoter (make-instance 'bitbucket-promoter)))
       (finishes
         (maybe-promote promoter run)))))
@@ -195,6 +196,6 @@
 
 (test bitbucket-promoter-pull-id
   (with-fixture state ()
-   (let ((run (make-instance 'recorder-run :pull-request "https://bitbucket.com/tdrhq/fast-example/pull-request/20")))
+   (let ((run (make-recorder-run :pull-request "https://bitbucket.com/tdrhq/fast-example/pull-request/20")))
      (is (equal "https://bitbucket.com/tdrhq/fast-example/pull-request/20"
                 (promoter-pull-id (make-instance 'bitbucket-promoter) run))))))

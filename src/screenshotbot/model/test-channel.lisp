@@ -18,7 +18,9 @@
   (:import-from #:fiveam-matchers/strings
                 #:contains-string)
   (:import-from #:fiveam-matchers/core
-                #:assert-that))
+                #:assert-that)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run))
 
 (util/fiveam:def-suite)
 
@@ -31,8 +33,8 @@
 (test active-runs
   (with-fixture state ()
    (let* ((channel (make-instance 'channel))
-          (run (make-instance 'recorder-run
-                               :channel channel)))
+          (run (make-recorder-run
+                :channel channel)))
      (is (equal nil (active-run channel "foo")))
      (setf (active-run channel "foo") run)
      (is (eql run (active-run channel "foo"))))))
@@ -43,23 +45,23 @@
           (channel (make-instance 'channel
                                    :company company)))
      (is (equal nil (channel-runs channel)))
-     (let ((run (make-instance 'recorder-run :channel channel
-                                             :company company)))
+     (let ((run (make-recorder-run :channel channel
+                                   :company company)))
        (is (equal (list run)
                   (channel-runs channel)))))))
 
 (test find-production-run-for-commit
   (with-fixture state ()
    (let* ((channel (make-instance 'channel))
-          (foo-run (make-instance 'recorder-run :channel channel
-                                                :commit-hash "foo"))
-          (bar-run (make-instance 'recorder-run :channel channel
-                                                :commit-hash "bar")))
+          (foo-run (make-recorder-run :channel channel
+                                      :commit-hash "foo"))
+          (bar-run (make-recorder-run :channel channel
+                                      :commit-hash "bar")))
      (is (eql foo-run (production-run-for channel :commit "foo")))
      (is (eql bar-run (production-run-for channel :commit "bar")))
-     (let ((another-bar-run (make-instance 'recorder-run
-                                            :channel channel
-                                            :commit-hash "bar")))
+     (let ((another-bar-run (make-recorder-run
+                             :channel channel
+                             :commit-hash "bar")))
        (is (eql bar-run (production-run-for channel :commit "bar")))))))
 
 (test get-full-repo-from-repo

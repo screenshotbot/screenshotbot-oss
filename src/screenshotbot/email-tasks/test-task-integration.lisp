@@ -51,6 +51,7 @@
   (:import-from #:screenshotbot/mailer
                 #:send-mail)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:recorder-run)
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
@@ -131,9 +132,9 @@
      (with-test-user (:user user :company company)
        (let* ((channel (make-instance 'channel
                                       :name "foobar"))
-              (run (make-instance 'recorder-run
-                                  :company company
-                                  :channel channel))
+              (run (make-recorder-run
+                    :company company
+                    :channel channel))
               (report (make-instance 'report
                                      :title "1 changes, 2 added"
                                      :channel channel
@@ -181,9 +182,9 @@
     (with-test-user (:user user :company company)
       (let* ((channel (make-instance 'channel
                                      :name "foobar"))
-             (run (make-instance 'recorder-run
-                                 :company company
-                                 :channel channel))
+             (run (make-recorder-run
+                   :company company
+                   :channel channel))
              (report (make-instance 'report
                                     :title "1 changes, 2 added"
                                     :channel channel

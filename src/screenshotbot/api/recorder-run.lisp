@@ -36,6 +36,10 @@
                 #:handle-resized-image)
   (:import-from #:util/store
                 #:location-for-oid)
+  (:import-from #:screenshotbot/model/screenshot-map
+                #:make-screenshot-map)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -195,8 +199,7 @@ it easier for us to recover, or even validate the model."
                        company
                        channel
                        (dto:run-screenshots run)))
-         (recorder-run (make-instance
-                        'recorder-run
+         (recorder-run (make-recorder-run
                         :company company
                         :channel channel
                         :screenshots screenshots

@@ -35,6 +35,7 @@
   (:import-from #:util/testing
                 #:with-global-binding)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:recorder-run)
   (:import-from #:fiveam-matchers/core
                 #:is-equal-to
@@ -144,19 +145,19 @@
 (test make-image-comparer-when-no-threshold
   (with-fixture state ()
     (assert-that
-     (make-image-comparer (make-instance 'recorder-run))
+     (make-image-comparer (make-recorder-run))
      (has-typep 'base-image-comparer))))
 
 (test make-image-comparer-when-zero-threshold
   (with-fixture state ()
     (assert-that
-     (make-image-comparer (make-instance 'recorder-run
-                                         :compare-threshold 0.0))
+     (make-image-comparer (make-recorder-run
+                           :compare-threshold 0.0))
      (has-typep 'base-image-comparer))))
 
 (test make-image-comparer-when-non-zero-threshold
   (with-fixture state ()
-    (let ((comparer (make-image-comparer (make-instance 'recorder-run
+    (let ((comparer (make-image-comparer (make-recorder-run
                                          :compare-threshold 0.001))))
       (assert-that
        comparer

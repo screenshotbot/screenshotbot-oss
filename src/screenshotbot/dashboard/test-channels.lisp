@@ -35,6 +35,7 @@
   (:import-from #:fiveam-matchers/misc
                 #:is-not-null)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:active-run
                 #:recorder-run)
   (:import-from #:util/testing
@@ -70,9 +71,9 @@
      (with-test-store ()
        (let* ((company (make-instance 'company))
               (channel (find-or-create-channel company "foobar"))
-              (run (make-instance 'recorder-run
-                                  :channel channel
-                                  :company company))
+              (run (make-recorder-run
+                    :channel channel
+                    :company company))
               (channel-2 (find-or-create-channel company "foobar-2")))
          (setf (active-run channel "master") run)
          (cl-mock:if-called 'can-view!

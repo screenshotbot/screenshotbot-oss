@@ -22,6 +22,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:recorder-run)
   (:import-from #:screenshotbot/abstract-pr-promoter
                 #:promoter-pull-id)
@@ -52,7 +53,7 @@
                    :company company
                    :diff 20
                    :revision 5)
-    (let ((run (make-instance 'recorder-run
-                              :company company
-                              :phabricator-diff-id "20")))
+    (let ((run (make-recorder-run
+                :company company
+                :phabricator-diff-id "20")))
       (is (eql 5 (promoter-pull-id promoter run))))))

@@ -5,7 +5,9 @@
         #:util
         #:fiveam
         #:screenshotbot/model/recorder-run
-        #:screenshotbot/model/core))
+        #:screenshotbot/model/core)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run))
 
 (defvar *tmpdir*)
 
@@ -31,7 +33,7 @@
 
 (test simple-creation
   (with-fixture state ()
-    (let* ((run (make-instance 'recorder-run))
+    (let* ((run (make-recorder-run))
            (id (store-object-id run))
            (promo-log (promotion-log run))
            (old-ts (%created-at run))
@@ -54,7 +56,7 @@
 
 (test re-creation-without-snapshot
   (with-fixture state ()
-    (let* ((run (make-instance 'recorder-run))
+    (let* ((run (make-recorder-run))
            (id (store-object-id run))
            (promo-log (promotion-log run))
            (old-ts (%created-at run))

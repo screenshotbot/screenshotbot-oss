@@ -27,7 +27,9 @@
                 #:make-image)
   (:import-from #:screenshotbot/installation
                 #:installation
-                #:*installation*))
+                #:*installation*)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run))
 (in-package :screenshotbot/test-diff-report)
 
 (util/fiveam:def-suite)
@@ -49,8 +51,8 @@
                                          :image img))
             (screenshot2 (make-screenshot :name "foo"
                                           :image img2))
-            (run1 (make-instance 'recorder-run :screenshots (list screenshot)))
-            (run2 (make-instance 'recorder-run :screenshots (list screenshot2))))
+            (run1 (make-recorder-run :screenshots (list screenshot)))
+            (run2 (make-recorder-run :screenshots (list screenshot2))))
        (flet ((make-change (name)
                 (make-instance 'change
                                :before (make-screenshot :name name)
@@ -84,16 +86,16 @@
 
 (test make-diff-report-added
   (with-fixture state ()
-    (let ((diff-report (make-diff-report run1 (make-instance 'recorder-run
-                                                              :screenshots '()))))
+    (let ((diff-report (make-diff-report run1 (make-recorder-run
+                                               :screenshots '()))))
       (is (eql 0 (length (diff-report-changes diff-report))))
       (is (eql 1 (length (diff-report-added diff-report)))))))
 
 
 (test make-diff-report-deleted
   (with-fixture state ()
-    (let ((diff-report (make-diff-report (make-instance 'recorder-run
-                                                         :screenshots '())
+    (let ((diff-report (make-diff-report (make-recorder-run
+                                          :screenshots '())
                                          run2)))
       (is (eql 0 (length (diff-report-changes diff-report))))
       (is (eql 1 (length (diff-report-deleted diff-report)))))))

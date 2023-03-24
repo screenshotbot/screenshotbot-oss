@@ -37,6 +37,7 @@
   (:import-from #:screenshotbot/promote-api
                 #:maybe-promote)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:compared-against
                 #:merge-base-failed-warning
                 #:recorder-run-warnings
@@ -83,15 +84,15 @@
                 (channel (make-instance 'channel
                                         :company company
                                         :github-repo "https://mysite.git/foo.git"))
-                (run (make-instance 'recorder-run
-                                    :company company
-                                    :channel channel
-                                    :commit-hash "car"
-                                    :merge-base "foo"))
+                (run (make-recorder-run
+                      :company company
+                      :channel channel
+                      :commit-hash "car"
+                      :merge-base "foo"))
                 (user (make-instance 'user
                                      :full-name "Arnold"))
-                (another-run (make-instance 'recorder-run
-                                            :commit-hash "foo"))
+                (another-run (make-recorder-run
+                              :commit-hash "foo"))
                 (promoter (make-instance 'test-promoter)))
            (&body)))))))
 
@@ -229,8 +230,8 @@
 
 (test warn-if-not-merge-base
   (with-fixture state ()
-    (let ((another-run (make-instance 'recorder-run
-                                      :commit-hash "bleh")))
+    (let ((another-run (make-recorder-run
+                        :commit-hash "bleh")))
       (warn-if-not-merge-base
        promoter
        run

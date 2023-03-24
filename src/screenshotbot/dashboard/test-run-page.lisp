@@ -17,6 +17,7 @@
   (:import-from #:screenshotbot/user-api
                 #:channel)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:not-fast-forward-promotion-warning
                 #:merge-base-failed-warning
                 #:recorder-run-warnings
@@ -51,13 +52,13 @@
                                        :name "bleh"
                                        :github-repo "git@github.com:a/b.gitq"))
                (im1 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
-               (run (make-instance 'recorder-run
-                                   :company company
-                                   :channel channel
-                                   :company company
-                                   :screenshots (list (make-screenshot im1))))
-               (another-run (make-instance 'recorder-run
-                                           :commit-hash "foo")))
+               (run (make-recorder-run
+                     :company company
+                     :channel channel
+                     :company company
+                     :screenshots (list (make-screenshot im1))))
+               (another-run (make-recorder-run
+                             :commit-hash "foo")))
           (&body))))))
 
 (def-easy-macro wrap-snapshot (&fn fn)
@@ -80,12 +81,12 @@
 
 (screenshot-test run-page-with-not-fast-forard-warnings
   (with-fixture state ()
-    (let ((run2 (make-instance 'recorder-run
-                               :company company
-                               :channel channel
-                               :company company
-                               :previous-run run
-                               :screenshots (list (make-screenshot im1)))))
+    (let ((run2 (make-recorder-run
+                 :company company
+                 :channel channel
+                 :company company
+                 :previous-run run
+                 :screenshots (list (make-screenshot im1)))))
      (with-transaction ()
        (setf (recorder-run-warnings run2)
              (list (make-instance 'not-fast-forward-promotion-warning))))

@@ -37,6 +37,7 @@
   (:import-from #:screenshotbot/sdk/git
                 #:git-repo)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:not-fast-forward-promotion-warning
                 #:recorder-run-warnings)
   (:import-from #:fiveam-matchers/lists
@@ -93,19 +94,18 @@
            (with-transaction ()
              (push channel (company-channels company)))
            (flet ((make-run (&rest args)
-                    (let ((run (apply #'make-instance
-                                  'recorder-run
-                                  (append
-                                   args
-                                   (list
-                                    :channel channel
-                                    :github-repo "foo"
-                                    :commit-hash nil
-                                    :cleanp t
-                                    :branch "master"
-                                    :branch-hash "a1"
-                                    :trunkp t
-                                    :company company)))))
+                    (let ((run (apply #'make-recorder-run
+                                      (append
+                                       args
+                                       (list
+                                        :channel channel
+                                        :github-repo "foo"
+                                        :commit-hash nil
+                                        :cleanp t
+                                        :branch "master"
+                                        :branch-hash "a1"
+                                        :trunkp t
+                                        :company company)))))
                       (with-transaction ()
                         (push run (company-runs company)))
                       run)))
