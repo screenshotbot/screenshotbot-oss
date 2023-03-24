@@ -38,7 +38,10 @@
   (:import-from #:alexandria
                 #:when-let)
   (:import-from #:screenshotbot/model/core
+                #:ensure-slot-boundp
                 #:non-root-object)
+  (:import-from #:screenshotbot/model/screenshot-map
+                #:make-screenshot-map)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -77,7 +80,8 @@
    #:pull-request-id
    #:compared-against
    #:compare-threshold
-   #:not-fast-forward-promotion-warning))
+   #:not-fast-forward-promotion-warning
+   #:run-screenshot-map))
 (in-package :screenshotbot/model/recorder-run)
 
 (with-class-validation
@@ -174,6 +178,9 @@
      :initarg :screenshots
      :initform nil
      :accessor recorder-run-screenshots)
+    (%screenshot-map
+     :initarg :screenshot-map
+     :accessor run-screenshot-map)
     (promotion-complete-p
      :initform nil
      :accessor promotion-complete-p)
@@ -256,6 +263,30 @@ associated report is rendered.")
   (ensure-directories-exist
    (location-for-oid #P"promotion-logs/"
                      (oid-array self))))
+
+(defmethod ensure-screenshot-map ((run recorder-run))
+  (restart-case
+      (when-let ((channel (recorder-run-channel run)))
+        (unless (run-screenshot-map run)
+          (let ((screenshots (recorder-run-screenshots run)))
+            (when (listp screenshots)
+             (let ((map
+                     (make-screenshot-map channel
+                                          screenshots)))
+               (log:info "Updating ~a" (bknr.datastore:store-object-id run))
+               (with-transaction ()
+                 (setf (run-screenshot-map run) map)))))))
+    (ignore-this-run ()
+      (values))
+    (unset-screenshots-for-this-run ()
+      (with-transaction ()
+        (setf (recorder-run-screenshots run) nil)))))
+
+(defun ensure-all-screenshot-maps ()
+  (ensure-slot-boundp 'recorder-run '%screenshot-map)
+  (time
+   (mapc #'ensure-screenshot-map
+         (bknr.datastore:class-instances 'recorder-run))))
 
 ;; Migration
 #+screenshotbot-oss
