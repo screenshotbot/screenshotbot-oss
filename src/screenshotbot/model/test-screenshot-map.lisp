@@ -71,6 +71,9 @@
             (im-2 (make-image :pathname (image-file "rose.png")))
             (screenshot-1 (make-screenshot :image im-1 :name "one"))
             (screenshot-2 (make-screenshot :image im-2 :name "two"))
+            (screenshot-3 (make-screenshot :image im-2 :name "three"))
+            (screenshot-4 (make-screenshot :image im-2 :name "four"))
+            (screenshot-5 (make-screenshot :image im-2 :name "five"))
             (screenshot-key-1-copy
               (make-instance 'screenshot-key :name "one"))
             (screenshot-key-2-copy
@@ -242,10 +245,15 @@
                 channel
                 (list screenshot-1
                       screenshot-2
-                      screenshot-3)))
+                      screenshot-3
+                      screenshot-4
+                      screenshot-5)))
            (m2 (make-screenshot-map
                 channel
-                (list (make-instance 'lite-screenshot
+                (list
+                 screenshot-4
+                 screenshot-5
+                 (make-instance 'lite-screenshot
                                      :screenshot-key screenshot-key-1-copy
                                      :image-oid (oid im-1 :stringp nil))))))
       (is (not (eql m2 m1)))
@@ -278,10 +286,14 @@
                        (contains
                         (screenshot-key screenshot-2)
                         (screenshot-key screenshot-1)
-                        (screenshot-key screenshot-3)))
+                        (screenshot-key screenshot-4)
+                        (screenshot-key screenshot-3)
+                        (screenshot-key screenshot-5)))
           (assert-that keys-2
                        (contains
-                        (screenshot-key screenshot-1))))))))
+                        (screenshot-key screenshot-1)
+                        (screenshot-key screenshot-4)
+                        (screenshot-key screenshot-5))))))))
 
 (test make-from-previous
   (with-fixture state ()
@@ -315,20 +327,20 @@
 
 (test pick-best-existing-map
   (with-fixture state ()
-    (let* ((m1 (make-from-previous (list screenshot-1) nil channel))
-           (m2 (make-from-previous (list screenshot-2) nil channel)))
+    (let* ((m1 (make-from-previous (list screenshot-3 screenshot-4 screenshot-1) nil channel))
+           (m2 (make-from-previous (list screenshot-3 screenshot-4 screenshot-2) nil channel)))
       (assert-that (pick-best-existing-map channel
-                                           (list screenshot-1))
+                                           (list screenshot-3 screenshot-4 screenshot-1))
                    (is-equal-to
                     m1))
       (assert-that (pick-best-existing-map channel
-                                           (list screenshot-2))
+                                           (list screenshot-3 screenshot-4 screenshot-2))
                    (is-equal-to
                     m2))
       (assert-that
        (let ((*lookback-count* 1))
          (pick-best-existing-map channel
-                                 (list screenshot-1)))
+                                 (list screenshot-3 screenshot-4 screenshot-1)))
        (is-equal-to
         m2)))))
 
@@ -409,4 +421,12 @@ delete this test in the future, it might be okay."
       (setf (slot-value one 'chain-cost) 100000000000)
       (let ((two (make-screenshot-map channel
                                       (list screenshot-1))))
+        (is (null (previous two)))))))
+
+(test if-the-cost-is-too-much-dont-use-parent
+  (with-fixture state ()
+    (let ((one (make-screenshot-map channel
+                                    (list screenshot-1))))
+      (let ((two (make-screenshot-map channel
+                                      (list screenshot-2))))
         (is (null (previous two)))))))

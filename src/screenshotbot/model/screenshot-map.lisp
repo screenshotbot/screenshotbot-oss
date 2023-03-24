@@ -184,6 +184,7 @@ will not consider it as a possibility.")
                            (cond
                              ((and
                                (< cost next-best-cost)
+                               (< cost (fset:size this-map))
                                (<= (+ cost (chain-cost this))
                                    (* *max-chain-cost-factor* (fset:size this-map))))
                               (values this cost))
