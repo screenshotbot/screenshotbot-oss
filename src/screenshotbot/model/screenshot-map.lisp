@@ -38,6 +38,11 @@
   _filtered_ map to actually do the comparisons, which would avoid the
   cost if the lookback is very large.")
 
+(defparameter *max-chain-cost-factor* 50
+  "Let's call this f. If adding a map to a chain, causes the chain cost
+of the map to go beyond f*N, where N is the size of the map, then we
+will not consider it as a possibility.")
+
 (defconstant +inf+ 1000000)
 
 (with-class-validation
@@ -56,11 +61,40 @@
                :initform nil
                :reader previous)
      (map :transient t
-          :initform nil))
+          :initform nil)
+     (chain-cost :transient t
+                 :initform nil))
     (:metaclass persistent-class)))
 
 (defmethod screenshot-map-to-list ((self screenshot-map))
   (slot-value self 'screenshots))
+
+(defun memoized-reduce (fn map initial-value slot &optional (callback #'identity))
+  "This is written in CPS form to avoid deep recursions."
+  (cond
+    ((null map) (funcall callback initial-value))
+    (t
+     (cond
+       ((slot-value map slot)
+        (funcall callback (slot-value map slot)))
+       (t
+        (memoized-reduce fn
+                         (previous map)
+                         initial-value
+                         slot
+                         (lambda (previous-value)
+                           (funcall callback
+                                    (setf (slot-value map slot)
+                                          (funcall fn map previous-value))))))))))
+
+(defun chain-cost (map)
+  (memoized-reduce (lambda (this cost)
+                     (+ (length (screenshots this))
+                        (length (deleted this))
+                        cost))
+                   map
+                   0
+                   'chain-cost))
 
 (defun make-set (list &optional (map (fset:empty-map)))
   (cond

@@ -20,6 +20,7 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/model/screenshot-map
+                #:chain-cost
                 #:compute-cost
                 #:*lookback-count*
                 #:pick-best-existing-map
@@ -357,3 +358,28 @@
       (is (eql 2 (compute-cost four one)))
       (is (eql 1 (compute-cost two four)))
       (is (eql 1 (compute-cost four two))))))
+
+(def-fixture chain-costs ()
+  (let* ((one (make-from-previous (list screenshot-1 screenshot-2)
+                                    nil channel))
+           (two (make-from-previous (list screenshot-1)
+                                    one channel))
+           (three (make-from-previous (list screenshot-2)
+                                      two channel)))
+      (&body)))
+
+(test chain-cost
+  (with-fixture state ()
+    (with-fixture chain-costs ()
+      (is (eql 0 (chain-cost nil)))
+      (is (eql 2 (chain-cost one)))
+      (is (eql 3 (chain-cost two)))
+      (is (eql 5 (chain-cost three))))))
+
+(test chain-cost-uncached
+  (with-fixture state ()
+    (with-fixture chain-costs ()
+      (is (eql 5 (chain-cost three)))
+      (is (eql 2 (slot-value one 'chain-cost)))
+      (is (eql 3 (slot-value two 'chain-cost)))
+      (is (eql 5 (slot-value three 'chain-cost))))))
