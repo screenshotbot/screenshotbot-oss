@@ -112,11 +112,10 @@
       <h6 class= "text-muted mb-3">Promotion History</h6>
       ,(paginated
         (lambda (args)
-          (destructuring-bind (run screenshot previous-screenshot)
+          (destructuring-bind (screenshot run previous-screenshot)
               args
-            (assert run)
             <div>
-              ,(render-single-screenshot screenshot run
+              ,(render-single-screenshot run screenshot
                                          :previous-screenshot previous-screenshot
                                          :channel channel)
             </div>))
