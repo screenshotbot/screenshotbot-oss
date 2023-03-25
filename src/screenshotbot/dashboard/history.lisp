@@ -61,12 +61,12 @@
    (cond
      (s
       <div class= "mb-4" >
-      <h4>,(screenshot-name s)
+      <h6 class= "mb-0" >,(screenshot-name s)
       ,(when name-change-p
          <span class= "badge bg-warning">
            Renamed or copied
          </span>)
-      </h4>
+      </h6>
 
       ,(when (and previous-screenshot image-change-p)
          (comparison-modal :toggle-id toggle-id
@@ -106,21 +106,24 @@
       </div>))))
 
 (markup:deftag render-history (&key screenshot-name channel)
-  <div>
-    <h1>Promotion History for ,(progn screenshot-name)</h1>
-    ,(paginated
-      (lambda (args)
-        (destructuring-bind (run screenshot previous-screenshot)
-            args
-          (assert run)
-          <div>
-            ,(render-single-screenshot screenshot run
-                                       :previous-screenshot previous-screenshot
-                                       :channel channel)
-          </div>))
+  <div class= "content-page bg-light-lighten">
+    <div class= "content history-page" >
+      <h3 class= "mt-3 mb-0" >,(progn screenshot-name)</h3>
+      <h6 class= "text-muted mb-3">Promotion History</h6>
+      ,(paginated
+        (lambda (args)
+          (destructuring-bind (run screenshot previous-screenshot)
+              args
+            (assert run)
+            <div>
+              ,(render-single-screenshot screenshot run
+                                         :previous-screenshot previous-screenshot
+                                         :channel channel)
+            </div>))
 
-      :num 12
-      :iterator (get-screenshot-history channel screenshot-name :iterator t))
+        :num 12
+        :iterator (get-screenshot-history channel screenshot-name :iterator t))
+    </div>
   </div>)
 
 (defhandler (history-page :uri "/channel/:channel/history")
