@@ -354,65 +354,62 @@
 
 
 
-(defun render-run-page (run &rest filters &key name)
+(defun render-run-page (run &key name)
   (can-view! run)
-  (flet ((re-call (&rest args)
-           (apply 'render-run-page run (append args filters))))
+  (let* ((channel (recorder-run-channel run))
+         (screenshots (recorder-run-screenshots run))
+         (filtered-screenshots (cond
+                                 (name
+                                  (loop for s in screenshots
+                                        if (string-equal (screenshot-name s) name)
+                                          collect s))
+                                 (t
+                                  screenshots))))
+    <app-template body-class= "dashboard bg-white" >
+      <div class= "page-title-box">
+        <h4 class= "page-title" >Run from
+          <:time class= "timeago" datetime= (created-at run)>
+            ,(created-at run)
+          </:time>
+        </h4>
 
-    (let* ((channel (recorder-run-channel run))
-           (screenshots (recorder-run-screenshots run))
-           (filtered-screenshots (cond
-                                   (name
-                                    (loop for s in screenshots
-                                          if (string-equal (screenshot-name s) name)
-                                            collect s))
-                                   (t
-                                    screenshots))))
-      <app-template body-class= "dashboard bg-white" >
-        <div class= "page-title-box">
-          <h4 class= "page-title" >Run from
-            <:time class= "timeago" datetime= (created-at run)>
-              ,(created-at run)
-            </:time>
-          </h4>
-
-          <div class= "d-flex justify-content-between mt-3 mb-3">
-            <div class= "" style= "width: 20em" >
-              <div class= "input-group">
-                <span class= "input-group-text" >
-                  <mdi name= "search" />
-                </span>
-                <input class= "form-control search d-inline-block" type= "text" autocomplete= "off"
-                       placeholder= "Search..."
-                       data-target= "#run-page-results" />
-              </div>
+        <div class= "d-flex justify-content-between mt-3 mb-3">
+          <div class= "" style= "width: 20em" >
+            <div class= "input-group">
+              <span class= "input-group-text" >
+                <mdi name= "search" />
+              </span>
+              <input class= "form-control search d-inline-block" type= "text" autocomplete= "off"
+                     placeholder= "Search..."
+                     data-target= "#run-page-results" />
             </div>
-
-
-            ,(when (can-edit run (current-user))
-               <div class= "">
-                 <run-advanced-menu run=run />
-               </div>)
           </div>
 
+
+          ,(when (can-edit run (current-user))
+             <div class= "">
+               <run-advanced-menu run=run />
+             </div>)
         </div>
 
-          ,@(render-warnings run)
+      </div>
 
-          ,(when-let (reports (reports-for-run run))
-             <div class= "alert alert-info mt-2" >
-             This run created a report with
+      ,@(render-warnings run)
 
-               ,(let ((report (car reports)))
-                          <a href= (format nil "/report/~a" (oid report)) >,(report-title report)</a>)
-             </div>)
+      ,(when-let (reports (reports-for-run run))
+         <div class= "alert alert-info mt-2" >
+           This run created a report with
 
-          <div id= "run-page-results" class= "search-results" data-update= (nibble () (update-content run channel))
-               data-args= "{}" >
-            ,(run-page-contents run channel filtered-screenshots)
-          </div>
+           ,(let ((report (car reports)))
+              <a href= (format nil "/report/~a" (oid report)) >,(report-title report)</a>)
+         </div>)
 
-      </app-template>)))
+      <div id= "run-page-results" class= "search-results" data-update= (nibble () (update-content run channel))
+           data-args= "{}" >
+        ,(run-page-contents run channel filtered-screenshots)
+      </div>
+
+    </app-template>))
 
 (defun update-content (run channel)
   (let* ((query (hunchentoot:parameter "search"))
