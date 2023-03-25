@@ -33,7 +33,9 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/model/recorder-run
-                #:make-recorder-run))
+                #:make-recorder-run)
+  (:import-from #:screenshotbot/model/screenshot-map
+                #:make-screenshot-map))
 
 (util/fiveam:def-suite)
 
@@ -97,8 +99,10 @@
 (test no-screenshots-no-task
   (with-fixture state ()
     (with-transaction ()
-      (setf (recorder-run-screenshots run1) nil)
-      (setf (recorder-run-screenshots run2) nil))
+      (setf (run-screenshot-map run1)
+            (make-screenshot-map channel nil))
+      (setf (run-screenshot-map run2)
+            (make-screenshot-map channel nil)))
     (maybe-send-tasks promoter run2)
     (is-false (company-reports company))))
 

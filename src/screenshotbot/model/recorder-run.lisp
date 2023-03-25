@@ -177,7 +177,7 @@
     (Screenshots
      :initarg :screenshots
      :initform nil
-     :accessor recorder-run-screenshots)
+     :documentation "The old list of screenshots, these days we generate them from the map")
     (%screenshot-map
      :initarg :screenshot-map
      :accessor run-screenshot-map)
@@ -264,6 +264,10 @@ associated report is rendered.")
 
 (defmethod (setf activep) (val (run recorder-run))
   (error "Old method, set active-run on channel directly"))
+
+(defmethod recorder-run-screenshots ((run recorder-run))
+  (screenshot-map:to-list
+   (run-screenshot-map run)))
 
 (defmethod bknr.datastore:blob-pathname ((self transient-promotion-log))
   (ensure-directories-exist
