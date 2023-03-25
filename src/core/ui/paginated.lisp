@@ -16,6 +16,24 @@
 
 (named-readtables:in-readtable markup:syntax)
 
+(defvar *filter-cache* (trivial-garbage:make-weak-hash-table
+                        :weakness :value
+                        :test #'equal
+                        #+sbcl
+                        :synchronized #+sbcl t))
+
+(defun apply-map-filter (map filter)
+  (util:or-setf
+   (gethash (cons map filter) *filter-cache*)
+   (cond
+     ((eql #'identity filter)
+      map)
+     (t
+      (fset:filter (lambda (x v)
+                     (declare (ignore v))
+                     (funcall filter x))
+                   map)))))
+
 (defun pagination-helper (&key
                            (filter #'identity)
                            (empty-view)
@@ -27,6 +45,8 @@
   "The renderer here is a function that takes three arguments: the list of objects to render,
  a lambda that calls pagination-helper on the remaining objects with
  the same arguments, and the start-counter of the first element.
+
+For a map, the filter filters on keys, not on values.
 
 The pagination-helper doesn't handle rendering on its own, for testability purposes."
   (multiple-value-bind (this-page rest)
@@ -40,6 +60,18 @@ The pagination-helper doesn't handle rendering on its own, for testability purpo
                  do (return (values results nil))
                finally
                   (return (values results t))))
+        ((fset:map? items)
+         (let ((items (apply-map-filter items filter)))
+          (values
+           (loop for i below num
+                 for j from start-counter below (fset:size items)
+                 collect (multiple-value-bind (key value)
+                             (fset:at-rank items j)
+                           (cons key value)))
+           ;; We can use the same map for the rest, since we're
+           ;; indexing by numbers.
+           (when (< (+ start-counter num) (fset:size items))
+             items))))
         (t
          (util/lists:head items num :filter filter)))
     (cond

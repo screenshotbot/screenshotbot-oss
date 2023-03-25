@@ -36,6 +36,14 @@ the next list of objects and the start-index"
   (loop for i from 0 below num
         collect (format nil "~a" i)))
 
+(defun make-test-map (num)
+  (fset:convert
+   'fset:map
+   (loop for i from 0 below num
+         collect (cons
+                  (format nil "~a" i)
+                  (+ 100 i)))))
+
 (test empty-view
   (is (eql :empty (%pagination-helper :num 5
                                       :items (make-test-list 0))))
@@ -75,4 +83,28 @@ the next list of objects and the start-index"
       (assert-that items (contains "3" "4" "5"))
       (let ((items more (funcall more)))
         (assert-that items (contains "6"))
+        (is (null more))))))
+
+(test more-link-with-maps
+  (let ((items more (%pagination-helper :num 3
+                                        :items (make-test-map 7))))
+    (assert-that items
+                 (contains (cons "0" 100) (cons "1" 101) (cons "2" 102)))
+    (let ((items more (funcall more)))
+      (assert-that items (contains (cons "3" 103) (cons "4" 104) (cons "5" 105)))
+      (let ((items more (funcall more)))
+        (assert-that items (contains (cons "6" 106)))
+        (is (null more))))))
+
+(test more-link-with-filtered-maps
+  (let ((items more (%pagination-helper :num 3
+                                        :filter (lambda (x)
+                                                  (< (parse-integer x) 7))
+                                        :items (make-test-map 10))))
+    (assert-that items
+                 (contains (cons "0" 100) (cons "1" 101) (cons "2" 102)))
+    (let ((items more (funcall more)))
+      (assert-that items (contains (cons "3" 103) (cons "4" 104) (cons "5" 105)))
+      (let ((items more (funcall more)))
+        (assert-that items (contains (cons "6" 106)))
         (is (null more))))))

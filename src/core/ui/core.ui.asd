@@ -6,7 +6,9 @@
 
 (defsystem :core.ui
   :serial t
-  :depends-on (:markup)
+  :depends-on (:markup
+               :trivial-garbage
+               :fset)
   :components ((:file "template")
                (:file "simple-card-page")
                (:file "mdi")
