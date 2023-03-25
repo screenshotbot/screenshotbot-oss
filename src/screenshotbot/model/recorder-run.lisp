@@ -297,9 +297,13 @@ associated report is rendered.")
    (let ((screenshots (recorder-run-screenshots run))
          (map (run-screenshot-map run)))
      (when (or screenshots map)
-       (assert (fset:equal?
-                (make-set screenshots)
-                (to-map map)))))))
+       (let ((screenshot-set (make-set screenshots)))
+         (assert (fset:equal?
+                  screenshot-set
+                  (to-map map)))
+         (loop for x in (fset:convert 'list screenshot-set)
+               for y in (fset:convert 'list (to-map map))
+               do (assert (eql (car x) (car y)))))))))
 
 ;; (mapc #'verify-screenshot-map (bknr.datastore:class-instances 'recorder-run))
 
