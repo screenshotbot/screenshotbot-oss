@@ -35,6 +35,7 @@
   (:import-from #:bknr.datastore
                 #:store-object-id)
   (:import-from #:core/ui/paginated
+                #:apply-map-filter
                 #:paginated)
   (:import-from #:screenshotbot/model/report
                 #:reports-for-run)
@@ -43,6 +44,7 @@
   (:import-from #:screenshotbot/model/image
                 #:image-dimensions)
   (:import-from #:screenshotbot/model/recorder-run
+                #:run-screenshot-map
                 #:compare-threshold
                 #:compared-against
                 #:merge-base-failed-warning
@@ -71,6 +73,8 @@
                 #:describe-pull-request)
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
+  (:import-from #:screenshotbot/screenshot-api
+                #:make-screenshot)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -78,7 +82,8 @@
    #:row-filter
    #:commit)
   (:export #:mask-editor
-           #:start-review-enabled-p))
+           #:start-review-enabled-p)
+  (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/dashboard/run-page)
 
 (named-readtables:in-readtable markup:syntax)
@@ -357,14 +362,14 @@
 (defun render-run-page (run &key name)
   (can-view! run)
   (let* ((channel (recorder-run-channel run))
-         (screenshots (recorder-run-screenshots run))
-         (filtered-screenshots (cond
-                                 (name
-                                  (loop for s in screenshots
-                                        if (string-equal (screenshot-name s) name)
-                                          collect s))
-                                 (t
-                                  screenshots))))
+         (screenshots (screenshot-map:to-map (run-screenshot-map run)))
+         (filter (cond
+                   (name
+                    (lambda (screenshot-key)
+                      (string-equal (screenshot-name screenshot-key) name)))
+                   (t
+                    #'identity)))
+         (filtered-screenshots (apply-map-filter screenshots filter)))
     <app-template body-class= "dashboard bg-white" >
       <div class= "page-title-box">
         <h4 class= "page-title" >Run from
@@ -386,10 +391,10 @@
           </div>
 
 
-          ,(when (can-edit run (current-user))
-             <div class= "">
-               <run-advanced-menu run=run />
-             </div>)
+        ,(when (can-edit run (current-user))
+           <div class= "">
+             <run-advanced-menu run=run />
+           </div>)
         </div>
 
       </div>
@@ -412,15 +417,14 @@
     </app-template>))
 
 (defun update-content (run channel)
-  (let* ((query (hunchentoot:parameter "search"))
-         (screenshots (recorder-run-screenshots run)))
+  (let* ((query (hunchentoot:parameter "search")))
     (run-page-contents
      run channel
-     screenshots
+     (screenshot-map:to-map (run-screenshot-map run))
      :filter (lambda (screenshot)
                (or (null query)
                    (str:contains? query (screenshot-name screenshot)
-      :ignore-case t))))))
+                                  :ignore-case t))))))
 
 (defun run-link (run)
   (make-url 'run-page :id (oid run)))
@@ -446,15 +450,38 @@
              :reader modal-id)))
 
 (defmethod filtered-screenshots ((self screenshots-viewer))
-  (remove-if-not (screenshots-viewer-filter self)
-                 (screenshots-viewer-screenshots self)))
+  (let ((screenshots (screenshots-viewer-screenshots self)))
+    (cond
+      ((fset:map? (screenshots-viewer-screenshots self))
+       ;; This will be weakly cached
+       (apply-map-filter screenshots (screenshots-viewer-filter self)))
+      (t
+       (remove-if-not (screenshots-viewer-filter self)
+                      (screenshots-viewer-screenshots self))))))
+
+(defun safe-elt (x i)
+  (cond
+    ((fset:map? x)
+     (multiple-value-bind (key value)
+         (fset:at-rank x i)
+       (make-screenshot :key key :image value)))
+    (t
+     (elt x i))))
+
+(defun safe-length (x)
+  (cond
+    ((fset:map? x)
+     (fset:size x))
+    (t
+     (length x))))
 
 (defmethod render-modal ((self screenshots-viewer))
   (let ((get-ith-image (nibble (n)
                          (setf (hunchentoot:content-type*) "application/json")
                          (let ((screenshot (funcall
                                             (screenshots-viewer-mapper self)
-                                            (elt (filtered-screenshots self) (parse-integer n)))))
+                                            (safe-elt (filtered-screenshots self)
+                                                      (parse-integer n)))))
                            (json:encode-json-to-string
                             `((:src . ,(image-public-url
                                         (screenshot-image screenshot)
@@ -479,7 +506,7 @@
                    <a href= "#" class= "btn next">Next<mdi name= "navigate_next" /></a>
                  </div>)
               <div class= "canvas-container "
-                   data-length= (length (filtered-screenshots self))
+                   data-length= (safe-length (filtered-screenshots self))
                    data-src=get-ith-image >
               </div>
             </div>
@@ -489,70 +516,72 @@
     </div>))
 
 
-(defun run-page-contents (run channel screenshots &key (filter #'identity))
+(defun run-page-contents (run channel screenshot-map &key (filter #'identity))
   (let ((screenshots-viewer (make-instance 'screenshots-viewer
-                                           :screenshots screenshots
+                                           :screenshots screenshot-map
                                            :filter filter)))
    <div id= (make-id) >
      ,(render-modal screenshots-viewer)
      ,(paginated
-       (lambda (screenshot i)
-         (let* ((name-parts (str:rsplit "--" (screenshot-name screenshot) :limit 2)))
-           <div class= " col-sm-12 col-md-4 col-lg-3 mb-1 mt-2">
-             <div class="card">
-               <div class="card-body">
-                 <div class= "screenshot-header" >
-                   <h4 class= "screenshot-title" >,(car name-parts)</h4>
-                   ,(when (cadr name-parts)
-                      <h6>,(cadr name-parts)</h6>)
-                   <ul class= "screenshot-options-menu">
-                     <li>
-                       <a href= (make-url 'history-page :channel (store-object-id channel)
-                                                                                          :screenshot-name (screenshot-name screenshot))
-                          >
-                         History
-                       </a>
-                     </li>
+       (lambda (pair i)
+         (destructuring-bind (screenshot-key . image) pair
+          (let* ((screenshot (make-screenshot :image image :key screenshot-key))
+                 (name-parts (str:rsplit "--" (screenshot-name screenshot) :limit 2)))
+            <div class= " col-sm-12 col-md-4 col-lg-3 mb-1 mt-2">
+              <div class="card">
+                <div class="card-body">
+                  <div class= "screenshot-header" >
+                    <h4 class= "screenshot-title" >,(car name-parts)</h4>
+                    ,(when (cadr name-parts)
+                       <h6>,(cadr name-parts)</h6>)
+                    <ul class= "screenshot-options-menu">
+                      <li>
+                        <a href= (make-url 'history-page :channel (store-object-id channel)
+                                                                                           :screenshot-name (screenshot-name screenshot))
+                           >
+                          History
+                        </a>
+                      </li>
 
-                     <li>
-                       <a href= (nibble () (mask-editor (recorder-run-channel run) screenshot
-                          :redirect (run-link run)))
-                          >Edit Masks</a>
+                      <li>
+                        <a href= (nibble () (mask-editor (recorder-run-channel run) screenshot
+                           :redirect (run-link run)))
+                           >Edit Masks</a>
 
-                     </li>
+                      </li>
 
-                     ,(when *create-issue-popup*
-                        <li>
-                          <a target= "_blank"
-                             href= (nibble ()
-                                             (funcall *create-issue-popup* run screenshot)) >
-                            Create Issue
-                          </a>
-                        </li>)
-                   </ul>
-                 </div>
-                 <a href= (image-public-url (screenshot-image screenshot) :size :full-page :type "webp") title= (screenshot-name screenshot)
-                    class= "screenshot-run-image"
-                    data-image-number=i
-                    data-target= (format nil "#~a" (modal-id screenshots-viewer))>
-                   ,(let ((dimensions (ignore-errors (image-dimensions (screenshot-image screenshot)))))
-                      <picture class="">
-                        <source srcset= (image-public-url (screenshot-image screenshot) :size :small :type :webp) />
-                        <:img
-                          class= "screenshot-image run-page-image"
-                          src= (image-public-url (screenshot-image screenshot)  :size :small
-                                                                              :type :png)
-                          width= (?. dimension-width dimensions)
-                          height= (?. dimension-height dimensions)
-                          />
-                      </picture>)
-                 </a>
-               </div> <!-- end card-body-->
-             </div>
+                      ,(when *create-issue-popup*
+                         <li>
+                           <a target= "_blank"
+                              href= (nibble ()
+                                              (funcall *create-issue-popup* run screenshot)) >
+                             Create Issue
+                           </a>
+                         </li>)
+                    </ul>
+                  </div>
+                  <a href= (image-public-url (screenshot-image screenshot) :size :full-page :type "webp") title= (screenshot-name screenshot)
+                     class= "screenshot-run-image"
+                     data-image-number=i
+                     data-target= (format nil "#~a" (modal-id screenshots-viewer))>
+                    ,(let ((dimensions (ignore-errors (image-dimensions (screenshot-image screenshot)))))
+                       <picture class="">
+                         <source srcset= (image-public-url (screenshot-image screenshot) :size :small :type :webp) />
+                         <:img
+                           class= "screenshot-image run-page-image"
+                           src= (image-public-url (screenshot-image screenshot)  :size :small
+                                                                               :type :png)
+                           width= (?. dimension-width dimensions)
+                           height= (?. dimension-height dimensions)
+                           />
+                       </picture>)
+                  </a>
+                </div> <!-- end card-body-->
+              </div>
 
-           </div>))
+            </div>)))
        :pass-index-p t
-       :items screenshots
+       :items screenshot-map
        :filter filter
        :empty-view  <p class= "text-muted" >No screenshots found</p>)
    </div>))

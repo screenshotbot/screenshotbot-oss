@@ -11,7 +11,8 @@
   (:import-from #:alexandria
                 #:remove-from-plist)
   (:export
-   #:paginated))
+   #:paginated
+   #:apply-map-filter))
 (in-package :core/ui/paginated)
 
 (named-readtables:in-readtable markup:syntax)
