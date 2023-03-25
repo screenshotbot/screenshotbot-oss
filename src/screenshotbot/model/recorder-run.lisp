@@ -40,10 +40,6 @@
   (:import-from #:screenshotbot/model/core
                 #:ensure-slot-boundp
                 #:non-root-object)
-  (:import-from #:screenshotbot/model/screenshot-map
-                #:to-map
-                #:make-set
-                #:make-screenshot-map)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -84,7 +80,8 @@
    #:compare-threshold
    #:not-fast-forward-promotion-warning
    #:run-screenshot-map
-   #:make-recorder-run))
+   #:make-recorder-run)
+  (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
 (with-class-validation
@@ -212,7 +209,7 @@ associated report is rendered.")
 
 (defun make-recorder-run (&rest args &key screenshots channel &allow-other-keys)
   (apply #'make-instance 'recorder-run
-         :screenshot-map (make-screenshot-map channel screenshots)
+         :screenshot-map (screenshot-map:make-screenshot-map channel screenshots)
          args))
 
 (defmethod print-object ((o recorder-run) stream)
@@ -280,8 +277,8 @@ associated report is rendered.")
           (let ((screenshots (recorder-run-screenshots run)))
             (when (listp screenshots)
              (let ((map
-                     (make-screenshot-map channel
-                                          screenshots)))
+                     (screenshot-map:make-screenshot-map channel
+                                                         screenshots)))
                (log:info "Updating ~a" (bknr.datastore:store-object-id run))
                (with-transaction ()
                  (setf (run-screenshot-map run) map)))))))
@@ -297,12 +294,12 @@ associated report is rendered.")
    (let ((screenshots (recorder-run-screenshots run))
          (map (run-screenshot-map run)))
      (when (or screenshots map)
-       (let ((screenshot-set (make-set screenshots)))
+       (let ((screenshot-set (screenshot-map:make-set screenshots)))
          (assert (fset:equal?
                   screenshot-set
-                  (to-map map)))
+                  (screenshot-map:to-map map)))
          (loop for x in (fset:convert 'list screenshot-set)
-               for y in (fset:convert 'list (to-map map))
+               for y in (fset:convert 'list (screenshot-map:to-map map))
                do (assert (eql (car x) (car y)))))))))
 
 ;; (mapc #'verify-screenshot-map (bknr.datastore:class-instances 'recorder-run))

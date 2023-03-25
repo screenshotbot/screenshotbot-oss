@@ -25,7 +25,10 @@
                 #:head)
   (:export
    #:screenshot-map
-   #:screenshot-map-as-list))
+   #:screenshot-map-as-list
+   #:make-set
+   #:to-map
+   #:make-screenshot-map))
 (in-package :screenshotbot/model/screenshot-map)
 
 (defparameter *lookback-count* 5
