@@ -21,6 +21,7 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/model/screenshot-map
+                #:to-list
                 #:previous
                 #:chain-cost
                 #:compute-cost
@@ -430,3 +431,15 @@ delete this test in the future, it might be okay."
       (let ((two (make-screenshot-map channel
                                       (list screenshot-2))))
         (is (null (previous two)))))))
+
+(test to-list
+  (with-fixture state ()
+    (let ((map (make-screenshot-map channel
+                                    (list screenshot-1 screenshot-2))))
+      (let ((one (to-list map))
+            (two (to-list map)))
+        (is (eq one two))
+        (assert-that one
+                     (contains
+                      (has-screenshot screenshot-1)
+                      (has-screenshot screenshot-2)))))))

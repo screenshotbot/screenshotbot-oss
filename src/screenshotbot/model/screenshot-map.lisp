@@ -28,7 +28,9 @@
    #:screenshot-map-as-list
    #:make-set
    #:to-map
+   #:to-list
    #:make-screenshot-map))
+
 (in-package :screenshotbot/model/screenshot-map)
 
 (defparameter *lookback-count* 5
@@ -41,6 +43,11 @@
   "Let's call this f. If adding a map to a chain, causes the chain cost
 of the map to go beyond f*N, where N is the size of the map, then we
 will not consider it as a possibility.")
+
+(defvar *to-list-cache* (trivial-garbage:make-weak-hash-table
+                         :weakness :value
+                         #+sbcl
+                         :synchronized #+sbcl t))
 
 (defconstant +inf+ 1000000)
 
@@ -117,6 +124,12 @@ will not consider it as a possibility.")
                    self
                    (fset:empty-map)
                    'map))
+
+(defmethod to-list ((self screenshot-map))
+  (util:or-setf
+   (gethash self *to-list-cache*)
+   (loop for (key . image) in (fset:convert 'list (to-map self))
+         collect (make-screenshot :key key :image image))))
 
 (defmethod make-from-previous (screenshots (previous screenshot-map)
                                channel)
