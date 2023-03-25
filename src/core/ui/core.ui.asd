@@ -11,3 +11,9 @@
                (:file "simple-card-page")
                (:file "mdi")
                (:file "paginated")))
+
+(defsystem :core.ui/tests
+  :serial t
+  :depends-on (:core.ui
+               :util/fiveam)
+  :components ((:file "test-paginated")))

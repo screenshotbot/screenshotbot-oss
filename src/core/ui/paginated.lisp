@@ -14,7 +14,7 @@
    #:paginated))
 (in-package :core/ui/paginated)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defun pagination-helper (&key
                            (filter #'identity)
