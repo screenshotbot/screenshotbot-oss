@@ -41,6 +41,8 @@
                 #:ensure-slot-boundp
                 #:non-root-object)
   (:import-from #:screenshotbot/model/screenshot-map
+                #:to-map
+                #:make-set
                 #:make-screenshot-map)
   ;; classes
   (:export #:promotion-log
@@ -288,6 +290,18 @@ associated report is rendered.")
     (unset-screenshots-for-this-run ()
       (with-transaction ()
         (setf (recorder-run-screenshots run) nil)))))
+
+(defmethod verify-screenshot-map (run)
+  (log:info "Verifying ~a" run)
+  (when (recorder-run-channel run)
+   (let ((screenshots (recorder-run-screenshots run))
+         (map (run-screenshot-map run)))
+     (when (or screenshots map)
+       (assert (fset:equal?
+                (make-set screenshots)
+                (to-map map)))))))
+
+;; (mapc #'verify-screenshot-map (bknr.datastore:class-instances 'recorder-run))
 
 (defun ensure-all-screenshot-maps ()
   (ensure-slot-boundp 'recorder-run '%screenshot-map)
