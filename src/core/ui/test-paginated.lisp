@@ -9,6 +9,8 @@
         #:fiveam)
   (:import-from #:core/ui/paginated
                 #:pagination-helper)
+  (:shadowing-import-from #:new-let
+                          #:let)
   (:import-from #:fiveam-matchers/core
                 #:is-not
                 #:equal-to
@@ -50,3 +52,27 @@ the next list of objects and the start-index"
                                    :items (make-test-list 13))
                (contains
                 (equal-to "3"))))
+
+(test more-link
+  (let ((items more (%pagination-helper :num 3
+                                        :items (make-test-list 7))))
+    (assert-that items
+                 (contains "0" "1" "2"))
+    (let ((items more (funcall more)))
+      (assert-that items (contains "3" "4" "5"))
+      (let ((items more (funcall more)))
+        (assert-that items (contains "6"))
+        (is (null more))))))
+
+(test more-link-with-filter
+  (let ((items more (%pagination-helper :num 3
+                                        :filter (lambda (x)
+                                                  (< (parse-integer x) 7))
+                                        :items (make-test-list 10))))
+    (assert-that items
+                 (contains "0" "1" "2"))
+    (let ((items more (funcall more)))
+      (assert-that items (contains "3" "4" "5"))
+      (let ((items more (funcall more)))
+        (assert-that items (contains "6"))
+        (is (null more))))))
