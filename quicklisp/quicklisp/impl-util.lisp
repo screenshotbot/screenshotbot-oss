@@ -68,6 +68,8 @@
     ".clisprc.lisp")
   (:implementation ecl
     ".eclrc")
+  (:implementation mezzano
+    "init.lisp")
   (:implementation mkcl
     ".mkclrc")
   (:implementation lispworks
@@ -191,7 +193,7 @@ quicklisp at CL startup."
     (not (or (pathname-name entry)
              (pathname-type entry))))
   (:implementation allegro
-    (ql-allegro:file-directory-p entry))
+    (ql-allegro:file-directory-p entry :follow-symbolic-links nil))
   (:implementation lispworks
     (ql-lispworks:file-directory-p entry)))
 
@@ -245,6 +247,8 @@ quicklisp at CL startup."
                 #+ecl :resolve-symlinks #+ecl nil)
      (directory (merge-pathnames *wild-relative* directory)
                 #+ecl :resolve-symlinks #+ecl nil)))
+  (:implementation mezzano
+    (directory (merge-pathnames *wild-entry* directory)))
   (:implementation mkcl
     (setf directory (truename directory))
     (nconc

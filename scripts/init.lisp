@@ -53,6 +53,10 @@
 (register-tdrhq "html2text"
                 "b5620fdd435df5254a713f3c10bd756632df3dce")
 
+;; Bug in quicklisp cl-str, please remove when updating after 2023-02-15
+(quick-patch:register "https://github.com/vindarel/cl-str"
+                      "cf2e7ae5e333b8a2dbfd01ec4ec26790b46eebf2")
+
 ;; TODO: automatically generate hashes
 #+screenshotbot-oss
 (progn

@@ -123,8 +123,11 @@ endif
 .PHONY:
 
 update-quicklisp: .PHONY
-	# $(sbcl) --eval '(load "quicklisp/setup.lisp")' --eval '(ql:update-client :prompt nil)'  --quit
 	$(SBCL_CORE) --eval '(load "quicklisp/setup.lisp")' --eval '(ql:update-all-dists :prompt nil)' --quit
+
+update-quicklisp-client: .PHONY
+	$(SBCL_CORE) --eval '(load "quicklisp/setup.lisp")' --eval '(ql:update-client :prompt nil)' --quit
+
 
 start-dev: $(sbcl)
 	$(sbcl) --script ./start-dev.lisp

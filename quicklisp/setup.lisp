@@ -23,7 +23,7 @@
 ;;; ASDF is a hard requirement of quicklisp. Make sure it's either
 ;;; already loaded or load it from quicklisp's bundled version.
 
-(defvar *required-asdf-version* "2.26")
+(defvar *required-asdf-version* "3.0")
 
 ;;; Put ASDF's fasls in a separate directory
 
@@ -80,7 +80,7 @@ already exist."
 
 (defun ensure-asdf-loaded ()
   "Try several methods to make sure that a sufficiently-new ASDF is
-loaded: first try (require 'asdf), then loading the ASDF FASL, then
+loaded: first try (require \"asdf\"), then loading the ASDF FASL, then
 compiling asdf.lisp to a FASL and then loading it."
   (let ((source (qmerge "asdf.lisp")))
     (labels ((asdf-symbol (name)
@@ -103,7 +103,7 @@ compiling asdf.lisp to a FASL and then loading it."
                         (when (version-satisfies *required-asdf-version*)
                           (return t)))))
           (try)
-          (try (require 'asdf))
+          (try (require "asdf"))
           (let ((fasl (asdf-fasl-pathname)))
             (try (load fasl :verbose nil))
             (try (load (compile-file source :verbose nil :output-file fasl))))
