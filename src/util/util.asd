@@ -152,8 +152,7 @@
                :lparallel
                :easy-macros
                :util)
-  :components ((:file "pipe-stream")
-               (:file "testing")))
+  :components ((:file "testing")))
 
 (defsystem :util/random-port
   :serial t
@@ -352,7 +351,6 @@
                              (:file "test-migrations")
                              (:file "test-lparallel")
                              (:file "test-hash-lock")
-                             (:file "test-pipe-stream")
                              (:file "test-threading")
                              (:file "test-cookies")
                              (:file "test-fiveam")
