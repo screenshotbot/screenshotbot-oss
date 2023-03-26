@@ -37,7 +37,10 @@
   (:import-from #:screenshotbot/model/image-comparer
                 #:make-image-comparer)
   (:import-from #:nibble
-                #:nibble))
+                #:nibble)
+  (:import-from #:screenshotbot/dashboard/bisect
+                #:bisect-page
+                #:bisect-item))
 (in-package :screenshotbot/dashboard/history)
 
 (named-readtables:in-readtable markup:syntax)
@@ -160,7 +163,11 @@
                (assert args)
                (destructuring-bind (screenshot run prev-run) args
                  (declare (ignore prev-run))
-                 (let ((new-result (list* (list screenshot run) result)))
+                 (let ((new-result (list*
+                                    (make-instance 'bisect-item
+                                                   :screenshot screenshot
+                                                   :run run)
+                                    result)))
                    (cond
                      ((eql run end-run)
                       ;; we're done
@@ -171,9 +178,7 @@
                                          end-run
                                          :result new-result))))))))
     (let ((bisect-list (build-bisect-list iterator end-run)))
-      <span>
-        ,(format nil "hello: ~a" bisect-list)
-      </span>)))
+      (bisect-page bisect-list))))
 
 (defun render-history-from-iterator (iterator screenshot-name channel
                                      &key bisect-options

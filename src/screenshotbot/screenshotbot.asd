@@ -180,6 +180,7 @@
                  (:file "api-keys")
                  (:file "channels")
                  (:file "reports")
+                 (:file "bisect")
                  (:file "history")
                  (:file "mask-builder")
                  (:file "site-admin")
