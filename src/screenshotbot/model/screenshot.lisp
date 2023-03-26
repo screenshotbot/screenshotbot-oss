@@ -19,6 +19,7 @@
                 #:delete-object
                 #:unique-index)
   (:import-from #:screenshotbot/user-api
+                #:recorder-previous-run
                 #:screenshot-name)
   (:import-from #:screenshotbot/report-api
                 #:screenshot-lang
@@ -26,6 +27,8 @@
   (:import-from #:screenshotbot/model/channel
                 #:channel-promoted-runs)
   (:import-from #:screenshotbot/model/recorder-run
+                #:active-run
+                #:master-branch
                 #:recorder-run
                 #:screenshot-get-canonical
                 #:recorder-run-screenshots)
@@ -266,9 +269,8 @@
   (%with-local-image (screenshot-image screenshot) fn))
 
 (defun get-screenshot-history (channel screenshot-name &key (iterator nil))
-  (let* ((get-next-promoted-run (channel-promoted-runs channel :iterator t))
-         (run (funcall get-next-promoted-run))
-         (prev-run (funcall get-next-promoted-run)))
+  (let* ((branch (master-branch channel))
+         (run (active-run channel branch)))
     (flet ((find-in-run (run screenshot-name)
              (when run
               (loop for s in (recorder-run-screenshots run)
@@ -286,25 +288,23 @@
                          nil)
                        return s))))
       (let ((screenshot (find-in-run run screenshot-name)))
-        (labels ((bump (prev-screenshot)
-                   (setf run prev-run)
-                   (setf screenshot prev-screenshot)
-                   (setf prev-run (funcall get-next-promoted-run)))
-                 (iterator ()
+        (labels ((iterator (run screenshot)
                    (when run
-                     (let ((image-comparer
-                             (make-image-comparer run))
-                           (prev-screenshot
-                             (when screenshot
-                               (or
-                                (find-in-run prev-run
-                                             (screenshot-name screenshot))
-                                (find-by-image prev-run screenshot)))))
+                     (let* ((prev-run (recorder-previous-run run))
+                            (image-comparer
+                              (make-image-comparer run))
+                            (prev-screenshot
+                              (when screenshot
+                                (or
+                                 (find-in-run prev-run
+                                              (screenshot-name screenshot))
+                                 (find-by-image prev-run screenshot)))))
                        (flet ((respond (prev-screenshot)
                                 (let ((run run)
                                       (screenshot screenshot))
-                                  (bump prev-screenshot)
-                                  (values (list screenshot run prev-screenshot) t))))
+                                  (values (list screenshot run prev-screenshot)
+                                          (lambda ()
+                                            (iterator prev-run prev-screenshot))))))
                          (cond
                            ((not screenshot)
                             ;; The screenshot didn't exist when the
@@ -323,9 +323,8 @@
                               ;; TODO: should we use masks here?
                               ;; Probably not.
                               nil))
-                            (bump prev-screenshot)
                             ;; Tail call optimize the next call
-                            (iterator))
+                            (iterator prev-run prev-screenshot))
                            (t
                             ;; in this, we found a difference between
                             ;; the current and the next screenshot.
@@ -333,15 +332,20 @@
 
           (cond
             (iterator
-             #'iterator)
+             (lambda ()
+              (iterator run screenshot)))
             (t
-             (loop for next = (iterator)
-                   while next
-                   for i from 0 upto 1000
-                   collect (first next) into result
-                   collect (second next) into result-runs
-                   finally
-                      (return (values result result-runs))))))))))
+             (let ((iter (lambda () (iterator run screenshot))))
+               (labels ((to-list (iter &optional res)
+                          (cond
+                            (iter
+                             (multiple-value-bind (next next-iter) (funcall iter)
+                               (to-list next-iter (list* next res))))
+                            (t
+                             (remove-if #'null
+                              (mapcar #'first
+                                      (reverse res)))))))
+                 (to-list iter))))))))))
 
 (defmethod image-metadata ((self abstract-screenshot))
   (image-metadata (screenshot-image self)))

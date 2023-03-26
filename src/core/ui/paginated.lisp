@@ -35,6 +35,20 @@
                      (funcall filter x))
                    map)))))
 
+(defun get-first-n (iterator num &optional res)
+  "Returns two values: the first num elements returned as a list, and a
+functional iterator to the rest"
+  (cond
+    ((<= num 0)
+     (values (reverse res) iterator))
+    (t
+     (multiple-value-bind (next next-iter) (funcall iterator)
+       (cond
+         ((null next)
+          (values (reverse res) nil))
+         (t
+          (get-first-n next-iter (1- num) (list* next res))))))))
+
 (defun pagination-helper (&key
                            (filter #'identity)
                            (empty-view)
@@ -53,14 +67,7 @@ The pagination-helper doesn't handle rendering on its own, for testability purpo
   (multiple-value-bind (this-page rest)
       (cond
         (iterator
-         (loop for i from 0 upto num
-               for next = (funcall iterator)
-               if next
-                 collect next into results
-               if (null next)
-                 do (return (values results nil))
-               finally
-                  (return (values results t))))
+         (get-first-n iterator num))
         ((fset:map? items)
          (let ((items (apply-map-filter items filter)))
           (values
@@ -82,7 +89,7 @@ The pagination-helper doesn't handle rendering on its own, for testability purpo
                              (pagination-helper
                               :num num :items (if iterator nil rest)
                               :start-counter (+ start-counter (length this-page))
-                              :iterator iterator
+                              :iterator (if iterator rest nil)
                               :filter filter
                               :renderer renderer)))))
          (funcall renderer this-page load-more start-counter)))

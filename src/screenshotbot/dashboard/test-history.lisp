@@ -17,7 +17,9 @@
   (:import-from #:screenshotbot/screenshot-api
                 #:get-screenshot-history)
   (:import-from #:screenshotbot/model/image
-                #:image-hash))
+                #:image-hash)
+  (:import-from #:screenshotbot/model/screenshot
+                #:screenshot))
 
 (util/fiveam:def-suite)
 
@@ -26,6 +28,17 @@
 
 (defmethod screenshot-image ((screenshot my-screenshot))
   (make-instance 'test-image))
+
+(defun make-list-iterator (screenshots runs)
+  (cond
+    (screenshots
+     (lambda ()
+       (check-type (first screenshots) my-screenshot)
+       (values (list (first screenshots) (first runs) (second screenshots))
+               (make-list-iterator (cdr screenshots) (cdr runs) ))))
+    (t
+     (lambda ()
+       (values nil nil)))))
 
 (defun make-history-iterator ()
   (let ((screenshots (list (make-instance 'my-screenshot
@@ -40,26 +53,19 @@
                                     :commit "two")
                     (make-instance 'test-recorder-run
                                     :commit "three"))))
-    (lambda ()
-      (when screenshots
-        (values
-         (list (pop screenshots)
-               (pop runs)
-               (car screenshots))
-         screenshots)))))
+    (make-list-iterator screenshots runs)))
 
 (test simple-render-history
   (let ((ctr 0))
    (cl-mock:with-mocks ()
-     (let ((remaining-screenshots ))
-       (cl-mock:if-called 'get-screenshot-history
-                           (lambda (channel screenshot-name &key iterator)
-                             (declare (ignore channel screenshot-name))
-                             (is-true iterator)
-                             (make-history-iterator)))
-       (cl-mock:if-called 'image-hash
-                           (lambda (image)
-                             (incf ctr))))
+     (cl-mock:if-called 'get-screenshot-history
+                        (lambda (channel screenshot-name &key iterator)
+                          (declare (ignore channel screenshot-name))
+                          (is-true iterator)
+                          (make-history-iterator)))
+     (cl-mock:if-called 'image-hash
+                        (lambda (image)
+                          (incf ctr)))
      (with-fake-request ()
        (auth:with-sessions ()
          (render-history
