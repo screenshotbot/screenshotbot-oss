@@ -35,13 +35,17 @@
   (:import-from #:screenshotbot/model/image
                 #:image=)
   (:import-from #:screenshotbot/model/image-comparer
-                #:make-image-comparer))
+                #:make-image-comparer)
+  (:import-from #:nibble
+                #:nibble))
 (in-package :screenshotbot/dashboard/history)
 
 (named-readtables:in-readtable markup:syntax)
 
 (defun render-single-screenshot (r s &key previous-screenshot
-                                       channel)
+                                       channel
+                                       bisect-options
+                                       iterator #| the *current* iterator |#)
   (let* ((screenshots-viewer (make-instance 'screenshots-viewer
                                             :navigationp nil
                                             :screenshots (list s)))
@@ -88,6 +92,8 @@
          <a href= "#" data-bs-toggle= "modal" data-bs-target = (format nil "#~a" toggle-id) >  Compare</a>
          </li>)
 
+      ,(funcall bisect-options
+                r s iterator)
       </ul>
       </div>
       ,(render-modal screenshots-viewer)
@@ -106,23 +112,78 @@
       </div>))))
 
 (markup:deftag render-history (&key screenshot-name channel)
+  (render-history-from-iterator
+   (get-screenshot-history channel screenshot-name :iterator t)
+   screenshot-name
+   channel
+   :bisect-options (lambda (run screenshot iterator)
+                     (declare (ignore run))
+                     (when (gk:check :bisect (current-company) :default nil)
+                      (let ((start-bisect (nibble ()
+                                            (start-bisect-from iterator
+                                                               :screenshot-name screenshot-name
+                                                               :bad-screenshot screenshot
+                                                               :channel channel))))
+                        <li>
+                          <a href= start-bisect >Start bisect</a>
+                        </li>)))))
+
+(defun start-bisect-from (iterator &key screenshot-name channel
+                                     bad-screenshot)
+  (app-template
+   (render-history-from-iterator
+    iterator
+    screenshot-name
+    channel
+    :alert
+    <div class= "alert alert-info mt-2">
+      Select a <em>good</em> screenshot as a starting point for bisect
+    </div>
+    :bisect-options (lambda (run screenshot good-iterator)
+                      (declare (ignore run good-iterator))
+                      (let ((start (nibble ()
+                                     (let-the-bisect-begin bad-screenshot screenshot
+                                                           iterator))))
+                        (cond
+                          ((eql screenshot bad-screenshot)
+                           <li>
+                             <span class= "text-danger">Bisect ending point (<em>bad</em> screenshot) </span>
+                           </li>)
+                          (t
+                           <li>
+                             <a href=start >Mark <em>good</em> for bisect</a>
+                           </li>)))))))
+
+(defun let-the-bisect-begin (bad good iterator)
+  (declare (ignore bad good iterator))
+  "hello")
+
+(defun render-history-from-iterator (iterator screenshot-name channel
+                                     &key bisect-options
+                                       alert)
   <div class= "content-page bg-light-lighten">
     <div class= "content history-page" >
       <h3 class= "mt-3 mb-0" >,(progn screenshot-name)</h3>
-      <h6 class= "text-muted mb-3">Promotion History</h6>
+      ,(cond
+         (alert
+          alert)
+         (t
+          <h6 class= "text-muted mb-3">Promotion History</h6>))
+
       ,(paginated
         (lambda (args &key iterator)
-          (declare (ignore iterator))
           (destructuring-bind (screenshot run previous-screenshot)
               args
             <div>
               ,(render-single-screenshot run screenshot
                                          :previous-screenshot previous-screenshot
-                                         :channel channel)
+                                         :iterator iterator
+                                         :channel channel
+                                         :bisect-options bisect-options)
             </div>))
 
         :num 12
-        :iterator (get-screenshot-history channel screenshot-name :iterator t))
+        :iterator iterator)
     </div>
   </div>)
 
