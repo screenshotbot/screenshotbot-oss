@@ -111,7 +111,8 @@
       <h3 class= "mt-3 mb-0" >,(progn screenshot-name)</h3>
       <h6 class= "text-muted mb-3">Promotion History</h6>
       ,(paginated
-        (lambda (args)
+        (lambda (args &key iterator)
+          (declare (ignore iterator))
           (destructuring-bind (screenshot run previous-screenshot)
               args
             <div>

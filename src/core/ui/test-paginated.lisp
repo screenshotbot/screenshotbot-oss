@@ -27,7 +27,8 @@
 just returns three values: the list of objects and a lambda to return
 the next list of objects and the start-index"
   (apply #'pagination-helper
-         :renderer (lambda (objects next start-counter)
+         :renderer (lambda (objects next start-counter &key iterators)
+                     (declare (ignore iterators))
                      (values objects next start-counter))
          :empty-view :empty
          args))
@@ -35,6 +36,14 @@ the next list of objects and the start-index"
 (defun make-test-list (num)
   (loop for i from 0 below num
         collect (format nil "~a" i)))
+
+(defun make-test-iterator (num &key (from 0))
+  (cond
+    ((= from num)
+     (lambda () nil))
+    (t
+     (lambda ()
+       (values (format nil "~a" from) (make-test-iterator num :from (1+ from)))))))
 
 (defun make-test-map (num)
   (fset:convert
@@ -107,4 +116,16 @@ the next list of objects and the start-index"
       (assert-that items (contains (cons "3" 103) (cons "4" 104) (cons "5" 105)))
       (let ((items more (funcall more)))
         (assert-that items (contains (cons "6" 106)))
+        (is (null more))))))
+
+
+(test more-link-with-iterator
+  (let ((items more (%pagination-helper :num 3
+                                        :iterator (make-test-iterator 7))))
+    (assert-that items
+                 (contains "0" "1" "2"))
+    (let ((items more (funcall more)))
+      (assert-that items (contains "3" "4" "5"))
+      (let ((items more (funcall more)))
+        (assert-that items (contains "6"))
         (is (null more))))))

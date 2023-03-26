@@ -38,16 +38,21 @@
 (defun get-first-n (iterator num &optional res)
   "Returns two values: the first num elements returned as a list, and a
 functional iterator to the rest"
-  (cond
-    ((<= num 0)
-     (values (reverse res) iterator))
-    (t
-     (multiple-value-bind (next next-iter) (funcall iterator)
-       (cond
-         ((null next)
-          (values (reverse res) nil))
-         (t
-          (get-first-n next-iter (1- num) (list* next res))))))))
+  (flet ((return-res (iterator)
+           (let ((x (reverse res)))
+             (values (mapcar #'first x)
+                     iterator
+                     (mapcar #'second x)))))
+   (cond
+     ((<= num 0)
+      (return-res iterator))
+     (t
+      (multiple-value-bind (next next-iter) (funcall iterator)
+        (cond
+          ((null next)
+           (return-res nil))
+          (t
+           (get-first-n next-iter (1- num) (list* (list next iterator) res)))))))))
 
 (defun pagination-helper (&key
                            (filter #'identity)
@@ -64,7 +69,7 @@ functional iterator to the rest"
 For a map, the filter filters on keys, not on values.
 
 The pagination-helper doesn't handle rendering on its own, for testability purposes."
-  (multiple-value-bind (this-page rest)
+  (multiple-value-bind (this-page rest iterators)
       (cond
         (iterator
          (get-first-n iterator num))
@@ -92,7 +97,7 @@ The pagination-helper doesn't handle rendering on its own, for testability purpo
                               :iterator (if iterator rest nil)
                               :filter filter
                               :renderer renderer)))))
-         (funcall renderer this-page load-more start-counter)))
+         (funcall renderer this-page load-more start-counter :iterators iterators)))
       (t
        empty-view))))
 
@@ -102,15 +107,20 @@ NIL, which can be used as a way of determining whether to render an
 empty message."
   (let ((fn (if pass-index-p
                 fn
-                (lambda (name i)
+                (lambda (name i &rest args)
                   (declare (ignore i))
-                  (funcall fn name)))))
+                  (apply fn name
+                         args)))))
    (apply #'pagination-helper
-          :renderer (lambda (this-page load-more start-counter)
+          :renderer (lambda (this-page load-more start-counter &key iterators)
                       <div class= "row pb-4 load-more-container" >
                       ,@(loop for page in this-page
+                              for idx from 0
                               for i from start-counter
-                              collect (funcall fn page i))
+                              collect (apply fn page i
+                                             (when iterators
+                                               (list :iterator
+                                                (elt iterators idx)))))
 
                       ,(when load-more
                          <div class= "col-12 d-flex justify-content-center">
