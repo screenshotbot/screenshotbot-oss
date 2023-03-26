@@ -140,10 +140,10 @@
       Select a <em>good</em> screenshot as a starting point for bisect
     </div>
     :bisect-options (lambda (run screenshot good-iterator)
-                      (declare (ignore run good-iterator))
+                      (declare (ignore good-iterator))
                       (let ((start (nibble ()
-                                     (let-the-bisect-begin bad-screenshot screenshot
-                                                           iterator))))
+                                     (let-the-bisect-begin iterator
+                                                           :end-run run))))
                         (cond
                           ((eql screenshot bad-screenshot)
                            <li>
@@ -154,9 +154,26 @@
                              <a href=start >Mark <em>good</em> for bisect</a>
                            </li>)))))))
 
-(defun let-the-bisect-begin (bad good iterator)
-  (declare (ignore bad good iterator))
-  "hello")
+(defun let-the-bisect-begin (iterator &key end-run)
+  (labels ((build-bisect-list (iterator end-run &key result)
+             (multiple-value-bind (args next-iter) (funcall iterator)
+               (assert args)
+               (destructuring-bind (screenshot run prev-run) args
+                 (declare (ignore prev-run))
+                 (let ((new-result (list* (list screenshot run) result)))
+                   (cond
+                     ((eql run end-run)
+                      ;; we're done
+                      (reverse
+                       new-result))
+                     (t
+                      (build-bisect-list next-iter
+                                         end-run
+                                         :result new-result))))))))
+    (let ((bisect-list (build-bisect-list iterator end-run)))
+      <span>
+        ,(format nil "hello: ~a" bisect-list)
+      </span>)))
 
 (defun render-history-from-iterator (iterator screenshot-name channel
                                      &key bisect-options
