@@ -11,10 +11,17 @@
                 #:register-admin-menu
                 #:defadminhandler)
   (:import-from #:nibble
-                #:nibble))
+                #:nibble)
+  (:import-from #:alexandria
+                #:when-let))
 (in-package :screenshotbot/admin/site-info)
 
 (markup:enable-reader)
+
+(defun safe-symbol-value (&rest args)
+  (when-let (sym (apply #'uiop:find-symbol* args))
+    (symbol-value sym)))
+
 (defadminhandler (site-info :uri "/admin/site-info") ()
   <admin-app-template>
     <ul class= "mt-3" >
@@ -32,6 +39,8 @@
       </li>
 
       <li>Debug-io: ,(format nil "~s" *debug-io*)</li>
+      <li>PID: ,(osicat-posix:getpid)</li>
+      <li>Slynk port: ,(safe-symbol-value "*ACTUAL-SLYNK-PORT*"   "SERVER/SLYNK-PREPARER" )</li>
     </ul>
   </admin-app-template>)
 

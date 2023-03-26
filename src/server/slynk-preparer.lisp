@@ -6,7 +6,9 @@
                 #:slynk-teardown
                 #:*slynk-port*
                 #:*slynk-loopback-interface*)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:*actual-slynk-port*))
 (in-package :server/slynk-preparer)
 
 (defclass slynk-preparer ()
