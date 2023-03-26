@@ -343,6 +343,7 @@
                              (:file "test-image")
                              (:file "test-channels")
                              (:file "test-history")
+                             (:file "test-bisect")
                              (:file "test-notices")))
                (:module "bitbucket"
                 :components ((:static-file "error-response-1" :type "json")
