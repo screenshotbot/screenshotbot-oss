@@ -121,7 +121,7 @@
    channel
    :bisect-options (lambda (run screenshot iterator)
                      (declare (ignore run))
-                     (let ((start-bisect (nibble ()
+                     (let ((start-bisect (nibble (:name :bisect-step-one)
                                            (start-bisect-from iterator
                                                               :screenshot-name screenshot-name
                                                               :bad-screenshot screenshot
@@ -143,7 +143,7 @@
     </div>
     :bisect-options (lambda (run screenshot good-iterator)
                       (declare (ignore good-iterator))
-                      (let ((start (nibble ()
+                      (let ((start (nibble (:name :bisect-step-two)
                                      (let-the-bisect-begin iterator
                                                            :end-run run))))
                         (cond

@@ -100,7 +100,7 @@
        (render-result (fset:lookup (items state) 0)))
       (t
        (flet ((bisect-nibble (fn)
-                (nibble ()
+                (nibble (:name :bisect-continue)
                   (render-bisection
                    (funcall fn state)))))
          (let ((midpoint (midpoint state))
