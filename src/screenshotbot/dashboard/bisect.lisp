@@ -19,6 +19,10 @@
                 #:deftag)
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
+  (:import-from #:screenshotbot/dashboard/run-page
+                #:render-modal
+                #:screenshots-viewer
+                #:modal-id)
   (:export
    #:bisect-item))
 (in-package :screenshotbot/dashboard/bisect)
@@ -55,6 +59,20 @@
                                      (midpoint-pos state)
                                      (fset:size (items state)))))
 
+(deftag screenshot-box-with-viewer (&key screenshot)
+  (let ((screenshots-viewer (make-instance 'screenshots-viewer
+                                           :screenshots (list screenshot)
+                                           :navigationp nil)))
+    <markup:merge-tag>
+      ,(render-modal screenshots-viewer)
+      <a href= "#"
+         class= "screenshot-run-image"
+         data-image-number=0
+         data-target= (format nil "#~a" (modal-id screenshots-viewer)) >
+        <screenshot-box screenshot=screenshot />
+      </a>
+    </markup:merge-tag>))
+
 (defmethod render-bisection (state)
   (let ((num-items (fset:size (items state))))
     (assert (>= num-items 2))
@@ -79,7 +97,7 @@
                </p>
              </div>
              <div  class= "card-body" >
-               <screenshot-box screenshot= (item-screenshot midpoint) />
+               <screenshot-box-with-viewer screenshot= (item-screenshot midpoint) />
              </div>
 
              <div class="card-footer">
