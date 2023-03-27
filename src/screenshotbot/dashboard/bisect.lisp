@@ -65,6 +65,11 @@
                                      (midpoint-pos state)
                                      (fset:size (items state)))))
 
+(defun state-if-skip (state)
+  (make-instance 'state
+                 :items (fset:less (items state)
+                                   (midpoint-pos state))))
+
 (deftag screenshot-box-with-viewer (&key screenshot)
   (let ((screenshots-viewer (make-instance 'screenshots-viewer
                                            :screenshots (list screenshot)
@@ -119,6 +124,7 @@
                </div>
                <a href= (bisect-nibble #'state-if-good) class= "btn btn-success" >Good</a>
                <a href= (bisect-nibble #'state-if-bad) class= "btn btn-danger" >Bad</a>
+               <a href= (bisect-nibble #'state-if-skip) class= "ms-2" >Skip this run</a>
              </div>
            </simple-card-page>))))))
 
