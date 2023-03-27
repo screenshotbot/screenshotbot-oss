@@ -121,15 +121,14 @@
    channel
    :bisect-options (lambda (run screenshot iterator)
                      (declare (ignore run))
-                     (when (gk:check :bisect (current-company) :default nil)
-                      (let ((start-bisect (nibble ()
-                                            (start-bisect-from iterator
-                                                               :screenshot-name screenshot-name
-                                                               :bad-screenshot screenshot
-                                                               :channel channel))))
-                        <li>
-                          <a href= start-bisect >Start bisect</a>
-                        </li>)))))
+                     (let ((start-bisect (nibble ()
+                                           (start-bisect-from iterator
+                                                              :screenshot-name screenshot-name
+                                                              :bad-screenshot screenshot
+                                                              :channel channel))))
+                       <li>
+                         <a href= start-bisect >Start bisect</a>
+                       </li>))))
 
 (defun start-bisect-from (iterator &key screenshot-name channel
                                      bad-screenshot)
