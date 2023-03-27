@@ -12,6 +12,8 @@
                 #:link-to-run
                 #:screenshot-box)
   (:import-from #:screenshotbot/user-api
+                #:channel-repo
+                #:recorder-run-channel
                 #:recorder-run-commit)
   (:import-from #:nibble
                 #:nibble)
@@ -23,6 +25,10 @@
                 #:render-modal
                 #:screenshots-viewer
                 #:modal-id)
+  (:import-from #:screenshotbot/dashboard/recent-runs
+                #:conditional-commit)
+  (:import-from #:util/misc
+                #:?.)
   (:export
    #:bisect-item))
 (in-package :screenshotbot/dashboard/bisect)
@@ -73,6 +79,13 @@
       </a>
     </markup:merge-tag>))
 
+(deftag link-to-run-with-commit (&key run)
+  <span>
+    <link-to-run run=run />
+    <conditional-commit repo= (?. channel-repo (recorder-run-channel run))
+                        hash=(recorder-run-commit run) />
+  </span>)
+
 (defmethod render-bisection (state)
   (let ((num-items (fset:size (items state))))
     (assert (>= num-items 2))
@@ -93,7 +106,7 @@
              <div class= "card-header">
                <h3>Bisecting</h3>
                <p class= "text-muted mb-1">
-                 Currently looking at <link-to-run run= (item-run midpoint) />
+                 Currently looking at <link-to-run-with-commit run= (item-run midpoint) />
                </p>
              </div>
              <div  class= "card-body" >
@@ -112,7 +125,7 @@
 (defun render-result (item)
   <simple-card-page>
     <div>
-      The first bad run is: <link-to-run run= (item-run item) />
+      The first bad run is: <link-to-run-with-commit run= (item-run item) />
     </div>
   </simple-card-page>)
 

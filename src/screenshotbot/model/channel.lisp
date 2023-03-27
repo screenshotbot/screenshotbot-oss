@@ -87,6 +87,7 @@
     (branch :initarg :branch
             :accessor channel-branch)
     (github-repo :initarg :github-repo
+                 :initform nil
                  :writer (setf github-repo)
                  :reader %%github-repo)
     (github-repo-full-name :accessor github-repo-full-name
