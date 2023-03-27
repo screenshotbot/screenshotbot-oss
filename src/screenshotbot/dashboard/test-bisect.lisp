@@ -82,3 +82,37 @@
                                   (make-instance 'bisect-item
                                                  :screenshot screenshot-1
                                                  :run run-1)))))))
+
+(screenshot-test bisect-with-wide-image
+  (with-fixture test-state ()
+    (let* ((wide-im (%make-image "wide.png"))
+           (screenshot (make-screenshot :image wide-im
+                                        :name "foo"))
+           (run (make-recorder-run
+                 :channel channel
+                 :screenshots (list screenshot))))
+      (wrap-snapshot ()
+        (render-bisection
+         (make-instance 'state
+                        :items (loop for i from 0 to 5
+                                     collect
+                                     (make-instance 'bisect-item
+                                                    :screenshot screenshot
+                                                    :run run))))))))
+
+(screenshot-test bisect-with-large-square
+  (with-fixture test-state ()
+    (let* ((wide-im (%make-image "large-square.png"))
+           (screenshot (make-screenshot :image wide-im
+                                        :name "foo"))
+           (run (make-recorder-run
+                 :channel channel
+                 :screenshots (list screenshot))))
+      (wrap-snapshot ()
+        (render-bisection
+         (make-instance 'state
+                        :items (loop for i from 0 to 5
+                                     collect
+                                     (make-instance 'bisect-item
+                                                    :screenshot screenshot
+                                                    :run run))))))))

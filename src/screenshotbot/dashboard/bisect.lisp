@@ -102,14 +102,14 @@
                 (pos (midpoint-pos state)))
             (assert (> pos 0))
             (assert midpoint)
-           <simple-card-page>
+           <simple-card-page max-width= "50rem" >
              <div class= "card-header">
                <h3>Bisecting</h3>
                <p class= "text-muted mb-1">
                  Currently looking at <link-to-run-with-commit run= (item-run midpoint) />
                </p>
              </div>
-             <div  class= "card-body" >
+             <div  class= "card-body" style= "overflow: hidden" >
                <screenshot-box-with-viewer screenshot= (item-screenshot midpoint) />
              </div>
 
