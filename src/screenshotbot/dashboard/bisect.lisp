@@ -9,11 +9,16 @@
   (:import-from #:screenshotbot/template
                 #:app-template)
   (:import-from #:screenshotbot/dashboard/compare
+                #:link-to-run
                 #:screenshot-box)
   (:import-from #:screenshotbot/user-api
                 #:recorder-run-commit)
   (:import-from #:nibble
                 #:nibble)
+  (:import-from #:markup
+                #:deftag)
+  (:import-from #:core/ui/simple-card-page
+                #:simple-card-page)
   (:export
    #:bisect-item))
 (in-package :screenshotbot/dashboard/bisect)
@@ -62,23 +67,36 @@
                 (nibble ()
                   (render-bisection
                    (funcall fn state)))))
-         <app-template>
-         ,(let ((midpoint (midpoint state))
+         (let ((midpoint (midpoint state))
                 (pos (midpoint-pos state)))
             (assert (> pos 0))
             (assert midpoint)
-            <div class= "mt-3" >
-            <span>Looking at commit ,(recorder-run-commit (item-run midpoint)).</span>
-            <a href= (bisect-nibble #'state-if-good) class= "btn btn-success" >Good?</a>
-            <a href= (bisect-nibble #'state-if-bad) class= "btn btn-danger" >Bad?</a>
-            <screenshot-box screenshot= (item-screenshot midpoint) />
-            </div>)
-         </app-template>)))))
+           <simple-card-page>
+             <div class= "card-header">
+               <h3>Bisecting</h3>
+               <p class= "text-muted mb-1">
+                 Currently looking at <link-to-run run= (item-run midpoint) />
+               </p>
+             </div>
+             <div  class= "card-body" >
+               <screenshot-box screenshot= (item-screenshot midpoint) />
+             </div>
+
+             <div class="card-footer">
+               <div class= "text-muted mb-2">
+                 Is this image good or bad?
+               </div>
+               <a href= (bisect-nibble #'state-if-good) class= "btn btn-success" >Good</a>
+               <a href= (bisect-nibble #'state-if-bad) class= "btn btn-danger" >Bad</a>
+             </div>
+           </simple-card-page>))))))
 
 (defun render-result (item)
-  <app-template>
-    The first bad commit is: ,(recorder-run-commit (item-run item))
-  </app-template>)
+  <simple-card-page>
+    <div>
+      The first bad run is: <link-to-run run= (item-run item) />
+    </div>
+  </simple-card-page>)
 
 (defun bisect-page (items)
   (render-bisection
