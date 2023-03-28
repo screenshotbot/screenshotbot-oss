@@ -33,6 +33,7 @@
                 #:active-run
                 #:recorder-previous-run
                 #:channel-runs
+                #:push-run-to-channel
                 #:github-repo
                 #:activep
                 #:publicp
@@ -57,7 +58,8 @@
    #:channel-cv
    #:channel-lock
    #:all-active-runs
-   #:channel-subscribers)
+   #:channel-subscribers
+   #:commit-to-run-map)
 
   ;; forward decls
   (:export
@@ -109,6 +111,10 @@
      :initform nil
      :transient t
      :accessor channel-runs)
+    (%commit-to-run-map
+     :initform (fset:empty-map)
+     :transient t
+     :accessor commit-to-run-map)
     (lock
      :initform (bt:make-lock)
      :transient t
@@ -142,6 +148,17 @@
   (or
    (assoc-value *channel-repo-overrides* channel)
    (%%github-repo channel)))
+
+(defmethod push-run-to-channel ((channel channel) run)
+  (bt:with-lock-held ((channel-lock channel))
+    (pushnew run (channel-runs channel))
+    (when (recorder-run-commit run)
+      (setf
+       (commit-to-run-map channel)
+       (fset:with
+        (commit-to-run-map channel)
+        (recorder-run-commit run)
+        run)))))
 
 (defmacro with-channel-lock ((channel) &body body)
   `(flet ((body () ,@body))

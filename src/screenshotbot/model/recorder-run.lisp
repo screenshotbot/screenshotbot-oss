@@ -60,6 +60,7 @@
            #:finalize-promotion
            #:trunkp
            #:channel-runs
+           #:push-run-to-channel
            #:promotion-log
            #:publicp
            #:active-run
@@ -238,12 +239,10 @@ associated report is rendered.")
   (make-instance 'transient-promotion-log
                  :oid-array (oid-array run)))
 
-;; (loop for run in (store-objects-with-class 'recorder-run) if (recorder-run-channel run) do (pushnew run (channel-runs (recorder-run-channel run))))
 (defmethod bknr.datastore:initialize-transient-instance :after ((run recorder-run))
   (let ((channel (recorder-run-channel run)))
     (when channel
-      (bt:with-lock-held (*lock*)
-        (pushnew run (channel-runs channel))))))
+      (push-run-to-channel channel run))))
 
 (defmethod can-view ((run recorder-run) user)
   (can-view (recorder-run-channel run) user))
