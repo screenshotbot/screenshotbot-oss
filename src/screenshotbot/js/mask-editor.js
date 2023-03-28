@@ -141,7 +141,12 @@ $(function () {
             var ret = [];
             canvas.getObjects().forEach(function (x) {
                 if (x.isType("rect")) {
-                    ret.push(x);
+                    ret.push({
+                        left: x.left,
+                        top: x.top,
+                        width: x.width * x.scaleX,
+                        height: x.height * x.scaleY,
+                    });
                 }
             });
             return ret;
