@@ -249,10 +249,9 @@
              (if y (store-object-id y) large-int))
           x
           y))
-    (loop for run in (channel-runs channel)
-          if (equal (recorder-run-commit run)
-                    commit)
-            collect run)
+    (fset:lookup
+     (commit-to-run-map channel)
+     commit)
     :initial-value nil)))
 
 (defmethod channel-active-run ((channel channel))
