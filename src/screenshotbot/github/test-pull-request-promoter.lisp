@@ -88,7 +88,7 @@
 (defclass dummy-repo (github-repo)
   ())
 
-(defclass dummy-channel (test-object)
+(defclass dummy-channel (channel)
   ((run :accessor channel-runs
         :initform nil)
    (name :accessor channel-name
