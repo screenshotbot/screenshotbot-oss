@@ -152,13 +152,12 @@
 (defmethod push-run-to-channel ((channel channel) run)
   (bt:with-lock-held ((channel-lock channel))
     (pushnew run (channel-runs channel))
-    (when (recorder-run-commit run)
-      (setf
-       (commit-to-run-map channel)
-       (fset:with
-        (commit-to-run-map channel)
-        (recorder-run-commit run)
-        run)))))
+    (when-let ((commit (recorder-run-commit run)))
+      (symbol-macrolet ((map (commit-to-run-map channel)))
+       (setf map (fset:with map
+                            commit
+                            (list* run
+                                   (fset:lookup map commit))))))))
 
 (defmacro with-channel-lock ((channel) &body body)
   `(flet ((body () ,@body))
