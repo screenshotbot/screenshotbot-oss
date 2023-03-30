@@ -151,7 +151,7 @@
 
 (defmethod push-run-to-channel ((channel channel) run)
   (bt:with-lock-held ((channel-lock channel))
-    (pushnew run (channel-runs channel))
+    (push run (channel-runs channel))
     (when-let ((commit (recorder-run-commit run)))
       (symbol-macrolet ((map (commit-to-run-map channel)))
        (setf map (fset:with map
