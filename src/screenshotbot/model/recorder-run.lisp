@@ -82,7 +82,8 @@
    #:compare-threshold
    #:not-fast-forward-promotion-warning
    #:run-screenshot-map
-   #:make-recorder-run)
+   #:make-recorder-run
+   #:remove-run-from-channel)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -223,7 +224,6 @@ associated report is rendered.")
       (ignore-errors
        (parse-integer (car part))))))
 
-
 (defun unpromote-run (run)
   (let ((previous-run (recorder-previous-run run))
         (channel (recorder-run-channel run))
@@ -244,6 +244,10 @@ associated report is rendered.")
   (let ((channel (recorder-run-channel run)))
     (when channel
       (push-run-to-channel channel run))))
+
+(defmethod bknr.datastore::destroy-object :before ((run recorder-run))
+  (when-let ((channel (recorder-run-channel run)))
+    (remove-run-from-channel channel run)))
 
 (defmethod can-view ((run recorder-run) user)
   (can-view (recorder-run-channel run) user))

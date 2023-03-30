@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:channel-runs
                 #:make-recorder-run
                 #:pull-request-id
                 #:transient-promotion-log
@@ -16,6 +17,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
                 #:equal-to
                 #:has-typep
                 #:assert-that)
@@ -23,6 +25,15 @@
                 #:with-transaction)
   (:import-from #:bknr.datastore
                 #:blob-pathname)
+  (:import-from #:fiveam-matchers/lists
+                #:contains)
+  (:import-from #:screenshotbot/user-api
+                #:channel)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
+  (:import-from #:screenshotbot/model/channel
+                #:production-run-for)
+
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-recorder-run)
 
@@ -48,3 +59,21 @@
                  :pull-request "https://foo/bar/20")))
       (is (eql nil (pull-request-id run)))
       (is (eql 20 (pull-request-id run2))))))
+
+(test maintains-channel-runs
+  (with-fixture state ()
+    (let* ((channel (make-instance 'channel))
+           (run (make-recorder-run
+                 :commit-hash "bleh2"
+                 :channel channel)))
+      (assert-that (production-run-for channel :commit "car")
+                   (has-length 0))
+      (assert-that (channel-runs channel)
+                   (contains run))
+      (assert-that (production-run-for channel :commit "bleh2")
+                   (is-equal-to run))
+      (bknr.datastore:delete-object run)
+      (assert-that (channel-runs channel)
+                   (has-length 0))
+      (assert-that (production-run-for channel :commit "bleh2")
+                   (has-length 0)))))

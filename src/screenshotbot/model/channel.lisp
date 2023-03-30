@@ -27,6 +27,7 @@
   (:import-from #:screenshotbot/model/image
                 #:masks)
   (:import-from #:screenshotbot/model/recorder-run
+                #:remove-run-from-channel
                 #:recorder-run
                 #:recorder-run-commit
                 #:master-branch
@@ -149,15 +150,33 @@
    (assoc-value *channel-repo-overrides* channel)
    (%%github-repo channel)))
 
+(defmacro updatef (map key fn)
+  (let ((m (gensym "M"))
+        (k (gensym "KEY"))
+        (ff (gensym "FN")))
+    `(let ((m ,map)
+           (k ,key)
+           (ff ,fn))
+       (setf ,map (fset:with m
+                             k
+                             (funcall ff (fset:lookup m k)))))))
+
 (defmethod push-run-to-channel ((channel channel) run)
   (bt:with-lock-held ((channel-lock channel))
     (push run (channel-runs channel))
     (when-let ((commit (recorder-run-commit run)))
-      (symbol-macrolet ((map (commit-to-run-map channel)))
-       (setf map (fset:with map
-                            commit
-                            (list* run
-                                   (fset:lookup map commit))))))))
+      (updatef (commit-to-run-map channel)
+               commit (lambda (items)
+                        (list* run items))))))
+
+(defmethod remove-run-from-channel ((channel channel) run)
+  (bt:with-lock-held ((channel-lock channel))
+    (removef (channel-runs channel) run)
+    (when-let ((commit (recorder-run-commit run)))
+      (updatef (commit-to-run-map channel)
+               commit
+               (lambda (items)
+                 (remove run items))))))
 
 (defmacro with-channel-lock ((channel) &body body)
   `(flet ((body () ,@body))
@@ -241,18 +260,19 @@
 
 (defmethod production-run-for ((channel channel)
                                &key commit)
+  (declare (optimize (speed 0) (debug 3)))
   ;; currently returns the oldest run for a given commit
   (let ((large-int most-positive-fixnum))
-   (reduce
-    (lambda (x y)
-      (if (< (if x (store-object-id x) large-int)
-             (if y (store-object-id y) large-int))
-          x
-          y))
-    (fset:lookup
-     (commit-to-run-map channel)
-     commit)
-    :initial-value nil)))
+    (reduce
+     (lambda (x y)
+       (if (< (if x (store-object-id x) large-int)
+              (if y (store-object-id y) large-int))
+           x
+           y))
+     (fset:lookup
+      (commit-to-run-map channel)
+      commit)
+     :initial-value nil)))
 
 (defmethod channel-active-run ((channel channel))
   (loop for run in (company-runs (channel-company channel))
