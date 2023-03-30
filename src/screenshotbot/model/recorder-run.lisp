@@ -36,6 +36,7 @@
   (:import-from #:screenshotbot/model/view
                 #:can-edit)
   (:import-from #:alexandria
+                #:remove-from-plist
                 #:when-let)
   (:import-from #:screenshotbot/model/core
                 #:ensure-slot-boundp
@@ -211,7 +212,7 @@ associated report is rendered.")
 (defun make-recorder-run (&rest args &key screenshots channel &allow-other-keys)
   (apply #'make-instance 'recorder-run
          :screenshot-map (screenshot-map:make-screenshot-map channel screenshots)
-         args))
+         (remove-from-plist args :screenshots)))
 
 (defmethod print-object ((o recorder-run) stream)
   (format stream "#<RECORDER-RUN ~a>" (oid o)))
