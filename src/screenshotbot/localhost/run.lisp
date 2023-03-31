@@ -43,7 +43,8 @@
 (defclass desktop-acceptor (screenshotbot/server:acceptor)
   ()
   (:default-initargs
-   :request-class 'desktop-request))
+   :request-class 'desktop-request
+   :address "127.0.0.1"))
 
 (defclass desktop-request (screenshotbot/server:request)
   ())
