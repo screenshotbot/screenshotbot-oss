@@ -23,7 +23,11 @@
                         :handler #'main/handler
                         :sub-commands (list (run:command))))
 (defun main ()
-  (uiop:setup-command-line-arguments)
-  (let ((args (cdr (uiop:raw-command-line-arguments))))
-    (let ((app (main/command)))
-      (clingon:run app args))))
+  (handler-bind ((error (lambda (e)
+                          (declare (ignore e))
+                          #+lispworks
+                          (dbg:output-backtrace :brief ))))
+    (uiop:setup-command-line-arguments)
+    (let ((args (cdr (uiop:raw-command-line-arguments))))
+      (let ((app (main/command)))
+        (clingon:run app args)))))

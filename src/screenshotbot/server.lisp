@@ -107,7 +107,8 @@
                     hunchensocket:websocket-acceptor
                     hex:acceptor-with-plugins) ()
   (:default-initargs
-   :name 'screenshotbot-acceptor))
+   :name 'screenshotbot-acceptor
+   :document-root (document-root)))
 
 (defmethod hunchentoot:acceptor-request-class ((self acceptor))
   "TODO: this can be moved to :default-initargs. This is easier for

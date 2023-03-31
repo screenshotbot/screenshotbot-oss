@@ -22,7 +22,8 @@
            #:*slynk-loopback-interface*
            #:*slynk-port*
            #:slynk-teardown
-           #:*shutdown-hooks*))
+           #:*shutdown-hooks*
+           #:with-cron))
 (in-package #:server)
 
 (defvar *port*)
@@ -258,6 +259,13 @@
     (format t "Shutting down hunchentoot~%")
     (hunchentoot:stop acceptor)))
 
+(def-easy-macro with-cron (&fn fn)
+  (cl-cron:start-cron)
+  (unwind-protect
+       (funcall fn)
+    (format t "Shutting down cron~%")
+    (cl-cron:stop-cron)))
+
 (defun main (&key (enable-store t)
                (jvm t)
                acceptor)
@@ -326,32 +334,29 @@
              (when enable-store
                (util/store:prepare-store))
 
-             (cl-cron:start-cron)
 
              (log:info "Store is prepared, moving on...")
+             (with-cron ()
+              (cond
+                (*shell*
+                 (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
+                (t
+                 (unless acceptor
+                   (init-multi-acceptor)
+                   (setf acceptor *multi-acceptor*))
+                 (with-running-acceptor (acceptor)
+                   (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
+                             (hunchentoot:acceptor-port acceptor))
+                   (setup-appenders :clear t)
 
-             (cond
-               (*shell*
-                (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
-               (t
-                (unless acceptor
-                  (init-multi-acceptor)
-                  (setf acceptor *multi-acceptor*))
-                (with-running-acceptor (acceptor)
-                  (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
-                            (hunchentoot:acceptor-port acceptor))
-                  (setup-appenders :clear t)
-
-                  (log:info "Now we wait indefinitely for shutdown notifications")
-                  (loop (sleep 60)))))))))
+                   (log:info "Now we wait indefinitely for shutdown notifications")
+                   (loop (sleep 60))))))))))
 
      ;; unwind if an interrupt happens
      (log:config :sane :immediate-flush t)
      (log:config :info)
      (format t "SHUTTING DOWN~%")
      (finish-output t)
-     (format t "Shutting down cron~%")
-     (cl-cron:stop-cron)
      (format t "Calling shutdown hooks~%")
      (mapc 'funcall *shutdown-hooks*)
 
