@@ -87,6 +87,12 @@
     </div>
   <hr class= "mt-0" >
 
+    ,(render-menu-items (installation) :user user :company company :script-name script-name)
+    ,(render-user-menu (installation) :user user :company company)
+  </div>)
+
+(defmethod render-menu-items (installation &key user company script-name)
+  <markup:merge-tag>
     <ul class="nav nav-pills flex-column ps-3 pe-3">
       <left-nav-item href= "/runs" image-class= "play_arrow"
                      script-name=script-name >
@@ -144,8 +150,25 @@
     </ul>
 
     <hr class= "mb-0" />
-    ,(render-user-menu (installation) :user user :company company)
-  </div>)
+  </markup:merge-tag>)
+
+(defmethod render-menu-items ((installation desktop-installation) &key script-name)
+  <ul class="nav nav-pills flex-column ps-3 pe-3">
+      <left-nav-item href= "/runs" image-class= "play_arrow"
+                     script-name=script-name >
+         Recent Runs
+        </left-nav-item>
+
+      <left-nav-item href= "/channels" image-class= "book"
+                     script-name=script-name >
+          Channels
+      </left-nav-item>
+
+      <left-nav-item href= "/report" image-class= "flag"
+                     script-name=script-name >
+                         Reports
+        </left-nav-item>
+    </ul>)
 
 (defmethod render-user-menu (installation &key user company)
   (when user
