@@ -20,9 +20,25 @@
                 #:user)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:screenshotbot/assets
+                #:*asset-list*)
   (:export
    #:command))
 (in-package :screenshotbot/localhost/run)
+
+
+(defun make-pre-compiled-assets ()
+  (let ((res (make-hash-table)))
+    (loop for asset in *asset-list*
+          do
+             (asdf:compile-system asset)
+             (setf
+              (gethash asset res)
+              (mapcar #'uiop:read-file-string
+                      (asdf:output-files 'asdf:compile-op asset))))
+    res))
+
+(defvar *pre-compiled-assets* (make-pre-compiled-assets))
 
 (defclass desktop-acceptor (screenshotbot/server:acceptor)
   ()
@@ -56,7 +72,8 @@
   (with-lparallel-kernel (:threads 4)
     (with-cron ()
       (with-global-binding ((*installation*
-                             (make-instance 'desktop-installation)))
+                             (make-instance 'desktop-installation
+                                            :pre-compiled-assets *pre-compiled-assets*)))
         (with-store ()
          (let ((port (clingon:getopt cmd :port)))
            (let ((acceptor (make-instance 'desktop-acceptor

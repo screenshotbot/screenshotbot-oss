@@ -19,6 +19,8 @@
   (:import-from #:util.cdn
                 #:*cdn-domain*)
   (:import-from #:screenshotbot/installation
+                #:desktop-installation
+                #:pre-compiled-assets
                 #:installation-domain
                 #:installation)
   (:import-from #:util.cdn
@@ -29,6 +31,17 @@
 (in-package :screenshotbot/assets)
 
 (named-readtables:in-readtable :interpol-syntax)
+
+(defvar *asset-list* nil
+  "This is used in the desktop app, to precompute assets into memory.
+
+In other situations, you can use this to iterate through all the
+possible assets.")
+
+(defun ensure-asset (system)
+  "Just adds the system to the list of asset-cache. Note that this not
+cause the asset to be immediately compiled."
+  (pushnew system *asset-list*))
 
 (defhandler (static-recorder-master :uri "/release/recorder-master.jar") ()
   (hunchentoot:handle-static-file #P "/home/arnold/builds/silkwrmsdk/binary/build/libs/binary-0.1.0-all.jar"))
@@ -53,6 +66,7 @@
 (defmacro handle-asdf-output (op component &optional (output-num 0))
   (let ((output-files (eval `(asdf:output-files ,op (asdf:find-component ,component nil)))))
     `(%handle-asdf-output
+      (installation)
       ,op
       ,component
       ',output-files
@@ -60,14 +74,13 @@
 
 (defmacro define-css (uri asdf-target)
   (let ((map-uri (format nil "~a.map" uri)))
-   `(progn
-      (defhandler (nil :uri ,uri) ()
-        (setf (hunchentoot:content-type*)  "text/css; charset=utf-8")
-        (handle-asdf-output 'asdf:compile-op  ,asdf-target))
-      (defhandler (nil :uri ,map-uri) ()
-        (handle-asdf-output 'asdf:compile-op ,asdf-target 1)))))
-
-
+    `(progn
+       (ensure-asset ,asdf-target)
+       (defhandler (nil :uri ,uri) ()
+         (setf (hunchentoot:content-type*)  "text/css; charset=utf-8")
+         (handle-asdf-output 'asdf:compile-op  ,asdf-target))
+       (defhandler (nil :uri ,map-uri) ()
+         (handle-asdf-output 'asdf:compile-op ,asdf-target 1)))))
 
 (define-css "/assets/css/default.css" :screenshotbot.css-assets)
 
@@ -142,7 +155,11 @@ rm -f $INSTALLER
 (defvar *lock* (bt:make-lock "assets-lock"))
 
 
-(defun %handle-asdf-output (op component output-files output-num )
+(defmethod %handle-asdf-output (installation
+                                op
+                                component
+                                output-files
+                                output-num )
   (bt:with-lock-held (*lock*)
     (let ((output (elt output-files output-num)))
       (when (or
@@ -157,14 +174,23 @@ rm -f $INSTALLER
         (comm:socket-io-error (e)
           (values))))))
 
+(defmethod %handle-asdf-output ((installation desktop-installation)
+                                op
+                                component
+                                output-files
+                                output-num)
+  (let ((cache (pre-compiled-assets installation)))
+    (elt (gethash component cache) output-num)))
+
 (defmacro define-js (url system)
   (let ((map-url (format nil "~a.map" url)))
-   `(progn
-      (defhandler (nil :uri ,url) ()
-        (setf (hunchentoot:content-type*) "application/javascript")
-        (setf (hunchentoot:header-out :x-sourcemap) ,map-url)
-        (handle-asdf-output 'asdf:compile-op ,system))
-      (defhandler (nil :uri ,map-url) ()
-        (handle-asdf-output 'asdf:compile-op ,system 1)))))
+    `(progn
+       (ensure-asset ,system)
+       (defhandler (nil :uri ,url) ()
+         (setf (hunchentoot:content-type*) "application/javascript")
+         (setf (hunchentoot:header-out :x-sourcemap) ,map-url)
+         (handle-asdf-output 'asdf:compile-op ,system))
+       (defhandler (nil :uri ,map-url) ()
+         (handle-asdf-output 'asdf:compile-op ,system 1)))))
 
 (define-js "/assets/js/dashboard.js" :screenshotbot.js-assets)

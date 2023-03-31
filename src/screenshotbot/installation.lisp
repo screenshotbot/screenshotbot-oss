@@ -35,7 +35,8 @@
    #:default-logged-in-page
    #:installation-s3-store
    #:null-s3-store
-   #:desktop-installation))
+   #:desktop-installation
+   #:pre-compiled-assets))
 (in-package :screenshotbot/installation)
 
 (defclass installation (abstract-installation)
@@ -61,7 +62,9 @@
 
 
 (defclass desktop-installation (installation)
-  ())
+  ((pre-compiled-assets :reader pre-compiled-assets
+                        :initarg :pre-compiled-assets
+                        :initform (make-hash-table))))
 
 (defclass multi-org-feature ()
   ()
