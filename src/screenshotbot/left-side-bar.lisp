@@ -9,6 +9,7 @@
         #:alexandria
         #:screenshotbot/user-api)
   (:import-from #:screenshotbot/installation
+                #:desktop-installation
                 #:installation
                 #:multi-org-feature)
   (:import-from #:screenshotbot/template
@@ -26,10 +27,11 @@
                 #:img-with-fallback))
 (in-package :screenshotbot/left-side-bar)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (deftag left-nav-item (children &key href image-class target
                        (script-name (error "need script-name")))
+  (declare (ignore target))
   (let ((activep (str:starts-with-p href script-name)))
     <li class= "nav-item"  >
       <a href= href class= (format nil "nav-link ~a text-white" (if activep "active" "")) >
@@ -142,7 +144,11 @@
     </ul>
 
     <hr class= "mb-0" />
-    ,(when user
+    ,(render-user-menu (installation) :user user :company company)
+  </div>)
+
+(defmethod render-user-menu (installation &key user company)
+  (when user
     <div class="dropdown p-3">
       <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
         <img src= (user-image-url user) alt="mdo" width="32" height="32" class="rounded-circle me-2">
@@ -165,6 +171,7 @@
 
         <li><a class="dropdown-item signout-link" href="/signout">Sign out</a></li>
       </ul>
-    </div>
-    )
-  </div>)
+    </div>))
+
+(defmethod render-user-menu ((installation desktop-installation) &key &allow-other-keys)
+  nil)
