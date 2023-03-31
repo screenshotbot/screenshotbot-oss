@@ -1,4 +1,5 @@
 (defsystem :screenshotbot.localhost
   :serial t
-  :depends-on (:screenshotbot)
+  :depends-on (:screenshotbot
+               :clingon)
   :components ((:file "init")))
