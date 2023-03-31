@@ -1,7 +1,14 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 (defpackage :screenshotbot/localhost/init
   (:use #:cl)
   (:export
-   #:main))
+   #:main)
+  (:local-nicknames (#:run #:screenshotbot/localhost/run)))
 (in-package :screenshotbot/localhost/init)
 
 (defun main/handler (cmd)
@@ -13,7 +20,8 @@
                         :description "Access Screenshotbots image comparison tools locally without internet access."
                         :authors (list "Modern Interpreters Inc")
                         :license "MPLv2"
-                        :handler #'main/handler))
+                        :handler #'main/handler
+                        :sub-commands (list (run:command))))
 (defun main ()
   (uiop:setup-command-line-arguments)
   (let ((args (cdr (uiop:raw-command-line-arguments))))

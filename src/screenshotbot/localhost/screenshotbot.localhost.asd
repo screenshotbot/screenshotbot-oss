@@ -2,4 +2,5 @@
   :serial t
   :depends-on (:screenshotbot
                :clingon)
-  :components ((:file "init")))
+  :components ((:file "run")
+               (:file "init")))
