@@ -34,7 +34,8 @@
    #:cached-singleton-company
    #:default-logged-in-page
    #:installation-s3-store
-   #:null-s3-store))
+   #:null-s3-store
+   #:desktop-installation))
 (in-package :screenshotbot/installation)
 
 (defclass installation (abstract-installation)
@@ -58,6 +59,9 @@
                       :initarg :singleton-company
                       :accessor cached-singleton-company)))
 
+
+(defclass desktop-installation (installation)
+  ())
 
 (defclass multi-org-feature ()
   ()

@@ -125,3 +125,26 @@ In the error case, it's hard to distinguish between a real error (e.g.
   (apply #'make-hash-table
          #+sbcl :synchronized #+sbcl t
          args))
+
+(defmacro with-global-binding (((sym value) &rest others) &body body)
+  `(call-with-global-binding ',sym ,value
+                             ,(cond
+                                ((null others)
+                                 `(lambda () ,@body))
+                                (t
+                                 `(lambda ()
+                                    (with-global-binding ,others
+                                      ,@body))))))
+
+(defun call-with-global-binding (sym value fn)
+  (let* ((boundp (boundp sym))
+         (old-val (when boundp  (symbol-value sym))))
+    (unwind-protect
+         (progn
+           (setf (symbol-value sym) value)
+           (funcall fn))
+      (cond
+        (boundp
+         (setf (symbol-value sym) old-val))
+        (t
+         (makunbound sym))))))
