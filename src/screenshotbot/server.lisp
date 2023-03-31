@@ -108,12 +108,8 @@
                     hex:acceptor-with-plugins) ()
   (:default-initargs
    :name 'screenshotbot-acceptor
-   :document-root (document-root)))
-
-(defmethod hunchentoot:acceptor-request-class ((self acceptor))
-  "TODO: this can be moved to :default-initargs. This is easier for
- temporary migration."
-  'request)
+   :document-root (document-root)
+   :request-class 'request))
 
 (defclass request (auth:authenticated-request
                    hunchensocket::websocket-request)

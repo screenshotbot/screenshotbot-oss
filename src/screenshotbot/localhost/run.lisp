@@ -14,23 +14,57 @@
   (:import-from #:core/installation/installation
                 #:*installation*)
   (:import-from #:screenshotbot/installation
+                #:singleton-company
                 #:desktop-installation)
+  (:import-from #:screenshotbot/model/user
+                #:user)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export
    #:command))
 (in-package :screenshotbot/localhost/run)
+
+(defclass desktop-acceptor (screenshotbot/server:acceptor)
+  ()
+  (:default-initargs
+   :request-class 'desktop-request))
+
+(defclass desktop-request (screenshotbot/server:request)
+  ())
+
+(defmethod auth:request-user ((request desktop-request))
+  (or
+   (car (bknr.datastore:class-instances 'user))
+   (let ((username (or (uiop:getenv "USER") "user")))
+     (make-instance 'user
+                    :full-name username
+                    :companies (list (singleton-company))
+                    :email (format nil "~a@localhost" username)))))
+
+(def-easy-macro with-store (&fn fn)
+  (with-global-binding ((util/store:*object-store*
+                         (namestring
+                          (ensure-directories-exist
+                           (path:catdir (format nil "~a/" (uiop:getenv "HOME"))
+                                        ".config/screenshotbot/desktop-store/")))))
+    (util/store:prepare-store)
+    (unwind-protect
+         (fn)
+      (bknr.datastore:close-store))))
 
 (defun handler (cmd)
   (with-lparallel-kernel (:threads 4)
     (with-cron ()
       (with-global-binding ((*installation*
                              (make-instance 'desktop-installation)))
-       (let ((port (clingon:getopt cmd :port)))
-         (let ((acceptor (make-instance 'screenshotbot/server:acceptor
-                                        :port port)))
-           (screenshotbot/server::prepare-acceptor-plugins acceptor)
-           (hunchentoot:start acceptor)
-           (log:info "The server is ready on http://localhost:~a" port)
-           (loop (sleep 60))))))))
+        (with-store ()
+         (let ((port (clingon:getopt cmd :port)))
+           (let ((acceptor (make-instance 'desktop-acceptor
+                                          :port port)))
+             (screenshotbot/server::prepare-acceptor-plugins acceptor)
+             (hunchentoot:start acceptor)
+             (log:info "The server is ready on http://localhost:~a" port)
+             (loop (sleep 60)))))))))
 
 (defun options ()
   (list
