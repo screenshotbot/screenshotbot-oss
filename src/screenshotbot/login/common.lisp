@@ -183,7 +183,7 @@
       (auth:request-account hunchentoot:*request*)))
 
 (defun logged-in-p ()
-  (auth:session-value :user))
+  (current-user))
 
 
 (defun %with-oauth-state-and-redirect (state body)
