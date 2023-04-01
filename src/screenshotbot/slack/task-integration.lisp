@@ -18,7 +18,11 @@
   (:import-from #:screenshotbot/dashboard/reports
                 #:report-link)
   (:import-from #:screenshotbot/slack/core
-                #:slack-error))
+                #:slack-error)
+  (:import-from #:screenshotbot/model/channel
+                #:channel-slack-channels)
+  (:import-from #:screenshotbot/model/report
+                #:report-channel))
 (in-package :screenshotbot/slack/task-integration)
 
 (defclass slack-task-integration (task-integration)
@@ -28,22 +32,30 @@
 
 (defmethod enabledp ((inst slack-task-integration))
   (let ((company (task-integration-company inst)))
-    (awhen (default-slack-config company)
-      (enabledp it))))
+    (default-slack-config company)))
 
 (defmethod send-task ((inst slack-task-integration) report)
   (let ((company (task-integration-company inst)))
     (assert (enabledp inst))
     (let ((it (default-slack-config company)))
-      (handler-case
-          (slack-post-on-channel
-           :channel (slack-config-channel it)
-           :company company
-           :token (access-token (access-token it))
-           :text (format nil "Screenshots changed in ~a, see: ~a"
-                         (channel-name (report-channel report))
-                         (report-link report)))
-        (slack-error (e)
-          ;; the slack API error has already been logged, so we should
-          ;; not propagate this.
-          (values))))))
+      (flet ((post-on-channel (channel)
+               (log:info "Channel is: ~a" channel)
+               (unless (str:emptyp channel)
+                (handler-case
+                    (slack-post-on-channel
+                     :channel channel
+                     :company company
+                     :token (access-token (access-token it))
+                     :text (format nil "Screenshots changed in ~a, see: ~a"
+                                   (channel-name (report-channel report))
+                                   (report-link report)))
+                  (slack-error (e)
+                    ;; the slack API error has already been logged, so we should
+                    ;; not propagate this.
+                    (values))))))
+        (when it
+          (post-on-channel (slack-config-channel it)))
+
+        (mapc #'post-on-channel
+              (channel-slack-channels
+               (report-channel report)))))))
