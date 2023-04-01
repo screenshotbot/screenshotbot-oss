@@ -60,7 +60,8 @@
    #:channel-lock
    #:all-active-runs
    #:channel-subscribers
-   #:commit-to-run-map)
+   #:commit-to-run-map
+   #:channel-slack-channels)
 
   ;; forward decls
   (:export
@@ -133,7 +134,10 @@
      :reader channel-cv)
     (created-at
      :initform (local-time:timestamp-to-universal (local-time:now))
-     :accessor %created-at))
+     :accessor %created-at)
+    (%slack-channels
+     :initform nil
+     :accessor channel-slack-channels))
    (:metaclass persistent-class)))
 
 (defmethod print-object ((self channel) stream)

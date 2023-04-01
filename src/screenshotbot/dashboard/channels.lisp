@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/dashboard/explain
                 #:explain)
   (:import-from #:screenshotbot/model/channel
+                #:channel-slack-channels
                 #:channel-subscribers
                 #:channel-company
                 #:all-active-runs)
@@ -55,13 +56,16 @@
   (:import-from #:screenshotbot/model/report
                 #:report-channel)
   (:import-from #:alexandria
+                #:curry
                 #:removef)
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:bknr.datastore
                 #:store-object-with-id)
   (:import-from #:bknr.datastore
-                #:store-object-id))
+                #:store-object-id)
+  (:import-from #:util/form-errors
+                #:with-error-builder))
 (in-package :screenshotbot/dashboard/channels)
 
 (named-readtables:in-readtable markup:syntax)
@@ -103,7 +107,11 @@
     </div>))
 
 (deftag slack-card (&key channel)
-  (let ()
+  (let ((slack-update (nibble (slack-channels :method :post)
+                        (slack-card-post channel slack-channels)))
+        (slack-channels (str:join ", "
+                           (mapcar (curry #'str:concat "#")
+                           (channel-slack-channels channel)))))
     <div class= "card mt-3">
       <div class= "card-body">
         <h4 class= "card-title">
@@ -111,13 +119,33 @@
         </h4>
         <p class= "text-muted">If you have configured <a href= "/settings/slack">Slack</a>, these Slack channels will always be notified of <tt>,(channel-name channel)</tt>'s changes.</p>
 
-        <div class= "input-group">
-          <input name= "slack-channels" class= "form-control"
-                 placeholder= "#channel1, #channel2" />
-          <input type= "submit" class= "btn btn-primary" value= "Save" />
-        </div>
+        <form method= "POST" action=slack-update >
+          <div class= "input-group">
+            <input name= "slack-channels" class= "form-control"
+                   value= slack-channels
+                   placeholder= "#channel1, #channel2" />
+            <input type= "submit" class= "btn btn-primary" value= "Save" />
+          </div>
+        </form>
       </div>
     </div>))
+
+(defun slack-card-post (channel slack-channels)
+  (with-error-builder (:check check :errors errors)
+    (flet ((parse-channel (channel)
+             (let ((channel (str:trim channel)))
+               (if (str:starts-with-p "#" channel)
+                   (str:substring 1 nil channel)
+                   channel))))
+      (let ((slack-channels (remove-if #'str:emptyp
+                                       (mapcar #'str:trim
+                                               (mapcar (curry #'str:replace-all "#" "")
+                                                (str:split "," slack-channels))))))
+        (assert (< (length slack-channels) 100))
+        (with-transaction ()
+          (setf (channel-slack-channels channel)
+                slack-channels)))
+      (go-back channel))))
 
 (defhandler (single-channel-page :uri "/channels/:id") (id)
   (let* ((id (parse-integer id))
