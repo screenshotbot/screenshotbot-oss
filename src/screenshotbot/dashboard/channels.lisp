@@ -186,8 +186,7 @@
 
         <subscription-card channel=channel />
 
-        ,(when (gk:check :slack-subscription (current-company) :default nil)
-           <slack-card channel=channel />)
+        <slack-card channel=channel />
 
         <div class= "card mt-3">
           <div class= "card-body">
