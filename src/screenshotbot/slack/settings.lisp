@@ -155,8 +155,10 @@
                value= (enabledp slack-config)
                checked= (if (enabledp slack-config) "checked") />
         <label for= "enabledp" class= "form-check-label" >
-          Enable Slack Notifications
+          Enable global Slack notifications
         </label>
+
+        <p class= "text-muted">You can also enable Slack notifications on individual <a href= "/channels">Screenshotbot channels</a>.</p>
       </div>
 
       </div>

@@ -95,10 +95,27 @@
               <p>You are <b>not</b> subscribed to this channel, and might not get notified when screenshots change on the main branch.</p>
 
               <form action=subscribe method= "post">
-                <input type= "submit" class= "btn btn-secondary" value = "Subscribe" />
+                <input type= "submit" class= "btn btn-primary" value = "Subscribe" />
               </form>
             </markup:merge-tag>))
 
+      </div>
+    </div>))
+
+(deftag slack-card (&key channel)
+  (let ()
+    <div class= "card mt-3">
+      <div class= "card-body">
+        <h4 class= "card-title">
+          Notify on Slack
+        </h4>
+        <p class= "text-muted">If you have configured <a href= "/settings/slack">Slack</a>, these Slack channels will always be notified of <tt>,(channel-name channel)</tt>'s changes.</p>
+
+        <div class= "input-group">
+          <input name= "slack-channels" class= "form-control"
+                 placeholder= "#channel1, #channel2" />
+          <input type= "submit" class= "btn btn-primary" value= "Save" />
+        </div>
       </div>
     </div>))
 
@@ -138,7 +155,11 @@
           </div>
         </div>
 
+
         <subscription-card channel=channel />
+
+        ,(when (gk:check :slack-subscription (current-company) :default nil)
+           <slack-card channel=channel />)
 
         <div class= "card mt-3">
           <div class= "card-body">
