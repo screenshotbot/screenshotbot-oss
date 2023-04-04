@@ -48,7 +48,8 @@
    #:*commit-limit*
    #:*mark-failed*
    #:*versionp*
-   #:*compare-threshold*))
+   #:*compare-threshold*
+   #:*desktop*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -267,3 +268,10 @@ Keep in mind that this value will typically be very low. e.g., a
 pixel changes which might be too high for most practical uses. You
 probably want to choose this so that no more than 10-20 pixels are
 allowed to be different at a time.")
+
+(define-flag *desktop*
+  :selector "desktop"
+  :default-value nil
+  :type boolean
+  :help "Whether running in desktop mode. In desktop mode the --hostname
+defaults to http://localhost:4095, and authentication is disabled.")

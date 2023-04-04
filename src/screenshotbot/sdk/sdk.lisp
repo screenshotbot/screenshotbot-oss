@@ -113,6 +113,15 @@
     (log:info "Will retry in ~a seconds" ret)
     ret))
 
+(defun api-hostname ()
+  (cond
+    ((and flags:*desktop*
+          (not
+           (str:starts-with-p "http://localhost" flags:*hostname*)))
+     "http://localhost:4095")
+    (t
+     flags:*hostname*)))
+
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
   (defun %request (api &key (method :post)
                          parameters
@@ -122,11 +131,13 @@
     (uiop:slurp-input-stream
      'string
      (http-request
-      (format nil "~a~a" *hostname* api)
+      (format nil "~a~a" (api-hostname) api)
       :method method
       :want-stream t
       :method method
-      :basic-authorization (when (remote-supports-basic-auth-p)
+      :basic-authorization (when (and
+                                  (not flags:*desktop*)
+                                  (remote-supports-basic-auth-p))
                              (list
                               *api-key*
                               *api-secret*))

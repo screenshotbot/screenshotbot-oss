@@ -29,6 +29,8 @@
                 #:api-key)
   (:import-from #:screenshotbot/model/company
                 #:get-singleton-company)
+  (:import-from #:screenshotbot/api/core
+                #:authenticate-api-request)
   (:export
    #:command))
 (in-package :screenshotbot/desktop/run)
@@ -67,6 +69,10 @@
 
 (defmethod auth:request-user ((request desktop-request))
   (singleton-user))
+
+(defmethod authenticate-api-request ((request desktop-request))
+  ;; Always authenticated in desktop mode!
+  (values))
 
 (defun store-dir ()
   (ensure-directories-exist
