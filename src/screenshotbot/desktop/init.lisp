@@ -4,12 +4,12 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/localhost/init
+(defpackage :screenshotbot/desktop/init
   (:use #:cl)
   (:export
    #:main)
-  (:local-nicknames (#:run #:screenshotbot/localhost/run)))
-(in-package :screenshotbot/localhost/init)
+  (:local-nicknames (#:run #:screenshotbot/desktop/run)))
+(in-package :screenshotbot/desktop/init)
 
 (defun main/handler (cmd)
   (clingon:print-usage-and-exit cmd t))

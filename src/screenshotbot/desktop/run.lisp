@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/localhost/run
+(defpackage :screenshotbot/desktop/run
   (:use #:cl)
   (:import-from #:server
                 #:with-cron
@@ -24,7 +24,7 @@
                 #:*asset-list*)
   (:export
    #:command))
-(in-package :screenshotbot/localhost/run)
+(in-package :screenshotbot/desktop/run)
 
 
 (defun make-pre-compiled-assets ()
