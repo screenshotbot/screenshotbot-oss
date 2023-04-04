@@ -19,3 +19,11 @@
                :screenshotbot/testing-lib
                :util/fiveam)
   :components ((:file "test-run")))
+
+(defsystem :screenshotbot.desktop/deliver
+  :author "Arnold Noronha <arnold@screenshotbot.io>"
+  :license "Mozilla Public License, v 2.0"
+  :defsystem-depends-on (#:build-utils/deliver-script)
+  :depends-on (:screenshotbot.desktop)
+  :components (("build-utils/deliver-script:deliver-script"
+                "deliver-desktop")))
