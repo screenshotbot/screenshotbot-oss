@@ -62,7 +62,10 @@
      (expired-p
       :type boolean
       :initform nil))
-    (:metaclass persistent-class)))
+    (:metaclass persistent-class)
+    (:default-initargs
+     :api-key (generate-api-key)
+     :api-secret-key (generate-api-secret))))
 
 (defvar *transient-keys* (make-mp-hash-table :test #'equal))
 
@@ -96,15 +99,12 @@
           key)
     key))
 
+;; TODO: delete
 (defmethod initialize-instance :around ((obj api-key)
                                         &rest args
                                         &key api-key api-secret-key
                                         &allow-other-keys)
-  (apply #'call-next-method
-         obj
-         :api-key (or api-key (generate-api-key))
-         :api-secret-key (or api-secret-key (generate-api-secret))
-         args))
+  (call-next-method))
 
 (defmethod model-id ((api-key api-key))
   (store-object-id api-key))
