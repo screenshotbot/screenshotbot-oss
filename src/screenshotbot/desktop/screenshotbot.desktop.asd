@@ -16,4 +16,6 @@
 (defsystem :screenshotbot.desktop/tests
   :serial t
   :depends-on (:screenshotbot.desktop
-               :util/fiveam))
+               :screenshotbot/testing-lib
+               :util/fiveam)
+  :components ((:file "test-run")))
