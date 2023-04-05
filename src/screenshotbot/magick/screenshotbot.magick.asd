@@ -12,6 +12,7 @@
                #:screenshotbot/events
                #:trivial-features
                #:screenshotbot/mask-rect-api
+               #:util/native-module
                #:util/health-check
                #:screenshotbot.magick.build
                #:serapeum

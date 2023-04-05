@@ -26,6 +26,10 @@
                 #:copy-file-fast)
   (:import-from #:util/health-check
                 #:def-health-check)
+  (:import-from #:util/native-module
+                #:embed-module
+                #:load-module
+                #:make-native-module)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#-lispworks #:fli #:util/fake-fli))
@@ -86,22 +90,25 @@
 
   (load-magick-native))
 
-(defvar *magick-native-loaded-p* nil)
+(defun verify-magick ()
+  (let ((ret (screenshotbot-verify-magick
+              'SrcCompositeOp
+              'SetAlphaChannel)))
+    (unless (= ret 1)
+      (error "The ImageMagick runtime does not match the configuration options that
+ Screenshotbot was compiled against. This might happen if you
+ recompiled or reinstalled ImageMagick, or switched the compiled
+ assets to a different machine. (Got result: ~a)" ret))))
 
-(defvar *magick-native-embedded-p* nil
-  "Whether we have embedded the library into the current image.")
 
-(defun magick-native-so ()
-  (asdf:output-file
-   'asdf:compile-op
-   (asdf:find-component :screenshotbot.magick '("magick-native"))))
+(defvar *magick-native* (make-native-module
+                         :magick-native
+                         :screenshotbot.magick
+                         "magick-native"
+                         :verify #'verify-magick))
 
 (defun embed-magick-native ()
-  #+lispworks
-  (progn
-   (fli:get-embedded-module :magick-native
-                            (magick-native-so))
-   (setf *magick-native-embedded-p* t)))
+  (embed-module *magick-native*))
 
 (defun load-magick-native (&key force)
   #-linux
@@ -109,26 +116,7 @@
     ;; For some reason reloading magick-native will cause segfaults on
     ;; mac tests.
     (warn "Can't reload magick-native on Mac"))
-  #+linux
-  (when force
-    #+lispworks
-    (fli:disconnect-module :magick-native)
-    (setf *magick-native-loaded-p* nil))
-  (util:or-setf
-   *magick-native-loaded-p*
-   (progn
-     (cond
-       (*magick-native-embedded-p*
-        #+lispworks
-        (fli:install-embedded-module :magick-native))
-       (t
-        (fli:register-module
-         :magick-native
-         :real-name (magick-native-so))))
-
-     (verify-magick)
-     t)
-   :thread-safe t))
+  (load-module *magick-native* :force force))
 
 ;; (load-magick-native :force t)
 
@@ -520,16 +508,6 @@
     ((src-composite-op composite-operator)
      (on-alpha-channel alpha-channel-option))
   :result-type :int)
-
-(defun verify-magick ()
-  (let ((ret (screenshotbot-verify-magick
-              'SrcCompositeOp
-              'SetAlphaChannel)))
-    (unless (= ret 1)
-      (error "The ImageMagick runtime does not match the configuration options that
- Screenshotbot was compiled against. This might happen if you
- recompiled or reinstalled ImageMagick, or switched the compiled
- assets to a different machine. (Got result: ~a)" ret))))
 
 
 (defun map-non-alpha-pixels (wand fn &key (limit 1000))

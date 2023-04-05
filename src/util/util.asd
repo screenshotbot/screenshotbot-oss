@@ -282,6 +282,10 @@
   :serial t
   :components ((:file "lparallel")))
 
+(defsystem :util/native-module
+  :depends-on (:util/fake-fli)
+  :components ((:file "native-module")))
+
 (defsystem :util/fake-fli
   :depends-on (:cffi
                :str)
