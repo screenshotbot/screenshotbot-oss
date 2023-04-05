@@ -12,6 +12,7 @@
                #:screenshotbot/events
                #:trivial-features
                #:screenshotbot/mask-rect-api
+               #:util/health-check
                #:screenshotbot.magick.build
                #:serapeum
                #:util/copy-file
@@ -22,7 +23,8 @@
                ("screenshotbot/magick/build:magick-cl-source-file" "ffi-7")
                ("screenshotbot/magick/build:magick-cl-source-file" "ffi-6")
                ("screenshotbot/magick/build:magick-cl-source-file"
-                "magick-lw")))
+                "magick-lw")
+               (:file "health-checks")))
 
 (defsystem :screenshotbot.magick/tests
   :serial t

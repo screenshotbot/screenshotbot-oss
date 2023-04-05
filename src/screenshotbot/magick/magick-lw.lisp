@@ -24,6 +24,8 @@
                 #:magick-lib-suffix)
   (:import-from #:util/copy-file
                 #:copy-file-fast)
+  (:import-from #:util/health-check
+                #:def-health-check)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#-lispworks #:fli #:util/fake-fli))

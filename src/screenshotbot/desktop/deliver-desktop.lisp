@@ -13,6 +13,7 @@
  :keep-clos-object-printing t
  :keep-lisp-reader t
  :keep-modules nil
+ :keep-pretty-printer t
  :keep-function-name t
  :keep-clos :meta-object-slots
  :deliver-level 5)
