@@ -11,7 +11,7 @@
                :screenshotbot.pro.css/extended-dashboard
                :util/health-check
                :clingon)
-  :components ((:file "pre-deliver")
+  :components ((:file "pre-deliver" :if-feature :lispworks)
                (:file "run")
                (:file "self-test")
                (:file "init")))
