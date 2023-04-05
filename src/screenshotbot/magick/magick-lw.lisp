@@ -534,12 +534,12 @@
 (defun get-non-alpha-pixels (wand &key (limit 1000)
                                     masks)
   (declare (optimize (Debug 3) (speed 0)))
-  (log:info "Got masks: ~S" (loop for mask in masks
-                                  collect (list
-                                           (mask-rect-left mask)
-                                           (mask-rect-top mask)
-                                           (mask-rect-width mask)
-                                           (mask-rect-height mask))))
+  (log:debug "Got masks: ~S" (loop for mask in masks
+                                   collect (list
+                                            (mask-rect-left mask)
+                                            (mask-rect-top mask)
+                                            (mask-rect-width mask)
+                                            (mask-rect-height mask))))
   (with-magick-gatekeeper ()
     (when (magick-get-image-alpha-channel wand)
       (with-native-masks (native-masks masks)
