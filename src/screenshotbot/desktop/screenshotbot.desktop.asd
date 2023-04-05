@@ -9,8 +9,10 @@
   :depends-on (:screenshotbot
                #-screenshotbot-oss
                :screenshotbot.pro.css/extended-dashboard
+               :util/health-check
                :clingon)
   :components ((:file "run")
+               (:file "self-test")
                (:file "init")))
 
 (defsystem :screenshotbot.desktop/tests

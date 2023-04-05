@@ -8,7 +8,8 @@
   (:use #:cl)
   (:export
    #:main)
-  (:local-nicknames (#:run #:screenshotbot/desktop/run)))
+  (:local-nicknames (#:run #:screenshotbot/desktop/run)
+                    (#:self-test #:screenshotbot/desktop/self-test)))
 (in-package :screenshotbot/desktop/init)
 
 (defun main/handler (cmd)
@@ -21,7 +22,8 @@
                         :authors (list "Modern Interpreters Inc")
                         :license "MPLv2"
                         :handler #'main/handler
-                        :sub-commands (list (run:command))))
+                        :sub-commands (list (run:command)
+                                            (self-test:command))))
 (defun main ()
   (handler-bind ((error (lambda (e)
                           (declare (ignore e))
