@@ -1,6 +1,8 @@
 (ql:quickload "screenshotbot.desktop")
 (ql:quickload :deliver-utils)
 
+(uiop:call-function "screenshotbot/desktop/pre-deliver:call-pre-delivery")
+
 (deliver-utils/common:deliver-common
  (ensure-directories-exist
   (car (asdf:output-files

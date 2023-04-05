@@ -41,7 +41,8 @@
    #:save-as-webp
    #:with-pixel-wand
    #:screenshotbot-set-pixel
-   #:with-pixel))
+   #:with-pixel
+   #:embed-magick-native))
 (in-package :screenshotbot/magick/magick-lw)
 
 (defclass magick-native (abstract-magick)
@@ -87,6 +88,21 @@
 
 (defvar *magick-native-loaded-p* nil)
 
+(defvar *magick-native-embedded-p* nil
+  "Whether we have embedded the library into the current image.")
+
+(defun magick-native-so ()
+  (asdf:output-file
+   'asdf:compile-op
+   (asdf:find-component :screenshotbot.magick '("magick-native"))))
+
+(defun embed-magick-native ()
+  #+lispworks
+  (progn
+   (fli:get-embedded-module :magick-native
+                            (magick-native-so))
+   (setf *magick-native-embedded-p* t)))
+
 (defun load-magick-native (&key force)
   #-linux
   (when force
@@ -101,12 +117,14 @@
   (util:or-setf
    *magick-native-loaded-p*
    (progn
-     (fli:register-module
-      :magick-native
-      :real-name
-      (asdf:output-file
-       'asdf:compile-op
-       (asdf:find-component :screenshotbot.magick '("magick-native"))))
+     (cond
+       (*magick-native-embedded-p*
+        #+lispworks
+        (fli:install-embedded-module :magick-native))
+       (t
+        (fli:register-module
+         :magick-native
+         :real-name (magick-native-so))))
 
      (verify-magick)
      t)
