@@ -8,7 +8,8 @@
   (:use #:cl)
   (:export
    #:make-native-module
-   #:load-module)
+   #:load-module
+   #:make-system-module)
   (:local-nicknames #-lispworks (#:fli #:util/fake-fli)))
 (in-package :util/native-module)
 
@@ -17,11 +18,15 @@
          :reader name)
    (pathname-provider :initarg :pathname-provider
                       :reader pathname-provider)
+   (pathname-flag :initarg :pathname-flag
+                  :reader pathname-flag
+                  :initform :real-name)
    (embedded-p :initform nil
                :accessor embedded-p)
    (loaded-p :initform nil
              :accessor loaded-p)
    (verify :initarg :verify
+           :initform (lambda ())
            :accessor verify)))
 
 (defun make-native-module (name system component-name &key (verify (lambda ())))
@@ -34,14 +39,29 @@
                                        (asdf:find-component system
                                                             (list component-name))))))
 
+(defun make-system-module (name &rest args)
+  (apply #'make-instance 'native-module
+         :name name
+         args))
+
 (defmethod module-pathname ((self native-module))
   (funcall (pathname-provider self)))
+
+(defun find-module (pathname)
+  "During the embed step, we need the absolute pathname"
+  (let ((path (list
+               "/usr/lib/"
+               "/usr/local/lib/")))
+    (loop for p in path
+          for abs = (path:catfile p pathname)
+          if (path:-e abs)
+            return abs)))
 
 (defmethod embed-module ((self native-module))
   #+lispworks
   (progn
     (fli:get-embedded-module (name self)
-                             (module-pathname self))
+                             (find-module (module-pathname self)))
     (setf (embedded-p self) t)))
 
 (defmethod load-module ((self native-module) &key force)
@@ -60,7 +80,7 @@
        (t
         (fli:register-module
          (name self)
-         :real-name (module-pathname self))))
+         (pathname-flag self) (module-pathname self))))
 
      (funcall (verify self))
      t)

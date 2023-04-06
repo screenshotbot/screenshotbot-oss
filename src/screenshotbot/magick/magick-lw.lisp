@@ -27,6 +27,7 @@
   (:import-from #:util/health-check
                 #:def-health-check)
   (:import-from #:util/native-module
+                #:make-system-module
                 #:embed-module
                 #:load-module
                 #:make-native-module)
@@ -66,6 +67,18 @@
 
 (defvar *path-setp* nil)
 
+(defvar *magick-wand*
+  (make-system-module :magick-wand
+                      :pathname-flag :file-name
+                      :pathname-provider
+                      (lambda ()
+                        (cond
+                          ((uiop:os-windows-p)
+                           ;; TODO: if needed we can discover this from the registry, see the
+                           ;; python wand code that does the same
+                           (win-magick-lib "MagickWand"))
+                          (t (format nil "libMagickWand~a.so" (magick-lib-suffix)))))))
+
 (defun register-magick-wand ()
   (when (uiop:os-windows-p)
     (unless *path-setp*
@@ -77,17 +90,7 @@
      :magick-core
      :file-name (win-magick-lib "MagickCore")))
 
-  (fli:register-module
-   ;; TODO: typo in module name, we should fix when a restart is due.
-   :magick-wand
-   :file-name
-   (cond
-    ((uiop:os-windows-p)
-     ;; TODO: if needed we can discover this from the registry, see the
-     ;; python wand code that does the same
-     (win-magick-lib "MagickWand"))
-    (t (format nil "libMagickWand~a.so" (magick-lib-suffix)))))
-
+  (load-module *magick-wand*)
   (load-magick-native))
 
 (defun verify-magick ()
@@ -108,6 +111,7 @@
                          :verify #'verify-magick))
 
 (defun embed-magick-native ()
+  (embed-module *magick-wand*)
   (embed-module *magick-native*))
 
 (defun load-magick-native (&key force)
