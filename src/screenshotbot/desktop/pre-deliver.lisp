@@ -6,13 +6,25 @@
 
 (defpackage :screenshotbot/desktop/pre-deliver
   (:use #:cl)
+  (:import-from #:util/native-module
+                #:load-module
+                #:embed-module
+                #:make-system-module)
   (:export
-   #:call-pre-delivery))
+   #:call-pre-delivery
+   #:install-modules))
 (in-package :screenshotbot/desktop/pre-deliver)
 
+(defvar *libjbig* (make-system-module :libjbig
+                                      :file-name "libjbig.so"))
+
 (defun call-pre-delivery ()
+  (embed-module *libjbig*)
   (screenshotbot/magick/magick-lw:embed-magick-native)
   (fli:disconnect-module
    :libosicat :remove t)
   (fli:disconnect-module
    'sqlite-ffi::sqlite3-lib :remove t))
+
+(defun install-modules ()
+  (load-module *libjbig*))

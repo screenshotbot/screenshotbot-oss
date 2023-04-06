@@ -6,6 +6,8 @@
 
 (defpackage :util/native-module
   (:use #:cl)
+  (:import-from #:alexandria
+                #:remove-from-plist)
   (:export
    #:make-native-module
    #:load-module
@@ -39,10 +41,17 @@
                                        (asdf:find-component system
                                                             (list component-name))))))
 
-(defun make-system-module (name &rest args)
-  (apply #'make-instance 'native-module
-         :name name
-         args))
+(defun make-system-module (name &rest args &key file-name &allow-other-keys)
+  (cond
+    (file-name
+     (make-instance 'native-module
+                    :name name
+                    :pathname-provider (lambda () file-name)
+                    :pathname-flag :file-name))
+    (t
+     (apply #'make-instance 'native-module
+            :name name
+            (remove-from-plist args :file-name)))))
 
 (defmethod module-pathname ((self native-module))
   (funcall (pathname-provider self)))
@@ -51,7 +60,8 @@
   "During the embed step, we need the absolute pathname"
   (let ((path (list
                "/usr/lib/"
-               "/usr/local/lib/")))
+               "/usr/local/lib/"
+               "/usr/lib/x86_64-linux-gnu/")))
     (loop for p in path
           for abs = (path:catfile p pathname)
           if (path:-e abs)

@@ -6,6 +6,9 @@
 
 (defpackage :screenshotbot/desktop/init
   (:use #:cl)
+  #+lispworks
+  (:import-from #:screenshotbot/desktop/pre-deliver
+                #:install-modules)
   (:export
    #:main)
   (:local-nicknames (#:run #:screenshotbot/desktop/run)
@@ -30,6 +33,8 @@
                           #+lispworks
                           (dbg:output-backtrace :brief ))))
     (uiop:setup-command-line-arguments)
+    #+lispworks
+    (install-modules)
     (let ((args (cdr (uiop:raw-command-line-arguments))))
       (let ((app (main/command)))
         (clingon:run app args)))))

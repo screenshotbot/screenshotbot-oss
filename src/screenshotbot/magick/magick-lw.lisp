@@ -67,17 +67,26 @@
 
 (defvar *path-setp* nil)
 
+(defun magick-so (name)
+  (lambda ()
+    (cond
+      ((uiop:os-windows-p)
+       ;; TODO: if needed we can discover this from the registry, see the
+       ;; python wand code that does the same
+       (win-magick-lib name))
+      (t (format nil "lib~a~a.so" name (magick-lib-suffix))))))
+
 (defvar *magick-wand*
   (make-system-module :magick-wand
                       :pathname-flag :file-name
                       :pathname-provider
-                      (lambda ()
-                        (cond
-                          ((uiop:os-windows-p)
-                           ;; TODO: if needed we can discover this from the registry, see the
-                           ;; python wand code that does the same
-                           (win-magick-lib "MagickWand"))
-                          (t (format nil "libMagickWand~a.so" (magick-lib-suffix)))))))
+                      (magick-so "MagickWand")))
+
+(defvar *magick-core*
+  (make-system-module :magick-core
+                      :pathname-flag :file-name
+                      :pathname-provider
+                      (magick-so "MagickCore")))
 
 (defun register-magick-wand ()
   (when (uiop:os-windows-p)
@@ -85,11 +94,7 @@
       (setf (uiop:getenv "Path") (format nil "~a;~a" (namestring *windows-magick-dir*) (uiop:getenv "Path")))
       (setf *path-setp* t)))
 
-  (when (uiop:os-windows-p)
-    (fli:register-module
-     :magick-core
-     :file-name (win-magick-lib "MagickCore")))
-
+  (load-module *magick-core*)
   (load-module *magick-wand*)
   (load-magick-native))
 
@@ -111,6 +116,7 @@
                          :verify #'verify-magick))
 
 (defun embed-magick-native ()
+  (embed-module *magick-core*)
   (embed-module *magick-wand*)
   (embed-module *magick-native*))
 
