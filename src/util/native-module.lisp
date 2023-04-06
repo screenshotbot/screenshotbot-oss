@@ -97,7 +97,7 @@
                                                :directory `(:relative)
                                                :defaults (module-pathname self)))))
     (delete-file output)
-    (log:info "Loading module ~a, ~a" (name self) output)
+    (log:debug "Loading module ~a, ~a" (name self) output)
     (with-open-file (stream output
                             :direction :output
                             :element-type '(unsigned-byte 8))
