@@ -9,6 +9,8 @@
   #+lispworks
   (:import-from #:screenshotbot/desktop/pre-deliver
                 #:install-modules)
+  (:import-from #:util/native-module
+                #:*lib-cache-dir*)
   (:export
    #:main)
   (:local-nicknames (#:run #:screenshotbot/desktop/run)
@@ -33,6 +35,10 @@
                           #+lispworks
                           (dbg:output-backtrace :brief ))))
     (uiop:setup-command-line-arguments)
+    (setf *lib-cache-dir*
+          (ensure-directories-exist
+           (pathname "~/.config/screenshotbot/libs/")))
+    (setf (uiop:getenv "LD_LIBRARY_PATH") (namestring *lib-cache-dir*))
     #+lispworks
     (install-modules)
     (let ((args (cdr (uiop:raw-command-line-arguments))))

@@ -68,13 +68,14 @@
 (defvar *path-setp* nil)
 
 (defun magick-so (name)
-  (lambda ()
-    (cond
-      ((uiop:os-windows-p)
-       ;; TODO: if needed we can discover this from the registry, see the
-       ;; python wand code that does the same
-       (win-magick-lib name))
-      (t (format nil "lib~a~a.so" name (magick-lib-suffix))))))
+  (let ((suffix (magick-lib-suffix)))
+   (lambda ()
+     (cond
+       ((uiop:os-windows-p)
+        ;; TODO: if needed we can discover this from the registry, see the
+        ;; python wand code that does the same
+        (win-magick-lib name))
+       (t (format nil "lib~a~a.so" name suffix))))))
 
 (defvar *magick-wand*
   (make-system-module :magick-wand

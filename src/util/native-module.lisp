@@ -11,15 +11,20 @@
   (:export
    #:make-native-module
    #:load-module
-   #:make-system-module)
+   #:make-system-module
+   #:*lib-cache-dir*)
   (:local-nicknames #-lispworks (#:fli #:util/fake-fli)))
 (in-package :util/native-module)
+
+(defvar *lib-cache-dir* nil)
 
 (defclass native-module ()
   ((name :initarg :name
          :reader name)
+   (lock :initform (bt:make-lock)
+         :reader lock)
    (pathname-provider :initarg :pathname-provider
-                      :reader pathname-provider)
+                      :accessor pathname-provider)
    (pathname-flag :initarg :pathname-flag
                   :reader pathname-flag
                   :initform :real-name)
@@ -29,7 +34,10 @@
              :accessor loaded-p)
    (verify :initarg :verify
            :initform (lambda ())
-           :accessor verify)))
+           :accessor verify)
+   (module-data :initform nil
+                :accessor module-data
+                :documentation "The actual binary data of the module, when installing it manually.")))
 
 (defun make-native-module (name system component-name &key (verify (lambda ())))
   (make-instance 'native-module
@@ -67,12 +75,37 @@
           if (path:-e abs)
             return abs)))
 
+(defun read-file-content (pathname)
+  (with-open-file (stream pathname
+                          :direction :input
+                          :element-type '(unsigned-byte 8))
+    (let ((res (make-array (file-length stream) :element-type '(unsigned-byte 8))))
+      (read-sequence res stream)
+      res)))
+
 (defmethod embed-module ((self native-module))
-  #+lispworks
-  (progn
-    (fli:get-embedded-module (name self)
-                             (find-module (module-pathname self)))
-    (setf (embedded-p self) t)))
+  (setf (pathname-provider self)
+        (let ((pathname (funcall (pathname-provider self))))
+          (lambda () pathname)))
+  (setf (module-data self)
+        (read-file-content
+         (find-module (module-pathname self))))
+  (setf (embedded-p self) t))
+
+(defmethod load-embedded-module ((self native-module))
+  (let ((output (path:catfile *lib-cache-dir* (make-pathname
+                                               :directory `(:relative)
+                                               :defaults (module-pathname self)))))
+    (delete-file output)
+    (log:info "Loading module ~a, ~a" (name self) output)
+    (with-open-file (stream output
+                            :direction :output
+                            :element-type '(unsigned-byte 8))
+      (write-sequence (module-data self)
+                      stream))
+    (fli:register-module (name self)
+                         :real-name output
+                         :connection-style :immediate)))
 
 (defmethod load-module ((self native-module) &key force)
   #+linux
@@ -80,18 +113,21 @@
     #+lispworks
     (fli:disconnect-module (name self))
     (setf (loaded-p self) nil))
-  (util:or-setf
-   (loaded-p self)
-   (progn
-     (cond
-       ((embedded-p self)
-        #+lispworks
-        (fli:install-embedded-module (name self)))
-       (t
-        (fli:register-module
-         (name self)
-         (pathname-flag self) (module-pathname self))))
-
-     (funcall (verify self))
-     t)
-   :thread-safe t))
+  (let ((needs-verify nil))
+   (util:or-setf
+    (loaded-p self)
+    (progn
+      (cond
+        ((embedded-p self)
+         (load-embedded-module self))
+        (t
+         (fli:register-module
+          (name self)
+          (pathname-flag self) (module-pathname self))))
+      (setf needs-verify t)
+      t)
+    :thread-safe t
+    :lock (lock self))
+    (when needs-verify
+      (funcall (verify self)))
+    t))
