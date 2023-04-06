@@ -77,14 +77,16 @@
             else
               collect (format nil "~a~a" part dir-sep))
       (list
+       ;; By default, this isn't set up in the Path on Mac, but this is where a
+       ;; default install from source of ImageMagick goes
+       "/usr/local/bin/"
        ;; Mac Homebrew default location
-       "/opt/homebrew/bin/"
-       )
+       "/opt/homebrew/bin/")
       (directory
        ;; Debian 11 default location. This returns the file itself,
        ;; but that's okay. The only caller of this will replace the
        ;; :name part of the pathname.
-       (format nil 
+       (format nil
                "/usr/lib/~a-linux-gnu/ImageMagick-*/bin-q*/MagickWand-config"
                (arch)))))))
 
