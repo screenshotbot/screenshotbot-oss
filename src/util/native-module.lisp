@@ -39,6 +39,9 @@
                 :accessor module-data
                 :documentation "The actual binary data of the module, when installing it manually.")))
 
+(defmethod print-object ((self native-module) out)
+  (format out "#<NATIVE-MODULE ~a>" (name self)))
+
 (defun make-native-module (name system component-name &key (verify (lambda ())))
   (make-instance 'native-module
                  :name name
