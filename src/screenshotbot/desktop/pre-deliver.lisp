@@ -35,6 +35,7 @@
    *libpng*
    *libwebpmux*
    *libwebpdemux*
+   #+linux
    *libgomp*))
 
 (defun call-pre-delivery ()

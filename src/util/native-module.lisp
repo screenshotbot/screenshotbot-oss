@@ -67,16 +67,31 @@
 (defmethod module-pathname ((self native-module))
   (funcall (pathname-provider self)))
 
+(defun ensure-pathname-type (&key type defaults)
+  (cond
+   ((equal type (pathname-type defaults))
+    defaults)
+   (t
+    (make-pathname :type type :defaults defaults))))
+
 (defun find-module (pathname)
   "During the embed step, we need the absolute pathname"
   (let ((path (list
                "/usr/lib/"
                "/usr/local/lib/"
-               "/usr/lib/x86_64-linux-gnu/")))
-    (loop for p in path
-          for abs = (path:catfile p pathname)
-          if (path:-e abs)
-            return abs)))
+               "/usr/lib/x86_64-linux-gnu/"
+               "/opt/homebrew/lib/")))
+
+     (loop for p in path
+           for abs = 
+             (ensure-pathname-type
+              :type #+darwin "dylib"
+              #+linux "so"
+              #+mswindows "dll"
+              :defaults
+              (path:catfile p pathname))
+           if (path:-e abs)
+             return abs)))
 
 (defun read-file-content (pathname)
   (with-open-file (stream pathname
