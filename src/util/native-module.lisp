@@ -69,10 +69,10 @@
 
 (defun ensure-pathname-type (&key type defaults)
   (cond
-   ((equal type (pathname-type defaults))
-    defaults)
+   ((equal "so" (pathname-type defaults))
+    (make-pathname :type type :defaults defaults))
    (t
-    (make-pathname :type type :defaults defaults))))
+    defaults)))
 
 (defun find-module (pathname)
   "During the embed step, we need the absolute pathname"
@@ -83,7 +83,7 @@
                "/opt/homebrew/lib/")))
 
      (loop for p in path
-           for abs = 
+           for abs =
              (ensure-pathname-type
               :type #+darwin "dylib"
               #+linux "so"
