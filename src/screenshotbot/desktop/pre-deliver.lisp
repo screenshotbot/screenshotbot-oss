@@ -15,15 +15,6 @@
    #:install-modules))
 (in-package :screenshotbot/desktop/pre-deliver)
 
-(defvar *libjbig* (make-system-module :libjbig
-                                      :file-name "libjbig.so"))
-
-(defvar *liblcms2* (make-system-module :liblcms2
-                                       :file-name "liblcms2.so"))
-
-(defvar *libtiff* (make-system-module :libtiff
-                                      :file-name "libtiff.so"))
-
 (defvar *libwebp* (make-system-module :libwebp
                                       :file-name "libwebp.so"))
 (defvar *libwebpmux* (make-system-module :libwebpmux
@@ -34,39 +25,14 @@
 (defvar *libpng* (make-system-module :libpng
                                      :file-name "libpng.so"))
 
-(defvar *libjpeg* (make-system-module :libjpeg
-                                      :file-name "libjpeg.so"))
-
-(defvar *libdeflate* (make-system-module :libdeflate
-                                         :file-name "libdeflate.so"))
-
-(defvar *liblqr* (make-system-module :liblqr
-                                     :file-name "liblqr-1.so"))
-
-(defvar *libglib-2.0* (make-system-module :libglib-2.0
-                                          :file-name "libglib-2.0.so"))
-
 (defvar *libgomp* (make-system-module :libgomp
                                       :file-name "libgomp.so.1"))
-
-(defvar *libdjvulibre* (make-system-module :libdjvulibre
-                                           :file-name "libdjvulibre.so"))
-
 
 (defparameter *libs*
   ;; the order here matter!
   (list
    *libwebp*
-   *libjpeg*
-   *libdeflate*
-   *libjbig*
-   *libtiff*
-   *liblcms2*
    *libpng*
-   *libglib-2.0*
-   *liblqr*
-   *libdjvulibre*
-   ;; good ones:
    *libwebpmux*
    *libwebpdemux*
    *libgomp*))
