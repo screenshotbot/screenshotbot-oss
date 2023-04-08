@@ -254,15 +254,12 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
         var thisX = (e.clientX - rect.left) * scale;
         var thisY = (e.clientY - rect.top) * scale;
 
-        return {
-            x: thisX,
-            y: thisY,
-        };
+        return new DOMPoint(thisX, thisY);
     }
 
     function getEventPositionOnImage(e) {
         var canvasPos = getEventPositionOnCanvas(e);
-        return transform.inverse().multiply(canvasPos);
+        return canvasPos.matrixTransform(ctx.getTransform().inverse());
     }
 
     function onZoomWheel(e) {
