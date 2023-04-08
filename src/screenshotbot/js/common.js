@@ -47,7 +47,7 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
         scheduleDraw();
     }));
 
-    var $canvas = $("<canvas />");
+    var $canvas = $("<canvas draggable='false' style='touch-action:none; '/>");
     var canvasEl = $canvas.get(0);
 
     $(canvasContainer).empty();
@@ -215,10 +215,11 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
         dragStart.translateX = transform.e;
         dragStart.translateY = transform.f;
 
+        var eventEl = document;
         // Only start moving after 250ms. In the meantime, if
         // we double-click, then we'll cancel this
         var timer = setTimeout(function () {
-            document.addEventListener("mousemove", onMouseMove);
+            eventEl.addEventListener("pointermove", onMouseMove);
         }, 100)
 
         function onMouseMove(e) {
@@ -228,22 +229,27 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
                 transform.f = pos.y - dragStart.y + dragStart.translateY;
                 scheduleDraw();
             }
+            e.preventDefault();
         }
 
         function onMouseEnd(e) {
             isDragging = false;
             clearTimeout(timer);
-            document.removeEventListener("mousemove", onMouseMove);
-            document.removeEventListener("mouseup", onMouseEnd);
+            eventEl.removeEventListener("pointermove", onMouseMove);
+            eventEl.removeEventListener("pointerup", onMouseEnd);
+            eventEl.removeEventListener("pointercancel", onMouseEnd);
+            e.preventDefault();
         }
 
 
-        document.addEventListener("mouseup", onMouseEnd);
+        eventEl.addEventListener("pointerup", onMouseEnd);
+        eventEl.addEventListener("pointercancel", onMouseEnd);
+        e.preventDefault();
     }
 
     var mouseDownTimer;
 
-    $(canvasEl).on("mousedown", onMouseDown);
+    $(canvasEl).on("pointerdown", onMouseDown);
 
     function getEventPositionOnCanvas(e) {
         var rect = canvasEl.getBoundingClientRect();
