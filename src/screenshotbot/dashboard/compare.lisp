@@ -44,8 +44,6 @@
                 #:map-unequal-pixels
                 #:image-blob
                 #:rect-as-list)
-  (:import-from #:screenshotbot/magick
-                #:run-magick)
   (:import-from #:core/ui/paginated
                 #:paginated)
   (:import-from #:bknr.datastore

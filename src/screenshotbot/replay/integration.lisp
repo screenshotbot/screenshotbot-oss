@@ -51,8 +51,6 @@
                 #:call-with-webdriver)
   (:import-from #:screenshotbot/webdriver/screenshot
                 #:full-page-screenshot)
-  (:import-from #:screenshotbot/magick
-                #:run-magick)
   (:import-from #:webdriver-client
                 #:window-resize)
   (:import-from #:auto-restart

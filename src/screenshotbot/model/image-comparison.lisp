@@ -20,8 +20,6 @@
                 #:with-local-image
                 #:make-image
                 #:image)
-  (:import-from #:screenshotbot/magick/magick
-                #:run-magick)
   (:import-from #:auto-restart
                 #:with-auto-restart)
   (:import-from #:bknr.datastore
