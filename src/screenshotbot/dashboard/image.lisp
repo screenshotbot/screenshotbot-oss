@@ -23,8 +23,6 @@
                 #:with-local-image)
   (:import-from #:util/object-id
                 #:oid)
-  (:import-from #:screenshotbot/magick
-                #:run-magick)
   (:import-from #:util/hash-lock
                 #:hash-locked-future
                 #:with-hash-lock-held
@@ -37,6 +35,9 @@
   (:import-from #:screenshotbot/user-api
                 #:current-company)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:save-wand-to-file
+                #:magick-write-image
+                #:with-wand
                 #:resize-image)
   (:export
    #:handle-resized-image))
@@ -76,12 +77,10 @@
                       :type :webp)))
            (let ((png (output-file "png")))
              (unless (uiop:file-exists-p png)
-               (uiop:with-staging-pathname (png)
-                 (run-magick
-                  (list "convert"
-                        webp
-                        "-strip"
-                        png))))
+               (with-wand (wand :file webp)
+                 (uiop:with-staging-pathname (png)
+                   (save-wand-to-file
+                    wand png))))
              (respond png))))
         (:webp
          (let* ((output-file (output-file "webp")))
