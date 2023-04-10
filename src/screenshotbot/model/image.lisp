@@ -33,8 +33,7 @@
                 #:persistent-class)
   (:import-from #:screenshotbot/magick
                 #:ping-image-dimensions
-                #:magick
-                #:run-magick)
+                #:magick)
   (:import-from #:bknr.indices
                 #:unique-index)
   (:import-from #:bknr.indices
@@ -351,96 +350,6 @@
    (<= (mask-rect-left mask)
        j
        (+ (mask-rect-left mask) (mask-rect-width mask) -1))))
-
-(defclass image-stream ()
-  ((width :initarg :width
-          :reader width)
-   (height :initarg :height
-           :reader height)
-   (pos-x :initform 0
-          :accessor pos-x)
-   (pos-y :initform 0
-          :accessor pos-y)))
-
-(defclass image-stream-expanded-canvas (image-stream)
-  ((delegate :initarg :delegate
-             :reader delegate)))
-
-(defmethod has-more-pixels-p ((self image-stream))
-  (< (pos-y self)
-     (height self)))
-
-(defmethod next-pos ((self image-stream))
-  (unless (has-more-pixels-p self)
-    (error "Out of bounds for image"))
-  (let ((old-x (pos-x self))
-        (old-y (pos-y self)))
-    (incf (pos-x self))
-    (when (>= (pos-x self) (width self))
-      (setf (pos-x self) 0)
-      (incf (pos-y self)))
-    (values old-y old-x)))
-
-(defclass image-array-stream (image-stream)
-  ((arr :initarg :arr
-        :reader arr)
-   (buffer :initarg :buffer
-           :reader buffer)))
-
-(defclass image-magick-stream (image-stream)
-  ((%stream :accessor %stream)
-   (file :initarg :file)
-   (buffer :initform (make-array 4 :element-type '(unsigned-byte 8))
-           :reader buffer)))
-
-(defmethod initialize-instance :around ((self image-array-stream) &key arr)
-  (let ((dims (array-dimensions arr)))
-    (call-next-method
-     self
-     :arr arr
-     :width (cadr dims)
-     :height (car dims)
-     :buffer (make-array (caddr dims)))))
-
-(defmethod read-next-pixel ((image image-array-stream))
-  (multiple-value-bind (pos-y pos-x) (next-pos image)
-    (let ((buffer (buffer image)))
-     (dotimes (j (length buffer))
-       (setf (aref buffer j)
-             (aref (arr image) pos-y pos-x j)))
-      buffer)))
-
-(defmethod read-next-pixel ((image image-stream-expanded-canvas))
-  (multiple-value-bind (pos-y pos-x) (next-pos image)
-    (let ((delegate (delegate image)))
-     (cond
-       ((or
-         (>= pos-x (width delegate))
-         (>= pos-y (height delegate)))
-        ;; bad pixel!
-        (dotimes (j (length (buffer delegate)))
-          (setf (aref (buffer delegate) j) 0))
-        (buffer delegate))
-       (t
-        (read-next-pixel delegate))))))
-
-(defmethod initialize-instance :after ((self image-magick-stream) &key file &allow-other-keys)
-  (setf (%stream self)
-        (run-magick (list
-                     "stream" "-map" "rgba"
-                     "-storage-type" "char"
-                     file
-                     "-")
-                    :async t)))
-
-(defmethod cleanup-image-stream ((self image-magick-stream))
-  (close (%stream self)))
-
-(defmethod read-next-pixel ((self image-magick-stream))
-  ;; we don't need the actual return value here
-  (next-pos self)
-  (read-sequence (buffer self) (%stream self))
-  (buffer self))
 
 
 #+screenshotbot-oss
