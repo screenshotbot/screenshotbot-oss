@@ -39,8 +39,6 @@
                 #:%map-unequal-pixels
                 #:transient-mask-rect
                 #:map-unequal-pixels)
-  (:import-from #:screenshotbot/magick
-                #:run-magick)
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:bknr.datastore
@@ -63,6 +61,9 @@
                 #:%make-oid
                 #:oid-array
                 #:oid-arr)
+  (:import-from #:screenshotbot/magick/magick-lw
+                #:with-wand
+                #:save-wand-to-file)
   (:export))
 
 (util/fiveam:def-suite)
@@ -163,32 +164,14 @@ uses the base-image-comparer."
 
 (defun make-magick-test-image (name)
   (uiop:with-temporary-file (:pathname p :type "webp")
-    (run-magick (list "convert" name "-strip" p))
+    (with-wand (wand :file name)
+      (save-wand-to-file wand p))
     (make-test-image p)))
 
 (defun make-test-image (pathname)
   (let* ((image (make-image
                  :pathname pathname)))
     image))
-
-#+nil
-(test image-comparison-with-different-file-types
-  (with-fixture state ()
-    (uiop:with-temporary-file (:pathname png :type "png")
-      (run-magick (list "convert" "rose:" png))
-      (uiop:with-temporary-file (:pathname webp :type "webp")
-        (run-magick (list "convert" "rose:" "-define" "webp:lossless=true" webp))
-        (is-true (%%image=
-                  (make-test-image png)
-                  (make-test-image webp)
-                  nil)))
-      (uiop:with-temporary-file (:pathname webp :type "webp")
-        (run-magick (list "convert" "wizard:" "-define" "webp:lossless=true" webp))
-        (is-false (%%image=
-                  (make-test-image png)
-                  (make-test-image webp)
-                  nil))))))
-
 
 (test image-public-url
   (is (equal "/image/blob/bar/default.webp" (util:make-url 'image-blob-get :oid "bar"))))
@@ -206,7 +189,8 @@ uses the base-image-comparer."
   (with-fixture state ()
     (is (eql :png (image-format img)))
     (uiop:with-temporary-file (:pathname webp :type "webp")
-      (run-magick (list "convert" "rose:" webp))
+      (with-wand (wand :file "rose:")
+        (save-wand-to-file wand webp))
       (let* ((image (make-image :pathname webp)))
         (is (eql :webp (image-format image)))))))
 
