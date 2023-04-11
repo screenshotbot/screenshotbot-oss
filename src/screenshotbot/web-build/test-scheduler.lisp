@@ -1,7 +1,7 @@
-(defpackage :screenshotbot/pro/web-build/test-scheduler
+(defpackage :screenshotbot/web-build/test-scheduler
   (:use #:cl
         #:fiveam)
-  (:import-from #:screenshotbot/pro/web-build/scheduler
+  (:import-from #:screenshotbot/web-build/scheduler
                 #:%run-now
                 #:next-runtime
                 #:maybe-run-project
@@ -16,7 +16,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:local-nicknames (#:a #:alexandria)))
-(in-package :screenshotbot/pro/web-build/test-scheduler)
+(in-package :screenshotbot/web-build/test-scheduler)
 
 
 (util/fiveam:def-suite)

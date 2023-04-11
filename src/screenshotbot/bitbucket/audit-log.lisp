@@ -4,8 +4,8 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/pro/bitbucket/audit-log
-  (:nicknames :screenshotbot/bitbucket/audit-log)
+(defpackage :screenshotbot/bitbucket/audit-log
+  (:nicknames :screenshotbot/pro/bitbucket/audit-log)
   (:use #:cl)
   (:import-from #:bknr.indices
                 #:skip-list-index)

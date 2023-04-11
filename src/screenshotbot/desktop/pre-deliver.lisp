@@ -38,7 +38,17 @@
    #+linux
    *libgomp*))
 
+(defun ensure-no-pro-packages ()
+  (loop for package in (list-all-packages)
+        if (str:starts-with-p "SCREENSHOTBOT/PRO/" (package-name package))
+          do
+             (restart-case
+                 (error "Package ~a is a bad package included in the system"
+                        package)
+               (ignore ()))))
+
 (defun call-pre-delivery ()
+  (ensure-no-pro-packages)
   (mapc #'embed-module *libs*)
   (screenshotbot/magick/magick-lw:embed-magick-native)
   (fli:disconnect-module

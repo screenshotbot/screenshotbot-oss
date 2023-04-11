@@ -4,8 +4,8 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/pro/bitbucket/plugin
-  (:nicknames :screenshotbot/bitbucket/plugin)
+(defpackage :screenshotbot/bitbucket/plugin
+  (:nicknames :screenshotbot/pro/bitbucket/plugin)
   (:use #:cl)
   (:import-from #:screenshotbot/plugin
                 #:plugin-parse-repo
