@@ -35,11 +35,15 @@
                *default-pathname-defaults*
                (uiop:getcwd)))
 
-(asdf:initialize-output-translations `(:output-translations
-                                       :inherit-configuration
-                                       (,(namestring *cwd*)
-                                         ,(format nil "~abuild/asdf-cache/~a/" *cwd*
-                                                  (uiop:implementation-identifier)))))
+(defun update-output-translations (root)
+  (asdf:initialize-output-translations
+   `(:output-translations
+     :inherit-configuration
+     (,(namestring root)
+      ,(format nil "~abuild/asdf-cache/~a/" root
+               (uiop:implementation-identifier))))))
+
+(update-output-translations *cwd*)
 
 #+sbcl
 (progn
