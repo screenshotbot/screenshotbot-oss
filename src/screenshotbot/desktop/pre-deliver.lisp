@@ -15,29 +15,6 @@
    #:install-modules))
 (in-package :screenshotbot/desktop/pre-deliver)
 
-(defvar *libwebp* (make-system-module :libwebp
-                                      :file-name "libwebp.so"))
-(defvar *libwebpmux* (make-system-module :libwebpmux
-                                         :file-name "libwebpmux.so"))
-(defvar *libwebpdemux* (make-system-module :libwebpdemux
-                                         :file-name "libwebpdemux.so"))
-
-(defvar *libpng* (make-system-module :libpng
-                                     :file-name "libpng.so"))
-
-(defvar *libgomp* (make-system-module :libgomp
-                                      :file-name "libgomp.so.1"))
-
-(defparameter *libs*
-  ;; the order here matter!
-  (list
-   *libwebp*
-   *libpng*
-   *libwebpmux*
-   *libwebpdemux*
-   #+linux
-   *libgomp*))
-
 (defun ensure-no-pro-packages ()
   (loop for package in (list-all-packages)
         if (str:starts-with-p "SCREENSHOTBOT/PRO/" (package-name package))
@@ -49,10 +26,7 @@
 
 (defun call-pre-delivery ()
   (ensure-no-pro-packages)
-  (mapc #'embed-module *libs*)
-  (screenshotbot/magick/magick-lw:embed-magick-native)
   (fli:disconnect-module
    'sqlite-ffi::sqlite3-lib :remove t))
 
-(defun install-modules ()
-  (mapc #'load-module *libs*))
+(defun install-modules ())

@@ -89,12 +89,44 @@
                       :pathname-provider
                       (magick-so "MagickCore")))
 
+(defvar *libwebp* (make-system-module :libwebp
+                                      :file-name "libwebp.so"))
+(defvar *libwebpmux* (make-system-module :libwebpmux
+                                         :file-name "libwebpmux.so"))
+(defvar *libwebpdemux* (make-system-module :libwebpdemux
+                                         :file-name "libwebpdemux.so"))
+
+(defvar *libpng* (make-system-module :libpng
+                                     :file-name "libpng.so"))
+
+(defvar *libgomp* (make-system-module :libgomp
+                                      :file-name "libgomp.so.1"))
+
+(defparameter *libs*
+  ;; the order here matter!
+  (list
+   *libwebp*
+   *libpng*
+   *libwebpmux*
+   *libwebpdemux*
+   #+linux
+   *libgomp*))
+
+#+lispworks
+(lw:define-action "Delivery actions" "Embed magick libraries"
+  (lambda ()
+    (mapc #'embed-module *libs*)
+    (embed-module *magick-wand*)
+    (embed-module *magick-core*)
+    (embed-module *magick-native*)))
+
 (defun register-magick-wand ()
   (when (uiop:os-windows-p)
     (unless *path-setp*
       (setf (uiop:getenv "Path") (format nil "~a;~a" (namestring *windows-magick-dir*) (uiop:getenv "Path")))
       (setf *path-setp* t)))
 
+  (mapc #'load-module *libs*)
   (load-module *magick-core*)
   (load-module *magick-wand*)
   (load-magick-native))
@@ -115,11 +147,6 @@
                          :screenshotbot.magick
                          "magick-native"
                          :verify #'verify-magick))
-
-(defun embed-magick-native ()
-  (embed-module *magick-core*)
-  (embed-module *magick-wand*)
-  (embed-module *magick-native*))
 
 (defun load-magick-native (&key force)
   #-linux

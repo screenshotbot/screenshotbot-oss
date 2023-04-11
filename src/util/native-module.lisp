@@ -115,7 +115,7 @@
                                                :directory `(:relative)
                                                :defaults (module-pathname self)))))
     (delete-file output)
-    (log:debug "Loading module ~a, ~a" (name self) output)
+    (log:info "Loading module ~a, ~a" (name self) output)
     (with-open-file (stream output
                             :direction :output
                             :element-type '(unsigned-byte 8))
@@ -124,6 +124,15 @@
     (fli:register-module (name self)
                          :real-name output
                          :connection-style :immediate)))
+
+(defmethod load-module :around (self &key force)
+  (handler-bind ((error (lambda (e)
+                          (declare (ignore e))
+                          ;; If a module does fail, it's probably very
+                          ;; early on, so we want to print some
+                          ;; additional debugging information.
+                          (log:info "Error loading module: ~a" self))))
+    (call-next-method)))
 
 (defmethod load-module ((self native-module) &key force)
   #+linux
