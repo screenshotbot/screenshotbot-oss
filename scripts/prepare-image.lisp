@@ -32,6 +32,7 @@
 (push (pathname (format nil "~a/local-projects/poiu/" (namestring (uiop:getcwd))))
       asdf:*central-registry*)
 
+(defvar *asdf-root-guesser* nil)
 
 (defparameter *cwd* (merge-pathnames
                *default-pathname-defaults*
@@ -138,7 +139,6 @@
 (pushnew :screenshotbot-oss *features*)
 
 (defun update-project-directories (cwd)
-  "This function is called dynamically from deliver-utils/common.lisp!"
   #-screenshotbot-oss
   (push (pathname (format nil "~alocal-projects/" cwd) ) ql:*local-project-directories*)
   (push (pathname (format nil "~asrc/" cwd)) ql:*local-project-directories*)
@@ -150,6 +150,20 @@
   (update-project-directories cwd))
 
 (update-project-directories *cwd*)
+
+(defun maybe-asdf-prepare ()
+  (when *asdf-root-guesser*
+    (update-root (funcall *asdf-root-guesser*))))
+
+(compile 'maybe-asdf-prepare)
+
+#+lispworks
+(lw:define-action "When starting image" "Re-prepare asdf"
+  #'maybe-asdf-prepare)
+
+(defun unprepare-asdf (root-guesser)
+  "This function is called dynamically from deliver-utils/common.lisp!"
+  (setf *asdf-root-guesser* root-guesser))
 
 (defun maybe-configure-proxy ()
   (let ((proxy (uiop:getenv "HTTP_PROXY")))
