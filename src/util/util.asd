@@ -96,6 +96,11 @@
                (:file "form-errors")
                (:file "debugger-hook")))
 
+(defsystem :util/osicat
+  :serial t
+  :depends-on (:osicat)
+  :components ((:file "osicat-lw" :if-feature :lispworks)))
+
 (defsystem :util/copy-file
   :serial t
   :defsystem-depends-on (:trivial-features)

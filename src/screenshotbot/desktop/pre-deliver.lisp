@@ -52,8 +52,6 @@
   (mapc #'embed-module *libs*)
   (screenshotbot/magick/magick-lw:embed-magick-native)
   (fli:disconnect-module
-   :libosicat :remove t)
-  (fli:disconnect-module
    'sqlite-ffi::sqlite3-lib :remove t))
 
 (defun install-modules ()

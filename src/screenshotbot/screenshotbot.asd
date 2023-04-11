@@ -33,6 +33,7 @@
   :depends-on (:util
                :markup
                :gravatar
+               :util/osicat
                :bknr.impex
                :util/logger
                :lparallel

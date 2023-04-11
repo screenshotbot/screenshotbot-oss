@@ -11,6 +11,7 @@
          :screenshotbot.desktop/deliver
          "deliver-desktop"))))
  :restart-fn #'screenshotbot/desktop/init:main
+ :prepare-asdf nil
  :require-modules nil
  :keep-clos-object-printing t
  :keep-lisp-reader t
