@@ -137,10 +137,19 @@
 
 (pushnew :screenshotbot-oss *features*)
 
-#-screenshotbot-oss
-(push (pathname (format nil "~alocal-projects/" *cwd*) ) ql:*local-project-directories*)
-(push (pathname (format nil "~asrc/" *cwd*)) ql:*local-project-directories*)
-(push (pathname (format nil "~athird-party/" *cwd*)) ql:*local-project-directories*)
+(defun update-project-directories (cwd)
+  "This function is called dynamically from deliver-utils/common.lisp!"
+  #-screenshotbot-oss
+  (push (pathname (format nil "~alocal-projects/" cwd) ) ql:*local-project-directories*)
+  (push (pathname (format nil "~asrc/" cwd)) ql:*local-project-directories*)
+  (push (pathname (format nil "~athird-party/" cwd)) ql:*local-project-directories*))
+
+
+(defun update-root (cwd)
+  (update-output-translations cwd)
+  (update-project-directories cwd))
+
+(update-project-directories *cwd*)
 
 (defun maybe-configure-proxy ()
   (let ((proxy (uiop:getenv "HTTP_PROXY")))
