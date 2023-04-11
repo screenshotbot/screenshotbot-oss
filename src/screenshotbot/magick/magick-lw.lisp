@@ -126,7 +126,9 @@
       (setf (uiop:getenv "Path") (format nil "~a;~a" (namestring *windows-magick-dir*) (uiop:getenv "Path")))
       (setf *path-setp* t)))
 
+  #+lispworks
   (mapc #'load-module *libs*)
+
   (load-module *magick-core*)
   (load-module *magick-wand*)
   (load-magick-native))
