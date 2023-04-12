@@ -9,6 +9,7 @@
         #:alexandria
         #:screenshotbot/user-api
         #:screenshotbot/report-api
+        #:screenshotbot/cdn
         #:screenshotbot/template
         #:screenshotbot/screenshot-api)
   (:import-from #:screenshotbot/dashboard/run-page
