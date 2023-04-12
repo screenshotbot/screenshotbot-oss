@@ -82,6 +82,7 @@
 
 (def-easy-macro with-sentry (&key (on-error (lambda ()
                                               (uiop:quit 1)))
+                                  (dry-run nil)
                                   (stream
                                    #+lispworks
                                    (system:make-stderr-stream)
@@ -104,8 +105,9 @@
                                                 :stream stream)
                           #-lispworks
                           (trivial-backtrace:print-backtrace einteg stream)
-                          #-screenshotbot-oss
-                          (util/threading:log-sentry e)
+                          (unless dry-run
+                            #-screenshotbot-oss
+                            (util/threading:log-sentry e))
                           (funcall on-error))))
      (handler-bind (#+lispworks
                     (error error-handler))
@@ -127,7 +129,8 @@
     (restart-case
         (with-sentry (:on-error (lambda ()
                                   (invoke-restart 'expected))
-                      :stream out-stream)
+                      :stream out-stream
+                      :dry-run t)
           (error "health-check for sdk"))
      (expected ()
        nil))
