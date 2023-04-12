@@ -16,7 +16,6 @@
                (:file "jar-file")
                (:file "js-package")
                (:file "css-package")
-               (:file "intellij-plugin")
                (:file "all")))
 
 (defsystem :build-utils/deliver-script
