@@ -67,7 +67,7 @@
     (setf *db* nil)))
 
 #+lispworks
-(ignore-errors ;; When loading this as a fasl in a delivered image, this throws
+(unless (hcl:delivered-image-p)
  (lw:define-action "Delivery Actions" "Clean image-comparison db"
    'clean-db))
 
