@@ -701,7 +701,7 @@
            changes-groups
            added-groups
            deleted-groups))
-      data-args= "{}" >
+      data-args= (json:encode-json-to-string `((:type . ,default-type))) >
       ,(report-result run
                       changes-groups
                       added-groups
