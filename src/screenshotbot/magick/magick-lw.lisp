@@ -113,12 +113,13 @@
    *libgomp*))
 
 #+lispworks
-(lw:define-action "Delivery actions" "Embed magick libraries"
-  (lambda ()
-    (mapc #'embed-module *libs*)
-    (embed-module *magick-wand*)
-    (embed-module *magick-core*)
-    (embed-module *magick-native*)))
+(unless (hcl:delivered-image-p)
+ (lw:define-action "Delivery actions" "Embed magick libraries"
+   (lambda ()
+     (mapc #'embed-module *libs*)
+     (embed-module *magick-wand*)
+     (embed-module *magick-core*)
+     (embed-module *magick-native*))))
 
 (defun register-magick-wand ()
   (when (uiop:os-windows-p)
