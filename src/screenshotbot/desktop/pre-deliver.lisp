@@ -17,7 +17,9 @@
 
 (defun ensure-no-pro-packages ()
   (loop for package in (list-all-packages)
-        if (str:starts-with-p "SCREENSHOTBOT/PRO/" (package-name package))
+        if (some (lambda (x)
+                   (str:starts-with-p x (package-name package)))
+                 (list "SCREENSHOTBOT/PRO/" "SCREENSHOTBOT/REPLAY/"))
           do
              (restart-case
                  (error "Package ~a is a bad package included in the system"
