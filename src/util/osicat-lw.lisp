@@ -25,8 +25,9 @@
   (log:info "Loading embedded osicat module")
   (fli:install-embedded-module :libosicat))
 
-(lw:define-action "Delivery Actions" "Embed osicat"
-  #'embed-osicat )
+(unless (hcl:delivered-image-p)
+ (lw:define-action "Delivery Actions" "Embed osicat"
+   #'embed-osicat ))
 
 (lw:define-action "When starting image" "Load embedded osicat"
   #'load-osicat)
