@@ -19,7 +19,9 @@
   (:import-from #:bknr.datastore
                 #:store-directory)
   (:import-from #:bknr.datastore
-                #:snapshot-subsystem))
+                #:snapshot-subsystem)
+  (:import-from #:util/store
+                #:defsubsystem))
 (in-package :util/store-version)
 
 (defvar *store-version* 1
@@ -62,3 +64,5 @@ version on loads"))
                                  :direction :output
                                  :if-exists :supersede)
     (format store-version "~a" *store-version*)))
+
+(defsubsystem version-subsystem :priority 40)

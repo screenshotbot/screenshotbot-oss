@@ -187,8 +187,8 @@
                :cffi
                :cl-cron)
   :components ((:file "file-lock")
-               (:file "store-version")
                (:file "store")
+               (:file "store-version")
                (:file "object-id")
                (:file "single")
                (:file "migrations")
