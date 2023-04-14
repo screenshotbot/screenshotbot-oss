@@ -28,6 +28,8 @@
                 #:store-directory)
   (:import-from #:bknr.datastore
                 #:restore-transaction-log)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -137,9 +139,18 @@ to the directory that was just snapshotted.")
 (defmethod bknr.datastore::close-store-object :after ((store safe-mp-store))
   (clear-transaction-log-lock store))
 
+(defvar *subsystems* `((bknr.datastore:store-object-subsystem 10)
+                       (bknr.datastore:blob-subsystem 11)))
+
+(defmacro defsubsystem (name &key (priority 15))
+  `(progn
+     (setf (assoc-value *subsystems* ',name)
+           (list ,priority))))
+
 (defun store-subsystems ()
-  (list (make-instance 'bknr.datastore:store-object-subsystem)
-        (make-instance 'bknr.datastore:blob-subsystem)))
+  (mapcar #'make-instance
+          (mapcar #'first
+                  (sort *subsystems* #'< :key #'second))))
 
 (defun prepare-store-for-test (&key (dir "~/test-store/")
                                  (store-class 'safe-mp-store))
