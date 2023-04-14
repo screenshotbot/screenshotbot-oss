@@ -11,6 +11,7 @@
   (:import-from #:bknr.indices
                 #:hash-index)
   (:import-from #:screenshotbot/model/image
+                #:find-image-by-oid
                 #:mask-rect-height
                 #:mask-rect-width
                 #:mask-rect-top
@@ -162,7 +163,7 @@
                      :after after
                      :masks masks
                      :identical-p (= 1 identical-as-num)
-                     :result (util:find-by-oid result-oid)))))
+                     :result (find-image-by-oid result-oid)))))
 
 (defun make-old-transient ()
   (values))

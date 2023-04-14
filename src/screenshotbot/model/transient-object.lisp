@@ -20,6 +20,7 @@
     (list*
      (car slot-def)
      (a:remove-from-plist args
+                          :index
                           :index-type
                           :index-initargs
                           :index-reader

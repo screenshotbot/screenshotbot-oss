@@ -253,14 +253,7 @@
 (defmethod find-image ((company company) hash)
   (error "Old function: call model/image:find-image instead"))
 
-(defmethod find-image-by-id ((company company) id)
-  (let ((obj (find-by-oid id)))
-    (typecase obj
-      (local-image
-       obj)
-      (t
-       (assert (eql company (company obj)))
-       obj))))
+(defgeneric find-image-by-id (company id))
 
 (defmethod find-or-create-channel ((company company) name)
   (or

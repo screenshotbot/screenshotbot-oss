@@ -23,6 +23,7 @@
   (:import-from #:screenshotbot/screenshot-api
                 #:local-image)
   (:import-from #:screenshotbot/model/company
+                #:find-image-by-id
                 #:company
                 #:verified-p ;; todo: remove, will cause conflict
                 #:image-oid-cache)
@@ -53,15 +54,16 @@
                 #:ping-image-metadata
                 #:with-wand)
   (:import-from #:util/object-id
+                #:make-oid
                 #:oid
                 #:oid-arr
                 #:oid-p
                 #:%make-oid
-                #:find-by-oid
                 #:oid-array)
   (:import-from #:util/digests
                 #:md5-file)
   (:import-from #:util/store
+                #:defindex
                 #:def-store-local
                 #:location-for-oid
                 #:with-class-validation)
@@ -85,6 +87,10 @@
                 #:def-easy-macro)
   (:import-from #:screenshotbot/events
                 #:push-event)
+  (:import-from #:bknr.indices
+                #:unique-index)
+  (:import-from #:bknr.datastore
+                #:store-object)
   ;; classes
   (:export
    #:image
@@ -135,6 +141,10 @@
     ()
     (:metaclass persistent-class)))
 
+(defindex +image-oid-index+ 'unique-index
+  :test 'equalp
+  :slot-name 'oid)
+
 (defparameter +image-state-filesystem+ 1
   "Image is saved on the local filesystem")
 
@@ -143,9 +153,14 @@
 ;; schema migration process.
 (with-transient-copy (transient-image abstract-image
                       :extra-transient-slots (#-screenshotbot-oss blob))
-  (defclass image (object-with-oid)
+  (defclass image (store-object)
     (#+screenshotbot-oss
      (link :initarg :link)
+     (oid :accessor util/object-id:oid-struct-or-array
+          :initarg :oid
+          :reader image-oid
+          :index +image-oid-index+
+          :index-reader %find-image-by-oid)
      (hash :initarg :hash
            :reader image-hash ;; NOTE: Returns a vector!
            :index-type hash-index
@@ -176,7 +191,8 @@
      #+screenshotbot-oss
      (content-type :initarg :content-type
                    :reader image-content-type))
-    (:metaclass persistent-class)))
+    (:metaclass persistent-class)
+    (:default-initargs :oid (%make-oid))))
 
 (defun imagep (image)
   (typep image 'abstract-image))
@@ -186,13 +202,26 @@
   image)
 
 (defmethod find-image-by-oid ((oid string))
-  (check-imagep (find-by-oid oid)))
+  (find-image-by-oid
+   ;; Convert to an array
+   (mongoid:oid oid)))
 
 (defmethod find-image-by-oid ((oid array))
-  (check-imagep (find-by-oid oid)))
+  (find-image-by-oid
+   ;; Convert to an OID object
+   (make-oid :arr oid)))
 
 (defmethod find-image-by-oid ((oid oid))
-  (check-imagep (find-by-oid oid)))
+  (%find-image-by-oid oid))
+
+(defmethod find-image-by-id ((company company) id)
+  (let ((obj (find-image-by-oid id)))
+    (typecase obj
+      (local-image
+       obj)
+      (t
+       (assert (eql company (company obj)))
+       obj))))
 
 #|
 
@@ -304,6 +333,7 @@
   ((url :initarg :url
         :accessor local-image-url))
   (:metaclass persistent-class)
+  (:default-initargs :oid (%make-oid))
   (:documentation "An IMAGE, that's used only for testing purposes locally"))
 
 (defmethod %with-local-image ((image abstract-image) fn)

@@ -17,7 +17,8 @@
 	   #:find-by-oid
 	   #:oid
        #:oid-array
-       #:creation-time-from-oid))
+       #:creation-time-from-oid
+       #:oid-struct-or-array))
 (in-package #:util/object-id)
 
 (defstruct oid
@@ -49,6 +50,7 @@
     (read-sequence arr stream)
     (make-oid :arr arr)))
 
+;; TODO: rename to new-oid
 (defun %make-oid ()
   (make-oid
    :arr
@@ -77,7 +79,7 @@
                (with-transaction ()
                 (setf (oid-struct-or-array obj) (make-oid :arr (oid-array obj))))))))
 
-(defmethod oid-array ((self object-with-oid))
+(defmethod oid-array (self)
   (let ((ret (oid-struct-or-array self)))
     (cond
       ((oid-p ret) (oid-arr ret))
