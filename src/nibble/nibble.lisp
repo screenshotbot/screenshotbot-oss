@@ -155,6 +155,13 @@
     </body>
   </html>)
 
+(define-condition expired-nibble (warning)
+  ((name :initarg :name
+         :initform nil))
+  (:report (lambda (self stream)
+             (with-slots (name) self
+               (format stream "Expired nibble with name ~a was accessed" name)))))
+
 (defmethod render-nibble ((plugin nibble-plugin) id)
   (funcall
    (nibble-plugin-wrapper plugin)
@@ -165,6 +172,7 @@
        (let ((nibble (get-nibble id)))
          (cond
            ((null nibble)
+            (warn 'expired-nibble :name (safe-parameter :_n))
             <html>
               <body>
                 The page you're looking for has expired.
@@ -236,9 +244,8 @@
 
 
 (defmethod markup:format-attr-val (stream (nibble nibble))
-  (with-slots (id) nibble
-   (format stream "\"~a\""
-           (nibble-url nibble))))
+  (format stream "\"~a\""
+          (nibble-url nibble)))
 
 (defmethod hex:safe-redirect ((nibble nibble) &rest args)
   (apply 'hex:safe-redirect (nibble-url nibble)
