@@ -20,8 +20,7 @@
                 #:defsecret
                 #:secret)
   (:import-from #:screenshotbot/model
-                #:github-repo
-                #:repo-left-ancestor-p)
+                #:github-repo)
   (:import-from #:screenshotbot/git-repo
                 #:public-repo-p
                 #:get-parent-commit

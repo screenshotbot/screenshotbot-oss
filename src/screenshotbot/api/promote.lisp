@@ -234,10 +234,6 @@
        (log :error "The commit ~a is not in branch ~a"
                   (recorder-run-commit run)
                   branch))
-      #+nil ;; todo: do we really need this? we removed this for generic-git-repo
-      ((not (channel-left-ancestor-in-branch-p channel (recorder-run-commit run)))
-       (log:error :promote "This commit ~a is not a left-ancestor in this channel"
-                  (recorder-run-commit run)))
       ((and previous-run
             (string= (recorder-run-commit previous-run)
                      (recorder-run-commit run)))

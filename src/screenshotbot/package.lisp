@@ -154,7 +154,6 @@
            #:new-instance
            #:make-gitlab-repo
            #:get-parent-commit
-           #:repo-left-ancestor-p
            #:public-repo-p
            #:report-acceptable
            #:screenshot-image

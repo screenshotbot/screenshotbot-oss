@@ -65,7 +65,6 @@
 
   ;; forward decls
   (:export
-   #:repo-left-ancestor-p
    #:make-gitlab-repo
    #:github-get-canonical-repo))
 (in-package :screenshotbot/model/channel)
@@ -245,14 +244,6 @@
         finally
            (return (make-instance 'generic-git-repo :link (github-repo channel)
                                              :company (channel-company channel)))))
-
-(defmethod channel-left-ancestor-in-branch-p ((channel channel) commit)
-  (declare (optimize (speed 0) (debug 3)))
-  (when (master-branch channel)
-   (repo-left-ancestor-p
-    (channel-repo channel)
-    commit
-    (master-branch channel))))
 
 (defmethod created-at (x)
   (local-time:universal-to-timestamp (%created-at x)))
