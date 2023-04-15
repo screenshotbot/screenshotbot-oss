@@ -65,4 +65,4 @@ version on loads"))
                                  :if-exists :supersede)
     (format store-version "~a" *store-version*)))
 
-(defsubsystem version-subsystem :priority 40)
+(defsubsystem version-subsystem :priority 5)
