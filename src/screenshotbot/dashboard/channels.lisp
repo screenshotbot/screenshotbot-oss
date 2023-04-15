@@ -246,7 +246,7 @@
              (perform-delete channel)
              (channel-deleted-confirmation))
       :no (nibble ()
-            (simple-confirmation-page channel))
+            (go-back channel))
       :danger t
       <span>Deleting this channel will delete all associated runs and reports. This cannot be
         undone. Are you sure you want to continue?</span>))
