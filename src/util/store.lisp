@@ -129,10 +129,18 @@ to the directory that was just snapshotted.")
           (values)))
       (setf transaction-log-lock nil))))
 
+(defmethod maybe-gc-coalesce ((store safe-mp-store))
+  #+lispworks
+  (hcl:gc-generation 4 :coalesce t))
+
+(defmethod maybe-gc-coalesce ((store store-for-test))
+  nil)
+
 (defmethod restore-transaction-log :before ((store safe-mp-store)
                                             transaction-log
                                             &key until)
   (declare (ignore until))
+  (maybe-gc-coalesce store)
   (ensure-transaction-log-lock store))
 
 
@@ -155,8 +163,6 @@ to the directory that was just snapshotted.")
           (mapcar #'first
                   (sort *subsystems* #'< :key #'second))))
 
-
-(defmethod gc-coalesce ((store safe-mp-store)))
 
 (defun prepare-store-for-test (&key (dir "~/test-store/")
                                  (store-class 'store-for-test))
