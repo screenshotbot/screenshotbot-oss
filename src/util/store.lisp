@@ -100,6 +100,9 @@ to the directory that was just snapshotted.")
 (defclass safe-mp-store (bknr.datastore:mp-store)
   ((transaction-log-lock :initform nil)))
 
+(defclass store-for-test (safe-mp-store)
+  ())
+
 (defmethod initialize-instance :before ((store safe-mp-store) &key directory &allow-other-keys))
 
 (defun ensure-transaction-log-lock (store)
@@ -152,8 +155,11 @@ to the directory that was just snapshotted.")
           (mapcar #'first
                   (sort *subsystems* #'< :key #'second))))
 
+
+(defmethod gc-coalesce ((store safe-mp-store)))
+
 (defun prepare-store-for-test (&key (dir "~/test-store/")
-                                 (store-class 'safe-mp-store))
+                                 (store-class 'store-for-test))
   (assert store-class)
   (make-instance store-class
                  :directory dir
