@@ -207,6 +207,19 @@
                      :identical-p (= 1 identical-as-num)
                      :result (find-image-by-oid result-oid)))))
 
+(defun migrate-sqlite ()
+  (loop for (before after) in (sqlite:execute-to-list
+                   (ensure-db)
+                   "select before, after
+      from comparisons
+      where masks = '' or masks is null")
+        for imc = (sqlite-read-comparison (find-image-by-oid before) (find-image-by-oid after))
+        do (make-image-comparison
+            :before (image-comparison-before imc)
+            :after (image-comparison-after imc)
+            :identical-p (identical-p imc)
+            :result (image-comparison-result imc))))
+
 (defun make-old-transient ()
   (values))
 
