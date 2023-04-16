@@ -71,9 +71,9 @@
   (with-fixture state ()
     (let ((imc (make-instance 'image-comparison
                                :result (make-screenshot im1))))
-      (finishes (random-zoom-to-on-result imc))
+      (finishes (random-zoom-to-on-result imc nil))
       (let ((res
-              (json:decode-json-from-string (random-zoom-to-on-result imc))))
+              (json:decode-json-from-string (random-zoom-to-on-result imc nil))))
         (is (eql 360 (a:assoc-value res :width)))
         (is (eql 360 (a:assoc-value res :height)))
         (is (< -1 (a:assoc-value res :x) 360))

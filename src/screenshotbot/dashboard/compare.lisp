@@ -284,35 +284,36 @@
         (handle-resized-image (image-comparison-result image-comparison) size :warmup t)))
       (t
        (setf (hunchentoot:content-type*) "application/json")
-       (json:encode-json-to-string
-        `((:identical . ,(identical-p image-comparison))
-          ;; for debugging: e.g. if we need to delete the comparison
-          (:store-object-id
-           .
-           ,(when (typep image-comparison 'store-object)
-              (bknr.datastore:store-object-id image-comparison)))
-          (:zoom-to . ,(nibble-url (nibble (:name :zoom) (random-zoom-to-on-result
-                                                          image-comparison))))
-          (:src . ,(make-image-cdn-url (image-public-url (image-comparison-result image-comparison) :size size)))
-          (:background . ,(make-image-cdn-url (image-public-url (screenshot-image (before-image self)) :size size)))
-          (:masks .
-                  ,(or
-                    (loop for mask in (image-comparison-masks image-comparison)
-                          collect
-                          `((:left . ,(mask-rect-left mask))
-                            (:top . ,(mask-rect-top mask))
-                            (:width . ,(mask-rect-width mask))
-                            (:height . ,(mask-rect-height mask))))
-                    #()))))))))
+       (let ((masks (screenshot-masks (after-image self))))
+        (json:encode-json-to-string
+         `((:identical . ,(identical-p image-comparison))
+           ;; for debugging: e.g. if we need to delete the comparison
+           (:store-object-id
+            .
+            ,(when (typep image-comparison 'store-object)
+               (bknr.datastore:store-object-id image-comparison)))
+           (:zoom-to . ,(nibble-url (nibble (:name :zoom) (random-zoom-to-on-result
+                                                           image-comparison masks))))
+           (:src . ,(make-image-cdn-url (image-public-url (image-comparison-result image-comparison) :size size)))
+           (:background . ,(make-image-cdn-url (image-public-url (screenshot-image (before-image self)) :size size)))
+           (:masks .
+                   ,(or
+                     (loop for mask in masks
+                           collect
+                           `((:left . ,(mask-rect-left mask))
+                             (:top . ,(mask-rect-top mask))
+                             (:width . ,(mask-rect-width mask))
+                             (:height . ,(mask-rect-height mask))))
+                     #())))))))))
 
 
-(defun random-zoom-to-on-result (image-comparison)
+(defun random-zoom-to-on-result (image-comparison masks)
   (setf (hunchentoot:content-type*) "application/json")
   (with-local-image (file (image-comparison-result image-comparison))
     (with-wand (wand :file file)
       (log:debug"random-zoom-to-on-result on ~a" file)
       (let ((pxs (get-non-alpha-pixels wand
-                                       :masks (image-comparison-masks image-comparison))))
+                                       :masks masks)))
         (let ((i (random (car (array-dimensions pxs)))))
           (let ((dims (image-dimensions (image-comparison-result image-comparison))))
             (json:encode-json-to-string

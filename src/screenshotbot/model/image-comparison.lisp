@@ -53,7 +53,6 @@
    #:image-comparison
    #:%image-comparisons-for-before
    #:image-comparison-after
-   #:image-comparison-masks
    #:image-comparison-result
    #:identical-p))
 (in-package :screenshotbot/model/image-comparison)
@@ -123,7 +122,7 @@
             :relaxed-object-reference t)
      (masks :initarg :masks
             :initform nil
-            :reader image-comparison-masks)
+            :reader %image-comparison-masks)
      (identical-p :initform nil
                   :accessor identical-p
                   :initarg :identical-p
@@ -142,7 +141,7 @@
 "
    (oid (image-comparison-before self))
    (oid (image-comparison-after self))
-   (render-masks (image-comparison-masks self))
+   (render-masks (%image-comparison-masks self))
    (if (identical-p self) 1 0)
    (oid (image-comparison-result self)))
   self)
@@ -232,7 +231,7 @@ If the images are identical, we return t, else we return NIL."
             (progn
               (let ((before (image-comparison-before self))
                     (after (image-comparison-after self))
-                    (masks (image-comparison-masks self)))
+                    (masks (%image-comparison-masks self)))
                 (delete-object self)
                 (find-image-comparison-on-images
                  before after masks))
