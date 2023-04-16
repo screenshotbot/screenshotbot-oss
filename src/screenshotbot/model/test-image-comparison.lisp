@@ -19,8 +19,6 @@
                 #:image-comparison-before
                 #:make-image-comparison
                 #:*stored-cache*
-                #:ensure-db
-                #:*db*
                 #:image-comparison
                 #:do-image-comparison)
   (:import-from #:screenshotbot/model/image
@@ -75,14 +73,6 @@
           (t
            (tmpdir:with-tmpdir (dir2)
              (inner dir2))))))))
-
-(test ensure-db-multiple-times
-  (with-fixture state ()
-    (finishes (ensure-db)))
-  (is (eql nil *db*))
-  (with-fixture state ()
-    (finishes
-     (ensure-db))))
 
 (test do-image-comparison
   (with-fixture state ()

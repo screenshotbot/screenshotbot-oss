@@ -27,8 +27,6 @@
                (ignore ()))))
 
 (defun call-pre-delivery ()
-  (ensure-no-pro-packages)
-  (fli:disconnect-module
-   'sqlite-ffi::sqlite3-lib :remove t))
+  (ensure-no-pro-packages))
 
 (defun install-modules ())

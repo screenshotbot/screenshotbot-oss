@@ -92,7 +92,6 @@
                :cl-interpol
                :dns-client
                :gzip-stream
-               :sqlite
                :zs3
                :random-sample
                :gatekeeper

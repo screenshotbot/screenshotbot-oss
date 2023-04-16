@@ -82,45 +82,6 @@
 
 (defvar *lock* (bt:make-lock "image-comparison"))
 
-(defvar *db* nil)
-
-(defun clean-db ()
-  (when *db*
-    (sqlite:disconnect *db*)
-    (setf *db* nil)))
-
-#+lispworks
-(unless (hcl:delivered-image-p)
- (lw:define-action "Delivery Actions" "Clean image-comparison db"
-   'clean-db))
-
-(add-datastore-cleanup-hook 'clean-db)
-
-(defun ensure-db ()
-  (util:or-setf
-   *db*
-   (let ((db
-          (sqlite:connect
-           (ensure-directories-exist
-            (path:catfile (object-store) "sqlite/image-comparisons.db")))))
-     (prepare-schema db)
-     db)
-   :thread-safe t))
-
-(defun prepare-schema (db)
-  (sqlite:execute-non-query
-   db
-   ;; before, after, and result are OIDs to images represented as
-   ;; strings.
-   "create table if not exists comparisons
-     (before text not null, after text not null,
-      identical_p int,
-      result text not null)")
-  (sqlite:execute-non-query
-   db
-   "create unique index if not exists comparisons_image_lookup
-    on comparisons (before, after)"))
-
 (with-transient-copy (transient-image-comparison abstract-image-comparison)
   (defclass image-comparison (store-object)
     ((before :initarg :before
@@ -177,48 +138,6 @@
 (deftransaction remove-image-comparison (imc)
   (setf *stored-cache*
         (fset:less *stored-cache* imc)))
-
-(defmethod sqlite-write-comparison ((self abstract-image-comparison))
-  (sqlite:execute-non-query
-   (ensure-db)
-   "insert or replace into comparisons
-      (before, after, identical_p, result)
- values (?, ?, ?, ?)
-"
-   (oid (image-comparison-before self))
-   (oid (image-comparison-after self))
-   (if (identical-p self) 1 0)
-   (oid (image-comparison-result self)))
-  self)
-
-(defun sqlite-read-comparison (before after)
-  (multiple-value-bind (identical-as-num result-oid)
-      (sqlite:execute-one-row-m-v
-       (ensure-db)
-         "select identical_p, result from comparisons where
-    before = ? and after = ?"
-         (oid before)
-         (oid after))
-    (when identical-as-num
-      (assert (member identical-as-num '(0 1)))
-      (make-instance 'transient-image-comparison
-                     :before before
-                     :after after
-                     :identical-p (= 1 identical-as-num)
-                     :result (find-image-by-oid result-oid)))))
-
-(defun migrate-sqlite ()
-  (loop for (before after) in (sqlite:execute-to-list
-                   (ensure-db)
-                   "select before, after
-      from comparisons
-      where masks = '' or masks is null")
-        for imc = (sqlite-read-comparison (find-image-by-oid before) (find-image-by-oid after))
-        do (make-image-comparison
-            :before (image-comparison-before imc)
-            :after (image-comparison-after imc)
-            :identical-p (identical-p imc)
-            :result (image-comparison-result imc))))
 
 (defun make-old-transient ()
   (values))
