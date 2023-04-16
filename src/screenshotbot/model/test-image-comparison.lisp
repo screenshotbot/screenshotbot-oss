@@ -76,25 +76,18 @@
     (is-true (uiop:file-exists-p im2))
     (uiop:with-temporary-file (:pathname out :type "png")
       (is-false
-       (do-image-comparison (make-screenshot im1) (make-screenshot im3) out nil)))
+       (do-image-comparison (make-screenshot im1) (make-screenshot im3) out)))
     (uiop:with-temporary-file (:pathname out :type "png")
       (is-true
-       (do-image-comparison (make-screenshot im1) (make-screenshot im2) out nil)))))
+       (do-image-comparison (make-screenshot im1) (make-screenshot im2) out)))))
 
-(test do-image-comparison-with-masks
+(test do-image-comparison-for-webp
   (with-fixture state ()
     (is-true (uiop:file-exists-p im1))
     (is-true (uiop:file-exists-p im2))
     (uiop:with-temporary-file (:pathname out :type "webp")
       (finishes
-        (do-image-comparison (make-screenshot im1) (make-screenshot im3) out
-          (list
-           (make-instance
-            'mask-rect
-            :top 3
-            :left 3
-            :width 10
-            :height 10)))))))
+        (do-image-comparison (make-screenshot im1) (make-screenshot im3) out)))))
 
 (test find-image-comparison-on-images
   (with-fixture state ()

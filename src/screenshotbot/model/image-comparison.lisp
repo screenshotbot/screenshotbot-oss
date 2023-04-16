@@ -174,12 +174,10 @@
 
 (defun do-image-comparison (before-image
                             after-image
-                            p
-                            masks)
+                            p)
   "Compares before-screenshot and after-screenshot, and saves the result image to P.
 
 If the images are identical, we return t, else we return NIL."
-  (declare (ignore masks)) ;; We used to draw the masks earlier, we don't now.
   (with-local-image (before-file before-image)
     (with-local-image (after-file after-image)
       (with-wand (before :file before-file)
@@ -206,8 +204,7 @@ If the images are identical, we return t, else we return NIL."
        (let ((identical-p (do-image-comparison
                             before
                             after
-                            p
-                            nil)))
+                            p)))
          (let* ((image (make-image :pathname p)))
            (bt:with-lock-held (*lock*)
              (or
