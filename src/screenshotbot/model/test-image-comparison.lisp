@@ -44,6 +44,8 @@
                 #:check-boolean
                 #:magick-set-size
                 #:with-wand)
+  (:import-from #:bknr.datastore
+                #:delete-object)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#:fli #:util/fake-fli)))
@@ -171,3 +173,19 @@
                    (find-image-comparison-from-cache
                     :before s1 :after s2)))
              (is (equal "bleh" (image-comparison-result imc))))))))))
+
+(test saving-deleted-objects
+  (with-fixture stored-cache ()
+    (let ((*installation* (make-instance 'installation)))
+     (tmpdir:with-tmpdir (dir)
+       (with-test-store (:dir dir)
+         (let ((s1 (make-image :pathname im1))
+               (s2 (make-image :pathname im2)))
+           (make-image-comparison :before s1 :after s2 :result s2)
+           (make-image-comparison :before s2 :after s2 :result s2)
+           (is (eql 2 (fset:size *stored-cache*)))
+           (delete-object s1)
+           (util:safe-snapshot)))
+       (is (eql 0 (fset:size *stored-cache*)))
+       (with-test-store (:dir dir)
+         (is (eql 1 (fset:size *stored-cache*))))))))

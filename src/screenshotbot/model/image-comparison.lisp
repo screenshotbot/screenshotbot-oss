@@ -67,6 +67,10 @@
                 #:snapshot-subsystem)
   (:import-from #:bknr.datastore
                 #:close-subsystem)
+  (:import-from #:bknr.indices
+                #:object-destroyed-p)
+  (:import-from #:bknr.datastore
+                #:store-object)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -286,8 +290,20 @@ If the images are identical, we return t, else we return NIL."
 
 (defconstant +snapshot-version+ 1)
 
+(defun gc-comparisons ()
+  (fset:do-set (var *stored-cache*)
+    (flet ((destroyed? (obj)
+             (when (and obj (typep obj 'store-object))
+               (object-destroyed-p obj))))
+      (when (or (destroyed? (image-comparison-before var))
+                (destroyed? (image-comparison-after var))
+                (destroyed? (image-comparison-result var)))
+        (setf *stored-cache*
+              (fset:less *stored-cache* var))))))
+
 (defmethod snapshot-subsystem ((store bknr.datastore:store) (self image-comparison-subsystem))
   (log:info "Snapshotting image-comparison subsystem")
+  (gc-comparisons)
   (with-open-file (output (store-subsystem-snapshot-pathname store self)
                           :direction :output
                           :element-type '(unsigned-byte 8)
