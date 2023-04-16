@@ -29,6 +29,7 @@
                 #:oid
                 #:oid-array)
   (:import-from #:util/store
+                #:defsubsystem
                 #:add-datastore-cleanup-hook
                 #:object-store
                 #:location-for-oid)
@@ -48,6 +49,24 @@
                 #:?.)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:bknr.datastore
+                #:deftransaction)
+  (:import-from #:bknr.datastore
+                #:store-subsystem-snapshot-pathname)
+  (:import-from #:bknr.datastore
+                #:encode-object)
+  (:import-from #:bknr.datastore
+                #:decode-object)
+  (:import-from #:bknr.datastore
+                #:encode)
+  (:import-from #:bknr.datastore
+                #:decode)
+  (:import-from #:bknr.datastore
+                #:restore-subsystem)
+  (:import-from #:bknr.datastore
+                #:snapshot-subsystem)
+  (:import-from #:bknr.datastore
+                #:close-subsystem)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -119,6 +138,31 @@
              :accessor image-comparison-result
              :documentation "The final image object"))
     (:metaclass persistent-class)))
+
+(defmethod fset:compare ((a transient-image-comparison)
+                         (b transient-image-comparison))
+  (fset:compare-slots a b
+                      #'image-comparison-before
+                      #'image-comparison-after))
+
+(defvar *stored-cache*
+  (fset:empty-set)
+  "A cache of empty image-comparison")
+
+(deftransaction %make-image-comparison (args)
+  (let ((imc (apply #'make-instance
+                    'transient-image-comparison
+                    args)))
+    (setf *stored-cache*
+          (fset:with *stored-cache* imc))
+    imc))
+
+(defun make-image-comparison (&rest args)
+  (%make-image-comparison args))
+
+(deftransaction remove-image-comparison (imc)
+  (setf *stored-cache*
+        (fset:less *stored-cache* imc)))
 
 (defmethod sqlite-write-comparison ((self abstract-image-comparison))
   (sqlite:execute-non-query
@@ -226,3 +270,63 @@ If the images are identical, we return t, else we return NIL."
                                  (bknr.datastore:store-objects-with-class 'image-comparison))
         do
         (recreate-image-comparison image-comparison)))
+
+(defclass image-comparison-subsystem ()
+  ())
+
+(defconstant +snapshot-version+ 1)
+
+(defmethod snapshot-subsystem ((store bknr.datastore:store) (self image-comparison-subsystem))
+  (with-open-file (output (store-subsystem-snapshot-pathname store self)
+                          :direction :output
+                          :element-type '(unsigned-byte 8)
+                          :if-does-not-exist :create
+                          :if-exists :supersede)
+    (encode +snapshot-version+ output)
+    ;; write the number of objects too
+    (encode (fset:size *stored-cache*) output)
+    (labels ((write-single (obj)
+               (encode (image-comparison-before obj) output)
+               (encode (image-comparison-after obj) output)
+               (encode (image-comparison-result obj) output)
+               (encode
+                (if (identical-p obj) 1 0)
+                output))
+             (write-imcs (set)
+               (cond
+                 ((fset:empty? set)
+                  nil)
+                 (t
+                  (let ((next (fset:arb set)))
+                    (write-single next)
+                    (write-imcs (fset:less set next)))))))
+      (write-imcs *stored-cache*))))
+
+(defmethod restore-subsystem ((store bknr.datastore:store) (self image-comparison-subsystem) &key until)
+  (declare (ignore until))
+  (let ((snapshot-file (store-subsystem-snapshot-pathname store self)))
+    (when (probe-file snapshot-file)
+      (with-open-file (stream snapshot-file
+                              :direction :input
+                              :element-type '(unsigned-byte 8))
+        (let ((version (decode stream)))
+          (unless (<= version +snapshot-version+)
+            (error "Unsupported version for image comparisons snapshot: ~a" version))
+          (let ((size (decode stream)))
+            (flet ((read-single ()
+                     (make-instance 'transient-image-comparison
+                                    :before (decode stream)
+                                    :after (decode stream)
+                                    :result (decode stream)
+                                    :identical-p (ecase (decode stream)
+                                                   (1 t)
+                                                   (0 nil)))))
+              (let ((objs (loop for i from 0 below size
+                                collect (read-single))))
+                (setf *stored-cache*
+                      (fset:convert 'fset:set objs))))))))))
+
+(defmethod close-subsystem ((store bknr.datastore:store) (self image-comparison-subsystem))
+  (setf *stored-cache* (fset:empty-set)))
+
+(defsubsystem image-comparison-subsystem :priority 20)

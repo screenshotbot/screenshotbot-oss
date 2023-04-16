@@ -14,6 +14,9 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:screenshotbot/model/image-comparison
+                #:image-comparison-before
+                #:make-image-comparison
+                #:*stored-cache*
                 #:ensure-db
                 #:*db*
                 #:image-comparison
@@ -46,21 +49,28 @@
 
 (util/fiveam:def-suite)
 
-(def-fixture state ()
+(defvar im1 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
+(defvar im2 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-2.png"))
+(defvar im3 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-3.png"))
+
+(def-fixture state (&key dir)
   (let ((*installation* (make-instance 'installation)))
-   (with-test-store ()
-     (tmpdir:with-tmpdir (dir)
-       (with-fake-request ()
-         (let ((im1 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
-               (im2 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-2.png"))
-               (im3 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-3.png"))
-               (objs))
-           (labels ((make-screenshot (img)
-                      (let* ((image (make-image :pathname img)))
-                        (make-instance 'screenshot
-                                        :name "foobar"
-                                        :image image))))
-             (&body))))))))
+    (with-test-store ()
+      (flet ((inner (dir)
+               (with-fake-request ()
+                 (let (objs)
+                   (labels ((make-screenshot (img)
+                              (let* ((image (make-image :pathname img)))
+                                (make-instance 'screenshot
+                                               :name "foobar"
+                                               :image image))))
+                     (&body))))))
+        (cond
+          (dir
+           (inner dir))
+          (t
+           (tmpdir:with-tmpdir (dir2)
+             (inner dir2))))))))
 
 (test ensure-db-multiple-times
   (with-fixture state ()
@@ -107,3 +117,42 @@
     (delete-file res)
     (fad:copy-file file res)
     (funcall fn (namestring res))))
+
+(def-fixture stored-cache ()
+  (unwind-protect
+       (&body)
+    (setf *stored-cache* (fset:empty-set))))
+
+(test saving-and-restoring-subsystem
+  (with-fixture stored-cache ()
+    (is (fset:equal? *stored-cache* (fset:empty-set)))
+    (tmpdir:with-tmpdir (dir)
+      (with-test-store (:dir dir)
+        (let ((im1 (make-image-comparison :before "foo" :after "bar"
+                                          :result "car"))
+              (im2 (make-image-comparison :before "foo1" :after "bar1"
+                                          :result "car1")))
+          (util:safe-snapshot)
+          (is (eql 2 (fset:size *stored-cache*)))))
+      (is (fset:equal? *stored-cache* (fset:empty-set)))
+      (with-test-store (:dir dir)
+        (is (eql 2 (fset:size *stored-cache*)))
+        (is (equal "foo"
+                   (image-comparison-before (fset:least *stored-cache*))))
+        (is (equal "foo1"
+                   (image-comparison-before (fset:greatest *stored-cache*))))))))
+
+
+(test saving-and-restoring-actual-image-objects
+  (with-fixture stored-cache ()
+    (let ((*installation* (make-instance 'installation)))
+     (tmpdir:with-tmpdir (dir)
+       (with-test-store (:dir dir)
+         (let ((s1 (make-image :pathname im1))
+               (s2 (make-image :pathname im2)))
+           (make-image-comparison :before s1 :after s2 :result s2)
+           (is (eql 1 (fset:size *stored-cache*)))
+           (util:safe-snapshot)))
+       (is (eql 0 (fset:size *stored-cache*)))
+       (with-test-store (:dir dir)
+         (is (eql 1 (fset:size *stored-cache*))))))))
