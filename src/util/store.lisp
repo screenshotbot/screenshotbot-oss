@@ -97,10 +97,13 @@ to the directory that was just snapshotted.")
      (ensure-directories-exist path)
      path)))
 
-(defclass safe-mp-store (bknr.datastore:mp-store)
+(defclass common-mp-store (bknr.datastore:mp-store)
+  ())
+
+(defclass safe-mp-store (common-mp-store)
   ((transaction-log-lock :initform nil)))
 
-(defclass store-for-test (safe-mp-store)
+(defclass store-for-test (common-mp-store)
   ())
 
 (defmethod initialize-instance :before ((store safe-mp-store) &key directory &allow-other-keys))
@@ -132,9 +135,6 @@ to the directory that was just snapshotted.")
 (defmethod maybe-gc-coalesce ((store safe-mp-store))
   #+lispworks
   (hcl:gc-generation 4 :coalesce t))
-
-(defmethod maybe-gc-coalesce ((store store-for-test))
-  nil)
 
 (defmethod restore-transaction-log :before ((store safe-mp-store)
                                             transaction-log
