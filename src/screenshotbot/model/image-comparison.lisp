@@ -277,6 +277,7 @@ If the images are identical, we return t, else we return NIL."
 (defconstant +snapshot-version+ 1)
 
 (defmethod snapshot-subsystem ((store bknr.datastore:store) (self image-comparison-subsystem))
+  (log:info "Snapshotting image-comparison subsystem")
   (with-open-file (output (store-subsystem-snapshot-pathname store self)
                           :direction :output
                           :element-type '(unsigned-byte 8)
@@ -304,6 +305,7 @@ If the images are identical, we return t, else we return NIL."
 
 (defmethod restore-subsystem ((store bknr.datastore:store) (self image-comparison-subsystem) &key until)
   (declare (ignore until))
+  (log:info "Restoring image-comparison subsystem")
   (let ((snapshot-file (store-subsystem-snapshot-pathname store self)))
     (when (probe-file snapshot-file)
       (with-open-file (stream snapshot-file
