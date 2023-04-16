@@ -250,27 +250,20 @@ If the images are identical, we return t, else we return NIL."
   returns true if the images are completely identical, or nil
   otherwise"
   (flet ((find ()
-           (sqlite-read-comparison before after)))
+           (find-image-comparison-from-cache :before before :after after)))
     (or
-     (bt:with-lock-held (*lock*)
-       (find))
+     (find)
      (with-tmp-image-file (:pathname p :type "webp" :prefix "comparison")
        (let ((identical-p (do-image-comparison
                             before
                             after
                             p)))
          (let* ((image (make-image :pathname p)))
-           (bt:with-lock-held (*lock*)
-             (or
-              (find)
-              (progn
-                (log:info "making new image-comparison")
-                (sqlite-write-comparison
-                 (make-instance 'transient-image-comparison
-                                :before before
-                                :after after
-                                :identical-p identical-p
-                                :result image)))))))))))
+           (make-image-comparison
+            :before before
+            :after after
+            :identical-p identical-p
+            :result image)))))))
 
 (with-auto-restart ()
   (defmethod recreate-image-comparison ((self image-comparison))
