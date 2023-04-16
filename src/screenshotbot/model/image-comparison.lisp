@@ -278,7 +278,8 @@ If the images are identical, we return t, else we return NIL."
               (let ((objs (loop for i from 0 below size
                                 collect (read-single))))
                 (setf *stored-cache*
-                      (fset:convert 'fset:set objs))))))))))
+                      (fset:convert 'fset:set objs)))))))))
+  (log:info "Loaded ~a image-comparison objects" (fset:size *stored-cache*)))
 
 (defmethod close-subsystem ((store bknr.datastore:store) (self image-comparison-subsystem))
   (setf *stored-cache* (fset:empty-set)))
