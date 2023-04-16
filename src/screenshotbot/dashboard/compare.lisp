@@ -258,8 +258,7 @@
       (rotatef before after))
     (find-image-comparison-on-images
      before
-     after
-     (screenshot-masks after-screenshot))))
+     after)))
 
 (defmethod prepare-image-comparison-file ((self image-comparison-job))
   (bt:with-lock-held ((lock self))

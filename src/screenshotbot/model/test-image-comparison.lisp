@@ -94,11 +94,11 @@
     (let ((before (make-image :pathname im1))
           (after (make-image :pathname im2)))
       ;; this will create a new image-comparison
-      (let ((result (find-image-comparison-on-images before after nil)))
+      (let ((result (find-image-comparison-on-images before after)))
         (is-true result)
         ;; We used to test that this object is the same as before, but
         ;; with sqlite that might no longer be the case.
-        (is-true (find-image-comparison-on-images before after nil))))))
+        (is-true (find-image-comparison-on-images before after))))))
 
 
 (def-easy-macro with-file-copy (&binding result file &fn fn)

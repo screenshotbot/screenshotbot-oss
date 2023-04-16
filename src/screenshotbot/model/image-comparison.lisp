@@ -91,24 +91,12 @@
    ;; strings.
    "create table if not exists comparisons
      (before text not null, after text not null,
-      masks text not null,
       identical_p int,
       result text not null)")
   (sqlite:execute-non-query
    db
    "create unique index if not exists comparisons_image_lookup
-    on comparisons (before, after, masks)"))
-
-(defun render-masks (masks)
-  "Create a rendering of masks for use as a key in the sqlite table."
-  (with-output-to-string (out)
-    (loop for mask in masks
-          do (format out
-                     "(~a ~a ~a ~a)"
-                     (mask-rect-left mask)
-                     (mask-rect-top mask)
-                     (mask-rect-width mask)
-                     (mask-rect-height mask)))))
+    on comparisons (before, after)"))
 
 (with-transient-copy (transient-image-comparison abstract-image-comparison)
   (defclass image-comparison (store-object)
@@ -122,7 +110,7 @@
             :relaxed-object-reference t)
      (masks :initarg :masks
             :initform nil
-            :reader %image-comparison-masks)
+            :documentation "DEPRECATED: do not use.")
      (identical-p :initform nil
                   :accessor identical-p
                   :initarg :identical-p
@@ -136,31 +124,28 @@
   (sqlite:execute-non-query
    (ensure-db)
    "insert or replace into comparisons
-      (before, after, masks, identical_p, result)
- values (?, ?, ?, ?, ?)
+      (before, after, identical_p, result)
+ values (?, ?, ?, ?)
 "
    (oid (image-comparison-before self))
    (oid (image-comparison-after self))
-   (render-masks (%image-comparison-masks self))
    (if (identical-p self) 1 0)
    (oid (image-comparison-result self)))
   self)
 
-(defun sqlite-read-comparison (before after masks)
+(defun sqlite-read-comparison (before after)
   (multiple-value-bind (identical-as-num result-oid)
       (sqlite:execute-one-row-m-v
        (ensure-db)
          "select identical_p, result from comparisons where
-    before = ? and after = ? and masks = ?"
+    before = ? and after = ?"
          (oid before)
-         (oid after)
-         (render-masks masks))
+         (oid after))
     (when identical-as-num
       (assert (member identical-as-num '(0 1)))
       (make-instance 'transient-image-comparison
                      :before before
                      :after after
-                     :masks masks
                      :identical-p (= 1 identical-as-num)
                      :result (find-image-by-oid result-oid)))))
 
@@ -187,16 +172,14 @@ If the images are identical, we return t, else we return NIL."
             same-p))))))
 
 (defmethod find-image-comparison-on-images ((before image)
-                                            (after image)
-                                            masks)
+                                            (after image))
   "Finds an existing image comparison for before and after, if it
   doesn't exist calls creator with a temporary file. The creator
   should create the image in the file provided. The creator should
   returns true if the images are completely identical, or nil
   otherwise"
-  (declare (ignore masks))
   (flet ((find ()
-           (sqlite-read-comparison before after nil)))
+           (sqlite-read-comparison before after)))
     (or
      (bt:with-lock-held (*lock*)
        (find))
@@ -215,7 +198,6 @@ If the images are identical, we return t, else we return NIL."
                  (make-instance 'transient-image-comparison
                                 :before before
                                 :after after
-                                :masks masks
                                 :identical-p identical-p
                                 :result image)))))))))))
 
@@ -228,11 +210,10 @@ If the images are identical, we return t, else we return NIL."
         (restart-case
             (progn
               (let ((before (image-comparison-before self))
-                    (after (image-comparison-after self))
-                    (masks (%image-comparison-masks self)))
+                    (after (image-comparison-after self)))
                 (delete-object self)
                 (find-image-comparison-on-images
-                 before after masks))
+                 before after))
               (delete-object image)
               (log:info "Deleting ~a" pathname)
               (delete-file pathname))
