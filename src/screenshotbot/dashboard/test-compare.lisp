@@ -2,6 +2,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/compare
+                #:image-comparison-job
+                #:prepare-image-comparison
                 #:random-zoom-to-on-result
                 #:image-comparison)
   (:import-from #:screenshotbot/model/image
@@ -35,6 +37,14 @@
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:*installation*)
+  (:import-from #:screenshotbot/screenshot-api
+                #:make-screenshot)
+  (:import-from #:fiveam-matchers/core
+                #:is-string
+                #:has-typep
+                #:assert-that)
+  (:import-from #:fiveam-matchers/described-as
+                #:described-as)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-compare)
 
@@ -49,11 +59,11 @@
                (im2 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-2.png"))
                (im3 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-3.png"))
                (objs))
-           (labels ((make-screenshot (img)
-                      (let* ((image (make-image :pathname img :for-tests t)))
-                        (make-instance 'screenshot
-                                       :name "foobar"
-                                       :image image))))
+           (flet ((make-screenshot (img)
+                    (let* ((image (make-image :pathname img :for-tests t)))
+                      (make-screenshot
+                       :name "foobar"
+                       :image image))))
              (&body))))))))
 
 
@@ -123,3 +133,17 @@
          :screenshotbot
          "report-page-only-added-screenshots"
          (render-report-page report :skip-access-checks t))))))
+
+(test prepare-image-comparison
+  (with-fixture state ()
+    (with-test-user (:user user
+                     :company company
+                     :logged-in-p t)
+      (let ((job (make-instance 'image-comparison-job
+                                :before-image (make-screenshot im1)
+                                :after-image (make-screenshot im2))))
+
+        (let ((image-comparison (prepare-image-comparison job)))
+          (assert-that image-comparison
+                       (described-as "Expected to get a json response"
+                           (is-string))))))))
