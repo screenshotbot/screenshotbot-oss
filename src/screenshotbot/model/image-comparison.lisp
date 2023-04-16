@@ -196,8 +196,9 @@ If the images are identical, we return t, else we return NIL."
   should create the image in the file provided. The creator should
   returns true if the images are completely identical, or nil
   otherwise"
+  (declare (ignore masks))
   (flet ((find ()
-           (sqlite-read-comparison before after masks)))
+           (sqlite-read-comparison before after nil)))
     (or
      (bt:with-lock-held (*lock*)
        (find))
@@ -206,7 +207,7 @@ If the images are identical, we return t, else we return NIL."
                             before
                             after
                             p
-                            masks)))
+                            nil)))
          (let* ((image (make-image :pathname p)))
            (bt:with-lock-held (*lock*)
              (or
