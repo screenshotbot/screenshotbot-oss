@@ -14,6 +14,8 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:screenshotbot/model/image-comparison
+                #:image-comparison-result
+                #:find-image-comparison-from-cache
                 #:image-comparison-before
                 #:make-image-comparison
                 #:*stored-cache*
@@ -156,3 +158,16 @@
        (is (eql 0 (fset:size *stored-cache*)))
        (with-test-store (:dir dir)
          (is (eql 1 (fset:size *stored-cache*))))))))
+
+(test finding-image-comparisons
+  (with-fixture stored-cache ()
+    (let ((*installation* (make-instance 'installation)))
+     (tmpdir:with-tmpdir (dir)
+       (with-test-store (:dir dir)
+         (let ((s1 (make-image :pathname im1))
+               (s2 (make-image :pathname im2)))
+           (make-image-comparison :before s1 :after s2 :result "bleh")
+           (let ((imc
+                   (find-image-comparison-from-cache
+                    :before s1 :after s2)))
+             (is (equal "bleh" (image-comparison-result imc))))))))))

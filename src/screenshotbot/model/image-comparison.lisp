@@ -157,6 +157,16 @@
           (fset:with *stored-cache* imc))
     imc))
 
+(defun find-image-comparison-from-cache (&key before after)
+  (multiple-value-bind (exists-p value)
+      (fset:lookup
+       *stored-cache*
+       (make-instance 'transient-image-comparison
+                      :before before
+                      :after after))
+    (declare (ignore exists-p))
+    value))
+
 (defun make-image-comparison (&rest args)
   (%make-image-comparison args))
 
