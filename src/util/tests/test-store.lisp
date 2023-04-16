@@ -250,3 +250,15 @@
      (eql :foo
       (with-snapshot-lock (*store*)
         :foo)))))
+
+(test can-compare-deleted-objects
+  (with-test-store ()
+    (let ((obj-1 (make-instance 'dummy-class))
+          (obj-2 (make-instance 'dummy-class)))
+      (flet ((checks ()
+               (is (eql :less (fset:compare obj-1 obj-2)))
+               (is (eql :equal (fset:compare obj-1 obj-1)))
+               (is (eql :greater (fset:compare obj-2 obj-1)))))
+        (checks)
+        (delete-object obj-1)
+        (checks)))))

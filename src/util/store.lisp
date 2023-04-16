@@ -30,6 +30,8 @@
                 #:restore-transaction-log)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:bknr.indices
+                #:*indexed-class-override*)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -701,4 +703,5 @@ this variable in LET forms, but you can SETF it if you like."
                (path:catfile root relpath))))))
 
 (defmethod fset:compare ((a store-object) (b store-object))
-  (fset:compare (store-object-id a) (store-object-id b)))
+  (let ((*indexed-class-override* t))
+    (fset:compare (store-object-id a) (store-object-id b))))
