@@ -80,8 +80,6 @@
    #:identical-p))
 (in-package :screenshotbot/model/image-comparison)
 
-(defvar *lock* (bt:make-lock "image-comparison"))
-
 (with-transient-copy (transient-image-comparison abstract-image-comparison)
   (defclass image-comparison (store-object)
     ((before :initarg :before
