@@ -1,5 +1,8 @@
 (defpackage :util/clsql/clsql
   (:use #:cl)
+  #+lispworks
+  (:import-from #:deliver-utils/common
+                #:guess-root)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/clsql/clsql)
 
@@ -12,9 +15,15 @@
              (pushnew path
                       clsql:*foreign-library-search-paths*
                       :test #'equal)))
-      (%push (asdf:system-relative-pathname
-              :util/clsql
-              "clsql/"))
+      (%push
+       (cond
+         #+lispworks
+         ((hcl:delivered-image-p)
+          (path:catdir (guess-root) "util/clsql/clsql/"))
+         (t
+          (asdf:system-relative-pathname
+           :util/clsql
+           "clsql/"))))
 
       ;; Only for Homebrew on Mac. Technically only for ARM64.
       (%push #p"/opt/homebrew/opt/mysql-client/lib/")))

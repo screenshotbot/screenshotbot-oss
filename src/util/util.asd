@@ -310,7 +310,8 @@
 
 (defsystem :util/clsql
   :depends-on (:clsql
-	       :trivial-features)
+               (:feature :lispworks :deliver-utils)
+               :trivial-features)
   :components ((:module "clsql"
                 :components ((:file "clsql")))))
 
