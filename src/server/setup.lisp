@@ -40,11 +40,6 @@
 ;; Reminder you can generate a self-signed pair like so:
 ;; openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -sha256 -days 365 -nodes -subj '/CN=localhost'
 
-(defvar *ssl-key*)
-(defvar *ssl-cert*)
-
-(defvar *remote-debugging-client-port*)
-(defvar *remote-debugging-password*)
 (defvar *slynk-loopback-interface*)
 (defvar *health-check*)
 
@@ -71,19 +66,6 @@
     (*verify-snapshots* nil "")
     #-sbcl
     (jvm:*libjvm* nil "Location of libjvm.so" :params ("LIBJVM"))
-    (*ssl-key* nil "SSL Key to be used for remote-debugging-client and other services"
-               :params ("SSL-KEY"))
-    (*ssl-cert* nil "Corresponding SSL Certificate file"
-                :params ("SSL-CERT"))
-    (*remote-debugging-client-port*
-     nil
-     "A port to open a Lispworks remote debugging client. If SSL key is
- provided, we'll attach an SSL context to the socket"
-     :params ("REMOTE-DEBUGGING-CLIENT-PORT"))
-    (*remote-debugging-password*
-     nil
-     "A password required for a client to connect"
-     :params ("REMOTE-DEBUGGING-CLIENT"))
     (*debugger*
      nil
      "Enable the debugger on the main thread, this lets us debug issues with loading snapshots and transaction logs."
@@ -184,23 +166,7 @@
 (defun setup-log4cl-debugger-hook ()
   )
 
-(defvar *remote-debugging-process* nil)
 (defvar *debugger* nil)
-
-#+lispworks
-(defun start-remote-debugging-client (port)
-  (log:info "Starting remote debugging server on port ~a" port)
-  (let ((ssl-ctx (when *ssl-key*
-                   (log:info "Using SSL key at ~a, cert at ~a" *ssl-key* *ssl-cert*)
-                   (comm:create-ssl-server-context :key-file *ssl-key*
-                                                   :cert-file *ssl-cert*
-                                                   :implementation :openssl))))
-    (setf *remote-debugging-process*
-     (util/remote-debugging:start-client-remote-debugging-server
-      :port port
-      :password *remote-debugging-password*
-      :ssl ssl-ctx)))
-  (log:info "Remote debugging server started"))
 
 (defun maybe-run-health-checks ()
   (when *health-check*
@@ -290,10 +256,6 @@
          (with-control-socket ()
           (with-slynk ()
             (unwind-on-interrupt ()
-              #+lispworks
-              (when *remote-debugging-client-port*
-                (start-remote-debugging-client
-                 *remote-debugging-client-port*))
 
               (when *verify-store*
                 (log:config :info)
@@ -370,9 +332,6 @@
      (when enable-store
        (bknr.datastore:close-store))
 
-     #+lispworks
-     (when *remote-debugging-process*
-       (comm:server-terminate *remote-debugging-process*))
 
      (format t "All services down~%")))
   #+lispworks
