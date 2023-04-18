@@ -12,9 +12,9 @@
 
 
 (def-easy-macro with-control-socket  (&fn fn)
-  #+windows
+  #+(or windows screenshotbot-oss)
   (funcall fn)
-  #-windows
+  #-(or windows screenshotbot-oss)
   (let* ((store-dir (object-store))
          (socket-file (ensure-directories-exist
                        (path:catfile store-dir "sockets/"

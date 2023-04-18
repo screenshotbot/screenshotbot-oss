@@ -23,6 +23,7 @@
                "lparallel"
                "control-socket"
                "easy-macros"
+               (:feature (:not (:or :mswindows :windows)) "osicat")
                "util/health-check"
                "bknr.datastore"
                "hunchentoot-multi-acceptor")
