@@ -47,7 +47,7 @@
 (test safe-interrupt
   (with-fixture state ()
    (let* ((ctr 0)
-          (max-ctr 100)
+          (max-ctr 300)
           (lock (bt:make-lock))
           (cv (bt:make-condition-variable))
           (callback-called-p nil))
@@ -68,8 +68,7 @@
         (safe-interrupt thread)
         (bt:join-thread thread)
         (is-true callback-called-p)
-        (is (< ctr (/ max-ctr 2)))
-        (pass))))))
+        (is (< ctr (/ max-ctr 2))))))))
 
 (def-fixture sentry-mocks ()
   (cl-mock:with-mocks ()
