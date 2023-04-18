@@ -40,9 +40,14 @@
 
 (defmethod dispatch-request ((self control-socket) socket)
   (log:info "Got new control-socket connection")
-  (unix-sockets:with-unix-socket (socket socket)
-    (let ((stream (flex:make-flexi-stream (unix-sockets:unix-socket-stream socket))))
-      (let ((cmd (read stream)))
-        (log:info "Got command: ~a" cmd)))))
+  (with-open-stream (stream (flex:make-flexi-stream (unix-sockets:unix-socket-stream socket)))
+    (let ((cmd (read stream)))
+      (log:info "Got command: ~a" cmd)
+      (write (apply #'handle-request cmd)
+             :stream stream))))
 
-;; (defvar *sock* (make-control-socket "/tmp/foo5"))
+(defmethod handle-request ((cmd (eql :echo)) &optional message)
+  `(:result ,message) )
+
+
+;; (defparameter *sock* (make-control-socket "/tmp/foo6"))
