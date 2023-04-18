@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/misc
+                #:relpath
                 #:safe-ensure-directories-exist
                 #:or-setf)
   (:import-from #:tmpdir
@@ -66,3 +67,14 @@
   (signals
       file-error
     (safe-ensure-directories-exist "/foo/car/bar.txt")))
+
+(defun pathname-equal (a b)
+  (string= (namestring a) (namestring b)))
+
+(test relpath
+  (let ((dir #P "/etc/bar/"))
+    (let ((subdir (path:catdir dir "foo/")))
+      (is (pathname-equal #P"foo/" (relpath subdir dir)))
+      (is (pathname-equal #P "../foo/" (relpath subdir (path:catdir dir "bleh/"))))
+      (is (pathname-equal #P "../../foo/" (relpath subdir (path:catdir dir "bleh/dfd/"))))
+      (is (pathname-equal #P "../foo.txt" (relpath "/etc/bar/foo.txt" "/etc/bar/car/" ))))))

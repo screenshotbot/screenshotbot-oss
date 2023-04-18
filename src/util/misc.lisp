@@ -148,3 +148,22 @@ In the error case, it's hard to distinguish between a real error (e.g.
          (setf (symbol-value sym) old-val))
         (t
          (makunbound sym))))))
+
+(defun relpath (path start)
+  (assert (fad:pathname-absolute-p path))
+  (assert (fad:pathname-absolute-p start))
+
+  (labels ((compute (path start)
+             (cond
+               ((equal (car path) (car start))
+                (compute (cdr path) (cdr start)))
+               ((not start)
+                path)
+               (t
+                (compute (list* ".." path)
+                         (cdr start))))))
+    (make-pathname
+     :directory
+     (list* :relative
+      (compute (pathname-directory path) (pathname-directory start)))
+     :defaults path)))
