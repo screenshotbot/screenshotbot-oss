@@ -222,7 +222,9 @@
             (loop for var in vars
                   for val in vals
                   do (setf (symbol-value var) val))
-      (fn *verify-store* *profile-store* *health-check*))))
+      (fn *verify-store*
+        (or #+lispworks *profile-store*)
+        *health-check*))))
 
 (def-easy-macro with-common-setup (&key enable-store &fn fn)
   (maybe-with-debugger ()
@@ -289,6 +291,7 @@
   (with-cl-cli-processed (:verify-store verify-store
                           :profile-store profile-store
                           :health-check health-check)
+    (declare (ignorable profile-store))
     (cond
       (verify-store
        (with-common-setup (:enable-store t)
