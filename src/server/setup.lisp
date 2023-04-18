@@ -33,7 +33,6 @@
 (defvar *verify-store*)
 (defvar *profile-store*)
 (defvar *verify-snapshots*)
-(defvar *socketmaster*)
 (defvar *shell*)
 (defvar *start-slynk*)
 
@@ -46,7 +45,6 @@
 (defparameter *options*
   `((*port* #+screenshotbot-oss "4091"
             #-screenshotbot-oss "4001" "" :params ("PORT"))
-    (*socketmaster* nil "")
     (*shell* nil "")
     (*slynk-port* #+screenshotbot-oss "4095"
                   #-screenshotbot-oss "4005"
@@ -73,24 +71,6 @@
 
 (defclass my-acceptor (hunchentoot-multi-acceptor:multi-acceptor)
   ())
-
-;; When using socketmaster to restart the server without downtime, we
-;; don't open a brand new socket, instead using the socket on file
-;; descriptor 3. Currently this is only tested on Lispworks, and we
-;; only use this for the non-OSS port. If you want to try this out,
-;; try remove this feature check and see if it works.
-#+(and lispworks (not screenshotbot-oss))
-(defmethod hunchentoot:start-listening ((acceptor my-acceptor))
-  ;; always listen on the PORT setup on fd 3. Assuming we'll be
-  ;; started by socketmaster
-  (cond
-    (*socketmaster*
-     (error "Socketmaster no longer supported, needs patched hunchentoot")
-     #+nil
-     (setf (hunchentoot::acceptor-listen-socket acceptor)
-           (usocket::make-stream-server-socket 3 :element-type '(unsigned-byte 8))))
-    (t
-     (call-next-method))))
 
 (defvar *multi-acceptor*)
 
