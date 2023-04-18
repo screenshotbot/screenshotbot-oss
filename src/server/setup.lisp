@@ -226,12 +226,15 @@
         (or #+lispworks *profile-store*)
         *health-check*))))
 
-(def-easy-macro with-common-setup (&key enable-store &fn fn)
+(def-easy-macro with-common-setup (&key enable-store jvm &fn fn)
   (maybe-with-debugger ()
     (with-lparallel-kernel ()
       (with-control-socket ()
         (with-slynk ()
           (unwind-on-interrupt ()
+            #+lispworks
+            (when jvm
+              (jvm:jvm-init))
 
             (fn))))
       ;; unwind if an interrupt happens
@@ -294,7 +297,7 @@
     (declare (ignorable profile-store))
     (cond
       (verify-store
-       (with-common-setup (:enable-store t)
+       (with-common-setup (:enable-store t :jvm jvm)
          (log:config :info)
          (time
           (cond
@@ -310,19 +313,21 @@
          (run-health-checks)
          (uiop:quit 0)))
       (health-check
-       (with-common-setup (:enable-store enable-store)
+       (with-common-setup (:enable-store enable-store :jvm jvm)
          (run-health-checks)
          (uiop:quit 0)))
       (t
-       (with-common-setup (:enable-store enable-store)
-         (%run :jvm jvm :enable-store enable-store :acceptor acceptor))))))
+       (with-common-setup (:enable-store enable-store :jvm jvm)
+         (%run :enable-store enable-store :acceptor acceptor))))))
 
-(defun %run (&key jvm enable-store acceptor)
+
+(defun required (&optional arg)
+  (error "Missing required argument: ~a" arg))
+
+(defun %run (&key (enable-store (required))
+               (acceptor (required)))
   (log:info "The port is now ~a" *port*)
 
-  #+lispworks
-  (when jvm
-    (jvm:jvm-init))
   (setup-appenders)
 
   (setup-log4cl-debugger-hook)

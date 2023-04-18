@@ -10,6 +10,9 @@
                :cffi
                :cl-fad
                :java.main
+               (:feature :lispworks :deliver-utils)
+               :log4cl
+               :util/misc
                :util
                :trivial-garbage)
   :components ((:file "jvm")))

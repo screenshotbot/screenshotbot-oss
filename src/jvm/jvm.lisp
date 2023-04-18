@@ -7,6 +7,11 @@
 (defpackage :jvm
   (:use :cl
    :alexandria)
+  #+lispworks
+  (:import-from #:deliver-utils/common
+                #:guess-root)
+  (:import-from #:util/misc
+                #:relpath)
   (:export :jvm-init
            :*libjvm*
            :free-memory
@@ -17,9 +22,29 @@
 (eval-when (:compile-toplevel  :load-toplevel)
   (require "java-interface"))
 
+(defun root ()
+  (cond
+    #+lispworks
+    ((hcl:delivered-image-p)
+     (guess-root))
+    (t
+     (truename
+      (path:catdir
+       (asdf:system-source-directory :java.main)
+       "../../../")))))
+
+(defvar *classpath-relative*
+  (let ((root (root)))
+   (loop for path in (build-utils:java-class-path
+                      (asdf:find-system :java.main))
+         collect
+         (relpath path root))))
+
 (defun jvm-get-classpath ()
   (let ((class-path
-          (build-utils:java-class-path (asdf:find-system :java.main))))
+          (let ((root (root)))
+            (loop for path in *classpath-relative*
+                  collect (path:catfile root path)))))
     #+ccl
     (pushnew (asdf:system-relative-pathname :cl+j "cl_j.jar")
              class-path)
@@ -28,6 +53,7 @@
     (pushnew
      (sys:lispworks-file "etc/lispcalls.jar")
      class-path)
+    (log:debug "Using classpath: ~S" class-path)
 
     class-path))
 
@@ -67,12 +93,10 @@
               (format nil "-Djava.class.path=~a"
                       (str:join ":" (mapcar 'namestring (jvm-get-classpath)))))))
 
-(defvar *classpath* (jvm-get-classpath))
-
 (defun jvm-init ()
   #+lispworks
   (lw-ji:init-java-interface
-   :java-class-path *classpath*
+   :java-class-path (jvm-get-classpath)
    :option-strings (list #+nil"-verbose")
    :jvm-library-path (libjvm.so))
 
