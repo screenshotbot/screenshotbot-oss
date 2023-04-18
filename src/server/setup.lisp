@@ -214,26 +214,28 @@
     (format t "Shutting down cron~%")
     (cl-cron:stop-cron)))
 
+(def-easy-macro with-cl-cli-processed (&fn fn)
+  (let ((args #-lispworks (cons "<arg0>"(uiop:command-line-arguments))
+                    #+lispworks sys:*line-arguments-list*))
+          (format t "CLI args: ~s~%" args)
+    (multiple-value-bind (vars vals matched dispatch rest)
+              (cl-cli:parse-cli args
+                                *options*)
+            (declare (ignore matched dispatch rest))
+            (loop for var in vars
+                  for val in vals
+                  do (setf (symbol-value var) val))
+      (fn))))
+
 (defun main (&key (enable-store t)
                (jvm t)
                acceptor)
   "Called from launch scripts, either web-bin or launch.lisp"
 
-  (maybe-with-debugger ()
-   (with-lparallel-kernel ()
-     (let ((args #-lispworks (cons "<arg0>"(uiop:command-line-arguments))
-                 #+lispworks sys:*line-arguments-list*))
-       (format t "CLI args: ~s~%" args)
-
-       (multiple-value-bind (vars vals matched dispatch rest)
-           (cl-cli:parse-cli args
-                             *options*)
-         (declare (ignore matched dispatch rest))
-         (loop for var in vars
-               for val in vals
-               do (setf (symbol-value var) val))
-
-         (with-control-socket ()
+  (with-cl-cli-processed ()
+    (maybe-with-debugger ()
+      (with-lparallel-kernel ()
+        (with-control-socket ()
           (with-slynk ()
             (unwind-on-interrupt ()
 
@@ -295,25 +297,24 @@
                      (setup-appenders :clear t)
 
                      (log:info "Now we wait indefinitely for shutdown notifications")
-                     (loop (sleep 60)))))))))))
-
-     ;; unwind if an interrupt happens
-     (log:config :sane :immediate-flush t)
-     (log:config :info)
-     (format t "SHUTTING DOWN~%")
-     (finish-output t)
-     (format t "Calling shutdown hooks~%")
-     (mapc 'funcall *shutdown-hooks*)
+                     (loop (sleep 60)))))))))
+        ;; unwind if an interrupt happens
+        (log:config :sane :immediate-flush t)
+        (log:config :info)
+        (format t "SHUTTING DOWN~%")
+        (finish-output t)
+        (format t "Calling shutdown hooks~%")
+        (mapc 'funcall *shutdown-hooks*)
 
 ;;;; Don't snapshot the store, if the process is killed while the
 ;;;; snapshot is happening, we have to manually recover the store
-     ;; (bknr.datastore:snapshot)
+        ;; (bknr.datastore:snapshot)
 
-     (when enable-store
-       (bknr.datastore:close-store))
+        (when enable-store
+          (bknr.datastore:close-store))
 
 
-     (format t "All services down~%")))
+        (format t "All services down~%"))))
   #+lispworks
   (wait-for-processes)
   (format t "All threads before exiting: ~s~%" (bt:all-threads))

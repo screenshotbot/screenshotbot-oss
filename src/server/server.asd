@@ -33,6 +33,12 @@
                (:file "control-socket")
                (:file "setup")))
 
+(defsystem #:server/cli
+  :depends-on (#:server
+               #:clingon)
+  :serial t
+  :components ((:file "cli")))
+
 ;; For slynk support, load this before calling server:main. The reason
 ;; we separate this into a separate system is for support with SLIME,
 ;; which is needed if you're using Atom's SLIMA.
