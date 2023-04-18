@@ -31,4 +31,4 @@
         (control-socket-stop cs)))))
 
 (defmethod handle-request ((cmd (eql :snapshot)) &optional (message "snapshot name"))
-  (util:safe-snapshot message))
+  (util/store:safe-snapshot message))
