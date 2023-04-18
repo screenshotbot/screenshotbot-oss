@@ -227,77 +227,38 @@
                   do (setf (symbol-value var) val))
       (fn))))
 
-(defun main (&key (enable-store t)
-               (jvm t)
-               acceptor)
-  "Called from launch scripts, either web-bin or launch.lisp"
+(def-easy-macro with-common-setup (&key enable-store &fn fn)
+  (maybe-with-debugger ()
+    (with-lparallel-kernel ()
+      (with-control-socket ()
+        (with-slynk ()
+          (unwind-on-interrupt ()
 
-  (with-cl-cli-processed ()
-    (maybe-with-debugger ()
+            (fn))))
+      ;; unwind if an interrupt happens
+      (log:config :sane :immediate-flush t)
+      (log:config :info)
+      (format t "SHUTTING DOWN~%")
+      (finish-output t)
+      (format t "Calling shutdown hooks~%")
+      (mapc 'funcall *shutdown-hooks*)
+
+;;;; Don't snapshot the store, if the process is killed while the
+;;;; snapshot is happening, we have to manually recover the store
+      ;; (bknr.datastore:snapshot)
+
+      (when enable-store
+        (bknr.datastore:close-store))
+
+
+      (format t "All services down~%")))
+      (maybe-with-debugger ()
       (with-lparallel-kernel ()
         (with-control-socket ()
           (with-slynk ()
             (unwind-on-interrupt ()
 
-              (when *verify-store*
-                (log:config :info)
-                (time
-                 (cond
-                   #+lispworks
-                   (*profile-store*
-                    (hcl:profile
-                     (util/store:verify-store)))
-                   (t
-                    (util/store:verify-store))))
-
-                (log:info "Done verifying store")
-                (log:info "Running health checks...")
-                (run-health-checks)
-                (uiop:quit 0))
-
-
-              (maybe-run-health-checks)
-              #+nil
-              (when *verify-snapshots*
-                (log:config :info)
-                (util:verify-snapshots)
-                (uiop:quit 0))
-
-              (log:info "The port is now ~a" *port*)
-
-              #+lispworks
-              (when jvm
-                (jvm:jvm-init))
-              (setup-appenders)
-
-              (setup-log4cl-debugger-hook)
-
-
-              ;; set this to t for 404 page. :/
-              (setf hunchentoot:*show-lisp-errors-p* t)
-
-              (setf hunchentoot:*rewrite-for-session-urls* nil)
-
-              (when enable-store
-                (util/store:prepare-store))
-
-
-              (log:info "Store is prepared, moving on...")
-              (with-cron ()
-                (cond
-                  (*shell*
-                   (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
-                  (t
-                   (unless acceptor
-                     (init-multi-acceptor)
-                     (setf acceptor *multi-acceptor*))
-                   (with-running-acceptor (acceptor)
-                     (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
-                               (hunchentoot:acceptor-port acceptor))
-                     (setup-appenders :clear t)
-
-                     (log:info "Now we wait indefinitely for shutdown notifications")
-                     (loop (sleep 60)))))))))
+              (fn))))
         ;; unwind if an interrupt happens
         (log:config :sane :immediate-flush t)
         (log:config :info)
@@ -314,12 +275,81 @@
           (bknr.datastore:close-store))
 
 
-        (format t "All services down~%"))))
+        (format t "All services down~%")))
+
   #+lispworks
   (wait-for-processes)
   (format t "All threads before exiting: ~s~%" (bt:all-threads))
   (log4cl:flush-all-appenders)
   (log4cl:stop-hierarchy-watcher-thread))
+
+
+(defun main (&key (enable-store t)
+               (jvm t)
+               acceptor)
+  "Called from launch scripts, either web-bin or launch.lisp"
+
+  (with-cl-cli-processed ()
+    (with-common-setup (:enable-store enable-store)
+      (when *verify-store*
+        (log:config :info)
+        (time
+         (cond
+           #+lispworks
+           (*profile-store*
+            (hcl:profile
+             (util/store:verify-store)))
+           (t
+            (util/store:verify-store))))
+
+        (log:info "Done verifying store")
+        (log:info "Running health checks...")
+        (run-health-checks)
+        (uiop:quit 0))
+
+
+      (maybe-run-health-checks)
+      #+nil
+      (when *verify-snapshots*
+        (log:config :info)
+        (util:verify-snapshots)
+        (uiop:quit 0))
+
+      (log:info "The port is now ~a" *port*)
+
+      #+lispworks
+      (when jvm
+        (jvm:jvm-init))
+      (setup-appenders)
+
+      (setup-log4cl-debugger-hook)
+
+
+      ;; set this to t for 404 page. :/
+      (setf hunchentoot:*show-lisp-errors-p* t)
+
+      (setf hunchentoot:*rewrite-for-session-urls* nil)
+
+      (when enable-store
+        (util/store:prepare-store))
+
+
+      (log:info "Store is prepared, moving on...")
+      (with-cron ()
+        (cond
+          (*shell*
+           (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
+          (t
+           (unless acceptor
+             (init-multi-acceptor)
+             (setf acceptor *multi-acceptor*))
+           (with-running-acceptor (acceptor)
+             (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
+                       (hunchentoot:acceptor-port acceptor))
+             (setup-appenders :clear t)
+
+             (log:info "Now we wait indefinitely for shutdown notifications")
+             (loop (sleep 60)))))))))
 
 #+lispworks
 (defun wait-for-processes ()
