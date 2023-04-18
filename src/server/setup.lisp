@@ -14,6 +14,8 @@
                 #:def-easy-macro)
   (:import-from #:lparallel.kernel
                 #:*lisp-exiting-p*)
+  (:import-from #:server/control-socket
+                #:with-control-socket)
   (:export #:main
            #:register-acceptor
            #:slynk-loop
@@ -285,72 +287,73 @@
                for val in vals
                do (setf (symbol-value var) val))
 
-         (with-slynk ()
-           (unwind-on-interrupt ()
-               #+lispworks
-             (when *remote-debugging-client-port*
-               (start-remote-debugging-client
-                *remote-debugging-client-port*))
+         (with-control-socket ()
+          (with-slynk ()
+            (unwind-on-interrupt ()
+              #+lispworks
+              (when *remote-debugging-client-port*
+                (start-remote-debugging-client
+                 *remote-debugging-client-port*))
 
-             (when *verify-store*
-               (log:config :info)
-               (time
+              (when *verify-store*
+                (log:config :info)
+                (time
+                 (cond
+                   #+lispworks
+                   (*profile-store*
+                    (hcl:profile
+                     (util/store:verify-store)))
+                   (t
+                    (util/store:verify-store))))
+
+                (log:info "Done verifying store")
+                (log:info "Running health checks...")
+                (run-health-checks)
+                (uiop:quit 0))
+
+
+              (maybe-run-health-checks)
+              #+nil
+              (when *verify-snapshots*
+                (log:config :info)
+                (util:verify-snapshots)
+                (uiop:quit 0))
+
+              (log:info "The port is now ~a" *port*)
+
+              #+lispworks
+              (when jvm
+                (jvm:jvm-init))
+              (setup-appenders)
+
+              (setup-log4cl-debugger-hook)
+
+
+              ;; set this to t for 404 page. :/
+              (setf hunchentoot:*show-lisp-errors-p* t)
+
+              (setf hunchentoot:*rewrite-for-session-urls* nil)
+
+              (when enable-store
+                (util/store:prepare-store))
+
+
+              (log:info "Store is prepared, moving on...")
+              (with-cron ()
                 (cond
-                  #+lispworks
-                  (*profile-store*
-                   (hcl:profile
-                    (util/store:verify-store)))
+                  (*shell*
+                   (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
                   (t
-                   (util/store:verify-store))))
+                   (unless acceptor
+                     (init-multi-acceptor)
+                     (setf acceptor *multi-acceptor*))
+                   (with-running-acceptor (acceptor)
+                     (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
+                               (hunchentoot:acceptor-port acceptor))
+                     (setup-appenders :clear t)
 
-               (log:info "Done verifying store")
-               (log:info "Running health checks...")
-               (run-health-checks)
-               (uiop:quit 0))
-
-
-             (maybe-run-health-checks)
-             #+nil
-             (when *verify-snapshots*
-               (log:config :info)
-               (util:verify-snapshots)
-               (uiop:quit 0))
-
-             (log:info "The port is now ~a" *port*)
-
-             #+lispworks
-             (when jvm
-               (jvm:jvm-init))
-             (setup-appenders)
-
-             (setup-log4cl-debugger-hook)
-
-
-             ;; set this to t for 404 page. :/
-             (setf hunchentoot:*show-lisp-errors-p* t)
-
-             (setf hunchentoot:*rewrite-for-session-urls* nil)
-
-             (when enable-store
-               (util/store:prepare-store))
-
-
-             (log:info "Store is prepared, moving on...")
-             (with-cron ()
-              (cond
-                (*shell*
-                 (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
-                (t
-                 (unless acceptor
-                   (init-multi-acceptor)
-                   (setf acceptor *multi-acceptor*))
-                 (with-running-acceptor (acceptor)
-                   (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
-                             (hunchentoot:acceptor-port acceptor))
-                   (setup-appenders :clear t)
-
-                   (log:info "Now we wait indefinitely for shutdown notifications")
-                   (loop (sleep 60))))))))))
+                     (log:info "Now we wait indefinitely for shutdown notifications")
+                     (loop (sleep 60)))))))))))
 
      ;; unwind if an interrupt happens
      (log:config :sane :immediate-flush t)

@@ -21,6 +21,7 @@
                "util/remote-debugging"
                "bordeaux-threads"
                "lparallel"
+               "control-socket"
                "easy-macros"
                "util/health-check"
                "bknr.datastore"
@@ -28,6 +29,7 @@
   :serial t
   :components ((:file "interrupts")
                (:file "health-checks")
+               (:file "control-socket")
                (:file "setup")))
 
 ;; For slynk support, load this before calling server:main. The reason

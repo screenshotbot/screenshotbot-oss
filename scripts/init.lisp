@@ -62,6 +62,7 @@
 (progn
   (quick-patch:register "https://github.com/moderninterpreters/markup" "master")
   (register-tdrhq "easy-macros" "main")
-  (register-tdrhq "fiveam-matchers" "master"))
+  (register-tdrhq "fiveam-matchers" "master")
+  (register-tdrhq "cl-unix-sockets" "master"))
 
 (quick-patch:checkout-all "build/quick-patch/")

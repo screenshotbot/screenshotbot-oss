@@ -18,7 +18,9 @@
     (let ((self (make-instance 'control-socket :socket socket)))
       (setf (thread self)
             (make-thread (lambda ()
-                              (cs-listen self))))
+                           (unwind-protect
+                                (cs-listen self)
+                             (delete-file pathname)))))
       self)))
 
 (defmethod control-socket-stop ((self control-socket))
@@ -36,7 +38,7 @@
             (dispatch-request self socket)))))
     (stop-control-socket ()
       (log:info "Stopping supervisor")
-      (values))))
+      (unix-sockets:close-unix-socket (socket self)))))
 
 (defmethod dispatch-request ((self control-socket) socket)
   (log:info "Got new control-socket connection")
