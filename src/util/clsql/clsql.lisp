@@ -39,8 +39,8 @@
 (unless (hcl:delivered-image-p)
   (lw:define-action "Delivery Actions" "Make immutable systems"
     (lambda ()
-      (asdf:register-immutable-system :clsql-mysql)
-      (asdf:register-immutable-system :clsql-sqlite3))))
+      (asdf:load-system :clsql-mysql)
+      (asdf:register-immutable-system :clsql-mysql))))
 
 #+lispworks
 (lw:define-action "When starting image" "Update search paths for mysql"
