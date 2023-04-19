@@ -31,3 +31,7 @@
 (defun relative-system-source-directory (system)
   (%asdf-relpath
    (asdf:system-source-directory system)))
+
+(defun relative-output-files (op component)
+  (mapcar #'%asdf-relpath
+          (asdf:output-files op (asdf:find-component component nil))))

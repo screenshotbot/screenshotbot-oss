@@ -97,4 +97,5 @@
            #:funcall-if
            #:?.
            #:or-setf
-           #:relative-system-source-directory))
+           #:relative-system-source-directory
+           #:relative-output-files))

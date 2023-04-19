@@ -64,7 +64,7 @@ cause the asset to be immediately compiled."
   (hex:safe-redirect "/release/recorder-master.jar"))
 
 (defmacro handle-asdf-output (op component &optional (output-num 0))
-  (let ((output-files (eval `(asdf:output-files ,op (asdf:find-component ,component nil)))))
+  (let ((output-files (eval `(util:relative-output-files ,op (asdf:find-component ,component nil)))))
     `(%handle-asdf-output
       (installation)
       ,op
