@@ -9,11 +9,14 @@
 (defun run/command ()
   (clingon:make-command :name "run"
                         :options (list)))
+
+(defun main/handler (cmd)
+  (clingon:print-usage-and-exit cmd t))
+
 (defun main/command ()
   (clingon:make-command :name "App Server"
-                        :subcommands (list (run/command)
-                                           (verify/command)
-                                           (self-test/command))))
+                        :handler #'main/handler
+                        :sub-commands nil))
 
 (defun legacy-mode-p (args)
   (and (second args)
@@ -25,4 +28,7 @@
      (warn "Using legacy mode for command line parsing")
      (server:main :jvm jvm :acceptor acceptor :enable-store enable-store))
     (t
-     (error "unimpl"))))
+     (let ((args #-lispworks (cdr (uiop:raw-command-line-arguments))
+                 #+lispworks (cdr sys:*line-arguments-list*)))
+       (let ((app (main/command)))
+         (clingon:run app args))))))
