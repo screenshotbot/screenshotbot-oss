@@ -13,7 +13,8 @@
    #:not-null!
    #:uniq
    #:safe-ensure-directories-exist
-   #:make-mp-hash-table))
+   #:make-mp-hash-table
+   #:relpath))
 (in-package :util/misc)
 
 

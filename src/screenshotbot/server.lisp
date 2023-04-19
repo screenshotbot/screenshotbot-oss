@@ -60,7 +60,7 @@
 (in-package :screenshotbot/server)
 
 (defparameter *domain* "https://screenshotbot.io")
-(defvar *root* (util:system-source-directory :screenshotbot))
+(defvar *root* (util:relative-system-source-directory :screenshotbot))
 
 (defvar *is-localhost* nil)
 
@@ -198,10 +198,6 @@
         (funcall impl)
       (no-access-error (e)
         (no-access-error-page)))))
-
-
-(defmethod hunchentoot:start ((acceptor acceptor))
-  (call-next-method))
 
 (defmacro defhandler ((name &key uri method intern
                               want-login) params &body body)

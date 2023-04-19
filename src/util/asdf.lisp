@@ -22,3 +22,12 @@
         (pathname (format nil "~a/" (str:downcase system))))))
     (t
      (asdf:system-source-directory system))))
+
+(defun %asdf-relpath (path)
+  (util/misc:relpath
+   (truename path)
+   (truename (path:catdir (asdf:system-source-directory :util) "../../"))))
+
+(defun relative-system-source-directory (system)
+  (%asdf-relpath
+   (asdf:system-source-directory system)))

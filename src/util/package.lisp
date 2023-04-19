@@ -96,4 +96,5 @@
            #:validate-indices
            #:funcall-if
            #:?.
-           #:or-setf))
+           #:or-setf
+           #:relative-system-source-directory))
