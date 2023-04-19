@@ -38,6 +38,7 @@
                       errno))
         (cond
           ((= errno +exdev+)
+           (log:warn "Could not hard link from ~a to ~a" src dest)
            (warn "Could not create hard link, falling back to manual copy, reason: ~a"
                  message)
            (uiop:copy-file src dest))
