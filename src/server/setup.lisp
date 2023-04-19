@@ -285,7 +285,6 @@
   (log4cl:flush-all-appenders)
   (log4cl:stop-hierarchy-watcher-thread))
 
-
 (defun main (&key (enable-store t)
                (jvm t)
                acceptor)
@@ -298,20 +297,7 @@
     (cond
       (verify-store
        (with-common-setup (:enable-store t :jvm jvm)
-         (log:config :info)
-         (time
-          (cond
-            #+lispworks
-            (profile-store
-             (hcl:profile
-              (util/store:verify-store)))
-            (t
-             (util/store:verify-store))))
-
-         (log:info "Done verifying store")
-         (log:info "Running health checks...")
-         (run-health-checks)
-         (uiop:quit 0)))
+         (%verify :profile-store profile-store)))
       (health-check
        (with-common-setup (:enable-store enable-store :jvm jvm)
          (run-health-checks)
@@ -319,6 +305,22 @@
       (t
        (with-common-setup (:enable-store enable-store :jvm jvm)
          (%run :enable-store enable-store :acceptor acceptor))))))
+
+(defun %verify (&key profile-store)
+  (log:config :info)
+  (time
+   (cond
+     #+lispworks
+     (profile-store
+      (hcl:profile
+       (util/store:verify-store)))
+     (t
+      (util/store:verify-store))))
+
+  (log:info "Done verifying store")
+  (log:info "Running health checks...")
+  (run-health-checks)
+  (uiop:quit 0))
 
 
 (defun required (&optional arg)
