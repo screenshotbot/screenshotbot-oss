@@ -3,6 +3,7 @@
   (:import-from #:clingon
                 #:make-option)
   (:import-from #:server
+                #:%verify
                 #:*slynk-port*
                 #:*start-slynk*
                 #:with-common-setup)
@@ -37,6 +38,22 @@
                  (run-health-checks))))
    :options (list* (common-options))))
 
+(defun verify/command (&key enable-store jvm)
+  (clingon:make-command
+   :name "verify"
+   :handler (lambda (cmd)
+              (with-store (cmd)
+                (with-common-setup (:enable-store enable-store :jvm jvm)
+                  (%verify :profile-store (clingon:getopt cmd :profile)))))
+   :options (list*
+             (make-option
+              :flag
+              :description "Whether to run the profiler when verifying the store"
+              :initial-value nil
+              :long-name "profile"
+              :key :profile)
+             (common-options))))
+
 (defun main/handler (cmd)
   (clingon:print-usage-and-exit cmd t))
 
@@ -49,7 +66,7 @@
     :long-name "store"
     :key :store)
    (make-option
-    :boolean
+    :flag
     :description "Whether to start slynk"
     :long-name "start-slynk"
     :key :start-slynk)
@@ -60,12 +77,15 @@
     :initial-value 4005
     :key :slynk-port)))
 
+
 (defun main/command (&key enable-store jvm)
   (clingon:make-command :name "App Server"
                         :handler #'main/handler
                         :sub-commands (list
                                        (self-test/command :enable-store enable-store
-                                                          :jvm jvm))))
+                                                          :jvm jvm)
+                                       (verify/command :enable-store enable-store
+                                                       :jvm jvm))))
 
 (defun legacy-mode-p (args)
   (and (second args)
