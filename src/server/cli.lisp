@@ -89,6 +89,7 @@
     :flag
     :description "Whether to start slynk"
     :long-name "start-slynk"
+    :initial-value :true
     :key :start-slynk)
    (make-option
     :integer
