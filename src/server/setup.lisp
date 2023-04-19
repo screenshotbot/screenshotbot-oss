@@ -90,8 +90,8 @@
 
 (defvar *shutdown-hooks* nil)
 
-(defun init-multi-acceptor ()
-  (setf *multi-acceptor* (make-instance 'my-acceptor :port (parse-integer *port*) :name 'multi-acceptor))
+(defun init-multi-acceptor (&key (port (parse-integer *port*)))
+  (setf *multi-acceptor* (make-instance 'my-acceptor :port port :name 'multi-acceptor))
   (init-sub-acceptors))
 
 (defun init-sub-acceptors ()
@@ -240,55 +240,30 @@
       ;; unwind if an interrupt happens
       (log:config :sane :immediate-flush t)
       (log:config :info)
-      (format t "SHUTTING DOWN~%")
+      (format t "shutting down~%")
       (finish-output t)
-      (format t "Calling shutdown hooks~%")
+      (format t "calling shutdown hooks~%")
       (mapc 'funcall *shutdown-hooks*)
 
-;;;; Don't snapshot the store, if the process is killed while the
+;;;; don't snapshot the store, if the process is killed while the
 ;;;; snapshot is happening, we have to manually recover the store
       ;; (bknr.datastore:snapshot)
 
       (when enable-store
         (bknr.datastore:close-store))
 
-
-      (format t "All services down~%")))
-      (maybe-with-debugger ()
-      (with-lparallel-kernel ()
-        (with-control-socket ()
-          (with-slynk ()
-            (unwind-on-interrupt ()
-
-              (fn))))
-        ;; unwind if an interrupt happens
-        (log:config :sane :immediate-flush t)
-        (log:config :info)
-        (format t "SHUTTING DOWN~%")
-        (finish-output t)
-        (format t "Calling shutdown hooks~%")
-        (mapc 'funcall *shutdown-hooks*)
-
-;;;; Don't snapshot the store, if the process is killed while the
-;;;; snapshot is happening, we have to manually recover the store
-        ;; (bknr.datastore:snapshot)
-
-        (when enable-store
-          (bknr.datastore:close-store))
-
-
-        (format t "All services down~%")))
+      (format t "all services down~%")))
 
   #+lispworks
   (wait-for-processes)
-  (format t "All threads before exiting: ~s~%" (bt:all-threads))
+  (format t "all threads before exiting: ~s~%" (bt:all-threads))
   (log4cl:flush-all-appenders)
   (log4cl:stop-hierarchy-watcher-thread))
 
 (defun main (&key (enable-store t)
                (jvm t)
                acceptor)
-  "Called from launch scripts, either web-bin or launch.lisp"
+  "called from launch scripts, either web-bin or launch.lisp"
 
   (with-cl-cli-processed (:verify-store verify-store
                           :profile-store profile-store
@@ -327,8 +302,10 @@
   (error "Missing required argument: ~a" arg))
 
 (defun %run (&key (enable-store (required))
-               (acceptor (required)))
-  (log:info "The port is now ~a" *port*)
+               (acceptor (required))
+               (port (parse-integer *port*))
+               (shell *shell*))
+  (log:info "The port is now ~a" port)
 
   (setup-appenders)
 
@@ -347,11 +324,11 @@
   (log:info "Store is prepared, moving on...")
   (with-cron ()
     (cond
-      (*shell*
+      (shell
        (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
       (t
        (unless acceptor
-         (init-multi-acceptor)
+         (init-multi-acceptor :port port)
          (setf acceptor *multi-acceptor*))
        (with-running-acceptor (acceptor)
          (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
