@@ -66,7 +66,7 @@
                "stripe"
                "log4cl"
                "util/threading"
-               "util/store"
+               "util.store"
                "util/misc"
                "util/html2text"
                "util/random-port"
@@ -170,30 +170,6 @@
                :alexandria)
   :components ((:file "form-state")))
 
-(defsystem :util/store
-  :serial t
-  :depends-on (:bknr.datastore
-               :util/misc
-               :util/cron
-               :tmpdir
-               :str
-               :easy-macros
-               :local-time
-               :fset
-               :cl-mongo-id
-               :copy-directory
-               :ironclad/core
-               (:feature (:not :lispworks) :util/fake-fli)
-               :cffi
-               :cl-cron)
-  :components ((:file "file-lock")
-               (:file "store")
-               (:file "store-version")
-               (:file "object-id")
-               (:file "single")
-               (:file "migrations")
-               (:file "delayed-accessors")
-               (:file "export")))
 
 (defsystem :util/lru-cache
   :serial t
@@ -350,15 +326,11 @@
                 :components ((:static-file "test-file" :type "txt")
                              (:static-file "test-file-compressed" :type "txt.gz")
                              (:file "test-ret-let")
-                             (:file "test-delayed-accessors")
                              (:file "test-logger")
                              (:file "test-misc")
                              (:file "test-copy-file")
                              (:file "test-request")
-                             (:file "test-store-version")
-                             (:file "test-store")
                              (:file "test-json-mop")
-                             (:file "test-migrations")
                              (:file "test-lparallel")
                              (:file "test-hash-lock")
                              (:file "test-threading")
@@ -372,11 +344,6 @@
                              (:file "test-cdn")
                              (:file "test-bind-form")
                              (:file "test-lru-cache")
-                             (:file "test-objectid")
-                             (:file "test-file-lock"
-                              :if-feature (:and
-                                           :lispworks
-                                           (:not :windows)))
                              #-(or darwin mswindows)
                              (:file "test-html2text")
                              (:file "test-mockable")

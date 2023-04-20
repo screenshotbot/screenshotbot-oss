@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :util/tests/test-store
+(uiop:define-package :util/store/test-store
     (:use #:cl
           #:fiveam
           #:alexandria)
@@ -34,7 +34,7 @@
                 #:delete-object)
   (:import-from #:bknr.datastore
                 #:*store*))
-(in-package :util/tests/test-store)
+(in-package :util/store/test-store)
 
 
 (util/fiveam:def-suite)

@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :util/tests/test-delayed-accessors
+(defpackage :util/store/test-delayed-accessors
   (:use #:cl
         #:fiveam)
   (:import-from #:bknr.datastore
@@ -17,7 +17,7 @@
                 #:with-test-store)
   (:import-from #:util/delayed-accessors
                 #:def-delayed-accessor))
-(in-package :util/tests/test-delayed-accessors)
+(in-package :util/store/test-delayed-accessors)
 
 (util/fiveam:def-suite)
 

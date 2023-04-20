@@ -4,7 +4,8 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :util/store
+(defpackage :util/store/store
+  (:nicknames :util/store)
   (:use #:cl
         #:bknr.datastore
         #:util/file-lock)

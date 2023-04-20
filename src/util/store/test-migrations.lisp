@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :util/test-migrations
+(defpackage :util/store/test-migrations
   (:use #:cl
         #:fiveam)
   (:import-from #:util/migrations
@@ -19,8 +19,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:local-nicknames (#:a #:alexandria)))
-(in-package :util/test-migrations)
-
+(in-package :util/store/test-migrations)
 
 (util/fiveam:def-suite)
 

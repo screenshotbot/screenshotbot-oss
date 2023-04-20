@@ -6,5 +6,5 @@
 
 (defsystem #:core.installation
   :serial t
-  :depends-on (:util/store #| remove |#)
+  :depends-on (:util.store #| remove |#)
   :components ((:file "installation")))

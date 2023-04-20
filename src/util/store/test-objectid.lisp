@@ -4,7 +4,7 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :util.model.test-object-id
+(defpackage :util/store/test-object-id
   (:use #:cl
 	#:alexandria
         #:fiveam)
@@ -37,9 +37,9 @@
                 #:contains)
   (:import-from #:bknr.datastore
                 #:class-instances))
-(in-package :util.model.test-object-id)
+(in-package :util/store/test-object-id)
 
-(def-suite* :util.model.test-object-id)
+(util/fiveam:def-suite)
 
 #-buck
 (test simple-creation-and-finding

@@ -7,7 +7,7 @@
 (defsystem :gatekeeper
   :serial t
   :depends-on (:bknr.datastore
-               :util/store)
+               :util.store)
   :components ((:file "gatekeeper")))
 
 (defsystem :gatekeeper/tests
