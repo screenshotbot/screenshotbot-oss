@@ -124,10 +124,21 @@ fails."
     (funcall fn))
   (uiop:quit 0))
 
+(defun maybe-profile (fn)
+  #-lispworks
+  (funcall fn)
+  #+lispworks
+  (if (position "-profile" system:*line-arguments-list*)
+      (hcl:profile
+       (funcall fn))
+      (funcall fn)))
+
 (defun safely-run-all-tests ()
   (fiveam:test foo-bar
     (fiveam:is-true (equal "foo" "foo")))
-  (if (not (fiveam:run-all-tests))
+  (if (not (maybe-profile
+            (lambda ()
+             (fiveam:run-all-tests))))
       (uiop:quit 1)))
 
 (defun main ()

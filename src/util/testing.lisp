@@ -81,23 +81,26 @@
                   "assets/css/extended-dashboard.css"))
       (setf prepared t))))
 
-(defun screenshot-static-page (project name content)
-  (let ((output (asdf:system-relative-pathname project "static-web-output/")))
-    (let ((output-file (path:catfile output (format nil "~a/index.html" name))))
-      (ensure-directories-exist output-file)
-      (maybe-prepare-screenshot-assets output)
-      (with-open-file (file output-file
-                            :direction :output
-                            :if-exists :supersede)
-        (let ((content (typecase content
-                         (string content)
-                         (t
-                          (cl-mock:with-mocks ()
-                            (cl-mock:if-called 'nibble:nibble-url (lambda (nibble)
-                                                                    "#"))
-                            (markup:write-html content))))))
-         (write-string content file))
-        (fiveam:pass "Screenshot written")))))
+(let ((cache (make-hash-table :test #'equal)))
+ (defun screenshot-static-page (project name content)
+   (let ((output (util:or-setf
+                  (gethash (list project name) cache)
+                  (asdf:system-relative-pathname project "static-web-output/"))))
+     (let ((output-file (path:catfile output (format nil "~a/index.html" name))))
+       (ensure-directories-exist output-file)
+       (maybe-prepare-screenshot-assets output)
+       (with-open-file (file output-file
+                             :direction :output
+                             :if-exists :supersede)
+         (let ((content (typecase content
+                          (string content)
+                          (t
+                           (cl-mock:with-mocks ()
+                             (cl-mock:if-called 'nibble:nibble-url (lambda (nibble)
+                                                                     "#"))
+                             (markup:write-html content))))))
+           (write-string content file))
+         (fiveam:pass "Screenshot written"))))))
 
 (defmacro with-local-acceptor ((host &key prepare-acceptor-callback (acceptor (gensym))) (name &rest args) &body body)
   "Create a debuggable single threaded acceptor for running tests"
