@@ -21,6 +21,7 @@
                "util/remote-debugging"
                "bordeaux-threads"
                "lparallel"
+               "serapeum"
                "control-socket"
                "easy-macros"
                (:feature (:not (:or :mswindows :windows)) "osicat")

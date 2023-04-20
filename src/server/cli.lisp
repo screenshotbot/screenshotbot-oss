@@ -25,7 +25,7 @@
                         :options (list)))
 
 (def-easy-macro with-store (cmd &fn fn)
-  (with-global-binding ((*object-store* (clingon:getopt cmd :store))
+  (with-global-binding ((*object-store* (serapeum:ensure-suffix (clingon:getopt cmd :store) "/"))
                         (*start-slynk* (clingon:getopt cmd :start-slynk))
                         (*slynk-port* (format nil "~a" (clingon:getopt cmd :slynk-port))))
     (fn)))
