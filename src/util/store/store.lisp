@@ -175,7 +175,7 @@ to the directory that was just snapshotted.")
                  :subsystems (store-subsystems)))
 
 (def-easy-macro with-test-store (&key (globally nil)
-                                      (store-class 'safe-mp-store)
+                                      (store-class 'store-for-test)
                                       dir
                                       &fn body)
   (%%call-with-test-store body :globally globally :store-class store-class
