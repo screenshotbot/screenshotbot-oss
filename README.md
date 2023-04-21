@@ -35,11 +35,6 @@ commercial and open source implementations. We officially support
 SBCL, Clozure CL (CCL) and LispWorks, but the core features should work on
 any compliant Common Lisp.
 
-LispWorks is a commercial
-platform. [screenshotbot.io](https://screenshotbot.io) is powered by
-LispWorks. Technically, it's the platform that gets tested the most in
-our deployment.
-
 *Update Nov 2022: We're switching our primary docker images from CCL
 to SBCL. SBCL is more performan and more stable than CCL. See this
 [migration
