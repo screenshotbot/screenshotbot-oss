@@ -29,7 +29,7 @@
   href= (util.cdn:make-cdn href) />)
 
 (defun cdn-for-image-url (src)
-  (let ((util.cdn:*cdn-cache-key* "images5" ))
+  (let ((util.cdn:*cdn-cache-key* "i6" ))
     (if (str:starts-with-p "/image/blob/" src)
         src
         (util.cdn:make-cdn src))))

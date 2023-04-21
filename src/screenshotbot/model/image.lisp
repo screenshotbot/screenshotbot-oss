@@ -592,9 +592,7 @@
   (image-public-url image))
 
 (defmethod image-public-url ((image local-image) &key size)
-  (hex:make-full-url
-   hunchentoot:*request*
-   (local-image-url image)))
+  (local-image-url image))
 
 (defmethod can-view ((image image) user)
   (is-user-id-same image user))
