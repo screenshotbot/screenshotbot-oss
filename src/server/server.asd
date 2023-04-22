@@ -22,7 +22,7 @@
                "bordeaux-threads"
                "lparallel"
                "serapeum"
-               "control-socket"
+	       (:feature (:not (:or :mswindows :windows)) "control-socket")
                "easy-macros"
                (:feature (:not (:or :mswindows :windows)) "osicat")
                "util/health-check"

@@ -4,6 +4,7 @@
                 #:def-easy-macro)
   (:import-from #:util/store
                 #:object-store)
+  #-(or mswindows windows)
   (:import-from #:control-socket/server
                 #:handle-request
                 #:control-socket-stop

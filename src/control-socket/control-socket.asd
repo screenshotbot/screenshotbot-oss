@@ -5,6 +5,7 @@
                :log4cl)
   :components ((:file "server")))
 
+#-(or mswindows windows)
 (defsystem :control-socket/tests
   :serial t
   :depends-on (:control-socket

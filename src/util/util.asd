@@ -98,8 +98,8 @@
 
 (defsystem :util/osicat
   :serial t
-  :depends-on (:osicat)
-  :components ((:file "osicat-lw" :if-feature :lispworks)))
+  :depends-on ((:feature (:not (:or :mswindows :windows)) :osicat))
+  :components ((:file "osicat-lw" :if-feature (:and :lispworks (:not (:or :mswindows :windows))))))
 
 (defsystem :util/copy-file
   :serial t

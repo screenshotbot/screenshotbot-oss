@@ -76,7 +76,7 @@
                :screenshotbot.css-assets
                :screenshotbot/secrets
                :util.java
-	       (:feature (:not :windows) :osicat)
+	       (:feature (:not (:or :mswindows :windows)) :osicat)
                :util/phabricator
                :util/copy-file
                :hunchensocket
