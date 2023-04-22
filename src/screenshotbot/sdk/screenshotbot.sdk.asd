@@ -60,6 +60,7 @@
   :serial t
   :depends-on (:screenshotbot.sdk/library
                :nyaml
+               :util/file-lock
                :util/random-port
                :cl-store
                :screenshotbot/replay-core)
