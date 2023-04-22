@@ -3,6 +3,7 @@
   :depends-on (:bknr.datastore
                :util/misc
                :util/cron
+               :util/file-lock
                :tmpdir
                :str
                :easy-macros
@@ -14,8 +15,7 @@
                (:feature (:not :lispworks) :util/fake-fli)
                :cffi
                :cl-cron)
-  :components ((:file "file-lock")
-               (:file "store")
+  :components ((:file "store")
                (:file "store-version")
                (:file "object-id")
                (:file "single")
@@ -27,11 +27,7 @@
   :serial t
   :depends-on (:util.store
                :util/fiveam)
-  :components ((:file "test-file-lock"
-                :if-feature (:and
-                             :lispworks
-                             (:not :windows)))
-               (:file "test-store-version")
+  :components ((:file "test-store-version")
                (:file "test-store")
                (:file "test-objectid")
                (:file "test-migrations")
