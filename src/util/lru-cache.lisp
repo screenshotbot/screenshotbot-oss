@@ -12,8 +12,7 @@
                 #:parse-size)
   (:export
    #:lru-cache
-   #:with-cache-file
-   #:dir))
+   #:with-cache-file))
 (in-package :util/lru-cache)
 
 (defclass lru-cache ()

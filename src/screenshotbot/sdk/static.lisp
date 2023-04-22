@@ -14,13 +14,6 @@
                 #:lru-cache)
   (:import-from #:screenshotbot/sdk/common-flags
                 #:*sdk-flags*)
-  (:import-from #:easy-macros
-                #:def-easy-macro)
-  (:import-from #:util/misc
-                #:with-global-binding)
-  (:import-from #:util/store/file-lock
-                #:release-file-lock
-                #:file-lock)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
@@ -190,65 +183,57 @@ upload blobs that haven't been uploaded before."
     (walk dir "")))
 
 (defun ensure-cache-dir ()
-  (let ((path #+mswindows
-              (path:catdir (pathname (uiop:getenv "APPDATA"))
-                           #P"screenshotbot/cache/replay/")
-              #-mswindows
-              (pathname "~/.cache/screenshotbot/replay/")))
-    (ensure-directories-exist path)
+  (unless *cache*
+    (let ((path #+mswindows
+                (path:catdir (pathname (uiop:getenv "APPDATA"))
+                             #P"screenshotbot/cache/replay/")
+                #-mswindows
+                (pathname "~/.cache/screenshotbot/replay/")))
+      (ensure-directories-exist path)
 
-    (make-instance 'lru-cache
-                   :dir path)))
-
-(def-easy-macro with-cache-dir (&fn fn)
-  (with-global-binding ((*cache* (ensure-cache-dir)))
-    (let ((lock
-            (make-instance 'file-lock
-                           :file (path:catfile (util/lru-cache:dir *cache*)
-                                               "lock"))))
-      (unwind-protect
-           (fn)
-        (release-file-lock lock)))))
+     (setf *cache*
+           (make-instance 'lru-cache
+                           :dir path)))))
 
 (defun record-static-website (location)
   (assert (path:-d location))
+  (ensure-cache-dir)
   (when flags:*production*
    (sdk:update-commit-graph (make-instance 'git:git-repo :link flags:*repo-url*)
                             flags:*main-branch*))
   (restart-case
-      (with-cache-dir ()
-       (tmpdir:with-tmpdir (tmpdir)
-         (let* ((context (make-instance 'context))
-                (port (util/random-port:random-port))
-                (acceptor (make-instance 'hunchentoot:acceptor
-                                         :port port
-                                         :document-root location))
-                (snapshot (make-instance 'replay:snapshot
-                                         :tmpdir tmpdir)))
-           (unwind-protect
-                (progn
-                  (hunchentoot:start acceptor)
-                  (loop for index.html in (find-all-index.htmls location)
-                        do
-                           (replay:load-url-into
-                            context
-                            snapshot
-                            (format nil "http://localhost:~a~a" port index.html)
-                            tmpdir
-                            :actual-url
-                            (when flags:*static-website-assets-root*
-                              (format nil "~a~a"
-                                      flags:*static-website-assets-root*
-                                      index.html))))
+      (tmpdir:with-tmpdir (tmpdir)
+        (let* ((context (make-instance 'context))
+               (port (util/random-port:random-port))
+               (acceptor (make-instance 'hunchentoot:acceptor
+                                        :port port
+                                        :document-root location))
+               (snapshot (make-instance 'replay:snapshot
+                                        :tmpdir tmpdir)))
+          (unwind-protect
+               (progn
+                 (hunchentoot:start acceptor)
+                 (loop for index.html in (find-all-index.htmls location)
+                       do
+                          (replay:load-url-into
+                           context
+                           snapshot
+                           (format nil "http://localhost:~a~a" port index.html)
+                           tmpdir
+                           :actual-url
+                           (when flags:*static-website-assets-root*
+                             (format nil "~a~a"
+                                     flags:*static-website-assets-root*
+                                     index.html))))
 
-                  (upload-snapshot-assets snapshot)
-                  (let* ((result (schedule-snapshot snapshot))
-                         (logs (a:assoc-value result :logs)))
-                    (log:info "Screenshot job queued: ~a" logs)))
-             (hunchentoot:stop acceptor)
-             #+mswindows
-             (progn
-               (log:info "[windows-only] Waiting 2s before cleanup")
-               (sleep 2))))))
+                 (upload-snapshot-assets snapshot)
+                 (let* ((result (schedule-snapshot snapshot))
+                        (logs (a:assoc-value result :logs)))
+                   (log:info "Screenshot job queued: ~a" logs)))
+            (hunchentoot:stop acceptor)
+            #+mswindows
+            (progn
+              (log:info "[windows-only] Waiting 2s before cleanup")
+              (sleep 2)))))
     (retry-record-static-website ()
       (record-static-website location))))
