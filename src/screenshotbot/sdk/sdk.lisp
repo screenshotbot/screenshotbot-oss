@@ -122,6 +122,12 @@
     (t
      flags:*hostname*)))
 
+
+(defun %make-basic-auth ()
+  (list
+   *api-key*
+   *api-secret*))
+
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
   (defun %request (api &key (method :post)
                          parameters
@@ -138,9 +144,7 @@
       :basic-authorization (when (and
                                   (not flags:*desktop*)
                                   (remote-supports-basic-auth-p))
-                             (list
-                              *api-key*
-                              *api-secret*))
+                             (%make-basic-auth))
       :content content
       :parameters (cond
                     ((remote-supports-basic-auth-p)
@@ -203,6 +207,9 @@ error."
           upload-url
           :method :put
           :parameters parameters
+          ;; Basic auth for image puts will be supported from API
+          ;; level 4, but in previous versions it should just be ignored.
+          :basic-authorization (%make-basic-auth)
           :content-type "application/octet-stream"
           :content-length file-length
           :content stream
