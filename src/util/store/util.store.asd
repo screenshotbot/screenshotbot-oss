@@ -21,6 +21,7 @@
                (:file "single")
                (:file "migrations")
                (:file "delayed-accessors")
+               (:file "checksums")
                (:file "export")))
 
 (defsystem :util.store/tests
@@ -31,4 +32,5 @@
                (:file "test-store")
                (:file "test-objectid")
                (:file "test-migrations")
-               (:file "test-delayed-accessors")))
+               (:file "test-delayed-accessors")
+               (:file "test-checksums")))
