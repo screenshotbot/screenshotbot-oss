@@ -141,6 +141,7 @@
 (defsystem :util/misc
   :serial t
   :depends-on (:local-time
+               :cl-fad
                :str)
   :components ((:file "misc")))
 

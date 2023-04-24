@@ -27,6 +27,7 @@
 (defsystem :util.store/tests
   :serial t
   :depends-on (:util.store
+               :fiveam-matchers
                :util/fiveam)
   :components ((:file "test-store-version")
                (:file "test-store")
