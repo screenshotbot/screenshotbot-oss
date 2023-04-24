@@ -186,8 +186,6 @@ screenshotbot-flow:
 	#	cd ~/builds/screenshotbot-example && ./gradlew :connectedDebugAndroidTest
 	cd ~/builds/screenshotbot-example && ./gradlew -i :debugAndroidTestScreenshotbot
 
-bknr-tests-lw:
-
 screenshotbot-tests: $(LW) .PHONY
 	$(LW_SCRIPT) ./scripts/jenkins.lisp -system screenshotbot/tests,screenshotbot.pro/tests,screenshotbot.sdk/tests
 

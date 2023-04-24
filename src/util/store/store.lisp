@@ -100,10 +100,15 @@ to the directory that was just snapshotted.")
      (ensure-directories-exist path)
      path)))
 
+(defclass checksumed-mp-store ()
+  ())
+
 (defclass common-mp-store (bknr.datastore:mp-store)
   ())
 
-(defclass safe-mp-store (common-mp-store)
+
+(defclass safe-mp-store (common-mp-store
+                         checksumed-mp-store)
   ((transaction-log-lock :initform nil)))
 
 (defclass store-for-test (common-mp-store)

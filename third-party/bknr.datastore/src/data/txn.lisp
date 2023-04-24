@@ -716,7 +716,11 @@ pathname until a non-existant directory name has been found."
   (pos :long))
 
 (defun truncate-log (pathname position)
-  (let ((backup (make-pathname :type "backup" :defaults pathname)))
+  (let ((backup (make-pathname :type (format nil "backup-~a-~a-~a"
+                                             (get-universal-time)
+                                             position
+                                             (random 1000))
+                               :defaults pathname)))
     (report-progress "~&; creating log file backup: ~A~%" backup)
     (with-open-file (s pathname
                        :element-type '(unsigned-byte 8)
@@ -758,11 +762,8 @@ pathname until a non-existant directory name has been found."
                 (let ((*txn-log-stream* s))
                   (execute-unlogged txn))))))
       (discard ()
-        :report (lambda (stream) (format stream "Discard transaction log before failing transaction ~A." txn))
-        (truncate-log pathname position)
-        ;; Should maybe throw instead of recursively restoring?  Maybe
-        ;; not, we'll never go into depths > 1 anyway.
-        (restore)))))
+        :report (lambda (stream) (format stream "Discard rest of the transaction log" txn))
+        (truncate-log pathname position)))))
 
 (defgeneric restore-subsystem (store subsystem &key until))
 

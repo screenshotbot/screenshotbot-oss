@@ -21,7 +21,13 @@
   (:import-from #:bknr.datastore
                 #:%decode-integer)
   (:import-from #:flexi-streams
-                #:make-in-memory-input-stream))
+                #:make-in-memory-input-stream)
+  (:import-from #:bknr.datastore
+                #:transaction)
+  (:import-from #:util/store/store
+                #:checksumed-mp-store)
+  (:import-from #:bknr.datastore
+                #:restore-transaction-log))
 (in-package :util/store/checksums)
 
 
@@ -48,12 +54,30 @@
       (let ((stream (make-in-memory-input-stream buff)))
        (decode stream)))))
 
-(defmethod encode-checksumed-object (object stream)
+(defmethod encode-checksumed-object (object stream &optional
+                                                     (next-method (lambda (object stream)
+                                                                    (encode-object object stream))))
   (%write-tag #\C stream)
   (let ((tmp (flex:make-in-memory-output-stream)))
-    (encode-object object tmp)
+    (funcall next-method object tmp)
     (let ((buff (flex:get-output-stream-sequence tmp)))
       (encode-integer (length buff) stream)
       (let ((digest (ironclad:digest-sequence :crc32 buff)))
         (write-sequence digest stream))
       (write-sequence buff stream))))
+
+
+(defmethod encode-object :around ((transaction transaction) stream)
+  (encode-checksumed-object transaction stream
+                            (lambda (transaction stream)
+                              (call-next-method transaction stream))))
+
+(defmethod restore-transaction-log :around ((store checksumed-mp-store)
+                                            transaction-log
+                                            &key until)
+  (declare (ignore until))
+  (handler-bind ((base-error (lambda (e)
+                               (declare (ignore e))
+                               (invoke-restart 'bknr.datastore::discard))))
+      (call-next-method)))
+
