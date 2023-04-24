@@ -417,25 +417,26 @@ to the directory that was just snapshotted.")
              (slot (find-effective-slot class slot-name))
              (indices (bknr.indices::index-effective-slot-definition-indices slot)))
         (dolist (index indices)
-         (let* ((unique-index-p (typep index 'bknr.indices:unique-index)))
-           (let* ((hash-table (bknr.indices::slot-index-hash-table index))
-                  (test (hash-table-test hash-table))
-                  (all-elts (store-objects-with-class class-name))
-                  (new-hash-table (build-hash-table all-elts
-                                                    slot-name
-                                                    :test test
-                                                    :unique-index-p unique-index-p)))
-             (restart-case
-                 (progn
-                   (log:info "Total number of elements: ~d" (length all-elts))
-                   (assert-hash-tables= hash-table
-                                        new-hash-table))
-               (fix-the-index ()
-                 (setf (bknr.indices::slot-index-hash-table index)
-                       new-hash-table))
-               (continue-testing-other-indices ()
-                 (values))
-               )))))
+          (when (typep index 'bknr.indices:slot-index)
+           (let* ((unique-index-p (typep index 'bknr.indices:unique-index)))
+             (let* ((hash-table (bknr.indices::slot-index-hash-table index))
+                    (test (hash-table-test hash-table))
+                    (all-elts (store-objects-with-class class-name))
+                    (new-hash-table (build-hash-table all-elts
+                                                      slot-name
+                                                      :test test
+                                                      :unique-index-p unique-index-p)))
+               (restart-case
+                   (progn
+                     (log:info "Total number of elements: ~d" (length all-elts))
+                     (assert-hash-tables= hash-table
+                                          new-hash-table))
+                 (fix-the-index ()
+                   (setf (bknr.indices::slot-index-hash-table index)
+                         new-hash-table))
+                 (continue-testing-other-indices ()
+                   (values))
+                 ))))))
     (retry--validate-class-index ()
       (validate-class-index class-name slot-name))))
 
