@@ -22,6 +22,8 @@
                 #:slot-index)
   (:import-from #:alexandria
                 #:curry)
+  (:import-from #:util/store/store
+                #:validate-index-values)
   (:export
    #:fset-set-index
    #:fset-unique-index))
@@ -132,3 +134,12 @@
 
 (defmethod %index-values-for-key ((self fset-set-index) val)
   val)
+
+
+(defmethod validate-index-values ((index abstract-fset-index) all-elts slot-name)
+  (let ((tmp (make-instance (type-of index) :slots (list slot-name))))
+    (loop for elt in all-elts
+          do (index-add tmp elt))
+    (unless (fset:equal? (%map tmp)
+                         (%map index))
+      (error "fset index does not match"))))

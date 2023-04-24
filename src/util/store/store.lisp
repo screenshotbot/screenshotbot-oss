@@ -33,6 +33,8 @@
                 #:assoc-value)
   (:import-from #:bknr.indices
                 #:*indexed-class-override*)
+  (:import-from #:bknr.indices
+                #:slot-index)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -409,6 +411,24 @@ to the directory that was just snapshotted.")
              (unless res
                (error "the two hash tables have different values for key ~a~%Missing values in new hash-table:~S~%Missing values in old hash-table:~s" k diff-1 diff-2)))))
 
+(defmethod validate-index-values ((index slot-index) all-elts
+                                  slot-name)
+  (let* ((unique-index-p (typep index 'bknr.indices:unique-index)))
+    (let* ((hash-table (bknr.indices::slot-index-hash-table index))
+           (test (hash-table-test hash-table))
+           (new-hash-table (build-hash-table all-elts
+                                             slot-name
+                                             :test test
+                                             :unique-index-p unique-index-p)))
+      (restart-case
+          (progn
+            (log:info "Total number of elements: ~d" (length all-elts))
+            (assert-hash-tables= hash-table
+                                 new-hash-table))
+        (fix-the-index ()
+          (setf (bknr.indices::slot-index-hash-table index)
+                new-hash-table))))))
+
 (defun validate-class-index (class-name slot-name)
   (declare (optimize (debug 3)))
   (log:info "Testing ~a, ~a" class-name slot-name)
@@ -417,28 +437,14 @@ to the directory that was just snapshotted.")
              (slot (find-effective-slot class slot-name))
              (indices (bknr.indices::index-effective-slot-definition-indices slot)))
         (dolist (index indices)
-          (when (typep index 'bknr.indices:slot-index)
-           (let* ((unique-index-p (typep index 'bknr.indices:unique-index)))
-             (let* ((hash-table (bknr.indices::slot-index-hash-table index))
-                    (test (hash-table-test hash-table))
-                    (all-elts (store-objects-with-class class-name))
-                    (new-hash-table (build-hash-table all-elts
-                                                      slot-name
-                                                      :test test
-                                                      :unique-index-p unique-index-p)))
-               (restart-case
-                   (handler-bind ((error (lambda (e)
-                                           (log:info "Errors while processing index for ~a ~a ~a" class slot indices))))
-                    (progn
-                      (log:info "Total number of elements: ~d" (length all-elts))
-                      (assert-hash-tables= hash-table
-                                           new-hash-table)))
-                 (fix-the-index ()
-                   (setf (bknr.indices::slot-index-hash-table index)
-                         new-hash-table))
-                 (continue-testing-other-indices ()
-                   (values))
-                 ))))))
+          (let ((all-elts (store-objects-with-class class-name)))
+            (handler-bind ((error (lambda (e)
+                                    (declare (ignore e))
+                                    (log:info "Errors while processing index for ~a ~a ~a" class slot indices))))
+              (restart-case
+                  (validate-index-values index all-elts slot-name)
+                (continue-testing-other-indices ()
+                  (values)))))))
     (retry--validate-class-index ()
       (validate-class-index class-name slot-name))))
 
