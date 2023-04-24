@@ -10,6 +10,7 @@
   (:import-from #:bknr.indices
                 #:indexed-class)
   (:import-from #:util/store/fset-index
+                #:fset-set-index
                 #:fset-unique-index)
   (:import-from #:util/store/store
                 #:with-test-store)
@@ -29,13 +30,21 @@
         :index-reader search-by-arg))
   (:metaclass indexed-class))
 
+(defclass test-object-2 ()
+  ((arg :initarg :arg
+        :index-type fset-set-index
+        :index-reader second-by-arg))
+  (:metaclass indexed-class))
+
 (def-fixture state ()
   (with-test-store ()
     (unwind-protect
          (&body)
-      (mapcar
-       #'clear-slot-indices
-       (closer-mop:class-slots (find-class 'test-object))))))
+      (loop for class in '(test-object test-object-2)
+            do
+               (mapcar
+                #'clear-slot-indices
+                (closer-mop:class-slots (find-class class)))))))
 
 (test simple-create-and-load
   (with-fixture state ()
@@ -57,3 +66,27 @@
                (search-by-arg "foo")))
       (destroy-object obj)
       (is (eql nil (search-by-arg "foo"))))))
+
+
+(defun make-set (&rest args)
+  (fset:convert 'fset:set args))
+
+(test simple-create-and-load-set
+  (with-fixture state ()
+    (let ((obj (make-instance 'test-object-2
+                              :arg "foo")))
+      (is (fset:equal? (make-set obj)
+                       (second-by-arg "foo")))
+      (is (fset:equal? (make-set)
+                       (second-by-arg "car")))
+      (let ((obj2 (make-instance 'test-object-2
+                                 :arg "foo")))
+        (is (fset:equal? (make-set obj obj2)
+                         (second-by-arg "foo")))
+        (destroy-object obj2)
+        (is (fset:equal? (make-set obj)
+                         (second-by-arg "foo")))
+        (destroy-object obj)
+        (is (fset:equal? (make-set)
+                         (second-by-arg "foo")))))))
+

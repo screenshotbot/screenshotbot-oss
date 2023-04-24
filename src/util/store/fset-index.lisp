@@ -15,7 +15,10 @@
   (:import-from #:bknr.indices
                 #:index-clear)
   (:import-from #:bknr.indices
-                #:index-remove))
+                #:index-remove)
+  (:export
+   #:fset-set-index
+   #:fset-unique-index))
 (in-package :util/store/fset-index)
 
 (defclass abstract-fset-index ()
@@ -27,47 +30,77 @@
 #-lispworks
 (defvar *lock* (bt:make-lock))
 
-(defmacro update-map (self expr)
+(defmacro update-map (self (map) &body expr)
   #-lispworks
   `(bt:with-lock-held (*lock*)
      (setf (%map ,self) ,expr))
   #+lispworks
-  `(system:atomic-exchange
+  `(atomics:atomic-update
     (slot-value ,self 'map)
-    ,expr))
+    (lambda (,map)
+      ,@expr)))
 
 (defun %slot-name (self)
   (car (%slots self)))
 
 (defmethod index-reinitialize ((new-index abstract-fset-index)
                                (old-index abstract-fset-index))
-  (update-map new-index
-              (%map old-index))
+  (update-map new-index (map)
+    (declare (ignore map))
+    (%map old-index))
   new-index)
 
 
 (defclass fset-unique-index (abstract-fset-index)
   ())
 
+(defclass fset-set-index (abstract-fset-index)
+  ((map :initform (fset:empty-map (fset:empty-set)))))
+
 (defmethod index-add ((self fset-unique-index)
                       obj)
-  (update-map self
-              (fset:with (%map self)
-                         (slot-value obj (%slot-name self))
-                         obj)))
+  (update-map self (map)
+    (fset:with map
+               (slot-value obj (%slot-name self))
+               obj)))
+
+(defmethod index-add ((self fset-set-index)
+                      obj)
+  (let ((key (slot-value obj (%slot-name self))))
+    (update-map self (map)
+      (fset:with map
+                 key
+                 (fset:with
+                  (fset:lookup map key)
+                  obj)))))
 
 (defmethod index-get ((self abstract-fset-index) key)
   (fset:lookup (%map self) key))
 
 (defmethod index-clear ((self abstract-fset-index))
-  (update-map self (fset:empty-map)))
+  (update-map self (map)
+    (declare (ignore map))
+    (fset:empty-map)))
+
+(defmethod index-clear ((self fset-set-index))
+  (update-map self (map)
+    (declare (ignore map))
+    (fset:empty-map (fset:empty-set))))
 
 (defmethod index-remove ((self fset-unique-index)
                          obj)
-  (update-map
-   self
-   (fset:less (%map self)
-              (slot-value obj (%slot-name self)))))
+  (update-map self (map)
+    (fset:less map
+               (slot-value obj (%slot-name self)))))
+
+(defmethod index-remove ((self fset-set-index) obj)
+  (let ((key (slot-value obj (%slot-name self))))
+    (update-map self (map)
+      (fset:with map
+                 key
+                 (fset:less
+                  (fset:lookup map key)
+                  obj)))))
 
 
 
