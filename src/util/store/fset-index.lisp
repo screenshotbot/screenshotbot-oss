@@ -27,14 +27,7 @@
    (map :initform (fset:empty-map)
         :accessor %map)))
 
-#-lispworks
-(defvar *lock* (bt:make-lock))
-
 (defmacro update-map (self (map) &body expr)
-  #-lispworks
-  `(bt:with-lock-held (*lock*)
-     (setf (%map ,self) ,expr))
-  #+lispworks
   `(atomics:atomic-update
     (slot-value ,self 'map)
     (lambda (,map)

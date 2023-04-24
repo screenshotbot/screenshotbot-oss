@@ -8,6 +8,8 @@
                :str
                :easy-macros
                :local-time
+               :atomics
+               :alexandria
                :fset
                :cl-mongo-id
                :copy-directory
@@ -22,7 +24,8 @@
                (:file "migrations")
                (:file "delayed-accessors")
                (:file "checksums")
-               (:file "export")))
+               (:file "export")
+               (:file "fset-index")))
 
 (defsystem :util.store/tests
   :serial t
@@ -34,4 +37,5 @@
                (:file "test-objectid")
                (:file "test-migrations")
                (:file "test-delayed-accessors")
-               (:file "test-checksums")))
+               (:file "test-checksums")
+               (:file "test-fset-index")))
