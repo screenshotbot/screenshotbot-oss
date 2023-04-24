@@ -88,8 +88,16 @@
                                             transaction-log
                                             &key until)
   (declare (ignore until))
-  (handler-bind ((base-error (lambda (e)
-                               (declare (ignore e))
-                               (invoke-restart 'bknr.datastore::discard))))
-      (call-next-method)))
+  (let ((errorp nil))
+    (prog1
+        (handler-bind ((base-error (lambda (e)
+                                     (declare (ignore e))
+                                     (setf errorp t)
+                                     (invoke-restart 'bknr.datastore::discard))))
+          (call-next-method))
+      (cond
+        (errorp
+         (log:warn "LOADED WITH TRUNCATED TRANSACTION LOG!"))
+        (t
+         (log:info "Transaction log was loaded successfully without truncation"))))))
 
