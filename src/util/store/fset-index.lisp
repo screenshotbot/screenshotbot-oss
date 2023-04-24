@@ -26,7 +26,8 @@
                 #:validate-index-values)
   (:export
    #:fset-set-index
-   #:fset-unique-index))
+   #:fset-unique-index
+   #:fset-set-compat-index))
 (in-package :util/store/fset-index)
 
 (defclass abstract-fset-index ()
@@ -65,6 +66,11 @@
 (defclass fset-set-index (abstract-fset-index)
   ((map :initform (fset:empty-map (fset:empty-set)))))
 
+(defclass fset-set-compat-index (fset-set-index)
+  ()
+  (:documentation "Like fset-set-index, but behaves similarly to hash-index. For example,
+the index reader returns a list in reverse sorted order instead of a set."))
+
 (defmethod index-add :around ((self abstract-fset-index) obj)
   (when (and
          (slot-boundp obj (%slot-name self))
@@ -95,6 +101,10 @@
   (update-map self (map)
     (declare (ignore map))
     (fset:empty-map)))
+
+(defmethod index-get :around ((self fset-set-compat-index) key)
+  (reverse
+   (fset:convert 'list (call-next-method))))
 
 (defmethod index-clear ((self fset-set-index))
   (update-map self (map)

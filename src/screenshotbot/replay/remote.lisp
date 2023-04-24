@@ -54,6 +54,9 @@
                 #:with-safe-interruptable)
   (:import-from #:screenshotbot/events
                 #:with-event)
+  (:import-from #:util/store/fset-index
+                #:fset-set-compat-index
+                #:fset-set-index)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
                     (#:browser-config #:screenshotbot/replay/browser-config))
@@ -156,7 +159,7 @@
                 :initform nil)
     (company :initarg :company
              :initform nil
-             :index-type hash-index
+             :index-type fset-set-compat-index
              :index-reader remote-runs-for-company
              :reader remote-run-company)
     (log-file :initarg :log-file

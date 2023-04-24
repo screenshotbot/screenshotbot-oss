@@ -100,6 +100,8 @@
                 #:store-object-id)
   (:import-from #:alexandria
                 #:when-let)
+  (:import-from #:util/lists
+                #:head)
   (:local-nicknames (#:a #:alexandria)
                     (#:integration #:screenshotbot/replay/integration)
                     (#:frontend #:screenshotbot/replay/frontend)
@@ -285,7 +287,7 @@
 
 (defun recent-runs ()
   <app-template title="Recent Web runs">
-    <render-runs runs= (remote-runs-for-company (current-company)) />
+    <render-runs runs= (head (remote-runs-for-company (current-company)) 100) />
   </app-template>)
 
 (defun view-build (build)
