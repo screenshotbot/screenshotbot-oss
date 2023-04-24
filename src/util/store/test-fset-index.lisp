@@ -19,6 +19,8 @@
   (:import-from #:bknr.indices
                 #:clear-slot-indices)
   (:import-from #:bknr.indices
+                #:destroy-object)
+  (:import-from #:bknr.indices
                 #:destroy-object))
 (in-package :util/store/test-fset-index)
 
@@ -41,13 +43,15 @@
 
 (def-fixture state ()
   (with-test-store ()
-    (unwind-protect
-         (&body)
-      (loop for class in '(test-object test-object-2)
-            do
-               (mapcar
-                #'clear-slot-indices
-                (closer-mop:class-slots (find-class class)))))))
+    (flet ((clear-indices ()
+             (loop for class in '(test-object test-object-2)
+                   do
+                      (mapcar
+                       #'clear-slot-indices
+                       (closer-mop:class-slots (find-class class))))))
+     (unwind-protect
+          (&body)
+       (clear-indices)))))
 
 (test simple-create-and-load
   (with-fixture state ()
@@ -136,3 +140,11 @@
   (with-fixture state ()
     (let ((obj (make-instance 'test-object :arg nil)))
       (is (equal nil (first-index-values))))))
+
+(test deleting-an-equivalent-object
+  (with-fixture state ()
+    (let ((obj (make-instance 'test-object :arg "foo")))
+      (clear-indices) ;; make obj not part of an index
+      (let ((obj-2 (make-instance 'test-object :arg "foo")))
+        (destroy-object obj)
+        (is (eql obj-2 (search-by-arg "foo")))))))
