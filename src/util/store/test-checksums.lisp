@@ -12,6 +12,7 @@
                 #:make-in-memory-input-stream
                 #:make-in-memory-output-stream)
   (:import-from #:util/store/checksums
+                #:could-not-read-checksum
                 #:could-not-read-length
                 #:end-of-file-error
                 #:checksum-failure
@@ -19,7 +20,11 @@
   (:import-from #:bknr.datastore
                 #:decode)
   (:import-from #:util/store/object-id
-                #:make-oid))
+                #:make-oid)
+  (:import-from #:bknr.datastore
+                #:%write-tag)
+  (:import-from #:bknr.datastore
+                #:encode-integer))
 (in-package :util/store/test-checksums)
 
 (util/fiveam:def-suite)
@@ -69,3 +74,16 @@
   (let ((stream (make-in-memory-input-stream #(67 #| C |#))))
     (signals could-not-read-length
       (decode stream))))
+
+(test truncated-crc32
+  "When the length itself gets truncated"
+  (let ((builder (make-in-memory-output-stream)))
+    (%write-tag #\C builder)
+    (encode-integer 10 builder)
+
+    ;; Write a partial CRC32
+    (write-byte 32 builder)
+    (write-byte 42 builder)
+   (let ((stream (make-in-memory-input-stream (get-output-stream-sequence builder))))
+     (signals could-not-read-checksum
+       (decode stream)))))
