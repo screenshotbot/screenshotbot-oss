@@ -131,3 +131,8 @@
       (is (equal
            (list obj obj-3)
            (second-index-values))))))
+
+(test nil-is-not-added-to-index
+  (with-fixture state ()
+    (let ((obj (make-instance 'test-object :arg nil)))
+      (is (equal nil (first-index-values))))))

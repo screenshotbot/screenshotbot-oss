@@ -66,7 +66,9 @@
   ((map :initform (fset:empty-map (fset:empty-set)))))
 
 (defmethod index-add :around ((self abstract-fset-index) obj)
-  (when (slot-boundp obj (%slot-name self))
+  (when (and
+         (slot-boundp obj (%slot-name self))
+         (slot-value obj (%slot-name self)))
     (call-next-method)))
 
 (defmethod index-add ((self fset-unique-index)
