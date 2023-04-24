@@ -16,6 +16,8 @@
                 #:index-clear)
   (:import-from #:bknr.indices
                 #:index-remove)
+  (:import-from #:bknr.indices
+                #:index-values)
   (:export
    #:fset-set-index
    #:fset-unique-index))
@@ -100,5 +102,22 @@
                   obj)))))
 
 
+(defmethod index-values ((self abstract-fset-index))
+  (labels ((build-values (map result)
+             (cond
+               ((fset:empty? map)
+                result)
+               (t
+                (multiple-value-bind (key val) (fset:arb map)
+                  (build-values
+                   (fset:less map key)
+                   (fset:union
+                    (%index-values-for-key self val)
+                    result)))))))
+    (fset:convert 'list (build-values (%map self) (fset:empty-set)))))
 
+(defmethod %index-values-for-key ((self fset-unique-index) val)
+  (fset:with (fset:empty-set) val))
 
+(defmethod %index-values-for-key ((self fset-set-index) val)
+  val)

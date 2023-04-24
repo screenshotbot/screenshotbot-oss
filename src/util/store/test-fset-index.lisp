@@ -28,13 +28,15 @@
   ((arg :initarg :arg
         :accessor %arg
         :index-type fset-unique-index
-        :index-reader search-by-arg))
+        :index-reader search-by-arg
+        :index-values first-index-values))
   (:metaclass indexed-class))
 
 (defclass test-object-2 ()
   ((arg :initarg :arg
         :index-type fset-set-index
-        :index-reader second-by-arg))
+        :index-reader second-by-arg
+        :index-values second-index-values))
   (:metaclass indexed-class))
 
 (def-fixture state ()
@@ -111,3 +113,21 @@
       (is (eql obj (search-by-arg "car")))
       (is (eql nil (search-by-arg "foo"))))))
 
+
+(test index-values
+  (with-fixture state ()
+    (let ((obj (make-instance 'test-object :arg "foo"))
+          (obj-2 (make-instance 'test-object))
+          (obj-3 (make-instance 'test-object :arg "bar")))
+      (is (equal
+           (list obj obj-3)
+           (first-index-values))))))
+
+(test index-values-for-set-mode
+  (with-fixture state ()
+    (let ((obj (make-instance 'test-object-2 :arg "foo"))
+          (obj-2 (make-instance 'test-object-2))
+          (obj-3 (make-instance 'test-object-2 :arg "bar")))
+      (is (equal
+           (list obj obj-3)
+           (second-index-values))))))
