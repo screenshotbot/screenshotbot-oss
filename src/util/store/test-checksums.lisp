@@ -24,7 +24,9 @@
   (:import-from #:bknr.datastore
                 #:%write-tag)
   (:import-from #:bknr.datastore
-                #:encode-integer))
+                #:encode-integer)
+  (:import-from #:bknr.datastore
+                #:%encode-integer))
 (in-package :util/store/test-checksums)
 
 (util/fiveam:def-suite)
@@ -45,7 +47,7 @@
   (with-fixture state ()
     (encode-checksumed-object test-oid output)
     (let ((buff (get-output-stream-sequence output)))
-      (setf (elt buff 10) 3)
+      (setf (elt buff 11) (mod (1+ (elt buff 11)) 128))
       (signals checksum-failure
         (decode (make-in-memory-input-stream buff))))))
 
@@ -79,7 +81,7 @@
   "When the length itself gets truncated"
   (let ((builder (make-in-memory-output-stream)))
     (%write-tag #\C builder)
-    (encode-integer 10 builder)
+    (%encode-integer 10 builder)
 
     ;; Write a partial CRC32
     (write-byte 32 builder)

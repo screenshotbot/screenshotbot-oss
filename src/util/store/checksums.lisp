@@ -17,8 +17,6 @@
   (:import-from #:bknr.datastore
                 #:decode)
   (:import-from #:bknr.datastore
-                #:encode-integer)
-  (:import-from #:bknr.datastore
                 #:%decode-integer)
   (:import-from #:flexi-streams
                 #:make-in-memory-input-stream)
@@ -27,7 +25,11 @@
   (:import-from #:util/store/store
                 #:checksumed-mp-store)
   (:import-from #:bknr.datastore
-                #:restore-transaction-log))
+                #:restore-transaction-log)
+  (:import-from #:bknr.datastore
+                #:%encode-integer)
+  (:import-from #:bknr.datastore
+                #:%decode-integer))
 (in-package :util/store/checksums)
 
 
@@ -49,7 +51,7 @@
 (defmethod decode-object ((tag (eql #\C)) stream)
   (let ((length
           (handler-case
-              (decode stream)
+              (%decode-integer stream)
             (end-of-file ()
               (error 'could-not-read-length))))
         (digest (make-array 4 :element-type '(unsigned-byte 8))))
@@ -73,7 +75,7 @@
   (let ((tmp (flex:make-in-memory-output-stream)))
     (funcall next-method object tmp)
     (let ((buff (flex:get-output-stream-sequence tmp)))
-      (encode-integer (length buff) stream)
+      (%encode-integer (length buff) stream)
       (let ((digest (ironclad:digest-sequence :crc32 buff)))
         (write-sequence digest stream))
       (write-sequence buff stream))))
