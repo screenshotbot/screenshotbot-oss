@@ -137,6 +137,7 @@
 
 
 (defmethod validate-index-values ((index abstract-fset-index) all-elts slot-name)
+  (declare (optimize (debug 3) (speed 0)))
   (let ((tmp (make-instance (type-of index) :slots (list slot-name))))
     (loop for elt in all-elts
           do (index-add tmp elt))
