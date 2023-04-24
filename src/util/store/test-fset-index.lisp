@@ -26,6 +26,7 @@
 
 (defclass test-object ()
   ((arg :initarg :arg
+        :accessor %arg
         :index-type fset-unique-index
         :index-reader search-by-arg))
   (:metaclass indexed-class))
@@ -98,4 +99,15 @@
     (let ((obj (make-instance 'test-object-2)))
       (is (fset:equal? (fset:empty-set)
                        (second-by-arg "foo"))))))
+
+(test update-slot
+  (with-fixture state ()
+    (let ((obj (make-instance 'test-object
+                              :arg "foo")))
+      (setf (%arg obj) "bar")
+      (is (eql obj (search-by-arg "bar")))
+      (is (eql nil (search-by-arg "foo")))
+      (setf (%arg obj) "car")
+      (is (eql obj (search-by-arg "car")))
+      (is (eql nil (search-by-arg "foo"))))))
 
