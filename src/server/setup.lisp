@@ -16,6 +16,8 @@
                 #:*lisp-exiting-p*)
   (:import-from #:server/control-socket
                 #:with-control-socket)
+  (:import-from #:util/threading
+                #:funcall-with-sentry-logs)
   (:export #:main
            #:register-acceptor
            #:slynk-loop
@@ -186,6 +188,9 @@
                             (invoke-restart 'cl:abort)))))
     (fn)))
 
+(def-easy-macro with-sentry-logging (&fn fn)
+  (funcall-with-sentry-logs fn))
+
 (def-easy-macro with-slynk (&fn fn)
   (when *start-slynk*
     (slynk-prepare *slynk-preparer*))
@@ -228,31 +233,32 @@
 
 (def-easy-macro with-common-setup (&key enable-store jvm &fn fn)
   (maybe-with-debugger ()
-    (with-lparallel-kernel ()
-      (with-control-socket ()
-        (with-slynk ()
-          (unwind-on-interrupt ()
-            #+lispworks
-            (when jvm
-              (jvm:jvm-init))
-
-            (fn))))
-      ;; unwind if an interrupt happens
-      (log:config :sane :immediate-flush t)
-      (log:config :info)
-      (format t "shutting down~%")
-      (finish-output t)
-      (format t "calling shutdown hooks~%")
-      (mapc 'funcall *shutdown-hooks*)
+    (with-sentry-logging ()
+      (with-lparallel-kernel ()
+        (with-control-socket ()
+          (with-slynk ()
+            (unwind-on-interrupt ()
+              #+lispworks
+              (when jvm
+                (jvm:jvm-init))
+              
+              (fn))))
+        ;; unwind if an interrupt happens
+        (log:config :sane :immediate-flush t)
+        (log:config :info)
+        (format t "shutting down~%")
+        (finish-output t)
+        (format t "calling shutdown hooks~%")
+        (mapc 'funcall *shutdown-hooks*)
 
 ;;;; don't snapshot the store, if the process is killed while the
 ;;;; snapshot is happening, we have to manually recover the store
-      ;; (bknr.datastore:snapshot)
+       ;; (bknr.datastore:snapshot)
 
-      (when enable-store
-        (bknr.datastore:close-store))
+       (when enable-store
+         (bknr.datastore:close-store))
 
-      (format t "all services down~%")))
+       (format t "all services down~%"))))
 
   #+lispworks
   (wait-for-processes)

@@ -26,6 +26,7 @@
                "easy-macros"
                (:feature (:not (:or :mswindows :windows)) "osicat")
                "util/health-check"
+               "util/threading"
                "bknr.datastore"
                "hunchentoot-multi-acceptor")
   :serial t
