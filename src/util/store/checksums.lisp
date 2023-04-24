@@ -32,8 +32,13 @@
                 #:%decode-integer))
 (in-package :util/store/checksums)
 
+(defparameter *max-transaction-size* 16777216
+  "A generous max transaction size")
 
 (define-condition base-error (error)
+  ())
+
+(define-condition invalid-transaction-length-error (base-error)
   ())
 
 (define-condition end-of-file-error (base-error)
@@ -55,6 +60,10 @@
             (end-of-file ()
               (error 'could-not-read-length))))
         (digest (make-array 4 :element-type '(unsigned-byte 8))))
+    (when (>= length *max-transaction-size*)
+      ;; This can also happen when the length is corrupted
+      (error 'invalid-transaction-length-error))
+
     (unless (= 4 (read-sequence digest stream))
       (error 'could-not-read-checksum))
 
@@ -75,6 +84,8 @@
   (let ((tmp (flex:make-in-memory-output-stream)))
     (funcall next-method object tmp)
     (let ((buff (flex:get-output-stream-sequence tmp)))
+      (when (> (length buff) *max-transaction-size*)
+        (error 'invalid-transaction-length-error))
       (%encode-integer (length buff) stream)
       (let ((digest (ironclad:digest-sequence :crc32 buff)))
         (write-sequence digest stream))
