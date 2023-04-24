@@ -721,6 +721,7 @@ pathname until a non-existant directory name has been found."
                                              position
                                              (random 1000))
                                :defaults pathname)))
+    (warn "Truncating transaction-log file ~a to ~a" pathname position)
     (report-progress "~&; creating log file backup: ~A~%" backup)
     (with-open-file (s pathname
                        :element-type '(unsigned-byte 8)
