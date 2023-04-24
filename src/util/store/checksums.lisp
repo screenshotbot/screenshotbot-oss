@@ -84,6 +84,13 @@
                             (lambda (transaction stream)
                               (call-next-method transaction stream))))
 
+(defun maybe-invoke-restart (restart)
+  (cond
+    ((find-restart restart)
+     (invoke-restart restart))
+    (t
+     (warn "Could not find restart: ~a" restart))))
+
 (defmethod restore-transaction-log :around ((store checksumed-mp-store)
                                             transaction-log
                                             &key until)
@@ -93,7 +100,7 @@
         (handler-bind ((base-error (lambda (e)
                                      (declare (ignore e))
                                      (setf errorp t)
-                                     (invoke-restart 'bknr.datastore::discard))))
+                                     (maybe-invoke-restart 'bknr.datastore::discard))))
           (call-next-method))
       (cond
         (errorp
