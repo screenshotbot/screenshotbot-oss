@@ -45,8 +45,6 @@
   (:import-from #:util/store
                 #:with-class-validation
                 #:defindex)
-  (:import-from #:bknr.indices
-                #:hash-index)
   (:import-from #:util/hash-lock
                 #:with-hash-lock-held
                 #:hash-lock)
