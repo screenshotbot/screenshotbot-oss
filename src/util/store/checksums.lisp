@@ -37,13 +37,21 @@
 (define-condition end-of-file-error (base-error)
   ())
 
+(define-condition could-not-read-length (end-of-file-error)
+  ())
+
 (define-condition checksum-failure (base-error)
   ())
 
 (defmethod decode-object ((tag (eql #\C)) stream)
-  (let ((length (decode stream))
+  (let ((length
+          (handler-case
+              (decode stream)
+            (end-of-file ()
+              (error 'could-not-read-length))))
         (digest (make-array 4 :element-type '(unsigned-byte 8))))
     (read-sequence digest stream)
+
     (let ((buff (make-array length :element-type '(unsigned-byte 8))))
       (let ((bytes-read (read-sequence buff stream)))
         (when (< bytes-read length)

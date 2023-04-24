@@ -12,6 +12,7 @@
                 #:make-in-memory-input-stream
                 #:make-in-memory-output-stream)
   (:import-from #:util/store/checksums
+                #:could-not-read-length
                 #:end-of-file-error
                 #:checksum-failure
                 #:encode-checksumed-object)
@@ -62,3 +63,9 @@
       (setf (elt buff 4) 3)
       (signals end-of-file-error
         (decode (make-in-memory-input-stream buff))))))
+
+(test truncated-length
+  "When the length itself gets truncated"
+  (let ((stream (make-in-memory-input-stream #(67 #| C |#))))
+    (signals could-not-read-length
+      (decode stream))))
