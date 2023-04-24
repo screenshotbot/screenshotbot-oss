@@ -19,6 +19,8 @@
                 #:with-transaction)
   (:import-from #:bknr.datastore
                 #:class-instances)
+  (:import-from #:util/store/fset-index
+                #:fset-unique-index)
   (:export
    #:check
    #:create
@@ -36,9 +38,9 @@
   (defclass gatekeeper (store-object)
     ((name :initarg :name
            :reader gk-name
-           :index-type unique-index
-           :index-initargs (:test 'equal)
-           :index-reader %gk-with-name)
+           :index-type fset-unique-index
+           :index-reader %gk-with-name
+           :index-values all-gks)
      (default-value :initform nil
                     :initarg :default
                     :accessor gk-default-value)

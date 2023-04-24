@@ -18,6 +18,10 @@
                 #:index-remove)
   (:import-from #:bknr.indices
                 #:index-values)
+  (:import-from #:bknr.indices
+                #:slot-index)
+  (:import-from #:alexandria
+                #:curry)
   (:export
    #:fset-set-index
    #:fset-unique-index))
@@ -43,6 +47,13 @@
   (update-map new-index (map)
     (declare (ignore map))
     (%map old-index))
+  new-index)
+
+(defmethod index-reinitialize ((new-index abstract-fset-index)
+                               (old-index slot-index))
+  (warn "Recreating index from slot-index")
+  (mapcar (curry #'index-add new-index)
+          (index-values old-index))
   new-index)
 
 

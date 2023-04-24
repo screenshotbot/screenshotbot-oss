@@ -427,10 +427,12 @@ to the directory that was just snapshotted.")
                                                       :test test
                                                       :unique-index-p unique-index-p)))
                (restart-case
-                   (progn
-                     (log:info "Total number of elements: ~d" (length all-elts))
-                     (assert-hash-tables= hash-table
-                                          new-hash-table))
+                   (handler-bind ((error (lambda (e)
+                                           (log:info "Errors while processing index for ~a ~a ~a" class slot indices))))
+                    (progn
+                      (log:info "Total number of elements: ~d" (length all-elts))
+                      (assert-hash-tables= hash-table
+                                           new-hash-table)))
                  (fix-the-index ()
                    (setf (bknr.indices::slot-index-hash-table index)
                          new-hash-table))
