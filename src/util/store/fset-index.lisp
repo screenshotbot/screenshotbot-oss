@@ -159,4 +159,7 @@ the index reader returns a list in reverse sorted order instead of a set."))
           do (index-add tmp elt))
     (unless (fset:equal? (%map tmp)
                          (%map index))
-      (error "fset index does not match"))))
+      (restart-case
+          (error "fset index does not match")
+        (fix-fset-index ()
+          (setf (%map index) (%map tmp)))))))

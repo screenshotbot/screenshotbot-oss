@@ -26,6 +26,8 @@
                 #:def-easy-macro)
   (:import-from #:bknr.datastore
                 #:with-transaction)
+  (:import-from #:util/store/fset-index
+                #:fset-set-index)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:base-audit-log
@@ -37,7 +39,7 @@
 (with-class-validation
   (defclass base-audit-log (store-object)
     ((%%company :initarg :company
-                :index-type hash-index
+                :index-type fset-set-index
                 :index-reader %audit-logs-for-company)
      (%%err :initarg :error
             :initform nil
@@ -50,11 +52,12 @@
 (register-auto-cleanup 'base-audit-log :timestamp #'%created-at)
 
 (defmethod audit-logs-for-company (company type)
-  (let ((elems (%audit-logs-for-company company)))
-    (loop for log in (uniq (sort elems #'> :key 'bknr.datastore:store-object-id))
-          if (or (not type)
-                 (typep log type))
-            collect log)))
+  (reverse
+   (fset:convert 'list
+                 (fset:filter
+                  (lambda (log)
+                    (typep log type))
+                  (%audit-logs-for-company company)))))
 
 (def-easy-macro with-audit-log (&binding audit-log expr &fn fn)
   (handler-bind ((error
