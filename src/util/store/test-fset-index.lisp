@@ -90,3 +90,12 @@
         (is (fset:equal? (make-set)
                          (second-by-arg "foo")))))))
 
+(test unbound-slot
+  (with-fixture state ()
+    (let ((obj (make-instance 'test-object)))
+      (is (eql nil
+               (search-by-arg "foo"))))
+    (let ((obj (make-instance 'test-object-2)))
+      (is (fset:equal? (fset:empty-set)
+                       (second-by-arg "foo"))))))
+

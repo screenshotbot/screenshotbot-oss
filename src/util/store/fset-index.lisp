@@ -57,6 +57,10 @@
 (defclass fset-set-index (abstract-fset-index)
   ((map :initform (fset:empty-map (fset:empty-set)))))
 
+(defmethod index-add :around ((self abstract-fset-index) obj)
+  (when (slot-boundp obj (%slot-name self))
+    (call-next-method)))
+
 (defmethod index-add ((self fset-unique-index)
                       obj)
   (update-map self (map)
