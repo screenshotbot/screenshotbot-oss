@@ -28,18 +28,18 @@
           :reader token))
   (:metaclass json-serializable-class))
 
-(defvar *secrets* (fset:empty-map))
+(defvar *secrets* nil)
 
 (defmacro def-passphrase-token (name &key id)
-  `(let ((passphrase (make-instance 'passphrase
-                                    :name (string-downcase ',name)
-                                    :id ,id
-                                    :type :token)))
-     (setf *secrets*
-           (fset:with *secrets*
-                      ',name passphrase))
-     (defun ,name ()
-       (read-passphrase passphrase))))
+  `(unless (assoc-value *secrets* ',name)
+     (let ((passphrase (make-instance 'passphrase
+                                      :name (string-downcase ',name)
+                                      :id ,id
+                                      :type :token)))
+       (setf (assoc-value *secrets* ',name)
+             passphrase)
+       (defun ,name ()
+         (read-passphrase passphrase)))))
 
 (def-passphrase-token stripe-prod-webhook-signing-key :id 14)
 
