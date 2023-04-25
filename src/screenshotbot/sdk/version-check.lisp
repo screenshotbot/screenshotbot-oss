@@ -19,6 +19,8 @@
                 #:*hostname*)
   (:import-from #:util/health-check
                 #:def-health-check)
+  (:import-from #:screenshotbot/sdk/backoff
+                #:backoff)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-version-check
@@ -42,19 +44,20 @@ might get logged in the webserver logs."
 (defun remote-supports-put-run ()
   (>= *remote-version* 4))
 
-(defun get-version (hostname)
-  (log:info "Getting remote version")
-  (multiple-value-bind (body ret)
-      (http-request
-       (format nil "~a/api/version" hostname)
-       :want-string t)
-    (let ((version (cond
-                     ((eql 200 ret)
-                      (decode-json body 'version))
-                     (t
-                      (log:warn "/api/version responded 404, this is probably because of running an old version of OSS Screenshotbot service")
-                      (make-instance 'version :version 1)))))
-      (version-number version))))
+(auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
+  (defun get-version (hostname)
+    (log:info "Getting remote version")
+    (multiple-value-bind (body ret)
+        (http-request
+         (format nil "~a/api/version" hostname)
+         :want-string t)
+      (let ((version (cond
+                       ((eql 200 ret)
+                        (decode-json body 'version))
+                       (t
+                        (log:warn "/api/version responded 404, this is probably because of running an old version of OSS Screenshotbot service")
+                        (make-instance 'version :version 1)))))
+        (version-number version)))))
 
 (def-easy-macro with-version-check (&fn fn)
   (let ((*remote-version* (get-version *hostname*)))

@@ -6,7 +6,7 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
-  :version "2.5.10"
+  :version "2.5.11"
   :depends-on (:dexador
                :com.google.flag
                :pkg
@@ -38,6 +38,7 @@
                :str)
   :components ((:file "package")
                (:file "flags")
+               (:file "backoff")
                (:file "version-check")
                (:file "bundle")
                (:file "firebase")

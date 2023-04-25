@@ -50,6 +50,8 @@
                 #:encode-json)
   (:import-from #:util/json-mop
                 #:json-mop-to-string)
+  (:import-from #:screenshotbot/sdk/backoff
+                #:backoff)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:dto #:screenshotbot/api/model)
                     (#:e #:screenshotbot/sdk/env))
@@ -105,13 +107,6 @@
                            (str:lines stacktrace))))
      (error 'api-error :message it)))
   (assoc-value result :response))
-
-(defun backoff (num)
-  (let ((ret (or
-              (car (nthcdr num (list 10 20 60)))
-              60)))
-    (log:info "Will retry in ~a seconds" ret)
-    ret))
 
 (defun api-hostname ()
   (cond
