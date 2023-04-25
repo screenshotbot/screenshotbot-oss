@@ -22,10 +22,15 @@
   ((name :initarg :name
          :reader passphrase-name)
    (id :initarg :id
+       :json-key "id"
+       :json-type :number
        :reader passphrase-id)
    (type :initarg :type)
    (token :initarg :token
-          :reader token))
+          :json-key "token"
+          :json-type :string
+          :initform nil
+          :accessor token))
   (:metaclass json-serializable-class))
 
 (defvar *secrets* nil)
@@ -45,19 +50,28 @@
 
 ;; (stripe-prod-webhook-signing-key)
 
+(defun save-passphrases (output)
+  (let ((secrets (mapcar #'cdr *secrets*)))
+    (mapc #'read-passphrase secrets)
+    (with-open-file (output output :if-exists :supersede
+                                   :direction :output)
+      (yason:encode secrets output))))
+
 (defmethod read-passphrase ((self passphrase))
-  (let ((phab (make-phab-instance-from-arcrc "https://phabricator.tdrhq.com")))
-    (let ((response (call-conduit phab "passphrase.query"
-                                  `((:ids . ,(list (passphrase-id self)))
-                                    (:need-secrets . t)
-                                    (:limit . 1)))))
-      (let ((data (cdar (assoc-value (assoc-value response :result) :data))))
-        (unless (string-equal (passphrase-name self)
-                              (assoc-value data :name))
-          (error "Expected key: ~a, but got ~a"
-                 (passphrase-name self)
-                 (assoc-value data :name)))
-        (assoc-value (assoc-value data :material) :token)))))
+  (util:or-setf
+   (token self)
+   (let ((phab (make-phab-instance-from-arcrc "https://phabricator.tdrhq.com")))
+     (let ((response (call-conduit phab "passphrase.query"
+                                   `((:ids . ,(list (passphrase-id self)))
+                                     (:need-secrets . t)
+                                     (:limit . 1)))))
+       (let ((data (cdar (assoc-value (assoc-value response :result) :data))))
+         (unless (string-equal (passphrase-name self)
+                               (assoc-value data :name))
+           (error "Expected key: ~a, but got ~a"
+                  (passphrase-name self)
+                  (assoc-value data :name)))
+         (assoc-value (assoc-value data :material) :token))))))
 
 
 

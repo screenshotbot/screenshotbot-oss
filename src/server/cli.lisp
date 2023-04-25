@@ -74,6 +74,21 @@
               :key :port)
              (common-options))))
 
+(defun save-passphrases/command ()
+  (clingon:make-command
+   :name "save-passphrases"
+   :handler (lambda (cmd)
+              (let ((output (clingon:getopt cmd :output)))
+                (uiop:call-function
+                 "util/phabricator/passphrase::save-passphrases"
+                 output)))
+   :options (list
+             (make-option
+              :filepath
+              :description "Where to save the passphrases"
+              :long-name "output"
+              :key :output))))
+
 (defun main/handler (cmd)
   (clingon:print-usage-and-exit cmd t))
 
@@ -106,6 +121,7 @@
                                                           :jvm jvm)
                                        (verify/command :enable-store enable-store
                                                        :jvm jvm)
+                                       (save-passphrases/command)
                                        (run/command :enable-store enable-store
                                                     :jvm jvm
                                                     :acceptor acceptor))))
