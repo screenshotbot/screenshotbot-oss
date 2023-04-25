@@ -283,12 +283,15 @@
   :depends-on (:dexador
                :alexandria
                :cl-json
+               :fset
+               :json-mop
                :pkg
                :util/request
                :quri)
   :components ((:module "phabricator"
                 :components ((:file "conduit")
-                             (:file "harbormaster")))))
+                             (:file "harbormaster")
+                             (:file "passphrase")))))
 
 (defsystem :util/clsql
   :depends-on (:clsql

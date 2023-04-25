@@ -51,15 +51,18 @@
                      ,(alist-hash-table
                        `(("token" . ,(api-key phab)))))))))
     (log:debug "using params: ~S" params)
-   (let ((res
-           (http-request
-            (format nil "~a/api/~a" (url phab) name)
-            :method :post
-            :want-string t
-            :form-data t
-            :parameters `(("params" . ,(json:encode-json-to-string params))
-                          ("output" . "json")
-                          ("__conduit__" . "1")))))
+    (let* ((encoded (json:encode-json-to-string params))
+           (res
+             (progn
+               (log:info "Running ~a" encoded)
+               (http-request
+                (format nil "~a/api/~a" (url phab) name)
+                :method :post
+                :want-string t
+                :form-data t
+                :parameters `(("params" . ,encoded)
+                              ("output" . "json")
+                             ("__conduit__" . "1"))))))
      (let* ((res
               (json:decode-json-from-string res))
             (error-info
