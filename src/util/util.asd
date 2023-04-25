@@ -287,6 +287,7 @@
                :json-mop
                :pkg
                :util/request
+               :util/misc
                :quri)
   :components ((:module "phabricator"
                 :components ((:file "conduit")

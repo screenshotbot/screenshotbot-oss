@@ -76,7 +76,7 @@
                        (assoc-value (%find (passphrase-id secret)) :token)))))))
 
 (defmethod read-passphrase ((self passphrase))
-  (util:or-setf
+  (util/misc:or-setf
    (token self)
    (let ((phab (make-phab-instance-from-arcrc "https://phabricator.tdrhq.com")))
      (let ((response (call-conduit phab "passphrase.query"
@@ -90,6 +90,3 @@
                   (passphrase-name self)
                   (assoc-value data :name)))
          (assoc-value (assoc-value data :material) :token))))))
-
-
-
