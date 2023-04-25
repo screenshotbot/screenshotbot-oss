@@ -27,6 +27,7 @@
                (:feature (:not (:or :mswindows :windows)) "osicat")
                "util/health-check"
                "util/threading"
+               "util/phabricator"
                "bknr.datastore"
                "hunchentoot-multi-acceptor")
   :serial t

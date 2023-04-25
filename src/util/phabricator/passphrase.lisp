@@ -12,11 +12,17 @@
                 #:call-conduit
                 #:make-phab-instance-from-arcrc)
   (:import-from #:alexandria
-                #:assoc-value))
+                #:assoc-value)
+  (:export
+   #:*secret-file*
+   #:reload-secrets))
 (in-package :util/phabricator/passphrase)
 
 (defvar *secret-file* nil
   "A *cache* of the secrets. The source of truth is still Phabricator")
+
+(defun reload-secrets ()
+  (load-passphrases *secret-file*))
 
 (defclass passphrase ()
   ((name :initarg :name
@@ -56,6 +62,18 @@
     (with-open-file (output output :if-exists :supersede
                                    :direction :output)
       (yason:encode secrets output))))
+
+(defun load-passphrases (input)
+  (with-open-file (input input :direction :input)
+    (let ((secrets (json:decode-json input)))
+      (flet ((%find (id)
+               (loop for secret in secrets
+                     if (eql (assoc-value secret :id)
+                             id)
+                       return secret)))
+        (loop for (nil . secret) in *secrets*
+              do (setf (token secret)
+                       (assoc-value (%find (passphrase-id secret)) :token)))))))
 
 (defmethod read-passphrase ((self passphrase))
   (util:or-setf

@@ -16,6 +16,8 @@
                 #:with-global-binding)
   (:import-from #:util/store
                 #:*object-store*)
+  (:import-from #:alexandria
+                #:when-let)
   (:export
    #:main))
 (in-package :server/cli)
@@ -39,13 +41,21 @@
                  (run-health-checks))))
    :options (list* (common-options))))
 
+(def-easy-macro with-run-or-verify-setup (cmd &key enable-store jvm &fn fn)
+  (with-store (cmd)
+    (when-let ((secrets (clingon:getopt cmd :secrets)))
+      (log:info "Loading secrets from ~a" secrets)
+      (setf util/phabricator/passphrase:*secret-file* secrets)
+      (util/phabricator/passphrase:reload-secrets))
+    (with-common-setup (:enable-store enable-store :jvm jvm)
+      (fn))))
+
 (defun verify/command (&key enable-store jvm)
   (clingon:make-command
    :name "verify"
    :handler (lambda (cmd)
-              (with-store (cmd)
-                (with-common-setup (:enable-store enable-store :jvm jvm)
-                  (%verify :profile-store (clingon:getopt cmd :profile)))))
+              (with-run-or-verify-setup (cmd :enable-store enable-store :jvm jvm)
+                (%verify :profile-store (clingon:getopt cmd :profile))))
    :options (list*
              (make-option
               :flag
@@ -59,12 +69,11 @@
   (clingon:make-command
    :name "run"
    :handler (lambda (cmd)
-              (with-store (cmd)
-                (with-common-setup (:enable-store enable-store :jvm jvm)
-                  (%run :enable-store enable-store
-                        :acceptor acceptor
-                        :port (clingon:getopt cmd :port)
-                        :shell nil))))
+              (with-run-or-verify-setup (cmd :enable-store enable-store :jvm jvm)
+                (%run :enable-store enable-store
+                      :acceptor acceptor
+                      :port (clingon:getopt cmd :port)
+                      :shell nil)))
    :options (list*
              (make-option
               :integer
@@ -100,6 +109,11 @@
     :short-name #\s
     :long-name "store"
     :key :store)
+   (make-option
+    :filepath
+    :description "Path to secrets file. Ignore on OSS."
+    :long-name "secrets"
+    :key :secrets)
    (make-option
     :flag
     :description "Whether to start slynk"
