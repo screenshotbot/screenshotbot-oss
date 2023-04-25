@@ -21,7 +21,9 @@
   (:import-from #:bknr.indices
                 #:destroy-object)
   (:import-from #:bknr.indices
-                #:destroy-object))
+                #:destroy-object)
+  (:import-from #:bknr.indices
+                #:index-existing-error))
 (in-package :util/store/test-fset-index)
 
 (util/fiveam:def-suite)
@@ -148,3 +150,11 @@
       (let ((obj-2 (make-instance 'test-object :arg "foo")))
         (destroy-object obj)
         (is (eql obj-2 (search-by-arg "foo")))))))
+
+(test uniqueness
+  (with-fixture state ()
+    (let ((obj (make-instance 'test-object :arg "foo")))
+      (signals index-existing-error
+        (make-instance 'test-object :arg "foo"))
+      ;; Make sure the index hasn't been modified
+      (is (eql obj (search-by-arg "foo"))))))

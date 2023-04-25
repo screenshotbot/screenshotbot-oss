@@ -24,6 +24,8 @@
                 #:curry)
   (:import-from #:util/store/store
                 #:validate-index-values)
+  (:import-from #:bknr.indices
+                #:index-existing-error)
   (:export
    #:fset-set-index
    #:fset-unique-index
@@ -80,9 +82,17 @@ the index reader returns a list in reverse sorted order instead of a set."))
 (defmethod index-add ((self fset-unique-index)
                       obj)
   (update-map self (map)
-    (fset:with map
-               (slot-value obj (%slot-name self))
-               obj)))
+    (let ((key (slot-value obj (%slot-name self))))
+      (cond
+        ((fset:lookup map key)
+         (error 'index-existing-error
+                :index self
+                :key key
+                :value obj))
+        (t
+         (fset:with map
+                    key
+                    obj))))))
 
 (defmethod index-add ((self fset-set-index)
                       obj)
