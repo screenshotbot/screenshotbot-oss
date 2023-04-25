@@ -35,6 +35,8 @@
                 #:*indexed-class-override*)
   (:import-from #:bknr.indices
                 #:slot-index)
+  (:import-from #:bknr.indices
+                #:clear-slot-indices)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -200,10 +202,9 @@ to the directory that was just snapshotted.")
          (funcall fn)
       (release-file-lock file-lock))))
 
-(defun %%call-with-test-store (fn &key (cleanup t)
-                                  (globally nil)
-                                    store-class
-                                    dir)
+(defun %%call-with-test-store (fn &key (globally nil)
+                                store-class
+                                dir)
   (when (boundp 'bknr.datastore:*store*)
     (error "Don't run this test in a live program with an existing store"))
   (flet ((inner-work ()
@@ -217,24 +218,27 @@ to the directory that was just snapshotted.")
                       (setf util/store:*object-store* (namestring dir))
                       (assert bknr.datastore:*store*)
                       (maybe-ensure-empty)
-                      (unwind-protect
-                           (progn
-                             (without-sync ()
-                              (funcall fn))
-                             #+nil
-                             (let ((objs (all-objects)))
-                               (when objs
-                                 (error "At the end of the test some objects were not deleted: ~s" objs))))
-                        (let ((store *store*))
-                          (close-store)
-                          (bknr.datastore::close-store-object store))
+                      (let ((classes-to-clean nil))
+                        (unwind-protect
+                             (progn
+                               (without-sync ()
+                                 (funcall fn))
+                               #+nil
+                               (let ((objs (all-objects)))
+                                 (when objs
+                                   (error "At the end of the test some objects were not deleted: ~s" objs))))
+                          (let ((classes-to-clean
+                                  (fset:convert
+                                   'fset:set
+                                   (mapcar #'class-of (bknr.datastore:all-store-objects)))))
+                            (let ((store *store*))
+                              (close-store)
+                              (bknr.datastore::close-store-object store))
 
-                        (when cleanup
-                          ;; Look at the associated test. This is the only way I know
-                          ;; of to clean up the indices. I wish there were a better
-                          ;; solution.
-                          (%%call-with-test-store (lambda ()) :cleanup nil
-                                                              :store-class store-class)))))
+                            (fset:do-set (class classes-to-clean)
+                              (mapc
+                               #'clear-slot-indices
+                               (closer-mop:class-slots class))))))))
              (cond
                (dir
                 (call-with-dir dir))
