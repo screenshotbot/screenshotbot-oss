@@ -12,6 +12,8 @@
   (:import-from #:screenshotbot/sdk/sdk
                 #:chdir-for-bin)
   (:import-from #:util/threading
+                #:maybe-log-sentry
+                #:*warning-count*
                 #:with-extras
                 #:*extras*
                 #:funcall-with-sentry-logs)
@@ -109,9 +111,14 @@
                             #-screenshotbot-oss
                             (util/threading:log-sentry e))
                           (funcall on-error))))
-     (handler-bind (#+lispworks
-                    (error error-handler))
-       (funcall fn)))))
+     (let ((*warning-count* 0))
+       (handler-bind (#+lispworks
+                      (error error-handler))
+         ;; We put the warning handler inside here, so that if an
+         ;; error happens in the warning handler, we can log that.
+         (handler-bind (#+lispworks
+                        (warning #'maybe-log-sentry))
+          (funcall fn)))))))
 
 (defun main (&rest args)
   (uiop:setup-command-line-arguments)
@@ -136,3 +143,9 @@
        nil))
     (assert (cl-ppcre:scan ".*RUN-HEALTH-CHECKS.*"
                            (get-output-stream-string out-stream)))))
+
+#+nil ;; too noisy, and less important
+(def-health-check sentry-logger-for-warnings ()
+  (let ((out-stream (make-string-output-stream)))
+    (with-sentry (:dry-run t)
+      (warn "warning health-check for sdk"))))
