@@ -104,7 +104,7 @@
                           (dbg:output-backtrace (if flags:*verbose* :bug-form :brief)
                                                 :stream stream)
                           #-lispworks
-                          (trivial-backtrace:print-backtrace einteg stream)
+                          (trivial-backtrace:print-backtrace e stream)
                           (unless dry-run
                             #-screenshotbot-oss
                             (util/threading:log-sentry e))
