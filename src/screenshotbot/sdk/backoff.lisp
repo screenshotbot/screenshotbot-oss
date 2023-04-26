@@ -10,9 +10,6 @@
 
 (defun backoff (num)
   "A backoff for auto-restart"
-  (let ((ret (or
-              (car (nthcdr num (list 10 20 60)))
-              60)))
-    (log:info "Will retry in ~a seconds" ret)
+  (let ((ret (car (nthcdr num (list 5 10 60)))))
+    (warn "Will retry in ~a seconds" ret)
     ret))
-

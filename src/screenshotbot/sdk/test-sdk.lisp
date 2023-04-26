@@ -164,8 +164,8 @@
       (is (equal "abcd" flags:*override-commit-hash*)))))
 
 (test backoff-happy-path
-  (is (eql 20 (backoff 1)))
-  (is (eql 60 (backoff 100))))
+  (is (eql 10 (backoff 1)))
+  (is (eql nil (backoff 100))))
 
 (test validate-pull-request
   (with-fixture state ()
