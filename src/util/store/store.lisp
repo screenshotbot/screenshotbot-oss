@@ -37,6 +37,8 @@
                 #:slot-index)
   (:import-from #:bknr.indices
                 #:clear-slot-indices)
+  (:import-from #:util/lists
+                #:head)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -414,6 +416,15 @@ to the directory that was just snapshotted.")
                (unordered-equalp  value1 value2)
              (unless res
                (error "the two hash tables have different values for key ~a~%Missing values in new hash-table:~S~%Missing values in old hash-table:~s" k diff-1 diff-2)))))
+
+(defvar *recent-validation-errors* nil)
+
+(defmethod validate-index-values :around (index all-elts slot-name)
+  (handler-bind ((error (lambda (e)
+                          (push e *recent-validation-errors*)
+                          (setf *recent-validation-errors*
+                                (head *recent-validation-errors* 10)))))
+    (call-next-method)))
 
 (defmethod validate-index-values ((index slot-index) all-elts
                                   slot-name)

@@ -79,7 +79,6 @@
                (:file "emacs")
                (:file "cookies")
                (:file "bind-form")
-               (:file "lists")
                (:file "cdn")
                (:file "package")
                (:file "mockable")
@@ -142,8 +141,10 @@
   :serial t
   :depends-on (:local-time
                :cl-fad
+               :easy-macros
                :str)
-  :components ((:file "misc")))
+  :components ((:file "misc")
+               (:file "lists")))
 
 (defsystem :util/atomics
   :serial t
