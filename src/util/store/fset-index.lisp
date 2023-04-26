@@ -164,7 +164,9 @@ the index reader returns a list in reverse sorted order instead of a set."))
 (define-condition corrupted-index (error)
   ((index :initarg :index)
    (all-elts :initarg :all-elts)
-   (slot-name :initarg :slot-name))
+   (slot-name :initarg :slot-name)
+   (actual-map :initarg :actual-map)
+   (expected-map :initarg :expected-map))
   (:report "fset index does not match"))
 
 (defmethod validate-index-values ((index abstract-fset-index) all-elts slot-name)
@@ -178,6 +180,8 @@ the index reader returns a list in reverse sorted order instead of a set."))
           (error 'corrupted-index
                  :index index
                  :all-elts all-elts
-                 :slot-name slot-name)
+                 :slot-name slot-name
+                 :actual-map (%map index)
+                 :expected-map (%map tmp))
         (fix-fset-index ()
           (setf (%map index) (%map tmp)))))))
