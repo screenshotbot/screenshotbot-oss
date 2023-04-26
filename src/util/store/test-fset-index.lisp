@@ -10,9 +10,11 @@
   (:import-from #:bknr.indices
                 #:indexed-class)
   (:import-from #:util/store/fset-index
+                #:corrupted-index
                 #:fset-set-index
                 #:fset-unique-index)
   (:import-from #:util/store/store
+                #:validate-index-values
                 #:with-test-store)
   (:import-from #:bknr.indices
                 #:index-clear)
@@ -23,7 +25,9 @@
   (:import-from #:bknr.indices
                 #:destroy-object)
   (:import-from #:bknr.indices
-                #:index-existing-error))
+                #:index-existing-error)
+  (:import-from #:bknr.indices
+                #:index-add))
 (in-package :util/store/test-fset-index)
 
 (util/fiveam:def-suite)
@@ -158,3 +162,19 @@
         (make-instance 'test-object :arg "foo"))
       ;; Make sure the index hasn't been modified
       (is (eql obj (search-by-arg "foo"))))))
+
+(test validate-index-happy-path
+  (with-fixture state ()
+    (let ((obj (make-instance 'test-object :arg "foo")))
+      (let ((index-1 (make-instance 'fset-unique-index :slots '(arg))))
+        (index-add index-1 obj)
+        (validate-index-values index-1 (list obj)
+                               'arg)))))
+
+(test validate-index-unhappy-path
+  (with-fixture state ()
+    (let ((obj (make-instance 'test-object :arg "foo")))
+      (let ((index-1 (make-instance 'fset-unique-index :slots '(arg))))
+        (signals corrupted-index
+         (validate-index-values index-1 (list obj)
+                                'arg))))))
