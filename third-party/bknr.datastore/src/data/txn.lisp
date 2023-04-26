@@ -710,10 +710,15 @@ pathname until a non-existant directory name has been found."
 
 (defvar *show-transactions* nil)
 
-#+ (and lispworks linux)
+#+ (and lispworks (or linux darwin))
 (cffi:defcfun (ffi-truncate "truncate") :int
   (path :string)
-  (pos :long))
+  ;; this next one is off_t, which is __darwin_off_t on Mac, and
+  ;; __kernel_off_t on Linux. On Darwin that is int64, on Linux that is long.
+  ;; (which should both be the same on 64 bit systems, but being careful anyway).
+  ;; https://opensource.apple.com/source/xnu/xnu-1504.9.17/bsd/sys/_types.h.auto.html
+  ;;
+  (pos #+darwin :int64 #+linux :long))
 
 (defun truncate-log (pathname position)
   (let ((backup (make-pathname :type (format nil "backup-~a-~a-~a"
@@ -735,9 +740,9 @@ pathname until a non-existant directory name has been found."
   (unix:unix-truncate (ext:unix-namestring pathname) position)
   #+sbcl
   (sb-posix:truncate (namestring pathname) position)
-  #+(or openmcl (and lispworks linux))
+  #+(or openmcl (and lispworks (or linux darwin)))
   (ffi-truncate (namestring pathname) position)
-  #-(or cmu sbcl openmcl (and lispworks linux))
+  #-(or cmu sbcl openmcl (and lispworks (or linux darwin)))
   (error "don't know how to truncate files on this platform"))
 
 (defun load-transaction-log (pathname &key until)
