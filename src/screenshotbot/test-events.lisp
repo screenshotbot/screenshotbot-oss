@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/events
+                #:event-engine
                 #:with-event
                 #:*events*
                 #:flush-events
@@ -15,8 +16,7 @@
                 #:insert-events
                 #:with-db
                 #:push-event
-                #:db-engine
-                #:*event-engine*)
+                #:db-engine)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:fiveam-matchers/core
@@ -24,21 +24,29 @@
                 #:assert-that)
   (:import-from #:fiveam-matchers/described-as
                 #:described-as)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-events)
 
 (util/fiveam:def-suite)
 
+(defclass fake-installation ()
+  ((event-engine :initarg :event-engine
+                 :reader event-engine)))
+
 (def-fixture state ()
   (uiop:with-temporary-file (:pathname pathname)
    (cl-mock:with-mocks ()
      (setf *events* nil)
-     (let* ((*event-engine*
-              (make-instance 'db-engine
-                             :connection-spec
-                             `(,(namestring pathname))
-                             :database-type :sqlite3)))
-       (with-db (db *event-engine*)
+     (let* ((*installation*
+              (make-instance 'fake-installation
+                             :event-engine
+                             (make-instance 'db-engine
+                                            :connection-spec
+                                            `(,(namestring pathname))
+                              :database-type :sqlite3))))
+       (with-db (db (event-engine *installation*))
          (clsql:query "create table event (name string, extras string, created_at datetime)"
                       :database db))
        (&body)))))
@@ -50,7 +58,7 @@
 
 (test insert-multiple-events
   (with-fixture state ()
-    (with-db (db *event-engine*)
+    (with-db (db (event-engine *installation*))
       (insert-events
        (list
         (make-instance 'event :name :foo)
@@ -64,14 +72,14 @@
   (with-fixture state ()
     (finishes
       (push-event :foobar))
-    (with-db (db *event-engine*)
+    (with-db (db (event-engine *installation*))
       (is (= 0 (row-count db))))
-    (flush-events *event-engine*)
-    (with-db (db *event-engine*)
+    (flush-events (event-engine *installation*))
+    (with-db (db (event-engine *installation*))
       (is (= 1 (row-count db))))
 
-    (flush-events *event-engine*)
-    (with-db (db *event-engine*)
+    (flush-events (event-engine *installation*))
+    (with-db (db (event-engine *installation*))
       (assert-that (row-count db)
                    (described-as "We shouln't insert again"
                      (is-equal-to 1))))))

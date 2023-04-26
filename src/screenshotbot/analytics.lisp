@@ -15,7 +15,8 @@
   (:import-from #:util/store
                 #:object-store)
   (:import-from #:screenshotbot/events
-                #:*event-engine*
+                #:event-engine
+                #:safe-installation
                 #:insert-multiple-items
                 #:db-engine
                 #:with-db)
@@ -23,6 +24,8 @@
                 #:with-batches)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:alexandria
+                #:when-let)
   (:export #:push-analytics-event
            #:analytics-event-ts
            #:analytics-event-script-name
@@ -94,7 +97,7 @@
 
 (defun %write-analytics-events ()
   (let ((old-events (util/atomics:atomic-exchange *events* nil)))
-    (write-analytics-events-to-engine *event-engine*
+    (write-analytics-events-to-engine (event-engine (safe-installation))
                                       old-events)))
 
 (defun all-analytics-events ()
@@ -108,7 +111,7 @@
 
 (defun map-analytics-events (function &key (keep-if (lambda (x) (declare (ignore x)) t))
                                         (limit 10000))
-  (when *event-engine*
+  (when-let ((engine (event-engine (safe-installation))))
     (let ((res
             (flet ((call-on (events)
                      (loop for ev in events
@@ -120,7 +123,7 @@
               (append
                (call-on *events*)
                (call-on
-                (with-db (db *event-engine*)
+                (with-db (db engine)
                   (clsql:select 'analytics-event :database db
                     :order-by (list
                                (make-instance

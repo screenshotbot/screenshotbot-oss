@@ -17,11 +17,24 @@
                 #:with-batches)
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
-  (:local-nicknames (#:a #:alexandria)))
+  (:import-from #:core/installation/installation
+                #:*installation*)
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:event-engine))
 (in-package :screenshotbot/events)
 
-(defvar *event-engine* nil)
 (defvar *events* nil)
+
+(defun safe-installation ()
+  ;; We want the event code to be as fixtureless as possible to all
+  ;; callers, so we handle unbound installations right here
+  (when (boundp '*installation*)
+    *installation*))
+
+(defgeneric event-engine (installation)
+  (:method (any)
+    nil))
 
 (defclass db-engine ()
   ((connection-spec :initarg :connection-spec
@@ -129,7 +142,7 @@
           (insert-events events db))))))
 
 (defmethod push-event (name &rest args)
-  (apply #'push-event-impl *event-engine* name args))
+  (apply #'push-event-impl (event-engine (safe-installation)) name args))
 
 (def-easy-macro with-event (name &rest args &fn fn)
   (flet ((push-type (type)
@@ -145,6 +158,6 @@
 
 (def-cron flush-events (:step-min 2)
   (ignore-and-log-errors ()
-   (flush-events *event-engine*)))
+   (flush-events (event-engine (safe-installation)))))
 
 ;; (push-event :test-sdf)

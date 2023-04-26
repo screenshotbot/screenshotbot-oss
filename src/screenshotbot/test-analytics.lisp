@@ -17,8 +17,8 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/events
+                #:event-engine
                 #:with-db
-                #:*event-engine*
                 #:db-engine)
   (:import-from #:fiveam-matchers/lists
                 #:has-item
@@ -35,20 +35,27 @@
                 #:has-length)
   (:import-from #:fiveam-matchers/every-item
                 #:every-item)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-analytics)
 
 (util/fiveam:def-suite)
 
+(defclass fake-installation ()
+  ((event-engine :initarg :event-engine
+                 :reader event-engine)))
+
 (def-fixture state ()
   (uiop:with-temporary-file (:pathname pathname)
     (with-test-store ()
-      (let* ((*event-engine*
-              (make-instance 'db-engine
-                             :connection-spec
-                             `(,(namestring pathname))
-                             :database-type :sqlite3)))
-        (with-db (db *event-engine*)
+      (let* ((*installation*
+               (make-instance 'fake-installation
+                              :event-engine (make-instance 'db-engine
+                                                           :connection-spec
+                                                           `(,(namestring pathname))
+                               :database-type :sqlite3))))
+        (with-db (db (event-engine *installation*))
           (clsql:query
            "create table analytics (ip_address text, session text, script_name text,
                                     referrer text,
