@@ -395,19 +395,34 @@ to the directory that was just snapshotted.")
         diff-1
         diff-2)))))
 
+(define-condition hash-tables-keys-dont-match (error)
+  ((keys1 :initarg :keys1)
+   (keys2 :initarg :keys2)
+   (diff-1 :initarg :diff-1)
+   (diff-2 :initarg :diff-2))
+  (:report (lambda (e out)
+             (with-slots (diff-1 diff-2) e
+               (format out "The two hash tables have different keys. ~%Missing keys in new-hash-table: ~s~% Missing keys in old hash-table: ~s~%"
+                       diff-1
+                       diff-2)))))
+
 (defun assert-hash-tables= (h1 h2)
   (unless (eql (hash-table-test h1)
                (hash-table-test h2))
     (error "the two hash tables have different test functions"))
-  (multiple-value-bind (res diff-1 diff-2)
-      (unordered-equalp
-           (alexandria:hash-table-keys h1)
-           (alexandria:hash-table-keys h2)
-           :test (hash-table-test h1))
-    (unless res
-      (error "The two hash tables have different keys. ~%Missing keys in new-hash-table: ~s~% Missing keys in old hash-table: ~s~%"
-             diff-1
-             diff-2)))
+  (let ((keys1 (alexandria:hash-table-keys h1))
+        (keys2 (alexandria:hash-table-keys h2)))
+    (multiple-value-bind (res diff-1 diff-2)
+        (unordered-equalp
+         keys1
+         keys2
+         :test (hash-table-test h1))
+      (unless res
+        (error 'hash-tables-keys-dont-match
+               :keys1 keys1
+               :keys2 keys2
+               :diff-1 diff-1
+               :diff-2 diff-2))))
   (loop for k being the hash-keys of h1
         for value1 = (gethash k h1)
         for value2 = (gethash k h2)
