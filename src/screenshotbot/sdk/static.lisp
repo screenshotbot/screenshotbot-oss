@@ -41,9 +41,7 @@
                                :element-type '(unsigned-byte 8))
     (let ((uri (quri:make-uri
                   :query `(("hash" . ,(md5-file file))
-                           ("type" . ,(pathname-type file))
-                           ("api-key" . ,flags:*api-key*)
-                           ("api-secret-key" . ,flags:*api-secret*))
+                           ("type" . ,(pathname-type file)))
                   :defaults
                   (quri:uri (format nil "~a/api/blob/upload" flags:*hostname*)))))
      (sdk:put-file (format nil "~a" uri)
