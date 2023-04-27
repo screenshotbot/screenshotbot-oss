@@ -183,7 +183,7 @@
                             ((path:-e input-file)
                              (with-open-file (input input-file)
                                (file-length input)))
-                            (t "0")))
+                            (t 0)))
 
       (handler-case
           (let ((out (hunchentoot:send-headers)))
