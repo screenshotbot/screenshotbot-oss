@@ -91,7 +91,6 @@
                               mobile-emulation
                               (proxy (error "must specify proxy"))
                               dimensions)
-  (log:info "got browser: ~s" browser)
   (restart-case
       (let ((driver (make-driver browser :proxy proxy)))
         (handler-bind

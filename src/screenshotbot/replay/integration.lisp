@@ -376,6 +376,7 @@ accessing the urls or sitemap slot."
                       tmpdir
                       results
                       url-count)
+    (log:info "Running batch from index ~a" idx)
     (with-webdriver (driver
                      :proxy (squid-proxy selenium-server)
                      :browser (frontend:browser-type config)
