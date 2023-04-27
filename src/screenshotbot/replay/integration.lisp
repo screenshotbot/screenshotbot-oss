@@ -367,6 +367,41 @@ accessing the urls or sitemap slot."
                 dest))
       :title title))))
 
+(with-auto-restart (:retries 2 :sleep 60)
+  (defun run-batch (&key urls config selenium-server
+                      idx
+                      snapshot
+                      hosted-url
+                      run
+                      tmpdir
+                      results
+                      url-count)
+    (with-webdriver (driver
+                     :proxy (squid-proxy selenium-server)
+                     :browser (frontend:browser-type config)
+                     :dimensions (when (frontend:dimensions config)
+                                   (cons
+                                    (frontend:width (dimensions config))
+                                    (frontend:height (dimensions config))))
+                     :mobile-emulation (frontend:mobile-emulation config))
+      ;; We have our browser and our hosted snapshots, let's go through this
+      (write-replay-log "Selenium worker is ready")
+      (run-replay-on-urls
+       :snapshot snapshot
+       :replay-proxy (ensure-proxy selenium-server)
+       :urls urls
+       :hosted-url hosted-url
+       :driver driver
+       :logger (lambda (url actual-url)
+                 (write-replay-log "[~a/~a] Running url: ~a / ~a"
+                                   (incf idx)
+                                   url-count  url actual-url))
+       :config config
+       :run run
+       :tmpdir tmpdir
+       :results results)
+      idx)))
+
 (with-auto-restart ()
   (defun replay-job-from-snapshot (&key (snapshot (error "must provide snapshot"))
                                      urls run tmpdir)
@@ -386,30 +421,16 @@ accessing the urls or sitemap slot."
                        (selenium-server-url selenium-server)))
                  (write-replay-log "Waiting for Selenium worker of type ~a" (browser-type config))
                  (with-batches (urls urls :index idx)
-                   (with-webdriver (driver
-                                    :proxy (squid-proxy selenium-server)
-                                    :browser (frontend:browser-type config)
-                                    :dimensions (when (frontend:dimensions config)
-                                                  (cons
-                                                   (frontend:width (dimensions config))
-                                                   (frontend:height (dimensions config))))
-                                    :mobile-emulation (frontend:mobile-emulation config))
-                     ;; We have our browser and our hosted snapshots, let's go through this
-                     (write-replay-log "Selenium worker is ready")
-                     (run-replay-on-urls
-                      :snapshot snapshot
-                      :replay-proxy (ensure-proxy selenium-server)
-                      :urls urls
-                      :hosted-url hosted-url
-                      :driver driver
-                      :logger (lambda (url actual-url)
-                                (write-replay-log "[~a/~a] Running url: ~a / ~a"
-                                                  (incf idx)
-                                                  url-count  url actual-url))
-                      :config config
-                      :run run
-                      :tmpdir tmpdir
-                      :results results))))))))))))
+                   (run-batch :urls urls
+                              :config config
+                              :selenium-server selenium-server
+                              :idx idx
+                              :snapshot snapshot
+                              :hosted-url hosted-url
+                              :run run
+                              :tmpdir tmpdir
+                              :results results
+                              :url-count url-count)))))))))))
 
 
 (defun best-image-type (config)

@@ -67,6 +67,6 @@
   (error "unimplemented"))
 
 (defmethod upload-image-directory ((self all-screenshots))
-  (loop for im in (screenshots self)
+  (loop for im in (remove-duplicates (screenshots self) :test #'equal :key #'screenshot-title)
         collect `((:id . ,(oid (screenshot-image im)))
                   (:name . ,(screenshot-title im)))))
