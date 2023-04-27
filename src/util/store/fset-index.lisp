@@ -32,11 +32,24 @@
    #:fset-set-compat-index))
 (in-package :util/store/fset-index)
 
+(defvar *index-id* 0)
+
 (defclass abstract-fset-index ()
   ((slot-name :initarg :slots
               :reader %slots)
    (map :initform (fset:empty-map)
-        :accessor %map)))
+        :accessor %map)
+   (index-id :initform #+lispworks (atomics:atomic-incf *index-id*) #-lispworks 0
+             :reader index-id
+             :documentation "A unique index to help debug index failures")))
+
+(defmethod print-object ((self abstract-fset-index) out)
+  (format out
+          "#<~a ~a on ~a size {~d}>"
+          (string (type-of self))
+          (index-id self)
+          (car (%slots self))
+          (fset:size (%map self))))
 
 (defmacro update-map (self (map) &body expr)
   `(atomics:atomic-update
@@ -46,6 +59,10 @@
 
 (defun %slot-name (self)
   (car (%slots self)))
+
+(defmethod index-reinitialize :before ((new-index abstract-fset-index) old-index)
+  (log:warn "Reinitializing index ~a from ~a" new-index
+            old-index))
 
 (defmethod index-reinitialize ((new-index abstract-fset-index)
                                (old-index abstract-fset-index))
@@ -167,7 +184,10 @@ the index reader returns a list in reverse sorted order instead of a set."))
    (slot-name :initarg :slot-name)
    (actual-map :initarg :actual-map)
    (expected-map :initarg :expected-map))
-  (:report "fset index does not match"))
+  (:report (lambda (e out)
+             (with-slots (index) e
+               (format out "fset index does not match on ~a"
+                       index)))))
 
 (defmethod validate-index-values ((index abstract-fset-index) all-elts slot-name)
   (declare (optimize (debug 3) (speed 0)))
