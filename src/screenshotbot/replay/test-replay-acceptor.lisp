@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/replay-acceptor
+                #:handle-asset-modified
                 #:acceptor-snapshots
                 #:asset-maps
                 #:pop-snapshot
@@ -19,6 +20,7 @@
                 #:default-render-acceptor
                 #:*default-render-acceptor*)
   (:import-from #:util/testing
+                #:with-fake-request
                 #:with-local-acceptor)
   (:import-from #:screenshotbot/replay/core
                 #:http-header
@@ -32,6 +34,10 @@
                 #:company)
   (:import-from #:util/object-id
                 #:oid-array)
+  (:import-from #:util/misc
+                #:with-global-binding)
+  (:import-from #:flexi-streams
+                #:make-in-memory-output-stream)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/replay/test-replay-acceptor)
 
@@ -41,19 +47,21 @@
                          :screenshotbot
                          "fixture/rose.png"))
 
-(def-fixture state (&key response-headers)
+(def-fixture state (&key response-headers
+                    (status 200))
   (with-test-store (:globally t)
     (tmpdir:with-tmpdir (tmpdir)
      (with-local-acceptor (host :acceptor acceptor)
          ('render-acceptor)
-       (fad:copy-file *fixture* (path:catfile tmpdir "abcd00.png"))
-       (let* ((*default-render-acceptor* acceptor)
-              (company (make-instance 'company))
-              (snapshot (make-instance 'snapshot
+       (unless (eql status 404)
+         (fad:copy-file *fixture* (path:catfile tmpdir "abcd00.png")))
+       (with-global-binding ((*default-render-acceptor* acceptor))
+        (let* ((company (make-instance 'company))
+               (snapshot (make-instance 'snapshot
                                         :tmpdir tmpdir))
-              (asset (make-instance
-                      'asset
-                       :status 200
+               (asset (make-instance
+                       'asset
+                       :status status
                        :url "https://www.example.com"
                        :file (format nil "/snapshot/~a/assets/abcd00.png"
                                      (uuid snapshot))
@@ -62,9 +70,9 @@
                                              :name "Content-type"
                                              :value "image/png")
                               response-headers))))
-         (setf (assets snapshot)
-               (list asset))
-         (&body))))))
+          (setf (assets snapshot)
+                (list asset))
+          (&body)))))))
 
 (test simple-loading
   (with-fixture state ()
@@ -237,6 +245,27 @@
             (is (equalp #() data))
             (is (eql 304 ret)))))))
 
+(test 404-without-asset-file
+  (with-fixture state (:status 404)
+    (push-snapshot acceptor company snapshot)
+    (let ((url (format nil "~a/company/~a/assets/abcd00.png"
+                       host
+                       (encrypt:encrypt-mongoid (oid-array company)))))
+      (signals dexador.error:http-request-not-found
+        (dex:get url)))))
+
+(test handle-asset-modified-on-404
+  (with-fixture state (:status 404)
+    (push-snapshot acceptor company snapshot)
+    (let ((url (format nil "~a/company/~a/assets/abcd00.png"
+                       host
+                       (encrypt:encrypt-mongoid (oid-array company)))))
+      (with-fake-request ()
+        (let ((hunchentoot::*hunchentoot-stream*
+                (make-in-memory-output-stream)))
+         (finishes
+           (handle-asset-modified snapshot asset)))))))
+
 (test cleanup-pop-snapshot
   (with-fixture state ()
     (is (eql 0 (length (snapshots-company acceptor))))
@@ -247,4 +276,4 @@
     (is (eql '()
               (a:hash-table-keys (asset-maps acceptor))))
     (is (eql '()
-              (a:hash-table-keys (acceptor-snapshots acceptor))))))
+             (a:hash-table-keys (acceptor-snapshots acceptor))))))

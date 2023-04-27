@@ -177,15 +177,21 @@
             (replay:asset-status asset))
       (send-asset-headers asset
                           :content-length
-                          (with-open-file (input input-file)
-                            (file-length input)))
+                          ;; If the file does not exist (i.e. if the headers sent back 404,
+                          ;; we want to gracefully return a 404
+                          (cond
+                            ((path:-e input-file)
+                             (with-open-file (input input-file)
+                               (file-length input)))
+                            (t "0")))
 
       (handler-case
           (let ((out (hunchentoot:send-headers)))
             (ecase (hunchentoot:request-method*)
               (:head)
               (:get
-               (send-file-to-stream input-file out)))
+               (when (path:-e input-file)
+                (send-file-to-stream input-file out))))
             (finish-output out))
         #+lispworks
         (comm:socket-io-error ()))
