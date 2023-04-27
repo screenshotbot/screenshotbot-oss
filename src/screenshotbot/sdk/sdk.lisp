@@ -463,6 +463,9 @@ error."
       (t
        (error "Could not guess the main branch, please use --main-branch argument")))))
 
+(define-condition invalid-pull-request (condition)
+  ())
+
 (defun validate-pull-request ()
   "One of our customers is using an incorrect --pull-request arg. The
 incorrect arg breaks some logic, and additionally is not required
@@ -473,7 +476,8 @@ pull-request looks incorrect."
    (flet ((validp (url)
             (str:starts-with-p "https://" url)))
      (unless (validp *pull-request*)
-       (warn "The --pull-request argument you provided was invalid: `~a`. We're ignoring this.~%"
+       (signal 'invalid-pull-request)
+       (log:warn "The --pull-request argument you provided was invalid: `~a`. We're ignoring this.~%"
              *pull-request*)
        (setf *pull-request* nil)))))
 

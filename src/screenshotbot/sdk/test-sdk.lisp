@@ -9,6 +9,7 @@
    :alexandria
         :fiveam)
   (:import-from #:screenshotbot/sdk/sdk
+                #:invalid-pull-request
                 #:empty-run-error
                 #:make-run
                 #:request
@@ -175,9 +176,9 @@
              flags:*pull-request*))
       (handler-case
           (%run nil)
-        (simple-warning ()
+        (invalid-pull-request ()
           (fail "Saw warning for nil")))
-      (signals simple-warning
+      (signals invalid-pull-request
         (%run "git@github.com:trhq/fast-example.git"))
       (is (equal nil (%run "git@github.com:tdrhq/fast-example.git")))
       (is (equal "https://github.com/tdrhq/fast-example/pulls/1" (%run "https://github.com/tdrhq/fast-example/pulls/1"))))))
