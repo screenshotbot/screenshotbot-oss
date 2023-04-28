@@ -177,5 +177,5 @@ In the error case, it's hard to distinguish between a real error (e.g.
   "CL:WITH-OPEN-FILE has dynamic extent and is dangerous in threaded code."
   (let ((stream (apply #'open open-args)))
     (unwind-protect
-         (fn)
+         (fn stream)
       (close stream))))
