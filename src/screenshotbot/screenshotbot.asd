@@ -400,6 +400,7 @@
                 :components ((:file "test-core")
                              (:file "test-sitemap")
                              (:file "test-remote")
+                             (:file "test-run-builder")
                              (:file "test-integration")
                              (:file "test-replay-acceptor")))
                (:module "slack"

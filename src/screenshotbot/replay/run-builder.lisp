@@ -52,11 +52,12 @@
                                 :pathname tmpfile
                                 :hash hash
                                 :verified-p t)))))
-      (push (make-instance
-             'screenshot
-              :title title
-              :image image)
-            (screenshots self)))))
+      (atomics:atomic-push
+       (make-instance
+        'screenshot
+        :title title
+        :image image)
+       (slot-value self 'screenshots)))))
 
 
 (defmethod list-all-screenshots ((self all-screenshots))
