@@ -432,7 +432,7 @@ accessing the urls or sitemap slot."
                                            (incf next-start (length urls))
                                            next))
                                   rest-args)))))
-        :parts 2
+        :parts 1
         batches)))))
 
 (with-auto-restart ()
