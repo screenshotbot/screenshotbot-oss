@@ -384,10 +384,12 @@
                                                  (floor secs 60)
                                                  (mod secs 60)))))))
                             (cond
-                              ((and
-                                (eql f 0)
-                                (eql s 0))
-                               "Unknown")
+                              ((or
+                                (not (eql :success (remote-run-status run)))
+                                (and
+                                 (eql f 0)
+                                 (eql s 0)))
+                               "")
                               ((eql f 0)
                                (render-time (get-universal-time)))
                               (t
