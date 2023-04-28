@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/misc
+                #:safe-with-open-file
                 #:relpath
                 #:safe-ensure-directories-exist
                 #:or-setf)
@@ -78,3 +79,10 @@
       (is (pathname-equal #P "../foo/" (relpath subdir (path:catdir dir "bleh/"))))
       (is (pathname-equal #P "../../foo/" (relpath subdir (path:catdir dir "bleh/dfd/"))))
       (is (pathname-equal #P "../foo.txt" (relpath "/etc/bar/foo.txt" "/etc/bar/car/" ))))))
+
+(test safe-with-open-file
+  (tmpdir:with-tmpdir (dir)
+    (safe-with-open-file (stream (path:catfile dir "foo.txt") :direction :output)
+      (write-string "arnold" stream))
+    (safe-with-open-file (stream (path:catfile dir "foo.txt") :direction :input)
+      (is (equal "arnold" (read-line stream))))))
