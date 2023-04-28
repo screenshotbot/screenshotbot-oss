@@ -73,6 +73,7 @@
                 #:record-screenshot
                 #:all-screenshots)
   (:import-from #:util/threading
+                #:safe-interrupt
                 #:with-extras
                 #:safe-interrupt-checkpoint)
   (:import-from #:screenshotbot/replay/proxy
@@ -406,34 +407,56 @@ accessing the urls or sitemap slot."
        :results results)
       idx)))
 
-(defun run-in-parallel (urls endingp &rest rest-args &key selenium-server
+(defun run-in-parallel (urls &rest rest-args &key selenium-server
                                                        &allow-other-keys)
   (let ((seen-failure-p nil)
         (replay-logs *replay-logs*)
         (batch-size 10)
         (next-start 0)
-        (lock (bt:make-lock)))
-   (let ((batches (make-batches urls :batch-size batch-size)))
-     (lparallel:future
-       (lparallel:pmapc
-        (lambda (urls)
-          (unless (or
-                   (funcall endingp)
-                   seen-failure-p)
-            (handler-bind ((error (lambda (e)
-                                    (declare (ignore e))
-                                    (setf seen-failure-p t))))
-             (let ((webdriver-client::*uri*
-                     (selenium-server-url selenium-server))
-                   (*replay-logs* replay-logs))
-               (apply #'run-batch :urls urls
-                                  :idx (bt:with-lock-held (lock)
-                                         (let ((next next-start))
-                                           (incf next-start (length urls))
-                                           next))
-                                  rest-args)))))
-        :parts 2
-        batches)))))
+        (lock (bt:make-lock))
+        (num-threads 2))
+    (let ((thread-batches (make-batches urls :batch-size (ceiling (length urls) num-threads))))
+      (log:info "thread batches: ~a" thread-batches)
+      (flet ((run-thread-batch (urls)
+               (let ((batches (make-batches urls :batch-size batch-size)))
+                 (mapc
+                  (lambda (urls)
+                    (log:info "Processing urls on thread ~a: ~S"
+                              (bt:current-thread)
+                              urls)
+                    (unless seen-failure-p
+                      (flet ((cleanup (e)
+                               (declare (ignore e))
+                               (setf seen-failure-p t)))
+                        (handler-bind ((error #'cleanup)
+                                       (safe-interrupt #'cleanup))
+                          (safe-interrupt-checkpoint)
+                          (let ((webdriver-client::*uri*
+                                  (selenium-server-url selenium-server))
+                                (*replay-logs* replay-logs))
+                            (apply #'run-batch :urls urls
+                                               :idx (bt:with-lock-held (lock)
+                                                      (let ((next next-start))
+                                                        (incf next-start (length urls))
+                                                        next))
+                                               rest-args))))))
+                  batches))))
+       (let ((worker-threads
+               (loop for urls in (cdr thread-batches)
+                     collect
+                     (let ((urls urls))
+                       (bt:make-thread
+                        (lambda ()
+                          (run-thread-batch urls))
+                        :name (format nil "replay-worker-thread-for-~a" (bt:current-thread)))))))
+
+         ;; Now let's use the current thread as one more batch
+         (unwind-protect
+              (run-thread-batch (car thread-batches))
+           (loop for thread in worker-threads
+                 do
+                    (write-replay-log "Waiting for worker thread: ~a" thread)
+                    (bt:join-thread thread))))))))
 
 (with-auto-restart ()
   (defun replay-job-from-snapshot (&key (snapshot (error "must provide snapshot"))
@@ -451,26 +474,15 @@ accessing the urls or sitemap slot."
                                                (selenium-host selenium-server)
                                                (selenium-port selenium-server)))
                (write-replay-log "Waiting for Selenium worker of type ~a" (browser-type config))
-               (let ((endingp nil))
-                 (let ((future
-                         (run-in-parallel urls
-                                          (lambda ()
-                                            endingp)
-                                          :config config
-                                          :selenium-server selenium-server
-                                          :snapshot snapshot
-                                          :hosted-url hosted-url
-                                          :run run
-                                          :tmpdir tmpdir
-                                          :results results
-                                          :url-count url-count)))
-                   (unwind-protect
-                        (loop until (lparallel:fulfilledp future)
-                              do (progn
-                                   (safe-interrupt-checkpoint)
-                                   (sleep 1)))
-                     (log:info "Setting endingp to true")
-                     (setf endingp t))))))))))))
+               (run-in-parallel urls
+                                :config config
+                                :selenium-server selenium-server
+                                :snapshot snapshot
+                                :hosted-url hosted-url
+                                :run run
+                                :tmpdir tmpdir
+                                :results results
+                                :url-count url-count)))))))))
 
 
 (defun best-image-type (config)
