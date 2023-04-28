@@ -6,6 +6,8 @@
 
 (defpackage :util/misc
   (:use #:cl)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export
    #:funcall-if
    #:?.
@@ -14,7 +16,8 @@
    #:uniq
    #:safe-ensure-directories-exist
    #:make-mp-hash-table
-   #:relpath))
+   #:relpath
+   #:safe-with-open-file))
 (in-package :util/misc)
 
 
@@ -168,3 +171,11 @@ In the error case, it's hard to distinguish between a real error (e.g.
      (list* :relative
       (compute (pathname-directory path) (pathname-directory start)))
      :defaults path)))
+
+
+(def-easy-macro safe-with-open-file (&binding stream &rest open-args &fn fn)
+  "CL:WITH-OPEN-FILE has dynamic extent and is dangerous in threaded code."
+  (let ((stream (apply #'open open-args)))
+    (unwind-protect
+         (fn)
+      (close stream))))

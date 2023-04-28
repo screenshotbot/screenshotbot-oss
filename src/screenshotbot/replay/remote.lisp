@@ -55,6 +55,8 @@
   (:import-from #:util/store/fset-index
                 #:fset-set-compat-index
                 #:fset-set-index)
+  (:import-from #:util/misc
+                #:safe-with-open-file)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
                     (#:browser-config #:screenshotbot/replay/browser-config))
@@ -104,7 +106,7 @@
                   (with-transaction ()
                     (setf (remote-run-status remote-run) :queued))
                   (with-event (:replay-job :company (company-name company))
-                   (with-open-file (stream (bknr.datastore:blob-pathname log-file) :direction :output)
+                   (safe-with-open-file (stream (bknr.datastore:blob-pathname log-file) :direction :output)
                      (handler-bind ((error (lambda (e)
                                              (write-replay-log "Got condition: ~a" e))))
                        (with-hash-lock-held ((remote-run-company remote-run) *hash-lock*)
@@ -268,7 +270,7 @@
                (hunchensocket:send-text-message client
                                                 (format nil "Log file is: ~a~%" log-file)))
               (handler-case
-                  (with-open-file (stream log-file :direction :input)
+                  (safe-with-open-file (stream log-file :direction :input)
                     (labels ((send-remaining ()
                                (when (< (file-position stream)
                                         (file-length stream))
