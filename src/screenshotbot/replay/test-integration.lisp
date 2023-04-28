@@ -64,6 +64,7 @@
   (:import-from #:hunchentoot
                 #:single-threaded-taskmaster)
   (:import-from #:util/testing
+                #:with-global-kernel
                 #:with-global-binding
                 #:with-local-acceptor)
   (:import-from #:screenshotbot/replay/services
@@ -125,64 +126,65 @@
          (hunchentoot:stop *replay-proxy*)))))
 
 (def-fixture state (&key host)
-  (with-test-store (:globally t)
-    (with-test-globals
-      (tmpdir:with-tmpdir (tmpdir)
-        (cl-mock:with-mocks ()
-          (with-open-file (dummy (path:catfile tmpdir "foo.html") :direction :output)
-            (write-string "foo" dummy))
-          (let* ((assets (list (make-instance 'asset
-                                              :url "https://www.google.com"
-                                              :status 200
-                                              :response-headers nil
-                                              :file "/foo.html")))
-                 (snapshot (make-instance 'snapshot :tmpdir tmpdir
-                                                    :root-files (list
-                                                                 "/foo.html" )
-                                                    :assets assets))
-                 (company (make-instance 'company))
-                 (user (make-instance 'user
-                                      :companies (list company)))
-                 (run (make-instance 'integration:run
-                                     :company company
-                                     :user user
-                                     :host host
-                                     :channel "test-channel"
-                                     :browser-configs
-                                     (list
-                                      (make-instance 'browser-config
-                                                     :name "firefox"
-                                                     :type "firefox"))))
-                 (fake-driver (make-instance 'fake-driver)))
-            (cl-mock:if-called 'call-with-selenium-server
-                               (lambda (fn &key type)
-                                 (funcall fn
-                                          (make-instance 'selenium-server
-                                                         :host "foo.bar"
-                                                         :squid-proxy "foo.bar:3128"
-                                                         :port 9093
-                                                         :type nil))))
-            (cl-mock:if-called 'get-local-addr
-                               (lambda (&rest args)
-                                 "de.ad.be.ef"))
+  (with-global-kernel (:count 2)
+   (with-test-store (:globally t)
+     (with-test-globals
+       (tmpdir:with-tmpdir (tmpdir)
+         (cl-mock:with-mocks ()
+           (with-open-file (dummy (path:catfile tmpdir "foo.html") :direction :output)
+             (write-string "foo" dummy))
+           (let* ((assets (list (make-instance 'asset
+                                               :url "https://www.google.com"
+                                               :status 200
+                                               :response-headers nil
+                                               :file "/foo.html")))
+                  (snapshot (make-instance 'snapshot :tmpdir tmpdir
+                                                     :root-files (list
+                                                                  "/foo.html" )
+                                                     :assets assets))
+                  (company (make-instance 'company))
+                  (user (make-instance 'user
+                                       :companies (list company)))
+                  (run (make-instance 'integration:run
+                                      :company company
+                                      :user user
+                                      :host host
+                                      :channel "test-channel"
+                                      :browser-configs
+                                      (list
+                                       (make-instance 'browser-config
+                                                      :name "firefox"
+                                                      :type "firefox"))))
+                  (fake-driver (make-instance 'fake-driver)))
+             (cl-mock:if-called 'call-with-selenium-server
+                                (lambda (fn &key type)
+                                  (funcall fn
+                                           (make-instance 'selenium-server
+                                                          :host "foo.bar"
+                                                          :squid-proxy "foo.bar:3128"
+                                                          :port 9093
+                                                          :type nil))))
+             (cl-mock:if-called 'get-local-addr
+                                (lambda (&rest args)
+                                  "de.ad.be.ef"))
 
-            (cl-mock:if-called 'call-with-webdriver
-                               (lambda (fn &rest args)
-                                 (let ((webdriver-client::*session*
-                                         (make-instance 'webdriver-client::session
-                                                        :id "dummy-test-session")))
-                                   (funcall fn fake-driver))))
-            (cl-mock:if-called '(setf webdriver-client:url)
-                               (lambda (url)
-                                 nil))
-            (cl-mock:if-called 'call-with-hosted-snapshot
-                               (lambda (company snapshot fn &rest args)
-                                 (funcall fn "http://fake-url/")))
+             (cl-mock:if-called 'call-with-webdriver
+                                (lambda (fn &rest args)
+                                  (let ((webdriver-client::*session*
+                                          (make-instance 'webdriver-client::session
+                                                         :id "dummy-test-session")))
+                                    (funcall fn fake-driver))))
+             (cl-mock:if-called '(setf webdriver-client:url)
+                                (lambda (url)
+                                  nil))
+             (cl-mock:if-called 'call-with-hosted-snapshot
+                                (lambda (company snapshot fn &rest args)
+                                  (funcall fn "http://fake-url/")))
 
-            (cl-mock:if-called 'ensure-proxy
-                               (lambda (selenium-service)
-                                 "http://fakehost:5003"))
-            (&body)))))))
+             (cl-mock:if-called 'ensure-proxy
+                                (lambda (selenium-service)
+                                  "http://fakehost:5003"))
+             (&body))))))))
 
 (test replay-job-from-snapshot
   (with-fixture state ()
@@ -265,27 +267,28 @@
           (hunchentoot:stop acceptor))))))
 
 (def-fixture state-2 ()
-  (with-test-store ()
-    (tmpdir:with-tmpdir (tmpdir)
-      (cl-mock:with-mocks ()
-        (cl-mock:if-called 'get-local-addr
+  (with-global-kernel (:count 2)
+   (with-test-store ()
+     (tmpdir:with-tmpdir (tmpdir)
+       (cl-mock:with-mocks ()
+         (cl-mock:if-called 'get-local-addr
                             (lambda (&rest args)
                               "9.9.9.9"))
-        (cl-mock:if-called 'hunchentoot:start
+         (cl-mock:if-called 'hunchentoot:start
                             (lambda (acceptor) (declare (ignore acceptor))))
-        (let* ((company (make-instance 'company))
-               (*default-render-acceptor* nil)
-               (asset (make-instance 'asset
+         (let* ((company (make-instance 'company))
+                (*default-render-acceptor* nil)
+                (asset (make-instance 'asset
                                       :file "foo"))
-               (snapshot (make-instance 'snapshot
+                (snapshot (make-instance 'snapshot
                                          :assets (list asset)
                                          :root-files (list "foo")))
-               (run (make-instance 'integration:run
+                (run (make-instance 'integration:run
                                     :company company
                                     :browser-configs
                                     (list (make-instance 'browser-config
-                                                          :type "chrome")))))
-          (&body))))))
+                                                         :type "chrome")))))
+           (&body)))))))
 
 (test replay-job-from-snapshot-2
   (with-fixture state-2 ()

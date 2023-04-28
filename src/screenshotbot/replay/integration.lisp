@@ -34,6 +34,7 @@
   (:import-from #:screenshotbot/replay/sitemap
                 #:parse-sitemap)
   (:import-from #:screenshotbot/replay/core
+                #:*replay-logs*
                 #:snapshot-request-sdk-flags
                 #:asset-file-name
                 #:context
@@ -85,6 +86,7 @@
   (:import-from #:util/misc
                 #:?.)
   (:import-from #:util/lists
+                #:make-batches
                 #:with-batches)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
@@ -404,6 +406,35 @@ accessing the urls or sitemap slot."
        :results results)
       idx)))
 
+(defun run-in-parallel (urls endingp &rest rest-args &key selenium-server
+                                                       &allow-other-keys)
+  (let ((seen-failure-p nil)
+        (replay-logs *replay-logs*)
+        (batch-size 10)
+        (next-start 0)
+        (lock (bt:make-lock)))
+   (let ((batches (make-batches urls :batch-size batch-size)))
+     (lparallel:future
+       (lparallel:pmapc
+        (lambda (urls)
+          (unless (or
+                   (funcall endingp)
+                   seen-failure-p)
+            (handler-bind ((error (lambda (e)
+                                    (declare (ignore e))
+                                    (setf seen-failure-p t))))
+             (let ((webdriver-client::*uri*
+                     (selenium-server-url selenium-server))
+                   (*replay-logs* replay-logs))
+               (apply #'run-batch :urls urls
+                                  :idx (bt:with-lock-held (lock)
+                                         (let ((next next-start))
+                                           (incf next-start (length urls))
+                                           next))
+                                  rest-args)))))
+        :parts 2
+        batches)))))
+
 (with-auto-restart ()
   (defun replay-job-from-snapshot (&key (snapshot (error "must provide snapshot"))
                                      urls run tmpdir)
@@ -419,20 +450,27 @@ accessing the urls or sitemap slot."
                                     :hostname (get-local-addr
                                                (selenium-host selenium-server)
                                                (selenium-port selenium-server)))
-               (let ((webdriver-client::*uri*
-                       (selenium-server-url selenium-server)))
-                 (write-replay-log "Waiting for Selenium worker of type ~a" (browser-type config))
-                 (with-batches (urls urls :index idx)
-                   (run-batch :urls urls
-                              :config config
-                              :selenium-server selenium-server
-                              :idx idx
-                              :snapshot snapshot
-                              :hosted-url hosted-url
-                              :run run
-                              :tmpdir tmpdir
-                              :results results
-                              :url-count url-count)))))))))))
+               (write-replay-log "Waiting for Selenium worker of type ~a" (browser-type config))
+               (let ((endingp nil))
+                 (let ((future
+                         (run-in-parallel urls
+                                          (lambda ()
+                                            endingp)
+                                          :config config
+                                          :selenium-server selenium-server
+                                          :snapshot snapshot
+                                          :hosted-url hosted-url
+                                          :run run
+                                          :tmpdir tmpdir
+                                          :results results
+                                          :url-count url-count)))
+                   (unwind-protect
+                        (loop until (lparallel:fulfilledp future)
+                              do (progn
+                                   (safe-interrupt-checkpoint)
+                                   (sleep 1)))
+                     (log:info "Setting endingp to true")
+                     (setf endingp t))))))))))))
 
 
 (defun best-image-type (config)
