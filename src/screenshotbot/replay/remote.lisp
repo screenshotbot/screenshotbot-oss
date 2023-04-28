@@ -198,7 +198,7 @@
 (defmethod (setf remote-run-status) :after ((val (eql :running)) (run remote-run))
   (setf (started-at run) (get-universal-time)))
 
-(defmethod (setf donep) :after (result (run remote-run))
+(defmethod (setf remote-run-status) :after ((val (eql :success)) (run remote-run))
   (setf (finished-at run) (get-universal-time)))
 
 (defmethod run-thread-id ((run remote-run))
