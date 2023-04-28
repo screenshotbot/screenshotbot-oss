@@ -61,6 +61,8 @@
                 #:api-key-secret-key
                 #:api-key-key)
   (:import-from #:screenshotbot/replay/remote
+                #:started-at
+                #:finished-at
                 #:run-thread-id
                 #:remote-runs-for-company
                 #:remote-run
@@ -328,7 +330,7 @@
       :items runs
       :checkboxes nil
       :empty-message "No previous runs"
-      :headers (list "Run date" "Status")
+      :headers (list "Run date" "Status" "Running time")
       :row-generator (lambda (run)
                        (taskie-row
                         :object run
@@ -363,6 +365,34 @@
                                    Cancel
                                  </a>
                                </span>))))
+
+                        </span>
+                        <span>
+                        ,(let ((f (or (ignore-errors (finished-at run)) 0))
+                               (s (or (ignore-errors (started-at run)) 0)))
+                           (flet ((render-time (end-time)
+                                    (let* ((secs (- end-time s))
+                                           (h (floor secs 3600)))
+                                      (cond
+                                        ((> h 0)
+                                         (format nil "~dh:~dm:~ds"
+                                                 h
+                                                 (floor (mod secs 3600) 60)
+                                                 (mod secs 60)))
+                                        (t
+                                         (format nil "~dm:~ds"
+                                                 (floor secs 60)
+                                                 (mod secs 60)))))))
+                            (cond
+                              ((and
+                                (eql f 0)
+                                (eql s 0))
+                               "Unknown")
+                              ((eql f 0)
+                               (render-time (get-universal-time)))
+                              (t
+                               (render-time f)))))
+
                         </span>
                         )))
   </markup:merge-tag>)
