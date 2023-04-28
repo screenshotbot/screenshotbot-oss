@@ -360,6 +360,7 @@ accessing the urls or sitemap slot."
       results
       :md5 md5
       :fetch (lambda (dest)
+               (log:info "Fetching screenshot to ~a" dest)
                (write-full-page-screenshot-from-handle
                 driver
                 proxy

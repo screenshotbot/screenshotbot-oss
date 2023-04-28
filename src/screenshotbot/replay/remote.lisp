@@ -172,6 +172,10 @@
     (status :initarg :status
             :initform :unknown
             :accessor remote-run-status)
+    (%finished-at :initform 0
+                  :accessor finished-at)
+    (%started-at :initform 0
+                 :accessor started-at)
     (%created-at :initform 0
                  :initarg :created-at
                  :reader %created-at))
@@ -190,6 +194,12 @@
     (not
      (and thread
           (bt:thread-alive-p thread)))))
+
+(defmethod (setf remote-run-status) :after ((val (eql :running)) (run remote-run))
+  (setf (started-at run) (get-universal-time)))
+
+(defmethod (setf donep) :after (result (run remote-run))
+  (setf (finished-at run) (get-universal-time)))
 
 (defmethod run-thread-id ((run remote-run))
   (unless (donep run)
