@@ -8,6 +8,8 @@
   (:use #:cl
         #:util/lists
         #:fiveam)
+  (:import-from #:util/lists
+                #:make-batches)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-lists)
 
@@ -36,3 +38,16 @@
   (is (equal '(2 3) (tail '(1 2 3) -2)))
   (is (equal '(1 2 3) (tail '(1 2 3) -3)))
   (is (equal '(1 2 3) (tail '(1 2 3) -10))))
+
+
+(test make-batches
+  (is (equal '((1 2 3)
+               (4 5 6)
+               (7 8))
+             (make-batches '(1 2 3 4 5 6 7 8)
+                           :batch-size 3)))
+  (is (equal '(0 3 6)
+             (nth-value
+              1
+              (make-batches '(1 2 3 4 5 6 7 8)
+                            :batch-size 3)))))

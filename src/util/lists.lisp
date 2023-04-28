@@ -3,7 +3,9 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:export #:head
-	   #:tail))
+	   #:tail
+       #:make-batches
+       #:with-batches))
 (in-package #:util/lists)
 
 ;; See also 'last' and 'butlast'
@@ -56,3 +58,14 @@ remaining elements (unfiltered)"
                      (call-next list ctr)))
                  (call-next rest (+ ctr (length batch)))))))
     (call-next list 0)))
+
+(defun make-batches (list &key (batch-size 10))
+  (let (res
+        indexes)
+    (with-batches (batch list :batch-size batch-size
+                   :index index)
+      (push batch res)
+      (push index indexes))
+    (values
+     (reverse res)
+     (reverse indexes))))
