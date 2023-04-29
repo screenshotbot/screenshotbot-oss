@@ -50,6 +50,8 @@
                 #:send-mail)
   (:import-from #:nibble
                 #:nibble)
+  (:import-from #:screenshotbot/plan
+                #:plan)
   (:export
    #:invite-page
    #:render-invite-page
@@ -70,6 +72,8 @@
       <h3>Invite Member</h3>
     </div>
 
+    <div class= "alert alert-danger d-none">
+    </div>
     <div class= "form-group mb-3">
       <label class= "form-label" for= "email">Email address (we'll send them an invite)</label>
       <input type= "email" class= "form-control" name= "email" id= "email"
@@ -82,6 +86,9 @@
     </div>
 
   </simple-card-page>)
+
+(defmethod can-invite-more-users-p (company plan)
+  t)
 
 (defhandler (nil :uri "/invite" :method :post) (email)
   (when (personalp (current-company))
@@ -102,6 +109,15 @@
                                             :company (current-company)))
              ;; todo: resend anyway
              "There's already a pending invite to that email address")
+      (unless (can-invite-more-users-p (current-company)
+                                       (plan))
+        (push
+         <span>
+           You have reached the limit of users and invites on this account.
+           You can <a href= "/settings/members">remove users or invites</a>,
+           or you can <a href= "/billing/dashboard">upgrade your plan from here</a>.
+         </span>
+         errors))
       (cond
         (errors
          (with-form-errors (:email email

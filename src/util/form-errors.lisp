@@ -22,11 +22,15 @@
       (setf (mquery:val ($ (mquery:namequery name)))
             val))))
 
+(defun input-is-button-p (input)
+  (str:s-member '("button" "submit")
+                (mquery:attr input "type")))
+
 (defun %with-form-errors (html &key errors args args-list was-validated tooltip)
   (let ((args (append args args-list)))
    (mquery:with-document (html)
      (when was-validated
-       (mquery:add-class ($ "input") "is-valid")
+       (mquery:add-class (remove-if #'input-is-button-p ($ "input")) "is-valid")
        (update-form-values
         args)
        (dolist (err errors)
