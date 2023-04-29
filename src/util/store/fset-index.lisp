@@ -68,8 +68,20 @@
                                (old-index abstract-fset-index))
   (update-map new-index (map)
     (declare (ignore map))
-    (%map old-index))
+    (fset:map-union
+     map
+     (%map old-index)
+     (curry #'merge-map-values new-index)))
   new-index)
+
+
+(define-condition index-values-dont-match (warning)
+  ((val1 :initarg :val1)
+   (val2 :initarg :val2))
+  (:report (lambda (w out)
+             (with-slots (val1 val2) w
+               (format out "Reinitializing index with values that don't match: ~a, ~a"
+                       val1 val2)))))
 
 (defmethod index-reinitialize ((new-index abstract-fset-index)
                                (old-index slot-index))
@@ -95,6 +107,16 @@ the index reader returns a list in reverse sorted order instead of a set."))
          (slot-boundp obj (%slot-name self))
          (slot-value obj (%slot-name self)))
     (call-next-method)))
+
+(defmethod merge-map-values ((self fset-set-index)
+                             val1 val2)
+  (fset:union val1 val2))
+
+(defmethod merge-map-values ((self fset-unique-index)
+                             val1 val2)
+  (unless (eql val1 val2)
+   (warn 'index-values-dont-match))
+  val1)
 
 (defmethod index-add ((self fset-unique-index)
                       obj)

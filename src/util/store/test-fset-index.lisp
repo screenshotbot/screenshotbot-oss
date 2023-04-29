@@ -27,7 +27,13 @@
   (:import-from #:bknr.indices
                 #:index-existing-error)
   (:import-from #:bknr.indices
-                #:index-add))
+                #:index-add)
+  (:import-from #:bknr.indices
+                #:index-reinitialize)
+  (:import-from #:bknr.indices
+                #:index-values)
+  (:import-from #:bknr.indices
+                #:index-get))
 (in-package :util/store/test-fset-index)
 
 (util/fiveam:def-suite)
@@ -178,3 +184,34 @@
         (signals corrupted-index
          (validate-index-values index-1 (list obj)
                                 'arg))))))
+
+
+(test index-reinitialize-for-fset-indices
+  (with-fixture state ()
+   (let ((index1 (make-instance 'fset-set-index :slots '(arg)))
+         (index2 (make-instance 'fset-set-index :slots '(arg))))
+     (let ((obj-1 (make-instance 'test-object-2 :arg "foo"))
+           (obj-2 (make-instance 'test-object-2 :arg "foo")))
+       (index-add index2 obj-2)
+       (index-add index1 obj-1)
+       (index-reinitialize index1 index2)
+       (is (fset:equal? (make-set obj-1 obj-2)
+                        (apply #'make-set (index-values index1))))
+       (is (fset:equal? (make-set obj-1 obj-2)
+                        (index-get index1 "foo")))))))
+
+(test index-reinitialize-for-unique-index
+  (with-fixture state ()
+   (let ((index1 (make-instance 'fset-unique-index :slots '(arg)))
+         (index2 (make-instance 'fset-unique-index :slots '(arg))))
+     (let ((obj-1 (make-instance 'test-object :arg "foo"))
+           (obj-2 (make-instance 'test-object :arg "bar")))
+       (index-add index2 obj-2)
+       (index-add index1 obj-1)
+       (index-reinitialize index1 index2)
+       (is (fset:equal? (make-set obj-1 obj-2)
+                        (apply #'make-set (index-values index1))))
+       (is (fset:equal? obj-1
+                        (index-get index1 "foo")))
+       (is (fset:equal? obj-2
+                        (index-get index1 "bar")))))))
