@@ -17,7 +17,8 @@
    #:safe-ensure-directories-exist
    #:make-mp-hash-table
    #:relpath
-   #:safe-with-open-file))
+   #:safe-with-open-file
+   #:nested-assoc-value))
 (in-package :util/misc)
 
 
@@ -179,3 +180,11 @@ In the error case, it's hard to distinguish between a real error (e.g.
     (unwind-protect
          (fn stream)
       (close stream))))
+
+(defun nested-assoc-value (obj &rest nesting)
+  (cond
+    ((not nesting)
+     obj)
+    (t
+     (apply #'nested-assoc-value (cdr (assoc (car nesting) obj :test #'equal))
+            (cdr nesting)))))
