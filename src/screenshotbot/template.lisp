@@ -108,9 +108,11 @@
                             (title "Screenshotbot")
                             (body-class "dashboard")
                             (user (current-user))
+                            (left-nav-bar t)
                             codemirror
                             (company (current-company))
                             (script-name (hunchentoot:script-name hunchentoot:*request*))
+                            (left-nav-bar t)
                             jquery-ui
                             admin)
   (declare (ignore scripts))
@@ -122,7 +124,8 @@
           data-user-email= (when user (user-email user))
           data-user-name= (when user (user-full-name user)) >
       <!-- Begin page -->
-      <left-side-bar user=user company=company script-name=script-name />
+      ,(when left-nav-bar
+         <left-side-bar user=user company=company script-name=script-name />)
         <div class="content-page bg-light-lighten">
           <div class="content">
 

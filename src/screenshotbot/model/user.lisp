@@ -15,6 +15,7 @@
                 #:with-transaction
                 #:persistent-class)
   (:import-from #:screenshotbot/installation
+                #:one-owned-company-per-user
                 #:multi-org-feature
                 #:installation)
   (:import-from #:bknr.indices
@@ -129,6 +130,7 @@
       :accessor oauth-users)
      (companies
       :initarg :companies
+      :initform nil
       :accessor %user-companies
       :documentation "This companies slot is only use in a multi-org
     set-up. A default installation of Screenshotbot OSS, would be a
@@ -206,6 +208,10 @@
                            :personalp t
                            :admins (list user)
                            :owner user)))))
+
+(defmethod initialize-companies-for-user (user (installation
+                                                one-owned-company-per-user))
+  (values))
 
 (defmethod destroy-object :before ((user user))
   (loop for company in (user-companies user)

@@ -648,12 +648,18 @@ body.dashboard {
     overflow-x: hidden;
 
     .content-page {
-        margin-left: calc(#{$left-side-menu-width} + 1em);
+        margin-left: 1em;
         margin-right: 1em;
         .main-content {
             max-width: 1280px;
             margin-left: auto;
             margin-right: auto;
+        }
+    }
+
+    @include media-breakpoint-up(sm) {
+        .leftside-menu + .content-page {
+            margin-left: calc(#{$left-side-menu-width} + 1em);
         }
     }
 

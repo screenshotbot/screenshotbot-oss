@@ -37,7 +37,8 @@
    #:null-s3-store
    #:desktop-installation
    #:pre-compiled-assets
-   #:one-owned-company-per-user))
+   #:one-owned-company-per-user
+   #:call-with-ensure-user-prepared))
 (in-package :screenshotbot/installation)
 
 (defclass installation (abstract-installation)
@@ -120,3 +121,10 @@ every user will have only one company that they are an owner of."))
      ,@body))
 
 (defgeneric default-logged-in-page (installation))
+
+(defgeneric call-with-ensure-user-prepared (installation user
+                                            fn)
+  (:method (installation user fn)
+    (funcall fn))
+  (:documentation "A web callback to ensure that a user is prepared before rending a
+with-login page."))

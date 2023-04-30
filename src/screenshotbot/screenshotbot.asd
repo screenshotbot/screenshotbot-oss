@@ -169,6 +169,7 @@
     :serial t
     :components ((:file "explain")
                  (:file "home")
+                 (:file "ensure-company")
                  (:file "numbers")
                  (:file "review-link")
                  (:file "run-page")
@@ -336,6 +337,7 @@
                (:file "test-abstract-pr-promoter")
                (:module "dashboard"
                 :components ((:file "test-recent-runs")
+                             (:file "test-ensure-company")
                              (:file "test-review-link")
                              (:file "test-run-page")
                              (:file "test-compare")

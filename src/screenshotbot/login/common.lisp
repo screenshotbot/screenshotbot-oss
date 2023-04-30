@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/template
                 #:landing-head)
   (:import-from #:screenshotbot/installation
+                #:call-with-ensure-user-prepared
                 #:installation
                 #:*installation*
                 #:multi-org-feature
@@ -99,11 +100,6 @@
 (defun needs-user! ()
   (unless (logged-in-p)
     (hex:safe-redirect "/")))
-
-(defgeneric call-with-ensure-user-prepared (installation user
-                                            fn)
-  (:method (installation user fn)
-    (funcall fn)))
 
 
 (defun server-with-login (fn &key needs-login signup alert company)

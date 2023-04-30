@@ -13,6 +13,7 @@
         #:screenshotbot/taskie
         #:markup)
   (:import-from #:screenshotbot/server
+                #:with-login
                 #:defhandler)
   (:import-from #:util #:make-url #:oid)
   (:import-from #:screenshotbot/ui
@@ -134,10 +135,9 @@
                                    (recorder-run-row :run run))))))
 
 (defun %recent-runs ()
-  (needs-user!)
-
-  (let ((runs (find-recent-runs)))
-    (render-recent-runs runs)))
+  (with-login ()
+   (let ((runs (find-recent-runs)))
+     (render-recent-runs runs))))
 
 (defhandler (recent-runs :uri "/runs") ()
   (%recent-runs))
