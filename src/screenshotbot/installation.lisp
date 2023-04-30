@@ -36,7 +36,8 @@
    #:installation-s3-store
    #:null-s3-store
    #:desktop-installation
-   #:pre-compiled-assets))
+   #:pre-compiled-assets
+   #:one-owned-company-per-user))
 (in-package :screenshotbot/installation)
 
 (defclass installation (abstract-installation)
@@ -72,6 +73,11 @@
   for each user to create their own organizations. Most installations
   don't really want that s so it's turned off by default. It's used on
   screenshotbot.io"))
+
+(defclass one-owned-company-per-user ()
+  ()
+  (:documentation "When added with multi-org-feature, this ensures that
+every user will have only one company that they are an owner of."))
 
 (defun mailer* (&optional (installation (installation)))
   (mailer installation))
