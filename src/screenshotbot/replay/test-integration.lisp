@@ -126,65 +126,66 @@
          (hunchentoot:stop *replay-proxy*)))))
 
 (def-fixture state (&key host)
-  (with-global-kernel (:count 2)
-   (with-test-store (:globally t)
-     (with-test-globals
-       (tmpdir:with-tmpdir (tmpdir)
-         (cl-mock:with-mocks ()
-           (with-open-file (dummy (path:catfile tmpdir "foo.html") :direction :output)
-             (write-string "foo" dummy))
-           (let* ((assets (list (make-instance 'asset
-                                               :url "https://www.google.com"
-                                               :status 200
-                                               :response-headers nil
-                                               :file "/foo.html")))
-                  (snapshot (make-instance 'snapshot :tmpdir tmpdir
-                                                     :root-files (list
-                                                                  "/foo.html" )
-                                                     :assets assets))
-                  (company (make-instance 'company))
-                  (user (make-instance 'user
-                                       :companies (list company)))
-                  (run (make-instance 'integration:run
-                                      :company company
-                                      :user user
-                                      :host host
-                                      :channel "test-channel"
-                                      :browser-configs
-                                      (list
-                                       (make-instance 'browser-config
-                                                      :name "firefox"
-                                                      :type "firefox"))))
-                  (fake-driver (make-instance 'fake-driver)))
-             (cl-mock:if-called 'call-with-selenium-server
-                                (lambda (fn &key type)
-                                  (funcall fn
-                                           (make-instance 'selenium-server
-                                                          :host "foo.bar"
-                                                          :squid-proxy "foo.bar:3128"
-                                                          :port 9093
-                                                          :type nil))))
-             (cl-mock:if-called 'get-local-addr
-                                (lambda (&rest args)
-                                  "de.ad.be.ef"))
+  (with-installation ()
+   (with-global-kernel (:count 2)
+     (with-test-store (:globally t)
+       (with-test-globals
+         (tmpdir:with-tmpdir (tmpdir)
+           (cl-mock:with-mocks ()
+             (with-open-file (dummy (path:catfile tmpdir "foo.html") :direction :output)
+               (write-string "foo" dummy))
+             (let* ((assets (list (make-instance 'asset
+                                                 :url "https://www.google.com"
+                                                 :status 200
+                                                 :response-headers nil
+                                                 :file "/foo.html")))
+                    (snapshot (make-instance 'snapshot :tmpdir tmpdir
+                                                       :root-files (list
+                                                                    "/foo.html" )
+                                                       :assets assets))
+                    (company (make-instance 'company))
+                    (user (make-instance 'user
+                                         :companies (list company)))
+                    (run (make-instance 'integration:run
+                                        :company company
+                                        :user user
+                                        :host host
+                                        :channel "test-channel"
+                                        :browser-configs
+                                        (list
+                                         (make-instance 'browser-config
+                                                        :name "firefox"
+                                                        :type "firefox"))))
+                    (fake-driver (make-instance 'fake-driver)))
+               (cl-mock:if-called 'call-with-selenium-server
+                                  (lambda (fn &key type)
+                                    (funcall fn
+                                             (make-instance 'selenium-server
+                                                            :host "foo.bar"
+                                                            :squid-proxy "foo.bar:3128"
+                                                            :port 9093
+                                                            :type nil))))
+               (cl-mock:if-called 'get-local-addr
+                                  (lambda (&rest args)
+                                    "de.ad.be.ef"))
 
-             (cl-mock:if-called 'call-with-webdriver
-                                (lambda (fn &rest args)
-                                  (let ((webdriver-client::*session*
-                                          (make-instance 'webdriver-client::session
-                                                         :id "dummy-test-session")))
-                                    (funcall fn fake-driver))))
-             (cl-mock:if-called '(setf webdriver-client:url)
-                                (lambda (url)
-                                  nil))
-             (cl-mock:if-called 'call-with-hosted-snapshot
-                                (lambda (company snapshot fn &rest args)
-                                  (funcall fn "http://fake-url/")))
+               (cl-mock:if-called 'call-with-webdriver
+                                  (lambda (fn &rest args)
+                                    (let ((webdriver-client::*session*
+                                            (make-instance 'webdriver-client::session
+                                                           :id "dummy-test-session")))
+                                      (funcall fn fake-driver))))
+               (cl-mock:if-called '(setf webdriver-client:url)
+                                  (lambda (url)
+                                    nil))
+               (cl-mock:if-called 'call-with-hosted-snapshot
+                                  (lambda (company snapshot fn &rest args)
+                                    (funcall fn "http://fake-url/")))
 
-             (cl-mock:if-called 'ensure-proxy
-                                (lambda (selenium-service)
-                                  "http://fakehost:5003"))
-             (&body))))))))
+               (cl-mock:if-called 'ensure-proxy
+                                  (lambda (selenium-service)
+                                    "http://fakehost:5003"))
+               (&body)))))))))
 
 (test replay-job-from-snapshot
   (with-fixture state ()
@@ -198,97 +199,100 @@
          'all-screenshots))))
 
 (test process-results
-  (with-local-acceptor (host
-                        :prepare-acceptor-callback (lambda (acceptor)
-                                                     (prepare-acceptor-plugins acceptor)))
-      ('acceptor)
-   (with-fixture state (:host host)
-     (unwind-protect
-          (let ((all-screenshots (make-instance 'all-screenshots
-                                                 :company company)))
-            (let ((pathname (asdf:system-relative-pathname
-                             :screenshotbot
-                             "fixture/rose.png")))
-              (run-builder:record-screenshot
-               all-screenshots
-               :title "rose"
-               :md5 (md5:md5sum-file pathname)
-               :fetch (lambda (dest)
-                        (fad:copy-file pathname dest))))
-            (finishes
-              (process-results
-               run
-               all-screenshots
-               )))))))
-
-(test if-old-image-is-rewritten-on-disk-we-still-dont-reupload
-  (let ((port (random-port)))
-    (with-fixture state (:host (format nil "http://127.0.0.1:~a" port))
-      (let ((acceptor (make-instance 'acceptor
-                                      :port port)))
-        (prepare-acceptor-plugins acceptor)
-        (hunchentoot:start acceptor)
-
-        (unwind-protect
-             (let ((all-screenshots (make-instance 'all-screenshots
-                                                    :company company)))
-               (let ((pathname (asdf:system-relative-pathname
-                           :screenshotbot
-                           "fixture/rose.png")))
+  (with-installation (:globally t)
+   (with-local-acceptor (host
+                         :prepare-acceptor-callback (lambda (acceptor)
+                                                      (prepare-acceptor-plugins acceptor)))
+       ('acceptor)
+     (with-fixture state (:host host)
+       (unwind-protect
+            (let ((all-screenshots (make-instance 'all-screenshots
+                                                  :company company)))
+              (let ((pathname (asdf:system-relative-pathname
+                               :screenshotbot
+                               "fixture/rose.png")))
                 (run-builder:record-screenshot
                  all-screenshots
                  :title "rose"
                  :md5 (md5:md5sum-file pathname)
                  :fetch (lambda (dest)
-                           (fad:copy-file pathname dest))))
-               (finishes
-                 (process-results
-                  run
-                  all-screenshots))
-               (let ((objs (bknr.datastore:store-objects-with-class 'image)))
-                (is (eql 1 (length objs))))
-               (loop for im in (bknr.datastore:store-objects-with-class 'image)
-                     do
-                        (with-local-image (pathname im)
-                         (fad:copy-file
-                          (asdf:system-relative-pathname
-                           :screenshotbot
-                           "fixture/rose.webp")
-                          pathname
-                          :overwrite t)))
+                          (fad:copy-file pathname dest))))
+              (finishes
+                (process-results
+                 run
+                 all-screenshots
+                 ))))))))
 
-               (process-results
-                run
-                all-screenshots)
+(test if-old-image-is-rewritten-on-disk-we-still-dont-reupload
+  (with-installation (:globally t)
+   (let ((port (random-port)))
+     (with-fixture state (:host (format nil "http://127.0.0.1:~a" port))
+       (let ((acceptor (make-instance 'acceptor
+                                      :port port)))
+         (prepare-acceptor-plugins acceptor)
+         (hunchentoot:start acceptor)
 
-               (is (eql 1 (length (bknr.datastore:store-objects-with-class 'image)))))
+         (unwind-protect
+              (let ((all-screenshots (make-instance 'all-screenshots
+                                                    :company company)))
+                (let ((pathname (asdf:system-relative-pathname
+                                 :screenshotbot
+                                 "fixture/rose.png")))
+                  (run-builder:record-screenshot
+                   all-screenshots
+                   :title "rose"
+                   :md5 (md5:md5sum-file pathname)
+                   :fetch (lambda (dest)
+                            (fad:copy-file pathname dest))))
+                (finishes
+                  (process-results
+                   run
+                   all-screenshots))
+                (let ((objs (bknr.datastore:store-objects-with-class 'image)))
+                  (is (eql 1 (length objs))))
+                (loop for im in (bknr.datastore:store-objects-with-class 'image)
+                      do
+                         (with-local-image (pathname im)
+                           (fad:copy-file
+                            (asdf:system-relative-pathname
+                             :screenshotbot
+                             "fixture/rose.webp")
+                            pathname
+                            :overwrite t)))
+
+                (process-results
+                 run
+                 all-screenshots)
+
+                (is (eql 1 (length (bknr.datastore:store-objects-with-class 'image)))))
 
 
-          (hunchentoot:stop acceptor))))))
+           (hunchentoot:stop acceptor)))))))
 
 (def-fixture state-2 ()
-  (with-global-kernel (:count 2)
-   (with-test-store ()
-     (tmpdir:with-tmpdir (tmpdir)
-       (cl-mock:with-mocks ()
-         (cl-mock:if-called 'get-local-addr
-                            (lambda (&rest args)
-                              "9.9.9.9"))
-         (cl-mock:if-called 'hunchentoot:start
-                            (lambda (acceptor) (declare (ignore acceptor))))
-         (let* ((company (make-instance 'company))
-                (*default-render-acceptor* nil)
-                (asset (make-instance 'asset
-                                      :file "foo"))
-                (snapshot (make-instance 'snapshot
-                                         :assets (list asset)
-                                         :root-files (list "foo")))
-                (run (make-instance 'integration:run
-                                    :company company
-                                    :browser-configs
-                                    (list (make-instance 'browser-config
-                                                         :type "chrome")))))
-           (&body)))))))
+  (with-installation ()
+   (with-global-kernel (:count 2)
+     (with-test-store ()
+       (tmpdir:with-tmpdir (tmpdir)
+         (cl-mock:with-mocks ()
+           (cl-mock:if-called 'get-local-addr
+                              (lambda (&rest args)
+                                "9.9.9.9"))
+           (cl-mock:if-called 'hunchentoot:start
+                              (lambda (acceptor) (declare (ignore acceptor))))
+           (let* ((company (make-instance 'company))
+                  (*default-render-acceptor* nil)
+                  (asset (make-instance 'asset
+                                        :file "foo"))
+                  (snapshot (make-instance 'snapshot
+                                           :assets (list asset)
+                                           :root-files (list "foo")))
+                  (run (make-instance 'integration:run
+                                      :company company
+                                      :browser-configs
+                                      (list (make-instance 'browser-config
+                                                           :type "chrome")))))
+             (&body))))))))
 
 (test replay-job-from-snapshot-2
   (with-fixture state-2 ()

@@ -89,6 +89,10 @@
   (:import-from #:util/lists
                 #:make-batches
                 #:with-batches)
+  (:import-from #:screenshotbot/plan
+                #:company-plan)
+  (:import-from #:screenshotbot/installation
+                #:installation)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
                     (#:integration #:screenshotbot/replay/integration)
@@ -97,7 +101,8 @@
   (:export
    #:sitemap
    #:run
-   #:original-request))
+   #:original-request
+   #:replay-concurrency))
 (in-package :screenshotbot/replay/integration)
 
 (with-auto-restart ()
@@ -407,14 +412,21 @@ accessing the urls or sitemap slot."
        :results results)
       idx)))
 
+(defgeneric replay-concurrency (company plan)
+  (:method (company plan)
+    2))
+
 (defun run-in-parallel (urls &rest rest-args &key selenium-server
-                                                       &allow-other-keys)
-  (let ((seen-failure-p nil)
-        (replay-logs *replay-logs*)
-        (batch-size 10)
-        (next-start 0)
-        (lock (bt:make-lock))
-        (num-threads 2))
+                                               run
+                        &allow-other-keys)
+  (let* ((company (company run))
+         (plan (company-plan company (installation)))
+         (seen-failure-p nil)
+         (replay-logs *replay-logs*)
+         (batch-size 10)
+         (next-start 0)
+         (lock (bt:make-lock))
+         (num-threads (replay-concurrency company plan)))
     (let ((thread-batches (make-batches urls :batch-size (ceiling (length urls) num-threads))))
       (log:info "thread batches: ~a" thread-batches)
       (flet ((run-thread-batch (urls)
