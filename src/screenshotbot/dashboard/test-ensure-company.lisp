@@ -21,5 +21,6 @@
 
 (screenshot-test empty-new-company-for-companyless-user
   (with-installation ()
-   (with-fake-request ()
-     (%new-company))))
+    (with-fake-request ()
+      (auth:with-sessions ()
+       (%new-company)))))

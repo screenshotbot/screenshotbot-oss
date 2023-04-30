@@ -24,6 +24,8 @@
                 #:run-response-id)
   (:import-from #:util/digests
                 #:md5-file)
+  (:import-from #:screenshotbot/dashboard/ensure-company
+                #:populate-company)
   (:export #:populate-company)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/login/populate)

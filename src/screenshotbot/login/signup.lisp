@@ -217,9 +217,7 @@
   ;; With multi-org-mode, each user will have an associated
   ;; personal company, in that case this might be a good time
   ;; to populate it with dummy data.
-  (let ((company (user-personal-company user)))
-    (unless company
-      (warn "USER-PERSONAL-COMPANY is blank, this is bad"))
+  (when-let ((company (user-personal-company user)))
     (ignore-and-log-errors ()
       (populate-company company))))
 

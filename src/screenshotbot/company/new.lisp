@@ -24,7 +24,9 @@
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
   (:import-from #:screenshotbot/events
-                #:push-event))
+                #:push-event)
+  (:import-from #:screenshotbot/dashboard/ensure-company
+                #:post-new-company))
 (in-package :screenshotbot/company/new)
 
 (markup:enable-reader)
@@ -67,45 +69,9 @@
       <organization-new-page />))))
 
 (defhandler (nil :uri "/organization/new" :method :post) (name i-agree)
-  (let ((errors))
-    (flet ((check (name test message)
-             (unless test
-               (push (cons name message) errors))))
-      (check :name (and name (>= (length name) 6))
-             "Organization name must be at least 6 letters long")
-      (check :i-agree i-agree
-             "You must accept that you understood how billing works")
-      (check :name
-             (not (company-with-name  name))
-             "There's already a company with that name. If you think
-              you should be the appropriate admin for this company,
-              please contact us.")
-      (check :name
-             (or (adminp (current-user))
-                 (< (length (user-companies (current-user))) 4))
-             "You have reached the limit of organizations you can
-             create. We have this limit just to prevent abuse. Please
-             contact us to create this organization for you."))
-    (cond
-      (errors
-       (with-form-errors (:name name
-                          :errors errors
-                          :was-validated t)
-         (organization-new-page )))
-      (t
-       (let* ((user (current-user))
-              (company (make-instance 'company
-                                      :name name
-                                      :admins (list user)
-                                      :owner user)))
-         (with-transaction ()
-           (push
-            company
-            (user-companies user)))
-         (setf (current-company) company)
-         (push-event :company.new)
-         (populate-company company)
-         (hex:safe-redirect 'company-create-confirmation-page))))))
+   (post-new-company name i-agree
+      :form #'organization-new-page
+      :redirect 'company-create-confirmation-page))
 
 (defhandler (company-create-confirmation-page
              :uri "/organizations/confirmed") ()

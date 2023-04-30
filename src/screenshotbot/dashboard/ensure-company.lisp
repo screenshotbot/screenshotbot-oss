@@ -7,13 +7,29 @@
 (defpackage :screenshotbot/dashboard/ensure-company
   (:use #:cl)
   (:import-from #:screenshotbot/user-api
+                #:current-company
+                #:current-user
+                #:adminp
                 #:user-companies)
   (:import-from #:screenshotbot/installation
                 #:call-with-ensure-user-prepared
                 #:one-owned-company-per-user)
   (:import-from #:screenshotbot/template
                 #:dashboard-template
-                #:app-template))
+                #:app-template)
+  (:import-from #:nibble
+                #:nibble)
+  (:import-from #:screenshotbot/model/company
+                #:company
+                #:company-with-name)
+  (:import-from #:screenshotbot/events
+                #:push-event)
+  (:import-from #:bknr.datastore
+                #:with-transaction)
+  (:import-from #:util/form-errors
+                #:with-form-errors)
+  (:export
+   #:post-new-company))
 (in-package :screenshotbot/dashboard/ensure-company)
 
 (named-readtables:in-readtable markup:syntax)
@@ -21,40 +37,93 @@
 (defmethod call-with-ensure-user-prepared ((installation one-owned-company-per-user)
                                            user
                                            fn)
+  (assert user)
   (cond
     ((user-companies user)
      (funcall fn))
     (t
-     (%new-company))))
+     (%new-company :redirect (nibble () (funcall fn))
+                   :user user))))
 
-(defun %new-company ()
-  <dashboard-template left-nav-bar=nil >
-    <div class= "container body-vh-100" style= "max-width: 40em" >
-      <div class= "row h-100">
-        <div class= "my-auto" style= "padding-bottom: 20vh;" >
-          <h4 class= "mb-3" >
-            Create Organization
-          </h4>
-             <p class= "mb-3" >Before we can begin, let's create an organization for your
-               projects. Organizations also let you collaborate with other users.</p>
+(defun %new-company (&key redirect
+                       user)
+  (let ((post (nibble (name)
+                (post-new-company name t
+                                  :user user
+                                  :form #'%new-company
+                                  :redirect redirect))))
+    <dashboard-template left-nav-bar=nil >
+      <div class= "container body-vh-100" style= "max-width: 40em" >
+        <div class= "row h-100">
+            <div class= "my-auto" style= "padding-bottom: 20vh;" >
+              <h4 class= "mb-3" >
+                Create Organization
+              </h4>
+              <p class= "mb-3" >Before we can begin, let's create an organization for your
+                projects. Organizations also let you collaborate with other users.</p>
 
-           <div class= "form-group pt-3">
+              <form action=post method= "post" >
+                <div class= "form-group pt-3">
 
-             <label for= "company" class= "form-label text-muted">
-               Organization name
-             </label>
-             <input type= "text" placeholder= "My company, Inc."
-                    name= "company"
-                    id= "company"
-                    class= "form-control" />
-           </div>
+                  <label for= "name" class= "form-label text-muted">
+                    Organization name
+                  </label>
+                  <input type= "text" placeholder= "My company, Inc."
+                         name= "name"
+                         id= "name"
+                         class= "form-control" />
+                </div>
 
-           <div class= "form-group mt-3">
-             <input type= "submit" class= "btn btn-primary form-control"
-                    value= "Create and continue" />
-           </div>
-
+                <div class= "form-group mt-3">
+                  <input type= "submit" class= "btn btn-primary form-control"
+                         value= "Create and continue" />
+                </div>
+              </form>
+            </div>
         </div>
       </div>
-       </div>
-     </dashboard-template>)
+    </dashboard-template>))
+
+(defun post-new-company (name i-agree
+                         &key form
+                           (user (current-user))
+                           redirect)
+  "This is also called by /organization/new"
+  (let ((errors))
+    (flet ((check (name test message)
+             (unless test
+               (push (cons name message) errors))))
+      (check :name (and name (>= (length name) 6))
+             "Organization name must be at least 6 letters long")
+      (check :i-agree i-agree
+             "You must accept that you understood how billing works")
+      (check :name
+             (not (company-with-name  name))
+             "There's already a company with that name. If you think
+              you should be the appropriate admin for this company,
+              please contact us.")
+      (check :name
+             (or (adminp user)
+                 (< (length (user-companies user)) 4))
+             "You have reached the limit of organizations you can
+             create. We have this limit just to prevent abuse. Please
+             contact us to create this organization for you."))
+    (cond
+      (errors
+       (with-form-errors (:name name
+                          :errors errors
+                          :was-validated t)
+         (funcall form)))
+      (t
+       (let* ((company (make-instance 'company
+                                      :name name
+                                      :admins (list user)
+                                      :owner user)))
+         (with-transaction ()
+           (push
+            company
+            (user-companies user)))
+         (setf (current-company) company)
+         (push-event :company.new)
+         (populate-company company)
+         (hex:safe-redirect redirect))))))
