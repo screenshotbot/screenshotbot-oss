@@ -215,3 +215,9 @@
                         (index-get index1 "foo")))
        (is (fset:equal? obj-2
                         (index-get index1 "bar")))))))
+
+(test index-fails-with-bad-initarg
+  (with-fixture state ()
+    (signals
+        #+lispworks conditions:unknown-keyword-error #-lispworks error
+     (make-instance 'fset-unique-index :slots '(arg) :bleh 2))))

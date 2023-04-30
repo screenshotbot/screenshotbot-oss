@@ -60,6 +60,10 @@
 (defun %slot-name (self)
   (car (%slots self)))
 
+(defmethod initialize-instance :after ((self abstract-fset-index)
+                                       &rest args)
+  (log:info "Created new index: ~a" self))
+
 (defmethod index-reinitialize :before ((new-index abstract-fset-index) old-index)
   (log:warn "Reinitializing index ~a from ~a" new-index
             old-index))
