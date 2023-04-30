@@ -28,19 +28,18 @@
      (%new-company))))
 
 (defun %new-company ()
-       <dashboard-template left-nav-bar=nil >
-       <div class= "container" style= "max-width: 50em" >
-         <div class= "card mt-3">
-           <div class= "card-header">
-           <h3 >
-             New Organization
-           </h3>
+  <dashboard-template left-nav-bar=nil >
+    <div class= "container body-vh-100" style= "max-width: 40em" >
+      <div class= "row h-100">
+        <div class= "my-auto" style= "padding-bottom: 20vh;" >
+          <h4 class= "mb-3" >
+            Create Organization
+          </h4>
+             <p class= "mb-3" >Before we can begin, let's create an organization for your
+               projects. Organizations also let you collaborate with other users.</p>
 
-           </div>
-         <div class= "card-body">
-           <div class= "form-group">
-             <p>Before we can begin, let's create an organization for your
-               projects. Organizations also let you invite colleagues and collaborators.</p>
+           <div class= "form-group pt-3">
+
              <label for= "company" class= "form-label text-muted">
                Organization name
              </label>
@@ -49,12 +48,13 @@
                     id= "company"
                     class= "form-control" />
            </div>
-         </div>
 
-         <div class= "card-footer">
-           <input type= "submit" class= "btn btn-primary" value= "Get Started" />
-         </div>
+           <div class= "form-group mt-3">
+             <input type= "submit" class= "btn btn-primary form-control"
+                    value= "Create and continue" />
+           </div>
 
-       </div>
+        </div>
+      </div>
        </div>
      </dashboard-template>)
