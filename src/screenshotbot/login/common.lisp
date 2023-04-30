@@ -100,24 +100,34 @@
   (unless (logged-in-p)
     (hex:safe-redirect "/")))
 
+(defgeneric call-with-ensure-user-prepared (installation user
+                                            fn)
+  (:method (installation user fn)
+    (funcall fn)))
+
 
 (defun server-with-login (fn &key needs-login signup alert company)
-  (cond
-    ((and
-      needs-login
-      company
-      (sso-auth-provider company))
-     (call-with-company-login (sso-auth-provider company)
-                              company
-                              fn))
-    ((and needs-login (not (current-user)))
-     (funcall
-      (if signup #'signup-get #'signin-get)
-      :alert alert
-      :redirect (nibble ()
-                  (funcall fn))))
-    (t
-     (funcall fn))))
+  (let ((fn (lambda ()
+              (call-with-ensure-user-prepared
+               (installation)
+               (current-user)
+               fn))))
+   (cond
+     ((and
+       needs-login
+       company
+       (sso-auth-provider company))
+      (call-with-company-login (sso-auth-provider company)
+                               company
+                               fn))
+     ((and needs-login (not (current-user)))
+      (funcall
+       (if signup #'signup-get #'signin-get)
+       :alert alert
+       :redirect (nibble ()
+                   (funcall fn))))
+     (t
+      (funcall fn)))))
 
 
 (defun current-user ()
