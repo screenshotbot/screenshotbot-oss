@@ -512,6 +512,14 @@
              (t
               (format nil "url(~a)" (funcall fn url))))))))))
 
+(defmethod rewrite-css ((context context) (snapshot snapshot) url css)
+  (flet ((rewrite-url (this-url)
+           (let ((full-url (quri:merge-uris (quri:uri this-url) url)))
+             (asset-file-name
+              (push-asset context snapshot full-url nil)))))
+    (let* ((css (rewrite-css-urls css #'rewrite-url)))
+      css)))
+
 
 (defmethod fetch-css-asset ((context context) (snapshot snapshot) url tmpdir)
   (log:debug "calling from fetch-css-asset")
@@ -519,14 +527,10 @@
     (with-open-stream (remote-stream remote-stream)
      (uiop:with-temporary-file (:stream out :pathname p :type "css"
                                 :directory (tmpdir snapshot))
-       (flet ((rewrite-url (this-url)
-                (let ((full-url (quri:merge-uris (quri:uri this-url) url)))
-                  (asset-file-name
-                   (push-asset context snapshot full-url nil)))))
-         (let* ((css (uiop:slurp-stream-string remote-stream))
-                (css (rewrite-css-urls css #'rewrite-url)))
-           (write-string css out)
-           (finish-output out)))
+       (let* ((css (uiop:slurp-stream-string remote-stream))
+              (css (rewrite-css context snapshot url css)))
+         (write-string css out)
+         (finish-output out))
        (close out) ;; required for windows
        (write-asset p "css"
                     :tmpdir (tmpdir snapshot)
@@ -648,6 +652,13 @@
        ((? "iframe")
         (setf (plump:attribute node "src")
               "/iframe-not-supported"))
+       ((? "style")
+        (loop for child across (plump:children node)
+              do (setf (plump:text child)
+                       (rewrite-css context
+                                    snapshot
+                                    root-url
+                                    (plump:text child)))))
        ((? "video")
         ;; autoplay videos mess up screenshots
         (plump:remove-attribute node "autoplay"))
