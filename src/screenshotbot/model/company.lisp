@@ -72,6 +72,7 @@
     ((name
       :initarg :name
       :accessor %company-name
+      :writer (setf company-name)
       :index-initargs (:test 'equal)
       :index-type unique-index
       :index-reader company-with-name

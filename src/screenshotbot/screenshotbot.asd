@@ -263,7 +263,8 @@
    (:module "company"
     :serial t
     :components ((:file "new")
-                 (:file "members")))
+                 (:file "members")
+                 (:file "rename")))
    (:module "slack"
     :serial t
     :components ((:file "plugin")

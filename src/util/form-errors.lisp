@@ -59,10 +59,12 @@
            (t
             ;; Add error message to a alert
             (let ((alert ($ ".alert")))
-              (mquery:remove-class alert "d-none")
-              (mquery:mqappend alert
-                               <div>,(progn err)</div>))
-            ))))))
+              (unless alert
+                (warn "Tried to update an alert, but did not find it"))
+              (when alert
+                (mquery:remove-class alert "d-none")
+                (mquery:mqappend alert
+                                 <div>,(progn err)</div>)))))))))
   (values html errors))
 
 (defmacro with-form-errors ((&rest args &key errors args-list was-validated tooltip &allow-other-keys) &body body)
@@ -85,8 +87,12 @@
   `(let ((,errors nil))
      (flet ((,check (field expr value)
               (unless expr
-                (push (cons field value)
-                      ,errors))))
+                (cond
+                  (field
+                   (push (cons field value)
+                         ,errors))
+                  (t
+                   (push value ,errors))))))
        ,@body
        (cond
          (,errors
