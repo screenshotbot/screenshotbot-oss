@@ -77,8 +77,11 @@
                 (path:catfile dir output))))
         (copy-css :screenshotbot.css-assets "assets/css/default.css")
         #-screenshotbot-oss
-        (copy-css :screenshotbot.pro.css/extended-dashboard
-                  "assets/css/extended-dashboard.css"))
+        (progn
+         (copy-css :screenshotbot.pro.css/extended-dashboard
+                   "assets/css/extended-dashboard.css")
+         (copy-css :screenshotbot.pro.css
+                   "assets/css/new-landing.css")))
       (setf prepared t))))
 
 (let ((cache (make-hash-table :test #'equal)))
@@ -91,6 +94,7 @@
        (maybe-prepare-screenshot-assets output)
        (with-open-file (file output-file
                              :direction :output
+                             :external-format :utf-8
                              :if-exists :supersede)
          (let ((content (typecase content
                           (string content)
