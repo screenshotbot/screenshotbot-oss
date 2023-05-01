@@ -38,7 +38,7 @@
 
 (defsettings settings-shares-page
   :name "shares"
-  :section nil
+  :section :organization
   :title "Public Shares"
   :handler 'shares-page)
 

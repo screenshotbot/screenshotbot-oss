@@ -44,8 +44,8 @@
 
 (defsettings members-page
   :name "members"
-  :section nil
-  :title "Org Members"
+  :section :organization
+  :title "Members"
   :handler (lambda ()
              (members-page)))
 
