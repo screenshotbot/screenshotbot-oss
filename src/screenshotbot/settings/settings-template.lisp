@@ -22,7 +22,9 @@
 (markup:enable-reader)
 
 (deftag settings-menu-item (children &key href)
-  <li class= "settings-nav-item" ><a href= href >,@children </a></li>)
+  <li class= "settings-nav-item" >
+    <a class= (if (equal (hunchentoot:script-name*) href)  "active")
+       href= href >,@children </a></li>)
 
 (defun settings-list-sections ()
   (remove-duplicates

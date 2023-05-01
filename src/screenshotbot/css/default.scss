@@ -196,12 +196,17 @@ ul.settings-nav {
 li.settings-nav-item {
     list-style: none;
     padding-left: 0;
+
+    .active {
+        font-weight: bold;
+    }
 }
 
 .settings-nav-title {
     text-transform: uppercase;
     padding: 1.5em 0em;
 }
+
 
 .setting-item-title {
     font-weight: bold;
