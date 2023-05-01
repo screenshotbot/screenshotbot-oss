@@ -165,6 +165,7 @@
    (:file "audit-log")
    (:file "impersonation")
    (:file "diff-report")
+   (:file "invite")
    (:module "dashboard"
     :serial t
     :components ((:file "explain")
@@ -187,7 +188,6 @@
                  (:file "mask-builder")
                  (:file "site-admin")
                  (:file "audit-log")))
-   (:file "invite")
    (:file "image-comparison")
    (:file "abstract-pr-promoter")
    (:module "github"

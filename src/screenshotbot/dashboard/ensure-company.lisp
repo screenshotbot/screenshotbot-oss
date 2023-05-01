@@ -7,6 +7,9 @@
 (defpackage :screenshotbot/dashboard/ensure-company
   (:use #:cl)
   (:import-from #:screenshotbot/user-api
+                #:company-name
+                #:user-full-name
+                #:unaccepted-invites
                 #:current-company
                 #:current-user
                 #:adminp
@@ -28,6 +31,12 @@
                 #:with-transaction)
   (:import-from #:util/form-errors
                 #:with-form-errors)
+  (:import-from #:screenshotbot/invite
+                #:accept-invite)
+  (:import-from #:screenshotbot/model/invite
+                #:inviter)
+  (:import-from #:screenshotbot/notice-api
+                #:invite-company)
   (:export
    #:post-new-company))
 (in-package :screenshotbot/dashboard/ensure-company)
@@ -38,12 +47,58 @@
                                            user
                                            fn)
   (assert user)
+  (ensure-company-or-invite
+   user
+   fn
+   (unaccepted-invites user)))
+
+(defun ensure-company-or-invite (user fn invites)
   (cond
     ((user-companies user)
      (funcall fn))
+    (invites
+     (let ((invite (car invites)))
+       (%accept-invite user invite
+                       :accept (nibble ()
+                                 (accept-invite invite)
+                                 (hex:safe-redirect
+                                  (nibble ()
+                                    (funcall fn))))
+                       :reject (nibble ()
+                                (ensure-company-or-invite
+                                 user fn (cdr invites))))))
     (t
      (%new-company :redirect (nibble () (funcall fn))
                    :user user))))
+
+(markup:deftag center-box (children)
+      <dashboard-template left-nav-bar=nil >
+      <div class= "container body-vh-100" style= "max-width: 40em" >
+        <div class= "row h-100">
+            <div class= "my-auto" style= "padding-bottom: 20vh;" >
+              ,@children
+            </div>
+        </div>
+      </div>
+    </dashboard-template>)
+
+(defun %accept-invite (user invite &key accept reject)
+  <center-box>
+    <h4>You have an invitation</h4>
+
+    <p>You have a pending invite from ,(user-full-name (inviter invite)) to join
+      <b>,(company-name (invite-company invite))</b> </p>
+
+    <form action=accept method= "post" class= "text-center" >
+      <div class= "form-group mt-3">
+        <input type= "submit" value= "Accept and continue" class= "btn btn-primary form-control" />
+      </div>
+      <div class= "mt-3">
+        <a href= reject class= "mt-3" >Decline for now</a>
+      </div>
+
+    </form>
+  </center-box>)
 
 (defun %new-company (&key redirect
                        user)
@@ -52,37 +107,31 @@
                                   :user user
                                   :form #'%new-company
                                   :redirect redirect))))
-    <dashboard-template left-nav-bar=nil >
-      <div class= "container body-vh-100" style= "max-width: 40em" >
-        <div class= "row h-100">
-            <div class= "my-auto" style= "padding-bottom: 20vh;" >
-              <h4 class= "mb-3" >
-                Create Organization
-              </h4>
-              <p class= "mb-3" >Before we can begin, let's create an organization for your
-                projects. Organizations also let you collaborate with other users.</p>
+  <center-box>
+    <h4 class= "mb-3" >
+      Create Organization
+    </h4>
+    <p class= "mb-3" >Before we can begin, let's create an organization for your
+      projects. Organizations also let you collaborate with other users.</p>
 
-              <form action=post method= "post" >
-                <div class= "form-group pt-3">
+    <form action=post method= "post" >
+      <div class= "form-group pt-3">
 
-                  <label for= "name" class= "form-label text-muted">
-                    Organization name
-                  </label>
-                  <input type= "text" placeholder= "My company, Inc."
-                         name= "name"
-                         id= "name"
-                         class= "form-control" />
-                </div>
-
-                <div class= "form-group mt-3">
-                  <input type= "submit" class= "btn btn-primary form-control"
-                         value= "Create and continue" />
-                </div>
-              </form>
-            </div>
-        </div>
+        <label for= "name" class= "form-label text-muted">
+          Organization name
+        </label>
+        <input type= "text" placeholder= "My company, Inc."
+               name= "name"
+               id= "name"
+               class= "form-control" />
       </div>
-    </dashboard-template>))
+
+      <div class= "form-group mt-3">
+        <input type= "submit" class= "btn btn-primary form-control"
+               value= "Create and continue" />
+      </div>
+    </form>
+  </center-box>))
 
 (defun post-new-company (name i-agree
                          &key form

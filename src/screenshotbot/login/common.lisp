@@ -102,12 +102,19 @@
     (hex:safe-redirect "/")))
 
 
-(defun server-with-login (fn &key needs-login signup alert company)
-  (let ((fn (lambda ()
-              (call-with-ensure-user-prepared
-               (installation)
-               (current-user)
-               fn))))
+(defun server-with-login (fn &key needs-login signup alert company
+                           ;; Sometimes, for instance for the invite
+                           ;; flow, we want to get a callback before
+                           ;; the user is prepared.
+                           (ensure-prepared t))
+  (let ((fn (cond
+              (ensure-prepared
+               (lambda ()
+                 (call-with-ensure-user-prepared
+                  (installation)
+                  (current-user)
+                  fn)))
+              (t fn))))
    (cond
      ((and
        needs-login

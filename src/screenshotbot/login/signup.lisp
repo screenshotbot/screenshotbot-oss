@@ -52,11 +52,15 @@
 (defmethod auth-provider-signup-form ((auth-provider standard-auth-provider) invite-code
                                       plan
                                       redirect)
-  (let ((post (nibble (email password full-name accept-terms-p plan)
+  (let* ((invite (unless (str:emptyp invite-code)
+                   (invite-with-code invite-code)))
+         (invite-email (when invite (invite-email invite)))
+         (post (nibble (email password full-name accept-terms-p plan)
                 (signup-post
                  :email email
                  :password password
                  :full-name full-name
+                 :invite invite
                  :accept-terms-p accept-terms-p
                  :plan plan
                  :redirect redirect))))
@@ -65,28 +69,25 @@
       <input type= "hidden" name= "invite-code" value=invite-code />
       <input type= "hidden" name= "plan" value=plan />
       <div class="form-group mb-3">
-        <input name= "full-name" class="form-control" type="text" id="fullname" placeholder="Full Name" required= "required" >
+        <input name= "full-name" class="form-control" type="text" id="fullname" placeholder="Full Name" required= "required" />
       </div>
 
       <div class="form-group mb-3">
         <input name= "email" class="form-control" type="email" id="email" required= "required" placeholder="Your Email"
-               value=
-               (unless (str:emptyp invite-code)
-                                               (let ((invite (invite-with-code invite-code)))
-               (when invite (invite-email invite))))
-               >
+               value=invite-email
+               />
       </div>
 
       <div class="form-group mb-3">
         <div class="input-group input-group-merge">
-          <input name= "password"  type="password" id="password" class="form-control" placeholder="Password">
+          <input name= "password"  type="password" id="password" class="form-control" placeholder="Password" />
         </div>
       </div>
 
 
 
       <div class="form-check ps-0 mb-3">
-          <input name= "accept-terms-p" type="checkbox" class="form-check-input me-3" id="checkbox-signup">
+          <input name= "accept-terms-p" type="checkbox" class="form-check-input me-3" id="checkbox-signup" />
             <label class="form-check-label" for="checkbox-signup">I accept the <a href="/terms" class="">Terms and Conditions</a></label>
       </div>
 
@@ -132,21 +133,16 @@
                                                         redirect)
                              if (and (eql idx 0) (> len 1))
                                collect  <or-signup-with />))
-                </div> <!-- end card-body -->
+                </div>
               </div>
-              <!-- end card -->
 
               <div class="row mt-3">
                 <div class="col-12 text-center">
                   <p class="">Already have account? <a href=login class="ml-1"><b>Log In</b></a></p>
-                </div> <!-- end col-->
+                </div>
               </div>
-              <!-- end row -->
-          <!-- end row -->
         </div>
-        <!-- end container -->
       </div>
-      <!-- end page -->
 
     </auth-template>))
 
@@ -157,7 +153,8 @@
 
   (signup-get :invite-code invite-code :plan plan))
 
-(defun signup-post (&key email password full-name accept-terms-p plan redirect)
+(defun signup-post (&key email password full-name accept-terms-p plan redirect
+                      invite)
   (let ((errors))
     (flet ((check (name test message)
              (unless test
@@ -195,9 +192,14 @@
                    password))
            (setf (current-user) user)
 
-           (with-transaction ()
-             (setf (unaccepted-invites user)
-                   (invites-with-email email)))
+           (let ((invites (remove-if #'null
+                                     (remove-duplicates
+                                      (list*
+                                       invite
+                                       (invites-with-email email))))))
+             (with-transaction ()
+               (setf (unaccepted-invites user)
+                invites)))
 
            (let ((confirmation (make-instance 'email-confirmation-code
                                                :user user)))

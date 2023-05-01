@@ -20,8 +20,6 @@
                 #:invite-email
                 #:inviter
                 #:invites-with-email)
-  (:import-from #:screenshotbot/dashboard/notices
-                #:accept-invite)
   (:import-from #:screenshotbot/model/user
                 #:user-with-email
                 #:personalp
@@ -145,7 +143,8 @@
 
 (defhandler (invite-signup-page :uri "/invite/signup/:invite-code") (invite-code)
   (let ((invite (invite-with-code invite-code)))
-   (with-login (:signup t :alert (when invite (invite-alert invite)))
+   (with-login (:signup t :alert (when invite (invite-alert invite))
+                :ensure-prepared nil)
      (cond
        ((or (null invite)
             (invite-used-p invite))

@@ -132,7 +132,7 @@
             <!-- Start Content-->
   <div class="">
     ,(cond
-       (user
+       ((and left-nav-bar user)
         <user-notice-list user=user />)
        (t
         ;; fix this, I shouldn't need this, but it breaks the CSS if

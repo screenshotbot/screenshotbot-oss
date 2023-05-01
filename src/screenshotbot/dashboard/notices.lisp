@@ -9,6 +9,7 @@
         #:alexandria
         #:screenshotbot/user-api
         #:screenshotbot/template
+        #:screenshotbot/invite
         #:screenshotbot/notice-api
         #:bknr.datastore)
   (:import-from #:markup #:deftag)
@@ -16,8 +17,7 @@
                 #:defhandler)
   (:import-from #:util #:oid #:make-url)
   (:import-from #:nibble
-                #:nibble)
-  (:export #:accept-invite))
+                #:nibble))
 (in-package :screenshotbot/dashboard/notices)
 
 (markup:enable-reader)
