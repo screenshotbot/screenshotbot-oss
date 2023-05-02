@@ -46,22 +46,25 @@
       </form>
     </div>)
        ,@ (loop for notice in (user-notices user) collect
-                <div class= "col-md-4 mt-2">
-                  <div class= "card">
-                    <div class= "card-header pt-0 pb-0">
-                      <h3>,(notice-title notice)</h3>
-                    </div>
+                (render-notice notice))
+  </div>)
 
-                <div class= "card-body pt-0 pb-0">
-                  <p>,(notice-summary notice)</p>
-                </div>
+(defmethod render-notice (notice)
+  <div class= "col-md-4 mt-2">
+    <div class= "card">
+      <div class= "card-header pt-0 pb-0">
+        <h3>,(notice-title notice)</h3>
+      </div>
 
-                <div class= "card-footer">
-                  <input type= "button" class= "btn btn-danger user-notice-dismiss" value= "Dismiss"
-                         data-notice-id= (oid notice) />
-                </div>
-                  </div>
-                </div>)
+      <div class= "card-body pt-0 pb-0">
+        <p>,(notice-summary notice)</p>
+      </div>
+
+      <div class= "card-footer">
+        <input type= "button" class= "btn btn-danger user-notice-dismiss" value= "Dismiss"
+               data-notice-id= (oid notice) />
+      </div>
+    </div>
   </div>)
 
 (defhandler (nil :uri "/notice/dismiss" :method :post) (notice-id)
