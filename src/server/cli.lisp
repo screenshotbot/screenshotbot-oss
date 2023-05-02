@@ -137,6 +137,7 @@
                                              :jvm jvm)
                           (verify/command :enable-store enable-store
                                           :jvm jvm)
+                          #-screenshotbot-oss
                           (uiop:call-function
                            "screenshotbot/pro/installation:gen-config/command")
                           (save-passphrases/command)
