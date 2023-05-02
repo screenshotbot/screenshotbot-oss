@@ -10,6 +10,7 @@
   (:import-from #:screenshotbot/server
                 #:acceptor)
   (:import-from #:screenshotbot/sdk/static
+                #:parse-config-from-file
                 #:find-all-index.htmls
                 #:upload-blob)
   (:import-from #:fiveam-matchers/core
@@ -21,6 +22,9 @@
                 #:md5-file)
   (:import-from #:util/testing
                 #:with-local-acceptor)
+  (:import-from #:screenshotbot/replay/browser-config
+                #:browser-type
+                #:browser-config-name)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags :screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/test-static)
@@ -95,3 +99,19 @@
     (assert-that
      (find-all-index.htmls dir)
      (is-not (has-item "bleh.png")))))
+
+(test parse-config-from-file
+  (uiop:with-temporary-file (:pathname p :stream s)
+    (write-string "[{
+ \"name\":\"Google Chrome\",
+ \"type\":\"chrome\",
+ \"dimensions\": \"24x2\"
+}
+]" s)
+    (finish-output s)
+    (let ((configs (parse-config-from-file p)))
+      (is (eql 1 (length configs)))
+      (is (equal "Google Chrome"
+                 (browser-config-name (car configs))))
+      (is (equal "chrome"
+                 (browser-type (car configs)))))))

@@ -21,6 +21,8 @@
   (:import-from #:util/store/file-lock
                 #:release-file-lock
                 #:file-lock)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
@@ -102,27 +104,30 @@ upload blobs that haven't been uploaded before."
           collect
           (replay:snapshot-asset-file snapshot asset)))))
 
+(defun parse-config-from-file (file)
+  (with-open-file (stream (pathname file))
+   (let ((configs (json:decode-json stream)))
+     (loop for config in configs
+           collect
+           (flet ((dim ()
+                    (a:when-let ((dim (assoc-value config :dimensions)))
+                      (str:split "x" dim))))
+             (make-instance 'browser-config
+                            :type (assoc-value config :type)
+                            :name (assoc-value config :name)
+                            :dimensions (when (dim)
+                                          (make-instance 'dimensions
+                                                         :width (parse-integer (first (dim)))
+                                                         :height (parse-integer (second (dim)))))
+                            :mobile-emulation (assoc-value config :mobile-emulation)))))))
+
 (defun browser-configs ()
   "Currently we're not providing a way to modify the browser
-  config. We're hardcoding this to a value that we can initially work
+  config. We're hardcooding this to a value that we can initially work
   with."
   (cond
     (flags:*browser-configs*
-     (let ((config (nyaml:parse (pathname flags:*browser-configs*))))
-       (loop for name being the hash-keys of config
-             using (hash-value value)
-             collect
-             (flet ((dim ()
-                      (a:when-let ((dim (gethash "dimensions" value)))
-                       (str:split "x" dim))))
-               (make-instance 'browser-config
-                               :type (gethash "type" value)
-                               :name name
-                               :dimensions (when (dim)
-                                             (make-instance 'dimensions
-                                                             :width (parse-integer (first (dim)))
-                                                             :height (parse-integer (second (dim)))))
-                               :mobile-emulation (gethash "mobile-emulation" value))))))
+     (parse-configs-from-file flags:*browser-configs*))
     (t
      (list
       (make-instance 'browser-config
