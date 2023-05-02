@@ -18,6 +18,8 @@
                 #:*object-store*)
   (:import-from #:alexandria
                 #:when-let)
+  (:import-from #:server/config
+                #:*config-file*)
   (:export
    #:main))
 (in-package :server/cli)
@@ -42,13 +44,19 @@
    :options (list* (common-options))))
 
 (def-easy-macro with-run-or-verify-setup (cmd &key enable-store jvm &fn fn)
-  (with-store (cmd)
-    (when-let ((secrets (clingon:getopt cmd :secrets)))
-      (log:info "Loading secrets from ~a" secrets)
-      (setf util/phabricator/passphrase:*secret-file* secrets)
-      (util/phabricator/passphrase:reload-secrets))
-    (with-common-setup (:enable-store enable-store :jvm jvm)
-      (fn))))
+  #-screenshotbot-oss
+  (unless (clingon:getopt cmd :config)
+    (error "Must provide a --config file"))
+  (with-global-binding ((*config-file* (clingon:getopt cmd :config)))
+    #-screenshotbotoss
+    (uiop:call-function "screenshotbot/pro/installation:init-pro-installation")
+    (with-store (cmd)
+      (when-let ((secrets (clingon:getopt cmd :secrets)))
+        (log:info "Loading secrets from ~a" secrets)
+        (setf util/phabricator/passphrase:*secret-file* secrets)
+        (util/phabricator/passphrase:reload-secrets))
+      (with-common-setup (:enable-store enable-store :jvm jvm)
+        (fn)))))
 
 (defun verify/command (&key enable-store jvm)
   (clingon:make-command
@@ -120,6 +128,11 @@
     :long-name "start-slynk"
     :initial-value :true
     :key :start-slynk)
+   (make-option
+    :filepath
+    :description "Config file to use (not for OSS)"
+    :long-name "config"
+    :key :config)
    (make-option
     :integer
     :description "the port to start slynk on"

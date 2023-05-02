@@ -16,7 +16,7 @@ repl.lisp-repl
 *.64ufasl
 *.64ofasl
 *.fasl
-config.lisp
+/config.lisp
 build
 /assets
 screenshotbot-installer.sh

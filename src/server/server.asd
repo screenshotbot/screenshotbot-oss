@@ -36,8 +36,13 @@
                (:file "control-socket")
                (:file "setup")))
 
+(defsystem #:server/config
+  :depends-on ()
+  :components ((:file "config")))
+
 (defsystem #:server/cli
   :depends-on (#:server
+               #:server/config
                #:clingon)
   :serial t
   :components ((:file "cli")))
