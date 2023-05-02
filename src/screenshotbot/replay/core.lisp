@@ -405,7 +405,8 @@
                          :latin-1)
                         (t
                          (error "unspported charset ~a" charset)))))))))
-   (guess-content-type-from-file file-name)
+   (ignore-errors
+    (guess-content-type-from-file file-name))
    :latin-1))
 
 (defun guess-content-type-from-file (file)
@@ -450,7 +451,10 @@
                                                  'character)
                                                 (t
                                                  'character))
-                                :external-format (guess-external-format info output))
+                                :external-format (or
+                                                  (unless force-binary
+                                                    (guess-external-format info output))
+                                                  :default))
                    (remote-response-status info)
                    (remote-response-headers info))))
               (good-cache-p (file)
