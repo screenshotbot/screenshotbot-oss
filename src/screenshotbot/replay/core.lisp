@@ -384,7 +384,8 @@
     (t
      str)))
 
-(defmethod guess-external-format ((info remote-response))
+(defmethod guess-external-format ((info remote-response)
+                                  file-name)
   (or
    (a:when-let ((content-type (assoc-value (remote-response-headers info) :content-type)))
      (loop for part in (str:split ";" content-type)
@@ -393,19 +394,40 @@
                 (when (string-equal (str:trim key) "charset")
                   (let* ((charset (remove-quotes (str:downcase (str:trim value)))))
                     (return
-                     (cond
-                       ((or
-                         (string= charset "utf-8")
-                         (string= charset "utf8"))
-                        :utf-8)
-                       ((or
-                         (string= charset "iso-8859-1")
-                         (string= charset "latin-1"))
-                        :latin-1)
-                       (t
-                        (error "unspported charset ~a" charset)))))))))
-
+                      (cond
+                        ((or
+                          (string= charset "utf-8")
+                          (string= charset "utf8"))
+                         :utf-8)
+                        ((or
+                          (string= charset "iso-8859-1")
+                          (string= charset "latin-1"))
+                         :latin-1)
+                        (t
+                         (error "unspported charset ~a" charset)))))))))
+   (guess-content-type-from-file file-name)
    :latin-1))
+
+(defun guess-content-type-from-file (file)
+  (with-open-file (stream file :direction :input)
+    (let ((html (plump:parse stream)))
+      (labels ((charset (tag)
+                 (plump:attribute tag "charset"))
+               (find-meta (tag)
+                 (cond
+                   ((and
+                     (typep tag 'plump:element)
+                     (string-equal "meta" (plump:tag-name tag))
+                     (charset tag))
+                    (cond
+                      ((string-equal "utf-8" (charset tag))
+                       :utf-8)))
+                   ((typep tag 'plump:nesting-node)
+                    (loop for child across (plump:children tag)
+                          for charset = (find-meta child)
+                          if charset
+                            return charset)))))
+        (find-meta html)))))
 
 (defun http-get (url &key (force-binary t)
                      (force-string nil)
@@ -428,7 +450,7 @@
                                                  'character)
                                                 (t
                                                  'character))
-                                :external-format (guess-external-format info))
+                                :external-format (guess-external-format info output))
                    (remote-response-status info)
                    (remote-response-headers info))))
               (good-cache-p (file)

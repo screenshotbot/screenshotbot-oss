@@ -182,16 +182,41 @@ background: url(shttps://google.com?f=1)
        (is (equal "<html><body>©</body></html>" (uiop:slurp-input-stream :string content)))))))
 
 (test guess-external-format
-  (flet ((make-info (content-type)
-           (let ((map `((:content-type . ,content-type))))
-             (make-instance 'remote-response
+  (uiop:with-temporary-file (:pathname p)
+   (flet ((make-info (content-type)
+            (let ((map `((:content-type . ,content-type))))
+              (make-instance 'remote-response
                              :headers map))))
-    (is (equal :utf-8
-               (guess-external-format (make-info "text/html; charset=utf-8"))))
-    (is (equal :utf-8
-               (guess-external-format (make-info "text/html; charset=UTF-8"))))
-    (is (equal :utf-8
-               (guess-external-format (make-info "text/html; charset='utf-8' "))))))
+     (is (equal :utf-8
+                (guess-external-format (make-info "text/html; charset=utf-8") p)))
+     (is (equal :utf-8
+                (guess-external-format (make-info "text/html; charset=UTF-8") p)))
+     (is (equal :utf-8
+                (guess-external-format (make-info "text/html; charset='utf-8' ") p))))))
+
+(test guess-external-format-from-content-utf-8
+  (uiop:with-temporary-file (:pathname p :stream s)
+   (flet ((make-info (content-type)
+            (let ((map `((:content-type . ,content-type))))
+              (make-instance 'remote-response
+                             :headers map))))
+     (write-string "<html><head><meta charset='utf-8'></head></html>"
+                   s)
+     (finish-output s)
+     (is (equal :utf-8
+                (guess-external-format (make-info "text/html") p))))))
+
+(test guess-external-format-from-content-latin-1
+  (uiop:with-temporary-file (:pathname p :stream s)
+   (flet ((make-info (content-type)
+            (let ((map `((:content-type . ,content-type))))
+              (make-instance 'remote-response
+                             :headers map))))
+     (write-string "<html><head></head></html>"
+                   s)
+     (finish-output s)
+     (is (equal :latin-1
+                (guess-external-format (make-info "text/html") p))))))
 
 (test http-cache-dir
   (with-fixture state ()
