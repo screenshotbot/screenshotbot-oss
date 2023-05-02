@@ -662,7 +662,7 @@ body.dashboard {
         }
     }
 
-    @include media-breakpoint-up(sm) {
+    @include media-breakpoint-up(xl) {
         .leftside-menu + .content-page {
             margin-left: calc(#{$left-side-menu-width} + 1em);
         }
