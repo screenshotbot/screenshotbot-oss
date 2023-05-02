@@ -127,7 +127,7 @@ upload blobs that haven't been uploaded before."
   with."
   (cond
     (flags:*browser-configs*
-     (parse-configs-from-file flags:*browser-configs*))
+     (parse-config-from-file flags:*browser-configs*))
     (t
      (list
       (make-instance 'browser-config
