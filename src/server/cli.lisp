@@ -130,15 +130,19 @@
 (defun main/command (&key enable-store jvm acceptor)
   (clingon:make-command :name "App Server"
                         :handler #'main/handler
-                        :sub-commands (list
-                                       (self-test/command :enable-store enable-store
-                                                          :jvm jvm)
-                                       (verify/command :enable-store enable-store
-                                                       :jvm jvm)
-                                       (save-passphrases/command)
-                                       (run/command :enable-store enable-store
-                                                    :jvm jvm
-                                                    :acceptor acceptor))))
+                        :sub-commands
+                        (remove-if #'null
+                         (list
+                          (self-test/command :enable-store enable-store
+                                             :jvm jvm)
+                          (verify/command :enable-store enable-store
+                                          :jvm jvm)
+                          (uiop:call-function
+                           "screenshotbot/pro/installation:gen-config/command")
+                          (save-passphrases/command)
+                          (run/command :enable-store enable-store
+                                       :jvm jvm
+                                       :acceptor acceptor)))))
 
 (defun legacy-mode-p (args)
   (and (second args)
