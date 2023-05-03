@@ -370,19 +370,9 @@
                         <span>
                         ,(let ((f (or (ignore-errors (finished-at run)) 0))
                                (s (or (ignore-errors (started-at run)) 0)))
-                           (flet ((render-time (end-time)
-                                    (let* ((secs (- end-time s))
-                                           (h (floor secs 3600)))
-                                      (cond
-                                        ((> h 0)
-                                         (format nil "~dh:~dm:~ds"
-                                                 h
-                                                 (floor (mod secs 3600) 60)
-                                                 (mod secs 60)))
-                                        (t
-                                         (format nil "~dm:~ds"
-                                                 (floor secs 60)
-                                                 (mod secs 60)))))))
+                           (flet ((%render-end-time (end-time)
+                                    (let* ((secs (- end-time s)))
+                                      (render-time secs))))
                             (cond
                               ((or
                                 (not (eql :success (remote-run-status run)))
@@ -391,13 +381,26 @@
                                  (eql s 0)))
                                "")
                               ((eql f 0)
-                               (render-time (get-universal-time)))
+                               (%render-end-time (get-universal-time)))
                               (t
-                               (render-time f)))))
+                               (%render-end-time f)))))
 
                         </span>
                         )))
   </markup:merge-tag>)
+
+(defun render-time (secs)
+  (cond
+    ((< secs 3600)
+     (let ((minute (format nil "~dm:~2,'0ds"
+                           (floor secs 60)
+                           (mod secs 60))))
+       minute))
+    (t
+     (format nil "~dh:~2,'0dm:~2,'0ds"
+             (floor secs 3600)
+             (floor (mod secs 3600) 60)
+             (mod secs 60)))))
 
 (defun https? ()
   (string-equal "https" (hunchentoot:header-in* :x-forwarded-proto)))

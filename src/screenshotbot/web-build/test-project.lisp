@@ -10,6 +10,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/web-build/project
+                #:render-time
                 #:form
                 #:scheduled-job-run-now
                 #:actually-run-now
@@ -94,3 +95,11 @@
   (with-fixture state ()
     (with-fixture screenshots ()
       (form :submit "" :exclusions "https://goog.gl/foo.txt"))))
+
+(test render-time
+  (is (equal "2m:01s"
+             (render-time 121)))
+  (is (equal "2m:11s"
+             (render-time 131)))
+    (is (equal "1h:02m:11s"
+             (render-time (+ 3600 131)))))
