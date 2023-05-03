@@ -241,7 +241,7 @@
               #+lispworks
               (when jvm
                 (jvm:jvm-init))
-              
+
               (fn))))
         ;; unwind if an interrupt happens
         (log:config :sane :immediate-flush t)
@@ -296,13 +296,13 @@
       (hcl:profile
        (util/store:verify-store)))
      (t
-      (util/store:verify-store))))
+      (util/store:verify-store
+       :callback (lambda ()
+                   (log:info "Done verifying store")
+                   (log:info "Running health checks...")
+                   (run-health-checks))))))
 
-  (log:info "Done verifying store")
-  (log:info "Running health checks...")
-  (run-health-checks)
   (uiop:quit 0))
-
 
 (defun required (&optional arg)
   (error "Missing required argument: ~a" arg))

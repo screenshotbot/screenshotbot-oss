@@ -265,7 +265,7 @@ to the directory that was just snapshotted.")
                  :subsystems (store-subsystems))
   (dispatch-datastore-hooks))
 
-(defun verify-store ()
+(defun verify-store (&key (callback (lambda ())))
   (let ((store-dir (object-store)))
     (tmpdir:with-tmpdir (dir)
       (let ((out-current (path:catdir dir "current/")))
@@ -277,7 +277,8 @@ to the directory that was just snapshotted.")
                         :directory dir
                         :subsystems (store-subsystems))
         (log:info "Got ~d objects" (length (bknr.datastore:all-store-objects)))
-        (log:info "Success!")))))
+        (log:info "Success!")
+        (funcall callback)))))
 
 (defun parse-timetag (timetag)
   "timetag is what bknr.datastore calls it. See utils.lisp in

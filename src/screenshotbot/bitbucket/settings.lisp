@@ -49,6 +49,12 @@
                 #:with-class-validation)
   (:import-from #:screenshotbot/ui/confirmation-page
                 #:confirmation-page)
+  (:import-from #:util/health-check
+                #:def-health-check)
+  (:import-from #:screenshotbot/model/company
+                #:company-with-name)
+  (:import-from #:alexandria
+                #:when-let*)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:refresh-token))
@@ -240,3 +246,13 @@
   :section :vcs
   :plugin 'bitbucket-plugin
   :handler 'settings-bitbucket-page)
+
+#-screenshotbot-oss
+(def-health-check production-bitbucket-api-key ()
+  (when-let* ((company (company-with-name "Modern Interpreters"))
+              (token (car (bitbucket-settings-for-company company))))
+    (let ((access-token (get-access-token-from-refresh-token
+                         company
+                         (refresh-token token))))
+      (assert (stringp access-token))
+      (assert (> (length access-token) 1)))))
