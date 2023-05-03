@@ -3,6 +3,7 @@
   (:import-from #:clingon
                 #:make-option)
   (:import-from #:server
+                #:*slynk-loopback-interface*
                 #:%run
                 #:%verify
                 #:*slynk-port*
@@ -31,6 +32,7 @@
 (def-easy-macro with-store (cmd &fn fn)
   (with-global-binding ((*object-store* (serapeum:ensure-suffix (clingon:getopt cmd :store) "/"))
                         (*start-slynk* (clingon:getopt cmd :start-slynk))
+                        (*slynk-loopback-interface* (clingon:getopt cmd :slynk-loopback-interface))
                         (*slynk-port* (format nil "~a" (clingon:getopt cmd :slynk-port))))
     (fn)))
 
@@ -128,6 +130,12 @@
     :long-name "start-slynk"
     :initial-value :true
     :key :start-slynk)
+   (make-option
+    :string
+    :description "The IP address to listen on for slynk"
+    :long-name "slynk-loopback-interface"
+    :initial-value "127.0.0.1"
+    :key :slynk-loopback-interface)
    (make-option
     :filepath
     :description "Config file to use (not for OSS)"
