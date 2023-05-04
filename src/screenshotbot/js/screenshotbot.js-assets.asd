@@ -55,8 +55,6 @@
                ("build-utils:js-file" "common")
                ("build-utils:js-file" "runs")
                ("build-utils:js-file" "mask-editor")
-               #-screenshotbot-oss
-               ("build-utils:js-file" "chatwoot")
                ("build-utils:js-file" "websocket-logs")
                ("build-utils:js-file" "acceptance")
                ("build-utils:js-file" "git-graph")
