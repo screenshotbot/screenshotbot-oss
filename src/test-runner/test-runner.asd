@@ -10,6 +10,8 @@
                #-(or jipr screenshotbot-oss)
                :sentry
                :graphs
+               :str
+               :tmpdir
                :cl-fad)
   :components ((:file "affected-systems")
                (:file "test-runner")))
