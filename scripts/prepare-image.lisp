@@ -17,6 +17,9 @@
 (progn
   (lw:set-default-character-element-type 'character))
 
+(when (probe-file ".jipr")
+  (push :jipr *features*))
+
 (when (probe-file "scripts/asdf.lisp")
   (format t "Compiling asdf..~%")
   (let ((output (compile-file "scripts/asdf.lisp" :verbose nil :print nil)))
