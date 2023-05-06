@@ -138,11 +138,18 @@
 
 (pushnew :screenshotbot-oss *features*)
 
+
+
 (defun update-project-directories (cwd)
-  #-screenshotbot-oss
-  (push (pathname (format nil "~alocal-projects/" cwd) ) ql:*local-project-directories*)
-  (push (pathname (format nil "~asrc/" cwd)) ql:*local-project-directories*)
-  (push (pathname (format nil "~athird-party/" cwd)) ql:*local-project-directories*))
+  (flet ((push-src-dir (name)
+           (let ((dir (pathname (format nil "~a~a/" cwd name))))
+             (when (probe-file dir)
+               (push dir ql:*local-project-directories*)))))
+    #-screenshotbot-oss
+    (push-src-dir "local-projects")
+    (push-src-dir "src")
+    (push-src-dir "third-party")
+    (push-src-dir "lisp")))
 
 
 (defun update-root (cwd)
