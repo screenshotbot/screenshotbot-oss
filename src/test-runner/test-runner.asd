@@ -7,7 +7,9 @@
                :jvm
                :trivial-features
                :fiveam
-               #-screenshotbot-oss
+               #-(or jipr screenshotbot-oss)
                :sentry
-               :testing)
-  :components ((:file "test-runner")))
+               :graphs
+               :cl-fad)
+  :components ((:file "affected-systems")
+               (:file "test-runner")))

@@ -90,7 +90,7 @@
       (when (uiop:getenv "JENKINS_URL")
         (let ((files (uiop:read-file-lines "build/affected-files.txt")))
           (log:info "Got affected files ~S" files)
-          (setf systems (testing/affected-systems:filter-affected-systems
+          (setf systems (test-runner/affected-systems:filter-affected-systems
                          systems
                          files)))))
     (log:info "Running the following tests: ~S" systems)

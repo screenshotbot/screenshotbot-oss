@@ -1,9 +1,9 @@
-(defpackage :testing/affected-systems
+(defpackage :test-runner/affected-systems
   (:use #:cl)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:filter-affected-systems))
-(in-package :testing/affected-systems)
+(in-package :test-runner/affected-systems)
 
 (defun action-deps (action)
   (destructuring-bind (op . component) action
