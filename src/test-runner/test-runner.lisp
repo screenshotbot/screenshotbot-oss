@@ -14,7 +14,7 @@
   (funcall (find-symbol "JVM-INIT" "JVM"))
   (setf *debugger-hook* nil)))
 
-#-screenshotbot-oss
+#-(or jipr screenshotbot-oss)
 (setf sentry:*disabledp* t)
 
 (defun hide-outputs ()
