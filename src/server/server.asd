@@ -61,7 +61,8 @@
                "slynk/profiler"
                "slynk/stickers"
                "slynk/indentation"
-               "slynk/retro")
+               "slynk/retro"
+               "slynk-named-readtables")
   :components ((:file "slynk-preparer")))
 
 (defsystem :server/tests

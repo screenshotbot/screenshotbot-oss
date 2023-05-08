@@ -57,6 +57,12 @@
 (quick-patch:register "https://github.com/vindarel/cl-str"
                       "cf2e7ae5e333b8a2dbfd01ec4ec26790b46eebf2")
 
+;; slynk-named-readtables is loaded from ~/.emacs.d. But this prevents
+;; us from loading it in a remote image. It's not part of quicklisp,
+;; so let's add it.
+(quick-patch:register "https://github.com/joaotavora/sly-named-readtables"
+                      "a5a42674ccffa97ccd5e4e9742beaf3ea719931f")
+
 ;; TODO: automatically generate hashes
 #+screenshotbot-oss
 (progn
