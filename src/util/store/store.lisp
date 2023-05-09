@@ -479,43 +479,47 @@ to the directory that was just snapshotted.")
     (retry--validate-class-index ()
       (validate-class-index class-name slot-name))))
 
-(defun all-store-objects-in-memory ()
+(defun all-store-objects-in-memory (&key full)
   (flet ((make-sorted (x)
            (sort x #'< :key #'store-object-id)))
-   (let ((from-bknr (make-sorted (bknr.datastore:all-store-objects))))
-     #-lispworks
-     from-bknr
-     #+lispworks
-     (let ((rest nil))
-       (hcl:sweep-all-objects
-        (lambda (obj)
-          (when (and
-                 (typep obj 'store-object)
-                 (not
-                  ;; Under certain circumstances (it looks like when I
-                  ;; update a class and there are deleted objects in
-                  ;; memory? Not sure), object-destroyed-p can fail on
-                  ;; actually destroyed objects. If that happens wrap
-                  ;; this next part in an ignore-errors. I don't want
-                  ;; to keep it by default since that's risky when
-                  ;; going about rewriting existing indices.
-                  (bknr.datastore::object-destroyed-p obj))
-                 (ignore-errors
-                  (store-object-id obj)))
-            (push obj rest)))
-        t)
-       (let ((sorted (make-sorted rest)))
-         (restart-case
-             (progn
-               (unless (equal sorted from-bknr)
-                 (error "The objects in memory and bknr index is not in sync, ~a vs ~a objects"
-                        (length sorted)
-                        (length from-bknr)))
-               sorted)
-           (return-the-list-from-memory ()
-             sorted)
-           (return-the-list-from-bknr ()
-             from-bknr)))))))
+    (let ((from-bknr (make-sorted (bknr.datastore:all-store-objects))))
+      (cond
+        ((null full)
+         from-bknr)
+        (t
+         #-lispworks
+         from-bknr
+         #+lispworks
+         (let ((rest nil))
+           (hcl:sweep-all-objects
+            (lambda (obj)
+              (when (and
+                     (typep obj 'store-object)
+                     (not
+                      ;; Under certain circumstances (it looks like when I
+                      ;; update a class and there are deleted objects in
+                      ;; memory? Not sure), object-destroyed-p can fail on
+                      ;; actually destroyed objects. If that happens wrap
+                      ;; this next part in an ignore-errors. I don't want
+                      ;; to keep it by default since that's risky when
+                      ;; going about rewriting existing indices.
+                      (bknr.datastore::object-destroyed-p obj))
+                     (ignore-errors
+                      (store-object-id obj)))
+                (push obj rest)))
+            t)
+           (let ((sorted (make-sorted rest)))
+             (restart-case
+                 (progn
+                   (unless (equal sorted from-bknr)
+                     (error "The objects in memory and bknr index is not in sync, ~a vs ~a objects"
+                            (length sorted)
+                            (length from-bknr)))
+                   sorted)
+               (return-the-list-from-memory ()
+                 sorted)
+               (return-the-list-from-bknr ()
+                 from-bknr))))        )))))
 
 (defun fast-remove-duplicates (list)
   (let ((hash-table (make-hash-table)))
@@ -523,8 +527,8 @@ to the directory that was just snapshotted.")
           do (setf (gethash x hash-table) t))
     (a:hash-table-keys hash-table)))
 
-(defun validate-indices ()
-  (let* ((objects (all-store-objects-in-memory))
+(defun validate-indices (&key (full nil))
+  (let* ((objects (all-store-objects-in-memory :full full))
          (classes (fast-remove-duplicates
                    (loop for class in (fast-remove-duplicates (mapcar 'class-of objects))
                          append (closer-mop:class-precedence-list class)))))
