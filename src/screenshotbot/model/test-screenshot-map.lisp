@@ -443,3 +443,11 @@ delete this test in the future, it might be okay."
                      (contains
                       (has-screenshot screenshot-1)
                       (has-screenshot screenshot-2)))))))
+
+
+(test make-empty-map
+  "Unlikely to see this in prod, but let's make sure we're handling this"
+  (with-fixture state ()
+    (let ((map (make-screenshot-map channel nil))
+          (map-2 (make-screenshot-map channel nil)))
+      (is (eql map map-2)))))
