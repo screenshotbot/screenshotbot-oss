@@ -37,6 +37,7 @@
         (setf (slot-value report 'promotion-report-p) t)))))
 
 (def-store-migration ("Add company slot to reports" :version 4)
+  (ensure-slot-boundp 'recorder-run 'screenshotbot/model/recorder-run::company)
   (dolist (report (class-instances 'report))
     (log:info "Fixing report: ~a" report)
     (with-transaction ()
