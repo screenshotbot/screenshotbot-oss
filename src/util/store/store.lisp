@@ -642,7 +642,8 @@ set-differences on O and the returned value from this."
      (snapshot))
     (let* ((new-directories (fad:list-directory *object-store*))
            (directories (set-difference new-directories directories :test #'equal)))
-      (assert (= 1 (length directories)))
+      (unless (= 1 (length directories))
+        (error "Expected to see one new directory, but saw: ~S" directories))
       (with-open-file (file (path:catfile (car directories) "comment.txt")
                             :direction :output
                             ;; If we recovered from an existing
