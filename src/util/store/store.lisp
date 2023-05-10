@@ -540,7 +540,9 @@ to the directory that was just snapshotted.")
           (loop for direct-slot in (closer-mop:class-direct-slots class)
                 for slot-name = (closer-mop:slot-definition-name direct-slot)
                 for slot = (find-effective-slot class slot-name)
-                if (bknr.indices::index-direct-slot-definition-index-type direct-slot)
+                if (or
+                    (bknr.indices::index-direct-slot-definition-index direct-slot)
+                    (bknr.indices::index-direct-slot-definition-index-type direct-slot))
                 if (not (eql 'bknr.datastore::id slot-name))
                   do
                      (let ((indices (bknr.indices::index-effective-slot-definition-indices slot)))
