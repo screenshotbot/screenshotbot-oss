@@ -60,17 +60,19 @@
 (defun needs-work-p ()
   (< *snapshot-store-version* *store-version*))
 
-(defun run-migrations ()
+(defun run-migrations (&key (snapshot t))
   (when (needs-work-p)
-    (util/store:safe-snapshot
-     (format nil "Before running migrations (current version: ~a)" *snapshot-store-version*))
+    (when snapshot
+      (util/store:safe-snapshot
+       (format nil "Before running migrations (current version: ~a)" *snapshot-store-version*)))
     (loop while (needs-work-p)
           do
              (progn
                (log:info "Current store version is ~a" *snapshot-store-version*)
                (bump-version)))
-    (util/store:safe-snapshot
-     (format nil "After running migrations (current version: ~a)" *snapshot-store-version*))))
+    (when snapshot
+     (util/store:safe-snapshot
+      (format nil "After running migrations (current version: ~a)" *snapshot-store-version*)))))
 
 (def-store-migration ("Dummy migration for version test" :version 2)
   (log:info "Nothing to do in this migration"))

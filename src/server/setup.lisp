@@ -303,7 +303,7 @@
                    (log:info "Done verifying store")
                    (log:info "Running health checks...")
                    (run-health-checks)
-                   (run-migrations))))))
+                   (run-migrations :snapshot nil))))))
 
   (uiop:quit 0))
 
