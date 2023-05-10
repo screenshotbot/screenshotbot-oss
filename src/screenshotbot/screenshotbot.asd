@@ -569,4 +569,5 @@
 (defsystem :screenshotbot/all
   :serial t
   :depends-on (:screenshotbot
-               :screenshotbot/replay))
+               :screenshotbot/replay
+               :screenshotbot.migrations))

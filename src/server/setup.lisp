@@ -18,6 +18,8 @@
                 #:with-control-socket)
   (:import-from #:util/threading
                 #:funcall-with-sentry-logs)
+  (:import-from #:util/store/store-migrations
+                #:run-migrations)
   (:export #:main
            #:register-acceptor
            #:slynk-loop
@@ -300,7 +302,8 @@
        :callback (lambda ()
                    (log:info "Done verifying store")
                    (log:info "Running health checks...")
-                   (run-health-checks))))))
+                   (run-health-checks)))
+      (run-migrations))))
 
   (uiop:quit 0))
 
@@ -326,6 +329,8 @@
   (when enable-store
     (util/store:prepare-store))
 
+  #+screenshotbot-oss
+  (run-migrations)
 
   (log:info "Store is prepared, moving on...")
   (with-cron ()
