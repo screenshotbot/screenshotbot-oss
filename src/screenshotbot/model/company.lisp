@@ -266,14 +266,6 @@
       (pushnew channel (company-channels company)))
      channel)))
 
-(defmethod find-run-by-id ((company company) id)
-  (when (stringp id)
-    (setf id (parse-integer id)))
-  (loop for run in (company-runs company)
-        if (eql id (model-id run))
-          return run))
-
-
 (defmethod can-view ((company company) user)
   (member company (user-companies user)))
 
