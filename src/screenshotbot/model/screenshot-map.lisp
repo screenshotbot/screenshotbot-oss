@@ -9,6 +9,7 @@
 (defpackage :screenshotbot/model/screenshot-map
   (:use #:cl)
   (:import-from #:bknr.datastore
+                #:class-instances
                 #:store-object)
   (:import-from #:bknr.datastore
                 #:persistent-class)
@@ -23,6 +24,8 @@
                 #:screenshot-key)
   (:import-from #:util/lists
                 #:head)
+  (:import-from #:screenshotbot/model/company
+                #:company)
   (:export
    #:screenshot-map
    #:screenshot-map-as-list
@@ -54,6 +57,7 @@ will not consider it as a possibility.")
 (with-class-validation
   (defclass screenshot-map (store-object)
     ((%channel :initarg :channel
+               :reader screenshot-map-channel
                :index-type hash-index
                :index-reader screenshot-maps-for-channel)
      (screenshots :initarg :screenshots
@@ -222,3 +226,27 @@ will not consider it as a possibility.")
        (make-instance 'screenshot-map
                       :channel channel
                       :screenshots screenshots)))))
+
+(defun build-usage-map ()
+  (labels ((build (rest result)
+             (cond
+               ((not rest)
+                result)
+               (t
+                (let* ((this (car rest))
+                       (count (+ (length (screenshots this))
+                                 (length (deleted this))))
+                       (company (ignore-errors (company (screenshot-map-channel this)))))
+                  (cond
+                    (company
+                     (build (cdr rest)
+                            (fset:with
+                             result
+                             company
+                             (+ count (fset:lookup result company)))))
+                    (t
+                     (build (cdr rest) result))))))))
+    (build (class-instances 'screenshot-map)
+           (fset:empty-map 0))))
+
+;; (build-usage-map)

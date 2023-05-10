@@ -130,7 +130,7 @@
     (:metaclass persistent-class)))
 
 (defmethod print-object ((self company) out)
-  (format out "#<COMPANY ~a>" (company-name self)))
+  (format out "#<COMPANY ~a>" (ignore-errors (company-name self))))
 
 (let ((lock (bt:make-lock "jira-config")))
   (defmethod jira-config ((company company))
