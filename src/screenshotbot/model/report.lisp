@@ -57,6 +57,7 @@
       :index-type hash-index
       :index-reader reports-for-run)
      (%company
+      :initform nil
       :accessor %report-company)
      (title
       :type string
