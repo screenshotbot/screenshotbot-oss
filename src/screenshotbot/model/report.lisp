@@ -56,6 +56,8 @@
       :accessor report-run
       :index-type hash-index
       :index-reader reports-for-run)
+     (%company
+      :accessor %report-company)
      (title
       :type string
       :initarg :title
@@ -86,6 +88,11 @@
      (created-at
       :accessor %created-at))
     (:metaclass has-created-at)))
+
+(defmethod initialize-instance :after ((report report) &key run)
+  (when run
+    (setf (%report-company report)
+          (recorder-run-company run))))
 
 (defmethod can-view ((report report) user)
   (and

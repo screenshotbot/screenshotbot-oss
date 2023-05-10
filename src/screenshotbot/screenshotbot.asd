@@ -370,6 +370,7 @@
                              (:file "test-screenshot-key")
                              (:file "test-screenshot-map")
                              (:file "test-image-comparer")
+                             (:file "test-report")
                              (:file "test-user")
                              (:file "test-channel")
                              (:file "test-api-key")
