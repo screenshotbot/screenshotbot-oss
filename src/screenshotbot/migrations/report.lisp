@@ -16,11 +16,16 @@
   (:import-from #:screenshotbot/user-api
                 #:company-reports)
   (:import-from #:screenshotbot/model/report
+                #:%report-company
                 #:promotion-report-p)
   (:import-from #:screenshotbot/model/core
                 #:ensure-slot-boundp)
   (:import-from #:screenshotbot/report-api
-                #:report))
+                #:report-run
+                #:report)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-company
+                #:recorder-run))
 (in-package :screenshotbot/migrations/report)
 
 (def-store-migration ("Update promotion-report-p" :version 3)
@@ -30,3 +35,13 @@
     (dolist (report (company-reports company))
       (with-transaction ()
         (setf (slot-value report 'promotion-report-p) t)))))
+
+(def-store-migration ("Add company slot to reports" :version 4)
+  (dolist (report (class-instances 'report))
+    (log:info "Fixing report: ~a" report)
+    (with-transaction ()
+     (setf
+      ;; TODO: replace this with report-company
+      (%report-company report)
+      (recorder-run-company
+       (report-run report))))))
