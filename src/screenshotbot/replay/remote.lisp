@@ -152,6 +152,9 @@
 
 ;; (send-remote-run (make-testing-run))
 
+(defindex +company-index+ 'fset-set-compat-index
+  :slot-name 'company)
+
 (with-class-validation
  (defclass remote-run (object-with-oid)
    ((remote-url :initarg :remote-url
@@ -159,7 +162,7 @@
                 :initform nil)
     (company :initarg :company
              :initform nil
-             :index-type fset-set-compat-index
+             :index +company-index+
              :index-reader remote-runs-for-company
              :reader remote-run-company)
     (log-file :initarg :log-file
