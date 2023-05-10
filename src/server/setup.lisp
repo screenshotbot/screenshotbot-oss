@@ -302,8 +302,8 @@
        :callback (lambda ()
                    (log:info "Done verifying store")
                    (log:info "Running health checks...")
-                   (run-health-checks)))
-      (run-migrations))))
+                   (run-health-checks)
+                   (run-migrations))))))
 
   (uiop:quit 0))
 
