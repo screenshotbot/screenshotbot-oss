@@ -25,10 +25,10 @@
                 #:defsubsystem))
 (in-package :util/store-version)
 
-(defvar *store-version* 1
+(defparameter *store-version* 2
   "The current version of the store being used.")
 
-(defvar *snapshot-store-version* 1
+(defvar *snapshot-store-version* *store-version*
   "The version of the snapshot that was read in. This is the one we
 migrate.")
 

@@ -25,7 +25,8 @@
                (:file "delayed-accessors")
                (:file "checksums")
                (:file "export")
-               (:file "fset-index")))
+               (:file "fset-index")
+               (:file "store-migrations")))
 
 (defsystem :util.store/tests
   :serial t
