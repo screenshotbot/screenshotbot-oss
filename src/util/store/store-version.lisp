@@ -28,23 +28,25 @@
 (defvar *store-version* 1
   "The current version of the store being used.")
 
+(defvar *snapshot-store-version* 1
+  "The version of the snapshot that was read in. This is the one we
+migrate.")
+
 (defvar *min-store-version* 1
   "The minimum supported version of the store, for loading purposes.")
 
 (defclass version-subsystem ()
-  ((store-version :accessor store-version
-                  :initarg :store-version
-                  :documentation "The version of the current store."))
+  ()
   (:documentation "A subsystem that also saves the store-version, and verifies the store
 version on loads"))
 
 (defmethod initialize-subsystem :after ((self version-subsystem) store store-existed-p)
   (cond
     (store-existed-p
-     (setf (store-version self)
+     (setf *snapshot-store-version*
            (read-current-version (ensure-store-current-directory store))))
     (t
-     (setf (store-version self) *store-version*)
+     (setf *snapshot-store-version* *store-version*)
      (write-current-version (ensure-store-current-directory store)))))
 
 
@@ -64,6 +66,6 @@ version on loads"))
   (with-open-file (store-version (path:catfile current-dir "store-version")
                                  :direction :output
                                  :if-exists :supersede)
-    (format store-version "~a" *store-version*)))
+    (format store-version "~a" *snapshot-store-version*)))
 
 (defsubsystem version-subsystem :priority 5)

@@ -31,7 +31,9 @@
   (:import-from #:bknr.datastore
                 #:*store*)
   (:import-from #:bknr.datastore
-                #:store-subsystems))
+                #:store-subsystems)
+  (:import-from #:util/store/store-version
+                #:*snapshot-store-version*))
 (in-package :util/store/test-store-version)
 
 
@@ -77,7 +79,7 @@
       (is (eql *store-version*
                (read-version)))
       (is (eql *store-version*
-               (store-version (get-subsystem)))))))
+               *snapshot-store-version*)))))
 
 (test open-existing-store ()
   (with-fixture state ()
@@ -85,7 +87,7 @@
     (with-store (dir)
       (open-store)
       (is (eql 2 (read-version)))
-      (is (eql 2 (store-version (get-subsystem)))))))
+      (is (eql 2 *snapshot-store-version*)))))
 
 (test open-store-with-version-0
   (with-fixture state ()
@@ -96,7 +98,7 @@
     ;; version file will not exist. Treat that as version 0.
     (with-store (dir)
       (open-store)
-      (is (eql 0 (store-version (get-subsystem))))
+      (is (eql 0 *snapshot-store-version*))
       (is (not (path:-e (version-file)))))))
 
 (test snapshot-updates-store-version
@@ -104,6 +106,6 @@
     (with-store (dir)
       (open-store)
       (is (eql *store-version* (read-version)))
-      (let ((*store-version* 199990))
+      (let ((*snapshot-store-version* 199990))
         (snapshot))
       (is (eql 199990 (read-version))))))
