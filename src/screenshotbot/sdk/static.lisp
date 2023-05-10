@@ -169,11 +169,10 @@ upload blobs that haven't been uploaded before."
                                  :merge-base (ignore-errors (git:merge-base repo branch-hash commit)))))
      (uiop:with-temporary-file (:pathname p)
        (cl-store:store request p)
-       (json:decode-json-from-string
-        (request
-         "/api/replay/schedule"
-         :method :post
-         :content p))))))
+       (request
+        "/api/replay/schedule"
+        :method :post
+        :content p)))))
 
 (defun find-all-index.htmls (dir)
   (declare (optimize (debug 3) (speed 0)))
