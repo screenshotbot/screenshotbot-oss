@@ -40,10 +40,9 @@
   (ensure-slot-boundp 'recorder-run 'screenshotbot/model/recorder-run::company)
   (dolist (report (class-instances 'report))
     (log:info "Fixing report: ~a" report)
-    (unless (%report-company report)
-      (with-transaction ()
-        (setf
-         ;; TODO: replace this with report-company
-         (%report-company report)
-         (recorder-run-company
-          (report-run report)))))))
+    (with-transaction ()
+      (setf
+       ;; TODO: replace this with report-company
+       (%report-company report)
+       (recorder-run-company
+        (report-run report))))))
