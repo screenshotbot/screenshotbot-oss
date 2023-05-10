@@ -41,6 +41,10 @@
   (:import-from #:screenshotbot/model/core
                 #:ensure-slot-boundp
                 #:non-root-object)
+  (:import-from #:util/store/store
+                #:defindex)
+  (:import-from #:util/store/fset-index
+                #:fset-set-index)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -98,6 +102,10 @@
 
 (defvar *lock* (bt:make-lock))
 
+(defindex +run-company-index+
+  'fset-set-index
+  :slot-name 'company)
+
 (with-class-validation
  (defclass recorder-run (object-with-oid)
    ((channel
@@ -107,7 +115,9 @@
      :accessor recorder-run-channel)
     (company
      :initarg :company
-     :reader recorder-run-company)
+     :initform nil
+     :reader recorder-run-company
+     :index +run-company-index+)
     (commit-hash
      :initarg :commit-hash
      :initform nil
