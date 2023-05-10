@@ -111,10 +111,13 @@
   (:documentation "Like fset-set-index, but behaves similarly to hash-index. For example,
 the index reader returns a list in reverse sorted order instead of a set."))
 
+(defmethod index-object-key ((self abstract-fset-index) obj)
+  (slot-value obj (%slot-name self)))
+
 (defmethod index-add :around ((self abstract-fset-index) obj)
   (when (and
          (slot-boundp obj (%slot-name self))
-         (slot-value obj (%slot-name self)))
+         (index-object-key self obj))
     (call-next-method)))
 
 (defmethod merge-map-values ((self fset-set-index)
@@ -130,7 +133,7 @@ the index reader returns a list in reverse sorted order instead of a set."))
 (defmethod index-add ((self fset-unique-index)
                       obj)
   (update-map self (map)
-    (let ((key (slot-value obj (%slot-name self))))
+    (let ((key (index-object-key self obj)))
       (cond
         ((fset:lookup map key)
          (error 'index-existing-error
@@ -144,7 +147,7 @@ the index reader returns a list in reverse sorted order instead of a set."))
 
 (defmethod index-add ((self fset-set-index)
                       obj)
-  (let ((key (slot-value obj (%slot-name self))))
+  (let ((key (index-object-key self obj)))
     (update-map self (map)
       (fset:with map
                  key
@@ -172,7 +175,7 @@ the index reader returns a list in reverse sorted order instead of a set."))
 (defmethod index-remove ((self fset-unique-index)
                          obj)
   (update-map self (map)
-    (let ((key (slot-value obj (%slot-name self))))
+    (let ((key (index-object-key self obj)))
       (cond
         ((eql obj (fset:lookup map key))
          (fset:less map key))
@@ -180,7 +183,7 @@ the index reader returns a list in reverse sorted order instead of a set."))
          map)))))
 
 (defmethod index-remove ((self fset-set-index) obj)
-  (let ((key (slot-value obj (%slot-name self))))
+  (let ((key (index-object-key self obj)))
     (update-map self (map)
       (fset:with map
                  key
