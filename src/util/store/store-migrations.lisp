@@ -42,9 +42,13 @@
   (setf *snapshot-store-version* version))
 
 (defun run-migration-for-version (version)
-  (when-let ((migration (assoc-value *migrations* version)))
-    (log:info "Running migration: ~a" (name migration))
-    (funcall (body migration))))
+  (let ((migration (assoc-value *migrations* version)))
+    (cond
+      (migration
+       (log:info "Running migration: ~a" (name migration))
+       (funcall (body migration)))
+      (t
+       (log:info "No migrations to run for version: ~a" version)))))
 
 (defun bump-version ()
   (let ((version *snapshot-store-version*))
