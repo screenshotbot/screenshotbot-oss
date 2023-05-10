@@ -16,10 +16,15 @@
   (:import-from #:screenshotbot/user-api
                 #:company-reports)
   (:import-from #:screenshotbot/model/report
-                #:promotion-report-p))
+                #:promotion-report-p)
+  (:import-from #:screenshotbot/model/core
+                #:ensure-slot-boundp)
+  (:import-from #:screenshotbot/report-api
+                #:report))
 (in-package :screenshotbot/migrations/report)
 
 (def-store-migration ("Update promotion-report-p" :version 3)
+  (ensure-slot-boundp 'report 'promotion-report-p)
   (dolist (company (class-instances 'company))
     (log:info "Updating reports for ~s" company)
     (dolist (report (company-reports company))
