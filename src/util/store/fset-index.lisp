@@ -36,7 +36,8 @@
 
 (defclass abstract-fset-index ()
   ((slot-name :initarg :slots
-              :reader %slots)
+              :initform nil
+              :accessor %slots)
    (map :initform (fset:empty-map)
         :accessor %map)
    (index-id :initform #+lispworks (atomics:atomic-incf *index-id*) #-lispworks 0
@@ -61,8 +62,12 @@
   (car (%slots self)))
 
 (defmethod initialize-instance :after ((self abstract-fset-index)
-                                       &rest args)
-  (log:info "Created new index: ~a" self))
+                                       &rest args
+                                       &key slot-name slots)
+  (assert (not (and slot-name slots)))
+  (log:info "Created new index: ~a" self)
+  (if slot-name
+      (setf (%slots self) (list slot-name))))
 
 (defmethod index-reinitialize :before ((new-index abstract-fset-index) old-index)
   (log:warn "Reinitializing index ~a from ~a" new-index
