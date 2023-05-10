@@ -26,6 +26,12 @@
                 #:head)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:screenshotbot/events
+                #:push-event)
+  (:import-from #:screenshotbot/user-api
+                #:company-name)
+  (:import-from #:util/cron
+                #:def-cron)
   (:export
    #:screenshot-map
    #:screenshot-map-as-list
@@ -250,3 +256,13 @@ will not consider it as a possibility.")
            (fset:empty-map 0))))
 
 ;; (build-usage-map)
+
+(defun push-usage-map ()
+  (fset:do-map (key val (build-usage-map))
+    (when (> val 1000)
+      (push-event :screenshot-map.usage
+                  :company (company-name key)
+                  :cost val))))
+
+(def-cron push-usage-map (:step-hour 1)
+  (push-usage-map))
