@@ -114,6 +114,8 @@
     <p class= "mb-3" >Before we can begin, let's create an organization for your
       projects. Organizations also let you collaborate with other users.</p>
 
+    <p class= "text-muted">You will be able to change this name later.</p>
+
     <form action=post method= "post" >
       <div class= "form-group pt-3">
 
