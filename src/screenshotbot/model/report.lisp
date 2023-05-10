@@ -79,6 +79,10 @@
       :initform 0
       :initarg :num-changes
       :accessor report-num-changes)
+     (promotion-report-p
+      :initform nil
+      :initarg :promotion-report-p
+      :reader promotion-report-p)
      (created-at
       :accessor %created-at))
     (:metaclass has-created-at)))

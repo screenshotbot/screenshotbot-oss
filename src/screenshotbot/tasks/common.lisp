@@ -82,6 +82,7 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
                (log:info "Screenshotbot is ready to send out a task, fingers crossed")
                (let* ((report (let ((report (make-instance 'report
                                                            :run run
+                                                           :promotion-report-p t
                                                            :channel channel
                                                            :num-changes (length (diff-report-changes diff-report))
                                                            :previous-run previous-run
