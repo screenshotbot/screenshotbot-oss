@@ -7,6 +7,7 @@
                 #:*cache*
                 #:context)
   (:import-from #:screenshotbot/sdk/sdk
+                #:request
                 #:ensure-api-success)
   (:import-from #:util/digests
                 #:sha256-file)
@@ -23,6 +24,8 @@
                 #:file-lock)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:util/request
+                #:http-request)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
@@ -166,16 +169,11 @@ upload blobs that haven't been uploaded before."
                                  :merge-base (ignore-errors (git:merge-base repo branch-hash commit)))))
      (uiop:with-temporary-file (:pathname p)
        (cl-store:store request p)
-       (let ((uri (quri:make-uri
-                   :query `(("api-key" . ,flags:*api-key*)
-                            ("api-secret-key" . ,flags:*api-secret*))
-                   :defaults
-                   (quri:uri (format nil "~a/api/replay/schedule" flags:*hostname*)))))
-         (ensure-api-success
-          (json:decode-json-from-string
-           (dex:post uri
-                     :content p
-                     :force-string t))))))))
+       (json:decode-json-from-string
+        (request
+         "/api/replay/schedule"
+         :method :post
+         :content p))))))
 
 (defun find-all-index.htmls (dir)
   (declare (optimize (debug 3) (speed 0)))
