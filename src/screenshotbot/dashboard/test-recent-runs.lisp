@@ -33,8 +33,7 @@
   (:import-from #:screenshotbot/login/common
                 #:*current-company-override*)
   (:import-from #:screenshotbot/user-api
-                #:pull-request-url
-                #:company-runs)
+                #:pull-request-url)
   (:import-from #:util/testing
                 #:screenshot-static-page
                 #:with-fake-request)
@@ -114,16 +113,3 @@
                                  :check-access-p nil
                                  :script-name "/runs"
                                  :company company)))))))))
-
-(defun profile-recent-runs (company email)
-  (let* ((company (company-with-name company))
-         (user (user-with-email email))
-         (*current-company-override* company))
-    (with-fake-request ()
-      (auth:with-sessions ()
-       (loop for i from 0 to 10000 do
-         (write-html (render-recent-runs (util/lists:head (company-runs company) 50)
-                                         :user *user*
-                                         :check-access-p nil
-                                         :script-name "/runs"
-                                         :company company)))))))
