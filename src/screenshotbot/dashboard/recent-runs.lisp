@@ -8,7 +8,6 @@
   (:use #:cl
         #:alexandria
         #:screenshotbot/user-api
-        #:screenshotbot/dashboard/numbers
         #:screenshotbot/template
         #:screenshotbot/taskie
         #:markup)
@@ -104,7 +103,6 @@
     (taskie-timestamp :prefix "" :timestamp (created-at run))))
 
 (defun render-recent-runs (runs &key (user (current-user))
-                                  (numbersp t)
                                   (check-access-p t)
                                   (script-name (hunchentoot:script-name*))
                                   (company (current-company)))
@@ -117,9 +115,6 @@
      :title "Screenshotbot: Runs"
      :company company
      :script-name "/runs"
-     #+nil
-     (when numbersp
-       (numbers-section :company company))
      (taskie-page-title :title "Recent Runs"
                         (ui/a :id "delete-runs" :btn :danger
                               :class "btn-sm"

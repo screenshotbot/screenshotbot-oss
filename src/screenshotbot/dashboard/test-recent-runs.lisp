@@ -113,7 +113,6 @@
                                  :user *user*
                                  :check-access-p nil
                                  :script-name "/runs"
-                                 :numbersp nil
                                  :company company)))))))))
 
 (defun profile-recent-runs (company email)
@@ -127,5 +126,4 @@
                                          :user *user*
                                          :check-access-p nil
                                          :script-name "/runs"
-                                         :numbersp nil
                                          :company company)))))))

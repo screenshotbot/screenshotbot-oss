@@ -171,7 +171,6 @@
     :components ((:file "explain")
                  (:file "home")
                  (:file "ensure-company")
-                 (:file "numbers")
                  (:file "review-link")
                  (:file "run-page")
                  (:file "image")
