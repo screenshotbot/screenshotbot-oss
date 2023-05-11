@@ -23,6 +23,8 @@
                 #:store-object
                 #:with-transaction)
   (:import-from #:bknr.indices
+                #:index-get
+                #:index-add
                 #:hash-index)
   (:import-from #:util/store
                 #:with-class-validation)
@@ -32,6 +34,11 @@
                 #:class-instances)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:util/store/fset-index
+                #:index-object-key
+                #:fset-set-index)
+  (:import-from #:util/store/store
+                #:defindex)
   (:export
    #:report
    #:report-run
@@ -46,8 +53,17 @@
    #:reports-for-run
    #:report-company
    #:acceptable-report
-   #:acceptable-reviewer))
+   #:acceptable-reviewer
+   #:company-promotion-reports))
 (in-package :screenshotbot/model/report)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defclass report-company-index (fset-set-index)
+    ()))
+
+(defindex +report-company-index+
+  'report-company-index
+  :slots '(%company promotion-report-p))
 
 (with-class-validation
   (defclass report (object-with-oid)
@@ -88,7 +104,17 @@
       :reader promotion-report-p)
      (created-at
       :accessor %created-at))
-    (:metaclass has-created-at)))
+    (:metaclass has-created-at)
+    (:class-indices (company-index
+                     :index +report-company-index+
+                     :slots (%company promotion-report-p)))))
+
+(defmethod index-add ((index report-company-index) obj)
+  (when (promotion-report-p obj)
+    (call-next-method)))
+
+(defmethod index-object-key ((index report-company-index) report)
+  (%report-company report))
 
 (defmethod initialize-instance :after ((report report) &key run)
   (when run
@@ -99,6 +125,10 @@
   (and
    (can-view (report-run report) user)
    (can-view (report-previous-run report) user)))
+
+(defun company-promotion-reports (company)
+  (index-get +report-company-index+ company))
+
 
 (defmethod report-company ((report report))
   (recorder-run-company (report-run report)))

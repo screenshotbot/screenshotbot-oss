@@ -226,7 +226,7 @@ associated report is rendered.")
          (remove-from-plist args :screenshots)))
 
 (defmethod print-object ((o recorder-run) stream)
-  (format stream "#<RECORDER-RUN ~a>" (oid o)))
+  (format stream "#<RECORDER-RUN ~a>" (ignore-errors (oid o))))
 
 (defmethod pull-request-id (run)
   (when-let ((url (pull-request-url run)))

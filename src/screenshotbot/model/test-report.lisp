@@ -18,6 +18,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/model/report
+                #:company-promotion-reports
                 #:%report-company))
 (in-package :screenshotbot/model/test-report)
 
@@ -47,3 +48,13 @@
     (let ((report (make-instance 'report :run run)))
       (is (eql (%report-company report)
                company)))))
+
+(test company-promoted-index
+  (with-fixture state ()
+    (let ((report-1 (make-instance 'report :run run
+                                           :promotion-report-p t))
+          (report-2 (make-instance 'report :run run)))
+      (is
+       (fset:equal?
+        (fset:with (fset:empty-set) report-1)
+        (company-promotion-reports company))))))

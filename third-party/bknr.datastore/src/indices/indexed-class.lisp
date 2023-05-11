@@ -495,8 +495,8 @@ also index subclasses of the class to which the slot belongs, default is T")
 
 (defmethod class-slot-index ((class indexed-class) slot-name)
   (let ((holder (find-if #'(lambda (holder) (and (eql (index-holder-class holder) class)
-						 (eql (index-holder-name holder) slot-name)))
-			 (indexed-class-indices class))))
+						                         (eql (index-holder-name holder) slot-name)))
+			             (indexed-class-indices class))))
     (when holder
       (index-holder-index holder))))
 
