@@ -39,6 +39,8 @@
                 #:call-with-company-login)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:runs-for-company)
   (:export
    #:*current-company-override*
    #:with-oauth-state-and-redirect
@@ -182,7 +184,7 @@
    (sort
     (let ((cutoff (timestamp- (local-time:now) 60 :day)))
       (loop for company in companies
-            for run = (car (company-runs company))
+            for run = (fset:greatest (runs-for-company company))
             for created-at = (when run (created-at run))
             if (and created-at (timestamp> created-at cutoff))
               collect

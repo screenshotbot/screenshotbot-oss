@@ -24,7 +24,12 @@
                 #:user-personal-company
                 #:make-user)
   (:import-from #:screenshotbot/login/common
+                #:most-recent-company
                 #:guess-best-company)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run)
+  (:import-from #:bknr.datastore
+                #:with-transaction)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/login/test-common)
 
@@ -56,3 +61,13 @@
            (user (make-user))
            (company (user-personal-company user)))
       (is (eql company (guess-best-company company user)) ))) ())
+
+
+(test most-recent-company
+  (with-fixture state ()
+    (let ((company-1 (make-instance 'company)))
+      (is (eql nil (most-recent-company (list company-1))))
+      (let ((run (make-instance 'recorder-run
+                     :screenshot-map nil
+                     :company company-1)))
+        (is (eql company-1 (most-recent-company (list company-1))))))))
