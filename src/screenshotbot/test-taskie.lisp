@@ -18,6 +18,10 @@
 (defclass my-object ()
   ((val :initarg :val)))
 
+(defmethod fset:compare ((a my-object)
+                         (b my-object))
+  (fset:compare-slots a  b 'val))
+
 (defmethod bknr.datastore:store-object-id ((obj my-object))
   (slot-value obj 'val))
 
@@ -38,9 +42,21 @@
     (with-pagination (page data :next-link next-link :prev-link prev-link)
       (is (eql 50 (length page))))))
 
+(test with-pagination-happy-path-with-set
+  (let ((data
+          (fset:convert 'fset:set
+                        (loop for i from 1 to 110 collect (make-instance 'my-object :val i)))))
+    (with-pagination (page data :next-link next-link :prev-link prev-link)
+      (is (eql 50 (length page))))))
+
 
 (test with-pagination-empty-list
   (let ((data nil))
+    (with-pagination (page data :next-link next-link :prev-link prev-link)
+      (is (equal nil page)))))
+
+(test with-pagination-empty-set
+  (let ((data (fset:empty-set)))
     (with-pagination (page data :next-link next-link :prev-link prev-link)
       (is (equal nil page)))))
 

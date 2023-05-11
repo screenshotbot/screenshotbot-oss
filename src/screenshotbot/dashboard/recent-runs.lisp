@@ -31,6 +31,8 @@
                 #:?.)
   (:import-from #:screenshotbot/dashboard/review-link
                 #:review-link)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:runs-for-company)
   (:export #:recent-runs))
 (in-package :screenshotbot/dashboard/recent-runs)
 
@@ -39,7 +41,7 @@
 (hex:declare-handler 'run-page)
 
 (defun find-recent-runs ()
-  (company-runs (current-company)))
+  (runs-for-company (current-company)))
 
 (deftag conditional-commit (&key repo hash)
 

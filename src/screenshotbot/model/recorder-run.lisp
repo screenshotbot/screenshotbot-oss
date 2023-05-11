@@ -87,7 +87,8 @@
    #:not-fast-forward-promotion-warning
    #:run-screenshot-map
    #:make-recorder-run
-   #:remove-run-from-channel)
+   #:remove-run-from-channel
+   #:runs-for-company)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -117,7 +118,8 @@
      :initarg :company
      :initform nil
      :reader recorder-run-company
-     :index +run-company-index+)
+     :index +run-company-index+
+     :index-reader runs-for-company)
     (commit-hash
      :initarg :commit-hash
      :initform nil

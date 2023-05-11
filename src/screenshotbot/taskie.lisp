@@ -18,6 +18,8 @@
   (:import-from #:bknr.datastore
                 #:store-object-id)
   (:import-from #:nibble #:nibble)
+  (:import-from #:util/lists
+                #:head)
   (:export
    #:taskie-list
    #:taskie-row
@@ -29,11 +31,6 @@
 (in-package :screenshotbot/taskie)
 
 (markup:enable-reader)
-
-(defun first-n (n x)
-  (loop for i in x
-        for j from 0 below n
-        collect (nth j x)))
 
 (deftag taskie-page-title (children &key title class)
   <div class= (format nil "page-title-box main-content ~a" class) >
@@ -113,7 +110,7 @@
          <td>
            <div class="form-check">
              <input type="checkbox" class="recent-run-item form-check-input"
-             id=id-name data-model-id= (if (typep object 'object-with-oid) (ignore-errors (oid object)) (store-object-id object)) >
+             id=id-name data-model-id= (if (typep object 'object-with-oid) (ignore-errors (oid object)) (store-object-id object)) />
         </div> <!-- end checkbox -->
 
       </td>)
@@ -130,18 +127,36 @@
       <timeago timestamp=timestamp />
     </span>)
 
+(defmethod head-and-tail (elements n)
+  (head elements n))
+
+(defmethod head-and-tail ((s fset:wb-set) n)
+  "Our sorting order on datastore objects is by store object ids. This
+means, that the newest elements are the greatest elements in our set."
+  (labels ((build-page (s n so-far)
+             (cond
+               ((or (fset:empty? s) (= n 0))
+                (values (nreverse so-far) s))
+               (t
+                (let ((next (fset:greatest s)))
+                  (build-page
+                   (fset:less s next)
+                   (1- n)
+                   (list* next so-far)))))))
+    (build-page s n nil)))
+
 (defun %with-pagination (data body &key prev)
   (let ((n 50))
-    (let* ((next-page-data
-             (nthcdr n data))
-           (this (nibble ()
-                   (%with-pagination data body
-                                     :prev prev)))
-           (next (when next-page-data
-                   (nibble ()
-                     (%with-pagination next-page-data body
-                                       :prev this)))))
-      (funcall body (first-n n data) next prev))))
+    (multiple-value-bind (this-page next-page-data)
+        (head-and-tail data n)
+     (let* ((this (nibble ()
+                    (%with-pagination data body
+                                      :prev prev)))
+            (next (when next-page-data
+                    (nibble ()
+                      (%with-pagination next-page-data body
+                                        :prev this)))))
+       (funcall body this-page next prev)))))
 
 (defmacro with-pagination ((page data &key (next-link (gensym "NEXT-LINK"))
                                         (prev-link (gensym "PREV-LINK")))
