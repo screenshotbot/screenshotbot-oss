@@ -76,6 +76,9 @@
 
     (t
      (let ((guesses (list
+                     ;; Debian bookworm
+                     "/usr/lib/jvm/java-17-openjdk-amd64/lib/server/libjvm.so"
+                     ;; Debian Bullseye
                      "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so"
                      "/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so"
                      "/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home/lib/server/libjvm.dylib")))
