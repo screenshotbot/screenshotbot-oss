@@ -49,9 +49,11 @@ re-recording this test.
 
 (def-fixture state (name &key (record nil))
   (with-test-store ()
-   (let ((pathname (asdf:system-relative-pathname
-                    :screenshotbot
-                    (format nil "github/fixture/~a.rec" name))))
+    (let ((pathname (path:catfile
+                     #.(asdf:system-relative-pathname
+                        :screenshotbot
+                        "github/fixture/")
+                     (format nil "~a.rec" name))))
      (with-recording (pathname :record record)
        (track 'github-api-request)
        (&body)))))

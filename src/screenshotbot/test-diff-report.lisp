@@ -35,8 +35,10 @@
 (util/fiveam:def-suite)
 
 (defun static-asset (file)
-  (asdf:system-relative-pathname :screenshotbot
-                                 (path:catfile "static/" file)))
+  (path:catfile
+   #.(asdf:system-relative-pathname :screenshotbot
+                                    "static/")
+   file))
 
 (def-fixture state ()
   (let ((*installation* (make-instance 'installation))

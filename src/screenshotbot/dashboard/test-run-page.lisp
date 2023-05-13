@@ -51,7 +51,7 @@
                                        :company company
                                        :name "bleh"
                                        :github-repo "git@github.com:a/b.gitq"))
-               (im1 (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
+               (im1 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
                (run (make-recorder-run
                      :company company
                      :channel channel

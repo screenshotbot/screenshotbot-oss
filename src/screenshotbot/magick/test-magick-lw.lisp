@@ -59,10 +59,10 @@
 
 (def-fixture state ()
   (tmpdir:with-tmpdir (tmpdir)
-    (let ((rose (asdf:system-relative-pathname :screenshotbot.magick "../fixture/rose.png"))
-          (rose-webp (asdf:system-relative-pathname :screenshotbot.magick "../fixture/rose.webp"))
-          (wizard (asdf:system-relative-pathname :screenshotbot.magick "../fixture/wizard.png"))
-          (transparent (asdf:system-relative-pathname :screenshotbot.magick "../fixture/point.png")))
+    (let ((rose #.(asdf:system-relative-pathname :screenshotbot.magick "../fixture/rose.png"))
+          (rose-webp #.(asdf:system-relative-pathname :screenshotbot.magick "../fixture/rose.webp"))
+          (wizard #.(asdf:system-relative-pathname :screenshotbot.magick "../fixture/wizard.png"))
+          (transparent #.(asdf:system-relative-pathname :screenshotbot.magick "../fixture/point.png")))
       (&body))))
 
 (test simple-file-load-save

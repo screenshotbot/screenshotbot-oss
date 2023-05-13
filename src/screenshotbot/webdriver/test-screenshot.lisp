@@ -18,7 +18,7 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (let* ((input-file (asdf:system-relative-pathname :screenshotbot "fixture/rose.png"))
+  (let* ((input-file #.(asdf:system-relative-pathname :screenshotbot "fixture/rose.png"))
          (original-md5 (ironclad:byte-array-to-hex-string (md5-file input-file))))
     (&body)))
 

@@ -47,8 +47,12 @@
   (:default-initargs :name 'dummy))
 
 (defun read-file-seq (file)
-  (with-open-file (stream (asdf:system-relative-pathname :util file) :direction :input
-                               :element-type '(unsigned-byte 8))
+  (with-open-file (stream
+                   (path:catfile
+                    #.(asdf:system-source-directory :util)
+                    file)
+                   :direction :input
+                   :element-type '(unsigned-byte 8))
     (let ((output (make-array (file-length stream)
                               :element-type '(unsigned-byte 8))))
       (read-sequence output stream)

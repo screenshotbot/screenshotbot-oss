@@ -15,6 +15,7 @@
   :defsystem-depends-on (:trivial-features)
   :depends-on (:clsql
                :util/clsql
+               :core.installation
                :util/misc
                :util/atomics
                :atomics)

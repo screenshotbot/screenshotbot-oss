@@ -26,7 +26,7 @@
 (test github-maybe-update-pull-request ()
   (with-test-store ()
    (with-open-file (s (path:catfile
-                       (asdf:system-source-directory :screenshotbot)
+                       #.(asdf:system-source-directory :screenshotbot)
                        "github/pull-request-example-1.json"))
      (let ((json (json:decode-json s))
            (random-url (generate-api-secret)))

@@ -30,10 +30,12 @@
 (util/fiveam:def-suite)
 
 (def-fixture state (name &key (record nil))
-  (with-recording ((asdf:system-relative-pathname :util/phabricator
-                                                  (format nil
-                                                          "phabricator/fixture/~a.rec"
-                                                          name))
+  (with-recording ((path:catfile
+                    #.(asdf:system-relative-pathname :util/phabricator
+                                                     "phabricator/fixture/")
+                    (format nil
+                            "~a.rec"
+                            name))
                    :record record)
     (track 'local-time:clock-now)
     (track 'call-conduit

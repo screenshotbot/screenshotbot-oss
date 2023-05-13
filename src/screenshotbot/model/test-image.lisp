@@ -76,8 +76,10 @@ uses the base-image-comparer."
          args))
 
 (defun static-asset (file)
-  (asdf:system-relative-pathname :screenshotbot
-                                 (path:catfile "static/" file)))
+  (path:catfile
+     #.(asdf:system-relative-pathname :screenshotbot
+                                      "static/")
+     file))
 
 (defclass fake-s3-store (base-store)
   ((dir :initarg :dir
@@ -109,7 +111,7 @@ uses the base-image-comparer."
 
 (def-fixture state ()
   (with-base-fixture ()
-   (let ((file (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png")))
+   (let ((file #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png")))
      (with-test-store ()
        (let* ((img (make-image
                     :pathname (static-asset "assets/images/old-example-view-right.png")))
@@ -178,7 +180,7 @@ uses the base-image-comparer."
 
 (test image-dimensions
   (with-fixture state ()
-    (let* ((file (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
+    (let* ((file #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
            (image (make-image :pathname file)))
       (let ((dimension (image-dimensions image)))
         (is (typep dimension 'dimension))

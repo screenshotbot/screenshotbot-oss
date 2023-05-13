@@ -21,7 +21,7 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (let ((*secret-file* (asdf:system-relative-pathname :screenshotbot "fixture/secrets.xml")))
+  (let ((*secret-file* #.(asdf:system-relative-pathname :screenshotbot "fixture/secrets.xml")))
     (&body)))
 
 (test simple-reading

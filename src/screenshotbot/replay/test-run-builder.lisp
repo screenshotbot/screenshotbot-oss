@@ -39,6 +39,6 @@
       :title "foobar"
       :md5 "aaaa"
       :fetch (lambda (tmpfile)
-               (copy-file-fast (asdf:system-relative-pathname :screenshotbot "fixture/rose.png")
+               (copy-file-fast #.(asdf:system-relative-pathname :screenshotbot "fixture/rose.png")
                                tmpfile)))
      (is (eql 1 (length (screenshots all-screenshots)))))))

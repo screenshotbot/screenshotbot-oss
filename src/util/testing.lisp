@@ -68,7 +68,7 @@
   (defun maybe-prepare-screenshot-assets (dir)
     (unless prepared
       (copy-directory:copy
-       (asdf:system-relative-pathname :screenshotbot "static/assets/")
+       #.(asdf:system-relative-pathname :screenshotbot "static/assets/")
        (path:catdir dir "assets/"))
       (flet ((copy-css (target output)
                (asdf:compile-system target)

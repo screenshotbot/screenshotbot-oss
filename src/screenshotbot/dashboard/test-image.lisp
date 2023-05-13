@@ -50,9 +50,9 @@
    (with-test-store (:globally t)
      (with-screenshotbot-kernel ()
        (let ((debug-tasks-p *debug-tasks-p*))
-         (let* ((im1 (asdf:system-relative-pathname
-                      :screenshotbot
-                      "dashboard/fixture/image.png"))
+         (let* ((im1 #.(asdf:system-relative-pathname
+                        :screenshotbot
+                        "dashboard/fixture/image.png"))
                 (im (make-image :pathname im1 :for-tests t)))
            (unwind-protect
                 (progn

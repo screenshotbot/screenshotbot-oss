@@ -37,8 +37,10 @@
 
 (defun %make-image (x)
   (make-image
-   :pathname (asdf:system-relative-pathname
-              :screenshotbot (format nil "fixture/~a" x))))
+   :pathname (path:catfile
+              #.(asdf:system-relative-pathname
+                 :screenshotbot "fixture/")
+              x)))
 
 (def-easy-macro wrap-snapshot (&fn fn)
   (snap-all-images)

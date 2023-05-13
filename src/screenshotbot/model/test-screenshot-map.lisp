@@ -60,9 +60,11 @@
 (util/fiveam:def-suite)
 
 (defun image-file (name)
-  (asdf:system-relative-pathname
-   :screenshotbot
-   (format nil "fixture/~a" name)))
+  (path:catfile
+   #.(asdf:system-relative-pathname
+      :screenshotbot
+      "fixture/")
+   name))
 
 (def-fixture state ()
   (with-installation ()

@@ -14,8 +14,8 @@
 (util/fiveam:def-suite)
 
 (test metadata-integration
-  (let* ((artifact-dir (asdf:system-relative-pathname
-                        :screenshotbot.sdk "example-firebase-artifacts/artifacts/"))
+  (let* ((artifact-dir #.(asdf:system-relative-pathname
+                          :screenshotbot.sdk "example-firebase-artifacts/artifacts/"))
          (metadata (path:catfile artifact-dir "sdcard/screenshots/com.facebook.testing.screenshot.example.test/screenshots-default/metadata.json")))
     (let ((bundle
            (make-image-bundle
@@ -24,8 +24,8 @@
         (pass)))))
 
 (test shot-integration
-  (let* ((artifact-dir (asdf:system-relative-pathname
-                        :screenshotbot.sdk "example-shot-artifacts//"))
+  (let* ((artifact-dir #.(asdf:system-relative-pathname
+                          :screenshotbot.sdk "example-shot-artifacts//"))
          (metadata (find-file artifact-dir "metadata.json"))
          (metadata-compose (find-file artifact-dir "metadata_compose.json")))
     (let ((bundle

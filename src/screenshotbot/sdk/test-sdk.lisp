@@ -105,9 +105,9 @@
   (with-fixture state ()
    (with-local-acceptor (host) ('hunchentoot:easy-acceptor
                                  :name 'test-acceptor)
-     (with-open-file (s (asdf:system-relative-pathname
-                         :screenshotbot.sdk
-                         "file-for-test.bin")
+     (with-open-file (s #.(asdf:system-relative-pathname
+                           :screenshotbot.sdk
+                           "file-for-test.bin")
                         :direction :input
                         :element-type 'flexi-streams:octet)
        (is

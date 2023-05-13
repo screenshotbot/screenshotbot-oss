@@ -208,9 +208,9 @@
        (unwind-protect
             (let ((all-screenshots (make-instance 'all-screenshots
                                                   :company company)))
-              (let ((pathname (asdf:system-relative-pathname
-                               :screenshotbot
-                               "fixture/rose.png")))
+              (let ((pathname #.(asdf:system-relative-pathname
+                                 :screenshotbot
+                                 "fixture/rose.png")))
                 (run-builder:record-screenshot
                  all-screenshots
                  :title "rose"
@@ -235,9 +235,9 @@
          (unwind-protect
               (let ((all-screenshots (make-instance 'all-screenshots
                                                     :company company)))
-                (let ((pathname (asdf:system-relative-pathname
-                                 :screenshotbot
-                                 "fixture/rose.png")))
+                (let ((pathname #.(asdf:system-relative-pathname
+                                   :screenshotbot
+                                   "fixture/rose.png")))
                   (run-builder:record-screenshot
                    all-screenshots
                    :title "rose"
@@ -254,9 +254,9 @@
                       do
                          (with-local-image (pathname im)
                            (fad:copy-file
-                            (asdf:system-relative-pathname
-                             :screenshotbot
-                             "fixture/rose.webp")
+                            #.(asdf:system-relative-pathname
+                               :screenshotbot
+                               "fixture/rose.webp")
                             pathname
                             :overwrite t)))
 

@@ -58,8 +58,10 @@
   ())
 
 (defun fix (name)
-  (asdf:system-relative-pathname :screenshotbot
-                                 (path:catfile "fixture/" name)))
+  (path:catfile
+   #.(asdf:system-relative-pathname :screenshotbot
+                                    "fixture/")
+   name))
 
 (def-fixture state ()
   (let ((*installation* (make-instance 'my-installation)))

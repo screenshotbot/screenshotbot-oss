@@ -16,8 +16,8 @@
 (def-fixture mocked-network ()
   (cl-mock:with-mocks ()
     (cl-mock:answer dex:get
-      (uiop:read-file-string (asdf:system-relative-pathname :screenshotbot "replay/fixtures/sitemap-index.xml"))
-      (uiop:read-file-string (asdf:system-relative-pathname :screenshotbot "replay/fixtures/sitemap-0.xml")))
+      (uiop:read-file-string #.(asdf:system-relative-pathname :screenshotbot "replay/fixtures/sitemap-index.xml"))
+      (uiop:read-file-string #.(asdf:system-relative-pathname :screenshotbot "replay/fixtures/sitemap-0.xml")))
     (&body)))
 
 (test sitemap

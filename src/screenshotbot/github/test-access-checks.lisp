@@ -67,7 +67,7 @@
              (repo-string-identifier "git@github.com.com:tdrhq/fast-example.git"))))
 
 (test get-repo-stars ()
-  (with-recording ((asdf:system-relative-pathname :screenshotbot "github/fixture/get-repo-stars.rec"))
+  (with-recording (#.(asdf:system-relative-pathname :screenshotbot "github/fixture/get-repo-stars.rec"))
     (track 'github-api-request :skip-args '(2))
     (is (equal (list 42 2)
                (multiple-value-list

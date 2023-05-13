@@ -44,8 +44,8 @@
 (test test-parses-error-correctly
   (with-fixture state ()
    (let ((response (uiop:read-file-string
-                    (asdf:system-relative-pathname
-                     :screenshotbot "bitbucket/error-response-1.json")))
+                    #.(asdf:system-relative-pathname
+                       :screenshotbot "bitbucket/error-response-1.json")))
          (audit-log (make-instance 'audit-log)))
      (signals bitbucket-error
       (parse-error-response
