@@ -19,13 +19,14 @@
 (util/fiveam:def-suite)
 
 (def-fixture state (&key oauth)
-  (with-installation ()
-   (with-test-store ()
-     (with-test-user (:user user :logged-in-p t)
-       (unless oauth
-         (with-transaction ()
-           (setf (auth:user-password user) "foobar")))
-       (&body)))))
+  (let ((auth::*iterations* 100))
+   (with-installation ()
+     (with-test-store ()
+       (with-test-user (:user user :logged-in-p t)
+         (unless oauth
+           (with-transaction ()
+             (setf (auth:user-password user) "foobar")))
+         (&body))))))
 
 (test simple-screenshot
   (with-fixture state ()

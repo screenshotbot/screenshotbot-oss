@@ -159,6 +159,8 @@ this would be a problem."
 
 (defvar *current-session*)
 
+(defvar *iterations* 20000)
+
 (defun session= (session1 session2)
   (and
    (string= (%session-token session1)
@@ -214,7 +216,7 @@ value."
 
 (defmethod (setf user-password) (password user)
   (setf (auth:password-hash user)
-        (cl-pass:hash password)))
+        (cl-pass:hash password :iterations *iterations*)))
 
 (defclass login-controller ()
   ((login-page
