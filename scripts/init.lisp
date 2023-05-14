@@ -38,9 +38,6 @@
   ;; Disable mmap since it causes issues with long file names.
   (register-tdrhq "pngload" "63382b67d637479cbfbc3876281070151b641594"))
 
-(quick-patch:register "https://github.com/tdrhq/cl-plus-ssl"
-                            "306b17bbae07a01fb32ecb50f83ed1bd9cbed04e")
-
 (quick-patch:register "https://github.com/gschjetne/cljwt"
                             "bd3e567097cd9d48eb811be601590afa167e6667")
 

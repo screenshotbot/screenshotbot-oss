@@ -17,7 +17,7 @@ repl.lisp-repl
 *.64ofasl
 *.fasl
 /config.lisp
-build
+/build
 /assets
 screenshotbot-installer.sh
 analytics-log-file.log
