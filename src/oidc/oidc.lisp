@@ -9,6 +9,8 @@
           #:alexandria)
   (:import-from #:nibble
                 #:nibble)
+  (:import-from #:util/request
+                #:http-request)
   (:export #:oidc
            #:issuer
            #:discover
@@ -105,28 +107,28 @@
 (defun oauth-get-access-token (token-url &key client_id client_secret code
                                            redirect_uri)
   (assert code)
-  (with-open-stream (stream (dex:post token-url
-                                      :want-stream t
-                                      :headers `(("Accept" . "application/json"))
-                                      :content `(("client_id" . ,client_id)
-                                                 ("client_secret" . ,client_secret)
-                                                 ("code" . ,code)
-                                                 ("grant_type" . "authorization_code")
-                                                 ("redirect_uri" . ,redirect_uri))))
-    (let ((resp
-            (json:decode-json stream)))
-      (log:info "Got response ~s" resp)
-      (when (assoc-value resp :error)
-        (error "oauth error: ~s" (assoc-value resp :error--description)))
-      (flet ((v (x) (assoc-value resp x)))
-        (let ((access-token (make-instance 'oauth-access-token
-                                           :access-token (v :access--token)
-                                           :expires-in (v :expires--in)
-                                           :refresh-token (v :refresh--token)
-                                           :refresh-token-expires-in (v :refresh--token--expires--in)
-                                           :scope (v :scope)
-                                           :token-type (v :token--type))))
-          access-token)))))
+  (let* ((resp (http-request token-url
+                             :method :post
+                             :want-string t
+                             :accept "application/json"
+                             :parameters
+                             `(("client_id" . ,client_id)
+                               ("client_secret" . ,client_secret)
+                               ("code" . ,code)
+                               ("grant_type" . "authorization_code")
+                               ("redirect_uri" . ,redirect_uri))))
+         (resp (json:decode-json-from-string resp)))
+    (when (assoc-value resp :error)
+      (error "oauth error: ~s" (assoc-value resp :error--description)))
+    (flet ((v (x) (assoc-value resp x)))
+      (let ((access-token (make-instance 'oauth-access-token
+                                         :access-token (v :access--token)
+                                         :expires-in (v :expires--in)
+                                         :refresh-token (v :refresh--token)
+                                         :refresh-token-expires-in (v :refresh--token--expires--in)
+                                         :scope (v :scope)
+                                         :token-type (v :token--type))))
+        access-token))))
 
 (defun make-json-request (url &rest args)
   (multiple-value-bind (stream status-code)
