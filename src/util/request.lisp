@@ -46,8 +46,12 @@
         (comm:ssl-verification-failure (e)
           (handle-error e))
         #+lispworks
+        (comm:ssl-failure (e)
+          (handle-error e))
+        #+lispworks
         (comm:socket-create-error (e)
           (handle-error e)))))))
+
 
 (defclass engine ()
   ())
