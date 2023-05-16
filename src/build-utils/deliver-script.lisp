@@ -111,9 +111,11 @@
   (or
    #+(and :x86-64 darwin)
    "build/lw-console-8-0-0x86_64"
-   #+(or :linux (and :arm64 :darwin))
-   (format nil "~a/builds/web/build/lw-console-8-0-0"
-           (uiop:getenv "HOME"))
+   #+(or :linux (and :arm64 :darwin)) ;; TODO: we can do this on all platforms
+   (namestring
+    (asdf:system-relative-pathname
+     :build-utils
+     "../../build/lw-console-8-0-0"))
    #+mswindows
    ".\\build\\lw-console-8-0-0"
    #+nil
