@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:root-files
                 #:remove-unwanted-headers
                 #:+empty-headers+
                 #:%lru-cache
@@ -32,7 +33,6 @@
                 #:lru-cache)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/replay/test-core)
-
 
 (util/fiveam:def-suite)
 
@@ -129,7 +129,43 @@ background: url(shttps://google.com?f=1)
 
      (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
        ;; Just verifying that on Windows, we don't keep any stale file descriptors around
-       (load-url-into context snapshot (quri:uri "https://screenshotbot.io/") tmpdir)))))
+       (finishes (load-url-into context snapshot (quri:uri "https://screenshotbot.io/") tmpdir))
+       (is (eql 1 (length (root-files snapshot))))))))
+
+(test identical-content-on-two-pages
+  (with-fixture state ()
+   (tmpdir:with-tmpdir (tmpdir)
+     (cl-mock:if-called 'util/request:http-request
+                        (lambda (url &rest args)
+                          (values
+                           (flexi-streams:make-in-memory-input-stream
+                            (flexi-streams:string-to-octets
+                             "<html><body></body></html>"))
+                           200
+                           +empty-headers+)))
+
+     (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
+       (finishes (load-url-into context snapshot (quri:uri "https://screenshotbot.io/") tmpdir))
+       (finishes (load-url-into context snapshot (quri:uri "https://screenshotbot.io/foobar") tmpdir))
+       (is (eql 2 (length (root-files snapshot))))))))
+
+(test identical-content-on-two-pages-with-different-actual-url
+  (with-fixture state ()
+   (tmpdir:with-tmpdir (tmpdir)
+     (cl-mock:if-called 'util/request:http-request
+                        (lambda (url &rest args)
+                          (values
+                           (flexi-streams:make-in-memory-input-stream
+                            (flexi-streams:string-to-octets
+                             "<html><body></body></html>"))
+                           200
+                           +empty-headers+)))
+
+     (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
+       (finishes (load-url-into context snapshot (quri:uri "https://screenshotbot.io/deadbeaf/") tmpdir :actual-url "foobar-1"))
+       (finishes (load-url-into context snapshot (quri:uri "https://screenshotbot.io/deadbeef/") tmpdir
+                                :actual-url "foobar-2"))
+       (is (eql 2 (length (root-files snapshot))))))))
 
 (test happy-path-fetch-toplevel
   (with-fixture state ()
