@@ -179,6 +179,7 @@
       (decf (request-counter snapshot)))))
 
 (defun root-assets (snapshot)
+  ;; TODO: T621
   (let ((map (make-hash-table :test 'equal)))
     (loop for asset in (assets snapshot)
           do
