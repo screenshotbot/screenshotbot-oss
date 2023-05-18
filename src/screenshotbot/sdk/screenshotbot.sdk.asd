@@ -6,7 +6,7 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
-  :version "2.5.14"
+  :version "2.5.15"
   :depends-on (:dexador
                :com.google.flag
                :pkg
@@ -92,6 +92,7 @@
                (:file "test-version-check")
                (:file "test-flags")
                (:file "test-git")
+               (:file "test-env")
                (:file "test-android")
                (:file "test-sdk")
                (:file "test-firebase")

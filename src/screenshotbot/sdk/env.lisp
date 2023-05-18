@@ -190,12 +190,17 @@
 (defmethod validp ((self buildkite-env-reader))
   (getenv self "BUILDKITE_BUILD_ID"))
 
+(defmethod make-pr-url (self repo pr-id)
+  (when-let ((repo-url (getenv self repo))
+             (pull-id (getenv self pr-id)))
+    (format nil "~a/pull/~a"
+            repo-url
+            pull-id)))
+
 (defmethod pull-request-url ((self  buildkite-env-reader))
-  (when-let ((repo-url (getenv self "BUILDKITE_REPO"))
-             (pull-id (getenv self "BUILDKITE_PULL_REQUEST")))
-   (format nil "~a/pull/~a"
-           repo-url
-           pull-id)))
+  (make-pr-url self
+               "BUILDKITE_REPO"
+               "BUILDKITE_PULL_REQUEST"))
 
 (defmethod sha1 ((self buildkite-env-reader))
   (getenv self "BUILDKITE_COMMIT"))
@@ -206,11 +211,36 @@
 (defmethod repo-url ((Self buildkite-env-reader))
   (getenv self "BUILDKITE_REPO"))
 
+(defclass bitbucket-pipeline-env-reader (base-env-reader)
+  ())
+
+(defmethod validp ((self bitbucket-pipeline-env-reader))
+  (getenv self "BITBUCKET_BUILD_NUMBER"))
+
+(defmethod pull-request-url ((self bitbucket-pipeline-env-reader))
+  (make-pr-url
+   self
+   "BITBUCKET_GIT_HTTP_ORIGIN"
+   "BITBUCKET_PR_ID"))
+
+(defmethod sha1 ((self bitbucket-pipeline-env-reader))
+  (getenv self "BITBUCKET_COMMIT"))
+
+(defmethod build-url ((self bitbucket-pipeline-env-reader))
+  (format nil "~a/addon/pipelines/home#!/results/~a"
+          (getenv self "BITBUCKET_GIT_HTTP_ORIGIN")
+          (getenv self "BITBUCKET_BUILD_NUMBER")))
+
+(defmethod repo-url ((self bitbucket-pipeline-env-reader))
+  (getenv self "BITBUCKET_GIT_HTTP_ORIGIN"))
+
 (defun make-env-reader ()
   (loop for option in '(circleci-env-reader
                         bitrise-env-reader
                         netlify-env-reader
                         azure-env-reader
+                        bitbucket-pipeline-env-reader
+
                         buildkite-env-reader)
         for env = (make-instance option)
         if (validp env)

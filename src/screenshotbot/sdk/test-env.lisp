@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/sdk/env)
   (:import-from #:screenshotbot/sdk/env
+                #:bitbucket-pipeline-env-reader
                 #:buildkite-env-reader
                 #:azure-env-reader
                 #:validp
@@ -62,4 +63,8 @@
 
 (test buildkite
   (finishes (test-happy-fns (make-instance 'buildkite-env-reader
+                                           :overrides nil))))
+
+(test bitbucket-pipeline
+  (finishes (test-happy-fns (make-instance 'bitbucket-pipeline-env-reader
                                            :overrides nil))))
