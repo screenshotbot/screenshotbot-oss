@@ -6,7 +6,10 @@
   (:export
    #:http-request
    #:http-success-response?
-   #:engine))
+   #:engine
+   #:bad-http-response
+   #:bad-http-response-status
+   #:bad-http-response-body))
 (in-package :util/request)
 
 (defun http-success-response? (response-code)
@@ -60,6 +63,16 @@
   "Default request engine. Does not cache, does not use cookies, does not
 use stream pools.")
 
+(define-condition bad-http-response (error)
+  ((status :initarg :status
+           :reader bad-http-response-status)
+   (url :initarg :url)
+   (body :initarg :body
+         :reader bad-http-response-body))
+  (:report (lambda (e out)
+             (with-slots (status url) e
+               (format out "Got response code ~a when downloading ~a" status url)))))
+
 (defmethod http-request-impl ((engine engine)
                               url &rest args &key headers-as-hash-table
                                                want-string
@@ -96,7 +109,10 @@ use stream pools.")
                (declare (ignore response))
                (when (and ensure-success
                           (not (http-success-response? status)))
-                 (error "Got response code ~a when downloading ~a" status url))))
+                 (error 'bad-http-response
+                        :status status
+                        :body res
+                        :url url))))
         (handler-bind ((error (lambda (e)
                                 (declare (ignore e))
                                 ;; We're not going to actually return the stream

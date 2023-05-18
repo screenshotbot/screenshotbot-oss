@@ -481,7 +481,6 @@
                :screenshotbot/hub
                :http-proxy
                :auto-restart
-               :dexador
                :drakma
                :json-mop
                :alexandria)
@@ -497,8 +496,7 @@
 
 (asdf:defsystem :screenshotbot/replay
   :serial t
-  :depends-on (:dexador
-               :hunchentoot
+  :depends-on (:hunchentoot
                :hunchensocket
                :screenshotbot
                :tmpdir
