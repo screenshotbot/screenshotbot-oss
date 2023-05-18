@@ -209,3 +209,19 @@
                  (error "should not be called")))
     (signals empty-run-error
       (make-run nil :branch "main"))))
+
+
+#+nil
+(test |ensure we're not depending on cl+ssl|
+  (let ((seen (make-hash-table :test #'equal)))
+    (labels ((find-bad (component path)
+               (when (string-equal "dexador" (asdf:component-name component))
+                 (fail "Found cl+ssl in deps ~S" path))
+               (unless (and
+                        (gethash component seen))
+                 (setf (gethash component seen) t)
+                 (dolist (dep (asdf:system-depends-on component))
+                   (unless (consp dep)
+                     (find-bad (asdf:find-system dep)
+                               (list* dep path)))))))
+      (find-bad (asdf:find-system :screenshotbot.sdk) nil))))

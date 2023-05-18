@@ -7,8 +7,7 @@
 (defsystem :screenshotbot.sdk/library
   :serial t
   :version "2.5.15"
-  :depends-on (:dexador
-               :com.google.flag
+  :depends-on (:com.google.flag
                :pkg
                :ironclad/core
                :hunchentoot
