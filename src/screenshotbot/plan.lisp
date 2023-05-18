@@ -28,7 +28,7 @@
   "Get the plan for the current user"
   *plan*)
 
-(defun plan ()
+(defun plan (&optional (company (current-company)))
   (company-plan
-   (current-company)
+   company
    (installation)))
