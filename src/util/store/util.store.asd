@@ -2,6 +2,7 @@
   :serial t
   :depends-on (:bknr.datastore
                :util/misc
+	       :trivial-features
                :util/cron
                :util/file-lock
                :tmpdir

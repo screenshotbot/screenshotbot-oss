@@ -274,6 +274,7 @@
 (deftransaction dummy-transaction (arg)
   (incf *state*))
 
+#-windows
 (test corrupted-transaction-log
   (let ((*state* 0))
    (tmpdir:with-tmpdir (dir)
@@ -293,6 +294,7 @@
                        :store-class 'safe-mp-store)
        (pass)))))
 
+#-windows
 (test corrupted-transaction-log-only-removes-last-transaction
   (let ((*state* 0))
    (tmpdir:with-tmpdir (dir)
