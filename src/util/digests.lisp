@@ -8,134 +8,93 @@
   (:use #:cl)
   (:import-from #:util/health-check
                 #:def-health-check)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:sha256-file
    #:md5-file))
 (in-package :util/digests)
 
-#|
-# define SHA_LBLOCK      16
+(fli:define-c-struct evp-md-ctx)
+(fli:define-c-struct evp-md)
 
-typedef struct SHA512state_st {
-    SHA_LONG64 h[8];
-    SHA_LONG64 Nl, Nh;
-    union {
-        SHA_LONG64 d[SHA_LBLOCK];
-        unsigned char p[SHA512_CBLOCK];
-    } u;
-    unsigned int num, md_len;
-} SHA512_CTX;
-|#
-
-(let ((output (asdf:output-file 'asdf:compile-op
-                                 (asdf:find-component :util/digests
-                                                      "digest"))))
-  (fli:register-module
-   :util-digest-native
-   :real-name output))
-
-(fli:define-foreign-function (sizeof-sha256-ctx "tdrhq_sizeof_SHA256_CTX")
+(fli:define-foreign-function (evp-md-ctx-new "EVP_MD_CTX_new")
     ()
+  :result-type (:pointer evp-md-ctx))
+
+(fli:define-foreign-function (evp-md-ctx-free "EVP_MD_CTX_free")
+    ((ctx (:pointer evp-md-ctx)))
+  :result-type :void)
+
+(def-easy-macro with-evp-md-ctx (&binding ctx &fn fn)
+  (let ((ctx (evp-md-ctx-new)))
+    (unwind-protect
+         (funcall fn ctx)
+      (evp-md-ctx-free ctx))))
+
+(fli:define-foreign-function (evp-get-digestbyname "EVP_get_digestbyname")
+    ((name (:reference :ef-mb-string)))
+  :result-type (:pointer evp-md))
+
+(fli:define-foreign-function (digest-init "EVP_DigestInit_ex")
+    ((ctx (:pointer evp-md-ctx))
+     (evp-md (:pointer evp-md))
+     (engine :pointer))
   :result-type :int)
 
-(fli:define-foreign-function (sizeof-md5-ctx "tdrhq_sizeof_MD5_CTX")
-    ()
-  :result-type :int)
-
-(defparameter *sizeof-sha256-ctx* (sizeof-sha256-ctx))
-(defparameter *sizeof-md5-ctx* (sizeof-md5-ctx))
-
-(fli:disconnect-module :util-digest-native)
-
-(fli:define-foreign-function (sha256-init "SHA256_Init")
-    ((ctx (:pointer :void)))
-  :result-type :int)
-
-(fli:define-foreign-function (sha256-update "SHA256_Update")
-    ((ctx (:pointer :void))
+(fli:define-foreign-function (digest-update "EVP_DigestUpdate")
+    ((ctx (:pointer evp-md-ctx))
      (data :lisp-simple-1d-array)
      (len :size-t))
   :result-type :int)
 
-(fli:define-foreign-function (sha256-final "SHA256_Final")
-    ((md :lisp-simple-1d-array)
-     (ctx (:pointer :void)))
+(fli:define-foreign-function (digest-final "EVP_DigestFinal_ex")
+    ((ctx (:pointer evp-md-ctx))
+     (md :lisp-simple-1d-array)
+     (size (:reference-return (:unsigned :int))))
   :result-type :int)
 
-
-(fli:define-foreign-function (md5-init "MD5_Init")
-    ((ctx (:pointer :void)))
-  :result-type :int)
-
-(fli:define-foreign-function (md5-update "MD5_Update")
-    ((ctx (:pointer :void))
-     (data :lisp-simple-1d-array)
-     (len :size-t))
-  :result-type :int)
-
-(fli:define-foreign-function (md5-final "MD5_Final")
-    ((md :lisp-simple-1d-array)
-     (ctx (:pointer :void)))
-  :result-type :int)
-
-(defun digest-file (file &key ctx-size
-                           init
-                           update
-                           final
-                           digest-length)
+(defun digest-file (file &key digest-name
+                           digest-length #| EVP_MD_get_size is hard to port. See variations in OpenSSL 1.1, 3.0, and LibreSSL. |#)
   (comm:ensure-ssl)
-  (fli:with-dynamic-foreign-objects ((sha-ctx :char :nelems (+ 20 ctx-size)))
-    (unless (= 1 (funcall init sha-ctx))
-      (error "could not init SHA digest"))
-    (let* ((buf-size (* 16 1024))
-           (buffer (make-array buf-size :element-type '(unsigned-byte 8)
-                                        :allocation :pinnable))
-           (result (make-array digest-length :element-type '(unsigned-byte 8)
-                               :initial-element 0
-                               :allocation :pinnable)))
-      (with-open-file (stream file :direction :input
-                                   :element-type '(unsigned-byte 8))
-        (loop named inner
-              for bytes = (read-sequence buffer stream)
-              while t
-              do
-                 (if (= bytes 0)
-                     (return-from inner))
-                 (unless (= 1
-                            (funcall update sha-ctx
-                                           buffer
-                                           bytes))
-                   (error "Could not update digest"))))
-      (unless (= 1 (funcall final result sha-ctx))
-        (error "Could not finalize SHA digest"))
-      result)))
+  (let ((evp-md (evp-get-digestbyname digest-name)))
+    (with-evp-md-ctx (ctx)
+      (digest-init ctx evp-md nil)
+      (let* ((buf-size (* 16 1024))
+             (buffer (make-array buf-size :element-type '(unsigned-byte 8)
+                                          :allocation :pinnable))
+             (result (make-array digest-length :element-type '(unsigned-byte 8)
+                                               :initial-element 0
+                                               :allocation :pinnable)))
+        (with-open-file (stream file :direction :input
+                                     :element-type '(unsigned-byte 8))
+          (loop named inner
+                for bytes = (read-sequence buffer stream)
+                while t
+                do
+                   (if (= bytes 0)
+                       (return-from inner))
+                   (unless (= 1
+                              (digest-update ctx
+                                             buffer
+                                             bytes))
+                     (error "Could not update digest"))))
+        (multiple-value-bind (result size)
+            (digest-final ctx result nil)
+          (unless (= 1 result)
+            (error "Could not finalize SHA digest"))
+          (unless (eql digest-length size)
+            (error "Digest length mismatch, this could mean corruption in memory")))
+        result))))
+
 
 (defun sha256-file (file)
-  (digest-file file :ctx-size *sizeof-sha256-ctx*
-                    :init #'sha256-init
-                    :update #'sha256-update
-                    :final #'sha256-final
-                    :digest-length 32))
+  (digest-file file
+               :digest-name "sha256"
+               :digest-length 32))
 
 (defun md5-file (file)
-  (digest-file file :ctx-size *sizeof-md5-ctx*
-                    :init #'md5-init
-                    :update #'md5-update
-                    :final #'md5-final
-                    :digest-length 16))
-
-(def-health-check verify-libcrypto-digests ()
-  (uiop:with-temporary-file (:pathname p :stream s)
-    (write-string "foobar" s)
-    (finish-output s)
-    (flet ((ensure (expected actual)
-             (unless (equalp expected actual)
-               (error "Expected digest of ~a, got ~a"
-                      expected actual))))
-      (ensure #(195 171 143 241 55 32 232 173 144 71 221 57 70
-                107 60 137 116 229 146 194 250 56 61 74 57 96
-                113 76 174 240 196 242)
-        (sha256-file p))
-      (ensure #(56 88 246 34 48 172 60 145 95 48 12 102 67 18 198 63)
-        (md5-file p)))))
+  (digest-file file
+               :digest-name "md5"
+               :digest-length 16))
