@@ -6,7 +6,7 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
-  :version "2.5.15"
+  :version "2.5.16"
   :depends-on (:com.google.flag
                :pkg
                :ironclad/core
