@@ -23,7 +23,10 @@
   "On Mac, it appears there's a separate comm::crypto-library. Not sure
 if there's a situation where we need to reference that module
 directly."
-  'comm::openssl-library)
+  #-mswindows
+  'comm::openssl-library
+  #+mswindows
+  'comm::crypto-library)
 
 (fli:define-foreign-function (evp-md-ctx-new "EVP_MD_CTX_new")
     ()
