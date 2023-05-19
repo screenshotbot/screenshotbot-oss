@@ -27,6 +27,7 @@
                :cl-fad
                :zip
                :trivial-garbage
+               :trivial-features
                :tmpdir
                :imago
                :imago/pngload

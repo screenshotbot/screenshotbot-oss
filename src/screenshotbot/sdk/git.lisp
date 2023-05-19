@@ -119,4 +119,9 @@
      ($ "git" "clone" "https://github.com/tdrhq/tiny-test-repo" dir))
     (let ((repo (make-instance 'git-repo :dir dir)))
       (let ((dag (read-graph repo)))
-        (assert (> (length (dag:ordered-commits dag)) 0))))))
+        (assert (> (length (dag:ordered-commits dag)) 0))))
+
+    ;; On Windows, some Git files are read-only, which will make this test
+    ;; fail
+    #+windows
+    (uiop:run-program (list "attrib" "-r" (format nil "~a\\*.*" (namestring dir)) "/s"))))
