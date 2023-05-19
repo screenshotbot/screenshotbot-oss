@@ -475,13 +475,11 @@
                :cl-mongo-id
                :cl-webdriver-client
                :screenshotbot/webdriver
-               :cl+ssl
                :util/digests
                :util/cron
                :screenshotbot/hub
                :http-proxy
                :auto-restart
-               :dexador
                :drakma
                :json-mop
                :alexandria)
@@ -498,6 +496,7 @@
 (asdf:defsystem :screenshotbot/replay
   :serial t
   :depends-on (:dexador
+               :cl+ssl
                :hunchentoot
                :hunchensocket
                :screenshotbot

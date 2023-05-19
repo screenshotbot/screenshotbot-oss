@@ -218,8 +218,7 @@
                  (fail "Found cl+ssl in deps ~S" path))
                (unless (or
                         (string-equal "dexador" (asdf:component-name component))
-                        (string-equal "secure-random" (asdf:component-name component))
-                        (string-equal "screenshotbot/replay-core" (asdf:component-name component)))
+                        (string-equal "secure-random" (asdf:component-name component)))
                 (unless (gethash component seen)
                   (setf (gethash component seen) t)
                   (dolist (dep (asdf:system-depends-on component))
