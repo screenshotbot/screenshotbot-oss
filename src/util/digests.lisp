@@ -70,7 +70,7 @@ directly."
 
 (defun digest-file (file &key digest-name
                            digest-length #| EVP_MD_get_size is hard to port. See variations in OpenSSL 1.1, 3.0, and LibreSSL. |#)
-  (comm:ensure-ssl)
+  (comm:ensure-ssl :implementation :openssl)
   (let ((evp-md (evp-get-digestbyname digest-name)))
     (with-evp-md-ctx (ctx)
       (digest-init ctx evp-md nil)
