@@ -98,3 +98,18 @@
   (digest-file file
                :digest-name "md5"
                :digest-length 16))
+
+(def-health-check verify-libcrypto-digests ()
+  (uiop:with-temporary-file (:pathname p :stream s)
+    (write-string "foobar" s)
+    (finish-output s)
+    (flet ((ensure (expected actual)
+             (unless (equalp expected actual)
+               (error "Expected digest of ~a, got ~a"
+                      expected actual))))
+      (ensure #(195 171 143 241 55 32 232 173 144 71 221 57 70
+                107 60 137 116 229 146 194 250 56 61 74 57 96
+                113 76 174 240 196 242)
+        (sha256-file p))
+      (ensure #(56 88 246 34 48 172 60 145 95 48 12 102 67 18 198 63)
+        (md5-file p)))))
