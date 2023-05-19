@@ -19,12 +19,21 @@
 (fli:define-c-struct evp-md-ctx)
 (fli:define-c-struct evp-md)
 
+(defun crypto-module ()
+  "On Mac, it appears there's a separate comm::crypto-library. Not sure
+if there's a situation where we need to reference that module
+directly."
+  'comm::openssl-library)
+
 (fli:define-foreign-function (evp-md-ctx-new "EVP_MD_CTX_new")
     ()
+  :module (crypto-module)
   :result-type (:pointer evp-md-ctx))
+
 
 (fli:define-foreign-function (evp-md-ctx-free "EVP_MD_CTX_free")
     ((ctx (:pointer evp-md-ctx)))
+  :module (crypto-module)
   :result-type :void)
 
 (def-easy-macro with-evp-md-ctx (&binding ctx &fn fn)
@@ -35,24 +44,28 @@
 
 (fli:define-foreign-function (evp-get-digestbyname "EVP_get_digestbyname")
     ((name (:reference :ef-mb-string)))
+  :module (crypto-module)
   :result-type (:pointer evp-md))
 
 (fli:define-foreign-function (digest-init "EVP_DigestInit_ex")
     ((ctx (:pointer evp-md-ctx))
      (evp-md (:pointer evp-md))
      (engine :pointer))
+  :module (crypto-module)
   :result-type :int)
 
 (fli:define-foreign-function (digest-update "EVP_DigestUpdate")
     ((ctx (:pointer evp-md-ctx))
      (data :lisp-simple-1d-array)
      (len :size-t))
+  :module (crypto-module)
   :result-type :int)
 
 (fli:define-foreign-function (digest-final "EVP_DigestFinal_ex")
     ((ctx (:pointer evp-md-ctx))
      (md :lisp-simple-1d-array)
      (size (:reference-return (:unsigned :int))))
+  :module (crypto-module)
   :result-type :int)
 
 (defun digest-file (file &key digest-name
