@@ -51,6 +51,9 @@
 (compile 'sentry-client::lw-find-dspec-location)
 
 (defun deliver-main ()
+  (when (find-package :cl+ssl)
+    (error "CL+SSL is present in this image, this can lead to problems when delivering this
+on Mac. (e.g., the image will try to load libcrypto etc."))
   (let ((output-file (output-file)))
     #-darwin ;; universal binary, output file should be temporary
     (safe-delete-file output-file)

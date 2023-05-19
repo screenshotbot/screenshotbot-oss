@@ -472,9 +472,6 @@
                :util/request
                :util/lru-cache
                :hunchentoot-extensions
-               :cl-mongo-id
-               :cl-webdriver-client
-               :screenshotbot/webdriver
                :util/digests
                :util/cron
                :screenshotbot/hub
@@ -488,8 +485,7 @@
                 :components ((static-file "replay-regex" :type "txt")
                              (:file "core")
                              (:file "browser-config")
-                             (:file "squid")
-                             (:file "proxy")))))
+                             (:file "squid")))))
 
 
 
@@ -497,6 +493,8 @@
   :serial t
   :depends-on (:dexador
                :cl+ssl
+               :cl-mongo-id
+               :cl-webdriver-client
                :hunchentoot
                :hunchensocket
                :screenshotbot
@@ -521,7 +519,8 @@
                :plump)
   :components ((:module "replay"
                 :serial t
-                :components ((:file "replay-acceptor")
+                :components ((:file "proxy")
+                             (:file "replay-acceptor")
                              (:file "services")
                              (:file "frontend")
                              (:file "sitemap")
