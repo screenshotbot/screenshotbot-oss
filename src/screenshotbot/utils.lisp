@@ -15,6 +15,7 @@
 (in-package :screenshotbot-utils)
 
 (defun md5-hex (f)
+  #+lispworks
   (comm:ensure-ssl)
   (ironclad:byte-array-to-hex-string (md5-file f)))
 
