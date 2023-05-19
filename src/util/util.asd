@@ -204,7 +204,8 @@
 (defsystem :util/digests
   :depends-on ((:feature (:not (:and :lispworks (:or :linux :darwin))) "md5")
                (:feature (:not (:and :lispworks (:or :linux :darwin))) "ironclad")
-               easy-macros)
+               :util/health-check
+               :easy-macros)
   :serial t
   :components ((lib-source-file
                 "digest"
