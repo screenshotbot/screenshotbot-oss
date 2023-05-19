@@ -15,6 +15,7 @@
 (in-package :screenshotbot-utils)
 
 (defun md5-hex (f)
+  (comm:ensure-ssl)
   (ironclad:byte-array-to-hex-string (md5-file f)))
 
 (def-easy-macro with-compression (&binding filename filename &key compress &fn fn)
