@@ -210,18 +210,20 @@
     (signals empty-run-error
       (make-run nil :branch "main"))))
 
-
-#+nil
+#+lispworks
 (test |ensure we're not depending on cl+ssl|
   (let ((seen (make-hash-table :test #'equal)))
     (labels ((find-bad (component path)
-               (when (string-equal "dexador" (asdf:component-name component))
+               (when (string-equal "cl+ssl" (asdf:component-name component))
                  (fail "Found cl+ssl in deps ~S" path))
-               (unless (and
-                        (gethash component seen))
-                 (setf (gethash component seen) t)
-                 (dolist (dep (asdf:system-depends-on component))
-                   (unless (consp dep)
-                     (find-bad (asdf:find-system dep)
-                               (list* dep path)))))))
+               (unless (or
+                        (string-equal "dexador" (asdf:component-name component))
+                        (string-equal "secure-random" (asdf:component-name component))
+                        (string-equal "screenshotbot/replay-core" (asdf:component-name component)))
+                (unless (gethash component seen)
+                  (setf (gethash component seen) t)
+                  (dolist (dep (asdf:system-depends-on component))
+                    (unless (consp dep)
+                      (find-bad (asdf:find-system dep)
+                                (list* dep path))))))))
       (find-bad (asdf:find-system :screenshotbot.sdk) nil))))
