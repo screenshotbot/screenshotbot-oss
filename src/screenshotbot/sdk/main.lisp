@@ -99,7 +99,9 @@
                 ("features" *features*)
                 ("channel" flags:*channel*)
                 ("build-url" flags:*build-url*)
-                ("hostname" (uiop:hostname)))
+                ("hostname" (uiop:hostname))
+                #+lispworks
+                ("openssl-version" (comm:openssl-version)))
    (let ((error-handler (lambda (e)
                           (format stream "~%~a~%~%" e)
                           #+lispworks
