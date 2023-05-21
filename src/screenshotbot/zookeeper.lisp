@@ -87,6 +87,33 @@
      (flags :int))
   :result-type (:pointer z-handle-t))
 
+(fli:define-foreign-callable "sb_zookeeper_aget_cb"
+    ((rc :int)
+     (result (:pointer string-vector))
+     (zk zk))
+  (log:info "Got an aget_child callback on ~S, ~a" zk rc)
+  (get-children-results zk (loop for i below (fli:foreign-slot-value result 'count)
+                                 collect (fli:convert-from-foreign-string
+                                          (fli:dereference
+                                           (fli:foreign-slot-value result 'data)
+                                           :index i)))))
+
+(defmethod get-children-results ((zk zk) results)
+  (log:info "Got results: ~S" results))
+
+(fli:define-foreign-function zoo-aget-children
+    ((zk zk)
+     (path (:reference-pass :ef-mb-string))
+     (watch :int)
+     (callback :pointer)
+     (context zk)))
+
+(defun get-children (zk path)
+  (zoo-aget-children zk
+                     path
+                     0
+                     (fli:make-pointer :symbol-name "sb_zookeeper_aget_cb")
+                     zk))
 
 (def-easy-macro with-zookeeper (&binding zk &key host
                                          (recv-timeout 30000)
@@ -108,7 +135,7 @@
       (setf (handle zk) zhandle-t)
       (bt:condition-wait (connected-cv zk) *lock*))
     (unwind-protect
-         (funcall fn fn)
+         (funcall fn zk)
       (log:info "Closing out zookeeper")
       (bt:with-recursive-lock-held (*lock*)
        (remhash (fli:pointer-address zhandle-t) *zks*)))))
@@ -119,4 +146,5 @@
 
 #+nil
 (with-zookeeper (zk :host "192.168.1.143:2181")
-  (log:info "hello"))
+  (log:info "hello")
+  (get-children zk "/"))
