@@ -43,6 +43,15 @@
    (handle :initarg :handle
            :accessor handle)))
 
+(defun zhandle-to-zk (zzh)
+  (bt:with-recursive-lock-held (*lock*)
+    (gethash (fli:pointer-address zzh) *zks*)))
+
+(fli:define-foreign-converter zk () object
+  :foreign-type '(:pointer :void)
+  :foreign-to-lisp `(zhandle-to-zk ,object)
+  :lisp-to-foreign `(handle ,object))
+
 (defun sym (name)
   (fli:dereference
    (fli:make-pointer :symbol-name (str:replace-all "-" "_" (string name))
@@ -51,24 +60,24 @@
 (defun zoo-connected-state ()
   (sym :zoo-connected-state))
 
+
 (fli:define-foreign-callable ("sb_zookeeper_watcher_cb"
                               :result-type :void)
-    ((zzh (:pointer z-handle-t))
+    ((zk zk)
      (type :int)
      (state :int)
      (path (:pointer :char))
      (context :pointer))
-  (declare (ignore path context))
-  (let ((zk (bt:with-recursive-lock-held (*lock*)
-              (gethash (fli:pointer-address zzh) *zks*))))
-    (cond
-      ((and
-        zk
-        (eql state (sym :zoo-connected-state)))
-       (bt:with-recursive-lock-held (*lock*)
-         (bt:condition-notify (connected-cv zk))))
-      (t
-       (log:warn "Got notification for unknown zookeeper instance")))))
+  (declare (ignore path context type))
+  (cond
+    ((and
+      zk
+      (eql state (sym :zoo-connected-state)))
+     (log:info "Connected for ~a" zk)
+     (bt:with-recursive-lock-held (*lock*)
+       (bt:condition-notify (connected-cv zk))))
+    (t
+     (log:warn "Got notification for unknown zookeeper instance"))))
 
 (fli:define-foreign-function zookeeper-init
     ((host (:reference-pass :ef-mb-string))
