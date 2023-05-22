@@ -19,6 +19,7 @@
     (count :int32)
   (data (:pointer (:pointer :char))))
 
+
 (fli:define-foreign-function (deallocate-string-vector "deallocate_String_vector")
     ((sv (:pointer string-vector)))
   :result-type :int)
@@ -52,10 +53,23 @@
   :foreign-to-lisp `(zhandle-to-zk ,object)
   :lisp-to-foreign `(handle ,object))
 
+(fli:define-foreign-converter acl () object
+  :foreign-type '(:pointer :void)
+  :lisp-to-foreign `(symptr ,object))
+
+(fli:define-foreign-converter create-mode () object
+  :foreign-type ':int
+  :lisp-to-foreign `(fli:dereference (symptr ,object)
+                                     :pointer-type `(:pointer :int)))
+
+(defun symptr (name)
+  (fli:make-pointer :symbol-name (str:replace-all "-" "_" (string name))))
+
 (defun sym (name)
-  (fli:dereference
-   (fli:make-pointer :symbol-name (str:replace-all "-" "_" (string name))
-                     :type :int)))
+  (let ((ptr (symptr name)))
+    (fli:dereference
+     ptr
+     :pointer-type `(:pointer :int))))
 
 (defun zoo-connected-state ()
   (sym :zoo-connected-state))
@@ -69,6 +83,7 @@
      (path (:pointer :char))
      (context :pointer))
   (declare (ignore path context type))
+  (log:info "Got watcher callback")
   (cond
     ((and
       zk
@@ -108,6 +123,29 @@
      (callback :pointer)
      (context zk)))
 
+(fli:define-foreign-function (%zoo-create "zoo_create")
+    ((zk zk)
+     (path (:reference-pass :ef-mb-string))
+     (value (:reference-pass :ef-mb-string))
+     (value-len :int)
+     (acl acl)
+     (mode create-mode)
+     (path-buffer (:pointer :char))
+     (path-buffer-len :int)))
+
+(defmethod zoo-simple-create ((zk zk)
+                              path
+                              value)
+  (%zoo-create
+   zk
+   path
+   value
+   (length value)
+   :zoo-open-acl-unsafe
+   :zoo-persistent
+   nil
+   0))
+
 (defun get-children (zk path)
   (zoo-aget-children zk
                      path
@@ -133,6 +171,7 @@
                      *zks*)
             zk)
       (setf (handle zk) zhandle-t)
+      (log:info "Waiting on connection condition")
       (bt:condition-wait (connected-cv zk) *lock*))
     (unwind-protect
          (funcall fn zk)
@@ -142,9 +181,10 @@
 
 
 #+nil
-(zookeeper-init "192.168.1.143:2181" (fli:make-pointer :symbol-name "sb_zookeeper_watcher_cb") 3000 nil 0)
+(zookeeper-init "localhost:2181" (fli:make-pointer :symbol-name "sb_zookeeper_watcher_cb") 3000 nil 0)
 
 #+nil
-(with-zookeeper (zk :host "192.168.1.143:2181")
-  (log:info "hello")
-  (get-children zk "/"))
+(with-zookeeper (zk :host "localhost:2181")
+  (zoo-simple-create zk "/foobar3" "car")
+  (get-children zk "/")
+  (sleep 1))
