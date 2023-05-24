@@ -39,6 +39,9 @@
                     :initform nil)
    (ts :initform (get-universal-time))))
 
+(defmethod print-object ((nibble nibble) out)
+  (format out "#<NIBBLE ~a>" (ignore-errors (slot-value nibble 'impl))))
+
 (defun all-nibbles ()
   (bt:with-lock-held (*lock*)
     (loop for v being the hash-values of *nibbles* collect v)))

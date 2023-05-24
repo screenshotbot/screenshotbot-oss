@@ -76,3 +76,8 @@
                            ""))))
            (render-nibble plugin nibble)
            (is (eql result :test))))))))
+
+(test render-nibble
+  (with-fixture state ()
+    (is (str:containsp "NIBBLE"
+                       (format nil "~a" (nibble () "dummy"))))))
