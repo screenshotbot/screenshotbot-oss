@@ -25,6 +25,7 @@
                 #:user-companies
                 #:user)
   (:import-from #:screenshotbot/installation
+                #:call-with-ensure-user-prepared
                 #:installation
                 #:multi-org-feature
                 #:one-owned-company-per-user))
@@ -65,3 +66,26 @@
                          (list invite))))
                (is (not (equal "Should not see this" ret)))
                ret))))))))
+
+(test call-with-happy-path
+  (with-test-store ()
+    (with-installation (:installation (make-instance 'my-installation))
+      (with-fake-request ()
+        (auth:with-sessions ()
+         (let ((val 0))
+           (is (eql 1
+                    (call-with-ensure-user-prepared
+                     (make-instance 'my-installation)
+                     nil
+                     (lambda ()
+                       (incf val)))))
+           ;; When there is no user, there's nothing to prepare
+           (is (eql 1 val))
+           (call-with-ensure-user-prepared
+            (make-instance 'my-installation)
+            (make-instance 'user)
+            (lambda ()
+              (incf val)))
+           ;; The body should not be called in this case because the user
+           ;; wasn't prepared
+           (is (eql 1 val))))))))

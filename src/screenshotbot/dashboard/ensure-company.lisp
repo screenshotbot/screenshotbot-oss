@@ -46,11 +46,15 @@
 (defmethod call-with-ensure-user-prepared ((installation one-owned-company-per-user)
                                            user
                                            fn)
-  (assert user)
-  (ensure-company-or-invite
-   user
-   fn
-   (unaccepted-invites user)))
+  ;; If the user is not
+  (cond
+    (user
+     (ensure-company-or-invite
+      user
+      fn
+      (unaccepted-invites user)))
+    (t
+     (funcall fn))))
 
 (defun ensure-company-or-invite (user fn invites)
   (cond
