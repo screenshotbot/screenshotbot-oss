@@ -119,13 +119,23 @@
 
 (markup:enable-reader)
 
+(defhandler (acceptable-review-url :uri "/acceptable/:id/review" :method :post) (id action redirect)
+  (let ((acceptable (bknr.datastore:store-object-with-id (parse-integer id))))
+    (can-edit! acceptable)
+    (let ((state (cond
+                   ((string-equal "accept" action)
+                    :accepted)
+                   ((string-equal "reject" action)
+                    :rejected)
+                   (t
+                    (error "Unknown acceptable review action: ~a" action)))))
+      (setf (acceptable-state acceptable :user (current-user))
+            state)
+      (hex:safe-redirect redirect))))
+
 (deftag render-acceptable (&key acceptable)
-  (let ((accept (nibble (redirect :name :accept)
-                  (setf (acceptable-state acceptable :user (current-user)) :accepted)
-                  (hex:safe-redirect redirect)))
-        (reject (nibble (redirect :name :reject)
-                  (setf (acceptable-state acceptable :user (current-user)) :rejected)
-                  (hex:safe-redirect redirect)))
+  (let ((review-url (hex:make-url 'acceptable-review-url :id (bknr.datastore:store-object-id
+                                                              acceptable)))
         (btn-class
           (ecase (acceptable-state acceptable)
             (:accepted
@@ -147,8 +157,9 @@
         ,(progn btn-text)
       </button>
       <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
-        <form action=accept method= "POST" >
+        <form action=review-url method= "POST" >
           <button action= "submit" class= "btn btn-link acceptable accept-link dropdown-item" >
+            <input type= "hidden" name= "action" value= "accept" />
             <input type= "hidden" name= "redirect"
                    value= (hunchentoot:script-name*) />
             <mdi name= "check" />
@@ -156,12 +167,13 @@
           </button>
         </form>
 
-        <form action=reject method= "POST">
-          <input type= "hidden" name= "redirect"
-                 value= (hunchentoot:script-name* ) />
-          <button action= "submit" class= "btn btn-link acceptable reject-link dropdown-item" >
-            <mdi name= "close" />
-            Reject</button>
+        <form action=review-url method= "POST">
+            <input type= "hidden" name= "action" value= "reject" />
+            <input type= "hidden" name= "redirect"
+                   value= (hunchentoot:script-name* ) />
+            <button action= "submit" class= "btn btn-link acceptable reject-link dropdown-item" >
+              <mdi name= "close" />
+              Reject</button>
         </form>
 
       </div>
@@ -681,7 +693,7 @@
 
       </li>
 
-      ,(when (and (can-edit run (current-user)) acceptable)
+      ,(when (and acceptable (can-edit acceptable (current-user)))
          <li class= "nav-item" >
          <render-acceptable acceptable=acceptable />
          </li>)

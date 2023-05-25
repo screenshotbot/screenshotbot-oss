@@ -39,6 +39,8 @@
                 #:fset-set-index)
   (:import-from #:util/store/store
                 #:defindex)
+  (:import-from #:screenshotbot/model/view
+                #:can-edit)
   (:export
    #:report
    #:report-run
@@ -154,6 +156,17 @@
             :documentation "The reviewer who last updated the state"))
     (:metaclass persistent-class)))
 
+(defmethod can-view ((self base-acceptable) user)
+  (and
+   (slot-boundp self 'report)
+   (can-view (acceptable-report self) user)))
+
+(defmethod can-edit ((self base-acceptable) user)
+  (and
+   (can-view self user)
+   (when-let* ((report (acceptable-report self))
+               (run (report-run report)))
+     (can-edit run user))))
 
 (defmethod find-acceptables (channel
                              &key (pull-request-id nil pull-request-provided-p))
