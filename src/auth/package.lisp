@@ -41,4 +41,5 @@
            #:authenticated-request
            #:find-user-session-value-by-hash
            #:request-user
-           #:request-account))
+           #:request-account
+           #:csrf-token))

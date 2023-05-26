@@ -119,7 +119,9 @@
 
 (markup:enable-reader)
 
-(defhandler (acceptable-review-url :uri "/acceptable/:id/review" :method :post) (id action redirect)
+(defhandler (acceptable-review-url :uri "/acceptable/:id/review" :method :post)
+            (id action redirect csrf)
+  (assert (equal csrf (auth:csrf-token)))
   (let ((acceptable (bknr.datastore:store-object-with-id (parse-integer id))))
     (can-edit! acceptable)
     (let ((state (cond
@@ -152,32 +154,26 @@
              "Rejected")
             ((nil)
              "Review"))))
-    <markup:merge-tag>
-      <button class= (format nil"btn  btn-secondary dropdown-toggle ~a" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        ,(progn btn-text)
-      </button>
-      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
-        <form action=review-url method= "POST" >
-          <button action= "submit" class= "btn btn-link acceptable accept-link dropdown-item" >
-            <input type= "hidden" name= "action" value= "accept" />
-            <input type= "hidden" name= "redirect"
-                   value= (hunchentoot:script-name*) />
-            <mdi name= "check" />
-            Accept
-          </button>
-        </form>
-
-        <form action=review-url method= "POST">
-            <input type= "hidden" name= "action" value= "reject" />
-            <input type= "hidden" name= "redirect"
-                   value= (hunchentoot:script-name* ) />
-            <button action= "submit" class= "btn btn-link acceptable reject-link dropdown-item" >
-              <mdi name= "close" />
-              Reject</button>
-        </form>
-
-      </div>
-    </markup:merge-tag>))
+    (flet ((form-menu (&key title action)
+             <form action=review-url method= "POST" >
+               <button action= "submit" class= (format nil "btn btn-link acceptable ~a-link dropdown-item" action) >
+                 <input type= "hidden" name= "action" value= action />
+                 <input type= "hidden" name= "csrf" value= (auth:csrf-token) />
+                 <input type= "hidden" name= "redirect"
+                        value= (hunchentoot:script-name*) />
+                 <mdi name= "check" />
+                 ,(progn title)
+               </button>
+             </form>))
+      <markup:merge-tag>
+        <button class= (format nil"btn  btn-secondary dropdown-toggle ~a" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          ,(progn btn-text)
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
+          ,(form-menu :title "Accept" :action "accept")
+          ,(form-menu :title "Reject" :action "reject")
+        </div>
+      </markup:merge-tag>)))
 
 (defun diff-report-empty-p (diff-report)
   (not

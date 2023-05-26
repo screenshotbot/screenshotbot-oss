@@ -148,12 +148,15 @@ this would be a problem."
   (assert user-id)
   (setf (session-value :user-id) user-id))
 
+(defun generate-session-token ()
+  (bt:with-lock-held (*lock*)
+    (funcall *session-token-generator*)))
+
 (defun %make-session ()
   "Only creates the session, does not do anything else with it"
   (let ((session (make-instance 'user-session-transient
                                 :token
-                                (bt:with-lock-held (*lock*)
-                                 (funcall *session-token-generator*)))))
+                                (generate-session-token))))
 
     session))
 
@@ -208,6 +211,12 @@ value."
 
 (defgeneric password-hash (user)
   (:documentation "password hash for the user"))
+
+(defmethod csrf-token ()
+  (util/misc:or-setf
+   (session-value :csrf-token)
+   (generate-session-token)
+   :thread-safe t))
 
 
 (defmethod check-password (user password)

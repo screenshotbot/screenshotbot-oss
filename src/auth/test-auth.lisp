@@ -4,6 +4,8 @@
   (:import-from :util/testing
                 :with-fake-request)
   (:import-from :auth
+                #:generate-session-token
+                #:csrf-token
    :fix-cookie-domain
    #+windows
    :read-windows-seed)
@@ -15,9 +17,10 @@
 (def-suite* :test-auth)
 
 (def-fixture state ()
-  (with-test-store ()
-   (with-fake-request ()
-     (&body))))
+  (cl-mock:with-mocks ()
+   (with-test-store ()
+     (with-fake-request ()
+       (&body)))))
 
 (test auth-simple-test
   (with-fixture state ()
@@ -46,3 +49,11 @@
   ;; maintain
   (is (equal "www.foo.com" (fix-cookie-domain "www.foo.com")))
   (is (equal "192.168.1.120" (fix-cookie-domain "192.168.1.120"))))
+
+(test csrf-token
+  (with-fixture state ()
+    (auth:with-sessions ()
+     (cl-mock:answer (generate-session-token) "foobar"
+       "bad")
+      (is (equal "foobar" (auth:csrf-token)))
+      (is (equal "foobar" (auth:csrf-token))))))
