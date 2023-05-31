@@ -155,7 +155,9 @@
        body
        ret))))
 
-(defun slack-post-on-channel (&key channel text token company)
+(defun slack-post-on-channel (&key channel text token company
+                                blocks
+                                (unfurl-urls nil))
   (with-event (:slack)
    (let ((audit-log (make-instance 'post-on-channel-audit-log
                                    :company company
@@ -164,8 +166,13 @@
      (let ((response (slack-request
                       :url "/api/chat.postMessage"
                       :token token
-                      :parameters `(("channel" . ,channel)
-                                    ("text" . ,text)))))
+                      :parameters
+                      (remove-if #'null `(("channel" . ,channel)
+                                          ("unfurl_links" . ,(if unfurl-urls "true" "false"))
+                                          ,(when text
+                                             `("text" . ,text))
+                                          ,(when blocks
+                                             `("blocks" . ,(json:encode-json-to-string blocks))))))))
        (check-slack-ok response audit-log)))))
 
 (defhandler (nil :uri "/slack-app-redirect") (code state)

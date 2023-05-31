@@ -46,9 +46,15 @@
                      :channel channel
                      :company company
                      :token (access-token (access-token it))
-                     :text (format nil "Screenshots changed in ~a, see: ~a"
-                                   (channel-name (report-channel report))
-                                   (report-link report)))
+                     :blocks `#(
+                               ,(alexandria:alist-hash-table
+                                `((:type . "section")
+                                  (:text . (("type" . "mrkdwn")
+                                            ("text" .
+                                             ,(format nil "Screenshots changed in *~a*~%<~a|~a>"
+                                                      (channel-name (report-channel report))
+                                                      (report-link report)
+                                                      (report-title report)))))))))
                   (slack-error (e)
                     ;; the slack API error has already been logged, so we should
                     ;; not propagate this.

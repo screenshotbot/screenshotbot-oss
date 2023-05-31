@@ -50,7 +50,8 @@
                       (push args posts)))
          (let* ((company (make-instance 'company))
                 (channel (make-instance 'channel :name "foobar"))
-                (report (make-instance 'report :channel channel))
+                (report (make-instance 'report :channel channel
+                                       :title "foobar"))
                 (self (make-instance 'slack-task-integration
                                      :company company))
                 (slack-token (make-instance 'slack-token
