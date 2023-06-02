@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:root-assets
                 #:root-files
                 #:remove-unwanted-headers
                 #:+empty-headers+
@@ -35,6 +36,10 @@
                 #:matches-regex)
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:contains)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/replay/test-core)
 
@@ -137,7 +142,41 @@ background: url(shttps://google.com?f=1)
        (is (eql 1 (length (root-files snapshot))))
        (assert-that (car (root-files snapshot))
                     (matches-regex
-                     "^/snapshot/.*/assets/41541aeb32611e6cf2fae94cb30d186a83688b548f26a27a95ff2eaece9cb8cc.html$"))))))
+                     "^/snapshot/.*/assets/41541aeb32611e6cf2fae94cb30d186a83688b548f26a27a95ff2eaece9cb8cc.html$"))
+       (assert-that (root-assets snapshot)
+                    (has-length 1))))))
+
+(test two-urls-with-same-content
+  (with-fixture state ()
+   (tmpdir:with-tmpdir (tmpdir)
+     (cl-mock:if-called 'util/request:http-request
+                        (lambda (url &rest args)
+                          (values
+                           (flexi-streams:make-in-memory-input-stream
+                            (flexi-streams:string-to-octets
+                             "<html><body></body></html>"))
+                           200
+                           +empty-headers+)))
+
+     (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
+       ;; Just verifying that on Windows, we don't keep any stale file descriptors around
+       (load-url-into context snapshot (quri:uri "https://screenshotbot.io/one") tmpdir)
+       (load-url-into context snapshot (quri:uri "https://screenshotbot.io/two") tmpdir)
+
+       (is (eql 2 (length (root-files snapshot))))
+
+       ;; TODO: T621: We want this to fail. Or.. figure out a way to
+       ;; propagate the roots here.
+       (is (equal (first (root-files snapshot))
+                  (second (root-files snapshot))))
+
+       (assert-that (root-assets snapshot)
+                    (has-length 2))
+       (assert-that (sort (mapcar #'url (root-assets snapshot)) #'string<)
+                    (contains
+                     "https://screenshotbot.io/one"
+                     ;; TODO: T621: we want this to show /two
+                     "https://screenshotbot.io/one"))))))
 
 (test identical-content-on-two-pages
   (with-fixture state ()
