@@ -31,6 +31,10 @@
                 #:http-get)
   (:import-from #:util/lru-cache
                 #:lru-cache)
+  (:import-from #:fiveam-matchers/strings
+                #:matches-regex)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/replay/test-core)
 
@@ -130,7 +134,10 @@ background: url(shttps://google.com?f=1)
      (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
        ;; Just verifying that on Windows, we don't keep any stale file descriptors around
        (finishes (load-url-into context snapshot (quri:uri "https://screenshotbot.io/") tmpdir))
-       (is (eql 1 (length (root-files snapshot))))))))
+       (is (eql 1 (length (root-files snapshot))))
+       (assert-that (car (root-files snapshot))
+                    (matches-regex
+                     "^/snapshot/.*/assets/41541aeb32611e6cf2fae94cb30d186a83688b548f26a27a95ff2eaece9cb8cc.html$"))))))
 
 (test identical-content-on-two-pages
   (with-fixture state ()
