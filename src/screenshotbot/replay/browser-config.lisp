@@ -40,12 +40,12 @@
          :json-key "type"
          :reader browser-type)
    (dimensions :initarg :dimensions
-               :json-type dimensions
+               :json-type (or null dimensions)
                :json-key  "dimensions"
                :initform nil
                :reader dimensions)
    (mobile-emulation :initarg :mobile-emulation
-                     :json-type :string
+                     :json-type (or null :string)
                      :json-key "mobileEmulation"
                      :initform nil
                      :reader mobile-emulation))

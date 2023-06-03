@@ -388,7 +388,15 @@ background: url(shttps://google.com?f=1)
                                                          :type "chrome"
                                                          :dimensions (make-instance 'dimensions
                                                                                     :width 1024
-                                                                                    :height 800)
+                                                                                    :height 800)))
+                                         :channel-name "bleh")))
+    (finishes (encode-json snapshot-request)))
+  (let ((snapshot-request (make-instance 'snapshot-request
+                                         :browser-configs
+                                         (list
+                                          (make-instance 'browser-config
+                                                         :name "foobar"
+                                                         :type "chrome"
                                                          :mobile-emulation "foobar"))
                                          :channel-name "bleh")))
     (finishes (encode-json snapshot-request))))
