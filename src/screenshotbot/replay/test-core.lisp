@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:snapshot-request
                 #:http-header-value
                 #:http-header-name
                 #:asset-response-headers
@@ -49,6 +50,9 @@
   (:import-from #:screenshotbot/api/model
                 #:decode-json
                 #:encode-json)
+  (:import-from #:screenshotbot/replay/browser-config
+                #:dimensions
+                #:browser-config)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/replay/test-core)
 
@@ -374,3 +378,17 @@ background: url(shttps://google.com?f=1)
        (remove-unwanted-headers
         `((:content-security-policy . "bleh")
           (:foo . "bar"))))))
+
+(test encode-decode-snapshot-request
+  (let ((snapshot-request (make-instance 'snapshot-request
+                                         :browser-configs
+                                         (list
+                                          (make-instance 'browser-config
+                                                         :name "foobar"
+                                                         :type "chrome"
+                                                         :dimensions (make-instance 'dimensions
+                                                                                    :width 1024
+                                                                                    :height 800)
+                                                         :mobile-emulation "foobar"))
+                                         :channel-name "bleh")))
+    (finishes (encode-json snapshot-request))))

@@ -6,6 +6,8 @@
 
 (defpackage :screenshotbot/replay/browser-config
   (:use #:cl)
+  (:import-from #:util/json-mop
+                #:ext-json-serializable-class)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:dimensions
@@ -19,18 +21,32 @@
 
 (defclass dimensions ()
   ((height :initarg :height
+           :json-type :number
+           :json-key "height"
            :reader height)
    (width :initarg :width
-          :reader width)))
+          :json-type :number
+          :json-key "width"
+          :reader width))
+  (:metaclass ext-json-serializable-class))
 
 (defclass browser-config ()
   ((name :initarg :name
+         :json-type :string
+         :json-key "name"
          :reader browser-config-name)
    (type :initarg :type
+         :json-type :string
+         :json-key "type"
          :reader browser-type)
    (dimensions :initarg :dimensions
-              :initform nil
-              :reader dimensions)
+               :json-type dimensions
+               :json-key  "dimensions"
+               :initform nil
+               :reader dimensions)
    (mobile-emulation :initarg :mobile-emulation
+                     :json-type :string
+                     :json-key "mobileEmulation"
                      :initform nil
-                     :reader mobile-emulation)))
+                     :reader mobile-emulation))
+  (:metaclass ext-json-serializable-class))

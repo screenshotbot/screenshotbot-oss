@@ -30,6 +30,8 @@
                 #:handle-misbehaving-engine)
   (:import-from #:util/json-mop
                 #:ext-json-serializable-class)
+  (:import-from #:screenshotbot/replay/browser-config
+                #:browser-config)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:rewrite-css-urls
@@ -76,32 +78,53 @@
 
 (defclass snapshot-request ()
   ((snapshot :initarg :snapshot
+             :json-key "snapshot"
+             :json-type snapshot
              :reader snapshot)
    (browser-configs :initarg :browser-configs
+                    :json-key "browserConfigs"
+                    :json-type (:list browser-config)
                     :reader browser-configs)
    (channel-name :initarg :channel-name
+                 :json-key "channel"
+                 :json-type :string
                  :reader channel-name)
    (pull-request :initarg :pull-request
+                 :json-key "pullRequestUrl"
+                 :json-type (or null :string)
                  :initform nil
                  :reader pull-request)
    (main-branch :initarg :main-branch
+                :json-key "mainBranch"
+                :json-type (or null :string)
                 :initform nil
                 :reader main-branch)
    (repo-url :initarg :repo-url
+             :json-key "repoUrl"
+             :json-type (or null :string)
              :initform nil
              :reader repo-url)
    (branch-hash :initarg :branch-hash
+                :json-key "branchHash"
+                :json-type (or null :string)
                 :initform nil
                 :reader branch-hash)
    (commit :initarg :commit
+           :json-key "commit"
+           :json-type (or null :string)
            :initform nil
            :reader commit)
    (sdk-flags :initform nil
+              :json-key "sdkFlags"
+              :json-type (or null :string)
               :initarg :sdk-flags
               :reader snapshot-request-sdk-flags)
    (merge-base :initarg :merge-base
+               :json-key "mergeBase"
+               :json-type (or null :string)
                :initform nil
-               :reader merge-base)))
+               :reader merge-base))
+  (:metaclass ext-json-serializable-class))
 
 (defclass context ()
   ((seen :initform (make-hash-table :test #'equal)

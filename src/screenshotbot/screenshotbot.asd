@@ -484,8 +484,8 @@
   :components ((:module "replay"
                 :serial t
                 :components ((static-file "replay-regex" :type "txt")
-                             (:file "core")
                              (:file "browser-config")
+                             (:file "core")
                              (:file "squid")))))
 
 
