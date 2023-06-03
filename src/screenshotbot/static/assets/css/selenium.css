@@ -25,6 +25,7 @@
 
 body {
     overflow: hidden !important;
+    pointer-events: none !important;
 }
 
 html {
