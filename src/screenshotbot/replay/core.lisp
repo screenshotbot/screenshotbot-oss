@@ -115,9 +115,18 @@
 
 (defclass http-header ()
   ((name :initarg :name
+         :json-type :string
+         :json-key "name"
          :reader http-header-name)
    (value :initarg :value
-          :reader http-header-value)))
+          :json-type :string
+          :json-key "value"
+          :reader http-header-value))
+  (:metaclass ext-json-serializable-class))
+
+(defmethod initialize-instance :after ((self http-header) &key name)
+  (when (symbolp name)
+    (setf (slot-value self 'name) (string-downcase (string name)))))
 
 (defclass asset ()
   ((file :initarg :file
@@ -138,9 +147,8 @@
                 :initform nil
                 :reader stylesheetp)
    (response-headers :initarg :response-headers
-                     ;; TODO(T623)
-                     ;; :json-type (:list http-header)
-                     ;; :json-key "responseHeaders"
+                     :json-type (:list http-header)
+                     :json-key "responseHeaders"
                      :reader asset-response-headers))
   (:metaclass ext-json-serializable-class))
 
