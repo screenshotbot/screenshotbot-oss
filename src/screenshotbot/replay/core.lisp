@@ -43,7 +43,6 @@
    #:snapshot-asset-file
    #:uuid
    #:assets
-   #:root-files
    #:url
    #:http-header-name
    #:http-header-value
@@ -151,8 +150,7 @@
          :reader uuid)
    (tmpdir :initarg :tmpdir
            :accessor tmpdir)
-   (root-files :accessor root-files
-               :initarg :root-files
+   (root-files :initarg :root-files
                :initform nil
                :documentation "DEPRECATED: See T621, as we're migrating this away to root-urls")
    (root-urls :accessor root-urls
@@ -183,27 +181,16 @@
     (bt:with-lock-held (*request-counter-lock*)
       (decf (request-counter snapshot)))))
 
-(defun root-assets-from-files (snapshot)
-  ;; TODO: Delete for T622
-  (let ((map (make-hash-table :test 'equal)))
-    (loop for asset in (assets snapshot)
-          do
-             (setf (gethash (asset-file asset) map)
-                   asset))
-    (loop for file in (root-files snapshot)
-          collect
-          (gethash file map))))
-
 (defun not-null! (expr)
   (assert expr)
   expr)
 
-(defun root-assets-from-urls (snapshot)
+(defun root-assets (snapshot)
   (let ((url-to-asset-map
           (reduce
            (lambda (map asset)
-             (check-type asset asset)
-             (check-type (url asset) string)
+             (declare (type asset asset)
+                      (type string url))
              (fset:with map (url asset) asset))
            (assets snapshot)
            :initial-value (fset:empty-map))))
@@ -211,14 +198,6 @@
      (loop for url in (root-urls snapshot)
            collect
            (not-null! (fset:lookup url-to-asset-map url))))))
-
-(defun root-assets (snapshot)
-  (cond
-    ((ignore-errors (root-urls snapshot))
-     (root-assets-from-urls snapshot))
-    (t
-     ;; This is here to support old SDKs
-     (root-assets-from-files snapshot))))
 
 (defmethod process-node (context node snapshot url)
   (values))
@@ -823,8 +802,6 @@
           (push
            (quri:render-uri url)
            (root-urls snapshot))
-          (push (asset-file root-asset)
-                (root-files snapshot))
           (push root-asset
                 (assets snapshot))))
       snapshot)))

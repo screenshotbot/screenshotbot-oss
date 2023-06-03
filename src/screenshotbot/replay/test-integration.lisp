@@ -140,8 +140,8 @@
                                                  :response-headers nil
                                                  :file "/foo.html")))
                     (snapshot (make-instance 'snapshot :tmpdir tmpdir
-                                                       :root-files (list
-                                                                    "/foo.html" )
+                                                       :root-urls (list
+                                                                    "https://www.google.com" )
                                                        :assets assets))
                     (company (make-instance 'company))
                     (user (make-instance 'user
@@ -283,10 +283,11 @@
            (let* ((company (make-instance 'company))
                   (*default-render-acceptor* nil)
                   (asset (make-instance 'asset
+                                        :url "https://foo.com"
                                         :file "foo"))
                   (snapshot (make-instance 'snapshot
                                            :assets (list asset)
-                                           :root-files (list "foo")))
+                                           :root-urls (list "https://foo.com")))
                   (run (make-instance 'integration:run
                                       :company company
                                       :browser-configs

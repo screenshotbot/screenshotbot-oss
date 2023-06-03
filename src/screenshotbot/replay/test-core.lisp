@@ -11,7 +11,6 @@
   (:import-from #:screenshotbot/replay/core
                 #:root-urls
                 #:root-assets
-                #:root-files
                 #:remove-unwanted-headers
                 #:+empty-headers+
                 #:%lru-cache
@@ -36,6 +35,7 @@
   (:import-from #:fiveam-matchers/strings
                 #:matches-regex)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
                 #:contains)
@@ -140,10 +140,10 @@ background: url(shttps://google.com?f=1)
      (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
        ;; Just verifying that on Windows, we don't keep any stale file descriptors around
        (finishes (load-url-into context snapshot (quri:uri "https://screenshotbot.io/") tmpdir))
-       (is (eql 1 (length (root-files snapshot))))
-       (assert-that (car (root-files snapshot))
-                    (matches-regex
-                     "^/snapshot/.*/assets/41541aeb32611e6cf2fae94cb30d186a83688b548f26a27a95ff2eaece9cb8cc.html$"))
+       (is (eql 1 (length (root-urls snapshot))))
+       (assert-that (car (root-urls snapshot))
+                    (is-equal-to
+                     "https://screenshotbot.io/"))
        (assert-that (root-assets snapshot)
                     (has-length 1))))))
 
@@ -163,8 +163,6 @@ background: url(shttps://google.com?f=1)
        ;; Just verifying that on Windows, we don't keep any stale file descriptors around
        (load-url-into context snapshot (quri:uri "https://screenshotbot.io/one") tmpdir)
        (load-url-into context snapshot (quri:uri "https://screenshotbot.io/two") tmpdir)
-
-       (is (eql 2 (length (root-files snapshot))))
 
        (assert-that (root-assets snapshot)
                     (has-length 2))
@@ -190,7 +188,7 @@ background: url(shttps://google.com?f=1)
      (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
        (finishes (load-url-into context snapshot (quri:uri "https://screenshotbot.io/") tmpdir))
        (finishes (load-url-into context snapshot (quri:uri "https://screenshotbot.io/foobar") tmpdir))
-       (is (eql 2 (length (root-files snapshot))))))))
+       (is (eql 2 (length (root-urls snapshot))))))))
 
 (test identical-content-on-two-pages-with-different-actual-url
   (with-fixture state ()
@@ -208,7 +206,7 @@ background: url(shttps://google.com?f=1)
        (finishes (load-url-into context snapshot (quri:uri "https://screenshotbot.io/deadbeaf/") tmpdir :actual-url "foobar-1"))
        (finishes (load-url-into context snapshot (quri:uri "https://screenshotbot.io/deadbeef/") tmpdir
                                 :actual-url "foobar-2"))
-       (is (eql 2 (length (root-files snapshot))))))))
+       (is (eql 2 (length (root-urls snapshot))))))))
 
 (test happy-path-fetch-toplevel
   (with-fixture state ()
