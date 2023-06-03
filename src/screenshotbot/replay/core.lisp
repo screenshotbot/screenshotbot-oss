@@ -153,7 +153,12 @@
            :accessor tmpdir)
    (root-files :accessor root-files
                :initarg :root-files
-               :initform nil)
+               :initform nil
+               :documentation "DEPRECATED: See T621, as we're migrating this away to root-urls")
+   (root-urls :accessor root-urls
+              :initarg :root-urls
+              :initform nil
+              :documentation "The URLs that were used for the root")
    (request-counter :accessor request-counter
                     :initform 0
                     :documentation "When the snapshot is being served,
@@ -178,8 +183,8 @@
     (bt:with-lock-held (*request-counter-lock*)
       (decf (request-counter snapshot)))))
 
-(defun root-assets (snapshot)
-  ;; TODO: T621
+(defun root-assets-from-files (snapshot)
+  ;; TODO: Delete for T622
   (let ((map (make-hash-table :test 'equal)))
     (loop for asset in (assets snapshot)
           do
@@ -188,6 +193,32 @@
     (loop for file in (root-files snapshot)
           collect
           (gethash file map))))
+
+(defun not-null! (expr)
+  (assert expr)
+  expr)
+
+(defun root-assets-from-urls (snapshot)
+  (let ((url-to-asset-map
+          (reduce
+           (lambda (map asset)
+             (check-type asset asset)
+             (check-type (url asset) string)
+             (fset:with map (url asset) asset))
+           (assets snapshot)
+           :initial-value (fset:empty-map))))
+    (reverse
+     (loop for url in (root-urls snapshot)
+           collect
+           (not-null! (fset:lookup url-to-asset-map url))))))
+
+(defun root-assets (snapshot)
+  (cond
+    ((ignore-errors (root-urls snapshot))
+     (root-assets-from-urls snapshot))
+    (t
+     ;; This is here to support old SDKs
+     (root-assets-from-files snapshot))))
 
 (defmethod process-node (context node snapshot url)
   (values))
@@ -762,7 +793,8 @@
                                    &key actual-url
                                      content)
     (file-position content 0) ;; in case of a restart
-    (let ((html (plump:parse content)))
+    (let* ((url (quri:uri url))
+           (html (plump:parse content)))
       (process-node context html snapshot
                     ;; If we pass an actual-url, then we should use the
                     ;; actual URL to figure out where to fetch assets
@@ -788,6 +820,9 @@
                            tmpdir
                            :url url
                            :snapshot snapshot)))
+          (push
+           (quri:render-uri url)
+           (root-urls snapshot))
           (push (asset-file root-asset)
                 (root-files snapshot))
           (push root-asset

@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:root-urls
                 #:root-assets
                 #:root-files
                 #:remove-unwanted-headers
@@ -165,18 +166,14 @@ background: url(shttps://google.com?f=1)
 
        (is (eql 2 (length (root-files snapshot))))
 
-       ;; TODO: T621: We want this to fail. Or.. figure out a way to
-       ;; propagate the roots here.
-       (is (equal (first (root-files snapshot))
-                  (second (root-files snapshot))))
-
        (assert-that (root-assets snapshot)
+                    (has-length 2))
+       (assert-that (root-urls snapshot)
                     (has-length 2))
        (assert-that (sort (mapcar #'url (root-assets snapshot)) #'string<)
                     (contains
                      "https://screenshotbot.io/one"
-                     ;; TODO: T621: we want this to show /two
-                     "https://screenshotbot.io/one"))))))
+                     "https://screenshotbot.io/two"))))))
 
 (test identical-content-on-two-pages
   (with-fixture state ()

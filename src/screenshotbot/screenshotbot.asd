@@ -464,6 +464,7 @@
   :serial t
   :depends-on (:plump
                :lquery
+               :fset
                :uuid
                :easy-macros
                :cl-store
