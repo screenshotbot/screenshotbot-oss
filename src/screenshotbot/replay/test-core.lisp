@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:request-counter
                 #:root-urls
                 #:root-assets
                 #:remove-unwanted-headers
@@ -41,6 +42,9 @@
                 #:contains)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
+  (:import-from #:screenshotbot/api/model
+                #:decode-json
+                #:encode-json)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/replay/test-core)
 
@@ -147,7 +151,7 @@ background: url(shttps://google.com?f=1)
        (assert-that (root-assets snapshot)
                     (has-length 1))))))
 
-(test two-urls-with-same-content
+(test can-encode-snapshot
   (with-fixture state ()
    (tmpdir:with-tmpdir (tmpdir)
      (cl-mock:if-called 'util/request:http-request
@@ -158,6 +162,25 @@ background: url(shttps://google.com?f=1)
                              "<html><body></body></html>"))
                            200
                            +empty-headers+)))
+
+     (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
+       (load-url-into context snapshot (quri:uri "https://screenshotbot.io/") tmpdir)
+       (let* ((encoded
+                (encode-json snapshot))
+              (snapshot (decode-json encoded 'snapshot)))
+         (is (eql 0 (request-counter snapshot))))))))
+
+(test two-urls-with-same-content
+  (with-fixture state ()
+   (tmpdir:with-tmpdir (tmpdir)
+     (cl-mock:if-called 'util/request:http-request
+                        (lambda (url &rest args)
+                          (values
+                           (flexi-streams:make-in-memory-input-stream
+                            (flexi-streams:string-to-octets
+                             "<html><body></body></html>"))
+                           200
+                           `(("x-foobar" . 1)))))
 
      (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir)))
        ;; Just verifying that on Windows, we don't keep any stale file descriptors around

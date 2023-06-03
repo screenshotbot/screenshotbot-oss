@@ -28,6 +28,8 @@
                 #:engine)
   (:import-from #:util/engines
                 #:handle-misbehaving-engine)
+  (:import-from #:util/json-mop
+                #:ext-json-serializable-class)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:rewrite-css-urls
@@ -119,16 +121,28 @@
 
 (defclass asset ()
   ((file :initarg :file
+         :json-type :string
+         :json-key "file"
          :reader asset-file)
    (url :initarg :url
+        :json-type :string
+        :json-key "url"
         :reader url)
    (status :initarg :status
+           :json-type :number
+           :json-key "status"
            :reader asset-status)
    (stylesheetp :initarg :stylesheetp
+                :json-type :bool
+                :json-key "isStylesheet"
                 :initform nil
                 :reader stylesheetp)
    (response-headers :initarg :response-headers
-                     :reader asset-response-headers)))
+                     ;; TODO(T623)
+                     ;; :json-type (:list http-header)
+                     ;; :json-key "responseHeaders"
+                     :reader asset-response-headers))
+  (:metaclass ext-json-serializable-class))
 
 (defmethod asset-file-name ((asset asset))
   (car (last (str:split "/" (asset-file asset)))))
@@ -145,8 +159,12 @@
 (defclass snapshot ()
   ((assets :initform nil
            :initarg :assets
+           :json-type (:list asset)
+           :json-key "assets"
            :accessor assets)
    (uuid :initform (format nil "~a" (uuid:make-v4-uuid))
+         :json-type :string
+         :json-key "uuid"
          :reader uuid)
    (tmpdir :initarg :tmpdir
            :accessor tmpdir)
@@ -154,6 +172,8 @@
                :initform nil
                :documentation "DEPRECATED: See T621, as we're migrating this away to root-urls")
    (root-urls :accessor root-urls
+              :json-type (:list :string)
+              :json-key "rootUrls"
               :initarg :root-urls
               :initform nil
               :documentation "The URLs that were used for the root")
@@ -162,7 +182,8 @@
                     :documentation "When the snapshot is being served,
                     this keeps track of the total number of current
                     requests. This allows us to wait until all assets
-                    are served before taking screenshots.")))
+                    are served before taking screenshots."))
+  (:metaclass ext-json-serializable-class))
 
 (defvar *request-counter-lock* (bt:make-lock "request-counter-lock"))
 
