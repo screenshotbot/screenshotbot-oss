@@ -26,8 +26,6 @@
                 #:assoc-value)
   (:import-from #:util/request
                 #:http-request)
-  (:import-from #:screenshotbot/api/model
-                #:encode-json)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
@@ -169,11 +167,12 @@ upload blobs that haven't been uploaded before."
                                  :commit commit
                                  :branch-hash branch-hash
                                  :merge-base (ignore-errors (git:merge-base repo branch-hash commit)))))
-     (request
-      "/api/replay/schedule"
-      :method :post
-      :content-type "application/json"
-      :content (encode-json request)))))
+     (uiop:with-temporary-file (:pathname p)
+       (cl-store:store request p)
+       (request
+        "/api/replay/schedule"
+        :method :post
+        :content p)))))
 
 (defun find-all-index.htmls (dir)
   (declare (optimize (debug 3) (speed 0)))
