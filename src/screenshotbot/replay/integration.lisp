@@ -40,7 +40,6 @@
                 #:context
                 #:write-replay-log
                 #:uuid
-                #:root-asset
                 #:asset-file
                 #:load-url-into
                 #:snapshot)
