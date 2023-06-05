@@ -498,8 +498,12 @@ function prepareReportJs () {
             $.ajax({
                 url: zoomToLink,
                 success: function(data) {
-                    var event = new CustomEvent("zoomToChange", { detail: data });
-                    $("canvas", canvasContainer).get(0).dispatchEvent(event);
+                    if (data.x < 0) {
+                        alert("Both images are identical in content");
+                    } else {
+                        var event = new CustomEvent("zoomToChange", { detail: data });
+                        $("canvas", canvasContainer).get(0).dispatchEvent(event);
+                    }
                     zoomToChangeSpinner.hide();
                 },
                 error: function () {

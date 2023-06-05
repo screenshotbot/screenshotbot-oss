@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/compare
+                #:random-non-alpha-px
                 #:image-comparison-job
                 #:prepare-image-comparison
                 #:random-zoom-to-on-result
@@ -45,6 +46,13 @@
                 #:assert-that)
   (:import-from #:fiveam-matchers/described-as
                 #:described-as)
+  (:import-from #:screenshotbot/magick/magick-lw
+                #:with-pixel-wand
+                #:pixel-set-color
+                #:magick-new-image
+                #:with-wand)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-compare)
 
@@ -78,6 +86,16 @@
         (is (eql 360 (a:assoc-value res :height)))
         (is (< -1 (a:assoc-value res :x) 360))
         (is (< -1 (a:assoc-value res :y) 360))))))
+
+(test random-non-alpha-for-no-alphas
+  (with-fixture state ()
+    (with-wand (wand)
+      (with-pixel-wand (pw)
+        (pixel-set-color pw "none")
+        (magick-new-image wand 10 10 pw)
+        (multiple-value-bind (x y) (random-non-alpha-px wand nil)
+          (is (eql -1 x))
+          (is (eql -1 y)))))))
 
 (test report-screenshot-test
   (with-fixture state ()

@@ -313,21 +313,31 @@
                              (:height . ,(mask-rect-height mask))))
                      #())))))))))
 
+(defun random-non-alpha-px (wand masks)
+  (let ((pxs (get-non-alpha-pixels wand
+                                   :masks masks)))
+    (let ((num (car (array-dimensions pxs))))
+     (cond
+       ((= num 0)
+        (values -1 -1))
+       (t
+        (let ((i (random num)))
+          (values
+           (aref pxs i 0)
+           (aref pxs i 1))))))))
 
 (defun random-zoom-to-on-result (image-comparison masks)
   (setf (hunchentoot:content-type*) "application/json")
   (with-local-image (file (image-comparison-result image-comparison))
     (with-wand (wand :file file)
       (log:debug"random-zoom-to-on-result on ~a" file)
-      (let ((pxs (get-non-alpha-pixels wand
-                                       :masks masks)))
-        (let ((i (random (car (array-dimensions pxs)))))
-          (let ((dims (image-dimensions (image-comparison-result image-comparison))))
-            (json:encode-json-to-string
-             `((:y . ,(aref pxs i 1))
-               (:x . ,(aref pxs i 0))
-               (:width . ,(dimension-width dims))
-               (:height . ,(dimension-height dims))))))))))
+      (multiple-value-bind (x y) (random-non-alpha-px wand masks)
+        (let ((dims (image-dimensions (image-comparison-result image-comparison))))
+          (json:encode-json-to-string
+           `((:y . ,y)
+             (:x . ,x)
+             (:width . ,(dimension-width dims))
+             (:height . ,(dimension-height dims)))))))))
 
 
 (defun async-diff-report (&rest args &key &allow-other-keys)
