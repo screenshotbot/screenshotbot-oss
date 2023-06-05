@@ -240,6 +240,10 @@
    (onutput (:reference-return :double)))
   :result-type (:pointer wand))
 
+(fli:define-foreign-function (%magick-identify-image "MagickIdentifyImage")
+    ((wand (:pointer wand)))
+  :result-type (:pointer :char))
+
 (fli:define-foreign-function (magick-set-option "MagickSetOption")
     ((wand (:pointer wand))
      (name (:reference :ef-mb-string))
@@ -678,3 +682,10 @@
             wand))
           (save-as-webp wand output
                         :lossless nil)))))))
+
+
+(defun magick-identify-image (wand)
+  (let ((ptr (%magick-identify-image wand)))
+    (unwind-protect
+         (fli:convert-from-foreign-string ptr)
+      (magick-relinquish-memory ptr))))

@@ -10,6 +10,7 @@
         #:fiveam-matchers
         #:screenshotbot/mask-rect-api)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:magick-identify-image
                 #:with-pixel
                 #:magick-get-image-width
                 #:magick-get-image-height
@@ -49,6 +50,8 @@
                 #:described-as)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:fiveam-matchers/strings
+                #:matches-regex)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#:fli #:util/fake-fli)))
@@ -546,3 +549,9 @@
         (with-wand (res :file dest)
           (is (eql 2 (magick-get-image-height res)))
           (is (eql 5 (magick-get-image-width res))))))))
+
+(test identify-image
+  (with-fixture state ()
+    (with-wand (wand :file rose)
+      (assert-that (magick-identify-image wand)
+                   (matches-regex "png:IHDR.bit_depth: 8")))))
