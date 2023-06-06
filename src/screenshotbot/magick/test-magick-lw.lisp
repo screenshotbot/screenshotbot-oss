@@ -10,6 +10,7 @@
         #:fiveam-matchers
         #:screenshotbot/mask-rect-api)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:magick-bad-exif-data
                 #:magick-identify-image
                 #:with-pixel
                 #:magick-get-image-width
@@ -60,12 +61,17 @@
 
 (util/fiveam:def-suite)
 
+(eval-when (:compile-toplevel :execute)
+  (defun fixture (name)
+    (asdf:system-relative-pathname :screenshotbot.magick
+                                   (format nil "../fixture/~a" name))))
+
 (def-fixture state ()
   (tmpdir:with-tmpdir (tmpdir)
-    (let ((rose #.(asdf:system-relative-pathname :screenshotbot.magick "../fixture/rose.png"))
-          (rose-webp #.(asdf:system-relative-pathname :screenshotbot.magick "../fixture/rose.webp"))
-          (wizard #.(asdf:system-relative-pathname :screenshotbot.magick "../fixture/wizard.png"))
-          (transparent #.(asdf:system-relative-pathname :screenshotbot.magick "../fixture/point.png")))
+    (let ((rose #.(fixture "rose.png"))
+          (rose-webp #.(fixture "rose.webp"))
+          (wizard #.(fixture "wizard.png"))
+          (transparent #.(fixture "point.png")))
       (&body))))
 
 (test simple-file-load-save
@@ -555,3 +561,15 @@
     (with-wand (wand :file rose)
       (assert-that (magick-identify-image wand)
                    (matches-regex "png:IHDR.bit_depth: 8")))))
+
+(test magick-bad-exif-data ()
+  (with-fixture state ()
+    (with-wand (wand :file rose)
+      (is (fset:equal? (fset:empty-map)
+                       (magick-bad-exif-data wand))))
+    (with-wand (wand :file #. (fixture "image-with-timestamp.png"))
+      (is (fset:equal?
+           (fset:with
+            (fset:empty-map)
+            "png:tIME" "2023-06-06T14:13:20Z")
+           (magick-bad-exif-data wand))))))

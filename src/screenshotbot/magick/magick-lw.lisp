@@ -689,3 +689,22 @@
     (unwind-protect
          (fli:convert-from-foreign-string ptr)
       (magick-relinquish-memory ptr))))
+
+(defun magick-bad-exif-data (wand)
+  "Returns a map of `bad` exif data. This is exif data that might be
+temporary and change over time. At time of writing we only expect this
+to be encoded timestamps."
+  (let ((identification (magick-identify-image wand))
+        (keys (list "png:tIME")))
+    (log:info "Got id: ~a" identification)
+    (reduce
+     (lambda (map line)
+       (destructuring-bind (key &optional val) (mapcar #'str:trim (str:split ": " (str:trim line) :limit 2))
+         (log:info "Got key: ~a" key)
+         (cond
+           ((str:s-member keys key)
+            (fset:with map key val))
+           (t
+            map))))
+     (str:lines identification)
+     :initial-value (fset:empty-map))))

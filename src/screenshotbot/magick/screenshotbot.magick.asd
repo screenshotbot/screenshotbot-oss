@@ -16,6 +16,7 @@
                #:util/health-check
                #:screenshotbot.magick.build
                #:serapeum
+               #:fset
                #:util/copy-file
                #:alexandria)
   :components ((:file "magick")
