@@ -51,7 +51,7 @@
 
     #+lispworks
     (pushnew
-     (sys:lispworks-file "etc/lispcalls.jar")
+     (relpath (asdf:output-file 'asdf:compile-op (asdf:find-system :jvm/lispcalls)) (root))
      class-path)
     (log:debug "Using classpath: ~S" class-path)
 
