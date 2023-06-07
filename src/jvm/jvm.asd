@@ -19,6 +19,7 @@
                (:feature :lispworks :deliver-utils)
                :log4cl
                :util/misc
+               :util/health-check
                :util
                :trivial-garbage)
   :components ((:file "jvm")))

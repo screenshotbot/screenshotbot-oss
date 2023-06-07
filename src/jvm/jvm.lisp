@@ -12,6 +12,8 @@
                 #:guess-root)
   (:import-from #:util/misc
                 #:relpath)
+  (:import-from #:util/health-check
+                #:def-health-check)
   (:export :jvm-init
            :*libjvm*
            :free-memory
@@ -126,3 +128,7 @@
 (defun free-memory ()
   #+lispworks
   (%free-memory (get-runtime)))
+
+#+lispworks
+(def-health-check lispcalls.jar-is-accessible ()
+  (lw-ji:find-java-class "com.lispworks.LispCalls"))
