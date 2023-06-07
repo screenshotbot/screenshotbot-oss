@@ -54,9 +54,12 @@ might get logged in the webserver logs."
       (let ((version (cond
                        ((eql 200 ret)
                         (decode-json body 'version))
-                       (t
+                       ((eql 404 ret)
                         (log:warn "/api/version responded 404, this is probably because of running an old version of OSS Screenshotbot service")
-                        (make-instance 'version :version 1)))))
+                        (make-instance 'version :version 1))
+                       (t
+                        (log:error "/api/version failed with code ~a" ret)
+                        (error "/api/version failed")))))
         (version-number version)))))
 
 (def-easy-macro with-version-check (&fn fn)
