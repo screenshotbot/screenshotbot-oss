@@ -22,6 +22,7 @@
                              (build-utils:java-file "JiraOAuthClient")
                              (build-utils:java-file "JiraOAuthGetTemporaryToken")
                              (build-utils:java-file "OAuthAuthenticationHandler")
+                             (build-utils:java-file "TokenAuthenticationHandler")
                              (build-utils:java-file "PropertiesClient")
                              (build-utils:java-file "Command")
                              (build-utils:java-file "JiraOAuthGetAccessToken")
