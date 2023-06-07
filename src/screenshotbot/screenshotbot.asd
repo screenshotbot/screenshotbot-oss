@@ -472,6 +472,7 @@
                :util/misc
                :util/request
                :util/lru-cache
+               :util/json-mop
                :hunchentoot-extensions
                :util/digests
                :util/cron
