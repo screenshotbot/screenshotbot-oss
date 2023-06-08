@@ -30,9 +30,12 @@
 #+lispworks
 (defmethod perform ((o compile-op) (s lispcalls-system))
   (let ((output (asdf:output-file o s)))
-   (unless (uiop:file-exists-p output)
-     (uiop:copy-file (sys:lispworks-file "etc/lispcalls.jar")
-                     output))))
+    (uiop:copy-file (sys:lispworks-file "etc/lispcalls.jar")
+                    output)))
+
+(defmethod operation-done-p ((o compile-op) (s lispcalls-system))
+  (let ((output (asdf:output-file o s)))
+    (uiop:file-exists-p output)))
 
 (defmethod asdf:output-files ((o compile-op) (s lispcalls-system))
   (list #P "lispcalls.jar"))
