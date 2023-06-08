@@ -189,6 +189,9 @@
                  (:file "site-admin")
                  (:file "audit-log")))
    (:file "image-comparison")
+   (:module "webhook"
+    :serial t
+    :components ((:file "model")))
    (:file "abstract-pr-promoter")
    (:module "github"
     :serial t
