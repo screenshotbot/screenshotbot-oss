@@ -52,7 +52,10 @@
      (signing-key
       :initarg :signing-key
       :reader signing-key
-      :initform "foobarCardar"))
+      :initform "foobarCardar")
+     (enabledp
+      :initarg :enabledp
+      :reader enabledp))
     (:metaclass persistent-class)))
 
 #+nil

@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/api/model
                 #:encode-json)
   (:import-from #:screenshotbot/webhook/model
+                #:enabledp
                 #:signing-key
                 #:endpoint
                 #:webhook-config-for-company)
@@ -25,16 +26,17 @@
 (defmethod send-webhook (company payload)
   (when-let* ((payload (encode-json payload))
               (config (webhook-config-for-company company)))
-    (make-thread
-     (lambda ()
-       (log:info "Sending payload")
-       (let ((signature (sign-payload payload :key (signing-key config))))
-         (http-request
-          (endpoint config)
-          :content payload
-          :additional-headers `(("Screenshotbot-Signature"
-                                 signature))
-          :method :post))))))
+    (when (enabledp config)
+     (make-thread
+      (lambda ()
+        (log:info "Sending payload")
+        (let ((signature (sign-payload payload :key (signing-key config))))
+          (http-request
+           (endpoint config)
+           :content payload
+           :additional-headers `(("Screenshotbot-Signature"
+                                  signature))
+           :method :post)))))))
 
 (defun sign-payload (payload &key (time (local-time:now))
                                key)

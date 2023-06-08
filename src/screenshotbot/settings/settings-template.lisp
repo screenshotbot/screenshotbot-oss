@@ -44,7 +44,7 @@
   (let ((sections (mapcar 'settings-section (mapcar 'cdr (all-settings (installation))))))
     (assert (equal nil
                    (set-difference (remove-duplicates sections)
-                                   '(nil :vcs :tasks :organization)
+                                   '(nil :vcs :tasks :organization :developers)
                                    :test #'string=)))
 
       <dashboard-template scripts= (list
@@ -60,6 +60,7 @@
             <settings-render-section title= "Organization" section=:organization />
             <settings-render-section title= "VCS" section=:vcs />
             <settings-render-section title= "Tasks" section=:tasks />
+            <settings-render-section title= "Developers" section=:developers />
           </ul>
         </div>
 

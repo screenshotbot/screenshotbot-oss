@@ -192,7 +192,8 @@
    (:module "webhook"
     :serial t
     :components ((:file "model")
-                 (:file "webhook")))
+                 (:file "webhook")
+                 (:file "settings")))
    (:file "abstract-pr-promoter")
    (:module "github"
     :serial t
