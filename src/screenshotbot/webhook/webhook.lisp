@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/api/model
                 #:encode-json)
   (:import-from #:screenshotbot/webhook/model
+                #:signing-key
                 #:endpoint
                 #:webhook-config-for-company)
   (:import-from #:util/request
@@ -27,7 +28,25 @@
     (make-thread
      (lambda ()
        (log:info "Sending payload")
-       (http-request
-        (endpoint config)
-        :content payload
-        :method :post)))))
+       (let ((signature (sign-payload payload :key (signing-key config))))
+         (http-request
+          (endpoint config)
+          :content payload
+          :additional-headers `(("Screenshotbot-Signature"
+                                 signature))
+          :method :post))))))
+
+(defun sign-payload (payload &key (time (local-time:now))
+                               key)
+  (let* ((unix (local-time:timestamp-to-unix time))
+         (payload (format nil "~a.~a"
+                          unix
+                          payload))
+         (mac (ironclad:make-mac :hmac
+                                 (flex:string-to-octets key)
+                                 :sha256)))
+    (ironclad:update-mac mac (flex:string-to-octets payload))
+    (format nil
+            "t=~a,signature=~a"
+            unix
+            (ironclad:byte-array-to-hex-string (ironclad:produce-mac mac)))))

@@ -339,6 +339,8 @@
                (:file "test-taskie")
                (:file "test-audit-log")
                (:file "test-abstract-pr-promoter")
+               (:module "webhook"
+                :components ((:file "test-webhook")))
                (:module "dashboard"
                 :components ((:file "test-recent-runs")
                              (:file "test-ensure-company")

@@ -19,7 +19,9 @@
   (:import-from #:screenshotbot/model/company
                 #:company-with-name)
   (:import-from #:util/store/object-id
-                #:find-by-oid))
+                #:find-by-oid)
+  (:export
+   #:signing-key))
 (in-package :screenshotbot/webhook/model)
 
 (with-class-validation
@@ -46,7 +48,11 @@
                :index-reader webhook-config-for-company)
      (endpoint :initarg :endpoint
                :reader endpoint
-               :initform "https://tdrhq.com/sb-webhook"))
+               :initform "https://tdrhq.com/sb-webhook")
+     (signing-key
+      :initarg :signing-key
+      :reader signing-key
+      :initform "foobarCardar"))
     (:metaclass persistent-class)))
 
 #+nil
