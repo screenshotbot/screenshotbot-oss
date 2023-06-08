@@ -226,6 +226,9 @@
   :depends-on (:bordeaux-threads
                :mailbox
                :str
+               :fset
+               :lparallel
+               :atomics
                :trivial-backtrace
                #-screenshotbot-oss
                :sentry

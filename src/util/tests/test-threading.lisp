@@ -9,6 +9,8 @@
         #:fiveam
         #:util/threading)
   (:import-from #:util/threading
+                #:*trace-stream*
+                #:max-pool
                 #:build-extras
                 #:with-extras
                 #:*log-sentry-p*
@@ -29,10 +31,16 @@
 
 (util/fiveam:def-suite)
 
+(defvar *ctr* 0)
+
 (def-fixture state ()
-  (let ((*catch-errors-p* t)
-        (*debugger-hook* *debugger-hook*))
-    (&body)))
+  (let ((stream (make-string-output-stream)))
+   (with-global-binding ((*catch-errors-p* t)
+                         (*debugger-hook* *debugger-hook*)
+                         (*trace-stream* stream))
+     (unwind-protect
+          (&body)
+       (setf *ctr* 0)))))
 
 (test simple-create-thread
   (with-fixture state ()
@@ -75,7 +83,7 @@
   (cl-mock:with-mocks ()
     ;; don't print the stack traces to the test output
     (cl-mock:if-called 'trivial-backtrace:print-backtrace
-                        (lambda (e)))
+                        (lambda (e &key output)))
 
     (let ((hunchentoot:*catch-errors-p* t))
       (let ((sentry-logs nil))
@@ -186,3 +194,40 @@
         (incf count)
         (assert-that (build-extras nil)
                      (contains '("name" . "2")))))))
+
+(defvar *lock* (bt:make-lock))
+
+(test max-pool
+  (with-fixture state ()
+    (let ((max-pool (make-instance 'max-pool :max 3))
+          (thread-count 100))
+      (let* ((promises (loop for i from 0 below thread-count
+                             collect (make-thread
+                                      (lambda ()
+                                        (bt:with-lock-held (*lock*)
+                                          (incf *ctr*)))
+                                      :pool max-pool)))
+             (threads (loop for promise in promises
+                            collect (lparallel:force promise))))
+        (dolist (thread threads)
+          (bt:join-thread thread))
+        (is (eql thread-count *ctr*))))))
+
+
+(test max-pool-with-errors
+  (with-fixture state ()
+    (with-global-binding ((*log-sentry-p* nil))
+     (let ((max-pool (make-instance 'max-pool :max 3))
+           (thread-count 100))
+       (let* ((promises (loop for i from 0 below thread-count
+                              collect (make-thread
+                                       (lambda ()
+                                         (bt:with-lock-held (*lock*)
+                                           (incf *ctr*))
+                                         (error "foobar"))
+                                       :pool max-pool)))
+              (threads (loop for promise in promises
+                             collect (lparallel:force promise))))
+         (dolist (thread threads)
+           (bt:join-thread thread))
+         (is (eql thread-count *ctr*)))))))

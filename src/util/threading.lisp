@@ -27,6 +27,7 @@
 )
 (in-package :util/threading)
 
+(defvar *trace-stream* *debug-io*)
 (defvar *catch-errors-p* t)
 (defvar *log-sentry-p* t)
 
@@ -173,7 +174,9 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
      ;; cause the process to crash
      (%invoke-debugger e))
     (t
-     (trivial-backtrace:print-backtrace e)
+     (trivial-backtrace:print-backtrace
+      e
+      :output *trace-stream*)
      (invoke-restart 'ignore-error))))
 
 (def-easy-macro ignore-and-log-errors (&fn fn)
@@ -200,3 +203,54 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
   (bt:make-thread
    fn
    :name name))
+
+(defclass max-pool-job ()
+  ((fn :initarg :fn
+     :reader fn)
+   (name :initarg :name
+         :reader job-name)
+   (promise :initarg :promise
+            :reader job-promise)))
+
+(defclass max-pool ()
+  ((max :initarg :max
+        :initform 100
+        :reader max-count)
+   (thread-count :initform 0
+                 :reader thread-count)
+   (queue :accessor queue
+          :initform (fset:empty-seq))
+   (lock :initform (bt:make-lock)
+         :reader lock))
+  (:documentation "A thread pool that has a maximum number of parallel threads running."))
+
+(defmethod maybe-process-queue ((self max-pool))
+  (bt:with-lock-held ((lock self))
+    (when (and
+           (< (thread-count self) (max-count self))
+           (not (fset:empty? (queue self))))
+      (let ((next (fset:first (queue self))))
+        (incf (slot-value self 'thread-count))
+        (lparallel:fulfill (job-promise next)
+          (bt:make-thread (lambda ()
+                            (unwind-protect
+                                 (funcall (fn next))
+                              (bt:with-lock-held ((lock self))
+                                (decf (slot-value self 'thread-count)))
+                              (maybe-process-queue self)))
+                          :name (job-name next)))
+        (setf (queue self) (fset:less-first (queue self)))))))
+
+(defmethod make-thread-impl ((self max-pool) fn &key name)
+  "Unlike the unlimited pool, in this case we'll return a promise of a
+thread, not a thread itself."
+  (let* ((promise (lparallel:promise))
+         (job (make-instance 'max-pool-job
+                             :fn fn
+                             :name name
+                             :promise promise)))
+    (bt:with-lock-held ((lock self))
+      (setf (queue self)
+            (fset:with-last (queue self) job)))
+    (maybe-process-queue self)
+    promise))
