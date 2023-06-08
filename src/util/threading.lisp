@@ -183,9 +183,20 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
     (ignore-error ()
       (values))))
 
-(defun make-thread (body &rest args)
-  (apply #'bt:make-thread
-           (lambda ()
-             (ignore-and-log-errors ()
-               (funcall body)))
-           args))
+(defclass unlimited-pool ()
+  ())
+
+(defvar *unlimited-pool* (make-instance' unlimited-pool))
+
+(defun make-thread (body &key (pool *unlimited-pool*) name)
+  (make-thread-impl
+   pool
+   (lambda ()
+     (ignore-and-log-errors ()
+       (funcall body)))
+   :name name))
+
+(defmethod make-thread-impl ((self unlimited-pool) fn &key name)
+  (bt:make-thread
+   fn
+   :name name))
