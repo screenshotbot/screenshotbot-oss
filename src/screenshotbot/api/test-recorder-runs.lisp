@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/server
                 #:logged-in-p)
   (:import-from #:screenshotbot/api/recorder-run
+                #:run-to-dto
                 #:warmup-image-caches
                 #:api-run-put
                 #:make-screenshot-for-channel
@@ -49,6 +50,9 @@
                 #:current-company)
   (:import-from #:screenshotbot/model/image
                 #:make-image)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
+                #:recorder-run)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 
 (util/fiveam:def-suite)
@@ -140,4 +144,12 @@
       (answer (current-company)
         company)
       (finishes
-       (api-run-put)))))
+        (api-run-put)))))
+
+(test run-to-dto
+  (with-fixture state ()
+    (finishes
+      (run-to-dto (make-recorder-run
+                   :branch "abcd"
+                   :screenshots (list
+                                 (make-screenshot :image img1 :name "foo")))))))

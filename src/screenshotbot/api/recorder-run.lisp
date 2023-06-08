@@ -40,6 +40,8 @@
                 #:make-screenshot-map)
   (:import-from #:screenshotbot/model/recorder-run
                 #:make-recorder-run)
+  (:import-from #:util/misc
+                #:?.)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -110,7 +112,12 @@
 
 (defun run-to-dto (run)
   (make-instance 'dto:run
-                 :id (oid run)))
+                 :id (oid run)
+                 :main-branch-hash (recorder-run-branch run)
+                 :commit-hash (recorder-run-commit run)
+                 :merge-base (recorder-run-merge-base run)
+                 :channel (?. channel-name (recorder-run-channel run))
+                 :pull-request (pull-request-url run)))
 
 (defapi (api-run-put :uri "/api/run" :method :put :use-yason t) ()
   (let ((body (hunchentoot:raw-post-data :force-text t)))

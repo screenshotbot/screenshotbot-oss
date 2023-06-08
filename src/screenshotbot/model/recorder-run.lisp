@@ -142,6 +142,7 @@
      :initform nil)
     (branch
      :initarg :branch
+     :initform nil
      :accessor recorder-run-branch)
     (branch-hash
      :initarg :branch-hash
