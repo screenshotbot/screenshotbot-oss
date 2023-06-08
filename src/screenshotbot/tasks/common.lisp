@@ -23,7 +23,18 @@
   (:import-from #:screenshotbot/diff-report
                 #:diff-report-title)
   (:import-from #:screenshotbot/model/company
-                #:add-company-report))
+                #:add-company-report)
+  (:import-from #:screenshotbot/webhook/model
+                #:webhook-payload)
+  (:import-from #:util/json-mop
+                #:ext-json-serializable-class)
+  (:import-from #:screenshotbot/user-api
+                #:channel-name)
+  (:import-from #:screenshotbot/api/recorder-run
+                #:run-to-dto)
+  (:import-from #:screenshotbot/webhook/webhook
+                #:send-webhook)
+  (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/tasks/common)
 
 (defclass noop-task-integration (task-integration)
@@ -64,6 +75,19 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
 (defmethod maybe-send-tasks ((promoter master-promoter) run)
   (%maybe-send-tasks run))
 
+(defclass channel-promoted-payload (webhook-payload)
+  ((channel :initarg :channel
+            :json-key "channel"
+            :json-type :string)
+   (run :initarg :run
+        :json-key "run"
+        :json-type dto:run)
+   (previous-run :initarg :previous-run
+                :json-key "previousRun"
+                :json-type dto:run))
+  (:metaclass ext-json-serializable-class)
+  (:default-initargs :event "channel.promotion"))
+
 (defun %maybe-send-tasks (run)
   "Send any tasks if required, called from a background job without
   any db."
@@ -95,6 +119,11 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
                  ;; by the user, it's not used in the promotion
                  ;; flows.
                  (warmup-comparison-images run previous-run)
+                 (send-webhook company
+                               (make-instance 'channel-promoted-payload
+                                              :channel (channel-name channel)
+                                              :run (run-to-dto run)
+                                              :previous-run (run-to-dto previous-run)))
                  (dolist (task-integration (get-enabled-task-integrations company channel))
                    (let ((task-integration task-integration))
                      (labels ((thread ()

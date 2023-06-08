@@ -191,7 +191,8 @@
    (:file "image-comparison")
    (:module "webhook"
     :serial t
-    :components ((:file "model")))
+    :components ((:file "model")
+                 (:file "webhook")))
    (:file "abstract-pr-promoter")
    (:module "github"
     :serial t

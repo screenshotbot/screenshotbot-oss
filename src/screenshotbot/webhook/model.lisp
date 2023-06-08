@@ -10,7 +10,9 @@
                 #:persistent-class
                 #:store-object)
   (:import-from #:util/store/store
-                #:with-class-validation))
+                #:with-class-validation)
+  (:import-from #:util/json-mop
+                #:ext-json-serializable-class))
 (in-package :screenshotbot/webhook/model)
 
 (with-class-validation
@@ -26,3 +28,10 @@
          :reader event-ts))
     (:metaclass persistent-class)
     (:default-initargs :ts (get-universal-time))))
+
+(defclass webhook-payload ()
+  ((event :initarg :event
+          :json-key "event"
+          :json-type :string
+          :reader event))
+  (:metaclass ext-json-serializable-class))
