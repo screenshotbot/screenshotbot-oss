@@ -10,9 +10,16 @@
                 #:persistent-class
                 #:store-object)
   (:import-from #:util/store/store
+                #:defindex
                 #:with-class-validation)
   (:import-from #:util/json-mop
-                #:ext-json-serializable-class))
+                #:ext-json-serializable-class)
+  (:import-from #:util/store/fset-index
+                #:fset-unique-index)
+  (:import-from #:screenshotbot/model/company
+                #:company-with-name)
+  (:import-from #:util/store/object-id
+                #:find-by-oid))
 (in-package :screenshotbot/webhook/model)
 
 (with-class-validation
@@ -28,6 +35,23 @@
          :reader event-ts))
     (:metaclass persistent-class)
     (:default-initargs :ts (get-universal-time))))
+
+(defindex +company-index+ 'fset-unique-index :slot-name '%company)
+
+(with-class-validation
+  (defclass webhook-company-config (store-object)
+    ((%company :initarg :company
+               :reader reader
+               :index +company-index+
+               :index-reader webhook-config-for-company)
+     (endpoint :initarg :endpoint
+               :reader endpoint
+               :initform "https://tdrhq.com/sb-webhook"))
+    (:metaclass persistent-class)))
+
+#+nil
+(make-instance 'webhook-company-config
+               :company (find-by-oid "5fd16bcf4f4b3822fd0000e1"))
 
 (defclass webhook-payload ()
   ((event :initarg :event
