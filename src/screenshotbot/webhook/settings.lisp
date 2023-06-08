@@ -10,8 +10,7 @@
                 #:settings-template
                 #:defsettings)
   (:import-from #:nibble
-                #:nibble
-                #:defnibble)
+                #:nibble)
   (:import-from #:util/form-errors
                 #:with-error-builder
                 #:with-form-errors)
@@ -37,7 +36,7 @@
 
 (named-readtables:in-readtable markup:syntax)
 
-(defnibble post-webhook-settings (endpoint signing-key enabled)
+(defun post-webhook-settings (endpoint signing-key enabled)
   (with-error-builder (:check check :errors errors
                        :form-builder (get-webhook-settings)
                        :form-args (:endpoint endpoint
@@ -74,9 +73,11 @@
     (hex:safe-redirect "/settings/webhook")))
 
 (defun get-webhook-settings ()
-  (let ((config (webhook-config-for-company (current-company))))
+  (let ((config (webhook-config-for-company (current-company)))
+        (post (nibble (endpoint signing-key enable)
+                (post-webhook-settings endpoint signing-key enable))))
     <settings-template>
-      <form method= "post" action= (nibble post-webhook-settings) >
+      <form method= "post" action= post >
         <div class= "card mt-3">
           <div class= "card-header">
             <h3>Webhooks</h3>
