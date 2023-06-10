@@ -47,7 +47,9 @@
    #:with-pixel-wand
    #:screenshotbot-set-pixel
    #:with-pixel
-   #:embed-magick-native))
+   #:embed-magick-native
+   #:with-drawing-wand
+   #:magick-draw-image))
 (in-package :screenshotbot/magick/magick-lw)
 
 (defclass magick-native (abstract-magick)
@@ -165,6 +167,9 @@
     (dummy :int))
 
 (fli:define-c-struct pixel-wand
+    (dummy :int))
+
+(fli:define-c-struct drawing-wand
   (dummy :int))
 
 (fli:define-foreign-function (magick-wand-genesis "MagickWandGenesis")
@@ -260,6 +265,43 @@
     ((wand (:pointer wand))
      (file (:reference :ef-mb-string)))
   :result-type :boolean)
+
+(fli:define-foreign-function (draw-annotation "DrawAnnotation")
+    ((wand (:pointer drawing-wand))
+     (x :double)
+     (y :double)
+     (text (:reference :ef-mb-string)))
+  :result-type :void)
+
+(fli:define-foreign-function (draw-set-stroke-color "DrawSetStrokeColor")
+    ((dwand (:pointer drawing-wand))
+     (px (:pointer pixel-wand)))
+  :result-type :void)
+
+(fli:define-foreign-function (draw-set-fill-color "DrawSetFillColor")
+    ((dwand (:pointer drawing-wand))
+     (px (:pointer pixel-wand)))
+  :result-type :void)
+
+(fli:define-foreign-function (draw-set-font "DrawSetFont")
+    ((wand (:pointer drawing-wand))
+     (font-name (:reference :ef-mb-string)))
+  :result-type :boolean)
+
+(fli:define-foreign-function (new-drawing-wand "NewDrawingWand")
+    ()
+  :result-type (:pointer drawing-wand))
+
+(fli:define-foreign-function (magick-draw-image "MagickDrawImage")
+    ((wand (:pointer wand))
+     (dwand (:pointer drawing-wand)))
+  :result-type :boolean)
+
+(fli:define-foreign-function (destroy-drawing-wand "DestroyDrawingWand")
+    ((dwand (:pointer drawing-wand)))
+  ;; The function signature actually returns a pointer :/
+  :result-type (:pointer drawing-wand))
+
 
 (fli:define-foreign-function (magick-clear-exception "MagickClearException")
     ((wand (:pointer wand)))
@@ -643,6 +685,12 @@
     (unwind-protect
          (funcall fn pwand)
       (clear-pixel-wand pwand))))
+
+(def-easy-macro with-drawing-wand (&binding drawing-wand &fn fn)
+  (let ((dwand (new-drawing-wand)))
+    (unwind-protect
+         (funcall fn dwand)
+      (destroy-drawing-wand dwand))))
 
 (fli:define-foreign-function screenshotbot-resize
     ((wand (:pointer wand))
