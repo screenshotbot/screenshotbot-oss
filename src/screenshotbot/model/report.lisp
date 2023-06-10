@@ -41,6 +41,8 @@
                 #:defindex)
   (:import-from #:screenshotbot/model/view
                 #:can-edit)
+  (:import-from #:util/store/object-id
+                #:oid)
   (:export
    #:report
    #:report-run
@@ -56,7 +58,9 @@
    #:report-company
    #:acceptable-report
    #:acceptable-reviewer
-   #:company-promotion-reports))
+   #:company-promotion-reports
+   #:report-to-dto)
+  (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/model/report)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -186,3 +190,7 @@
     (setf (slot-value acceptable 'state)
           state)
     (setf (acceptable-reviewer acceptable) user)))
+
+(defun report-to-dto (report)
+  (make-instance 'dto:report
+                 :id (oid report)))

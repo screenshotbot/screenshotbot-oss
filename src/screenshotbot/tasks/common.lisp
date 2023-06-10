@@ -34,6 +34,8 @@
                 #:run-to-dto)
   (:import-from #:screenshotbot/webhook/webhook
                 #:send-webhook)
+  (:import-from #:screenshotbot/model/report
+                #:report-to-dto)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/tasks/common)
 
@@ -84,7 +86,10 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
         :json-type dto:run)
    (previous-run :initarg :previous-run
                 :json-key "previousRun"
-                :json-type dto:run))
+                 :json-type dto:run)
+   (report :initarg :report
+           :json-key "report"
+           :json-type dto:report))
   (:metaclass ext-json-serializable-class)
   (:default-initargs :event "channel.promotion"))
 
@@ -123,7 +128,8 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
                                (make-instance 'channel-promoted-payload
                                               :channel (channel-name channel)
                                               :run (run-to-dto run)
-                                              :previous-run (run-to-dto previous-run)))
+                                              :previous-run (run-to-dto previous-run)
+                                              :report (report-to-dto report)))
                  (dolist (task-integration (get-enabled-task-integrations company channel))
                    (let ((task-integration task-integration))
                      (labels ((thread ()

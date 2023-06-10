@@ -43,7 +43,8 @@
              #:run-repo
              #:build-url
              #:override-commit-hash
-             #:compare-threshold))
+             #:compare-threshold
+             #:report))
 
 (in-package :screenshotbot/api/model)
 
@@ -193,6 +194,12 @@
                       :json-type (or null :number)
                       :initform nil
                       :reader compare-threshold))
+  (:metaclass ext-json-serializable-class))
+
+(defclass report ()
+  ((id :initarg :id
+       :json-key "id"
+       :json-type :string))
   (:metaclass ext-json-serializable-class))
 
 (defmethod json-mop:json-to-clos ((items vector) (class (eql 'screenshot-list))

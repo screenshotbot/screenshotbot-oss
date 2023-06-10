@@ -18,8 +18,11 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/model/report
+                #:report-to-dto
                 #:company-promotion-reports
-                #:%report-company))
+                #:%report-company)
+  (:import-from #:screenshotbot/api/model
+                #:encode-json))
 (in-package :screenshotbot/model/test-report)
 
 (util/fiveam:def-suite)
@@ -58,3 +61,11 @@
        (fset:equal?
         (fset:with (fset:empty-set) report-1)
         (company-promotion-reports company))))))
+
+(test dto-is-serializable
+  (with-fixture state ()
+    (let ((report (make-instance 'report
+                                 :run run
+                                 :previous-run run)))
+      (finishes
+       (encode-json (report-to-dto report))))))
