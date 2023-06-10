@@ -84,8 +84,8 @@
 
 (defun get-webhook-settings ()
   (let ((config (ensure-webhook-config (current-company)))
-        (post (nibble (endpoint signing-key enable)
-                (post-webhook-settings endpoint signing-key enable))))
+        (post (nibble (endpoint signing-key enabled)
+                (post-webhook-settings endpoint signing-key enabled))))
     <settings-template>
       <form method= "post" action= post >
         <div class= "card mt-3">
