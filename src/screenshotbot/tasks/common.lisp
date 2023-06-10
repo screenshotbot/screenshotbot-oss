@@ -81,6 +81,9 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
   ((channel :initarg :channel
             :json-key "channel"
             :json-type :string)
+   (branch :initarg :branch
+           :json-key "branch"
+           :json-type (or null :string))
    (run :initarg :run
         :json-key "run"
         :json-type dto:run)
@@ -127,6 +130,7 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
                  (send-webhook company
                                (make-instance 'channel-promoted-payload
                                               :channel (channel-name channel)
+                                              :branch (recorder-run-branch run)
                                               :run (run-to-dto run)
                                               :previous-run (run-to-dto previous-run)
                                               :report (report-to-dto report)))
