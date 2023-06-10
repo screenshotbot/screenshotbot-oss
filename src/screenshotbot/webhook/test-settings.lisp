@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/testing
+                #:with-test-user
                 #:with-installation
                 #:screenshot-test)
   (:import-from #:screenshotbot/webhook/settings
@@ -15,16 +16,19 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:auth
-                #:with-sessions))
+                #:with-sessions)
+  (:import-from #:util/store/store
+                #:with-test-store))
 (in-package :screenshotbot/webhook/test-settings)
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-installation ()
-    (with-fake-request ()
-      (with-sessions ()
-       (&body)))))
+  (with-test-store ()
+   (with-installation ()
+     (with-test-user (:logged-in-p t)
+       (with-sessions ()
+         (&body))))))
 
 (screenshot-test webhook-settings-page
   (with-fixture state ()

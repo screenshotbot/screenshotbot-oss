@@ -23,6 +23,8 @@
                 #:delete-object
                 #:deftransaction)
   (:import-from #:screenshotbot/webhook/model
+                #:update-config
+                #:ensure-webhook-config
                 #:enabledp
                 #:signing-key
                 #:endpoint
@@ -65,19 +67,6 @@
                 (current-user))
            "You must be an admin to update this setting")))
 
-(defvar *lock* (bt:make-lock))
-
-(defun update-config (&key company endpoint signing-key enabled)
-  (bt:with-lock-held (*lock*)
-    (when-let ((prev (webhook-config-for-company company)))
-      (delete-object prev))
-    (make-instance 'webhook-company-config
-                   :company company
-                   :endpoint endpoint
-                   :signing-key signing-key
-                   :enabledp enabled)
-    (hex:safe-redirect "/settings/webhook")))
-
 (defun show-signing-key-on-click ()
   (ps
     (let* ((input (get-element-by-id "signing-key"))
@@ -94,7 +83,7 @@
            (set "text" "Hide")))))))
 
 (defun get-webhook-settings ()
-  (let ((config (webhook-config-for-company (current-company)))
+  (let ((config (ensure-webhook-config (current-company)))
         (post (nibble (endpoint signing-key enable)
                 (post-webhook-settings endpoint signing-key enable))))
     <settings-template>

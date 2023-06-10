@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/webhook/model
   (:use #:cl)
   (:import-from #:bknr.datastore
+                #:delete-object
                 #:persistent-class
                 #:store-object)
   (:import-from #:util/store/store
@@ -17,12 +18,20 @@
   (:import-from #:util/store/fset-index
                 #:fset-unique-index)
   (:import-from #:screenshotbot/model/company
+                #:company
                 #:company-with-name)
   (:import-from #:util/store/object-id
                 #:find-by-oid)
+  (:import-from #:alexandria
+                #:when-let)
+  (:import-from #:screenshotbot/model/core
+                #:generate-api-key)
   (:export
-   #:signing-key))
+   #:signing-key
+   #:update-config))
 (in-package :screenshotbot/webhook/model)
+
+(defvar *lock* (bt:make-lock))
 
 (with-class-validation
   (defclass webhook-event (store-object)
@@ -62,9 +71,32 @@
 (make-instance 'webhook-company-config
                :company (find-by-oid "5fd16bcf4f4b3822fd0000e1"))
 
+(defmethod ensure-webhook-config ((company company))
+  (bt:with-lock-held (*lock*)
+    (let ((config
+            (webhook-config-for-company company)))
+      (or
+       config
+       (make-instance 'webhook-company-config
+                      :company company
+                      :endpoint ""
+                      :enabledp nil
+                      :signing-key (generate-api-key))))))
+
 (defclass webhook-payload ()
   ((event :initarg :event
           :json-key "event"
           :json-type :string
           :reader event))
   (:metaclass ext-json-serializable-class))
+
+(defun update-config (&key company endpoint signing-key enabled)
+  (bt:with-lock-held (*lock*)
+    (when-let ((prev (webhook-config-for-company company)))
+      (delete-object prev))
+    (make-instance 'webhook-company-config
+                   :company company
+                   :endpoint endpoint
+                   :signing-key signing-key
+                   :enabledp enabled)
+    (hex:safe-redirect "/settings/webhook")))
