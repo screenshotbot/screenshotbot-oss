@@ -341,7 +341,8 @@
                (:file "test-audit-log")
                (:file "test-abstract-pr-promoter")
                (:module "webhook"
-                :components ((:file "test-webhook")))
+                :components ((:file "test-webhook")
+                             (:file "test-settings")))
                (:module "dashboard"
                 :components ((:file "test-recent-runs")
                              (:file "test-ensure-company")

@@ -25,7 +25,8 @@
      (mapcar
       #'package-name
         (sort
-         (let ((bad-packages (list (find-package :keyword))))
+         (let ((bad-packages (mapcar #'find-package
+                                     `(:keyword :common-lisp-user))))
           (loop for package in (list-all-packages)
                 if (and
                     (not (member package bad-packages))
