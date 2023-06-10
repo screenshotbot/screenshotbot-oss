@@ -31,7 +31,13 @@
   (:import-from #:alexandria
                 #:when-let)
   (:import-from #:util/misc
-                #:?.))
+                #:?.)
+  (:import-from #:core/ui/mdi
+                #:mdi)
+  (:import-from #:parenscript
+                #:ps)
+  (:import-from #:ps
+                #:@))
 (in-package :screenshotbot/webhook/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -72,6 +78,21 @@
                    :enabledp enabled)
     (hex:safe-redirect "/settings/webhook")))
 
+(defun show-signing-key-on-click ()
+  (ps
+    (let* ((input (get-element-by-id "signing-key"))
+           (verb (get-element-by-id "verb"))
+           (type (@ input type)))
+      (flet ((set (type verb-val)
+               (setf (@ input type) type)
+               (setf (@ verb inner-h-t-m-l) verb-val)
+               ))
+        (cond
+          ((= type "text")
+           (set "password" "Show"))
+          (t
+           (set "text" "Hide")))))))
+
 (defun get-webhook-settings ()
   (let ((config (webhook-config-for-company (current-company)))
         (post (nibble (endpoint signing-key enable)
@@ -90,9 +111,15 @@
 
             <div class= "form-group mb-3">
               <label class= "form-label" for= "signing-key" >Signing Secret Key</label>
-              <input type= "password" name= "signing-key" id= "signing-key" class= "form-control mb-3"
+              <div class= "input-group mb-2">
+                <input type= "password" name= "signing-key" id= "signing-key" class= "form-control"
 
-                     value= (?. signing-key config) />
+                       value= (?. signing-key config) />
+                <button type= "button" class="btn btn-danger"
+                        onclick= (show-signing-key-on-click) >
+                  <mdi name= "visibility" /> <span id= "verb">Show</span> Signing Key
+                </button>
+              </div>
 
               <div class= "text-muted">
                 The signing key can be any string. It will be used to compute an SHA256 HMAC which
