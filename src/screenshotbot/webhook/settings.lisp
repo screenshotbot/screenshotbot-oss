@@ -23,6 +23,7 @@
                 #:delete-object
                 #:deftransaction)
   (:import-from #:screenshotbot/webhook/model
+                #:webhook-event
                 #:update-config
                 #:ensure-webhook-config
                 #:enabledp
@@ -39,7 +40,10 @@
   (:import-from #:parenscript
                 #:ps)
   (:import-from #:ps
-                #:@))
+                #:@)
+  (:import-from #:screenshotbot/dashboard/audit-log
+                #:render-audit-logs
+                #:render-audit-log))
 (in-package :screenshotbot/webhook/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -128,6 +132,10 @@
           </div>
         </div>
       </form>
+
+      ,(render-audit-logs :type 'webhook-event
+                          :company (current-company)
+                          :title "Webhook Event History")
     </settings-template>))
 
 (defsettings webhook

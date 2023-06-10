@@ -16,6 +16,7 @@
   (:import-from #:util/json-mop
                 #:ext-json-serializable-class)
   (:import-from #:util/store/fset-index
+                #:fset-set-index
                 #:fset-unique-index)
   (:import-from #:screenshotbot/model/company
                 #:company
@@ -26,37 +27,38 @@
                 #:when-let)
   (:import-from #:screenshotbot/model/core
                 #:generate-api-key)
+  (:import-from #:screenshotbot/audit-log
+                #:base-audit-log)
   (:export
    #:signing-key
-   #:update-config))
+   #:update-config
+   #:webhook-event))
 (in-package :screenshotbot/webhook/model)
 
 (defvar *lock* (bt:make-lock))
 
+(defindex +company-event-index+ 'fset-set-index :slot-name '%company)
+
 (with-class-validation
-  (defclass webhook-event (store-object)
-    ((%company :initarg :company
-               :reader company)
-     (event :initarg :event
+  (defclass webhook-event (base-audit-log)
+    ((event :initarg :event
             :reader event
             :documentation "The name of the event being sent. This will also be in the payload, but we use this for rendering information.")
      (%payload :initarg :payload
-               :reader event-payload)
-     (ts :initarg :ts
-         :reader event-ts))
-    (:metaclass persistent-class)
-    (:default-initargs :ts (get-universal-time))))
+               :reader event-payload))
+    (:metaclass persistent-class)))
 
 (defindex +company-index+ 'fset-unique-index :slot-name '%company)
+
 
 (with-class-validation
   (defclass webhook-company-config (store-object)
     ((%company :initarg :company
-               :reader reader
+               :reader config-company
                :index +company-index+
                :index-reader webhook-config-for-company)
      (endpoint :initarg :endpoint
-               :reader endpoint
+               :accessor endpoint
                :initform "https://tdrhq.com/sb-webhook")
      (signing-key
       :initarg :signing-key

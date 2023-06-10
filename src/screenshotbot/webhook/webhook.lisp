@@ -9,6 +9,10 @@
   (:import-from #:screenshotbot/api/model
                 #:encode-json)
   (:import-from #:screenshotbot/webhook/model
+                #:config-company
+                #:webhook-payload
+                #:event
+                #:webhook-event
                 #:enabledp
                 #:signing-key
                 #:endpoint
@@ -19,24 +23,35 @@
                 #:when-let*)
   (:import-from #:util/threading
                 #:make-thread)
+  (:import-from #:screenshotbot/audit-log
+                #:with-audit-log)
   (:export
    #:send-webhook))
 (in-package :screenshotbot/webhook/webhook)
 
-(defmethod send-webhook (company payload)
-  (when-let* ((payload (encode-json payload))
+(defmethod send-webhook (company (payload webhook-payload))
+  (when-let* ((event-name (event payload))
+              (payload (encode-json payload))
               (config (webhook-config-for-company company)))
     (when (enabledp config)
      (make-thread
       (lambda ()
-        (log:info "Sending payload")
-        (let ((signature (sign-payload payload :key (signing-key config))))
-          (http-request
-           (endpoint config)
-           :content payload
-           :additional-headers `(("Screenshotbot-Signature"
-                                  signature))
-           :method :post)))))))
+        (actually-send-webhook config event-name payload))))))
+
+(defmethod actually-send-webhook (config event-name (payload string))
+  (log:info "Sending payload")
+  (with-audit-log (audit-log (make-instance 'webhook-event
+                                            :company (config-company config)
+                                            :event event-name
+                                            :payload payload))
+    (declare (ignore audit-log))
+    (let ((signature (sign-payload payload :key (signing-key config))))
+      (http-request
+       (endpoint config)
+       :content payload
+       :additional-headers `(("Screenshotbot-Signature"
+                              . ,signature))
+       :method :post))))
 
 (defun sign-payload (payload &key (time (local-time:now))
                                key)

@@ -44,11 +44,12 @@
     (string (type-of self)))))
 
 (deftag render-audit-logs (&key type (company (current-company))
-                           subtitle)
+                           subtitle
+                           (title "API Audit Logs"))
   (let ((audit-logs (audit-logs-for-company company type)))
     <div class= "card mt-3 pb-0">
       <div class= "card-header">
-        <h5>API Audit Logs</h5>
+        <h5>,(progn title) </h5>
       </div>
 
       <div class= "card-body pb-0">
