@@ -90,7 +90,7 @@
 
             <div class= "form-group mb-3">
               <label class= "form-label" for= "signing-key" >Signing Secret Key</label>
-              <input type= "text" name= "signing-key" id= "signing-key" class= "form-control mb-3"
+              <input type= "password" name= "signing-key" id= "signing-key" class= "form-control mb-3"
 
                      value= (?. signing-key config) />
 
