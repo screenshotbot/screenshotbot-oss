@@ -17,12 +17,15 @@
   (:import-from #:screenshotbot/model/company
                 #:company-admin-p)
   (:import-from #:screenshotbot/user-api
+                #:created-at
                 #:current-user
                 #:current-company)
   (:import-from #:bknr.datastore
                 #:delete-object
                 #:deftransaction)
   (:import-from #:screenshotbot/webhook/model
+                #:event-payload
+                #:event
                 #:webhook-event
                 #:update-config
                 #:ensure-webhook-config
@@ -43,7 +46,18 @@
                 #:@)
   (:import-from #:screenshotbot/dashboard/audit-log
                 #:render-audit-logs
-                #:render-audit-log))
+                #:render-audit-log)
+  (:import-from #:screenshotbot/audit-log
+                #:audit-log-error)
+  (:import-from #:screenshotbot/webhook/webhook
+                #:force-resend-webhook
+                #:payload)
+  (:import-from #:core/ui/simple-card-page
+                #:simple-card-page)
+  (:import-from #:core/ui/post
+                #:post-a)
+  (:import-from #:util/timeago
+                #:timeago))
 (in-package :screenshotbot/webhook/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -137,6 +151,27 @@
                           :company (current-company)
                           :title "Webhook Event History")
     </settings-template>))
+
+(defmethod render-audit-log ((self webhook-event))
+  (let ((failedp (audit-log-error self))
+        (details (nibble ()
+                   (setf (hunchentoot:content-type*) "application/json")
+                   (event-payload self)))
+        (retry (nibble (:once t)
+                 (force-resend-webhook self)
+                 (hex:safe-redirect "/settings/webhook"))))
+    <span class= (if failedp "text-danger" "text-success") >
+      <mdi name= (if failedp "close" "done") />
+      ,(event self) at ,(timeago :timestamp (created-at self))
+      <a href=details target= "_blank" >
+        <mdi name= "open_in_new" />
+      </a>
+
+      <post-a href= retry title= "Resend Webhook" >
+        <mdi name= "restart_alt" />
+      </post-a>
+
+    </span>) )
 
 (defsettings webhook
   :name "webhook"

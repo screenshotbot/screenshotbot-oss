@@ -33,14 +33,16 @@
    #:base-audit-log
    #:audit-logs-for-company
    #:audit-log-error
-   #:with-audit-log))
+   #:with-audit-log
+   #:audit-log-company))
 (in-package :screenshotbot/audit-log)
 
 (with-class-validation
   (defclass base-audit-log (store-object)
     ((%%company :initarg :company
                 :index-type fset-set-index
-                :index-reader %audit-logs-for-company)
+                :index-reader %audit-logs-for-company
+                :reader audit-log-company)
      (%%err :initarg :error
             :initform nil
             :accessor audit-log-error)

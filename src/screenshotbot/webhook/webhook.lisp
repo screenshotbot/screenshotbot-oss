@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/api/model
                 #:encode-json)
   (:import-from #:screenshotbot/webhook/model
+                #:event-payload
                 #:config-company
                 #:webhook-payload
                 #:event
@@ -20,11 +21,15 @@
   (:import-from #:util/request
                 #:http-request)
   (:import-from #:alexandria
+                #:assoc-value
                 #:when-let*)
   (:import-from #:util/threading
                 #:make-thread)
   (:import-from #:screenshotbot/audit-log
+                #:audit-log-company
                 #:with-audit-log)
+  (:import-from #:screenshotbot/model/company
+                #:company)
   (:export
    #:send-webhook))
 (in-package :screenshotbot/webhook/webhook)
@@ -38,20 +43,30 @@
       (lambda ()
         (actually-send-webhook config event-name payload))))))
 
+(defmethod force-resend-webhook ((ev webhook-event))
+  (when-let* ((company (audit-log-company ev))
+              (config (webhook-config-for-company company)))
+    (actually-send-webhook config (assoc-value
+                                   (json:decode-json-from-string (event-payload ev))
+                                   :event)
+                           (event-payload ev))))
+
 (defmethod actually-send-webhook (config event-name (payload string))
   (log:info "Sending payload")
-  (with-audit-log (audit-log (make-instance 'webhook-event
-                                            :company (config-company config)
-                                            :event event-name
-                                            :payload payload))
-    (declare (ignore audit-log))
-    (let ((signature (sign-payload payload :key (signing-key config))))
-      (http-request
-       (endpoint config)
-       :content payload
-       :additional-headers `(("Screenshotbot-Signature"
-                              . ,signature))
-       :method :post))))
+  (ignore-errors
+   (with-audit-log (audit-log (make-instance 'webhook-event
+                                             :company (config-company config)
+                                             :event event-name
+                                             :payload payload))
+     (declare (ignore audit-log))
+     (let ((signature (sign-payload payload :key (signing-key config))))
+       (http-request
+        (endpoint config)
+        :content payload
+        :additional-headers `(("Screenshotbot-Signature"
+                               . ,signature))
+        :ensure-success t
+        :method :post)))))
 
 (defun sign-payload (payload &key (time (local-time:now))
                                key)

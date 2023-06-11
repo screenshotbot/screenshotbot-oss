@@ -10,6 +10,7 @@
                :trivial-garbage
                :fset)
   :components ((:file "template")
+               (:file "post")
                (:file "simple-card-page")
                (:file "mdi")
                (:file "paginated")))
