@@ -145,6 +145,14 @@ means, that the newest elements are the greatest elements in our set."
                    (list* next so-far)))))))
     (build-page s n nil)))
 
+(defun empty-data-p (next-page-data)
+  "Either nil, or an empty set"
+  (or
+   (null next-page-data)
+   (and
+      (fset:set? next-page-data)
+      (fset:empty? next-page-data))))
+
 (defun %with-pagination (data body &key prev)
   (let ((n 50))
     (multiple-value-bind (this-page next-page-data)
@@ -152,7 +160,7 @@ means, that the newest elements are the greatest elements in our set."
      (let* ((this (nibble ()
                     (%with-pagination data body
                                       :prev prev)))
-            (next (when next-page-data
+            (next (unless (empty-data-p next-page-data)
                     (nibble ()
                       (%with-pagination next-page-data body
                                         :prev this)))))

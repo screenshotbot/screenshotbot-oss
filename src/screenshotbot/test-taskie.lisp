@@ -53,12 +53,16 @@
 (test with-pagination-empty-list
   (let ((data nil))
     (with-pagination (page data :next-link next-link :prev-link prev-link)
-      (is (equal nil page)))))
+      (is (equal nil page))
+      (is-false next-link)
+      (is-false prev-link))))
 
 (test with-pagination-empty-set
   (let ((data (fset:empty-set)))
     (with-pagination (page data :next-link next-link :prev-link prev-link)
-      (is (equal nil page)))))
+      (is (equal nil page))
+      (is-false next-link)
+      (is-false prev-link))))
 
 (test timeago-happy-path
   (finishes (timeago :timestamp 40))
