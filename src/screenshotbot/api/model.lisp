@@ -63,6 +63,7 @@
     (json-mop:encode object out)))
 
 (defmethod decode-json (json type)
+  (declare (optimize (speed 0) (debug 3)))
   (cond
     ((and
       (listp type)
