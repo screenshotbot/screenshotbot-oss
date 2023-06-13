@@ -38,6 +38,14 @@
     (is (typep ret 'version))
     (is (equal 2 (slot-value ret 'version)))))
 
+(test decoding-list
+  (let ((ret
+         (decode-json (str:trim " [{\"version\": 2},{\"version\":3}] ")
+                      '(:list version))))
+    (is (listp ret))
+    (is (equal 2 (slot-value (car ret) 'version)))
+    (is (equal 3 (slot-value (cadr ret) 'version)))))
+
 (test unrecognized-fields
   (let ((ret
          (decode-json (str:trim " {\"foo\": \"car\", \"version\": 2, \"bleh\": \"ten\"} ")

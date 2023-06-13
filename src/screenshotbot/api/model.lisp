@@ -63,7 +63,18 @@
     (json-mop:encode object out)))
 
 (defmethod decode-json (json type)
-  (json-mop:json-to-clos json type))
+  (cond
+    ((and
+      (listp type)
+      (eql :list (car type)))
+     (loop for item across (yason:parse (make-string-input-stream json)
+                                        :object-as :hash-table
+                                        :json-arrays-as-vectors t
+                                        :json-booleans-as-symbols t
+                                        :json-nulls-as-keyword t)
+           collect (json-mop:json-to-clos item (second type))))
+    (t
+     (json-mop:json-to-clos json type))))
 
 (defclass failed-run ()
   ((id :initarg :id

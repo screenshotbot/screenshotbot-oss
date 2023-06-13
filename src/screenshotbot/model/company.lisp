@@ -219,7 +219,6 @@
       :accessor enabledp))
     (:metaclass persistent-class)))
 
-
 ;; eh, we could do better
 (defun all-companies ()
   (remove-duplicates
