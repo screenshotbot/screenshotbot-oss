@@ -38,6 +38,7 @@
                 #:answer
                 #:if-called)
   (:import-from #:screenshotbot/sdk/git
+                #:current-branch
                 #:cleanp
                 #:repo-link
                 #:merge-base
@@ -193,6 +194,7 @@
     (let ((repo :dummy-repo))
       (answer (rev-parse repo "main") "abcd")
       (answer (current-commit repo) "bdfd")
+      (answer (current-branch repo) "my-branch")
       (answer (merge-base "abcd" "bdfd" "abcd"))
       (answer (repo-link repo) "https://github.com/tdrhq/fast-example")
       (answer (cleanp repo) t)

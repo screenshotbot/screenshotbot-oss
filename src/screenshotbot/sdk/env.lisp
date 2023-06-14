@@ -29,7 +29,9 @@
               :reader overrides))
   (:documentation "Reads the environment to get some information about the current build"))
 
-(defgeneric work-branch (env))
+(defgeneric work-branch (env)
+  (:documentation "This isn't being used, and can be removed if required. Currently we
+get this from the Git repository directly."))
 
 (defclass env-reader (base-env-reader)
   ())
