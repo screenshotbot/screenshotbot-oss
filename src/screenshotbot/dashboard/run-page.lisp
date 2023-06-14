@@ -227,6 +227,7 @@
             <li>Commit: ,(commit :repo repo :hash (recorder-run-commit run)) </li>
             <li>Override Commit hash for Pull Requests: ,(commit :repo repo :hash (override-commit-hash run))</li>
             <li>Main Branch: ,(recorder-run-branch run)</li>
+            <li>Branch: ,(recorder-run-work-branch run)</li>
             <li>Commit on branch: ,(commit :repo repo :hash (ignore-errors
                                                              (recorder-run-branch-hash run)))</li>
             <li>Merge base: ,(commit :repo repo :hash (recorder-run-merge-base run))</li>
@@ -238,6 +239,7 @@
             <li>Number of screenshots: ,(length (recorder-run-screenshots run))</li>
             <li>Total run size: ,(run-size run)kB</li>
             <li>Comparison threshold: ,(compare-threshold run)</li>
+
 
             <li>Screenshots that are above 16k dimensions: ,(length (screenshots-above-16k-dim run))
 
