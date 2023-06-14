@@ -16,7 +16,8 @@
    #:git-repo
    #:rev-parse
    #:merge-base
-   #:current-commit)
+   #:current-commit
+   #:current-branch)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/git)
 
@@ -68,6 +69,12 @@
                              :output 'string
                              :error-output *error-output*)))
     (str:trim out)))
+
+(defmethod current-branch ((repo git-repo))
+  ($ (git-command repo) "rev-parse" "--abbrev-ref" "HEAD"))
+
+(defmethod current-branch ((repo null-repo))
+  nil)
 
 (defun assert-commit (commit line)
   (unless (eql 40 (length commit))

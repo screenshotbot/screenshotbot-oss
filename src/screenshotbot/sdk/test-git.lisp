@@ -8,14 +8,39 @@
             (:use #:cl
                   #:fiveam)
             (:import-from #:screenshotbot/sdk/git
+                          #:current-commit
+                          #:current-branch
+                          #:git-command
+                          #:repo-dir
+                          #:git-repo
+                          #:$
                           #:assert-commit)
             (:import-from #:fiveam-matchers/core
                           #:assert-that)
             (:import-from #:fiveam-matchers/strings
-                          #:contains-string))
+                          #:contains-string)
+            (:import-from #:fiveam-matchers/has-length
+                          #:has-length))
 (in-package :screenshotbot/sdk/test-git)
 
 (util/fiveam:def-suite)
+
+(defun run-in-dir (repo cmd)
+  (uiop:run-program (format nil "cd ~a && ~a" (namestring (repo-dir repo)) cmd)))
+
+(defun make-commit (repo content)
+  (let ((file (path:catfile (repo-dir repo) "file.txt")))
+   (with-open-file (stream file
+                           :direction :output)
+     (write-string content stream))
+    (run-in-dir repo "git add file.txt" )
+    (run-in-dir repo "git commit -a -m ...")))
+
+(def-fixture git-repo ()
+  (tmpdir:with-tmpdir (dir)
+    (uiop:run-program (list "git" "init" (namestring dir)))
+    (let ((repo (make-instance 'git-repo :dir dir)))
+      (&body))))
 
 (test assert-commit
   (handler-case
@@ -25,3 +50,16 @@
     (error (e)
       (assert-that (format nil "~a" e)
                    (contains-string "`foo` does not")))))
+
+(test get-current-commit
+  (with-fixture git-repo ()
+    (make-commit repo "foobar")
+    (assert-that (current-commit repo)
+                 (has-length 40))))
+
+(test get-current-branch
+  (with-fixture git-repo ()
+    (make-commit repo "foobar")
+    (run-in-dir repo "git checkout -b carbar")
+    (is (equal "carbar"
+               (current-branch repo)))))
