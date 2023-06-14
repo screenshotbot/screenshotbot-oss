@@ -25,6 +25,8 @@
                 #:with-class-validation)
   (:import-from #:screenshotbot/dashboard/review-link
                 #:describe-pull-request)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-work-branch)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:bitbucket-plugin
@@ -71,6 +73,10 @@
         (cl-ppcre:scan-to-strings ".*/pull-requests/((\\d)*)$" url)
       (cond
         (all
-         (format nil "Pull ~a" (elt parts 0)))
+         (str:concat
+          (format nil "Pull ~a" (elt parts 0))
+          (let ((branch (recorder-run-work-branch run)))
+            (unless (str:emptyp branch)
+             (format nil " (~a)" (car (last (str:split "/" branch))))))))
         (t
          (call-next-method))))))

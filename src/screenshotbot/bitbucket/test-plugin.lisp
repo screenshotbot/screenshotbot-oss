@@ -31,3 +31,42 @@
                  (describe-pull-request repo
                                         (make-recorder-run
                                          :pull-request "https://bitbucket.org/tdrhq/fast-example/pull-requests/2")))))))
+
+(test describe-pull-request-for-bitbucket-for-run-with-branch
+  (with-test-store ()
+    (let ((repo (make-instance 'bitbucket-repo)))
+      (is (equal "Pull Request"
+                 (describe-pull-request repo (make-recorder-run
+                                              :work-branch "foobar"
+                                              :pull-request "https://google.com"))))
+      (is (equal "Pull 2 (foobar)"
+                 (describe-pull-request repo
+                                        (make-recorder-run
+                                         :work-branch "foobar"
+                                         :pull-request "https://bitbucket.org/tdrhq/fast-example/pull-requests/2")))))))
+
+(test describe-pull-request-for-bitbucket-for-empty-string-branch
+  (with-test-store ()
+    (let ((repo (make-instance 'bitbucket-repo)))
+      (is (equal "Pull Request"
+                 (describe-pull-request repo (make-recorder-run
+                                              :work-branch ""
+                                              :pull-request "https://google.com"))))
+      (is (equal "Pull 2"
+                 (describe-pull-request repo
+                                        (make-recorder-run
+                                         :work-branch ""
+                                         :pull-request "https://bitbucket.org/tdrhq/fast-example/pull-requests/2")))))))
+
+(test describe-pull-request-for-bitbucket-for-branch-with-/-in-name
+  (with-test-store ()
+    (let ((repo (make-instance 'bitbucket-repo)))
+      (is (equal "Pull Request"
+                 (describe-pull-request repo (make-recorder-run
+                                              :work-branch ""
+                                              :pull-request "https://google.com"))))
+      (is (equal "Pull 2 (blah)"
+                 (describe-pull-request repo
+                                        (make-recorder-run
+                                         :work-branch "feature/blah"
+                                         :pull-request "https://bitbucket.org/tdrhq/fast-example/pull-requests/2")))))))
