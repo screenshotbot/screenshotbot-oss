@@ -44,7 +44,8 @@
              #:build-url
              #:override-commit-hash
              #:compare-threshold
-             #:report))
+             #:report
+             #:work-branch))
 
 (in-package :screenshotbot/api/model)
 
@@ -185,6 +186,11 @@
                 :json-type (or null :string)
                 :initform nil
                 :reader main-branch)
+   (work-branch :initarg :work-branch
+                :json-key "workBranch"
+                :json-type (or null :string)
+                :initform nil
+                :reader work-branch)
    (phabrictor-diff-id :initarg :phabricator-diff-id
                        :json-key "phabricatorDiff"
                        :json-type (or null :number)

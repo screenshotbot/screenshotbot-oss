@@ -217,6 +217,7 @@ it easier for us to recover, or even validate the model."
                         :cleanp (dto:cleanp run)
                         :pull-request (dto:pull-request-url run)
                         :branch (dto:main-branch run)
+                        :work-branch (dto:work-branch run)
                         :branch-hash (dto:main-branch-hash run)
                         :override-commit-hash (dto:override-commit-hash run)
                         :build-url (dto:build-url run)

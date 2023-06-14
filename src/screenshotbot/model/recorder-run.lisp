@@ -88,7 +88,8 @@
    #:run-screenshot-map
    #:make-recorder-run
    #:remove-run-from-channel
-   #:runs-for-company)
+   #:runs-for-company
+   #:recorder-run-work-branch)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -108,120 +109,129 @@
   :slot-name 'company)
 
 (with-class-validation
- (defclass recorder-run (object-with-oid)
-   ((channel
-     :initarg :channel
-     :initform nil
-     :relaxed-object-reference t
-     :accessor recorder-run-channel)
-    (company
-     :initarg :company
-     :initform nil
-     :reader recorder-run-company
-     :index +run-company-index+
-     :index-reader runs-for-company)
-    (commit-hash
-     :initarg :commit-hash
-     :initform nil
-     :accessor recorder-run-commit)
-    #+screenshotbot-oss
-    (promotion-log
-     :accessor %promotion-log)
-    (build-url
-     :initform nil
-     :initarg :build-url
-     :accessor run-build-url)
-    (github-repo
-     :initform nil
-     :initarg :github-repo
-     :accessor github-repo)
-    (cleanp
-     :initarg :cleanp)
-    (activep
-     :initarg :activep
-     :initform nil)
-    (branch
-     :initarg :branch
-     :initform nil
-     :accessor recorder-run-branch)
-    (branch-hash
-     :initarg :branch-hash
-     :initform nil
-     :accessor recorder-run-branch-hash
-     :documentation "If a --branch is provided, this is the sha of the
+  (defclass recorder-run (object-with-oid)
+    ((channel
+      :initarg :channel
+      :initform nil
+      :relaxed-object-reference t
+      :accessor recorder-run-channel)
+     (company
+      :initarg :company
+      :initform nil
+      :reader recorder-run-company
+      :index +run-company-index+
+      :index-reader runs-for-company)
+     (commit-hash
+      :initarg :commit-hash
+      :initform nil
+      :accessor recorder-run-commit)
+     #+screenshotbot-oss
+     (promotion-log
+      :accessor %promotion-log)
+     (build-url
+      :initform nil
+      :initarg :build-url
+      :accessor run-build-url)
+     (github-repo
+      :initform nil
+      :initarg :github-repo
+      :accessor github-repo)
+     (cleanp
+      :initarg :cleanp)
+     (activep
+      :initarg :activep
+      :initform nil)
+     (branch
+      :initarg :branch
+      :initform nil
+      :accessor recorder-run-branch
+      :documentation "The main branch. This is not the branch associated with the
+    current pull request!")
+     (work-branch
+      :initarg :work-branch
+      :initform nil
+      :accessor recorder-run-work-branch
+      :documentation "The branch we're currently working on, which might
+    be the same as the main branch, or it might be the current pull
+    request branch")
+     (branch-hash
+      :initarg :branch-hash
+      :initform nil
+      :accessor recorder-run-branch-hash
+      :documentation "If a --branch is provided, this is the sha of the
     specified branch at the time of run. This might be different from
     the COMMIT-HASH, because the COMMIT-HASH might on, say a Pull
     Request (tied to the branch) or an ancestor of the branch.")
-    (merge-base-hash
-     :initform nil
-     :initarg :merge-base
-     :accessor recorder-run-merge-base
-     :documentation "The merge base between branch-hash and commit-hash")
-    (pull-request
-     :initarg :pull-request
-     :initform nil
-     :reader pull-request-url)
-    (gitlab-merge-request-iid
-     :initarg :gitlab-merge-request-iid
-     :initform nil
-     :reader gitlab-merge-request-iid)
-    (phabricator-diff-id
-     :initarg :phabricator-diff-id
-     :initform nil
-     :reader phabricator-diff-id)
-    (previous-run
-     :initform nil
-     :initarg :previous-run
-     :accessor recorder-previous-run
-     :documentation "The previous *ACTIVE* run. Unpromoted runs aren't tracked on the channel, because often the reason it's unpromoted means that we don't understand if it belongs to the channel. If there are multile previous-runs for different branches, this will always point to the previous run on master branch.")
-    (create-github-issue-p
-     :initform t
-     :initarg :create-github-issue-p
-     :accessor create-github-issue-p)
-    (trunkp
-     :initarg :trunkp
-     :accessor trunkp
-     :initform nil
-     :documentation "whether this is tracking a production branch (as opposed to dev)")
-    (periodic-job-p
-     :initarg :periodic-job-p
-     :initform nil
-     :accessor periodic-job-p
-     :documentation "Jobs that are done periodically, as opposed to for
+     (merge-base-hash
+      :initform nil
+      :initarg :merge-base
+      :accessor recorder-run-merge-base
+      :documentation "The merge base between branch-hash and commit-hash")
+     (pull-request
+      :initarg :pull-request
+      :initform nil
+      :reader pull-request-url)
+     (gitlab-merge-request-iid
+      :initarg :gitlab-merge-request-iid
+      :initform nil
+      :reader gitlab-merge-request-iid)
+     (phabricator-diff-id
+      :initarg :phabricator-diff-id
+      :initform nil
+      :reader phabricator-diff-id)
+     (previous-run
+      :initform nil
+      :initarg :previous-run
+      :accessor recorder-previous-run
+      :documentation "The previous *ACTIVE* run. Unpromoted runs aren't tracked on the channel, because often the reason it's unpromoted means that we don't understand if it belongs to the channel. If there are multile previous-runs for different branches, this will always point to the previous run on master branch.")
+     (create-github-issue-p
+      :initform t
+      :initarg :create-github-issue-p
+      :accessor create-github-issue-p)
+     (trunkp
+      :initarg :trunkp
+      :accessor trunkp
+      :initform nil
+      :documentation "whether this is tracking a production branch (as opposed to dev)")
+     (periodic-job-p
+      :initarg :periodic-job-p
+      :initform nil
+      :accessor periodic-job-p
+      :documentation "Jobs that are done periodically, as opposed to for
     each commit. We will attempt to promote each run. This is mostly
     for taking screenshots of public websites.")
-    (Screenshots
-     :initarg :screenshots
-     :initform nil
-     :documentation "The old list of screenshots, these days we generate them from the map")
-    (%screenshot-map
-     :initarg :screenshot-map
-     :accessor run-screenshot-map)
-    (promotion-complete-p
-     :initform nil
-     :accessor promotion-complete-p)
-    (override-commit-hash
-     :initform nil
-     :initarg :override-commit-hash
-     :accessor override-commit-hash
-     :documentation "Override the pull request commit hash that will be
+     (Screenshots
+      :initarg :screenshots
+      :initform nil
+      :documentation "The old list of screenshots, these days we generate them from the map")
+     (%screenshot-map
+      :initarg :screenshot-map
+      :accessor run-screenshot-map)
+     (promotion-complete-p
+      :initform nil
+      :accessor promotion-complete-p)
+     (override-commit-hash
+      :initform nil
+      :initarg :override-commit-hash
+      :accessor override-commit-hash
+      :documentation "Override the pull request commit hash that will be
     used to update the Pull Request (either GitHub or Bitbucket)")
-    (%compare-threshold
-     :initform nil
-     :initarg :compare-threshold
-     :accessor compare-threshold
-     :documentation "The comparison threshold in terms of fraction of pixels changed. If
+     (%compare-threshold
+      :initform nil
+      :initarg :compare-threshold
+      :accessor compare-threshold
+      :documentation "The comparison threshold in terms of fraction of pixels changed. If
 NIL or 0, this will use exact pixel comparisons.")
-    (%warnings
-     :initform nil
-     :accessor recorder-run-warnings
-     :documentation "A list of warning objects that will be rendered whenever the run or an
+     (%warnings
+      :initform nil
+      :accessor recorder-run-warnings
+      :documentation "A list of warning objects that will be rendered whenever the run or an
 associated report is rendered.")
-    (created-at
-     :initform nil
-     :accessor %created-at))
-   (:metaclass has-created-at)
-   (:default-initargs :screenshot-map (error "need screenshot-map"))))
+     (created-at
+      :initform nil
+      :accessor %created-at))
+    (:metaclass has-created-at)
+    (:default-initargs :screenshot-map (error "need screenshot-map"))))
 
 (defun make-recorder-run (&rest args &key screenshots channel &allow-other-keys)
   (apply #'make-instance 'recorder-run
