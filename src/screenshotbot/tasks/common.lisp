@@ -80,19 +80,24 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
 (defclass channel-promoted-payload (webhook-payload)
   ((channel :initarg :channel
             :json-key "channel"
-            :json-type :string)
+            :json-type :string
+            :documentation "The channel name on which this promotion happened.")
    (branch :initarg :branch
            :json-key "branch"
-           :json-type (or null :string))
+           :json-type (or null :string)
+           :documentation "The git branch on which this promotion happened. e.g. `main`")
    (run :initarg :run
         :json-key "run"
-        :json-type dto:run)
+        :json-type dto:run
+        :documentation "The run that triggered this event")
    (previous-run :initarg :previous-run
                 :json-key "previousRun"
-                 :json-type dto:run)
+                 :json-type dto:run
+                 :documentation "The previous promoted run")
    (report :initarg :report
            :json-key "report"
-           :json-type dto:report))
+           :json-type dto:report
+           :documentation "The report object that was generated"))
   (:metaclass ext-json-serializable-class)
   (:default-initargs :event "channel.promotion"))
 

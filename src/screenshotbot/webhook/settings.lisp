@@ -164,11 +164,11 @@
       <mdi name= (if failedp "close" "done") />
       ,(event self) at ,(timeago :timestamp (created-at self))
       <a href=details target= "_blank" >
-        <mdi name= "open_in_new" />
+        <mdi name= "open_in_new" /> Show details
       </a>
 
       <post-a href= retry title= "Resend Webhook" >
-        <mdi name= "restart_alt" />
+        <mdi name= "refresh" /> Retry
       </post-a>
 
     </span>) )
