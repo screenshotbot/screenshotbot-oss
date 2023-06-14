@@ -30,7 +30,8 @@
   (sha1 env-reader)
   (build-url env-reader)
   (guess-channel-name env-reader)
-  (repo-url env-reader))
+  (repo-url env-reader)
+  (work-branch env-reader))
 
 (def-fixture state ()
   (&body))

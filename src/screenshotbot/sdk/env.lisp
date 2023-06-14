@@ -20,13 +20,16 @@
    #:sha1
    #:build-url
    #:repo-url
-   #:guess-channel-name))
+   #:guess-channel-name
+   #:work-branch))
 (in-package :screenshotbot/sdk/env)
 
 (defclass base-env-reader ()
   ((overrides :initarg :overrides
               :reader overrides))
   (:documentation "Reads the environment to get some information about the current build"))
+
+(defgeneric work-branch (env))
 
 (defclass env-reader (base-env-reader)
   ())
@@ -50,6 +53,9 @@
   nil)
 
 (defmethod guess-channel-name ((self base-env-reader))
+  nil)
+
+(defmethod work-branch ((self base-env-reader))
   nil)
 
 (defmethod build-url ((self env-reader))
@@ -85,6 +91,9 @@
 (defmethod sha1 ((self circleci-env-reader))
   (getenv self "CIRCLE_SHA1"))
 
+(defmethod work-branch ((self circleci-env-reader))
+  (getenv self "CIRCLE_BRANCH"))
+
 (defclass bitrise-env-reader (base-env-reader)
   ())
 
@@ -106,6 +115,9 @@
    ;; TODO: this one is probably incorrect.
    (getenv self "BITRISEIO_PULL_REQUEST_REPOSITORY_URL")
    (getenv self "GIT_REPOSITORY_URL")))
+
+(defmethod work-branch ((self bitrise-env-reader))
+  (getenv self "BITRISE_GIT_BRANCH"))
 
 (defun link-to-github-pull-request (repo-url pull-id)
   (let ((key (cond
@@ -151,6 +163,9 @@
 (defmethod validp ((self env-reader))
   t)
 
+(defmethod work-branch ((self netlify-env-reader))
+  (getenv self "BRANCH"))
+
 (defmethod sha1 ((self bitrise-env-reader))
   (getenv self "BITRISE_GIT_COMMIT"))
 
@@ -183,6 +198,9 @@
 (defmethod repo-url ((self azure-env-reader))
   (getenv self "Build.Repository.Uri"))
 
+(defmethod work-branch ((self azure-env-reader))
+  (getenv self "Build.SourceBranchName"))
+
 ;; https://buildkite.com/docs/pipelines/environment-variables
 (defclass buildkite-env-reader (base-env-reader)
   ())
@@ -211,6 +229,9 @@
 (defmethod repo-url ((Self buildkite-env-reader))
   (getenv self "BUILDKITE_REPO"))
 
+(defmethod work-branch ((self buildkite-env-reader))
+  (getenv self "BUILDKITE_BRANCH"))
+
 (defclass bitbucket-pipeline-env-reader (base-env-reader)
   ())
 
@@ -233,6 +254,9 @@
 
 (defmethod repo-url ((self bitbucket-pipeline-env-reader))
   (getenv self "BITBUCKET_GIT_HTTP_ORIGIN"))
+
+(defmethod work-branch ((self bitbucket-pipeline-env-reader))
+  (getenv self "BITBUCKET_BRANCH"))
 
 (defun make-env-reader ()
   (loop for option in '(circleci-env-reader
