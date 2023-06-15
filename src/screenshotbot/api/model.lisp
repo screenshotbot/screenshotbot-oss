@@ -133,7 +133,7 @@
                 :json-key "screenshots"
                 :json-type (:list screenshot)
                 :reader run-screenshots
-                :documentation "A list of screenshots for this run.")
+                :documentation "A list of screenshots for this run. This field may not be present when querying a run.")
    (commit :initarg :commit-hash
            :json-key "commit"
            :json-type (or null :string)
