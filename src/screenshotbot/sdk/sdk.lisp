@@ -142,6 +142,7 @@
                                   (remote-supports-basic-auth-p))
                              (%make-basic-auth))
       :content content
+      :external-format-out :utf-8
       :parameters (cond
                     ((remote-supports-basic-auth-p)
                      parameters)
