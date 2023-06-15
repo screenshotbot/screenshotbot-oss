@@ -99,11 +99,13 @@
   ((name :initarg :name
          :json-type :string
          :json-key "name"
-         :reader screenshot-name)
+         :reader screenshot-name
+         :documentation "The name associated with this screenshot")
    (image-id :initarg :image-id
              :json-type :string
              :json-key "imageId"
-             :reader screenshot-image-id)
+             :reader screenshot-image-id
+             :documentation "The ID of the image associated with this screenshot")
    (lang :initarg :lang
          :initform nil
          :json-type (or null :string)
@@ -120,20 +122,24 @@
   ((id :initarg :id
        :json-key "id"
        :json-type :string
-       :reader run-id)
+       :reader run-id
+       :documentation "The ID of this run")
    (channel :initarg :channel
             :json-key "channel"
             :json-type :string
-            :reader run-channel)
+            :reader run-channel
+            :documentation "The channel name used with this run")
    (screenshots :initarg :screenshots
                 :json-key "screenshots"
                 :json-type (:list screenshot)
-                :reader run-screenshots)
+                :reader run-screenshots
+                :documentation "A list of screenshots for this run.")
    (commit :initarg :commit-hash
            :json-key "commit"
            :json-type (or null :string)
            :initform nil
-           :reader run-commit)
+           :reader run-commit
+           :documentation "The Git commit hash for this run")
    (create-github-issue :initarg :create-github-issue-p
                         :json-key "shouldCreateGithubIssue"
                         :initform nil
@@ -160,64 +166,76 @@
                      :json-key "pullRequestUrl"
                      :json-type (or null :string)
                      :initform nil
-                     :reader pull-request-url)
+                     :reader pull-request-url
+                     :documentation "The pull request URL associated with this run, if any.")
    (main-branch-hash :initarg :main-branch-hash
                      :json-key "mainBranchCommit"
                      :json-type (or null :string)
                      :initform nil
-                     :reader main-branch-hash)
+                     :reader main-branch-hash
+                     :documentation "The Git hash of the main branch at the time that this run was created.")
    (override-commit-hash :initarg :override-commit-hash
                          :json-key "overrideCommitHash"
                          :json-type (or null :string)
                          :initform nil
-                         :reader override-commit-hash)
+                         :reader override-commit-hash
+                         :documentation "The Git hash associated with the current run. This might be different from `commit` if the CI job had a step of rebasing the changes onto the master branch.")
    (build-url :initarg :build-url
               :json-key "buildUrl"
               :json-type (or null :string)
               :initform nil
-              :reader build-url)
+              :reader build-url
+              :documentation "The URL of the build job that created this run")
    (merge-base :initarg :merge-base
                :json-key "mergeBase"
                :json-type (or null :string)
                :initform nil
-               :reader merge-base)
+               :reader merge-base
+               :documentation "The commit hash of the merge base of this commit with the main branch.")
    (main-branch :initarg :main-branch
                 :json-key "mainBranch"
                 :json-type (or null :string)
                 :initform nil
-                :reader main-branch)
+                :reader main-branch
+                :documentation "The main branch, usually `main` or `master`.")
    (work-branch :initarg :work-branch
                 :json-key "workBranch"
                 :json-type (or null :string)
                 :initform nil
-                :reader work-branch)
+                :reader work-branch
+                :documentation "The branch on which the CI job was run")
    (phabrictor-diff-id :initarg :phabricator-diff-id
                        :json-key "phabricatorDiff"
                        :json-type (or null :number)
                        :initform nil
-                       :reader phabricator-diff-id)
+                       :reader phabricator-diff-id
+                       :documentation "A Phabricator Diff ID associated with the run, if any.")
    (gitlab-merge-request-iid :initarg :gitlab-merge-request-iid
                              :json-key "gitlabMergeRequestIID"
                              :json-type (or null :number)
                              :initform nil
-                             :reader gitlab-merge-request-iid)
+                             :reader gitlab-merge-request-iid
+                             :documentation "A GitLab merge request IID associated with the run, if any.")
    (repo :initarg :github-repo
          :json-key "repo"
          :json-type (or null :string)
          :initform nil
          ;; Internally this is github-repo :/
-         :reader run-repo)
+         :reader run-repo
+         :documentation "The repository URL")
    (compare-threshold :initarg :compare-threshold
                       :json-key "compareThreshold"
                       :json-type (or null :number)
                       :initform nil
-                      :reader compare-threshold))
+                      :reader compare-threshold
+                      :documentation "The comparison threshold used for comparisons associated with this run."))
   (:metaclass ext-json-serializable-class))
 
 (defclass report ()
   ((id :initarg :id
        :json-key "id"
-       :json-type :string))
+       :json-type :string
+       :documentation "The ID of this report"))
   (:metaclass ext-json-serializable-class))
 
 (defmethod json-mop:json-to-clos ((items vector) (class (eql 'screenshot-list))
