@@ -38,6 +38,7 @@
     (run-in-dir repo "git commit -a -m ...")))
 
 (def-fixture git-repo ()
+  #-screenshotbot-oss
   (tmpdir:with-tmpdir (dir)
     (uiop:run-program (list "git" "init" (namestring dir)))
     (let ((repo (make-instance 'git-repo :dir dir)))
@@ -52,14 +53,12 @@
       (assert-that (format nil "~a" e)
                    (contains-string "`foo` does not")))))
 
-#-screenshotbot-oss
 (test get-current-commit
   (with-fixture git-repo ()
     (make-commit repo "foobar")
     (assert-that (current-commit repo)
                  (has-length 40))))
 
-#-screenshotbot-oss
 (test get-current-branch
   (with-fixture git-repo ()
     (make-commit repo "foobar")
