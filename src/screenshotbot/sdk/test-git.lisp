@@ -1,3 +1,4 @@
+;; -*- encoding: utf-8 -*-
 ;;;; Copyright 2018-Present Modern Interpreters Inc.
 ;;;;
 ;;;; This Source Code Form is subject to the terms of the Mozilla Public
@@ -65,3 +66,10 @@
     (run-in-dir repo "git checkout -b carbar")
     (is (equal "carbar"
                (current-branch repo)))))
+
+(test utf-8-characters-in-git-branch
+  (with-fixture git-repo ()
+    (make-commit repo "foobar")
+    (run-in-dir repo "git checkout -b léquipe")
+    (let ((branch (current-branch repo)))
+      (is (equal "léquipe" (current-branch repo))))))

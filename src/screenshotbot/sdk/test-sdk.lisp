@@ -1,3 +1,4 @@
+;; -*- coding: utf-8 -*-
 ;; Copyright 2018-Present Modern Interpreters Inc.
 ;;
 ;; This Source Code Form is subject to the terms of the Mozilla Public
@@ -44,6 +45,12 @@
                 #:merge-base
                 #:current-commit
                 #:rev-parse)
+  (:import-from #:screenshotbot/api/model
+                #:decode-json)
+  (:import-from #:util/json-mop
+                #:json-mop-to-string)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-work-branch)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:a #:alexandria)
                     (#:dto #:screenshotbot/api/model)))
@@ -225,3 +232,8 @@
                      (find-bad (asdf:find-system dep)
                                (list* dep path)))))))
       (find-bad (asdf:find-system :screenshotbot.sdk) nil))))
+
+(test encode-decode-utf-8-branchname
+  (let ((run (make-instance 'dto:run :work-branch "léquipe")))
+    (let ((json (decode-json (json-mop-to-string run) 'dto:run)))
+      (is (equal "léquipe" (dto:work-branch run))))))
