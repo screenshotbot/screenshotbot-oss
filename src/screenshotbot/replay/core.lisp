@@ -24,6 +24,7 @@
   (:import-from #:alexandria
                 #:assoc-value)
   (:import-from #:util/request
+                #:http-success-response?
                 #:http-request-impl
                 #:engine)
   (:import-from #:util/engines
@@ -382,6 +383,8 @@
 
        (multiple-value-bind (remote-stream status response-headers)
            (call-next-method)
+         (unless (http-success-response? status)
+           (write-replay-log "Warning: request failed with ~a" status))
          (let ((response-headers
                  (remove-unwanted-headers response-headers)))
            (push `(:x-original-url . ,(quri:render-uri url)) response-headers)
