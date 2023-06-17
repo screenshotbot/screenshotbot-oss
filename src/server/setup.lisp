@@ -172,23 +172,29 @@
                                                       :context #'context))
       (unwind-protect
            (funcall fn)
-        (format t "lparallel: shutting down~%")
+        (safe-log "lparallel: shutting down~%")
         (setf shutting-down-p t)
         (lparallel:end-kernel :wait t)
-        (format t "lparallel: shutdown complete~%")))))
+        (safe-log "lparallel: shutdown complete!~%")))))
 
 (def-easy-macro maybe-with-debugger (&fn fn)
   (handler-bind ((error (lambda (e)
-                          (format t "Got error: ~a (*debugger* is set to ~a)" e
-                                  *debugger*)
+                          (safe-log "Got error: ~a (*debugger* is set to ~a)" e
+                                    *debugger*)
                           #+lispworks
                           (dbg:output-backtrace :brief)
                           ;; So by this point, *debugger* is most
                           ;; likely already read from the command line
-                          ;; options
+                          ;; options.
                           (unless *debugger*
-                            (invoke-restart 'cl:abort)))))
-    (fn)))
+                            ;; Invoking a restart here might be
+                            ;; unsafe, since we don't know if all the
+                            ;; unwind-protects are going to behave
+                            ;; correctly.
+                            (safe-log "Aborting because of error~%")
+                            (uiop:quit 1)))))
+    (fn))
+  (safe-log "Out of maybe-with-debugger~%"))
 
 (def-easy-macro with-sentry-logging (&fn fn)
   (funcall-with-sentry-logs fn))
@@ -198,21 +204,21 @@
     (slynk-prepare *slynk-preparer*))
   (unwind-protect
        (fn)
-    (format t "Shutting down slynk~%")
+    (safe-log "Shutting down slynk~%")
     (slynk-teardown *slynk-preparer*)))
 
 (def-easy-macro with-running-acceptor (acceptor &fn fn)
   (hunchentoot:start acceptor)
   (unwind-protect
        (fn)
-    (format t "Shutting down hunchentoot~%")
+    (safe-log "Shutting down hunchentoot~%")
     (hunchentoot:stop acceptor)))
 
 (def-easy-macro with-cron (&fn fn)
   (cl-cron:start-cron)
   (unwind-protect
        (funcall fn)
-    (format t "Shutting down cron~%")
+    (safe-log "Shutting down cron~%")
     (cl-cron:stop-cron)))
 
 (def-easy-macro with-cl-cli-processed (&key &binding verify-store
@@ -221,7 +227,7 @@
                                             &fn fn)
   (let ((args #-lispworks (cons "<arg0>"(uiop:command-line-arguments))
                     #+lispworks sys:*line-arguments-list*))
-          (format t "CLI args: ~s~%" args)
+          (safe-log "CLI args: ~s~%" args)
     (multiple-value-bind (vars vals matched dispatch rest)
               (cl-cli:parse-cli args
                                 *options*)
@@ -233,38 +239,42 @@
         (or #+lispworks *profile-store*)
         *health-check*))))
 
+(defun safe-log (&rest args)
+  (apply #'format t args)
+  (finish-output t))
+
 (def-easy-macro with-common-setup (&key enable-store jvm &fn fn)
   (maybe-with-debugger ()
-    (with-sentry-logging ()
-      (with-lparallel-kernel ()
-        (with-control-socket ()
-          (with-slynk ()
-            (unwind-on-interrupt ()
-              #+lispworks
-              (when jvm
-                (jvm:jvm-init))
+    (with-sentry-logger ()
+     (with-lparallel-kernel ()
+       (with-control-socket ()
+         (with-slynk ()
+           (unwind-on-interrupt ()
+             #+lispworks
+             (when jvm
+               (jvm:jvm-init))
 
-              (fn))))
-        ;; unwind if an interrupt happens
-        (log:config :sane :immediate-flush t)
-        (log:config :info)
-        (format t "shutting down~%")
-        (finish-output t)
-        (format t "calling shutdown hooks~%")
-        (mapc 'funcall *shutdown-hooks*)
+             (fn))))
+       ;; unwind if an interrupt happens
+       (log:config :sane :immediate-flush t)
+       (log:config :info)
+       (safe-log "shutting down~%")
+       (safe-log "calling shutdown hooks~%")
+       (mapc 'funcall *shutdown-hooks*)
 
-;;;; don't snapshot the store, if the process is killed while the
-;;;; snapshot is happening, we have to manually recover the store
+       ;; ;; don't snapshot the store, if the process is killed while the
+       ;; ;; snapshot is happening, we have to manually recover the store
        ;; (bknr.datastore:snapshot)
 
        (when enable-store
          (bknr.datastore:close-store))
 
-       (format t "all services down~%"))))
+       (safe-log "all services down~%")
+       (finish-out))))
 
   #+lispworks
   (wait-for-processes)
-  (format t "all threads before exiting: ~s~%" (bt:all-threads))
+  (safe-log "all threads before exiting: ~s~%" (bt:all-threads))
   (log4cl:flush-all-appenders)
   (log4cl:stop-hierarchy-watcher-thread))
 
@@ -352,29 +362,30 @@
 #+lispworks
 (defun wait-for-processes ()
   (dotimes (i 30)
-   (let* ((processes
-           (set-difference (mp:list-all-processes) mp:*initial-processes*))
-          (processes
-           (loop for p in processes
-                 unless (or
-                         (eql p (mp:get-current-process))
-                         (member (mp:process-name p)
-                                 '("Hierarchy Watcher"
-                                   "The idle process"
-                                   "Initial delivery process"
-                                   "Restart Function Process")
-                                 :test 'string=))
-              collect p)))
+    (safe-log "[~a/30] Wait for processes" i)
+    (let* ((processes
+             (set-difference (mp:list-all-processes) mp:*initial-processes*))
+           (processes
+             (loop for p in processes
+                   unless (or
+                           (eql p (mp:get-current-process))
+                           (member (mp:process-name p)
+                                   '("Hierarchy Watcher"
+                                     "The idle process"
+                                     "Initial delivery process"
+                                     "Restart Function Process")
+                                   :test 'string=))
+                     collect p)))
 
-     (cond
-       (processes
-        (log:info "Threads remaining: ~S" processes)
-        (log4cl:flush-all-appenders)
-        (sleep 1))
-       (t
-        ;; nothing left!
-        (log:info "Should be a safe shutdown!")
-        (return-from wait-for-processes nil)))))
+      (cond
+        (processes
+         (log:info "Threads remaining: ~S" processes)
+         (log4cl:flush-all-appenders)
+         (sleep 1))
+        (t
+         ;; nothing left!
+         (log:info "Should be a safe shutdown!")
+         (return-from wait-for-processes nil)))))
   (log:info "We waited for threads to cleanup but nothing happened, so we're going for a force uiop:quit")
   (log4cl:flush-all-appenders)
   (uiop:quit))

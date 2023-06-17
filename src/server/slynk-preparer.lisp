@@ -53,4 +53,4 @@
         (error 'no-available-port)))
 
 (defmethod slynk-teardown ((self slynk-preparer))
-  (slynk:stop-server (parse-integer *slynk-port*)))
+  (slynk:stop-server *actual-slynk-port*))

@@ -180,4 +180,5 @@
                  #+lispworks (cdr sys:*line-arguments-list*)))
        (let ((app (main/command :jvm jvm :enable-store enable-store
                                 :acceptor acceptor)))
-         (clingon:run app args))))))
+         (clingon:run app args)
+         (uiop:quit 0))))))
