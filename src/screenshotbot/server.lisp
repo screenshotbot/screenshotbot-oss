@@ -127,7 +127,7 @@
 
 (defvar *acceptor*
   (make-instance 'acceptor
-                 :port 3015
+                 :port 4001
                  :name 'screenshotbot-acceptor
                  :document-root (document-root)))
 

@@ -81,7 +81,12 @@
    :handler (lambda (cmd)
               (with-run-or-verify-setup (cmd :enable-store enable-store :jvm jvm)
                 (%run :enable-store enable-store
-                      :acceptor acceptor
+                      :acceptor
+                      (cond
+                        ((clingon:getopt cmd :only-screenshotbot-p)
+                         (symbol-value
+                          (uiop:find-symbol* :*acceptor* :screenshotbot/server)))
+                        (t acceptor))
                       :port (clingon:getopt cmd :port)
                       :shell nil)))
    :options (list*
@@ -91,6 +96,12 @@
               :long-name "port"
               :initial-value 4001
               :key :port)
+             (make-option
+              :flag
+              :description "Only load the screenshotbot acceptor, instead of the multiacceptor"
+              :initial-value nil
+              :long-name "only-screenshotbot"
+              :key :only-screenshotbot-p)
              (common-options))))
 
 (defun save-passphrases/command ()
