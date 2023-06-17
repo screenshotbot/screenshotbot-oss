@@ -50,7 +50,9 @@
 
 (defmethod file-handle ((self file-lock))
   #+lispworks
-  (slot-value (file-lock-stream self) 'stream::file-handle))
+  (let ((handle (slot-value (file-lock-stream self) 'stream::file-handle)))
+    (log:info "Got file handle for lock: ~a" handle)
+    handle))
 
 (defun get-unix-error ()
   (or
@@ -60,13 +62,16 @@
 (defmethod ensure-stream ((self file-lock))
   (unless (file-lock-stream self)
     (setf (file-lock-stream self)
-          (open (filename self) :if-does-not-exist :create
-                                :if-exists :append))))
+          (open (ensure-directories-exist
+                 (filename self))
+                :if-does-not-exist :create
+                :if-exists :append))))
 
 (defmethod acquire-file-lock ((self file-lock) &key (sharedp nil)
                                                  (timeout 600))
   (ensure-stream self)
-  (log:info "Waiting for file lock: ~a" (filename self))
+  (log:info "Waiting for file lock: ~a (shared: ~a, timeout: ~a)" (filename self)
+            sharedp timeout)
   (let ((start-time (get-universal-time)))
     (loop for res = (flock
                      (file-handle self)
@@ -78,6 +83,7 @@
           do (progn
                (when (> (get-universal-time)
                         (+ start-time timeout))
+                 (log:info "Could not get file lock: ~a" (get-unix-error))
                  (error 'could-not-get-lock))
                (when (= 0 (mod ctr 25))
                  (log:info "Could not get file lock ~a, will try again on ~a: ~a"
