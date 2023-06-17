@@ -65,7 +65,8 @@
           (open (ensure-directories-exist
                  (filename self))
                 :if-does-not-exist :create
-                :if-exists :append))))
+                :if-exists :append
+                :direction :output))))
 
 (defmethod acquire-file-lock ((self file-lock) &key (sharedp nil)
                                                  (timeout 600))
