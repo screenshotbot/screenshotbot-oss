@@ -46,7 +46,6 @@
    #:error-user
    #:make-thread
    #:error-obj
-   #:*landing-page*
    #:*acceptor*
    #:no-access-error
    #:prepare-acceptor-plugins
@@ -80,12 +79,6 @@
 (defsecret :trello-secret
   "Trello Secret used for OAuth. You must still connect your
   Organization to Trello from the /settings/trello")
-
-(defvar *landing-page* nil
-  "By default, the landing page takes you to the sign-in page if
-  you're not signed in, and takes you to the dashboard when you're
-  signed in. If you provide a *LANDING-PAGE* which will be a symbol
-  for a function, we'll run that as the landing page instead.")
 
 (defvar *disable-mail* nil
   "Disable emails. In the future this should be part of NOOP-MAILER,
@@ -269,10 +262,11 @@ Disallow: /n")))
   (cond
     ((logged-in-p)
      (default-logged-in-page (installation)))
-   (*landing-page*
-    (funcall *landing-page*))
-   (t
-    (hex:safe-redirect "/login"))))
+    (t
+     (render-landing-page (installation)))))
+
+(defmethod render-landing-page ((self installation))
+  (hex:safe-redirect "/login"))
 
 (server:register-acceptor *acceptor*
                           "screenshotbot.io"
