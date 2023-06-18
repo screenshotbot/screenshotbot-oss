@@ -58,19 +58,19 @@
                                :redirect redirect))))
   <form action=result method= "POST" >
     <div class="form-group mb-3">
-      <input name= "email"  class="form-control" type="email" id="emailaddress" required="" placeholder="Email">
+      <input name= "email"  class="form-control" type="email" id="emailaddress" required="" placeholder="Email" />
     </div>
 
     <div class="form-group mb-3">
       <div class="input-group input-group-merge">
-        <input name= "password" type="password" id="password" class="form-control" placeholder="Password">
+        <input name= "password" type="password" id="password" class="form-control" placeholder="Password" />
       </div>
     </div>
 
     <div class= "d-flex justify-content-between">
       <div class="form-check ps-0">
-        <input type="checkbox" class="form-check-input me-3" id="checkbox-signin" checked= "checked" >
-          <label class="form-check-label" for="checkbox-signin">Remember me</label>
+        <input type="checkbox" class="form-check-input me-3" id="checkbox-signin" checked= "checked" />
+        <label class="form-check-label" for="checkbox-signin">Remember me</label>
       </div>
 
       <div>
@@ -91,45 +91,44 @@
 
 (deftag signin-get (&key (redirect "/") (alert nil))
   (assert redirect)
-  (let ((signup (nibble ()
-                  (signup-get :redirect redirect
-                              :alert alert))))
-    <auth-template>
+  (if-let ((provider (default-oidc-provider (installation))))
+    (hex:safe-redirect (oauth-signin-link provider redirect))
+    (let ((signup (nibble ()
+                    (signup-get :redirect redirect
+                                :alert alert))))
+      <auth-template>
 
-      <div class="account-pages mt-5 mb-5">
+        <div class="account-pages mt-5 mb-5">
           ,(progn alert)
-                        <div class="card">
+          <div class="card">
 
-                            <!-- Logo -->
-                            <div class="card-header pt-4 pb-4 text-center bg-primary">
-                            <auth-header-logo />
-                            </div>
+            <!-- Logo -->
+            <div class="card-header pt-4 pb-4 text-center bg-primary">
+              <auth-header-logo />
+            </div>
 
-                            <div class="">
-                              <h4 class="text-dark-50 ps-4 mt-0 font-weight-bold">Sign In</h4>
-                            </div>
+            <div class="">
+              <h4 class="text-dark-50 ps-4 mt-0 font-weight-bold">Sign In</h4>
+            </div>
 
-                            <div class="card-body p-4">
-                              ,@ (loop for auth-provider in (auth-providers (installation))
-                                       collect
-                                       (auth-provider-signin-form auth-provider redirect))
-                            </div> <!-- end card-body -->
-                        </div>
-                        <!-- end card -->
+            <div class="card-body p-4">
+              ,@ (loop for auth-provider in (auth-providers (installation))
+                       collect
+                       (auth-provider-signin-form auth-provider redirect))
+            </div> <!-- end card-body -->
+          </div>
+          <!-- end card -->
 
-                        <div class="row mt-3">
-                            <div class="col-12 text-center">
-                                <p class="signup-message">Don't have an account? <a href=signup class="ms-1"><b>Sign Up</b></a></p>
+          <div class="row mt-3">
+            <div class="col-12 text-center">
+              <p class="signup-message">Don't have an account? <a href=signup class="ms-1"><b>Sign Up</b></a></p>
 
-                    </div> <!-- end col -->
-                </div>
-                <!-- end row -->
+            </div> <!-- end col -->
+          </div>
+          <!-- end row -->
         </div>
         <!-- end page -->
-
-
-
-      </auth-template>))
+      </auth-template>)))
 
 (defhandler (nil :uri "/signin" :method :get) (after-logout redirect)
   (declare (ignore after-logout))
@@ -137,9 +136,7 @@
     (when (logged-in-p)
       (hex:safe-redirect redirect))
 
-    (if-let ((provider (default-oidc-provider (installation))))
-      (hex:safe-redirect (oauth-signin-link provider redirect))
-      (signin-get :redirect redirect))))
+    (signin-get :redirect redirect)))
 
 (defun signin-post (&key email password redirect)
   (let (errors
