@@ -138,7 +138,7 @@
       (hex:safe-redirect redirect))
 
     (if-let ((provider (default-oidc-provider (installation))))
-      (hunchentoot:redirect (oauth-signin-link provider redirect))
+      (hex:safe-redirect (oauth-signin-link provider redirect))
       (signin-get :redirect redirect))))
 
 (defun signin-post (&key email password redirect)

@@ -132,7 +132,7 @@
 
 (defun make-json-request (url &rest args)
   (multiple-value-bind (stream status-code)
-      (apply 'dex:request url
+      (apply 'util/request:http-request url
              :want-stream t
              args)
     (with-open-stream (stream stream)
@@ -160,10 +160,10 @@
        (let ((user-info
                (make-json-request (userinfo-endpoint auth)
                                   :method :post
-                                  :content `(("access_token"
-                                              .
-                                              ,(access-token-str token))
-                                             ("alt" . "json")))))
+                                  :parameters `(("alt" . "json"))
+                                  :additional-headers `(("Authorization".
+                                                                        ,(format nil "Bearer ~a"
+                                                                                 (Access-token-str token)))))))
          (log:debug "Got user info ~S" user-info)
          (after-authentication
           auth
