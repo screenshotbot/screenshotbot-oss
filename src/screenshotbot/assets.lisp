@@ -19,12 +19,11 @@
   (:import-from #:util.cdn
                 #:*cdn-domain*)
   (:import-from #:screenshotbot/installation
+                #:installation-cdn
                 #:desktop-installation
                 #:pre-compiled-assets
                 #:installation-domain
                 #:installation)
-  (:import-from #:util.cdn
-                #:*cdn-domain*)
   (:export
    #:define-css
    #:define-js))
@@ -85,7 +84,7 @@ cause the asset to be immediately compiled."
 (define-css "/assets/css/default.css" :screenshotbot.css-assets)
 
 (defun generate-.sh (name)
-  (let ((util.cdn:*cdn-domain* screenshotbot/server:*cdn-domain*))
+  (let ((util.cdn:*cdn-domain* (installation-cdn (installation))))
     (let ((staging-p (not (equal "localhost" (uiop:hostname)))))
      (let ((darwin-link (artifact-link (format nil "~a-darwin" name)
                                        :cdn (not staging-p)))

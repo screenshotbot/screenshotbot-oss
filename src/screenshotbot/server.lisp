@@ -11,6 +11,7 @@
   (:import-from #:screenshotbot/secret
                 #:defsecret)
   (:import-from #:screenshotbot/installation
+                #:installation-cdn
                 #:installation
                 #:default-logged-in-page)
   (:import-from #:util/threading
@@ -37,7 +38,6 @@
    #:*seleniump*
    #:*nibble-plugin*
    #:*documentation-plugin*
-   #:*cdn-domain*
    #:*domain*
    #:logged-in-p
    #:dashboard
@@ -70,13 +70,6 @@
   `(progn
      (defvar ,name)
      (setf (documentation ',name 'variable) ,doc)))
-
-(defvar *cdn-domain* nil
-  "A CDN to use with this instance. Assuming your instance is public
-  facing, and your CDN is configured to look up assets from the root
-  of the domain. (e.g. https://mycdn.cloudfront.net/foo/bar.jpg should
-  go to https://myscreenshotbot.xyz.com/foo/bar.jpg) Leave as NIL to
-  disable CDN.")
 
 (defsecret :trello-key
   "Trello Key used for OAuth. You must still connect your Organization
@@ -224,8 +217,7 @@
      (push-analytics-event)
      (let ((script-name (hunchentoot:script-name request))
            (util.cdn:*cdn-domain*
-             (unless (staging-p)
-               *cdn-domain*)))
+             (installation-cdn (installation))))
        (cond
          ((staging-p)
           (setf (hunchentoot:header-out "Cache-Control") "no-cache"))

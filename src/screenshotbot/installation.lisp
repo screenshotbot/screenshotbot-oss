@@ -60,7 +60,10 @@
                           :accessor default-oidc-provider)
    (singleton-company :initform nil
                       :initarg :singleton-company
-                      :accessor cached-singleton-company)))
+                      :accessor cached-singleton-company)
+   (cdn :initarg :cdn
+        :initform nil
+        :accessor installation-cdn)))
 
 
 (defclass desktop-installation (installation)
