@@ -23,6 +23,8 @@
                 #:def-easy-macro)
   (:import-from #:core/ui/template
                 #:*app-template*)
+  (:import-from #:core/installation/installation
+                #:installation-domain)
   (:export
    #:defhandler
    #:with-login
@@ -228,7 +230,7 @@
               (not *is-localhost*))
          (setf (hunchentoot:header-out
                 "Access-Control-Allow-Origin")
-               "https://screenshotbot.io"))
+               (installation-domain (installation))))
        (call-next-method)))))
 
 (defhandler (nil :uri "/force-crash") ()
