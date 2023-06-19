@@ -14,11 +14,11 @@
                 #:with-transaction
                 #:*create-issue-fn*)
   (:import-from #:screenshotbot/github/access-checks
+                #:github-create-issue
                 #:fix-github-link))
 (in-package :screenshotbot/github/task-integration)
 
 (defvar *create-issue-fn* 'github-create-issue)
-
 
 (defclass github-task-integration (task-integration)
   ())
