@@ -91,6 +91,12 @@
     ,(render-user-menu (installation) :user user :company company)
   </div>)
 
+(defmethod web-projects-supported-p (installation)
+  t)
+
+(defmethod billing-supported-p (installation)
+  nil)
+
 (defmethod render-menu-items (installation &key user company script-name)
   <markup:merge-tag>
     <ul class="nav nav-pills flex-column ps-3 pe-3">
@@ -99,10 +105,11 @@
          Recent Runs
         </left-nav-item>
 
-      <left-nav-item href= "/web-projects" image-class= "cloud_queue"
-                      script-name=script-name >
-        Web Projects
-       </left-nav-item>
+      ,(when (web-projects-supported-p installation)
+         <left-nav-item href= "/web-projects" image-class= "cloud_queue"
+                        script-name=script-name >
+           Web Projects
+         </left-nav-item>)
 
       <left-nav-item href= "/channels" image-class= "book"
                      script-name=script-name >
@@ -134,8 +141,7 @@
         API Keys
       </left-nav-item>
 
-      ,(progn
-         #-screenshotbot-oss
+      ,(when (billing-supported-p installation)
          <left-nav-item href= "/billing/dashboard" image-class= "payment"
                         script-name=script-name >
            Billing
