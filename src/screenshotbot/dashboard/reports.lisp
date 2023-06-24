@@ -44,11 +44,20 @@
   (:import-from #:screenshotbot/taskie
                 #:taskie-page-title)
   (:import-from #:screenshotbot/model/report
+                #:acceptable-history-item-state
+                #:acceptable-history-item-ts
+                #:accepable-history-item-user
+                #:acceptable-history-item
+                #:acceptable-history
                 #:report-company)
   (:import-from #:screenshotbot/events
                 #:push-event)
   (:import-from #:screenshotbot/dashboard/run-page
                 #:render-warnings)
+  (:import-from #:screenshotbot/user-api
+                #:user-full-name)
+  (:import-from #:util/timeago
+                #:timeago)
   (:export #:report-page #:report-link
            #:shared-report-page))
 (in-package :screenshotbot/dashboard/reports)
@@ -156,8 +165,8 @@
       </div>
 
       <div class= "card-footer">
-        <input type= "submit" class= "btn btn-primary" value= "Create Public Link" >
-          <a href= (report-link report) class= "btn btn-outline-secondary" >Cancel</a>
+        <input type= "submit" class= "btn btn-primary" value= "Create Public Link" />
+        <a href= (report-link report) class= "btn btn-outline-secondary" >Cancel</a>
       </div>
     </simple-card-page>))
 
@@ -229,7 +238,53 @@
    (when (current-user)
      (cons
       <span><mdi name= "chat" /> Add Note</span>
-      (create-note-page :for report :redirect (make-url 'report-page :id (oid report)))))))
+      (create-note-page :for report :redirect (make-url 'report-page :id (oid report)))))
+   (cons
+    <span><mdi name= "history"/> Feedback history</span>
+    (nibble (:name "review-history")
+      (render-acceptable-history report)))))
+
+(defun render-acceptable-history (report)
+  (let ((history-items (acceptable-history (report-acceptable report))))
+    <simple-card-page>
+
+      <div class= "card-header" >
+        <h4 class= "">
+          Review History
+        </h4>
+      </div>
+      <div class= "card-body">
+        ,(cond
+           (history-items
+            <ul>
+              ,@ (loop for item in history-items
+                       collect (render-acceptable-history-item item))
+            </ul>)
+           (t
+            <span>This report has not been reviewed.</span>))
+
+      </div>
+      <div class= "card-footer">
+        <a class= "btn btn-link" href= (make-url 'report-page :id (oid report))>Back to report</a>
+      </div>
+    </simple-card-page>))
+
+(defmethod render-acceptable-history-item ((item acceptable-history-item))
+  (let ((class (ecase (acceptable-history-item-state item)
+                 (:accepted
+                  "text-success")
+                 (:rejected
+                  "text-danger"))))
+    <li>
+      <span class=class >,(progn (str:sentence-case (string (acceptable-history-item-state item))))</span>
+      by
+      ,(user-full-name (accepable-history-item-user item))
+      at
+      ,(timeago :timestamp (acceptable-history-item-ts item))
+    </li>))
+
+
+
 
 (defhandler (report-list :uri "/report" :method :get
                          :want-login t) ()

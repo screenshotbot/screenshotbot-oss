@@ -171,8 +171,11 @@
     ((state :initarg :state
             :reader acceptable-history-item-state)
      (%user :initarg :user
-            :reader accepable-history-item-user))
-    (:metaclass persistent-class)))
+            :reader accepable-history-item-user)
+     (ts :accessor acceptable-history-item-ts
+         :initarg :ts))
+    (:metaclass persistent-class)
+    (:default-initargs :ts (get-universal-time))))
 
 (defmethod can-view ((self base-acceptable) user)
   (and

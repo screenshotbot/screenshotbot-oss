@@ -39,7 +39,7 @@
     (set-created-at res (get-universal-time))
     res))
 
-(defun ensure-slot-boundp (item slot)
+(defun ensure-slot-boundp (item slot &key value)
   (let ((items (cond
                  ((listp item)
                   item)
@@ -50,7 +50,7 @@
     (loop for item in items do
       (unless (slot-boundp item slot)
         (with-transaction ()
-          (setf (slot-value item slot) nil))))))
+          (setf (slot-value item slot) value))))))
 
 
 (defun %random (num)
