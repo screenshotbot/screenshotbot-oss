@@ -239,13 +239,14 @@
      (cons
       <span><mdi name= "chat" /> Add Note</span>
       (create-note-page :for report :redirect (make-url 'report-page :id (oid report)))))
-   (cons
-    <span><mdi name= "history"/> Feedback history</span>
-    (nibble (:name "review-history")
-      (render-acceptable-history report)))))
+   (when-let ((acceptable (report-acceptable report)))
+    (cons
+     <span><mdi name= "history"/> Feedback history</span>
+     (nibble (:name "review-history")
+       (render-acceptable-history acceptable))))))
 
-(defun render-acceptable-history (report)
-  (let ((history-items (acceptable-history (report-acceptable report))))
+(defun render-acceptable-history (acceptable)
+  (let ((history-items (acceptable-history acceptable)))
     <simple-card-page>
 
       <div class= "card-header" >
