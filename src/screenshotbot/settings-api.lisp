@@ -65,12 +65,17 @@
 (defmethod plugin-settings ((plugin plugin))
   nil)
 
+(defmethod should-show-settings-p (installation setting-name)
+  t)
+
 (defmethod all-settings ((installation installation))
   (remove-if
    (lambda (settings)
-     (and
-      (settings-only-staging-p (cdr settings))
-      (not (staging-p))))
+     (or
+      (not (should-show-settings-p installation (car settings)))
+      (and
+       (settings-only-staging-p (cdr settings))
+       (not (staging-p)))))
    (remove-if #'null
     (append
      *settings*

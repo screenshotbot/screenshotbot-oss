@@ -48,7 +48,6 @@
   :title "Members"
   :handler (lambda ()
              (members-page)))
-
 (defun mailto (x)
   <a href= (format nil "mailto:~a" x)>,(progn x)</a>)
 
