@@ -19,6 +19,7 @@
                 #:recorder-run-channel
                 #:publicp)
   (:import-from #:bknr.datastore
+                #:deftransaction
                 #:persistent-class
                 #:store-object
                 #:with-transaction)
@@ -59,7 +60,8 @@
    #:acceptable-report
    #:acceptable-reviewer
    #:company-promotion-reports
-   #:report-to-dto)
+   #:report-to-dto
+   #:acceptable-history-item)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/model/report)
 
@@ -157,7 +159,19 @@
      (%user :initarg :user
             :initform nil
             :accessor acceptable-reviewer
-            :documentation "The reviewer who last updated the state"))
+            :documentation "The reviewer who last updated the state")
+     (history :initform nil
+              :accessor acceptable-history
+              :documentation "A list of history items"))
+    (:metaclass persistent-class)))
+
+
+(with-class-validation
+  (defclass acceptable-history-item (store-object)
+    ((state :initarg :state
+            :reader acceptable-history-item-state)
+     (%user :initarg :user
+            :reader accepable-history-item-user))
     (:metaclass persistent-class)))
 
 (defmethod can-view ((self base-acceptable) user)
@@ -189,7 +203,12 @@
   (with-transaction ()
     (setf (slot-value acceptable 'state)
           state)
-    (setf (acceptable-reviewer acceptable) user)))
+    (setf (acceptable-reviewer acceptable) user)
+    (push
+     (make-instance 'acceptable-history-item
+                    :state state
+                    :user user)
+       (acceptable-history acceptable))))
 
 (defun report-to-dto (report)
   (make-instance 'dto:report
