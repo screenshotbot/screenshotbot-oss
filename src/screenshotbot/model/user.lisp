@@ -37,6 +37,8 @@
                 #:def-store-local)
   (:import-from #:screenshotbot/events
                 #:push-event)
+  (:import-from #:util/misc
+                #:?.)
   (:export
    #:user
    #:email-confirmation-code
@@ -314,11 +316,15 @@
       (setf (confirmed-p user) t))))
 
 (defmethod user-image-url (user &rest args)
-  (if (oauth-users user)
-      (oauth-user-avatar (car (oauth-users user)))
-      (format nil "~a" (apply 'gravatar:image-url
-                              (user-email user)
-                              args))))
+  (let ((known-avatar
+          (?. oauth-user-avatar (car (oauth-users user)))))
+    (cond
+      ((str:emptyp known-avatar)
+       (format nil "~a" (apply 'gravatar:image-url
+                               (user-email user)
+                               args)))
+      (t
+       known-avatar))))
 
 (defmethod default-company ((user user))
   (let ((user-companies (user-companies  user)))
