@@ -161,6 +161,7 @@
             :accessor acceptable-reviewer
             :documentation "The reviewer who last updated the state")
      (history :initform nil
+              :initarg :history
               :accessor acceptable-history
               :documentation "A list of history items"))
     (:metaclass persistent-class)))

@@ -8,10 +8,13 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/reports
+                #:render-acceptable-history
                 #:submit-share-report)
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/testing
+                #:fix-timestamps
+                #:screenshot-test
                 #:with-test-user)
   (:import-from #:screenshotbot/report-api
                 #:report)
@@ -26,6 +29,9 @@
                 #:share)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
+  (:import-from #:screenshotbot/model/report
+                #:acceptable-history-item
+                #:base-acceptable)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-reports)
 
@@ -47,3 +53,25 @@
     (let ((shares (class-instances 'share)))
       (assert-that shares
                    (has-length 1)))))
+
+(screenshot-test render-acceptable-history-empty ()
+  (with-fixture state ()
+    (let ((report (make-instance 'report))
+          (acceptable (make-instance 'base-acceptable
+                                     :report report)))
+      (render-acceptable-history acceptable))))
+
+(screenshot-test render-acceptable-history-non-empty ()
+  (with-fixture state ()
+    (let ((report (make-instance 'report))
+          (acceptable (make-instance 'base-acceptable
+                                     :report report
+                                     :history (list
+                                               (make-instance 'acceptable-history-item
+                                                              :state :accepted
+                                                              :user user)
+                                               (make-instance 'acceptable-history-item
+                                                              :state :rejected
+                                                              :user user)))))
+      (fix-timestamps
+       (render-acceptable-history acceptable)))))

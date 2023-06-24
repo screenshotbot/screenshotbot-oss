@@ -44,6 +44,7 @@
   (:import-from #:screenshotbot/taskie
                 #:taskie-page-title)
   (:import-from #:screenshotbot/model/report
+                #:acceptable-report
                 #:acceptable-history-item-state
                 #:acceptable-history-item-ts
                 #:accepable-history-item-user
@@ -62,7 +63,7 @@
            #:shared-report-page))
 (in-package :screenshotbot/dashboard/reports)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defhandler (report-page :uri "/report/:id" :method :get) (id)
   (cond
@@ -266,7 +267,7 @@
 
       </div>
       <div class= "card-footer">
-        <a class= "btn btn-link" href= (make-url 'report-page :id (oid report))>Back to report</a>
+        <a class= "btn btn-link" href= (report-link (acceptable-report acceptable))>Back to report</a>
       </div>
     </simple-card-page>))
 
