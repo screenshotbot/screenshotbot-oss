@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/dashboard/explain
                 #:explain)
   (:import-from #:screenshotbot/model/channel
+                #:with-channel-lock
                 #:channel-slack-channels
                 #:channel-subscribers
                 #:channel-company
@@ -41,6 +42,8 @@
                 #:current-company
                 #:company-channels)
   (:import-from #:screenshotbot/model/recorder-run
+                #:channel-runs
+                #:recorder-run-company
                 #:active-run)
   (:import-from #:util/request
                 #:http-request)
@@ -50,6 +53,7 @@
   (:import-from #:util/misc
                 #:make-mp-hash-table)
   (:import-from #:bknr.datastore
+                #:without-sync
                 #:deftransaction)
   (:import-from #:bknr.datastore
                 #:deftransaction)
@@ -260,21 +264,28 @@
     <span>Channel deleted. <a href= "/channels">Back to channels</a></span>
   </simple-card-page>)
 
-(deftransaction perform-delete (channel)
+(defun perform-delete (channel)
   (check-type channel channel)
-  ;; Deleting a channel is an expensive operation, and we're blocking all transactions
-  ;; in the meantime.
-  (let ((company (company channel)))
-    (setf (company-runs company)
-          (remove channel (company-runs company)
-                  :key #'recorder-run-channel))
-    (setf (company-reports company)
-          (remove channel (company-reports company)
-                  :key #'report-channel))
-    (setf (company-channels company)
-          (remove channel (company-channels company)))
+  (without-sync ()
+   (with-channel-lock (channel)
+     (let ((company (company channel)))
+       (assert company)
+       (with-transaction ()
+         (setf (company-reports company)
+               (remove channel (company-reports company)
+                       :key #'report-channel)))
+       (detach-runs (channel-runs channel))
+       (with-transaction ()
+         (setf (company-channels company)
+               (remove channel (company-channels company))))
+       (with-transaction ()
+         (setf (company channel) nil))))))
 
-    (setf (company channel) nil)))
+(defun detach-runs (runs)
+  "Detach the run from the company as a way of deleting it."
+  (loop for run in runs
+        do (with-transaction ()
+             (setf (recorder-run-company run) nil))))
 
 (defun guess-channel-args (channel)
   (list

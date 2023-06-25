@@ -118,7 +118,7 @@
      (company
       :initarg :company
       :initform nil
-      :reader recorder-run-company
+      :accessor recorder-run-company
       :index +run-company-index+
       :index-reader runs-for-company)
      (commit-hash

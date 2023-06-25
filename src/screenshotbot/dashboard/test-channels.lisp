@@ -35,6 +35,7 @@
   (:import-from #:fiveam-matchers/misc
                 #:is-not-null)
   (:import-from #:screenshotbot/model/recorder-run
+                #:runs-for-company
                 #:make-recorder-run
                 #:active-run
                 #:recorder-run)
@@ -100,7 +101,8 @@
 
 (test delete-channel
   (with-fixture state ()
-    (perform-delete channel)))
+    (perform-delete channel)
+    (is (fset:empty? (runs-for-company company)))))
 
 (screenshot-test channel-deleted-confirmation
   (with-fixture state ()
