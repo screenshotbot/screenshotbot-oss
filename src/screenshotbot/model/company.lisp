@@ -306,7 +306,9 @@
 (defmethod company-admin-p ((company company) user)
   (or
    (eql user (company-owner company))
-   (member user (company-admins company))))
+   (member user (company-admins company))
+   ;; superadmin is always a company admin
+   (adminp user)))
 
 (deftransaction
     add-company-report (company report)
