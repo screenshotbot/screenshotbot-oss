@@ -85,7 +85,7 @@
         </span>
       </a>
     </div>
-  <hr class= "mt-0" >
+  <hr class= "mt-0" />
 
     ,(render-menu-items (installation) :user user :company company :script-name script-name)
     ,(render-user-menu (installation) :user user :company company)
@@ -96,6 +96,9 @@
 
 (defmethod billing-supported-p (installation)
   nil)
+
+(defmethod documentation-url (installation)
+  "/documentation")
 
 (defmethod render-menu-items (installation &key user company script-name)
   <markup:merge-tag>
@@ -124,7 +127,7 @@
     <hr />
 
     <ul class="nav nav-pills flex-column mb-auto ps-3 pe-3">
-      <left-nav-item href= "/documentation" image-class= "menu_book" target= "_blank"
+      <left-nav-item href= (documentation-url (installation)) image-class= "menu_book" target= "_blank"
                      script-name=script-name >
         Documentation
   </left-nav-item>
