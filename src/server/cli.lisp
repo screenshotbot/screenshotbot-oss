@@ -21,6 +21,8 @@
                 #:when-let)
   (:import-from #:server/config
                 #:*config-file*)
+  (:import-from #:util/threading
+                #:make-thread)
   (:export
    #:main))
 (in-package :server/cli)
@@ -75,11 +77,31 @@
               :key :profile)
              (common-options))))
 
+(defvar *signal-lock* (bt:make-lock))
+
+#+lispworks
+(defun sigusr1-handler (&rest x)
+  (declare (ignore x))
+  (make-thread
+   (lambda ()
+     (let ((stream (sys:make-stderr-stream)))
+       (bt:with-lock-held (*signal-lock*)
+
+         (format stream "SIGUSR1: Started~%")
+         (asdf:load-system :screenshotbot.pro)
+         (util:validate-indices)
+         (format stream "SIGUSR1: Success ~a.~%"
+                 (uiop:read-file-string "release_timestamp"))
+         (finish-output stream))))))
+
 (defun run/command (&key enable-store jvm acceptor)
   (clingon:make-command
    :name "run"
    :handler (lambda (cmd)
               (with-run-or-verify-setup (cmd :enable-store enable-store :jvm jvm)
+                #+lispworks
+                (sys:set-signal-handler 10
+                                        'sigusr1-handler)
                 (%run :enable-store enable-store
                       :acceptor
                       (cond
