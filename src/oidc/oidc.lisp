@@ -144,6 +144,10 @@
        (otherwise
         (error "Failed to make json request, status code ~a" status-code))))))
 
+(define-condition authentication-error (error)
+  ((message :initarg :message
+            :reader authentication-error-message)))
+
 (defmethod oidc-callback ((auth oidc) code redirect
                           &key error
                             (error-redirect "/"))
@@ -165,12 +169,15 @@
                                                                         ,(format nil "Bearer ~a"
                                                                                  (Access-token-str token)))))))
          (log:debug "Got user info ~S" user-info)
-         (after-authentication
-          auth
-          :user-id (assoc-value user-info :sub)
-          :email (assoc-value user-info :email)
-          :full-name (assoc-value user-info :name)
-          :avatar (assoc-value user-info :picture)))))
+         (handler-case
+             (after-authentication
+              auth
+              :user-id (assoc-value user-info :sub)
+              :email (assoc-value user-info :email)
+              :full-name (assoc-value user-info :name)
+              :avatar (assoc-value user-info :picture))
+           (authentication-error (e)
+             (hex:safe-redirect error-redirect :error (authentication-error-message e)))))))
     (t
      ;; error the OAuth flow, most likely
      (warn "Oauth failed: ~a" error)
