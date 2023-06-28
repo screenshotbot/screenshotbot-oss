@@ -30,6 +30,7 @@
                 #:store-object
                 #:persistent-class)
   (:import-from #:oidc/oidc
+                #:verify-userinfo
                 #:make-oidc-auth-link)
   (:export
    #:google-user
@@ -77,3 +78,8 @@
                  (quri:uri-query-params old))))))
     (t
      (call-next-method))))
+
+(defmethod verify-userinfo ((self google-oauth-provider) user-info)
+  (when (google-domain self)
+    (assert (equal (assoc-value user-info :hd)
+                   (google-domain self)))))

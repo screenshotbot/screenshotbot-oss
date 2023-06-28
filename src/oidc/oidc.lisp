@@ -169,6 +169,7 @@
                                                                         ,(format nil "Bearer ~a"
                                                                                  (Access-token-str token)))))))
          (log:debug "Got user info ~S" user-info)
+         (verify-userinfo auth user-info)
          (handler-case
              (after-authentication
               auth
@@ -182,6 +183,8 @@
      ;; error the OAuth flow, most likely
      (warn "Oauth failed: ~a" error)
      (hex:safe-redirect error-redirect :error error))))
+
+(defmethod verify-user-info (oidc user-info))
 
 (defgeneric after-authentication (oidc &key
                                          user-id

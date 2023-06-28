@@ -11,6 +11,7 @@
                 #:google-domain
                 #:google-oauth-provider)
   (:import-from #:oidc/oidc
+                #:verify-userinfo
                 #:make-oidc-auth-link)
   (:import-from #:util/testing
                 #:with-fake-request)
@@ -22,7 +23,7 @@
 
 (util/fiveam:def-suite)
 
-(test make-oidc-auth-link
+(test make-oidc-auth-link-for-google
   (let ((provider (make-instance 'google-oauth-provider
                                  :client-id "foobar"
                                  :client-secret "barbar"
@@ -42,3 +43,20 @@
 want to make sure we don't accidently push that change."
   (let ((provider (make-instance 'google-oauth-provider)))
     (is (null (google-domain provider)))))
+
+(test verify-userinfo-for-google
+  (let ((provider (make-instance 'google-oauth-provider
+                                 :domain nil)))
+    (finishes
+     (verify-userinfo
+      provider nil))))
+
+(test verify-userinfo-for-google-with-domain
+  (let ((provider (make-instance 'google-oauth-provider
+                                 :domain "example.com")))
+    (finishes
+     (verify-userinfo
+      provider `((:hd . "example.com"))))
+    (signals simple-error
+      (verify-userinfo
+       provider `((:hd . "foo.com"))))))
