@@ -73,10 +73,6 @@
         (cl-ppcre:scan-to-strings ".*/pull-requests/((\\d)*)$" url)
       (cond
         (all
-         (str:concat
-          (format nil "Pull ~a" (elt parts 0))
-          (let ((branch (recorder-run-work-branch run)))
-            (unless (str:emptyp branch)
-             (format nil " (~a)" (car (last (str:split "/" branch))))))))
+         (format nil "Pull ~a" (elt parts 0)))
         (t
          (call-next-method))))))

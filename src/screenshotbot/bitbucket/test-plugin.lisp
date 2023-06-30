@@ -35,7 +35,7 @@
 (test describe-pull-request-for-bitbucket-for-run-with-branch
   (with-test-store ()
     (let ((repo (make-instance 'bitbucket-repo)))
-      (is (equal "Pull Request"
+      (is (equal "Pull Request (foobar)"
                  (describe-pull-request repo (make-recorder-run
                                               :work-branch "foobar"
                                               :pull-request "https://google.com"))))

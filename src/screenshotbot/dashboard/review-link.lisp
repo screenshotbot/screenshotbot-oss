@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/dashboard/review-link
   (:use #:cl)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-work-branch
                 #:pull-request-id
                 #:gitlab-merge-request-iid
                 #:phabricator-diff-id)
@@ -59,3 +60,10 @@
 
 (defmethod describe-pull-request (repo run)
   "Pull Request")
+
+(defmethod describe-pull-request :around (repo run)
+  (str:concat
+   (call-next-method)
+   (let ((branch (recorder-run-work-branch run)))
+     (unless (str:emptyp branch)
+       (format nil " (~a)" (car (last (str:split "/" branch))))))))
