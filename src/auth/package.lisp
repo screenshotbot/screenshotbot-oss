@@ -18,9 +18,12 @@
                 :host
                 :cookie-in)
   (:import-from #:util/store/store
+                #:defindex
                 #:with-class-validation)
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
+  (:import-from #:util/store/fset-index
+                #:fset-set-index)
   (:export #:user-session
            #:session-value
            #:session-key

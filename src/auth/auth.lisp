@@ -9,6 +9,9 @@
 (defgeneric auth-get-user-class (acceptor)
   (:documentation "Gets the class used to store the user data"))
 
+(defindex +sessions-index+ 'fset-set-index
+  :slot-name 'session-token)
+
 (with-class-validation
  (defclass user-session-value (store-object)
    ((session-key-and-prop-key
@@ -18,6 +21,8 @@
               :documentation "The property key. e.g. :USER, or :COMPANY. Note: this is currently not being used.")
     (session-token :initarg :session-token
                    :accessor  session-token
+                   :index +sessions-index+
+                   :index-reader values-for-session-token
                    :documentation "Just the session token, as a string.")
     (session-domain :initarg :session-domain
                     :accessor session-domain
