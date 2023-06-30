@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :test-auth
+(defpackage :auth/test-auth
   (:use :cl
    :fiveam)
   (:import-from :util/testing
@@ -17,9 +17,9 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:export))
-(in-package :test-auth)
+(in-package :auth/test-auth)
 
-(def-suite* :test-auth)
+(util/fiveam:def-suite)
 
 (def-fixture state ()
   (cl-mock:with-mocks ()
