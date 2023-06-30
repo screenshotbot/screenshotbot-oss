@@ -9,13 +9,14 @@
 (defgeneric auth-get-user-class (acceptor)
   (:documentation "Gets the class used to store the user data"))
 
-(defclass user-session-value (store-object)
-  ((session-key-and-prop-key
-    :accessor session-key-and-prop-key)
-   (value
-    :initarg :value
-    :accessor value))
-  (:metaclass persistent-class))
+(with-class-validation
+ (defclass user-session-value (store-object)
+   ((session-key-and-prop-key
+     :accessor session-key-and-prop-key)
+    (value
+     :initarg :value
+     :accessor value))
+   (:metaclass persistent-class)))
 
 (defmethod initialize-instance :after ((uv user-session-value)
                                        &key session-key

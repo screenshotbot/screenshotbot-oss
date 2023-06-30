@@ -3,6 +3,7 @@
   :depends-on ("cl-pass"
                "bknr.datastore"
                "util/misc"
+               "util.store"
                "log4cl"
                "cl-fad"
                "cl-store"

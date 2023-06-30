@@ -15,6 +15,8 @@
                 :set-cookie
                 :host
                 :cookie-in)
+  (:import-from #:util/store/store
+                #:with-class-validation)
   (:export #:user-session
            #:session-value
            #:session-key
