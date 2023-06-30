@@ -10,6 +10,8 @@
   (:import-from :util/testing
                 :with-fake-request)
   (:import-from :auth
+                #:session-token
+                #:session-domain
                 #:session-key
                 #:prop-key
                 #:user-session-value
@@ -21,6 +23,11 @@
                 #:with-test-store)
   (:import-from #:bknr.datastore
                 #:class-instances)
+  (:import-from #:fiveam-matchers/core
+                #:is-string
+                #:assert-that)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
   (:export))
 (in-package :auth/test-auth)
 
@@ -54,7 +61,11 @@
   (with-fixture state ()
     (auth:with-sessions ()
       (setf (auth:session-value :name) 33)
-      (is (eql :name (prop-key (last-user-session-value)))))))
+      (is (eql :name (prop-key (last-user-session-value))))
+      (is (equal "localhost" (session-domain (last-user-session-value))))
+      (assert-that (session-token (last-user-session-value))
+                   (is-string)
+                   (has-length 32)))))
 
 #+windows
 (test read-windows-seed

@@ -16,6 +16,12 @@
     (prop-key :initarg :prop-key
               :reader prop-key
               :documentation "The property key. e.g. :USER, or :COMPANY. Note: this is currently not being used.")
+    (session-token :initarg :session-token
+                   :reader session-token
+                   :documentation "Just the session token, as a string.")
+    (session-domain :initarg :session-domain
+                    :reader session-domain
+                    :documentation "The domain associated with this session")
     (value
      :initarg :value
      :accessor value))
@@ -24,8 +30,10 @@
 (defmethod initialize-instance :after ((uv user-session-value)
                                        &key session-key
                                          prop-key
-                                         value)
-  (declare (ignore value))
+                                         value
+                                         session-token
+                                         session-domain)
+  (declare (ignore value session-token session-domain))
   (setf (session-key-and-prop-key uv)
         (cons session-key prop-key)))
 
@@ -201,8 +209,10 @@ value."
               (find-user-session-value (session-key session)
                                        key)
               (make-instance 'user-session-value
-                              :session-key (session-key session)
-                              :prop-key key)))))
+                             :session-token (%session-token session)
+                             :session-domain (session-domain session)
+                             :session-key (session-key session)
+                             :prop-key key)))))
     (bknr.datastore:with-transaction ()
       (setf (value x) value))))
 

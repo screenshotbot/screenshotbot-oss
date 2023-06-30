@@ -17,5 +17,6 @@
   :serial t
   :depends-on (:auth
                :util/testing
+               :fiveam-matchers
                :util/fiveam)
   :components ((:file "test-auth")))
