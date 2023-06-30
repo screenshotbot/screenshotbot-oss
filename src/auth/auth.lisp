@@ -30,8 +30,13 @@
                     :documentation "The domain associated with this session")
     (value
      :initarg :value
-     :accessor value))
-   (:metaclass persistent-class)))
+     :accessor value)
+    (last-update-ts
+     :initarg :last-update-ts
+     :initform (get-universal-time) #| migration |#
+     :accessor last-update-ts))
+   (:metaclass persistent-class)
+   (:default-initargs :last-update-ts (get-universal-time))))
 
 (defmethod initialize-instance :after ((uv user-session-value)
                                        &key session-key #| deprecated |#
@@ -216,6 +221,7 @@ value."
                              :session-key (session-key session) #| deprecated |#
                              :prop-key key)))))
     (bknr.datastore:with-transaction ()
+      (setf (last-update-ts x) (get-universal-time))
       (setf (value x) value))))
 
 (defgeneric password-hash (user)
