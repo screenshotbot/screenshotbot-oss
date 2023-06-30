@@ -29,6 +29,8 @@
                 #:find-by-oid)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:screenshotbot/installation
+                #:installation)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/email-tasks/settings)
 
@@ -47,6 +49,9 @@
 
 (defvar *lock* (bt:make-lock))
 
+(defmethod emails-enabled-by-default-p (installation)
+  nil)
+
 (defun email-setting (&key user company)
   (flet ((old ()
            (loop for setting in (email-settings-for-user user)
@@ -59,7 +64,8 @@
         (old)
         (make-instance 'email-setting
                         :user user
-                        :company company))))))
+                        :company company
+                        :enabledp (emails-enabled-by-default-p (installation))))))))
 
 (defun save-settings (settings enabledp)
   ;; there's not much in terms of validation to do here.

@@ -10,6 +10,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/email-tasks/settings
+                #:emails-enabled-by-default-p
                 #:emails-enabledp
                 #:email-setting
                 #:get-email-settings)
@@ -68,6 +69,9 @@
 
 (defclass multi-installation (installation multi-org-feature)
   ())
+
+(defmethod emails-enabled-by-default-p ((self multi-installation))
+  t)
 
 (def-fixture state ()
   (with-test-store ()
