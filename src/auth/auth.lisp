@@ -81,31 +81,18 @@ this would be a problem."
 
 (defparameter *cookie-name* "s2")
 
-(defun ip-address-p (domain)
-  (or
-   (search "localhost" domain)
-   (cl-ppcre:scan "\\.\\d*$" domain)))
-
-(defun fix-cookie-domain (domain)
-  (cond
-    ((ip-address-p domain)
-     domain)
-    (t
-     domain)))
-
 (defun host-without-port ()
   (car (str:split ":" (host))))
 
 (defun set-session-cookie (token &optional domain)
   (let ((domain (or domain (host-without-port))))
-    (let ((domain (fix-cookie-domain domain)))
-      (set-cookie *cookie-name*
-                  :value token :domain domain :expires (+ (get-universal-time) (* 365 2600 24))
-                  :path "/" :secure (and
-                                     *secure-cookie-p*
-                                        (string=
-                                         "https"
-                                         (hunchentoot:header-in* :x-forwarded-proto)))))))
+    (set-cookie *cookie-name*
+                :value token :domain domain :expires (+ (get-universal-time) (* 365 2600 24))
+                :path "/" :secure (and
+                                   *secure-cookie-p*
+                                   (string=
+                                    "https"
+                                    (hunchentoot:header-in* :x-forwarded-proto))))))
 
 (defun has-session? ()
   (let ((s (cookie-in *cookie-name*)))

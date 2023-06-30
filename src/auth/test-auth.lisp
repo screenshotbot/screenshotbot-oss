@@ -12,7 +12,6 @@
   (:import-from :auth
                 #:generate-session-token
                 #:csrf-token
-   :fix-cookie-domain
    #+windows
    :read-windows-seed)
   (:import-from #:util/store
@@ -46,15 +45,6 @@
 #+windows
 (test read-windows-seed
   (is-true (read-windows-seed)))
-
-(test fix-cookie-domain
-  (is (equal "foo.com" (fix-cookie-domain "foo.com")))
-  (is (equal "localhost" (fix-cookie-domain "localhost")))
-  (is (equal "192.168.1.119" (fix-cookie-domain "192.168.1.119")))
-  ;; We used to map www.foo.com to foo.com, but that logic is hard to
-  ;; maintain
-  (is (equal "www.foo.com" (fix-cookie-domain "www.foo.com")))
-  (is (equal "192.168.1.120" (fix-cookie-domain "192.168.1.120"))))
 
 (test csrf-token
   (with-fixture state ()
