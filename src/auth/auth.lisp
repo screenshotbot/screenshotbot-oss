@@ -210,19 +210,23 @@ value."
 
 
 (defun (setf session-value) (value key &key (session (current-session)))
-  (let ((x (bt:with-lock-held (*lock*)
-             (or
-              (find-user-session-value (%session-token session)
-                                       (session-domain session)
-                                       key)
-              (make-instance 'user-session-value
-                             :session-token (%session-token session)
-                             :session-domain (session-domain session)
-                             :session-key (session-key session) #| deprecated |#
-                             :prop-key key)))))
-    (bknr.datastore:with-transaction ()
-      (setf (last-update-ts x) (get-universal-time))
-      (setf (value x) value))))
+  (bt:with-lock-held (*lock*)
+    (let ((x (find-user-session-value (%session-token session)
+                                     (session-domain session)
+                                     key)))
+      (cond
+        (x
+         (bknr.datastore:with-transaction ()
+           (setf (last-update-ts x) (get-universal-time))
+           (setf (value x) value)))
+        (t
+         (make-instance 'user-session-value
+                        :session-token (%session-token session)
+                        :session-domain (session-domain session)
+                        :session-key (session-key session) #| deprecated |#
+                        :value value
+                        :prop-key key)))
+      value)))
 
 (defgeneric password-hash (user)
   (:documentation "password hash for the user"))
