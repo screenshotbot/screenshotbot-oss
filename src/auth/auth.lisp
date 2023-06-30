@@ -13,6 +13,9 @@
  (defclass user-session-value (store-object)
    ((session-key-and-prop-key
      :accessor session-key-and-prop-key)
+    (prop-key :initarg :prop-key
+              :reader prop-key
+              :documentation "The property key. e.g. :USER, or :COMPANY. Note: this is currently not being used.")
     (value
      :initarg :value
      :accessor value))
