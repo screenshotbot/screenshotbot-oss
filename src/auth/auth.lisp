@@ -20,20 +20,20 @@
         (cons session-key prop-key)))
 
 
+(defvar *cache* (make-hash-table :test #'equal))
 
-(let ((cache (make-hash-table :test #'equal)))
-  (defun find-user-session-value (session-key prop-key)
-    "The reason we don't use a BKNR index for this is because the
+(defun find-user-session-value (session-key prop-key)
+  "The reason we don't use a BKNR index for this is because the
 index has a tendency to go stale. When the index does go stale,
 sessions are one of the first objects created that can make the index
 incorrect. We don't have a crazy number of sessions per instance that
 this would be a problem."
-    (let ((cache-key (cons session-key prop-key)))
-      (util/misc:or-setf
-       (gethash cache-key cache)
-       (loop for user-session-value in (bknr.datastore:store-objects-with-class 'user-session-value)
-             if (equal cache-key (session-key-and-prop-key user-session-value))
-                return user-session-value)))))
+  (let ((cache-key (cons session-key prop-key)))
+    (util/misc:or-setf
+     (gethash cache-key *cache*)
+     (loop for user-session-value in (bknr.datastore:store-objects-with-class 'user-session-value)
+           if (equal cache-key (session-key-and-prop-key user-session-value))
+             return user-session-value))))
 
 (defvar *hash-cache* (make-hash-table :test #'equal))
 
