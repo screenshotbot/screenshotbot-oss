@@ -7,6 +7,8 @@
 (defpackage #:auth
   (:use #:cl)
   (:import-from :bknr.datastore
+                :with-transaction
+                :class-instances
    :store-object
                 :hash-index
                 :unique-index
@@ -17,6 +19,8 @@
                 :cookie-in)
   (:import-from #:util/store/store
                 #:with-class-validation)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
   (:export #:user-session
            #:session-value
            #:session-key

@@ -14,13 +14,13 @@
    ((session-key-and-prop-key
      :accessor session-key-and-prop-key)
     (prop-key :initarg :prop-key
-              :reader prop-key
+              :accessor prop-key
               :documentation "The property key. e.g. :USER, or :COMPANY. Note: this is currently not being used.")
     (session-token :initarg :session-token
-                   :reader session-token
+                   :accessor  session-token
                    :documentation "Just the session token, as a string.")
     (session-domain :initarg :session-domain
-                    :reader session-domain
+                    :accessor session-domain
                     :documentation "The domain associated with this session")
     (value
      :initarg :value
@@ -237,3 +237,18 @@ value."
 (defclass login-controller ()
   ((login-page
     :initarg :login-page)))
+
+(defmacro safe-setf (place val)
+  (alexandria:with-gensyms (xval)
+    `(let ((,xval ,val))
+       (unless (equal (ignore-errors ,place) ,xval)
+         (with-transaction ()
+           (setf ,place ,xval))))))
+
+(def-store-migration ("auth: Set individual slots from keys" :version 5)
+  (dolist (usv (class-instances 'user-session-value))
+    (when (session-key-and-prop-key usv)
+     (destructuring-bind ((token . domain) . prop-key) (session-key-and-prop-key usv)
+       (safe-setf (session-token usv) token)
+       (safe-setf (session-domain usv) domain)
+       (safe-setf (prop-key usv) prop-key)))))
