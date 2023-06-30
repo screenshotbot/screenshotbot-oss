@@ -10,6 +10,7 @@
   (:import-from :util/testing
                 :with-fake-request)
   (:import-from :auth
+                #:expiry-ts
                 #:session-token
                 #:session-domain
                 #:session-key
@@ -56,6 +57,22 @@
       (is (equal 33 (auth:session-value :name)))
       (setf (auth:session-value :name) 44)
       (is (equal 44 (auth:session-value :name))))))
+
+(test set-key-val-with-expiry
+  (with-fixture state ()
+    (auth:with-sessions ()
+      (setf (auth:session-value :name :expires-in 1000)  33)
+      (is (equal 33 (auth:session-value :name)))
+      (is (<
+           (get-universal-time)
+           (expiry-ts (last-user-session-value))
+           (+ 1100 (get-universal-time)) ))
+      (setf (auth:session-value :name :expires-in 500) 44)
+      (is (equal 44 (auth:session-value :name)))
+      (is (<
+           (get-universal-time)
+           (expiry-ts (last-user-session-value))
+           (+ 600 (get-universal-time)) )))))
 
 (test new-fields-are-set
   (with-fixture state ()

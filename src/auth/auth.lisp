@@ -12,6 +12,9 @@
 (defindex +sessions-index+ 'fset-set-index
   :slot-name 'session-token)
 
+(defindex +expiry-index+ 'fset-set-index
+  :slot-name 'expiry-ts)
+
 (with-class-validation
  (defclass user-session-value (store-object)
    ((session-key-and-prop-key
@@ -34,7 +37,12 @@
     (last-update-ts
      :initarg :last-update-ts
      :initform (get-universal-time) #| migration |#
-     :accessor last-update-ts))
+     :accessor last-update-ts)
+    (expiry-ts
+     :initarg :expiry-ts
+     :initform nil
+     :accessor expiry-ts
+     :index +expiry-index+))
    (:metaclass persistent-class)
    (:default-initargs :last-update-ts (get-universal-time))))
 
@@ -47,8 +55,6 @@
   (declare (ignore value session-token session-domain))
   (setf (session-key-and-prop-key uv)
         (cons session-key prop-key)))
-
-
 
 (defun find-user-session-value (token domain prop-key)
   (let ((usvs (values-for-session-token token)))
@@ -209,24 +215,29 @@ value."
          (value x))))
 
 
-(defun (setf session-value) (value key &key (session (current-session)))
-  (bt:with-lock-held (*lock*)
-    (let ((x (find-user-session-value (%session-token session)
-                                     (session-domain session)
-                                     key)))
-      (cond
-        (x
-         (bknr.datastore:with-transaction ()
-           (setf (last-update-ts x) (get-universal-time))
-           (setf (value x) value)))
-        (t
-         (make-instance 'user-session-value
-                        :session-token (%session-token session)
-                        :session-domain (session-domain session)
-                        :session-key (session-key session) #| deprecated |#
-                        :value value
-                        :prop-key key)))
-      value)))
+(defun (setf session-value) (value key &key (session (current-session))
+                                         expires-in)
+  (let ((expiry-ts (when expires-in (+ (get-universal-time) expires-in))))
+    (bt:with-lock-held (*lock*)
+      (let ((x (find-user-session-value (%session-token session)
+                                        (session-domain session)
+                                        key)))
+        (cond
+          (x
+           (bknr.datastore:with-transaction ()
+             (setf (last-update-ts x) (get-universal-time))
+             (when expiry-ts
+               (setf (expiry-ts x) expiry-ts))
+             (setf (value x) value)))
+          (t
+           (make-instance 'user-session-value
+                          :session-token (%session-token session)
+                          :session-domain (session-domain session)
+                          :session-key (session-key session) #| deprecated |#
+                          :expiry-ts expiry-ts
+                          :value value
+                          :prop-key key)))
+        value))))
 
 (defgeneric password-hash (user)
   (:documentation "password hash for the user"))
