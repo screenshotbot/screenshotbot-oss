@@ -65,5 +65,7 @@
   (str:concat
    (call-next-method)
    (let ((branch (recorder-run-work-branch run)))
-     (unless (str:emptyp branch)
+     (unless (or
+              (str:emptyp branch)
+              (equal "HEAD" branch))
        (format nil " (~a)" (car (last (str:split "/" branch))))))))

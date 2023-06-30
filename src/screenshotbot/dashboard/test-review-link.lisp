@@ -33,3 +33,11 @@
                                         (make-recorder-run
                                          :work-branch "feature/blah"
                                          :pull-request "https://bitbucket.org/tdrhq/fast-example/pull-requests/2")))))))
+
+(test describe-pull-request-url-for-HEAD
+  (with-test-store ()
+    (let ((repo (make-instance 'generic-git-repo)))
+      (is (equal "Pull Request"
+                 (describe-pull-request repo (make-recorder-run
+                                              :work-branch "HEAD"
+                                              :pull-request "https://google.com")))))))
