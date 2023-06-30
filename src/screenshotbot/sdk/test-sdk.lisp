@@ -51,6 +51,11 @@
                 #:json-mop-to-string)
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run-work-branch)
+  (:import-from #:hunchentoot
+                #:easy-acceptor
+                #:define-easy-handler)
+  (:import-from #:util/misc
+                #:with-global-binding)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:a #:alexandria)
                     (#:dto #:screenshotbot/api/model)))
@@ -191,7 +196,6 @@
       (is (equal nil (%run "git@github.com:tdrhq/fast-example.git")))
       (is (equal "https://github.com/tdrhq/fast-example/pulls/1" (%run "https://github.com/tdrhq/fast-example/pulls/1"))))))
 
-
 (test make-run-happy-path
   "Does not test much, sadly"
   (with-fixture state ()
@@ -237,3 +241,25 @@
   (let ((run (make-instance 'dto:run :work-branch "léquipe")))
     (let ((json (decode-json (json-mop-to-string run) 'dto:run)))
       (is (equal "léquipe" (dto:work-branch run))))))
+
+(defvar *result* nil)
+
+(define-easy-handler (test-handler :uri (lambda (request) request) :acceptor-names '(test-handler)) ()
+  (setf *result* (json:decode-json-from-string (hunchentoot:raw-post-data :force-text t)))
+  "{}")
+
+(test make-request-with-unicode
+  (with-global-binding ((*result* nil)
+                        (auto-restart:*global-enable-auto-retries-p* nil))
+    (with-local-acceptor (host) ('easy-acceptor :name 'test-handler)
+      (let ((flags:*hostname* host))
+        (finishes
+          (request "/test-handler"
+                   :method :put
+                   :content (make-instance 'dto:report :id "foobar")))
+        (is (equal "foobar" (assoc-value *result* :id)))
+        (finishes
+          (request "/test-handler"
+                   :method :put
+                   :content (make-instance 'dto:report :id "léquipe")))
+        (is (equal "léquipe" (assoc-value *result* :id)))))))
