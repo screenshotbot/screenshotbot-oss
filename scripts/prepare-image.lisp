@@ -161,6 +161,46 @@
 
 (update-project-directories *cwd*)
 
+(let ((initial-path *cwd*))
+ (defun fix-absolute-path (path)
+   (let* ((cwd (uiop:getcwd))
+          (path (pathname path))
+          (initial-parts (pathname-directory initial-path))
+          (parts (pathname-directory cwd)))
+     (cond
+       ((and
+         (> (length (pathname-directory path))
+            (length initial-parts))
+         (equalp
+          (subseq (pathname-directory path) 0 (length initial-parts))
+          initial-parts))
+        (make-pathname
+         :directory
+         (append
+          parts
+          (subseq (pathname-directory path) (length initial-parts)))
+         :defaults path))
+       (t
+        path)))))
+
+(defmacro fix-paths-in (place)
+  `(setf ,place
+         (mapcar #'fix-absolute-path ,place)))
+
+(defun fix-absolute-registry-paths ()
+  (fix-paths-in asdf:*central-registry*)
+  (fix-paths-in ql:*local-project-directories*)
+  (update-output-translations (uiop:getcwd))
+  (setf ql-setup:*quicklisp-home*
+        (fix-absolute-path ql-setup:*quicklisp-home*))
+  (quicklisp:setup)
+  (ql:register-local-projects))
+
+#+lispworks
+(lw:define-action "When starting image" "Fix absolute registry paths"
+  #'fix-absolute-registry-paths)
+
+
 (defun maybe-asdf-prepare ()
   (when *asdf-root-guesser*
     (update-root (funcall *asdf-root-guesser*))))
