@@ -368,6 +368,7 @@
                 :components ((:file "test-github-oauth")
                              (:file "test-google-oauth")
                              (:file "test-populate")
+                             (:file "test-oidc")
                              (:file "test-login")
                              (:file "test-signup")
                              (:file "test-common")))

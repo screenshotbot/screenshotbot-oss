@@ -64,7 +64,10 @@
 (defclass oidc-provider (abstract-oauth-provider
                          oidc)
   ((identifier :initarg :identifier
-               :accessor oidc-provider-identifier))
+               :accessor oidc-provider-identifier)
+   (expiration-seconds :initarg :expiration-seconds
+                       :initform nil
+                       :reader expiration-seconds))
   (:default-initargs
    :oauth-name "Generic OIDC"
    :callback-endpoint 'oauth-callback))
@@ -114,7 +117,7 @@
                :email email
                :full-name full-name
                :avatar avatar)))
-    (setf (current-user) user)))
+    (setf (current-user :expires-in (expiration-seconds auth)) user)))
 
 (defun update-oidc-user (oauth-user &key
                                       (email (error "required"))
