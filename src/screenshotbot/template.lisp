@@ -29,6 +29,7 @@
            #:*template-override*
            #:mailto)
   (:import-from #:screenshotbot/installation
+                #:installation-cdn
                 #:installation)
   (:import-from #:screenshotbot/user-api
                 #:current-company)
@@ -218,14 +219,18 @@
                                                  (http-status-code (eql 500))
                                                  &rest properties
                                                  &key &allow-other-keys)
-
   ;; something went wrong, let's be very careful about rendering this,
   ;; so we don't get into a secondary crash
-  (cond
-    ((staging-p)
-     (call-next-method))
-    (t
-     (something-went-wrong))))
+  (let ((util.cdn:*cdn-domain*
+          ;; This is outside of acceptor-dispatch-request, so we've
+          ;; lost out setting for cdn-domain.
+          (ignore-errors
+           (installation-cdn (installation)))))
+   (cond
+     ((staging-p)
+      (call-next-method))
+     (t
+      (something-went-wrong)))))
 
 (defun something-went-wrong ()
   (markup:write-html
