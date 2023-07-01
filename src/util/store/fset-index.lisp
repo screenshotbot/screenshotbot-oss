@@ -29,7 +29,8 @@
   (:export
    #:fset-set-index
    #:fset-unique-index
-   #:fset-set-compat-index))
+   #:fset-set-compat-index
+   #:index-least))
 (in-package :util/store/fset-index)
 
 (defvar *index-id* 0)
@@ -194,6 +195,10 @@ the index reader returns a list in reverse sorted order instead of a set."))
           (t
            (fset:with map key new-val)))))))
 
+(defmethod index-least ((self fset-set-index))
+  (let ((set (nth-value 1 (fset:least (%map self)))))
+    (when set
+     (fset:least set))))
 
 (defmethod index-values ((self abstract-fset-index))
   (labels ((build-values (map result)

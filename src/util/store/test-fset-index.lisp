@@ -11,6 +11,7 @@
                 #:index-remove
                 #:indexed-class)
   (:import-from #:util/store/fset-index
+                #:index-least
                 #:%map
                 #:corrupted-index
                 #:fset-set-index
@@ -210,6 +211,16 @@
         (is (not (fset:empty? (%map index1))))
         (index-remove index1 obj-1)
         (is (fset:empty? (%map index1)))))))
+
+(test gets-least
+  (with-fixture state ()
+    (let ((index1 (make-instance 'fset-set-index :slots '(arg))))
+      (let ((obj-1 (make-instance 'test-object-2 :arg "foo")))
+        (is (eql nil (index-least index1)))
+        (index-add index1 obj-1)
+        (is (eql obj-1 (index-least index1)))
+        (index-remove index1 obj-1)
+        (is (eql nil (index-least index1)))))))
 
 (test index-reinitialize-for-unique-index
   (with-fixture state ()
