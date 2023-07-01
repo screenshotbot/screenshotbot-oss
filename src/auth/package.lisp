@@ -26,6 +26,8 @@
   (:import-from #:util/store/fset-index
                 #:index-least
                 #:fset-set-index)
+  (:import-from #:util/cron
+                #:def-cron)
   (:export #:user-session
            #:session-value
            #:session-key

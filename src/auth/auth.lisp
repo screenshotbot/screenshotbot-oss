@@ -283,3 +283,6 @@ value."
            (< (expiry-ts smallest) ts))
       (delete-object smallest)
       (clean-session-values ts))))
+
+(def-cron clean-session-values (:minute 5 :step-hour 1)
+  (clean-session-values))
