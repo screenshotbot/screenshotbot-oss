@@ -14,3 +14,10 @@
                #:pkg)
   :components ((:file "oidc")
                (:file "all")))
+
+(defsystem :oidc/tests
+  :serial t
+  :depends-on (#:oidc
+               #:util/fiveam
+               #:cl-mock)
+  :components ((:file "test-oidc")))

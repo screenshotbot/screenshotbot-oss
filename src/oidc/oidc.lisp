@@ -148,6 +148,14 @@
   ((message :initarg :message
             :reader authentication-error-message)))
 
+(defmethod user-info ((auth oidc) token)
+  (make-json-request (userinfo-endpoint auth)
+                     :method :post
+                     :parameters `(("alt" . "json"))
+                     :additional-headers `(("Authorization".
+                                                           ,(format nil "Bearer ~a"
+                                                                    (Access-token-str token))))))
+
 (defmethod oidc-callback ((auth oidc) code redirect
                           &key error
                             (error-redirect "/"))
@@ -162,12 +170,7 @@
                                   hunchentoot:*request*
                                   (oauth-callback auth)))))
        (let ((user-info
-               (make-json-request (userinfo-endpoint auth)
-                                  :method :post
-                                  :parameters `(("alt" . "json"))
-                                  :additional-headers `(("Authorization".
-                                                                        ,(format nil "Bearer ~a"
-                                                                                 (Access-token-str token)))))))
+               (user-info auth token)))
          (log:debug "Got user info ~S" user-info)
          (verify-userinfo auth user-info)
          (handler-case
@@ -184,7 +187,7 @@
      (warn "Oauth failed: ~a" error)
      (hex:safe-redirect error-redirect :error error))))
 
-(defmethod verify-user-info (oidc user-info))
+(defmethod verify-userinfo (oidc user-info))
 
 (defgeneric after-authentication (oidc &key
                                          user-id
