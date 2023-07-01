@@ -551,6 +551,16 @@ to the directory that was just snapshotted.")
                                             slot-name))))
     t))
 
+(defmethod all-subsystem-objects (subsystem)
+  nil)
+
+(defmethod all-subsystem-objects ((self store-object-subsystem))
+  (bknr.datastore:class-instances 'store-object))
+
+(defmethod all-global-objects (store)
+  (loop for subsystem in (bknr.datastore::store-subsystems *store*)
+        appending (all-subsystem-objects subsystem)))
+
 
 (defmethod find-any-refs (objects)
   "Similar to BKNR.DATASTORE:FIND-REFS, but all elements in the transitive paths from U - O to O.
@@ -615,7 +625,7 @@ set-differences on O and the returned value from this."
                  (character nil)
                  (number nil)
                  (string nil))))
-      (loop for x in (bknr.datastore:store-objects-with-class 'store-object)
+      (loop for x in (all-global-objects *store*)
             if (not (gethash x original-objects))
               do
                  (dfs x))
