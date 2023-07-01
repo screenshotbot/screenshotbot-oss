@@ -94,8 +94,8 @@
 (defmethod auth:user-class ((user-view user-view))
   'user)
 
-(defun (setf current-user) (user &key expires-in)
-  (setf (auth:session-value :user :expires-in expires-in) user)
+(defun (setf current-user) (user)
+  (setf (auth:session-value :user) user)
   (setf (auth:request-user hunchentoot:*request*) user)
   user)
 

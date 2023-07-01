@@ -85,9 +85,6 @@
    (user :initarg :user
          :initform nil
          :accessor oauth-user-user)
-   (expiration-seconds :initarg :expiration-seconds
-                       :initform nil
-                       :reader expiration-seconds])
    (identifier :initarg :identifier
                :accessor oidc-provider-identifier))
   (:metaclass persistent-class))
@@ -117,7 +114,7 @@
                :email email
                :full-name full-name
                :avatar avatar)))
-    (setf (current-user :expires-in (expiration-seconds auth)) user)))
+    (setf (current-user) user)))
 
 (defun update-oidc-user (oauth-user &key
                                       (email (error "required"))
