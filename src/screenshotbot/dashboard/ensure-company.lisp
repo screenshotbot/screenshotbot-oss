@@ -109,7 +109,9 @@
   (let ((post (nibble (name)
                 (post-new-company name t
                                   :user user
-                                  :form #'%new-company
+                                  :form (lambda ()
+                                          (%new-company :redirect redirect
+                                                        :user user))
                                   :redirect redirect))))
   <center-box>
     <h4 class= "mb-3" >
