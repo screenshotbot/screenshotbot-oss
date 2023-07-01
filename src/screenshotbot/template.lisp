@@ -221,37 +221,36 @@
                                                  &key &allow-other-keys)
   ;; something went wrong, let's be very careful about rendering this,
   ;; so we don't get into a secondary crash
-  (let ((util.cdn:*cdn-domain*
-          ;; This is outside of acceptor-dispatch-request, so we've
-          ;; lost out setting for cdn-domain.
-          (ignore-errors
-           (installation-cdn (installation)))))
-   (cond
-     ((staging-p)
-      (call-next-method))
-     (t
-      (something-went-wrong)))))
+  (cond
+    ((staging-p)
+     (call-next-method))
+    (t
+     (something-went-wrong))))
 
 (defun something-went-wrong ()
-  (markup:write-html
-   <html>
-   <landing-head />
-   <body>
-   <section class= "error-500" >
-   <div class= "container full-height">
+  (let ((util.cdn:*cdn-domain*
+          ;; This is outside of acceptor-dispatch-request, so we've
+          ;; lost our setting for cdn-domain.
+          (installation-cdn (installation))))
+    (markup:write-html
+     <html>
+       <landing-head />
+       <body>
+         <section class= "error-500" >
+           <div class= "container full-height">
 
-   <h1>Oh no! Something went wrong!</h1>
-   <p>We've been notified of this issue and will look into it as soon as we can.</p>
+             <h1>Oh no! Something went wrong!</h1>
+             <p>We've been notified of this issue and will look into it as soon as we can.</p>
 
-   <p>If this is blocking you, please reach out to <a href= "mailto:support@screenshotbot.io">support@screenshotbot.io</a>.</p>
+             <p>If this is blocking you, please reach out to <a href= "mailto:support@screenshotbot.io">support@screenshotbot.io</a>.</p>
 
-   <p><a href= "/">Home</a>  ,(progn "|")
-   <a href= "javascript:history.back()">Back to previous page</a></p>
+             <p><a href= "/">Home</a>  ,(progn "|")
+             <a href= "javascript:history.back()">Back to previous page</a></p>
 
-        </div>
-   </section>
-   </body>
-   </html>))
+           </div>
+         </section>
+       </body>
+     </html>)))
 
 (Defhandler (get-started :uri "/get-started") ()
   (hex:safe-redirect "/documentation/getting-started"))
