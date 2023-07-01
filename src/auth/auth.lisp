@@ -275,3 +275,11 @@ value."
        (safe-setf (session-token usv) token)
        (safe-setf (session-domain usv) domain)
        (safe-setf (prop-key usv) prop-key)))))
+
+(defun clean-session-values (&optional (ts (get-universal-time)))
+  (let ((smallest (index-least +expiry-index+)))
+    (when (and
+           smallest
+           (< (expiry-ts smallest) ts))
+      (delete-object smallest)
+      (clean-session-values ts))))

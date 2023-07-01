@@ -7,6 +7,7 @@
 (defpackage #:auth
   (:use #:cl)
   (:import-from :bknr.datastore
+                :delete-object
                 :with-transaction
                 :class-instances
    :store-object
@@ -23,6 +24,7 @@
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
   (:import-from #:util/store/fset-index
+                #:index-least
                 #:fset-set-index)
   (:export #:user-session
            #:session-value

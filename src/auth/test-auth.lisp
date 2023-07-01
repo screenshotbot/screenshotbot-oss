@@ -10,6 +10,7 @@
   (:import-from :util/testing
                 :with-fake-request)
   (:import-from :auth
+                #:clean-session-values
                 #:expiry-ts
                 #:session-token
                 #:session-domain
@@ -83,6 +84,28 @@
       (assert-that (session-token (last-user-session-value))
                    (is-string)
                    (has-length 32)))))
+
+(test cleans-old-values
+  (With-fixture state ()
+    (auth:with-sessions ()
+      (let ((ts (get-universal-time)))
+        (setf (auth:session-value :name :expires-in 3000) "foobar")
+        (is (equal "foobar" (auth:session-value :name)))
+        (clean-session-values (+ ts 6000))
+        (is (equal nil (auth:session-value :name)))))))
+
+(test cleans-only-old-values
+  (With-fixture state ()
+    (auth:with-sessions ()
+      (let ((ts (get-universal-time)))
+        (setf (auth:session-value :name :expires-in 3000) "foobar")
+        (setf (auth:session-value :bar :expires-in 9000) "foobar1")
+        (setf (auth:session-value :car) "foobar2")
+        (is (equal "foobar" (auth:session-value :name)))
+        (clean-session-values (+ ts 6000))
+        (is (equal nil (auth:session-value :name)))
+        (is (equal "foobar1" (auth:session-value :bar)))
+        (is (equal "foobar2" (auth:session-value :car)))))))
 
 #+windows
 (test read-windows-seed
