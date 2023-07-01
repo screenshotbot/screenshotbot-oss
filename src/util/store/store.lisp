@@ -561,7 +561,7 @@ to the directory that was just snapshotted.")
   (loop for subsystem in (bknr.datastore::store-subsystems *store*)
         appending (all-subsystem-objects subsystem)))
 
-(defmethod object-neighbors (x)
+(defmethod object-neighbors ((x store-object))
   "For a given object, find all neighboring objects. i,e, the objects
 that this object directly references."
   (loop for slotd in (closer-mop:class-slots (class-of x))
@@ -592,7 +592,7 @@ set-differences on O and the returned value from this."
       (setf (gethash obj original-objects) t))
     (labels ((dfs (x)
                (etypecase x
-                 (store-object
+                 (standard-object
                   (unless (gethash x seen)
                     (setf (gethash x seen) t)
                     (when
