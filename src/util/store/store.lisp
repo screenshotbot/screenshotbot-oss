@@ -561,6 +561,20 @@ to the directory that was just snapshotted.")
   (loop for subsystem in (bknr.datastore::store-subsystems *store*)
         appending (all-subsystem-objects subsystem)))
 
+(defmethod object-neighbors (x)
+  "For a given object, find all neighboring objects. i,e, the objects
+that this object directly references."
+  (loop for slotd in (closer-mop:class-slots (class-of x))
+        if (and
+            (slot-boundp x (closer-mop:slot-definition-name slotd))
+            (not (bknr.datastore::transient-slot-p slotd))
+            (not (bknr.datastore::relaxed-object-reference-slot-p slotd)))
+          collect
+          (let ((slot-value
+                  (slot-value x
+                              (closer-mop:slot-definition-name slotd))))
+            slot-value)))
+
 
 (defmethod find-any-refs (objects)
   "Similar to BKNR.DATASTORE:FIND-REFS, but all elements in the transitive paths from U - O to O.
@@ -586,15 +600,8 @@ set-differences on O and the returned value from this."
                         ;; we must still traverse it, otherwise we
                         ;; might miss some paths.
                         (or
-                         (loop for slotd in (closer-mop:class-slots (class-of x))
-                               if (and
-                                   (slot-boundp x (closer-mop:slot-definition-name slotd))
-                                   (not (bknr.datastore::transient-slot-p slotd))
-                                   (not (bknr.datastore::relaxed-object-reference-slot-p slotd))
-                                   (let ((slot-value
-                                           (slot-value x
-                                                       (closer-mop:slot-definition-name slotd))))
-                                     (dfs slot-value)))
+                         (loop for neighbor in (object-neighbors x)
+                               if (dfs neighbor)
                                  collect t)
                          (gethash x original-objects))
                       ;; on the way back on the DFS, mark all the
