@@ -27,7 +27,8 @@
            #:oidc-callback
            #:on-successful-oauth
            #:after-authentication
-           #:make-oidc-auth-link))
+           #:make-oidc-auth-link
+           #:logout-link))
 
 (defclass oauth-access-token ()
   ((access-token :type (or null string)
@@ -67,6 +68,12 @@
           :documentation "The default scope used for authorization")
    (cached-discovery :initform nil
                      :accessor cached-discovery)))
+
+(defmethod logout-link ((self oidc))
+  "RP initiated logout link: https://openid.net/specs/openid-connect-rpinitiated-1_0.html.
+
+  In theory, this should should be implemented using the end_session_endpoint, but for now we're only implementing it for AWS Cognito."
+  (error "logout link not implemented for this"))
 
 (defun check-https (url)
   "Our OpenID Connect implementation does not do id-token

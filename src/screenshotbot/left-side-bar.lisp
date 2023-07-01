@@ -9,6 +9,7 @@
         #:alexandria
         #:screenshotbot/user-api)
   (:import-from #:screenshotbot/installation
+                #:default-oidc-provider
                 #:desktop-installation
                 #:installation
                 #:multi-org-feature)
@@ -24,7 +25,9 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/cdn
-                #:img-with-fallback))
+                #:img-with-fallback)
+  (:import-from #:oidc/oidc
+                #:logout-link))
 (in-package :screenshotbot/left-side-bar)
 
 (named-readtables:in-readtable markup:syntax)
@@ -183,12 +186,12 @@
   (when user
     <div class="dropdown p-3">
       <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-        <img src= (user-image-url user) alt="mdo" width="32" height="32" class="rounded-circle me-2">
-          <strong class= "user-full-name" > ,(cond
-                      ((or (not company) (singletonp company) (personalp company))
-                       (user-full-name user))
-                      (t
-                       (company-name company))) </strong>
+        <img src= (user-image-url user) alt="mdo" width="32" height="32" class="rounded-circle me-2" />
+        <strong class= "user-full-name" > ,(cond
+                                             ((or (not company) (singletonp company) (personalp company))
+                                              (user-full-name user))
+                                             (t
+                                              (company-name company))) </strong>
       </a>
       <ul class="dropdown-menu dropdown-menu-dark text-small shadow multi-level" aria-labelledby="dropdownUser1">
         ,(company-switcher (installation) :user user)
@@ -201,9 +204,16 @@
 	      </a>
            </li>)
 
-        <li><a class="dropdown-item signout-link" href="/signout">Sign out</a></li>
+        <li><a class="dropdown-item signout-link" href= (signout-link (installation)) >Sign out</a></li>
       </ul>
     </div>))
+
+(defmethod signout-link ((self installation))
+  (cond
+    ((default-oidc-provider self)
+     (logout-link (default-oidc-provider self)))
+    (t
+     "/signout")))
 
 (defmethod render-user-menu ((installation desktop-installation) &key &allow-other-keys)
   nil)

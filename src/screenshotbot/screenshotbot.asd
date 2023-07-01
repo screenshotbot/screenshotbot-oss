@@ -261,6 +261,7 @@
                  (:file "github-oauth")
                  (:file "github-oauth-ui")
                  (:file "google-oauth")
+                 (:file "aws-cognito")
                  (:file "login")
                  (:file "populate")
                  (:file "signup")
