@@ -185,11 +185,14 @@ the index reader returns a list in reverse sorted order instead of a set."))
 (defmethod index-remove ((self fset-set-index) obj)
   (let ((key (index-object-key self obj)))
     (update-map self (map)
-      (fset:with map
-                 key
-                 (fset:less
-                  (fset:lookup map key)
-                  obj)))))
+      (let ((new-val (fset:less
+                      (fset:lookup map key)
+                      obj)))
+        (cond
+          ((fset:empty? new-val)
+           (fset:less map key))
+          (t
+           (fset:with map key new-val)))))))
 
 
 (defmethod index-values ((self abstract-fset-index))

@@ -8,8 +8,10 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:bknr.indices
+                #:index-remove
                 #:indexed-class)
   (:import-from #:util/store/fset-index
+                #:%map
                 #:corrupted-index
                 #:fset-set-index
                 #:fset-unique-index)
@@ -199,6 +201,15 @@
                         (apply #'make-set (index-values index1))))
        (is (fset:equal? (make-set obj-1 obj-2)
                         (index-get index1 "foo")))))))
+
+(test removes-empty-sets
+  (with-fixture state ()
+    (let ((index1 (make-instance 'fset-set-index :slots '(arg))))
+      (let ((obj-1 (make-instance 'test-object-2 :arg "foo")))
+        (index-add index1 obj-1)
+        (is (not (fset:empty? (%map index1))))
+        (index-remove index1 obj-1)
+        (is (fset:empty? (%map index1)))))))
 
 (test index-reinitialize-for-unique-index
   (with-fixture state ()
