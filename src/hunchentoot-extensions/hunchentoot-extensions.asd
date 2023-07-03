@@ -16,6 +16,7 @@
                :log4cl)
   :components ((:file "package")
                (:file "url")
+               (:file "existing-socket" :if-feature :lispworks)
                (:file "acceptor-with-plugins")
                (:file "better-easy-handler")
                (:file "postdata")

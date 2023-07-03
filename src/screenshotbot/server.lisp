@@ -25,6 +25,9 @@
                 #:*app-template*)
   (:import-from #:core/installation/installation
                 #:installation-domain)
+  #+lispworks
+  (:import-from #:hunchentoot-extensions/existing-socket
+                #:acceptor-with-existing-socket)
   (:export
    #:defhandler
    #:with-login
@@ -91,7 +94,8 @@
 (defun document-root ()
   (path:catdir *root* #p"static/"))
 
-(defclass acceptor (util:base-acceptor
+(defclass acceptor (#+lispworks acceptor-with-existing-socket
+                    util:base-acceptor
                     hunchensocket:websocket-acceptor
                     hex:acceptor-with-plugins) ()
   (:default-initargs

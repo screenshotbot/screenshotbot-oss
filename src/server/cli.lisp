@@ -1,3 +1,9 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 (defpackage :server/cli
   (:use #:cl)
   (:import-from #:clingon
@@ -23,6 +29,9 @@
                 #:*config-file*)
   (:import-from #:util/threading
                 #:make-thread)
+  #+lispworks
+  (:import-from #:hunchentoot-extensions/existing-socket
+                #:existing-socket)
   (:export
    #:main))
 (in-package :server/cli)
@@ -94,6 +103,12 @@
                  (uiop:read-file-string "release_timestamp"))
          (finish-output stream))))))
 
+(defun apply-socket (acceptor socket)
+  #+lispworks
+  (when socket
+    (setf (existing-socket acceptor) socket))
+  acceptor)
+
 (defun run/command (&key enable-store jvm acceptor)
   (clingon:make-command
    :name "run"
@@ -104,11 +119,13 @@
                                         'sigusr1-handler)
                 (%run :enable-store enable-store
                       :acceptor
-                      (cond
-                        ((clingon:getopt cmd :only-screenshotbot-p)
-                         (symbol-value
-                          (uiop:find-symbol* :*acceptor* :screenshotbot/server)))
-                        (t acceptor))
+                      (apply-socket
+                       (cond
+                         ((clingon:getopt cmd :only-screenshotbot-p)
+                          (symbol-value
+                           (uiop:find-symbol* :*acceptor* :screenshotbot/server)))
+                         (t acceptor))
+                       (clingon:getopt cmd :socket))
                       :port (clingon:getopt cmd :port)
                       :shell nil)))
    :options (list*
@@ -118,6 +135,11 @@
               :long-name "port"
               :initial-value 4001
               :key :port)
+             (make-option
+              :integer
+              :description "HTTP listening socket, usually set up my systemd"
+              :long-name "socket"
+              :key :socket)
              (make-option
               :flag
               :description "Only load the screenshotbot acceptor, instead of the multiacceptor"

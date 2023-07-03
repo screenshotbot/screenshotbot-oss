@@ -20,6 +20,9 @@
                 #:funcall-with-sentry-logs)
   (:import-from #:util/store/store-migrations
                 #:run-migrations)
+  #+lispworks
+  (:import-from #:hunchentoot-extensions/existing-socket
+                #:acceptor-with-existing-socket)
   (:export #:main
            #:register-acceptor
            #:slynk-loop
@@ -73,7 +76,8 @@
      "Enable the debugger on the main thread, this lets us debug issues with loading snapshots and transaction logs."
      :params ("DEBUGGER"))))
 
-(defclass my-acceptor (hunchentoot-multi-acceptor:multi-acceptor)
+(defclass my-acceptor (#+lispworks acceptor-with-existing-socket
+                       hunchentoot-multi-acceptor:multi-acceptor)
   ())
 
 (defvar *multi-acceptor*)
