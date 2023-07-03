@@ -226,14 +226,19 @@
        (eql #\- (elt (second args) 0))))
 
 (defun main (&key (jvm t) acceptor (enable-store t))
-  (cond
-    ((legacy-mode-p sys:*line-arguments-list*)
-     (warn "Using legacy mode for command line parsing")
-     (server:main :jvm jvm :acceptor acceptor :enable-store enable-store))
-    (t
-     (let ((args #-lispworks (cdr (uiop:raw-command-line-arguments))
-                 #+lispworks (cdr sys:*line-arguments-list*)))
-       (let ((app (main/command :jvm jvm :enable-store enable-store
-                                :acceptor acceptor)))
-         (clingon:run app args)
-         (uiop:quit 0))))))
+  (handler-bind ((error (lambda (e)
+                          (format t "Got error during init process: ~a~%" e)
+                          #+lispworks
+                          (dbg:output-backtrace :bug-form t)
+                          (uiop:quit 1))))
+   (cond
+     ((legacy-mode-p sys:*line-arguments-list*)
+      (warn "Using legacy mode for command line parsing")
+      (server:main :jvm jvm :acceptor acceptor :enable-store enable-store))
+     (t
+      (let ((args #-lispworks (cdr (uiop:raw-command-line-arguments))
+                  #+lispworks (cdr sys:*line-arguments-list*)))
+        (let ((app (main/command :jvm jvm :enable-store enable-store
+                                 :acceptor acceptor)))
+          (clingon:run app args)
+          (uiop:quit 0)))))))
