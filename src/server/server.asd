@@ -22,7 +22,7 @@
                "bordeaux-threads"
                "lparallel"
                "serapeum"
-	       (:feature (:not (:or :mswindows :windows)) "control-socket")
+               (:feature (:and :lispworks (:not :mswindows)) "control-socket")
                "easy-macros"
                (:feature (:not (:or :mswindows :windows)) "osicat")
                "util/health-check"
@@ -33,7 +33,7 @@
   :serial t
   :components ((:file "interrupts")
                (:file "health-checks")
-               (:file "control-socket")
+               (:file "control-socket" :if-feature (:and :lispworks (:not :mswindows)))
                (:file "setup")))
 
 (defsystem #:server/config
@@ -45,7 +45,8 @@
                #:server/config
                #:clingon)
   :serial t
-  :components ((:file "cli")))
+  :components ((:file "eval" :if-feature :lispworks)
+               (:file "cli")))
 
 ;; For slynk support, load this before calling server:main. The reason
 ;; we separate this into a separate system is for support with SLIME,

@@ -40,16 +40,11 @@
       (log:info "Stopping supervisor")
       (unix-sockets:close-unix-socket (socket self)))))
 
+(defvar *num* 0)
+
 (defmethod dispatch-request ((self control-socket) socket)
-  (log:info "Got new control-socket connection")
-  (with-open-stream (stream (flex:make-flexi-stream (unix-sockets:unix-socket-stream socket)))
-    (let ((cmd (read stream)))
-      (log:info "Got command: ~a" cmd)
-      (write (apply #'handle-request cmd)
-             :stream stream))))
-
-(defmethod handle-request ((cmd (eql :echo)) &optional message)
-  `(:result ,message) )
-
-
-;; (defparameter *sock* (make-control-socket "/tmp/foo6"))
+  (let ((stream (unix-sockets:unix-socket-stream socket)))
+    (dbg:create-client-remote-debugging-connection
+     (format nil "Control socket connection ~a" (incf *num*))
+     :stream stream
+     :log-stream t)))

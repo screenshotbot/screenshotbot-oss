@@ -221,7 +221,9 @@
                           (save-passphrases/command)
                           (run/command :enable-store enable-store
                                        :jvm jvm
-                                       :acceptor acceptor)))))
+                                       :acceptor acceptor)
+                          #+lispworks
+                          (server/eval:eval/command)))))
 
 (defun legacy-mode-p (args)
   (and (second args)

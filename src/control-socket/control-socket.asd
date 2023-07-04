@@ -2,10 +2,11 @@
   :serial t
   :depends-on (:unix-sockets
                :util/threading
-               :log4cl)
-  :components ((:file "server")))
+               :log4cl
+               (:feature :lispworks (:require "remote-debugger-full")))
+  :components ((:file "server" :if-feature (:and :lispworks (:not :mswindows)))))
 
-#-(or mswindows windows)
+#+(and :lispworks (:not :mswindows))
 (defsystem :control-socket/tests
   :serial t
   :depends-on (:control-socket

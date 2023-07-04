@@ -4,18 +4,12 @@
                 #:def-easy-macro)
   (:import-from #:util/store
                 #:object-store)
-  #-(or mswindows windows)
   (:import-from #:control-socket/server
-                #:handle-request
                 #:control-socket-stop
                 #:make-control-socket))
 (in-package :server/control-socket)
 
-
 (def-easy-macro with-control-socket  (&fn fn)
-  #+(or windows screenshotbot-oss)
-  (funcall fn)
-  #-(or windows screenshotbot-oss)
   (let* ((store-dir (object-store))
          (socket-file (ensure-directories-exist
                        (path:catfile store-dir "sockets/"
@@ -30,6 +24,3 @@
            (funcall fn)
         (log:info "Shut down control socket")
         (control-socket-stop cs)))))
-
-(defmethod handle-request ((cmd (eql :snapshot)) &optional (message "snapshot name"))
-  (util/store:safe-snapshot message))

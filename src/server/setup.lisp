@@ -14,6 +14,7 @@
                 #:def-easy-macro)
   (:import-from #:lparallel.kernel
                 #:*lisp-exiting-p*)
+  #+(:and :lispworks (:not :mswindows))
   (:import-from #:server/control-socket
                 #:with-control-socket)
   (:import-from #:util/threading
@@ -48,6 +49,10 @@
 
 (defvar *slynk-loopback-interface* "localhost")
 (defvar *health-check*)
+
+#-(:and :lispworks (:not :mswindows))
+(def-easy-macro with-control-socket (&fn fn)
+  (funcall fn))
 
 (defparameter *options*
   `((*port* #+screenshotbot-oss "4091"
