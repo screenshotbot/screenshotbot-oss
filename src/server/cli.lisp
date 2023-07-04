@@ -95,13 +95,15 @@
    (lambda ()
      (let ((stream (sys:make-stderr-stream)))
        (bt:with-lock-held (*signal-lock*)
-
+         (log:info "SIGUSR1: Started")
          (format stream "SIGUSR1: Started~%")
+         (finish-output stream)
          (asdf:load-system :screenshotbot.pro)
          (util:validate-indices)
          (format stream "SIGUSR1: Success ~a.~%"
                  (uiop:read-file-string "release_timestamp"))
-         (finish-output stream))))))
+         (finish-output stream))))
+   :name "SIGUSR1-thread"))
 
 (defun apply-socket (acceptor socket)
   #+lispworks
