@@ -48,7 +48,9 @@
                             `(block nil
                                (handler-bind ((error (lambda (e)
                                                        (format t "~a" e)
-                                                       (dbg:output-backtrace :bug-form)
+                                                       (dbg:output-backtrace :brief)
+                                                       (with-open-file (file "log/eval-crash-log" :direction :output :if-exists :supersede)
+                                                         (dbg:output-backtrace :verbose file))
                                                        (return-from nil nil))))
                                  ,(read-from-string expr)
                                  t))
@@ -56,7 +58,8 @@
                             :connection conn)))
                (cond
                  ((not status)
-                  (log:info "Command failed"))
+                  (log:info "Command failed: ~a" expr)
+                  (uiop:quit 1))
                  (t
                   (log:info "Command ran without errors")))))
         (dbg:close-remote-debugging-connection conn)))))
