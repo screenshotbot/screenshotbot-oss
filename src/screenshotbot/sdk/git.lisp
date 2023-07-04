@@ -122,8 +122,8 @@
 
 (def-health-check verify-can-read-a-git-commit-graph ()
   (tmpdir:with-tmpdir (dir)
-    (let ((*error-output* ))
-     ($ "git" "clone" "https://github.com/tdrhq/tiny-test-repo" dir))
+    (let ((*error-output* (make-string-output-stream)))
+      ($ "git" "clone" "https://github.com/tdrhq/tiny-test-repo" dir))
     (let ((repo (make-instance 'git-repo :dir dir)))
       (let ((dag (read-graph repo)))
         (assert (> (length (dag:ordered-commits dag)) 0))))
