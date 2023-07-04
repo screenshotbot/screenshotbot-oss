@@ -187,7 +187,10 @@
   `(setf ,place
          (mapcar #'fix-absolute-path ,place)))
 
+(setf asdf::*base-build-directory* *cwd*)
+
 (defun fix-absolute-registry-paths ()
+  (setf asdf::*base-build-directory* (uiop:getcwd))
   (fix-paths-in asdf:*central-registry*)
   (fix-paths-in ql:*local-project-directories*)
   (update-output-translations (uiop:getcwd))
