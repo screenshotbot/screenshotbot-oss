@@ -319,8 +319,7 @@
      (t
       (util/store:verify-store
        :callback (lambda ()
-                   (log:info "Done verifying store")
-                   (log:info "Running health checks...")
+                   (log:info "Done verifying store, running health checks...")
                    (unless (run-health-checks)
                      (log:info "Crashing, since health checks failed")
                      (uiop:quit 1))

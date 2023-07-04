@@ -277,7 +277,6 @@ to the directory that was just snapshotted.")
                         :directory dir
                         :subsystems (store-subsystems))
         (log:info "Got ~d objects" (length (bknr.datastore:all-store-objects)))
-        (log:info "Success!")
         (funcall callback)))))
 
 (defun parse-timetag (timetag)

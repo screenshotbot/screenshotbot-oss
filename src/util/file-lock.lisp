@@ -51,7 +51,6 @@
 (defmethod file-handle ((self file-lock))
   #+lispworks
   (let ((handle (slot-value (file-lock-stream self) 'stream::file-handle)))
-    (log:info "Got file handle for lock: ~a" handle)
     handle))
 
 (defun get-unix-error ()
