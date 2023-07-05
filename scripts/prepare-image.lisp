@@ -49,7 +49,7 @@
      (,(namestring root)
       ,(format nil "~abuild/asdf-cache/~a/" root
                (uiop:implementation-identifier))))))
-
+(compile 'update-output-translations)
 (update-output-translations *cwd*)
 
 #+sbcl
@@ -153,35 +153,40 @@
     (push-src-dir "src")
     (push-src-dir "third-party")
     (push-src-dir "lisp")))
-
+(compile 'update-project-directories)
 
 (defun update-root (cwd)
   (update-output-translations cwd)
   (update-project-directories cwd))
+(compile 'update-root)
 
 (update-project-directories *cwd*)
 
-(let ((initial-path *cwd*))
- (defun fix-absolute-path (path)
-   (let* ((cwd (uiop:getcwd))
-          (path (pathname path))
-          (initial-parts (pathname-directory initial-path))
-          (parts (pathname-directory cwd)))
-     (cond
-       ((and
-         (> (length (pathname-directory path))
-            (length initial-parts))
-         (equalp
-          (subseq (pathname-directory path) 0 (length initial-parts))
-          initial-parts))
-        (make-pathname
-         :directory
-         (append
-          parts
-          (subseq (pathname-directory path) (length initial-parts)))
-         :defaults path))
-       (t
-        path)))))
+(defvar *initial-path* *cwd*
+  "The CWD before the image was saved")
+
+(defun fix-absolute-path (path)
+  (let* ((initial-path *initial-path*)
+         (cwd (uiop:getcwd))
+         (path (pathname path))
+         (initial-parts (pathname-directory initial-path))
+         (parts (pathname-directory cwd)))
+    (cond
+      ((and
+        (> (length (pathname-directory path))
+           (length initial-parts))
+        (equalp
+         (subseq (pathname-directory path) 0 (length initial-parts))
+         initial-parts))
+       (make-pathname
+        :directory
+        (append
+         parts
+         (subseq (pathname-directory path) (length initial-parts)))
+        :defaults path))
+      (t
+       path))))
+(compile 'fix-absolute-path)
 
 (defmacro fix-paths-in (place)
   `(setf ,place
@@ -190,14 +195,22 @@
 (setf asdf::*base-build-directory* *cwd*)
 
 (defun fix-absolute-registry-paths ()
-  (setf asdf::*base-build-directory* (uiop:getcwd))
-  (fix-paths-in asdf:*central-registry*)
-  (fix-paths-in ql:*local-project-directories*)
-  (update-output-translations (uiop:getcwd))
-  (setf ql-setup:*quicklisp-home*
-        (fix-absolute-path ql-setup:*quicklisp-home*))
-  (quicklisp:setup)
-  (ql:register-local-projects))
+  (when
+      #-lispworks t
+      #+lispworks
+      (or
+         (not (boundp 'lw:*delivery-level*))
+         (= 0 lw:*delivery-level*))
+    (setf asdf::*base-build-directory* (uiop:getcwd))
+    (fix-paths-in asdf:*central-registry*)
+    (fix-paths-in ql:*local-project-directories*)
+    (update-output-translations (uiop:getcwd))
+    (setf ql-setup:*quicklisp-home*
+          (fix-absolute-path ql-setup:*quicklisp-home*))
+    (quicklisp:setup)
+    (ql:register-local-projects)))
+
+(compile 'fix-absolute-registry-paths)
 
 #+lispworks
 (lw:define-action "When starting image" "Fix absolute registry paths"
