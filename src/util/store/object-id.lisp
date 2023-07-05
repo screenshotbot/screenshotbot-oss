@@ -163,8 +163,8 @@ oid to a string. Otherwise we return the OID object as is."
     (t
      (oid-struct-or-array obj))))
 
-(defmethod location-for-oid ((root pathname) (oid oid) &key suffix)
-  (location-for-oid
-   root
-   (oid-arr oid)
-   :suffix suffix))
+(defmethod location-for-oid ((root pathname) (oid oid) &rest args &key &allow-other-keys)
+  (apply #'location-for-oid
+         root
+         (oid-arr oid)
+         args))

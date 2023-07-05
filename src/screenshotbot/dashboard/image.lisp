@@ -39,6 +39,10 @@
                 #:magick-write-image
                 #:with-wand
                 #:resize-image)
+  (:import-from #:util/store
+                #:location-for-oid)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
   (:export
    #:handle-resized-image))
 (in-package :screenshotbot/dashboard/image)
@@ -54,19 +58,36 @@
 (defun %ignore (x)
   (declare (ignore x)))
 
+(defun pathname-for-resized-image (oid &key type size
+                                         (version :new))
+  (ecase version
+    (:old
+     ;; Removing this code requires *min-store-version* to be >= 6!
+     (make-pathname
+      :type type
+      :defaults (cache-dir)
+      :name (format nil "~a-~a" oid size)))
+    (:new
+     (location-for-oid
+      #P"image-cache/"
+      (ironclad:hex-string-to-byte-array oid)
+      :suffix size
+      :type type))))
+
+(defparameter *size-map*
+  `(("small" . "300x300")
+    ("half-page" . "600x600")
+    ("full-page" . "2000x2000")
+    ;; For testing only:
+    ("tiny" . "5x5")))
+
 (defun %build-resized-image (image size-name &key type)
   "Synchronous version. Do not call directly."
-  (let ((size (cond
-                ((string-equal "small" size-name) "300x300")
-                ((string-equal "half-page" size-name) "600x600")
-                ((string-equal "full-page" size-name) "2000x2000")
-                ((string-equal "tiny" size-name) "5x5") ;; for testing only
-                (t (error "invalid image size: ~a" size-name)))))
+  (let ((size (or
+               (assoc-value *size-map* size-name :test #'string-equal)
+               (error "invalid image size: ~a" size-name))))
     (flet ((output-file (type)
-             (make-pathname
-              :type type
-              :defaults (cache-dir)
-              :name (format nil "~a-~a" (oid image) size)))
+             (pathname-for-resized-image (oid image) :type type :size size))
            (respond (res)
              res))
       (ecase type
@@ -134,3 +155,18 @@
         (t
          (with-local-image (file image)
            (handle-static-file file)))))))
+
+(def-store-migration ("Move image-cache to nested directories" :version 6)
+  (dolist (image (bknr.datastore:class-instances 'image))
+    (dolist (size (mapcar #'cdr *size-map*))
+      (dolist (type (list "webp" "png"))
+        (let* ((args (list (oid image) :size size :type type))
+               (old (apply #'pathname-for-resized-image (append
+                                                         args
+                                                         (list :version :old))))
+               (new (apply #'pathname-for-resized-image args)))
+          (when (and
+                 (path:-e old)
+                 (not (path:-e new)))
+            (log:info "Renaming ~a to ~a" old new)
+            (rename-file old new)))))))

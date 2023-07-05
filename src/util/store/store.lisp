@@ -749,7 +749,8 @@ this variable in LET forms, but you can SETF it if you like."
          (get-store-local ',name))))
 
 (defmethod location-for-oid ((root pathname) (oid array)
-                             &key suffix)
+                             &key suffix
+                               type)
   "Returns two values: the absolute pathname for the given oid and root,
  and the relative pathname relative to the object store. The second
  value is useful for propagating to s3-store."
@@ -764,6 +765,7 @@ this variable in LET forms, but you can SETF it if you like."
     ;; one day. That should be good enough for anybody!
     (let* ((relpath (make-pathname
                      :directory (list :relative p1 p2)
+                     :type type
                      :name (cond
                              (suffix
                               (format nil "~a-~a" p4 suffix))
