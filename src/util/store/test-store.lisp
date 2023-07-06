@@ -37,6 +37,8 @@
   (:import-from #:bknr.datastore
                 #:deftransaction)
   (:import-from #:util/store/store
+                #:*ensure-directories-cache*
+                #:fast-ensure-directories-exist
                 #:safe-mp-store)
   (:import-from #:bknr.datastore
                 #:truncate-log))
@@ -328,3 +330,21 @@
                        :store-class 'safe-mp-store)
        (pass))
      (is (eql 9 *state*)))))
+
+
+(test fast-ensure-directories-exist
+  (tmpdir:with-tmpdir (dir)
+    (let ((path (path:catdir dir "foo/bar/car")))
+      (is (equalp path (fast-ensure-directories-exist path)))
+      (is (path:-d (path:catdir dir "foo/bar/")))
+      (is-true (fset:@ *ensure-directories-cache* (pathname-directory path)))
+      (is (equalp path (fast-ensure-directories-exist path)))
+
+      ;; Make sure we're not hitting the disk.. so let's delete the
+      ;; directory and try again.
+      #+lispworks
+      (progn
+        (lw:delete-directory (path:catdir dir "foo/bar/"))
+        (is (equalp path (fast-ensure-directories-exist path)))
+        ;; We shouldn't have actually hit the disk to do this
+        (is-false (path:-d (path:catdir dir "foo/bar/")))))))

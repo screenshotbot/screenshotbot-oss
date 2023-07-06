@@ -96,6 +96,19 @@ to the directory that was just snapshotted.")
 (defun dispatch-datastore-cleanup-hooks ()
   (mapc 'funcall *datastore-cleanup-hooks*))
 
+(defvar *ensure-directories-cache* (fset:empty-set))
+
+(defun fast-ensure-directories-exist (path)
+  (let ((dir (pathname-directory path)))
+    (cond
+      ((fset:@ *ensure-directories-cache* dir)
+       path)
+      (t
+       (prog1
+           (ensure-directories-exist path)
+         (setf *ensure-directories-cache* (fset:with *ensure-directories-cache*
+                                                     dir)))))))
+
 (defun object-store ()
   (let* ((dir *object-store*)
          (dir (if (or
@@ -103,7 +116,7 @@ to the directory that was just snapshotted.")
                    (and (uiop:os-windows-p) (str:ends-with-p "\\" dir)))
                   dir (format nil "~a/" dir))))
    (let ((path (pathname dir)))
-     (ensure-directories-exist path)
+     (fast-ensure-directories-exist path)
      path)))
 
 (defclass checksumed-mp-store ()
@@ -773,7 +786,7 @@ this variable in LET forms, but you can SETF it if you like."
            (file (path:catfile store-dir
                                root
                                relpath)))
-      (ensure-directories-exist file)
+      (fast-ensure-directories-exist file)
       (values file
               (namestring
                (path:catfile root relpath))))))
