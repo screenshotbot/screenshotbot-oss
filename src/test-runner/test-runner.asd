@@ -11,6 +11,8 @@
                :sentry
                :graphs
                :str
+               :util/misc
+               :util/threading
                :tmpdir
                :cl-fad)
   :components ((:file "affected-systems")

@@ -1,6 +1,10 @@
 (defpackage :test-runner/test-runner
   (:nicknames :test-runner)
   (:use #:cl)
+  (:import-from #:util/misc
+                #:with-global-binding)
+  (:import-from #:util/threading
+                #:*log-sentry-p*)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:init
@@ -142,10 +146,11 @@ fails."
       (uiop:quit 1)))
 
 (defun main ()
-  (call-with-main-wrapper
-   (lambda ()
-     (maybe-hide-outputs)
-     (safely-run-all-tests))))
+  (with-global-binding ((*log-sentry-p* nil))
+    (call-with-main-wrapper
+     (lambda ()
+       (maybe-hide-outputs)
+       (safely-run-all-tests)))))
 
 (defun fix-system-name (system)
   (let ((system (if (str:starts-with-p ":" system)

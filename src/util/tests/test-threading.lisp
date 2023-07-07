@@ -35,12 +35,13 @@
 
 (def-fixture state ()
   (let ((stream (make-string-output-stream)))
-   (with-global-binding ((*catch-errors-p* t)
-                         (*debugger-hook* *debugger-hook*)
-                         (*trace-stream* stream))
-     (unwind-protect
-          (&body)
-       (setf *ctr* 0)))))
+    (with-global-binding ((*catch-errors-p* t)
+                          (*log-sentry-p* t)
+                          (*debugger-hook* *debugger-hook*)
+                          (*trace-stream* stream))
+      (unwind-protect
+           (&body)
+        (setf *ctr* 0)))))
 
 (test simple-create-thread
   (with-fixture state ()
