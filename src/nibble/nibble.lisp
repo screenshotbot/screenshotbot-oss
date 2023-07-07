@@ -66,7 +66,11 @@
   (:default-initargs :prefix "/n/"))
 
 (defun make-id ()
-  (secure-random:number (ash 1 120)))
+  ;; We'll end up with a 120bit integer.
+  (let ((entropy 88))
+    (logior
+     (ash (get-universal-time) entropy)
+     (secure-random:number (ash 1 entropy)))))
 
 (defun push-nibble (id nibble)
   (bt:with-lock-held (*lock*)

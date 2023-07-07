@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:nibble
+                #:make-id
                 #:nibble-url
                 #:nibble-current-user
                 #:defnibble
@@ -11,7 +12,8 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :nibble/test-nibble)
 
-(def-suite* :test-nibble)
+(def-suite* :nibble)
+(def-suite* :nibble/test-nibble :in :nibble)
 
 (defclass fake-acceptor ()
   ())
@@ -81,3 +83,7 @@
   (with-fixture state ()
     (is (str:containsp "NIBBLE"
                        (format nil "~a" (nibble () "dummy"))))))
+
+(test make-id-happy-path
+  (with-fixture state ()
+    (is (> (make-id) 10000000))))
