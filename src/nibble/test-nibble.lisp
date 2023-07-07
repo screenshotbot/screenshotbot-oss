@@ -86,4 +86,4 @@
 
 (test make-id-happy-path
   (with-fixture state ()
-    (is (> (make-id) 10000000))))
+    (is (> (make-id (get-universal-time)) 10000000))))

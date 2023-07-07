@@ -37,7 +37,7 @@
          :accessor nibble-user)
    (check-session-p :initarg :check-session-p
                     :initform nil)
-   (ts :initform (get-universal-time))))
+   (ts :initarg :ts)))
 
 (defmethod print-object ((nibble nibble) out)
   (format out "#<NIBBLE ~a>" (ignore-errors (slot-value nibble 'impl))))
@@ -65,7 +65,7 @@
             :accessor nibble-plugin-wrapper))
   (:default-initargs :prefix "/n/"))
 
-(defun make-id ()
+(defun make-id (ts)
   ;; We'll end up with a 120bit integer.
   (let ((entropy 88))
     (logior
@@ -113,7 +113,8 @@
                        :impl (lambda ,args ,@body)))))))
 
 (defun call-nibble (&key once name args check-session-p impl)
-  (let* ((id (make-id))
+  (let* ((ts (get-universal-time))
+         (id (make-id ts))
          (nibble (make-instance 'nibble
                                  :impl impl
                                  :name name
@@ -133,6 +134,7 @@
                                  :check-session-p check-session-p
                                  :once once
                                  :args args
+                                 :ts ts
                                  :id id)))
     (push-nibble id nibble)))
 
