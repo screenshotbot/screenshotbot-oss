@@ -10,16 +10,28 @@
                 #:def-easy-macro)
   (:import-from #:server
                 #:*shutdown-hooks*)
+  (:import-from #:util/threading
+                #:max-pool)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:define-channel
    #:with-screenshotbot-kernel
-   #:sb/future))
+   #:sb/future
+   #:*magick-pool*))
 (in-package :screenshotbot/async)
 
 (defvar *kernel* nil)
 
 (defvar *magick-kernel* nil)
+
+(defvar *magick-pool* nil)
+
+(defun reinit-pool ()
+  (setf *magick-pool* (make-instance 'max-pool :max (serapeum:count-cpus :default 4))))
+
+#+lispworks
+(lw:define-action "When starting image" "Reset magick pool"
+  #'reinit-pool)
 
 (defvar *kernel-lock* (bt:make-lock))
 
