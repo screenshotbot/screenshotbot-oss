@@ -23,7 +23,7 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:screenshotbot/async
-                #:with-magick-kernel)
+                #:magick-future)
   (:import-from #:lparallel
                 #:future
                 #:force)
@@ -71,24 +71,23 @@
                                    masks)
   (with-local-image (file1 image1)
     (with-local-image (file2 image2)
-      (with-magick-kernel ()
-       (force
-        (future
-          (with-wand (before :file file1)
-            (let ((limit (floor (* (min 1.0 (compare-threshold self))
-                                   (magick-get-image-height before)
-                                   (magick-get-image-width before)))))
-              (with-wand (after :file file2)
-                (with-image-comparison (before after
-                                        :result result
-                                        :in-place-p t)
-                  (let ((bad-pixels (get-non-alpha-pixels
-                                     result
-                                     ;; Why +2 instead of +1? I think it might
-                                     ;; be a bug somewhere in
-                                     ;; get-non-alpha-pixels, but +2 works for
-                                     ;; now.
-                                     :limit (+ 2 limit)
-                                     :masks masks)))
-                    (let ((bad-pixel-count (first (array-dimensions bad-pixels))))
-                      (<= bad-pixel-count limit)))))))))))))
+      (force
+       (magick-future ()
+         (with-wand (before :file file1)
+           (let ((limit (floor (* (min 1.0 (compare-threshold self))
+                                  (magick-get-image-height before)
+                                  (magick-get-image-width before)))))
+             (with-wand (after :file file2)
+               (with-image-comparison (before after
+                                       :result result
+                                       :in-place-p t)
+                 (let ((bad-pixels (get-non-alpha-pixels
+                                    result
+                                    ;; Why +2 instead of +1? I think it might
+                                    ;; be a bug somewhere in
+                                    ;; get-non-alpha-pixels, but +2 works for
+                                    ;; now.
+                                    :limit (+ 2 limit)
+                                    :masks masks)))
+                   (let ((bad-pixel-count (first (array-dimensions bad-pixels))))
+                     (<= bad-pixel-count limit))))))))))))

@@ -11,7 +11,10 @@
   (:import-from #:server
                 #:*shutdown-hooks*)
   (:import-from #:util/threading
+                #:make-thread
                 #:max-pool)
+  (:import-from #:lparallel.promise
+                #:promise)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:define-channel
@@ -28,6 +31,8 @@
 
 (defun reinit-pool ()
   (setf *magick-pool* (make-instance 'max-pool :max (serapeum:count-cpus :default 4))))
+
+(reinit-pool)
 
 #+lispworks
 (lw:define-action "When starting image" "Reset magick pool"
@@ -105,3 +110,12 @@
       (log:info "Done: magick kernel"))))
 
 (pushnew 'shutdown *shutdown-hooks*)
+
+(def-easy-macro magick-future (&fn fn)
+  (let ((promise (lparallel:promise)))
+    (prog1
+        promise
+      (make-thread
+       (lambda ()
+         (lparallel:fulfill promise (fn)))
+       :pool *magick-pool*))))

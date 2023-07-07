@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/async
+                #:magick-future
                 #:sb/future)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-async)
@@ -18,3 +19,8 @@
 (test sb/future-happy-path
   (let ((val (lparallel:force (sb/future () :done))))
     (is (eql :done val))))
+
+(test magick-future-happy-path
+  (is (eql 2
+           (lparallel:force
+            (magick-future () (+ 1 1))))))
