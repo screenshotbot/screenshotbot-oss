@@ -38,7 +38,8 @@
    #:desktop-installation
    #:pre-compiled-assets
    #:one-owned-company-per-user
-   #:call-with-ensure-user-prepared))
+   #:call-with-ensure-user-prepared
+   #:replay-password))
 (in-package :screenshotbot/installation)
 
 (defclass installation (abstract-installation)
@@ -55,6 +56,9 @@
    (s3-store :initform (make-instance 'null-s3-store)
              :initarg :s3-store
              :accessor installation-s3-store)
+   (replay-password :initarg :replay-password
+                    :initform nil
+                    :accessor replay-password)
    (default-oidc-provider :initform nil
                           :initarg :default-oidc-provider
                           :accessor default-oidc-provider)
