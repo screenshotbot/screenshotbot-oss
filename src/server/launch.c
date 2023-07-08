@@ -2,21 +2,61 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <string.h>
 
-void stream_child(FILE* child) {
-        char *line = NULL;
-        size_t len = 0;
+#define BUF_SIZE 800
+#define KEY "Opening transaction log lock"
 
-        ssize_t nread;
+void stream_child(int fd) {
+        char buf[BUF_SIZE + 10];
+        size_t pos = 0;
 
-        while ((nread = getline(&line, &len, child)) != -1) {
-                printf("%s", line);
+        while (1) {
+                if (pos == BUF_SIZE) {
+                        // Long line, can't do anything about it.
+                        pos = 0;
+                }
+
+                ssize_t nread = read(fd, buf + pos, BUF_SIZE - pos);
+                if (nread < 0) {
+                        if (errno == EAGAIN || errno == EWOULDBLOCK
+                                || errno == EINTR) {
+                                continue;
+                        } else {
+                                perror("Failed to read from child");
+                                exit(1);
+                        }
+                }
+
+                if (nread == 0) {
+                        goto cleanup;
+                }
+
+                write(STDOUT_FILENO, buf + pos, nread);
+
+                pos += nread;
+                buf[pos] = 0;
+                char *newline = strrchr(buf, '\n');
+                if (newline) {
+                        newline[0] = 0;
+
+                        //printf("\n\nline is: %s\n\n", buf);
+                        if (strstr(buf, KEY)) {
+                                printf("Found key!\n");
+                                fflush(stdout);
+                        }
+
+                        int newlen = pos - (newline - buf) - 1;
+                        memmove(buf, newline+1, newlen);
+                        pos = newlen;
+
+                }
         }
 
-        if (line)
-                free(line);
-
-        fclose(child);
+cleanup:
+        close(fd);
 }
 
 int child(int pipefd[2], char** argv) {
@@ -77,9 +117,10 @@ int main(int argc, char** argv) {
                 return child(pipefd, argv);
         }
 
-
-
         close(pipefd[1]);
+
+        fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
+
         FILE* child = fdopen(pipefd[0], "r");
 
         if (!child) {
@@ -87,7 +128,7 @@ int main(int argc, char** argv) {
                 return 1;
         }
 
-        stream_child(child);
+        stream_child(pipefd[0]);
 
         int wstatus = 0;
         pid_t wpid = waitpid(pid, &wstatus, 0);
