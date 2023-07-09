@@ -18,6 +18,12 @@ typedef struct _process {
         int fd;
         char buf[BUF_SIZE + 10];
         size_t pos;
+
+        /* whether we've seen the KEY */
+        int ready;
+
+        /* whether we're the primary process */
+        int primary;
 } process;
 
 #define PCOUNT 2
@@ -56,6 +62,7 @@ int stream_child_tick(process *p) {
                 //printf("\n\nline is: %s\n\n", buf);
                 if (strstr(p->buf, KEY)) {
                         printf("Found key!\n");
+                        p->ready = 1;
                         fflush(stdout);
                 }
 
@@ -232,9 +239,44 @@ void setup_signals() {
 
 }
 
+void promote_one() {
+        for (int i = 0; i < PCOUNT; i++) {
+                if (processes[i].fd < 0) {
+                        continue;
+                }
+
+                if (processes[i].ready) {
+                        printf("Promoted: %d\n", processes[i].pid);
+                        processes[i].primary = 1;
+                        return;
+                }
+        }
+}
+
+void maybe_promote() {
+        int readyCount = 0;
+        int primaryCount = 0;
+        for (int i = 0; i < PCOUNT; i++) {
+                if (processes[i].fd < 0) {
+                        continue;
+                }
+                if (processes[i].ready) {
+                        readyCount++;
+                }
+                if (processes[i].primary) {
+                        primaryCount++;
+                }
+        }
+
+        if (readyCount > 0 && primaryCount == 0) {
+                promote_one();
+        }
+}
+
 int main(int argc, char** argv) {
         _argc = argc;
         _argv = argv;
+        memset(&processes, 0, sizeof(processes));
 
         if (argc < 2) {
                 fprintf(stderr, "Need arguments to launch\n");
@@ -254,6 +296,7 @@ int main(int argc, char** argv) {
                         launch(argc, argv);
                         hup_called = 0;
                 }
+                maybe_promote();
                 printf("in here\n");
                 stream_children(processes, PCOUNT);
         }
