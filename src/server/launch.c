@@ -6,6 +6,9 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/param.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #define BUF_SIZE 800
 #define KEY "Opening transaction log lock"
@@ -162,10 +165,19 @@ int child(int pipefd[2], char** argv) {
         return 1;
 }
 
-int main(int argc, char** argv) {
-        if (argc < 2) {
-                fprintf(stderr, "Need arguments to launch\n");
-                return -1;
+int unused_slot() {
+        for (int i = 0; i < PCOUNT; i++) {
+                if (processes[i].fd < 0) {
+                        return i;
+                }
+        }
+        return -1;
+}
+
+void launch(int argc, char** argv) {
+        if (unused_slot() < 0) {
+                fprintf(stderr, "Attempting to launch without unused slot\n");
+                return;
         }
         printf("Launching command %s\n", argv[1]);
         fflush(stdout);
@@ -173,7 +185,7 @@ int main(int argc, char** argv) {
         int pipefd[2];
         if (pipe(pipefd) != 0) {
                 perror("pipe failed");
-                return -1;
+                exit(1);
         }
         printf("Got pipe!: %d, %d, %d\n", pipefd[0], pipefd[1], getpid());
 
@@ -181,26 +193,67 @@ int main(int argc, char** argv) {
         pid_t pid = fork();
         if (pid == -1) {
                 perror("fork failed");
-                return -1;
+                exit(1);
         }
 
         if (pid == 0) {  // child
-                return child(pipefd, argv);
+                child(pipefd, argv);
+                return;
         }
 
         close(pipefd[1]);
 
         fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
 
+        int slot = unused_slot();
+
+        processes[slot].pos = 0;
+        processes[slot].fd = pipefd[0];
+        processes[slot].pid = pid;
+}
+
+int hup_called = 0;
+int _argc;
+char** _argv;
+
+void hup_handler(int) {
+        printf("Got SIGHUP!\n");
+        hup_called = 1;
+}
+
+void setup_signals() {
+        struct sigaction act = { 0 };
+        act.sa_flags = SA_SIGINFO ;
+        act.sa_handler = &hup_handler;
+        if (sigaction(SIGHUP, &act, NULL) == -1) {
+                perror("sigaction failed");
+                exit(1);
+        }
+
+}
+
+int main(int argc, char** argv) {
+        _argc = argc;
+        _argv = argv;
+
+        if (argc < 2) {
+                fprintf(stderr, "Need arguments to launch\n");
+                return -1;
+        }
+
         for (int i = 0; i < PCOUNT; i++) {
                 processes[i].fd = -1;
         }
 
-        processes[0].pos = 0;
-        processes[0].fd = pipefd[0];
-        processes[0].pid = pid;
+        setup_signals();
+
+        launch(argc, argv);
 
         while (count_active()) {
+                if (hup_called) {
+                        launch(argc, argv);
+                        hup_called = 0;
+                }
                 printf("in here\n");
                 stream_children(processes, PCOUNT);
         }
