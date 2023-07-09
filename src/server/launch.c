@@ -9,54 +9,70 @@
 #define BUF_SIZE 800
 #define KEY "Opening transaction log lock"
 
-void stream_child(int fd) {
+typedef struct _process {
+        int fd;
         char buf[BUF_SIZE + 10];
-        size_t pos = 0;
+        size_t pos;
+} process;
 
+#define PCOUNT 2
+
+process processes[PCOUNT];
+
+int stream_child_tick(process *p) {
+        if (p->pos == BUF_SIZE) {
+                // Long line, can't do anything about it.
+                p->pos = 0;
+        }
+
+        ssize_t nread = read(p->fd, p->buf + p->pos, BUF_SIZE - p->pos);
+        if (nread < 0) {
+                if (errno == EAGAIN || errno == EWOULDBLOCK
+                    || errno == EINTR) {
+                        return -1; // Try again
+                } else {
+                        perror("Failed to read from child");
+                        exit(1);
+                }
+        }
+
+        if (nread == 0) {
+                return 0;
+        }
+
+        write(STDOUT_FILENO, p->buf + p->pos, nread);
+
+        p->pos += nread;
+        p->buf[p->pos] = 0;
+        char *newline = strrchr(p->buf, '\n');
+        if (newline) {
+                newline[0] = 0;
+
+                //printf("\n\nline is: %s\n\n", buf);
+                if (strstr(p->buf, KEY)) {
+                        printf("Found key!\n");
+                        fflush(stdout);
+                }
+
+                int newlen = p->pos - (newline - p->buf) - 1;
+                memmove(p->buf, newline+1, newlen);
+                p->pos = newlen;
+
+        }
+
+        return nread;
+}
+
+void stream_child(process* p) {
         while (1) {
-                if (pos == BUF_SIZE) {
-                        // Long line, can't do anything about it.
-                        pos = 0;
-                }
-
-                ssize_t nread = read(fd, buf + pos, BUF_SIZE - pos);
-                if (nread < 0) {
-                        if (errno == EAGAIN || errno == EWOULDBLOCK
-                                || errno == EINTR) {
-                                continue;
-                        } else {
-                                perror("Failed to read from child");
-                                exit(1);
-                        }
-                }
-
-                if (nread == 0) {
+                int ret = stream_child_tick(p);
+                if (ret == 0) {
                         goto cleanup;
-                }
-
-                write(STDOUT_FILENO, buf + pos, nread);
-
-                pos += nread;
-                buf[pos] = 0;
-                char *newline = strrchr(buf, '\n');
-                if (newline) {
-                        newline[0] = 0;
-
-                        //printf("\n\nline is: %s\n\n", buf);
-                        if (strstr(buf, KEY)) {
-                                printf("Found key!\n");
-                                fflush(stdout);
-                        }
-
-                        int newlen = pos - (newline - buf) - 1;
-                        memmove(buf, newline+1, newlen);
-                        pos = newlen;
-
                 }
         }
 
 cleanup:
-        close(fd);
+        close(p->fd);
 }
 
 int child(int pipefd[2], char** argv) {
@@ -128,7 +144,10 @@ int main(int argc, char** argv) {
                 return 1;
         }
 
-        stream_child(pipefd[0]);
+        process p;
+        p.pos = 0;
+        p.fd = pipefd[0];
+        stream_child(&p);
 
         int wstatus = 0;
         pid_t wpid = waitpid(pid, &wstatus, 0);
