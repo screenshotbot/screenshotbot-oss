@@ -9,8 +9,10 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 
 #define BUF_SIZE 800
+#define KILL_INTERVAL 3 /* time after TERM to send a KILL */
 #define KEY "Opening transaction log lock"
 
 typedef struct _process {
@@ -24,11 +26,19 @@ typedef struct _process {
 
         /* whether we're the primary process */
         int primary;
+
+        /* time at which we sent a SIGTERM */
+        time_t term_time;
 } process;
 
 #define PCOUNT 2
 
 process processes[PCOUNT];
+
+void init_process(process *p) {
+        memset(p, 0, sizeof(*p));
+        p->fd = -1;
+}
 
 int stream_child_tick(process *p) {
         if (p->pos == BUF_SIZE) {
@@ -76,6 +86,7 @@ int stream_child_tick(process *p) {
 }
 
 void cleanup(process* ps) {
+        printf("Cleaning up %d\n", ps->pid);
         close(ps->fd);
         ps->fd = -1; // Indicator that we're dead.
 
@@ -90,6 +101,8 @@ void cleanup(process* ps) {
         if (status != 0) {
                 fprintf(stderr, "Child process %d crashed with %d\n", ps->pid, status);
         }
+
+        init_process(ps);
 }
 
 void stream_children(process* ps, int pcount) {
@@ -116,7 +129,7 @@ void stream_children(process* ps, int pcount) {
                 perror("select() failed");
                 exit(1);
         } else {
-                printf("Got %d ready fds\n", retval);
+                //printf("Got %d ready fds\n", retval);
                 // retval is the count of fds
                 for (int i = 0; i < pcount; i++) {
                         if (FD_ISSET(ps[i].fd, &rfds)) {
@@ -194,7 +207,7 @@ void launch(int argc, char** argv) {
                 perror("pipe failed");
                 exit(1);
         }
-        printf("Got pipe!: %d, %d, %d\n", pipefd[0], pipefd[1], getpid());
+        //printf("Got pipe!: %d, %d, %d\n", pipefd[0], pipefd[1], getpid());
 
 
         pid_t pid = fork();
@@ -253,38 +266,84 @@ void promote_one() {
         }
 }
 
-void maybe_promote() {
+
+int is_valid(process* p) {
+        return p->fd >= 0;
+}
+
+int ready_count() {
         int readyCount = 0;
-        int primaryCount = 0;
         for (int i = 0; i < PCOUNT; i++) {
-                if (processes[i].fd < 0) {
+                if (!is_valid(&processes[i])) {
                         continue;
                 }
                 if (processes[i].ready) {
                         readyCount++;
+                }
+        }
+
+        return readyCount;
+}
+
+int primary_count() {
+        int primaryCount = 0;
+        for (int i = 0; i < PCOUNT; i++) {
+                if (!is_valid(&processes[i])) {
+                        continue;
                 }
                 if (processes[i].primary) {
                         primaryCount++;
                 }
         }
 
-        if (readyCount > 0 && primaryCount == 0) {
+        return primaryCount;
+}
+
+process* primary() {
+        for (int i = 0; i < PCOUNT; i++) {
+                process *p = &processes[i];
+                if (is_valid(p) && p->primary) {
+                        return p;
+                }
+        }
+        return NULL;
+}
+
+void maybe_promote() {
+        if (ready_count() > 0 && primary_count() == 0) {
                 promote_one();
         }
 }
 
+/* If there's a ready process, and a primary process, we kill the primary. We first attempt a TERM, */
+void maybe_kill_primary() {
+        if (ready_count() > 1 && primary_count() == 1) {
+                /* There's more than one ready instance, but one primary */
+                process *p = primary();
+                if (!p->term_time) {
+                        printf("Sending SIGTERM to %d\n", p->pid);
+                        kill(p->pid, SIGTERM);
+                        p->term_time = time(NULL);
+                } else {
+                        if (time(NULL) - p->term_time > KILL_INTERVAL) {
+                                printf("Sending SIGKILL to %d\n", p->pid);
+                                kill(p->pid, SIGKILL);
+                        }
+                }
+        }
+}
+
+
 int main(int argc, char** argv) {
         _argc = argc;
         _argv = argv;
-        memset(&processes, 0, sizeof(processes));
+        for (int i = 0; i < PCOUNT; i++) {
+                init_process(&processes[i]);
+        }
 
         if (argc < 2) {
                 fprintf(stderr, "Need arguments to launch\n");
                 return -1;
-        }
-
-        for (int i = 0; i < PCOUNT; i++) {
-                processes[i].fd = -1;
         }
 
         setup_signals();
@@ -296,8 +355,8 @@ int main(int argc, char** argv) {
                         launch(argc, argv);
                         hup_called = 0;
                 }
+                maybe_kill_primary();
                 maybe_promote();
-                printf("in here\n");
                 stream_children(processes, PCOUNT);
         }
 }
