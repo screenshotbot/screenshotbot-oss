@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <systemd/sd-daemon.h>
 
 #define BUF_SIZE 800
 #define KILL_INTERVAL 3 /* time after TERM to send a KILL */
@@ -261,6 +262,11 @@ void promote_one() {
                 if (processes[i].ready) {
                         printf("Promoted: %d\n", processes[i].pid);
                         processes[i].primary = 1;
+                        char s[1000];
+                        snprintf(s, sizeof(s),
+                                 "MAINPID=%d",
+                                 processes[i].pid);
+                        sd_notify(0, s);
                         return;
                 }
         }

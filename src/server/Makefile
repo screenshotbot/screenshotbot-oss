@@ -1,3 +1,3 @@
 
 launch: launch.c
-	gcc launch.c -o launch
+	gcc launch.c -l systemd -o launch
