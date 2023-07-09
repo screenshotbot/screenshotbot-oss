@@ -5,11 +5,13 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/param.h>
 
 #define BUF_SIZE 800
 #define KEY "Opening transaction log lock"
 
 typedef struct _process {
+        int pid;
         int fd;
         char buf[BUF_SIZE + 10];
         size_t pos;
@@ -63,16 +65,69 @@ int stream_child_tick(process *p) {
         return nread;
 }
 
-void stream_child(process* p) {
-        while (1) {
-                int ret = stream_child_tick(p);
-                if (ret == 0) {
-                        goto cleanup;
+void cleanup(process* ps) {
+        close(ps->fd);
+        ps->fd = -1; // Indicator that we're dead.
+
+        int wstatus = 0;
+        pid_t wpid = waitpid(ps->pid, &wstatus, 0);
+        if (wpid < 0) {
+                perror("waitpid failed");
+                exit(1);
+        }
+
+        int status = WEXITSTATUS(wstatus);
+        if (status != 0) {
+                fprintf(stderr, "Child process %d crashed with %d\n", ps->pid, status);
+        }
+}
+
+void stream_children(process* ps, int pcount) {
+        fd_set rfds;
+        FD_ZERO(&rfds);
+        int maxfd = 0;
+        for (int i = 0; i < pcount; i++) {
+                if (ps[i].fd >= 0) {
+                        FD_SET(ps[i].fd, &rfds);
+                        maxfd = MAX(ps[i].fd, maxfd);
                 }
         }
 
-cleanup:
-        close(p->fd);
+        struct timeval tv;
+        tv.tv_sec = 5;
+        tv.tv_usec = 0;
+
+        int retval = select(maxfd + 1, &rfds, NULL, NULL, &tv);
+
+        if (retval == -1) {
+                if (errno == EINTR) {
+                        return;
+                }
+                perror("select() failed");
+                exit(1);
+        } else {
+                printf("Got %d ready fds\n", retval);
+                // retval is the count of fds
+                for (int i = 0; i < pcount; i++) {
+                        if (FD_ISSET(ps[i].fd, &rfds)) {
+                                int ret = stream_child_tick(&ps[i]);
+                                if (ret == 0) {
+                                        cleanup(&ps[i]);
+                                }
+                        }
+                }
+        }
+
+}
+
+int count_active() {
+        int count = 0;
+        for (int i = 0; i < PCOUNT; i ++) {
+                if (processes[i].fd >= 0) {
+                        count ++;
+                }
+        }
+        return count;
 }
 
 int child(int pipefd[2], char** argv) {
@@ -137,28 +192,16 @@ int main(int argc, char** argv) {
 
         fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
 
-        FILE* child = fdopen(pipefd[0], "r");
-
-        if (!child) {
-                perror("fdopen");
-                return 1;
+        for (int i = 0; i < PCOUNT; i++) {
+                processes[i].fd = -1;
         }
 
-        process p;
-        p.pos = 0;
-        p.fd = pipefd[0];
-        stream_child(&p);
+        processes[0].pos = 0;
+        processes[0].fd = pipefd[0];
+        processes[0].pid = pid;
 
-        int wstatus = 0;
-        pid_t wpid = waitpid(pid, &wstatus, 0);
-        if (wpid < 0) {
-                perror("waitpid failed");
-                return 1;
+        while (count_active()) {
+                printf("in here\n");
+                stream_children(processes, PCOUNT);
         }
-
-        int status = WEXITSTATUS(wstatus);
-        if (status != 0) {
-                fprintf(stderr, "Child process crashed with %d\n", status);
-        }
-        return status;
 }
