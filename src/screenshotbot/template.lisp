@@ -48,7 +48,9 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:core/ui/template
-                #:render-template))
+                #:render-template)
+  (:import-from #:core/installation/installation
+                #:installation-domain))
 
 (markup:enable-reader)
 
@@ -78,7 +80,7 @@
 (markup:deftag google-analytics ()
   #-screenshotbot-oss
   (when (analyticsp (installation))
-    <:script data-domain="screenshotbot.io" src="/js/script.js" data-api= "/api/event" defer ></:script>))
+    <:script defer data-domain= (installation-domain (installation)) src="https://plausible.io/js/script.js"></:script>))
 
 (deftag dashboard-head (&key jquery-ui
                         (title "Screenshotbot")
