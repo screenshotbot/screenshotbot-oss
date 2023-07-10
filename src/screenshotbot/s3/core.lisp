@@ -15,11 +15,11 @@
                 #:*s3-endpoint*)
   (:import-from #:screenshotbot/installation
                 #:null-s3-store)
-  (:import-from #:screenshotbot/async
-                #:with-screenshotbot-kernel)
   (:import-from #:util/misc
                 #:safe-ensure-directories-exist)
   (:import-from #:util/threading
+                #:make-thread
+                #:max-pool
                 #:ignore-and-log-errors)
   (:local-nicknames (#:a #:alexandria))
   (:export
@@ -41,26 +41,31 @@
                       :reader secret-key))
   (:documentation "An S3 copy of the object-store"))
 
+(defvar *upload-pool*
+  (make-instance 'max-pool :max 40))
+
 (def-easy-macro with-store (store &fn fn)
   (let ((*s3-endpoint* (endpoint store))
         (*credentials* store))
     (funcall fn)))
 
-(defmethod upload-file ((store s3-store) file key)
-  (with-store (store)
-    (zs3:put-file
-     file
-     (bucket store)
-     key)))
+(auto-restart:with-auto-restart (:retries 3 :sleep 5)
+  (defmethod upload-file ((store s3-store) file key)
+    (with-store (store)
+      (zs3:put-file
+       file
+       (bucket store)
+       key))))
 
 (defmethod upload-file ((store null-s3-store) file key)
   nil)
 
 (defmethod s3-store-update-remote ((store s3-store) file key)
-  (with-screenshotbot-kernel ()
-    (lparallel:speculate
-      (ignore-and-log-errors ()
-       (upload-file store file key)))))
+  (make-thread
+   (lambda ()
+     (upload-file store file key))
+   :pool *upload-pool*
+   :name "S3 upload"))
 
 (defmethod s3-store-update-remote ((store null-s3-store) file key)
   nil)
