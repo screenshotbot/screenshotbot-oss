@@ -382,30 +382,6 @@
        (+ (mask-rect-left mask) (mask-rect-width mask) -1))))
 
 
-#+screenshotbot-oss
-(defmethod maybe-rewrite-image-blob ((image image))
-  (restart-case
-      (alexandria:when-let ((blob (%image-blob image)))
-        (let ((dest (local-location-for-oid (oid-array image)))
-              (src (blob-pathname blob)))
-          (when (path:-e src)
-            (assert (osicat-posix:link
-                     src dest)))
-          (log:info "Rewriting blob for ~s: ~s" image blob)
-          (with-transaction ()
-            (setf (%image-blob image) nil)
-            (setf (%image-state image) +image-state-filesystem+))))
-    (ignore-image ()
-      nil)))
-
-#+screenshotbot-oss
-(defun rewrite-all-image-blobs ()
-  (loop for image in (reverse (bknr.datastore:class-instances 'image))
-        do
-        (maybe-rewrite-image-blob image)))
-
-
-
 (defun local-location-for-oid (oid)
   "Figure out the local location for the given OID"
   (location-for-oid

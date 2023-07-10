@@ -100,17 +100,10 @@
   :depends-on ((:feature (:not :lispworks) :util/fake-fli))
   :components ((:file "file-lock")))
 
-(defsystem :util/osicat
-  :serial t
-  :depends-on ((:feature (:not (:or :mswindows :windows)) :osicat))
-  :components ((:file "osicat-lw" :if-feature (:and :lispworks (:not (:or :mswindows :windows))))))
-
 (defsystem :util/copy-file
   :serial t
   :defsystem-depends-on (:trivial-features)
   :depends-on (:uiop
-               #-lispworks
-               :osicat
                #-lispworks
                :util/fake-fli)
   :components ((:file "copy-file")))
@@ -129,8 +122,8 @@
 #+lispworks
 (defsystem :util/memory
     :serial t
-    :depends-on ((:feature :linux :osicat))
-    :components ((:file "memory")))
+  :depends-on (:util/posix)
+  :components ((:file "memory")))
 
 (defsystem :util/logrotate
   :serial t
@@ -200,6 +193,11 @@
   :serial t
   :components ((:file "fiveam")
                (:file "mock-recording")))
+
+(defsystem :util/posix
+  :depends-on (#-lispworks
+               :util/fake-fli)
+  :components ((:file "posix")))
 
 (defsystem :util/digests
   :depends-on ((:feature (:not (:and :lispworks (:or :linux :darwin))) "md5")

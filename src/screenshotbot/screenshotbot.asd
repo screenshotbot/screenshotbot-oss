@@ -34,7 +34,7 @@
   :depends-on (:util
                :markup
                :gravatar
-               :util/osicat
+               :util/posix
                :bknr.impex
                :util/logger
                :lparallel
@@ -77,7 +77,6 @@
                :screenshotbot.css-assets
                :screenshotbot/secrets
                :util.java
-	       (:feature (:not (:or :mswindows :windows)) :osicat)
                :util/phabricator
                :util/copy-file
                :hunchensocket

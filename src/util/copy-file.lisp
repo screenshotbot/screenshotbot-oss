@@ -30,12 +30,9 @@
   #-windows
   (let ((ret (link (namestring src) (namestring dest))))
     (unless (= ret 0)
-      (let* ((errno #+lispworks (lw:errno-value)
-                    #-lispworks (osicat-posix:get-errno))
-             (message #+lispworks
-                      (lw:get-unix-error errno)
-                      #-lispworks
-                      errno))
+      (let* ((errno
+               (util/posix:errno))
+             (message (util/posix:get-errno-string errno)))
         (cond
           ((= errno +exdev+)
            (log:warn "Could not hard link from ~a to ~a" src dest)

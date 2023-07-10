@@ -56,7 +56,7 @@
 (defun process-mem-usage ()
   (let ((ret 0))
     #+linux
-    (let ((pid (osicat-posix:getpid)))
+    (let ((pid (util/posix:getpid)))
       (with-open-file (stream (format nil "/proc/~d/smaps" pid))
         (loop for line = (read-line stream nil nil)
               while line

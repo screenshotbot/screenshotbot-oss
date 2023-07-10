@@ -13,7 +13,7 @@
   (let* ((store-dir (object-store))
          (socket-file (ensure-directories-exist
                        (path:catfile store-dir "sockets/"
-                                     (format nil "~a.sock" (osicat-posix:getpid))))))
+                                     (format nil "~a.sock" (util/posix:getpid))))))
 
     (when (probe-file socket-file)
       (delete-file socket-file))

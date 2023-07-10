@@ -63,7 +63,3 @@
                  (t
                   (log:info "Command ran without errors")))))
         (dbg:close-remote-debugging-connection conn)))))
-
-#+nil
-(perform-eval "/data/arnold/object-store/sockets/1.sock"
-              "(format t \"hello world ~a~%\" (osicat-posix:getpid))  ")

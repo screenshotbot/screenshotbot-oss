@@ -24,7 +24,6 @@
                "serapeum"
                (:feature (:and :lispworks (:not :mswindows)) "control-socket")
                "easy-macros"
-               (:feature (:not (:or :mswindows :windows)) "osicat")
                "util/health-check"
                "util/threading"
                "util/phabricator"
@@ -60,6 +59,7 @@
                "slynk/mrepl"
                "slynk/trace-dialog"
                "slynk/profiler"
+               "util/posix"
                "slynk/stickers"
                "slynk/indentation"
                "slynk/retro"

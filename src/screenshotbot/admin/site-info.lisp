@@ -39,7 +39,7 @@
       </li>
 
       <li>Debug-io: ,(format nil "~s" *debug-io*)</li>
-      <li>PID: ,(progn #+linux (osicat-posix:getpid))</li>
+      <li>PID: ,(progn #+linux (util/posix:getpid))</li>
       <li>Slynk port: ,(safe-symbol-value "*ACTUAL-SLYNK-PORT*"   "SERVER/SLYNK-PREPARER" )</li>
     </ul>
   </admin-app-template>)
