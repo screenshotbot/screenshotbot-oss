@@ -36,10 +36,6 @@
    #:main))
 (in-package :server/cli)
 
-(defun run/command ()
-  (clingon:make-command :name "run"
-                        :options (list)))
-
 (def-easy-macro with-store (cmd &fn fn)
   (with-global-binding ((*object-store* (serapeum:ensure-suffix (clingon:getopt cmd :store) "/"))
                         (*start-slynk* (clingon:getopt cmd :start-slynk))
@@ -57,6 +53,7 @@
    :options (list* (common-options))))
 
 (def-easy-macro with-run-or-verify-setup (cmd &key enable-store jvm &fn fn)
+  (process-common-options cmd)
   #-screenshotbot-oss
   (unless (clingon:getopt cmd :config)
     (error "Must provide a --config file"))
@@ -70,6 +67,10 @@
         (util/phabricator/passphrase:reload-secrets))
       (with-common-setup (:enable-store enable-store :jvm jvm)
         (fn)))))
+
+(defun process-common-options (cmd)
+  (when (clingon:getopt cmd :verbose)
+    (log:config :debug)))
 
 (defun verify/command (&key enable-store jvm)
   (clingon:make-command
@@ -198,6 +199,11 @@
     :description "Config file to use (not for OSS)"
     :long-name "config"
     :key :config)
+   (make-option
+    :flag
+    :description "whether to enable verbose logs"
+    :long-name "verbose"
+    :key :verbose)
    (make-option
     :integer
     :description "the port to start slynk on"
