@@ -10,4 +10,5 @@
   :class build-utils:js-library
   :defsystem-depends-on (:build-utils)
   :components ((build-utils:js-file "bundle.min")
+               #-screenshotbot-oss
                (build-utils:js-file "config")))
