@@ -17,6 +17,7 @@
   :components ((:file "package")
                (:file "url")
                (:file "existing-socket" :if-feature :lispworks)
+               (:file "random-port" :if-feature :lispworks)
                (:file "acceptor-with-plugins")
                (:file "better-easy-handler")
                (:file "postdata")
@@ -33,6 +34,7 @@
                :fiveam-matchers
                :fiveam)
   :components ((:file "test-acceptor-with-plugins")
+               (:file "test-random-port" :if-feature :lispworks)
                (:file "test-better-easy-handler")
                (:file "test-url")
                (:file "test-async")))
