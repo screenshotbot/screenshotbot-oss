@@ -9,6 +9,8 @@
   (:import-from #:clingon
                 #:make-option)
   (:import-from #:server
+                #:init-multi-acceptor
+                #:*multi-acceptor*
                 #:*slynk-loopback-interface*
                 #:%run
                 #:%verify
@@ -124,10 +126,14 @@
                       :acceptor
                       (apply-socket
                        (cond
-                         ((clingon:getopt cmd :only-screenshotbot-p)
+                         ((and
+                           nil ;; Disable for now.
+                           (clingon:getopt cmd :only-screenshotbot-p))
                           (symbol-value
                            (uiop:find-symbol* :*acceptor* :screenshotbot/server)))
-                         (t acceptor))
+                         (t
+                          (init-multi-acceptor :port 4001)
+                          *multi-acceptor*))
                        (clingon:getopt cmd :socket))
                       :port (clingon:getopt cmd :port)
                       :shell nil)))
