@@ -11,7 +11,9 @@
                 #:start-listening)
   (:import-from #:hunchentoot-extensions/existing-socket
                 #:existing-socket
-                #:acceptor-with-existing-socket))
+                #:acceptor-with-existing-socket)
+  (:export
+   #:acceptor-on-random-port))
 (in-package :hunchentoot-extensions/random-port)
 
 (defclass acceptor-on-random-port (acceptor-with-existing-socket)
