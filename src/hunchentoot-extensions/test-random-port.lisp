@@ -25,38 +25,48 @@
 
 (test happy-path-random-port
   (let ((acceptor (make-instance 'test-acc :name 'foobar)))
+    (is-false (hunchentoot:started-p acceptor))
     (hunchentoot:start acceptor)
+    (is-true (hunchentoot:started-p acceptor))
     (is
      (equal "OK"
             (dex:get (format nil "http://127.0.0.1:~a/hello" (hunchentoot:acceptor-port acceptor))
                      :read-timeout 3
                      :connect-timeout 3)))
     (hunchentoot:stop acceptor)
+    (is-false (hunchentoot:started-p acceptor))
     (pass)))
 
 (test stop-then-start
   (let ((acceptor (make-instance 'test-acc :name 'foobar)))
+    (is-false (hunchentoot:started-p acceptor))
     (hunchentoot:start acceptor)
+    (is-true (hunchentoot:started-p acceptor))
     (hunchentoot:stop acceptor)
+    (is-false (hunchentoot:started-p acceptor))
     (hunchentoot:start acceptor)
+    (is-true (hunchentoot:started-p acceptor))
     (is
      (equal "OK"
             (dex:get (format nil "http://127.0.0.1:~a/hello" (hunchentoot:acceptor-port acceptor))
                      :read-timeout 3
                      :connect-timeout 3)))
     (hunchentoot:stop acceptor)
-    (pass)))
+    (is-false (hunchentoot:started-p acceptor))))
 
 (test allow-shutting-down-twice
   (let ((acceptor (make-instance 'test-acc :name 'foobar)))
     (hunchentoot:start acceptor)
     (hunchentoot:stop acceptor)
+    (is-false (hunchentoot:started-p acceptor))
     (finishes
-      (hunchentoot:stop acceptor))))
+      (hunchentoot:stop acceptor))
+    (is-false (hunchentoot:started-p acceptor))))
 
 (test allow-shutting-down-without-starting
   (let ((acceptor (make-instance 'test-acc :name 'foobar)))
     (finishes
      (hunchentoot:stop acceptor))
     (finishes
-      (hunchentoot:stop acceptor))))
+      (hunchentoot:stop acceptor))
+    (is-false (hunchentoot:started-p acceptor))))
