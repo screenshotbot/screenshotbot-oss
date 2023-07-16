@@ -51,4 +51,7 @@
   (declare (ignore soft))
   (when (started-p acceptor)
     (setf (started-p acceptor) nil)
-    (call-next-method)))
+    (call-next-method))
+  (setf (existing-socket acceptor) nil)
+  #-lispworks
+  (setf (slot-value acceptor 'hunchentoot::port) 0))
