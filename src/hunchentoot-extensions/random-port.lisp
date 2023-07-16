@@ -19,12 +19,14 @@
   (:default-initargs :port 0))
 
 (defmethod start-listening :before ((acceptor acceptor-on-random-port))
+  #+lispworks
+  (setf (existing-socket acceptor)
+        (comm::create-tcp-socket-for-service
+         0 :address "127.0.0.1" :backlog 30))
+  #-lispworks
   (let* ((usocket (usocket:socket-listen "127.0.0.1" 0
                                          :element-type '(unsigned-byte 8))))
     (setf (existing-socket acceptor)
-          #+lispworks
-          (usocket:socket usocket)
-          #-lispworks
           usocket)))
 
 
