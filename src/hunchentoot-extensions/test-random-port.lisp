@@ -20,8 +20,16 @@
                     hunchentoot:easy-acceptor)
   ())
 
-(test happy-path
-  (let ((acceptor (make-instance 'test-acc)))
+(hunchentoot:define-easy-handler (my-handler :uri "/hello" :acceptor-names '(foobar)) ()
+  "OK")
+
+(test happy-path-random-port
+  (let ((acceptor (make-instance 'test-acc :name 'foobar)))
     (hunchentoot:start acceptor)
+    (is
+     (equal "OK"
+            (dex:get (format nil "http://127.0.0.1:~a/hello" (hunchentoot:acceptor-port acceptor))
+                     :read-timeout 3
+                     :connect-timeout 3)))
     (hunchentoot:stop acceptor)
     (pass)))

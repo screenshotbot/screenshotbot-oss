@@ -15,24 +15,27 @@
 (in-package :hunchentoot-extensions/random-port)
 
 (defclass acceptor-on-random-port (acceptor-with-existing-socket)
-  ())
+  ()
+  (:default-initargs :port 0))
 
 (defmethod start-listening :before ((acceptor acceptor-on-random-port))
-  (let* ((usocket (usocket:socket-listen "127.0.0.1" 0)))
+  (let* ((usocket (usocket:socket-listen "127.0.0.1" 0
+                                         :element-type '(unsigned-byte 8))))
     (setf (existing-socket acceptor)
           #+lispworks
           (usocket:socket usocket)
           #-lispworks
           usocket)))
 
+
+;; On usocket based implementations, hunchentoot already supports 0 as
+;; the acceptor port.
+#+lispworks
 (defmethod acceptor-port ((acceptor acceptor-on-random-port))
   (cond
     ((existing-socket acceptor)
-     #+lispworks
      (nth-value
       1
-      (comm:get-socket-address (existing-socket acceptor)))
-     #-lispworks
-     (usocket:get-local-port (existing-socket acceptor)))
+      (comm:get-socket-address (existing-socket acceptor))))
     (t
      0)))
