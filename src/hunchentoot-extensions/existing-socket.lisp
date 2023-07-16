@@ -20,22 +20,27 @@
 (defclass acceptor-with-existing-socket ()
   ((existing-socket :initarg :existing-socket
                     :initform nil
-                    :accessor existing-socket)))
+                    :accessor existing-socket
+                    :documentation "On Lispworks, this is a file descriptor. On other platforms it should be a usocket socket.")))
 
 (defmethod start-listening ((acceptor acceptor-with-existing-socket))
   (cond
     ((not (existing-socket acceptor))
      (call-next-method))
     (t
+     #-lispworks
+     (setf (hunchentoot::acceptor-listen-socket acceptor)
+           (existing-socket acceptor))
+     #+lispworks
      (let ((process
              (bt:make-thread
               (lambda ()
-                (loop until (acceptor-shutdown-p acceptor)
-                      do
-                         (handle-incoming-connection
-                          (acceptor-taskmaster acceptor)
-                          (comm::get-fd-from-socket (existing-socket acceptor))))))))
-       ;; This will get unstopped in accept-connections
+                (catch 'out
+                  (loop until (acceptor-shutdown-p acceptor)
+                        do
+                           (handle-incoming-connection
+                            (acceptor-taskmaster acceptor)
+                            (comm::get-fd-from-socket (existing-socket acceptor)))))))))
        (mp:process-stop process)
        (setf (acceptor-process acceptor) process)
        (values)))))

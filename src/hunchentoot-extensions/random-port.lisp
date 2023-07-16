@@ -18,15 +18,21 @@
   ())
 
 (defmethod start-listening :before ((acceptor acceptor-on-random-port))
-  (let* ((usocket (usocket:socket-listen "127.0.0.1" 0))
-         (socket (usocket:socket usocket)))
-    (setf (existing-socket acceptor) socket)))
+  (let* ((usocket (usocket:socket-listen "127.0.0.1" 0)))
+    (setf (existing-socket acceptor)
+          #+lispworks
+          (usocket:socket usocket)
+          #-lispworks
+          usocket)))
 
 (defmethod acceptor-port ((acceptor acceptor-on-random-port))
   (cond
     ((existing-socket acceptor)
+     #+lispworks
      (nth-value
       1
-      (comm:get-socket-address (existing-socket acceptor))))
+      (comm:get-socket-address (existing-socket acceptor)))
+     #-lispworks
+     (usocket:get-local-port (existing-socket acceptor)))
     (t
      0)))
