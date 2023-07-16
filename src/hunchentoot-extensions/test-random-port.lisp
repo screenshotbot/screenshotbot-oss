@@ -33,3 +33,17 @@
                      :connect-timeout 3)))
     (hunchentoot:stop acceptor)
     (pass)))
+
+(test allow-shutting-down-twice
+  (let ((acceptor (make-instance 'test-acc :name 'foobar)))
+    (hunchentoot:start acceptor)
+    (hunchentoot:stop acceptor)
+    (finishes
+      (hunchentoot:stop acceptor))))
+
+(test allow-shutting-down-without-starting
+  (let ((acceptor (make-instance 'test-acc :name 'foobar)))
+    (finishes
+     (hunchentoot:stop acceptor))
+    (finishes
+      (hunchentoot:stop acceptor))))

@@ -15,7 +15,8 @@
 (in-package :hunchentoot-extensions/random-port)
 
 (defclass acceptor-on-random-port (acceptor-with-existing-socket)
-  ()
+  ((started-p :initform nil
+              :accessor started-p))
   (:default-initargs :port 0))
 
 (defmethod start-listening :before ((acceptor acceptor-on-random-port))
@@ -29,6 +30,8 @@
     (setf (existing-socket acceptor)
           usocket)))
 
+(defmethod start-listening :after ((acceptor acceptor-on-random-port))
+  (setf (started-p acceptor) t))
 
 ;; On usocket based implementations, hunchentoot already supports 0 as
 ;; the acceptor port.
@@ -41,3 +44,9 @@
       (comm:get-socket-address (existing-socket acceptor))))
     (t
      0)))
+
+(defmethod hunchentoot:stop :around ((acceptor acceptor-on-random-port) &key soft)
+  (declare (ignore soft))
+  (when (started-p acceptor)
+    (setf (started-p acceptor) nil)
+    (call-next-method)))
