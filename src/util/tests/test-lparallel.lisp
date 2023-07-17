@@ -8,8 +8,6 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/lparallel)
-  (:import-from #:util/testing
-                #:with-global-kernel)
   (:import-from #:lparallel.promise
                 #:future)
   (:import-from #:lparallel.promise

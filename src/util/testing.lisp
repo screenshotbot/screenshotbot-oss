@@ -20,8 +20,7 @@
    #:in-test-p
    #:screenshot-static-page
    #:with-local-acceptor
-   #:with-global-binding
-   #:with-global-kernel))
+   #:with-global-binding))
 (in-package :util/testing)
 
 (defvar *in-test-p* nil)
@@ -164,10 +163,3 @@
              (bt:join-thread thread)
              (when thread-crashed?
                (error "The acceptor thread crashed, see logs")))))))))
-
-
-(def-easy-macro with-global-kernel (&key (count 2)  &fn fn)
-  (with-global-binding ((lparallel:*kernel* (lparallel:make-kernel count)))
-    (unwind-protect
-         (funcall fn)
-      (lparallel:end-kernel :wait t))))
