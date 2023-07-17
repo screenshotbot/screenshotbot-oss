@@ -9,6 +9,7 @@
         #:fiveam
         #:util/threading)
   (:import-from #:util/threading
+                #:schedule-timer
                 #:*trace-stream*
                 #:max-pool
                 #:build-extras
@@ -232,3 +233,26 @@
          (dolist (thread threads)
            (bt:join-thread thread))
          (is (eql thread-count *ctr*)))))))
+
+(test simple-timer-test
+  (dotimes (i 3)
+    (let ((promise (lparallel:promise)))
+      (schedule-timer 0
+                      (lambda ()
+                        (lparallel:fulfill
+                            promise
+                          :done)))
+      (is (eql :done (lparallel:force promise))))))
+
+(test simple-timer-test-in-parallel
+  (let* ((count 10)
+         (promises (loop for i below count collect (lparallel:promise))))
+    (dotimes (i count)
+      (util:copying (i)
+       (schedule-timer 0
+                       (lambda ()
+                         (lparallel:fulfill
+                             (elt promises i)
+                           :done)))))
+    (dotimes (i count)
+      (is (eql :done (lparallel:force (elt promises i)))))))

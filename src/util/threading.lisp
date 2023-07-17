@@ -254,3 +254,61 @@ thread, not a thread itself."
             (fset:with-last (queue self) job)))
     (maybe-process-queue self)
     promise))
+
+(defvar *timer-lock* (bt:make-lock))
+(defvar *timer-cv* (bt:make-condition-variable))
+(defvar *timers* (fset:empty-set))
+(defvar *next-timer-id* 0)
+
+(defclass timer-entry ()
+  ((ts :initarg :ts
+       :reader ts)
+   (timer-id :initform (incf *next-timer-id*))
+   (args :initarg :args
+         :reader args)))
+
+(defmethod fset:compare ((a timer-entry) (b timer-entry))
+  (fset:compare-slots a b
+                      'ts 'timer-id))
+
+(defun schedule-timer (timeout fn &key (pool *unlimited-pool*))
+  (bt:with-lock-held (*timer-lock*)
+    (let ((at-time (+ (get-universal-time) timeout)))
+      (log:debug "Scheduling at ~a" at-time)
+      (setf
+       *timers*
+       (fset:with *timers*
+                  (make-instance 'timer-entry
+                                 :ts at-time
+                                 :args (list fn :pool pool))))
+      (when (= 1 (fset:size *timers*))
+        ;; We're the first to be added, so create a thread
+        (make-thread
+         (lambda ()
+           (log:debug "Creating timer thread")
+           (timer-thread))))
+      (bt:condition-notify *timer-cv*))))
+
+(defun timer-thread ()
+  (bt:with-lock-held (*timer-lock*)
+    (labels ((work ()
+               (let ((current-time (get-universal-time)))
+                (cond
+                  ((fset:empty? *timers*)
+                   ;; We're done for now
+                   (values))
+                  (t
+                   (let ((next (fset:least *timers*)))
+                     (cond
+                       ((<= (ts next) current-time)
+                        (log:debug "Timestamp is ready: ~a for ~a"
+                                   (ts next) current-time)
+                        (apply #'make-thread (args next))
+                        (setf *timers* (fset:less *timers* next))
+                        (work))
+                       (t
+                        (let ((secs (- (ts next) current-time)))
+                          (log:debug "Sleeping for ~a" secs)
+                          (bt:condition-wait *timer-cv* *timer-lock* :timeout secs))
+                        (work)))))))))
+      (work))))
