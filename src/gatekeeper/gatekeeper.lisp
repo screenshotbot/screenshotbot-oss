@@ -21,6 +21,8 @@
                 #:class-instances)
   (:import-from #:util/store/fset-index
                 #:fset-unique-index)
+  (:import-from #:util/store/store
+                #:defindex)
   (:export
    #:check
    #:create
@@ -34,11 +36,15 @@
    #:show-all))
 (in-package :gatekeeper/gatekeeper)
 
+(defindex +name-index+
+  'fset-unique-index
+  :slot-name 'name)
+
 (with-class-validation
   (defclass gatekeeper (store-object)
     ((name :initarg :name
            :reader gk-name
-           :index-type fset-unique-index
+           :index +name-index+
            :index-reader %gk-with-name
            :index-values all-gks)
      (default-value :initform nil
