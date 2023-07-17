@@ -312,3 +312,12 @@ thread, not a thread itself."
                           (bt:condition-wait *timer-cv* *timer-lock* :timeout secs))
                         (work)))))))))
       (work))))
+
+(def-easy-macro scheduled-future (timeout &rest args &fn fn)
+  (let ((promise (lparallel:promise)))
+    (apply #'schedule-timer timeout
+           (lambda ()
+             (lparallel:fulfill promise
+               (funcall fn)))
+           args)
+    promise))

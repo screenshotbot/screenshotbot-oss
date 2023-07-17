@@ -31,9 +31,6 @@
                 #:channel-repo
                 #:user
                 #:channel)
-  (:import-from #:util/testing
-                #:with-global-kernel
-                #:with-global-binding)
   (:import-from #:screenshotbot/promote-api
                 #:maybe-promote)
   (:import-from #:screenshotbot/model/recorder-run
@@ -77,29 +74,28 @@
 
 (def-fixture state ()
   (with-test-store (:globally t)
-    (with-global-kernel ()
-      (cl-mock:with-mocks ()
-       (with-installation (:globally t)
-         (let* ((company (make-instance 'company))
-                (channel (make-instance 'channel
-                                        :company company
-                                        :github-repo "https://mysite.git/foo.git"))
-                (run (make-recorder-run
-                      :company company
-                      :channel channel
-                      :commit-hash "car"
-                      :merge-base "foo"))
-                (user (make-instance 'user
-                                     :full-name "Arnold"))
-                (another-run (make-recorder-run
-                              :commit-hash "foo"))
-                (promoter (make-instance 'test-promoter)))
-           (&body)))))))
+    (cl-mock:with-mocks ()
+      (with-installation (:globally t)
+        (let* ((company (make-instance 'company))
+               (channel (make-instance 'channel
+                                       :company company
+                                       :github-repo "https://mysite.git/foo.git"))
+               (run (make-recorder-run
+                     :company company
+                     :channel channel
+                     :commit-hash "car"
+                     :merge-base "foo"))
+               (user (make-instance 'user
+                                    :full-name "Arnold"))
+               (another-run (make-recorder-run
+                             :commit-hash "foo"))
+               (promoter (make-instance 'test-promoter)))
+          (&body))))))
 
 (test simple-run-retriever-test
   (with-fixture state ()
     (let ((retriever (make-instance 'run-retriever
-                                    :sleep-fn #'identity)))
+                                    :sleep-time 0)))
       (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd"
                                                     +empty-logger+)))))))
 
@@ -112,7 +108,7 @@
                    :channel channel
                    :commit "abcd")
     (let ((retriever (make-instance 'run-retriever
-                                    :sleep-fn #'identity)))
+                                    :sleep-time 0)))
       (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd"
                                                     +empty-logger+)))))))
 
@@ -165,9 +161,10 @@
                                     :run-retriever (make-instance 'controlled-run-retreiver
                                                                   :promise promise)))
            (done nil)
-           (thread (lparallel:future
-                     (maybe-promote promoter run)
-                     (setf done t))))
+           (thread (bt:make-thread
+                    (lambda ()
+                      (maybe-promote promoter run)
+                      (setf done t)))))
       (loop until (checks promoter)
             for i from 0 to 100
             do (sleep 0.1))
@@ -178,7 +175,7 @@
       (lparallel:fulfill
           promise
         another-run)
-      (lparallel:force thread)
+      (bt:join-thread thread)
 
       (assert-that (checks promoter)
                    (contains (has-typep 'check)

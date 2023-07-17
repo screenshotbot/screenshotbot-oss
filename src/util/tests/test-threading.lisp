@@ -9,6 +9,7 @@
         #:fiveam
         #:util/threading)
   (:import-from #:util/threading
+                #:scheduled-future
                 #:schedule-timer
                 #:*trace-stream*
                 #:max-pool
@@ -256,3 +257,10 @@
                            :done)))))
     (dotimes (i count)
       (is (eql :done (lparallel:force (elt promises i)))))))
+
+(test scheduled-future
+  (is (eql
+       :done
+       (lparallel:force
+        (scheduled-future (0)
+          :done)))))

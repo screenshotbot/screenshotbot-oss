@@ -76,6 +76,8 @@
                 #:run-failed-on-commit-p)
   (:import-from #:util/logger
                 #:format-log)
+  (:import-from #:util/threading
+                #:scheduled-future)
   (:export
    #:check
    #:check-status
@@ -142,9 +144,9 @@
             :accessor check-summary)))
 
 (defclass run-retriever ()
-  ((sleep-fn :initarg :sleep-fn
-             :reader sleep-fn
-             :initform #'sleep)))
+  ((sleep-time :initarg :sleep-time
+               :initform 30
+               :reader sleep-time)))
 
 
 (defun find-last-green-run (channel commit &key (depth 100))
@@ -174,9 +176,10 @@
                ((run-failed-on-commit-p channel base-commit)
                 (failover))
                ((>= retries 0)
-                (lparallel:future
-                  (format-log logger :info "Waiting 30s before checking again for ~a" base-commit)
-                  (funcall (sleep-fn retriever) 30)
+                (format-log logger :info "Waiting ~as before checking again for ~a"
+                            (sleep-time retriever)
+                            base-commit)
+                (scheduled-future ((sleep-time retriever))
                   (lparallel:chain (produce base-commit (1- retries)))))
                (t
                 (failover)))))
