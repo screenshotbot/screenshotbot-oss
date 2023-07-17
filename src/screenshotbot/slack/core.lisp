@@ -34,6 +34,8 @@
                 #:audit-logs-for-company)
   (:import-from #:util/store
                 #:with-class-validation)
+  (:import-from #:util/store/store
+                #:defindex)
   (:export
    #:slack-token
    #:latest-slack-token
@@ -50,6 +52,11 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/slack/core)
 
+(defindex +company-index+
+  'hash-index
+  :slot-name 'company
+  :test 'eql)
+
 (with-class-validation
  (defclass slack-token (store-object)
    ((access-token
@@ -59,8 +66,7 @@
     (company
      :initarg :company
      :accessor slack-token-company
-     :index-type hash-index
-     :index-initargs (:test 'eql)
+     :index +company-index+
      :index-reader slack-tokens-for-company)
     (ts
      :initform (get-universal-time)
