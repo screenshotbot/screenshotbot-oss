@@ -31,6 +31,7 @@
                :util/request
                :util/testing
                :util/fiveam
+               :dexador
                :fiveam-matchers
                :fiveam)
   :components ((:file "test-acceptor-with-plugins")
