@@ -80,7 +80,7 @@
 (markup:deftag google-analytics ()
   #-screenshotbot-oss
   (when (analyticsp (installation))
-    <:script defer data-domain= (installation-domain (installation)) src="https://plausible.io/js/script.js"></:script>))
+    <:script defer data-domain= (installation-domain (installation))  data-api="/api/event" src="/js/script.js"></:script>))
 
 (deftag dashboard-head (&key jquery-ui
                         (title "Screenshotbot")
