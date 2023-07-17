@@ -64,7 +64,6 @@
   (:import-from #:hunchentoot
                 #:single-threaded-taskmaster)
   (:import-from #:util/testing
-                #:with-global-kernel
                 #:with-global-binding
                 #:with-local-acceptor)
   (:import-from #:screenshotbot/replay/services
@@ -127,7 +126,7 @@
 
 (def-fixture state (&key host)
   (with-installation ()
-   (with-global-kernel (:count 2)
+   (with-global-binding ((lparallel:*kernel* nil))
      (with-test-store (:globally t)
        (with-test-globals
          (tmpdir:with-tmpdir (tmpdir)
@@ -271,7 +270,7 @@
 
 (def-fixture state-2 ()
   (with-installation ()
-   (with-global-kernel (:count 2)
+    (with-global-binding ((lparallel:*kernel* nil))
      (with-test-store ()
        (tmpdir:with-tmpdir (tmpdir)
          (cl-mock:with-mocks ()
