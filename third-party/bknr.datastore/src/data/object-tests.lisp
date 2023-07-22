@@ -1,4 +1,9 @@
+(defpackage :bknr.datastore.tests
+  (:use #:cl #:bknr.datastore #:bknr.indices
+        #:fiveam))
 (in-package :bknr.datastore.tests)
+
+(def-suite* :bknr.datastore.tests)
 
 (defun delete-directory (pathname)
   (when (probe-file pathname)
@@ -29,7 +34,16 @@
 
 (defvar *test-datastore* nil)
 
-(define-test-class datastore-test-class)
+(defmacro test-equal (&rest args)
+  `(is (equal ,@args)))
+
+(defmacro test-assert (&rest args)
+  `(is-true ,@args))
+
+(defmacro test-condition (expr (%quote condition))
+  (declare (ignore %quote))
+  `(signals ,condition
+     ,expr))
 
 (defun make-test-store-directory ()
   ;; bknr.utils:make-temporary-pathname does not really return a new
@@ -38,14 +52,14 @@
   ;; that we accept the risk.
   (ensure-directories-exist (format nil "~A/" (bknr.utils:make-temporary-pathname :defaults "/tmp/" :name "store-test"))))
 
-(defmethod run-test :around ((test datastore-test-class) &optional (output *debug-io*))
+(def-fixture datastore-test-class ()
   (let ((directory (make-test-store-directory))
         error)
     (make-instance 'mp-store :directory directory)
     (handler-bind ((error (lambda (e)
                             (declare (ignore e))
                             (setf error t))))
-      (call-next-method))
+      (&body))
     (close-store)
     (if error
         (format output ";; store directory ~A not deleted~%" directory)
@@ -67,16 +81,14 @@
       (restore)
       (test-equal initial-objects (object-classes-and-ids))
       (test-equal next-object-id (bknr.datastore::next-object-id (bknr.datastore::store-object-subsystem))))))
- 
+
 (defmacro defdstest (name args &body body)
   (when args
     (error "unexpected arguments ~A to defdstest ~A" args name))
-  `(setf (gethash ',name *tests*)
-         (make-instance 'datastore-test-class
-                        :unit :datastore
-                        :name ',name
-                        :body (lambda () (do-run-test (lambda () ,@body))))))
- 
+  `(test ,name
+     (with-fixture datastore-test-class ()
+       ,@body)))
+
 (defdstest store-setup ()
   (test-assert *store*))
 
@@ -285,6 +297,3 @@
         (error "abort")))
     (test-equal nil (parent-child parent))
     (test-equal nil (class-instances 'child))))
-
-(defun run-datastore-test (name)
-  (unit-test:run-test (gethash name *tests*)))
