@@ -26,8 +26,9 @@
 			 (:file "indexed-class" :depends-on ("package" "indices"))
 			 (:file "category-index" :depends-on ("package" "protocol" "indices"))))))
 
-(defsystem :bknr.indices/test
+(defsystem :bknr.indices/tests
   :depends-on (:bknr.indices
-               :unit-test)
+               :fiveam
+               :fiveam-matchers)
   :components ((:module "indices"
                         :components ((:file "indices-tests")))))
