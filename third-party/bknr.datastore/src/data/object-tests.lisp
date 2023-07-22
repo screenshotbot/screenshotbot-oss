@@ -187,7 +187,13 @@
   ((child :update :initform nil :initarg nil)))
 
 (define-persistent-class child ()
-  ())
+                         ())
+
+(defclass child-with-index ()
+  ((foo :initarg :foo
+        :index-type unique-index
+        :index-reader child-by-foo))
+  (:metaclass persistent-class))
 
 (defun object-classes-and-ids ()
   "Return a list of conses with the car being a class name and the cdr
@@ -297,3 +303,17 @@
         (error "abort")))
     (test-equal nil (parent-child parent))
     (test-equal nil (class-instances 'child))))
+
+(defdstest abort-anonymous-transaction-for-indices ()
+  (let ((parent (make-instance 'parent :child nil)))
+    (ignore-errors
+      (with-transaction (:abort)
+        (setf (parent-child parent) (make-instance 'child-with-index :foo 2))
+        (error "abort")))
+    (test-equal nil (parent-child parent))
+    (test-equal nil (class-instances 'child-with-index))
+    ;; This fails: Even though we've rolled back the creation of
+    ;; object, we haven't rolled back the indices to their previous
+    ;; state. -- Arnold
+    #+nil
+    (test-equal nil (child-by-foo 2))))
