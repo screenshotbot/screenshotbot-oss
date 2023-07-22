@@ -49,8 +49,12 @@
   (clean-up-screenshotbot-screenshots))
 
 (defun find-tests ()
-  (let* ((pathname "src/")
-         (index (ql::ensure-system-index pathname)))
+  (append
+   (%find-tests "src/")
+   (%find-tests "third-party/bknr.datastore/")))
+
+(defun %find-tests (pathname)
+  (let* ((index (ql::ensure-system-index pathname)))
     (when index
       (with-open-file (stream index)
         (remove-if 'null
