@@ -56,14 +56,15 @@
   (let ((directory (make-test-store-directory))
         error)
     (make-instance 'mp-store :directory directory)
-    (handler-bind ((error (lambda (e)
-                            (declare (ignore e))
-                            (setf error t))))
-      (&body))
-    (close-store)
-    (if error
-        (format output ";; store directory ~A not deleted~%" directory)
-        (delete-directory directory))))
+    (unwind-protect
+         (handler-bind ((error (lambda (e)
+                                 (declare (ignore e))
+                                 (setf error t))))
+           (&body))
+      (close-store)
+      (if error
+          (format output ";; store directory ~A not deleted~%" directory)
+          (delete-directory directory)))))
 
 (defvar *tests* (make-hash-table))
 
