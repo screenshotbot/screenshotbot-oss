@@ -1,36 +1,14 @@
 (defpackage :bknr.datastore.tests
   (:use #:cl #:bknr.datastore #:bknr.indices
-        #:fiveam))
+        #:fiveam
+        #:fiveam-matchers))
 (in-package :bknr.datastore.tests)
 
 (def-suite* :bknr.datastore.tests)
 
 (defun delete-directory (pathname)
   (when (probe-file pathname)
-    #+cmu
-    (loop for file in (directory pathname)
-       when (pathname-name file)
-       do (delete-file file)
-       unless (pathname-name file)
-       do (delete-directory file))
-    #+allegro
-    (excl:delete-directory-and-files pathname)
-    #+cmu
-    (unix:unix-rmdir (namestring pathname))
-    #+sbcl
-    (loop for file in (directory
-                       (merge-pathnames
-                        (make-pathname
-                         :name    :wild
-                         :type    :wild
-                         :version :wild)
-                        pathname))
-       when (pathname-name file) do (delete-file file)
-       unless (pathname-name file) do (delete-directory file))
-    #+sbcl
-    (sb-posix:rmdir (namestring pathname))
-    #+openmcl
-    (ccl::recursive-delete-directory pathname)))
+    (fad:delete-directory-and-files pathname)))
 
 (defvar *test-datastore* nil)
 
@@ -209,6 +187,13 @@
   (with-transaction (:make)
     (make-instance 'parent :child (make-instance 'child))))
 
+(defdstest circular-in-anon-txn-without-serialization ()
+  (let ((parent (make-instance 'parent)))
+    (with-transaction (:circular)
+      (setf (parent-child parent) (make-instance 'child))))
+  (test-equal (find-class 'child)
+              (class-of (parent-child (first (class-instances 'parent))))))
+
 (defdstest serialize-circular-in-anon-txn ()
   (let ((parent (make-instance 'parent)))
     (with-transaction (:circular)
@@ -302,9 +287,18 @@
       (with-transaction (:abort)
         (setf (parent-child parent) (make-instance 'child))
         (error "abort")))
-    (test-equal nil (parent-child parent))
-    (test-equal nil (class-instances 'child))))
+    ;; The old behavior was to to abort the whole transaction, the new
+    ;; one will still play out any intermediate transactions.
+    (is-true (parent-child parent))
+    (assert-that (class-instances 'child)
+                 (has-length 1))))
 
+(defdstest ensure-setf-slot-value-returns-newval ()
+  (let ((parent (make-instance 'parent :child nil)))
+    (let ((child (setf (parent-child parent) (make-instance 'child))))
+      (is (eql child (car (class-instances 'child)))))))
+
+#+nil
 (defdstest abort-anonymous-transaction-for-indices ()
   (let ((parent (make-instance 'parent :child nil)))
     (ignore-errors

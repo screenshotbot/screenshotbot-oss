@@ -35,8 +35,13 @@
                                             (:file "blob" :depends-on ("txn" "object" "package"))))))
 
 (defsystem :bknr.datastore/tests
-    :depends-on (:bknr.datastore :fiveam :cl-store :bknr.utils)
-    :components ((:module "data" :components ((:file "encoding-test")
+  :depends-on (:bknr.datastore
+               :fiveam
+               :cl-store
+               :bknr.utils
+               :cl-fad
+               :fiveam-matchers)
+  :components ((:module "data" :components ((:file "encoding-test")
                                               (:file "object-tests")))))
 
 (defmethod asdf:perform ((op asdf:test-op) (system (eql (find-system :bknr.datastore))))

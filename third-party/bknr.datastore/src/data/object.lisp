@@ -110,39 +110,30 @@ reads will return nil.")))
       (slot-makunbound object slot-name)
       (setf (slot-value object slot-name) value)))
 
-(defmethod (setf slot-value-using-class) :before ((newval t)
+(defmethod (setf slot-value-using-class) :around ((newval t)
                                                   (class persistent-class)
                                                   object
                                                   (slotd persistent-effective-slot-definition))
-  (unless (transient-slot-p slotd)
-    (let ((slot-name (slot-definition-name slotd)))
-      (unless (or (in-transaction-p)
-                  (member slot-name '(last-change id)))
-        (error 'persistent-slot-modified-outside-of-transaction :slot-name slot-name :object object))
-      (when (in-anonymous-transaction-p)
-        (push (list #'undo-set-slot
-                    object
-                    (slot-definition-name slotd)
-                    (if (slot-boundp object (slot-definition-name slotd))
-                        (slot-value object (slot-definition-name slotd))
-                        'unbound))
-              (anonymous-transaction-undo-log *current-transaction*)))
-      (when (and (not (eq :restore (store-state *store*)))
-                 (not (member slot-name '(last-change id))))
-        (setf (slot-value object 'last-change) (current-transaction-timestamp))))))
+  (let ((slot-name (slot-definition-name slotd)))
+    (cond
+      ((or
+        (in-transaction-p)
+        (transient-slot-p slotd)
+        (member slot-name '(last-change id))
+        ;; If we're restoring then we don't need to create a new transaction
+        (eq :restore (store-state *store*)))
+       (call-next-method))
+     (t
+      ;; If we're not in a transaction, or this is not a transient
+      ;; slot, we don't make the change directly, instead we just
+      ;; create a transaction for it. The transaction should call
+      ;; slot-value-using-class again.
+      (execute (make-instance 'transaction
+                              :function-symbol 'tx-change-slot-values
+                              :timestamp (get-universal-time)
+                              :args (list object (slot-definition-name slotd) newval)))
+      newval))))
 
-(defmethod (setf slot-value-using-class) :after (newval
-                                                 (class persistent-class)
-                                                 object
-                                                 (slotd persistent-effective-slot-definition))
-  (when (and (not (transient-slot-p slotd))
-             (in-anonymous-transaction-p)
-             (not (member (slot-definition-name slotd) '(last-change id))))
-    (encode (make-instance 'transaction
-                           :timestamp (transaction-timestamp *current-transaction*)
-                           :function-symbol 'tx-change-slot-values
-                           :args (list object (slot-definition-name slotd) newval))
-            (anonymous-transaction-log-buffer *current-transaction*))))
 
 (define-condition transient-slot-cannot-have-initarg (store-error)
   ((class :initarg :class)

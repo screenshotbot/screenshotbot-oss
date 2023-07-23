@@ -51,8 +51,8 @@
       (is (eql :arg (obj-value obj))))
     (let ((obj (make-instance 'obj)))
       (is (typep obj 'abstract-obj))
-      (signals error
-        (setf (obj-value obj) :arg))
+      (setf (obj-value obj) :arg)
+      (is (eql :arg (obj-value obj)))
       (with-transaction ()
         (setf (obj-value obj) :arg2))
       (is (eql :arg2 (obj-value obj))))))

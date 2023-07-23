@@ -617,8 +617,12 @@ transaction, if any."
              :original-error e))))
 
 (defun do-with-transaction (label thunk)
+  (with-store-guard ()
+    (funcall thunk))
+  #+nil
   (when (in-transaction-p)
     (error 'anonymous-transaction-in-transaction))
+  #+nil
   (let ((txn (make-instance 'anonymous-transaction :label label))
         (next-object-id (next-object-id (store-object-subsystem))))
     (with-transaction-log (txn)
