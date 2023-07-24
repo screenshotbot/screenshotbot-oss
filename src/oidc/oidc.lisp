@@ -92,7 +92,10 @@
          (let ((url (format nil "~a/.well-known/openid-configuration"
                             (check-https
                              (issuer oidc)))))
-      (json:decode-json-from-string (dex:get url))))))
+           (let ((ret
+                   (json:decode-json-from-string (dex:get url))))
+             (log:info "Got ~S~%" ret)
+             ret)))))
 
 
 (defmethod authorization-endpoint ((oidc oidc))

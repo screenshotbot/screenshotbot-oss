@@ -11,6 +11,7 @@
                 #:google-domain
                 #:google-oauth-provider)
   (:import-from #:oidc/oidc
+                #:discover
                 #:verify-userinfo
                 #:make-oidc-auth-link)
   (:import-from #:util/testing
@@ -18,45 +19,61 @@
   (:import-from #:auth
                 #:with-sessions)
   (:import-from #:alexandria
-                #:assoc-value))
+                #:assoc-value)
+  (:import-from #:util/mock-recording
+                #:with-recording))
 (in-package :screenshotbot/login/test-google-oauth)
 
 (util/fiveam:def-suite)
 
+(def-fixture state ()
+  (&body))
+
+
+(defclass test-google-oauth-provider (google-oauth-provider)
+  ())
+
+(defmethod discover ((self test-google-oauth-provider))
+  `((:ISSUER . "https://accounts.google.com") (:AUTHORIZATION--ENDPOINT . "https://accounts.google.com/o/oauth2/v2/auth") (:DEVICE--AUTHORIZATION--ENDPOINT . "https://oauth2.googleapis.com/device/code") (:TOKEN--ENDPOINT . "https://oauth2.googleapis.com/token") (:USERINFO--ENDPOINT . "https://openidconnect.googleapis.com/v1/userinfo") (:REVOCATION--ENDPOINT . "https://oauth2.googleapis.com/revoke") (:JWKS--URI . "https://www.googleapis.com/oauth2/v3/certs") (:RESPONSE--TYPES--SUPPORTED "code" "token" "id_token" "code token" "code id_token" "token id_token" "code token id_token" "none") (:SUBJECT--TYPES--SUPPORTED "public") (:ID--TOKEN--SIGNING--ALG--VALUES--SUPPORTED "RS256") (:SCOPES--SUPPORTED "openid" "email" "profile") (:TOKEN--ENDPOINT--AUTH--METHODS--SUPPORTED "client_secret_post" "client_secret_basic") (:CLAIMS--SUPPORTED "aud" "email" "email_verified" "exp" "family_name" "given_name" "iat" "iss" "locale" "name" "picture" "sub") (:CODE--CHALLENGE--METHODS--SUPPORTED "plain" "S256") (:GRANT--TYPES--SUPPORTED "authorization_code" "refresh_token" "urn:ietf:params:oauth:grant-type:device_code" "urn:ietf:params:oauth:grant-type:jwt-bearer")))
+
 (test make-oidc-auth-link-for-google
-  (let ((provider (make-instance 'google-oauth-provider
-                                 :client-id "foobar"
-                                 :client-secret "barbar"
-                                 :domain "example.com")))
-    (with-fake-request ()
-      (with-sessions ()
-       (let ((uri (make-oidc-auth-link provider "https://foobar.com")))
-         (is (stringp uri))
-         (let* ((uri (quri:uri uri))
-                (params (quri:uri-query-params uri)))
-           (is (equal "foobar" (assoc-value params "client_id" :test #'equal)))
-           (is (equal "example.com" (assoc-value params "hd" :test #'equal)))))))))
+  (with-fixture state ()
+    (let ((provider (make-instance 'test-google-oauth-provider
+                                   :client-id "foobar"
+                                   :client-secret "barbar"
+                                   :domain "example.com")))
+      (with-fake-request ()
+        (with-sessions ()
+          (let ((uri (make-oidc-auth-link provider "https://foobar.com")))
+            (is (stringp uri))
+            (let* ((uri (quri:uri uri))
+                   (params (quri:uri-query-params uri)))
+              (is (equal "foobar" (assoc-value params "client_id" :test #'equal)))
+              (is (equal "example.com" (assoc-value params "hd" :test #'equal))))))))))
 
 
 (test default-domain-is-nil
   "It's very likely we change the default domain for local testing, we
 want to make sure we don't accidently push that change."
-  (let ((provider (make-instance 'google-oauth-provider)))
-    (is (null (google-domain provider)))))
+  (with-fixture state ()
+   (let ((provider (make-instance 'google-oauth-provider)))
+     (is (null (google-domain provider))))))
 
 (test verify-userinfo-for-google
-  (let ((provider (make-instance 'google-oauth-provider
-                                 :domain nil)))
-    (finishes
-     (verify-userinfo
-      provider nil))))
+  (with-fixture state ()
+   (let ((provider (make-instance 'google-oauth-provider
+                                  :domain nil)))
+     (finishes
+       (verify-userinfo
+        provider nil)))))
 
 (test verify-userinfo-for-google-with-domain
-  (let ((provider (make-instance 'google-oauth-provider
-                                 :domain "example.com")))
-    (finishes
-     (verify-userinfo
-      provider `((:hd . "example.com"))))
-    (signals simple-error
-      (verify-userinfo
-       provider `((:hd . "foo.com"))))))
+  (with-fixture state ()
+   (let ((provider (make-instance 'google-oauth-provider
+                                  :domain "example.com")))
+     (finishes
+       (verify-userinfo
+        provider `((:hd . "example.com"))))
+     (signals simple-error
+       (verify-userinfo
+        provider `((:hd . "foo.com")))))))
