@@ -312,3 +312,14 @@
     ;; state. -- Arnold
     #+nil
     (test-equal nil (child-by-foo 2))))
+
+(bknr.datastore:deftransaction tx-set-child (parent child)
+  (setf (parent-child parent) child))
+
+(defdstest set-slot-from-within-txn ()
+  (let ((parent (make-instance 'parent))
+        (child (make-instance 'child)))
+    (tx-set-child parent child)
+    (is (eql child (parent-child parent)))
+    (restore)
+    (is (eql child (parent-child parent)))))
