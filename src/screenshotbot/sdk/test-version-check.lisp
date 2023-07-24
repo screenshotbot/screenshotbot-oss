@@ -21,8 +21,13 @@
 
 (util/fiveam:def-suite)
 
+(def-fixture state ()
+  (let ((auto-restart:*global-enable-auto-retries-p* nil))
+    (cl-mock:with-mocks ()
+      (&body))))
+
 (test get-version
-  (cl-mock:with-mocks ()
+  (with-fixture state ()
     (answer (http-request "https://api.screenshotbot.io/api/version"
                           :want-string t)
       (values "{\"version\":1}" 200))
@@ -30,14 +35,14 @@
 
 #-sbcl ;; See D7222. Temporary fix until we can see what's going on with this.
 (test get-version-404
-  (cl-mock:with-mocks ()
-    #+nil(answer (http-request "https://www.google.com/api/version"
+  (with-fixture state ()
+    (answer (http-request "https://www.google.com/api/version"
                           :want-string t)
-      "{\"version\":1}")
+      (values "" 404))
     (is (eql 1 (get-version "https://www.google.com")))))
 
 (test with-version-check
-  (cl-mock:with-mocks ()
+  (with-fixture state ()
     (answer (get-version "https://api.screenshotbot.io")
       189)
     (let ((ans))
