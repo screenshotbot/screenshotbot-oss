@@ -13,10 +13,19 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:alexandria
-                #:when-let))
+                #:when-let)
+  (:import-from #:util/timeago
+                #:timeago))
 (in-package :screenshotbot/admin/site-info)
 
 (markup:enable-reader)
+
+(defvar *boot-time* (get-universal-time))
+
+#+lispworks
+(lw:define-action "When starting image" "Update boot time"
+  (lambda ()
+    (setf *boot-time* (get-universal-time))))
 
 (defun safe-symbol-value (&rest args)
   (when-let (sym (apply #'uiop:find-symbol* args))
@@ -40,6 +49,7 @@
 
       <li>Debug-io: ,(format nil "~s" *debug-io*)</li>
       <li>PID: ,(progn #+linux (util/posix:getpid))</li>
+      <li>Booted at: ,(timeago :time *boot-time*)</li>
       <li>Slynk port: ,(safe-symbol-value "*ACTUAL-SLYNK-PORT*"   "SERVER/SLYNK-PREPARER" )</li>
     </ul>
   </admin-app-template>)
