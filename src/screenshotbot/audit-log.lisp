@@ -28,6 +28,8 @@
                 #:with-transaction)
   (:import-from #:util/store/fset-index
                 #:fset-set-index)
+  (:import-from #:util/store/store
+                #:defindex)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:base-audit-log
@@ -37,10 +39,14 @@
    #:audit-log-company))
 (in-package :screenshotbot/audit-log)
 
+(defindex +company-index+
+  'fset-set-index
+  :slot-name '%%company)
+
 (with-class-validation
   (defclass base-audit-log (store-object)
     ((%%company :initarg :company
-                :index-type fset-set-index
+                :index +company-index+
                 :index-reader %audit-logs-for-company
                 :reader audit-log-company)
      (%%err :initarg :error
