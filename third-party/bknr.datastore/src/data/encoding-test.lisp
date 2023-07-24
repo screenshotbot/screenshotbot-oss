@@ -164,7 +164,7 @@
 (test-encoding array.3
                (make-array '(2 2) :element-type 'fixnum :initial-element 3))
 
-(test-encoding (array.3b :skip "will be fixed later - http://trac.common-lisp.net/bknr/ticket/31")
+(test-encoding (array.3b)
                (make-array '(2 2) :element-type '(mod 10) :initial-element 3))
 
 (test-encoding array.4
