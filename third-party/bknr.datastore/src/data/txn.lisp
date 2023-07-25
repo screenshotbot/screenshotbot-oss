@@ -530,7 +530,8 @@ to the log file in an atomic group"))
 
 (defmethod execute-transaction ((store store) (transaction transaction))
   (with-statistics-log (*transaction-statistics* (transaction-function-symbol transaction))
-    (with-transaction-log (transaction)
+                       (with-transaction-log (transaction)
+
       (execute-unlogged transaction))))
 
 (defun execute (transaction)
