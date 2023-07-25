@@ -618,20 +618,7 @@ transaction, if any."
 
 (defun do-with-transaction (label thunk)
   (with-store-guard ()
-    (funcall thunk))
-  #+nil
-  (when (in-transaction-p)
-    (error 'anonymous-transaction-in-transaction))
-  #+nil
-  (let ((txn (make-instance 'anonymous-transaction :label label))
-        (next-object-id (next-object-id (store-object-subsystem))))
-    (with-transaction-log (txn)
-      (handler-case
-          (funcall thunk)
-        (error (e)
-          (setf (next-object-id (store-object-subsystem)) next-object-id)
-          (anonymous-transaction-undo txn)
-          (error e))))))
+    (funcall thunk)))
 
 (defmacro with-transaction ((&optional label) &body body)
   `(do-with-transaction ,(if (symbolp label) (symbol-name label) label)
