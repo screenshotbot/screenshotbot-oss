@@ -529,10 +529,8 @@ to the log file in an atomic group"))
 (defvar *transaction-statistics* (make-statistics-table))
 
 (defmethod execute-transaction ((store store) (transaction transaction))
-  (with-statistics-log (*transaction-statistics* (transaction-function-symbol transaction))
-                       (with-transaction-log (transaction)
-
-      (execute-unlogged transaction))))
+  (with-transaction-log (transaction)
+    (execute-unlogged transaction)))
 
 (defun execute (transaction)
   "Interface routine to execute a transaction, called through

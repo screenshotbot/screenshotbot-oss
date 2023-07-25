@@ -342,7 +342,7 @@ to the directory that was just snapshotted.")
 
 (cl-cron:make-cron-job 'cron-snapshot
                         :minute 0
-                        :hour 6
+                        :step-hour 6
                         :hash-key 'cron-snapshot)
 
 (cl-cron:make-cron-job 'delete-old-snapshots

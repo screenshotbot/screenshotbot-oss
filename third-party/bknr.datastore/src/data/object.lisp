@@ -230,29 +230,68 @@ reads will return nil.")))
 #+allegro
 (aclmop::finalize-inheritance (find-class 'store-object))
 
-(defmethod initialize-instance :around ((object store-object) &rest initargs &key)
-  (setf (slot-value object 'id) (allocate-next-object-id))
+(defmethod fix-make-instance-args ((class persistent-class)
+                               initargs)
+  (list*
+   class
+   (append
+    (list :id (allocate-next-object-id))
+    initargs
+    (let ((used-keys (loop for key in initargs by #'cddr
+                           collect key)))
+      (loop for initarg in (closer-mop:class-default-initargs class)
+            unless (member (first initarg)
+                           used-keys)
+              appending (list
+                         (first initarg)
+                         (funcall (third initarg))))))))
+
+(defmethod make-instance :around ((class persistent-class) &rest initargs
+                                  &key
+                                    id)
+  "There are three ways make-instance can be called:
+
+   * Outside of a transaction, in which case we have to encode a
+     transaction, but also use default-initargs
+
+   * Inside a deftransaction, in which case we use default-initargs
+     immediately, but don't encode a transaction
+
+   * When commiting or replaying a transaction. As with the last
+     case (in-transaction-p) will be true here, but :id will truthy
+     since we have already processed default-initargs.
+"
   (cond
-    ((not (in-transaction-p))
-     (with-store-guard ()
-       (let ((transaction (make-instance 'transaction
-                                         :function-symbol 'make-instance
-                                         :timestamp (get-universal-time)
-                                         :args (cons (class-name (class-of object))
-                                                     (append (list :id (slot-value object 'id))
-                                                             initargs)))))
-         (with-statistics-log (*transaction-statistics* (transaction-function-symbol transaction))
-           (with-transaction-log (transaction)
-             (call-next-method))))))
-    ((in-anonymous-transaction-p)
-     (encode (make-instance 'transaction
-                            :function-symbol 'make-instance
-                            :timestamp (transaction-timestamp *current-transaction*)
-                            :args (cons (class-name (class-of object)) initargs))
-             (anonymous-transaction-log-buffer *current-transaction*))
-     (call-next-method))
+    ((or
+      (in-transaction-p)
+      (eq :restore (store-state *store*)))
+     (cond
+       (id
+        ;; This is a nested call from the transaction execution or
+        ;; from a restore.
+        (when (<= id (next-object-id (store-object-subsystem)))
+          (mp-with-lock-held (*allocate-object-id-lock*)
+            (setf (next-object-id (store-object-subsystem))
+                  (max
+                   (next-object-id (store-object-subsystem))
+                   (1+ id)))))
+        (call-next-method))
+       (t
+        (apply #'call-next-method
+               (fix-make-instance-args class initargs)))))
     (t
-     (call-next-method))))
+     (with-store-guard ()
+       (let ((transaction
+               (destructuring-bind (class . args)
+                   (fix-make-instance-args
+                    class initargs)
+                (make-instance 'transaction
+                               :function-symbol 'make-instance
+                               :timestamp (get-universal-time)
+                               :args (list*
+                                      (class-name class)
+                                      args)))))
+         (execute transaction))))))
 
 (defvar *allocate-object-id-lock* (bt:make-lock "Persistent Object ID Creation"))
 

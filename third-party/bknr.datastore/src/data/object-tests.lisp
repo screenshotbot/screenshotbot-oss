@@ -323,3 +323,63 @@
     (is (eql child (parent-child parent)))
     (restore)
     (is (eql child (parent-child parent)))))
+
+
+(defclass object-with-init (store-object)
+  ((arg :initarg :arg
+        :reader arg))
+  (:metaclass persistent-class)
+  (:default-initargs :arg (+ 1 1)))
+
+(deftransaction tx-make-object ()
+  (make-instance 'object-with-init))
+
+(deftransaction tx-make-object-with-arg (arg)
+  (make-instance 'object-with-init :arg arg))
+
+(defdstest default-initargs-is-parsed ()
+  (let ((obj (make-instance 'object-with-init)))
+    (is (eql 2 (arg obj))))
+  (let ((obj (tx-make-object)))
+    (is (eql 2 (arg obj))))
+  (assert-that (mapcar #'arg (class-instances 'object-with-init))
+               (contains 2 2))
+  (restore)
+  (assert-that (mapcar #'arg (class-instances 'object-with-init))
+               (contains 2 2)))
+
+(defdstest default-initargs-doesnt-ignore-args ()
+  (let ((obj (make-instance 'object-with-init :arg 5)))
+    (is (eql 5 (arg obj))))
+  (let ((obj (tx-make-object-with-arg 5)))
+    (is (eql 5 (arg obj))))
+  (assert-that (mapcar #'arg (class-instances 'object-with-init))
+               (contains 5 5))
+  (restore)
+  (assert-that (mapcar #'arg (class-instances 'object-with-init))
+               (contains 5 5)))
+
+(defclass object-with-ensure-init (store-object)
+  ((arg :initarg :arg
+        :reader arg))
+  (:metaclass persistent-class)
+  (:default-initargs :arg (error "must specify :arg")))
+
+(deftransaction tx-make-object-with-ensure-init (arg)
+  (make-instance 'object-with-ensure-init :arg arg))
+
+(defdstest default-initargs-with-overrident-must-behave ()
+  (let ((obj (make-instance 'object-with-ensure-init :arg 5)))
+    (is (eql 5 (arg obj))))
+  (let ((obj (tx-make-object-with-ensure-init 5)))
+    (is (eql 5 (arg obj))))
+
+  (assert-that (mapcar #'arg (class-instances 'object-with-ensure-init))
+               (contains 5 5))
+  (restore)
+  (assert-that (mapcar #'arg (class-instances 'object-with-ensure-init))
+               (contains 5 5))
+  (signals error
+    (make-instance 'object-with-ensure-init))
+  (assert-that (mapcar #'arg (class-instances 'object-with-ensure-init))
+               (contains 5 5)))
