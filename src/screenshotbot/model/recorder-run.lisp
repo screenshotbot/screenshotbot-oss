@@ -185,7 +185,7 @@
       :accessor recorder-previous-run
       :documentation "The previous *ACTIVE* run. Unpromoted runs aren't tracked on the channel, because often the reason it's unpromoted means that we don't understand if it belongs to the channel. If there are multile previous-runs for different branches, this will always point to the previous run on master branch.")
      (create-github-issue-p
-      :initform t
+      :initform nil
       :initarg :create-github-issue-p
       :accessor create-github-issue-p)
      (trunkp
