@@ -242,18 +242,7 @@ to the directory that was just snapshotted.")
                                (let ((objs (all-objects)))
                                  (when objs
                                    (error "At the end of the test some objects were not deleted: ~s" objs))))
-                          (let ((classes-to-clean
-                                  (fset:convert
-                                   'fset:set
-                                   (mapcar #'class-of (bknr.datastore:all-store-objects)))))
-                            (let ((store *store*))
-                              (close-store)
-                              (bknr.datastore::close-store-object store))
-
-                            (fset:do-set (class classes-to-clean)
-                              (mapc
-                               #'clear-slot-indices
-                               (closer-mop:class-slots class))))))))
+                          (clear-indices-for-tests)))))
              (cond
                (dir
                 (call-with-dir dir))
@@ -271,6 +260,20 @@ to the directory that was just snapshotted.")
        (let ((*store* nil)
              (util/store::*object-store* nil))
          (inner-work))))))
+
+(defun clear-indices-for-tests ()
+  (let ((classes-to-clean
+          (fset:convert
+           'fset:set
+           (mapcar #'class-of (bknr.datastore:all-store-objects)))))
+    (let ((store *store*))
+      (close-store)
+      (bknr.datastore::close-store-object store))
+
+    (fset:do-set (class classes-to-clean)
+      (mapc
+       #'clear-slot-indices
+       (closer-mop:class-slots class)))))
 
 (defun prepare-store ()
   (make-instance 'safe-mp-store
