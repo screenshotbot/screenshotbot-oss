@@ -18,6 +18,7 @@
   (:import-from #:util/misc
                 #:safe-ensure-directories-exist)
   (:import-from #:util/threading
+                #:with-extras
                 #:make-thread
                 #:max-pool
                 #:ignore-and-log-errors)
@@ -48,6 +49,10 @@
   (let ((*s3-endpoint* (endpoint store))
         (*credentials* store))
     (funcall fn)))
+
+(defmethod upload-file :around (store file key)
+  (with-extras (("s3-key" key))
+    (call-next-method)))
 
 (auto-restart:with-auto-restart (:retries 3 :sleep 5)
   (defmethod upload-file ((store s3-store) file key)
