@@ -253,6 +253,7 @@ Disallow: /n")))
 (defmacro with-login ((&key (needs-login t) (signup nil)
                          (company nil)
                          (ensure-prepared t)
+                         (allow-url-redirect nil)
                          (alert nil)) &body body)
   ;; server-with-login is implemented in login/common.lisp
   `(server-with-login (lambda () ,@body)
@@ -260,6 +261,7 @@ Disallow: /n")))
                       :signup ,signup
                       :company ,company
                       :ensure-prepared ,ensure-prepared
+                      :allow-url-redirect ,allow-url-redirect
                       :alert ,alert))
 
 (defhandler (nil :uri "/") ()

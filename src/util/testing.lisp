@@ -48,7 +48,8 @@
   (:default-initargs :acceptor-plugins (list (make-instance 'nibble-plugin))))
 
 (defmacro with-fake-request ((&key  (acceptor '(quote test-acceptor)) (host "localhost")
-                                (script-name "/")) &body body)
+                                (script-name "/")
+                                (params)) &body body)
  `(let* ((hunchentoot::*hunchentoot-stream*)
          (hunchentoot:*catch-errors-p* nil)
          (hunchentoot:*acceptor* (make-instance ,acceptor))

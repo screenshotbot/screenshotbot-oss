@@ -106,7 +106,8 @@
        ((can-public-view run)
         (render))
        (t
-        (with-login (:company (recorder-run-company run))
+        (with-login (:company (recorder-run-company run)
+                     :allow-url-redirect t)
           (render)))))))
 
 (deftag page-nav-dropdown (children &key title)

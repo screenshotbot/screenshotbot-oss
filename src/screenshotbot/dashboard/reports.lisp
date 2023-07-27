@@ -89,6 +89,7 @@
           </simple-card-page>)
          (t
           (with-login (:needs-login (not (can-public-view report))
+                       :allow-url-redirect t
                        :company (report-company report))
             (render-report-page report))))))))
 

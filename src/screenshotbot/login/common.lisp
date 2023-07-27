@@ -105,6 +105,9 @@
 
 
 (defun server-with-login (fn &key needs-login signup alert company
+                           ;; Redirect a GET request back to the
+                           ;; original URL instead of a nibble.
+                           (allow-url-redirect nil)
                            ;; Sometimes, for instance for the invite
                            ;; flow, we want to get a callback before
                            ;; the user is prepared.
@@ -129,8 +132,15 @@
       (funcall
        (if signup #'signup-get #'signin-get)
        :alert alert
-       :redirect (nibble ()
-                   (funcall fn))))
+       :redirect
+       (cond
+         ((and
+           allow-url-redirect
+           (eql :get (hunchentoot:request-method*)))
+          (hunchentoot:request-uri*))
+         (t
+          (nibble (:name :after-login)
+            (funcall fn))))))
      (t
       (funcall fn)))))
 

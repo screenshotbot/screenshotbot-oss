@@ -6,7 +6,8 @@
 
 (defpackage :screenshotbot/login/test-common
   (:use #:cl
-        #:fiveam)
+        #:fiveam
+        #:fiveam-matchers)
   (:import-from #:screenshotbot/installation
                 #:multi-org-feature
                 #:installation
@@ -24,12 +25,19 @@
                 #:user-personal-company
                 #:make-user)
   (:import-from #:screenshotbot/login/common
+                #:signin-get
                 #:most-recent-company
                 #:guess-best-company)
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run)
   (:import-from #:bknr.datastore
                 #:with-transaction)
+  (:import-from #:screenshotbot/server
+                #:server-with-login)
+  (:import-from #:screenshotbot/testing
+                #:with-installation)
+  (:import-from #:util/testing
+                #:with-fake-request)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/login/test-common)
 
@@ -37,9 +45,10 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-    (cl-mock:with-mocks ()
-      (&body))))
+  (with-installation ()
+   (with-test-store ()
+     (cl-mock:with-mocks ()
+       (&body)))))
 
 (test current-company-for-common
   (with-fixture state ()
@@ -71,3 +80,29 @@
                      :screenshot-map nil
                      :company company-1)))
         (is (eql company-1 (most-recent-company (list company-1))))))))
+
+(test server-with-login-happy-path
+  (with-fixture state ()
+    (let ((last-redirect))
+      (cl-mock:if-called 'signin-get
+                         (lambda (&key alert redirect)
+                           (setf last-redirect redirect)))
+      (server-with-login
+       (lambda () "foo")
+       :needs-login t)
+      (assert-that last-redirect
+                   (has-typep 'nibble:nibble)))))
+
+(test server-with-login-with-allowing-url-redirect
+  (with-fixture state ()
+    (let ((last-redirect))
+      (cl-mock:if-called 'signin-get
+                         (lambda (&key alert redirect)
+                           (setf last-redirect redirect)))
+      (with-fake-request (:script-name "/foo/bar")
+        (server-with-login
+         (lambda () "foo")
+         :allow-url-redirect t
+         :needs-login t))
+      (assert-that last-redirect
+                   (is-equal-to "/foo/bar")))))
