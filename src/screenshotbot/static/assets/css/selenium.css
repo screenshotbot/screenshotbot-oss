@@ -1,3 +1,7 @@
+/* This is not the same as pro/replay/static/css/replay.css! This one
+   is used for testing screenshotbot itself, whereas the other is for
+   testing external pages. */
+
 * {
  transition-property: none !important;
  -o-transition-property: none !important;
