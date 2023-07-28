@@ -587,6 +587,9 @@
                                  :custom-css (custom-css build)
                                  :channel (web-project-name build)
                                  :host host
+                                 :sleep (if (gk:check :replay-long-sleep company)
+                                            3
+                                            0.5)
                                  :browser-configs
                                  (loop for browser in (browsers build)
                                        collect
