@@ -33,6 +33,8 @@
                 #:nibble)
   (:import-from #:screenshotbot/events
                 #:push-event)
+  (:import-from #:oidc/oidc
+                #:logout-link)
   (:export
    #:client-id
    #:client-secret
@@ -179,4 +181,11 @@ user as used in Screenshotbot)"
 
 (defmethod oauth-logo-svg ((auth oidc-provider))
   (declare (ignore auth))
+  nil)
+
+
+(defmethod logout-link ((self oidc-provider))
+  "See https://docs.aws.amazon.com/cognito/latest/developerguide/logout-endpoint.html.
+
+In particular this means that /cognito/logout-confirmation must be in your 'Allowed sign-out URLs'"
   nil)
