@@ -588,7 +588,7 @@
                                  :channel (web-project-name build)
                                  :host host
                                  :sleep (if (gk:check :replay-long-sleep company)
-                                            3
+                                            5
                                             0.5)
                                  :browser-configs
                                  (loop for browser in (browsers build)
