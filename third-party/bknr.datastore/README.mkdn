@@ -13,8 +13,15 @@ very fantastic bknr.datastore.
   - In particular, we no longer support rollbacks
   - WITH-TRANSACTION is generally complicated, difficult for a n00b to understand, and has a lot of rough edges (for instance, it does not rollback changes to indices)
   - But, it also enabled an easy way to batch multiple IO requests. Without WITH-TRANSACTION, the only way to batch IO requests is to create an explicit named transaction.
-  - Removing the ability of rollbacks also allows us to implement things like Raft replication protocol for High Availability situations.
+  - Removing the ability of rollbacks also allows us to implement things like Raft consensus protocol for High Availability situations.
 * There are probably bunch of other small changes in here that have accumulated over time.
+
+# Planned changes from OG version
+
+* Asynchronous snapshots
+* Getting rid of skip-lists and replacing with fset. (required for async snapshots)
+* There's a bug somewhere that makes indexes fail during hot reloads. This bug is non-deterministic and has been bugging me for years. The workaround is to never define an index on a slot using `:index-type ...`. Instead define an index in a `defvar` and then use `:index *my-index*`.
+* bknr.cluster... will be a separate repository but we'll continually make changes to bknr.datastore to support it.
 
 # installing through quicklisp
 
