@@ -15,7 +15,6 @@
   (declare (optimize (speed 0) (debug 3)))
   (log:info "Reset store: ~a" why)
   (when *store*
-    (bknr.datastore::close-store-object *store*)
     (assert (not (equal "object-store"
                         (car (last (pathname-directory (bknr.datastore::store-directory *store*)))))))
     (close-store)

@@ -182,7 +182,9 @@
   (make-instance class-name :directory directory :subsystems subsystems))
 
 (defun close-store ()
-  (makunbound '*store*))
+  (let ((store *store*))
+    (makunbound '*store*)
+    (close-store-object store)))
 
 (defmacro with-store-guard ((&optional (store '*store*)) &body body)
   "Execute BODY in the context of the guard of STORE."

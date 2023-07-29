@@ -266,9 +266,7 @@ to the directory that was just snapshotted.")
           (fset:convert
            'fset:set
            (mapcar #'class-of (bknr.datastore:all-store-objects)))))
-    (let ((store *store*))
-      (close-store)
-      (bknr.datastore::close-store-object store))
+    (close-store)
 
     (fset:do-set (class classes-to-clean)
       (mapc
