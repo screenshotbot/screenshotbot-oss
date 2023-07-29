@@ -184,15 +184,15 @@
 (defun close-store ()
   (makunbound '*store*))
 
-(defmacro with-store-guard ((&optional (store '*store*)) &rest body)
+(defmacro with-store-guard ((&optional (store '*store*)) &body body)
   "Execute BODY in the context of the guard of STORE."
   `(funcall (store-guard ,store) #'(lambda () ,@body)))
 
-(defmacro with-log-guard ((&optional (store '*store*)) &rest body)
+(defmacro with-log-guard ((&optional (store '*store*)) &body body)
   "Execute BODY in the context of the log file guard of STORE."
   `(funcall (store-log-guard ,store) #'(lambda () ,@body)))
 
-(defmacro with-store-state ((state &optional (store '*store*)) &rest body)
+(defmacro with-store-state ((state &optional (store '*store*)) &body body)
   (let ((old-state (gensym)))
     `(let ((,old-state (store-state ,store)))
        (setf (store-state ,store) ,state)
