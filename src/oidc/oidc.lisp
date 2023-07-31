@@ -30,6 +30,8 @@
            #:make-oidc-auth-link
            #:logout-link))
 
+(named-readtables:in-readtable markup:syntax)
+
 (defclass oauth-access-token ()
   ((access-token :type (or null string)
                  :initarg :access-token
@@ -166,6 +168,8 @@
                                                            ,(format nil "Bearer ~a"
                                                                     (Access-token-str token))))))
 
+
+
 (defmethod oidc-callback ((auth oidc) code redirect
                           &key error
                             (error-redirect "/"))
@@ -191,7 +195,13 @@
               :full-name (assoc-value user-info :name)
               :avatar (assoc-value user-info :picture))
            (authentication-error (e)
-             (hex:safe-redirect error-redirect :error (authentication-error-message e)))))))
+             (hex:safe-redirect (nibble ()
+                                  <html>
+                                    <body>
+                                      There was an error authenticating: ,(authentication-error-message e)
+                                      <a href= error-redirect >Go Back</a>
+                                    </body>
+                                  </html>)))))))
     (t
      ;; error the OAuth flow, most likely
      (warn "Oauth failed: ~a" error)
