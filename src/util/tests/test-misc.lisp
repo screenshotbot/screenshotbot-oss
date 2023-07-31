@@ -41,6 +41,21 @@
        "car")))
     (is (equal "foo" var))))
 
+(test or-setf-thread-safety
+  (loop for i from 0 to 100
+        do
+           (let ((ctr 0)
+                 (val nil))
+             (let ((threads (loop for i from 0 to 10
+                                  collect (bt:make-thread
+                                           (lambda ()
+                                             (util:or-setf
+                                              val
+                                              (incf ctr)
+                                              :thread-safe t))))))
+               (mapc #'bt:join-thread threads)
+               (is (eql 1 ctr))))))
+
 
 (test safe-ensure-directories-exist
   (with-tmpdir (dir)

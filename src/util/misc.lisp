@@ -45,8 +45,9 @@
      `(or
        ,place
        (bt:with-lock-held (,lock)
-         ,place
-         (setf ,place ,expr))))
+         (or
+          ,place
+          (setf ,place ,expr)))))
     (t
      `(or
        ,place
