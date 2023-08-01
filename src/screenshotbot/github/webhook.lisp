@@ -108,8 +108,8 @@
                        data :signature signature)))
 
 (defhandler (nil :uri "/github-webhook") ()
-  (let ((plugin (github-plugin))
-        (webhook-secret (webhook-secret plugin)))
+  (let* ((plugin (github-plugin))
+         (webhook-secret (webhook-secret plugin)))
     (let ((stream (hunchentoot:raw-post-data
                    :want-stream t
                    :force-binary t))
