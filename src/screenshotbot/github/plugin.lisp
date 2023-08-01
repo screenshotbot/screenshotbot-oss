@@ -22,7 +22,8 @@
    #:private-key
    #:app-name
    #:webhook-secret
-   #:webhook-relays))
+   #:webhook-relays
+   #:verification-oauth-provider))
 (in-package :screenshotbot/github/plugin)
 
 (defclass github-plugin (plugin)
@@ -37,7 +38,11 @@
    (webhook-relays :initarg :webhook-relays
                    :initform nil
                    :accessor webhook-relays
-                   :documentation "A list of backends to relay this webhook to.")))
+                   :documentation "A list of backends to relay this webhook to.")
+   (verification-oauth-provider
+    :initarg :verification-oauth-provider
+    :accessor verification-oauth-provider
+    :documentation "Similar to the login OAuth for GitHub, it's only used as an authorization to verify that the user can access the specific repo.")))
 
 (defmethod initialize-instance :after ((plugin github-plugin)
                                        &key private-key-file &allow-other-keys)

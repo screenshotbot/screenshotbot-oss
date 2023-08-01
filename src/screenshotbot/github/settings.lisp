@@ -13,6 +13,7 @@
         #:screenshotbot/user-api
         #:screenshotbot/settings-api)
   (:import-from #:screenshotbot/github/plugin
+                #:verification-oauth-provider
                 #:private-key
                 #:app-id
                 #:app-name
@@ -74,8 +75,7 @@
    #:verified-repo-p))
 (in-package :screenshotbot/github/settings)
 
-(markup:enable-reader)
-
+(named-readtables:in-readtable markup:syntax)
 
 (defun github-app-installation-callback (state installation-id setup-action)
   (restart-case
@@ -254,9 +254,7 @@
                          (uiop:call-function
                           ;; TODO: cleanup dependency
                           "screenshotbot/login/github-oauth:make-gh-oauth-link"
-                          (uiop:call-function
-                           ;; TODO: cleanup dependency
-                           "screenshotbot/login/github-oauth:github-oauth-provider")
+                          (verification-oauth-provider (github-plugin))
                           (nibble ()
                             (verify-repo repo access-token))
                           :access-token-callback (lambda (token)
