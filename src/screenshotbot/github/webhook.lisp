@@ -96,7 +96,7 @@
      (lambda ()
        (http-request
         url
-        :parameters `(("x-hub-signature-256" . ,signature))
+        :additional-headers `(("x-hub-signature-256" . ,signature))
         :method :post
         :content (flexi-streams:octets-to-string data
                                                  :external-format :utf-8)))
