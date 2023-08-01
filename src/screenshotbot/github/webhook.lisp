@@ -120,7 +120,6 @@
         (maybe-relay-webhook
          plugin
          data
-         :length length
          :signature signature)
         (make-thread
          (lambda ()
