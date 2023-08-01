@@ -21,7 +21,8 @@
    #:app-id
    #:private-key
    #:app-name
-   #:webhook-secret))
+   #:webhook-secret
+   #:webhook-relays))
 (in-package :screenshotbot/github/plugin)
 
 (defclass github-plugin (plugin)
@@ -32,7 +33,11 @@
    (app-id :initarg :app-id
            :accessor app-id)
    (private-key :initarg :private-key
-                :accessor private-key)))
+                :accessor private-key)
+   (webhook-relays :initarg :webhook-relays
+                   :initform nil
+                   :accessor webhook-relays
+                   :documentation "A list of backends to relay this webhook to.")))
 
 (defmethod initialize-instance :after ((plugin github-plugin)
                                        &key private-key-file &allow-other-keys)
