@@ -107,13 +107,13 @@
 
 (test default-company-for-non-pro
   (with-test-store ()
-   (let* ((company (make-instance 'company))
-          (*installation* (make-instance 'installation
-                                          :singleton-company company)))
-     (let* ((user (make-user)))
-       (is (eql
-            (default-company user)
-            company))))))
+    (let* ((company (make-instance 'company
+                                   :singletonp t))
+           (*installation* (make-instance 'installation)))
+      (let* ((user (make-user)))
+        (is (eql
+             (default-company user)
+             company))))))
 
 (test default-company-removed-from-user-companies
   (with-fixture state ()

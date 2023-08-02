@@ -22,7 +22,6 @@
   (:import-from #:bknr.datastore
                 #:deftransaction)
   (:import-from #:screenshotbot/installation
-                #:cached-singleton-company
                 #:multi-org-feature
                 #:installation)
   (:import-from #:util/store
@@ -276,10 +275,8 @@
   it is created. Otherwise the existing singleton company is
   returned. Singleton companies are mostly used in the OSS version,
   even though you can customize it to use multiple companies."
-  (setf (cached-singleton-company installation)
-   (or
-    (company-with-singletonp t)
-    (make-instance 'company :singletonp t))))
+  (unless (company-with-singletonp t)
+    (make-instance 'company :singletonp t)))
 
 (defmethod prepare-singleton-company-for-installation ((installation multi-org-feature))
   "We never create a singleton company for multi-orgs"
@@ -290,7 +287,7 @@
    (prepare-singleton-company-for-installation installation)))
 
 (defmethod get-singleton-company ((installation installation))
-  (cached-singleton-company installation))
+  (company-with-singletonp t))
 
 (defmethod get-singleton-company ((installation multi-org-feature))
   (error "singleton company doesn't make sense in a multi-org mode"))

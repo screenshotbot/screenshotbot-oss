@@ -15,7 +15,6 @@
                 #:*installation*)
   (:import-from #:screenshotbot/installation
                 #:installation
-                #:singleton-company
                 #:desktop-installation)
   (:import-from #:screenshotbot/model/user
                 #:user)

@@ -31,7 +31,6 @@
    #:multi-org-feature
    #:default-oidc-provider
    #:installation-domain
-   #:cached-singleton-company
    #:default-logged-in-page
    #:installation-s3-store
    #:null-s3-store
@@ -62,9 +61,6 @@
    (default-oidc-provider :initform nil
                           :initarg :default-oidc-provider
                           :accessor default-oidc-provider)
-   (singleton-company :initform nil
-                      :initarg :singleton-company
-                      :accessor cached-singleton-company)
    (cdn :initarg :cdn
         :initform nil
         :accessor installation-cdn)))
