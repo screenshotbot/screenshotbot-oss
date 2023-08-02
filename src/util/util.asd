@@ -95,11 +95,6 @@
                (:file "form-errors")
                (:file "debugger-hook")))
 
-(defsystem :util/file-lock
-  :serial t
-  :depends-on ((:feature (:not :lispworks) :cffi))
-  :components ((:file "file-lock")))
-
 (defsystem :util/copy-file
   :serial t
   :defsystem-depends-on (:trivial-features)
@@ -354,10 +349,6 @@
                              (:file "test-lists")
                              (:file "test-sizeof")
                              (:file "test-models")
-                             (:file "test-file-lock"
-                              :if-feature (:and
-                                           :lispworks
-                                           (:not :windows)))
                              (:file "test-disk-size")
                              (:file "test-cdn")
                              (:file "test-bind-form")

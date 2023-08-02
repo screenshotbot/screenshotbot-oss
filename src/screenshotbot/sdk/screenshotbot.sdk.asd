@@ -61,7 +61,7 @@
 (defsystem :screenshotbot.sdk/static
   :serial t
   :depends-on (:screenshotbot.sdk/library
-               :util/file-lock
+               :file-lock
                :util/random-port
                :cl-store
                :screenshotbot/replay-core)

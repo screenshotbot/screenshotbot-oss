@@ -4,7 +4,7 @@
                :util/misc
 	       :trivial-features
                :util/cron
-               :util/file-lock
+               :file-lock
                :tmpdir
                :str
                :easy-macros

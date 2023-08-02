@@ -8,7 +8,7 @@
   (:nicknames :util/store)
   (:use #:cl
         #:bknr.datastore
-        #:util/file-lock)
+        #:file-lock)
   (:import-from #:bknr.datastore
                 #:close-store)
   (:import-from #:easy-macros
@@ -23,7 +23,7 @@
                 #:close-transaction-log-stream)
   (:import-from #:bknr.datastore
                 #:close-transaction-log-stream)
-  (:import-from #:util/file-lock
+  (:import-from #:file-lock
                 #:make-file-lock)
   (:import-from #:bknr.datastore
                 #:store-directory)

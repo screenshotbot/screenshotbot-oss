@@ -23,11 +23,9 @@
                  #:util/copying
                  #:util/store
                  #:util/misc
-                 #-mswindows
-                 #:util/file-lock
-		 #:util/bind-form
-		 #:util/html2text
-		 #:util/object-id)
+                 #:util/bind-form
+                 #:util/html2text
+                 #:util/object-id)
   (:use-reexport #:util/make-instance-with-accessors)
   (:export #:head
            #:google-analytics
