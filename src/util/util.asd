@@ -97,7 +97,7 @@
 
 (defsystem :util/file-lock
   :serial t
-  :depends-on ((:feature (:not :lispworks) :util/fake-fli))
+  :depends-on ((:feature (:not :lispworks) :cffi))
   :components ((:file "file-lock")))
 
 (defsystem :util/copy-file

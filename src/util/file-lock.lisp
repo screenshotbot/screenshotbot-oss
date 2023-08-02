@@ -7,8 +7,6 @@
 (defpackage :util/file-lock
   (:nicknames :util/store/file-lock)
   (:use #:cl)
-  (:local-nicknames #-lispworks
-                    (#:fli #:util/fake-fli)                    )
   (:export
    #:release-file-lock
    #:file-lock
@@ -26,10 +24,22 @@
 (defconstant lock-un 8 "Unlock.")
 (defconstant lock-nb 4 "Don't block when locking.")
 
+;; In theory, this is identical to the cffi:defcfun in the next step.
+;; But, our code is a bit reliant on this and we don't like dealing
+;; making too many FLI changes on our production server. We know the
+;; FLI version works for us, so we're leaving it as is. (PS. If you
+;; the reader are trying to add Windows support, feel free to use
+;; CFFI.)
+#+lispworks
 (fli:define-foreign-function (flock "flock")
     ((fd :int)
      (operation :int))
   :result-type :int)
+
+#-lispworks
+(cffi:defcfun ("flock" flock) :int
+  (fd :int)
+  (operation :int))
 
 (define-condition lock-not-held (error)
   ()
