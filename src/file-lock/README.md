@@ -1,4 +1,6 @@
 
+[![tdrhq](https://circleci.com/gh/tdrhq/file-lock.svg?style=shield)](https://app.circleci.com/pipelines/github/tdrhq/file-lock?branch=main)
+
 # file-lock: Simple flock based file locking for CL
 
 There's not much to this. Currently only supported on POSIX systems
