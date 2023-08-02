@@ -19,7 +19,7 @@
                 #:def-easy-macro)
   (:import-from #:util/misc
                 #:with-global-binding)
-  (:import-from #:util/store/file-lock
+  (:import-from #:file-lock
                 #:release-file-lock
                 #:file-lock)
   (:import-from #:alexandria

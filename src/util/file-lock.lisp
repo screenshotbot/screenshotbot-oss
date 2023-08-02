@@ -5,13 +5,13 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :util/file-lock
-  (:nicknames :util/store/file-lock)
+  (:nicknames :file-lock)
   (:use #:cl)
   (:export
    #:release-file-lock
    #:file-lock
    #:make-file-lock))
-(in-package :util/file-lock)
+(in-package :file-lock)
 
 (defclass file-lock ()
   ((file :initarg :file
