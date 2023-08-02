@@ -4,7 +4,8 @@
   :license "MIT License"
   :version "0.0.1"
   :serial t
-  :depends-on ((:feature (:not :lispworks) :cffi))
+  :depends-on ((:feature (:not :lispworks) :cffi)
+               :log4cl)
   :components ((:file "file-lock")))
 
 (defsystem :file-lock/tests

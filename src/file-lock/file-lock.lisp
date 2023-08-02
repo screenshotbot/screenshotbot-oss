@@ -131,8 +131,9 @@
                        &allow-other-keys)
   (declare (ignorable file))
   (cond
-    #+(or (not :lispworks) windows)
+    #+(or (not (:or :sbcl :lispworks)) windows)
     (t
+     (warn "Lock files not supported on this platform, and the lock will be a no-op.")
      (make-instance 'noop-file-lock :file file))
     (t
      (apply #'make-instance 'file-lock args))))
