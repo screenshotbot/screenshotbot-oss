@@ -10,6 +10,8 @@
 
 (defsystem :file-lock/tests
   :serial t
-  :depends-on (:file-lock)
+  :depends-on (:file-lock
+               :fiveam
+               :tmpdir)
   :components ((:file "test-file-lock"
                 :if-feature (:not :windows))))

@@ -1,6 +1,5 @@
 (defpackage :file-lock/test-file-lock
   (:use #:cl
-        #:alexandria
         #:fiveam)
   (:import-from #:file-lock
                 #:file-lock
