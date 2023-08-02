@@ -10,6 +10,7 @@
    :alexandria
         :fiveam)
   (:import-from #:screenshotbot/sdk/sdk
+                #:format-api-url
                 #:invalid-pull-request
                 #:empty-run-error
                 #:make-run
@@ -263,3 +264,13 @@
                    :method :put
                    :content (make-instance 'dto:report :id "léquipe")))
         (is (equal "léquipe" (assoc-value *result* :id)))))))
+
+(test format-api-url
+  (is (equal "https://api.screenshotbot.io/api/version"
+             (format-api-url "/api/version")))
+  (let ((flags:*hostname* "https://foo.screenshotbot.io/"))
+    (is (equal "https://foo.screenshotbot.io/api/version"
+               (format-api-url "/api/version"))))
+  (let ((flags:*hostname* "foo.screenshotbot.io"))
+    (is (equal "https://foo.screenshotbot.io/api/version"
+               (format-api-url "/api/version")))))

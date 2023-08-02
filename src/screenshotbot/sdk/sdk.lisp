@@ -115,6 +115,8 @@
           (not
            (str:starts-with-p "http://localhost" flags:*hostname*)))
      "http://localhost:4095")
+    ((not (str:containsp "/" flags:*hostname*))
+     (format nil "https://~a" flags:*hostname*))
     (t
      flags:*hostname*)))
 
@@ -123,6 +125,12 @@
   (list
    *api-key*
    *api-secret*))
+
+(defun format-api-url (api)
+  (quri:render-uri
+   (quri:merge-uris
+    api
+    (api-hostname))))
 
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
   (defun %request (api &key (method :post)
@@ -133,7 +141,7 @@
     (uiop:slurp-input-stream
      'string
      (http-request
-      (format nil "~a~a" (api-hostname) api)
+      (format-api-url api)
       :method method
       :want-stream t
       :method method

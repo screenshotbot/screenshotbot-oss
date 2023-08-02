@@ -6,9 +6,10 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
-  :version "2.5.22"
+  :version "2.5.23"
   :depends-on (:com.google.flag
                :pkg
+               :quri
                :ironclad/core
                :hunchentoot
                :cl-json
