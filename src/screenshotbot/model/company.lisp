@@ -28,6 +28,10 @@
                 #:with-class-validation)
   (:import-from #:alexandria
                 #:when-let)
+  (:import-from #:util/store/store
+                #:defindex)
+  (:import-from #:util/store/fset-index
+                #:fset-unique-index)
   (:export
    #:company
    #:company-reports
@@ -65,6 +69,10 @@
    #:sso-auth-provider
    #:add-company-report))
 (in-package :screenshotbot/model/company)
+
+(defindex +singleton-index+
+  'fset-unique-index
+  :slot-name 'singletonp)
 
 (with-class-validation
   (defclass company (object-with-oid)
@@ -117,7 +125,7 @@
       :initform nil)
      (singletonp
       :initarg :singletonp
-      :index-type unique-index
+      :index +singleton-index+
       :index-reader company-with-singletonp)
      (sso-auth-provider
       :initform nil
