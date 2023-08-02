@@ -25,8 +25,6 @@
 
 (defvar *kernel* nil)
 
-(defvar *magick-kernel* nil)
-
 (defvar *magick-pool* nil)
 
 (defun reinit-pool ()
@@ -50,15 +48,6 @@
    :thread-safe t
    :lock *kernel-lock*))
 
-(defun magick-kernel ()
-  (util:or-setf
-   *magick-kernel*
-   (lparallel:make-kernel (serapeum:count-cpus)
-
-                          :name "magick-kernel")
-   :thread-safe t
-   :lock *kernel-lock*))
-
 (defun make-channel (&rest args)
   (let ((lparallel:*kernel* (async-kernel)))
     (apply #'lparallel:make-channel args)))
@@ -66,10 +55,6 @@
 (def-easy-macro with-screenshotbot-kernel (&fn fn)
   "Bind lparallel:*kernel* to the screenshotbot kernel"
   (let ((lparallel:*kernel* (async-kernel)))
-    (funcall fn)))
-
-(def-easy-macro with-magick-kernel (&fn fn)
-  (let ((lparallel:*kernel* (magick-kernel)))
     (funcall fn)))
 
 (defmacro define-channel (name &rest args)
@@ -101,13 +86,7 @@
       (log:info "Shutting down: screenshotbot lparallel kernel")
       (lparallel:end-kernel :wait t)
       (setf *kernel* nil)
-      (log:info "Done: screenshotbot lparallel kernel")))
-  (when *magick-kernel*
-    (with-magick-kernel ()
-      (log:info "Shutting down: magick kernel")
-      (lparallel:end-kernel :wait t)
-      (setf *magick-kernel* nil)
-      (log:info "Done: magick kernel"))))
+      (log:info "Done: screenshotbot lparallel kernel"))))
 
 (pushnew 'shutdown *shutdown-hooks*)
 

@@ -28,7 +28,7 @@
                 #:with-hash-lock-held
                 #:hash-lock)
   (:import-from #:screenshotbot/async
-                #:with-magick-kernel
+                #:magick-future
                 #:with-screenshotbot-kernel)
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
@@ -117,12 +117,17 @@
                                   :size size))))
               (respond output-file)))))))))
 
+(defvar *futures* (make-hash-table :test #'equal
+                                   #+lispworks #+lispworks
+                                   :weak-kind :value))
+
 (defun build-resized-image (image size-name &key (type :webp))
-  (with-magick-kernel ()
-    (hash-locked-future ((list image size-name) *image-resize-lock*)
-      (ignore-and-log-errors ()
-        (%build-resized-image image size-name
-                              :type type)))))
+  (util:or-setf
+   (gethash (list image size-name type) *futures*)
+   (magick-future ()
+     (%build-resized-image image size-name
+                           :type type))
+   :thread-safe t))
 
 (defun handle-resized-image (image size &key warmup
                                           type)

@@ -29,9 +29,6 @@
                 #:with-test-store)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
-  (:import-from #:screenshotbot/async
-                #:*magick-kernel*
-                #:with-magick-kernel)
   (:import-from #:util/testing
                 #:with-global-binding)
   (:import-from #:screenshotbot/model/recorder-run
@@ -65,11 +62,7 @@
   (with-test-store ()
     (with-installation ()
       (let ((comparer (make-instance 'threshold-comparer :threshold threshold)))
-        (with-global-binding ((*magick-kernel* nil))
-          (unwind-protect
-               (&body)
-            (with-magick-kernel ()
-              (lparallel:end-kernel :wait t))))))))
+        (&body)))))
 
 (test test-with-test-image
   (with-fixture state ()
