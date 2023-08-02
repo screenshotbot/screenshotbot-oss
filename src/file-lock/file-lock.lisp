@@ -53,9 +53,14 @@
                        :sharedp sharedp)))
 
 (defmethod file-handle ((self file-lock))
-  #+lispworks
-  (let ((handle (slot-value (file-lock-stream self) 'stream::file-handle)))
-    handle))
+  (let ((stream (file-lock-stream self)))
+    #+lispworks
+    (let ((handle (slot-value stream 'stream::file-handle)))
+      handle)
+    #+sbcl
+    (sb-posix:file-descriptor stream)
+    #- (or sbcl lispworks)
+    (error "Can't get file-handle on this platform, only SBCL and Lispworks supported. Please send a Pull Request, it shouldn't be too hard:)")))
 
 (defun get-unix-error ()
   (or

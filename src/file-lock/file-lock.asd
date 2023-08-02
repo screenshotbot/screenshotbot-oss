@@ -11,6 +11,4 @@
   :serial t
   :depends-on (:file-lock)
   :components ((:file "test-file-lock"
-                :if-feature (:and
-                             :lispworks
-                             (:not :windows)))))
+                :if-feature (:not :windows))))
