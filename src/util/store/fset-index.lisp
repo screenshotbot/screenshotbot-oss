@@ -121,6 +121,12 @@ the index reader returns a list in reverse sorted order instead of a set."))
          (index-object-key self obj))
     (call-next-method)))
 
+(defmethod index-remove :around ((self abstract-fset-index) obj)
+  (when (and
+         (every (curry #'slot-boundp obj) (%slots self))
+         (index-object-key self obj))
+    (call-next-method)))
+
 (defmethod merge-map-values ((self fset-set-index)
                              val1 val2)
   (fset:union val1 val2))

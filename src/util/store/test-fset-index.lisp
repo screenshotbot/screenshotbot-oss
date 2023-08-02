@@ -121,6 +121,12 @@
       (is (fset:equal? (fset:empty-set)
                        (second-by-arg "foo"))))))
 
+(test remove-unbound-slot
+  (with-fixture state ()
+    (let ((obj (make-instance 'test-object)))
+      (finishes
+       (destroy-object obj)))))
+
 (test update-slot
   (with-fixture state ()
     (let ((obj (make-instance 'test-object
