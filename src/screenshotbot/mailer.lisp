@@ -7,6 +7,8 @@
 (uiop:define-package :screenshotbot/mailer
     (:use #:cl #:alexandria)
     (:import-from #:util/threading
+                  #:make-thread
+                  #:max-pool
                   #:ignore-and-log-errors)
     (:import-from #:screenshotbot/async
                   #:sb/future)
@@ -122,7 +124,15 @@
     (dont-send-the-mail ()
       nil)))
 
+(defvar *mailer-pool* (make-instance 'max-pool))
+
 (defmethod send-mail ((mailer background-mailer) &rest args)
-  (sb/future ()
-    (ignore-and-log-errors ()
-      (apply #'send-mail (delegate mailer) args))))
+  (let ((promise (lparallel:promise)))
+    (prog1
+        promise
+      (make-thread
+       (lambda ()
+         (lparallel:fulfill promise
+           (apply #'send-mail (delegate mailer) args)))
+       :pool *mailer-pool*
+       :name "email thread"))))

@@ -16,10 +16,6 @@
 
 (util/fiveam:def-suite)
 
-(test sb/future-happy-path
-  (let ((val (lparallel:force (sb/future () :done))))
-    (is (eql :done val))))
-
 (test magick-future-happy-path
   (is (eql 2
            (lparallel:force

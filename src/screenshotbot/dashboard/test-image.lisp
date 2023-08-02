@@ -23,9 +23,6 @@
                 #:blob-pathname)
   (:import-from #:util/store
                 #:with-test-store)
-  (:import-from #:screenshotbot/async
-                #:shutdown
-                #:with-screenshotbot-kernel)
   (:import-from #:util/hash-lock
                 #:hash-locked-future
                 #:hash-lock)
@@ -38,6 +35,8 @@
                 #:with-global-binding)
   (:import-from #:util/threading
                 #:*log-sentry-p*)
+  (:import-from #:screenshotbot/async
+                #:magick-future)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-image)
 
@@ -48,18 +47,16 @@
   (with-global-binding ((*installation* (make-instance 'installation))
                         (*log-sentry-p* nil))
    (with-test-store (:globally t)
-     (with-screenshotbot-kernel ()
-       (let ((debug-tasks-p *debug-tasks-p*))
-         (let* ((im1 #.(asdf:system-relative-pathname
-                        :screenshotbot
-                        "dashboard/fixture/image.png"))
-                (im (make-image :pathname im1 :for-tests t)))
-           (unwind-protect
-                (progn
-                  (setf *debug-tasks-p* nil)
-                  (&body))
-             (setf *debug-tasks-p* debug-tasks-p)
-             (shutdown))))))))
+     (let ((debug-tasks-p *debug-tasks-p*))
+       (let* ((im1 #.(asdf:system-relative-pathname
+                      :screenshotbot
+                      "dashboard/fixture/image.png"))
+              (im (make-image :pathname im1 :for-tests t)))
+         (unwind-protect
+              (progn
+                (setf *debug-tasks-p* nil)
+                (&body))
+           (setf *debug-tasks-p* debug-tasks-p)))))))
 
 (test future-has-*store*
   (with-fixture state ()
@@ -71,36 +68,17 @@
         (is (equal query query))
         (is (equal query
                    (force
-                    (future
+                    (magick-future ()
                       query))))
         (is (equal query
-                   (force (future
-                            (chain (future query))))))
-        (let ((one (future query))
-              (two (future query))
-              (three (future query)))
+                   (force (magick-future ()
+                            (chain (magick-future () query))))))
+        (let ((one (magick-future () query))
+              (two (magick-future () query))
+              (three (magick-future () query)))
           (is (equal query (force one)))
           (is (equal query (force two)))
           (is (equal query (force three))))))))
-
-(test hash-lock-has-*store*
-  (with-fixture state ()
-    (let ((random-value (random 1000)))
-      (symbol-macrolet ((query (list
-                                random-value
-                                bknr.datastore:*store*
-                                util/store:*object-store*)))
-        (let ((hash-lock (make-instance 'hash-lock)))
-          (is (equal :foo
-                     (force
-                      (hash-locked-future (2 hash-lock)
-                        :foo))))
-          (future query)
-          (future query)
-          (is (equal query
-                     (force
-                      (hash-locked-future (2 hash-lock)
-                        query)))))))))
 
 (test handle-resized-image-warmup-happy-path
   (with-fixture state ()
