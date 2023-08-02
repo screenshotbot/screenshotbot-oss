@@ -39,6 +39,10 @@
                 #:clear-slot-indices)
   (:import-from #:util/lists
                 #:head)
+  #+lispworks
+  (:import-from #:bknr.cluster/store
+                #:cluster-store-mixin
+                #:backward-compatibility-mixin)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -125,10 +129,15 @@ to the directory that was just snapshotted.")
 (defclass common-mp-store (bknr.datastore:mp-store)
   ())
 
-
 (defclass safe-mp-store (common-mp-store
                          checksumed-mp-store)
   ((transaction-log-lock :initform nil)))
+
+#+lispworks
+(defclass raft-store (backward-compatibility-mixin
+                      cluster-store-mixin
+                      safe-mp-store)
+  ())
 
 (defclass store-for-test (common-mp-store)
   ())

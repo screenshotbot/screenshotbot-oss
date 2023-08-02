@@ -2,11 +2,12 @@
   :serial t
   :depends-on (:bknr.datastore
                :util/misc
-	       :trivial-features
+               :trivial-features
                :util/cron
                :file-lock
                :tmpdir
                :str
+               (:feature :lispworks :bknr.cluster)
                :easy-macros
                :local-time
                :atomics
