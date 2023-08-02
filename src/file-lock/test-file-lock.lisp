@@ -5,7 +5,9 @@
                 #:file-lock
                 #:release-file-lock
                 #:could-not-get-lock
-                #:lock-not-held))
+                #:lock-not-held)
+  (:import-from #:util/file-lock
+                #:with-file-lock))
 (in-package :file-lock/test-file-lock)
 
 (fiveam:def-suite* :file-lock)
@@ -14,6 +16,11 @@
   (tmpdir:with-tmpdir (dir)
     (let ((lock (make-instance 'file-lock :file (path:catfile dir "test.lock"))))
       (release-file-lock lock)
+      (pass))))
+
+(test simple-macro-use
+  (tmpdir:with-tmpdir (dir)
+    (with-file-lock (:file (path:catfile dir "test.lock"))
       (pass))))
 
 (test second-unlock-errors

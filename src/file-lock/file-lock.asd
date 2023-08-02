@@ -5,6 +5,7 @@
   :version "0.0.1"
   :serial t
   :depends-on ((:feature (:not :lispworks) :cffi)
+               :easy-macros
                :log4cl)
   :components ((:file "file-lock")))
 

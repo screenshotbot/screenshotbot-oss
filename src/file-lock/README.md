@@ -19,10 +19,8 @@ great developer experience.)
 The most common use case is pretty straightforward:
 
 ```lisp
-(let ((file-lock (make-file-lock :file "...")))
-    (unwind-protect
-        (do-stuff)
-      (release-file-lock file-lock)))
+(with-file-lock (:file "...")
+  (do-stuff))
 ```
 
 ## Author

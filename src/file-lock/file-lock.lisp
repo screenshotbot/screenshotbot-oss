@@ -1,10 +1,13 @@
 (defpackage :util/file-lock
   (:nicknames :file-lock)
   (:use #:cl)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export
    #:release-file-lock
    #:file-lock
-   #:make-file-lock))
+   #:make-file-lock
+   #:with-file-lock))
 (in-package :file-lock)
 
 (defclass file-lock ()
@@ -137,3 +140,10 @@
      (make-instance 'noop-file-lock :file file))
     (t
      (apply #'make-instance 'file-lock args))))
+
+(def-easy-macro with-file-lock (&key file &binding lock
+                                     &fn fn)
+  (let ((lock (make-file-lock :file file)))
+    (unwind-protect
+         (fn lock)
+      (release-file-lock lock))))
