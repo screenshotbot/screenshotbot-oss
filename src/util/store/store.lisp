@@ -830,3 +830,7 @@ this variable in LET forms, but you can SETF it if you like."
 (defmethod fset:compare ((a store-object) (b store-object))
   (let ((*indexed-class-override* t))
     (fset:compare (store-object-id a) (store-object-id b))))
+
+(deftransaction tx-force-error (msg)
+  ;;(error "force crash with ~a" msg)
+  )
