@@ -182,6 +182,8 @@
          (cond
            ((null nibble)
             (warn 'expired-nibble :name (safe-parameter :_n))
+            (setf (hunchentoot:return-code*) 410 #| GONE |# )
+            (setf (hunchentoot:header-out :x-expired-nibble) "1")
             <html>
               <body>
                 The page you're looking for has expired.

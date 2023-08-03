@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:nibble
+                #:expired-nibble
                 #:make-id
                 #:nibble-url
                 #:nibble-current-user
@@ -87,3 +88,16 @@
 (test make-id-happy-path
   (with-fixture state ()
     (is (> (make-id (get-universal-time)) 10000000))))
+
+(test expired-nibble
+  (with-fixture state ()
+    (util/testing:with-fake-request ()
+      (render-nibble plugin "342343243343432232213123123")
+      (is (eql 410 (hunchentoot:return-code hunchentoot:*reply*)))
+      (is (equal "1" (hunchentoot:header-out :x-expired-nibble))))))
+
+(test expired-nibble-signals-warnings
+  (with-fixture state ()
+    (util/testing:with-fake-request ()
+      (signals expired-nibble
+       (render-nibble plugin "342343243343432232213123123")))))
