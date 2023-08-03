@@ -98,8 +98,10 @@
         url
         :additional-headers `(("x-hub-signature-256" . ,signature))
         :method :post
+        :external-format-out :utf-8
         :content (flexi-streams:octets-to-string data
                                                  :external-format :utf-8)))
+
      :pool *thread-pool*)))
 
 (defun maybe-relay-webhook (plugin data &key  signature)
