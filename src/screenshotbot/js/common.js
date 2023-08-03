@@ -1,3 +1,22 @@
+$sb = {
+    ajax: function(data) {
+        let updated = {
+            ...data,
+            error: function (xmlHttpRequest) {
+                if (xmlHttpRequest.status == 410) {
+                    alert("This page has expired. Please refresh and try again.");
+                } else {
+                    if (data.error) {
+                        data.error(xmlHttpRequest);
+                    }
+                }
+            }
+        }
+
+        console.log("Using", updated);
+        $.ajax(updated);
+    }
+}
 
 function setupLiveOnAttach(selector, fn) {
     if (!window.liveAttachEvents) {
@@ -457,7 +476,7 @@ function prepareReportJs () {
         img.hide();
 
 
-        $.ajax({
+        $sb.ajax({
             url: src,
             success: function (data) {
                 loading.hide();
@@ -495,7 +514,7 @@ function prepareReportJs () {
             zoomToChange.prop("disabled", true);
             zoomToChangeSpinner.show();
 
-            $.ajax({
+            $sb.ajax({
                 url: zoomToLink,
                 success: function(data) {
                     if (data.x < 0) {
@@ -560,7 +579,7 @@ $(document).on("show.bs.modal", ".single-screenshot-modal", function () {
     function fetchData() {
         var n = $(canvas).data("image-number");
         var src = $(canvas).data("src");
-        $.ajax({
+        $sb.ajax({
             url: src,
             data: {
                 n: n,
@@ -664,7 +683,7 @@ function prepareBaguetteBox(el) {
 setupLiveOnAttach(".modal-link", function () {
     $(this).click(function (e) {
         var href = $(this).data("href");
-        $.ajax({
+        $sb.ajax({
             url: href,
             error: function () {
                 swAlert("Something went wrong. Please reload and try again");
