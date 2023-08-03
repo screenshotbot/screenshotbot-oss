@@ -28,8 +28,7 @@
                 #:with-hash-lock-held
                 #:hash-lock)
   (:import-from #:screenshotbot/async
-                #:magick-future
-                #:with-screenshotbot-kernel)
+                #:magick-future)
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
   (:import-from #:screenshotbot/user-api

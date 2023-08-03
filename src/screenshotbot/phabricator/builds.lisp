@@ -31,8 +31,6 @@
                 #:initialize-transient-instance)
   (:import-from #:bknr.datastore
                 #:with-transaction)
-  (:import-from #:screenshotbot/async
-                #:with-screenshotbot-kernel)
   (:import-from #:lparallel.promise
                 #:future)
   (:import-from #:screenshotbot/phabricator/plugin
@@ -101,9 +99,8 @@ the status, and the details")
   (find-build-info company (parse-integer diff)))
 
 (def-easy-macro in-future (&fn fn)
-  (with-screenshotbot-kernel ()
-    (future
-      (funcall fn))))
+  (future
+    (funcall fn)))
 
 (defmacro if-setf (place expr)
   `(let ((val ,expr))
