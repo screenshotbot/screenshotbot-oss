@@ -169,7 +169,7 @@
           (funcall fn)
        (setf *error-output* old)))))
 
-(def-easy-macro with-lparallel-kernel (&key (threads 100)
+(def-easy-macro with-lparallel-kernel (&key (threads 20)
                                             &fn fn)
   (let ((shutting-down-p nil))
     (flet ((context (fn)
