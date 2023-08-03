@@ -155,6 +155,7 @@ In the error case, it's hard to distinguish between a real error (e.g.
         (t
          (makunbound sym))))))
 
+;; Sync with bknr.cluster
 (defun relpath (path start)
   (assert (fad:pathname-absolute-p path))
   (assert (fad:pathname-absolute-p start))

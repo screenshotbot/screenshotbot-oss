@@ -257,9 +257,8 @@
                                 (pr-merge-base promoter run)
                                 ;; We're using the run as a logger!
                                 (identity run))))
-         (flet ((make-failure-check (&rest args)
+         (flet ((make-run-check (&rest args)
                   (apply #'make-instance 'check
-                         :status :failure
                          :details-url (make-details-url 'screenshotbot/dashboard/run-page:run-page
                                                         :id (oid run))
                          args)))
@@ -279,15 +278,17 @@
                   (check (cond
                            ((null merge-base)
                             (format-log run :info "No base-commit provided in run")
-                            (make-failure-check
+                            (make-run-check
+                             :status :failure
                              :title "Base SHA not available for comparison, please check CI setup"
                              :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
                            ((null base-run)
                             (push-event :promoter.no-base-run :oid (oid run))
                             (format-log run :info "Could not find base-run")
-                            (make-failure-check
-                             :title (format nil "Could not find a run for commit ~a, try rebasing" merge-base)
-                             :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
+                            (make-run-check
+                             :status :success
+                             :title (format nil "Could not find a run for commit ~a, most likely this is a new channel." merge-base)
+                             :summary "Screenshots unavailable for base commit, most likely this is a new channel"))
                            (t
                             (format-log run :info "Base run is available, preparing notification from diff-report")
                             (warn-if-not-merge-base promoter run base-run)

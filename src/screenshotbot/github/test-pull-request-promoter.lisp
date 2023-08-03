@@ -228,8 +228,8 @@
        (maybe-promote promoter run)
        (is-true check)
        (is (equal "car" (pr-merge-base promoter run)))
-       (is (eql :failure (check-status check)))
-       (is (cl-ppcre:scan ".*rebasing*" (check-title check)))))))
+       (is (eql :success (check-status check)))
+       (is (cl-ppcre:scan ".*most likely this is a new channel.*" (check-title check)))))))
 
 (test check-result-for-diff-report
   (with-installation ()
