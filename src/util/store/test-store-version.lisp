@@ -58,9 +58,13 @@
                                          (make-instance 'version-subsystem))))
              (version-file ()
                (ensure-directories-exist
-                (path:catfile dir "current/store-version")))
+                (path:catfile dir "current/version-subsystem-snapshot")))
              (read-version ()
-               (parse-integer (uiop:read-file-string (version-file))))
+               (cond
+                 ((path:-e (version-file))
+                          (parse-integer (uiop:read-file-string (version-file))))
+                 (t
+                  :does-not-exist)))
              (get-subsystem ()
                (loop for subsystem in (store-subsystems *store*)
                      if (typep subsystem 'version-subsystem)
@@ -68,6 +72,7 @@
              (write-version (ver)
                (with-open-file (s (version-file)
                                   :direction :output
+                                  :if-exists :supersede
                                   :if-does-not-exist :create)
                  (format s "~a" ver))))
      (&body))))
@@ -76,6 +81,9 @@
   (with-fixture state ()
     (with-store (dir)
       (open-store)
+      (is (eql :does-not-exist
+               (read-version)))
+      (bknr.datastore:snapshot)
       (is (eql *store-version*
                (read-version)))
       (is (eql *store-version*
@@ -83,29 +91,20 @@
 
 (test open-existing-store ()
   (with-fixture state ()
+    (open-store)
+    (bknr.datastore:snapshot)
+    (close-store)
     (write-version 2)
     (with-store (dir)
       (open-store)
       (is (eql 2 (read-version)))
       (is (eql 2 *snapshot-store-version*)))))
 
-(test open-store-with-version-0
-  (with-fixture state ()
-    (with-store (dir)
-      (open-store)
-      (delete-file (version-file)))
-    ;; If somebody uses an old version of store, and then updated, the
-    ;; version file will not exist. Treat that as version 0.
-    (with-store (dir)
-      (open-store)
-      (is (eql 0 *snapshot-store-version*))
-      (is (not (path:-e (version-file)))))))
-
 (test snapshot-updates-store-version
   (with-fixture state ()
     (with-store (dir)
       (open-store)
-      (is (eql *store-version* (read-version)))
+      (is (eql :does-not-exist (read-version)))
       (let ((*snapshot-store-version* 199990))
         (snapshot))
       (is (eql 199990 (read-version))))))

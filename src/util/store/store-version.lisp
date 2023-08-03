@@ -8,6 +8,9 @@
   (:nicknames :util/store-version)
   (:use #:cl)
   (:import-from #:bknr.datastore
+                #:restore-subsystem
+                #:snapshot-subsystem
+                #:store-subsystem-snapshot-pathname
                 #:snapshot-store)
   (:import-from #:bknr.datastore
                 #:store-current-directory)
@@ -42,29 +45,30 @@ version on loads"))
 
 (defmethod initialize-subsystem :after ((self version-subsystem) store store-existed-p)
   (log:info "Store directory: ~a" (bknr.datastore::store-directory store))
-  (cond
-    (store-existed-p
-     (setf *snapshot-store-version*
-           (read-current-version (ensure-store-current-directory store))))
-    (t
-     (setf *snapshot-store-version* *store-version*)
-     (write-current-version (ensure-store-current-directory store)))))
+  (setf *snapshot-store-version* *store-version*))
 
 
 (defmethod restore-subsystem (store (self version-subsystem) &key until)
-  (declare (ignore until)))
+  (declare (ignore until))
+  (setf *snapshot-store-version*
+        (or
+         (read-current-version store self)
+         *store-version*)))
 
 (defmethod snapshot-subsystem (store (self version-subsystem))
-  (write-current-version (ensure-store-current-directory store)))
+  (write-current-version store self))
 
-(defmethod read-current-version (current-dir)
-  (let ((ver-file (path:catfile current-dir "store-version")))
-    (if (path:-e ver-file)
-        (parse-integer (str:trim (uiop:read-file-string ver-file)))
-        0)))
+(defmethod read-current-version (store self)
+  (let ((snapshot-pathname (store-subsystem-snapshot-pathname store self)))
+    (loop for ver-file in (list snapshot-pathname
+                                ;; old version:
+                                (make-pathname :name "store-version" :defaults snapshot-pathname))
+          if (path:-e ver-file)
+            return (parse-integer (str:trim (uiop:read-file-string ver-file))))))
 
-(defmethod write-current-version (current-dir)
-  (with-open-file (store-version (path:catfile current-dir "store-version")
+(defmethod write-current-version (store self)
+  (with-open-file (store-version (ensure-directories-exist
+                                  (store-subsystem-snapshot-pathname store self))
                                  :direction :output
                                  :if-exists :supersede)
     (format store-version "~a" *snapshot-store-version*)))
