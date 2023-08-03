@@ -41,6 +41,7 @@ migrate.")
 version on loads"))
 
 (defmethod initialize-subsystem :after ((self version-subsystem) store store-existed-p)
+  (log:info "Store directory: ~a" (bknr.datastore::store-directory store))
   (cond
     (store-existed-p
      (setf *snapshot-store-version*

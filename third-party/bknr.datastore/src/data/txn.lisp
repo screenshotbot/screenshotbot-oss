@@ -486,7 +486,9 @@ to the log file in an atomic group"))
                      (transaction-timestamp transaction))))
 
 (defmethod execute-unlogged ((transaction transaction))
+  (log:info "waiting for store guard")
   (with-store-guard ()
+    (log:info "in store guard")
     (let ((*current-transaction* transaction))
       (apply (or (symbol-function (transaction-function-symbol transaction))
                  (error 'undefined-transaction

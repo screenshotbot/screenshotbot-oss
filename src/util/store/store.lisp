@@ -30,6 +30,7 @@
   (:import-from #:bknr.datastore
                 #:restore-transaction-log)
   (:import-from #:alexandria
+                #:when-let
                 #:assoc-value)
   (:import-from #:bknr.indices
                 #:*indexed-class-override*)
@@ -64,7 +65,9 @@
    #:def-store-local
    #:location-for-oid
    #:add-datastore-cleanup-hook
-   #:*snapshot-hooks*))
+   #:*snapshot-hooks*
+   #:raft-store
+   #:make-default-store))
 (in-package :util/store)
 
 (defvar *object-store*)
@@ -136,7 +139,8 @@ to the directory that was just snapshotted.")
 #+lispworks
 (defclass raft-store (backward-compatibility-mixin
                       cluster-store-mixin
-                      safe-mp-store)
+                      ;; Hopefully braft takes care of the locking here
+                      bknr.datastore:store)
   ())
 
 (defclass store-for-test (common-mp-store)
@@ -282,10 +286,27 @@ to the directory that was just snapshotted.")
        #'clear-slot-indices
        (closer-mop:class-slots class)))))
 
+(defun read-raft-config ()
+  (let ((raft-config (path:catfile (object-store) "raft-config.lisp")))
+    (when (path:-e raft-config)
+      (read-from-string
+       (uiop:read-file-string raft-config)))))
+
+(defun make-default-store (&rest args)
+  (apply #'make-instance
+         (append
+          args
+          (list
+           :directory (object-store)
+           :subsystems (store-subsystems)))))
+
 (defun prepare-store ()
-  (make-instance 'safe-mp-store
-                 :directory (object-store)
-                 :subsystems (store-subsystems))
+  (let ((raft-config (read-raft-config)))
+    (cond
+      (raft-config
+       (eval raft-config))
+      (t
+       (make-default-store 'safe-mp-store))))
   (dispatch-datastore-hooks))
 
 (defun verify-store (&key (callback (lambda ())))
@@ -296,9 +317,14 @@ to the directory that was just snapshotted.")
         (copy-directory:copy (path:catdir store-dir "current/")
                              out-current)
         (assert (path:-d out-current))
-        (make-instance 'safe-mp-store
-                        :directory dir
-                        :subsystems (store-subsystems))
+        (let ((raft-config (read-raft-config)))
+          (cond
+            (raft-config
+             (error "verify unimplemented yet."))
+            (t
+             (make-instance 'safe-mp-store
+                            :directory dir
+                            :subsystems (store-subsystems)))))
         (log:info "Got ~d objects" (length (bknr.datastore:all-store-objects)))
         (funcall callback)))))
 
