@@ -18,7 +18,7 @@
 ;; non-Lispworks.. temporary though. It's just because we haven't
 ;; tested it enough.
 #-lispworks
-(defmethod set-signal-handler (signal (handler (eql t)))
+(defmethod set-signal-handler (signal (handler (eql nil)))
   "Reset signal handler to default"
   (values))
 
@@ -66,7 +66,7 @@
 
                  (prepare-interrupts))
             (dolist (sig signals)
-              (set-signal-handler sig t)))
+              (set-signal-handler sig nil)))
         (interrupted-by-signal-handler (e)
           (format t "Unwinded from signal handler~%")
           (values))))))
