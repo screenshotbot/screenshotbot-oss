@@ -339,6 +339,7 @@ accessing the urls or sitemap slot."
          (json-response (json:decode-json-from-string resp))
          (oid (a:assoc-value json-response :oid))
          (md5 (a:assoc-value json-response :md-5)))
+    (log:info "Got response: ~a" resp)
     (values oid md5)))
 
 (defmethod write-full-page-screenshot-from-handle (driver proxy oid dest)

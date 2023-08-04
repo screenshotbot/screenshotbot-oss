@@ -104,6 +104,7 @@
 (defvar *shutdown-hooks* nil)
 
 (defun init-multi-acceptor (&key (port (parse-integer *port*)))
+  (log:info "Acceptor on ~a" port)
   (setf *multi-acceptor* (make-instance 'my-acceptor :port port :name 'multi-acceptor))
   (init-sub-acceptors))
 

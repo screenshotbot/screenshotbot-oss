@@ -29,6 +29,7 @@
   (:import-from #:bknr.indices
                 #:object-destroyed-p)
   (:import-from #:bknr.datastore
+                #:*store*
                 #:delete-object)
   (:import-from #:bknr.datastore
                 #:with-transaction)
@@ -37,6 +38,9 @@
   (:import-from #:scheduled-jobs/bindings
                 #:cron-next
                 #:cron-parse-expr)
+  #+lispworks
+  (:import-from #:bknr.cluster/server
+                #:leaderp)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:make-scheduled-job
@@ -184,5 +188,8 @@ the queue. Internal detail."
    :name "schedule-job"))
 
 (def-cron call-pending-scheduled-job ()
-  (when (boundp 'bknr.datastore:*store*)
+  (when (and
+         (boundp 'bknr.datastore:*store*)
+         #+lispworks
+         (leaderp bknr.datastore:*store*))
    (call-pending-scheduled-jobs)))

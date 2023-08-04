@@ -44,6 +44,9 @@
   (:import-from #:bknr.cluster/store
                 #:cluster-store-mixin
                 #:backward-compatibility-mixin)
+  #+lispworks
+  (:import-from #:bknr.cluster/server
+                #:with-leadership-priority)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -138,6 +141,7 @@ to the directory that was just snapshotted.")
 
 #+lispworks
 (defclass raft-store (backward-compatibility-mixin
+                      with-leadership-priority
                       cluster-store-mixin
                       ;; Hopefully braft takes care of the locking here
                       bknr.datastore:store)

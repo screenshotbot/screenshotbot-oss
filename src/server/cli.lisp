@@ -132,7 +132,7 @@
                           (symbol-value
                            (uiop:find-symbol* :*acceptor* :screenshotbot/server)))
                          (t
-                          (init-multi-acceptor :port 4001)
+                          (init-multi-acceptor :port (clingon:getopt cmd :port))
                           *multi-acceptor*))
                        (clingon:getopt cmd :socket))
                       :port (clingon:getopt cmd :port)
