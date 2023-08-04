@@ -40,11 +40,11 @@
                 #:clear-slot-indices)
   (:import-from #:util/lists
                 #:head)
-  #+lispworks
+  #+ (and lispworks linux)
   (:import-from #:bknr.cluster/store
                 #:cluster-store-mixin
                 #:backward-compatibility-mixin)
-  #+lispworks
+  #+ (and lispworks linux)
   (:import-from #:bknr.cluster/server
                 #:with-leadership-priority)
   (:local-nicknames (#:a #:alexandria))
@@ -139,7 +139,7 @@ to the directory that was just snapshotted.")
                          checksumed-mp-store)
   ((transaction-log-lock :initform nil)))
 
-#+lispworks
+#+ (and lispworks linux)
 (defclass raft-store (backward-compatibility-mixin
                       with-leadership-priority
                       cluster-store-mixin

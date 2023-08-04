@@ -38,7 +38,7 @@
   (:import-from #:scheduled-jobs/bindings
                 #:cron-next
                 #:cron-parse-expr)
-  #+lispworks
+  #+ (and lispworks linux)
   (:import-from #:bknr.cluster/server
                 #:leaderp)
   (:local-nicknames (#:a #:alexandria))
@@ -190,6 +190,6 @@ the queue. Internal detail."
 (def-cron call-pending-scheduled-job ()
   (when (and
          (boundp 'bknr.datastore:*store*)
-         #+lispworks
+         #+ (and lispworks linux)
          (leaderp bknr.datastore:*store*))
    (call-pending-scheduled-jobs)))

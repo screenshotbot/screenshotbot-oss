@@ -7,7 +7,7 @@
                :file-lock
                :tmpdir
                :str
-               (:feature :lispworks :bknr.cluster)
+               (:feature (:and :lispworks :linux) :bknr.cluster)
                :easy-macros
                :local-time
                :atomics
