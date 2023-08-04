@@ -38,6 +38,47 @@
              (list "foo1" "foo3")
              (mapcar 'image-name ims)))))))
 
+(test test-bundle-does-not-recurse-by-default
+  (with-fixture state ()
+    (with-open-file (s4 (ensure-directories-exist (path:catfile dir "blah/car.png"))
+                        :direction :output))
+    (let ((bundle (make-instance 'image-directory
+                                 :directory dir)))
+      (let ((ims (list-images bundle)))
+        (is (eql 2 (length ims)))
+        (is (%set-equal
+             (list "foo1" "foo3")
+             (mapcar 'image-name ims)))))))
+
+(test test-bundle-with-recursion
+  (with-fixture state ()
+    (with-open-file (s4 (ensure-directories-exist (path:catfile dir "blah/car.png"))
+                        :direction :output))
+    (let ((bundle (make-instance 'image-directory
+                                 :directory dir
+                                 :recursivep t)))
+      (let ((ims (list-images bundle)))
+        (is (%set-equal
+             (list "foo1" "foo3" "blah/car")
+             (mapcar 'image-name ims)))))))
+
+(test test-bundle-with-recursion-deeper
+  (with-fixture state ()
+    (with-open-file (s4 (ensure-directories-exist (path:catfile dir "blah/car.png"))
+                        :direction :output))
+    (with-open-file (s4 (ensure-directories-exist (path:catfile dir "blah/car/dar.png"))
+                        :direction :output))
+    (with-open-file (s4 (ensure-directories-exist (path:catfile dir "blah/car/dar2.png"))
+                        :direction :output))
+    (let ((bundle (make-instance 'image-directory
+                                 :directory dir
+                                 :recursivep t)))
+      (let ((ims (list-images bundle)))
+        (is (%set-equal
+             (list "foo1" "foo3" "blah/car"
+                   "blah/car/dar" "blah/car/dar2")
+             (mapcar 'image-name ims)))))))
+
 (defun true-namestring (x)
   "On Mac, the temp directory uses a symbolic link so it's not
 possible to compare the namestring directly"

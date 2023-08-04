@@ -51,24 +51,34 @@
 
 (defclass image-directory ()
   ((directory :initarg :directory
-              :accessor bundle-directory)))
+              :accessor bundle-directory)
+   (recursivep :initarg :recursivep
+               :initform nil
+               :reader recursivep)))
 
 (defmethod override-image-pathname ((bundle image-directory)
                                     key pathname)
   pathname)
 
 (defmethod list-images ((bundle image-directory))
-  (loop for im in (fad:list-directory (bundle-directory bundle))
-        if (equal "png" (pathname-type im))
-          collect
-        (let ((key (pathname-name im)))
-          (let ((image (make-instance 'local-image
-                                      :name key
-                                      :pathname (override-image-pathname
-                                                 bundle
-                                                 key
-                                                 im))))
-            image))))
+  (labels ((parse-directory (dir prefix)
+             (loop for im in (fad:list-directory dir)
+                   if (and (recursivep bundle)
+                           (path:-d im))
+                     append (parse-directory
+                             im
+                             (str:concat prefix (car (last (pathname-directory im))) "/"))
+                   if (equal "png" (pathname-type im))
+                     collect
+                     (let ((key (str:concat prefix (pathname-name im))))
+                       (let ((image (make-instance 'local-image
+                                                   :name key
+                                                   :pathname (override-image-pathname
+                                                              bundle
+                                                              key
+                                                              im))))
+                         image)))))
+    (parse-directory (bundle-directory bundle) "")))
 
 (defmethod image-stream ((im local-image))
   (open (image-pathname im) :direction :input

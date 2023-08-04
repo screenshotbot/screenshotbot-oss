@@ -49,7 +49,8 @@
    #:*mark-failed*
    #:*versionp*
    #:*compare-threshold*
-   #:*desktop*))
+   #:*desktop*
+   #:*recursive*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -58,6 +59,12 @@
   :selector "directory"
   :type string
   :help "Directory of images")
+
+(define-flag *recursive*
+  :default-value nil
+  :selector "recursive"
+  :type boolean
+  :help "Whether to scan the directory recursively")
 
 (define-flag *versionp*
   :default-value nil

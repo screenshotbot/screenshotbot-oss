@@ -444,7 +444,8 @@ error."
                        :directory *directory*
                        :diff-dir *ios-diff-dir*))
        (t
-        (make-instance 'image-directory :directory *directory*))))
+        (make-instance 'image-directory :directory *directory*
+                       :recursivep flags:*recursive*))))
     (t
      (error "Unknown run type, maybe you missed --directory?"))))
 
