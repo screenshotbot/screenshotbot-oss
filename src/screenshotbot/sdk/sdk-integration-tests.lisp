@@ -98,10 +98,12 @@
                (write-sequence buff s))
       (finish-output s)
       (let ((res (util/request:http-request
-                  (format nil "~a/api/upload-test"
-                          (or
-                           (uiop:getenv "SCREENSHOTBOT_API_HOSTNAME")
-                           "https://screenshotbot.io"))
+                  (quri:render-uri
+                   (quri:merge-uris
+                    "/api/upload-test"
+                    (or
+                     (uiop:getenv "SCREENSHOTBOT_API_HOSTNAME")
+                     "https://screenshotbot.io")))
                   :basic-authorization (list
                                         (uiop:getenv "SCREENSHOTBOT_API_KEY")
                                         (uiop:getenv "SCREENSHOTBOT_API_SECRET"))

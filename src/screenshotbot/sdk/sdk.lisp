@@ -9,7 +9,8 @@
   (:use #:cl
         #:alexandria
         #:anaphora
-        #:screenshotbot/sdk/flags)
+        #:screenshotbot/sdk/flags
+        #:screenshotbot/sdk/hostname)
   (:import-from #:dag
                 #:add-commit
                 #:commit
@@ -109,28 +110,11 @@
      (error 'api-error :message it)))
   (assoc-value result :response))
 
-(defun api-hostname ()
-  (cond
-    ((and flags:*desktop*
-          (not
-           (str:starts-with-p "http://localhost" flags:*hostname*)))
-     "http://localhost:4095")
-    ((not (str:containsp "/" flags:*hostname*))
-     (format nil "https://~a" flags:*hostname*))
-    (t
-     flags:*hostname*)))
-
 
 (defun %make-basic-auth ()
   (list
    *api-key*
    *api-secret*))
-
-(defun format-api-url (api)
-  (quri:render-uri
-   (quri:merge-uris
-    api
-    (api-hostname))))
 
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
   (defun %request (api &key (method :post)

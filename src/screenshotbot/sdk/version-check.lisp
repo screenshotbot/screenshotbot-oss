@@ -21,6 +21,8 @@
                 #:def-health-check)
   (:import-from #:screenshotbot/sdk/backoff
                 #:backoff)
+  (:import-from #:screenshotbot/sdk/hostname
+                #:format-api-url)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-version-check
@@ -45,11 +47,11 @@ might get logged in the webserver logs."
   (>= *remote-version* 4))
 
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
-  (defun get-version (hostname)
+  (defun get-version ()
     (log:info "Getting remote version")
     (multiple-value-bind (body ret)
         (http-request
-         (format nil "~a/api/version" hostname)
+         (format-api-url "/api/version")
          :want-string t)
       (let ((version (cond
                        ((eql 200 ret)
@@ -63,7 +65,7 @@ might get logged in the webserver logs."
         (version-number version)))))
 
 (def-easy-macro with-version-check (&fn fn)
-  (let ((*remote-version* (get-version *hostname*)))
+  (let ((*remote-version* (get-version)))
     (when (/= *remote-version* *api-version*)
       (log:warn "Server is running API version ~a, but this client uses version ~a. ~%
 

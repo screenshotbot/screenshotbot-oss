@@ -15,7 +15,8 @@
                 #:http-request)
   (:import-from #:cl-mock
                 #:answer)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria)
+                    (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/test-version-check)
 
 
@@ -31,7 +32,8 @@
     (answer (http-request "https://api.screenshotbot.io/api/version"
                           :want-string t)
       (values "{\"version\":1}" 200))
-    (is (eql 1 (get-version "https://api.screenshotbot.io")))))
+    (let ((flags:*hostname* "https://api.screenshotbot.io"))
+     (is (eql 1 (get-version))))))
 
 #-sbcl ;; See D7222. Temporary fix until we can see what's going on with this.
 (test get-version-404
@@ -39,11 +41,12 @@
     (answer (http-request "https://www.google.com/api/version"
                           :want-string t)
       (values "" 404))
-    (is (eql 1 (get-version "https://www.google.com")))))
+    (let ((flags:*hostname* "https://www.google.com"))
+     (is (eql 1 (get-version))))))
 
 (test with-version-check
   (with-fixture state ()
-    (answer (get-version "https://api.screenshotbot.io")
+    (answer (get-version)
       189)
     (let ((ans))
       (with-version-check ()
