@@ -54,7 +54,7 @@
 
 (defvar *suppress-schema-warnings* nil)
 
-(deftransaction update-instances-for-changed-class (class)
+(defun update-instances-for-changed-class (class)
   (let ((instance-count (length (class-instances class))))
     (when (plusp instance-count)
       (unless *suppress-schema-warnings*
