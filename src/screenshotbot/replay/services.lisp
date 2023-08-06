@@ -88,7 +88,7 @@
                           ((oss?)
                            "selenium-hub")
                           ((linode?)
-                           "172.104.213.118")
+                           "172.30.1.180")
                           (t
                            "172.17.0.1"))
                   :squid-proxy (cond
