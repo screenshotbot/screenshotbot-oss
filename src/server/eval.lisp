@@ -53,6 +53,7 @@
                                                          (dbg:output-backtrace :verbose file))
                                                        (return-from nil nil))))
                                  ,(read-from-string expr)
+                                 (sleep 2)
                                  t))
                             :output-stream *standard-output*
                             :connection conn)))
