@@ -64,7 +64,9 @@
 
 (defun linode? ()
   (unless (oss?)
-   (equal "localhost" (uiop:hostname))))
+    (or
+     (equal "localhost" (uiop:hostname))
+     (str:starts-with-p "ip-" (uiop:hostname)))))
 
 (defun scale-provider ()
   (make-instance 'vagrant))

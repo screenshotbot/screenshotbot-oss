@@ -76,7 +76,9 @@
 
 (defun linode? ()
   #-screenshotbot-oss
-  (equal "localhost" (uiop:hostname)))
+  (or
+   (equal "localhost" (uiop:hostname))
+   (str:starts-with-p "ip-" (uiop:hostname))))
 
 (defvar *replay-proxy* nil)
 
