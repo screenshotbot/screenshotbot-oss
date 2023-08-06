@@ -28,6 +28,9 @@
   #+lispworks
   (:import-from #:hunchentoot-extensions/existing-socket
                 #:acceptor-with-existing-socket)
+  #+lispworks
+  (:import-from #:bknr.cluster/server
+                #:leaderp)
   (:export
    #:defhandler
    #:with-login
@@ -287,6 +290,11 @@ Disallow: /n")))
    fn
    args))
 
+#+lispworks
+(defhandler (nil :uri "/raft-state") ()
+  (if (leaderp bknr.datastore:*store*)
+      "leader"
+      "other"))
 
 
 #+screenshotbot-oss
