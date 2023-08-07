@@ -496,10 +496,6 @@ accessing the urls or sitemap slot."
                                 :results results
                                 :url-count url-count)))))))))
 
-(with-selenium-server (server :type "firefox")
-  (values
-     (selenium-host server)
-   (selenium-port server)))
 
 (defun best-image-type (config)
   (cond

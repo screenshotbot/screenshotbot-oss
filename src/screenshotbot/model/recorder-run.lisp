@@ -233,31 +233,6 @@ associated report is rendered.")
     (:metaclass has-created-at)
     (:default-initargs :screenshot-map (error "need screenshot-map"))))
 
-(defindex +unchanged-run-index+
-  'fset-set-index
-  :slot-name 'commit)
-
-(defclass unchanged-run (store-object)
-  ((commit :initarg :commit
-           :reader unchanged-run-commit
-           :index +unchanged-run-index+
-           :index-reader %unchanged-runs-for-commit)
-   (other-commit :initarg :other-commit
-            :reader unchanged-run-other-commit
-            :documentation "The commit that this is going to be a copy of")
-   (channel :initarg :channel
-            :initform nil
-            :reader unchanged-run-channel))
-  (:metaclass persistent-class)
-  (:documentation "Annotates that this commit should have identical screenshots to the other commit"))
-
-(defun unchanged-run-for-commit (channel commit)
-  (let ((runs (%unchanged-runs-for-commit commit)))
-    (fset:do-set (ur runs)
-      (when (eql channel (unchanged-run-channel ur))
-        (return-from unchanged-run-for-commit ur))))
-  nil)
-
 (defun make-recorder-run (&rest args &key screenshots channel &allow-other-keys)
   (apply #'make-instance 'recorder-run
          :screenshot-map (screenshot-map:make-screenshot-map channel screenshots)

@@ -222,9 +222,6 @@
   (:documentation "Push the CHECK to the corresponding run remotely "))
 
 (defmethod push-remote-check :before (promoter run check)
-
-
-
   (atomics:atomic-push (list run check) *logs*))
 
 (defgeneric make-promoter-for-acceptable (acceptable))
