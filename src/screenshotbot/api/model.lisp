@@ -45,12 +45,16 @@
              #:override-commit-hash
              #:compare-threshold
              #:report
-             #:work-branch))
+             #:work-branch
+             #:unchanged-run-other-commit
+             #:unchanged-run-commit
+             #:unchanged-run-channel
+             #:unchanged-run))
 
 (in-package :screenshotbot/api/model)
 
 ;; Please update CHANGELOG.md
-(defparameter *api-version* 5)
+(defparameter *api-version* 6)
 
 (defclass version ()
   ((version :initarg :version
@@ -94,6 +98,29 @@
            :initform nil
            :reader failed-run-commit))
   (:metaclass ext-json-serializable-class))
+
+(defclass unchanged-run ()
+  ((id :initarg :id
+       :json-type (or null :number)
+       :initform nil
+       :json-key "id")
+   (channel :initarg :channel
+            :json-key "channel"
+            :json-type (or null :string)
+            :initform nil
+            :reader unchanged-run-channel)
+   (commit :initarg :commit
+           :json-key "commit"
+           :json-type (or null :string)
+           :initform nil
+           :reader unchanged-run-commit)
+   (other-commit :initarg :other-commit
+                 :json-key "other-commit"
+                 :json-type (or null :string)
+                 :initform nil
+                 :reader unchanged-run-other-commit))
+  (:metaclass ext-json-serializable-class))
+
 
 (defclass screenshot ()
   ((name :initarg :name
