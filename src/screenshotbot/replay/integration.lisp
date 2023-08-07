@@ -496,7 +496,6 @@ accessing the urls or sitemap slot."
                                 :results results
                                 :url-count url-count)))))))))
 
-
 (defun best-image-type (config)
   (cond
     ((string-equal "firefox" (browser-type config))
