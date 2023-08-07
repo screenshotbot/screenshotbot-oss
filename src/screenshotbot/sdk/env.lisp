@@ -218,9 +218,11 @@ get this from the Git repository directly."))
             pull-id)))
 
 (defmethod pull-request-url ((self  buildkite-env-reader))
-  (make-pr-url self
-               "BUILDKITE_REPO"
-               "BUILDKITE_PULL_REQUEST"))
+  (let ((pr "BUILDKITE_PULL_REQUEST"))
+   (unless (string-equal "false" (getenv self pr))
+     (make-pr-url self
+                  "BUILDKITE_REPO"
+                  pr))))
 
 (defmethod sha1 ((self buildkite-env-reader))
   (getenv self "BUILDKITE_COMMIT"))

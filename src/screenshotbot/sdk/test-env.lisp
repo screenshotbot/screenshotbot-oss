@@ -69,3 +69,20 @@
 (test bitbucket-pipeline
   (finishes (test-happy-fns (make-instance 'bitbucket-pipeline-env-reader
                                            :overrides nil))))
+
+
+(test buildkite-pull-request-is-not-nil-when-not-false
+  (let ((one (make-instance
+              'buildkite-env-reader
+              :overrides `(("BUILDKITE_PULL_REQUEST" . "2")
+                           ("BUILDKITE_REPO" . "https://github.com/tdrhq/fast-example")))))
+    (is (equal "https://github.com/tdrhq/fast-example/pull/2"
+               (pull-request-url one)))))
+
+(test buildkite-pull-request-is-nil-when-false
+  (let ((one (make-instance
+              'buildkite-env-reader
+              :overrides `(("BUILDKITE_PULL_REQUEST" . "false")
+                           ("BUILDKITE_REPO" . "https://github.com/tdrhq/fast-example")))))
+    (is (equal nil
+               (pull-request-url one)))))
