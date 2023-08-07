@@ -20,6 +20,7 @@
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
   (:import-from #:screenshotbot/model/recorder-run
+                #:unchanged-run
                 #:make-recorder-run))
 
 (util/fiveam:def-suite)
@@ -63,6 +64,37 @@
                              :channel channel
                              :commit-hash "bar")))
        (is (eql bar-run (production-run-for channel :commit "bar")))))))
+
+(test find-production-run-unchanged-run
+  (with-fixture state ()
+   (let* ((channel (make-instance 'channel))
+          (unchanged-run (make-instance 'unchanged-run
+                                  :channel channel
+                                  :commit "foo"
+                                  :other-commit "bar"))
+          (bar-run (make-recorder-run :channel channel
+                                      :commit-hash "bar")))
+     (is (eql bar-run (production-run-for channel :commit "bar")))
+     (is (eql bar-run (production-run-for channel :commit "foo")))
+
+     (let ((another-bar-run (make-recorder-run
+                             :channel channel
+                             :commit-hash "bar")))
+       (is (eql bar-run (production-run-for channel :commit "foo")))
+       (is (eql bar-run (production-run-for channel :commit "bar")))))))
+
+(test detect-infinite-loops-in-unchanged-run
+  (with-fixture state ()
+   (let* ((channel (make-instance 'channel))
+          (foo-run (make-instance 'unchanged-run
+                                  :channel channel
+                                  :commit "foo"
+                                  :other-commit "bar"))
+          (bar-run (make-instance 'unchanged-run
+                                  :channel channel
+                                  :commit "bar"
+                                  :other-commit "foo")))
+     (is (eql nil (production-run-for channel :commit "bar"))))))
 
 (test get-full-repo-from-repo
   (is (equal "foo/bar"

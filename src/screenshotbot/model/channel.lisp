@@ -27,6 +27,9 @@
   (:import-from #:screenshotbot/model/image
                 #:masks)
   (:import-from #:screenshotbot/model/recorder-run
+                #:unchanged-run-other-commit
+                #:unchanged-run-for-commit
+                #:unchanged-runs-for-commit
                 #:remove-run-from-channel
                 #:recorder-run
                 #:recorder-run-commit
@@ -254,20 +257,30 @@
    (is-user-id-same channel user)))
 
 (defmethod production-run-for ((channel channel)
-                               &key commit)
-  (declare (optimize (speed 0) (debug 3)))
+                               &key commit
+                                 (seen (fset:empty-set)))
   ;; currently returns the oldest run for a given commit
-  (let ((large-int most-positive-fixnum))
-    (reduce
-     (lambda (x y)
-       (if (< (if x (store-object-id x) large-int)
-              (if y (store-object-id y) large-int))
-           x
-           y))
-     (fset:lookup
-      (commit-to-run-map channel)
-      commit)
-     :initial-value nil)))
+  (let ((unchanged-run (unchanged-run-for-commit
+                        channel commit)))
+    (cond
+      ((fset:contains? seen commit)
+       nil)
+      (unchanged-run
+       (production-run-for channel
+                           :commit (unchanged-run-other-commit unchanged-run)
+                           :seen (fset:with seen commit)))
+      (t
+       (let ((large-int most-positive-fixnum))
+         (reduce
+          (lambda (x y)
+            (if (< (if x (store-object-id x) large-int)
+                   (if y (store-object-id y) large-int))
+                x
+                y))
+          (fset:lookup
+           (commit-to-run-map channel)
+           commit)
+          :initial-value nil))))))
 
 (defmethod channel-active-run ((channel channel))
   (loop for run in (company-runs (channel-company channel))
