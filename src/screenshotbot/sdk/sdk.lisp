@@ -51,6 +51,7 @@
   (:import-from #:screenshotbot/api/model
                 #:encode-json)
   (:import-from #:util/json-mop
+                #:ext-json-serializable-class
                 #:json-mop-to-string)
   (:import-from #:screenshotbot/sdk/backoff
                 #:backoff)
@@ -152,7 +153,10 @@
   (let ((json (%request api :method method
                             :parameters parameters
                             :content (cond
-                                       ((eql :put method)
+                                       ((or
+                                         (eql :put method)
+                                         (typep (class-of content)
+                                                'ext-json-serializable-class))
                                         (json-mop-to-string
                                          content))
                                        ((and (eql method :post)

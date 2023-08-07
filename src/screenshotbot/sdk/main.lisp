@@ -27,6 +27,8 @@
                 #:def-easy-macro)
   (:import-from #:screenshotbot/sdk/failed-run
                 #:mark-failed)
+  (:import-from #:screenshotbot/sdk/unchanged-run
+                #:mark-unchanged-run)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
@@ -65,6 +67,10 @@
        (sdk:parse-org-defaults)
        (with-version-check ()
          (mark-failed)))
+      (flags:*unchanged-from*
+       (sdk:parse-org-defaults)
+       (with-version-check ()
+         (mark-unchanged-run)))
       (flags:*ios-multi-dir*
        (sdk:parse-org-defaults)
        (sdk:run-ios-multi-dir-toplevel))

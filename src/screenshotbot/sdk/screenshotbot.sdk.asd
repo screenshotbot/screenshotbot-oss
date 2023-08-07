@@ -6,7 +6,7 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
-  :version "2.5.27"
+  :version "2.5.28"
   :depends-on (:com.google.flag
                :pkg
                :quri
@@ -48,7 +48,8 @@
                (:file "env")
                (:file "git")
                (:file "sdk")
-               (:file "failed-run")))
+               (:file "failed-run")
+               (:file "unchanged-run")))
 
 (defsystem :screenshotbot.sdk/gradle
   :serial t

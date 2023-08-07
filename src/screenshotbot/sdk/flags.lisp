@@ -50,7 +50,8 @@
    #:*versionp*
    #:*compare-threshold*
    #:*desktop*
-   #:*recursive*))
+   #:*recursive*
+   #:*unchanged-from*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -254,6 +255,12 @@ You don't need to call this, but if you do we can use the information
 to show more appropriate information on Pull Requests. For instance,
 if you have a Pull Request based off of a failing commit, we can find
 the last green commit to make our screenshot report.")
+
+(define-flag *unchanged-from*
+  :selector "mark-unchanged-from"
+  :default-value nil
+  :type (or null string)
+  :help "Notify Screenshotbot that the run for this commit will be identical to the run from the commit provided")
 
 (define-flag *compare-threshold*
   :selector "compare-threshold"
