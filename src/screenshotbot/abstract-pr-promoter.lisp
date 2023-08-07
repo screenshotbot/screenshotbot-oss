@@ -282,16 +282,10 @@
                              :status :failure
                              :title "Base SHA not available for comparison, please check CI setup"
                              :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
-                           ((null base-run)
-                            (push-event :promoter.no-base-run :oid (oid run))
-                            (format-log run :info "Could not find base-run")
-                            (make-run-check
-                             :status :success
-                             :title (format nil "Could not find a run for commit ~a, most likely this is a new channel." merge-base)
-                             :summary "Screenshots unavailable for base commit, most likely this is a new channel"))
                            (t
                             (format-log run :info "Base run is available, preparing notification from diff-report")
-                            (warn-if-not-merge-base promoter run base-run)
+                            (when base-run
+                              (warn-if-not-merge-base promoter run base-run))
                             (make-check-result-from-diff-report
                              promoter
                              run

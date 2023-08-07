@@ -732,7 +732,11 @@
       </markup:merge-tag>)))
 
 (deftag link-to-run (&key run)
-  <a href= (hex:make-url "/runs/:id" :id (oid run))>run from ,(timeago :timestamp (created-at run))</a>)
+  (cond
+    (run
+     <a href= (hex:make-url "/runs/:id" :id (oid run))>run from ,(timeago :timestamp (created-at run))</a>)
+    (t
+     <span>empty run</span>)))
 
 (defun info-modal (run to)
   <div class="modal" tabindex="-1" id= "comparison-info-modal" >
@@ -747,7 +751,7 @@
 
           ,(when-let* ((repo (channel-repo (recorder-run-channel run)))
                        (this-hash (recorder-run-commit run))
-                       (prev-hash (recorder-run-commit to)))
+                       (prev-hash (?. recorder-run-commit to)))
              (let ((review-link (review-link :run run)))
                <p class= "mt-2" >
                  This commit: <commit repo= repo hash=this-hash />

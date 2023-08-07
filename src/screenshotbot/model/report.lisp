@@ -132,7 +132,7 @@
 (defmethod can-view ((report report) user)
   (and
    (can-view (report-run report) user)
-   (can-view (report-previous-run report) user)))
+   (?. can-view (report-previous-run report) user)))
 
 (defun company-promotion-reports (company)
   (index-get +report-company-index+ company))

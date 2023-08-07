@@ -163,7 +163,8 @@
 (defun %make-diff-report (run to)
   (restart-case
       (let ((names (recorder-run-screenshots run))
-            (to-names (recorder-run-screenshots to)))
+            (to-names (when to
+                        (recorder-run-screenshots to))))
         (make-instance
          'diff-report
           :added (hash-set-difference

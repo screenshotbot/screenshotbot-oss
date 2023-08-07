@@ -72,7 +72,11 @@
   (:import-from #:alexandria
                 #:plist-alist
                 #:alist-plist
-                #:assoc-value))
+                #:assoc-value)
+  (:import-from #:screenshotbot/model/image
+                #:make-image)
+  (:import-from #:screenshotbot/screenshot-api
+                #:make-screenshot))
 (in-package :screenshotbot/github/test-pull-request-promoter)
 
 (util/fiveam:def-suite)
@@ -214,12 +218,18 @@
 (test without-a-base-run-we-get-an-error
   (with-fixture state ()
     (let ((*base-run* nil))
-     (let ((run (make-recorder-run
-                  :channel (make-instance 'dummy-channel)
-                  :company company
-                  :pull-request "https://github.com/tdrhq/fast-example/pull/2"
-                  :merge-base "car"
-                  :commit-hash "foo"))
+      (let* ((image (make-image
+                     :pathname (asdf:system-relative-pathname :screenshotbot "fixture/rose.png")))
+             (screenshot (make-screenshot
+                          :image image
+                          :name "foobar"))
+             (run (make-recorder-run
+                   :channel (make-instance 'dummy-channel)
+                   :company company
+                   :screenshots (list screenshot)
+                   :pull-request "https://github.com/tdrhq/fast-example/pull/2"
+                   :merge-base "car"
+                   :commit-hash "foo"))
            (check))
        (cl-mock:if-called 'push-remote-check
                           (lambda (promoter run %check)
@@ -228,8 +238,8 @@
        (maybe-promote promoter run)
        (is-true check)
        (is (equal "car" (pr-merge-base promoter run)))
-       (is (eql :success (check-status check)))
-       (is (cl-ppcre:scan ".*most likely this is a new channel.*" (check-title check)))))))
+       (is (eql :action_required (check-status check)))
+       (is (equal "1 added" (check-title check)))))))
 
 (test check-result-for-diff-report
   (with-installation ()
