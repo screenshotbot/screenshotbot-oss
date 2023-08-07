@@ -577,6 +577,7 @@ pull-request looks incorrect."
                                              (car (last (pathname-directory directory))))))))
 
 (defmethod update-commit-graph (repo branch)
+  (log:info "Updating commit graph")
   (let* ((dag (read-graph repo))
          (json (with-output-to-string (s)
                  (dag:write-to-stream dag s))))
@@ -592,11 +593,11 @@ pull-request looks incorrect."
                   :link *repo-url*))
 
 (defun single-directory-run (directory &key channel)
-  (log:info "Uploading images from: ~a" directory)
   (let ((repo (git-repo))
         (branch *main-branch*))
     (when *production*
       (update-commit-graph repo branch))
+    (log:info "Uploading images from: ~a" directory)
     (make-directory-run directory
                         :channel channel
                         :pull-request *pull-request*
