@@ -64,7 +64,7 @@
   (labels ((parse-directory (dir prefix)
              (loop for im in (fad:list-directory dir)
                    if (and (recursivep bundle)
-                           (path:-d im))
+                           (fad:directory-pathname-p im))
                      append (parse-directory
                              im
                              (str:concat prefix (car (last (pathname-directory im))) "/"))
@@ -78,7 +78,10 @@
                                                               key
                                                               im))))
                          image)))))
-    (parse-directory (bundle-directory bundle) "")))
+    (log:info "Parsing directory ~a" (bundle-directory bundle))
+    (unwind-protect
+         (parse-directory (bundle-directory bundle) "")
+      (log:debug "Done parsing directory"))))
 
 (defmethod image-stream ((im local-image))
   (open (image-pathname im) :direction :input
