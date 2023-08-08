@@ -52,7 +52,7 @@
   (:import-from #:core/installation/installation
                 #:installation-domain))
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defparameter *favicon* "/assets/images/logo-favicon.png")
 
@@ -80,7 +80,7 @@
 (markup:deftag google-analytics ()
   #-screenshotbot-oss
   (when (analyticsp (installation))
-    <:script defer data-domain= (quri:uri-domain (quri:uri (installation-domain (installation))))  data-api="/api/event" src="/js/script.js"></:script>))
+    <:script data-domain= (quri:uri-host (quri:uri (installation-domain (installation))))  data-api="/api/event" src="/js/script.js" defer ></:script>))
 
 (deftag dashboard-head (&key jquery-ui
                         (title "Screenshotbot")

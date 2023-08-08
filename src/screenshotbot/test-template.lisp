@@ -13,6 +13,7 @@
                 #:*user*
                 #:*company*)
   (:import-from #:screenshotbot/template
+                #:analyticsp
                 #:something-went-wrong)
   (:import-from #:fiveam-matchers
                 #:is-string
@@ -28,6 +29,7 @@
                 #:with-fake-request
                 #:screenshot-static-page)
   (:import-from #:screenshotbot/testing
+                #:with-installation
                 #:screenshot-test))
 
 (util/fiveam:def-suite)
@@ -71,3 +73,16 @@
     (with-fake-request ()
      (auth:with-sessions ()
        (no-access-error-page)))))
+
+(defclass my-installation (installation)
+  ((analyticsp :initform t
+               :reader analyticsp)))
+
+#-screenshotbot-oss
+(test analytics
+  (with-installation (:installation (make-instance 'my-installation :domain "https://foo.screenshotbot.io"))
+    (with-fake-request ()
+     (let ((tag (google-analytics)))
+       (is-true tag)
+       (is (equal "foo.screenshotbot.io"
+                  (mquery:attr tag "data-domain")))))))
