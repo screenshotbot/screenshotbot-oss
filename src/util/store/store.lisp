@@ -40,12 +40,13 @@
                 #:clear-slot-indices)
   (:import-from #:util/lists
                 #:head)
-  #+ (and lispworks linux)
+  #+bknr.cluster
   (:import-from #:bknr.cluster/store
                 #:cluster-store-mixin
                 #:backward-compatibility-mixin)
-  #+ (and lispworks linux)
+  #+bknr.cluster
   (:import-from #:bknr.cluster/server
+                #:data-path
                 #:with-leadership-priority)
   (:local-nicknames (#:a #:alexandria))
   (:export
@@ -139,7 +140,7 @@ to the directory that was just snapshotted.")
                          checksumed-mp-store)
   ((transaction-log-lock :initform nil)))
 
-#+ (and lispworks linux)
+#+bknr.cluster
 (defclass raft-store (backward-compatibility-mixin
                       with-leadership-priority
                       cluster-store-mixin
@@ -705,25 +706,40 @@ set-differences on O and the returned value from this."
     (call-next-method)))
 
 (defun safe-snapshot (&optional (comment "default-comment"))
+  (safe-snapshot-impl *store* :comment comment))
+
+(defmethod safe-snapshot-impl (store &key comment)
+  (log:info "Going into snapshot, write access will be locked")
+  (time
+   (snapshot)))
+
+(defmethod safe-snapshot-impl ((store safe-mp-store) &key comment)
   (let ((directories (fad:list-directory *object-store*)))
-    (log:info "Going into snapshot, write access will be locked")
-    (time
-     (snapshot))
+    (call-next-method)
     (let* ((new-directories (fad:list-directory *object-store*))
            (directories (set-difference new-directories directories :test #'equal)))
       (unless (= 1 (length directories))
         (error "Expected to see one new directory, but saw: ~S" directories))
-      (with-open-file (file (path:catfile (car directories) "comment.txt")
-                            :direction :output
-                            ;; If we recovered from an existing
-                            ;; snapshot, then the comment.txt might
-                            ;; already be here.
-                            :if-exists :supersede)
-        (write-string comment file))
-
+      (%write-comment (car directories) comment)
       (let ((dir (car directories)))
         (dispatch-snapshot-hooks dir)
         dir))))
+
+(defun %write-comment (dir comment)
+  (with-open-file (file (path:catfile dir "comment.txt")
+                        :direction :output
+                        ;; If we recovered from an existing
+                        ;; snapshot, then the comment.txt might
+                        ;; already be here.
+                        :if-exists :supersede)
+    (write-string comment file)))
+
+#+bknr.cluster
+(defmethod safe-snapshot-impl ((store cluster-store-mixin) &key comment)
+  (call-next-method)
+  (let ((dir (path:catdir (data-path store) "snapshot")))
+    (%write-comment dir comment)
+    (dispatch-snapshot-hooks dir)))
 
 (defun dispatch-snapshot-hooks (dir)
   (loop for hook in *snapshot-hooks* do
