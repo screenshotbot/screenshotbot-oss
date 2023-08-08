@@ -86,6 +86,11 @@
     (let ((diff-report (make-diff-report run1 run2)))
       (is (eql 1 (length (diff-report-changes diff-report)))))))
 
+(test make-diff-report-to-nil-run
+  (with-fixture state ()
+    (let ((diff-report (make-diff-report run1 nil)))
+      (is (eql 1 (length (diff-report-added diff-report)))))))
+
 (test make-diff-report-added
   (with-fixture state ()
     (let ((diff-report (make-diff-report run1 (make-recorder-run
