@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/compare
+                #:link-to-run
                 #:random-non-alpha-px
                 #:image-comparison-job
                 #:prepare-image-comparison
@@ -53,8 +54,11 @@
                 #:with-wand)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-compare)
+
 
 (util/fiveam:def-suite)
 
@@ -165,3 +169,7 @@
           (assert-that image-comparison
                        (described-as "Expected to get a json response"
                            (is-string))))))))
+
+(test link-to-empty-run
+  (assert-that (format nil "~a" (link-to-run :run nil))
+               (contains-string "empty run")))
