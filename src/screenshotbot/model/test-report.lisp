@@ -12,6 +12,7 @@
   (:import-from #:screenshotbot/report-api
                 #:report)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:recorder-run)
   (:import-from #:screenshotbot/screenshot-api
                 #:make-screenshot)
@@ -22,7 +23,21 @@
                 #:company-promotion-reports
                 #:%report-company)
   (:import-from #:screenshotbot/api/model
-                #:encode-json))
+                #:encode-json)
+  (:import-from #:screenshotbot/testing
+                #:with-installation
+                #:with-test-user)
+  (:import-from #:screenshotbot/user-api
+                #:user-companies
+                #:channel
+                #:can-view)
+  (:import-from #:fiveam-matchers/lists
+                #:has-item)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:multi-org-feature))
 (in-package :screenshotbot/model/test-report)
 
 (util/fiveam:def-suite)
@@ -68,4 +83,41 @@
                                  :run run
                                  :previous-run run)))
       (finishes
-       (encode-json (report-to-dto report))))))
+        (encode-json (report-to-dto report))))))
+
+(defclass multi-install (multi-org-feature
+                         installation)
+  ())
+
+(test can-view-on-report
+  (with-fixture state ()
+    (with-installation (:installation (make-instance 'multi-install))
+     (with-test-user (:user user :company company)
+       (let* ((channel (make-instance 'channel :company company))
+              (run1 (make-recorder-run :company company
+                                       :channel channel))
+              (run2 (make-recorder-run :company company
+                                       :channel channel))
+              (report (make-instance 'report
+                                     :run run1
+                                     :previous-run run2)))
+         (assert-that (user-companies user)
+                      (has-item company))
+         (is-true user)
+         (is-true (can-view report user)))))))
+
+(test can-view-on-report-with-nil-previous
+  (with-fixture state ()
+    (with-installation (:installation (make-instance 'multi-install))
+     (with-test-user (:user user :company company)
+       (let* ((channel (make-instance 'channel :company company))
+              (run1 (make-recorder-run :company company
+                                       :channel channel))
+              (run2 nil)
+              (report (make-instance 'report
+                                     :run run1
+                                     :previous-run run2)))
+         (assert-that (user-companies user)
+                      (has-item company))
+         (is-true user)
+         (is-true (can-view report user)))))))
