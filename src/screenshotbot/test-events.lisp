@@ -25,6 +25,7 @@
   (:import-from #:fiveam-matchers/described-as
                 #:described-as)
   (:import-from #:core/installation/installation
+                #:installation-domain
                 #:*installation*)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-events)
@@ -33,7 +34,10 @@
 
 (defclass fake-installation ()
   ((event-engine :initarg :event-engine
-                 :reader event-engine)))
+                 :reader event-engine)
+   (domain :initform "example.com"
+           :reader installation-domain)))
+
 
 (def-fixture state ()
   (uiop:with-temporary-file (:pathname pathname)

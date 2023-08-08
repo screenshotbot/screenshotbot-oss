@@ -18,7 +18,10 @@
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
   (:import-from #:core/installation/installation
+                #:installation-domain
                 #:*installation*)
+  (:import-from #:util/misc
+                #:?.)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:event-engine))
@@ -54,7 +57,13 @@
            :reader event-extras)
    (created-at
     :accessor created-at
-    :initform (local-time:now))))
+    :initform (local-time:now))
+   (hostname
+    :reader hostname
+    :initform (uiop:hostname))
+   (domain
+    :reader domain
+    :initform (?. installation-domain (safe-installation)))))
 
 (def-easy-macro with-db (&binding db engine &fn fn)
   (let ((db (clsql:connect (connection-spec engine)
