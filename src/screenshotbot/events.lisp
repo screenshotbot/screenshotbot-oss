@@ -57,13 +57,7 @@
            :reader event-extras)
    (created-at
     :accessor created-at
-    :initform (local-time:now))
-   (hostname
-    :reader hostname
-    :initform (uiop:hostname))
-   (domain
-    :reader domain
-    :initform (?. installation-domain (safe-installation)))))
+    :initform (local-time:now))))
 
 (def-easy-macro with-db (&binding db engine &fn fn)
   (let ((db (clsql:connect (connection-spec engine)
@@ -119,15 +113,21 @@
      :database db)))
 
 (defun insert-events (events db)
-  (insert-multiple-items db
-                         "event"
-                         events
-                         '("name" "extras" "created_at")
-                         (lambda (ev)
-                           (list
-                            (event-name ev)
-                            (event-extras ev)
-                            (created-at ev)))))
+  (let ((hostname
+          (uiop:hostname))
+        (domain
+          (?. installation-domain (safe-installation))))
+   (insert-multiple-items db
+                          "event"
+                          events
+                          '("name" "extras" "created_at" "domain" "hostname")
+                          (lambda (ev)
+                            (list
+                             (event-name ev)
+                             (event-extras ev)
+                             (created-at ev)
+                             domain
+                             hostname)))))
 
 (defmethod push-event-impl ((engine db-engine) name &rest args)
   (let ((ev (make-instance 'event

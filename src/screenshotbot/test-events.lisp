@@ -51,7 +51,7 @@
                                             `(,(namestring pathname))
                               :database-type :sqlite3))))
        (with-db (db (event-engine *installation*))
-         (clsql:query "create table event (name string, extras string, created_at datetime)"
+         (clsql:query "create table event (name string, extras string, domain, string, hostname string, created_at datetime)"
                       :database db))
        (&body)))))
 
