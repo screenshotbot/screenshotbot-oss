@@ -26,6 +26,8 @@
                 #:?.)
   (:import-from #:alexandria
                 #:when-let)
+  (:import-from #:core/installation/installation
+                #:installation-domain)
   (:export #:push-analytics-event
            #:analytics-event-ts
            #:analytics-event-script-name
@@ -77,23 +79,31 @@
 
 (defmethod write-analytics-events-to-engine ((engine db-engine) events)
   (with-db (db engine)
-    (with-batches (events events)
-      (insert-multiple-items db "analytics" events
-                             '("ip_address" "session" "script_name"
-                               "referrer"
-                               "user_agent"
-                               "query_string" "ts")
-                             (lambda (event)
-                               (list
-                                (slot-value event 'ip-address)
-                                (event-session event)
-                                (analytics-event-script-name event)
-                                (ignore-errors
-                                 (slot-value event 'referrer))
-                                (ignore-errors
-                                 (slot-value event 'user-agent))
-                                (slot-value event 'query-string)
-                                (analytics-event-ts event)))))))
+    (let ((hostname
+            (uiop:hostname))
+          (domain
+            (?. installation-domain (safe-installation))))
+     (with-batches (events events)
+       (insert-multiple-items db "analytics" events
+                              '("ip_address" "session" "script_name"
+                                "referrer"
+                                "user_agent"
+                                "query_string" "ts"
+                                "hostname"
+                                "domain")
+                              (lambda (event)
+                                (list
+                                 (slot-value event 'ip-address)
+                                 (event-session event)
+                                 (analytics-event-script-name event)
+                                 (ignore-errors
+                                  (slot-value event 'referrer))
+                                 (ignore-errors
+                                  (slot-value event 'user-agent))
+                                 (slot-value event 'query-string)
+                                 (analytics-event-ts event)
+                                 hostname
+                                 domain)))))))
 
 (defun %write-analytics-events ()
   (let ((old-events (util/atomics:atomic-exchange *events* nil)))

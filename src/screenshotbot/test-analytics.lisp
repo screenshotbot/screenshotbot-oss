@@ -36,6 +36,7 @@
   (:import-from #:fiveam-matchers/every-item
                 #:every-item)
   (:import-from #:core/installation/installation
+                #:installation-domain
                 #:*installation*)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-analytics)
@@ -44,7 +45,9 @@
 
 (defclass fake-installation ()
   ((event-engine :initarg :event-engine
-                 :reader event-engine)))
+                 :reader event-engine)
+   (domain :initform "https://foo.screenshotbot.io"
+           :reader installation-domain)))
 
 (def-fixture state ()
   (uiop:with-temporary-file (:pathname pathname)
@@ -60,7 +63,8 @@
            "create table analytics (ip_address text, session text, script_name text,
                                     referrer text,
                                     user_agent text,
-                                     query_string text, ts datetime)"
+                                    query_string text, ts datetime,
+                                    hostname text, domain text)"
            :database db))
         (let ((*events* nil)
               (ev1 (make-instance 'analytics-event
