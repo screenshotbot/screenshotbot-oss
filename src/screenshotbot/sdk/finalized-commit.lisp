@@ -19,9 +19,11 @@
   (when (< version-check:*remote-version* 7)
     (error "The remote Screenshotbot server does not support --mark-unchanged-from"))
 
-  (let ((repo (git-repo)))
+  (let* ((repo (git-repo))
+         (commit (current-commit repo)))
     (sdk:request "/api/unchanged-run"
                  :method :post
                  :content
                  (make-instance 'dto:finalized-commit
-                                :commit (current-commit repo)))))
+                                :commit commit))
+    (log:info "Finalized runs for commit ~a" commit)))
