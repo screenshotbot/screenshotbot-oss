@@ -26,6 +26,7 @@
               :reader company)
     (%commit :initarg :commit
              :index +commit-index+
+             :reader finalized-commit-hash
              :index-reader %finalized-commits-for-commit))
    (:metaclass persistent-class)))
 

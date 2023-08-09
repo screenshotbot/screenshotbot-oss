@@ -49,12 +49,14 @@
              #:unchanged-run-other-commit
              #:unchanged-run-commit
              #:unchanged-run-channel
-             #:unchanged-run))
+             #:unchanged-run
+             #:finalized-commit
+             #:finalized-commit-hash))
 
 (in-package :screenshotbot/api/model)
 
 ;; Please update CHANGELOG.md
-(defparameter *api-version* 6)
+(defparameter *api-version* 7)
 
 (defclass version ()
   ((version :initarg :version
@@ -119,6 +121,17 @@
                  :json-type (or null :string)
                  :initform nil
                  :reader unchanged-run-other-commit))
+  (:metaclass ext-json-serializable-class))
+
+(defclass finalized-commit ()
+  ((id :initarg :id
+       :json-type (or null :number)
+       :initform nil
+       :json-key "id")
+   (commit :initarg :commit
+           :json-key "commit"
+           :json-type (or null :string)
+           :reader finalized-commit-hash))
   (:metaclass ext-json-serializable-class))
 
 
