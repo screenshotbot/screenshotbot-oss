@@ -29,6 +29,8 @@
                 #:mark-failed)
   (:import-from #:screenshotbot/sdk/unchanged-run
                 #:mark-unchanged-run)
+  (:import-from #:screenshotbot/sdk/finalized-commit
+                #:finalize-commit)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
@@ -84,6 +86,9 @@
        (firebase:with-firebase-output (flags:*firebase-output*)
          (with-defaults ()
            (sdk:run-prepare-directory-toplevel))))
+      (flags:*finalize*
+       (with-defaults ()
+         (finalize-commit)))
       (t
        (with-defaults ()
          (sdk:run-prepare-directory-toplevel))))))

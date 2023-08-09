@@ -51,7 +51,8 @@
    #:*compare-threshold*
    #:*desktop*
    #:*recursive*
-   #:*unchanged-from*))
+   #:*unchanged-from*
+   #:*finalize*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -289,3 +290,9 @@ allowed to be different at a time.")
   :type boolean
   :help "Whether running in desktop mode. In desktop mode the --hostname
 defaults to http://localhost:4095, and authentication is disabled.")
+
+(define-flag *finalize*
+  :selector "finalize"
+  :default-value nil
+  :type boolean
+  :help "Notify Screenshotbot that all builds on all channels on this commit are complete. This is not required to be called, but if used provides a better developer experience when later builds are waiting on this commit.")

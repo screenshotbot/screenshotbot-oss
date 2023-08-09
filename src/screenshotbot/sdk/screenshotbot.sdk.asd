@@ -49,7 +49,8 @@
                (:file "git")
                (:file "sdk")
                (:file "failed-run")
-               (:file "unchanged-run")))
+               (:file "unchanged-run")
+               (:file "finalized-commit")))
 
 (defsystem :screenshotbot.sdk/gradle
   :serial t
