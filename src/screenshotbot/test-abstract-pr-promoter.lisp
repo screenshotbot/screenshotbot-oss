@@ -166,6 +166,27 @@
                     (test-logger-stream logger))
                    (is-not (contains-string "Waiting 0s before checking again"))))))
 
+(test run-retriever-when-commit-is-finalized-but-the-run-is-present
+  (with-fixture state ()
+    (cl-mock:answer (channel-repo channel) :git-repo)
+    (cl-mock:answer (get-parent-commit :git-repo "abcd")
+      "foobar")
+    (make-instance 'finalized-commit
+                   :company company
+                   :commit "abcd")
+
+    (let* ((run (make-recorder-run
+                 :commit-hash "abcd"
+                 :channel channel))
+           (retriever (make-instance 'run-retriever
+                                     :sleep-time 0))
+           (logger (make-instance 'test-logger)))
+      (is (equal run (lparallel:force (retrieve-run retriever channel "abcd"
+                                                    logger))))
+      (assert-that (get-output-stream-string
+                    (test-logger-stream logger))
+                   (is-not (contains-string "Waiting 0s before checking again"))))))
+
 
 (test format-updated-summary
   (with-fixture state ()
