@@ -4,7 +4,7 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop/package:define-package :screenshotbot/analytics
+(defpackage :screenshotbot/analytics
     (:use #:cl
           #:alexandria
           #:iterate)
@@ -135,6 +135,9 @@
                (call-on
                 (with-db (db engine)
                   (clsql:select 'analytics-event :database db
+                                :where (clsql:sql-operation
+                                        '= (clsql:sql-expression :attribute "domain")
+                                        (installation-domain (safe-installation)))
                     :order-by (list
                                (make-instance
                                 'clsql:sql :string "ts desc"))
