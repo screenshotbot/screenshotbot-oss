@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/events
+                #:with-tracing
                 #:event-engine
                 #:with-event
                 #:*events*
@@ -106,3 +107,15 @@
                  events))
       (is (eql 2 (with-event (:test-stuff)
                    2))))))
+
+(test with-tracing-happy-path
+  (with-fixture state ()
+   (let ((events))
+     (cl-mock:if-called 'push-event
+                        (lambda (name &rest args)
+                          (push name events)))
+     (is (eql 'result
+              (with-tracing (:foobar)
+                'result)))
+     (assert-that events
+                  (has-length 1)))))

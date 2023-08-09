@@ -24,7 +24,8 @@
                 #:?.)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:event-engine))
+   #:event-engine
+   #:with-tracing))
 (in-package :screenshotbot/events)
 
 (defvar *events* nil)
@@ -170,3 +171,11 @@
    (flush-events (event-engine (safe-installation)))))
 
 ;; (push-event :test-sdf)
+
+(def-easy-macro with-tracing (name &fn fn)
+  (let ((start-time (local-time:now)))
+    (unwind-protect
+         (funcall fn)
+      (push-event :trace :name (string name)
+                         :time (local-time:timestamp-difference
+                                (local-time:now) start-time)))))
