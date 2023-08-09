@@ -44,6 +44,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:fiveam-matchers/core
+                #:is-not
                 #:has-typep
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
@@ -61,7 +62,11 @@
   (:import-from #:screenshotbot/model/failed-run
                 #:failed-run)
   (:import-from #:fiveam-matchers/has-length
-                #:has-length))
+                #:has-length)
+  (:import-from #:util/logger
+                #:format-log)
+  (:import-from #:screenshotbot/model/finalized-commit
+                #:finalized-commit))
 (in-package :screenshotbot/test-abstract-pr-promoter)
 
 
@@ -71,6 +76,17 @@
 (defvar *cv* (bt:make-condition-variable))
 
 (defconstant +empty-logger+ nil)
+
+(defclass test-logger ()
+  ((stream :initform (make-string-output-stream)
+           :reader test-logger-stream)))
+
+(defmethod format-log ((logger test-logger)
+                       level msg &rest args)
+  (apply #'format (test-logger-stream logger)
+         msg
+         args)
+  (format (test-logger-stream logger) "~%"))
 
 (def-fixture state ()
   (with-test-store (:globally t)
@@ -99,6 +115,23 @@
       (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd"
                                                     +empty-logger+)))))))
 
+
+
+(test run-retriever-when-commit-has-not-failed-or-finalized
+  (with-fixture state ()
+    (cl-mock:answer (channel-repo channel) :git-repo)
+    (cl-mock:answer (get-parent-commit :git-repo "abcd")
+      "foobar")
+    (let ((retriever (make-instance 'run-retriever
+                                    :sleep-time 0))
+          (logger (make-instance 'test-logger)))
+      (is (equal nil (lparallel:force
+                      (retrieve-run retriever channel "abcd"
+                                    logger))))
+      (assert-that (get-output-stream-string
+                    (test-logger-stream logger))
+                   (contains-string "Waiting 0s before checking again")))))
+
 (test run-retriever-when-commit-has-failed
   (with-fixture state ()
     (cl-mock:answer (channel-repo channel) :git-repo)
@@ -108,9 +141,30 @@
                    :channel channel
                    :commit "abcd")
     (let ((retriever (make-instance 'run-retriever
-                                    :sleep-time 0)))
+                                    :sleep-time 0))
+          (logger (make-instance 'test-logger)))
       (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd"
-                                                    +empty-logger+)))))))
+                                                    logger))))
+      (assert-that (get-output-stream-string
+                    (test-logger-stream logger))
+                   (is-not (contains-string "Waiting 0s before checking again"))))))
+
+(test run-retriever-when-commit-is-finalized
+  (with-fixture state ()
+    (cl-mock:answer (channel-repo channel) :git-repo)
+    (cl-mock:answer (get-parent-commit :git-repo "abcd")
+      "foobar")
+    (make-instance 'finalized-commit
+                   :company company
+                   :commit "abcd")
+    (let ((retriever (make-instance 'run-retriever
+                                    :sleep-time 0))
+          (logger (make-instance 'test-logger)))
+      (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd"
+                                                    logger))))
+      (assert-that (get-output-stream-string
+                    (test-logger-stream logger))
+                   (is-not (contains-string "Waiting 0s before checking again"))))))
 
 
 (test format-updated-summary

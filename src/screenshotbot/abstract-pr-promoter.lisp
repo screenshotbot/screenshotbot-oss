@@ -16,6 +16,7 @@
                 #:report-acceptable
                 #:report)
   (:import-from #:screenshotbot/model/channel
+                #:channel-company
                 #:production-run-for)
   (:import-from #:screenshotbot/user-api
                 #:created-at
@@ -78,6 +79,8 @@
                 #:format-log)
   (:import-from #:util/threading
                 #:scheduled-future)
+  (:import-from #:screenshotbot/model/finalized-commit
+                #:commit-finalized-p)
   (:export
    #:check
    #:check-status
@@ -173,7 +176,9 @@
                 (immediate-promise nil))
                ((production-run-for channel :commit base-commit)
                 (immediate-promise it))
-               ((run-failed-on-commit-p channel base-commit)
+               ((or
+                 (commit-finalized-p (channel-company channel) base-commit)
+                 (run-failed-on-commit-p channel base-commit))
                 (failover))
                ((>= retries 0)
                 (format-log logger :info "Waiting ~as before checking again for ~a"
