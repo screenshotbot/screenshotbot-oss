@@ -38,6 +38,11 @@
    #:main))
 (in-package :screenshotbot/sdk/main)
 
+(def-easy-macro with-defaults (&fn fn)
+  (sdk:parse-org-defaults)
+  (with-version-check ()
+    (funcall fn)))
+
 (defun %main (&optional (argv #+lispworks system:*line-arguments-list*
                               #-lispworks (uiop:command-line-arguments)))
   (log:config :sane :immediate-flush t)
@@ -64,28 +69,23 @@
       (flags:*self-test*
        (uiop:quit (if (run-health-checks) 0 1)))
       (flags:*mark-failed*
-       (sdk:parse-org-defaults)
-       (with-version-check ()
+       (with-defaults ()
          (mark-failed)))
       (flags:*unchanged-from*
-       (sdk:parse-org-defaults)
-       (with-version-check ()
+       (with-defaults ()
          (mark-unchanged-run)))
       (flags:*ios-multi-dir*
        (sdk:parse-org-defaults)
        (sdk:run-ios-multi-dir-toplevel))
       (flags:*static-website*
-       (sdk:parse-org-defaults)
-       (with-version-check ()
+       (with-defaults ()
          (static:record-static-website flags:*static-website*)))
       (flags:*firebase-output*
        (firebase:with-firebase-output (flags:*firebase-output*)
-         (sdk:parse-org-defaults)
-         (with-version-check ()
+         (with-defaults ()
            (sdk:run-prepare-directory-toplevel))))
       (t
-       (sdk:parse-org-defaults)
-       (with-version-check ()
+       (with-defaults ()
          (sdk:run-prepare-directory-toplevel))))))
 
 (def-easy-macro with-sentry (&key (on-error (lambda ()
