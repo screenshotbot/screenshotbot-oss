@@ -291,7 +291,7 @@ Disallow: /n")))
    args))
 
 #+ (and lispworks linux)
-(defhandler (nil :uri "/raft-state") ()
+(hunchentoot:define-easy-handler (raft-state :uri "/raft-state") ()
   (if (leaderp bknr.datastore:*store*)
       "leader"
       "other"))
