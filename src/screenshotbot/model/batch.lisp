@@ -10,10 +10,42 @@
                 #:persistent-class
                 #:store-object)
   (:import-from #:util/store/store
-                #:with-class-validation))
+                #:defindex
+                #:with-class-validation)
+  (:import-from #:util/store/fset-index
+                #:fset-unique-index)
+  (:import-from #:bknr.indices
+                #:index-get)
+  (:export
+   #:find-or-create-batch))
 (in-package :screenshotbot/model/batch)
+
+(defindex +lookup-index+
+  'fset-unique-index
+  :slots '(%commit %company %repo))
+
 
 (with-class-validation
   (defclass batch (store-object)
-    ()
-    (:metaclass persistent-class)))
+    ((%company :initarg :company
+               :reader company)
+     (%repo :initarg :repo
+            :reader repo)
+     (%commit :initarg :commit
+              :reader commit))
+    (:metaclass persistent-class)
+    (:class-indices
+     (lookup-index
+      :index +lookup-index+
+      :slots (%commit %company %repo)))))
+
+(defvar *lock* (bt:make-lock))
+
+(defun find-or-create-batch (company repo commit)
+  (bt:with-lock-held (*lock*)
+    (or
+     (index-get +lookup-index+ (list commit company repo))
+     (make-instance 'batch
+                    :company company
+                    :repo repo
+                    :commit commit))))

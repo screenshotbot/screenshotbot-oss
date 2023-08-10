@@ -113,7 +113,10 @@
 the index reader returns a list in reverse sorted order instead of a set."))
 
 (defmethod index-object-key ((self abstract-fset-index) obj)
-  (slot-value obj (%slot-name self)))
+  (if (= 1 (length (%slots self)))
+      (slot-value obj (%slot-name self))
+      (mapcar (curry #'slot-value obj)
+              (%slots self))))
 
 (defmethod index-add :around ((self abstract-fset-index) obj)
   (when (and

@@ -52,7 +52,8 @@
              #:unchanged-run
              #:finalized-commit
              #:finalized-commit-hash
-             #:recorder-run-url))
+             #:recorder-run-url
+             #:run-batch))
 
 (in-package :screenshotbot/api/model)
 
@@ -274,7 +275,13 @@
         :json-key "url"
         :json-type (or null :string)
         :reader recorder-run-url
-        :documentation "The URL of this run"))
+        :documentation "The URL of this run")
+   (batch :initarg :batch
+          :json-key "batch"
+          :initform nil
+          :json-type (or null :string)
+          :reader run-batch
+          :documentation "The batch name associated with this run"))
   (:metaclass ext-json-serializable-class))
 
 (defclass report ()

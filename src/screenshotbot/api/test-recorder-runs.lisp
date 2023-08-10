@@ -18,6 +18,7 @@
   (:import-from #:screenshotbot/server
                 #:logged-in-p)
   (:import-from #:screenshotbot/api/recorder-run
+                #:%put-run
                 #:run-to-dto
                 #:warmup-image-caches
                 #:api-run-put
@@ -50,13 +51,20 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-batch
                 #:make-recorder-run
                 #:recorder-run)
   (:import-from #:fiveam-matchers/core
+                #:has-typep
                 #:assert-that
                 #:equal-to)
   (:import-from #:fiveam-matchers/strings
                 #:starts-with)
+  (:import-from #:fiveam-matchers/misc
+                #:is-null
+                #:is-not-null)
+  (:import-from #:screenshotbot/model/batch
+                #:batch)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 
 (util/fiveam:def-suite)
@@ -167,3 +175,36 @@
                    :screenshots (list
                                  (make-screenshot :image img1 :name "foo")))))
      (starts-with "https://example.com/runs/"))))
+
+(test batch-is-added
+  (with-fixture state ()
+    (assert company)
+    (%put-run company
+              (make-instance 'dto:run
+                             :channel "foo"
+                             :batch "dummy-batch"
+                             :screenshots (list
+                                           (make-instance 'dto:screenshot
+                                                          :name "foo"
+                                                          :image-id (oid img1)))))
+    (let ((run (car (last (class-instances 'recorder-run)))))
+      (is-true run)
+      (assert-that (recorder-run-batch run)
+                   (is-not-null)
+                   (has-typep 'batch)))))
+
+(test batch-is-nil
+  (with-fixture state ()
+    (assert company)
+    (%put-run company
+              (make-instance 'dto:run
+                             :channel "foo"
+                             :batch nil
+                             :screenshots (list
+                                           (make-instance 'dto:screenshot
+                                                          :name "foo"
+                                                          :image-id (oid img1)))))
+    (let ((run (car (last (class-instances 'recorder-run)))))
+      (is-true run)
+      (assert-that (recorder-run-batch run)
+                   (is-null)))))

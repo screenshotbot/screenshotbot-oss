@@ -48,6 +48,10 @@
                 #:installation-domain)
   (:import-from #:screenshotbot/installation
                 #:installation)
+  (:import-from #:alexandria
+                #:when-let)
+  (:import-from #:screenshotbot/model/batch
+                #:find-or-create-batch)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -216,9 +220,14 @@ it easier for us to recover, or even validate the model."
                        company
                        channel
                        (dto:run-screenshots run)))
+         (batch (when-let ((batch (dto:run-batch run)))
+                  (find-or-create-batch company
+                                        (dto:run-repo run)
+                                        (dto:run-commit run))))
          (recorder-run (make-recorder-run
                         :company company
                         :channel channel
+                        :batch batch
                         :screenshots screenshots
                         :commit-hash (dto:run-commit run)
                         :create-github-issue-p (dto:should-create-github-issue-p run)

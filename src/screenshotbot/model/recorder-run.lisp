@@ -89,7 +89,8 @@
    #:make-recorder-run
    #:remove-run-from-channel
    #:runs-for-company
-   #:recorder-run-work-branch)
+   #:recorder-run-work-branch
+   #:recorder-run-batch)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -229,7 +230,11 @@ NIL or 0, this will use exact pixel comparisons.")
 associated report is rendered.")
      (created-at
       :initform nil
-      :accessor %created-at))
+      :accessor %created-at)
+     (batch :initform nil
+            :initarg :batch
+            :accessor recorder-run-batch
+            :documentation "The batch object associated with this run"))
     (:metaclass has-created-at)
     (:default-initargs :screenshot-map (error "need screenshot-map"))))
 

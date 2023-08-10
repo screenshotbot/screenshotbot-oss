@@ -11,6 +11,7 @@
                 #:index-remove
                 #:indexed-class)
   (:import-from #:util/store/fset-index
+                #:index-object-key
                 #:index-least
                 #:%map
                 #:corrupted-index
@@ -249,3 +250,20 @@
     (signals
         #+lispworks conditions:unknown-keyword-error #-lispworks error
      (make-instance 'fset-unique-index :slots '(arg) :bleh 2))))
+
+(test index-key-does-not-use-list-for-single
+  (with-fixture state ()
+    (let ((obj (make-instance 'test-object
+                              :arg "foo")))
+      (is (equal "foo"
+                 (index-object-key (make-instance 'fset-unique-index :slots '(arg))
+                                   obj)))
+      (is (equal "foo"
+                 (index-object-key (make-instance 'fset-set-index :slots '(arg))
+                                   obj)))
+      (is (equal (list "foo" "foo")
+                 (index-object-key (make-instance 'fset-unique-index :slots '(arg arg))
+                                   obj)))
+      (is (equal (list "foo" "foo")
+                 (index-object-key (make-instance 'fset-set-index :slots '(arg arg))
+                                   obj))))))

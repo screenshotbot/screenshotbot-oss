@@ -381,6 +381,7 @@
                              (:file "test-auto-cleanup")
                              (:file "test-transient-object")
                              (:file "test-recorder-run")
+                             (:file "test-batch")
                              (:file "test-finalized-commit")
                              (:file "test-screenshot")
                              (:file "test-screenshot-key")
