@@ -27,6 +27,7 @@
                (:file "delayed-accessors")
                (:file "checksums")
                (:file "export")
+               (:file "fset")
                (:file "fset-index")
                (:file "store-migrations")))
 
@@ -41,4 +42,5 @@
                (:file "test-migrations")
                (:file "test-delayed-accessors")
                (:file "test-checksums")
+               (:file "test-fset")
                (:file "test-fset-index")))
