@@ -307,8 +307,9 @@ error."
              args))))
 
 (defun put-run (run)
-  (request "/api/run" :method :put
-           :content run))
+  (let ((result (request "/api/run" :method :put
+                                    :content run)))
+    (log:info "Created run: ~a" (assoc-value result :url))))
 
 (defun put-run-via-old-api (run)
   (flet ((bool (x) (if x "true" "false")))
