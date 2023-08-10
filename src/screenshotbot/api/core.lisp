@@ -22,6 +22,8 @@
   (:import-from #:util/json-mop
                 #:json-mop-to-string
                 #:ext-json-serializable-class)
+  (:import-from #:screenshotbot/events
+                #:with-tracing)
   (:export
    #:defapi
    #:result
@@ -122,7 +124,8 @@ function fn for the purpose of tests."
          (defun ,name (&key ,@param-names)
            ,doc
            ,@decls
-           ,@body)
+           (with-tracing (,uri)
+             ,@body))
          (defhandler (,handler-name :uri ,uri :method ,method :intern ,intern) ,params
            ,@decls
            (flet ((ret ()
