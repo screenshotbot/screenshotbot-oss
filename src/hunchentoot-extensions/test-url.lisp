@@ -3,7 +3,9 @@
         :fiveam
         :hex)
   (:import-from :hex
-                :missing-required-arg))
+                :missing-required-arg)
+  (:import-from #:util/testing
+                #:with-fake-request))
 (in-package :util.test-url)
 
 (def-suite* :util.test-url)
@@ -56,3 +58,21 @@
 (test make-url-with-http
   (is (equal "https://example.com" (make-url "https://example.com")))
   (is (equal "https://example.com?foo=bar" (make-url "https://example.com" :foo "bar"))))
+
+(test make-full-url-with
+  (with-fake-request ()
+   (is (equal "http://example.com/foo" (make-full-url
+                                      (make-instance
+                                       'hunchentoot:request
+                                       :uri "/car/bar"
+                                       :headers-in `((:host . "example.com")))
+                                      "/foo")))
+    (let ((req (make-instance
+                'hunchentoot:request
+                :uri "/car/bar"
+                :headers-in `((:host . "example.com")
+                              (:x-forwarded-proto . "https")))))
+      (is (equal "https" (hunchentoot:header-in :x-forwarded-proto req)))
+      (is (equal "https://example.com/foo" (make-full-url
+                                            req
+                                            "/foo"))))))

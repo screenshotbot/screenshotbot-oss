@@ -71,7 +71,7 @@ to decide how to attach the new parameter to the end of the string."
 (defun make-full-url (request &rest make-url-args)
   (let ((part (apply 'make-url make-url-args)))
     (format nil "~a~a"
-            (get-request-domain-prefix)
+            (get-request-domain-prefix request)
             part)))
 
 (defun make-url (path &rest rest &key &allow-other-keys)
@@ -135,7 +135,10 @@ to decide how to attach the new parameter to the end of the string."
     (let ((port (parse-integer port)))
      (case port
        (443 (format nil "https://~a" host))
-       (80 (format nil "~a://~a" host
-                   (or (hunchentoot:header-in* :x-forwarded-proto)
-                       "http")))
+       (80 (format nil "~a://~a"
+                   (or
+                    (hunchentoot:header-in :x-forwarded-proto request)
+                    (hunchentoot:header-in :x-forwarded-proto request)
+                    "http")
+                   host))
        (otherwise (format nil "http://~a:~a" host port))))))

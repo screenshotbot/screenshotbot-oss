@@ -195,6 +195,7 @@ error."
   (defun put-file (upload-url stream &key parameters)
     ;; In case we're retrying put-file, let's make sure we reset the
     ;; stream
+    (log:debug "put file to: ~a" upload-url)
     (file-position stream 0)
     (with-file-stream (stream stream)
      (let ((file-length (file-length stream)))
