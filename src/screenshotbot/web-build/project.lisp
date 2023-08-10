@@ -412,7 +412,9 @@
              (if (https?)
                  "wss"
                  "ws")
-             (hunchentoot:host)
+             (if (https?)
+                 (car (str:split ":" (hunchentoot:host)))
+                 (hunchentoot:host))
              (util:oid remote-run)))
     (t
      (format nil "~a/wsapp/replay/logs/~a"
