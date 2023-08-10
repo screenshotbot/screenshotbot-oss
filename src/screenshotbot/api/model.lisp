@@ -268,7 +268,11 @@
                       :json-type (or null :number)
                       :initform nil
                       :reader compare-threshold
-                      :documentation "The comparison threshold used for comparisons associated with this run."))
+                      :documentation "The comparison threshold used for comparisons associated with this run.")
+   (url :initarg :url
+        :json-key "url"
+        :json-type (or null :string)
+        :documentation "The URL of this run"))
   (:metaclass ext-json-serializable-class))
 
 (defclass report ()
