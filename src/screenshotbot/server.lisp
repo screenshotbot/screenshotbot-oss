@@ -300,3 +300,6 @@ Disallow: /n")))
 #+screenshotbot-oss
 (setf hunchentoot-multi-acceptor:*default-acceptor*
       *acceptor*)
+
+(defhandler (nil :uri "/test-headers") ()
+  (format nil ":~a:" (hunchentoot:header-in* :x-forwarded-proto)))

@@ -31,19 +31,20 @@
                          (t
                           directory)))
                       cmd)))
-   (apply #'uiop:run-program
-            (append
-             (cond
-               ((uiop:os-windows-p)
-                (list "cmd" "/c"))
-               (t
-                (list "bash" "-c")))
-             (list
-              cmd))
-            (append
-             (a:remove-from-plist args :directory)
-             (list :output t
-                   :error-output t)))))
+    (log:info "running: ~s" cmd)
+    (apply #'uiop:run-program
+           (append
+            (cond
+              ((uiop:os-windows-p)
+               (list "cmd" "/c"))
+              (t
+               (list "bash" "-c")))
+            (list
+             cmd))
+           (append
+            (a:remove-from-plist args :directory)
+            (list :output t
+                  :error-output t)))))
 
 (defvar *sdk* (car (asdf:output-files 'asdf:compile-op
                                        (asdf:find-component :screenshotbot.sdk/deliver
@@ -135,9 +136,12 @@
   (with-repo
     (test-crash)
     ;; veryfy we're correctly cloning the repo
+    (log:info "Finished testing crash")
     #-mswindows
     (run (list "test" "-e" "gen.sh"))
     (run-gen.sh)
+
+    (log:info "Running sdk")
     (run (list *sdk*
                "--directory" "./screenshots"
                "--production=false"))
@@ -153,7 +157,9 @@
                               :direction :output)
         (format stream
                 "text 15,15 \"Random code: ~a\" " (secure-random:number 10000000000000000000)))
+
     (run-gen.sh)
+    (log:info "final run with random code")
     (run (list *sdk*
                "--directory" "./screenshots"
                "--production=false")))
