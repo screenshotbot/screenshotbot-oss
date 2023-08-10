@@ -151,6 +151,7 @@
                  (:file "screenshot-key")
                  (:file "screenshot-map")
                  (:file "recorder-run")
+                 (:file "batch")
                  (:file "report" :depends-on ("recorder-run"))
                  (:file "image-comparison")
                  (:file "channel")
