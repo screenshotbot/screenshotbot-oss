@@ -94,6 +94,7 @@
                :util/fiveam)
   :components ((:file "test-bundle")
                (:file "test-version-check")
+               (:file "test-main")
                (:file "test-flags")
                (:file "test-git")
                (:file "test-env")

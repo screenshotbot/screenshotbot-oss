@@ -51,7 +51,7 @@
   (log:config :info)
 
   (log:info "Screenshotbot SDK v~a" *client-version*)
-  (let ((unrecognized   (parse-command-line (cdr (command-line)))))
+  (let ((unrecognized  (parse-command-line (cdr argv))))
     (when flags:*verbose*
       (log:config :debug))
     (log:debug "Run this in interactive shell: ~S"
