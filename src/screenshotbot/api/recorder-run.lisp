@@ -44,6 +44,10 @@
                 #:?.)
   (:import-from #:screenshotbot/dashboard/run-page
                 #:run-link)
+  (:import-from #:core/installation/installation
+                #:installation-domain)
+  (:import-from #:screenshotbot/installation
+                #:installation)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -115,7 +119,10 @@
 (defun run-to-dto (run)
   (make-instance 'dto:run
                  :id (oid run)
-                 :url (run-link run)
+                 :url (quri:render-uri
+                       (quri:merge-uris
+                        (run-link run)
+                        (installation-domain (installation))))
                  :main-branch-hash (recorder-run-branch run)
                  :commit-hash (recorder-run-commit run)
                  :merge-base (recorder-run-merge-base run)

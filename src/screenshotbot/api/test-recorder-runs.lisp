@@ -6,7 +6,6 @@
 
 (pkg:define-package :screenshotbot/api/test-recorder-runs
   (:use #:cl
-        #:alexandria
         #:bknr.datastore
         #:screenshotbot/model/user
         #:screenshotbot/model/channel
@@ -53,6 +52,11 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:make-recorder-run
                 #:recorder-run)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that
+                #:equal-to)
+  (:import-from #:fiveam-matchers/strings
+                #:starts-with)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 
 (util/fiveam:def-suite)
@@ -153,3 +157,13 @@
                    :branch "abcd"
                    :screenshots (list
                                  (make-screenshot :image img1 :name "foo")))))))
+
+(test run-to-dto-has-uri
+  (with-fixture state ()
+    (assert-that
+     (dto:recorder-run-url
+      (run-to-dto (make-recorder-run
+                   :branch "abcd"
+                   :screenshots (list
+                                 (make-screenshot :image img1 :name "foo")))))
+     (starts-with "https://example.com/runs/"))))

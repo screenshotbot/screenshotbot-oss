@@ -51,7 +51,8 @@
              #:unchanged-run-channel
              #:unchanged-run
              #:finalized-commit
-             #:finalized-commit-hash))
+             #:finalized-commit-hash
+             #:recorder-run-url))
 
 (in-package :screenshotbot/api/model)
 
@@ -272,6 +273,7 @@
    (url :initarg :url
         :json-key "url"
         :json-type (or null :string)
+        :reader recorder-run-url
         :documentation "The URL of this run"))
   (:metaclass ext-json-serializable-class))
 
