@@ -16,6 +16,8 @@
                 #:fset-unique-index)
   (:import-from #:bknr.indices
                 #:index-get)
+  (:import-from #:util/store/object-id
+                #:object-with-oid)
   (:export
    #:find-or-create-batch))
 (in-package :screenshotbot/model/batch)
@@ -26,7 +28,7 @@
 
 
 (with-class-validation
-  (defclass batch (store-object)
+  (defclass batch (object-with-oid)
     ((%company :initarg :company
                :reader company)
      (%repo :initarg :repo
