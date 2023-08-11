@@ -48,6 +48,7 @@
                     (#:static #:screenshotbot/sdk/static)
                     (#:firebase #:screenshotbot/sdk/firebase))
   ;; TODO: delete
+  #+lispworks
   (:import-from #:screenshotbot/sdk/common-flags
                 #:*api-key*
                 #:*hostname*

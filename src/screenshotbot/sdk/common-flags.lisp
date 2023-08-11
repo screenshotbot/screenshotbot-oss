@@ -20,6 +20,7 @@
 
 ;; For easy reloading, this can be deleted in the future, but might
 ;; require a restart of the server.
+#+lispworks
 '(*hostname*
  *api-key*
  *api-secret*)
