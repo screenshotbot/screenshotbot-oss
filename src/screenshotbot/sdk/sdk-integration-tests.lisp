@@ -128,6 +128,13 @@
    (run (list *sdk*
               "--finalize"))))
 
+(defun test-static-website ()
+  (log:info "## TESTING --static-website")
+  (run (list *sdk*
+             "--static-website"
+             "src/screenshotbot/sdk/static-example/")
+       :directory #P"/home/arnold/builds/web/"))
+
 (defun test-mark-unchanged ()
   (log:info "## TESTING --mark-unchanged-from")
   (with-repo
@@ -147,6 +154,8 @@
   (test-mark-failed)
 
   (test-finalize)
+
+  (test-static-website)
 
   (test-mark-unchanged)
 

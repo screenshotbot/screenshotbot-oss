@@ -55,30 +55,28 @@
                     stream))))
 
 
-(defun blob-check (files)
+(defun blob-check (api-context files)
   "Check if the given list of files have already been uploaded in the paste"
   (let ((input (loop for file in files
                      collect `((:file . ,(namestring file))
                                (:hash . ,(md5-file file))
                                (:type . ,(pathname-type file))))))
-    (sdk:request "/api/blob/check"
+    (sdk:request api-context
+                 "/api/blob/check"
                  :method :post
                  :parameters `(("query" . ,(json:encode-json-to-string input))))))
 
-(defun upload-multiple-files (files)
+(defun upload-multiple-files (api-context files)
   "Upload multiple blobs efficiently, checking to make sure we only
 upload blobs that haven't been uploaded before."
-  (restart-case
-      (let ((files (remove-if-not #'uiop:file-exists-p files)))
-       (let ((results (blob-check files)))
-         (loop for result in results
-               for existsp = (a:assoc-value result :exists)
-               for file = (a:assoc-value result :file)
-               if (not existsp)
-                 do
-                    (upload-blob file))))
-    (retry-upload-multiple-files ()
-      (upload-multiple-files files))))
+  (let ((files (remove-if-not #'uiop:file-exists-p files)))
+    (let ((results (blob-check api-context files)))
+      (loop for result in results
+            for existsp = (a:assoc-value result :exists)
+            for file = (a:assoc-value result :file)
+            if (not existsp)
+              do
+                 (upload-blob api-context file)))))
 
 #+nil
 (let ((flags:*hostname* "https://staging.screenshotbot.io")
@@ -101,9 +99,10 @@ upload blobs that haven't been uploaded before."
       (flags:*api-secret* *secret*))
   (record-static-website "~/builds/gatsby-example/public/"))
 
-(defun upload-snapshot-assets (snapshot)
+(defun upload-snapshot-assets (api-context snapshot)
   "Upload all the assets in the snapshot"
   (upload-multiple-files
+   api-context
    (append
     (loop for asset in (replay:assets snapshot)
           collect
@@ -152,7 +151,7 @@ upload blobs that haven't been uploaded before."
         using (hash-value sym)
         collect (cons key (symbol-value sym))))
 
-(defun schedule-snapshot (snapshot)
+(defun schedule-snapshot (api-context snapshot)
   "Schedule a Replay build with the given snapshot"
   (setf (replay:tmpdir snapshot) nil) ;; hack for json encoding
   (let* ((repo (make-instance 'git:git-repo :link flags:*repo-url*))
@@ -172,6 +171,7 @@ upload blobs that haven't been uploaded before."
      (uiop:with-temporary-file (:pathname p)
        (cl-store:store request p)
        (request
+        api-context
         "/api/replay/schedule"
         :method :post
         :content p)))))
@@ -212,47 +212,45 @@ upload blobs that haven't been uploaded before."
            (fn)
         (release-file-lock lock)))))
 
-(defun record-static-website (api-context location)
-  (assert (path:-d location))
-  (when flags:*production*
-    (sdk:update-commit-graph
-     api-context
-     (make-instance 'git:git-repo :link flags:*repo-url*)
-     flags:*main-branch*))
-  (restart-case
-      (with-cache-dir ()
-       (tmpdir:with-tmpdir (tmpdir)
-         (let* ((context (make-instance 'context))
-                (port (util/random-port:random-port))
-                (acceptor (make-instance 'hunchentoot:acceptor
-                                         :port port
-                                         :document-root location))
-                (snapshot (make-instance 'replay:snapshot
-                                         :tmpdir tmpdir)))
-           (unwind-protect
-                (progn
-                  (hunchentoot:start acceptor)
-                  (loop for index.html in (find-all-index.htmls location)
-                        do
-                           (replay:load-url-into
-                            context
-                            snapshot
-                            (format nil "http://localhost:~a~a" port index.html)
-                            tmpdir
-                            :actual-url
-                            (when flags:*static-website-assets-root*
-                              (format nil "~a~a"
-                                      flags:*static-website-assets-root*
-                                      index.html))))
+(auto-restart:with-auto-restart ()
+ (defun record-static-website (api-context location)
+   (assert (path:-d location))
+   (when flags:*production*
+     (sdk:update-commit-graph
+      api-context
+      (make-instance 'git:git-repo :link flags:*repo-url*)
+      flags:*main-branch*))
+   (with-cache-dir ()
+     (tmpdir:with-tmpdir (tmpdir)
+       (let* ((context (make-instance 'context))
+              (port (util/random-port:random-port))
+              (acceptor (make-instance 'hunchentoot:acceptor
+                                       :port port
+                                       :document-root location))
+              (snapshot (make-instance 'replay:snapshot
+                                       :tmpdir tmpdir)))
+         (unwind-protect
+              (progn
+                (hunchentoot:start acceptor)
+                (loop for index.html in (find-all-index.htmls location)
+                      do
+                         (replay:load-url-into
+                          context
+                          snapshot
+                          (format nil "http://localhost:~a~a" port index.html)
+                          tmpdir
+                          :actual-url
+                          (when flags:*static-website-assets-root*
+                            (format nil "~a~a"
+                                    flags:*static-website-assets-root*
+                                    index.html))))
 
-                  (upload-snapshot-assets snapshot)
-                  (let* ((result (schedule-snapshot snapshot))
-                         (logs (a:assoc-value result :logs)))
-                    (log:info "Screenshot job queued: ~a" logs)))
-             (hunchentoot:stop acceptor)
-             #+mswindows
-             (progn
-               (log:info "[windows-only] Waiting 2s before cleanup")
-               (sleep 2))))))
-    (retry-record-static-website ()
-      (record-static-website location))))
+                (upload-snapshot-assets api-context snapshot)
+                (let* ((result (schedule-snapshot api-context snapshot))
+                       (logs (a:assoc-value result :logs)))
+                  (log:info "Screenshot job queued: ~a" logs)))
+           (hunchentoot:stop acceptor)
+           #+mswindows
+           (progn
+             (log:info "[windows-only] Waiting 2s before cleanup")
+             (sleep 2))))))))
