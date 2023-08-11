@@ -210,9 +210,8 @@
 
 (defun prod-request? ()
   (destructuring-bind (host port) (str:split ":" (hunchentoot:host))
-    (and
-     (equal port "443")
-     (not (str:starts-with-p "staging." host)))))
+    (declare (ignore port))
+    (not (str:starts-with-p "staging." host))))
 
 (defun discard-condition-p (condition)
   #+sbcl (typep condition 'sb-int:broken-pipe)
