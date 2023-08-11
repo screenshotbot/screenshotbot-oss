@@ -212,11 +212,13 @@ upload blobs that haven't been uploaded before."
            (fn)
         (release-file-lock lock)))))
 
-(defun record-static-website (location)
+(defun record-static-website (api-context location)
   (assert (path:-d location))
   (when flags:*production*
-   (sdk:update-commit-graph (make-instance 'git:git-repo :link flags:*repo-url*)
-                            flags:*main-branch*))
+    (sdk:update-commit-graph
+     api-context
+     (make-instance 'git:git-repo :link flags:*repo-url*)
+     flags:*main-branch*))
   (restart-case
       (with-cache-dir ()
        (tmpdir:with-tmpdir (tmpdir)

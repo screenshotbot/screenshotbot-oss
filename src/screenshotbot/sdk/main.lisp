@@ -147,8 +147,7 @@
        (sdk:run-ios-multi-dir-toplevel))
       (flags:*static-website*
        (with-defaults (api-context)
-         ;; TODO: use context here
-         (static:record-static-website flags:*static-website*)))
+         (static:record-static-website api-context flags:*static-website*)))
       (flags:*firebase-output*
        (firebase:with-firebase-output (flags:*firebase-output*)
          (with-defaults (api-context)
