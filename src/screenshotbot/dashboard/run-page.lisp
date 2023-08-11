@@ -242,11 +242,11 @@
             <li>Comparison threshold: ,(compare-threshold run)</li>
 
 
-            <li>Screenshots that are above 16k dimensions: ,(length (screenshots-above-16k-dim run))
+            <li>Screenshots that are above 16k dimensions:
 
             <a href= (nibble ()
                                <app-template>
-                                 List of screenshots with large dimensions
+                                 List of screenshots with large dimensions ,(length (screenshots-above-16k-dim run))
                                  <ul>
                                    ,@(loop for x in (screenshots-above-16k-dim run)
                                            collect <li>
