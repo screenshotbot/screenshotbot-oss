@@ -85,12 +85,9 @@ cause the asset to be immediately compiled."
 
 (defun generate-.sh (name)
   (let ((util.cdn:*cdn-domain* (installation-cdn (installation))))
-    (let ((staging-p (not (equal "localhost" (uiop:hostname)))))
-     (let ((darwin-link (artifact-link (format nil "~a-darwin" name)
-                                       :cdn (not staging-p)))
-           (linux-link (artifact-link (format nil "~a-linux" name)
-                                      :cdn (not staging-p))))
-       #?"#!/bin/sh
+    (let ((darwin-link (artifact-link (format nil "~a-darwin" name)))
+          (linux-link (artifact-link (format nil "~a-linux" name))))
+      #?"#!/bin/sh
 set -e
 set -x
 
@@ -107,7 +104,7 @@ else
 fi
 sh ./$INSTALLER
 rm -f $INSTALLER
-"))))
+")))
 
 
 (defmacro define-platform-asset (name)
