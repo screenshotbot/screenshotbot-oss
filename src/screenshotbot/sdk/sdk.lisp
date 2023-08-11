@@ -144,8 +144,8 @@
                     ((remote-supports-basic-auth-p)
                      parameters)
                     (t (list*
-                        (cons "api-key" *api-key*)
-                        (cons "api-secret-key" *api-secret*)
+                        (cons "api-key" (api-context:key api-context))
+                        (cons "api-secret-key" (api-context:secret api-context))
                         parameters)))))))
 
 (defmethod request ((api-context api-context:api-context)
