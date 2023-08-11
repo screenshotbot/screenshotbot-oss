@@ -122,6 +122,19 @@
               "--mark-failed"
               "--channel=foo"))))
 
+(defun test-finalize ()
+  (log:info "## TESTING --finalize")
+  (with-repo
+   (run (list *sdk*
+              "--finalize"))))
+
+(defun test-mark-unchanged ()
+  (log:info "## TESTING --mark-unchanged-from")
+  (with-repo
+      (run (list *sdk*
+                 "--channel" "bleh"
+                 "--mark-unchanged-from" "abcd"))))
+
 (defun run-self-tests ()
   (log:info "Running self tests")
   (run (list *sdk* "--self-test")))
@@ -132,6 +145,10 @@
   (test-large-file)
 
   (test-mark-failed)
+
+  (test-finalize)
+
+  (test-mark-unchanged)
 
   (with-repo
     (test-crash)
