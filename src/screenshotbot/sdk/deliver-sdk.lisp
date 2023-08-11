@@ -35,7 +35,12 @@
                  (list "git" "clone" "https://github.com/tdrhq/fast-example"
                        dir))
                (handler-case
-                   (screenshotbot/sdk/sdk::update-commit-graph git-repo "bar")
+                   (screenshotbot/sdk/sdk::update-commit-graph
+                    (make-instance 'screenshotbot/sdk/api-context:api-context
+                                   :key "deliver-sdk"
+                                   :secret "xxx"
+                                   :hostname "https://screenshotbot.io")
+                    git-repo "bar")
                  (screenshotbot/sdk/sdk::api-error ()
                    nil)))
           #+mswindows

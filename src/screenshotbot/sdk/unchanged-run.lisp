@@ -17,7 +17,7 @@
    #:mark-unchanged-run))
 (in-package :screenshotbot/sdk/unchanged-run)
 
-(defun mark-unchanged-run ()
+(defun mark-unchanged-run (api-context)
   (when (< version-check:*remote-version* 6)
     (error "The remote Screenshotbot server does not support --mark-unchanged-from"))
 
@@ -25,7 +25,8 @@
     (error "You must provide a --channel to use --mark-unchanged-from"))
 
   (let ((repo (git-repo)))
-    (sdk:request "/api/unchanged-run"
+    (sdk:request api-context
+                 "/api/unchanged-run"
                  :method :post
                  :content
                  (make-instance 'dto:unchanged-run

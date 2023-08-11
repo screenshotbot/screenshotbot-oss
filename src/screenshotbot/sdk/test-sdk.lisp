@@ -57,6 +57,8 @@
                 #:define-easy-handler)
   (:import-from #:util/misc
                 #:with-global-binding)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:api-context)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:a #:alexandria)
                     (#:dto #:screenshotbot/api/model)))
@@ -127,7 +129,11 @@
        (is
         (equal
          "4249fe0e72f21fd54dbb2f3325bec263"
-         (put-file (format nil "~a/put" host) s)))))))
+         (put-file (make-instance 'api-context
+                                  :key ""
+                                  :secret ""
+                                  :hostname host)
+                   (format nil "~a/put" host) s)))))))
 
 (defvar *env-overrides* nil)
 
@@ -200,29 +206,36 @@
 (test make-run-happy-path
   "Does not test much, sadly"
   (with-fixture state ()
-    (if-called 'request
-               (lambda (uri &key method content)
-                 (is-true (typep content 'dto:run))))
-    (let ((repo :dummy-repo))
-      (answer (rev-parse repo "main") "abcd")
-      (answer (current-commit repo) "bdfd")
-      (answer (current-branch repo) "my-branch")
-      (answer (merge-base "abcd" "bdfd" "abcd"))
-      (answer (repo-link repo) "https://github.com/tdrhq/fast-example")
-      (answer (cleanp repo) t)
-      (finishes
-        (make-run `(((:id . "foo")
-                     (:name . "car")))
-                 :branch "main"
-                 :repo repo)))))
+    (let ((%content))
+      (if-called 'request
+                 (lambda (api-context uri &key method content)
+                   (setf %content content)
+                   nil))
+      (let ((repo :dummy-repo))
+        (answer (rev-parse repo "main") "abcd")
+        (answer (current-commit repo) "bdfd")
+        (answer (current-branch repo) "my-branch")
+        (answer (merge-base "abcd" "bdfd" "abcd"))
+        (answer (repo-link repo) "https://github.com/tdrhq/fast-example")
+        (answer (cleanp repo) t)
+        (let ((context (make-instance 'api-context)))
+          (finishes
+            (make-run context
+                      `(((:id . "foo")
+                         (:name . "car")))
+                      :branch "main"
+                      :repo repo))
+          (is-true (typep %content 'dto:run)))))
+    ))
 
 (test make-run-on-empty-directory-crashes-appropriately
   (with-fixture state  ()
     (if-called 'request
                (lambda (&rest args)
                  (error "should not be called")))
-    (signals empty-run-error
-      (make-run nil :branch "main"))))
+    (let ((api-context (make-instance 'api-context)))
+     (signals empty-run-error
+       (make-run api-context nil :branch "main")))))
 
 #+lispworks
 (test |ensure we're not depending on cl+ssl|
@@ -253,24 +266,36 @@
   (with-global-binding ((*result* nil)
                         (auto-restart:*global-enable-auto-retries-p* nil))
     (with-local-acceptor (host) ('easy-acceptor :name 'test-handler)
-      (let ((flags:*hostname* host))
+      (let ((api-context (make-instance 'api-context
+                                        :key ""
+                                        :secret ""
+                                        :hostname host)))
         (finishes
-          (request "/test-handler"
+          (request api-context
+                   "/test-handler"
                    :method :put
                    :content (make-instance 'dto:report :id "foobar")))
         (is (equal "foobar" (assoc-value *result* :id)))
         (finishes
-          (request "/test-handler"
+          (request api-context
+                   "/test-handler"
                    :method :put
                    :content (make-instance 'dto:report :id "léquipe")))
         (is (equal "léquipe" (assoc-value *result* :id)))))))
 
 (test format-api-url
   (is (equal "https://api.screenshotbot.io/api/version"
-             (format-api-url "/api/version")))
-  (let ((flags:*hostname* "https://foo.screenshotbot.io/"))
-    (is (equal "https://foo.screenshotbot.io/api/version"
-               (format-api-url "/api/version"))))
-  (let ((flags:*hostname* "foo.screenshotbot.io"))
-    (is (equal "https://foo.screenshotbot.io/api/version"
-               (format-api-url "/api/version")))))
+             (format-api-url
+              (make-instance 'api-context
+                             :hostname "https://api.screenshotbot.io")
+              "/api/version")))
+  (is (equal "https://foo.screenshotbot.io/api/version"
+             (format-api-url
+              (make-instance 'api-context
+                             :hostname "https://foo.screenshotbot.io/")
+              "/api/version")))
+  (is (equal "https://foo.screenshotbot.io/api/version"
+             (format-api-url
+              (make-instance 'api-context
+                             :hostname "foo.screenshotbot.io")
+              "/api/version"))))

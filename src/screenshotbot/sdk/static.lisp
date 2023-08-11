@@ -30,7 +30,8 @@
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:git #:screenshotbot/sdk/git)
-                    (#:replay #:screenshotbot/replay/core))
+                    (#:replay #:screenshotbot/replay/core)
+                    (#:api-context #:screenshotbot/sdk/api-context))
   (:export
    #:record-static-website))
 (in-package :screenshotbot/sdk/static)
@@ -39,7 +40,7 @@
 (defun md5-file (file)
   (ironclad:byte-array-to-hex-string (sha256-file  file)))
 
-(defun upload-blob (file)
+(defun upload-blob (api-context file)
   "Upload the blob, without checking if it has been previously uploaded"
   (log:info "Uploading file: ~a" file)
   (with-open-file (stream file :direction  :input
@@ -48,9 +49,10 @@
                   :query `(("hash" . ,(md5-file file))
                            ("type" . ,(pathname-type file)))
                   :defaults
-                  (quri:uri (format nil "~a/api/blob/upload" flags:*hostname*)))))
-     (sdk:put-file (format nil "~a" uri)
-                   stream))))
+                  (quri:uri (format nil "~a/api/blob/upload" (api-context:hostname api-context))))))
+      (sdk:put-file api-context
+                    (format nil "~a" uri)
+                    stream))))
 
 
 (defun blob-check (files)

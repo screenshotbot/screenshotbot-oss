@@ -55,9 +55,12 @@
                 #:json-mop-to-string)
   (:import-from #:screenshotbot/sdk/backoff
                 #:backoff)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:api-context)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:dto #:screenshotbot/api/model)
-                    (#:e #:screenshotbot/sdk/env))
+                    (#:e #:screenshotbot/sdk/env)
+                    (#:api-context #:screenshotbot/sdk/api-context))
   (:export
    #:single-directory-run
    #:*request*
@@ -112,13 +115,14 @@
   (assoc-value result :response))
 
 
-(defun %make-basic-auth ()
+(defun %make-basic-auth (api-context)
   (list
-   *api-key*
-   *api-secret*))
+   (api-context:key api-context)
+   (api-context:secret api-context)))
 
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
-  (defun %request (api &key (method :post)
+  (defun %request (api-context
+                   api &key (method :post)
                          parameters
                          content)
     ;; TODO: we're losing the response code here, we need to do
@@ -126,14 +130,14 @@
     (uiop:slurp-input-stream
      'string
      (http-request
-      (format-api-url api)
+      (format-api-url api-context api)
       :method method
       :want-stream t
       :method method
       :basic-authorization (when (and
                                   (not flags:*desktop*)
                                   (remote-supports-basic-auth-p))
-                             (%make-basic-auth))
+                             (%make-basic-auth api-context))
       :content content
       :external-format-out :utf-8
       :parameters (cond
@@ -144,13 +148,15 @@
                         (cons "api-secret-key" *api-secret*)
                         parameters)))))))
 
-(defun request (api &key (method :post)
-                      parameters
-                      content)
+(defmethod request ((api-context api-context:api-context)
+                    api &key (method :post)
+                          parameters
+                          content)
   (log:debug "Making API request: ~S" api)
   (when (and (eql method :get) parameters)
     (error "Can't use :get with parameters"))
-  (let ((json (%request api :method method
+  (let ((json (%request api-context
+                        api :method method
                             :parameters parameters
                             :content (cond
                                        ((or
@@ -192,7 +198,7 @@ error."
     (lambda (,stream) ,@body)))
 
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
-  (defun put-file (upload-url stream &key parameters)
+  (defun put-file (api-context upload-url stream &key parameters)
     ;; In case we're retrying put-file, let's make sure we reset the
     ;; stream
     (log:debug "put file to: ~a" upload-url)
@@ -207,7 +213,7 @@ error."
           :parameters parameters
           ;; Basic auth for image puts will be supported from API
           ;; level 4, but in previous versions it should just be ignored.
-          :basic-authorization (%make-basic-auth)
+          :basic-authorization (%make-basic-auth api-context)
           :content-type "application/octet-stream"
           :content-length file-length
           :content stream
@@ -218,14 +224,14 @@ error."
            (error "Failed to upload image: code ~a" code))
          result)))))
 
-(defun upload-image (key stream hash response)
+(defun upload-image (api-context key stream hash response)
   (Assert hash)
   (log:debug "Checking to see if we need to re-upload ~a, ~a" key hash)
   (log:debug "/api/screenshot response: ~s" response)
   (let ((upload-url (assoc-value response :upload-url)))
     (when upload-url
       (log:debug "Uploading ~a" key)
-      (put-file upload-url stream)))
+      (put-file api-context upload-url stream)))
   (setf (assoc-value response :name) key)
   response)
 
@@ -255,84 +261,84 @@ error."
   ()
   (:report "No screenshots were detected in this this run"))
 
-(defun make-run (images &rest args
-                 &key repo
-                   channel
-                   pull-request
-                   branch
-                   (branch-hash nil has-branch-hash-p)
-                   (commit nil has-commit-p)
-                   (merge-base nil has-merge-base-p)
-                   (github-repo nil has-github-repo-p)
-                   periodic-job-p
-                   create-github-issue
-                   (metadata-provider  (make-instance 'metadata-provider))
-                   is-trunk)
-  (restart-case
-      (progn
-        (unless images
-          (error 'empty-run-error))
-        (let ((screenshots (build-screenshot-objects images metadata-provider)))
-          ;;(log:info "screenshot records: ~s" screenshots)
-         (let* ((branch-hash (if has-branch-hash-p branch-hash (rev-parse repo branch)))
-                (commit (if has-commit-p commit (current-commit repo)))
-                (work-branch (current-branch repo))
-                (merge-base (if has-merge-base-p merge-base (merge-base repo branch-hash commit)))
-                (github-repo (if has-github-repo-p
-                                 github-repo
-                                 (repo-link repo)))
-                (run (make-instance 'dto:run
-                                    :channel channel
-                                    :screenshots screenshots
-                                    :main-branch branch
-                                    :work-branch work-branch
-                                    :main-branch-hash branch-hash
-                                    :github-repo github-repo
-                                    :merge-base merge-base
-                                    :periodic-job-p periodic-job-p
-                                    :build-url *build-url*
-                                    :compare-threshold flags:*compare-threshold*
-                                    :pull-request pull-request
-                                    :commit-hash commit
-                                    :override-commit-hash flags:*override-commit-hash*
-                                    :create-github-issue-p create-github-issue
-                                    :cleanp (cleanp repo)
-                                    :gitlab-merge-request-iid (safe-parse-int *gitlab-merge-request-iid*)
-                                    :phabricator-diff-id (safe-parse-int *phabricator-diff-id*)
-                                    :trunkp is-trunk)))
-           (if (remote-supports-put-run)
-               (put-run run)
-               (put-run-via-old-api run)))))
-    (retry-run ()
-      (apply 'make-run images
-             args))))
+(auto-restart:with-auto-restart ()
+ (defun make-run (api-context
+                  images &rest args
+                  &key repo
+                    channel
+                    pull-request
+                    branch
+                    (branch-hash nil has-branch-hash-p)
+                    (commit nil has-commit-p)
+                    (merge-base nil has-merge-base-p)
+                    (github-repo nil has-github-repo-p)
+                    periodic-job-p
+                    create-github-issue
+                    (metadata-provider  (make-instance 'metadata-provider))
+                    is-trunk)
+   (unless images
+     (error 'empty-run-error))
+   (let ((screenshots (build-screenshot-objects images metadata-provider)))
+     ;;(log:info "screenshot records: ~s" screenshots)
+     (let* ((branch-hash (if has-branch-hash-p branch-hash (rev-parse repo branch)))
+            (commit (if has-commit-p commit (current-commit repo)))
+            (work-branch (current-branch repo))
+            (merge-base (if has-merge-base-p merge-base (merge-base repo branch-hash commit)))
+            (github-repo (if has-github-repo-p
+                             github-repo
+                             (repo-link repo)))
+            (run (make-instance 'dto:run
+                                :channel channel
+                                :screenshots screenshots
+                                :main-branch branch
+                                :work-branch work-branch
+                                :main-branch-hash branch-hash
+                                :github-repo github-repo
+                                :merge-base merge-base
+                                :periodic-job-p periodic-job-p
+                                :build-url *build-url*
+                                :compare-threshold flags:*compare-threshold*
+                                :pull-request pull-request
+                                :commit-hash commit
+                                :override-commit-hash flags:*override-commit-hash*
+                                :create-github-issue-p create-github-issue
+                                :cleanp (cleanp repo)
+                                :gitlab-merge-request-iid (safe-parse-int *gitlab-merge-request-iid*)
+                                :phabricator-diff-id (safe-parse-int *phabricator-diff-id*)
+                                :trunkp is-trunk)))
+       (if (remote-supports-put-run)
+           (put-run api-context run)
+           (put-run-via-old-api api-context run))))))
 
-(defun put-run (run)
-  (let ((result (request "/api/run" :method :put
+(defmethod put-run ((api-context api-context) run)
+  (let ((result (request api-context
+                         "/api/run" :method :put
                                     :content run)))
     (log:info "Created run: ~a" (assoc-value result :url))))
 
-(defun put-run-via-old-api (run)
+(defun put-run-via-old-api (api-context run)
   (flet ((bool (x) (if x "true" "false")))
-   (request "/api/run"
-            :parameters `(("channel" . ,(dto:run-channel run))
-                          ("screenshot-records" . ,(json:encode-json-to-string
-                                                    (dto:run-screenshots run)))
-                          ("branch" . ,(dto:main-branch run))
-                          ("branch-hash" . ,(dto:main-branch-hash run))
-                          ("github-repo" . ,(dto:run-repo run))
-                          ("merge-base" . ,(dto:merge-base run))
-                          ("periodic-job-p" . ,(bool (dto:periodic-job-p run)))
-                          ("build-url" . ,(dto:build-url run))
-                          ("pull-request" . ,(dto:pull-request-url run))
-                          ("commit" . ,(dto:run-commit run))
-                          ("override-commit-hash" . ,(dto:override-commit-hash run))
-                          ("create-github-issue" . ,(bool (dto:should-create-github-issue-p run)))
-                          ("is-clean" . ,(bool (dto:cleanp run)))
-                          ("gitlab-merge-request-iid" .
-                                                      ,(dto:gitlab-merge-request-iid run))
-                          ("phabricator-diff-id" . ,(dto:phabricator-diff-id run))
-                          ("is-trunk" . ,(bool (dto:trunkp run)))))))
+    (request
+     api-context
+     "/api/run"
+     :parameters `(("channel" . ,(dto:run-channel run))
+                   ("screenshot-records" . ,(json:encode-json-to-string
+                                             (dto:run-screenshots run)))
+                   ("branch" . ,(dto:main-branch run))
+                   ("branch-hash" . ,(dto:main-branch-hash run))
+                   ("github-repo" . ,(dto:run-repo run))
+                   ("merge-base" . ,(dto:merge-base run))
+                   ("periodic-job-p" . ,(bool (dto:periodic-job-p run)))
+                   ("build-url" . ,(dto:build-url run))
+                   ("pull-request" . ,(dto:pull-request-url run))
+                   ("commit" . ,(dto:run-commit run))
+                   ("override-commit-hash" . ,(dto:override-commit-hash run))
+                   ("create-github-issue" . ,(bool (dto:should-create-github-issue-p run)))
+                   ("is-clean" . ,(bool (dto:cleanp run)))
+                   ("gitlab-merge-request-iid" .
+                                               ,(dto:gitlab-merge-request-iid run))
+                   ("phabricator-diff-id" . ,(dto:phabricator-diff-id run))
+                   ("is-trunk" . ,(bool (dto:trunkp run)))))))
 
 
 (defun $! (&rest args)
@@ -369,16 +375,15 @@ error."
     (read-first-match *device-regex* name)))
 
 
-(defmethod make-directory-run (dir &rest args)
+(defmethod make-directory-run (api-context dir &rest args)
   (log:debug "Reading images from ~a" dir)
   (let ((images
-          (upload-image-directory dir)))
+          (upload-image-directory api-context dir)))
     (log:info "Creating run")
-    (apply 'make-run images
+    (apply 'make-run
+           api-context
+           images
            args)))
-;;; let ((response (request "/api/screenshot"
-;;;                            :parameters `(("name" . ,key)
-;;;                                          ("hash" . ,hash)))))
 
 (defun keyword-except-md5 (identifier)
   ;; this is bug prone, but I know for a fact we don't have
@@ -389,23 +394,26 @@ error."
    (t
     (json:camel-case-to-lisp identifier))))
 
-(defmethod upload-image-directory (bundle)
+(defmethod upload-image-directory (api-context bundle)
   (let ((images (list-images bundle)))
     (let ((hash-to-response
            (let ((json:*json-identifier-name-to-lisp* 'keyword-except-md5))
-             (request "/api/screenshot"
-                      :parameters `(("hash-list"
-                                     . ,(json:encode-json-to-string (mapcar 'md5-sum images))))))))
+             (request
+              api-context
+              "/api/screenshot"
+              :parameters `(("hash-list"
+                             . ,(json:encode-json-to-string (mapcar 'md5-sum images))))))))
       (log:debug "got full response: ~s" hash-to-response)
       (loop for im in (list-images bundle)
             collect
             (progn
               (with-open-stream (s (image-stream im))
                 (unwind-protect
-                    (upload-image (image-name im) s
-                                  (md5-sum im)
-                                  (assoc-value hash-to-response (md5-sum im)
-                                               :test 'string=))
+                     (upload-image api-context
+                                   (image-name im) s
+                                   (md5-sum im)
+                                   (assoc-value hash-to-response (md5-sum im)
+                                                :test 'string=))
                   (close-image im))))))))
 
 (defun test-upload ()
@@ -444,20 +452,6 @@ error."
    fn
    (%read-directory-from-args)))
 
-(defun emptify (s)
-  "If the string is empty, return nil"
-  (if (str:emptyp s) nil s))
-
-(defun parse-api-key-from-environment (env)
-  (setf *api-key*
-        (or (emptify *api-key*)
-            (e:api-key env)))
-  (setf *api-secret*
-        (or (emptify *api-secret*)
-            (e:api-secret env)))
-
-  (alexandria:when-let (hostname (e:api-hostname env))
-    (setf flags:*hostname* hostname)))
 
 (defun guess-master-branch (repo)
   (flet ((check (x)
@@ -490,8 +484,6 @@ pull-request looks incorrect."
 
 (defun parse-environment ()
   (let ((env (e:make-env-reader)))
-    (parse-api-key-from-environment env)
-
     (when *branch*
       (error "--branch is no longer supported, please use --main-branch instead"))
 
@@ -534,10 +526,6 @@ pull-request looks incorrect."
 
 (defun parse-org-defaults ()
   (parse-environment)
-  (when (str:emptyp *api-key*)
-    (error "No --api-key provided"))
-  (when(str:emptyp *api-secret*)
-    (error "No --api-secret provided"))
   (when *org-defaults*
    (ecase (intern (str:upcase *org-defaults*) "KEYWORD")
      (nil
@@ -582,29 +570,31 @@ pull-request looks incorrect."
                                              *channel*
                                              (car (last (pathname-directory directory))))))))
 
-(defmethod update-commit-graph (repo branch)
+(defmethod update-commit-graph (api-context repo branch)
   (log:info "Updating commit graph")
   (let* ((dag (read-graph repo))
          (json (with-output-to-string (s)
                  (dag:write-to-stream dag s))))
-    (request "/api/commit-graph"
-             :method :post
-             :parameters (list
-                          (cons "repo-url" (repo-link repo))
-                          (cons "branch" branch)
-                          (cons "graph-json" json)))))
+    (request
+     api-context
+     "/api/commit-graph"
+     :method :post
+     :parameters (list
+                  (cons "repo-url" (repo-link repo))
+                  (cons "branch" branch)
+                  (cons "graph-json" json)))))
 
 (defun git-repo ()
   (make-instance 'git-repo
                   :link *repo-url*))
 
-(defun single-directory-run (directory &key channel)
+(defun single-directory-run (api-context directory &key channel)
   (let ((repo (git-repo))
         (branch *main-branch*))
     (when *production*
-      (update-commit-graph repo branch))
+      (update-commit-graph api-context repo branch))
     (log:info "Uploading images from: ~a" directory)
-    (make-directory-run directory
+    (make-directory-run api-context directory
                         :channel channel
                         :pull-request *pull-request*
                         :create-github-issue *create-github-issue*
@@ -626,10 +616,10 @@ pull-request looks incorrect."
           do
              (upload-ios-subdirectory directory))))
 
-(defun run-prepare-directory-toplevel ()
+(defun run-prepare-directory-toplevel (api-context)
   (prepare-directory
    (lambda (directory)
-     (single-directory-run directory :channel *channel*))))
+     (single-directory-run api-context directory :channel *channel*))))
 
 (def-health-check verify-https-works ()
   (util/request:http-request "https://screenshotbot.io/api/version"

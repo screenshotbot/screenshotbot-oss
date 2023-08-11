@@ -5,8 +5,7 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/sdk/main
-  (:use #:cl
-        #:com.google.flag)
+  (:use #:cl)
   (:import-from #:screenshotbot/sdk/help
                 #:help)
   (:import-from #:screenshotbot/sdk/sdk
@@ -31,19 +30,86 @@
                 #:mark-unchanged-run)
   (:import-from #:screenshotbot/sdk/finalized-commit
                 #:finalize-commit)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:api-context
+                #:desktop-api-context)
+  (:import-from #:screenshotbot/sdk/hostname
+                #:api-hostname)
+  (:import-from #:screenshotbot/sdk/env
+                #:make-env-reader)
+  (:import-from #:screenshotbot/sdk/common-flags
+                #:define-flag)
+  (:import-from #:com.google.flag
+                #:parse-command-line)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
+                    (#:e #:screenshotbot/sdk/env)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:static #:screenshotbot/sdk/static)
                     (#:firebase #:screenshotbot/sdk/firebase))
+  ;; TODO: delete
+  (:import-from #:screenshotbot/sdk/common-flags
+                #:*api-key*
+                #:*hostname*
+                #:*api-secret*)
   (:export
    #:main))
 (in-package :screenshotbot/sdk/main)
 
-(def-easy-macro with-defaults (&fn fn)
+(define-flag *api-key*
+  :selector "api-key"
+  :default-value nil
+  :type (or null string)
+  :help "Screenshotbot API Key. Defaults to $SCREENSHOTBOT_API_KEY.")
+
+(define-flag *api-secret*
+  :selector "api-secret"
+  :default-value nil
+  :type (or null string)
+  :help "Screenshotbot API Secret. Defaults to $SCREENSHOTBOT_API_SECRET")
+
+(define-flag *hostname*
+  :selector "api-hostname"
+  :default-value ""
+  :type string
+  :help "Screenshotbot API Endpoint"
+  :documentation "Only used for Enterprise or Open Source users, Defaults to `https://api.screenshotbot.io` or $SCREENSHOTBOT_API_HOSTNAME")
+
+
+(def-easy-macro with-defaults (&binding api-context &fn fn)
   (sdk:parse-org-defaults)
-  (with-version-check ()
-    (funcall fn)))
+  (let ((api-context (make-api-context)))
+    (with-version-check (api-context)
+      (funcall fn api-context))))
+
+(defun emptify (s)
+  "If the string is empty, return nil"
+  (if (str:emptyp s) nil s))
+
+
+(defun make-api-context ()
+  (let ((env (make-env-reader)))
+    (cond
+      (flags:*desktop*
+       (make-instance 'desktop-api-context))
+      (t
+       (let ((key (or (emptify *api-key*)
+                      (e:api-key env)))
+             (secret (or (emptify *api-secret*)
+                         (e:api-secret env))))
+         (when (str:emptyp key)
+           (error "No --api-key provided"))
+         (when(str:emptyp secret)
+           (error "No --api-secret provided"))
+         (let ((hostname (api-hostname
+                          :hostname (or (emptify *hostname*)
+                                        (emptify (e:api-hostname env))
+                                        "https://api.screenshotbot.io"))))
+           (log:debug "Using hostname: ~a" hostname)
+           (make-instance 'api-context
+                          :key key
+                          :secret secret
+                          :hostname hostname)))))))
 
 (defun %main (&optional (argv #+lispworks system:*line-arguments-list*
                               #-lispworks (uiop:command-line-arguments)))
@@ -71,27 +137,28 @@
       (flags:*self-test*
        (uiop:quit (if (run-health-checks) 0 1)))
       (flags:*mark-failed*
-       (with-defaults ()
-         (mark-failed)))
+       (with-defaults (api-context)
+         (mark-failed api-context)))
       (flags:*unchanged-from*
-       (with-defaults ()
-         (mark-unchanged-run)))
+       (with-defaults (api-context)
+         (mark-unchanged-run api-context)))
       (flags:*ios-multi-dir*
        (sdk:parse-org-defaults)
        (sdk:run-ios-multi-dir-toplevel))
       (flags:*static-website*
-       (with-defaults ()
+       (with-defaults (api-context)
+         ;; TODO: use context here
          (static:record-static-website flags:*static-website*)))
       (flags:*firebase-output*
        (firebase:with-firebase-output (flags:*firebase-output*)
-         (with-defaults ()
-           (sdk:run-prepare-directory-toplevel))))
+         (with-defaults (api-context)
+           (sdk:run-prepare-directory-toplevel api-context))))
       (flags:*finalize*
-       (with-defaults ()
-         (finalize-commit)))
+       (with-defaults (api-context)
+         (finalize-commit api-context)))
       (t
-       (with-defaults ()
-         (sdk:run-prepare-directory-toplevel))))))
+       (with-defaults (api-context)
+         (sdk:run-prepare-directory-toplevel api-context))))))
 
 (def-easy-macro with-sentry (&key (on-error (lambda ()
                                               (uiop:quit 1)))
@@ -105,8 +172,8 @@
   #-screenshotbot-oss
   (sentry-client:initialize-sentry-client
    sentry:*dsn* :client-class 'sentry:delivered-client)
-  (with-extras (("api_hostname" flags:*hostname*)
-                ("api_id"  flags:*api-key*)
+  (with-extras (("api_hostname" *hostname*)
+                ("api_id"  *api-key*)
                 ("features" *features*)
                 ("channel" flags:*channel*)
                 ("build-url" flags:*build-url*)

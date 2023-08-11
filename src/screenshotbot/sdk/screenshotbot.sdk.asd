@@ -6,7 +6,7 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
-  :version "2.5.32"
+  :version "2.6.0"
   :depends-on (:com.google.flag
                :pkg
                :quri
@@ -39,6 +39,7 @@
                :str)
   :components ((:file "package")
                (:file "flags")
+               (:file "api-context")
                (:file "hostname")
                (:file "backoff")
                (:file "version-check")

@@ -25,6 +25,8 @@
   (:import-from #:screenshotbot/replay/browser-config
                 #:browser-type
                 #:browser-config-name)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:api-context)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags :screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/test-static)
@@ -43,7 +45,10 @@
   (let ((auto-restart:*global-enable-auto-retries-p* nil))
    (with-local-acceptor (host) ('hunchentoot:easy-acceptor
                                  :name 'test-acceptor)
-     (let ((flags:*hostname* host))
+     (let ((api-context (make-instance 'api-context
+                                       :key ""
+                                       :secret ""
+                                       :hostname host)))
        (unwind-protect
             (progn
               (&body))
@@ -63,7 +68,7 @@
       (write-string "zoidberg" out)
       (finish-output out)
       (let ((md5 (md5-file p)))
-        (upload-blob p)
+        (upload-blob api-context p)
         (is (equalp *hex* md5))))))
 
 (test binary-blob
@@ -75,7 +80,7 @@
       (finish-output out)
       (is (eql 256 (trivial-file-size:file-size-in-octets p)))
       (let ((md5 (md5-file p)))
-        (upload-blob p)
+        (upload-blob api-context p)
         (is (eql 256 *len*))
         (is  (equalp *hex* md5))))))
 

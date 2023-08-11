@@ -17,11 +17,8 @@
    #:*directory*
    #:*verbose*
    #:*org-defaults*
-   #:*api-key*
    #:*create-github-issue*
-   #:*api-secret*
    #:*gitlab-merge-request-iid*
-   #:*hostname*
    #:*channel*
    #:*pull-request*
    #:*branch*

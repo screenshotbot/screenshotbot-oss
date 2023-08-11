@@ -6,26 +6,27 @@
 
 (defpackage :screenshotbot/sdk/hostname
   (:use #:cl)
-  (:local-nicknames (#:flags #:screenshotbot/sdk/flags))
+  (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
+                    (#:api-context #:screenshotbot/sdk/api-context))
   (:export
    #:api-hostname
    #:format-api-url))
 (in-package :screenshotbot/sdk/hostname)
 
-(defun api-hostname ()
+(defun api-hostname (&key (hostname (error "must provide :hostname")))
   (cond
     ((and flags:*desktop*
           (not
-           (str:starts-with-p "http://localhost" flags:*hostname*)))
+           (str:starts-with-p "http://localhost" hostname)))
      "http://localhost:4095")
-    ((not (str:containsp "/" flags:*hostname*))
-     (format nil "https://~a" flags:*hostname*))
+    ((not (str:containsp "/" hostname))
+     (format nil "https://~a" hostname))
     (t
-     flags:*hostname*)))
+     hostname)))
 
 
-(defun format-api-url (api)
+(defun format-api-url (api-context api)
   (quri:render-uri
    (quri:merge-uris
     api
-    (api-hostname))))
+    (api-hostname :hostname (api-context:hostname api-context)))))

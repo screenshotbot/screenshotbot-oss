@@ -15,8 +15,6 @@
                 #:def-easy-macro)
   (:import-from #:util/request
                 #:http-request)
-  (:import-from #:screenshotbot/sdk/common-flags
-                #:*hostname*)
   (:import-from #:util/health-check
                 #:def-health-check)
   (:import-from #:screenshotbot/sdk/backoff
@@ -47,11 +45,11 @@ might get logged in the webserver logs."
   (>= *remote-version* 4))
 
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
-  (defun get-version ()
+  (defun get-version (api-context)
     (log:info "Getting remote version")
     (multiple-value-bind (body ret)
         (http-request
-         (format-api-url "/api/version")
+         (format-api-url api-context "/api/version")
          :want-string t)
       (let ((version (cond
                        ((eql 200 ret)
@@ -64,8 +62,8 @@ might get logged in the webserver logs."
                         (error "/api/version failed")))))
         (version-number version)))))
 
-(def-easy-macro with-version-check (&fn fn)
-  (let ((*remote-version* (get-version)))
+(def-easy-macro with-version-check (api-context &fn fn)
+  (let ((*remote-version* (get-version api-context)))
     (when (/= *remote-version* *api-version*)
       (log:warn "Server is running API version ~a, but this client uses version ~a. ~%
 

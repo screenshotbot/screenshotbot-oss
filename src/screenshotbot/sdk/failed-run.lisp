@@ -15,7 +15,7 @@
                     (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/failed-run)
 
-(defun mark-failed ()
+(defun mark-failed (api-context)
   (when (< version-check:*remote-version* 3)
     (error "The remote Screenshotbot server does not support --mark-failed"))
 
@@ -23,7 +23,8 @@
     (error "You must provide a --channel to use --mark-failed"))
 
   (let ((repo (git-repo)))
-    (sdk:request "/api/failed-run" :method :put
+    (sdk:request api-context
+                 "/api/failed-run" :method :put
                                    :content (make-instance 'dto:failed-run
                                                            :commit (current-commit repo)
                                                            :channel flags:*channel*))))

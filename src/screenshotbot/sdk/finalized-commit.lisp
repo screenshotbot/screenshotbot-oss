@@ -15,13 +15,14 @@
                     (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/finalized-commit)
 
-(defun finalize-commit ()
+(defun finalize-commit (api-context)
   (when (< version-check:*remote-version* 7)
     (error "The remote Screenshotbot server does not support --mark-unchanged-from"))
 
   (let* ((repo (git-repo))
          (commit (current-commit repo)))
-    (sdk:request "/api/unchanged-run"
+    (sdk:request api-context
+                 "/api/unchanged-run"
                  :method :post
                  :content
                  (make-instance 'dto:finalized-commit

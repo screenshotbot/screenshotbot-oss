@@ -20,10 +20,6 @@
                 #:make-directory-run)
   (:import-from #:screenshotbot/sdk/git
                 #:null-repo)
-  (:import-from #:screenshotbot/sdk/flags
-                #:*hostname*
-                #:*api-secret*
-                #:*api-key*)
   (:import-from #:screenshotbot/sdk/bundle
                 #:local-image
                 #:list-images)
@@ -92,6 +88,8 @@
                 #:company-plan)
   (:import-from #:screenshotbot/installation
                 #:installation)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:api-context)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
                     (#:integration #:screenshotbot/replay/integration)
@@ -235,14 +233,15 @@ accessing the urls or sitemap slot."
              ;; to set the flags manually for the web-based replay
              ;; jobs, but for the static website code, the
              ;; `with-sdk-flags` will propagate the flags.
-             (flags:*api-key* (api-key-key api-key))
-             (flags:*api-secret* (api-key-secret-key api-key))
-             (flags:*hostname* (host run))
              (flags:*pull-request* (?. replay:pull-request request))
              (flags:*main-branch* (?. replay:main-branch request))
              (flags:*repo-url* (?. replay:repo-url request)))
         (with-sdk-flags (:flags (?. snapshot-request-sdk-flags request))
           (make-directory-run
+           (make-instance 'api-context
+                          :key (api-key-key api-key)
+                          :secret (api-key-secret-key api-key)
+                          :hostname (host run))
            results
            :repo (make-instance 'null-repo)
            :branch "master"

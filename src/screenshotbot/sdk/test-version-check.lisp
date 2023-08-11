@@ -14,7 +14,10 @@
   (:import-from #:util/request
                 #:http-request)
   (:import-from #:cl-mock
+                #:if-called
                 #:answer)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:api-context)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/test-version-check)
@@ -32,8 +35,11 @@
     (answer (http-request "https://api.screenshotbot.io/api/version"
                           :want-string t)
       (values "{\"version\":1}" 200))
-    (let ((flags:*hostname* "https://api.screenshotbot.io"))
-     (is (eql 1 (get-version))))))
+    (is (eql 1 (get-version
+                (make-instance 'api-context
+                               :key ""
+                               :secret ""
+                               :hostname "https://api.screenshotbot.io"))))))
 
 #-sbcl ;; See D7222. Temporary fix until we can see what's going on with this.
 (test get-version-404
@@ -41,14 +47,19 @@
     (answer (http-request "https://www.google.com/api/version"
                           :want-string t)
       (values "" 404))
-    (let ((flags:*hostname* "https://www.google.com"))
-     (is (eql 1 (get-version))))))
+    (is (eql 1 (get-version
+                (make-instance 'api-context
+                               :key ""
+                               :secret ""
+                               :hostname "https://www.google.com"))))))
 
 (test with-version-check
   (with-fixture state ()
-    (answer (get-version)
-      189)
+    (if-called 'get-version
+               (lambda (api-context)
+                 189))
     (let ((ans))
-      (with-version-check ()
+      (with-version-check ((make-instance 'api-context
+                                          :hostname "..."))
        (setf ans *remote-version*))
       (is (eql 189 ans)))))

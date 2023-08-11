@@ -10,7 +10,20 @@
   (:import-from #:cl-mock
                 #:with-mocks)
   (:import-from #:screenshotbot/sdk/main
-                #:%main))
+                #:*api-secret*
+                #:*api-key*
+                #:*hostname*
+                #:make-api-context
+                #:%main)
+  (:import-from #:screenshotbot/sdk/env
+                #:api-hostname
+                #:make-env-reader)
+  (:local-nicknames (#:a #:alexandria)
+                    (#:flags #:screenshotbot/sdk/flags)
+                    (#:sdk #:screenshotbot/sdk/sdk)
+                    (#:static #:screenshotbot/sdk/static)
+                    (#:api-context #:screenshotbot/sdk/api-context)
+                    (#:firebase #:screenshotbot/sdk/firebase)))
 (in-package :screenshotbot/sdk/test-main)
 
 
@@ -36,6 +49,7 @@
                             (error 'quit-condition :code code)))))
     (&body)))
 
+
 (test simple-parsing
   (with-fixture state ()
     (finishes
@@ -45,3 +59,47 @@
   (with-fixture state ()
     (signals quit-condition
       (%main (list "./recorder" "--helpy")))))
+
+
+(test simple-make-api-context
+  (with-fixture state ()
+    (let ((*hostname* "https://bleh.com")
+          (*api-key* "foo")
+          (*api-secret* "bleh"))
+      (finishes
+        (make-api-context)))))
+
+(test simple-make-api-context-domain
+  (with-fixture state ()
+    (let ((*hostname* "bleh.com")
+          (*api-key* "foo")
+          (*api-secret* "bleh"))
+      (let ((ctx
+              (make-api-context)))
+        (is (equal "https://bleh.com"
+                   (api-context:hostname ctx)))))))
+
+(test reads-hostname-from-env
+  (with-fixture state ()
+    (cl-mock:answer (make-env-reader) :env)
+    (cl-mock:answer (api-hostname :env)
+      "zoidberg.com")
+    (let ((*api-key* "foo")
+          (*api-secret* "bleh"))
+      (let ((ctx
+              (make-api-context)))
+        (is (equal "https://zoidberg.com"
+                   (api-context:hostname ctx)))))))
+
+(test reads-hostname-from-env-2
+  (with-fixture state ()
+    (cl-mock:answer (make-env-reader) :env)
+    (cl-mock:answer (api-hostname :env)
+      "https://staging.screenshotbot.io")
+    (let ((*hostname* "")
+          (*api-key* "foo")
+          (*api-secret* "bleh"))
+      (let ((ctx
+              (make-api-context)))
+        (is (equal "https://staging.screenshotbot.io"
+                   (api-context:hostname ctx)))))))

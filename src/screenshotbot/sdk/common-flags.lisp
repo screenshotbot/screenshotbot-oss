@@ -10,9 +10,6 @@
   (:shadow #:define-flag)
   (:export
    #:*verbose*
-   #:*api-key*
-   #:*api-secret*
-   #:*hostname*
    #:*help*
    #:*sdk-flags*
    #:define-flag))
@@ -20,6 +17,12 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *sdk-flags* (make-hash-table)))
+
+;; For easy reloading, this can be deleted in the future, but might
+;; require a restart of the server.
+'(*hostname*
+ *api-key*
+ *api-secret*)
 
 (defmacro define-flag (name &rest args
      &key selector &allow-other-keys)
@@ -34,25 +37,6 @@
    :selector "verbose"
    :type boolean
   :help "Verbose logs")
-
-(define-flag *api-key*
-  :selector "api-key"
-  :default-value nil
-  :type (or null string)
-  :help "Screenshotbot API Key. Defaults to $SCREENSHOTBOT_API_KEY.")
-
-(define-flag *api-secret*
-  :selector "api-secret"
-  :default-value nil
-  :type (or null string)
-  :help "Screenshotbot API Secret. Defaults to $SCREENSHOTBOT_API_SECRET")
-
-(define-flag *hostname*
-  :selector "api-hostname"
-  :default-value "https://api.screenshotbot.io"
-  :type string
-  :help "Screenshotbot API Endpoint"
-  :documentation "Only used for Enterprise or Open Source users, Defaults to `https://api.screenshotbot.io` or $SCREENSHOTBOT_API_HOSTNAME")
 
 (define-flag *help*
   :selector "help"
