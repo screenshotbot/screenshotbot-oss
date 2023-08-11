@@ -138,12 +138,12 @@
       :method method
       :want-stream t
       :method method
-      :basic-authorization (when (remote-supports-basic-auth-p)
+      :basic-authorization (when (remote-supports-basic-auth-p api-context)
                              (%make-basic-auth api-context))
       :content content
       :external-format-out :utf-8
       :parameters (cond
-                    ((remote-supports-basic-auth-p)
+                    ((remote-supports-basic-auth-p api-context)
                      parameters)
                     (t (list*
                         (cons "api-key" (api-context:key api-context))
@@ -308,7 +308,7 @@ error."
                                 :gitlab-merge-request-iid (safe-parse-int *gitlab-merge-request-iid*)
                                 :phabricator-diff-id (safe-parse-int *phabricator-diff-id*)
                                 :trunkp is-trunk)))
-       (if (remote-supports-put-run)
+       (if (remote-supports-put-run api-context)
            (put-run api-context run)
            (put-run-via-old-api api-context run))))))
 

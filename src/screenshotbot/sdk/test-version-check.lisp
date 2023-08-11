@@ -8,7 +8,6 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/version-check
-                #:*remote-version*
                 #:with-version-check
                 #:get-version)
   (:import-from #:util/request
@@ -17,6 +16,7 @@
                 #:if-called
                 #:answer)
   (:import-from #:screenshotbot/sdk/api-context
+                #:remote-version
                 #:api-context)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)))
@@ -59,7 +59,8 @@
                (lambda (api-context)
                  189))
     (let ((ans))
-      (with-version-check ((make-instance 'api-context
-                                          :hostname "..."))
-       (setf ans *remote-version*))
+      (let ((api-context (make-instance 'api-context
+                                        :hostname "...")))
+        (with-version-check (api-context)
+          (setf ans (remote-version api-context))))
       (is (eql 189 ans)))))

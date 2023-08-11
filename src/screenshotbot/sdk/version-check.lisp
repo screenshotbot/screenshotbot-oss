@@ -21,11 +21,12 @@
                 #:backoff)
   (:import-from #:screenshotbot/sdk/hostname
                 #:format-api-url)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:remote-version)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-version-check
    #:*client-version*
-   #:*remote-version*
    #:remote-supports-put-run))
 (in-package :screenshotbot/sdk/version-check)
 
@@ -33,16 +34,14 @@
                                 (asdf:find-system :screenshotbot.sdk/library))
   "The client version. Note that is different from the *api-version*.")
 
-(defvar *remote-version* *api-version*)
-
-(defun remote-supports-basic-auth-p ()
+(defun remote-supports-basic-auth-p (api-context)
   "Prior to this version, the auth was passed as http parameters. That
 wasn't great for security since it might mean the plain-text secret
 might get logged in the webserver logs."
-  (>= *remote-version* 2))
+  (>= (remote-version api-context) 2))
 
-(defun remote-supports-put-run ()
-  (>= *remote-version* 4))
+(defun remote-supports-put-run (api-context)
+  (>= (remote-version api-context) 4))
 
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
   (defun get-version (api-context)
@@ -63,15 +62,16 @@ might get logged in the webserver logs."
         (version-number version)))))
 
 (def-easy-macro with-version-check (api-context &fn fn)
-  (let ((*remote-version* (get-version api-context)))
-    (when (/= *remote-version* *api-version*)
+  (let ((remote-version (get-version api-context)))
+    (when (/= remote-version *api-version*)
       (log:warn "Server is running API version ~a, but this client uses version ~a. ~%
 
 This is most likely supported, however, it's more likely to have
 bugs. If you're using OSS Screenshotbot, we suggest upgrading.
 "
-                *remote-version*
+                remote-version
                 *api-version*))
+    (setf (remote-version api-context) remote-version)
     (funcall fn)))
 
 

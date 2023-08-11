@@ -9,6 +9,8 @@
   (:import-from #:screenshotbot/sdk/git
                 #:current-commit
                 #:git-repo)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:remote-version)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:version-check #:screenshotbot/sdk/version-check)
@@ -16,7 +18,7 @@
 (in-package :screenshotbot/sdk/finalized-commit)
 
 (defun finalize-commit (api-context)
-  (when (< version-check:*remote-version* 7)
+  (when (< (remote-version api-context) 7)
     (error "The remote Screenshotbot server does not support --mark-unchanged-from"))
 
   (let* ((repo (git-repo))

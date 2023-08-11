@@ -9,6 +9,8 @@
   (:import-from #:screenshotbot/sdk/git
                 #:current-commit
                 #:git-repo)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:remote-version)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:version-check #:screenshotbot/sdk/version-check)
@@ -18,7 +20,7 @@
 (in-package :screenshotbot/sdk/unchanged-run)
 
 (defun mark-unchanged-run (api-context)
-  (when (< version-check:*remote-version* 6)
+  (when (< (remote-version api-context) 6)
     (error "The remote Screenshotbot server does not support --mark-unchanged-from"))
 
   (when (equal flags:*channel* "unnamed-channel")

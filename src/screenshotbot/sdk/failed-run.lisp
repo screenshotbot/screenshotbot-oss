@@ -9,6 +9,8 @@
   (:import-from #:screenshotbot/sdk/git
                 #:current-commit
                 #:git-repo)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:remote-version)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:version-check #:screenshotbot/sdk/version-check)
@@ -16,7 +18,7 @@
 (in-package :screenshotbot/sdk/failed-run)
 
 (defun mark-failed (api-context)
-  (when (< version-check:*remote-version* 3)
+  (when (< (remote-version api-context) 3)
     (error "The remote Screenshotbot server does not support --mark-failed"))
 
   (when (equal flags:*channel* "unnamed-channel")

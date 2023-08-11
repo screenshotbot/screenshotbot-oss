@@ -6,16 +6,23 @@
 
 (defpackage :screenshotbot/sdk/api-context
   (:use #:cl)
+  (:import-from #:screenshotbot/api/model
+                #:*api-version*)
   (:export
    #:api-context
    #:key
    #:secret
    #:hostname
    #:desktop-api-context
-   #:desktop-p))
+   #:desktop-p
+   #:remote-version))
 (in-package :screenshotbot/sdk/api-context)
 
-(defclass api-context ()
+(defclass base-api-context ()
+  ((remote-version :initform *api-version*
+                   :accessor remote-version)))
+
+(defclass api-context (base-api-context)
   ((key :initarg :key
         :reader key)
    (secret :initarg :secret
@@ -24,6 +31,6 @@
              :reader hostname
              :documentation "A URL like https://screenshotbot.io")))
 
-(defclass desktop-api-context ()
+(defclass desktop-api-context (base-api-context)
   ((hostname :reader hostname
              :initform "http://localhost:4095")))
