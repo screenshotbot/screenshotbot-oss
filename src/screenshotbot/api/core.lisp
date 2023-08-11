@@ -53,7 +53,9 @@
   (with-api-key (api-key api-secret-key)
     (let ((key (%find-api-key  api-key)))
       (unless key
-        (warn "No such API key: ~a" api-key)
+        ;; Remove some noise from sdk-integration-tests
+        (unless (equal "deliver-sdk" api-key)
+          (warn "No such API key: ~a" api-key))
         (error 'api-error
                :message (format nil "No such API key: ~a" api-key)))
       (unless (or
