@@ -133,7 +133,7 @@
   (run (list *sdk*
              "--static-website"
              "src/screenshotbot/sdk/static-example/")
-       :directory #P"/home/arnold/builds/web/"))
+       :directory (uiop:getcwd)))
 
 (defun test-mark-unchanged ()
   (log:info "## TESTING --mark-unchanged-from")
