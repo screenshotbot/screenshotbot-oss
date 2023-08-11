@@ -11,7 +11,8 @@
    #:key
    #:secret
    #:hostname
-   #:desktop-api-context))
+   #:desktop-api-context
+   #:desktop-p))
 (in-package :screenshotbot/sdk/api-context)
 
 (defclass api-context ()

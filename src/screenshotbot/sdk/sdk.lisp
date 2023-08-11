@@ -56,6 +56,7 @@
   (:import-from #:screenshotbot/sdk/backoff
                 #:backoff)
   (:import-from #:screenshotbot/sdk/api-context
+                #:desktop-api-context
                 #:api-context)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:dto #:screenshotbot/api/model)
@@ -115,10 +116,13 @@
   (assoc-value result :response))
 
 
-(defun %make-basic-auth (api-context)
+(defmethod %make-basic-auth (api-context)
   (list
    (api-context:key api-context)
    (api-context:secret api-context)))
+
+(defmethod %make-basic-auth ((self desktop-api-context))
+  nil)
 
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
   (defun %request (api-context
@@ -134,9 +138,7 @@
       :method method
       :want-stream t
       :method method
-      :basic-authorization (when (and
-                                  (not flags:*desktop*)
-                                  (remote-supports-basic-auth-p))
+      :basic-authorization (when (remote-supports-basic-auth-p)
                              (%make-basic-auth api-context))
       :content content
       :external-format-out :utf-8
