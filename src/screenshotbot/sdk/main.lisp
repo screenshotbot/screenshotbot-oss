@@ -155,9 +155,13 @@
       (flags:*finalize*
        (with-defaults (api-context)
          (finalize-commit api-context)))
-      (t
+      (flags:*directory*
        (with-defaults (api-context)
-         (sdk:run-prepare-directory-toplevel api-context))))))
+         (sdk:run-prepare-directory-toplevel api-context)))
+      (t
+       (help)
+       (warn "No --directory provided")
+       (uiop:quit 1)))))
 
 (def-easy-macro with-sentry (&key (on-error (lambda ()
                                               (uiop:quit 1)))

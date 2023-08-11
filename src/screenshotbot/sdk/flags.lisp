@@ -54,9 +54,9 @@
 (in-package :screenshotbot/sdk/flags)
 
 (define-flag *directory*
-  :default-value "./"
+  :default-value nil
   :selector "directory"
-  :type string
+  :type (or null string)
   :help "Directory of images")
 
 (define-flag *recursive*
