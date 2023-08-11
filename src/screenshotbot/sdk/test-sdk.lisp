@@ -47,6 +47,7 @@
                 #:current-commit
                 #:rev-parse)
   (:import-from #:screenshotbot/api/model
+                #:*api-version*
                 #:decode-json)
   (:import-from #:util/json-mop
                 #:json-mop-to-string)
@@ -218,7 +219,8 @@
         (answer (merge-base "abcd" "bdfd" "abcd"))
         (answer (repo-link repo) "https://github.com/tdrhq/fast-example")
         (answer (cleanp repo) t)
-        (let ((context (make-instance 'api-context)))
+        (let ((context (make-instance 'api-context
+                                      :remote-version *api-version*)))
           (finishes
             (make-run context
                       `(((:id . "foo")
@@ -267,6 +269,7 @@
                         (auto-restart:*global-enable-auto-retries-p* nil))
     (with-local-acceptor (host) ('easy-acceptor :name 'test-handler)
       (let ((api-context (make-instance 'api-context
+                                        :remote-version *api-version*
                                         :key ""
                                         :secret ""
                                         :hostname host)))

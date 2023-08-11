@@ -17,8 +17,7 @@
                 #:*extras*
                 #:funcall-with-sentry-logs)
   (:import-from #:screenshotbot/sdk/version-check
-                #:*client-version*
-                #:with-version-check)
+                #:*client-version*)
   (:import-from #:util/health-check
                 #:def-health-check
                 #:run-health-checks)
@@ -31,6 +30,7 @@
   (:import-from #:screenshotbot/sdk/finalized-commit
                 #:finalize-commit)
   (:import-from #:screenshotbot/sdk/api-context
+                #:remote-version
                 #:api-context
                 #:desktop-api-context)
   (:import-from #:screenshotbot/sdk/hostname
@@ -80,8 +80,9 @@
 (def-easy-macro with-defaults (&binding api-context &fn fn)
   (sdk:parse-org-defaults)
   (let ((api-context (make-api-context)))
-    (with-version-check (api-context)
-      (funcall fn api-context))))
+    (let ((version (remote-version api-context)))
+      (log:debug "Remote version is ~a" version))
+    (funcall fn api-context)))
 
 (defun emptify (s)
   "If the string is empty, return nil"

@@ -15,12 +15,24 @@
    #:hostname
    #:desktop-api-context
    #:desktop-p
-   #:remote-version))
+   #:remote-version
+   #:fetch-version))
 (in-package :screenshotbot/sdk/api-context)
 
+(defgeneric fetch-version (api-context)
+  (:documentation "Actually fetch the api version, without any caching. Don't call this directly, instead call REMOTE-VERSION on the api-context."))
+
 (defclass base-api-context ()
-  ((remote-version :initform *api-version*
+  ((remote-version :initform nil
+                   :initarg :remote-version
                    :accessor remote-version)))
+
+(defmethod remote-version :around ((self base-api-context))
+  (let ((prev (call-next-method)))
+    (cond
+      (prev  prev)
+      (t
+       (setf (remote-version self) (fetch-version self))))))
 
 (defclass api-context (base-api-context)
   ((key :initarg :key

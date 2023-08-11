@@ -7,15 +7,14 @@
 (defpackage :screenshotbot/sdk/test-version-check
   (:use #:cl
         #:fiveam)
-  (:import-from #:screenshotbot/sdk/version-check
-                #:with-version-check
-                #:get-version)
+  (:import-from #:screenshotbot/sdk/version-check)
   (:import-from #:util/request
                 #:http-request)
   (:import-from #:cl-mock
                 #:if-called
                 #:answer)
   (:import-from #:screenshotbot/sdk/api-context
+                #:fetch-version
                 #:remote-version
                 #:api-context)
   (:local-nicknames (#:a #:alexandria)
@@ -35,7 +34,7 @@
     (answer (http-request "https://api.screenshotbot.io/api/version"
                           :want-string t)
       (values "{\"version\":1}" 200))
-    (is (eql 1 (get-version
+    (is (eql 1 (fetch-version
                 (make-instance 'api-context
                                :key ""
                                :secret ""
@@ -47,7 +46,7 @@
     (answer (http-request "https://www.google.com/api/version"
                           :want-string t)
       (values "" 404))
-    (is (eql 1 (get-version
+    (is (eql 1 (fetch-version
                 (make-instance 'api-context
                                :key ""
                                :secret ""
@@ -55,12 +54,11 @@
 
 (test with-version-check
   (with-fixture state ()
-    (if-called 'get-version
+    (if-called 'fetch-version
                (lambda (api-context)
                  189))
     (let ((ans))
       (let ((api-context (make-instance 'api-context
                                         :hostname "...")))
-        (with-version-check (api-context)
-          (setf ans (remote-version api-context))))
-      (is (eql 189 ans)))))
+        (is (eql 189 (remote-version api-context)))
+        (is (eql 189 (remote-version api-context)))))))

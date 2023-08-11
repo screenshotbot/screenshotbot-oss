@@ -22,10 +22,10 @@
   (:import-from #:screenshotbot/sdk/hostname
                 #:format-api-url)
   (:import-from #:screenshotbot/sdk/api-context
+                #:fetch-version
                 #:remote-version)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:with-version-check
    #:*client-version*
    #:remote-supports-put-run))
 (in-package :screenshotbot/sdk/version-check)
@@ -43,37 +43,37 @@ might get logged in the webserver logs."
 (defun remote-supports-put-run (api-context)
   (>= (remote-version api-context) 4))
 
+(defvar *in-here* nil)
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
-  (defun get-version (api-context)
-    (log:info "Getting remote version")
-    (multiple-value-bind (body ret)
-        (http-request
-         (format-api-url api-context "/api/version")
-         :want-string t)
-      (let ((version (cond
-                       ((eql 200 ret)
-                        (decode-json body 'version))
-                       ((eql 404 ret)
-                        (log:warn "/api/version responded 404, this is probably because of running an old version of OSS Screenshotbot service")
-                        (make-instance 'version :version 1))
-                       (t
-                        (log:error "/api/version failed with code ~a" ret)
-                        (error "/api/version failed")))))
-        (version-number version)))))
+  (defmethod fetch-version (api-context)
+    (log:info "Fetching remote version")
+    (assert (not *in-here*))
+    (let ((*in-here* t))
+     (multiple-value-bind (body ret)
+         (http-request
+          (format-api-url api-context "/api/version")
+          :want-string t)
+       (let ((version (cond
+                        ((eql 200 ret)
+                         (decode-json body 'version))
+                        ((eql 404 ret)
+                         (log:warn "/api/version responded 404, this is probably because of running an old version of OSS Screenshotbot service")
+                         (make-instance 'version :version 1))
+                        (t
+                         (log:error "/api/version failed with code ~a" ret)
+                         (error "/api/version failed")))))
+         (warn-for-bad-versions (version-number version))
+         (version-number version))))))
 
-(def-easy-macro with-version-check (api-context &fn fn)
-  (let ((remote-version (get-version api-context)))
-    (when (/= remote-version *api-version*)
-      (log:warn "Server is running API version ~a, but this client uses version ~a. ~%
+(defun warn-for-bad-versions (remote-version)
+  (when (/= remote-version *api-version*)
+    (log:warn "Server is running API version ~a, but this client uses version ~a. ~%
 
 This is most likely supported, however, it's more likely to have
 bugs. If you're using OSS Screenshotbot, we suggest upgrading.
 "
-                remote-version
-                *api-version*))
-    (setf (remote-version api-context) remote-version)
-    (funcall fn)))
-
+              remote-version
+              *api-version*)))
 
 (def-health-check verify-can-decode-json ()
   (eql 10 (version-number (decode-json "{\"version\":10}" 'version))))
