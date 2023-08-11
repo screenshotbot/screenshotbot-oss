@@ -147,6 +147,8 @@
   (run (list *sdk* "--self-test")))
 
 (defun run-tests ()
+  (setf (uiop:getenv "TDRHQ_IGNORE_SENTRY") "true")
+
   (run-self-tests)
 
   (test-large-file)
