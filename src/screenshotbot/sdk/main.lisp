@@ -165,6 +165,17 @@
        (warn "No --directory provided")
        (uiop:quit 1)))))
 
+(defun trim-arg (arg)
+  (let ((size 6)
+        (prefix 3))
+   (cond
+     ((<= (length arg) size)
+      arg)
+     (t
+      (format nil "~a...~a"
+              (str:substring 0 prefix arg)
+              (str:substring (- (length arg) (- size prefix)) nil arg))))))
+
 (def-easy-macro with-sentry (&key (on-error (lambda ()
                                               (uiop:quit 1)))
                                   (dry-run nil)
@@ -182,6 +193,11 @@
                 ("features" *features*)
                 ("channel" flags:*channel*)
                 ("build-url" flags:*build-url*)
+                #+lispworks
+                ("cmd-line-trimmed"
+                 (mapcar
+                  #'trim-arg
+                  sys:*line-arguments-list*))
                 ("hostname" (uiop:hostname))
                 #+lispworks
                 ("openssl-version" (comm:openssl-version)))
