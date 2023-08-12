@@ -9,6 +9,7 @@
             (:use #:cl
                   #:fiveam)
             (:import-from #:screenshotbot/sdk/git
+                          #:rev-parse
                           #:current-commit
                           #:current-branch
                           #:git-command
@@ -72,3 +73,11 @@
     (run-in-dir repo "git checkout -b léquipe")
     (let ((branch (current-branch repo)))
       (is (equal "léquipe" (current-branch repo))))))
+
+(test rev-parse-happy-path
+  (with-fixture git-repo ()
+    (make-commit repo "foobar")
+    (run-in-dir repo "git checkout -b origin/car")
+    (is-false (rev-parse repo "bleh"))
+    (is-true
+     (rev-parse repo "car"))))

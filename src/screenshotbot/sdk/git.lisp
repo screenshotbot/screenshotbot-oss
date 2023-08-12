@@ -109,7 +109,7 @@
 
 (defmethod rev-parse ((repo git-repo) branch)
   (handler-case
-      ($ (git-command repo) "rev-parse" (format nil "origin/~a" branch))
+      ($ (git-command repo) "rev-parse" "-q" "--verify" (format nil "origin/~a" branch))
     (error
       nil)))
 
