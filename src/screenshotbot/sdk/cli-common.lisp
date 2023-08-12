@@ -12,6 +12,8 @@
                 #:api-context)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:util/health-check
+                #:run-health-checks)
   (:export
    #:with-clingon-api-context
    #:common-run-options
@@ -88,7 +90,10 @@ as opposed to `recorder help`."
               :key :desktop
               :long-name "desktop"
               :description "Whether the server is running on the Desktop version of Screenshotbot."))
-   :sub-commands (mapcar #'funcall (mapcar #'cdr *root-commands*))))
+   :sub-commands
+   (list*
+    (self-test/command)
+    (mapcar #'funcall (mapcar #'cdr *root-commands*)))))
 
 (defun common-run-options ()
   "A list of run options that are common between directory runs and static-website runs."
@@ -126,3 +131,11 @@ as opposed to `recorder help`."
 
 (defmacro register-root-command (fn)
   `(setf (assoc-value *root-commands* ,fn) ,fn))
+
+
+(defun self-test/command ()
+  (clingon:make-command
+   :name "self-test"
+   :description "Run a few diagnostic self-tests. This can be useful to figure out why this tool is failing in your environment."
+   :handler (lambda (cmd)
+              (uiop:quit (if (run-health-checks) 0 1)))))
