@@ -12,6 +12,7 @@
   (:import-from #:screenshotbot/sdk/api-context
                 #:remote-version)
   (:import-from #:screenshotbot/sdk/cli-common
+                #:register-root-command
                 #:*root-commands*
                 #:with-clingon-api-context)
   (:import-from #:clingon.command
@@ -58,4 +59,4 @@
                 (finalize-commit api-context
                                  :commit (getopt cmd :commit))))))
 
-(setf (assoc-value *root-commands* 'finalize) #'finalize-commit/command)
+(register-root-command 'finalize-commit/command)
