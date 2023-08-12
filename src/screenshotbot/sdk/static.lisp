@@ -7,6 +7,7 @@
                 #:*cache*
                 #:context)
   (:import-from #:screenshotbot/sdk/sdk
+                #:guess-master-branch
                 #:request
                 #:ensure-api-success)
   (:import-from #:util/digests
@@ -23,13 +24,23 @@
                 #:release-file-lock
                 #:file-lock)
   (:import-from #:alexandria
+                #:remove-from-plist
                 #:assoc-value)
   (:import-from #:util/request
                 #:http-request)
+  (:import-from #:clingon
+                #:make-option)
+  (:import-from #:clingon.command
+                #:getopt)
+  (:import-from #:screenshotbot/sdk/cli-common
+                #:common-run-options
+                #:*root-commands*
+                #:with-clingon-api-context)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:git #:screenshotbot/sdk/git)
+                    (#:e #:screenshotbot/sdk/env)
                     (#:replay #:screenshotbot/replay/core)
                     (#:api-context #:screenshotbot/sdk/api-context))
   (:export
@@ -78,26 +89,6 @@ upload blobs that haven't been uploaded before."
               do
                  (upload-blob api-context file)))))
 
-#+nil
-(let ((flags:*hostname* "https://staging.screenshotbot.io")
-      (flags:*api-key* *key*)
-      (flags:*api-secret* *secret*))
-  (upload-blob "~/builds/web/update-ip.lisp"))
-
-#+nil
-(let ((flags:*hostname* "https://staging.screenshotbot.io")
-      (flags:*api-key* *key*)
-      (flags:*api-secret* *secret*))
-  (upload-multiple-files
-   (list
-    "~/builds/web/update-ip.lisp"
-    "~/builds/web/Makefile")))
-
-#+nil
-(let ((flags:*hostname* "https://staging.screenshotbot.io")
-      (flags:*api-key* *key*)
-      (flags:*api-secret* *secret*))
-  (record-static-website "~/builds/gatsby-example/public/"))
 
 (defun upload-snapshot-assets (api-context snapshot)
   "Upload all the assets in the snapshot"
@@ -125,13 +116,13 @@ upload blobs that haven't been uploaded before."
                                                          :height (parse-integer (second (dim)))))
                             :mobile-emulation (assoc-value config :mobile-emulation)))))))
 
-(defun browser-configs ()
+(defun read-browser-configs (file)
   "Currently we're not providing a way to modify the browser
   config. We're hardcooding this to a value that we can initially work
   with."
   (cond
-    (flags:*browser-configs*
-     (parse-config-from-file flags:*browser-configs*))
+    (file
+     (parse-config-from-file file))
     (t
      (list
       (make-instance 'browser-config
@@ -151,23 +142,30 @@ upload blobs that haven't been uploaded before."
         using (hash-value sym)
         collect (cons key (symbol-value sym))))
 
-(defun schedule-snapshot (api-context snapshot)
+(defun schedule-snapshot (api-context snapshot &key channel
+                                                 repo-url
+                                                 browser-configs
+                                                 main-branch
+                                                 pull-request
+                                                 production)
   "Schedule a Replay build with the given snapshot"
+  (declare (ignore production)) ;; TODO
   (setf (replay:tmpdir snapshot) nil) ;; hack for json encoding
-  (let* ((repo (make-instance 'git:git-repo :link flags:*repo-url*))
-         (branch-hash (ignore-errors (git:rev-parse repo flags:*main-branch*)))
+  (let* ((repo (make-instance 'git:git-repo :link repo-url))
+         (branch-hash (ignore-errors (git:rev-parse repo main-branch)))
          (commit (ignore-errors (git:current-commit repo))))
    (let ((request (make-instance 'replay:snapshot-request
                                  :snapshot snapshot
-                                 :channel-name flags:*channel*
-                                 :pull-request flags:*pull-request*
-                                 :main-branch flags:*main-branch*
-                                 :repo-url flags:*repo-url*
-                                 :browser-configs (browser-configs)
+                                 :channel-name channel
+                                 :pull-request pull-request
+                                 :main-branch main-branch
+                                 :repo-url repo-url
+                                 :browser-configs (read-browser-configs browser-configs)
                                  :sdk-flags (get-sdk-flags)
                                  :commit commit
                                  :branch-hash branch-hash
-                                 :merge-base (ignore-errors (git:merge-base repo branch-hash commit)))))
+                                 :merge-base
+                                 (git:merge-base repo branch-hash commit))))
      (uiop:with-temporary-file (:pathname p)
        (cl-store:store request p)
        (request
@@ -198,7 +196,6 @@ upload blobs that haven't been uploaded before."
               #-mswindows
               (pathname "~/.cache/screenshotbot/replay/")))
     (ensure-directories-exist path)
-
     (make-instance 'lru-cache
                    :dir path)))
 
@@ -213,44 +210,100 @@ upload blobs that haven't been uploaded before."
         (release-file-lock lock)))))
 
 (auto-restart:with-auto-restart ()
- (defun record-static-website (api-context location)
-   (assert (path:-d location))
-   (when flags:*production*
-     (sdk:update-commit-graph
-      api-context
-      (make-instance 'git:git-repo :link flags:*repo-url*)
-      flags:*main-branch*))
-   (with-cache-dir ()
-     (tmpdir:with-tmpdir (tmpdir)
-       (let* ((context (make-instance 'context))
-              (port (util/random-port:random-port))
-              (acceptor (make-instance 'hunchentoot:acceptor
-                                       :port port
-                                       :document-root location))
-              (snapshot (make-instance 'replay:snapshot
-                                       :tmpdir tmpdir)))
-         (unwind-protect
-              (progn
-                (hunchentoot:start acceptor)
-                (loop for index.html in (find-all-index.htmls location)
-                      do
-                         (replay:load-url-into
-                          context
-                          snapshot
-                          (format nil "http://localhost:~a~a" port index.html)
-                          tmpdir
-                          :actual-url
-                          (when flags:*static-website-assets-root*
-                            (format nil "~a~a"
-                                    flags:*static-website-assets-root*
-                                    index.html))))
+  (defun record-static-website (api-context location
+                                &rest args
+                                &key production
+                                  repo-url
+                                  main-branch
+                                  assets-root
+                                  &allow-other-keys)
+    (assert (path:-d location))
+    (let ((git-repo (make-instance 'git:git-repo :link repo-url)))
+      (when production
+        (sdk:update-commit-graph
+         api-context
+         git-repo
+         main-branch))
+      (let ((schedule-args
+              (remove-from-plist args
+                                 :main-branch :assets-root))
+            (main-branch (or main-branch
+                             (guess-master-branch git-repo))))
+        (with-cache-dir ()
+          (tmpdir:with-tmpdir (tmpdir)
+            (let* ((context (make-instance 'context))
+                   (port (util/random-port:random-port))
+                   (acceptor (make-instance 'hunchentoot:acceptor
+                                            :port port
+                                            :document-root location))
+                   (snapshot (make-instance 'replay:snapshot
+                                            :tmpdir tmpdir)))
+              (unwind-protect
+                   (progn
+                     (hunchentoot:start acceptor)
+                     (loop for index.html in (find-all-index.htmls location)
+                           do
+                              (replay:load-url-into
+                               context
+                               snapshot
+                               (format nil "http://localhost:~a~a" port index.html)
+                               tmpdir
+                               :actual-url
+                               (when assets-root
+                                 (format nil "~a~a"
+                                         assets-root
+                                         index.html))))
 
-                (upload-snapshot-assets api-context snapshot)
-                (let* ((result (schedule-snapshot api-context snapshot))
-                       (logs (a:assoc-value result :logs)))
-                  (log:info "Screenshot job queued: ~a" logs)))
-           (hunchentoot:stop acceptor)
-           #+mswindows
-           (progn
-             (log:info "[windows-only] Waiting 2s before cleanup")
-             (sleep 2))))))))
+                     (upload-snapshot-assets api-context snapshot)
+                     (let* ((result (apply #'schedule-snapshot api-context snapshot
+                                           :main-branch main-branch
+                                           schedule-args))
+                            (logs (a:assoc-value result :logs)))
+                       (log:info "Screenshot job queued: ~a" logs)))
+                (hunchentoot:stop acceptor)
+                #+mswindows
+                (progn
+                  (log:info "[windows-only] Waiting 2s before cleanup")
+                  (sleep 2))))))))
+))
+
+(defun static-website/command ()
+  (clingon:make-command
+   :name "static-website"
+   :options (list*
+             (make-option
+              :string
+              :long-name "assets-root"
+              :description "The root for all image/CSS assets. If not provided it defaults to the directory"
+              :key :assets-root)
+             (make-option
+              :string
+              :long-name "directory"
+              :required t
+              :description "The directory that we scan for all HTML files."
+              :key :directory)
+             (make-option
+              :string
+              :long-name "browser-configs"
+              :description "A JSON file that specifies which browsers to run this on."
+              :key :browser-configs)
+             (common-run-options))
+   :description "Upload a directory of HTML assets with images/CSS and have Screenshotbot render them in browsers of your choice"
+   :handler (lambda (cmd)
+              (log:config :debug)
+              (with-clingon-api-context (api-context cmd)
+                (let ((env (e:make-env-reader)))
+                  (apply #'record-static-website
+                         api-context (getopt cmd :directory)
+                         :pull-request (or (getopt cmd :pull-request)
+                                           (e:pull-request-url env))
+                         :repo-url (or (getopt cmd :repo-url)
+                                       (e:repo-url env))
+                         :browser-configs (getopt cmd :browser-configs)
+                         :main-branch (getopt cmd :main-branch)
+                         (loop for key  in `(:assets-root :production
+                                             :channel)
+                               append (list key (getopt cmd key)))))))))
+
+(setf (assoc-value *root-commands* :static-website)
+      #'static-website/command)

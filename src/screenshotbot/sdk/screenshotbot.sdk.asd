@@ -6,7 +6,7 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
-  :version "2.6.4"
+  :version "2.6.5"
   :depends-on (:com.google.flag
                :pkg
                :quri
@@ -21,6 +21,7 @@
                #-screenshotbot-oss
                :sentry
                :sentry-client
+               :clingon
                :alexandria
                :auto-restart
                :util/misc
@@ -44,6 +45,7 @@
                (:file "backoff")
                (:file "version-check")
                (:file "bundle")
+               (:file "cli-common")
                (:file "firebase")
                (:file "android")
                (:file "env")

@@ -82,6 +82,7 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
               :keep-clos :meta-object-slots
               :keep-pretty-printer t
               :keep-clos-object-printing t
+              :kill-dspec-table nil ;; for defadvice, in particular clingon:exit
               :keep-lisp-reader t
               ;; temporary: get the build green
               :keep-symbols `(system:pipe-exit-status

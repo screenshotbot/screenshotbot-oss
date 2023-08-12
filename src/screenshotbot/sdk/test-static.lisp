@@ -10,6 +10,7 @@
   (:import-from #:screenshotbot/server
                 #:acceptor)
   (:import-from #:screenshotbot/sdk/static
+                #:static-website/command
                 #:parse-config-from-file
                 #:find-all-index.htmls
                 #:upload-blob)
@@ -120,3 +121,8 @@
                  (browser-config-name (car configs))))
       (is (equal "chrome"
                  (browser-type (car configs)))))))
+
+
+(test simple-make-command
+  (finishes
+   (static-website/command)))

@@ -53,6 +53,8 @@
                 #:*api-key*
                 #:*hostname*
                 #:*api-secret*)
+  (:import-from #:screenshotbot/sdk/cli-common
+                #:root/command)
   (:export
    #:main))
 (in-package :screenshotbot/sdk/main)
@@ -113,6 +115,9 @@
                           :secret secret
                           :hostname hostname)))))))
 
+(defun try-clingon (argv)
+  (clingon:run (root/command) (cdr argv)))
+
 (defun %main (&optional (argv #+lispworks system:*line-arguments-list*
                               #-lispworks (uiop:command-line-arguments)))
   (log:config :sane :immediate-flush t :pattern "[%D{%H:%M:%S}] %5p: %m%n")
@@ -128,9 +133,14 @@
                   (%main ',argv)))
     (cond
       (unrecognized
-       (format t "Unrecognized arguments: ~a~%" (Str:join " " unrecognized))
-       (help)
-       (uiop:quit 1))
+       (cond
+         ((not (str:emptyp (uiop:getenv "SCREENSHOTBOT_CLI_V2")))
+          (log:info "Enabling V2 of Screenshotbot CLI interface")
+          (try-clingon argv))
+         (t
+           (format t "Unrecognized arguments: ~a~%" (Str:join " " unrecognized))
+           (help)
+           (uiop:quit 1))))
       (flags:*help*
        (help))
       (flags:*versionp*
@@ -149,7 +159,12 @@
        (sdk:run-ios-multi-dir-toplevel))
       (flags:*static-website*
        (with-defaults (api-context)
-         (static:record-static-website api-context flags:*static-website*)))
+         (static:record-static-website api-context flags:*static-website*
+                                       :production flags:*production*
+                                       :repo-url flags:*repo-url*
+                                       :browser-configs flags:*browser-configs*
+                                       :main-branch flags:*main-branch*
+                                       :assets-root flags:*static-website-assets-root*)))
       (flags:*firebase-output*
        (firebase:with-firebase-output (flags:*firebase-output*)
          (with-defaults (api-context)
@@ -250,3 +265,8 @@
   (let ((out-stream (make-string-output-stream)))
     (with-sentry (:dry-run t)
       (warn "warning health-check for sdk"))))
+
+#+lispworks
+(lw:defadvice (clingon.utils:exit clingon-exit-warning :before) (&optional (code 0))
+  (unless (= code 0)
+    (warn "Exiting with code: ~a~%" code)))

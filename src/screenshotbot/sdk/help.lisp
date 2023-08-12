@@ -17,6 +17,8 @@
   (format t "Usage: recorder [options]~%~%")
   (format t "Use this script from your CI pipelines or locally to
 upload screenshots and generate reports~%~%")
+  (format t "We are currently migrating the commands from a single top-level
+command to multiple subcommands. Use `recorder help` to get documentation for subcommands.~%~%")
   (format t "Options:~%~%")
   (loop for (name . flag) in (sort com.google.flag::*registered-flags* #'string< :key #'car) do
     (let* ((lines (mapcar #'str:trim (str:lines (com.google.flag::help flag))))

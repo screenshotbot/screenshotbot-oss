@@ -58,6 +58,7 @@
   nil)
 
 (defun $ (&rest args)
+  (log:debug "Running command with args: ~S" args)
   (let* ((args (flatten args))
          (args (loop for arg in args
                     if (pathnamep arg)
