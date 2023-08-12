@@ -101,6 +101,7 @@
                (:file "test-flags")
                (:file "test-git")
                (:file "test-env")
+               (:file "test-cli-common")
                (:file "test-android")
                (:file "test-sdk")
                (:file "test-firebase")
