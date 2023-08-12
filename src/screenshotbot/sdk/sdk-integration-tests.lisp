@@ -181,6 +181,7 @@
     (log:info "Running sdk")
     (run (list *sdk*
                "--directory" "./screenshots"
+               "--channel" "sdk-integration-tests"
                "--production=false"))
     #+darwin
     (run (list "arch" "-x86_64"
@@ -199,6 +200,7 @@
     (log:info "final run with random code")
     (run (list *sdk*
                "--directory" "./screenshots"
+               "--channel" "integration-tests-with-random-code"
                "--production=false")))
 
   #+darwin
