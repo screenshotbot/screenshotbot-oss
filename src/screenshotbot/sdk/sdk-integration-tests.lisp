@@ -138,6 +138,7 @@
 (defun test-static-website ()
   (log:info "## TESTING --static-website")
   (run (list *sdk*
+             "--channel" "static-website-for-test"
              "--static-website"
              "src/screenshotbot/sdk/static-example/")
        :directory (uiop:getcwd)))

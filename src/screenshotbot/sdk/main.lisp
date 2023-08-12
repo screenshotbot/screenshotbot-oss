@@ -161,6 +161,7 @@
        (with-defaults (api-context)
          (static:record-static-website api-context flags:*static-website*
                                        :production flags:*production*
+                                       :channel flags:*channel*
                                        :repo-url flags:*repo-url*
                                        :browser-configs flags:*browser-configs*
                                        :main-branch flags:*main-branch*
