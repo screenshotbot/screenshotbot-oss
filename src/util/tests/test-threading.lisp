@@ -177,6 +177,14 @@
          (is-true called))))))
 
 
+(test with-extras-does-not-crash
+  (with-fixture state ()
+   (let ((body-called-p nil))
+     (with-extras (("name" (error "foo")))
+       (finishes
+         (build-extras nil))))))
+
+
 (test with-extras
   (with-fixture state ()
    (let ((body-called-p nil))
