@@ -232,7 +232,7 @@ error."
   (log:debug "/api/screenshot response: ~s" response)
   (let ((upload-url (assoc-value response :upload-url)))
     (when upload-url
-      (log:debug "Uploading ~a" key)
+      (log:info "Uploading image for `~a`" key)
       (put-file api-context upload-url stream)))
   (setf (assoc-value response :name) key)
   response)
@@ -381,7 +381,7 @@ error."
   (log:debug "Reading images from ~a" dir)
   (let ((images
           (upload-image-directory api-context dir)))
-    (log:info "Creating run")
+    (log:debug "Creating run")
     (apply 'make-run
            api-context
            images
@@ -406,7 +406,7 @@ error."
               :parameters `(("hash-list"
                              . ,(json:encode-json-to-string (mapcar 'md5-sum images))))))))
       (log:debug "got full response: ~s" hash-to-response)
-      (loop for im in (list-images bundle)
+      (loop for im in images
             collect
             (progn
               (with-open-stream (s (image-stream im))

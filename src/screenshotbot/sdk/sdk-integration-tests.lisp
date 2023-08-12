@@ -128,6 +128,13 @@
    (run (list *sdk*
               "--finalize"))))
 
+(defun test-verbose-logs ()
+  (log:info "## TESTING --verbose")
+  (with-repo
+      (run (list *sdk*
+                 "--verbose"
+                 "--finalize"))))
+
 (defun test-static-website ()
   (log:info "## TESTING --static-website")
   (run (list *sdk*
@@ -160,6 +167,8 @@
   (test-static-website)
 
   (test-mark-unchanged)
+
+  (test-verbose-logs)
 
   (with-repo
     (test-crash)

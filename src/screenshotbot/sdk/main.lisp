@@ -115,13 +115,13 @@
 
 (defun %main (&optional (argv #+lispworks system:*line-arguments-list*
                               #-lispworks (uiop:command-line-arguments)))
-  (log:config :sane :immediate-flush t)
+  (log:config :sane :immediate-flush t :pattern "[%D{%H:%M:%S}] %5p: %m%n")
   (log:config :info)
 
   (log:info "Screenshotbot SDK v~a" *client-version*)
   (let ((unrecognized  (parse-command-line (cdr argv))))
     (when flags:*verbose*
-      (log:config :debug))
+      (log:config :debug :oneline))
     (log:debug "Run this in interactive shell: ~S"
                `(progn
                   (chdir-for-bin ,(uiop:getcwd))
