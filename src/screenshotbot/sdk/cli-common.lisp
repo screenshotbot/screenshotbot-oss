@@ -10,9 +10,12 @@
                 #:api-hostname)
   (:import-from #:screenshotbot/sdk/api-context
                 #:api-context)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:export
    #:with-clingon-api-context
-   #:common-run-options))
+   #:common-run-options
+   #:register-root-command))
 (in-package :screenshotbot/sdk/cli-common)
 
 (defun make-api-context (&key api-key
@@ -120,3 +123,6 @@ as opposed to `recorder help`."
     :initial-value nil
     :description "The pull request URL."
     :key :pull-request)))
+
+(defmacro register-root-command (fn)
+  `(setf (assoc-value *root-commands* ,fn) ,fn))

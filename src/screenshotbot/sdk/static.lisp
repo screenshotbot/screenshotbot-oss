@@ -33,6 +33,7 @@
   (:import-from #:clingon.command
                 #:getopt)
   (:import-from #:screenshotbot/sdk/cli-common
+                #:register-root-command
                 #:common-run-options
                 #:*root-commands*
                 #:with-clingon-api-context)
@@ -305,5 +306,4 @@ upload blobs that haven't been uploaded before."
                                              :channel)
                                append (list key (getopt cmd key)))))))))
 
-(setf (assoc-value *root-commands* :static-website)
-      #'static-website/command)
+(register-root-command 'static-website/command)
