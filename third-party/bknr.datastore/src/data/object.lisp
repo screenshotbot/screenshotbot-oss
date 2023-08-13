@@ -231,11 +231,10 @@ reads will return nil.")))
 (aclmop::finalize-inheritance (find-class 'store-object))
 
 (defmethod fix-make-instance-args ((class persistent-class)
-                               initargs)
+                                   initargs)
   (list*
    class
    (append
-    (list :id (allocate-next-object-id))
     initargs
     (let ((used-keys (loop for key in initargs by #'cddr
                            collect key)))
@@ -267,17 +266,9 @@ reads will return nil.")))
       (eq :restore (store-state *store*)))
      (cond
        (id
-        ;; This is a nested call from the transaction execution or
-        ;; from a restore.
-        (when (<= id (next-object-id (store-object-subsystem)))
-          (mp-with-lock-held (*allocate-object-id-lock*)
-            (setf (next-object-id (store-object-subsystem))
-                  (max
-                   (next-object-id (store-object-subsystem))
-                   (1+ id)))))
         (call-next-method))
        (t
-        (apply #'call-next-method
+        (apply #'tx-make-instance
                (fix-make-instance-args class initargs)))))
     (t
      (with-store-guard ()
@@ -286,12 +277,20 @@ reads will return nil.")))
                    (fix-make-instance-args
                     class initargs)
                 (make-instance 'transaction
-                               :function-symbol 'make-instance
+                               :function-symbol 'tx-make-instance
                                :timestamp (get-universal-time)
                                :args (list*
                                       (class-name class)
                                       args)))))
          (execute transaction))))))
+
+(defun tx-make-instance (class &rest args)
+  ;; class might either be a symbol, or a class depending on whether
+  ;; this was a toplevel transaction or called inside another
+  ;; transaction.
+  (apply #'make-instance class
+         :id (allocate-next-object-id)
+         args))
 
 (defvar *allocate-object-id-lock* (bt:make-lock "Persistent Object ID Creation"))
 
