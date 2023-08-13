@@ -13,6 +13,8 @@
   (:import-from #:util/store
                 #:location-for-oid
                 #:defindex)
+  (:import-from #:bknr.datastore
+                #:in-transaction-p)
   (:export #:object-with-oid
 	   #:object-with-unindexed-oid
 	   #:find-by-oid
@@ -53,6 +55,8 @@
 
 ;; TODO: rename to new-oid
 (defun %make-oid ()
+  (when (in-transaction-p)
+    (warn "Making OID in transaction"))
   (make-oid
    :arr
    (mongoid:oid)))
