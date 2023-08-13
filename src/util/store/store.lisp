@@ -71,7 +71,8 @@
    #:add-datastore-cleanup-hook
    #:*snapshot-hooks*
    #:raft-store
-   #:make-default-store))
+   #:make-default-store
+   #:raft-store-final))
 (in-package :util/store)
 
 (defvar *object-store*)
@@ -147,6 +148,13 @@ to the directory that was just snapshotted.")
                       ;; Hopefully braft takes care of the locking here
                       bknr.datastore:store)
   ())
+
+(defclass raft-store-final (with-leadership-priority
+                            cluster-store-mixin
+                            ;; Hopefully braft takes care of the locking here
+                            bknr.datastore:store)
+  ()
+  (:documentation "The final raft store we'll be using"))
 
 (defclass store-for-test (common-mp-store)
   ())
