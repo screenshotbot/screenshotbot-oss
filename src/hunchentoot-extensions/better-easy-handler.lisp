@@ -304,26 +304,9 @@ Apache log analysis tools.)"
                     target
                     (hunchentoot:script-name hunchentoot:*request*))))
     (let ((target (apply 'make-url target args)))
-     (cond
-       ((str:starts-with? "/" target)
-        (let ((host (hunchentoot:host)))
-          (destructuring-bind (host &optional (port "80")) (str:split ":" host)
-            (let* ((port (parse-integer port))
-                   (https
-                     (or
-                      (string-equal "https" (hunchentoot:header-in* :x-forwarded-proto))
-                      (equal port 443))))
-              (hunchentoot:redirect
-               target
-               :host host
-               :port (if https
-                         443
-                         port)
-               :protocol (if https
-                             :https
-                             :http))))))
-       (t
-        (hunchentoot:redirect target))))))
+      (setf (hunchentoot:header-out :location) target
+            (hunchentoot:return-code*) hunchentoot:+http-moved-temporarily+)
+      (hunchentoot:abort-request-handler))))
 
 (defmethod hunchentoot:acceptor-dispatch-request :around ((acceptor base-acceptor) request)
   (restart-case
