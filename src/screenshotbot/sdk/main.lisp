@@ -205,11 +205,12 @@
   #-screenshotbot-oss
   (sentry-client:initialize-sentry-client
    sentry:*dsn* :client-class 'sentry:delivered-client)
-  (with-tags (("cli-client" "true"))
-    (with-extras (("api_hostname" *hostname*)
-                  ("api_id"  *api-key*)
+  (with-tags (("cli-client" "true")
+              ("api_hostname" *hostname*)
+              ("api_id"  *api-key*)
+              ("channel" flags:*channel*))
+    (with-extras (("api_id"  *api-key*)
                   ("features" *features*)
-                  ("channel" flags:*channel*)
                   ("build-url" flags:*build-url*)
                   #+lispworks
                   ("cmd-line-trimmed"
