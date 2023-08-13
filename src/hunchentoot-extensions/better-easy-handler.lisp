@@ -320,11 +320,16 @@ Apache log analysis tools.)"
         (let ((host (hunchentoot:host)))
           (destructuring-bind (host &optional (port "80")) (str:split ":" host)
             (let* ((port (parse-integer port))
-                   (https (equal port 443)))
+                   (https
+                     (or
+                      (string-equal "https" (hunchentoot:header-in* :x-forwarded-proto))
+                      (equal port 443))))
               (hunchentoot:redirect
                target
                :host host
-               :port port
+               :port (if https
+                         443
+                         port)
                :protocol (if https
                              :https
                              :http))))))

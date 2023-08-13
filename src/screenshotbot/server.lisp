@@ -303,3 +303,9 @@ Disallow: /n")))
 
 (defhandler (nil :uri "/test-headers") ()
   (format nil ":~a:" (hunchentoot:header-in* :x-forwarded-proto)))
+
+
+(defhandler (nil :uri "/test-nibble-redirect") ()
+  (hex:safe-redirect
+   (nibble:nibble ()
+     "hello world")))
