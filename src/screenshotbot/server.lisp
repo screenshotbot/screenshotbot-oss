@@ -292,9 +292,12 @@ Disallow: /n")))
 
 #+ (and lispworks linux)
 (hunchentoot:define-easy-handler (raft-state :uri "/raft-state") ()
-  (if (leaderp bknr.datastore:*store*)
-      "leader"
-      "other"))
+  (cond
+    ((leaderp bknr.datastore:*store*)
+     "leader")
+    (t
+     (setf (hunchentoot:return-code*) 400)
+     "other")))
 
 
 #+screenshotbot-oss
