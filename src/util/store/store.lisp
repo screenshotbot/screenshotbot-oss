@@ -10,6 +10,7 @@
         #:bknr.datastore
         #:file-lock)
   (:import-from #:bknr.datastore
+                #:deftransaction
                 #:close-store)
   (:import-from #:easy-macros
                 #:def-easy-macro)
@@ -387,7 +388,7 @@ to the directory that was just snapshotted.")
 (defun cron-snapshot ()
   (when (boundp 'bknr.datastore:*store*)
     (log:info "Snapshotting bknr.datastore")
-    (safe-snapshot "cron-job")))
+    (safe-snapshot "cron-job" nil)))
 
 (cl-cron:make-cron-job 'cron-snapshot
                         :minute 0
@@ -713,15 +714,18 @@ set-differences on O and the returned value from this."
   (with-snapshot-lock (store)
     (call-next-method)))
 
-(defun safe-snapshot (&optional (comment "default-comment"))
-  (safe-snapshot-impl *store* :comment comment))
+(defun safe-snapshot (&optional (comment "default-comment") (force t))
+  (safe-snapshot-impl *store* :comment comment
+                      :force force))
 
-(defmethod safe-snapshot-impl (store &key comment)
+(defmethod safe-snapshot-impl (store &key comment
+                                       (force t))
   (log:info "Going into snapshot, write access will be locked")
   (time
    (snapshot)))
 
-(defmethod safe-snapshot-impl ((store safe-mp-store) &key comment)
+(defmethod safe-snapshot-impl ((store safe-mp-store) &key comment
+                                                       (force t))
   (let ((directories (fad:list-directory *object-store*)))
     (call-next-method)
     (let* ((new-directories (fad:list-directory *object-store*))
@@ -742,8 +746,18 @@ set-differences on O and the returned value from this."
                         :if-exists :supersede)
     (write-string comment file)))
 
+(deftransaction fake-transaction ()
+  nil)
+
 #+bknr.cluster
-(defmethod safe-snapshot-impl ((store cluster-store-mixin) &key comment)
+(defmethod safe-snapshot-impl ((store cluster-store-mixin) &key comment
+                                                             (force t))
+  (when force
+    ;; bknr.cluster will not take a snapshot if there have been no new
+    ;; transactions. But if we're doing a reload from code, we
+    ;; probably want to force a new snapshot.
+    (fake-transaction))
+
   (call-next-method)
   (let ((dir (path:catdir (data-path store) "snapshot")))
     (%write-comment dir comment)
