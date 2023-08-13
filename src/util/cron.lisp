@@ -6,6 +6,9 @@
 
 (defpackage :util/cron
   (:use #:cl)
+  #+bknr.cluster
+  (:import-from #:bknr.cluster/server
+                #:leaderp)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:def-cron))
@@ -31,8 +34,12 @@
 (defmacro def-cron (name (&rest args) &body body)
   `(cl-cron:make-cron-job
     (lambda ()
-      (flet ((body () ,@body))
-        (call-with-cron-wrapper #'body)))
+      (when (and
+             (boundp 'bknr.datastore:*store*)
+             #+bknr.cluster
+             (leaderp bknr.datastore:*store*))
+       (flet ((body () ,@body))
+         (call-with-cron-wrapper #'body))))
     :hash-key ',name
     ,@args))
 
