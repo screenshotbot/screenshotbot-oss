@@ -78,7 +78,7 @@
   #-screenshotbot-oss
   (or
    (equal "localhost" (uiop:hostname))
-   (str:starts-with-p "ip-" (uiop:hostname))))
+   (equal "prod1.screenshotbot.io" (uiop:hostname))))
 
 (defvar *replay-proxy* nil)
 
