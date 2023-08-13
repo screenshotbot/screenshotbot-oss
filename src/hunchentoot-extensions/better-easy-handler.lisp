@@ -299,17 +299,6 @@ Apache log analysis tools.)"
 (defun %assert-is-intern ()
   (assert (is-intern? )))
 
-(defun safe-domain ()
-  (destructuring-bind (host &optional (port "80")) (str:split ":" (hunchentoot:host))
-    (format nil "~a://~a"
-            (if (equal "443" port) "https" "http")
-            (if (or
-                 (equal "443" port)
-                 (equal "80" port))
-                host
-                (hunchentoot:host)))))
-
-
 (defmethod safe-redirect (target &rest args)
   (let ((target (if (and target (not (equal "" target)))
                     target

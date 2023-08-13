@@ -23,7 +23,6 @@
            #:acceptor-with-plugins
            #:log-crash-extras
            #:*acceptor-plugin*
-           #:safe-domain
            #:make-uri-regex
            #:acceptor-db-config
            #:make-uri-regex
