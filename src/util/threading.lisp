@@ -23,7 +23,8 @@
    #:*extras*
    #:ignore-and-log-errors
    #:*warning-count*
-   #:with-extras)
+   #:with-extras
+   #:with-tags)
 )
 (in-package :util/threading)
 
@@ -102,30 +103,39 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
 (defvar *warning-count* 0)
 
 (defvar *extras* nil)
+(defvar *tags* nil)
 
-(defun build-extras (condition)
+(defun build-extras (condition &key (extras *extras*))
   ;; If the extras are nil, it probably means some calback is not
   ;; returning a list
   (ignore-errors
-   (loop for extra in *extras*
+   (loop for extra in extras
          appending (ignore-errors (funcall extra condition)))))
 
-(defmacro with-extras ((&rest pairs) &body body)
-  `(let* ((*extras* (list*
-                     ,@ (loop for (name body) in pairs
-                              collect
-                              `(lambda (e)
-                                 (declare (ignore e))
-                                 (list
-                                  (cons ,name (format nil "~a"
-                                                      (progn
-                                                        ,body))))))
-                        *extras*)))
+(defmacro with-extras-impl (var (&rest pairs) &body body)
+  `(let* ((,var (list*
+                 ,@ (loop for (name body) in pairs
+                          collect
+                          `(lambda (e)
+                             (declare (ignore e))
+                             (list
+                              (cons ,name (format nil "~a"
+                                                  (progn
+                                                    ,body))))))
+                    ,var)))
      (progn ,@body)))
+
+(defmacro with-extras ((&rest pairs) &body body)
+  `(with-extras-impl *extras* ,pairs ,@body))
+
+(defmacro with-tags ((&rest pairs) &body body)
+  `(with-extras-impl *tags* ,pairs ,@body))
 
 (defun %log-sentry (condition)
   #-screenshotbot-oss
-  (sentry-client:capture-exception condition :extras (build-extras condition)))
+  (let ((tags (build-extras condition :extras *tags*)))
+    (sentry-client:capture-exception condition :extras (build-extras condition)
+                                               :tags tags)))
 
 (defmethod log-sentry (condition)
   (when *catch-errors-p*

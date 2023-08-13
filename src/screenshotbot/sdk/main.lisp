@@ -11,6 +11,7 @@
   (:import-from #:screenshotbot/sdk/sdk
                 #:chdir-for-bin)
   (:import-from #:util/threading
+                #:with-tags
                 #:maybe-log-sentry
                 #:*warning-count*
                 #:with-extras
@@ -204,38 +205,39 @@
   #-screenshotbot-oss
   (sentry-client:initialize-sentry-client
    sentry:*dsn* :client-class 'sentry:delivered-client)
-  (with-extras (("api_hostname" *hostname*)
-                ("api_id"  *api-key*)
-                ("features" *features*)
-                ("channel" flags:*channel*)
-                ("build-url" flags:*build-url*)
-                #+lispworks
-                ("cmd-line-trimmed"
-                 (mapcar
-                  #'trim-arg
-                  sys:*line-arguments-list*))
-                ("hostname" (uiop:hostname))
-                #+lispworks
-                ("openssl-version" (comm:openssl-version)))
-   (let ((error-handler (lambda (e)
-                          (format stream "~%~a~%~%" e)
-                          #+lispworks
-                          (dbg:output-backtrace (if flags:*verbose* :bug-form :brief)
-                                                :stream stream)
-                          #-lispworks
-                          (trivial-backtrace:print-backtrace e stream)
-                          (unless dry-run
-                            #-screenshotbot-oss
-                            (util/threading:log-sentry e))
-                          (funcall on-error))))
-     (let ((*warning-count* 0))
-       (handler-bind (#+lispworks
-                      (error error-handler))
-         ;; We put the warning handler inside here, so that if an
-         ;; error happens in the warning handler, we can log that.
-         (handler-bind (#+lispworks
-                        (warning #'maybe-log-sentry))
-          (funcall fn)))))))
+  (with-tags (("cli-client" "true"))
+    (with-extras (("api_hostname" *hostname*)
+                  ("api_id"  *api-key*)
+                  ("features" *features*)
+                  ("channel" flags:*channel*)
+                  ("build-url" flags:*build-url*)
+                  #+lispworks
+                  ("cmd-line-trimmed"
+                   (mapcar
+                    #'trim-arg
+                    sys:*line-arguments-list*))
+                  ("hostname" (uiop:hostname))
+                  #+lispworks
+                  ("openssl-version" (comm:openssl-version)))
+      (let ((error-handler (lambda (e)
+                             (format stream "~%~a~%~%" e)
+                             #+lispworks
+                             (dbg:output-backtrace (if flags:*verbose* :bug-form :brief)
+                                                   :stream stream)
+                             #-lispworks
+                             (trivial-backtrace:print-backtrace e stream)
+                             (unless dry-run
+                               #-screenshotbot-oss
+                               (util/threading:log-sentry e))
+                             (funcall on-error))))
+        (let ((*warning-count* 0))
+          (handler-bind (#+lispworks
+                         (error error-handler))
+            ;; We put the warning handler inside here, so that if an
+            ;; error happens in the warning handler, we can log that.
+            (handler-bind (#+lispworks
+                           (warning #'maybe-log-sentry))
+              (funcall fn))))))))
 
 (defun main (&rest args)
   (uiop:setup-command-line-arguments)
