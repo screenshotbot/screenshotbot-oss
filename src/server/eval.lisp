@@ -48,7 +48,7 @@
                             `(block nil
                                (handler-bind ((error (lambda (e)
                                                        (format t "~a" e)
-                                                       (dbg:output-backtrace :brief)
+                                                       (dbg:output-backtrace :verbose *standard-output*)
                                                        (with-open-file (file "log/eval-crash-log" :direction :output :if-exists :supersede)
                                                          (dbg:output-backtrace :verbose file))
                                                        (return-from nil nil))))
