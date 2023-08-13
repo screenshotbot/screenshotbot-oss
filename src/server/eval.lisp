@@ -44,23 +44,28 @@
       (unwind-protect
            (progn
              (log:info "Evaluating expression")
-             (let ((status (dbg:ide-eval-form-in-remote
-                            `(block nil
-                               (handler-bind ((error (lambda (e)
-                                                       (format t "~a" e)
-                                                       (dbg:output-backtrace :verbose *standard-output*)
-                                                       (with-open-file (file "log/eval-crash-log" :direction :output :if-exists :supersede)
-                                                         (dbg:output-backtrace :verbose file))
-                                                       (return-from nil nil))))
-                                 ,(read-from-string expr)
-                                 (sleep 2)
-                                 t))
-                            :output-stream *standard-output*
-                            :connection conn)))
-               (cond
-                 ((not status)
+             (multiple-value-bind (status reason)
+                 (dbg:ide-eval-form-in-remote
+                  `(block nil
+                     (format *standard-output* "Inside block~%")
+                     (handler-bind ((error (lambda (e)
+                                             (dbg:output-backtrace :verbose *standard-output*)
+                                             #+nil
+                                             (with-open-file (file "log/eval-crash-log" :direction :output :if-exists :supersede)
+                                               (dbg:output-backtrace :verbose file))
+                                             (return-from nil :fail))))
+                       ,(read-from-string expr)
+                       (format *standard-output* "End of block~%")
+                       :good))
+                  :output-stream *standard-output*
+                  :connection conn)
+               (case status
+                 (:fail
                   (log:info "Command failed: ~a" expr)
                   (uiop:quit 1))
-                 (t
-                  (log:info "Command ran without errors")))))
+                 (:good
+                  (log:info "Command ran without errors"))
+                 (otherwise
+                  (log:info "Command failed with ~a: ~a [~a]" status expr reason)
+                  (uiop:quit 1)))))
         (dbg:close-remote-debugging-connection conn)))))
