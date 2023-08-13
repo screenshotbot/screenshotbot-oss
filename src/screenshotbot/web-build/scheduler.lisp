@@ -29,6 +29,8 @@
                 #:installation-domain)
   (:import-from #:auto-restart
                 #:with-auto-restart)
+  (:import-from #:util/cron
+                #:def-cron)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:update-next-job-at))
@@ -96,6 +98,5 @@ next-runtime is not set, then it is calculated and updated."
     (maybe-run-project project)))
 
 
-(cl-cron:make-cron-job
- 'run-web-projects
- :hash-key 'run-web-projects)
+(def-cron run-web-projects ()
+  (run-web-projects))
