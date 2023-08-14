@@ -18,11 +18,14 @@
   (:import-from #:bknr.indices
                 #:index-get)
   (:import-from #:util/store/object-id
+                #:find-by-oid
                 #:object-with-oid)
   (:import-from #:screenshotbot/user-api
                 #:can-view)
   (:export
-   #:find-or-create-batch))
+   #:find-or-create-batch
+   #:batch-items
+   #:batch-item-channel))
 (in-package :screenshotbot/model/batch)
 
 (defindex +lookup-index+
@@ -52,9 +55,9 @@
     ((batch :initarg :batch
             :reader batch
             :index +batch-item-index+
-            :index-reader batch-items-for-batch)
+            :index-reader batch-items)
      (%channel :initarg :channel
-               :reader channel)
+               :reader batch-item-channel)
      (%acceptable :initarg :acceptable
                   :reader acceptable)
      (%run :initarg :run
@@ -74,9 +77,10 @@
                     :repo repo
                     :commit commit))))
 
+
 (defun find-batch-item (batch &key channel)
-  (fset:do-set (item (batch-items-for-batch batch))
-    (when (eql (channel item) channel)
+  (fset:do-set (item (batch-items batch))
+    (when (eql (batch-item-channel item) channel)
       (return item))))
 
 (defmethod can-view ((self batch) user)

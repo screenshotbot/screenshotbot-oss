@@ -69,38 +69,38 @@
   (taskie-row :object run
               (ui/a :href
                     (format nil "/runs/~a" (oid run))
-      (channel-name (recorder-run-channel run)))
+                    (channel-name (recorder-run-channel run)))
               (ui/div
                (let ((review-link (review-link :run run)))
-                (cond
-                  ((activep run)
-                   <span>
-                   Promoted<explain title= "Promoted run"><promoted-tooltip /></explain>  run
-                   <conditional-commit repo= (channel-repo (recorder-run-channel run))
-                   hash= (recorder-run-commit run) />
-                   </span>)
-                  ((recorder-previous-run run)
-                   <span>Previously promoted run
-                   <conditional-commit repo= (channel-repo (recorder-run-channel run))
-                   hash= (recorder-run-commit run) />
-                   </span>)
-                  (review-link
-                   <span>
-                     Run on ,(progn review-link)
-                   </span>)
-                  (t
-                   <span>
-                   Unpromoted run
-                   ,(when-let ((repo (channel-repo (recorder-run-channel run)))
-                               (hash (recorder-run-commit run)))
-                      <span>
-                      on
-                      <commit repo= repo hash=hash />
-                      </span>)
-                   </span>
-                   ))))
+                 (cond
+                   ((activep run)
+                    <span>
+                    Promoted<explain title= "Promoted run"><promoted-tooltip /></explain>  run
+                    <conditional-commit repo= (channel-repo (recorder-run-channel run))
+                    hash= (recorder-run-commit run) />
+                    </span>)
+                   ((recorder-previous-run run)
+                    <span>Previously promoted run
+                    <conditional-commit repo= (channel-repo (recorder-run-channel run))
+                    hash= (recorder-run-commit run) />
+                    </span>)
+                   (review-link
+                    <span>
+                    Run on ,(progn review-link)
+                    </span>)
+                   (t
+                    <span>
+                    Unpromoted run
+                    ,(when-let ((repo (channel-repo (recorder-run-channel run)))
+                                (hash (recorder-run-commit run)))
+                       <span>
+                       on
+                       <commit repo= repo hash=hash />
+                       </span>)
+                    </span>
+                    ))))
 
-    (taskie-timestamp :prefix "" :timestamp (created-at run))))
+              (taskie-timestamp :prefix "" :timestamp (created-at run))))
 
 (defun render-recent-runs (runs &key (user (current-user))
                                   (check-access-p t)

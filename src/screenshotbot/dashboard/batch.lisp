@@ -12,9 +12,16 @@
   (:import-from #:util/store/object-id
                 #:find-by-oid)
   (:import-from #:screenshotbot/user-api
+                #:channel-name
                 #:can-view!)
   (:import-from #:screenshotbot/template
-                #:app-template))
+                #:app-template)
+  (:import-from #:screenshotbot/model/batch
+                #:batch-item-channel
+                #:batch-items)
+  (:import-from #:screenshotbot/taskie
+                #:taskie-row
+                #:taskie-list))
 (in-package :screenshotbot/dashboard/batch)
 
 (named-readtables:in-readtable markup:syntax)
@@ -26,7 +33,16 @@
       (can-view! batch)
       (render-batch batch))))
 
+(defun render-batch-item (item)
+  (taskie-row
+   :object item
+   <span>,(channel-name (batch-item-channel item)) </span>))
+
 (defmethod render-batch (batch)
-  <app-template>
-   hello world
-  </app-template>)
+  (let ((items (fset:convert 'list (batch-items batch))))
+    <app-template>
+      ,(taskie-list :empty-message "No runs in this batch yet"
+                    :items items
+                    :headers (list "Channel")
+                    :row-generator #'render-batch-item)
+    </app-template>))
