@@ -9,6 +9,8 @@
   #+bknr.cluster
   (:import-from #:bknr.cluster/server
                 #:leaderp)
+  (:import-from #:alexandria
+                #:remove-from-plist)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:def-cron
@@ -35,16 +37,20 @@
 (defmethod cron-enabled-on-store-p (store)
   t)
 
-(defmacro def-cron (name (&rest args) &body body)
-  `(cl-cron:make-cron-job
-    (lambda ()
-      (when (and
-             (boundp 'bknr.datastore:*store*)
-             (cron-enabled-on-store-p bknr.datastore:*store*))
-       (flet ((body () ,@body))
-         (call-with-cron-wrapper #'body))))
-    :hash-key ',name
-    ,@args))
+(defmacro def-cron (name (&rest args &key (only-on-leader t) &allow-other-keys) &body body)
+  "If ONLY-ON-LEADER is true then we only run this cron job on the leader."
+  (let ((args (remove-from-plist args :only-on-leader)))
+   `(cl-cron:make-cron-job
+     (lambda ()
+       (when (or
+              (not only-on-leader)
+              (and
+               (boundp 'bknr.datastore:*store*)
+               (cron-enabled-on-store-p bknr.datastore:*store*)))
+         (flet ((body () ,@body))
+           (call-with-cron-wrapper #'body))))
+     :hash-key ',name
+     ,@args)))
 
 #+lispworks
 (def-cron gc (:minute 14 :hour 6)
