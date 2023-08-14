@@ -9,6 +9,7 @@
                :str
                (:feature (:and :lispworks :linux) :bknr.cluster)
                :easy-macros
+               :auto-restart
                :local-time
                :atomics
                :alexandria
