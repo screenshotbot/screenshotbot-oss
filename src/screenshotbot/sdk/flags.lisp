@@ -49,7 +49,8 @@
    #:*desktop*
    #:*recursive*
    #:*unchanged-from*
-   #:*finalize*))
+   #:*finalize*
+   #:*batch*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -219,6 +220,15 @@
  up  the files from Google Cloud when we're done. We use the `gcloud`
  command line tool so you must have already called
  activate-service-account before this step.")
+
+(define-flag *batch*
+  :selector "batch"
+  :default-value nil
+  :type (or null string)
+  :help "[EXPERIMENTAL] Batch multiple channels into one single build status named by this argument.
+
+This is heavily experimental, and probably does not work at the moment. Please contact
+support@screenshotbot.io if you feel like you need to use this.")
 
 (define-flag *self-test*
   :selector "self-test"

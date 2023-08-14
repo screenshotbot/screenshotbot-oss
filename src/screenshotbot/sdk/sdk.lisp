@@ -300,6 +300,7 @@ error."
                                 :periodic-job-p periodic-job-p
                                 :build-url *build-url*
                                 :compare-threshold flags:*compare-threshold*
+                                :batch flags:*batch*
                                 :pull-request pull-request
                                 :commit-hash commit
                                 :override-commit-hash flags:*override-commit-hash*
