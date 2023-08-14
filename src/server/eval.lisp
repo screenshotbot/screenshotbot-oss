@@ -56,6 +56,7 @@
                                              (return-from nil :fail))))
                        ,(read-from-string expr)
                        (format *standard-output* "End of block~%")
+                       (sleep 2)
                        :good))
                   :output-stream *standard-output*
                   :connection conn)
