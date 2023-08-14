@@ -50,13 +50,14 @@
                                 (return-from nil :fail))))
           (eval (read-from-string expr))
           (format *standard-output* "End of block~%")
-          (finish-output *standard-output*)
-          (sleep 2)
           :good)))))
 
 (defun perform-eval (socket expr)
-  (log:info "Opening socket connection")
-  (with-unix-socket (socket (unix-sockets:connect-unix-socket socket))
+  (log:info "Opening socket connection v2.")
+  (let ((socket
+          ;; NOTE: dbg:create-ide-remote-debugging-connection requires
+          ;; us to NOT close the socket/stream.
+          (unix-sockets:connect-unix-socket socket)))
     (log:info "Creating debugging connection")
     (let ((conn (dbg:create-ide-remote-debugging-connection
                  "Eval"
