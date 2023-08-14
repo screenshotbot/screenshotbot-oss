@@ -43,7 +43,7 @@
    `(cl-cron:make-cron-job
      (lambda ()
        (when (or
-              (not only-on-leader)
+              (not ,only-on-leader)
               (and
                (boundp 'bknr.datastore:*store*)
                (cron-enabled-on-store-p bknr.datastore:*store*)))
