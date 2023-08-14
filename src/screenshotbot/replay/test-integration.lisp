@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/integration
+                #:with-sdk-flags
                 #:all-screenshots
                 #:process-results
                 #:replay-job-from-snapshot
@@ -344,3 +345,15 @@
       (assert-that (mapcar #'car (integration::urls run))
                    (is-not (has-item "/facebook"))
                    (has-item "/google")))))
+
+(test with-sdk-flags-happy-path
+  (let (result)
+    (with-sdk-flags (:flags `((:metadata . "foobar")))
+      (setf result :pass))
+    (is (eql :pass result))))
+
+(test with-sdk-flags-unknown-flag
+  (let (result)
+    (with-sdk-flags (:flags `((:unknown-flag . "foobar")))
+      (setf result :pass))
+    (is (eql :pass result))))

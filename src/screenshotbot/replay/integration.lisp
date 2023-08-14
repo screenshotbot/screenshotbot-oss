@@ -213,6 +213,7 @@ accessing the urls or sitemap slot."
 (def-easy-macro with-sdk-flags (&key flags &fn fn)
   (loop for (key . value) in flags
         for sym = (gethash key *sdk-flags*)
+        if sym ;; in case the SDK is not in sync
         collect sym into symbols
         collect value into values
         finally (progv symbols values
