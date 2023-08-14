@@ -50,7 +50,7 @@
     ((batch :initarg :batch
             :reader batch
             :index +batch-item-index+
-            :reader batch-items-for-batch)
+            :index-reader batch-items-for-batch)
      (%channel :initarg :channel
                :reader channel)
      (%acceptable :initarg :acceptable
@@ -71,3 +71,8 @@
                     :company company
                     :repo repo
                     :commit commit))))
+
+(defun find-batch-item (batch &key channel)
+  (fset:do-set (item (batch-items-for-batch batch))
+    (when (eql (channel item) channel)
+      (return item))))

@@ -10,8 +10,11 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/company
+                #:find-or-create-channel
                 #:company)
   (:import-from #:screenshotbot/model/batch
+                #:batch-item
+                #:find-batch-item
                 #:find-or-create-batch))
 (in-package :screenshotbot/model/test-batch)
 
@@ -19,7 +22,8 @@
 
 (def-fixture state ()
   (with-test-store ()
-    (let ((company (make-instance 'company)))
+    (let* ((company (make-instance 'company))
+           (channel (find-or-create-channel company "test-channel")))
       (&body))))
 
 (test find-instead-of-create
@@ -27,3 +31,15 @@
    (is (eql
         (find-or-create-batch company "http://foo.git" "abcd")
         (find-or-create-batch company "http://foo.git" "abcd")))))
+
+(test find-batch-item
+  (with-fixture state ()
+    (let ((batch (find-or-create-batch company "http://foo.git" "abcd")))
+      (let ((case1 (make-instance 'batch-item
+                     :batch batch
+                     :channel :foo))
+            (res (make-instance 'batch-item
+                                :batch batch
+                                :channel channel)))
+        (is (eql res (find-batch-item batch :channel channel)))
+        (is (eql case1 (find-batch-item batch :channel :foo)))))))
