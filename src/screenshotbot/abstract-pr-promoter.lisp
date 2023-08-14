@@ -43,6 +43,7 @@
                 #:get-parent-commit
                 #:repo-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:override-commit-hash
                 #:recorder-run
                 #:recorder-run-warnings
                 #:merge-base-failed-warning
@@ -100,7 +101,8 @@
    #:abstract-pr-promoter
    #:abstract-pr-acceptable
    #:make-promoter-for-acceptable
-   #:promoter-pull-id))
+   #:promoter-pull-id
+   #:check-sha))
 (in-package :screenshotbot/abstract-pr-promoter)
 
 (defvar *logs* nil)
@@ -144,7 +146,10 @@
                 :accessor details-url)
    (summary :initarg :summary
             :initform "NA"
-            :accessor check-summary)))
+            :accessor check-summary)
+   (sha :initarg :sha
+        :initform (error "must provide :sha for check")
+        :accessor check-sha)))
 
 (defclass run-retriever ()
   ((sleep-time :initarg :sleep-time
@@ -241,6 +246,11 @@
     :status state
     :user user)))
 
+(defmethod actual-sha ((run recorder-run))
+  (or
+   (override-commit-hash run)
+   (recorder-run-commit run)))
+
 (defmethod maybe-promote ((promoter abstract-pr-promoter)
                           run)
   (let* ((repo (channel-repo (recorder-run-channel run)))
@@ -266,6 +276,7 @@
                   (apply #'make-instance 'check
                          :details-url (make-details-url 'screenshotbot/dashboard/run-page:run-page
                                                         :id (oid run))
+                         :sha (actual-sha run)
                          args)))
            (unless (lparallel:fulfilledp base-run-promise)
              (format-log run :info "Base commit is not available yet, waiting for upto 5 minutes")
@@ -274,6 +285,7 @@
               run
               (make-instance 'check
                              :status :pending
+                             :sha (actual-sha run)
                              :details-url (make-details-url 'screenshotbot/dashboard/run-page:run-page
                                                         :id (oid run))
                              :title (format nil "Waiting for screenshots on ~a to be available"
@@ -352,6 +364,7 @@ Revision. It will be tested with EQUAL"))
    (cond
      ((diff-report-empty-p diff-report)
       (make-instance 'check
+                     :sha (actual-sha run)
                      :status :success
                      :title "No screenshots changed"
                      :summary "No action required on your part"
@@ -411,6 +424,7 @@ Revision. It will be tested with EQUAL"))
                  :status status)))
    (make-instance
     'check
+    :sha (actual-sha (report-run report))
     :status status
     :user user
     :report report

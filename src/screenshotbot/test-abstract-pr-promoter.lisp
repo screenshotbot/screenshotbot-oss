@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:actual-sha
                 #:warn-if-not-merge-base
                 #:format-check-title
                 #:make-check-for-report
@@ -323,3 +324,18 @@
      another-run)
     (assert-that (recorder-run-warnings run)
                  (has-length 0))))
+
+(test make-task-args-override-commit-hash
+  (with-fixture state ()
+    (let ((run (make-recorder-run
+                :channel channel
+                :override-commit-hash "foobar"
+                :commit-hash "zoidberg")))
+      (is (equal "foobar" (actual-sha run))))))
+
+(test make-task-args-no-commit-hash
+  (with-fixture state ()
+    (let ((run (make-recorder-run
+                :channel channel
+                :commit-hash "zoidberg")))
+      (is (equal "zoidberg" (actual-sha run))))))

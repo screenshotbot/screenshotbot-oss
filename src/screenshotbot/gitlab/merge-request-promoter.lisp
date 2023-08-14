@@ -208,7 +208,7 @@
    (list
     :company (company repo)
     :project-path (project-path repo)
-    :sha (recorder-run-commit run)
+    :sha (check-sha check)
     :state (ecase (check-status check)
              (:success "success")
              (:accepted "success")

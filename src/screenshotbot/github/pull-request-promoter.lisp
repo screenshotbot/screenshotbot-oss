@@ -50,6 +50,7 @@
                 #:user-updated-check-run
                 #:updated-check-run)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-sha
                 #:make-promoter-for-acceptable
                 #:check-user
                 #:push-remote-check
@@ -166,9 +167,7 @@
                           (:failure "failure")
                           (:action-required "action_required")
                           (:action_required "action_required")))
-          :head-sha (or
-                     (override-commit-hash run)
-                     (recorder-run-commit run)))))
+          :head-sha (check-sha check))))
 
 
 (defmethod make-acceptable ((promoter pull-request-promoter) report

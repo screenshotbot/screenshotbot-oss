@@ -64,6 +64,7 @@
                                             :refresh-token "fake-refresh-token"
                                             :company company))
             (check (make-instance 'check
+                                  :sha "abcd"
                                   :title "No screenshots changed"
                                   :status :success)))
        (cl-mock:with-mocks ()
@@ -84,25 +85,6 @@
         (is (equal "SUCCESSFUL" (a:assoc-value result :state)))
         (is (equal "tdrhq/dummy" (a:assoc-value result :full-name)))))))
 
-(test make-task-args-override-commit-hash
-  (with-fixture state ()
-    (let ((run (make-recorder-run
-                :channel channel
-                :override-commit-hash "foobar"
-                :commit-hash "zoidberg"))
-          (promoter (make-instance 'bitbucket-promoter)))
-      (let ((result (make-build-status-args run check)))
-        (is (equal "foobar" (a:assoc-value result :commit)))))))
-
-(test make-task-args-no-commit-hash
-  (with-fixture state ()
-    (let ((run (make-recorder-run
-                :channel channel
-                :commit-hash "zoidberg"))
-          (promoter (make-instance 'bitbucket-promoter)))
-      (let ((result (make-build-status-args run check)))
-        (is (equal "zoidberg" (a:assoc-value result :commit)))))))
-
 (test make-task-args-for-every-version-of-state
   (with-fixture state ()
     (dolist (state (list :accepted :rejected :success :failure :action_required :action-required :pending))
@@ -111,6 +93,7 @@
                  :commit-hash "zoidberg"))
            (promoter (make-instance 'bitbucket-promoter))
            (check (make-instance 'check
+                                 :sha "foo"
                                  :status state
                                  :title "foobar")))
        (let ((result (make-build-status-args run check)))
@@ -137,6 +120,7 @@
      (make-instance 'bitbucket-promoter)
      run
      (make-instance 'check
+                    :sha "abcd"
                     :title "hello"
                     :status :success))
     (is (eql 1 (length (bitbucket-audit-logs-for-company company))))
@@ -169,6 +153,7 @@
     (push-remote-check
      (make-instance 'bitbucket-promoter)
      run (make-instance 'check
+                        :sha "foobar"
                         :status :success
                         :title "hello"))
     (is (eql 1 (length (bitbucket-audit-logs-for-company company))))
