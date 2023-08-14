@@ -13,6 +13,7 @@
                 #:defindex
                 #:with-class-validation)
   (:import-from #:util/store/fset-index
+                #:fset-set-index
                 #:fset-unique-index)
   (:import-from #:bknr.indices
                 #:index-get)
@@ -25,7 +26,6 @@
 (defindex +lookup-index+
   'fset-unique-index
   :slots '(%commit %company %repo))
-
 
 (with-class-validation
   (defclass batch (object-with-oid)
@@ -40,6 +40,26 @@
      (lookup-index
       :index +lookup-index+
       :slots (%commit %company %repo)))))
+
+(defindex +batch-item-index+
+  'fset-set-index
+  :slot-name 'batch)
+
+(with-class-validation
+  (defclass batch-item (store-object)
+    ((batch :initarg :batch
+            :reader batch
+            :index +batch-item-index+
+            :reader batch-items-for-batch)
+     (%channel :initarg :channel
+               :reader channel)
+     (%acceptable :initarg :acceptable
+                  :reader acceptable)
+     (%run :initarg :run
+           :reader run)
+     (%report :initarg :report
+              :reader report))
+    (:metaclass persistent-class)))
 
 (defvar *lock* (bt:make-lock))
 
