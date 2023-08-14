@@ -255,32 +255,31 @@
 
 (def-easy-macro with-common-setup (&key enable-store jvm &fn fn)
   (maybe-with-debugger ()
-    (with-sentry-logger ()
-     (with-lparallel-kernel ()
-       (with-control-socket ()
-         (with-slynk ()
-           (unwind-on-interrupt ()
-             #+lispworks
-             (when jvm
-               (jvm:jvm-init))
+    (with-lparallel-kernel ()
+      (with-control-socket ()
+        (with-slynk ()
+          (unwind-on-interrupt ()
+            #+lispworks
+            (when jvm
+              (jvm:jvm-init))
 
-             (fn))))
-       ;; unwind if an interrupt happens
-       (log:config :sane :immediate-flush t)
-       (log:config :info)
-       (safe-log "shutting down~%")
-       (safe-log "calling shutdown hooks~%")
-       (mapc 'funcall *shutdown-hooks*)
+            (fn))))
+      ;; unwind if an interrupt happens
+      (log:config :sane :immediate-flush t)
+      (log:config :info)
+      (safe-log "shutting down~%")
+      (safe-log "calling shutdown hooks~%")
+      (mapc 'funcall *shutdown-hooks*)
 
-       ;; ;; don't snapshot the store, if the process is killed while the
-       ;; ;; snapshot is happening, we have to manually recover the store
-       ;; (bknr.datastore:snapshot)
+      ;; ;; don't snapshot the store, if the process is killed while the
+      ;; ;; snapshot is happening, we have to manually recover the store
+      ;; (bknr.datastore:snapshot)
 
-       (when enable-store
-         (bknr.datastore:close-store))
+      (when enable-store
+        (bknr.datastore:close-store))
 
-       (safe-log "all services down~%")
-       (finish-out))))
+      (safe-log "all services down~%")
+      (finish-output t)))
 
   #+lispworks
   (wait-for-processes)
