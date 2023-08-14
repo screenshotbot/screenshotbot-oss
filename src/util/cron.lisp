@@ -42,10 +42,10 @@
   (let ((args (remove-from-plist args :only-on-leader)))
    `(cl-cron:make-cron-job
      (lambda ()
-       (when (or
-              (not ,only-on-leader)
-              (and
-               (boundp 'bknr.datastore:*store*)
+       (when (and
+              (boundp 'bknr.datastore:*store*)
+              (or
+               (not ,only-on-leader)
                (cron-enabled-on-store-p bknr.datastore:*store*)))
          (flet ((body () ,@body))
            (call-with-cron-wrapper #'body))))
