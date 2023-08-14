@@ -221,9 +221,11 @@ it easier for us to recover, or even validate the model."
                        channel
                        (dto:run-screenshots run)))
          (batch (when-let ((batch (dto:run-batch run)))
-                  (find-or-create-batch company
-                                        (dto:run-repo run)
-                                        (dto:run-commit run))))
+                  (find-or-create-batch
+                   :company company
+                   :repo (dto:run-repo run)
+                   :commit (dto:run-commit run)
+                   :name batch)))
          (recorder-run (make-recorder-run
                         :company company
                         :channel channel

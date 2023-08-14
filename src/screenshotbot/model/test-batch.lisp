@@ -36,12 +36,24 @@
 (test find-instead-of-create
   (with-fixture state ()
    (is (eql
-        (find-or-create-batch company "http://foo.git" "abcd")
-        (find-or-create-batch company "http://foo.git" "abcd")))))
+        (find-or-create-batch
+         :company company
+         :repo "http://foo.git"
+         :commit "abcd"
+         :name "foobar")
+        (find-or-create-batch
+         :company company
+         :repo "http://foo.git"
+         :commit "abcd"
+         :name "foobar")))))
 
 (test find-batch-item
   (with-fixture state ()
-    (let ((batch (find-or-create-batch company "http://foo.git" "abcd")))
+    (let ((batch (find-or-create-batch
+                  :company company
+                  :repo "http://foo.git"
+                  :commit "abcd"
+                  :name "foobar")))
       (let ((case1 (make-instance 'batch-item
                      :batch batch
                      :channel :foo))
@@ -54,5 +66,9 @@
 
 (test can-view
   (with-fixture state ()
-    (let ((batch (find-or-create-batch company "http://foo.git" "abcd")))
+    (let ((batch (find-or-create-batch
+                  :company company
+                  :repo "http://foo.git"
+                  :commit "abcd"
+                  :name "foobar")))
       (is-false (can-view batch user)))))

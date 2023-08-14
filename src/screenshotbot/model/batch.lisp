@@ -25,12 +25,13 @@
   (:export
    #:find-or-create-batch
    #:batch-items
-   #:batch-item-channel))
+   #:batch-item-channel
+   #:batch-name))
 (in-package :screenshotbot/model/batch)
 
-(defindex +lookup-index+
+(defindex +lookup-index-v2+
   'fset-unique-index
-  :slots '(%commit %company %repo))
+  :slots '(%commit %company %repo %name))
 
 (with-class-validation
   (defclass batch (object-with-oid)
@@ -39,12 +40,14 @@
      (%repo :initarg :repo
             :reader repo)
      (%commit :initarg :commit
-              :reader commit))
+              :reader commit)
+     (%name :initarg :name
+            :reader batch-name))
     (:metaclass persistent-class)
     (:class-indices
-     (lookup-index
-      :index +lookup-index+
-      :slots (%commit %company %repo)))))
+     (lookup-index-v2
+      :index +lookup-index-v2+
+      :slots (%commit %company %repo %name)))))
 
 (defindex +batch-item-index+
   'fset-set-index
@@ -68,14 +71,19 @@
 
 (defvar *lock* (bt:make-lock))
 
-(defun find-or-create-batch (company repo commit)
+(defun find-or-create-batch (&key
+                               (company (error "must provide :company"))
+                               (repo (error "must provide repo"))
+                               (commit (error "must provide commit"))
+                               (name (error "must provide name")))
   (bt:with-lock-held (*lock*)
     (or
-     (index-get +lookup-index+ (list commit company repo))
+     (index-get +lookup-index-v2+ (list commit company repo name))
      (make-instance 'batch
                     :company company
                     :repo repo
-                    :commit commit))))
+                    :commit commit
+                    :name name))))
 
 
 (defun find-batch-item (batch &key channel)
