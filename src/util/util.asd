@@ -234,8 +234,6 @@
 
 (defsystem :util/cron
   :depends-on (:cl-cron
-               #+(and lispworks linux)
-               :bknr.cluster
                :util/threading)
   :components ((:file "cron")))
 

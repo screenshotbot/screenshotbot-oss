@@ -48,7 +48,10 @@
   #+bknr.cluster
   (:import-from #:bknr.cluster/server
                 #:data-path
+                #:leaderp
                 #:with-leadership-priority)
+  (:import-from #:util/cron
+                #:cron-enabled-on-store-p)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -384,6 +387,9 @@ to the directory that was just snapshotted.")
           do
              (delete-snapshot-dir dir)))
 
+#+bknr.cluster
+(defmethod cron-enabled-on-store-p ((store cluster-store-mixin))
+  (leaderp store))
 
 (defun cron-snapshot ()
   (when (boundp 'bknr.datastore:*store*)

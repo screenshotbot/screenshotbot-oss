@@ -11,7 +11,8 @@
                 #:leaderp)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:def-cron))
+   #:def-cron
+   #:cron-enabled-on-store-p))
 (in-package :util/cron)
 
 #+nil
@@ -31,13 +32,15 @@
 (defun call-with-cron-wrapper (fn)
   (util/threading:call-with-thread-fixes fn))
 
+(defmethod cron-enabled-on-store-p (store)
+  t)
+
 (defmacro def-cron (name (&rest args) &body body)
   `(cl-cron:make-cron-job
     (lambda ()
       (when (and
              (boundp 'bknr.datastore:*store*)
-             #+bknr.cluster
-             (leaderp bknr.datastore:*store*))
+             (cron-enabled-on-store-p bknr.datastore:*store*))
        (flet ((body () ,@body))
          (call-with-cron-wrapper #'body))))
     :hash-key ',name
