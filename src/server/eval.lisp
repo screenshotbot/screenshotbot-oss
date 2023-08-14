@@ -11,6 +11,8 @@
                 #:make-option)
   (:import-from #:unix-sockets
                 #:with-unix-socket)
+  (:import-from #:util/misc
+                #:safe-with-open-file)
   (:export
    #:eval/command))
 (in-package :server/eval)
@@ -34,6 +36,24 @@
               :long-name "expression"
               :key :expr))))
 
+(defun safely-eval (expr tmp)
+  (format *standard-output* "Using tmpfile: ~s" tmp)
+  (safe-with-open-file (file tmp :direction :output
+                                 :if-does-not-exist :create
+                                 :if-exists :supersede)
+    (let ((*standard-output* file))
+      (block nil
+        (format *standard-output* "Inside block~%")
+        (handler-bind ((error (lambda (e)
+                                (declare (ignore e))
+                                (dbg:output-backtrace :verbose *standard-output*)
+                                (return-from nil :fail))))
+          (eval (read-from-string expr))
+          (format *standard-output* "End of block~%")
+          (finish-output *standard-output*)
+          (sleep 2)
+          :good)))))
+
 (defun perform-eval (socket expr)
   (log:info "Opening socket connection")
   (with-unix-socket (socket (unix-sockets:connect-unix-socket socket))
@@ -44,29 +64,26 @@
       (unwind-protect
            (progn
              (log:info "Evaluating expression")
-             (multiple-value-bind (status reason)
-                 (dbg:ide-eval-form-in-remote
-                  `(block nil
-                     (format *standard-output* "Inside block~%")
-                     (handler-bind ((error (lambda (e)
-                                             (dbg:output-backtrace :verbose *standard-output*)
-                                             #+nil
-                                             (with-open-file (file "log/eval-crash-log" :direction :output :if-exists :supersede)
-                                               (dbg:output-backtrace :verbose file))
-                                             (return-from nil :fail))))
-                       ,(read-from-string expr)
-                       (format *standard-output* "End of block~%")
-                       (sleep 2)
-                       :good))
-                  :output-stream *standard-output*
-                  :connection conn)
-               (case status
-                 (:fail
-                  (log:info "Command failed: ~a" expr)
-                  (uiop:quit 1))
-                 (:good
-                  (log:info "Command ran without errors"))
-                 (otherwise
-                  (log:info "Command failed with ~a: ~a [~a]" status expr reason)
-                  (uiop:quit 1)))))
+             (uiop:with-temporary-file (:pathname tmp :keep t :prefix "deploy-eval")
+               (delete-file tmp)
+               (log:info "Logging output to: ~a" tmp)
+               (let ((final-expr
+                       `(safely-eval ,expr ,(namestring tmp))))
+                 (log:info "Full expression ~S" final-expr)
+                 (multiple-value-bind (status reason)
+                     (dbg:ide-eval-form-in-remote
+                      final-expr
+                      :output-stream *standard-output*
+                      :connection conn)
+                   (write-string (uiop:read-file-string tmp))
+                   (case status
+                     (:fail
+                      (log:info "Command failed: ~a" expr)
+                      (uiop:quit 1))
+                     (:good
+                      (delete-file tmp)
+                      (log:info "Command ran without errors"))
+                     (otherwise
+                      (log:info "Command failed with ~a: ~a [~a]" status expr reason)
+                      (uiop:quit 1)))))))
         (dbg:close-remote-debugging-connection conn)))))
