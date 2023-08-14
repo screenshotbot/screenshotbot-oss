@@ -521,7 +521,7 @@ to the directory that was just snapshotted.")
                                              :unique-index-p unique-index-p)))
       (restart-case
           (progn
-            (log:info "Total number of elements: ~d" (length all-elts))
+            (format t "Total number of elements: ~d~%" (length all-elts))
             (assert-hash-tables= hash-table
                                  new-hash-table))
         (fix-the-index ()
@@ -530,7 +530,7 @@ to the directory that was just snapshotted.")
 
 (defun validate-class-index (class-name slot-name)
   (declare (optimize (debug 3)))
-  (log:info "Testing ~a, ~a" class-name slot-name)
+  (format t "Testing ~a, ~a~%" class-name slot-name)
   (restart-case
       (let* ((class (find-class class-name))
              (slot (find-effective-slot class slot-name))
@@ -539,7 +539,7 @@ to the directory that was just snapshotted.")
           (let ((all-elts (store-objects-with-class class-name)))
             (handler-bind ((error (lambda (e)
                                     (declare (ignore e))
-                                    (log:info "Errors while processing index for ~a ~a ~a" class slot indices))))
+                                    (format t "Errors while processing index for ~a ~a ~a~%" class slot indices))))
               (restart-case
                   (validate-index-values index all-elts slot-name)
                 (continue-testing-other-indices ()
