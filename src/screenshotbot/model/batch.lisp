@@ -19,6 +19,8 @@
                 #:index-get)
   (:import-from #:util/store/object-id
                 #:object-with-oid)
+  (:import-from #:screenshotbot/user-api
+                #:can-view)
   (:export
    #:find-or-create-batch))
 (in-package :screenshotbot/model/batch)
@@ -76,3 +78,6 @@
   (fset:do-set (item (batch-items-for-batch batch))
     (when (eql (channel item) channel)
       (return item))))
+
+(defmethod can-view ((self batch) user)
+  (can-view (company self) user))

@@ -15,16 +15,23 @@
   (:import-from #:screenshotbot/model/batch
                 #:batch-item
                 #:find-batch-item
-                #:find-or-create-batch))
+                #:find-or-create-batch)
+  (:import-from #:screenshotbot/user-api
+                #:can-view
+                #:user)
+  (:import-from #:screenshotbot/testing
+                #:with-installation))
 (in-package :screenshotbot/model/test-batch)
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
   (with-test-store ()
-    (let* ((company (make-instance 'company))
-           (channel (find-or-create-channel company "test-channel")))
-      (&body))))
+    (with-installation ()
+     (let* ((company (make-instance 'company))
+            (user (make-instance 'user))
+            (channel (find-or-create-channel company "test-channel")))
+       (&body)))))
 
 (test find-instead-of-create
   (with-fixture state ()
@@ -43,3 +50,9 @@
                                 :channel channel)))
         (is (eql res (find-batch-item batch :channel channel)))
         (is (eql case1 (find-batch-item batch :channel :foo)))))))
+
+
+(test can-view
+  (with-fixture state ()
+    (let ((batch (find-or-create-batch company "http://foo.git" "abcd")))
+      (is-false (can-view batch user)))))
