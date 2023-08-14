@@ -121,7 +121,7 @@
         <h4 class= "card-title">
           Notify on Slack
         </h4>
-        <p class= "text-muted">If you have configured <a href= "/settings/slack">Slack</a>, these Slack channels will always be notified of <tt>,(channel-name channel)</tt>'s changes.</p>
+        <p class= "text-muted">If you have configured <a href= "/settings/slack">Slack</a>, these Slack channels will always be notified of <tt>,(safe-channel-name channel)</tt>'s changes.</p>
 
         <form method= "POST" action=slack-update >
           <div class= "input-group">
@@ -169,7 +169,7 @@
       <div class= "card-page-container mt-3 mx-auto" style= "max-width: 60em" >
         <div class= "card">
           <div class= "card-header d-flex justify-content-between">
-            <h3>,(channel-name channel)</h3>
+            <h3>,(safe-channel-name channel)</h3>
             <a href= (nibble () (confirm-delete channel)) class= "btn btn-danger">Delete</a>
           </div>
           <div class= "card-body">
@@ -293,12 +293,18 @@
    :channel (channel-name channel)
    :branch (caar (all-active-runs channel))))
 
+(defun safe-channel-name (channel)
+  (let ((name (channel-name channel)))
+    (if (str:emptyp name)
+        <em>empty</em>
+        name)))
+
 (deftag channel-list-row (&key channel)
   (taskie-row :object channel
               (ui/a :href (hex:make-url
                            'single-channel-page
                            :id (store-object-id channel))
-                    (channel-name channel))
+                    (safe-channel-name channel))
               (taskie-timestamp :timestamp (created-at channel))))
 
 (deftag explain-channels ()
