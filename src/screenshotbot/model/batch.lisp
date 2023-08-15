@@ -29,9 +29,15 @@
    #:batch-name))
 (in-package :screenshotbot/model/batch)
 
-(defindex +lookup-index-v2+
-  'fset-unique-index
-  :slots '(%commit %company %repo %name))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun accessors ()
+    '(company repo name phabricator-diff-id
+      pull-request-url)))
+
+
+(defindex +lookup-index-v4+
+  'fset-set-index
+  :slot-name '%commit)
 
 (with-class-validation
   (defclass batch (object-with-oid)
@@ -40,14 +46,22 @@
      (%repo :initarg :repo
             :reader repo)
      (%commit :initarg :commit
+              :index +lookup-index-v4+
+              :index-reader batches-for-commit
               :reader commit)
      (%name :initarg :name
-            :reader batch-name))
-    (:metaclass persistent-class)
-    (:class-indices
-     (lookup-index-v2
-      :index +lookup-index-v2+
-      :slots (%commit %company %repo %name)))))
+            :reader batch-name)
+     (%phabricator-diff-id :initarg :phabricator-diff-id
+                           :initform nil
+                           :reader phabricator-diff-id)
+     (%pull-request-url :initarg :pull-request-url
+                        :initform nil
+                        :reader pull-request-url))
+    (:metaclass persistent-class)))
+
+(defmethod name (batch)
+  ;; just convenience for some of the macro-expansions
+  (batch-name batch))
 
 (defindex +batch-item-index+
   'fset-set-index
@@ -71,19 +85,21 @@
 
 (defvar *lock* (bt:make-lock))
 
-(defun find-or-create-batch (&key
-                               (company (error "must provide :company"))
-                               (repo (error "must provide repo"))
-                               (commit (error "must provide commit"))
-                               (name (error "must provide name")))
+(defun find-existing-batch #.`(&key commit
+                                    ,@(accessors))
+  (fset:do-set (batch (batches-for-commit commit))
+    (when #.`(and
+              ,@(loop for key in (accessors)
+                      collect `(equal ,key (,key batch))))
+          (return batch))))
+
+(defun find-or-create-batch (&rest args
+                             &key &allow-other-keys)
   (bt:with-lock-held (*lock*)
     (or
-     (index-get +lookup-index-v2+ (list commit company repo name))
-     (make-instance 'batch
-                    :company company
-                    :repo repo
-                    :commit commit
-                    :name name))))
+     (apply #'find-existing-batch args)
+     (apply #'make-instance 'batch
+            args))))
 
 
 (defun find-batch-item (batch &key channel)
