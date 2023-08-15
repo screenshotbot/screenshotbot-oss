@@ -43,6 +43,9 @@
                 #:make-mp-hash-table)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:util/threading
+                #:make-thread
+                #:max-pool)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/phabricator/builds)
 
@@ -98,9 +101,14 @@ the status, and the details")
 (defmethod find-build-info (company (diff string))
   (find-build-info company (parse-integer diff)))
 
+(defvar *pool* (make-instance 'max-pool
+                              :max 30))
+
 (def-easy-macro in-future (&fn fn)
-  (future
-    (funcall fn)))
+  (make-thread
+   (lambda ()
+     (fn))
+   :name "phabricator/builds.lisp"))
 
 (defmacro if-setf (place expr)
   `(let ((val ,expr))
@@ -164,7 +172,7 @@ the status, and the details")
 (defun %actually-update-status (phab  self
                                 &key status-map)
   "Immediately send the Harbormaster message"
-  (log:info "Updating: D~a" (build-info-revision self))
+  (log:info "Updating: D~a ~S" (build-info-revision self) status-map)
   (let ((types (mapcar #'cadr status-map)))
     (let ((fail-count (count "fail" types :test #'equal))
           (work-count (count "work" types :test #'equal)))
