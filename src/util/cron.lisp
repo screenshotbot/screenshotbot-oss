@@ -11,6 +11,8 @@
                 #:leaderp)
   (:import-from #:alexandria
                 #:remove-from-plist)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:def-cron
@@ -32,7 +34,8 @@
       (values))))
 
 (defun call-with-cron-wrapper (fn)
-  (util/threading:call-with-thread-fixes fn))
+  (ignore-and-log-errors ()
+    (util/threading:call-with-thread-fixes fn)))
 
 (defmethod cron-enabled-on-store-p (store)
   t)
