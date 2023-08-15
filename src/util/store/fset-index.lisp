@@ -71,8 +71,8 @@
       (setf (%slots self) (list slot-name))))
 
 (defmethod index-reinitialize :before ((new-index abstract-fset-index) old-index)
-  (log:warn "Reinitializing index ~a from ~a" new-index
-            old-index))
+  (log:debug "Reinitializing index ~a from ~a" new-index
+             old-index))
 
 (defmethod index-reinitialize ((new-index abstract-fset-index)
                                (old-index abstract-fset-index))
