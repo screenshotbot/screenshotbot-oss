@@ -66,7 +66,7 @@
                                        &rest args
                                        &key slot-name slots)
   (assert (not (and slot-name slots)))
-  (log:info "Created new index: ~a" self)
+  (log:debug "Created new index: ~a" self)
   (if slot-name
       (setf (%slots self) (list slot-name))))
 
