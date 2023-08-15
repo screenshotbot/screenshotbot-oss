@@ -172,6 +172,7 @@
 
 (defmethod oidc-callback ((auth oidc) code redirect
                           &key error
+                            error-description
                             (error-redirect "/"))
   (flet ((error-authenticating (message)
            (nibble ()
@@ -206,9 +207,12 @@
               (hex:safe-redirect (error-authenticating (authentication-error-message e))))))))
      (t
       ;; error the OAuth flow, most likely
-      (warn "Oauth failed: ~a" error)
-      (error-authenticating
-       error)))))
+      (let ((message (format nil "~a: ~a"
+                             error
+                             (or error-description "No details provided"))))
+        (warn "Oauth failed: ~a" message)
+        (error-authenticating
+         message))))))
 
 (defmethod verify-userinfo (oidc user-info))
 
@@ -225,9 +229,10 @@
 (defmethod make-oidc-auth-link ((oauth oidc) redirect
                                 &key (error-redirect "/"))
   (let* ((auth-uri (quri:uri (authorization-endpoint oauth)))
-         (redirect (nibble (code error)
+         (redirect (nibble (code error error_description)
                      (oidc-callback oauth code redirect
                                     :error error
+                                    :error-description error_description
                                     :error-redirect error-redirect))))
     (setf (quri:uri-query-params auth-uri)
           `(("redirect_uri" . ,(hex:make-full-url hunchentoot:*request* (oauth-callback oauth)))
