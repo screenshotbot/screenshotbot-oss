@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-key
+                #:make-check
                 #:actual-sha
                 #:warn-if-not-merge-base
                 #:format-check-title
@@ -95,6 +97,7 @@
       (with-installation (:globally t)
         (let* ((company (make-instance 'company))
                (channel (make-instance 'channel
+                                       :name "foobar-channel"
                                        :company company
                                        :github-repo "https://mysite.git/foo.git"))
                (run (make-recorder-run
@@ -339,3 +342,8 @@
                 :channel channel
                 :commit-hash "zoidberg")))
       (is (equal "zoidberg" (actual-sha run))))))
+
+(test key-for-make-check
+  (with-fixture state ()
+    (let ((check (make-check run)))
+      (is (equal "foobar-channel" (check-key check))))))

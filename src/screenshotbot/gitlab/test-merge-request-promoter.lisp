@@ -76,6 +76,7 @@
                                          (make-instance 'gitlab-plugin))))
        (let* ((company (make-instance 'company))
               (channel (make-instance 'channel
+                                      :name "gitlab-test-channel"
                                       :company company
                                       :github-repo "https://gitlab.com/tdrhq/fast-example"))
               (settings (make-instance 'gitlab-settings

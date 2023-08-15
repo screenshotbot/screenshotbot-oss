@@ -19,6 +19,7 @@
                 #:channel-company
                 #:production-run-for)
   (:import-from #:screenshotbot/user-api
+                #:channel-name
                 #:created-at
                 #:current-user
                 #:user-email
@@ -257,7 +258,7 @@
 (defmethod make-check ((run recorder-run) &rest args)
   (apply #'make-instance 'check
          :sha (actual-sha run)
-         :key (recorder-run-channel run)
+         :key (channel-name (recorder-run-channel run))
          args))
 
 (defmethod maybe-promote ((promoter abstract-pr-promoter)

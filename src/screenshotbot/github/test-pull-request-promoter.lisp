@@ -246,8 +246,12 @@
   (with-installation ()
    (with-test-store ()
      (let* ((company (make-instance 'company))
-            (empty-run (make-recorder-run :company company))
-            (another-empty-run (make-recorder-run :company company))
+            (channel (make-instance 'channel
+                                    :name "github-test-channel"))
+            (empty-run (make-recorder-run :company company
+                                          :channel channel))
+            (another-empty-run (make-recorder-run :company company
+                                                  :channel channel))
             (empty-report (make-instance 'diff-report :added nil
                                                      :deleted nil
                                                      :changes nil)))
