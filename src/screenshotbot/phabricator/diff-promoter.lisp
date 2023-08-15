@@ -18,6 +18,7 @@
   (:import-from #:util/phabricator/conduit
                 #:make-phab-instance-from-arcrc)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-key
                 #:promoter-pull-id
                 #:check-title
                 #:make-promoter-for-acceptable
@@ -40,11 +41,6 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:phabricator-diff-id
                 #:recorder-run-company)
-  (:import-from #:screenshotbot/user-api
-                #:recorder-run-channel
-                #:channel-name)
-  (:import-from #:screenshotbot/model/report
-                #:report-channel)
   (:import-from #:screenshotbot/report-api
                 #:report)
   (:import-from #:alexandria
@@ -112,7 +108,7 @@
      (:pending "work")
      (:action_required "fail")
      (:action-required "fail"))
-   :name (channel-name (recorder-run-channel run))
+   :name (check-key check)
    :details
    (format nil "~a~%~a"
            (check-title check)
