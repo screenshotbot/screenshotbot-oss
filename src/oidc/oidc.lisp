@@ -173,39 +173,42 @@
 (defmethod oidc-callback ((auth oidc) code redirect
                           &key error
                             (error-redirect "/"))
-  (cond
-    (code
-     (let ((token (oauth-get-access-token
-                   (token-endpoint auth)
-                   :client_id (client-id auth)
-                   :client_secret (client-secret auth)
-                   :code code
-                   :redirect_uri (hex:make-full-url
-                                  hunchentoot:*request*
-                                  (oauth-callback auth)))))
-       (let ((user-info
-               (user-info auth token)))
-         (log:debug "Got user info ~S" user-info)
-         (verify-userinfo auth user-info)
-         (handler-case
-             (after-authentication
-              auth
-              :user-id (assoc-value user-info :sub)
-              :email (assoc-value user-info :email)
-              :full-name (assoc-value user-info :name)
-              :avatar (assoc-value user-info :picture))
-           (authentication-error (e)
-             (hex:safe-redirect (nibble ()
-                                  <html>
-                                    <body>
-                                      There was an error authenticating: ,(authentication-error-message e)
-                                      <a href= error-redirect >Go Back</a>
-                                    </body>
-                                  </html>)))))))
-    (t
-     ;; error the OAuth flow, most likely
-     (warn "Oauth failed: ~a" error)
-     (hex:safe-redirect error-redirect :error error))))
+  (flet ((error-authenticating (message)
+           (nibble ()
+             <html>
+               <body>
+                 There was an error authenticating: ,(progn message)
+                 <a href= error-redirect >Go Back</a>
+               </body>
+             </html>)))
+   (cond
+     (code
+      (let ((token (oauth-get-access-token
+                    (token-endpoint auth)
+                    :client_id (client-id auth)
+                    :client_secret (client-secret auth)
+                    :code code
+                    :redirect_uri (hex:make-full-url
+                                   hunchentoot:*request*
+                                   (oauth-callback auth)))))
+        (let ((user-info
+                (user-info auth token)))
+          (log:debug "Got user info ~S" user-info)
+          (verify-userinfo auth user-info)
+          (handler-case
+              (after-authentication
+               auth
+               :user-id (assoc-value user-info :sub)
+               :email (assoc-value user-info :email)
+               :full-name (assoc-value user-info :name)
+               :avatar (assoc-value user-info :picture))
+            (authentication-error (e)
+              (hex:safe-redirect (error-authenticating (authentication-error-message e))))))))
+     (t
+      ;; error the OAuth flow, most likely
+      (warn "Oauth failed: ~a" error)
+      (error-authenticating
+       error)))))
 
 (defmethod verify-userinfo (oidc user-info))
 
