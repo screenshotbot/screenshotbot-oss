@@ -29,6 +29,7 @@
   (:import-from #:bknr.indices
                 #:object-destroyed-p)
   (:import-from #:bknr.datastore
+                #:deftransaction
                 #:*store*
                 #:delete-object)
   (:import-from #:bknr.datastore
@@ -150,15 +151,17 @@ we're not looking in to what the object references."
               (%reschedule-job next now))
             (%call-pending-scheduled-jobs))))))))
 
+(deftransaction update-at (next at)
+  "Transaction to update both the AT slot, and the queue at the same
+time."
+  (setf (%at next) at)
+  (%update-queue next))
+
 (defun %reschedule-job (next now)
   "After a job has just been run, call this to reschedule the job onto
 the queue. Internal detail."
   (flet ((schedule-at (at)
-           (with-transaction ()
-             ;; the queue will be updated in the unwind-protect
-             (setf (%at next) at))
-           (bt:with-lock-held (*lock*)
-             (%update-queue next))))
+           (update-at next at)))
     (cond
       ((cronexpr next)
        ;; Figure out the next run time based on the cronexpr

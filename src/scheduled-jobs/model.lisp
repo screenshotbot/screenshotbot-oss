@@ -90,6 +90,11 @@ internal use only."
                  (at self)
                  (priority-queue))))
 
+(defun update-queue-for-all ()
+  "A hacky fix to reset the queue, see T749"
+  (mapcar #'%update-queue (bknr.datastore:class-instances 'scheduled-job)))
+
+
 (defmethod bknr.datastore:initialize-transient-instance ((self scheduled-job))
   (bt:with-lock-held (*lock*)
     (%update-queue self)))

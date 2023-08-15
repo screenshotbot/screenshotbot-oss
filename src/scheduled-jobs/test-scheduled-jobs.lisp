@@ -21,6 +21,7 @@
   (:import-from #:bknr.indices
                 #:object-destroyed-p)
   (:import-from #:scheduled-jobs/model
+                #:update-queue-for-all
                 #:tz-offset
                 #:cronexpr
                 #:%update-queue
@@ -290,3 +291,19 @@
     (setf time 21)
     (call-pending-scheduled-jobs)
     (is (eql 'scheduled-job *state*))))
+
+
+(test update-queue-for-for-replayed-transactions
+    (with-fixture state ()
+    (let ((job (make-scheduled-job :at 20
+                                   :function 'foo
+                                   :args '())))
+      (setf time 5)
+      (call-pending-scheduled-jobs)
+      (is (eql nil *state*))
+      (setf (%at job) 1)
+      (call-pending-scheduled-jobs)
+      (is (eql nil *state*))
+      (update-queue-for-all)
+      (call-pending-scheduled-jobs)
+      (is (eql :done *state*)))))
