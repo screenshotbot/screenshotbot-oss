@@ -40,6 +40,7 @@
   (:import-from #:screenshotbot/promote-api
                 #:maybe-promote)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:make-check
                 #:promoter-pull-id
                 #:push-remote-check
                 #:check)
@@ -63,10 +64,9 @@
             (bitbucket-token (make-instance 'bitbucket-token
                                             :refresh-token "fake-refresh-token"
                                             :company company))
-            (check (make-instance 'check
-                                  :sha "abcd"
-                                  :title "No screenshots changed"
-                                  :status :success)))
+            (check (make-check run
+                              :title "No screenshots changed"
+                              :status :success)))
        (cl-mock:with-mocks ()
          (if-called 'bitbucket-settings-for-company
                     (lambda (c)
@@ -92,10 +92,9 @@
                  :channel channel
                  :commit-hash "zoidberg"))
            (promoter (make-instance 'bitbucket-promoter))
-           (check (make-instance 'check
-                                 :sha "foo"
-                                 :status state
-                                 :title "foobar")))
+           (check (make-check run
+                              :status state
+                              :title "foobar")))
        (let ((result (make-build-status-args run check)))
          (is (equal "zoidberg" (a:assoc-value result :commit)))
          (is (str:s-member (list "SUCCESSFUL" "FAILED" "INPROGRESS")
@@ -119,10 +118,8 @@
     (push-remote-check
      (make-instance 'bitbucket-promoter)
      run
-     (make-instance 'check
-                    :sha "abcd"
-                    :title "hello"
-                    :status :success))
+     (make-check run :title "hello"
+                     :status :success))
     (is (eql 1 (length (bitbucket-audit-logs-for-company company))))
     (let ((audit-log (car (bitbucket-audit-logs-for-company company))))
       (is (eql nil (audit-log-error audit-log)))
@@ -152,10 +149,9 @@
                 :at-start t)
     (push-remote-check
      (make-instance 'bitbucket-promoter)
-     run (make-instance 'check
-                        :sha "foobar"
-                        :status :success
-                        :title "hello"))
+     run (make-check run
+                     :status :success
+                     :title "hello"))
     (is (eql 1 (length (bitbucket-audit-logs-for-company company))))
     (let ((audit-log (car (bitbucket-audit-logs-for-company company))))
      (is (not (str:emptyp (audit-log-error audit-log)))))))

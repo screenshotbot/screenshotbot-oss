@@ -139,6 +139,9 @@
    (report :initarg :report
            :initform nil
            :accessor report)
+   (key :initarg :key
+        :initform (error "must provide :key for check")
+        :accessor check-key)
    (title :initarg :title
           :accessor check-title)
    (details-url :initarg :details-url
@@ -251,6 +254,12 @@
    (override-commit-hash run)
    (recorder-run-commit run)))
 
+(defmethod make-check ((run recorder-run) &rest args)
+  (apply #'make-instance 'check
+         :sha (actual-sha run)
+         :key (recorder-run-channel run)
+         args))
+
 (defmethod maybe-promote ((promoter abstract-pr-promoter)
                           run)
   (let* ((repo (channel-repo (recorder-run-channel run)))
@@ -273,23 +282,21 @@
                                 ;; We're using the run as a logger!
                                 (identity run))))
          (flet ((make-run-check (&rest args)
-                  (apply #'make-instance 'check
+                  (apply #'make-check run
                          :details-url (make-details-url 'screenshotbot/dashboard/run-page:run-page
                                                         :id (oid run))
-                         :sha (actual-sha run)
                          args)))
            (unless (lparallel:fulfilledp base-run-promise)
              (format-log run :info "Base commit is not available yet, waiting for upto 5 minutes")
              (push-remote-check
               promoter
               run
-              (make-instance 'check
-                             :status :pending
-                             :sha (actual-sha run)
-                             :details-url (make-details-url 'screenshotbot/dashboard/run-page:run-page
-                                                        :id (oid run))
-                             :title (format nil "Waiting for screenshots on ~a to be available"
-                                            (str:substring 0 4 (pr-merge-base promoter run))))))
+              (make-check run
+                          :status :pending
+                          :details-url (make-details-url 'screenshotbot/dashboard/run-page:run-page
+                                                         :id (oid run))
+                          :title (format nil "Waiting for screenshots on ~a to be available"
+                                         (str:substring 0 4 (pr-merge-base promoter run))))))
            (let* ((base-run (lparallel:force base-run-promise))
                   (merge-base (pr-merge-base promoter run))
                   (check (cond
@@ -363,14 +370,13 @@ Revision. It will be tested with EQUAL"))
   (let ((diff-report (make-diff-report run base-run)))
    (cond
      ((diff-report-empty-p diff-report)
-      (make-instance 'check
-                     :sha (actual-sha run)
-                     :status :success
-                     :title "No screenshots changed"
-                     :summary "No action required on your part"
-                     :details-url
-                     (make-details-url 'screenshotbot/dashboard/run-page:run-page
-                                       :id (oid run))))
+      (make-check run
+                  :status :success
+                  :title "No screenshots changed"
+                  :summary "No action required on your part"
+                  :details-url
+                  (make-details-url 'screenshotbot/dashboard/run-page:run-page
+                                    :id (oid run))))
      (t
       (let ((report (make-instance 'report
                                    :run run
@@ -422,16 +428,14 @@ Revision. It will be tested with EQUAL"))
                  :user user
                  :previousp previousp
                  :status status)))
-   (make-instance
-    'check
-    :sha (actual-sha (report-run report))
-    :status status
-    :user user
-    :report report
-    :title title
-    :summary summary
-    :details-url (make-details-url 'screenshotbot/dashboard/reports:report-page
-                                   :id (oid report)))))
+   (make-check (report-run report)
+               :status status
+               :user user
+               :report report
+               :title title
+               :summary summary
+               :details-url (make-details-url 'screenshotbot/dashboard/reports:report-page
+                                              :id (oid report)))))
 
 (defmethod maybe-send-tasks ((promoter abstract-pr-promoter) run)
   (values))

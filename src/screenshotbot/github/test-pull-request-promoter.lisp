@@ -32,6 +32,7 @@
                 #:retrieve-run
                 #:report)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:make-check
                 #:check
                 #:push-remote-check
                 #:check-status
@@ -318,10 +319,9 @@
                     :screenshots (list (make-instance 'screenshot :name "foobar"))
                     :merge-base "car"
                     :commit-hash "foo")))
-          (push-remote-check promoter run (make-instance 'check
-                                                         :sha "foo"
-                                                         :status :accepted
-                                                         :title "foobar"))
+          (push-remote-check promoter run (make-check run
+                                                      :status :accepted
+                                                      :title "foobar"))
           (assert-that calls
                        (has-length 1)))))))
 
@@ -362,10 +362,9 @@
                   :channel channel
                   :commit-hash "zoidberg"))
             (promoter (make-instance 'pull-request-promoter))
-             (check (make-instance 'check
-                                   :sha "zoidberg"
-                                   :status state
-                                   :title "foobar")))
+             (check (make-check run
+                                :status state
+                                :title "foobar")))
        (let ((result (plist-alist (make-github-args run check))))
          (is (equal "zoidberg" (assoc-value result :head-sha)))
          ;; See: https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28
