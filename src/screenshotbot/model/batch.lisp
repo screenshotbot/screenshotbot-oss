@@ -32,7 +32,9 @@
    #:find-or-create-batch
    #:batch-items
    #:batch-item-channel
-   #:batch-name))
+   #:batch-name
+   #:batch-item-run
+   #:batch-item-report))
 (in-package :screenshotbot/model/batch)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -88,13 +90,13 @@
             :index +batch-item-index+
             :index-reader batch-items)
      (%channel :initarg :channel
-               :reader batch-item-channel)
+               :accessor batch-item-channel)
      (%acceptable :initarg :acceptable
-                  :reader acceptable)
+                  :accessor acceptable)
      (%run :initarg :run
-           :reader run)
+           :accessor batch-item-run)
      (%report :initarg :report
-              :reader report))
+              :accessor batch-item-report))
     (:metaclass persistent-class)))
 
 (defvar *lock* (bt:make-lock))

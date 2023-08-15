@@ -197,6 +197,7 @@
                  (:file "webhook")
                  (:file "settings")))
    (:file "abstract-pr-promoter")
+   (:file "batch-promoter")
    (:module "github"
     :serial t
     :components ((:file "plugin")

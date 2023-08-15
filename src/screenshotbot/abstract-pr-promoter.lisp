@@ -45,6 +45,7 @@
                 #:repo-link)
   (:import-from #:screenshotbot/model/recorder-run
                 #:override-commit-hash
+                #:recorder-run-batch
                 #:recorder-run
                 #:recorder-run-warnings
                 #:merge-base-failed-warning
@@ -103,7 +104,9 @@
    #:abstract-pr-acceptable
    #:make-promoter-for-acceptable
    #:promoter-pull-id
-   #:check-sha))
+   #:check-sha
+   #:push-remote-check-via-batching))
+
 (in-package :screenshotbot/abstract-pr-promoter)
 
 (defvar *logs* nil)
@@ -234,6 +237,21 @@
                                run
                                check)
   (:documentation "Push the CHECK to the corresponding run remotely "))
+
+(defgeneric push-remote-check-via-batching (promoter
+                                            batch
+                                            run
+                                            check))
+
+(defmethod push-remote-check :around (promoter
+                                      (run recorder-run)
+                                      check)
+  (let ((batch (recorder-run-batch run)))
+    (cond
+      (batch
+       (push-remote-check-via-batching promoter batch run check))
+      (t
+       (call-next-method)))))
 
 (defmethod push-remote-check :before (promoter run check)
   (atomics:atomic-push (list run check) *logs*))
