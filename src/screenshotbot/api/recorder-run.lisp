@@ -225,7 +225,9 @@ it easier for us to recover, or even validate the model."
                    :company company
                    :repo (dto:run-repo run)
                    :commit (dto:run-commit run)
-                   :name batch)))
+                   :name batch
+                   :pull-request-url (dto:pull-request-url run)
+                   :phabricator-diff-id (dto:phabricator-diff-id run))))
          (recorder-run (make-recorder-run
                         :company company
                         :channel channel
