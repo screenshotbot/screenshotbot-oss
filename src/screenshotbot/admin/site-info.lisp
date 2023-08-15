@@ -51,6 +51,7 @@
       <li>PID: ,(progn #+linux (util/posix:getpid))</li>
       <li>Booted at: ,(timeago :timestamp *boot-time*)</li>
       <li>Slynk port: ,(safe-symbol-value "*ACTUAL-SLYNK-PORT*"   "SERVER/SLYNK-PREPARER" )</li>
+      <li>Hostname: ,(uiop:hostname)</li>
     </ul>
   </admin-app-template>)
 
