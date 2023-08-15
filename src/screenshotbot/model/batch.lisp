@@ -22,6 +22,11 @@
                 #:object-with-oid)
   (:import-from #:screenshotbot/user-api
                 #:can-view)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:phabricator-diff-id
+                #:pull-request-url
+                #:github-repo
+                #:recorder-run-company)
   (:export
    #:find-or-create-batch
    #:batch-items
@@ -39,15 +44,22 @@
   'fset-set-index
   :slot-name '%commit)
 
+;; Note that for most of the fields, we create an alias for the slot
+;; readers to use the same slots as recorder-run as a convenience.
 (with-class-validation
   (defclass batch (object-with-oid)
     ((%company :initarg :company
-               :reader company)
+               :reader company
+               :reader recorder-run-company)
      (%repo :initarg :repo
-            :reader repo)
+            :reader repo
+            :reader github-repo)
      (%commit :initarg :commit
               :index +lookup-index-v4+
               :index-reader batches-for-commit
+              ;; Note: we don't need recorder-run-commit here because
+              ;; a promoter should not be using that anyway. Promoters
+              ;; should instead use CHECK-SHA.
               :reader commit)
      (%name :initarg :name
             :reader batch-name)
