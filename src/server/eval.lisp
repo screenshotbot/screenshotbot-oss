@@ -76,7 +76,8 @@
                       final-expr
                       :output-stream *standard-output*
                       :connection conn)
-                   (write-string (uiop:read-file-string tmp))
+                   (ignore-errors
+                    (write-string (uiop:read-file-string tmp)))
                    (case status
                      (:fail
                       (log:info "Command failed: ~a" expr)
