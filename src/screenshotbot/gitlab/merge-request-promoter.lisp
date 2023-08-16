@@ -132,22 +132,6 @@
 (defmethod promoter-pull-id ((promoter merge-request-promoter) run)
   (gitlab-merge-request-iid run))
 
-;; TODO: cleanup
-(defmethod maybe-promote ((promoter merge-request-promoter) run)
-  (call-next-method)
-  #+nil
-  (restart-case
-      (cond
-        ((typep (channel-repo (recorder-run-channel run))
-                'gitlab-repo)
-         (let* ((mr (get-merge-request run)))
-           (when mr
-             (maybe-promote-mr promoter run mr))))
-        (t
-         (log:info "Not promoting, gitlab")))
-    (restart-maybe-promote ()
-      (maybe-promote promoter run))))
-
 (defun comment (promoter message)
   (push message (comments promoter)))
 
