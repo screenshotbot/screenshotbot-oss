@@ -8,6 +8,7 @@
   (:use #:cl
         #:screenshotbot/azure/plugin)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-key
                 #:make-promoter-for-acceptable
                 #:details-url
                 #:check-status
@@ -117,7 +118,7 @@
                                  (:action-required +failed+))
                         :target-url (details-url check)
                         :context (make-instance 'git-status-context
-                                                :name (channel-name (recorder-run-channel run))))
+                                                :name (check-key check)))
          :repository-id repo
          :pull-request-id (pull-request-id run))))))
 
