@@ -17,11 +17,21 @@
   (:import-from #:screenshotbot/template
                 #:app-template)
   (:import-from #:screenshotbot/model/batch
+                #:batch-item-run
+                #:batch-item-report
+                #:batch-item
                 #:batch-item-channel
                 #:batch-items)
   (:import-from #:screenshotbot/taskie
                 #:taskie-row
                 #:taskie-list)
+  (:import-from #:anaphora
+                #:it
+                #:acond)
+  (:import-from #:screenshotbot/dashboard/run-page
+                #:run-link)
+  (:import-from #:screenshotbot/dashboard/reports
+                #:report-link)
   (:export
    #:batch-handler))
 (in-package :screenshotbot/dashboard/batch)
@@ -35,10 +45,19 @@
       (can-view! batch)
       (render-batch batch))))
 
+(defmethod batch-item-link ((item batch-item))
+  (acond
+    ((batch-item-report item)
+     (report-link it))
+    ((batch-item-run item)
+     (run-link it))
+    (t
+     (error "no run or report attached to this item"))))
+
 (defun render-batch-item (item)
   (taskie-row
    :object item
-   <span>,(channel-name (batch-item-channel item)) </span>))
+   <span><a href= (batch-item-link item) >,(channel-name (batch-item-channel item))</a></span>))
 
 (defmethod render-batch (batch)
   (let ((items (fset:convert 'list (batch-items batch))))

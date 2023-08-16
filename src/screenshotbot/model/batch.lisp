@@ -98,6 +98,7 @@
      (%run :initarg :run
            :accessor batch-item-run)
      (%report :initarg :report
+              :initform nil
               :accessor batch-item-report))
     (:metaclass persistent-class)))
 

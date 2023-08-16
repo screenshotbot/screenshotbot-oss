@@ -16,13 +16,18 @@
                 #:with-installation
                 #:screenshot-test)
   (:import-from #:screenshotbot/dashboard/batch
+                #:batch-item-link
                 #:render-batch)
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/user-api
-                #:channel))
+                #:channel)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run)
+  (:import-from #:screenshotbot/report-api
+                #:report))
 (in-package :screenshotbot/dashboard/test-batch)
 
 
@@ -33,7 +38,9 @@
     (with-installation ()
      (with-fake-request ()
        (let* ((company (make-instance 'company))
-              (batch (make-instance 'batch)))
+              (batch (make-instance 'batch))
+              (run (make-recorder-run))
+              (report (make-instance 'report)))
          (&body))))))
 
 (screenshot-test batch-item-empty-view
@@ -46,6 +53,19 @@
                                   :company company
                                   :name "//foo:bar")))
       (make-instance 'batch-item
+                     :run run
                      :channel channel
                      :batch batch)
       (render-batch batch))))
+
+
+(test batch-item-link
+  (with-fixture state ()
+    (is (not (str:emptyp
+              (batch-item-link
+               (make-instance 'batch-item
+                              :run run)))))
+    (is (not (str:emptyp
+              (batch-item-link
+               (make-instance 'batch-item
+                              :run report)))))))
