@@ -102,10 +102,13 @@
   (typep repo 'github-repo))
 
 (defmethod repo-full-name (repo)
+  (repo-full-name (repo-link repo)))
+
+(defmethod repo-full-name ((repo-link string))
   (multiple-value-bind (full parts)
       (cl-ppcre:scan-to-strings "^https://.*/(.*/.*)$"
                                 (github-get-canonical-repo
-                                 (repo-link repo)))
+                                 repo-link))
     (assert full)
     (elt parts 0)))
 

@@ -59,6 +59,7 @@
                                     :github-repo "https://bitbucket.org/tdrhq/dummy"))
             (company (make-instance 'company))
             (run (make-recorder-run :company company
+                                    :github-repo "https://bitbucket.org/tdrhq/dummy"
                                     :commit-hash "abcd"
                                     :channel channel))
             (bitbucket-token (make-instance 'bitbucket-token
@@ -79,7 +80,8 @@
 
 (test make-task-args-happy-path
   (with-fixture state ()
-    (let* ((run (make-recorder-run :channel channel))
+    (let* ((run (make-recorder-run :channel channel
+                                   :github-repo "https://bitbucket.org/tdrhq/dummy"))
            (promoter (make-instance 'bitbucket-promoter)))
       (let ((result (make-build-status-args run check)))
         (is (equal "SUCCESSFUL" (a:assoc-value result :state)))
@@ -88,9 +90,10 @@
 (test make-task-args-for-every-version-of-state
   (with-fixture state ()
     (dolist (state (list :accepted :rejected :success :failure :action_required :action-required :pending))
-     (let ((run (make-recorder-run
-                 :channel channel
-                 :commit-hash "zoidberg"))
+      (let ((run (make-recorder-run
+                  :github-repo "https://bitbucket.org/tdrhq/dummy"
+                  :channel channel
+                  :commit-hash "zoidberg"))
            (promoter (make-instance 'bitbucket-promoter))
            (check (make-check run
                               :status state

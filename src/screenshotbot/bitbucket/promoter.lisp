@@ -36,6 +36,7 @@
   (:import-from #:screenshotbot/model/channel
                 #:github-get-canonical-repo)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-repo-url
                 #:override-commit-hash
                 #:recorder-run-company)
   (:import-from #:screenshotbot/user-api
@@ -193,16 +194,16 @@
 
 (defun make-build-status-args (run
                                check)
-  (let* ((channel (recorder-run-channel run))
-         (repo (channel-repo channel)))
-   (flet ((make-details-url (&rest args)
-            (format nil
+  (let* ((repo-url
+           (recorder-run-repo-url run)))
+    (flet ((make-details-url (&rest args)
+             (format nil
                     "~a~a"
                     (installation-domain (installation))
                     (apply #'hex:make-url args))))
      `((:key . ,(make-key (check-key check)))
        ;; TODO: refactor repo-full-name to not use GitHub specific code.
-       (:full-name . ,(screenshotbot/github/pull-request-promoter::repo-full-name repo))
+       (:full-name . ,(screenshotbot/github/pull-request-promoter::repo-full-name repo-url))
        (:commit . ,(or
                     (nullify (override-commit-hash run))
                     (recorder-run-commit run)))
