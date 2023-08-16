@@ -35,7 +35,8 @@
    #:batch-name
    #:batch-item-run
    #:batch-item-report
-   #:batch-commit))
+   #:batch-commit
+   #:batch-item-status))
 (in-package :screenshotbot/model/batch)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -91,7 +92,10 @@
             :reader batch
             :index +batch-item-index+
             :index-reader batch-items)
+     (%status :initarg :status
+              :accessor batch-item-status)
      (%channel :initarg :channel
+               :initform nil
                :accessor batch-item-channel)
      (%acceptable :initarg :acceptable
                   :accessor acceptable)

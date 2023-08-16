@@ -7,12 +7,14 @@
 (defpackage :screenshotbot/batch-promoter
   (:use #:cl)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-status
                 #:check-user
                 #:check
                 #:make-check
                 #:push-remote-check
                 #:push-remote-check-via-batching)
   (:import-from #:screenshotbot/model/batch
+                #:batch-item-status
                 #:batch
                 #:batch-name
                 #:batch-commit
@@ -58,6 +60,7 @@
      (setf (batch-item-channel item) (recorder-run-channel run))
      (setf (batch-item-run item) run)
      (setf (batch-item-report item) (report check))
+     (setf (batch-item-status item) (check-status check))
 
      (push-remote-check
       promoter

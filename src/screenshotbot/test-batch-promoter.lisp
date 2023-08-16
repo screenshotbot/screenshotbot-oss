@@ -57,5 +57,6 @@
       batch
       run
       (make-check run
+                  :status :accepted
                   :sha "foo")))
     (is (eql 1 (length (checks promoter))))))
