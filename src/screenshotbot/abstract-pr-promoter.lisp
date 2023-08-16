@@ -413,7 +413,7 @@ Revision. It will be tested with EQUAL"))
             (setup-acceptable)
             (make-check-for-report
              report
-             :status :action_required
+             :status :action-required
              :summary "Please verify that the images look reasonable to you"))
            (acceptable
             (format-log run :info "Found a previous review: ~a" acceptable)

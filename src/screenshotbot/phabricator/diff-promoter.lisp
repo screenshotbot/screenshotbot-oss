@@ -106,7 +106,6 @@
      (:failed "fail")
      (:failure "fail")
      (:pending "work")
-     (:action_required "fail")
      (:action-required "fail"))
    :name (check-key check)
    :details

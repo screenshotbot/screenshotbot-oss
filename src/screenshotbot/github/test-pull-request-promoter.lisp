@@ -240,7 +240,7 @@
        (maybe-promote promoter run)
        (is-true check)
        (is (equal "car" (pr-merge-base promoter run)))
-       (is (eql :action_required (check-status check)))
+       (is (eql :action-required (check-status check)))
        (is (equal "1 added" (check-title check)))))))
 
 (test check-result-for-diff-report
@@ -289,7 +289,7 @@
            (let ((check (make-check-result-from-diff-report
                          (make-instance 'pull-request-promoter)
                          run another-run)))
-             (is (eql :action_required(check-status check)))
+             (is (eql :action-required(check-status check)))
              (is (cl-ppcre:scan "1 change.*" (check-title check))))))))))
 
 (test report-has-acceptable
@@ -362,7 +362,7 @@
 (test make-github-for-every-version-of-state
   (with-fixture state ()
 
-    (dolist (state (list :accepted :rejected :success :failure :action_required :action-required))
+    (dolist (state (list :accepted :rejected :success :failure :action-required))
       (let* ((channel (make-instance 'channel
                                      :name "test-channel"
                                      :github-repo "https://github.com/tdrhq/fast-example"))

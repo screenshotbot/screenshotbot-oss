@@ -168,8 +168,7 @@
                           (:rejected "failure")
                           (:success "success")
                           (:failure "failure")
-                          (:action-required "action_required")
-                          (:action_required "action_required")))
+                          (:action-required "action_required")))
           :head-sha (check-sha check))))
 
 

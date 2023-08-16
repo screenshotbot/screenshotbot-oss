@@ -114,7 +114,6 @@
                                  (:rejected +failed+)
                                  (:success +succeeded+)
                                  (:failure +failed+)
-                                 (:action_required +failed+)
                                  (:action-required +failed+))
                         :target-url (details-url check)
                         :context (make-instance 'git-status-context

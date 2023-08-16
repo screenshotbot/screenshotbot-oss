@@ -211,7 +211,6 @@
                     (:accepted "SUCCESSFUL")
                     (:rejected "FAILED")
                     (:pending "INPROGRESS")
-                    (:action_required "FAILED")
                     (:action-required "FAILED")))
        (:name . ,(format nil "Screenshots for ~a" (check-key check)))
        (:url . ,(or (details-url check)

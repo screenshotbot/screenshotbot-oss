@@ -199,7 +199,6 @@
              (:rejected "failed")
              (:pending "pending")
              (:failure "failed")
-             (:action_required "failed")
              (:action-required "failed"))
     :target-url (or
                  (details-url check)

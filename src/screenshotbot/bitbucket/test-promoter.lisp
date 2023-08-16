@@ -89,7 +89,7 @@
 
 (test make-task-args-for-every-version-of-state
   (with-fixture state ()
-    (dolist (state (list :accepted :rejected :success :failure :action_required :action-required :pending))
+    (dolist (state (list :accepted :rejected :success :failure :action-required :pending))
       (let* ((run (make-recorder-run
                    :github-repo "https://bitbucket.org/tdrhq/dummy"
                    :channel channel
