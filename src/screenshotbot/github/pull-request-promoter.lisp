@@ -147,9 +147,8 @@
                                         :title "doing stuff")))
 
 (defun make-github-args (run check)
-  (let* ((repo (channel-repo (recorder-run-channel run)))
-         (repo-url (repo-link repo))
-         (full-name (repo-full-name repo))
+  (let* ((repo-url (recorder-run-repo-url run))
+         (full-name (repo-full-name repo-url))
          (github-plugin (github-plugin)))
     (list :app-id (app-id github-plugin)
           :private-key (private-key github-plugin)

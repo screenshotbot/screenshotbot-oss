@@ -152,6 +152,7 @@
     (let* ((*base-run* nil)
            (run (make-recorder-run
                  :company company
+                 :github-repo "https://github.com/tdrhq/fast-example"
                  :channel (make-instance 'dummy-channel)
                  :merge-base "car"
                  :commit-hash "foo")))
@@ -300,6 +301,7 @@
      (let ((run (make-recorder-run
                   :channel (make-instance 'dummy-channel)
                   :company company
+                  :github-repo "https://github.com/tdrhq/fast-example"
                   :pull-request "https://github.com/tdrhq/fast-example/pull/2"
                   :screenshots (list (make-instance 'screenshot :name "foobar"))
                   :merge-base "car"
@@ -319,6 +321,7 @@
         (let ((run (make-recorder-run
                     :channel (make-instance 'dummy-channel)
                     :company company
+                    :github-repo "https://github.com/tdrhq/fast-example"
                     :pull-request "https://github.com/tdrhq/fast-example/pull/2"
                     :screenshots (list (make-instance 'screenshot :name "foobar"))
                     :merge-base "car"
@@ -341,6 +344,7 @@
           (let* ((run (make-recorder-run
                        :channel (make-instance 'dummy-channel)
                        :company company
+                       :github-repo "https://github.com/tdrhq/fast-example"
                        :pull-request "https://github.com/tdrhq/fast-example/pull/2"
                        :screenshots (list (make-instance 'screenshot :name "foobar"))
                        :merge-base "car"
@@ -362,7 +366,8 @@
       (let* ((channel (make-instance 'channel
                                      :name "test-channel"
                                      :github-repo "https://github.com/tdrhq/fast-example"))
-            (run (make-recorder-run
+             (run (make-recorder-run
+                  :github-repo "https://github.com/tdrhq/fast-example"
                   :channel channel
                   :commit-hash "zoidberg"))
             (promoter (make-instance 'pull-request-promoter))
