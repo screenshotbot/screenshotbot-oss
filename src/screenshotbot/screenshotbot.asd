@@ -346,6 +346,7 @@
                (:file "test-taskie")
                (:file "test-audit-log")
                (:file "test-abstract-pr-promoter")
+               (:file "test-batch-promoter")
                (:module "webhook"
                 :components ((:file "test-model")
                              (:file "test-webhook")
