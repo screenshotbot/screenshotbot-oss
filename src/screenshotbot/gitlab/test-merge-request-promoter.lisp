@@ -8,6 +8,9 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/gitlab/merge-request-promoter
+                #:base-sha
+                #:gitlab-request
+                #:get-merge-request
                 #:gitlab-acceptable
                 #:post-build-status
                 #:merge-request-promoter)
@@ -84,10 +87,11 @@
                                        :url "https://gitlab.com"
                                        :token "foobar"))
               (run (make-recorder-run :company company
-                                                :commit-hash "baa"
-                                                :merge-base "aaa"
-                                                :channel channel
-                                                :gitlab-merge-request-iid 7))
+                                      :commit-hash "baa"
+                                      :merge-base "aaa"
+                                      :channel channel
+                                      :github-repo "https://gitlab.com/tdrhq/fast-example"
+                                      :gitlab-merge-request-iid 7))
               (another-run (make-recorder-run))
               (*base-run* (make-recorder-run :company company))
               (last-build-status))
@@ -137,3 +141,16 @@
   (with-fixture state ()
     (let* ((promoter (make-instance 'merge-request-promoter)))
       (is (equal 7 (promoter-pull-id promoter run))))))
+
+
+(test get-merge-request
+  (with-fixture state ()
+    #+nil
+    (cl-mock:if-called 'gitlab-request
+                       (lambda (company url)
+                         (error "unimpl")))
+    (cl-mock:answer
+        (gitlab-request company
+                        "/projects/tdrhq%2Ffast-example/merge_requests/7")
+      "{\"diff_refs\": {\"base_sha\":\"foo\"}}")
+    (is (equal "foo" (base-sha (get-merge-request run))))))

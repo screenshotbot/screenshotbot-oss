@@ -41,7 +41,10 @@
                  :link link))
 
 (defmethod project-path ((repo gitlab-repo))
-  (str:substring 1 nil (elt (multiple-value-list (quri:parse-uri (repo-link repo))) 4)))
+  (project-path (repo-link repo)))
+
+(defmethod project-path ((repo-url string))
+  (str:substring 1 nil (elt (multiple-value-list (quri:parse-uri repo-url)) 4)))
 
 (defmethod public-repo-p ((repo gitlab-repo))
   (restart-case

@@ -65,6 +65,7 @@
   (:import-from #:util/store
                 #:with-class-validation)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-repo-url
                 #:gitlab-merge-request-iid)
   (:export
    #:merge-request-promoter
@@ -92,7 +93,7 @@
 
 
 (defun safe-get-mr-id (run)
-  (let ((mr-id (gitlab-merge-request-iid run)))
+  (let ((mr-id (format nil "~a" (gitlab-merge-request-iid run))))
     (unless (str:emptyp mr-id)
       (parse-integer mr-id))))
 
@@ -117,17 +118,16 @@
 (defun get-merge-request (run)
   (let ((mr-id (gitlab-merge-request-iid run)))
     (when mr-id
-      (let* ((repo (channel-repo (recorder-run-channel run))))
-        (let ((project-path (project-path repo))
-              (mr-id (safe-get-mr-id run)))
-          (when mr-id
-            (let ((res (json:decode-json-from-string
-                        (gitlab-request repo
-                                        (format nil "/projects/~a/merge_requests/~a"
-                                                (urlencode:urlencode project-path)
-                                                mr-id)))))
-              (make-instance 'merge-request
-                             :base-sha (assoc-value (assoc-value res :diff--refs) :base--sha )))))))))
+      (let ((project-path (project-path (recorder-run-repo-url run)))
+            (mr-id (safe-get-mr-id run)))
+        (when mr-id
+          (let ((res (json:decode-json-from-string
+                      (gitlab-request (recorder-run-company run)
+                                      (format nil "/projects/~a/merge_requests/~a"
+                                              (urlencode:urlencode project-path)
+                                              mr-id)))))
+            (make-instance 'merge-request
+                           :base-sha (assoc-value (assoc-value res :diff--refs) :base--sha ))))))))
 
 (defmethod promoter-pull-id ((promoter merge-request-promoter) run)
   (gitlab-merge-request-iid run))
@@ -188,10 +188,10 @@
 
 (defmethod make-gitlab-args (run
                              check)
-  (let ((repo (channel-repo (recorder-run-channel run))))
+  (let ((project-path (project-path (recorder-run-repo-url run))))
    (list
-    :company (company repo)
-    :project-path (project-path repo)
+    :company (recorder-run-company run)
+    :project-path project-path
     :sha (check-sha check)
     :state (ecase (check-status check)
              (:success "success")
