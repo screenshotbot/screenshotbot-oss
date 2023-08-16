@@ -7,9 +7,15 @@
 (defpackage :screenshotbot/batch-promoter
   (:use #:cl)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-user
+                #:check
+                #:make-check
                 #:push-remote-check
                 #:push-remote-check-via-batching)
   (:import-from #:screenshotbot/model/batch
+                #:batch
+                #:batch-name
+                #:batch-commit
                 #:batch-item-report
                 #:batch-item-run
                 #:batch-item-channel
@@ -23,7 +29,17 @@
                 #:report)
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run-company
-                #:github-repo))
+                #:github-repo)
+  (:import-from #:hunchentoot-extensions
+                #:make-full-url)
+  (:import-from #:screenshotbot/dashboard/batch
+                #:batch-handler)
+  (:import-from #:util/store/object-id
+                #:oid)
+  (:import-from #:core/installation/installation
+                #:installation-domain)
+  (:import-from #:screenshotbot/installation
+                #:installation))
 (in-package :screenshotbot/batch-promoter)
 
 (defvar *lock* (bt:make-lock))
@@ -46,4 +62,21 @@
      (push-remote-check
       promoter
       batch
-      check))))
+      (compute-check batch
+                     :user (check-user check))))))
+
+(defmethod compute-check ((batch batch)
+                          &key user)
+  (make-instance 'check
+                 :sha (batch-commit batch)
+                 :key (batch-name batch)
+                 :user user ;; The user who initiated this check request, for audit-logs
+                 :title (format nil "[experimentl] ~a" (batch-name batch))
+                 :details-url (quri:render-uri
+                               (quri:merge-uris
+                                (hex:make-url
+                                 'batch-handler
+                                 :oid (oid batch))
+                                (installation-domain (installation))))
+                 :status :action-required
+                 :summary "Summary not implemented yet"))

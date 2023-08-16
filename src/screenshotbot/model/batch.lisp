@@ -34,7 +34,8 @@
    #:batch-item-channel
    #:batch-name
    #:batch-item-run
-   #:batch-item-report))
+   #:batch-item-report
+   #:batch-commit))
 (in-package :screenshotbot/model/batch)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -64,6 +65,7 @@
               ;; Note: we don't need recorder-run-commit here because
               ;; a promoter should not be using that anyway. Promoters
               ;; should instead use CHECK-SHA.
+              :reader batch-commit
               :reader commit)
      (%name :initarg :name
             :reader batch-name)

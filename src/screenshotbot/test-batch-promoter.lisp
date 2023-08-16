@@ -19,7 +19,9 @@
                 #:make-check
                 #:abstract-pr-promoter)
   (:import-from #:screenshotbot/user-api
-                #:channel))
+                #:channel)
+  (:import-from #:screenshotbot/testing
+                #:with-installation))
 (in-package :screenshotbot/test-batch-promoter)
 
 (util/fiveam:def-suite)
@@ -34,16 +36,18 @@
   (push check (checks self)))
 
 (def-fixture state ()
-  (with-test-store ()
-    (let* ((channel (make-instance 'channel
-                                   :name "channel-1"))
-           (batch (make-instance 'batch
-                                 :name "my-batch"))
-           (run (make-recorder-run
-                 :channel channel
-                 :batch batch))
-           (promoter (make-instance 'test-promoter)))
-      (&body))))
+  (with-installation ()
+   (with-test-store ()
+     (let* ((channel (make-instance 'channel
+                                    :name "channel-1"))
+            (batch (make-instance 'batch
+                                  :commit "abcd"
+                                  :name "my-batch"))
+            (run (make-recorder-run
+                  :channel channel
+                  :batch batch))
+            (promoter (make-instance 'test-promoter)))
+       (&body)))))
 
 (test simple-batching-test
   (with-fixture state ()

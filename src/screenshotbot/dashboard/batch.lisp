@@ -21,12 +21,14 @@
                 #:batch-items)
   (:import-from #:screenshotbot/taskie
                 #:taskie-row
-                #:taskie-list))
+                #:taskie-list)
+  (:export
+   #:batch-handler))
 (in-package :screenshotbot/dashboard/batch)
 
 (named-readtables:in-readtable markup:syntax)
 
-(defhandler (nil :uri "/batch/:oid") (oid)
+(defhandler (batch-handler :uri "/batch/:oid") (oid)
   (with-login ()
     (let ((batch (find-by-oid oid)))
       (assert batch)
