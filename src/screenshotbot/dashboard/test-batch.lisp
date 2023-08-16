@@ -47,14 +47,48 @@
   (with-fixture state ()
     (render-batch batch)))
 
-(screenshot-test batch-item-with-few-batches
+(screenshot-test batch-item-with-a-single-batches
   (with-fixture state ()
     (let ((channel (make-instance 'channel
                                   :company company
                                   :name "//foo:bar")))
       (make-instance 'batch-item
                      :run run
+                     :status :accepted
                      :channel channel
+                     :batch batch)
+      (render-batch batch))))
+
+(screenshot-test batch-item-with-few-batches
+  (with-fixture state ()
+    (flet ((mc (name)
+             (make-instance 'channel
+                            :company company
+                            :name name)))
+     (make-instance 'batch-item
+                    :run run
+                    :status :accepted
+                    :channel (mc "//one")
+                    :batch batch)
+      (make-instance 'batch-item
+                     :run run
+                     :status :rejected
+                     :channel (mc "//two")
+                     :batch batch)
+      (make-instance 'batch-item
+                     :run run
+                     :status :action-required
+                     :channel (mc "//three")
+                     :batch batch)
+      (make-instance 'batch-item
+                     :run run
+                     :status :action-required
+                     :channel (mc "//four")
+                     :batch batch)
+      (make-instance 'batch-item
+                     :run run
+                     :status :success
+                     :channel (mc "//five")
                      :batch batch)
       (render-batch batch))))
 
