@@ -90,7 +90,8 @@
    #:remove-run-from-channel
    #:runs-for-company
    #:recorder-run-work-branch
-   #:recorder-run-batch)
+   #:recorder-run-batch
+   #:recorder-run-repo-url)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -136,7 +137,8 @@
      (github-repo
       :initform nil
       :initarg :github-repo
-      :accessor github-repo)
+      :accessor github-repo
+      :accessor recorder-run-repo-url)
      (cleanp
       :initarg :cleanp)
      (activep

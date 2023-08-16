@@ -23,6 +23,7 @@
   (:import-from #:screenshotbot/user-api
                 #:can-view)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-repo-url
                 #:phabricator-diff-id
                 #:pull-request-url
                 #:github-repo
@@ -53,7 +54,8 @@
                :reader recorder-run-company)
      (%repo :initarg :repo
             :reader repo
-            :reader github-repo)
+            :reader github-repo
+            :reader recorder-run-repo-url)
      (%commit :initarg :commit
               :index +lookup-index-v4+
               :index-reader batches-for-commit
