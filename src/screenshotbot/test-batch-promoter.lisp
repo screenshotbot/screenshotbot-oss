@@ -25,11 +25,13 @@
 (util/fiveam:def-suite)
 
 (defclass test-promoter (abstract-pr-promoter)
-  ())
+  ((checks :initform nil
+           :accessor checks)))
 
 (defmethod push-remote-check ((self test-promoter)
-                              run
-                              check))
+                              (batch batch)
+                              check)
+  (push check (checks self)))
 
 (def-fixture state ()
   (with-test-store ()
@@ -51,4 +53,5 @@
       batch
       run
       (make-check run
-                  :sha "foo")))))
+                  :sha "foo")))
+    (is (eql 1 (length (checks promoter))))))
