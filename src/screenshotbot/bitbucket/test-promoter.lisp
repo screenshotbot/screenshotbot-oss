@@ -90,15 +90,15 @@
 (test make-task-args-for-every-version-of-state
   (with-fixture state ()
     (dolist (state (list :accepted :rejected :success :failure :action_required :action-required :pending))
-      (let ((run (make-recorder-run
-                  :github-repo "https://bitbucket.org/tdrhq/dummy"
-                  :channel channel
-                  :commit-hash "zoidberg"))
-           (promoter (make-instance 'bitbucket-promoter))
-           (check (make-check run
-                              :status state
-                              :title "foobar")))
-       (let ((result (make-build-status-args run check)))
+      (let* ((run (make-recorder-run
+                   :github-repo "https://bitbucket.org/tdrhq/dummy"
+                   :channel channel
+                   :commit-hash "zoidberg"))
+             (promoter (make-instance 'bitbucket-promoter))
+             (check (make-check run
+                                :status state
+                                :title "foobar")))
+        (let ((result (make-build-status-args run check)))
          (is (equal "zoidberg" (a:assoc-value result :commit)))
          (is (str:s-member (list "SUCCESSFUL" "FAILED" "INPROGRESS")
                            (assoc-value result :state))))))))

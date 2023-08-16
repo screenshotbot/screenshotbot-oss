@@ -204,9 +204,7 @@
      `((:key . ,(make-key (check-key check)))
        ;; TODO: refactor repo-full-name to not use GitHub specific code.
        (:full-name . ,(screenshotbot/github/pull-request-promoter::repo-full-name repo-url))
-       (:commit . ,(or
-                    (nullify (override-commit-hash run))
-                    (recorder-run-commit run)))
+       (:commit . ,(check-sha check))
        (:state . ,(ecase (check-status check)
                     (:success "SUCCESSFUL")
                     (:failure "FAILED")
