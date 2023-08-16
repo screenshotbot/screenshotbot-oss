@@ -50,6 +50,7 @@
                 #:user-updated-check-run
                 #:updated-check-run)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-key
                 #:check-sha
                 #:make-promoter-for-acceptable
                 #:check-user
@@ -151,7 +152,7 @@
           :private-key (private-key github-plugin)
           :full-name full-name
           :check-name (format nil "Screenshotbot Changes: ~a "
-                              (channel-name (recorder-run-channel run)))
+                              (check-key check))
           :output `(("title" . ,(check-title check))
                     ("summary" . ,(check-summary check)))
           :details-url (details-url check)
