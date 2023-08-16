@@ -24,6 +24,8 @@
                 #:pre-compiled-assets
                 #:installation-domain
                 #:installation)
+  (:import-from #:core/installation/installation
+                #:installation-domain)
   (:export
    #:define-css
    #:define-js))
@@ -84,7 +86,10 @@ cause the asset to be immediately compiled."
 (define-css "/assets/css/default.css" :screenshotbot.css-assets)
 
 (defun generate-.sh (name)
-  (let ((util.cdn:*cdn-domain* (installation-cdn (installation))))
+  (let ((util.cdn:*cdn-domain* (or
+                                (installation-cdn (installation))
+                                ;; A hack for staging:
+                                (installation-domain (installation)))))
     (let ((darwin-link (artifact-link (format nil "~a-darwin" name)))
           (linux-link (artifact-link (format nil "~a-linux" name))))
       #?"#!/bin/sh
