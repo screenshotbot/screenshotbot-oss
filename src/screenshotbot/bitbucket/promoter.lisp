@@ -15,6 +15,7 @@
                 #:bitbucket-repo
                 #:bitbucket-plugin)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-key
                 #:promoter-pull-id
                 #:make-promoter-for-acceptable
                 #:abstract-pr-acceptable
@@ -193,14 +194,13 @@
 (defun make-build-status-args (run
                                check)
   (let* ((channel (recorder-run-channel run))
-         (repo (channel-repo channel))
-         (channel-name (channel-name channel)))
+         (repo (channel-repo channel)))
    (flet ((make-details-url (&rest args)
             (format nil
                     "~a~a"
                     (installation-domain (installation))
                     (apply #'hex:make-url args))))
-     `((:key . ,(make-key channel-name))
+     `((:key . ,(make-key (check-key check)))
        ;; TODO: refactor repo-full-name to not use GitHub specific code.
        (:full-name . ,(screenshotbot/github/pull-request-promoter::repo-full-name repo))
        (:commit . ,(or
@@ -214,7 +214,7 @@
                     (:pending "INPROGRESS")
                     (:action_required "FAILED")
                     (:action-required "FAILED")))
-       (:name . ,(format nil "Screenshots for ~a" channel-name))
+       (:name . ,(format nil "Screenshots for ~a" (check-key check)))
        (:url . ,(or (details-url check)
                     (make-details-url 'run-page :id (oid run))))
        (:description . ,(check-title check))))))
