@@ -58,5 +58,6 @@
       run
       (make-check run
                   :status :accepted
+                  :title "bar"
                   :sha "foo")))
     (is (eql 1 (length (checks promoter))))))

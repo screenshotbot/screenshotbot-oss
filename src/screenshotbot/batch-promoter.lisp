@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/batch-promoter
   (:use #:cl)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-title
                 #:check-status
                 #:check-user
                 #:check
@@ -14,6 +15,7 @@
                 #:push-remote-check
                 #:push-remote-check-via-batching)
   (:import-from #:screenshotbot/model/batch
+                #:batch-item-title
                 #:batch-item-status
                 #:batch
                 #:batch-name
@@ -61,6 +63,7 @@
      (setf (batch-item-run item) run)
      (setf (batch-item-report item) (report check))
      (setf (batch-item-status item) (check-status check))
+     (setf (batch-item-title item) (check-title check))
 
      (push-remote-check
       promoter
