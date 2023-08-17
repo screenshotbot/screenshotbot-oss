@@ -71,6 +71,17 @@
       (compute-check batch
                      :user (check-user check))))))
 
+
+(defun compute-status (item)
+  (let ((statuses (fset:image #'batch-item-status item)))
+    (loop for status in (list :rejected
+                              :failure
+                              :action-required
+                              :accepted
+                              :success)
+          if (fset:contains? statuses status)
+            return status)))
+
 (defmethod compute-check ((batch batch)
                           &key user)
   (make-instance 'check
@@ -84,5 +95,5 @@
                                  'batch-handler
                                  :oid (oid batch))
                                 (installation-domain (installation))))
-                 :status :action-required
+                 :status (compute-status (batch-items batch))
                  :summary "Summary not implemented yet"))

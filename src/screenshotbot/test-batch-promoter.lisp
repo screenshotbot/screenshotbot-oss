@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/batch
+                #:batch-item
                 #:batch)
   (:import-from #:util/store/store
                 #:with-test-store)
@@ -21,7 +22,9 @@
   (:import-from #:screenshotbot/user-api
                 #:channel)
   (:import-from #:screenshotbot/testing
-                #:with-installation))
+                #:with-installation)
+  (:import-from #:screenshotbot/batch-promoter
+                #:compute-status))
 (in-package :screenshotbot/test-batch-promoter)
 
 (util/fiveam:def-suite)
@@ -61,3 +64,30 @@
                   :title "bar"
                   :sha "foo")))
     (is (eql 1 (length (checks promoter))))))
+
+(test compute-status-happy-path
+  (with-fixture state ()
+    (is (eql :action-required
+             (compute-status
+              (fset:convert 'fset:set
+                            (list
+                             (make-instance 'batch-item
+                                            :status :success)
+                             (make-instance 'batch-item
+                                            :status :action-required))))))
+    (is (eql :accepted
+             (compute-status
+              (fset:convert 'fset:set
+                            (list
+                             (make-instance 'batch-item
+                                            :status :success)
+                             (make-instance 'batch-item
+                                            :status :accepted))))))
+    (is (eql :rejected
+             (compute-status
+              (fset:convert 'fset:set
+                            (list
+                             (make-instance 'batch-item
+                                            :status :rejected)
+                             (make-instance 'batch-item
+                                            :status :accepted))))))))
