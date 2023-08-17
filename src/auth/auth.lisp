@@ -33,6 +33,7 @@
                     :documentation "The domain associated with this session")
     (value
      :initarg :value
+     :relaxed-object-reference t
      :accessor value)
     (last-update-ts
      :initarg :last-update-ts
