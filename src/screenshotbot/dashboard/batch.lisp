@@ -17,6 +17,7 @@
   (:import-from #:screenshotbot/template
                 #:app-template)
   (:import-from #:screenshotbot/model/batch
+                #:batch-item-status
                 #:batch-item-run
                 #:batch-item-report
                 #:batch-item
@@ -32,6 +33,8 @@
                 #:run-link)
   (:import-from #:screenshotbot/dashboard/reports
                 #:report-link)
+  (:import-from #:core/ui/mdi
+                #:mdi)
   (:export
    #:batch-handler))
 (in-package :screenshotbot/dashboard/batch)
@@ -55,9 +58,29 @@
      (error "no run or report attached to this item"))))
 
 (defun render-batch-item (item)
-  (taskie-row
-   :object item
-   <span><a href= (batch-item-link item) >,(channel-name (batch-item-channel item))</a></span>))
+  (let ((class (ecase (batch-item-status item)
+                 (:accepted "success")
+                 (:rejected "danger")
+                 (:success "gray")
+                 (:failure "danger")
+                 (:action-required "warning")))
+        (icon (ecase (batch-item-status item)
+                (:accepted "done")
+                (:rejected "close")
+                (:success "done")
+                (:failure "dangerous")
+                (:action-required "report"))))
+   (taskie-row
+    :object item
+    <span  >
+      <mdi name=icon class= (format nil "text-~a" class) />
+    ,(let ((link (batch-item-link item)))
+       (cond
+         (link
+          <a href= link class= (format nil "link-~a" class) >,(channel-name (batch-item-channel item))</a>)
+         (t
+          <span>(channel-name (batch-item-channel item))</span>)))
+    </span>)))
 
 (defmethod render-batch (batch)
   (let ((items (fset:convert 'list (batch-items batch))))
