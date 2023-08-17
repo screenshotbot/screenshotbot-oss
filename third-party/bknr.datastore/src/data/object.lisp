@@ -62,9 +62,17 @@
                          instance-count class))
       (mapc #'reinitialize-instance (class-instances class)))))
 
+(defvar *wait-for-tx-p* t
+  "If true, we wait for the transaction to apply before proceeding. This
+is only applicable for bknr.cluster.")
+
 (defmethod reinitialize-instance :after ((class persistent-class) &key)
   (when (and (boundp '*store*) *store*)
-    (update-instances-for-changed-class (class-name class))
+    (let (#+lispworks (*wait-for-tx-p* nil))
+      ;; At least on Lispworks, we might be inside here when the
+      ;; entire process is blocked, which means any transactions being
+      ;; applied on another thread will never run.
+      (update-instances-for-changed-class (class-name class)))
     (unless *suppress-schema-warnings*
       (report-progress "~&; class ~A has been changed. To ensure correct schema ~
                               evolution, please snapshot your datastore.~%"
