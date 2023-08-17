@@ -42,6 +42,8 @@
 (named-readtables:in-readtable markup:syntax)
 
 (defhandler (batch-handler :uri "/batch/:oid") (oid)
+  (setf (hunchentoot:header-out :cache-control)
+        "no-cache, no-store, must-revalidate")
   (with-login ()
     (let ((batch (find-by-oid oid)))
       (assert batch)
