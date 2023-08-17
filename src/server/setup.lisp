@@ -225,7 +225,13 @@
     (hunchentoot:stop acceptor)))
 
 (def-easy-macro with-cron (&fn fn)
-  (cl-cron:start-cron)
+  (bt:make-thread
+   (lambda ()
+     ;; Wait a bit for the server to stabilize before starting any
+     ;; cron jobs. This might be particularly important in Raft, where
+     ;; we might still be replaying transactions.
+     (sleep 300)
+     (cl-cron:start-cron)))
   (unwind-protect
        (funcall fn)
     (safe-log "Shutting down cron~%")
@@ -346,14 +352,13 @@
 
   (setf hunchentoot:*rewrite-for-session-urls* nil)
 
-  (when enable-store
-    (util/store:prepare-store))
-
-  #+screenshotbot-oss
-  (run-migrations)
-
-  (log:info "Store is prepared, moving on...")
   (with-cron ()
+    (when enable-store
+      (util/store:prepare-store))
+    (log:info "Store is prepared, moving on...")
+
+    #+screenshotbot-oss
+    (run-migrations)
     (cond
       (shell
        (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
