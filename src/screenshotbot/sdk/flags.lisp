@@ -50,7 +50,8 @@
    #:*recursive*
    #:*unchanged-from*
    #:*finalize*
-   #:*batch*))
+   #:*batch*
+   #:*work-branch*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -117,6 +118,12 @@
   :type (or null string)
   :help "Git Branch of the main branch being tracked. We try first
   `main` and then `master`, by checking for origin/<branch-name>")
+
+(define-flag *work-branch*
+  :selector "work-branch"
+  :default-value nil
+  :type (or null string)
+  :help "Your current branch, preferably as provided by your CI environment as opposed to reading from git. Some CI environments may not update the local branch name, and instead provides the branch name as an environment variable. We can automatically figure this out on CircleCI, Bitrise, Netlify, Azure DevOps, BuildKits, and Bitbucket Pipelines.")
 
 (define-flag *repo-url*
   :selector "repo-url"

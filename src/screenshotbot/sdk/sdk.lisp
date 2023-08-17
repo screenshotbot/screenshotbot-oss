@@ -293,7 +293,8 @@ error."
                                 :channel channel
                                 :screenshots screenshots
                                 :main-branch branch
-                                :work-branch work-branch
+                                :work-branch (or flags:*work-branch*
+                                                 work-branch)
                                 :main-branch-hash branch-hash
                                 :github-repo github-repo
                                 :merge-base merge-base
@@ -497,6 +498,9 @@ pull-request looks incorrect."
 
     (or-setf *repo-url*
              (e:repo-url env))
+
+    (or-setf flags:*work-branch*
+             (e:work-branch env))
 
     (unless *pull-request*
       (setf *pull-request*
