@@ -194,7 +194,8 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
    pool
    (lambda ()
      (ignore-and-log-errors ()
-       (funcall body)))
+       (with-tags (("hostname" (uiop:hostname)))
+         (funcall body))))
    :name name))
 
 (defmethod make-thread-impl ((self unlimited-pool) fn &key name)

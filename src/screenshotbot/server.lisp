@@ -15,6 +15,7 @@
                 #:installation
                 #:default-logged-in-page)
   (:import-from #:util/threading
+                #:with-tags
                 #:*warning-count*
                 #:log-sentry)
   (:import-from #:hunchentoot-extensions
@@ -214,24 +215,25 @@
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor acceptor) request)
   (declare (optimize (speed 3))
            (type hunchentoot:request request))
-  (let ((*app-template* (make-instance 'screenshotbot-template)))
-   (auth:with-sessions ()
-     (push-analytics-event)
-     (let ((script-name (hunchentoot:script-name request))
-           (util.cdn:*cdn-domain*
-             (installation-cdn (installation))))
-       (cond
-         ((staging-p)
-          (setf (hunchentoot:header-out "Cache-Control") "no-cache"))
-         ((cl-ppcre:scan *asset-regex* script-name)
-          (setf (hunchentoot:header-out "Cache-Control") "max-age=3600000")))
-       (when (and
-              (str:starts-with-p "/assets" script-name)
-              (not *is-localhost*))
-         (setf (hunchentoot:header-out
-                "Access-Control-Allow-Origin")
-               (installation-domain (installation))))
-       (call-next-method)))))
+  (with-tags (("hostname" (uiop:hostname)))
+   (let ((*app-template* (make-instance 'screenshotbot-template)))
+     (auth:with-sessions ()
+       (push-analytics-event)
+       (let ((script-name (hunchentoot:script-name request))
+             (util.cdn:*cdn-domain*
+               (installation-cdn (installation))))
+         (cond
+           ((staging-p)
+            (setf (hunchentoot:header-out "Cache-Control") "no-cache"))
+           ((cl-ppcre:scan *asset-regex* script-name)
+            (setf (hunchentoot:header-out "Cache-Control") "max-age=3600000")))
+         (when (and
+                (str:starts-with-p "/assets" script-name)
+                (not *is-localhost*))
+           (setf (hunchentoot:header-out
+                  "Access-Control-Allow-Origin")
+                 (installation-domain (installation))))
+         (call-next-method))))))
 
 (defhandler (nil :uri "/force-crash") ()
   (error "ouch"))
