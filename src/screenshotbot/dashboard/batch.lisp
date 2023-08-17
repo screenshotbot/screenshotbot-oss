@@ -66,7 +66,7 @@
                  (:rejected "danger")
                  (:success "gray")
                  (:failure "danger")
-                 (:action-required "warning")))
+                 (:action-required "danger")))
         (icon (ecase (batch-item-status item)
                 (:accepted "done")
                 (:rejected "close")
@@ -75,13 +75,14 @@
                 (:action-required "report"))))
    (taskie-row
     :object item
-    <span  >
+    <span>
       <div>
         <mdi name=icon class= (format nil "text-~a" class) />
-        ,(let ((link (batch-item-link item)))
+        ,(let ((link (batch-item-link item))
+               (link-class (format nil "link-~a ~a" class (if (eql :rejected (batch-item-status item)) "fw-bold"))))
            (cond
              (link
-              <a href= link class= (format nil "link-~a" class) >,(channel-name (batch-item-channel item))</a>)
+              <a href= link class= link-class >,(channel-name (batch-item-channel item))</a>)
              (t
               <span>(channel-name (batch-item-channel item))</span>)))
         <span class= "text-muted ms-2" >,(batch-item-title item) </span>
