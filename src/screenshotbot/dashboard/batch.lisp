@@ -17,6 +17,7 @@
   (:import-from #:screenshotbot/template
                 #:app-template)
   (:import-from #:screenshotbot/model/batch
+                #:batch-item-title
                 #:batch-item-status
                 #:batch-item-run
                 #:batch-item-report
@@ -75,13 +76,16 @@
    (taskie-row
     :object item
     <span  >
-      <mdi name=icon class= (format nil "text-~a" class) />
-    ,(let ((link (batch-item-link item)))
-       (cond
-         (link
-          <a href= link class= (format nil "link-~a" class) >,(channel-name (batch-item-channel item))</a>)
-         (t
-          <span>(channel-name (batch-item-channel item))</span>)))
+      <div>
+        <mdi name=icon class= (format nil "text-~a" class) />
+        ,(let ((link (batch-item-link item)))
+           (cond
+             (link
+              <a href= link class= (format nil "link-~a" class) >,(channel-name (batch-item-channel item))</a>)
+             (t
+              <span>(channel-name (batch-item-channel item))</span>)))
+        <span class= "text-muted ms-2" >,(batch-item-title item) </span>
+      </div>
     </span>)))
 
 (defmethod render-batch (batch)
