@@ -354,6 +354,8 @@
 
 (test with-sdk-flags-unknown-flag
   (let (result)
-    (with-sdk-flags (:flags `((:unknown-flag . "foobar")))
+    (with-sdk-flags (:flags `((:unknown-flag . "foobar")
+                              (:metadata . "bleh")))
+      (is (equal "bleh" screenshotbot/sdk/flags:*metadata*))
       (setf result :pass))
     (is (eql :pass result))))
