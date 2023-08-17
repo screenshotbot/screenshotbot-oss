@@ -166,7 +166,7 @@
        ret))))
 
 
-(def-cron flush-events (:step-min 2)
+(def-cron flush-events (:step-min 2 :only-on-leader nil)
   (ignore-and-log-errors ()
    (flush-events (event-engine (safe-installation)))))
 
