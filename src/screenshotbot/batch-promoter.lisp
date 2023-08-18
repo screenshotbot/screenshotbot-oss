@@ -70,6 +70,9 @@
      (setf (batch-item-status item) (check-status check))
      (setf (batch-item-title item) (check-title check))
 
+     (unless (check-status check)
+       (warn "Got a NIL status for ~a" run))
+
      (with-hash-lock-held (batch *push-lock*)
        (push-remote-check
         promoter
@@ -82,6 +85,7 @@
     (loop for status in (list :rejected
                               :failure
                               :action-required
+                              :pending
                               :accepted
                               :success)
           if (fset:contains? statuses status)
@@ -96,6 +100,7 @@
        (:rejected "Some screenshots were rejected")
        (:failure "Failures")
        (:action-required "Some screenshots need review")
+       (:pending "Waiting for a previous run")
        (:accepted "All screenshots accepted")
        (:success "No screenshots changed")))))
 
