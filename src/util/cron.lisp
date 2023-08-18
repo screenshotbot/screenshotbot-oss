@@ -6,9 +6,6 @@
 
 (defpackage :util/cron
   (:use #:cl)
-  #+bknr.cluster
-  (:import-from #:bknr.cluster/server
-                #:leaderp)
   (:import-from #:alexandria
                 #:remove-from-plist)
   (:import-from #:util/threading
