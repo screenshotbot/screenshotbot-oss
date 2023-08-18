@@ -90,8 +90,8 @@
        (:rejected "Some screenshots were rejected")
        (:failure "Failures")
        (:action-required "Some screenshots need review")
-       (:accepted "All screnshots acceted")
-       (:success "")))))
+       (:accepted "All screenshots accepted")
+       (:success "No screenshots changed")))))
 
 (defmethod compute-check ((batch batch)
                           &key user)
