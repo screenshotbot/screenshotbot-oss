@@ -214,6 +214,9 @@ it easier for us to recover, or even validate the model."
                                   :if-exists :supersede)
       (json-mop:encode run out))))
 
+(defun emptify (x)
+  (if (str:emptyp x) nil x))
+
 (defmethod %put-run (company (run dto:run))
   (let* ((channel (find-or-create-channel company (dto:run-channel run)))
          (screenshots (screenshot-records-api-to-internal
@@ -224,7 +227,9 @@ it easier for us to recover, or even validate the model."
                   (find-or-create-batch
                    :company company
                    :repo (dto:run-repo run)
-                   :commit (dto:run-commit run)
+                   :commit (or
+                             (emptify (dto:override-commit-hash run))
+                             (dto:run-commit run))
                    :name batch
                    :pull-request-url (dto:pull-request-url run)
                    :phabricator-diff-id (dto:phabricator-diff-id run))))

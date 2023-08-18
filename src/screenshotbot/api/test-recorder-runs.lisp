@@ -64,6 +64,7 @@
                 #:is-null
                 #:is-not-null)
   (:import-from #:screenshotbot/model/batch
+                #:batch-commit
                 #:batch)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 
@@ -182,6 +183,7 @@
     (%put-run company
               (make-instance 'dto:run
                              :channel "foo"
+                             :commit-hash "deadbeef"
                              :batch "dummy-batch"
                              :screenshots (list
                                            (make-instance 'dto:screenshot
@@ -191,7 +193,48 @@
       (is-true run)
       (assert-that (recorder-run-batch run)
                    (is-not-null)
-                   (has-typep 'batch)))))
+                   (has-typep 'batch))
+      (is (equal "deadbeef" (batch-commit (recorder-run-batch run)))))))
+
+(test batch-uses-does-not-use-empty-override-commit-hash
+  (with-fixture state ()
+    (assert company)
+    (%put-run company
+              (make-instance 'dto:run
+                             :channel "foo"
+                             :commit-hash "deadbeef"
+                             :override-commit-hash ""
+                             :batch "dummy-batch"
+                             :screenshots (list
+                                           (make-instance 'dto:screenshot
+                                                          :name "foo"
+                                                          :image-id (oid img1)))))
+    (let ((run (car (last (class-instances 'recorder-run)))))
+      (is-true run)
+      (assert-that (recorder-run-batch run)
+                   (is-not-null)
+                   (has-typep 'batch))
+      (is (equal "deadbeef" (batch-commit (recorder-run-batch run)))))))
+
+(test batch-uses-does-not-uses-override-commit-hash
+  (with-fixture state ()
+    (assert company)
+    (%put-run company
+              (make-instance 'dto:run
+                             :channel "foo"
+                             :commit-hash "deadbeef"
+                             :override-commit-hash "baadf00d"
+                             :batch "dummy-batch"
+                             :screenshots (list
+                                           (make-instance 'dto:screenshot
+                                                          :name "foo"
+                                                          :image-id (oid img1)))))
+    (let ((run (car (last (class-instances 'recorder-run)))))
+      (is-true run)
+      (assert-that (recorder-run-batch run)
+                   (is-not-null)
+                   (has-typep 'batch))
+      (is (equal "baadf00d" (batch-commit (recorder-run-batch run)))))))
 
 (test batch-is-nil
   (with-fixture state ()
