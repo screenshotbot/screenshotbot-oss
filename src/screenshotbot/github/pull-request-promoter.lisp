@@ -63,6 +63,10 @@
                 #:github-plugin)
   (:import-from #:screenshotbot/user-api
                 #:pull-request-url)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-work-branch)
+  (:import-from #:util/logger
+                #:format-log)
   (:export
    #:pull-request-promoter
    #:pr-acceptable
@@ -115,7 +119,13 @@
 
 
 (defmethod maybe-promote ((promoter pull-request-promoter) run)
-  (call-next-method))
+  (let ((branch (recorder-run-work-branch run)))
+    (cond
+      ((and branch
+            (str:starts-with-p "gh-readonly-queue/" branch))
+       (format-log run :into "This is a merge queue run, so we are not going to push any remoe check."))
+      (t
+       (call-next-method)))))
 
 (defmethod push-remote-check ((promoter pull-request-promoter)
                               run check)

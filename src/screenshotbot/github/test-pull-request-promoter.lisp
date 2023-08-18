@@ -217,6 +217,28 @@
         (is (equal "car" (pr-merge-base promoter run)))
         (is (eql :success (check-status check)))))))
 
+(test run-on-merge-queue-is-ignored
+  (with-fixture state ()
+    (let ((*base-run* (make-recorder-run
+                        :company company
+                        :channel (make-instance 'dummy-channel)
+                        :merge-base "dfdfdf"
+                        :commit-hash "car"))
+          (check))
+      (cl-mock:if-called 'push-remote-check
+                         (lambda (promoter run %check)
+                           (declare (ignore promoter run))
+                           (setf check %check)))
+      (let ((run (make-recorder-run
+                  :company company
+                  :channel (make-instance 'dummy-channel)
+                  :work-branch "gh-readonly-queue/main/pr-45902-592fa2c43487bf"
+                  :pull-request "https://github.com/tdrhq/fast-example/pull/2"
+                  :merge-base "car"
+                  :commit-hash "foo")))
+        (maybe-promote promoter run)
+        (is-false check)))))
+
 (test without-a-base-run-we-get-an-error
   (with-fixture state ()
     (let ((*base-run* nil))
