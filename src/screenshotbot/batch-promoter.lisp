@@ -107,4 +107,4 @@
                                  :oid (oid batch))
                                 (installation-domain (installation))))
                  :status (compute-status (batch-items batch))
-                 :summary "Summary not implemented yet"))
+                 :summary "Please review the changes to make sure they look reasonable"))
