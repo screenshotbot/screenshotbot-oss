@@ -24,6 +24,7 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/batch-promoter
+                #:compute-title
                 #:compute-status))
 (in-package :screenshotbot/test-batch-promoter)
 
@@ -91,3 +92,12 @@
                                             :status :rejected)
                              (make-instance 'batch-item
                                             :status :accepted))))))))
+
+(test compute-title
+  (with-fixture state ()
+    (is (equal "some thing some thing"
+               (compute-title
+                (fset:convert 'fset:set
+                              (list
+                               (make-instance 'batch-item
+                                              :title "some thing some thing"))))))))

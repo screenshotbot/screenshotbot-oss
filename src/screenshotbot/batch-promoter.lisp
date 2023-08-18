@@ -71,7 +71,6 @@
       (compute-check batch
                      :user (check-user check))))))
 
-
 (defun compute-status (item)
   (let ((statuses (fset:image #'batch-item-status item)))
     (loop for status in (list :rejected
@@ -82,13 +81,25 @@
           if (fset:contains? statuses status)
             return status)))
 
+(defun compute-title (items)
+  (cond
+    ((= 1 (fset:size items))
+     (batch-item-title (fset:least items)))
+    (t
+     (ecase (compute-status items)
+       (:rejected "Some screenshots were rejected")
+       (:failure "Failures")
+       (:action-required "Some screenshots need review")
+       (:accepted "All screnshots acceted")
+       (:success "")))))
+
 (defmethod compute-check ((batch batch)
                           &key user)
   (make-instance 'check
                  :sha (batch-commit batch)
                  :key (batch-name batch)
                  :user user ;; The user who initiated this check request, for audit-logs
-                 :title (format nil "[experimentl] ~a" (batch-name batch))
+                 :title (compute-title (batch-items batch))
                  :details-url (quri:render-uri
                                (quri:merge-uris
                                 (hex:make-url
