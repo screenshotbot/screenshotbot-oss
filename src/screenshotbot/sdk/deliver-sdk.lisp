@@ -59,6 +59,8 @@
   (when (find-package :cl+ssl)
     (error "CL+SSL is present in this image, this can lead to problems when delivering this
 on Mac. (e.g., the image will try to load libcrypto etc."))
+  (when (find-package :bknr.cluster/server)
+    (error "BKNR.CLUSTER is present in this image"))
   (let ((output-file (output-file)))
     #-darwin ;; universal binary, output file should be temporary
     (safe-delete-file output-file)
