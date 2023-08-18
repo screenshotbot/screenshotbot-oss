@@ -132,7 +132,7 @@
   (let ((args (make-github-args run check))
         (audit-log-args (list
                          :company (recorder-run-company run)
-                         :commit (recorder-run-commit run))))
+                         :commit (check-sha check))))
     (with-audit-log (updated-check-run
                      (trivia:match (check-user check)
                        (nil
