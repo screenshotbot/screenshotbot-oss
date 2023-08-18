@@ -47,11 +47,15 @@
                 #:backward-compatibility-mixin)
   #+bknr.cluster
   (:import-from #:bknr.cluster/server
+                #:log-transaction-error
                 #:data-path
                 #:leaderp
                 #:with-leadership-priority)
   (:import-from #:util/cron
                 #:cron-enabled-on-store-p)
+  (:import-from #:util/threading
+                #:with-extras
+                #:log-sentry)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -145,20 +149,32 @@ to the directory that was just snapshotted.")
                          checksumed-mp-store)
   ((transaction-log-lock :initform nil)))
 
+(defclass base-raft-store ()
+  ())
+
 #+bknr.cluster
 (defclass raft-store (backward-compatibility-mixin
                       with-leadership-priority
                       cluster-store-mixin
                       ;; Hopefully braft takes care of the locking here
-                      bknr.datastore:store)
+                      bknr.datastore:store
+                      base-raft-store)
   ())
 
 (defclass raft-store-final (with-leadership-priority
                             cluster-store-mixin
                             ;; Hopefully braft takes care of the locking here
-                            bknr.datastore:store)
+                             bknr.datastore:store
+                             base-raft-store)
   ()
   (:documentation "The final raft store we'll be using"))
+
+
+#+bknr.cluster
+(defmethod log-transaction-error ((sm base-raft-store) trans e)
+  (log:info "logging issue to sentry")
+  (with-extras (("transaction" trans))
+    (log-sentry e)))
 
 (defclass store-for-test (common-mp-store)
   ())

@@ -10,6 +10,7 @@
                (:feature (:and :lispworks :linux) :bknr.cluster)
                :easy-macros
                :auto-restart
+               :util/threading
                :local-time
                :atomics
                :alexandria
