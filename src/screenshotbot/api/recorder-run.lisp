@@ -200,20 +200,6 @@
                                        (funcall fn (getf args arg))))))))
      (%put-run company dto-run))))
 
-(defmethod backup-location ((recorder-run recorder-run))
-  (location-for-oid #P"cl-store/runs/"
-                    (oid recorder-run :stringp nil)))
-
-(defmethod write-dto-backup ((recorder-run recorder-run)
-                             (run dto:run))
-  "Writes a backup of the DTO to disk. We do clever things with the data in persistent storage,
-especially with respect to the list of screenshots, so this will make
-it easier for us to recover, or even validate the model."
-  (let ((filename (backup-location recorder-run)))
-    (with-open-file (out filename :direction :output
-                                  :if-exists :supersede)
-      (json-mop:encode run out))))
-
 (defun emptify (x)
   (if (str:emptyp x) nil x))
 
@@ -254,8 +240,6 @@ it easier for us to recover, or even validate the model."
                         :gitlab-merge-request-iid (dto:gitlab-merge-request-iid run)
                         :github-repo (dto:run-repo run)
                         :compare-threshold (dto:compare-threshold run))))
-
-    (write-dto-backup recorder-run run)
 
     (with-transaction ()
       (setf (channel-branch channel) (dto:main-branch run)))
