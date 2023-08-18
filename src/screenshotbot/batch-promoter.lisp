@@ -43,10 +43,15 @@
   (:import-from #:core/installation/installation
                 #:installation-domain)
   (:import-from #:screenshotbot/installation
-                #:installation))
+                #:installation)
+  (:import-from #:util/hash-lock
+                #:with-hash-lock-held
+                #:hash-lock))
 (in-package :screenshotbot/batch-promoter)
 
 (defvar *lock* (bt:make-lock))
+
+(defvar *push-lock* (make-instance 'hash-lock))
 
 (auto-restart:with-auto-restart ()
  (defmethod push-remote-check-via-batching (promoter
@@ -65,11 +70,12 @@
      (setf (batch-item-status item) (check-status check))
      (setf (batch-item-title item) (check-title check))
 
-     (push-remote-check
-      promoter
-      batch
-      (compute-check batch
-                     :user (check-user check))))))
+     (with-hash-lock-held (batch *push-lock*)
+       (push-remote-check
+        promoter
+        batch
+        (compute-check batch
+                       :user (check-user check)))))))
 
 (defun compute-status (item)
   (let ((statuses (fset:image #'batch-item-status item)))
