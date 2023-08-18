@@ -240,7 +240,9 @@
             <li>Number of screenshots: ,(length (recorder-run-screenshots run))</li>
             <li>Total run size: ,(run-size run)kB</li>
             <li>Comparison threshold: ,(compare-threshold run)</li>
-
+            <li>Batch: ,(when-let ((batch (recorder-run-batch run)))
+                          <a href= (format nil "/batch/~a" (oid batch)) >link</a>)
+            </li>
 
             <li>Screenshots that are above 16k dimensions:
 
