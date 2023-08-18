@@ -64,13 +64,15 @@
   (let ((class (ecase (batch-item-status item)
                  (:accepted "success")
                  (:rejected "danger")
-                 (:success "gray")
+                 (:success "muted")
                  (:failure "danger")
+                 (:pending "muted")
                  (:action-required "danger")))
         (icon (ecase (batch-item-status item)
                 (:accepted "done")
                 (:rejected "close")
                 (:success "done")
+                (:pending "pending")
                 (:failure "dangerous")
                 (:action-required "report"))))
    (taskie-row
@@ -95,6 +97,7 @@
    :failure
    :action-required
    :accepted
+   :pending
    :success))
 
 (defun status-order (item)
