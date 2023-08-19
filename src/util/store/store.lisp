@@ -149,7 +149,8 @@ to the directory that was just snapshotted.")
                          checksumed-mp-store)
   ((transaction-log-lock :initform nil)))
 
-(defclass base-raft-store ()
+#+bknr.cluster
+(defclass base-raft-store (util/store/elb-store:elb-store-mixin)
   ())
 
 #+bknr.cluster
