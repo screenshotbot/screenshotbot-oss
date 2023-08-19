@@ -42,10 +42,10 @@
    (lambda ()
      (%run-target-cmd self cmd))))
 
-(defmethod on-leader-start ((self elb-store-mixin))
+(defmethod on-leader-start :after ((self elb-store-mixin))
   (ignore-and-log-errors ()
    (run-target-cmd self "register-targets")))
 
-(defmethod on-leader-stop ((self elb-store-mixin))
+(defmethod on-leader-stop :after ((self elb-store-mixin))
   (ignore-and-log-errors ()
    (run-target-cmd self "deregister-targets")))
