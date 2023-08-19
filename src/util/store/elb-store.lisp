@@ -32,7 +32,7 @@
   (defmethod  %run-target-cmd (self cmd)
     (when (elb-arn self)
       (uiop:run-program
-       (list "aws" cmd "--target-group-arn"
+       (list "aws" "elbv2" cmd "--target-group-arn"
              (elb-arn self)
              "--targets"
              (format nil "Id=~a" (instance-id)))))))
