@@ -10,6 +10,7 @@
                 #:on-leader-start
                 #:on-leader-stop)
   (:import-from #:util/threading
+                #:make-thread
                 #:ignore-and-log-errors)
   (:export
    #:elb-store-mixin))
@@ -28,13 +29,18 @@
 
 
 (auto-restart:with-auto-restart (:retries 3 :sleep 1)
-  (defmethod  run-target-cmd (self cmd)
+  (defmethod  %run-target-cmd (self cmd)
     (when (elb-arn self)
       (uiop:run-program
        (list "aws" cmd "--target-group-arn"
              (elb-arn self)
              "--targets"
              (format nil "Id=~a" (instance-id)))))))
+
+(defun run-target-cmd (self cmd)
+  (make-thread
+   (lambda ()
+     (%run-target-cmd self cmd))))
 
 (defmethod on-leader-start ((self elb-store-mixin))
   (ignore-and-log-errors ()
