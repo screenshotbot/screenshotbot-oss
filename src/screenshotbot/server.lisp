@@ -217,6 +217,10 @@
   (when (and
          (boundp 'bknr.datastore:*store*)
          (not (leaderp bknr.datastore:*store*)))
+    ;; If we're here, it's probably because the leader got transfered
+    ;; recently. The new leader might not be ready yet, so this hack
+    ;; slows down nginx before it retries the next backend.
+    (sleep 0.1)
     (setf (hunchentoot:return-code*) 502)
     (hunchentoot:abort-request-handler))
   (with-tags (("hostname" (uiop:hostname)))
