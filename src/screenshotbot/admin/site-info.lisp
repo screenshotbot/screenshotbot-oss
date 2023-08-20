@@ -52,6 +52,7 @@
       <li>Booted at: ,(timeago :timestamp *boot-time*)</li>
       <li>Slynk port: ,(safe-symbol-value "*ACTUAL-SLYNK-PORT*"   "SERVER/SLYNK-PREPARER" )</li>
       <li>Hostname: ,(uiop:hostname)</li>
+      <li>Nginx downstream: ,(hunchentoot:remote-addr*)</li>
     </ul>
   </admin-app-template>)
 
