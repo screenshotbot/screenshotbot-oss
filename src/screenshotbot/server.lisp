@@ -213,8 +213,12 @@
   (cl-ppcre:create-scanner "[.](js|css|woff|otf|woff2|png|jpg|jpeg|webp|svg)$"))
 
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor acceptor) request)
-  (declare (optimize (speed 3))
-           (type hunchentoot:request request))
+  #+bknr.cluster
+  (when (and
+         (boundp 'bknr.datastore:*store*)
+         (not (leaderp bknr.datastore:*store*)))
+    (setf (hunchentoot:return-code) 503)
+    (hunchentoot:abort-request-handler))
   (with-tags (("hostname" (uiop:hostname)))
    (let ((*app-template* (make-instance 'screenshotbot-template)))
      (auth:with-sessions ()
