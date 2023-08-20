@@ -217,7 +217,7 @@
   (when (and
          (boundp 'bknr.datastore:*store*)
          (not (leaderp bknr.datastore:*store*)))
-    (setf (hunchentoot:return-code*) 503)
+    (setf (hunchentoot:return-code*) 502)
     (hunchentoot:abort-request-handler))
   (with-tags (("hostname" (uiop:hostname)))
    (let ((*app-template* (make-instance 'screenshotbot-template)))
