@@ -86,18 +86,19 @@
      (error "Using non https endpoint ~a for authentication" url)))
   url)
 
-(defmethod discover ((oidc oidc))
-  "Returns an alist of all the fields in the discovery document"
-  (or
-   (cached-discovery oidc)
-   (setf (cached-discovery oidc)
-         (let ((url (format nil "~a/.well-known/openid-configuration"
-                            (check-https
-                             (issuer oidc)))))
-           (let ((ret
-                   (json:decode-json-from-string (dex:get url))))
-             (log:info "Got ~S~%" ret)
-             ret)))))
+(auto-restart:with-auto-restart (:retries 3 :sleep 1)
+  (defmethod discover ((oidc oidc))
+    "Returns an alist of all the fields in the discovery document"
+    (or
+     (cached-discovery oidc)
+     (setf (cached-discovery oidc)
+           (let ((url (format nil "~a/.well-known/openid-configuration"
+                              (check-https
+                               (issuer oidc)))))
+             (let ((ret
+                     (json:decode-json-from-string (dex:get url))))
+               (log:info "Got ~S~%" ret)
+               ret))))))
 
 
 (defmethod authorization-endpoint ((oidc oidc))
