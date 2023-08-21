@@ -31,7 +31,8 @@
    #:delete-api-key
    #:make-transient-key
    #:api-key-key
-   #:api-key-secret-key))
+   #:api-key-secret-key
+   #:api-key-description))
 (in-package :screenshotbot/model/api-key)
 
 (with-class-validation
@@ -59,6 +60,11 @@
       :initarg :api-secret-key
       :accessor api-key-secret-key
       :initform nil)
+     (%description
+      :type string
+      :initarg :description
+      :initform nil
+      :accessor api-key-description)
      (expired-p
       :type boolean
       :initform nil))
