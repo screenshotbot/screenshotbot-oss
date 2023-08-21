@@ -24,32 +24,54 @@
   (:import-from #:screenshotbot/taskie
                 #:taskie-row
                 #:taskie-page-title
-                #:taskie-list))
+                #:taskie-list)
+  (:import-from #:screenshotbot/model/api-key
+                #:api-key-description)
+  (:import-from #:easy-macros
+                #:def-easy-macro))
 (in-package :screenshotbot/dashboard/api-keys)
 
 (markup:enable-reader)
 
+(def-easy-macro with-description (&binding final-description &key description (action "Create Key") &fn fn)
+  <simple-card-page form-action= (nibble (description) (fn description)) >
+    <div class= "card-header">
+      <h3>Describe this key</h3>
+    </div>
+
+      <label class= "form-label" for= "#description">
+        This human-readable description let's you distinguish keys on the API keys dashboard.
+      </label>
+      <textarea name= "description" class= "form-control" placeholder= "Enter text here" id= "description" >,(progn description)</textarea>
+
+    <div class= "card-footer">
+      <input type= "submit" class= "btn btn-primary" value= action />
+      <a href= "/api-keys" class= "btn btn-secondary" >Cancel</a>
+    </div>
+  </simple-card-page>)
 
 (defun %create-api-key (user company)
-  (let ((api-key (make-instance 'api-key
+  (with-description (description)
+   (let ((api-key (make-instance 'api-key
                                  :user user
+                                 :description description
                                  :company company)))
-    <simple-card-page max-width= "80em" >
-      <div class= "card-header">
-        <h3>New API Key</h3>
-      </div>
-      <p>Please copy paste the API secret, you won't have access to it again. But you will be able to create new API keys as needed.</p>
+     <simple-card-page max-width= "80em" >
+     <div class= "card-header">
+     <h3>New API Key</h3>
+     </div>
+     <p>Please copy paste the API secret, you won't have access to it again. But you will be able to create new API keys as needed.</p>
 
-      <div>
-        <b>API Key</b>: ,(api-key-key api-key)<br />
-        <b>API Secret</b>: ,(api-key-secret-key api-key)
-      </div>
+     <div>
+     <b>API Key</b>: ,(api-key-key api-key)<br />
+     <b>API Secret</b>: ,(api-key-secret-key api-key)
+     </div>
 
-      <div class= "card-footer">
-        <a href= "/api-keys">Go back</a>
-      </div>
+     <div class= "card-footer">
+     <a href= "/api-keys">Go back</a>
+     </div>
 
-    </simple-card-page>))
+     </simple-card-page>)))
 
 (defun %confirm-delete (api-key)
   (confirmation-page
@@ -59,6 +81,12 @@
    :no (nibble ()
          (hex:safe-redirect "/api-keys"))
    <p>Are you sure you want to delete API Key ,(api-key-key api-key)</p>))
+
+(defun edit-api-key (api-key)
+  (with-description (description :description (api-key-description api-key)
+                     :action "Update description")
+    (setf (api-key-description api-key) description)
+    (hex:safe-redirect "/api-keys")))
 
 (defun %api-key-page (&key (user (current-user))
                         (company (current-company))
@@ -77,7 +105,7 @@
 
       ,(taskie-list
         :items api-keys
-        :headers (list "API Key" "Secret" "Actions")
+        :headers (list "API Key" "Secret" "Description" "Actions")
         :empty-message "You haven't created an API Key yet"
         :checkboxes nil
         :row-generator (lambda (api-key)
@@ -91,8 +119,14 @@
                            <taskie-row>
                              <span class= "" >,(api-key-key api-key)</span>
                              <span>,(progn coded-secret)</span>
+                               <span class= "d-inline-block text-truncate" style= "max-width: 20em" title= (api-key-description api-key) >
+                                 ,(or (api-key-description api-key) "")
+                                </span>
 
                              <span>
+                               <a href= (nibble () (edit-api-key api-key)) >
+                                 <mdi name= "edit" />
+                               </a>
                                <form style="display:inline-block" class= "ml-4" method= "post" >
                                  <button type= "submit" formaction=delete-api-key
                                         formmethod= "post"

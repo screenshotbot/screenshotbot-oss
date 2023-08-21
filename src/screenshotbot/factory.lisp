@@ -20,6 +20,8 @@
                 #:make-oid)
   (:import-from #:screenshotbot/model/recorder-run
                 #:compare-threshold)
+  (:import-from #:screenshotbot/model/api-key
+                #:api-key-description)
   (:export #:test-user
            #:test-company
            #:test-screenshot
@@ -90,6 +92,9 @@
 (defclass test-api-key ()
   ((key :initarg :key
         :accessor api-key-key)
+   (description :initarg :description
+                :initform nil
+                :accessor api-key-description)
    (secret :initarg :secret
            :accessor api-key-secret-key)))
 

@@ -10,6 +10,7 @@
           #:fiveam
           #:screenshotbot/api-key-api)
   (:import-from #:screenshotbot/dashboard/api-keys
+                #:with-description
                 #:%api-key-page)
   (:import-from #:screenshotbot/factory
                 #:test-user
@@ -22,7 +23,10 @@
                 #:*template-override*)
   (:import-from #:util/testing
                 #:with-fake-request
-                #:screenshot-static-page))
+                #:screenshot-static-page)
+  (:import-from #:screenshotbot/testing
+                #:with-installation
+                #:screenshot-test))
 
 (util/fiveam:def-suite)
 
@@ -53,3 +57,10 @@
         (markup:write-html
          (%api-key-page :user (make-instance 'test-user)
                         :company *company*)))))))
+
+(screenshot-test api-key-page-description-page
+  (with-installation ()
+   (with-fake-request ()
+     (auth:with-sessions ()
+       (with-description (description)
+         (values))))))
