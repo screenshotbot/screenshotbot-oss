@@ -28,8 +28,7 @@
 (def-fixture state ()
   (with-test-store ()
     (let* ((company (make-instance 'company))
-           (plugin (make-instance 'gitlab-plugin
-                                  :access-token "dummy")))
+           (plugin (make-instance 'gitlab-plugin)))
      (&body))))
 
 (test gitlab-plugin-parse-repo

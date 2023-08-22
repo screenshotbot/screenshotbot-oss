@@ -14,10 +14,8 @@
   (:import-from #:screenshotbot/model/channel
                 #:github-repo)
   (:export
-   #:gitlab-plugin
-   #:gitlab-access-token))
+   #:gitlab-plugin))
 (in-package :screenshotbot/gitlab/plugin)
 
 (defclass gitlab-plugin (plugin)
-  ((access-token :initarg :access-token
-                 :accessor gitlab-access-token)))
+  ())
