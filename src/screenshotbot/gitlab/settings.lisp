@@ -125,7 +125,7 @@
               <div class= "mb-3">
                 <label for= "gitlab-url" class= "form-label">GitLab URL</label>
                 <input id= "gitlab-url" type= "url" name= "gitlab-url" class= "form-control"
-                       value= (?. gitlab-url settings ) />
+                       value= (or (?. gitlab-url settings ) "https://gitlab.com") />
               </div>
 
               <div class= "mb-3">
