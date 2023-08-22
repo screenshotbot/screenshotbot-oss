@@ -19,17 +19,24 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/gitlab/settings
-                #:gitlab-settings))
+                #:settings-page
+                #:gitlab-settings)
+  (:import-from #:screenshotbot/testing
+                #:with-installation
+                #:screenshot-test)
+  (:import-from #:util/testing
+                #:with-fake-request))
 (in-package :screenshotbot/gitlab/test-settings)
 
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-    (let* ((company (make-instance 'company))
-           (plugin (make-instance 'gitlab-plugin)))
-     (&body))))
+  (with-installation ()
+   (with-test-store ()
+     (let* ((company (make-instance 'company))
+            (plugin (make-instance 'gitlab-plugin)))
+       (&body)))))
 
 (test gitlab-plugin-parse-repo
   (with-fixture state ()
@@ -41,3 +48,9 @@
                          company
                          "https://gitlab.com/tdrhq/fast-example.git")
       (has-typep 'gitlab-repo)))))
+
+(screenshot-test gitlab-settings-page
+  (with-fixture state ()
+    (with-fake-request ()
+      (auth:with-sessions ()
+        (settings-page)))))
