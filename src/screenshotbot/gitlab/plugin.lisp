@@ -21,11 +21,3 @@
 (defclass gitlab-plugin (plugin)
   ((access-token :initarg :access-token
                  :accessor gitlab-access-token)))
-
-(defmethod plugin-parse-repo ((plugin gitlab-plugin) company repo-str)
-  (declare (ignore company plugin))
-  (when (str:containsp "gitlab" repo-str)
-    (make-instance 'gitlab-repo
-                    :link repo-str
-                    :company company
-                    :access-token (gitlab-access-token plugin))))
