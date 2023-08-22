@@ -47,6 +47,8 @@
                 #:audit-log-error)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:parenscript
+                #:ps)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/gitlab/settings)
 
@@ -151,6 +153,7 @@
                                 (t
                                  token))))
                   (save-settings gitlab-url token))))
+         (disable-test-settings (ps (setf (ps:@ (get-element-by-id "test-settings") disabled) t)))
          (test (nibble ()
                  (test-gitlab-settings))))
     <settings-template>
@@ -172,19 +175,21 @@
               <div class= "mb-3">
                 <label for= "gitlab-url" class= "form-label">GitLab URL</label>
                 <input id= "gitlab-url" type= "url" name= "gitlab-url" class= "form-control"
-                       value= (or (?. gitlab-url settings ) "https://gitlab.com") />
+                       value= (or (?. gitlab-url settings ) "https://gitlab.com")
+                       oninput=disable-test-settings />
               </div>
 
               <div class= "mb-3">
                 <label for= "token" class= "form-label">Personal Access Token</label>
                 <input id= "token" type= "password" name= "token" class= "form-control"
-                       value= (when settings +unchanged+) />
+                       value= (when settings +unchanged+)
+                       oninput= disable-test-settings />
               </div>
           </div>
 
           <div class= "card-footer">
             <input type= "submit" value= "Save" class= "btn btn-primary"/>
-            <a href= test class= "btn btn-secondary">Test settings</a>
+            <input type= "submit" formaction=test class= "btn btn-secondary" id= "test-settings" value= "Test Settings" />
           </div>
         </div>
       </form>
