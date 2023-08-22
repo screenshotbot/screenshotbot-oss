@@ -32,6 +32,7 @@
                 #:current-user
                 #:current-company)
   (:import-from #:screenshotbot/gitlab/settings
+                #:gitlab-request
                 #:gitlab-settings
                 #:company
                 #:gitlab-token
@@ -96,20 +97,6 @@
   (let ((mr-id (format nil "~a" (gitlab-merge-request-iid run))))
     (unless (str:emptyp mr-id)
       (parse-integer mr-id))))
-
-(defun gitlab-request (repo-or-company url &key (method :get) content)
-  (let* ((company (if (typep repo-or-company 'company)
-                      repo-or-company
-                      (company repo-or-company)))
-        (settings (gitlab-settings-for-company company)))
-    (util/request:http-request
-     (format nil "~a/api/v4~a" (gitlab-url settings) url)
-     :method method
-     :additional-headers `(("PRIVATE-TOKEN" . ,(gitlab-token settings)))
-     :ensure-success t
-     :want-string t
-     :content-type "application/json"
-     :content (json:encode-json-to-string content))))
 
 (defclass merge-request ()
   ((base-sha :initarg :base-sha

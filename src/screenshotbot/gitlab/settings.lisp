@@ -1,3 +1,9 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 (defpackage :screenshotbot/gitlab/settings
   (:use #:cl)
   (:import-from #:screenshotbot/settings-api
@@ -31,11 +37,16 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/gitlab/audit-logs
+                #:check-personal-access-token
                 #:gitlab-audit-log
                 #:config-updated-audit-log)
   (:import-from #:screenshotbot/dashboard/audit-log
                 #:render-audit-logs)
-
+  (:import-from #:screenshotbot/audit-log
+                #:with-audit-log
+                #:audit-log-error)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/gitlab/settings)
 
@@ -104,7 +115,33 @@
         (t
          (finish-save-settings gitlab-url token))))))
 
-(defun settings-page ()
+(defun test-gitlab-settings ()
+  (flet ((settings-page (&rest args)
+           (hex:safe-redirect
+            (nibble ()
+              (apply #'settings-page args)))))
+   (with-audit-log (audit-log (make-instance 'check-personal-access-token
+                                             :company (current-company)))
+     (multiple-value-bind (body code)
+         (gitlab-request (current-company)
+                         "/personal_access_tokens/self"
+                         :ensure-success nil)
+       (cond
+         ((> code 400)
+          (let ((error (format nil "The token appears to be invalid, GitLab responded with ~a" code)))
+            (setf (audit-log-error audit-log) error)
+            (settings-page :error
+                           error)))
+         (t
+          (let ((json (json:decode-json-from-string body)))
+            (let ((scopes (assoc-value json :scopes)))
+              (cond
+                ((str:s-member scopes "api")
+                 (settings-page :success "Access token validated successfully."))
+                (t
+                 (settings-page :error "The access token does not have the `api` scope.")))))))))))
+
+(defun settings-page (&key error success)
   (let* ((settings (gitlab-settings-for-company (current-company)))
          (current-token (?. gitlab-token settings))
          (save (nibble (gitlab-url token)
@@ -113,8 +150,18 @@
                                  current-token)
                                 (t
                                  token))))
-                  (save-settings gitlab-url token)))))
+                  (save-settings gitlab-url token))))
+         (test (nibble ()
+                 (test-gitlab-settings))))
     <settings-template>
+      ,(when error
+         <div class= "alert alert-danger mt-3">
+           ,(progn error)
+         </div>)
+      ,(when success
+         <div class= "alert alert-success mt-3">
+           ,(progn success)
+         </div>)
       <form action=save method= "POST" >
         <div class= "card mt-3" style= "max-width: 80em">
           <div class= "card-header">
@@ -137,6 +184,7 @@
 
           <div class= "card-footer">
             <input type= "submit" value= "Save" class= "btn btn-primary"/>
+            <a href= test class= "btn btn-secondary">Test settings</a>
           </div>
         </div>
       </form>
@@ -151,3 +199,18 @@
   :title "GitLab"
   :plugin 'gitlab-plugin
   :handler 'settings-page)
+
+(defun gitlab-request (repo-or-company url &key (method :get) content
+                                             (ensure-success t))
+  (let* ((company (if (typep repo-or-company 'company)
+                      repo-or-company
+                      (company repo-or-company)))
+        (settings (gitlab-settings-for-company company)))
+    (util/request:http-request
+     (format nil "~a/api/v4~a" (gitlab-url settings) url)
+     :method method
+     :additional-headers `(("PRIVATE-TOKEN" . ,(gitlab-token settings)))
+     :want-string t
+     :content-type "application/json"
+     :ensure-success ensure-success
+     :content (json:encode-json-to-string content))))

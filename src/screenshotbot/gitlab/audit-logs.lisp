@@ -21,7 +21,8 @@
   (:export
    #:update-status-for-user-audit-log
    #:config-updated-audit-log
-   #:gitlab-audit-log))
+   #:gitlab-audit-log
+   #:check-personal-access-token))
 (in-package :screenshotbot/gitlab/audit-logs)
 
 (markup:enable-reader)
@@ -35,6 +36,11 @@
   (defclass update-status-audit-log (gitlab-audit-log)
     ((commit :initarg :commit
              :reader %commit))
+    (:metaclass persistent-class)))
+
+(with-class-validation
+  (defclass check-personal-access-token (gitlab-audit-log)
+    ()
     (:metaclass persistent-class)))
 
 (defmethod describe-audit-log ((self update-status-audit-log))
