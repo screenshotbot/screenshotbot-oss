@@ -135,7 +135,11 @@
                       (expected (format nil "sha256=~a"
                                         (ironclad:byte-array-to-hex-string expected))))
                  (unless (equal expected actual)
-                   (error "invalid hmac, expected ~a, got ~a" expected actual))))
+                   (error "invalid hmac, expected ~a, got ~a for ~s" expected actual
+                          (or
+                           (ignore-errors
+                            (flex:octets-to-string data :external-format :utf-8))
+                           data)))))
              (log:debug "hmac validated")
              (let ((json (json:decode-json
                           (flexi-streams:make-flexi-stream
