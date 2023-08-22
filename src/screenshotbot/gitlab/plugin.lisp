@@ -14,8 +14,15 @@
   (:import-from #:screenshotbot/model/channel
                 #:github-repo)
   (:export
-   #:gitlab-plugin))
+   #:gitlab-plugin
+   #:gitlab-client-id
+   #:gitlab-client-secret))
 (in-package :screenshotbot/gitlab/plugin)
 
 (defclass gitlab-plugin (plugin)
-  ())
+  ((client-id :initarg :client-id
+              :reader gitlab-client-id
+              :documentation "The OAuth client id")
+   (client-secret :initarg :client-secret
+                  :reader gitlab-client-secret
+                  :documentation "The OAuth client secret")))
