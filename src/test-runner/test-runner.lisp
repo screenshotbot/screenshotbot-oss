@@ -91,7 +91,8 @@
                   (union
                    (find-tests)
                    (screenshot-tests)
-                   :test #'string-equal))))
+                   :test #'string-equal)))
+        (test-redefinitions-p (not (str:emptyp (uiop:getenv "TDRHQ_TEST_REDEF")))))
     #-screenshotbot-oss
     (progn
       #-ccl
@@ -103,9 +104,25 @@
                          files)))))
     (log:info "Running the following tests: ~S" systems)
 
+    #+lispworks
+    (when test-redefinitions-p
+      (ql:quickload :hu.dwim.def+hu.dwim.common)
+      (ql:quickload :hu.dwim.def/namespace)
+      (ql:quickload :slynk/fancy-inspector)
+      (ql:quickload :slynk/indentation)
+      ;; We might not need this in the future
+      (ql:quickload :adw-charting-vecto)
+      (ql:quickload :osicat)
+      (ql:quickload :colorize)
+      (ql:quickload :clsql)
+      (ql:quickload :zpb-exif)
+
+      (setf dspec:*redefinition-action* :error))
     (dolist (system systems)
       (log:info "Loading: ~s" system)
-     (ql:quickload system))))
+      (ql:quickload system))
+    #+lispworks
+    (setf dspec:*redefinition-action* :warn)))
 
 (defun maybe-hide-outputs ()
   (unless (equal "1" (uiop:getenv "TDRHQ_TEST_DEBUG"))

@@ -25,11 +25,10 @@
                 #:with-test-store)
   (:import-from #:bknr.datastore
                 #:class-instances)
-  (:import-from #:fiveam-matchers/core
+  (:import-from #:fiveam-matchers
                 #:is-string
+                #:has-length
                 #:assert-that)
-  (:import-from #:fiveam-matchers/has-length
-                #:has-length)
   (:export))
 (in-package :auth/test-auth)
 

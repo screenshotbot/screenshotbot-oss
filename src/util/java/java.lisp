@@ -492,9 +492,6 @@
          (setf idx (+ 1 idx)))
     ret))
 
-(defun safe-jvref (arr i)
-  (let ((ret (jvref arr i)))
-    ret))
 
 (defun (setf safe-jvref) (val arr i)
   (setf (jvref arr i) val))

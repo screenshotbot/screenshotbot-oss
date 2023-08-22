@@ -158,9 +158,10 @@
   (restore)
   (test-equal 1 (length (class-instances 'store-object))))
 
-(defdstest make-instance-in-anon-txn ()
+(defdstest make-instance-in-anon-txn-1 ()
   (with-transaction ()
     (test-assert (make-instance 'store-object))))
+
 
 (define-persistent-class parent ()
   ((child :update :initform nil :initarg nil)))

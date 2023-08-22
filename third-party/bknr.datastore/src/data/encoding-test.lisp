@@ -213,7 +213,7 @@
 
 ;; cons
 
-(test-encoding cons.1 '(1 2 3))
+(test-encoding cons.1.1 '(1 2 3))
 (test-encoding cons.2 '((1 2 3)))
 (test-encoding cons.3 '(#\Space 1 1.2 1.3 #(1 2 3)))
 

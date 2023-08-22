@@ -41,7 +41,7 @@
                 #:*installation*)
   (:import-from #:screenshotbot/screenshot-api
                 #:make-screenshot)
-  (:import-from #:fiveam-matchers/core
+  (:import-from #:fiveam-matchers
                 #:is-string
                 #:has-typep
                 #:assert-that)

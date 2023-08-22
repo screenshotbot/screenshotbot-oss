@@ -98,7 +98,7 @@
        (sleep 0.1)
        (hex:handle-async-error r :code 501)))))
 
-(test has-errors
+(test has-errors-2
   (with-fixture state ()
     (is (eql 501
              (second (multiple-value-list (get "/async-errors")))))))

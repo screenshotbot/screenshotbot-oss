@@ -127,7 +127,9 @@ also index subclasses of the class to which the slot belongs, default is T")
 (defun defun-and-compile (defun)
   (let ((function (second defun)))
     (when function
-      (eval defun)
+      (eval
+       `(let (#+lispworks (dspec:*redefinition-action* :warn))
+          ,defun))
       (compile function))))
 
 (defun create-index-access-functions (index &key index-reader index-values
