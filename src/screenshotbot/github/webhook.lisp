@@ -24,6 +24,7 @@
                 #:webhook-secret
                 #:github-plugin)
   (:import-from #:util/threading
+                #:with-extras
                 #:make-thread
                 #:max-pool
                 #:ignore-and-log-errors)
@@ -126,21 +127,9 @@
         (make-thread
          (lambda ()
            (ignore-and-log-errors ()
-             (let ((hmac (ironclad:make-hmac (flexi-streams:string-to-octets
-                                              webhook-secret)
-                                             :sha256)))
-               (ironclad:update-hmac hmac data)
-               (let* ((expected (ironclad:hmac-digest hmac))
-                      (actual signature)
-                      (expected (format nil "sha256=~a"
-                                        (ironclad:byte-array-to-hex-string expected))))
-                 (unless (equal expected actual)
-                   (error "invalid hmac, expected ~a, got ~a for ~s" expected actual
-                          (or
-                           (ignore-errors
-                            (flex:octets-to-string data :external-format :utf-8))
-                           data)))))
-             (log:debug "hmac validated")
+             (validate-hmac :webhook-secret webhook-secret
+                            :data data
+                            :signature signature)
              (let ((json (json:decode-json
                           (flexi-streams:make-flexi-stream
                            (flexi-streams:make-in-memory-input-stream data)))))
@@ -157,6 +146,23 @@
          :name "github-webhook"
          :pool *thread-pool*))
       "OK")))
+
+(defun validate-hmac (&key webhook-secret
+                        data
+                        signature)
+  (let ((hmac (ironclad:make-hmac (flexi-streams:string-to-octets
+                                   webhook-secret)
+                                  :sha256)))
+    (ironclad:update-hmac hmac data)
+    (let* ((expected (ironclad:hmac-digest hmac))
+           (actual signature)
+           (expected (format nil "sha256=~a"
+                             (ironclad:byte-array-to-hex-string expected))))
+      (unless (equal expected actual)
+        (with-extras (("data" data)
+                      ("decoded-data"(flex:octets-to-string data :external-format :utf-8)))
+         (error "invalid hmac, expected ~a, got ~a" expected actual)))))
+  (log:debug "hmac validated"))
 
 (defun github-maybe-update-pull-request (json)
   (let ((obj (assoc-value json :pull--request)))
