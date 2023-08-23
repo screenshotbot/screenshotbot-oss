@@ -45,7 +45,7 @@
 (defhandler (batch-handler :uri "/batch/:oid") (oid)
   (setf (hunchentoot:header-out :cache-control)
         "no-cache, no-store, must-revalidate")
-  (with-login ()
+  (with-login (:allow-url-redirect t)
     (let ((batch (find-by-oid oid)))
       (assert batch)
       (can-view! batch)
