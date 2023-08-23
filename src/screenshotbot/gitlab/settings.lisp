@@ -26,6 +26,7 @@
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:screenshotbot/user-api
+                #:pull-request-url
                 #:commit-link
                 #:current-user
                 #:current-company)
@@ -52,6 +53,9 @@
                 #:ps)
   (:import-from #:screenshotbot/git-repo
                 #:repo-link)
+  (:import-from #:screenshotbot/dashboard/review-link
+                #:get-canonical-pull-request-url
+                #:describe-pull-request)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/gitlab/settings)
 
@@ -227,3 +231,14 @@
   (format nil "~a/-/commit/~a"
           (repo-link repo)
           hash))
+
+(defmethod describe-pull-request ((repo gitlab-repo) run)
+  (format nil "!~a"
+          (car (last
+                (str:split "/"
+                       (pull-request-url run))))))
+
+(defmethod get-canonical-pull-request-url ((repo gitlab-repo) id)
+  (format nil "~a/-/merge_requests/~a"
+          (repo-link repo)
+          id))
