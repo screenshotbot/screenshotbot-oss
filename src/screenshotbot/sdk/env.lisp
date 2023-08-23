@@ -57,7 +57,7 @@ get this from the Git repository directly."))
 (defmethod guess-channel-name ((self base-env-reader))
   nil)
 
-(defmethod work-branch ((self base-env-reader))
+(defmethod work-branch ((self env-reader))
   nil)
 
 (defmethod build-url ((self env-reader))
