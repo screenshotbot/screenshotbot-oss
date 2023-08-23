@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/sdk/env)
   (:import-from #:screenshotbot/sdk/env
+                #:*all-readers*
                 #:gitlab-ci-env-reader
                 #:bitbucket-pipeline-env-reader
                 #:buildkite-env-reader
@@ -23,6 +24,10 @@
 (util/fiveam:def-suite)
 
 (defun test-happy-fns (env-reader)
+  (is (member (type-of env-reader)
+              (list*
+               'env-reader
+               *all-readers*)))
   (validp env-reader)
   (api-key env-reader)
   (api-secret env-reader)
@@ -93,4 +98,8 @@
                (pull-request-url one)))))
 
 (test make-env-reader-happy-path
-  (is (typep (make-env-reader) 'env-reader)))
+  (finishes (make-env-reader)))
+
+(test all-readers-has-valid-types
+  (loop for reader-name in *all-readers*
+        do (is-true (find-class reader-name))))

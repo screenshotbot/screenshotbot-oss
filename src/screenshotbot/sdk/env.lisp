@@ -285,14 +285,17 @@ get this from the Git repository directly."))
 (defmethod work-branch ((self gitlab-ci-env-reader))
   (getenv self "CI_COMMIT_REF_NAME"))
 
-(defun make-env-reader ()
-  (loop for option in '(circleci-env-reader
-                        bitrise-env-reader
-                        netlify-env-reader
-                        azure-env-reader
-                        bitbucket-pipeline-env-reader
-                        buildkite-env-reader
-                        gitlab-ci-env-reader)
+(defparameter *all-readers*
+  '(circleci-env-reader
+    bitrise-env-reader
+    netlify-env-reader
+    azure-env-reader
+    bitbucket-pipeline-env-reader
+    buildkite-env-reader
+    gitlab-ci-env-reader))
+
+(defun make-env-reader (&key overrides)
+  (loop for option in *all-readers*
         for env = (make-instance option)
         if (validp env)
           return env
