@@ -91,3 +91,6 @@
                            ("BUILDKITE_REPO" . "https://github.com/tdrhq/fast-example")))))
     (is (equal nil
                (pull-request-url one)))))
+
+(test make-env-reader-happy-path
+  (is (typep (make-env-reader) 'env-reader)))
