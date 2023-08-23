@@ -26,6 +26,7 @@
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:screenshotbot/user-api
+                #:commit-link
                 #:current-user
                 #:current-company)
   (:import-from #:util/misc
@@ -49,6 +50,8 @@
                 #:assoc-value)
   (:import-from #:parenscript
                 #:ps)
+  (:import-from #:screenshotbot/git-repo
+                #:repo-link)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/gitlab/settings)
 
@@ -219,3 +222,8 @@
      :content-type "application/json"
      :ensure-success ensure-success
      :content (json:encode-json-to-string content))))
+
+(defmethod commit-link ((repo gitlab-repo) hash)
+  (format nil "~a/-/commit/~a"
+          (repo-link repo)
+          hash))
