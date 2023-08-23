@@ -280,7 +280,7 @@ get this from the Git repository directly."))
   (getenv self "CI_JOB_URL"))
 
 (defmethod repo-url ((self gitlab-ci-env-reader))
-  (getenv self "CI_REPOSITORY_URL"))
+  (getenv self "CI_PROJECT_URL"))
 
 (defmethod work-branch ((self gitlab-ci-env-reader))
   (getenv self "CI_COMMIT_REF_NAME"))
