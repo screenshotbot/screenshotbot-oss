@@ -44,6 +44,7 @@
   (:import-from #:screenshotbot/model/image
                 #:image-dimensions)
   (:import-from #:screenshotbot/model/recorder-run
+                #:gitlab-merge-request-iid
                 #:run-screenshot-map
                 #:compare-threshold
                 #:compared-against
@@ -234,6 +235,7 @@
             <li>Merge base: ,(commit :repo repo :hash (recorder-run-merge-base run))</li>
             <li>Pull request: ,(or (pull-request-url run) "NA")</li>
             <li>Phabricator Diff-id: ,(or (phabricator-diff-id run) "NA")</li>
+            <li>Merge request IID: ,(or (gitlab-merge-request-iid run) "NA")</li>
             <li>Build URL: <a href=(run-build-url run)>,(run-build-url run)</a> </li>
             <li>Production?: ,(if (trunkp run) "true" "false")</li>
             <li>Periodic job?: ,(if (periodic-job-p run) "true" "false")</li>
