@@ -262,14 +262,37 @@ get this from the Git repository directly."))
 (defmethod work-branch ((self bitbucket-pipeline-env-reader))
   (getenv self "BITBUCKET_BRANCH"))
 
+(defclass gitlab-ci-env-reader (base-env-reader)
+  ())
+
+(defmethod validp ((self gitlab-ci-env-reader))
+  (getenv self "GITLAB_CI"))
+
+(defmethod pull-request-url ((self gitlab-ci-env-reader))
+  (format nil "~a/-/merge_requests/~a"
+          (getenv self "CI_MERGE_REQUEST_PROJECT_URL")
+          (getenv self "CI_MERGE_REQUEST_IID")))
+
+(defmethod sha1 ((self gitlab-ci-env-reader))
+  (getenv self "CI_COMMIT_SHA"))
+
+(defmethod build-url ((self gitlab-ci-env-reader))
+  (getenv self "CI_JOB_URL"))
+
+(defmethod repo-url ((self gitlab-ci-env-reader))
+  (getenv self "CI_REPOSITORY_URL"))
+
+(defmethod work-branch ((self gitlab-ci-env-reader))
+  (getenv self "CI_COMMIT_REF_NAME"))
+
 (defun make-env-reader ()
   (loop for option in '(circleci-env-reader
                         bitrise-env-reader
                         netlify-env-reader
                         azure-env-reader
                         bitbucket-pipeline-env-reader
-
-                        buildkite-env-reader)
+                        buildkite-env-reader
+                        gitlab-ci-env-reader)
         for env = (make-instance option)
         if (validp env)
           return env

@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/sdk/env)
   (:import-from #:screenshotbot/sdk/env
+                #:gitlab-ci-env-reader
                 #:bitbucket-pipeline-env-reader
                 #:buildkite-env-reader
                 #:azure-env-reader
@@ -68,6 +69,10 @@
 
 (test bitbucket-pipeline
   (finishes (test-happy-fns (make-instance 'bitbucket-pipeline-env-reader
+                                           :overrides nil))))
+
+(test gitlab-ci-pipeline
+  (finishes (test-happy-fns (make-instance 'gitlab-ci-env-reader
                                            :overrides nil))))
 
 
