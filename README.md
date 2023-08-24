@@ -249,8 +249,8 @@ be subjective:
   support available.
 * [Happo](https://happo.io) Commercial platform with a focus on web and
   Javascript screenshots.
-* [Percy](https://percy.io) Commercial platform with a focus on web and
-  mobile integration tests.
+* [Percy](https://percy.io) Commercial platform with a focus on web
+  screenshots.
 * [Emerge Tools Snapshots](https://emergetools.com) Commercial platform
   that locks you into their ecosystem. For instance, you can't use
   standard libraries like Paparazzi or swift-snapshot-testing.
