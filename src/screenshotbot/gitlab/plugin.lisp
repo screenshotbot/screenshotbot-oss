@@ -22,7 +22,7 @@
 (defclass gitlab-plugin (plugin)
   ((client-id :initarg :client-id
               :reader gitlab-client-id
-              :documentation "The OAuth client id")
+              :documentation "The OAuth client id. Unused at the moment.")
    (client-secret :initarg :client-secret
                   :reader gitlab-client-secret
-                  :documentation "The OAuth client secret")))
+                  :documentation "The OAuth client secret. Unused at the moment.")))
