@@ -296,7 +296,7 @@ error."
                                 :github-repo github-repo
                                 :merge-base merge-base
                                 :periodic-job-p periodic-job-p
-                                :build-url *build-url*
+                                :build-url flags:*build-url*
                                 :compare-threshold flags:*compare-threshold*
                                 :batch flags:*batch*
                                 :pull-request pull-request
@@ -368,12 +368,12 @@ error."
        (log:debug "No regex match for ~a, ~a" regex name)))))
 
 (defmethod screenshot-lang ((m metadata-provider) name)
-  (when *lang-regex*
-    (read-first-match *lang-regex* name)))
+  (when flags:*lang-regex*
+    (read-first-match flags:*lang-regex* name)))
 
 (defmethod screenshot-device ((m metadata-provider) name)
-  (when *device-regex*
-    (read-first-match *device-regex* name)))
+  (when flags:*device-regex*
+    (read-first-match flags:*device-regex* name)))
 
 
 (defmethod make-directory-run (api-context dir &rest args)
@@ -430,20 +430,20 @@ error."
   (cond
     ((android-run-p)
      (log:info "Looks like an Android run")
-     (make-image-bundle :metadata *metadata*))
-    ((not (str:emptyp *directory*))
-     (unless (path:-d *directory*)
-       (error "Not a directory: ~a. Did you miss --metadata if you intended to use a bundle.zip?" *directory*))
+     (make-image-bundle :metadata flags:*metadata*))
+    ((not (str:emptyp flags:*directory*))
+     (unless (path:-d flags:*directory*)
+       (error "Not a directory: ~a. Did you miss --metadata if you intended to use a bundle.zip?" flags:*directory*))
      (cond
-       (*ios-diff-dir*
-        (log:debug "Using diff dir: ~a" *ios-diff-dir*)
+       (flags:*ios-diff-dir*
+        (log:debug "Using diff dir: ~a" flags:*ios-diff-dir*)
         (when ensure-diff-dir
-          (assert (path:-d *ios-diff-dir*)))
+          (assert (path:-d flags:*ios-diff-dir*)))
         (make-instance 'image-directory-with-diff-dir
-                       :directory *directory*
-                       :diff-dir *ios-diff-dir*))
+                       :directory flags:*directory*
+                       :diff-dir flags:*ios-diff-dir*))
        (t
-        (make-instance 'image-directory :directory *directory*
+        (make-instance 'image-directory :directory flags:*directory*
                        :recursivep flags:*recursive*))))
     (t
      (error "Unknown run type, maybe you missed --directory?"))))
@@ -474,46 +474,46 @@ incorrect arg breaks some logic, and additionally is not required
 since we can determine the pull-request from the environment. We can
 do a quick sanity check, and recover with a warning if the
 pull-request looks incorrect."
-  (when *pull-request*
+  (when flags:*pull-request*
    (flet ((validp (url)
             (str:starts-with-p "https://" url)))
-     (unless (validp *pull-request*)
+     (unless (validp flags:*pull-request*)
        (signal 'invalid-pull-request)
        (log:warn "The --pull-request argument you provided was invalid: `~a`. We're ignoring this.~%"
-             *pull-request*)
-       (setf *pull-request* nil)))))
+             flags:*pull-request*)
+       (setf flags:*pull-request* nil)))))
 
 (defun parse-environment ()
   (let ((env (e:make-env-reader)))
-    (when *branch*
+    (when flags:*branch*
       (error "--branch is no longer supported, please use --main-branch instead"))
 
     (validate-pull-request)
 
-    (or-setf *build-url*
+    (or-setf flags:*build-url*
              (e:build-url env))
 
-    (or-setf *repo-url*
+    (or-setf flags:*repo-url*
              (e:repo-url env))
 
     (or-setf flags:*work-branch*
              (e:work-branch env))
 
-    (unless *pull-request*
-      (setf *pull-request*
+    (unless flags:*pull-request*
+      (setf flags:*pull-request*
             (e:pull-request-url env)))
 
-    (when (equal "unnamed-channel" *channel*)
+    (when (equal "unnamed-channel" flags:*channel*)
       (when-let ((channel (e:guess-channel-name env)))
-        (setf *channel* channel)))
+        (setf flags:*channel* channel)))
 
     (or-setf
      flags:*override-commit-hash*
-     (unless (str:emptyp *pull-request*)
+     (unless (str:emptyp flags:*pull-request*)
        (e:sha1 env)))
 
-    (unless *main-branch*
-      (setf *main-branch*
+    (unless flags:*main-branch*
+      (setf flags:*main-branch*
             (guess-master-branch (git-repo))))))
 
 (defun link-to-github-pull-request (repo-url pull-id)
@@ -530,13 +530,13 @@ pull-request looks incorrect."
 
 (defun parse-org-defaults ()
   (parse-environment)
-  (when *org-defaults*
-   (ecase (intern (str:upcase *org-defaults*) "KEYWORD")
+  (when flags:*org-defaults*
+   (ecase (intern (str:upcase flags:*org-defaults*) "KEYWORD")
      (nil
       nil)
      (:kickstarter-ios
-      (setf *lang-regex* ".*_lang_(.*?)_.*")
-      (setf *device-regex* ".*_device_(.*?)$")))))
+      (setf flags:*lang-regex* ".*_lang_(.*?)_.*")
+      (setf flags:*device-regex* ".*_device_(.*?)$")))))
 
 (defun recursive-directories (directory)
   (or
@@ -562,16 +562,16 @@ pull-request looks incorrect."
 
 (defun upload-ios-subdirectory (directory)
   (log:info "Uploading run from ~a" directory)
-  (let*((relative-dir (get-relative-path directory *directory*))
-        (*directory* (namestring directory))
-        (*ios-diff-dir* (when *ios-diff-dir*
-                          (namestring (path:catdir *ios-diff-dir*
-                                                   relative-dir)))))
-    (log:info "Will look for image diffs at ~S" *ios-diff-dir*)
+  (let*((relative-dir (get-relative-path directory flags:*directory*))
+        (flags:*directory* (namestring directory))
+        (flags:*ios-diff-dir* (when flags:*ios-diff-dir*
+                                (namestring (path:catdir flags:*ios-diff-dir*
+                                                         relative-dir)))))
+    (log:info "Will look for image diffs at ~S" flags:*ios-diff-dir*)
     (let ((dir (%read-directory-from-args :ensure-diff-dir nil)))
       (single-directory-run dir
                             :channel (format nil "~a/~a"
-                                             *channel*
+                                             flags:*channel*
                                              (car (last (pathname-directory directory))))))))
 
 (defmethod update-commit-graph (api-context repo branch)
@@ -590,20 +590,20 @@ pull-request looks incorrect."
 
 (defun git-repo ()
   (make-instance 'git-repo
-                  :link *repo-url*))
+                  :link flags:*repo-url*))
 
 (defun single-directory-run (api-context directory &key channel)
   (let ((repo (git-repo))
-        (branch *main-branch*))
-    (when *production*
+        (branch flags:*main-branch*))
+    (when flags:*production*
       (update-commit-graph api-context repo branch))
     (log:info "Uploading images from: ~a" directory)
     (make-directory-run api-context directory
                         :channel channel
-                        :pull-request *pull-request*
-                        :create-github-issue *create-github-issue*
+                        :pull-request flags:*pull-request*
+                        :create-github-issue flags:*create-github-issue*
                         :repo repo
-                        :is-trunk *production*
+                        :is-trunk flags:*production*
                         :branch branch)))
 
 (defun chdir-for-bin (path)
@@ -615,15 +615,15 @@ pull-request looks incorrect."
   (fad:canonical-pathname (path:catdir (uiop:getcwd) p)))
 
 (defun run-ios-multi-dir-toplevel ()
-  (let ((*directory* (namestring (absolute-pathname *directory*))))
-    (loop for directory in (recursive-directories *directory*)
+  (let ((flags:*directory* (namestring (absolute-pathname flags:*directory*))))
+    (loop for directory in (recursive-directories flags:*directory*)
           do
              (upload-ios-subdirectory directory))))
 
 (defun run-prepare-directory-toplevel (api-context)
   (prepare-directory
    (lambda (directory)
-     (single-directory-run api-context directory :channel *channel*))))
+     (single-directory-run api-context directory :channel flags:*channel*))))
 
 (def-health-check verify-https-works ()
   (util/request:http-request "https://screenshotbot.io/api/version"
