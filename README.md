@@ -244,15 +244,15 @@ There are a few alternatives to Screenshotbot, and in the interest of
 transparency we'll list them here. We're biased so our comparison may
 be subjective:
 
-* [Vizzy|https://github.com/workday/vizzy] Open source with similar
+* [Vizzy](https://github.com/workday/vizzy) Open source with similar
   goals as Screenshotbot. Not as actively maintained, no commercial
   support available.
-* [Happo|https://happo.io] Commercial platform with a focus on web and
+* [Happo](https://happo.io) Commercial platform with a focus on web and
   Javascript screenshots.
-* [Percy|https://percy.io] Commercial platform with a focus on web and
+* [Percy](https://percy.io) Commercial platform with a focus on web and
   mobile integration tests.
-* [Emerge Tools Snapshots|https://emergetools.com] Commercial platform
-  and locks you into their ecosystem. For instance, you can't use
+* [Emerge Tools Snapshots](https://emergetools.com) Commercial platform
+  that locks you into their ecosystem. For instance, you can't use
   standard libraries like Paparazzi or swift-snapshot-testing.
 
 We encourage you to look at all your options. In any case, please do
