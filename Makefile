@@ -269,4 +269,4 @@ upload-mac-intel-sdk:
 
 upload-screenshots-oss: .PHONY
 	curl https://screenshotbot.io/recorder.sh | bash
-	~/screenshotbot/recorder --static-website src/screenshotbot/static-web-output/ --main-branch master --channel screenshotbot-oss --repo-url 'git@github.com:screenshotbot/screenshotbot-oss.git' --main-branch main
+	SCREENSHOTBOT_CLI_V2=1 ~/screenshotbot/recorder ci static-website --directory src/screenshotbot/static-web-output/ --main-branch master --channel screenshotbot-oss --repo-url 'git@github.com:screenshotbot/screenshotbot-oss.git' --main-branch main
