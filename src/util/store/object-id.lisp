@@ -15,6 +15,8 @@
                 #:defindex)
   (:import-from #:bknr.datastore
                 #:in-transaction-p)
+  (:import-from #:util/store/store
+                #:generate-sync-test-for-object)
   (:export #:object-with-oid
 	   #:object-with-unindexed-oid
 	   #:find-by-oid
@@ -172,3 +174,6 @@ oid to a string. Otherwise we return the OID object as is."
          root
          (oid-arr oid)
          args))
+
+(defmethod generate-sync-test-for-object ((obj object-with-oid) output)
+  (format output "oid:~a " (oid obj)))

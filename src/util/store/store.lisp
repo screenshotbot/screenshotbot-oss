@@ -900,3 +900,18 @@ this variable in LET forms, but you can SETF it if you like."
 (deftransaction tx-force-error (msg)
   ;;(error "force crash with ~a" msg)
   )
+
+(defun generate-sync-test (&optional (output *standard-output*))
+  (dolist (subsystem (bknr.datastore::store-subsystems *store*))
+    (generate-sync-test-for-subsystem *store* subsystem output)))
+
+(defmethod generate-sync-test-for-subsystem (store subsystem output)
+  (values))
+
+(defmethod generate-sync-test-for-subsystem (store (subsystem store-object-subsystem) output)
+  (dolist (obj (all-store-objects))
+    (format output "~a " obj)
+    (generate-sync-test-for-object obj output)
+    (format output "~%")))
+
+(defmethod generate-sync-test-for-object (obj output))
