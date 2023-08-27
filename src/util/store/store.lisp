@@ -909,7 +909,7 @@ this variable in LET forms, but you can SETF it if you like."
   (values))
 
 (defmethod generate-sync-test-for-subsystem (store (subsystem store-object-subsystem) output)
-  (dolist (obj (all-store-objects))
+  (fset:do-set (obj (fset:convert 'fset:set (all-store-objects)))
     (format output "~a " obj)
     (generate-sync-test-for-object obj output)
     (format output "~%")))
