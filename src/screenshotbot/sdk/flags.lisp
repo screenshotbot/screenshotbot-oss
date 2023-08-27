@@ -123,7 +123,11 @@
   :selector "work-branch"
   :default-value nil
   :type (or null string)
-  :help "Your current branch, preferably as provided by your CI environment as opposed to reading from git. Some CI environments may not update the local branch name, and instead provides the branch name as an environment variable. We can automatically figure this out on CircleCI, Bitrise, Netlify, Azure DevOps, BuildKits, and Bitbucket Pipelines.")
+  :help "Your current branch, preferably as provided by your CI environment
+as opposed to reading from git. Some CI environments may not update the
+local branch name, and instead provides the branch name as an environment
+variable. We can automatically figure this out on CircleCI, Bitrise,
+Netlify, Azure DevOps, BuildKits, and Bitbucket Pipelines.")
 
 (define-flag *repo-url*
   :selector "repo-url"
@@ -230,10 +234,8 @@
   :selector "batch"
   :default-value nil
   :type (or null string)
-  :help "[EXPERIMENTAL] Batch multiple channels into one single build status named by this argument.
-
-This is heavily experimental, and probably does not work at the moment. Please contact
-support@screenshotbot.io if you feel like you need to use this.")
+  :help "Batch multiple channels into one single build status named by this
+argument.")
 
 (define-flag *self-test*
   :selector "self-test"
@@ -273,7 +275,8 @@ the last green commit to make our screenshot report.")
   :selector "mark-unchanged-from"
   :default-value nil
   :type (or null string)
-  :help "Notify Screenshotbot that the run for this commit will be identical to the run from the commit provided")
+  :help "Notify Screenshotbot that the run for this commit will be identical
+to the run from the commit provided")
 
 (define-flag *compare-threshold*
   :selector "compare-threshold"
@@ -307,4 +310,7 @@ defaults to http://localhost:4095, and authentication is disabled.")
   :selector "finalize"
   :default-value nil
   :type boolean
-  :help "Notify Screenshotbot that all builds on all channels on this commit are complete. This is not required to be called, but if used provides a better developer experience when later builds are waiting on this commit.")
+  :help "Notify Screenshotbot that all builds on all channels on this
+commit are complete. This is not required to be called, but if
+used provides a better developer experience when later builds
+ are waiting on this commit.")
