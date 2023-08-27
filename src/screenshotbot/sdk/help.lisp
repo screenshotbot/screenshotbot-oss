@@ -7,6 +7,8 @@
 (uiop:define-package :screenshotbot/sdk/help
   (:use #:cl
         #:alexandria)
+  (:import-from #:screenshotbot/sdk/common-flags
+                #:obsolete?)
   (:export
    #:help))
 (in-package :screenshotbot/sdk/help)
@@ -33,9 +35,10 @@ command to multiple subcommands. Use `recorder help` to get documentation for su
                      lines)
                     (t
                      (list* "" lines)))))
-      (format t " --~22A~40A~%" name
-              (or (car lines) ""))
-      (loop for l in (cdr lines) do
-        (format t "~25A~A~%" " " l))))
+      (unless (obsolete? flag)
+        (format t " --~22A~40A~%" name
+                (or (car lines) ""))
+        (loop for l in (cdr lines) do
+          (format t "~25A~A~%" " " l)))))
   (format t "~%Copyright 2020-2022 Modern Interpreters Inc.~%")
   (format t "Please reach out to support@screenshotbot.io for any questions~%"))

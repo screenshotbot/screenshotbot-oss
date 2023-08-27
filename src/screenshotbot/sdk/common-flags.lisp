@@ -12,7 +12,8 @@
    #:*verbose*
    #:*help*
    #:*sdk-flags*
-   #:define-flag))
+   #:define-flag
+   #:obsolete?))
 (in-package :screenshotbot/sdk/common-flags)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -34,12 +35,15 @@
        ,@args)))
 
 (define-flag *verbose*
-   :default-value nil
-   :selector "verbose"
-   :type boolean
+  :default-value nil
+  :selector "verbose"
+  :type boolean
   :help "Verbose logs")
 
 (define-flag *help*
   :selector "help"
   :default-value nil
   :type boolean)
+
+(defun obsolete? (flag)
+  (str:containsp "[OBSOLETE]" (com.google.flag::help flag)))

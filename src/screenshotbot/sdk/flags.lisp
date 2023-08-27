@@ -147,35 +147,33 @@
   :selector "production"
   :default-value t
   :type boolean
-  :documentation "Whether this is a run on your CI. For local runs, we
+  :help "Whether this is a run on your CI. For local runs, we
   suggest using `--production=false`. This avoids polluting your runs
   in production.")
 
 (define-flag *lang-regex*
   :selector "lang-regex"
   :default-value nil
-  :type (or null string))
+  :type (or null string)
+  :help "[OBSOLETE]")
 
 (define-flag *device-regex*
   :selector "device-regex"
   :default-value nil
   :type (or null string)
-  :documentation "[OBSOLETE]")
+  :help "[OBSOLETE]")
 
 (define-flag *ios-multi-dir*
   :selector "ios-multi-dir"
   :default-value nil
+  :help "[OBSOLETE]"
   :type boolean)
 
 (define-flag *ios-diff-dir*
   :selector "ios-diff-dir"
   :default-value nil
   :type (or null string)
-  :help
-  "When using ios-snapshot-test-case, this can link to the
-  IMAGE_DIFF_DIR. In most cases this isn't required, but it can be
-  useful for backward compatibility if you don't want to update the
-  tests to always work in recorde mode.")
+  :help "[OBSOLETE]")
 
 (define-flag *metadata*
   :selector "metadata"
