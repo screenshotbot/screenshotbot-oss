@@ -76,8 +76,8 @@
 (define-flag *org-defaults*
   :default-value nil
   :selector "defaults"
-  :type (or null string))
-
+  :type (or null string)
+  :help "[OBSOLETE]")
 
 (define-flag *create-github-issue*
   :selector "create-github-issue"

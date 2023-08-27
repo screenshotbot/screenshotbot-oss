@@ -242,9 +242,7 @@ error."
         (let ((name (assoc-value im :name)))
           (make-instance 'dto:screenshot
                          :name name
-                         :image-id (assoc-value im :id)
-                         :lang (screenshot-lang metadata-provider name)
-                         :device (screenshot-device metadata-provider name)))))
+                         :image-id (assoc-value im :id)))))
 
 (defun safe-parse-int (str)
   (cond
@@ -356,25 +354,6 @@ error."
 
 (defclass metadata-provider ()
   ())
-
-(defun read-first-match (regex name)
-  (multiple-value-bind
-        (full matches)
-      (cl-ppcre:scan-to-strings regex name)
-    (cond
-      (full
-       (elt matches 0))
-      (t
-       (log:debug "No regex match for ~a, ~a" regex name)))))
-
-(defmethod screenshot-lang ((m metadata-provider) name)
-  (when flags:*lang-regex*
-    (read-first-match flags:*lang-regex* name)))
-
-(defmethod screenshot-device ((m metadata-provider) name)
-  (when flags:*device-regex*
-    (read-first-match flags:*device-regex* name)))
-
 
 (defmethod make-directory-run (api-context dir &rest args)
   (log:debug "Reading images from ~a" dir)
@@ -529,14 +508,7 @@ pull-request looks incorrect."
 
 
 (defun parse-org-defaults ()
-  (parse-environment)
-  (when flags:*org-defaults*
-   (ecase (intern (str:upcase flags:*org-defaults*) "KEYWORD")
-     (nil
-      nil)
-     (:kickstarter-ios
-      (setf flags:*lang-regex* ".*_lang_(.*?)_.*")
-      (setf flags:*device-regex* ".*_device_(.*?)$")))))
+  (parse-environment))
 
 (defun recursive-directories (directory)
   (or
