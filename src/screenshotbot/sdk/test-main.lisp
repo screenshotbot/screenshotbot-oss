@@ -10,6 +10,7 @@
   (:import-from #:cl-mock
                 #:with-mocks)
   (:import-from #:screenshotbot/sdk/main
+                #:warn-when-obsolete-flags
                 #:trim-arg
                 #:*api-secret*
                 #:*api-key*
@@ -110,3 +111,15 @@
   (with-fixture state ()
     (is (equal "foo" (trim-arg "foo")))
     (is (equal "--f...bar" (trim-arg "--foobar")))))
+
+
+(test warn-when-obsolete-flags
+  (with-fixture state ()
+    (let ((saw nil))
+      (handler-bind ((warning (lambda (w)
+                                (setf saw w))))
+        (warn-when-obsolete-flags))
+      (is-false saw))
+    (let ((flags:*ios-multi-dir* t))
+      (signals simple-warning
+       (warn-when-obsolete-flags)))))

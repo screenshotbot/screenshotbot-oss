@@ -119,6 +119,17 @@
 (defun try-clingon (argv)
   (clingon:run (root/command) (cdr argv)))
 
+(defun warn-when-obsolete-flags ()
+  (macrolet ((test (flag)
+               `(when ,flag
+                  (warn "obsolete flag used: ~a ~a"
+                         ',flag ,flag))))
+    (test flags:*ios-multi-dir*)
+    (test flags:*branch*)
+    (test flags:*lang-regex*)
+    (test flags:*device-regex*)
+    (test flags:*ios-diff-dir*)))
+
 (defun %main (&optional (argv #+lispworks system:*line-arguments-list*
                               #-lispworks (uiop:command-line-arguments)))
   (log:config :sane :immediate-flush t :pattern "[%D{%H:%M:%S}] %5p: %m%n")
@@ -132,6 +143,8 @@
                `(progn
                   (chdir-for-bin ,(uiop:getcwd))
                   (%main ',argv)))
+
+    (warn-when-obsolete-flags)
     (cond
       (unrecognized
        (cond
