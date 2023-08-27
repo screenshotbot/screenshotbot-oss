@@ -68,7 +68,6 @@
    #:request
    #:put-file
    #:parse-org-defaults
-   #:run-ios-multi-dir-toplevel
    #:run-prepare-directory-toplevel
    #:absolute-pathname
    #:update-commit-graph
@@ -413,17 +412,8 @@ error."
     ((not (str:emptyp flags:*directory*))
      (unless (path:-d flags:*directory*)
        (error "Not a directory: ~a. Did you miss --metadata if you intended to use a bundle.zip?" flags:*directory*))
-     (cond
-       (flags:*ios-diff-dir*
-        (log:debug "Using diff dir: ~a" flags:*ios-diff-dir*)
-        (when ensure-diff-dir
-          (assert (path:-d flags:*ios-diff-dir*)))
-        (make-instance 'image-directory-with-diff-dir
-                       :directory flags:*directory*
-                       :diff-dir flags:*ios-diff-dir*))
-       (t
-        (make-instance 'image-directory :directory flags:*directory*
-                       :recursivep flags:*recursive*))))
+     (make-instance 'image-directory :directory flags:*directory*
+                                     :recursivep flags:*recursive*))
     (t
      (error "Unknown run type, maybe you missed --directory?"))))
 
@@ -532,20 +522,6 @@ pull-request looks incorrect."
       (log:debug "Relative path is: ~S" res)
       res)))
 
-(defun upload-ios-subdirectory (directory)
-  (log:info "Uploading run from ~a" directory)
-  (let*((relative-dir (get-relative-path directory flags:*directory*))
-        (flags:*directory* (namestring directory))
-        (flags:*ios-diff-dir* (when flags:*ios-diff-dir*
-                                (namestring (path:catdir flags:*ios-diff-dir*
-                                                         relative-dir)))))
-    (log:info "Will look for image diffs at ~S" flags:*ios-diff-dir*)
-    (let ((dir (%read-directory-from-args :ensure-diff-dir nil)))
-      (single-directory-run dir
-                            :channel (format nil "~a/~a"
-                                             flags:*channel*
-                                             (car (last (pathname-directory directory))))))))
-
 (defmethod update-commit-graph (api-context repo branch)
   (log:info "Updating commit graph")
   (let* ((dag (read-graph repo))
@@ -585,12 +561,6 @@ pull-request looks incorrect."
 
 (defun absolute-pathname (p)
   (fad:canonical-pathname (path:catdir (uiop:getcwd) p)))
-
-(defun run-ios-multi-dir-toplevel ()
-  (let ((flags:*directory* (namestring (absolute-pathname flags:*directory*))))
-    (loop for directory in (recursive-directories flags:*directory*)
-          do
-             (upload-ios-subdirectory directory))))
 
 (defun run-prepare-directory-toplevel (api-context)
   (prepare-directory

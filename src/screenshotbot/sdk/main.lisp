@@ -169,9 +169,6 @@
       (flags:*unchanged-from*
        (with-defaults (api-context)
          (mark-unchanged-run api-context)))
-      (flags:*ios-multi-dir*
-       (sdk:parse-org-defaults)
-       (sdk:run-ios-multi-dir-toplevel))
       (flags:*static-website*
        (with-defaults (api-context)
          (static:record-static-website api-context flags:*static-website*

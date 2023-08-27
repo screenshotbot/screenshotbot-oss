@@ -92,15 +92,6 @@
            (is (typep (car (image-bundles (%read-directory-from-args)))
                       'directory-image-bundle))))))))
 
-(test read-directory-with-ios-diff-dir
-  (with-fixture state ()
-   (tmpdir:with-tmpdir (s)
-     (tmpdir:with-tmpdir (s2)
-       (let ((*directory* (namestring s))
-             (*ios-diff-dir* (namestring s2)))
-         (is (typep (%read-directory-from-args)
-                    'image-directory-with-diff-dir)))))))
-
 (test get-relative-path
   (is (equal #P "foo/"
              (get-relative-path #P "/bar/car/foo/" "/bar/car/")))
