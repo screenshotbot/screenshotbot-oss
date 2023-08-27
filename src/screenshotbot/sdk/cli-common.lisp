@@ -53,9 +53,17 @@
 (defun root/handler (cmd)
   (clingon:print-usage-and-exit cmd t))
 
+(defclass root-command (clingon:command)
+  ())
+
+(defmethod clingon:command-usage-string ((self root-command))
+  "recorder ci record --directory /path/to/screenshots --channel channel-name
+  recorder dev [record|verify] <options>")
+
 (defun root/command ()
-  (clingon:make-command
-   :name "Screenshotbot CLI"
+  (make-instance
+   'root-command
+   :name "recorder"
    :handler #'root/handler
    :description "Use this script from your CI pipelines or locally to
 upload screenshots and generate reports with Screenshotbot.
@@ -91,9 +99,19 @@ as opposed to `recorder help`."
               :long-name "desktop"
               :description "Whether the server is running on the Desktop version of Screenshotbot."))
    :sub-commands
-   (list*
+   (list
     (self-test/command)
-    (mapcar #'funcall (mapcar #'cdr *root-commands*)))))
+    (ci/command))))
+
+
+
+(defun ci/command ()
+  (clingon:make-command
+   :name "ci"
+   :handler (lambda (cmd)
+              (clingon:print-usage-and-exit cmd t))
+   :description "Collection of commands that are typically run during CI jobs. In particular, `ci record` might be what you're looking for."
+   :sub-commands (mapcar #'funcall (mapcar #'cdr *root-commands*))))
 
 (defun common-run-options ()
   "A list of run options that are common between directory runs and static-website runs."

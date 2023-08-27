@@ -136,6 +136,7 @@
   (log:config :info)
 
   (log:info "Screenshotbot SDK v~a" *client-version*)
+
   (let ((unrecognized  (parse-command-line (cdr argv))))
     (when flags:*verbose*
       (log:config :debug :oneline))
@@ -286,4 +287,5 @@
 #+lispworks
 (lw:defadvice (clingon.utils:exit clingon-exit-warning :before) (&optional (code 0))
   (unless (= code 0)
-    (warn "Exiting with code: ~a~%" code)))
+    (warn "Exiting with code: ~a~%" code))
+  (finish-output *error-output*))
