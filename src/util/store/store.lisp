@@ -54,6 +54,7 @@
   (:import-from #:util/cron
                 #:cron-enabled-on-store-p)
   (:import-from #:util/threading
+                #:ignore-and-log-errors
                 #:with-extras
                 #:log-sentry)
   (:local-nicknames (#:a #:alexandria))
@@ -398,20 +399,22 @@ to the directory that was just snapshotted.")
 
 (defun delete-old-snapshots ()
   ;; always keep at least 7 snapshots even if they are old
-  (loop for (ts . dir) in (nthcdr 7 (all-snapshots-sorted (object-store)))
-        if (local-time:timestamp< ts (local-time:timestamp- (local-time:now)
-                                                            14 :day))
-          do
-             (delete-snapshot-dir dir)))
+  (ignore-and-log-errors ()
+   (loop for (ts . dir) in (nthcdr 7 (all-snapshots-sorted (object-store)))
+         if (local-time:timestamp< ts (local-time:timestamp- (local-time:now)
+                                                             14 :day))
+           do
+              (delete-snapshot-dir dir))))
 
 #+bknr.cluster
 (defmethod cron-enabled-on-store-p ((store cluster-store-mixin))
   (leaderp store))
 
 (defun cron-snapshot ()
-  (when (boundp 'bknr.datastore:*store*)
-    (log:info "Snapshotting bknr.datastore")
-    (safe-snapshot "cron-job" nil)))
+  (ignore-and-log-errors ()
+   (when (boundp 'bknr.datastore:*store*)
+     (log:info "Snapshotting bknr.datastore")
+     (safe-snapshot "cron-job" nil))))
 
 (cl-cron:make-cron-job 'cron-snapshot
                         :minute 0
