@@ -119,35 +119,47 @@
   (check-https
    (assoc-value (discover oidc) :end--session--endpoint)))
 
-(defun oauth-get-access-token (token-url &key client_id client_secret code
-                                           redirect_uri)
-  (assert code)
-  (multiple-value-bind (resp token-resp-code)
-      (http-request token-url
-                    :method :post
-                    :want-string t
-                    :accept "application/json"
-                    :parameters
-                    `(("client_id" . ,client_id)
-                      ("client_secret" . ,client_secret)
-                      ("code" . ,code)
-                      ("grant_type" . "authorization_code")
-                      ("redirect_uri" . ,redirect_uri)))
-   (let* ((resp
-            (with-extras (("response" resp)
-                          ("response-code" token-resp-code))
-              (json:decode-json-from-string resp))))
-     (when (assoc-value resp :error)
-       (error "oauth error: ~s" (assoc-value resp :error--description)))
-     (flet ((v (x) (assoc-value resp x)))
-       (let ((access-token (make-instance 'oauth-access-token
-                                          :access-token (v :access--token)
-                                          :expires-in (v :expires--in)
-                                          :refresh-token (v :refresh--token)
-                                          :refresh-token-expires-in (v :refresh--token--expires--in)
-                                          :scope (v :scope)
-                                          :token-type (v :token--type))))
-         access-token)))))
+(auto-restart:with-auto-restart (:attempt attempt)
+ (defun oauth-get-access-token (token-url &key client_id client_secret code
+                                            redirect_uri)
+   (assert code)
+   (multiple-value-bind (resp token-resp-code)
+       (http-request token-url
+                     :method :post
+                     :want-string t
+                     :accept "application/json"
+                     :parameters
+                     `(("client_id" . ,client_id)
+                       ("client_secret" . ,client_secret)
+                       ("code" . ,code)
+                       ("grant_type" . "authorization_code")
+                       ("redirect_uri" . ,redirect_uri)))
+     (when (and
+            (< attempt 2)
+            (eql 502 token-resp-code))
+       ;; See T796. In particular, Okta seems to occassional return a
+       ;; 502. Are we allowed to retry in this situation? I don't know
+       ;; yet, but we'll find out right now. If this doesn't work, a
+       ;; more appropriate fix might be to restart the authentication
+       ;; flow all over again.
+       (warn "Got a 502, retrying token-url.")
+       (sleep 1)
+       (invoke-restart 'retry-oauth-get-access-token))
+     (let* ((resp
+              (with-extras (("response" resp)
+                            ("response-code" token-resp-code))
+                (json:decode-json-from-string resp))))
+       (when (assoc-value resp :error)
+         (error "oauth error: ~s" (assoc-value resp :error--description)))
+       (flet ((v (x) (assoc-value resp x)))
+         (let ((access-token (make-instance 'oauth-access-token
+                                            :access-token (v :access--token)
+                                            :expires-in (v :expires--in)
+                                            :refresh-token (v :refresh--token)
+                                            :refresh-token-expires-in (v :refresh--token--expires--in)
+                                            :scope (v :scope)
+                                            :token-type (v :token--type))))
+           access-token))))))
 
 (defun make-json-request (url &rest args)
   (multiple-value-bind (stream status-code)
