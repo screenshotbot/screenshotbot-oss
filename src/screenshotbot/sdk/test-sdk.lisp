@@ -18,7 +18,7 @@
                 #:validate-pull-request
                 #:backoff
                 #:parse-environment
-                #:%read-directory-from-args
+                #:make-bundle
                 #:*directory*
                 #:*metadata*
                 #:get-relative-path
@@ -80,7 +80,7 @@
   (with-fixture state ()
    (tmpdir:with-tmpdir (s)
      (let ((*directory* (namestring s)))
-       (is (typep (%read-directory-from-args)
+       (is (typep (make-bundle)
                   'image-directory))))))
 
 (test read-directory-for-android
@@ -89,7 +89,7 @@
      (let ((*directory* (namestring s)))
        (uiop:with-temporary-file (:pathname metadata :type "json")
          (let ((*metadata* (namestring metadata)))
-           (is (typep (car (image-bundles (%read-directory-from-args)))
+           (is (typep (car (image-bundles (make-bundle)))
                       'directory-image-bundle))))))))
 
 (test get-relative-path

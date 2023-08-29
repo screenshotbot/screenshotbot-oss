@@ -14,7 +14,8 @@
                 #:list-images)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:directory-image-bundle))
+   #:directory-image-bundle
+   #:make-image-bundle))
 (in-package :screenshotbot/sdk/android)
 
 (defun child-by-name (item name)
@@ -192,7 +193,3 @@ These older versions use a different metadata format and are currently
 (make-regular-dir (path:catfile (asdf:system-source-directory :screenshotbot.sdk)
                                 "example/metadata.xml")
                   #P "/tmp/foog/")
-
-
-(defun android-run-p ()
-  *metadata*)

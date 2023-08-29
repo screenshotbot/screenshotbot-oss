@@ -26,9 +26,6 @@
                 #:image-name
                 #:image-directory
                 #:image-directory-with-diff-dir)
-  (:import-from #:screenshotbot/sdk/android
-                #:make-image-bundle
-                #:android-run-p)
   (:import-from #:screenshotbot/sdk/git
                 #:git-repo
                 #:current-commit
@@ -60,7 +57,8 @@
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:dto #:screenshotbot/api/model)
                     (#:e #:screenshotbot/sdk/env)
-                    (#:api-context #:screenshotbot/sdk/api-context))
+                    (#:api-context #:screenshotbot/sdk/api-context)
+                    (#:android   #:screenshotbot/sdk/android))
   (:export
    #:single-directory-run
    #:*request*
@@ -404,16 +402,18 @@ error."
                       :is-trunk t
                       :branch "master"))
 
-(defun %read-directory-from-args (&key (ensure-diff-dir t))
+(defun make-bundle (&key (metadata flags:*metadata*)
+                      (directory flags:*directory*)
+                      (recursivep flags:*recursive*))
   (cond
-    ((android-run-p)
+    (metadata
      (log:info "Looks like an Android run")
-     (make-image-bundle :metadata flags:*metadata*))
-    ((not (str:emptyp flags:*directory*))
-     (unless (path:-d flags:*directory*)
-       (error "Not a directory: ~a. Did you miss --metadata if you intended to use a bundle.zip?" flags:*directory*))
-     (make-instance 'image-directory :directory flags:*directory*
-                                     :recursivep flags:*recursive*))
+     (android:make-image-bundle :metadata metadata))
+    ((not (str:emptyp directory))
+     (unless (path:-d directory)
+       (error "Not a directory: ~a" directory))
+     (make-instance 'image-directory :directory directory
+                                     :recursivep recursivep))
     (t
      (error "Unknown run type, maybe you missed --directory?"))))
 
@@ -558,7 +558,7 @@ pull-request looks incorrect."
   (fad:canonical-pathname (path:catdir (uiop:getcwd) p)))
 
 (defun run-prepare-directory-toplevel (api-context)
-  (let ((directory (%read-directory-from-args)))
+  (let ((directory (make-bundle)))
     (single-directory-run api-context directory :channel flags:*channel*)))
 
 (def-health-check verify-https-works ()
