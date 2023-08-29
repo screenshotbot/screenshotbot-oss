@@ -73,46 +73,8 @@
 
 (defvar *in-test-p* nil)
 
-(defun ensure-private-ip ()
-  (unless *in-test-p* ;; can't mock because of multithreading
-   (assert (equal (dns-client:resolve "tdrhq.com") (hunchentoot:real-remote-addr)))))
-
 (defun md5-hex (f)
   (ironclad:byte-array-to-hex-string (md5:md5sum-file f)))
-
-(def-easy-macro with-staging-decompression (&binding file-name file-name &key compress
-                                                     &fn fn)
-  (cond
-    (compress
-     (let ((gz-file (format nil "~a.gz" (namestring file-name))))
-       (fn gz-file)
-       ;; Using chipz etc are super slow :/
-       (uiop:run-program
-        (list "gunzip" "--synchronous" "-f"
-              (uiop:escape-shell-token gz-file)))))
-    (t
-     (fn file-name))))
-
-(defhandler (nil :uri "/intern/artifact/upload" :method :put) (name hash upload-key
-                                                                    compressed)
-  (assert name)
-  (assert (secret :artifact-upload-key))
-  (ensure-private-ip)
-  (assert (equal upload-key (secret :artifact-upload-key)))
-  (log:info "Uploading artifact: ~a" name)
-  (uiop:with-staging-pathname (file-name (artifact-file-name name))
-
-    (with-staging-decompression (file-name
-                                 file-name
-                                 :compress (string-equal "true" compressed))
-      (hex:write-postdata-to-file file-name))
-    (assert (equal
-             (md5-hex file-name)
-             hash)))
-  (log:info "artifact uploaded")
-  (call-hooks name)
-  "OK")
-
 
 (defun artifact-file-name (name)
   (assert (not (str:containsp "/." name)))
@@ -152,6 +114,3 @@
         if (equal dep (artifact-hook-dep hook))
           do
         (funcall (artifact-hook-callback hook))))
-
-
-;; (upload-artifact "installer-linux" "/home/arnold/.cache/common-lisp/lw-7.1.2-linux-x64/home/arnold/builds/web/screenshotbot/sdk/installer")

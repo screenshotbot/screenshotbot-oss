@@ -19,7 +19,6 @@
                 #:call-hooks
                 #:*artifact-hooks*
                 #:*in-test-p*
-                #:ensure-private-ip
                 #:artifact-link)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
@@ -32,18 +31,15 @@
 (def-fixture state ()
   (tmpdir:with-tmpdir (dir)
     (assert (not (boundp '*object-store*)))
-    (let ((old-secret (secret :artifact-upload-key))
-          (old-hooks *artifact-hooks*))
+    (let ((old-hooks *artifact-hooks*))
       (with-installation (:globally t)
        (unwind-protect
             (progn
               (setf *object-store* (namestring dir))
               (setf old-hooks *artifact-hooks*)
               (setf *in-test-p* t)
-              (setf (secret :artifact-upload-key) "foobar")
               (with-local-acceptor (host) ('screenshotbot/server:acceptor)
                 (&body)))
-         (setf (secret :artifact-upload-key) old-secret)
          (setf *in-test-p* nil)
          (setf *artifact-hooks* old-hooks)
          (makunbound '*object-store*))))))
@@ -77,38 +73,6 @@
       (finish-output output)
       (is
        (equal "hello"
-              (util/request:http-request
-               (format nil "~a/artifact/test-art.txt" host)
-               :ensure-success t
-               :want-string t))))))
-
-(test upload-asset ()
-  (with-fixture state ()
-    (with-open-file (output
-                     (ensure-directories-exist
-                      (path:catfile
-                       (object-store)
-                       "artifacts/test-art.txt"))
-                     :direction :output)
-      (write-string "hello2" output)
-      (finish-output output)
-      (close output)
-
-      (is
-       (equal
-        "OK"
-        (util/request:http-request
-         (format nil "~a/intern/artifact/upload?name=test-art.txt&hash=~a&upload-key=foobar"
-                 host
-                 (ironclad:byte-array-to-hex-string
-                  (md5:md5sum-string "zoidberg")))
-         :method :put
-         :ensure-success t
-         :want-string t
-         :content "zoidberg")))
-
-      (is
-       (equal "zoidberg"
               (util/request:http-request
                (format nil "~a/artifact/test-art.txt" host)
                :ensure-success t

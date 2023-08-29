@@ -321,7 +321,6 @@
                :fiveam-matchers
                :util/random-port
                :trivia
-               :screenshotbot/utils
                :screenshotbot/replay-core
                :screenshotbot/webdriver
                :screenshotbot/replay
@@ -459,8 +458,7 @@
                :util/digests
                :bknr.impex)
   :components ((:static-file "dtd/secret" :type "dtd")
-               (:file "secret")
-               (:file "artifacts-secrets")))
+               (:file "secret")))
 
 
 (defsystem :screenshotbot/store-tests
@@ -471,19 +469,6 @@
   :components ((:file "test-store")))
 
 
-(defsystem :screenshotbot/utils
-  :serial t
-  :depends-on (:drakma
-               :flexi-streams
-               :ironclad
-               :screenshotbot/secrets
-               :easy-macros
-               :gzip-stream
-               :md5
-               :log4cl
-               :cl-fad
-               :alexandria)
-  :components ((:file "utils")))
 
 (asdf:defsystem :screenshotbot/replay-core
   :serial t
