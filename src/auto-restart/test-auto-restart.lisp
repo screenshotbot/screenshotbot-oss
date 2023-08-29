@@ -236,3 +236,20 @@
                (inline))
       t))
   (is (equal "hello world" (documentation #'foo 'function))))
+
+
+
+(test maybe-invoke-restart
+  (let ((count 0)
+        (seen nil))
+    (with-auto-restart (:attempt attempt)
+      (defun foo ()
+        (push attempt seen)
+        (log:info "in here: ~a" auto-restart::*attempt*)
+        (incf count)
+        (assert (< count 10))
+        (when (< attempt 3)
+          (invoke-restart 'retry-foo))))
+    (foo)
+    (is (eql 3 count))
+    (is (equal (list 3 2 1) seen))))

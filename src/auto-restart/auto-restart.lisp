@@ -24,9 +24,15 @@
   "Globally enable or disable automatic retries. Useful for unit tests.")
 
 (defmacro with-auto-restart ((&key (retries 0)
-                                   (sleep 0)
+                                (sleep 0)
+                                (attempt (gensym "attempt"))
                                 (restart-name))
                              &body body)
+  "Enable auto-restarts for a DEFUN.
+
+ATTEMPT will be a variable name that will be bound to the current
+attempt. Attempts will be 1-indexed (1, 2, 3 ... ).
+"
   (assert (= 1 (length body)))
 
   (let* ((body (car body))
@@ -66,7 +72,8 @@
          ,@decls
          (let ((*attempt* (1+ *attempt*)))
            (restart-case
-               (flet ((body ()
+               (flet ((body (,attempt)
+                        (declare (ignorable ,attempt))
                         ,@body))
                  (let ((attempt *attempt*))
                    (flet ((error-handler (e)
@@ -77,8 +84,9 @@
                                   (sleep sleep-time)))
                               (invoke-restart ',restart-name))))
                      (handler-bind ((error #'error-handler))
-                       (let ((*attempt* 0))
-                         (body))))))
+                       (let ((my-attempt *attempt*))
+                         (let ((*attempt* 0))
+                           (body my-attempt)))))))
              (,restart-name ()
                (apply #',fn-name ,@ (fix-args-for-funcall var-names))))))))))
 
