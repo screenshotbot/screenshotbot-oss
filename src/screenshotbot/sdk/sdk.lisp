@@ -417,11 +417,6 @@ error."
     (t
      (error "Unknown run type, maybe you missed --directory?"))))
 
-(defun prepare-directory (fn)
-  (funcall
-   fn
-   (%read-directory-from-args)))
-
 
 (defun guess-master-branch (repo)
   (flet ((check (x)
@@ -563,9 +558,8 @@ pull-request looks incorrect."
   (fad:canonical-pathname (path:catdir (uiop:getcwd) p)))
 
 (defun run-prepare-directory-toplevel (api-context)
-  (prepare-directory
-   (lambda (directory)
-     (single-directory-run api-context directory :channel flags:*channel*))))
+  (let ((directory (%read-directory-from-args)))
+    (single-directory-run api-context directory :channel flags:*channel*)))
 
 (def-health-check verify-https-works ()
   (util/request:http-request "https://screenshotbot.io/api/version"
