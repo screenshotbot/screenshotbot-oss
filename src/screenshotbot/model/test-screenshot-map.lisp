@@ -55,7 +55,9 @@
   (:import-from #:fiveam-matchers/satisfying
                 #:satisfying)
   (:import-from #:fiveam-matchers/misc
-                #:is-null))
+                #:is-null)
+  (:import-from #:bknr.datastore
+                #:deftransaction))
 (in-package :screenshotbot/model/test-screenshot-map)
 
 
@@ -456,20 +458,26 @@ delete this test in the future, it might be okay."
           (map-2 (make-screenshot-map channel nil)))
       (is (eql map map-2)))))
 
+(deftransaction construct-long-list (count)
+  (let ((items (loop for i from 0 below count
+                     collect (make-instance 'screenshot-map
+                                            :screenshots nil))))
+    (loop for item on items
+          if (second item)
+            do
+               (setf (slot-value (first item) 'previous)
+                     (second item)))
+    items))
+
 (test memoized-map-is-tail-call-optimized
   (with-fixture state ()
     (let ((count 40000))
-      (let ((items (loop for i from 0 below count
-                         collect (make-instance 'screenshot-map
-                                                :screenshots nil))))
-        (loop for item on items
-              if (second item)
-              do
-                 (setf (slot-value (first item) 'previous)
-                       (second item)))
-        (memoized-reduce
-         (lambda (this length)
-           (+ 1 length))
-         (car items)
-         0
-         'chain-cost)))))
+      (let ((items (construct-long-list count)))
+        (is
+         (equal count
+                (memoized-reduce
+                 (lambda (this length)
+                   (+ 1 length))
+                 (car items)
+                 0
+                 'chain-cost)))))))
