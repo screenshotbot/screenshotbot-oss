@@ -21,6 +21,8 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/model/screenshot-map
+                #:memoized-reduce
+                #:screenshot-map
                 #:to-list
                 #:previous
                 #:chain-cost
@@ -453,3 +455,21 @@ delete this test in the future, it might be okay."
     (let ((map (make-screenshot-map channel nil))
           (map-2 (make-screenshot-map channel nil)))
       (is (eql map map-2)))))
+
+(test memoized-map-is-tail-call-optimized
+  (with-fixture state ()
+    (let ((count 40000))
+      (let ((items (loop for i from 0 below count
+                         collect (make-instance 'screenshot-map
+                                                :screenshots nil))))
+        (loop for item on items
+              if (second item)
+              do
+                 (setf (slot-value (first item) 'previous)
+                       (second item)))
+        (memoized-reduce
+         (lambda (this length)
+           (+ 1 length))
+         (car items)
+         0
+         'chain-cost)))))

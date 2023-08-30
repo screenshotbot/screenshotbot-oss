@@ -87,21 +87,20 @@ will not consider it as a possibility.")
 
 (defun memoized-reduce (fn map initial-value slot &optional (callback #'identity))
   "This is written in CPS form to avoid deep recursions."
-  (cond
-    ((null map) (funcall callback initial-value))
-    (t
-     (cond
-       ((slot-value map slot)
-        (funcall callback (slot-value map slot)))
-       (t
-        (memoized-reduce fn
-                         (previous map)
-                         initial-value
-                         slot
-                         (lambda (previous-value)
-                           (funcall callback
-                                    (setf (slot-value map slot)
-                                          (funcall fn map previous-value))))))))))
+  (labels ((%memoized-reduce (map &optional (callback #'identity))
+             (cond
+               ((null map) (funcall callback initial-value))
+               (t
+                (cond
+                  ((slot-value map slot)
+                   (funcall callback (slot-value map slot)))
+                  (t
+                   (%memoized-reduce (previous map)
+                                     (lambda (previous-value)
+                                       (funcall callback
+                                                (setf (slot-value map slot)
+                                                      (funcall fn map previous-value)))))))))))
+    (%memoized-reduce map callback)))
 
 (defun chain-cost (map)
   (memoized-reduce (lambda (this cost)
