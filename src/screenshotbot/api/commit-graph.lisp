@@ -12,24 +12,20 @@
         #:screenshotbot/user-api))
 (in-package :screenshotbot/api/commit-graph)
 
-(defapi (update-commit-graph :uri "/api/commit-graph" :method :post) (repo-url branch graph-json)
-  ;; do nothing with this for the moment
-  (%update-commit-graph repo-url branch graph-json))
+(auto-restart:with-auto-restart ()
+ (defun %update-commit-graph-v2 (repo-url graph-json)
+   (log:info "Updating commit graph for ~S and ~S" (current-company) repo-url)
+   (let* ((commit-graph (find-or-create-commit-graph
+                         (current-company)
+                         repo-url)))
+     (log:info "got graph: ~a" graph-json)
+     (bt:with-recursive-lock-held ((lock commit-graph))
+       (let ((dag (commit-graph-dag commit-graph))
+             (new-dag (dag:read-from-stream (make-string-input-stream graph-json))))
+         (dag:merge-dag dag new-dag)
+         (setf (commit-graph-dag commit-graph)
+               dag))))))
 
-(defun %update-commit-graph (repo-url branch graph-json)
-  (log:info "Updating commit graph for ~S and ~S" (current-company) repo-url)
-  (restart-case
-      (let* ((commit-graph (find-or-create-commit-graph
-                            (current-company)
-                            repo-url)))
-        (log:info "got graph: ~a" graph-json)
-        (bt:with-recursive-lock-held ((lock commit-graph))
-          (let ((dag (commit-graph-dag commit-graph))
-                (new-dag (dag:read-from-stream (make-string-input-stream graph-json))))
-            (dag:merge-dag dag new-dag)
-            (setf (commit-graph-dag commit-graph)
-                  dag))))
-    (retry-update-commit-graph ()
-      (%update-commit-graph repo-url
-                            branch
-                            graph-json))))
+(defapi (update-commit-graph :uri "/api/commit-graph" :method :post) (repo-url graph-json)
+  ;; do nothing with this for the moment
+  (%update-commit-graph-v2 repo-url graph-json))

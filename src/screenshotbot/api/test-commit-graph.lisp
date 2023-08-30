@@ -12,7 +12,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/api/commit-graph
-                #:%update-commit-graph)
+                #:%update-commit-graph-v2)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/api/test-commit-graph)
 
@@ -27,7 +27,6 @@
                                           :sha "abcd"
                                           :author "zoidberg") )
        (finishes
-        (%update-commit-graph "https://github.com/foo/bar"
-                              "main"
-                              (with-output-to-string (out)
-                                (dag:write-to-stream dag out))))))))
+        (%update-commit-graph-v2 "https://github.com/foo/bar"
+                                 (with-output-to-string (out)
+                                   (dag:write-to-stream dag out))))))))
