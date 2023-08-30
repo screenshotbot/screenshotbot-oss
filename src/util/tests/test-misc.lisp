@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/misc
+                #:random-selection
                 #:safe-with-open-file
                 #:relpath
                 #:safe-ensure-directories-exist
@@ -101,3 +102,8 @@
       (write-string "arnold" stream))
     (safe-with-open-file (stream (path:catfile dir "foo.txt") :direction :input)
       (is (equal "arnold" (read-line stream))))))
+
+(test random-select
+  (dotimes (i 100)
+    (assert
+     (random-selection (list 1 2 3 4 5 6 7 8 9 10) :weight (lambda (x) (* x x))))))

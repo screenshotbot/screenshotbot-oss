@@ -190,3 +190,14 @@ In the error case, it's hard to distinguish between a real error (e.g.
     (t
      (apply #'nested-assoc-value (cdr (assoc (car nesting) obj :test #'equal))
             (cdr nesting)))))
+
+(defun random-selection (objs &key (weight (lambda (obj) (declare (ignore obj)) 1)))
+  (let ((total-weight (loop for obj in objs
+                            summing (funcall weight obj))))
+    (let ((pick (random total-weight)))
+      (loop for obj in objs
+            if (< pick (funcall weight obj))
+              return obj
+            else
+              do
+                 (decf pick (funcall weight obj))))))
