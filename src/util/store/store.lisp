@@ -57,6 +57,8 @@
                 #:ignore-and-log-errors
                 #:with-extras
                 #:log-sentry)
+  (:import-from #:util/misc
+                #:safe-ensure-directories-exist)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -126,7 +128,7 @@ to the directory that was just snapshotted.")
        path)
       (t
        (prog1
-           (ensure-directories-exist path)
+           (safe-ensure-directories-exist path)
          (setf *ensure-directories-cache* (fset:with *ensure-directories-cache*
                                                      dir)))))))
 
