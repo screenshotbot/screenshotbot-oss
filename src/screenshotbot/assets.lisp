@@ -99,11 +99,12 @@ set -x
 type=`uname`
 
 INSTALLER=screenshotbot-installer.sh
+CURL=\"curl --retry 3 \"
 
 if [ $type = \"Linux\" ] ; then
-  curl --progress-bar ${linux-link} --output $INSTALLER
+  $CURL --progress-bar ${linux-link} --output $INSTALLER
 elif [ $type = \"Darwin\" ] ; then
-  curl --progress-bar  ${darwin-link} --output $INSTALLER
+  $CURL --progress-bar  ${darwin-link} --output $INSTALLER
 else
   echo Unknown uname type: $type, please message support@screenshotbot.io
 fi
