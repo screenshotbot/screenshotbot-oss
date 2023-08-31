@@ -121,6 +121,7 @@
 (defmethod %make-basic-auth ((self desktop-api-context))
   nil)
 
+;; TODO: fix auto restarts: T810
 (auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
   (defun %request (api-context
                    api &key (method :post)
