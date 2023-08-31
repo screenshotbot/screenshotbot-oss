@@ -10,6 +10,7 @@
   (:import-from #:cl-mock
                 #:with-mocks)
   (:import-from #:screenshotbot/sdk/main
+                #:with-defaults
                 #:warn-when-obsolete-flags
                 #:trim-arg
                 #:*api-secret*
@@ -20,6 +21,8 @@
   (:import-from #:screenshotbot/sdk/env
                 #:api-hostname
                 #:make-env-reader)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:remote-version)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
@@ -122,4 +125,13 @@
       (is-false saw))
     (let ((flags:*ios-multi-dir* t))
       (signals simple-warning
-       (warn-when-obsolete-flags)))))
+        (warn-when-obsolete-flags)))))
+
+(test with-defaults-happy-path
+  (with-fixture state ()
+    (cl-mock:answer (make-api-context)
+      :api-context)
+    (cl-mock:answer (remote-version :api-context)
+      9)
+    (with-defaults (api-context)
+      (pass))))

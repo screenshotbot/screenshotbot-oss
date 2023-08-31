@@ -17,7 +17,8 @@
    #:rev-parse
    #:merge-base
    #:current-commit
-   #:current-branch)
+   #:current-branch
+   #:cleanp)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/git)
 
@@ -26,17 +27,12 @@
                     ($ "git" "rev-parse" "--show-toplevel"))))
 
 (defclass git-repo ()
-  ((link :initarg :link
-         :accessor repo-link)
-   (dir :initarg :dir
+  ((dir :initarg :dir
         :accessor repo-dir
         :initform (git-root))))
 
 (defclass null-repo ()
   ())
-
-(defmethod repo-link ((repo null-repo))
-  nil)
 
 (defmethod cleanp ((repo null-repo))
   t)
@@ -118,3 +114,6 @@
     ;; fail
     #+windows
     (uiop:run-program (list "attrib" "-r" (format nil "~a\\*.*" (namestring dir)) "/s"))))
+
+(defun git-repo ()
+  (make-instance 'git-repo))

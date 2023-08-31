@@ -6,7 +6,7 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
-  :version "2.6.19"
+  :version "2.7.0"
   :depends-on (:com.google.flag
                :pkg
                :quri
@@ -50,6 +50,7 @@
                (:file "android")
                (:file "env")
                (:file "git")
+               (:file "run-context")
                (:file "sdk")
                (:file "failed-run")
                (:file "unchanged-run")
@@ -98,6 +99,7 @@
   :components ((:file "test-bundle")
                (:file "test-version-check")
                (:file "test-main")
+               (:file "test-run-context")
                (:file "test-flags")
                (:file "test-git")
                (:file "test-env")

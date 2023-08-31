@@ -56,6 +56,10 @@
                 #:*api-secret*)
   (:import-from #:screenshotbot/sdk/cli-common
                 #:root/command)
+  (:import-from #:screenshotbot/sdk/run-context
+                #:flags-run-context)
+  (:import-from #:screenshotbot/sdk/git
+                #:git-repo)
   (:export
    #:main))
 (in-package :screenshotbot/sdk/main)
@@ -81,7 +85,6 @@
 
 
 (def-easy-macro with-defaults (&binding api-context &fn fn)
-  (sdk:parse-org-defaults)
   (let ((api-context (make-api-context)))
     (let ((version (remote-version api-context)))
       (log:debug "Remote version is ~a" version))
@@ -171,12 +174,12 @@
          (mark-unchanged-run api-context)))
       (flags:*static-website*
        (with-defaults (api-context)
-         (static:record-static-website api-context flags:*static-website*
-                                       :production flags:*production*
-                                       :channel flags:*channel*
-                                       :repo-url flags:*repo-url*
+         (static:record-static-website api-context
+                                       (make-instance 'flags-run-context
+                                                      :env (make-env-reader)
+                                                      :git-repo (git-repo))
+                                       flags:*static-website*
                                        :browser-configs flags:*browser-configs*
-                                       :main-branch flags:*main-branch*
                                        :assets-root flags:*static-website-assets-root*)))
       (flags:*firebase-output*
        (firebase:with-firebase-output (flags:*firebase-output*)

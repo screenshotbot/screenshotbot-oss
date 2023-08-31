@@ -7,7 +7,6 @@
                 #:*cache*
                 #:context)
   (:import-from #:screenshotbot/sdk/sdk
-                #:guess-master-branch
                 #:request
                 #:ensure-api-success)
   (:import-from #:util/digests
@@ -37,13 +36,18 @@
                 #:common-run-options
                 #:*root-commands*
                 #:with-clingon-api-context)
+  (:import-from #:screenshotbot/sdk/run-context
+                #:flags-run-context)
+  (:import-from #:screenshotbot/sdk/git
+                #:git-repo)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:git #:screenshotbot/sdk/git)
                     (#:e #:screenshotbot/sdk/env)
                     (#:replay #:screenshotbot/replay/core)
-                    (#:api-context #:screenshotbot/sdk/api-context))
+                    (#:api-context #:screenshotbot/sdk/api-context)
+                    (#:run-context #:screenshotbot/sdk/run-context))
   (:export
    #:record-static-website))
 (in-package :screenshotbot/sdk/static)
@@ -211,62 +215,61 @@ upload blobs that haven't been uploaded before."
         (release-file-lock lock)))))
 
 (auto-restart:with-auto-restart ()
-  (defun record-static-website (api-context location
-                                &rest args
-                                &key production
-                                  repo-url
-                                  main-branch
-                                  assets-root
+  (defun record-static-website (api-context run-context location &rest args
+                                &key assets-root
+                                  browser-configs
                                   &allow-other-keys)
     (assert (path:-d location))
-    (let ((git-repo (make-instance 'git:git-repo :link repo-url)))
-      (when production
-        (sdk:update-commit-graph
-         api-context
-         git-repo
-         main-branch))
-      (let ((schedule-args
-              (remove-from-plist args
-                                 :main-branch :assets-root))
-            (main-branch (or main-branch
-                             (guess-master-branch git-repo))))
-        (with-cache-dir ()
-          (tmpdir:with-tmpdir (tmpdir)
-            (let* ((context (make-instance 'context))
-                   (port (util/random-port:random-port))
-                   (acceptor (make-instance 'hunchentoot:acceptor
-                                            :port port
-                                            :document-root location))
-                   (snapshot (make-instance 'replay:snapshot
-                                            :tmpdir tmpdir)))
-              (unwind-protect
-                   (progn
-                     (hunchentoot:start acceptor)
-                     (loop for index.html in (find-all-index.htmls location)
-                           do
-                              (replay:load-url-into
-                               context
-                               snapshot
-                               (format nil "http://localhost:~a~a" port index.html)
-                               tmpdir
-                               :actual-url
-                               (when assets-root
-                                 (format nil "~a~a"
-                                         assets-root
-                                         index.html))))
+    (when (run-context:productionp run-context)
+      (sdk:update-commit-graph
+       api-context
+       (run-context:git-repo run-context)
+       (run-context:main-branch run-context)))
+    (let ((schedule-args
+            (remove-from-plist args
+                               :main-branch :assets-root))
+          (main-branch (run-context:main-branch run-context)))
+      (with-cache-dir ()
+        (tmpdir:with-tmpdir (tmpdir)
+          (let* ((context (make-instance 'context))
+                 (port (util/random-port:random-port))
+                 (acceptor (make-instance 'hunchentoot:acceptor
+                                          :port port
+                                          :document-root location))
+                 (snapshot (make-instance 'replay:snapshot
+                                          :tmpdir tmpdir)))
+            (unwind-protect
+                 (progn
+                   (hunchentoot:start acceptor)
+                   (loop for index.html in (find-all-index.htmls location)
+                         do
+                            (replay:load-url-into
+                             context
+                             snapshot
+                             (format nil "http://localhost:~a~a" port index.html)
+                             tmpdir
+                             :actual-url
+                             (when assets-root
+                               (format nil "~a~a"
+                                       assets-root
+                                       index.html))))
 
-                     (upload-snapshot-assets api-context snapshot)
-                     (let* ((result (apply #'schedule-snapshot api-context snapshot
-                                           :main-branch main-branch
-                                           schedule-args))
-                            (logs (a:assoc-value result :logs)))
-                       (log:info "Screenshot job queued: ~a" logs)))
-                (hunchentoot:stop acceptor)
-                #+mswindows
-                (progn
-                  (log:info "[windows-only] Waiting 2s before cleanup")
-                  (sleep 2))))))))
-))
+                   (upload-snapshot-assets api-context snapshot)
+                   (let* ((result (apply #'schedule-snapshot api-context snapshot
+                                         :main-branch main-branch
+                                         schedule-args))
+                          (logs (a:assoc-value result :logs)))
+                     (log:info "Screenshot job queued: ~a" logs)))
+              (hunchentoot:stop acceptor)
+              #+mswindows
+              (progn
+                (log:info "[windows-only] Waiting 2s before cleanup")
+                (sleep 2)))))))
+    ))
+
+(defclass static-run-context (run-context:run-context
+                              run-context:env-reader-run-context)
+  ())
 
 (defun static-website/command ()
   (clingon:make-command
@@ -293,17 +296,16 @@ upload blobs that haven't been uploaded before."
    :handler (lambda (cmd)
               (log:config :debug)
               (with-clingon-api-context (api-context cmd)
-                (let ((env (e:make-env-reader)))
-                  (apply #'record-static-website
-                         api-context (getopt cmd :directory)
-                         :pull-request (or (getopt cmd :pull-request)
-                                           (e:pull-request-url env))
-                         :repo-url (or (getopt cmd :repo-url)
-                                       (e:repo-url env))
-                         :browser-configs (getopt cmd :browser-configs)
-                         :main-branch (getopt cmd :main-branch)
-                         (loop for key  in `(:assets-root :production
-                                             :channel)
-                               append (list key (getopt cmd key)))))))))
+                (apply #'record-static-website
+                       api-context
+                       (apply #'make-instance 'static-run-context
+                              :env (e:make-env-reader)
+                              :git-repo (git-repo)
+                              :main-branch (getopt cmd :main-branch)
+                              :channel (getopt cmd :channel)
+                              :productionp (getopt cmd :production))
+                       (getopt cmd :directory)
+                       :browser-configs (getopt cmd :browser-configs)
+                       :assets-root (getopt cmd :assets-root))))))
 
 (register-root-command 'static-website/command)
