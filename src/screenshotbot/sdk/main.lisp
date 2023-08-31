@@ -222,6 +222,8 @@
               ("channel" flags:*channel*))
     (with-extras (("api_id"  *api-key*)
                   ("features" *features*)
+                  ("build_creator"
+                   (uiop:getenv "BUILDKITE_BUILD_CREATOR"))
                   ("build-url" flags:*build-url*)
                   #+lispworks
                   ("cmd-line-trimmed"
