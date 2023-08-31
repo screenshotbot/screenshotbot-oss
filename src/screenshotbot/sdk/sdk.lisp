@@ -543,7 +543,8 @@ pull-request looks incorrect."
 (defun single-directory-run (api-context directory &key channel)
   (let ((repo (git-repo))
         (branch flags:*main-branch*))
-    (when flags:*production*
+    (when (and flags:*production*
+               (> flags:*commit-limit* 0))
       (update-commit-graph api-context repo branch))
     (log:info "Uploading images from: ~a" directory)
     (make-directory-run api-context directory
