@@ -120,32 +120,42 @@
 (defmethod %make-basic-auth ((self desktop-api-context))
   nil)
 
-;; TODO: fix auto restarts: T810
-(auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
+(auto-restart:with-auto-restart (:attempt attempt)
   (defun %request (api-context
                    api &key (method :post)
                          parameters
-                         content)
+                         content
+                         (backoff 2))
     ;; TODO: we're losing the response code here, we need to do
     ;; something with it.
-    (uiop:slurp-input-stream
-     'string
-     (http-request
-      (format-api-url api-context api)
-      :method method
-      :want-stream t
-      :method method
-      :basic-authorization (when (remote-supports-basic-auth-p api-context)
-                             (%make-basic-auth api-context))
-      :content content
-      :external-format-out :utf-8
-      :parameters (cond
-                    ((remote-supports-basic-auth-p api-context)
-                     parameters)
-                    (t (list*
-                        (cons "api-key" (api-context:key api-context))
-                        (cons "api-secret-key" (api-context:secret api-context))
-                        parameters)))))))
+    (multiple-value-bind (stream response-code)
+        (http-request
+         (format-api-url api-context api)
+         :method method
+         :want-stream t
+         :method method
+         :basic-authorization (when (remote-supports-basic-auth-p api-context)
+                                (%make-basic-auth api-context))
+         :content content
+         :external-format-out :utf-8
+         :parameters (cond
+                       ((remote-supports-basic-auth-p api-context)
+                        parameters)
+                       (t (list*
+                           (cons "api-key" (api-context:key api-context))
+                           (cons "api-secret-key" (api-context:secret api-context))
+                           parameters))))
+      (when (and
+             (member response-code '(502 503))
+             (< attempt 5))
+        (sleep (expt backoff attempt))
+        (invoke-restart 'retry-%request))
+
+      ;; TODO: if the request has failed after multiple attempts, we
+      ;; should signal an error
+
+      (with-open-stream (stream stream)
+        (uiop:slurp-input-stream 'string stream)))))
 
 (defmethod request ((api-context api-context:api-context)
                     api &key (method :post)

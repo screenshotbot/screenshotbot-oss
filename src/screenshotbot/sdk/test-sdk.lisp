@@ -10,6 +10,7 @@
    :alexandria
         :fiveam)
   (:import-from #:screenshotbot/sdk/sdk
+                #:%request
                 #:format-api-url
                 #:invalid-pull-request
                 #:empty-run-error
@@ -60,6 +61,8 @@
                 #:with-global-binding)
   (:import-from #:screenshotbot/sdk/api-context
                 #:api-context)
+  (:import-from #:util/request
+                #:http-request)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:a #:alexandria)
                     (#:dto #:screenshotbot/api/model)))
@@ -293,3 +296,47 @@
               (make-instance 'api-context
                              :hostname "foo.screenshotbot.io")
               "/api/version"))))
+
+(test retries-%request
+  (with-fixture state ()
+    (let ((count 0))
+     (cl-mock:if-called 'http-request
+                        (lambda (url &rest args)
+                          (incf count)
+                          (cond
+                            ((<= count 3)
+                             (values (make-string-input-stream "Bad") 502))
+                            (t
+                             (values (make-string-input-stream "Good") 200)))))
+      (is
+       (equal "Good"
+              (%request (make-instance 'api-context
+                                       :remote-version *api-version*
+                                       :key "foo"
+                                       :secret "bar"
+                                       :hostname "https://example.com")
+                        "/api/test"
+                        :backoff 0))))))
+
+
+(test retries-%request-will-finally-fail
+  (with-fixture state ()
+    (let ((count 0))
+     (cl-mock:if-called 'http-request
+                        (lambda (url &rest args)
+                          (incf count)
+                          (cond
+                            ((<= count 10)
+                             (values (make-string-input-stream "Bad") 502))
+                            (t
+                             (values (make-string-input-stream "Good") 200)))))
+      (is
+       ;; See TODO in %request, this should probably signal an error
+       (equal "Bad"
+              (%request (make-instance 'api-context
+                                       :remote-version *api-version*
+                                       :key "foo"
+                                       :secret "bar"
+                                       :hostname "https://example.com")
+                        "/api/test"
+                        :backoff 0))))))
