@@ -9,14 +9,14 @@
             (:use #:cl
                   #:fiveam)
             (:import-from #:screenshotbot/sdk/git
+                          #:read-graph
                           #:rev-parse
                           #:current-commit
                           #:current-branch
                           #:git-command
                           #:repo-dir
                           #:git-repo
-                          #:$
-                          #:assert-commit)
+                          #:$)
             (:import-from #:fiveam-matchers/core
                           #:assert-that)
             (:import-from #:fiveam-matchers/strings
@@ -45,15 +45,6 @@
     (let ((repo (make-instance 'git-repo :dir dir)))
       (&body))))
 
-(test assert-commit
-  (handler-case
-      (progn
-        (assert-commit "foo" "foo bar")
-        (fail "expected error"))
-    (error (e)
-      (assert-that (format nil "~a" e)
-                   (contains-string "`foo` does not")))))
-
 (test get-current-commit
   (with-fixture git-repo ()
     (make-commit repo "foobar")
@@ -81,3 +72,11 @@
     (is-false (rev-parse repo "bleh"))
     (is-true
      (rev-parse repo "car"))))
+
+(test read-dag-from-repo
+  (with-fixture git-repo ()
+    (make-commit repo "foobar")
+    (let ((dag
+            (read-graph repo)))
+      (assert-that (dag::all-commits dag)
+                   (has-length 1)))))

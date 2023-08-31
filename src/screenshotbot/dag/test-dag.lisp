@@ -7,9 +7,10 @@
 (defpackage :screenshotbot.dag.test-dag
   (:use #:cl
         #:dag
-        #:alexandria
-        #:fiveam)
+        #:fiveam
+        #:fiveam-matchers)
   (:import-from #:dag
+                #:assert-commit
                 #:ordered-commits
                 #:commit-map
                 #:digraph
@@ -29,7 +30,9 @@
                 #:has-any
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
-                #:contains))
+                #:contains)
+  (:import-from #:alexandria
+                #:assoc-value))
 
 (in-package :screenshotbot.dag.test-dag)
 
@@ -262,3 +265,12 @@ for you."
       (add-edge "aa" "bb" :dag dag)
       (assert-that (mapcar #'sha (ordered-commits dag))
                    (contains "aa")))))
+
+(test assert-commit
+  (handler-case
+      (progn
+        (assert-commit "foo" "foo bar")
+        (fail "expected error"))
+    (error (e)
+      (assert-that (format nil "~a" e)
+                   (contains-string "`foo` does not")))))

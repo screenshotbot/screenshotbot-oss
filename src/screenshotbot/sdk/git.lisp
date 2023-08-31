@@ -77,30 +77,15 @@
 (defmethod current-branch ((repo null-repo))
   nil)
 
-(defun assert-commit (commit line)
-  (unless (eql 40 (length commit))
-    (error "`~a` does not look like a valid Git commit SHA1 string, read from `~a`"
-           commit
-           line)))
-
-
 (defmethod read-graph ((repo git-repo))
-  (let ((lines (nreverse (str:lines
-                          ($ (git-command repo)
-                            "log" "--all"
-                            (when flags:*commit-limit*
-                              (format nil "--max-count=~a" flags:*commit-limit*))
-                            "--pretty=%H %P")))))
-    (let ((dag (make-instance 'dag:dag)))
-      (dolist (line lines)
-        (destructuring-bind (sha &rest parents) (str:split " " (str:trim line))
-          (assert-commit sha line)
-          (loop for parent in parents do
-            (assert-commit parent line))
-          (dag:add-commit dag (make-instance 'dag:commit
-                                             :sha sha
-                                             :parents parents))))
-      dag)))
+  (dag:read-from-stream
+   (make-string-input-stream
+    ($ (git-command repo)
+      "log" "--all"
+      (when flags:*commit-limit*
+        (format nil "--max-count=~a" flags:*commit-limit*))
+      "--pretty=%H %P"))
+   :format :text))
 
 (defmethod merge-base ((repo git-repo) master-sha commit-sha)
   ($ (git-command repo) "merge-base" master-sha commit-sha))

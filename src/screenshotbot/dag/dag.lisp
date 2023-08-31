@@ -187,6 +187,12 @@ tree. This version uses the Kahn's algorithm instead of DFS"
            (encode (parents commit) stream))))))
   (finish-output stream))
 
+(defun assert-commit (commit line)
+  (unless (eql 40 (length commit))
+    (error "`~a` does not look like a valid Git commit SHA1 string, read from `~a`"
+           commit
+           line)))
+
 (defun read-from-stream (stream &key (format :json))
   (let ((dag (make-instance 'dag :pathname (or
                                             (ignore-errors
@@ -218,6 +224,19 @@ tree. This version uses the Kahn's algorithm instead of DFS"
                                        :sha sha
                                        :author author
                                        :parents parents)))))
+      dag)
+     (:text
+      (loop for line = (read-line stream nil)
+            while (and line
+                       (not (str:emptyp (str:trim line))))
+            do
+               (destructuring-bind (sha &rest parents) (str:split " " (str:trim line))
+                 (assert-commit sha line)
+                 (loop for parent in parents do
+                   (assert-commit parent line))
+                 (dag:add-commit dag (make-instance 'dag:commit
+                                                    :sha sha
+                                                    :parents parents))))
       dag))))
 
 (defmethod merge-dag ((dag dag) (from-dag dag))
