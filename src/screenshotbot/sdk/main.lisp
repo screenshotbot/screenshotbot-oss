@@ -224,6 +224,7 @@
                   ("features" *features*)
                   ("build_creator"
                    (uiop:getenv "BUILDKITE_BUILD_CREATOR"))
+                  ("cli-version" *client-version*)
                   ("build-url" flags:*build-url*)
                   #+lispworks
                   ("cmd-line-trimmed"
