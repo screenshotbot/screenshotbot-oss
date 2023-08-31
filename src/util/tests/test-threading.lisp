@@ -243,6 +243,31 @@
            (bt:join-thread thread))
          (is (eql thread-count *ctr*)))))))
 
+(defclass fake-sentry ()
+  ((captured :initform nil
+             :accessor captured)))
+
+(defmethod sentry-client::client-capture-exception ((self fake-sentry) e &rest args &key &allow-other-keys)
+  (push e (captured self)))
+
+#-screenshotbot-oss
+(test max-pool-logs-errors
+  (with-fixture state ()
+    (with-global-binding ((*log-sentry-p* t)
+                          (*catch-errors-p* t)
+                          (sentry-client::*sentry-client* (make-instance 'fake-sentry))
+                          (ctr 0))
+      (let ((max-pool (make-instance 'max-pool :max 3)))
+        (let ((future-thread (make-thread
+                              (lambda ()
+                                (incf ctr)
+                                (error "foobar1")
+                                (incf ctr))
+                              :pool max-pool)))
+          (bt:join-thread (lparallel:force future-thread)))
+        (is (eql 1 ctr))
+        (is (eql 1 (length (captured sentry-client::*sentry-client*))))))))
+
 (test simple-timer-test
   (dotimes (i 3)
     (let ((promise (lparallel:promise)))
