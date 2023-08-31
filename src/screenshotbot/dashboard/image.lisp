@@ -42,12 +42,38 @@
                 #:location-for-oid)
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export
    #:handle-resized-image))
 (in-package :screenshotbot/dashboard/image)
 
 (defvar *image-resize-lock* (make-instance 'hash-lock
-                                            :test 'equal))
+                                           :test 'equal))
+
+(defvar *semaphore* nil)
+
+#+lispworks
+(defun semaphore ()
+  (util:or-setf
+   *semaphore*
+   (mp:make-semaphore :count (serapeum:count-cpus))
+   :thread-safe t))
+
+#-lispworks
+(def-easy-macro with-semaphore (&fn fn)
+  (fn))
+
+#+lispworks
+(def-easy-macro with-semaphore (&fn fn)
+  (let ((sem (semaphore)))
+    (case (mp:semaphore-acquire sem :timeout 60)
+      (nil
+       (error "could not get semaphore in time"))
+      (t
+       (unwind-protect
+            (fn)
+         (mp:semaphore-release sem))))))
 
 (defun cache-dir ()
   (let ((dir (path:catdir util/store:*object-store* "image-cache/")))
@@ -80,7 +106,7 @@
     ;; For testing only:
     ("tiny" . "5x5")))
 
-(defun %build-resized-image (image size-name &key type)
+(defun %build-resized-image (image size-name &key (type :webp))
   "Synchronous version. Do not call directly."
   (let ((size (or
                (assoc-value *size-map* size-name :test #'string-equal)
@@ -116,37 +142,26 @@
                                   :size size))))
               (respond output-file)))))))))
 
-(defvar *futures* (make-hash-table :test #'equal
-                                   #+lispworks #+lispworks
-                                   :weak-kind :value))
-
-(defun build-resized-image (image size-name &key (type :webp))
-  (util:or-setf
-   (gethash (list image size-name type) *futures*)
-   (magick-future ()
-     (%build-resized-image image size-name
-                           :type type))
-   :thread-safe t))
-
 (defun handle-resized-image (image size &key warmup
                                           type)
-  (cond
-    (warmup
-     (force
-      (build-resized-image image size)))
-    (t
-     (let ((output-file
-             (force
-              (build-resized-image
-               image size
-               :type (cond
-                       ((string= type "png")
-                        :png)
-                       (t
-                        :webp))))))
-       (handle-static-file
-        output-file
-        (format nil "image/~a" (pathname-type output-file)))))))
+  (with-hash-lock-held ((list image size type) *image-resize-lock*)
+    (cond
+      (warmup
+       (with-semaphore ()
+        (%build-resized-image image size)))
+      (t
+       (let ((output-file
+               (with-semaphore ()
+                 (%build-resized-image
+                  image size
+                  :type (cond
+                          ((string= type "png")
+                           :png)
+                          (t
+                           :webp))))))
+         (handle-static-file
+          output-file
+          (format nil "image/~a" (pathname-type output-file))))))))
 
 (defhandler (image-blob-get :uri "/image/blob/:oid/default.webp") (oid size type)
   (let ((oid (encrypt:decrypt-mongoid oid)))

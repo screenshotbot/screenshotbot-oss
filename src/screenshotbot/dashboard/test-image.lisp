@@ -8,7 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/image
-                #:build-resized-image
+                #:%build-resized-image
                 #:handle-resized-image)
   (:import-from #:lparallel
                 #:force
@@ -93,13 +93,13 @@
 
 (test build-resized-image-for-png
   (with-fixture state ()
-    (let ((output-file (force (build-resized-image im :tiny :type :png))))
+    (let ((output-file (%build-resized-image im :tiny :type :png)))
       (is (equal "png" (pathname-type output-file)))
-      (force (build-resized-image im :tiny :type :png)))))
+      (%build-resized-image im :tiny :type :png))))
 
 (test build-resized-image-for-png-when-webp-alread-exists
   (with-fixture state ()
-    (force (build-resized-image im :tiny :type :webp))
-    (let ((output-file (force (build-resized-image im :tiny :type :png))))
+    (%build-resized-image im :tiny :type :webp)
+    (let ((output-file (%build-resized-image im :tiny :type :png)))
       (is (equal "png" (pathname-type output-file)))
-      (force (build-resized-image im :tiny :type :png)))))
+      (%build-resized-image im :tiny :type :png))))
