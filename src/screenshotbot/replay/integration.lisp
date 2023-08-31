@@ -90,8 +90,6 @@
                 #:installation)
   (:import-from #:screenshotbot/sdk/api-context
                 #:api-context)
-  (:import-from #:screenshotbot/sdk/run-context
-                #:run-context)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
                     (#:integration #:screenshotbot/replay/integration)
@@ -247,17 +245,15 @@ accessing the urls or sitemap slot."
                           :secret (api-key-secret-key api-key)
                           :hostname (host run))
            results
-           (make-instance
-            'run-context
-            :main-branch "master"
-            :commit-hash (when request (replay:commit request))
-            :merge-base (when request (replay:merge-base request))
-            :main-branch-hash (when request (replay:branch-hash request))
-            :repo-url (when request (replay:repo-url request))
-            :productionp t
-            :repo-clean-p t
-            :channel (channel run))
-           :periodic-job-p (or (not request) (str:emptyp (replay:commit request))))))
+           :repo (make-instance 'null-repo)
+           :branch "master"
+           :commit (when request (replay:commit request))
+           :merge-base (when request (replay:merge-base request))
+           :branch-hash (when request (replay:branch-hash request))
+           :github-repo (when request (replay:repo-url request))
+           :periodic-job-p (or (not request) (str:emptyp (replay:commit request)))
+           :is-trunk t
+           :channel (channel run))))
     (retry-process-results ()
       (process-results run results))))
 

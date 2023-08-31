@@ -10,13 +10,14 @@
    :alexandria
         :fiveam)
   (:import-from #:screenshotbot/sdk/sdk
-                #:put-run
-                #:single-directory-run
                 #:format-api-url
+                #:invalid-pull-request
                 #:empty-run-error
                 #:make-run
                 #:request
+                #:validate-pull-request
                 #:backoff
+                #:parse-environment
                 #:make-bundle
                 #:*directory*
                 #:*metadata*
@@ -41,6 +42,7 @@
   (:import-from #:screenshotbot/sdk/git
                 #:current-branch
                 #:cleanp
+                #:repo-link
                 #:merge-base
                 #:current-commit
                 #:rev-parse)
@@ -57,12 +59,7 @@
   (:import-from #:util/misc
                 #:with-global-binding)
   (:import-from #:screenshotbot/sdk/api-context
-                #:remote-version
                 #:api-context)
-  (:import-from #:screenshotbot/sdk/run-context
-                #:run-context)
-  (:import-from #:screenshotbot/api/commit-graph
-                #:update-commit-graph)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:a #:alexandria)
                     (#:dto #:screenshotbot/api/model)))
@@ -144,11 +141,59 @@
      (cl-mock:if-called 'uiop:getenv #'fake-getenv)
      ,@body))
 
+(test parse-override-commit-hash
+  (with-fixture state ()
+    (with-env ((:circle-pull-request "http://foo"))
+      (parse-environment)
+      (is (equal "http://foo" flags:*pull-request*))))
+  (with-fixture state ()
+    (with-env ((:circle-sha1 "abcd")
+               (:circle-pull-request "http://foo"))
+      (parse-environment)
+      (is (equal "abcd" flags:*override-commit-hash*))))
+  (with-fixture state ()
+    (with-env ((:circle-sha1 "abcd")
+               (:circle-pull-request ""))
+      (parse-environment)
+      (is (equal nil flags:*override-commit-hash*)))))
+
+(test parse-override-commit-hash-with-bitrise
+    (with-fixture state ()
+    (with-env ((:bitrise-git-commit "abcd")
+               (:bitriseio-pull-request-repository-url "https://bitbucket.org/tdrhq/fast-example"))
+      (parse-environment)
+      (is (equal nil flags:*pull-request*))
+      (is (equal nil flags:*override-commit-hash*))))
+
+  (with-fixture state ()
+    (with-env ((:bitrise-git-commit "abcd")
+               (:bitrise-pull-request "1")
+               (:bitriseio-pull-request-repository-url "https://bitbucket.org/tdrhq/fast-example"))
+      (parse-environment)
+
+      (is (equal "https://bitbucket.org/tdrhq/fast-example/pull-requests/1"
+                 flags:*pull-request*))
+
+      (is (equal "abcd" flags:*override-commit-hash*)))))
+
 (test backoff-happy-path
   (is (eql 10 (backoff 1)))
   (is (eql nil (backoff 100))))
 
-
+(test validate-pull-request
+  (with-fixture state ()
+    (flet ((%run (url)
+             (setf flags:*pull-request* url)
+             (validate-pull-request)
+             flags:*pull-request*))
+      (handler-case
+          (%run nil)
+        (invalid-pull-request ()
+          (fail "Saw warning for nil")))
+      (signals invalid-pull-request
+        (%run "git@github.com:trhq/fast-example.git"))
+      (is (equal nil (%run "git@github.com:tdrhq/fast-example.git")))
+      (is (equal "https://github.com/tdrhq/fast-example/pulls/1" (%run "https://github.com/tdrhq/fast-example/pulls/1"))))))
 
 (test make-run-happy-path
   "Does not test much, sadly"
@@ -163,6 +208,7 @@
         (answer (current-commit repo) "bdfd")
         (answer (current-branch repo) "my-branch")
         (answer (merge-base "abcd" "bdfd" "abcd"))
+        (answer (repo-link repo) "https://github.com/tdrhq/fast-example")
         (answer (cleanp repo) t)
         (let ((context (make-instance 'api-context
                                       :remote-version *api-version*)))
@@ -170,11 +216,10 @@
             (make-run context
                       `(((:id . "foo")
                          (:name . "car")))
-                      (make-instance 'run-context
-                                     :main-branch "main"
-                                     :repo-clean-p t
-                                     :repo-url repo)))
-          (is-true (typep %content 'dto:run)))))))
+                      :branch "main"
+                      :repo repo))
+          (is-true (typep %content 'dto:run)))))
+    ))
 
 (test make-run-on-empty-directory-crashes-appropriately
   (with-fixture state  ()
@@ -183,9 +228,7 @@
                  (error "should not be called")))
     (let ((api-context (make-instance 'api-context)))
      (signals empty-run-error
-       (make-run api-context nil
-                 (make-instance 'run-context
-                                :main-branch "main"))))))
+       (make-run api-context nil :branch "main")))))
 
 #+lispworks
 (test |ensure we're not depending on cl+ssl|
@@ -250,25 +293,3 @@
               (make-instance 'api-context
                              :hostname "foo.screenshotbot.io")
               "/api/version"))))
-
-
-(test single-directory-run-happy-path
-  (with-fixture state ()
-    (if-called 'request
-               (lambda (context request &key parameters)
-                 nil))
-    (if-called 'remote-version
-               (lambda (context)
-                 *api-version*))
-    (if-called 'put-run
-               (lambda (context run)
-                 nil))
-    (tmpdir:with-tmpdir (dir)
-      (with-open-file (stream (path:catfile dir "foo.png") :direction :output))
-      (single-directory-run
-       :api-context
-       (make-bundle :directory (namestring dir))
-       (make-instance 'run-context
-                      :main-branch "master"
-                      :repo-clean-p t
-                      :productionp nil)))))

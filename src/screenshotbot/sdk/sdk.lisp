@@ -27,10 +27,12 @@
                 #:image-directory
                 #:image-directory-with-diff-dir)
   (:import-from #:screenshotbot/sdk/git
+                #:git-repo
                 #:current-commit
                 #:rev-parse
                 #:read-graph
                 #:cleanp
+                #:repo-link
                 #:merge-base)
   (:import-from #:util/request
                 #:http-request)
@@ -52,14 +54,11 @@
   (:import-from #:screenshotbot/sdk/api-context
                 #:desktop-api-context
                 #:api-context)
-  (:import-from #:screenshotbot/sdk/run-context
-                #:flags-run-context)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:dto #:screenshotbot/api/model)
                     (#:e #:screenshotbot/sdk/env)
                     (#:api-context #:screenshotbot/sdk/api-context)
-                    (#:android   #:screenshotbot/sdk/android)
-                    (#:run-context   #:screenshotbot/sdk/run-context))
+                    (#:android   #:screenshotbot/sdk/android))
   (:export
    #:single-directory-run
    #:*request*
@@ -260,40 +259,55 @@ error."
   (:report "No screenshots were detected in this this run"))
 
 (auto-restart:with-auto-restart ()
- (defmethod make-run (api-context
-                      images
-                      (run-context run-context:run-context)
-                      &key
-                        (metadata-provider (make-instance 'metadata-provider))
-                        periodic-job-p)
+ (defun make-run (api-context
+                  images &rest args
+                  &key repo
+                    channel
+                    pull-request
+                    branch
+                    (branch-hash nil has-branch-hash-p)
+                    (commit nil has-commit-p)
+                    (merge-base nil has-merge-base-p)
+                    (github-repo nil has-github-repo-p)
+                    periodic-job-p
+                    create-github-issue
+                    (metadata-provider  (make-instance 'metadata-provider))
+                    is-trunk)
    (unless images
      (error 'empty-run-error))
    (let ((screenshots (build-screenshot-objects images metadata-provider)))
      ;;(log:info "screenshot records: ~s" screenshots)
-     (let* ((branch-hash (run-context:main-branch-hash run-context))
-            (commit (run-context:commit-hash run-context))
-            (merge-base (run-context:merge-base run-context))
-            (github-repo (run-context:repo-url run-context))
+     (let* ((branch-hash
+              (if has-branch-hash-p branch-hash
+                  (when-let ((hash (rev-parse repo branch)))
+                    (unless hash
+                      (error "Could not rev-parse origin/~a" branch))
+                    hash)))
+            (commit (if has-commit-p commit (current-commit repo)))
+            (merge-base (if has-merge-base-p merge-base (merge-base repo branch-hash commit)))
+            (github-repo (if has-github-repo-p
+                             github-repo
+                             (repo-link repo)))
             (run (make-instance 'dto:run
-                                :channel (run-context:channel run-context)
+                                :channel channel
                                 :screenshots screenshots
-                                :main-branch (run-context:main-branch run-context)
-                                :work-branch (run-context:work-branch run-context)
+                                :main-branch branch
+                                :work-branch flags:*work-branch*
                                 :main-branch-hash branch-hash
                                 :github-repo github-repo
                                 :merge-base merge-base
                                 :periodic-job-p periodic-job-p
-                                :build-url (run-context:build-url run-context)
-                                :compare-threshold  (run-context:compare-threshold run-context)
-                                :batch (run-context:batch run-context)
-                                :pull-request (run-context:pull-request-url run-context)
+                                :build-url flags:*build-url*
+                                :compare-threshold flags:*compare-threshold*
+                                :batch flags:*batch*
+                                :pull-request pull-request
                                 :commit-hash commit
-                                :override-commit-hash (run-context:override-commit-hash run-context)
-                                :create-github-issue-p (run-context:create-github-issue-p run-context)
-                                :cleanp (run-context:repo-clean-p run-context)
-                                :gitlab-merge-request-iid (safe-parse-int (run-context:gitlab-merge-request-iid run-context))
-                                :phabricator-diff-id (safe-parse-int (run-context:phabricator-diff-id run-context))
-                                :trunkp (run-context:productionp run-context))))
+                                :override-commit-hash flags:*override-commit-hash*
+                                :create-github-issue-p create-github-issue
+                                :cleanp (cleanp repo)
+                                :gitlab-merge-request-iid (safe-parse-int *gitlab-merge-request-iid*)
+                                :phabricator-diff-id (safe-parse-int *phabricator-diff-id*)
+                                :trunkp is-trunk)))
        (if (remote-supports-put-run api-context)
            (put-run api-context run)
            (put-run-via-old-api api-context run))))))
@@ -344,15 +358,14 @@ error."
 (defclass metadata-provider ()
   ())
 
-(defmethod make-directory-run (api-context dir run-context &rest args)
+(defmethod make-directory-run (api-context dir &rest args)
   (log:debug "Reading images from ~a" dir)
   (let ((images
           (upload-image-directory api-context dir)))
     (log:debug "Creating run")
-    (apply #'make-run
+    (apply 'make-run
            api-context
            images
-           run-context
            args)))
 
 (defun keyword-except-md5 (identifier)
@@ -386,6 +399,14 @@ error."
                                                 :test 'string=))
                   (close-image im))))))))
 
+(defun test-upload ()
+  (make-directory-run #P "/home/arnold/builds/ios-oss/Screenshots/_64/Kickstarter_Framework_iOSTests.ActivitiesViewControllerTests/"
+                      :channel "test-channel"
+                      :repo (make-instance 'git-repo
+                                           :link "https://github.com/tdrhq/ios-oss"
+                                           :dir #P "~/builds/ios-oss/")
+                      :is-trunk t
+                      :branch "master"))
 
 (defun make-bundle (&key (metadata flags:*metadata*)
                       (directory flags:*directory*)
@@ -403,6 +424,67 @@ error."
      (error "Unknown run type, maybe you missed --directory?"))))
 
 
+(defun guess-master-branch (repo)
+  (flet ((check (x)
+           (rev-parse repo x)))
+    (cond
+      ((check "main")
+       "main")
+      ((check "master")
+       "master")
+      (t
+       (error "Could not guess the main branch, please use --main-branch argument")))))
+
+(define-condition invalid-pull-request (condition)
+  ())
+
+(defun validate-pull-request ()
+  "One of our customers is using an incorrect --pull-request arg. The
+incorrect arg breaks some logic, and additionally is not required
+since we can determine the pull-request from the environment. We can
+do a quick sanity check, and recover with a warning if the
+pull-request looks incorrect."
+  (when flags:*pull-request*
+   (flet ((validp (url)
+            (str:starts-with-p "https://" url)))
+     (unless (validp flags:*pull-request*)
+       (signal 'invalid-pull-request)
+       (log:warn "The --pull-request argument you provided was invalid: `~a`. We're ignoring this.~%"
+             flags:*pull-request*)
+       (setf flags:*pull-request* nil)))))
+
+(defun parse-environment ()
+  (let ((env (e:make-env-reader)))
+    (when flags:*branch*
+      (error "--branch is no longer supported, please use --main-branch instead"))
+
+    (validate-pull-request)
+
+    (or-setf flags:*build-url*
+             (e:build-url env))
+
+    (or-setf flags:*repo-url*
+             (e:repo-url env))
+
+    (or-setf flags:*work-branch*
+             (e:work-branch env))
+
+    (unless flags:*pull-request*
+      (setf flags:*pull-request*
+            (e:pull-request-url env)))
+
+    (when (equal "unnamed-channel" flags:*channel*)
+      (when-let ((channel (e:guess-channel-name env)))
+        (setf flags:*channel* channel)))
+
+    (or-setf
+     flags:*override-commit-hash*
+     (unless (str:emptyp flags:*pull-request*)
+       (e:sha1 env)))
+
+    (unless flags:*main-branch*
+      (setf flags:*main-branch*
+            (guess-master-branch (git-repo))))))
 
 (defun link-to-github-pull-request (repo-url pull-id)
   (let ((key (cond
@@ -415,6 +497,9 @@ error."
            key
            pull-id)))
 
+
+(defun parse-org-defaults ()
+  (parse-environment))
 
 (defun recursive-directories (directory)
   (or
@@ -438,9 +523,7 @@ error."
       (log:debug "Relative path is: ~S" res)
       res)))
 
-(defmethod update-commit-graph (api-context repo
-                                &key
-                                  (repo-url (error "must provide :repo-url")))
+(defmethod update-commit-graph (api-context repo branch)
   (log:info "Updating commit graph")
   (let* ((dag (read-graph repo))
          (json (with-output-to-string (s)
@@ -450,19 +533,28 @@ error."
      "/api/commit-graph"
      :method :post
      :parameters (list
-                  (cons "repo-url" repo-url)
+                  (cons "repo-url" (repo-link repo))
+                  (cons "branch" branch)
                   (cons "graph-json" json)))))
 
-(defun single-directory-run (api-context directory run-context)
-  (let ((branch (run-context:main-branch run-context)))
-    (when (and
-           (run-context:productionp run-context)
-           (> flags:*commit-limit* 0))
-      (update-commit-graph api-context (run-context:git-repo run-context)
-                           :repo-url (run-context:repo-url run-context)))
+(defun git-repo ()
+  (make-instance 'git-repo
+                  :link flags:*repo-url*))
+
+(defun single-directory-run (api-context directory &key channel)
+  (let ((repo (git-repo))
+        (branch flags:*main-branch*))
+    (when (and flags:*production*
+               (> flags:*commit-limit* 0))
+      (update-commit-graph api-context repo branch))
     (log:info "Uploading images from: ~a" directory)
     (make-directory-run api-context directory
-                        run-context)))
+                        :channel channel
+                        :pull-request flags:*pull-request*
+                        :create-github-issue flags:*create-github-issue*
+                        :repo repo
+                        :is-trunk flags:*production*
+                        :branch branch)))
 
 (defun chdir-for-bin (path)
   (uiop:chdir path)
@@ -474,10 +566,7 @@ error."
 
 (defun run-prepare-directory-toplevel (api-context)
   (let ((directory (make-bundle)))
-    (single-directory-run api-context directory
-                          (make-instance
-                           'flags-run-context
-                           :env (e:make-env-reader)))))
+    (single-directory-run api-context directory :channel flags:*channel*)))
 
 (def-health-check verify-https-works ()
   (util/request:http-request "https://screenshotbot.io/api/version"

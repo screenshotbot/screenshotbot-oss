@@ -29,7 +29,8 @@
       (tmpdir:with-tmpdir (dir)
         (unwind-protect
              (let ((git-repo (make-instance 'screenshotbot/sdk/git::git-repo
-                                             :dir dir)))
+                                             :dir dir
+                                             :link "https://github.com/tdrhq/fast-example")))
                (screenshotbot/sdk/git::$
                  (list "git" "clone" "https://github.com/tdrhq/fast-example"
                        dir))
@@ -39,8 +40,7 @@
                                    :key "deliver-sdk"
                                    :secret "xxx"
                                    :hostname "https://screenshotbot.io")
-                    git-repo
-                    :repo-url "https://github.com/tdrhq/fast-example")
+                    git-repo "bar")
                  (screenshotbot/sdk/sdk::api-error ()
                    nil)))
           #+mswindows
