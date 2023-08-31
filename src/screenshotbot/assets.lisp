@@ -86,13 +86,16 @@ cause the asset to be immediately compiled."
 (define-css "/assets/css/default.css" :screenshotbot.css-assets)
 
 (defun generate-.sh (name)
-  (let ((util.cdn:*cdn-domain* (or
-                                (installation-cdn (installation))
-                                ;; A hack for staging:
-                                (installation-domain (installation)))))
-    (let ((darwin-link (artifact-link (format nil "~a-darwin" name)))
-          (linux-link (artifact-link (format nil "~a-linux" name))))
-      #?"#!/bin/sh
+  (let ((domain (or
+                 (installation-cdn (installation))
+                 ;; A hack for staging:
+                 (installation-domain (installation)))))
+    (flet ((make-link (platform)
+             (format nil "~a/artifact/${VERSION}~a-~a" domain name platform)))
+     (let ((darwin-link (make-link "darwin"))
+           (linux-link (make-link "linux"))
+           (domain (installation-domain (installation))))
+       #?"#!/bin/sh
 set -e
 set -x
 
@@ -100,6 +103,7 @@ type=`uname`
 
 INSTALLER=screenshotbot-installer.sh
 CURL=\"curl --retry 3 \"
+VERSION=`$CURL --fail ${domain}/recorder-version/current || true`
 
 if [ $type = \"Linux\" ] ; then
   $CURL --progress-bar ${linux-link} --output $INSTALLER
@@ -110,7 +114,7 @@ else
 fi
 sh ./$INSTALLER
 rm -f $INSTALLER
-")))
+"))))
 
 
 (defmacro define-platform-asset (name)

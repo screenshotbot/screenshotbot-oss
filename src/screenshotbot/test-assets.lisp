@@ -38,7 +38,7 @@
                    "dummy"))
      (let ((contents (uiop:read-file-string (path:catfile (object-store) "artifacts/dummy.sh"))))
        (assert-that contents
-                    (contains-string "https://example.com/artifact/dummy-linux"))))))
+                    (contains-string "https://example.com/artifact/${VERSION}dummy-linux"))))))
 
 (test generate-.sh-uses-cdn
   (with-installation (:installation (make-instance
@@ -49,5 +49,5 @@
      (generate-dummy-platform-assets)
      (let ((contents (uiop:read-file-string (path:catfile (object-store) "artifacts/dummy.sh"))))
        (assert-that contents
-                    (contains-string "https://cdn.example.com/artifact/dummy-linux")
-                    (is-not (contains-string "https://example.com/artifact/dummy-linux")))))))
+                    (contains-string "https://cdn.example.com/artifact/${VERSION}dummy-linux")
+                    (is-not (contains-string "https://example.com/artifact/")))))))
