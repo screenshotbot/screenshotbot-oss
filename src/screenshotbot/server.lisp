@@ -46,7 +46,6 @@
    #:*disable-mail*
    #:*seleniump*
    #:*nibble-plugin*
-   #:*documentation-plugin*
    #:*domain*
    #:logged-in-p
    #:dashboard
@@ -111,15 +110,6 @@
                    hunchensocket::websocket-request)
   ())
 
-#-screenshotbot-oss
-(defclass sb-documentation-plugin (documentation-plugin:documentation-plugin)
-  ())
-
-#-screenshotbot-oss
-(defmethod hex:acceptor-plugin-name ((plugin sb-documentation-plugin))
-  ;; limitation of hex plugins, the routing is specified on the parent
-  ;; class.
-  'documentation-plugin:documentation-plugin)
 
 (defvar *acceptor*
   (make-instance 'acceptor
@@ -139,18 +129,9 @@
                                         :prefix "/n/"
                                         :wrapper '%handler-wrap))
 
-#-screenshotbot-oss
-(defvar *documentation-plugin*
-  (make-instance 'sb-documentation-plugin
-                  :prefix "/documentation-new/"
-                  :landing-page "why-screenshot-tests"
-                  :root (path:catdir (util:system-source-directory :screenshotbot)
-                                     #P "pro/documentation/")))
 
 (defun prepare-acceptor-plugins (acceptor)
-  (pushnew *nibble-plugin* (hex:acceptor-plugins acceptor))
-  #-screenshotbot-oss
-  (pushnew *documentation-plugin* (hex:acceptor-plugins acceptor)))
+  (pushnew *nibble-plugin* (hex:acceptor-plugins acceptor)))
 
 (prepare-acceptor-plugins *acceptor*)
 
