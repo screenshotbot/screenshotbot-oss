@@ -17,7 +17,8 @@
    #:rev-parse
    #:merge-base
    #:current-commit
-   #:current-branch)
+   #:current-branch
+   #:cleanp)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/git)
 
