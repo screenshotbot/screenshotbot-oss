@@ -409,15 +409,6 @@ error."
                                                 :test 'string=))
                   (close-image im))))))))
 
-(defun test-upload ()
-  (make-directory-run #P "/home/arnold/builds/ios-oss/Screenshots/_64/Kickstarter_Framework_iOSTests.ActivitiesViewControllerTests/"
-                      :channel "test-channel"
-                      :repo (make-instance 'git-repo
-                                           :link "https://github.com/tdrhq/ios-oss"
-                                           :dir #P "~/builds/ios-oss/")
-                      :is-trunk t
-                      :branch "master"))
-
 (defun make-bundle (&key (metadata flags:*metadata*)
                       (directory flags:*directory*)
                       (recursivep flags:*recursive*))
