@@ -34,10 +34,9 @@
         :initform (git-root))))
 
 (defclass null-repo ()
-  ())
-
-(defmethod repo-link ((repo null-repo))
-  nil)
+  ((link :initarg :link
+         :initform nil
+         :accessor repo-link)))
 
 (defmethod cleanp ((repo null-repo))
   t)

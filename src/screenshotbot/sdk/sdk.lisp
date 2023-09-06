@@ -27,6 +27,8 @@
                 #:image-directory
                 #:image-directory-with-diff-dir)
   (:import-from #:screenshotbot/sdk/git
+                #:null-repo
+                #:git-root
                 #:git-repo
                 #:current-commit
                 #:rev-parse
@@ -539,8 +541,15 @@ pull-request looks incorrect."
                   (cons "graph-json" json)))))
 
 (defun git-repo ()
-  (make-instance 'git-repo
-                  :link flags:*repo-url*))
+  (let ((root (ignore-errors (git-root))))
+    (cond
+      (root
+       (make-instance 'git-repo
+                      :link flags:*repo-url*))
+      (t
+       (log:warn "This is not running inside a Git repo. Please contact support@screenshotbot.io for advice, since the behavior in this case can be very different.")
+       (make-instance 'null-repo
+                      :link flags:*repo-url*)))))
 
 (defun single-directory-run (api-context directory &key channel)
   (let ((repo (git-repo))
