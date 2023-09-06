@@ -24,6 +24,8 @@
                 #:env-reader)
   (:import-from #:screenshotbot/sdk/bundle
                 #:image-directory)
+  (:import-from #:screenshotbot/sdk/sentry
+                #:with-sentry)
   (:export
    #:dev/command)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)))
@@ -54,8 +56,6 @@
 (defmethod productionp ((self dev-run-context))
   nil)
 
-(defmethod merge-base)
-
 (defun make-run-and-get-id (cmd)
   (let ((ctx (make-instance 'dev-run-context
                             :productionp nil)))
@@ -72,8 +72,9 @@
    :description "Record a user run"
    :options (default-options)
    :handler (lambda (cmd)
-              (let ((run-id (make-run-and-get-id cmd)))
-                (error "Unimplemented now ~a" run-id)))))
+              (with-sentry ()
+               (let ((run-id (make-run-and-get-id cmd)))
+                 (error "Unimplemented now ~a" run-id))))))
 
 (defun verify/command ()
   (clingon:make-command
@@ -81,8 +82,9 @@
    :description "Verify a run against the last recorded run"
    :options (default-options)
    :handler (lambda (cmd)
-              (let ((run-id (make-run-and-get-id cmd)))
-                (error "unimpl")))))
+              (with-sentry ()
+               (let ((run-id (make-run-and-get-id cmd)))
+                 (error "unimpl"))))))
 
 (defun dev/command ()
   (clingon:make-command

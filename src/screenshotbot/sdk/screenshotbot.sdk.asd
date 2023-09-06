@@ -31,6 +31,7 @@
                :zip
                :trivial-garbage
                :trivial-features
+               :util/threading
                :tmpdir
                :imago
                :imago/pngload
@@ -52,6 +53,7 @@
                (:file "git")
                (:file "run-context")
                (:file "sdk")
+               (:file "sentry")
                (:file "cli-common")
                (:file "dev")
                (:file "failed-run")
