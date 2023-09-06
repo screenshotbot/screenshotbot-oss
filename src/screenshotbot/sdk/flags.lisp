@@ -51,7 +51,8 @@
    #:*unchanged-from*
    #:*finalize*
    #:*batch*
-   #:*work-branch*))
+   #:*work-branch*
+   #:*main-branch-commit-hash*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -118,6 +119,14 @@
   :type (or null string)
   :help "Git Branch of the main branch being tracked. We try first
   `main` and then `master`, by checking for origin/<branch-name>")
+
+(define-flag *main-branch-commit-hash*
+  :selector "main-branch-commit-hash"
+  :default-value nil
+  :type (or null string)
+  :help "The commit of the main branch at time of running. In most case, you
+DO NOT need to provide this, and we'll detect this from the Git repository
+directly. Please contact support@screenshotbot.io if you plan on using this.")
 
 (define-flag *work-branch*
   :selector "work-branch"
