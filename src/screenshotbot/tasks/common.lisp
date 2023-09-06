@@ -21,6 +21,9 @@
   (:import-from #:screenshotbot/compare
                 #:warmup-comparison-images)
   (:import-from #:screenshotbot/diff-report
+                #:diff-report-changes
+                #:make-diff-report
+                #:diff-report-empty-p
                 #:diff-report-title)
   (:import-from #:screenshotbot/model/company
                 #:add-company-report)

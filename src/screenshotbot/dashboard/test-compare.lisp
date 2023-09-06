@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/compare
+                #:warmup-comparison-images-sync
                 #:link-to-run
                 #:random-non-alpha-px
                 #:image-comparison-job
@@ -173,3 +174,12 @@
 (test link-to-empty-run
   (assert-that (format nil "~a" (link-to-run :run nil))
                (contains-string "empty run")))
+
+(test warmup-comparison-images
+  (with-fixture state ()
+    (let ((run (make-recorder-run
+                :screenshots (list (make-screenshot im1))))
+          (to (make-recorder-run
+               :screenshots (list (make-screenshot im2)))))
+      (finishes
+       (warmup-comparison-images-sync run to)))))

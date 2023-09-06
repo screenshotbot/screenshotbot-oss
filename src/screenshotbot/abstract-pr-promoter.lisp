@@ -29,7 +29,7 @@
                 #:channel-repo)
   (:import-from #:screenshotbot/installation
                 #:installation)
-  (:import-from #:screenshotbot/dashboard/compare
+  (:import-from #:screenshotbot/diff-report
                 #:diff-report-empty-p)
   (:import-from #:util/object-id
                 #:oid)

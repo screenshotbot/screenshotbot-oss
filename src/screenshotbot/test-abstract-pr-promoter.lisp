@@ -54,7 +54,7 @@
                 #:contains)
   (:import-from #:screenshotbot/model/report
                 #:base-acceptable)
-  (:import-from #:screenshotbot/dashboard/compare
+  (:import-from #:screenshotbot/diff-report
                 #:diff-report-empty-p)
   (:import-from #:cl-mock
                 #:answer)
@@ -69,7 +69,9 @@
   (:import-from #:util/logger
                 #:format-log)
   (:import-from #:screenshotbot/model/finalized-commit
-                #:finalized-commit))
+                #:finalized-commit)
+  (:import-from #:screenshotbot/diff-report
+                #:diff-report-empty-p))
 (in-package :screenshotbot/test-abstract-pr-promoter)
 
 

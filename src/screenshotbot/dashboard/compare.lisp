@@ -10,7 +10,6 @@
         #:alexandria
         #:nibble
         #:screenshotbot/template
-        #:screenshotbot/diff-report
         #:screenshotbot/model/screenshot
         #:screenshotbot/model/image-comparison
         #:screenshotbot/model/image
@@ -75,6 +74,10 @@
                 #:get-non-alpha-pixels
                 #:with-wand)
   (:import-from #:screenshotbot/diff-report
+                #:deleted-groups
+                #:added-groups
+                #:diff-report-changes
+                #:make-diff-report
                 #:actual-item
                 #:changes-groups
                 #:get-tab-title)
@@ -100,13 +103,10 @@
   (:import-from #:screenshotbot/model/screenshot
                 #:abstract-screenshot)
   (:export
-   #:diff-report
    #:render-acceptable
-   #:make-diff-report
-   #:diff-report-empty-p
    #:render-diff-report
-   #:diff-report-changes
-   #:warmup-comparison-images))
+   #:warmup-comparison-images)
+  (:local-nicknames (#:diff-report #:screenshotbot/diff-report)))
 (in-package :screenshotbot/dashboard/compare)
 
 ;; fake symbols for bknr migration
@@ -365,39 +365,40 @@
 (defun warmup-comparison-images (run previous-run)
   (make-thread
    (lambda ()
-     (restart-case
-         (let ((report (make-diff-report run previous-run)))
-           ;; warmup in the order that the report would be typically
-           ;; viewed.
-           (dolist (group (changes-groups report))
-            (let ((changes (mapcar #'actual-item (group-items group))))
-              (loop for change in changes
-                    for i from 1
-                    for before = (before change)
-                    for after = (after change)
-                    for image-comparison-job = (make-instance 'image-comparison-job
-                                                               :before-image before
-                                                               :after-image after)
-                    do
-                       (progn
-                         (log:info "Warming up compare image ~d of ~d (~a)" i (length changes)
-                                   (screenshot-name after))
-                         (restart-case
-                             (prepare-image-comparison image-comparison-job :size nil
-                                                                            :warmup t)
-                           (ignore-this-image ()
-                             nil)))))))
-       (retry-warmup-thread ()
-         (warmup-comparison-images run previous-run))))
+     (warmup-comparison-images-sync run previous-run))
    :name "warmup-comparison-images"))
+
+(auto-restart:with-auto-restart ()
+  (defun warmup-comparison-images-sync (run previous-run)
+    (let ((report (diff-report:make-diff-report run previous-run)))
+      ;; warmup in the order that the report would be typically
+      ;; viewed.
+      (dolist (group (changes-groups report))
+        (let ((changes (mapcar #'actual-item (diff-report:group-items group))))
+          (loop for change in changes
+                for i from 1
+                for before = (diff-report:before change)
+                for after = (diff-report:after change)
+                for image-comparison-job = (make-instance 'image-comparison-job
+                                                          :before-image before
+                                                          :after-image after)
+                do
+                   (progn
+                     (log:info "Warming up compare image ~d of ~d (~a)" i (length changes)
+                               (screenshot-name after))
+                     (restart-case
+                         (prepare-image-comparison image-comparison-job :size nil
+                                                                        :warmup t)
+                       (ignore-this-image ()
+                         nil)))))))))
 
 (defun all-comparisons-page (report)
   <app-template>
     <a href= "javascript:window.history.back()">Back to Report</a>
     ,(paginated
       (lambda (change)
-       (let* ((before (before change))
-              (after (after change))
+       (let* ((before (diff-report:before change))
+              (after (diff-report:after change))
               (image-comparison-job (make-instance 'image-comparison-job
                                                     :before-image before
                                                     :after-image after))
@@ -412,7 +413,7 @@
                                     />
          </div>))
       :num 5
-      :items (diff-report-changes report))
+      :items (diff-report:diff-report-changes report))
   </app-template>)
 
 (deftag progress-img (&key (alt "Image Difference") src class)
@@ -519,15 +520,15 @@
   <div class= "col-12">
   <div class= "card mb-3">
     ,(maybe-tabulate
-      (loop for group-item in (group-items group)
+      (loop for group-item in (diff-report:group-items group)
             for change = (actual-item group-item)
             for next-id = (random 1000000000000000)
-            for s = (before change)
-            for x = (after change)
+            for s = (diff-report:before change)
+            for x = (diff-report:after change)
             collect
     (make-instance
     'tab
-    :title (group-item-subtitle group-item)
+    :title (diff-report:group-item-subtitle group-item)
     :content
     (let* ((s s)
            (x x)
@@ -562,7 +563,7 @@
                         />
       <comparison-modal before=x after=s toggle-id=toggle-id />
     </div>)))
-      :header  <h4 class= "screenshot-title">,(highlight-search-term search (group-title group))</h4>)
+      :header  <h4 class= "screenshot-title">,(highlight-search-term search (diff-report:group-title group))</h4>)
   </div>
   </div>)
 
@@ -624,13 +625,13 @@
                             acceptable
                             (re-run nil))
   (declare (ignore re-run))
-  (let* ((report (make-diff-report run to))
+  (let* ((report (diff-report:make-diff-report run to))
          (all-comparisons (nibble (:name :all-comparison)
                             (all-comparisons-page report))))
     (declare (ignorable all-comparisons))
-    (let* ((changes-groups (changes-groups report))
-           (added-groups (added-groups report))
-           (deleted-groups (deleted-groups report))
+    (let* ((changes-groups (diff-report:changes-groups report))
+           (added-groups (diff-report:added-groups report))
+           (deleted-groups (diff-report:deleted-groups report))
            (default-type
              (or
                (hunchentoot:parameter "type")
@@ -765,7 +766,7 @@
 (defun group-matches-p (group search)
   (or
    (str:emptyp search)
-   (str:contains? search (group-title group) :ignore-case t)))
+   (str:contains? search (diff-report:group-title group) :ignore-case t)))
 
 (defun report-result (run changes-groups added-groups deleted-groups
                       &key
@@ -796,7 +797,7 @@
                                             :screenshots groups
                                             :filter filter
                                             :mapper (lambda (group)
-                                                      (actual-item (car (group-items group)))))))
+                                                      (actual-item (car (diff-report:group-items group)))))))
     <div>
       ,(render-modal screenshots-viewer)
 
@@ -805,7 +806,7 @@
           <div class= "col-md-6">
             <div class= "card mb-3">
               ,(maybe-tabulate
-                (loop for group-item in (group-items group)
+                (loop for group-item in (diff-report:group-items group)
                       for screenshot = (actual-item group-item)
                       collect
                       (make-instance
@@ -817,9 +818,9 @@
                           data-image-number=i
                           data-target= (format nil "#~a" (modal-id screenshots-viewer)) >
 
-                         <screenshot-box  screenshot=screenshot title= (group-title group) />
+                         <screenshot-box  screenshot=screenshot title= (diff-report:group-title group) />
                        </a>))
-                :header <h4 class= "screenshot-title" >,(highlight-search-term search (group-title group)) </h4>)
+                :header <h4 class= "screenshot-title" >,(highlight-search-term search (diff-report:group-title group)) </h4>)
             </div>
           </div>)
         :num 12
