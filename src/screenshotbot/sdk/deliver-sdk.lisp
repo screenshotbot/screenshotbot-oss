@@ -76,7 +76,7 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
 
     (build-utils/deliver-script:default-deliver 'screenshotbot/sdk/main:main
               output-file
-              0
+              5
               :keep-function-name t
               :keep-debug-mode nil
               #+mswindows :console #+mswindows :init
