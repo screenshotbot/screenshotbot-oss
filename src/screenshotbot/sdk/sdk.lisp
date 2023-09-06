@@ -42,6 +42,7 @@
                 #:?.
                 #:or-setf)
   (:import-from #:screenshotbot/sdk/version-check
+                #:*client-version*
                 #:remote-supports-put-run
                 #:remote-supports-basic-auth-p)
   (:import-from #:util/health-check
@@ -138,6 +139,7 @@
          :method method
          :basic-authorization (when (remote-supports-basic-auth-p api-context)
                                 (%make-basic-auth api-context))
+         :additional-headers `(("X-client-version" . ,*client-version*))
          :content content
          :external-format-out :utf-8
          :parameters (cond
