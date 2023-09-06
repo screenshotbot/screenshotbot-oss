@@ -333,7 +333,8 @@ error."
                          "/api/run" :method :put
                                     :content run)))
     (log:info "Created run: ~a" (assoc-value result :url))
-    result))
+    (make-instance 'dto:run
+                   :id (assoc-value result :id))))
 
 (defun put-run-via-old-api (api-context run)
   (flet ((bool (x) (if x "true" "false")))

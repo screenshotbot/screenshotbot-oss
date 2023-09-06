@@ -30,6 +30,8 @@
                 #:null-repo)
   (:import-from #:screenshotbot/sdk/api-context
                 #:api-context)
+  (:import-from #:screenshotbot/api/model
+                #:encode-json)
   (:export
    #:dev/command)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)))
@@ -92,6 +94,13 @@
      :channel (getopt cmd :channel)
      :directory (getopt cmd :directory))))
 
+(defun recording-file (channel)
+  (ensure-directories-exist
+   (path:catfile
+    (path:-d (uiop:getenv "HOME"))
+    ".config/screenshotbot/recordings/"
+    (format nil "~a.json" channel))))
+
 (defun record/command ()
   (clingon:make-command
    :name "record"
@@ -99,8 +108,12 @@
    :options (default-options)
    :handler (lambda (cmd)
               (with-sentry ()
-               (let ((run-id (make-run-and-get-id cmd)))
-                 (error "Unimplemented now ~a" run-id))))))
+                (let ((run (make-run-and-get-id cmd)))
+                  (let ((recording (recording-file (getopt cmd :channel))))
+                    (uiop:with-staging-pathname (recording)
+                      (with-open-file (stream recording :direction :output
+                                                        :if-exists :supersede)
+                        (write-string (encode-json run) stream)))))))))
 
 (defun verify/command ()
   (clingon:make-command
