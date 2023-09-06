@@ -332,7 +332,8 @@ error."
   (let ((result (request api-context
                          "/api/run" :method :put
                                     :content run)))
-    (log:info "Created run: ~a" (assoc-value result :url))))
+    (log:info "Created run: ~a" (assoc-value result :url))
+    result))
 
 (defun put-run-via-old-api (api-context run)
   (flet ((bool (x) (if x "true" "false")))

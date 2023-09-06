@@ -26,6 +26,10 @@
                 #:image-directory)
   (:import-from #:screenshotbot/sdk/sentry
                 #:with-sentry)
+  (:import-from #:screenshotbot/sdk/git
+                #:null-repo)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:api-context)
   (:export
    #:dev/command)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)))
@@ -56,15 +60,37 @@
 (defmethod productionp ((self dev-run-context))
   nil)
 
-(defun make-run-and-get-id (cmd)
+(defun %make-run-and-get-id (api-ctx &key directory channel)
+  (log:info "here")
   (let ((ctx (make-instance 'dev-run-context
-                            :productionp nil)))
+                            :productionp nil
+                            :channel channel
+                            :main-branch "main")))
     (with-flags-from-run-context (ctx)
-      (with-clingon-api-context (api-ctx cmd)
-        (make-directory-run
-         api-ctx
-         (make-instance 'image-directory
-                        :directory (getopt cmd :directory)))))))
+      (log:info "hello")
+      (make-directory-run
+       api-ctx
+       (make-instance 'image-directory
+                      :directory directory)
+       :channel channel
+       :repo (make-instance 'null-repo)))))
+
+#+nil
+(%make-run-and-get-id (make-instance 'api-context
+                                     :key "DD9RA2F8ZXBAUTRZ6T4D"
+                                     :hostname "https://api.screenshotbot.io"
+                                     :secret "UY8JzaybHIDEyD7SzBEqqqEPY2mNiH7W113Rum6h")
+                      :directory "/home/arnold/builds/fast-example/screenshots/"
+                      :channel "dummy")
+
+(defun make-run-and-get-id (cmd)
+  (when (getopt cmd :verbose)
+    (log:config :debug))
+  (with-clingon-api-context (api-ctx cmd)
+    (%make-run-and-get-id
+     api-ctx
+     :channel (getopt cmd :channel)
+     :directory (getopt cmd :directory))))
 
 (defun record/command ()
   (clingon:make-command

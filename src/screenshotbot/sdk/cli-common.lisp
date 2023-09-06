@@ -100,7 +100,12 @@ as opposed to `recorder help`."
               :boolean
               :key :desktop
               :long-name "desktop"
-              :description "Whether the server is running on the Desktop version of Screenshotbot."))
+              :description "Whether the server is running on the Desktop version of Screenshotbot.")
+             (make-option
+              :boolean
+              :key :verbose
+              :long-name "verbose"
+              :description "Verbose logging"))
    :sub-commands
    (list
     (self-test/command)
