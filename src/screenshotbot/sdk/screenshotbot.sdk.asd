@@ -4,6 +4,7 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+
 (defsystem :screenshotbot.sdk/library
   :serial t
   :version "2.7.3"
@@ -45,13 +46,14 @@
                (:file "backoff")
                (:file "version-check")
                (:file "bundle")
-               (:file "cli-common")
                (:file "firebase")
                (:file "android")
                (:file "env")
                (:file "git")
                (:file "run-context")
                (:file "sdk")
+               (:file "dev")
+               (:file "cli-common")
                (:file "failed-run")
                (:file "unchanged-run")
                (:file "finalized-commit")))

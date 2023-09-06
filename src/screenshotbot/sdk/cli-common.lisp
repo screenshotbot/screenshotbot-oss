@@ -14,6 +14,8 @@
                 #:assoc-value)
   (:import-from #:util/health-check
                 #:run-health-checks)
+  (:import-from #:screenshotbot/sdk/dev
+                #:dev/command)
   (:export
    #:with-clingon-api-context
    #:common-run-options
@@ -101,8 +103,8 @@ as opposed to `recorder help`."
    :sub-commands
    (list
     (self-test/command)
-    (ci/command))))
-
+    (ci/command)
+    (dev/command))))
 
 
 (defun ci/command ()
