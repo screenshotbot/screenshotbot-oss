@@ -246,6 +246,7 @@
                  (:file "image")
                  (:file "promote")
                  (:file "recorder-run" :depends-on ("promote"))
+                 (:file "compare")
                  (:file "commit-graph")))
    (:module "phabricator"
     :serial t
@@ -442,6 +443,7 @@
                              (:file "test-unchanged-run")
                              (:file "test-finalized-commit")
                              (:file "test-commit-graph")
+                             (:file "test-compare")
                              (:file "test-image")
                              (:file "test-promote")
                              (:file "test-send-tasks")

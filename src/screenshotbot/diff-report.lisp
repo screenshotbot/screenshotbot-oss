@@ -36,7 +36,8 @@
    #:group-items
    #:group-title
    #:actual-item
-   #:group-item-subtitle))
+   #:group-item-subtitle
+   #:diff-report-empty-p))
 (in-package :screenshotbot/diff-report)
 
 (defvar *cache* (trivial-garbage:make-weak-hash-table :test #'equal
@@ -204,3 +205,9 @@
                             :before s1
                             :masks (screenshot-masks s1)
                             :after x))))
+
+(defun diff-report-empty-p (diff-report)
+  (not
+   (or (diff-report-added diff-report)
+       (diff-report-deleted diff-report)
+       (diff-report-changes diff-report))))

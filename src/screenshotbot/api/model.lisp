@@ -53,7 +53,10 @@
              #:finalized-commit
              #:finalized-commit-hash
              #:recorder-run-url
-             #:run-batch))
+             #:run-batch
+             #:comparison
+             #:comparison-samep
+             #:comparison-title))
 
 (in-package :screenshotbot/api/model)
 
@@ -295,3 +298,14 @@
                                   &rest initargs)
   (loop for x across items
         collect (apply #'json-mop:json-to-clos x 'screenshot initargs)))
+
+(defclass comparison ()
+  ((samep :initarg :samep
+          :json-key "isSame"
+          :json-type :boolean
+          :reader comparison-samep)
+   (title :initarg :title
+          :json-key "title"
+          :json-type (or null :string)
+          :reader comparison-title))
+  (:metaclass ext-json-serializable-class))

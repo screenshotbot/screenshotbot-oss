@@ -175,12 +175,6 @@
         </div>
       </markup:merge-tag>)))
 
-(defun diff-report-empty-p (diff-report)
-  (not
-   (or (diff-report-added diff-report)
-       (diff-report-deleted diff-report)
-       (diff-report-changes diff-report))))
-
 (defhandler (compare-page :uri "/runs/:id/compare/:to") (id to)
   (when (string= "254" id)
     (hex:safe-redirect "/report/5fd16bcf4f4b3822fd000146"))
