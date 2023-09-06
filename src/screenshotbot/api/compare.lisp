@@ -35,7 +35,7 @@
         (make-instance 'dto:comparison
                        :samep nil
                        :title (diff-report-title diff-report)
-                       :url (format nil "https://~a/runs/~a/compare/~a"
+                       :url (format nil "~a/runs/~a/compare/~a"
                                     (installation-domain (installation))
                                     (oid run)
                                     (oid to))))))
