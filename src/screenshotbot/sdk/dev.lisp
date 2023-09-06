@@ -68,27 +68,17 @@
   nil)
 
 (defun %make-run-and-get-id (api-ctx &key directory channel)
-  (log:info "here")
   (let ((ctx (make-instance 'dev-run-context
                             :productionp nil
                             :channel channel
                             :main-branch "main")))
     (with-flags-from-run-context (ctx)
-      (log:info "hello")
       (make-directory-run
        api-ctx
        (make-instance 'image-directory
                       :directory directory)
        :channel channel
        :repo (make-instance 'null-repo)))))
-
-#+nil
-(%make-run-and-get-id (make-instance 'api-context
-                                     :key "DD9RA2F8ZXBAUTRZ6T4D"
-                                     :hostname "https://api.screenshotbot.io"
-                                     :secret "UY8JzaybHIDEyD7SzBEqqqEPY2mNiH7W113Rum6h")
-                      :directory "/home/arnold/builds/fast-example/screenshots/"
-                      :channel "dummy")
 
 (defun make-run-and-get-id (cmd)
   (when (getopt cmd :verbose)
