@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/run-context
+                #:flags-run-context
                 #:run-context
                 #:env-reader-run-context
                 #:invalid-pull-request
@@ -20,7 +21,8 @@
   (:import-from #:cl-mock
                 #:if-called)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)
-                    (#:git #:screenshotbot/sdk/git)))
+                    (#:git #:screenshotbot/sdk/git)
+                    (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/test-run-context)
 
 
@@ -129,3 +131,9 @@
       (finishes (run-context:merge-base self))
       (finishes (run-context:repo-clean-p self))
       (finishes (run-context:main-branch-hash self)))))
+
+(test main-branch-hash-for-flags
+  (with-fixture state ()
+    (let ((flags:*main-branch-commit-hash* "foo"))
+      (is (equal "foo"
+                 (run-context:main-branch-hash (make-instance 'flags-run-context)))))))

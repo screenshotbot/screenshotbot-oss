@@ -218,6 +218,7 @@ pull-request looks incorrect."
   ()
   (:default-initargs
    :main-branch flags:*main-branch*
+   :main-branch-hash flags:*main-branch-commit-hash*
    :pull-request-url flags:*pull-request*
    :create-github-issue-p flags:*create-github-issue*
    :repo-url flags:*repo-url*
