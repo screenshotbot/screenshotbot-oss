@@ -234,7 +234,7 @@ pull-request looks incorrect."
    :compare-threshold flags:*compare-threshold*
    :batch flags:*batch*))
 
-(def-easy-macro with-flags-from-run-context (self)
+(def-easy-macro with-flags-from-run-context (self &fn fn)
   "Temporary hack to enable using both flags and run-context everywhere."
   (check-type self run-context)
   (let ((flags:*main-branch* (main-branch self))
@@ -249,4 +249,5 @@ pull-request looks incorrect."
         (flags:*channel* (channel self))
         (flags:*override-commit-hash* (override-commit-hash self))
         (flags:*compare-threshold* (compare-threshold self))
-        (flags:*batch* (batch self)))))
+        (flags:*batch* (batch self)))
+    (fn)))

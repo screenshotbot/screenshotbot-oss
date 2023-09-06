@@ -14,13 +14,14 @@
                 #:assoc-value)
   (:import-from #:util/health-check
                 #:run-health-checks)
-  (:import-from #:screenshotbot/sdk/dev
-                #:dev/command)
   (:export
    #:with-clingon-api-context
    #:common-run-options
-   #:register-root-command))
+   #:register-root-command
+   #:dev/command))
 (in-package :screenshotbot/sdk/cli-common)
+
+(declaim (ftype (function) dev/command))
 
 (defun make-api-context (&key api-key
                            api-secret
