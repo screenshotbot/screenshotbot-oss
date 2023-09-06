@@ -216,6 +216,7 @@
                "--production=false"))))
 
 (defun run-tests-with-tmpdir ()
+  (log:config :sane :immediate-flush t :pattern "[%D{%H:%M:%S}] %5p: %m%n")
   (tmpdir:with-tmpdir (dir)
     (let ((*default-cmd-dir* dir))
       (run-tests))))
