@@ -14,6 +14,7 @@
   (:import-from #:clingon.options
                 #:make-option)
   (:import-from #:screenshotbot/sdk/sdk
+                #:request
                 #:make-directory-run)
   (:import-from #:screenshotbot/sdk/cli-common
                 #:with-clingon-api-context
@@ -31,10 +32,14 @@
   (:import-from #:screenshotbot/sdk/api-context
                 #:api-context)
   (:import-from #:screenshotbot/api/model
+                #:decode-json
                 #:encode-json)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:export
    #:dev/command)
-  (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)))
+  (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)
+                    (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/dev)
 
 (defclass dev-run-context (run-context
@@ -115,6 +120,24 @@
                                                         :if-exists :supersede)
                         (write-string (encode-json run) stream)))))))))
 
+(defun read-recorded-run (channel)
+  (let ((file (recording-file channel)))
+    (cond
+      ((path:-e file)
+       (decode-json (uiop:read-file-string file)
+                    'dto:run))
+      (t
+       (error "No recording for channel ~a" channel)))))
+
+(defun compare-runs (api-context run1 run2)
+  (let ((body
+          (request api-context (format nil "/api/run/~a/compare/~a"
+                                       (dto:run-id run1)
+                                       (dto:run-id run2)))))
+    (make-instance 'dto:comparison
+                   :samep (assoc-value body :samep)
+                   :title (assoc-value body :title))))
+
 (defun verify/command ()
   (clingon:make-command
    :name "verify"
@@ -122,8 +145,18 @@
    :options (default-options)
    :handler (lambda (cmd)
               (with-sentry ()
-               (let ((run-id (make-run-and-get-id cmd)))
-                 (error "unimpl"))))))
+                (let ((recorded-run (read-recorded-run (getopt cmd :channel))))
+                  (with-clingon-api-context (api-ctx cmd)
+                   (let* ((run (make-run-and-get-id cmd))
+                          (comparison (compare-runs api-ctx run recorded-run)))
+                     (cond
+                       ((dto:comparison-samep comparison)
+                        (log:info "Nothing's changed.")
+                        (uiop:quit 0))
+                       (t
+                        (log:info "~a" (dto:comparison-title comparison))
+                        (log:info "See changes at ...")
+                        (uiop:quit 1))))))))))
 
 (defun dev/command ()
   (clingon:make-command
