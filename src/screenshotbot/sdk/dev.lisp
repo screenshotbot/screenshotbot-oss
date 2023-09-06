@@ -136,7 +136,8 @@
                                        (dto:run-id run2)))))
     (make-instance 'dto:comparison
                    :samep (assoc-value body :samep)
-                   :title (assoc-value body :title))))
+                   :title (assoc-value body :title)
+                   :url (assoc-value body :url))))
 
 (defun verify/command ()
   (clingon:make-command
@@ -155,7 +156,7 @@
                         (uiop:quit 0))
                        (t
                         (log:info "~a" (dto:comparison-title comparison))
-                        (log:info "See changes at ...")
+                        (log:info "See changes at ~a" (dto:comparison-url comparison))
                         (uiop:quit 1))))))))))
 
 (defun dev/command ()
