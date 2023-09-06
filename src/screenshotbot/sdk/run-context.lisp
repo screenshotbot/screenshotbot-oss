@@ -13,6 +13,8 @@
                 #:when-let)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export
    #:run-context
    #:flags-run-context
@@ -34,7 +36,8 @@
    #:compare-threshold
    #:batch
    #:gitlab-merge-request-iid
-   #:phabricator-diff-id)
+   #:phabricator-diff-id
+   #:with-flags-from-run-context)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:e #:screenshotbot/sdk/env)
                     (#:git #:screenshotbot/sdk/git)))
@@ -230,3 +233,20 @@ pull-request looks incorrect."
    :override-commit-hash flags:*override-commit-hash*
    :compare-threshold flags:*compare-threshold*
    :batch flags:*batch*))
+
+(def-easy-macro with-flags-from-run-context (self)
+  "Temporary hack to enable using both flags and run-context everywhere."
+  (check-type self run-context)
+  (let ((flags:*main-branch* (main-branch self))
+        (flags:*main-branch-commit-hash* (main-branch-hash self))
+        (flags:*pull-request* (pull-request-url self))
+        (flags:*create-github-issue* (create-github-issue-p self))
+        (flags:*repo-url* (repo-url self))
+        (flags:*production* (productionp self))
+        (flags:*build-url* (build-url self))
+        (flags:*gitlab-merge-request-iid* (gitlab-merge-request-iid self))
+        (flags:*phabricator-diff-id* (phabricator-diff-id self))
+        (flags:*channel* (channel self))
+        (flags:*override-commit-hash* (override-commit-hash self))
+        (flags:*compare-threshold* (compare-threshold self))
+        (flags:*batch* (batch self)))))

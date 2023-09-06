@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/run-context
+                #:with-flags-from-run-context
                 #:flags-run-context
                 #:run-context
                 #:env-reader-run-context
@@ -137,3 +138,11 @@
     (let ((flags:*main-branch-commit-hash* "foo"))
       (is (equal "foo"
                  (run-context:main-branch-hash (make-instance 'flags-run-context)))))))
+
+(test with-flags
+  (with-fixture state ()
+    (let ((rc (make-instance 'run-context
+                             :channel "foobar")))
+      (with-flags-from-run-context (rc)
+        ;; just test one thing for now
+        (is (equal "foobar" flags:*channel*))))))
