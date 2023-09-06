@@ -56,7 +56,8 @@
              #:run-batch
              #:comparison
              #:comparison-samep
-             #:comparison-title))
+             #:comparison-title
+             #:comparison-url))
 
 (in-package :screenshotbot/api/model)
 
@@ -307,5 +308,9 @@
    (title :initarg :title
           :json-key "title"
           :json-type (or null :string)
-          :reader comparison-title))
+          :reader comparison-title)
+   (url :initarg :url
+        :json-key "url"
+        :json-type (or null :string)
+        :reader comparison-url))
   (:metaclass ext-json-serializable-class))
