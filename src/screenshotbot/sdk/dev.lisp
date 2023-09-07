@@ -89,12 +89,22 @@
      :channel (getopt cmd :channel)
      :directory (getopt cmd :directory))))
 
+(defun homedir ()
+  (path:-d (uiop:getenv "HOME")))
+
 (defun recording-file (channel)
   (ensure-directories-exist
    (path:catfile
-    (path:-d (uiop:getenv "HOME"))
+    (homedir)
     ".config/screenshotbot/recordings/"
     (format nil "~a.json" channel))))
+
+(defun record-run (run channel)
+  (let ((recording (recording-file channel)))
+    (uiop:with-staging-pathname (recording)
+      (with-open-file (stream recording :direction :output
+                                        :if-exists :supersede)
+        (write-string (encode-json run) stream)))))
 
 (defun record/command ()
   (clingon:make-command
@@ -104,11 +114,7 @@
    :handler (lambda (cmd)
               (with-sentry ()
                 (let ((run (make-run-and-get-id cmd)))
-                  (let ((recording (recording-file (getopt cmd :channel))))
-                    (uiop:with-staging-pathname (recording)
-                      (with-open-file (stream recording :direction :output
-                                                        :if-exists :supersede)
-                        (write-string (encode-json run) stream)))))))))
+                  (record-run run (getopt cmd :channel)))))))
 
 (defun read-recorded-run (channel)
   (let ((file (recording-file channel)))
