@@ -18,9 +18,6 @@
   ;; On MacOS, the TMPDIR variable can change between sessions.
   (uiop:setup-temporary-directory)
 
-  #-sbcl
-  (log4cl::init-hook)
-
   ;; If we used this image to deliver another image, we don't
   ;; want to load the same hook twice
   (unless *hook-loaded-p*
@@ -51,8 +48,7 @@
 
 (format t "Got command line arguments: ~S" (uiop:raw-command-line-arguments))
 
-#-sbcl
-(log4cl::save-hook)
+(assert (not (find-package :bordeaux-threads)))
 
 #+lispworks
 (flet ((build ()

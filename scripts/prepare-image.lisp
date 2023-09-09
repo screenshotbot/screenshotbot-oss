@@ -239,8 +239,6 @@
 (maybe-configure-proxy)
 
 
-(ql:quickload "log4cl")
-
 ;; for SLY
 (ql:quickload "flexi-streams")
 
@@ -249,7 +247,7 @@
 
 (ql:quickload :documentation-utils)
 
-(log:info "*local-project-directories: ~S" ql:*local-project-directories*)
+;;(log:info "*local-project-directories: ~S" ql:*local-project-directories*)
 
 #+lispworks
 (require "java-interface")
