@@ -20,6 +20,7 @@
   :depends-on (:quick-patch
                :cl-mock
                :tmpdir
+               :fiveam-matchers
                :str
                :fiveam)
   :components ((:file "test-impl")))

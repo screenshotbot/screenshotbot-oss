@@ -7,7 +7,7 @@
 (uiop:define-package :quick-patch/test-impl
     (:use #:cl
           #:fiveam
-          #:alexandria)
+          #:fiveam-matchers)
   (:import-from #:quick-patch/impl
                 #:catdir
                 #:name-from-repo-name
@@ -55,9 +55,9 @@
                                 (is (equal repo "https://github.com/m0cchi/cl-slack"))
                                 (is (equal commit "019ecb3"))))
           (checkout-all dir)
-          (is (member expected-dir
-                      *central-registry*
-                      :test 'equal)))
+          (assert-that (mapcar #'namestring *central-registry*)
+                       (has-item
+                        (matches-regex ".*cl-slack/$"))))
         (pass)))))
 
 

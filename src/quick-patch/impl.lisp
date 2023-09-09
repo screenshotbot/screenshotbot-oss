@@ -103,17 +103,18 @@ is provided, add each of the directories to asdf:*central-registry*"
     (subseq repo-name (+ 1 pos))))
 
 (defun checkout-all (cache-dir)
-  (setf *cache-dir* cache-dir)
-  (loop for (repo commit subdirs) in *externals*
-        do
-           (let* ((name (name-from-repo-name repo))
-                  (cache-dir (catdir *cache-dir* (format nil "~a/" name))))
-             (dolist (subdir subdirs)
-               (assert subdir)
-               (pushnew (catdir cache-dir subdir)
-                        asdf:*central-registry*
-                        :test 'equal))
-             (prepare-git-repo repo commit cache-dir))))
+  (let ((cache-dir (merge-pathnames cache-dir (uiop:getcwd))))
+    (setf *cache-dir* cache-dir)
+    (loop for (repo commit subdirs) in *externals*
+          do
+             (let* ((name (name-from-repo-name repo))
+                    (cache-dir (catdir *cache-dir* (format nil "~a/" name))))
+               (dolist (subdir subdirs)
+                 (assert subdir)
+                 (pushnew (catdir cache-dir subdir)
+                          asdf:*central-registry*
+                          :test 'equal))
+               (prepare-git-repo repo commit cache-dir)))))
 
 (defun prepare-externals (&rest args)
   (apply #'checkout-all args))
