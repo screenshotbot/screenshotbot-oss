@@ -5,7 +5,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 sbcl=build/sbcl-console
-CACHE_KEY=7
+CACHE_KEY=8
 SBCL_CORE=sbcl --no-userinit
 CCL_DEFAULT_DIRECTORY?=/opt/software/ccl
 CCL_CORE=$(CCL_DEFAULT_DIRECTORY)/lx86cl64
