@@ -137,3 +137,9 @@
   :depends-on (#:screenshotbot.sdk/gradle)
   :components (("build-utils/deliver-script:deliver-script"
                 "deliver-java")))
+
+(defsystem :screenshotbot.sdk/integration-tests
+  :depends-on (#:fiveam
+               #:screenshotbot.sdk/deliver
+               #:screenshotbot.sdk)
+  :components ((:file "integration-tests")))
