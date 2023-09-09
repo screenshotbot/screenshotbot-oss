@@ -32,6 +32,15 @@
      (make-pathname :type "lwheap"
                     :defaults output))))
 
+#+lispworks
+(defmethod asdf:operation-done-p :around ((o compile-op) (s deliver-script))
+  (when (call-next-method)
+    (let* ((output-file (car (output-files o s)))
+           (core-file (merge-pathnames
+                       (car system:*line-arguments-list*)
+                       (uiop:getcwd))))
+      (>= (file-write-date output-file)
+          (file-write-date core-file)))))
 
 (defclass deliver-so-script (deliver-script)
   ((type :initform "lisp")))
