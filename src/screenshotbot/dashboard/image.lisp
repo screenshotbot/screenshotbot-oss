@@ -24,7 +24,6 @@
   (:import-from #:util/object-id
                 #:oid)
   (:import-from #:util/hash-lock
-                #:hash-locked-future
                 #:with-hash-lock-held
                 #:hash-lock)
   (:import-from #:screenshotbot/async

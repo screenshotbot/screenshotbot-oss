@@ -15,8 +15,7 @@
                 #:future)
   (:export
    #:hash-lock
-   #:with-hash-lock-held
-   #:hash-locked-future)
+   #:with-hash-lock-held)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/hash-lock)
 
@@ -70,47 +69,3 @@
            ;; we were the last one waiting on this, we can free up all
            ;; the resource associated with this object
            (remhash obj (%hash-table hash-lock))))))))
-
-(defclass hash-locked-future ()
-  ((promise :initarg :promise
-            :reader hash-locked-promise)
-   (body :initarg :body
-         :reader body)
-   (kernel :initarg :kernel
-           :reader kernel)))
-
-(def-easy-macro hash-locked-future (obj hash-lock &fn body)
-  "Like future, but we ensure the lock is held before running the future.
- We can be a little more efficient by ensuring that only one object is
-o running at any point of time."
-  (let ((promise (promise)))
-    (bt:with-lock-held ((%lock hash-lock))
-      (let ((obj-state (object-state obj hash-lock)))
-        (a:appendf
-         (future-queue obj-state)
-         (list
-          (make-instance 'hash-locked-future
-                         :promise promise
-                         :body body
-                         :kernel lparallel:*kernel*)))
-        (unless (second (future-queue obj-state))
-          ;; If there's exactly one item on the list, then we should
-          ;; trigger the next future.
-          (trigger-next-future obj-state hash-lock))))
-    promise))
-
-(defun trigger-next-future (object-state hash-lock)
-  "Trigger the next future in the queue. Make sure you're holding the
- hash-lock's lock before calling this function"
-  (let ((next-future (car (future-queue object-state))))
-    (let ((lparallel:*kernel* (kernel next-future)))
-      (fulfill (hash-locked-promise next-future)
-        (chain
-         (future
-          (unwind-protect
-               (bt:with-lock-held ((item-lock object-state))
-                 (funcall (body next-future)))
-            (bt:with-lock-held ((%lock hash-lock))
-              (pop (future-queue object-state))
-              (when (future-queue object-state)
-                (trigger-next-future object-state hash-lock))))))))))

@@ -24,7 +24,6 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:util/hash-lock
-                #:hash-locked-future
                 #:hash-lock)
   (:import-from #:lparallel.kernel
                 #:*debug-tasks-p*)
