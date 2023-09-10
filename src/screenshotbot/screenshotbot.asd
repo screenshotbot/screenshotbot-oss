@@ -331,6 +331,7 @@
                :screenshotbot)
   :components ((:file "factory")
                (:file "test-server")
+               (:file "test-testing")
                (:file "test-artifacts")
                (:file "test-promote-api")
                (:file "test-diff-report")

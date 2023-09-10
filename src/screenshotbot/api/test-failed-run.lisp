@@ -16,6 +16,8 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/testing
+                #:with-installation
+                #:multi-org-test-installation
                 #:with-test-user)
   (:import-from #:alexandria
                 #:assoc-value)
@@ -26,20 +28,21 @@
 
 (def-fixture state ()
   (cl-mock:with-mocks ()
-   (with-test-store ()
-     (&body))))
+    (with-installation (:installation (make-instance 'multi-org-test-installation))
+     (with-test-store ()
+       (&body)))))
 
 (test simple-put-list
   (with-fixture state ()
-   (let ((failed-run-dto (make-instance 'dto:failed-run
-                                        :channel "bleh"
-                                        :commit "foo")))
-     (answer (parse-body 'dto:failed-run)
-       failed-run-dto)
-     (with-test-user (:logged-in-p t)
-       (finishes
-         (%put-failed-run))
-       (is (eql 1 (length (%list-failed-runs))))
-       (is (equal "bleh" (dto:failed-run-channel (car (%list-failed-runs))))))
-     (with-test-user (:logged-in-p t :company-name "two")
-       (is (eql 0 (length (%list-failed-runs))))))))
+    (let ((failed-run-dto (make-instance 'dto:failed-run
+                                         :channel "bleh"
+                                         :commit "foo")))
+      (answer (parse-body 'dto:failed-run)
+        failed-run-dto)
+      (with-test-user (:logged-in-p t)
+        (finishes
+          (%put-failed-run))
+        (is (eql 1 (length (%list-failed-runs))))
+        (is (equal "bleh" (dto:failed-run-channel (car (%list-failed-runs))))))
+      (with-test-user (:logged-in-p t :company-name "two")
+        (is (eql 0 (length (%list-failed-runs))))))))

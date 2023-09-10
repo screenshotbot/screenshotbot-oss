@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/testing
+                #:multi-org-test-installation
                 #:with-installation
                 #:with-test-user)
   (:import-from #:screenshotbot/user-api
@@ -30,7 +31,7 @@
 (util/fiveam:def-suite)
 
 (test notices-screenshot-test
-  (with-installation ()
+  (with-installation (:installation (make-instance 'multi-org-test-installation))
    (with-test-store ()
      (with-test-user (:user user
                       :company company

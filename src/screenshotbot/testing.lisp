@@ -8,6 +8,8 @@
     (:use #:cl
           #:alexandria)
   (:import-from #:screenshotbot/model/company
+                #:get-singleton-company
+                #:prepare-singleton-company
                 #:company)
   (:import-from #:screenshotbot/model/user
                 #:user)
@@ -34,6 +36,7 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:screenshotbot/installation
+                #:multi-org-feature
                 #:installation
                 #:*installation*)
   (:import-from #:screenshotbot/server
@@ -42,7 +45,12 @@
    #:snap-image-blob
    #:snap-all-images
    #:fix-timestamps
-   #:screenshot-test))
+   #:screenshot-test
+   #:multi-org-test-installation))
+
+(defclass multi-org-test-installation (multi-org-feature
+                                       installation)
+  ())
 
 (def-easy-macro with-installation (&key globally
                                         (installation (make-instance 'installation))
@@ -65,8 +73,14 @@
                              (logged-in-p nil)
                              (fake-request-args nil)) &body body)
   `(with-installation ()
-     (let* ((,company (make-instance ,company-class
-                                     :name ,company-name))
+     (let* ((,company
+              (typecase (installation)
+                (multi-org-feature
+                 (make-instance ,company-class
+                                :name ,company-name))
+                (t
+                 (prepare-singleton-company)
+                 (get-singleton-company (installation)))))
             (,user (make-user :companies (list ,company)))
             (,api-key (make-instance 'api-key :user ,user
                                               :company ,company))
