@@ -6,6 +6,7 @@
   :depends-on (#-jipr
                :jvm
                :trivial-features
+               :log4cl
                :fiveam
                #-(or jipr screenshotbot-oss)
                :sentry

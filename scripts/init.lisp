@@ -50,15 +50,16 @@
 (register-tdrhq "html2text"
                 "b5620fdd435df5254a713f3c10bd756632df3dce")
 
-;; Bug in quicklisp cl-str, please remove when updating after 2023-02-15
-(quick-patch:register "https://github.com/vindarel/cl-str"
-                      "cf2e7ae5e333b8a2dbfd01ec4ec26790b46eebf2")
-
 ;; slynk-named-readtables is loaded from ~/.emacs.d. But this prevents
 ;; us from loading it in a remote image. It's not part of quicklisp,
 ;; so let's add it.
 (quick-patch:register "https://github.com/joaotavora/sly-named-readtables"
                       "a5a42674ccffa97ccd5e4e9742beaf3ea719931f")
+
+(assert (not (find-package :bordeaux-threads)))
+
+(register-tdrhq "bordeaux-threads"
+                "123286e88a6791ed7f8b8811c90406d6917258ac")
 
 ;; TODO: automatically generate hashes
 #+screenshotbot-oss
