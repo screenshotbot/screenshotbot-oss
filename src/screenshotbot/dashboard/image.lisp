@@ -116,12 +116,12 @@
              res))
       (ecase type
         (:png
-         (warn "Requesting a png")
          (let ((webp (%build-resized-image
                       image size-name
                       :type :webp)))
            (let ((png (output-file "png")))
              (unless (uiop:file-exists-p png)
+               (warn "Requesting a png that does not exist")
                (with-wand (wand :file webp)
                  (uiop:with-staging-pathname (png)
                    (save-wand-to-file
