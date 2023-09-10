@@ -23,7 +23,10 @@
                 #:api-key-secret-key
                 #:api-key-key)
   (:import-from #:screenshotbot/model/api-key
-                #:api-key-secret))
+                #:api-key-secret)
+  (:import-from #:screenshotbot/user-api
+                #:can-view
+                #:can-view!))
 (in-package :screenshotbot/sdk/integration-tests)
 
 (def-suite* :integration-tests)
@@ -95,6 +98,7 @@
          (with-env ("SCREENSHOTBOT_API_SECRET" "")
            (with-env ("SCREENSHOTBOT_API_HOSTNAME" host)
              (with-test-user (:user user :company company :api-key api-key)
+               (assert (can-view company user))
                (with-env ("SCREENSHOTBOT_API_KEY" (api-key-key api-key))
                  (with-env ("SCREENSHOTBOT_API_SECRET" (api-key-secret-key api-key))
                    (&body)))))))))))
@@ -103,6 +107,10 @@
   (with-fixture state ()
     (pass)))
 
+(def-easy-macro with-v2 (&fn fn)
+  (with-env ("SCREENSHOTBOT_CLI_V2" "true")
+    (fn)))
+
 (test mark-failed
   (with-fixture state ()
     (with-repo
@@ -110,3 +118,31 @@
         (run (list *sdk*
                    "--mark-failed"
                    "--channel=foo"))))))
+
+(test record-and-verify-unchanged
+  (with-fixture state ()
+    (with-v2 ()
+      (with-repo
+        (run (list "./gen.sh"))
+        (finishes
+          (run (list *sdk* "dev" "record" "--directory" "screenshots" "--channel" "bleh")))
+        (finishes
+          (run (list *sdk* "dev" "verify" "--directory" "screenshots" "--channel" "bleh")))))))
+
+(test record-and-verify-changed
+  (with-fixture state ()
+    (with-v2 ()
+      (with-repo
+        (run (list "./gen.sh"))
+        (finishes
+          (run (list *sdk* "dev" "record" "--directory" "screenshots" "--channel" "bleh")))
+
+        (with-open-file (stream (path:catfile *default-cmd-dir*
+                                              "ascii.txt")
+                                :direction :output :if-exists :supersede)
+          (write-string "text 15,15 \"duh\" " stream))
+        (run (list "./gen.sh"))
+        (multiple-value-bind (stdout stderr ret)
+            (run (list *sdk* "dev" "verify" "--directory" "screenshots" "--channel" "bleh")
+                 :ignore-error-status t)
+          (is (eql 1 ret)))))))
