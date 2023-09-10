@@ -1,3 +1,5 @@
+(ql:quickload :alexandria)
+
 (defpackage :screenshotbot/sdk/sdk-integration-tests
   (:use #:cl)
   (:import-from #:alexandria
