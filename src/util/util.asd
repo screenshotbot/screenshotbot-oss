@@ -239,6 +239,7 @@
 
 (defsystem :util/request
   :depends-on (:drakma
+               :log4cl
                :easy-macros)
   :serial t
   :components ((:file "http-cache")
