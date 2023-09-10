@@ -65,9 +65,11 @@
 #+screenshotbot-oss
 (progn
   (quick-patch:register "https://github.com/moderninterpreters/markup" "master")
+  (quick-patch:register "https://github.com/moderninterpreters/cl-sentry-client" "master")
   (register-tdrhq "easy-macros" "main")
   (register-tdrhq "fiveam-matchers" "master")
   (register-tdrhq "cl-unix-sockets" "master")
   (register-tdrhq "bknr.cluster" "main"))
+
 
 (quick-patch:checkout-all "build/quick-patch/")
