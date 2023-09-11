@@ -366,3 +366,14 @@
                (:module "phabricator"
                 :components ((:file "test-conduit")
                              (:file "test-harbormaster")))))
+
+(defsystem :util/events
+  :serial t
+  :defsystem-depends-on (:trivial-features)
+  :depends-on (:clsql
+               :util/clsql
+               :core.installation
+               :util/misc
+               :util/atomics
+               :atomics)
+  :components ((:file "events")))

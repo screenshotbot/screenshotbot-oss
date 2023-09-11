@@ -6,6 +6,7 @@
 
 (defpackage :screenshotbot/events
   (:use #:cl)
+  (:nicknames :util/events)
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:clsql-sys
@@ -26,7 +27,7 @@
   (:export
    #:event-engine
    #:with-tracing))
-(in-package :screenshotbot/events)
+(in-package :util/events)
 
 (defvar *events* nil)
 

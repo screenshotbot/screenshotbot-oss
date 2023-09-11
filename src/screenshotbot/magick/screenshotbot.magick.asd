@@ -9,7 +9,8 @@
   :defsystem-depends-on (:screenshotbot.magick.build)
   :depends-on (#-lispworks #:util/fake-fli
                #:easy-macros
-               #:screenshotbot/events
+               #:util/events
+               #:util/posix
                #:trivial-features
                #:screenshotbot/mask-rect-api
                #:util/native-module

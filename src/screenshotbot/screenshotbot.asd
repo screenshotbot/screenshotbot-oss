@@ -10,17 +10,6 @@
 (in-package :screenshotbot-system)
 
 
-(defsystem :screenshotbot/events
-  :serial t
-  :defsystem-depends-on (:trivial-features)
-  :depends-on (:clsql
-               :util/clsql
-               :core.installation
-               :util/misc
-               :util/atomics
-               :atomics)
-  :components ((:file "events")))
-
 (defsystem :screenshotbot/mask-rect-api
   :serial t
   :depends-on ()
@@ -63,7 +52,7 @@
                :serapeum
                #+(or ccl lispworks)
                :java.libs
-               :screenshotbot/events
+               :util/events
                :util/form-state
                :util/hash-lock
                :util/request
@@ -325,7 +314,7 @@
                :screenshotbot/webdriver
                :screenshotbot/replay
                :screenshotbot/testing-lib
-               :screenshotbot/events
+               :util/events
                :tmpdir
                :cl-mock
                :screenshotbot)
