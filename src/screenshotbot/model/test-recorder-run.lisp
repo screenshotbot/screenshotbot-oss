@@ -28,6 +28,7 @@
   (:import-from #:fiveam-matchers/lists
                 #:contains)
   (:import-from #:screenshotbot/user-api
+                #:recorder-run-commit
                 #:channel)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
@@ -77,3 +78,17 @@
                    (has-length 0))
       (assert-that (production-run-for channel :commit "bleh2")
                    (has-length 0)))))
+
+(test if-commit-is-not-present-try-override-commit
+  (with-fixture state ()
+    (let* ((channel (make-instance 'channel))
+           (run (make-recorder-run
+                 :override-commit-hash "bleh")))
+      (is (equal "bleh" (recorder-run-commit run))))))
+
+(test if-both-commit-and-override-commit-is-not-present
+  "Then we return nil without failing"
+  (with-fixture state ()
+    (let* ((channel (make-instance 'channel))
+           (run (make-recorder-run)))
+      (is (equal nil (recorder-run-commit run))))))

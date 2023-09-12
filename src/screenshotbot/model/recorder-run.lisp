@@ -244,6 +244,11 @@ associated report is rendered.")
   'fset-set-index
   :slot-name 'commit)
 
+(defmethod recorder-run-commit :around (run)
+  (or
+   (call-next-method)
+   (override-commit-hash run)))
+
 (defclass unchanged-run (store-object)
   ((commit :initarg :commit
            :reader unchanged-run-commit
