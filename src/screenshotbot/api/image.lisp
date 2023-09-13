@@ -105,6 +105,7 @@
            (cons hash (prepare-single-upload hash nil))))
     (t
      (error 'api-error
+            :message
             "provide either hash or hash-list argument"))))
 
 (defhandler (nil :uri "/api/prepare-upload" :method :post) (hash content-type)
@@ -151,6 +152,7 @@
             (setf (screenshotbot/model/image:verified-p image) t)))
          (t
           (error 'api-error
+                 :message
                   (format nil
                           "md5sum mismatch from what was uploaded for image: ~a vs ~a"
                           etag
