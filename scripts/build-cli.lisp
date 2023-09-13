@@ -13,15 +13,15 @@
 #+sbcl
 (sb-ext:save-lisp-and-die *output*
                           :purify t
-                          :toplevel 'screenshotbot-sdk:main
+                          :toplevel 'screenshotbot/sdk/main:main
                           :executable t)
 
 #+ccl
 (ccl:save-application *output*
-                      :toplevel-function 'screenshotbot-sdk:main)
+                      :toplevel-function 'screenshotbot/sdk/main:main)
 
 #+lispworks
-(deliver 'screenshotbot-sdk:main *output* 5
+(deliver 'screenshotbot/sdk/main:main *output* 5
           :keep-function-name t
           :keep-pretty-printer t
           :keep-lisp-reader t
