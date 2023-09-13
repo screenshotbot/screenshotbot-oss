@@ -168,6 +168,15 @@
                    (str:containsp "www." full-name)))
              "That name looks invalid")
       (check :full-name
+             (< (length full-name) 150)
+             "Name is too long")
+      (check :password
+             (< (length password) 150)
+             "Password is too long")
+      (check :email
+             (< (length email) 150)
+             "Password is too long")
+      (check :full-name
              (not (str:emptyp (str:trim full-name)))
              "We would really like you to introduce yourself!")
       (check :email
