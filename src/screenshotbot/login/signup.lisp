@@ -162,6 +162,12 @@
       (check :password (and password (>= (length password) 8))
              "Please use at least 8 letters for the password")
       (check :full-name
+             (not (or
+                   (str:containsp "https:" full-name)
+                   (str:containsp "http:" full-name)
+                   (str:containsp "www." full-name)))
+             "That name looks invalid")
+      (check :full-name
              (not (str:emptyp (str:trim full-name)))
              "We would really like you to introduce yourself!")
       (check :email
