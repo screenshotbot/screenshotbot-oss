@@ -222,53 +222,56 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
     for (let im of images) {
         im.onload = onEitherImageLoad;
     }
-    var dragStart = { x: 0, y: 0, translateX: 0, translateY: 0 };
+    // Mapping from pointerId to { x: 0, y: 0, translateX: 0, translateY: 0 };
+    var dragStart = {};
 
     function onMouseDown(e) {
         if (e.which != 1) {
             return;
         }
 
-        var isDragging = true;
-        dragStart = getEventPositionOnCanvas(e);
-        dragStart.translateX = transform.e;
-        dragStart.translateY = transform.f;
+        var pointerId = e.pointerId;
+        dragStart[pointerId] = getEventPositionOnCanvas(e);
+        ds = dragStart[pointerId];
+        ds.translateX = transform.e;
+        ds.translateY = transform.f;
+        ds.startTime = Date.now();
 
-        var eventEl = document;
-        // Only start moving after 250ms. In the meantime, if
-        // we double-click, then we'll cancel this
-        var timer = setTimeout(function () {
-            eventEl.addEventListener("pointermove", onMouseMove);
-        }, 100)
-
-        function onMouseMove(e) {
-            var pos = getEventPositionOnCanvas(e);
-            if (isDragging) {
-                transform.e = pos.x - dragStart.x + dragStart.translateX;
-                transform.f = pos.y - dragStart.y + dragStart.translateY;
-                scheduleDraw();
-            }
-            e.preventDefault();
-        }
-
-        function onMouseEnd(e) {
-            isDragging = false;
-            clearTimeout(timer);
-            eventEl.removeEventListener("pointermove", onMouseMove);
-            eventEl.removeEventListener("pointerup", onMouseEnd);
-            eventEl.removeEventListener("pointercancel", onMouseEnd);
-            e.preventDefault();
-        }
-
-
-        eventEl.addEventListener("pointerup", onMouseEnd);
-        eventEl.addEventListener("pointercancel", onMouseEnd);
         e.preventDefault();
     }
 
-    var mouseDownTimer;
+    function onMouseMove(e) {
+        var pos = getEventPositionOnCanvas(e);
+        var ds = dragStart[e.pointerId]
+        if (ds && ds.startTime < Date.now() - 100) {
+            transform.e = pos.x - ds.x + ds.translateX;
+            transform.f = pos.y - ds.y + ds.translateY;
+            scheduleDraw();
+        }
 
+        if (ds) {
+            e.preventDefault();
+        }
+    }
+
+    function onMouseEnd(e) {
+        if (dragStart[e.pointerId]) {
+            delete dragStart[e.pointerId];
+            e.preventDefault();
+        }
+    }
+
+    document.addEventListener("pointermove", onMouseMove);
+    document.addEventListener("pointerup", onMouseEnd);
+    document.addEventListener("pointercancel", onMouseEnd);
     $(canvasEl).on("pointerdown", onMouseDown);
+
+    $(canvasEl).on("remove", function () {
+        console.log("removing listeners");
+        document.removeEventListener("pointermove", onMouseMove);
+        document.removeEventListener("pointerup", onMouseEnd);
+        document.removeEventListener("pointercancel", onMouseEnd);
+    });
 
     function getEventPositionOnCanvas(e) {
         var rect = canvasEl.getBoundingClientRect();
