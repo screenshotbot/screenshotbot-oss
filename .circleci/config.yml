@@ -75,3 +75,6 @@ workflows:
   launch:
     jobs:
       - launch
+  launch:
+    jobs:
+      - build-cli
