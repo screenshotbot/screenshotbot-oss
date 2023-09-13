@@ -216,6 +216,7 @@
             (setf (hunchentoot:header-out "Cache-Control") "no-cache"))
            ((cl-ppcre:scan *asset-regex* script-name)
             (setf (hunchentoot:header-out "Cache-Control") "max-age=3600000")))
+         (setf (hunchentoot:header-out "X-Frame-Options") "DENY")
          (when (and
                 (str:starts-with-p "/assets" script-name)
                 (not *is-localhost*))
