@@ -58,22 +58,21 @@
                                             batch
                                             run
                                             check)
-   (let ((item (bt:with-lock-held (*lock*)
-                  (or
-                   (find-batch-item batch :channel (recorder-run-channel run))
-                   (make-instance 'batch-item
-                                  :channel (recorder-run-channel run)
-                                  :batch batch)))))
-     (setf (batch-item-channel item) (recorder-run-channel run))
-     (setf (batch-item-run item) run)
-     (setf (batch-item-report item) (report check))
-     (setf (batch-item-status item) (check-status check))
-     (setf (batch-item-title item) (check-title check))
+   (with-hash-lock-held (batch *push-lock*)
+     (let ((item (or
+                  (find-batch-item batch :channel (recorder-run-channel run))
+                  (make-instance 'batch-item
+                                 :channel (recorder-run-channel run)
+                                 :batch batch))))
+       (setf (batch-item-channel item) (recorder-run-channel run))
+       (setf (batch-item-run item) run)
+       (setf (batch-item-report item) (report check))
+       (setf (batch-item-status item) (check-status check))
+       (setf (batch-item-title item) (check-title check))
 
-     (unless (check-status check)
-       (warn "Got a NIL status for ~a" run))
+       (unless (check-status check)
+         (warn "Got a NIL status for ~a" run))
 
-     (with-hash-lock-held (batch *push-lock*)
        (push-remote-check
         promoter
         batch
