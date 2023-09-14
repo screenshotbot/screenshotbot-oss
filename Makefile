@@ -76,7 +76,8 @@ QUICKLISP_DEPS=$(shell find quicklisp -name '*.txt') $(shell find quicklisp -nam
 IMAGE_DEPS=scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO) scripts/prepare-image.lisp scripts/init.lisp scripts/asdf.lisp $(QUICKLISP_DEPS)
 
 ifeq ($(UNAME),Linux)
-	LW_CORE=$(LW_PREFIX)/lispworks-$(LW_VERSION)-amd64-linux
+
+	LW_CORE=$(LW_PREFIX)/lispworks-$(LW_VERSION)-*-linux
 endif
 
 ifeq ($(UNAME),Darwin)
