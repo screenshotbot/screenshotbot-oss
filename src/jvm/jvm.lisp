@@ -77,13 +77,15 @@
                (error "Could not find java, pass '--libjvm' argument"))))
 
     (t
-     (let ((guesses (list
-                     ;; Debian bookworm
-                     "/usr/lib/jvm/java-17-openjdk-amd64/lib/server/libjvm.so"
-                     ;; Debian Bullseye
-                     "/usr/lib/jvm/java-11-openjdk-amd64/lib/server/libjvm.so"
-                     "/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so"
-                     "/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home/lib/server/libjvm.dylib")))
+     (let* ((platform #+arm64 "arm64"
+                      #-arm64 "amd64")
+            (guesses (list
+                      ;; Debian bookworm
+                      (format nil "/usr/lib/jvm/java-17-openjdk-~a/lib/server/libjvm.so" platform)
+                      ;; Debian Bullseye
+                      (format nil "/usr/lib/jvm/java-11-openjdk-~a/lib/server/libjvm.so" platform)
+                      "/usr/lib/jvm/java-11-openjdk/lib/server/libjvm.so"
+                      "/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home/lib/server/libjvm.dylib")))
        (loop for guess in guesses
              if (path:-e guess)
                do (return guess)
