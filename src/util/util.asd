@@ -313,6 +313,11 @@
   :serial t
   :components ((:file "json-mop")))
 
+(defsystem :util/throttler
+  :depends-on ()
+  :serial t
+  :components ((:file "throttler")))
+
 (defsystem :util/tests
   :depends-on (:util
                :util/hash-lock
@@ -328,6 +333,7 @@
                :util/phabricator
                :util/logger
                :util/json-mop
+               :util/throttler
                :util/request
                :util/fiveam)
   :defsystem-depends-on (:trivial-features)
@@ -337,6 +343,7 @@
                              (:static-file "test-file-compressed" :type "txt.gz")
                              (:file "test-ret-let")
                              (:file "test-mail")
+                             (:file "test-throttler")
                              (:file "test-logger")
                              (:file "test-misc")
                              (:file "test-copy-file")
