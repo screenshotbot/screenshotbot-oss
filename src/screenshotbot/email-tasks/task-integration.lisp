@@ -100,13 +100,18 @@
   (dolist (user (users-to-email (report-channel report)))
     (send-email-to-user user report)))
 
+(defun maybe-redact-token (token)
+  (if (util:token-safe-for-email-p token)
+      token
+      "[filtered]"))
+
 (with-auto-restart ()
   (defun send-email-to-user (user report)
     (push-event :email-task-notification)
     (send-mail
      (mailer*)
      :to (user-email user)
-     :subject (format nil "Screenshots changed in ~a" (channel-name (recorder-run-channel (report-run report))))
+     :subject (format nil "Screenshots changed in ~a" (maybe-redact-token (channel-name (recorder-run-channel (report-run report)))))
      :from
      #-screenshotbot-oss "notifications@screenshotbot.io"
      #+screenshotbot-oss nil ;; default mailer setting

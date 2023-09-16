@@ -96,4 +96,5 @@
            #:?.
            #:or-setf
            #:relative-system-source-directory
-           #:relative-output-files))
+           #:relative-output-files
+           #:token-safe-for-email-p))

@@ -15,6 +15,16 @@
      (mapcar 'str:trim (str:split "," s)))
     (t s)))
 
+(defun token-safe-for-email-p (token)
+  "Check if the given token is safe to use in an email. For instance,
+the token \"https://example.com\" is unsafe, because Gmail will format
+that as a link which can be used for phishing."
+  (not
+   (or
+    (str:containsp "https:" token)
+    (str:containsp "http:" token)
+    (str:containsp "www." token))))
+
 (defun make-mail-message-id ()
   (format nil "<~a@tdrhq.com>"
           (mongoid:oid-str (mongoid:oid))))

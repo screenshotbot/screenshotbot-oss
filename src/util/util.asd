@@ -336,6 +336,7 @@
                 :components ((:static-file "test-file" :type "txt")
                              (:static-file "test-file-compressed" :type "txt.gz")
                              (:file "test-ret-let")
+                             (:file "test-mail")
                              (:file "test-logger")
                              (:file "test-misc")
                              (:file "test-copy-file")
