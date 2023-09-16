@@ -148,6 +148,8 @@
              "Please enter an email")
       (check :password (not (str:emptyp password))
              "Please enter a password")
+      (check :password (< (length password) 150)
+             "Password too long")
       (check :email user
              "No account associated with that email address")
       (when user
