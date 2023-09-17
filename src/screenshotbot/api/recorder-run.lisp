@@ -25,6 +25,7 @@
   (:import-from #:screenshotbot/server
                 #:make-thread)
   (:import-from #:screenshotbot/user-api
+                #:current-user
                 #:current-company)
   (:import-from #:util #:oid)
   (:import-from #:bknr.datastore
@@ -41,6 +42,7 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:make-recorder-run)
   (:import-from #:util/misc
+                #:not-null!
                 #:?.)
   (:import-from #:screenshotbot/dashboard/run-page
                 #:run-link)
@@ -52,6 +54,9 @@
                 #:when-let)
   (:import-from #:screenshotbot/model/batch
                 #:find-or-create-batch)
+  (:import-from #:util/throttler
+                #:throttle!
+                #:keyed-throttler)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -68,6 +73,10 @@
        :reader run-response-id)))
 
 (defparameter *synchronous-promotion* nil)
+
+(defvar *non-production-throttler* (make-instance 'keyed-throttler
+                                                  :tokens 1200)
+  "A throttler for non-production runs (i.e. `ci record` and `ci verify`)")
 
 
 (defun js-boolean (x)
@@ -203,7 +212,11 @@
 (defun emptify (x)
   (if (str:emptyp x) nil x))
 
+
 (defmethod %put-run (company (run dto:run))
+  (unless (dto:trunkp run)
+    (throttle! *non-production-throttler* :key (not-null! (current-user))))
+
   (let* ((channel (find-or-create-channel company (dto:run-channel run)))
          (screenshots (screenshot-records-api-to-internal
                        company

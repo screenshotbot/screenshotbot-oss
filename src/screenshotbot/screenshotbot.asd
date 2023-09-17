@@ -24,6 +24,7 @@
                :markup
                :gravatar
                :util/posix
+               :util/throttler
                :bknr.impex
                :util/logger
                :lparallel
