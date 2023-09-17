@@ -40,14 +40,20 @@
                 #:with-transaction)
   (:import-from #:screenshotbot/login/common
                 #:after-create-user)
+  (:import-from #:util/throttler
+                #:throttle!
+                #:keyed-throttler)
   (:export
    #:signup-get
    #:signup-get-page
    #:signup-post))
 (in-package :screenshotbot/login/signup)
 
+(named-readtables:in-readtable markup:syntax)
 
-(markup:enable-reader)
+(defvar *signup-throttler* (make-instance 'keyed-throttler
+                                          :tokens 200)
+  "Throttles signups by IP address")
 
 (defmethod auth-provider-signup-form ((auth-provider standard-auth-provider) invite-code
                                       plan
@@ -195,7 +201,8 @@
           (signup-get
            :plan plan)))
         (t
-    ;; everything looks good, let's create our user
+         ;; everything looks good, let's create our user
+         (throttle! *signup-throttler* :key (hunchentoot:real-remote-addr))
          (let ((user (make-user
                       :full-name full-name
                       :email email)))
