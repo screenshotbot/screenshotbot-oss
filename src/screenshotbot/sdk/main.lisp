@@ -134,7 +134,7 @@
     (test flags:*ios-diff-dir*)))
 
 (defun %main (&optional (argv #+lispworks system:*line-arguments-list*
-                              #-lispworks (uiop:command-line-arguments)))
+                              #-lispworks (uiop:raw-command-line-arguments)))
   (log:config :sane :immediate-flush t :pattern "[%D{%H:%M:%S}] %5p: %m%n")
   (log:config :info)
 
