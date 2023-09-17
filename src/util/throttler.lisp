@@ -11,7 +11,8 @@
   (:import-from #:local-time
                 #:timestamp-difference)
   (:export
-   #:keyed-throttler))
+   #:keyed-throttler
+   #:throttle!))
 (in-package :util/throttler)
 
 (defclass throttler ()
@@ -54,6 +55,10 @@ If the request is throttled, then an error is signaled."))
 
 (defmethod throttled-funcall ((self throttler) fn &key (now (get-universal-time))
                                                     key)
+  (throttle! self :now now :key key)
+  (funcall fn))
+
+(defmethod throttle! ((self throttler) &key key (now (get-universal-time)))
   (declare (ignore key))
   (bt:with-lock-held ((lock self))
     (incf (%tokens self)
@@ -63,8 +68,7 @@ If the request is throttled, then an error is signaled."))
       (error 'throttled-error))
     (when (> (%tokens self) (max-tokens self))
       (setf (%tokens self) (max-tokens self)))
-    (decf (%tokens self)))
-  (funcall fn))
+    (decf (%tokens self))))
 
 (defmethod throttler-for-key ((self keyed-throttler) key &key now)
   (with-slots (throttler-map) self
@@ -83,12 +87,24 @@ If the request is throttled, then an error is signaled."))
                                    :now now))))
          (fset:@ throttler-map key))))))
 
-(defmethod throttled-funcall ((self keyed-throttler) fn &key (now (get-universal-time))
-                                                          key)
+(defmethod throttle! ((self keyed-throttler) &key (now (get-universal-time))
+                                               key)
   (unless key
     (error "Must provide :key for a keyed-throttler"))
   (let ((throttler (throttler-for-key self key :now now)))
-    (throttled-funcall throttler fn :now now)))
+    (throttle! throttler :now now)))
+
+(defmethod throttle! :around (self &key now key)
+  (declare (ignore now key))
+  (restart-case
+      (call-next-method)
+    (ignore-throttling ()
+      (values))))
+
+(defmethod throttled-funcall ((self keyed-throttler) fn &key (now (get-universal-time))
+                                                          key)
+  (throttle! self :now now :key key)
+  (funcall fn))
 
 (def-easy-macro with-throttling (throttler &key key &fn fn)
   (throttled-funcall throttler #'fn :key key))
