@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/throttler
+                #:keyed-throttler
                 #:%tokens
                 #:throttled-error
                 #:throttled-funcall
@@ -32,6 +33,14 @@
     (is (eql :done
              (with-throttling (throttler)
                :done)))))
+
+(test simple-call-with-key
+  (with-fixture state ()
+    (let ((throttler (make-instance 'keyed-throttler
+                                    :tokens 100)))
+      (is (eql :done
+               (with-throttling (throttler :key 20)
+                 :done))))))
 
 (test throttles
   (with-fixture state ()
@@ -91,3 +100,29 @@
       (throttled-funcall throttler (lambda ()
                                      (incf ctr))
                          :now 1102))))
+
+
+(test throttles-with-keyed-throttler
+  (with-fixture state ()
+    (let ((throttler (make-instance 'keyed-throttler :tokens 10
+                                                     :period 1000))
+          (ctr 0))
+      (dotimes (i 10)
+        (throttled-funcall throttler (lambda ()
+                                       (incf ctr))
+                           :now (+ 1000 i)
+                           :key "foo"))
+      (is (eql 10 ctr))
+      (signals throttled-error
+       (throttled-funcall throttler (lambda ()
+                                      (incf ctr))
+                          :now 1013
+                          :key "foo"))
+      (throttled-funcall throttler (lambda ()
+                                     (incf ctr))
+                         :now 1013
+                         :key "bar")
+      (throttled-funcall throttler (lambda ()
+                                     (incf ctr))
+                         :now 1102
+                         :key "foo"))))

@@ -9,7 +9,9 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:local-time
-                #:timestamp-difference))
+                #:timestamp-difference)
+  (:export
+   #:keyed-throttler))
 (in-package :util/throttler)
 
 (defclass throttler ()
@@ -39,7 +41,20 @@ If the request is throttled, then an error is signaled."))
 (define-condition throttled-error (error)
   ())
 
-(defmethod throttled-funcall ((self throttler) fn &key (now (get-universal-time)))
+(defclass keyed-throttler ()
+  ((max-tokens :initarg :tokens
+               :initform (error "must provide :tokens")
+               :reader max-tokens)
+   (period :initarg :period
+           :reader period
+           :initform 3600
+           :documentation "interval in seconds, defaults to an hour")
+   (throttler-map :accessor throttler-map
+                  :initform (fset:empty-map))))
+
+(defmethod throttled-funcall ((self throttler) fn &key (now (get-universal-time))
+                                                    key)
+  (declare (ignore key))
   (bt:with-lock-held ((lock self))
     (incf (%tokens self)
           (* (- now (%last-updated self)) (/ (max-tokens self) (period self))))
@@ -51,5 +66,29 @@ If the request is throttled, then an error is signaled."))
     (decf (%tokens self)))
   (funcall fn))
 
-(def-easy-macro with-throttling (throttler &fn fn)
-  (throttled-funcall throttler #'fn))
+(defmethod throttler-for-key ((self keyed-throttler) key &key now)
+  (with-slots (throttler-map) self
+    (let ((existing (fset:@ throttler-map key)))
+      (cond
+        (existing
+         existing)
+        (t
+         (atomics:atomic-update
+          throttler-map
+          (lambda (old)
+           (fset:with
+            old key (make-instance 'throttler
+                                   :tokens (max-tokens self)
+                                   :period (period self)
+                                   :now now))))
+         (fset:@ throttler-map key))))))
+
+(defmethod throttled-funcall ((self keyed-throttler) fn &key (now (get-universal-time))
+                                                          key)
+  (unless key
+    (error "Must provide :key for a keyed-throttler"))
+  (let ((throttler (throttler-for-key self key :now now)))
+    (throttled-funcall throttler fn :now now)))
+
+(def-easy-macro with-throttling (throttler &key key &fn fn)
+  (throttled-funcall throttler #'fn :key key))
