@@ -34,6 +34,9 @@
   (let ((bytes (md5-file file)))
     (ironclad:byte-array-to-hex-string bytes)))
 
+(defun make-fake-hash (ch)
+  (make-array 40 :element-type 'character :initial-element ch))
+
 
 (defmethod populate-company ((company company))
   (flet ((make-image (path)
@@ -62,8 +65,8 @@
     (let ((image1 (make-image "assets/images/example-view-square.svg.png"))
           (image2 (make-image "assets/images/example-view.svg.png")))
 
-      (let* ((run (create-run :image image1 :commit "abcdef1"))
-             (run-2 (create-run :image image2 :commit "abcdef2")))
+      (let* ((run (create-run :image image1 :commit (make-fake-hash #\a)))
+             (run-2 (create-run :image image2 :commit (make-fake-hash #\b))))
         (with-transaction ()
           (setf (recorder-previous-run run-2) run)
           (setf (active-run (recorder-run-channel run-2) "master") run-2))

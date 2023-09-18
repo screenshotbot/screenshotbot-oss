@@ -18,6 +18,7 @@
   (:import-from #:screenshotbot/server
                 #:logged-in-p)
   (:import-from #:screenshotbot/api/recorder-run
+                #:check-commit-hash!
                 #:%put-run
                 #:run-to-dto
                 #:warmup-image-caches
@@ -143,7 +144,7 @@
 (test recorder-run-put-happy-path
   (with-fixture state ()
     (let ((dto (make-instance 'dto:run
-                              :commit-hash "bleh"
+                              :commit-hash (h "bleh")
                               :channel "blah"
                               :screenshots (list
                                             (make-instance 'dto:screenshot
@@ -177,13 +178,18 @@
                                  (make-screenshot :image img1 :name "foo")))))
      (starts-with "https://example.com/runs/"))))
 
+(defun h (x)
+  (str:substring
+   0 40
+   (format nil "~a~a" x "0000000000000000000000000000000000000000")))
+
 (test batch-is-added
   (with-fixture state ()
     (assert company)
     (%put-run company
               (make-instance 'dto:run
                              :channel "foo"
-                             :commit-hash "deadbeef"
+                             :commit-hash (h "deadbeef")
                              :batch "dummy-batch"
                              :screenshots (list
                                            (make-instance 'dto:screenshot
@@ -194,7 +200,7 @@
       (assert-that (recorder-run-batch run)
                    (is-not-null)
                    (has-typep 'batch))
-      (is (equal "deadbeef" (batch-commit (recorder-run-batch run)))))))
+      (is (equal (h "deadbeef") (batch-commit (recorder-run-batch run)))))))
 
 (test batch-uses-does-not-use-empty-override-commit-hash
   (with-fixture state ()
@@ -202,7 +208,7 @@
     (%put-run company
               (make-instance 'dto:run
                              :channel "foo"
-                             :commit-hash "deadbeef"
+                             :commit-hash (h "deadbeef")
                              :override-commit-hash ""
                              :batch "dummy-batch"
                              :screenshots (list
@@ -214,7 +220,7 @@
       (assert-that (recorder-run-batch run)
                    (is-not-null)
                    (has-typep 'batch))
-      (is (equal "deadbeef" (batch-commit (recorder-run-batch run)))))))
+      (is (equal (h "deadbeef") (batch-commit (recorder-run-batch run)))))))
 
 (test batch-uses-does-not-uses-override-commit-hash
   (with-fixture state ()
@@ -222,8 +228,8 @@
     (%put-run company
               (make-instance 'dto:run
                              :channel "foo"
-                             :commit-hash "deadbeef"
-                             :override-commit-hash "baadf00d"
+                             :commit-hash (h "deadbeef")
+                             :override-commit-hash (h "baadf00d")
                              :batch "dummy-batch"
                              :screenshots (list
                                            (make-instance 'dto:screenshot
@@ -234,7 +240,7 @@
       (assert-that (recorder-run-batch run)
                    (is-not-null)
                    (has-typep 'batch))
-      (is (equal "baadf00d" (batch-commit (recorder-run-batch run)))))))
+      (is (equal (h "baadf00d") (batch-commit (recorder-run-batch run)))))))
 
 (test batch-is-nil
   (with-fixture state ()
@@ -251,3 +257,11 @@
       (is-true run)
       (assert-that (recorder-run-batch run)
                    (is-null)))))
+
+(test validate-commit-hash
+  (is (eql nil (check-commit-hash! nil)))
+  (is (eql nil (check-commit-hash! "")))
+  (is (equal "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+             (check-commit-hash! "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")))
+  (signals simple-error
+   (check-commit-hash! "abcd")))
