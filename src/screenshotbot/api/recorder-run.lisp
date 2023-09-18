@@ -212,17 +212,6 @@
 (defun emptify (x)
   (if (str:emptyp x) nil x))
 
-(defun check-commit-hash! (hash)
-  (cond
-    ((str:emptyp hash)
-     nil)
-    (t
-     (unless
-         (and
-          (stringp hash)
-          (eql 40 (length hash)))
-       (error "Invalid Git commit hash: ~a" hash))
-     hash)))
 
 (defmethod %put-run (company (run dto:run))
   (unless (dto:trunkp run)
@@ -248,7 +237,7 @@
                         :channel channel
                         :batch batch
                         :screenshots screenshots
-                        :commit-hash (check-commit-hash! (dto:run-commit run))
+                        :commit-hash (dto:run-commit run)
                         :create-github-issue-p (dto:should-create-github-issue-p run)
                         :trunkp (dto:trunkp run)
                         :periodic-job-p (dto:periodic-job-p run)
@@ -257,9 +246,9 @@
                         :branch (dto:main-branch run)
                         :work-branch (dto:work-branch run)
                         :branch-hash (dto:main-branch-hash run)
-                        :override-commit-hash (check-commit-hash! (dto:override-commit-hash run))
+                        :override-commit-hash (dto:override-commit-hash run)
                         :build-url (dto:build-url run)
-                        :merge-base (check-commit-hash! (dto:merge-base run))
+                        :merge-base (dto:merge-base run)
                         :phabricator-diff-id (dto:phabricator-diff-id run)
                         :gitlab-merge-request-iid (dto:gitlab-merge-request-iid run)
                         :github-repo (dto:run-repo run)

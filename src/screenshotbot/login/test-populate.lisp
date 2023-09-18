@@ -24,5 +24,4 @@
 
 (test simple-populate
   (with-fixture state ()
-    (finishes
-     (populate-company company))))
+    (populate-company company)))
