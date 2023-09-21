@@ -123,7 +123,7 @@
                                 (installation-domain (installation))))
                  :status (compute-status (batch-items batch))
                  :summary
-                 (if (gk:check :markdown-summary t)
+                 (if (gk:check :markdown-summary (recorder-run-company batch) :default t)
                      (build-check-summary batch)
                      "Please review the changes to make sure they look reasonable")))
 

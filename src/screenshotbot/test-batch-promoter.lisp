@@ -25,7 +25,9 @@
                 #:with-installation)
   (:import-from #:screenshotbot/batch-promoter
                 #:compute-title
-                #:compute-status))
+                #:compute-status)
+  (:import-from #:screenshotbot/model/company
+                #:company))
 (in-package :screenshotbot/test-batch-promoter)
 
 (util/fiveam:def-suite)
@@ -42,9 +44,12 @@
 (def-fixture state ()
   (with-installation ()
    (with-test-store ()
-     (let* ((channel (make-instance 'channel
+     (let* ((company (make-instance 'company))
+            (channel (make-instance 'channel
+                                    :company company
                                     :name "channel-1"))
             (batch (make-instance 'batch
+                                  :company company
                                   :commit "abcd"
                                   :name "my-batch"))
             (run (make-recorder-run
