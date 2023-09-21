@@ -37,7 +37,8 @@
   (:import-from #:core/ui/mdi
                 #:mdi)
   (:export
-   #:batch-handler))
+   #:batch-handler
+   #:sort-items))
 (in-package :screenshotbot/dashboard/batch)
 
 (named-readtables:in-readtable markup:syntax)

@@ -27,6 +27,7 @@
                 #:batch-item
                 #:batch-items)
   (:import-from #:screenshotbot/user-api
+                #:channel-name
                 #:recorder-run-commit
                 #:recorder-run-channel)
   (:import-from #:screenshotbot/report-api
@@ -37,6 +38,8 @@
   (:import-from #:hunchentoot-extensions
                 #:make-full-url)
   (:import-from #:screenshotbot/dashboard/batch
+                #:batch-item-link
+                #:sort-items
                 #:batch-handler)
   (:import-from #:util/store/object-id
                 #:oid)
@@ -48,6 +51,8 @@
                 #:with-hash-lock-held
                 #:hash-lock))
 (in-package :screenshotbot/batch-promoter)
+
+(named-readtables:in-readtable markup:syntax)
 
 (defvar *lock* (bt:make-lock))
 
@@ -117,4 +122,34 @@
                                  :oid (oid batch))
                                 (installation-domain (installation))))
                  :status (compute-status (batch-items batch))
-                 :summary "Please review the changes to make sure they look reasonable"))
+                 :summary
+                 (if (gk:check :markdown-summary t)
+                     (build-check-summary batch)
+                     "Please review the changes to make sure they look reasonable")))
+
+(defun build-check-summary (batch)
+  (markup:write-html
+   (let ((items (sort-items (fset:convert 'list (batch-items batch)))))
+     <table>
+     ,@ (loop for item in items collect
+              <tr>
+                <td>
+                  ,(ecase (batch-item-status item)
+                     (:accepted ":white_check_mark:")
+                     (:rejected ":x:")
+                     (:success ":white_check_mark:")
+                     (:failure ":x:")
+                     (:pending ":eyes:")
+                     (:action-required ":x:"))
+                </td>
+                <td>
+                  <a href= (quri:render-uri (quri:merge-uris
+                     (batch-item-link item)
+                     (installation-domain (installation))))
+                     >,(channel-name (batch-item-channel item))</a>
+                </td>
+                <td>
+                  ,(batch-item-title item)
+                </td>
+              </tr>)
+     </table>)))
