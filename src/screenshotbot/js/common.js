@@ -659,14 +659,6 @@ function setupHeadroom() {
 
 $(setupHeadroom);
 
-/*
-AOS.init ({
-    disable: function () {
-        //return window.innerWidth < 1200;
-        return false;
-    }
-});*/
-
 setupLiveOnAttach(".baguetteBox", function () {
     prepareBaguetteBox(this);
 });
