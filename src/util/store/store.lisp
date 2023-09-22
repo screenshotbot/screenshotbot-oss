@@ -414,19 +414,17 @@ to the directory that was just snapshotted.")
 
 (defun cron-snapshot ()
   (ignore-and-log-errors ()
-   (when (boundp 'bknr.datastore:*store*)
+    (when (and
+           (boundp 'bknr.datastore:*store*)
+           #+bknr.cluster
+           (leaderp bknr.datastore:*store*))
      (log:info "Snapshotting bknr.datastore")
      (safe-snapshot "cron-job" nil))))
 
 (cl-cron:make-cron-job 'cron-snapshot
                         :minute 0
-                        :step-hour 6
+                        :hour 6
                         :hash-key 'cron-snapshot)
-
-(cl-cron:make-cron-job 'delete-old-snapshots
-                       :minute 0
-                       :hour 4
-                       :hash-key 'delete-old-snapshots)
 
 (defun build-hash-table (objects slot &key test unique-index-p)
   (let ((hash-table (make-hash-table :test test)))
