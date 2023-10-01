@@ -346,7 +346,7 @@
             (commit-link repo
                          hash)))
      <warning-alert>
-       <span>The <a href= (link (recorder-run-commit run))>merge base</a> for ,(review-link :run run) had a failing build. Screenshotbot used <a href= (link (recorder-run-commit (compared-against warning)))>this commit</a> to generate reports for this run. Consider rebasing to avoid this message.
+       <span>The <a href= (link (recorder-run-merge-base run))>merge base</a> for ,(review-link :run run) had a failing build. Screenshotbot used <a href= (link (recorder-run-commit (compared-against warning)))>this commit</a> to generate reports for this run. Consider rebasing to avoid this message.
        </span>
      </warning-alert>)))
 
