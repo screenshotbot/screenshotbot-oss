@@ -56,4 +56,18 @@
     </ul>
   </admin-app-template>)
 
+(defadminhandler (thread-list :uri "/admin/thread-list") ()
+  <admin-app-template>
+    <table>
+      ,@ (loop for thread in (bt:all-threads)
+               collect
+               <tr>
+                 <td>
+                   ,(format nil "~a" thread)
+                 </td>
+               </tr>)
+    </table>
+  </admin-app-template>)
+
 (register-admin-menu "Site Info" 'site-info)
+(register-admin-menu "Thread list" 'thread-list)
