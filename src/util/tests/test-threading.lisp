@@ -297,3 +297,10 @@
        (lparallel:force
         (scheduled-future (0)
           :done)))))
+
+(test scheduled-future-negative
+  (is (eql
+       :done
+       (lparallel:force
+        (scheduled-future (-100)
+          :done)))))
