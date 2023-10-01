@@ -26,14 +26,21 @@
                              :if-does-not-exist :create)
        (fn stream)))))
 
+(defun format-ts (stream ts)
+  (local-time:format-timestring
+   stream
+   ts :format `("[" (:hour 2) ":" (:min 2) ":" (:sec 2) "] ")))
+
 (defmethod format-log  ((logger logger)
                         level
                         message
                         &rest args)
   (with-logger-stream (logger stream)
     (format stream "~a: " level)
+    (format-ts stream (local-time:now))
     (apply #'format stream message args)
     (format stream "~%")))
+
 
 (defmethod format-log  ((logger null)
                         level

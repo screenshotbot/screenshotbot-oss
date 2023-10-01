@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/logger
+                #:format-ts
                 #:format-log
                 #:logger)
   (:import-from #:fiveam-matchers/strings
@@ -37,3 +38,9 @@
        "hello world 1"
        (format-log nil
                    :info "hello world ~a" 1))))
+
+(test format-ts
+  (let ((local-time:*default-timezone* local-time:+utc-zone+))
+    (is (equal "[01:00:11] "
+               (format-ts nil (make-instance 'local-time:timestamp
+                                             :sec 3611))))))
