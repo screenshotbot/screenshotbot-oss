@@ -91,10 +91,14 @@ cause the asset to be immediately compiled."
                  ;; A hack for staging:
                  (installation-domain (installation)))))
     (flet ((make-link (platform)
-             (format nil "~a/artifact/${VERSION}~a-~a" domain name platform)))
-     (let ((darwin-link (make-link "darwin"))
-           (linux-link (make-link "linux"))
-           (domain (installation-domain (installation))))
+             (format nil "~a/artifact/${VERSION}~a-~a" domain name platform))
+           (fetch (link)
+             (format nil "$CURL --progress-bar ~a --output $INSTALLER"
+                     link)))
+     (let* ((darwin-link (make-link "darwin"))
+            (linux-link (make-link "linux"))
+            (arm64-link (format nil "~a-arm64" linux-link))
+            (domain (installation-domain (installation))))
        #?"#!/bin/sh
 set -e
 set -x
@@ -106,9 +110,13 @@ CURL=\"curl --retry 3 \"
 VERSION=`$CURL --fail ${domain}/recorder-version/current || true`
 
 if [ $type = \"Linux\" ] ; then
-  $CURL --progress-bar ${linux-link} --output $INSTALLER
+  if [ \"`uname -m`\" = \"aarch64\" ] ; then
+    ${(fetch arm64-link)}
+  else
+    ${(fetch linux-link)}
+  fi
 elif [ $type = \"Darwin\" ] ; then
-  $CURL --progress-bar  ${darwin-link} --output $INSTALLER
+  ${(fetch darwin-link)}
 else
   echo Unknown uname type: $type, please message support@screenshotbot.io
 fi
