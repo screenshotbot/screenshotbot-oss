@@ -74,6 +74,12 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
     ;; some such.
     (lw:undefine-action "When starting image" "Reset cl-mongo-id state")
 
+    ;; See Lisp Support Call #43182
+    ;; The goal is to allow us to run the CLI on Alpine Linux (or any linux that
+    ;; is shipped with musl instead of glibc.)
+    #+(and linux arm64)
+    (setf (symbol-function 'sys::set-signals-mask) #'lw:false)
+
     (build-utils/deliver-script:default-deliver 'screenshotbot/sdk/main:main
               output-file
               5
