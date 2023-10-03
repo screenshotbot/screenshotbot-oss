@@ -133,12 +133,27 @@
     (test flags:*device-regex*)
     (test flags:*ios-diff-dir*)))
 
+(defun maybe-setup-ssl ()
+  #+ (and lispworks linux)
+  (let* ((potential-paths (list "/usr/lib/libssl.so.3"))
+         (path (loop for path in potential-paths
+                     if (path:-e path)
+                       return path)))
+    (when path
+      (handler-case
+          (comm:ensure-ssl)
+        (error ()
+          (log:warn "Default libssl paths failed, trying ~a" path)
+          (comm:ensure-ssl :library-path path))))))
+
 (defun %main (&optional (argv #+lispworks system:*line-arguments-list*
                               #-lispworks (uiop:raw-command-line-arguments)))
   (log:config :sane :immediate-flush t :pattern "[%D{%H:%M:%S}] %5p: %m%n")
   (log:config :info)
 
   (log:info "Screenshotbot SDK v~a" *client-version*)
+
+  (maybe-setup-ssl)
 
   (let ((unrecognized  (parse-command-line (cdr argv))))
     (when flags:*verbose*
