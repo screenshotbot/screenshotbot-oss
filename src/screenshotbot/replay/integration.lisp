@@ -68,6 +68,7 @@
                 #:record-screenshot
                 #:all-screenshots)
   (:import-from #:util/threading
+                #:make-thread
                 #:safe-interrupt
                 #:with-extras
                 #:safe-interrupt-checkpoint)
@@ -458,7 +459,7 @@ accessing the urls or sitemap slot."
                (loop for urls in (cdr thread-batches)
                      collect
                      (let ((urls urls))
-                       (bt:make-thread
+                       (make-thread
                         (lambda ()
                           (run-thread-batch urls))
                         :name (format nil "replay-worker-thread-for-~a" (bt:current-thread)))))))
