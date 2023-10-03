@@ -88,6 +88,11 @@
    :format :text))
 
 (defmethod merge-base ((repo git-repo) master-sha commit-sha)
+  (unless master-sha
+    (error "Main branch SHA missing"))
+  (unless commit-sha
+    (error "Commit SHA missing"))
+
   ($ (git-command repo) "merge-base" master-sha commit-sha))
 
 (defmethod merge-base ((repo null-repo) master-sha commit-sha)
