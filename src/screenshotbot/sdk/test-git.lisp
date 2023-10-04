@@ -28,7 +28,10 @@
 (util/fiveam:def-suite)
 
 (defun run-in-dir (repo cmd)
-  (uiop:run-program (format nil "cd ~a && ~a" (namestring (repo-dir repo)) cmd)))
+  (let ((cmd (cl-ppcre:regex-replace
+              "^git " cmd
+              "git -c user.name=FooBar -c user.email=foo@example.com ")))
+   (uiop:run-program (format nil "cd ~a && ~a" (namestring (repo-dir repo)) cmd))))
 
 (defun make-commit (repo content)
   (let ((file (path:catfile (repo-dir repo) "file.txt")))
