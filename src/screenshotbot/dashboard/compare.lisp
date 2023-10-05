@@ -672,8 +672,8 @@
                     # changed pixels
                   </td>
                   <td>
-                    ,(if (> num-changed 9999)
-                         "> 9999"
+                    ,(if (>= num-changed 999)
+                         "> 999"
                          num-changed)
                   </td>
                 </tr>
