@@ -102,6 +102,10 @@
                 #:make-image-cdn-url)
   (:import-from #:screenshotbot/model/screenshot
                 #:abstract-screenshot)
+  (:import-from #:alexandria
+                #:when-let)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:run-build-url)
   (:export
    #:render-acceptable
    #:render-diff-report
@@ -683,6 +687,9 @@
                collect
                <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
       <li><a role= "button" class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal"><mdi name= "info"/> Info</a></li>
+      ,(when-let ((url (?. run-build-url run)))
+         <li><a role= "button" class= "dropdown-item" href=url target= "_blank">
+             <mdi name= "build" /> View Build</a></li>)
       ,(progn
          #+screenshotbot-oss
          (progn
