@@ -618,7 +618,7 @@
             <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style= "margin-right: auto" >
               More
             </button>
-            <ul class="dropdown-menu dropdown-menu-end">
+            <ul class="dropdown-menu">
               <li>
                 <a class= "dropdown-item metrics-link" href= "#" >
                   Metrics
