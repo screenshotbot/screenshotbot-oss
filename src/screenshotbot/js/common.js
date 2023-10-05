@@ -485,6 +485,9 @@ function prepareReportJs () {
                 loading.hide();
                 img.show();
                 zoomToLink = data.zoomTo;
+                metricsLink = data.metrics;
+                $(".metrics-link", modal).attr("href", metricsLink);
+
                 console.log("Loading into canvas", data);
                 loadIntoCanvas(canvasContainer.get(0),
                                [{

@@ -71,6 +71,8 @@
   (:import-from #:nibble
                 #:nibble-url)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:magick-get-image-width
+                #:magick-get-image-height
                 #:get-non-alpha-pixels
                 #:with-wand)
   (:import-from #:screenshotbot/diff-report
@@ -106,6 +108,8 @@
                 #:when-let)
   (:import-from #:screenshotbot/model/recorder-run
                 #:run-build-url)
+  (:import-from #:core/ui/simple-card-page
+                #:simple-card-page)
   (:export
    #:render-acceptable
    #:render-diff-report
@@ -121,7 +125,7 @@
    identical-p
    result))
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defhandler (acceptable-review-url :uri "/acceptable/:id/review" :method :post)
             (id action redirect csrf)
@@ -299,6 +303,8 @@
                (bknr.datastore:store-object-id image-comparison)))
            (:zoom-to . ,(nibble-url (nibble (:name :zoom) (random-zoom-to-on-result
                                                            image-comparison masks))))
+           (:metrics . ,(nibble-url (nibble (:name :metrics)
+                                      (metrics-page image-comparison masks))))
            (:src . ,(make-image-cdn-url (image-public-url (image-comparison-result image-comparison) :size size)))
            (:background . ,(make-image-cdn-url (image-public-url (screenshot-image (before-image self)) :size size)))
            (:masks .
@@ -609,6 +615,18 @@
               alt= "Image difference" />
           </div>
           <div class="modal-footer">
+            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style= "margin-right: auto" >
+              More
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <a class= "dropdown-item metrics-link" href= "#" >
+                  Metrics
+                </a>
+              </li>
+
+            </ul>
+
             <zoom-to-change-button />
 
             <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
@@ -616,6 +634,62 @@
         </div>
       </div>
     </div>))
+
+(defun metrics-page (image-comparison masks)
+  (with-local-image (file (image-comparison-result image-comparison))
+    (with-wand (wand :file file)
+      (log:debug"random-zoom-to-on-result on ~a" file)
+      (multiple-value-bind (pixels) (get-non-alpha-pixels wand :masks masks)
+        (let ((num-changed (car (array-dimensions pixels)))
+              (width (magick-get-image-width wand))
+              (height (magick-get-image-height wand)))
+          <simple-card-page>
+            <table class= "table" >
+              <thead>
+                <tr>
+                  <td>
+                    Metric
+                  </td>
+                  <td>
+                    Value
+                  </td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    Dimensions
+                  </td>
+                  <td>
+                    <span>
+                      ,(progn width)x,(progn height)
+                    </span>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    # changed pixels
+                  </td>
+                  <td>
+                    ,(if (> num-changed 9999)
+                         "> 9999"
+                         num-changed)
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Fraction changed pixels</td>
+                  <td>
+                    ,(/ (* 1.0 num-changed) (* height width))
+                  </td>
+                </tr>
+
+
+              </tbody>
+
+            </table>
+          </simple-card-page>)))))
 
 
 (deftag compare-tab-a (body &key type default-type)

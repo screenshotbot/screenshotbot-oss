@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/compare
+                #:metrics-page
                 #:warmup-comparison-images-sync
                 #:link-to-run
                 #:random-non-alpha-px
@@ -91,6 +92,13 @@
         (is (eql 360 (a:assoc-value res :height)))
         (is (< -1 (a:assoc-value res :x) 360))
         (is (< -1 (a:assoc-value res :y) 360))))))
+
+(test metrics-page-happy-path
+  "Since this uses FLI, we need to be extra careful about testing it."
+  (with-fixture state ()
+    (let ((imc (make-instance 'image-comparison
+                              :result (make-screenshot im1))))
+      (finishes (metrics-page imc nil)))))
 
 (test random-non-alpha-for-no-alphas
   (with-fixture state ()
