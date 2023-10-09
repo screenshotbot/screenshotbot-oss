@@ -11,6 +11,7 @@
   (:import-from #:screenshotbot/sdk/env
                 #:*all-readers*
                 #:gitlab-ci-env-reader
+                #:github-actions-env-reader
                 #:bitbucket-pipeline-env-reader
                 #:buildkite-env-reader
                 #:azure-env-reader
@@ -79,6 +80,11 @@
 (test gitlab-ci-pipeline
   (finishes (test-happy-fns (make-instance 'gitlab-ci-env-reader
                                            :overrides nil))))
+
+(test github-actions
+  (finishes (test-happy-fns (make-instance 'github-actions-env-reader
+                                           :overrides nil))))
+
 
 
 (test buildkite-pull-request-is-not-nil-when-not-false

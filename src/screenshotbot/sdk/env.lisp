@@ -285,6 +285,39 @@ get this from the Git repository directly."))
 (defmethod work-branch ((self gitlab-ci-env-reader))
   (getenv self "CI_COMMIT_REF_NAME"))
 
+(defclass github-actions-env-reader (base-env-reader)
+  ())
+
+(defmethod validp ((self github-actions-env-reader))
+  (getenv self "GITHUB_ACTION"))
+
+(defmethod pull-request-url ((self github-actions-env-reader))
+  "test")
+
+(defmethod sha1 ((self github-actions-env-reader))
+  (getenv self "GITHUB_SHA"))
+
+(defmethod github-server-url ((self github-actions-env-reader))
+  (getenv self "GITHUB_SERVER_URL"))
+
+(defmethod github-repo ((self github-actions-env-reader))
+  (getenv self "GITHUB_REPOSITORY"))
+
+(defmethod build-url ((self github-actions-env-reader))
+  (format nil "~a/~a/actions/runs/~a"
+          (github-server-url self)
+          (github-repo self)
+          (getenv self "GITHUB_RUN_ID")))
+
+(defmethod repo-url ((self github-actions-env-reader))
+  (format nil
+          "~a/~a"
+          (github-server-url self)
+          (github-repo self)))
+
+(defmethod work-branch ((self github-actions-env-reader))
+  (getenv self "GITHUB_BASE_REF"))
+
 (defparameter *all-readers*
   '(circleci-env-reader
     bitrise-env-reader
@@ -292,7 +325,9 @@ get this from the Git repository directly."))
     azure-env-reader
     bitbucket-pipeline-env-reader
     buildkite-env-reader
-    gitlab-ci-env-reader))
+    gitlab-ci-env-reader
+    github-actions-env-reader))
+
 
 (defun make-env-reader (&key overrides)
   (loop for option in *all-readers*
