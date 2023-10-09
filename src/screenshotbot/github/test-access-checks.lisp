@@ -64,7 +64,17 @@
   (is (equal "tdrhq/fast-example"
              (repo-string-identifier "git@github.com.com:tdrhq/fast-example")))
   (is (equal "tdrhq/fast-example"
+             (repo-string-identifier "git@github.com.com:tdrhq/fast-example/")))
+  (is (equal "tdrhq/fast-example"
              (repo-string-identifier "git@github.com.com:tdrhq/fast-example.git"))))
+
+(test get-repo-id
+  (is (equal "tdrhq/fast-example"
+             (get-repo-id "https://github.com/tdrhq/fast-example")))
+  (is (equal "tdrhq/fast-example"
+             (get-repo-id "git@github.com.com:tdrhq/fast-example")))
+  (is (equal "tdrhq/fast-example"
+             (get-repo-id "git@github.com.com:tdrhq/fast-example.git"))))
 
 (test get-repo-stars ()
   (with-recording (#.(asdf:system-relative-pathname :screenshotbot "github/fixture/get-repo-stars.rec"))

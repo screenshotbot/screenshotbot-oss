@@ -222,10 +222,17 @@
 (defmethod github-repo-id ((repo github-repo))
   (github-repo-id (repo-link repo)))
 
+(defun remove-trailing-/ (url)
+  (cl-ppcre:regex-replace-all
+   "/$" url ""))
+
 (defun repo-string-identifier (repo-url)
   (destructuring-bind (prefix org name)
       (str:rsplit "/" (str:replace-all ":" "/"
-                                       (cl-ppcre:regex-replace-all "[.]git$" repo-url ""))
+                                       (cl-ppcre:regex-replace-all
+                                        "[.]git$"
+                                        (remove-trailing-/
+                                         repo-url) ""))
                   :limit 3)
     (format nil "~a/~a" org name)))
 
@@ -249,10 +256,9 @@
 ;; (github-integration-test)
 
 (defun get-repo-id (repo)
-  (cl-ppcre:regex-replace-all
-   "^(git@github.com:|https://github.com/)([^.]*)([.]git)?$"
-   (github-get-canonical-repo repo)
-   "\\2"))
+  "An alias for repo-string-identifier"
+  (repo-string-identifier repo))
+
 
 (defmethod commit-link ((repo github-repo) hash)
   (format nil "https://github.com/~a/commit/~a"
