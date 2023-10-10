@@ -292,7 +292,7 @@ get this from the Git repository directly."))
   (getenv self "GITHUB_ACTION"))
 
 (defmethod pull-request-url ((self github-actions-env-reader))
-  "test")
+  nil)
 
 (defmethod sha1 ((self github-actions-env-reader))
   (getenv self "GITHUB_SHA"))
