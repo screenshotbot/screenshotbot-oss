@@ -295,9 +295,9 @@ error."
               (if has-branch-hash-p branch-hash
                   (or
                    flags:*main-branch-commit-hash*
-                   (when-let ((hash (rev-parse repo branch)))
+                   (let ((hash (rev-parse repo branch)))
                      (unless hash
-                       (error "Could not rev-parse origin/~a" branch))
+                       (warn "Could not rev-parse origin/~a" branch))
                      hash))))
             (commit (if has-commit-p commit (current-commit repo)))
             (merge-base (if has-merge-base-p merge-base (merge-base repo branch-hash commit)))

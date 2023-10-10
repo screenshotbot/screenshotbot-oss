@@ -214,6 +214,7 @@
                 "text 15,15 \"Random code: ~a\" " (secure-random:number 10000000000000000000)))
     (run-gen.sh)
     (run (list "arch" "-x86_64" *sdk*
+               "--main-branch" "master" ;; For some reason, in a recent change this is not being detected.
                "--directory" "./screenshots"
                "--production=false"))))
 
