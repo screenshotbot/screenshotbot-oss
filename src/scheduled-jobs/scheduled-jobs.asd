@@ -65,8 +65,7 @@
   :depends-on (#:cl-cron
                #:scheduled-jobs/headers
                #:util
-               #:util/threading
-               #:priority-queue)
+               #:util/threading)
   :components ((lib-source-file "ccronexpr")
                (:file "model")
                (:file "bindings")

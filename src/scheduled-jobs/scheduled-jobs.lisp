@@ -7,25 +7,17 @@
 (defpackage :scheduled-jobs
   (:use #:cl)
   (:import-from #:scheduled-jobs/model
+                #:next-scheduled-job
                 #:tz-offset
                 #:cronexpr
-                #:wrapper
                 #:job
                 #:%at
-                #:%update-queue
                 #:*lock*
                 #:at
                 #:periodic
-                #:priority-queue
                 #:scheduled-job-args
                 #:scheduled-job-function
                 #:scheduled-job)
-  (:import-from #:priority-queue
-                #:pqueue-front-value
-                #:pqueue-empty-p
-                #:pqueue-pop
-                #:pqueue-front-key
-                #:pqueue-front)
   (:import-from #:bknr.indices
                 #:object-destroyed-p)
   (:import-from #:bknr.datastore
@@ -117,45 +109,34 @@ we're not looking in to what the object references."
 (defvar *call-pending-scheduled-jobs-lock* (bt:make-lock "call-pending-scheduled-job"))
 
 (defun %call-pending-scheduled-jobs ()
-  (let ((queue (priority-queue))
-        (now (now)))
+  (let ((now (now)))
     (when (bt:with-lock-held (*lock*)
-            (and
-             (not (pqueue-empty-p queue))
-             (< (pqueue-front-key queue) now)))
-     (multiple-value-bind (next-wrapper next-at)
+            (let ((next (next-scheduled-job)))
+              (and
+               next
+               (< (at next) now))))
+     (multiple-value-bind (next)
          (bt:with-lock-held (*lock*)
-           (unless (pqueue-empty-p queue)
-             (pqueue-pop queue)))
-       (let ((next (when next-wrapper
-                     (job next-wrapper))))
-         (cond
-           ((null next)
-            :no-more)
-           ((or
-             (object-destroyed-p next)
-             ;; If (setf at) was called on the object, then
-             ;; this could be a stale reference in the
-             ;; priority queue.
-             (not (eql next-wrapper (wrapper next))))
-            (%call-pending-scheduled-jobs))
-           ((> next-at now)
-            (error "We should not be here, we should've handled this earlier"))
-           (t
-            (unwind-protect
-                 (call-job *executor*
-                           (lambda (&rest args)
-                             (let ((*scheduled-job* next))
-                               (apply (scheduled-job-function next) args)))
-                           (scheduled-job-args next))
-              (%reschedule-job next now))
-            (%call-pending-scheduled-jobs))))))))
+           (next-scheduled-job))
+       (cond
+         ((null next)
+          :no-more)
+         ((> (at next) now)
+          (error "We should not be here, we should've handled this earlier"))
+         (t
+          (unwind-protect
+               (call-job *executor*
+                         (lambda (&rest args)
+                           (let ((*scheduled-job* next))
+                             (apply (scheduled-job-function next) args)))
+                         (scheduled-job-args next))
+            (%reschedule-job next now))
+          (%call-pending-scheduled-jobs)))))))
 
 (deftransaction update-at (next at)
   "Transaction to update both the AT slot, and the queue at the same
-time."
-  (setf (%at next) at)
-  (%update-queue next))
+time. TODO: delete this."
+  (setf (%at next) at))
 
 (defun %reschedule-job (next now)
   "After a job has just been run, call this to reschedule the job onto

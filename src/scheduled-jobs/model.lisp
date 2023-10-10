@@ -12,44 +12,28 @@
                 #:persistent-class)
   (:import-from #:bknr.datastore
                 #:initialize-transient-instance)
-  (:import-from #:priority-queue
-                #:make-pqueue
-                #:pqueue-push)
   (:import-from #:bknr.datastore
                 #:*store*)
   (:import-from #:util/store/store
                 #:defindex)
   (:import-from #:util/store/fset-index
+                #:index-least
                 #:fset-set-index)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:scheduled-job
    #:scheduled-job-function
    #:scheduled-job-args
-   #:priority-queue
    #:%at
-   #:%update-queue
    #:job
-   #:cronexpr))
+   #:cronexpr
+   #:next-scheduled-job))
 (in-package :scheduled-jobs/model)
 
 (defvar *lock* (bt:make-recursive-lock))
 
 ;; TODO: replace this logic with def-store-local. It's best to time
 ;; this with a restart
-
-(defvar *priority-queues*
-  (apply #'make-hash-table
-           #+lispworks
-           '(:weak-kind :key)
-           #-lispworks
-           '()))
-
-(defun priority-queue ()
-  (util:or-setf
-   (gethash *store* *priority-queues*)
-   (make-pqueue #'<)
-   :thread-safe t))
 
 (defindex +scheduled-job-index+
   'fset-set-index
@@ -86,27 +70,13 @@
             :transient t))
   (:metaclass persistent-class))
 
-(defclass wrapper ()
-  ((job :initarg :job
-        :reader job)))
-
-(defun %update-queue (self)
-  "Update the queue for the given object. This is exported for
-internal use only."
-  (let ((wrapper (make-instance 'wrapper :job self)))
-    (setf (wrapper self) wrapper)
-    (pqueue-push wrapper
-                 (at self)
-                 (priority-queue))))
-
-(defun update-queue-for-all ()
-  "A hacky fix to reset the queue, see T749"
-  (mapcar #'%update-queue (bknr.datastore:class-instances 'scheduled-job)))
+(defun next-scheduled-job ()
+  (index-least +scheduled-job-index+))
 
 
 (defmethod bknr.datastore:initialize-transient-instance ((self scheduled-job))
-  (bt:with-lock-held (*lock*)
-    (%update-queue self)))
+  ;; TODO: delete
+  (call-next-method))
 
 (defmethod tz-offset ((self scheduled-job))
   (let ((tzname (scheduled-job-tzname self)))
