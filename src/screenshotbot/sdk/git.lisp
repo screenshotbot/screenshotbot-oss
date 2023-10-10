@@ -18,7 +18,8 @@
    #:merge-base
    #:current-commit
    #:current-branch
-   #:cleanp)
+   #:cleanp
+   #:git-message)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/git)
 
@@ -49,6 +50,10 @@
 
 (defmethod cleanp ((repo git-repo))
   (str:emptyp ($ (git-command repo) "status" "--porcelain")))
+
+(defmethod git-message ((repo git-repo) &key (ref "HEAD"))
+  "Shows the message of the given ref, which defaults to HEAD"
+  ($ (git-command repo) "log" "-1" "--pretty=%B" "HEAD"))
 
 
 (defmethod current-commit ((repo git-repo))

@@ -9,6 +9,7 @@
             (:use #:cl
                   #:fiveam)
             (:import-from #:screenshotbot/sdk/git
+                          #:git-message
                           #:read-graph
                           #:rev-parse
                           #:current-commit
@@ -83,3 +84,8 @@
             (read-graph repo)))
       (assert-that (dag::all-commits dag)
                    (has-length 1)))))
+
+(test git-message
+  (with-fixture git-repo ()
+    (make-commit repo "foobar")
+    (is (equal "..." (git-message repo)))))

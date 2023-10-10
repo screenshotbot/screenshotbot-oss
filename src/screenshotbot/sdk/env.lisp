@@ -10,6 +10,9 @@
                 #:assoc-value
                 #:when-let
                 #:if-let)
+  (:import-from #:screenshotbot/sdk/git
+                #:git-message
+                #:git-repo)
   (:shadow #:getenv)
   (:export
    #:make-env-reader
@@ -295,7 +298,19 @@ get this from the Git repository directly."))
   nil)
 
 (defmethod sha1 ((self github-actions-env-reader))
-  (getenv self "GITHUB_SHA"))
+  (let ((sha (getenv self "GITHUB_SHA")))
+    (let* ((repo (make-instance 'git-repo))
+           (message (git-message repo)))
+      (multiple-value-bind (res parts)
+          (cl-ppcre:scan-to-strings
+           ".*Merge (.*) into .*"
+           message)
+        (cond
+          (res
+           (elt parts 0))
+          (t
+           (warn "Could not parse ~a" message)
+           sha))))))
 
 (defmethod github-server-url ((self github-actions-env-reader))
   (getenv self "GITHUB_SERVER_URL"))

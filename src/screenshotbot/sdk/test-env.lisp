@@ -19,7 +19,13 @@
                 #:netlify-env-reader
                 #:bitrise-env-reader
                 #:circleci-env-reader
-                #:env-reader))
+                #:env-reader)
+  (:import-from #:screenshotbot/sdk/git
+                #:git-message
+                #:git-repo)
+  (:import-from #:cl-mock
+                #:if-called
+                #:answer))
 (in-package :screenshotbot/sdk/test-env)
 
 (util/fiveam:def-suite)
@@ -109,3 +115,11 @@
 (test all-readers-has-valid-types
   (loop for reader-name in *all-readers*
         do (is-true (find-class reader-name))))
+
+(test github-reads-env-from-git-repo
+  (cl-mock:with-mocks ()
+    (if-called 'git-message
+               (lambda (git-repo)
+                 " Merge 02520edac7d38b71bacaee1c32d3c7f5cd880f8b into 38181385c139952159a3cf69950f8ff658395efb  "))
+    (let ((reader (make-instance 'github-actions-env-reader)))
+      (is (equal "02520edac7d38b71bacaee1c32d3c7f5cd880f8b" (sha1 reader))))))

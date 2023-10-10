@@ -7,7 +7,7 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
-  :version "2.7.7"
+  :version "2.7.8"
   :depends-on (:com.google.flag
                :pkg
                :quri
@@ -49,8 +49,8 @@
                (:file "bundle")
                (:file "firebase")
                (:file "android")
-               (:file "env")
                (:file "git")
+               (:file "env")
                (:file "run-context")
                (:file "sdk")
                (:file "sentry")
