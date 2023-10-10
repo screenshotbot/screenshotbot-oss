@@ -17,6 +17,10 @@
                 #:pqueue-push)
   (:import-from #:bknr.datastore
                 #:*store*)
+  (:import-from #:util/store/store
+                #:defindex)
+  (:import-from #:util/store/fset-index
+                #:fset-set-index)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:scheduled-job
@@ -47,9 +51,14 @@
    (make-pqueue #'<)
    :thread-safe t))
 
+(defindex +scheduled-job-index+
+  'fset-set-index
+  :slot-name 'at)
+
 (defclass scheduled-job (store-object)
   ((at :initarg :at
        :reader at
+       :index +scheduled-job-index+
        :writer (setf %at) #| For internal use only |#)
    (function
     :initarg :function
