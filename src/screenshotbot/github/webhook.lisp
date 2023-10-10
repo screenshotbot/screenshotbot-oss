@@ -51,7 +51,10 @@
     (format nil "^(ssh://)?git@~a[:/]" host)
     (cl-ppcre:regex-replace-all
      "https://api."
-     (cl-ppcre:regex-replace-all "[.]git$" repo "")
+     (cl-ppcre:regex-replace-all "[.]git$"
+                                 (cl-ppcre:regex-replace-all "^git://"
+                                  repo "https://")
+                                 "")
      "https://")
     (format nil "https://~a/" host))))
 

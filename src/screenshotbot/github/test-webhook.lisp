@@ -52,6 +52,9 @@
   (is (equal "https://github.com/foo/bar"
              (github-get-canonical-repo "https://github.com/foo/bar.git")))
   (is (equal "https://github.com/foo/bar"
+             ;; Github actions uses this syntax
+             (github-get-canonical-repo "git://github.com/foo/bar.git")))
+  (is (equal "https://github.com/foo/bar"
              (github-get-canonical-repo "https://api.github.com/foo/bar.git")))
   (is (equal "https://github.com/foo/bar"
              (github-get-canonical-repo "git@github.com:foo/bar.git")))
