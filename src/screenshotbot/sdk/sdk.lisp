@@ -57,11 +57,14 @@
   (:import-from #:screenshotbot/sdk/api-context
                 #:desktop-api-context
                 #:api-context)
+  (:import-from #:screenshotbot/sdk/run-context
+                #:flags-run-context)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:dto #:screenshotbot/api/model)
                     (#:e #:screenshotbot/sdk/env)
                     (#:api-context #:screenshotbot/sdk/api-context)
-                    (#:android   #:screenshotbot/sdk/android))
+                    (#:android   #:screenshotbot/sdk/android)
+                    (#:run-context #:screenshotbot/sdk/run-context))
   (:export
    #:single-directory-run
    #:*request*
@@ -463,7 +466,11 @@ pull-request looks incorrect."
        (setf flags:*pull-request* nil)))))
 
 (defun parse-environment ()
-  (let ((env (e:make-env-reader)))
+  (let* ((env (e:make-env-reader))
+         ;; TODO: we should use run-ctx for all our computations, and
+         ;; eventually remove the setf-ing of flags. See T795
+         (run-ctx (make-instance 'flags-run-context
+                                 :env env)))
     (when flags:*branch*
       (error "--branch is no longer supported, please use --main-branch instead"))
 
@@ -486,10 +493,9 @@ pull-request looks incorrect."
       (when-let ((channel (e:guess-channel-name env)))
         (setf flags:*channel* channel)))
 
-    (or-setf
+    (setf
      flags:*override-commit-hash*
-     (unless (str:emptyp flags:*pull-request*)
-       (e:sha1 env)))
+     (run-context:override-commit-hash run-ctx))
 
     (unless flags:*main-branch*
       (setf flags:*main-branch*

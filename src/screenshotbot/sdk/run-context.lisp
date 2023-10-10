@@ -169,8 +169,7 @@ pull-request looks incorrect."
 (defmethod override-commit-hash :around ((self env-reader-run-context))
   (or
    (call-next-method)
-   (unless (str:emptyp (pull-request-url self))
-     (e:sha1 (env self)))))
+   (e:sha1 (env self))))
 
 (defmethod commit-hash :around ((self env-reader-run-context))
   (or

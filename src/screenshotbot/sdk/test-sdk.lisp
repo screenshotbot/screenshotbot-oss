@@ -158,7 +158,7 @@
     (with-env ((:circle-sha1 "abcd")
                (:circle-pull-request ""))
       (parse-environment)
-      (is (equal nil flags:*override-commit-hash*)))))
+      (is (equal "abcd" flags:*override-commit-hash*)))))
 
 (test parse-override-commit-hash-with-bitrise
     (with-fixture state ()
@@ -166,7 +166,7 @@
                (:bitriseio-pull-request-repository-url "https://bitbucket.org/tdrhq/fast-example"))
       (parse-environment)
       (is (equal nil flags:*pull-request*))
-      (is (equal nil flags:*override-commit-hash*))))
+      (is (equal "abcd" flags:*override-commit-hash*))))
 
   (with-fixture state ()
     (with-env ((:bitrise-git-commit "abcd")

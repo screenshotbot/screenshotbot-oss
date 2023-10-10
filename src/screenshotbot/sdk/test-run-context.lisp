@@ -82,7 +82,7 @@
   (with-fixture state ()
     (with-env ((:circle-sha1 "abcd")
                (:circle-pull-request ""))
-      (is (equal nil
+      (is (equal "abcd"
                  (run-context:override-commit-hash
                   (make-instance 'test-run-context
                                  :env (make-env-reader))))))))
@@ -94,8 +94,8 @@
                (:bitriseio-pull-request-repository-url "https://bitbucket.org/tdrhq/fast-example"))
       (is (equal nil (run-context:pull-request-url
                       (make-instance 'test-run-context))))
-      (is (equal nil (run-context:override-commit-hash
-                      (make-instance 'test-run-context))))))
+      (is (equal "abcd" (run-context:override-commit-hash
+                         (make-instance 'test-run-context))))))
 
   (with-fixture state ()
     (with-env ((:bitrise-git-commit "abcd")
