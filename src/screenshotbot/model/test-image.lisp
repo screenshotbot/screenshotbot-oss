@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/model/image)
   (:import-from #:screenshotbot/model/image
+                #:no-image-uploaded-yet
                 #:base-image-comparer
                 #:all-soft-expired-images
                 #:soft-expiration-time
@@ -302,3 +303,9 @@ uses the base-image-comparer."
 (test all-soft-expired-images-happy-path
   (with-fixture state ()
     (is-false (all-soft-expired-images))))
+
+(test no-image-uploaded-yet
+  (with-fixture state ()
+    (setf (%image-state img) nil)
+    (signals no-image-uploaded-yet
+      (with-local-image (file img)))))

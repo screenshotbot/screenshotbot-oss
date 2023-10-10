@@ -336,10 +336,15 @@
   (:default-initargs :oid (%make-oid))
   (:documentation "An IMAGE, that's used only for testing purposes locally"))
 
+(define-condition no-image-uploaded-yet (error)
+  ((image :initarg :image))
+  (:report (lambda (self stream)
+             (format stream "No image uploaded for ~a" (slot-value self 'image)))))
+
 (defmethod %with-local-image ((image abstract-image) fn)
   (cond
     ((image-not-uploaded-yet-p image)
-     (error "no image uploaded yet for ~a" image))
+     (error 'no-image-uploaded-yet :image image))
     (t
      (multiple-value-bind (file key) (image-filesystem-pathname image)
        (cond
