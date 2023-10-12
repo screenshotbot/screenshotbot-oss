@@ -55,7 +55,8 @@
 (def-fixture state ()
   (with-installation ()
    (with-test-store ()
-     (let* ((channel (make-instance 'channel :name "channel-0"
+     (let* ((auto-restart:*global-enable-auto-retries-p* nil)
+            (channel (make-instance 'channel :name "channel-0"
                                     :github-repo "https://bitbucket.org/tdrhq/dummy"))
             (company (make-instance 'company))
             (run (make-recorder-run :company company

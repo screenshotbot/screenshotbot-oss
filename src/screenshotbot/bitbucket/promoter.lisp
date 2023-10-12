@@ -125,6 +125,33 @@
           full-name
           commit))
 
+(auto-restart:with-auto-restart (:retries 3)
+  (defun actually-push-remote-check (&key token url args audit-log)
+    (multiple-value-bind (stream result-code)
+        (util/request:http-request
+         url
+         :method :post
+         :content-type "application/json"
+         :want-stream t
+         :additional-headers
+         `(("Authorization" . ,(Format nil "Bearer ~a" token)))
+         :force-binary nil
+         :content (json:encode-json-to-string args))
+      (let ((ret (uiop:slurp-input-stream 'string stream)))
+        (cond
+          ((http-success-response? result-code)
+           (push-event :bitbucket.update-success)
+           (log:info "Got bitbucket result: ~a" ret))
+          (t ;; error
+           (push-event :bitbucket.update-failure)
+           ;; We do both a warning and an error to both get notified,
+           ;; and also trigger the auto-retry
+           (log:info "Got BitBucket response code: ~a" result-code)
+
+           ;; Note that this will both warn and raise an error, the
+           ;; error will trigger the auto retry.
+           (parse-error-response ret result-code audit-log)))))))
+
 (defmethod push-remote-check ((promoter bitbucket-promoter)
                               run
                               check)
@@ -146,25 +173,11 @@
            (let* ((url (build-status-url
                         full-name
                         commit)))
-             (multiple-value-bind (stream result-code)
-                 (util/request:http-request
-                  url
-                  :method :post
-                  :content-type "application/json"
-                  :want-stream t
-                  :additional-headers
-                  `(("Authorization" . ,(Format nil "Bearer ~a" token)))
-                  :force-binary nil
-                  :content (json:encode-json-to-string args))
-               (let ((ret (uiop:slurp-input-stream 'string stream)))
-                 (cond
-                   ((http-success-response? result-code)
-                    (push-event :bitbucket.update-success)
-                    (log:info "Got bitbucket result: ~a" ret))
-                   (t ;; error
-                    (push-event :bitbucket.update-failure)
-                    (log:info "Got BitBucket response code: ~a" result-code)
-                    (parse-error-response ret result-code audit-log)))))))))
+             (actually-push-remote-check
+              :token token
+              :url url
+              :args args
+              :audit-log audit-log)))))
     (bitbucket-error (e)
       (values))))
 
