@@ -9,7 +9,8 @@
         #:iterate)
   (:export
    #:with-auto-restart
-   #:*global-enable-auto-retries-p*))
+   #:*global-enable-auto-retries-p*
+   #:exponential-backoff))
 (in-package :auto-restart)
 
 
@@ -23,8 +24,12 @@
 (defvar *global-enable-auto-retries-p* t
   "Globally enable or disable automatic retries. Useful for unit tests.")
 
+(defun exponential-backoff (base)
+  `(lambda (attempt)
+     (expt ,base attempt)))
+
 (defmacro with-auto-restart ((&key (retries 0)
-                                (sleep 0)
+                                (sleep (exponential-backoff 2))
                                 (attempt (gensym "attempt"))
                                 (restart-name))
                              &body body)
