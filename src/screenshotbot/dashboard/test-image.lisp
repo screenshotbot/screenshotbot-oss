@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/image
+                #:send-404
                 #:%build-resized-image
                 #:handle-resized-image)
   (:import-from #:lparallel
@@ -31,6 +32,7 @@
                 #:installation
                 #:*installation*)
   (:import-from #:util/testing
+                #:with-fake-request
                 #:with-global-binding)
   (:import-from #:util/threading
                 #:*log-sentry-p*)
@@ -102,3 +104,12 @@
     (let ((output-file (%build-resized-image im :tiny :type :png)))
       (is (equal "png" (pathname-type output-file)))
       (%build-resized-image im :tiny :type :png))))
+
+
+(test send-404-happy-path
+  (with-fixture state ()
+    (with-fake-request ()
+      (is
+       (equal "this is a test"
+        (catch 'hunchentoot::handler-done
+          (send-404 "this is a test")))))))

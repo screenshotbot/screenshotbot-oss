@@ -19,6 +19,7 @@
   (:import-from #:hunchentoot
                 #:handle-static-file)
   (:import-from #:screenshotbot/model/image
+                #:no-image-uploaded-yet
                 #:find-image-by-oid
                 #:with-local-image)
   (:import-from #:util/object-id
@@ -162,17 +163,25 @@
           output-file
           (format nil "image/~a" (pathname-type output-file))))))))
 
+(defun send-404 (reason)
+  (setf (hunchentoot:header-out :content-type) "text/html")
+  (setf (hunchentoot:return-code*) hunchentoot:+http-not-found+)
+  (hunchentoot:abort-request-handler reason))
+
 (defhandler (image-blob-get :uri "/image/blob/:oid/default.webp") (oid size type)
-  (let ((oid (encrypt:decrypt-mongoid oid)))
-    (assert oid)
-    (let* ((image (find-image-by-oid oid)))
-      (setf (hunchentoot:header-out :content-type) "image/png")
-      (cond
-        (size
-         (handle-resized-image image size :type type))
-        (t
-         (with-local-image (file image)
-           (handle-static-file file)))))))
+  (handler-case
+      (let ((oid (encrypt:decrypt-mongoid oid)))
+        (assert oid)
+        (let* ((image (find-image-by-oid oid)))
+          (setf (hunchentoot:header-out :content-type) "image/png")
+          (cond
+            (size
+             (handle-resized-image image size :type type))
+            (t
+             (with-local-image (file image)
+               (handle-static-file file))))))
+    (no-image-uploaded-yet ()
+      (send-404 "No image uploaded yet for this image"))))
 
 (def-store-migration ("Move image-cache to nested directories" :version 6)
   (dolist (image (bknr.datastore:class-instances 'image))
