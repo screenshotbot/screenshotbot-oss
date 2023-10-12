@@ -42,33 +42,34 @@
                      ("exp" . ,(+ 300 ts)))))))
 
 
-(defun github-request (url
-                       &key parameters installation-token
-                         jwt-token
-                         (json-parameters nil) ;; boolean
-                         (method :get))
-  (when (and parameters (eql method :get))
-    (error "parameters not supported with :GET"))
-  (multiple-value-bind (s res)
-      (http-request
-       (format nil "https://api.github.com~a" url)
-       :method method
-       :want-string t
-       :additional-headers
-       `(("Accept" . "application/vnd.github.v3+json")
-         ("Authorization"
-          .
-          ,(cond
-             (installation-token
-              (format nil "token ~a" installation-token))
-             (jwt-token
-              (format nil "Bearer ~a" jwt-token))
-             (t
-              (error "specify either :jwt-token or :installation-token")))))
-       :content (if json-parameters
-                    (json:encode-json-to-string parameters)
-                    parameters))
-    (unless (or (eql res 200) (eql res 201))
-      (error "Got bad github error code: ~a (~S)" res
-             (ignore-errors (json:decode-json-from-string s))))
-    (json:decode-json-from-string s)))
+(auto-restart:with-auto-restart (:retries 3)
+  (defun github-request (url
+                         &key parameters installation-token
+                           jwt-token
+                           (json-parameters nil) ;; boolean
+                           (method :get))
+    (when (and parameters (eql method :get))
+      (error "parameters not supported with :GET"))
+    (multiple-value-bind (s res)
+        (http-request
+         (format nil "https://api.github.com~a" url)
+         :method method
+         :want-string t
+         :additional-headers
+         `(("Accept" . "application/vnd.github.v3+json")
+           ("Authorization"
+            .
+            ,(cond
+               (installation-token
+                (format nil "token ~a" installation-token))
+               (jwt-token
+                (format nil "Bearer ~a" jwt-token))
+               (t
+                (error "specify either :jwt-token or :installation-token")))))
+         :content (if json-parameters
+                      (json:encode-json-to-string parameters)
+                      parameters))
+      (unless (or (eql res 200) (eql res 201))
+        (error "Got bad github error code: ~a (~S)" res
+               (ignore-errors (json:decode-json-from-string s))))
+      (json:decode-json-from-string s))))
