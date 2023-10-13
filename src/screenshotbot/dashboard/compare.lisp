@@ -71,6 +71,7 @@
   (:import-from #:nibble
                 #:nibble-url)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:get-px-as-string
                 #:magick-get-image-width
                 #:magick-get-image-height
                 #:get-non-alpha-pixels
@@ -92,6 +93,7 @@
   (:import-from #:screenshotbot/model/transient-object
                 #:with-transient-copy)
   (:import-from #:screenshotbot/model/image-comparison
+                #:image-comparison-before
                 #:find-image-comparison-on-images)
   (:import-from #:bknr.datastore
                 #:store-object)
@@ -635,61 +637,110 @@
       </div>
     </div>))
 
+
 (defun metrics-page (image-comparison masks)
   (with-local-image (file (image-comparison-result image-comparison))
     (with-wand (wand :file file)
       (log:debug"random-zoom-to-on-result on ~a" file)
       (multiple-value-bind (pixels) (get-non-alpha-pixels wand :masks masks)
-        (let ((num-changed (car (array-dimensions pixels)))
-              (width (magick-get-image-width wand))
-              (height (magick-get-image-height wand)))
-          <simple-card-page>
-            <table class= "table" >
-              <thead>
-                <tr>
-                  <td>
-                    Metric
-                  </td>
-                  <td>
-                    Value
-                  </td>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    Dimensions
-                  </td>
-                  <td>
-                    <span>
-                      ,(progn width)x,(progn height)
-                    </span>
-                  </td>
-                </tr>
+        (flet ((read-px-values (image)
+                 (with-local-image (file image)
+                   (with-wand (wand :file file)
+                     (loop for _ from 0 to 3
+                           for i from 0 to (car (array-dimensions pixels))
+                           collect
+                           (get-px-as-string wand
+                                             (aref pixels i 0)
+                                             (aref pixels i 1)))))))
+         (let ((num-changed (car (array-dimensions pixels)))
+               (width (magick-get-image-width wand))
+               (height (magick-get-image-height wand))
+               (before-values (read-px-values
+                               (image-comparison-before image-comparison)))
+               (after-values (read-px-values
+                              (image-comparison-after image-comparison))))
+           <app-template>
+             <div class= "main-content">
+               <div class= "card-page-container mx-auto">
+                 <div class= "card mt-2">
+                   <div class= "card-body">
 
-                <tr>
-                  <td>
-                    # changed pixels
-                  </td>
-                  <td>
-                    ,(if (>= num-changed 999)
-                         "> 999"
-                         num-changed)
-                  </td>
-                </tr>
+                     <table class= "table" >
+                       <thead>
+                         <tr>
+                           <td>
+                             Metric
+                           </td>
+                           <td>
+                             Value
+                           </td>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         <tr>
+                           <td>
+                             Dimensions
+                           </td>
+                           <td>
+                             <span>
+                               ,(progn width)x,(progn height)
+                             </span>
+                           </td>
+                         </tr>
 
-                <tr>
-                  <td>Fraction changed pixels</td>
-                  <td>
-                    ,(/ (* 1.0 num-changed) (* height width))
-                  </td>
-                </tr>
+                         <tr>
+                           <td>
+                             # changed pixels
+                           </td>
+                           <td>
+                             ,(if (>= num-changed 999)
+                                  "> 999"
+                                  num-changed)
+                           </td>
+                         </tr>
+
+                         <tr>
+                           <td>Fraction changed pixels</td>
+                           <td>
+                             ,(/ (* 1.0 num-changed) (* height width))
+                           </td>
+                         </tr>
 
 
-              </tbody>
+                       </tbody>
 
-            </table>
-          </simple-card-page>)))))
+                     </table>
+                   </div>
+                 </div>
+
+                 <div class= "card mt-2">
+                   <div class= "card-body">
+
+                     <table class= "table">
+                       <thead>
+                         <tr>
+                           <td>Position</td>
+                           <td>Previous color</td>
+                           <td>After color</td>
+                         </tr>
+                       </thead>
+                       <tbody>
+                       ,@ (loop for i below (car (array-dimensions pixels))
+                                for before in before-values
+                                for after in after-values
+                                collect
+                                <tr>
+                                  <td> ,(aref pixels i 0),,(aref pixels i 1)</td>
+                                  <td>,(progn before) </td>
+                                  <td>,(progn after)</td>
+                                </tr>)
+                       </tbody>
+                     </table>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </app-template>))))))
 
 
 (deftag compare-tab-a (body &key type default-type)

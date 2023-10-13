@@ -97,6 +97,8 @@
   "Since this uses FLI, we need to be extra careful about testing it."
   (with-fixture state ()
     (let ((imc (make-instance 'image-comparison
+                              :before (make-image :pathname im1 :for-tests t)
+                              :after (make-image :pathname im2 :for-tests t)
                               :result (make-screenshot im1))))
       (finishes (metrics-page imc nil)))))
 

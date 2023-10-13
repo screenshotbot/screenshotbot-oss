@@ -10,6 +10,7 @@
         #:fiveam-matchers
         #:screenshotbot/mask-rect-api)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:get-px-as-string
                 #:magick-bad-exif-data
                 #:magick-identify-image
                 #:with-pixel
@@ -489,6 +490,9 @@
       (is (equalp (list 1 2)
                   (array-dimensions res))))))
 
+
+
+
 (test complex-case-from-prod
   (with-fixture get-non-alpha (:width 1500 :height 55)
     (let ((masks '((1243 22 9 26)
@@ -573,3 +577,8 @@
             (fset:empty-map)
             "png:tIME" "2023-06-06T14:13:20Z")
            (magick-bad-exif-data wand))))))
+
+(test get-px-as-string
+  (with-single-pixel-image (:wand wand :height 20 :width 30 :default-mark t)
+    (is (equal "srgb(10,0,0)" (get-px-as-string wand 10 19)))
+    (is (equal "srgba(0,0,0,0)" (get-px-as-string wand 3 3)))))

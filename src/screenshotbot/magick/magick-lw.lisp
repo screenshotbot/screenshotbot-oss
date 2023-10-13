@@ -49,7 +49,8 @@
    #:with-pixel
    #:embed-magick-native
    #:with-drawing-wand
-   #:magick-draw-image))
+   #:magick-draw-image
+   #:get-px-as-string))
 (in-package :screenshotbot/magick/magick-lw)
 
 (defclass magick-native (abstract-magick)
@@ -558,11 +559,14 @@
      (magick-get-image-height wand)
      (get-image-format wand))))
 
+
+(defun from-magick-string (format)
+  (unwind-protect
+       (fli:convert-from-foreign-string format)
+    (magick-relinquish-memory format)))
+
 (defun get-image-format (wand)
-  (let ((format (magick-get-image-format wand)))
-    (unwind-protect
-         (fli:convert-from-foreign-string format)
-      (magick-relinquish-memory format))))
+  (from-magick-string (magick-get-image-format wand)))
 
 (fli:define-c-struct pixel
     (x :size-t)
@@ -599,6 +603,18 @@
     ((src-composite-op composite-operator)
      (on-alpha-channel alpha-channel-option))
   :result-type :int)
+
+(fli:define-foreign-function (magick-get-image-pixel-color "MagickGetImagePixelColor")
+    ((wand (:pointer wand))
+     (x :ssize-t)
+     (y :ssize-t)
+     (color (:pointer pixel-wand)))
+  :result-type :boolean)
+
+
+(fli:define-foreign-function (pixel-get-color-as-string "PixelGetColorAsString")
+    ((wand (:pointer pixel-wand)))
+  :result-type (:pointer :char))
 
 
 (defun map-non-alpha-pixels (wand fn &key (limit 1000))
@@ -756,3 +772,10 @@ to be encoded timestamps."
             map))))
      (str:lines identification)
      :initial-value (fset:empty-map))))
+
+(defun get-px-as-string (wand x y)
+  (with-pixel-wand (px)
+    (magick-get-image-pixel-color
+     wand x y
+     px)
+    (from-magick-string (pixel-get-color-as-string px))))

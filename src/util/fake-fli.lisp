@@ -56,6 +56,8 @@
      (error "this looks like a bad type: ~a" x))
     ((eql :size-t x)
      :uint64)
+    ((eql :ssize-t x)
+     :int64)
     ((eql :time-t x)
      :uint64)
     ((not (listp x))
