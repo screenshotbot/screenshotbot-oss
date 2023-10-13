@@ -318,7 +318,12 @@ Apache log analysis tools.)"
                    (log-crash-extras acceptor condition)))
                util/threading:*extras*)))
         (with-warning-logger ()
-          (call-next-method)))
+          (cond
+            ((str:starts-with-p "/~" (hunchentoot:script-name request))
+             (setf (hunchentoot:return-code*) hunchentoot:+http-not-found+)
+             (hunchentoot:abort-request-handler))
+            (t
+             (call-next-method)))))
     (redispatch-request ()
       (hunchentoot:acceptor-dispatch-request acceptor request))))
 
