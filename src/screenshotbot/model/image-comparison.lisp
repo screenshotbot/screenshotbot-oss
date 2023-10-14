@@ -139,14 +139,6 @@
   (setf *stored-cache*
         (fset:less *stored-cache* imc)))
 
-(defun make-old-transient ()
-  (values))
-
-;; TODO: remove
-(def-cron make-old-transient (:minute 45 :hour 22)
-  (make-old-transient))
-
-
 (defun do-image-comparison (before-image
                             after-image
                             p)
