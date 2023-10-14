@@ -69,7 +69,9 @@
   (:import-from #:bknr.datastore
                 #:store-object-id)
   (:import-from #:util/form-errors
-                #:with-error-builder))
+                #:with-error-builder)
+  (:import-from #:screenshotbot/dashboard/recent-runs
+                #:render-recent-runs))
 (in-package :screenshotbot/dashboard/channels)
 
 (named-readtables:in-readtable markup:syntax)
@@ -163,6 +165,10 @@
    (hex:make-url
     'single-channel-page :id (store-object-id channel))))
 
+(defun view-channel-runs (channel)
+  (render-recent-runs (channel-runs channel)
+                      :title (format nil "Runs for ~a" (channel-name channel))))
+
 (defun single-channel-view (channel)
   <app-template >
     <div class= "main-content">
@@ -170,7 +176,10 @@
         <div class= "card">
           <div class= "card-header d-flex justify-content-between">
             <h3>,(safe-channel-name channel)</h3>
-            <a href= (nibble () (confirm-delete channel)) class= "btn btn-danger">Delete</a>
+            <div>
+              <a href= (nibble () (view-channel-runs channel)) >View Runs</a>
+              <a href= (nibble () (confirm-delete channel)) class= "btn btn-danger ms-2"  >Delete</a>
+            </div>
           </div>
           <div class= "card-body">
             <p>First seen: <timeago timestamp= (created-at channel) />

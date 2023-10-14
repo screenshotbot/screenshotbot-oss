@@ -103,6 +103,7 @@
               (taskie-timestamp :prefix "" :timestamp (created-at run))))
 
 (defun render-recent-runs (runs &key (user (current-user))
+                                (title "Recent Runs")
                                   (check-access-p t)
                                   (script-name (hunchentoot:script-name*))
                                   (company (current-company)))
@@ -115,7 +116,7 @@
      :title "Screenshotbot: Runs"
      :company company
      :script-name "/runs"
-     (taskie-page-title :title "Recent Runs"
+     (taskie-page-title :title title
                         (ui/a :id "delete-runs" :btn :danger
                               :class "btn-sm"
                               "Delete Selected")
