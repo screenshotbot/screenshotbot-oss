@@ -45,6 +45,8 @@
                 #:defindex)
   (:import-from #:util/store/fset-index
                 #:fset-set-index)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -225,6 +227,9 @@
       :accessor compare-threshold
       :documentation "The comparison threshold in terms of fraction of pixels changed. If
 NIL or 0, this will use exact pixel comparisons.")
+     (%compare-tolerance
+      :initarg :compare-tolerance
+      :accessor compare-tolerance)
      (%warnings
       :initform nil
       :accessor recorder-run-warnings
@@ -238,7 +243,8 @@ associated report is rendered.")
             :accessor recorder-run-batch
             :documentation "The batch object associated with this run"))
     (:metaclass has-created-at)
-    (:default-initargs :screenshot-map (error "need screenshot-map"))))
+    (:default-initargs :screenshot-map (error "need screenshot-map")
+                       :compare-tolerance nil)))
 
 (defindex +unchanged-run-index+
   'fset-set-index
@@ -408,3 +414,6 @@ compare against the actual merge base.")))
     ()
     (:metaclass persistent-class)
     (:documentation "A warning that this was not a fast-forward when the run was promoted")))
+
+(def-store-migration ("Add compare tolerance" :version 7)
+  (screenshotbot/model/core:ensure-slot-boundp 'recorder-run '%compare-tolerance))
