@@ -41,16 +41,15 @@
   (safe-with-open-file (file tmp :direction :output
                                  :if-does-not-exist :create
                                  :if-exists :supersede)
-    (let ((*standard-output* file))
-      (block nil
-        (format *standard-output* "Inside block~%")
-        (handler-bind ((error (lambda (e)
-                                (declare (ignore e))
-                                (dbg:output-backtrace :verbose *standard-output*)
-                                (return-from nil :fail))))
-          (eval (read-from-string expr))
-          (format *standard-output* "End of block~%")
-          :good)))))
+    (block nil
+      (format *standard-output* "Inside block~%")
+      (handler-bind ((error (lambda (e)
+                              (declare (ignore e))
+                              (dbg:output-backtrace :verbose *standard-output*)
+                              (return-from nil :fail))))
+        (eval (read-from-string expr))
+        (format *standard-output* "End of block~%")
+        :good))))
 
 (defun perform-eval (socket expr)
   (log:info "Opening socket connection v2.")
@@ -75,7 +74,7 @@
                      (dbg:ide-eval-form-in-remote
                       final-expr
                       :output-stream *standard-output*
-                      :timeout 90
+                      :timeout 300
                       :connection conn)
                    (ignore-errors
                     (write-string (uiop:read-file-string tmp)))
