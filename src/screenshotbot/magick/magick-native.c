@@ -212,122 +212,145 @@ extern size_t screenshotbot_find_non_transparent_pixels(MagickWand* wand, pixel*
 }
 
 static void draw_red(PixelWand* wand) {
-		PixelSetAlphaQuantum(wand, QuantumRange);
-		PixelSetRedQuantum(wand, QuantumRange);
-		PixelSetGreenQuantum(wand, 0);
-		PixelSetBlueQuantum(wand, 0);
+        PixelSetAlphaQuantum(wand, QuantumRange);
+        PixelSetRedQuantum(wand, QuantumRange);
+        PixelSetGreenQuantum(wand, 0);
+        PixelSetBlueQuantum(wand, 0);
 }
 
 static void draw_transparent(PixelWand* wand) {
-		PixelSetAlphaQuantum(wand, 0);
-		PixelSetRedQuantum(wand, 0);
-		PixelSetGreenQuantum(wand, 0);
-		PixelSetBlueQuantum(wand, 0);
+        PixelSetAlphaQuantum(wand, 0);
+        PixelSetRedQuantum(wand, 0);
+        PixelSetGreenQuantum(wand, 0);
+        PixelSetBlueQuantum(wand, 0);
 }
 
 
 static bool fill_row_with_red(int start, PixelWand** drow, size_t dwidth) {
-		for (int i = start; i < dwidth; i++) {
-				draw_red(drow[i]);
-		}
-		return start < dwidth;
+        for (int i = start; i < dwidth; i++) {
+                draw_red(drow[i]);
+        }
+        return start < dwidth;
 }
 
-static bool inplace_compare_rows(PixelWand** drow, PixelWand** srow,
-								 size_t dwidth,
-								 size_t swidth) {
-		//fprintf(stderr, "inplace compare rows of width: %zu, %zu\n", dwidth, swidth);
-		int x;
-		bool changed = false;
+static bool inplace_compare_rows_v2(PixelWand** drow, PixelWand** srow,
+                                    size_t dwidth,
+                                    size_t swidth,
+                                    int dist) {
+        int x;
+        bool changed = false;
+        int sq_dist = 4 * dist * dist;
 
 #define CQ(name,i) (name(drow[i]) == name(srow[i]))
+#define DIST(name,i) (((long)name(drow[i])) - ((long)name(srow[i])))
 
-		for (x = 0; x < _min(dwidth, swidth); x++) {
-				if (CQ(PixelGetAlphaQuantum, x) &&
-					CQ(PixelGetRedQuantum, x) &&
-					CQ(PixelGetBlueQuantum, x) &&
-					CQ(PixelGetGreenQuantum, x)) {
-						draw_transparent(drow[x]);
-				} else {
-						draw_red(drow[x]);
-						changed = true;
-				}
-		}
+        for (x = 0; x < _min(dwidth, swidth); x++) {
+                bool same;
 
-		if (fill_row_with_red(x, drow, dwidth)) {
-				changed = true;
-		}
+                if (sq_dist == 0) {
+                        same = CQ(PixelGetAlphaQuantum, x) &&
+                                CQ(PixelGetRedQuantum, x) &&
+                                CQ(PixelGetBlueQuantum, x) &&
+                                CQ(PixelGetGreenQuantum, x);
+                } else {
+                        long a = DIST(PixelGetAlphaQuantum, x);
+                        long r = DIST(PixelGetRedQuantum, x);
+                        long g = DIST(PixelGetGreenQuantum, x);
+                        long b = DIST(PixelGetBlueQuantum, x);
+                        same = ((a*a + r*r + g*g + b*b) <= sq_dist);
+                }
+                if (same) {
+                        draw_transparent(drow[x]);
+                } else {
+                        draw_red(drow[x]);
+                        changed = true;
+                }
+        }
 
-		return changed;
+        if (fill_row_with_red(x, drow, dwidth)) {
+                changed = true;
+        }
+
+        return changed;
+
 }
-
 
 /*
  * Compares dest to src, while modifying dest.  returns 0 if no
  * changes were detected. -1 on error, and 1 on success.
+ *
+ * dist: the distance between two pixels to be considered different.
  */
-extern int screenshotbot_inplace_compare(MagickWand* dest,
-										 MagickWand* src) {
-		PixelIterator* diter = NULL;
-		PixelIterator* siter = NULL;
-		int changed = 0;
+extern int screenshotbot_inplace_compare_v2(MagickWand* dest,
+                                            MagickWand* src,
+                                            int dist) {
+        PixelIterator* diter = NULL;
+        PixelIterator* siter = NULL;
+        int changed = 0;
 
 
-		diter = NewPixelIterator(dest);
-		if (!diter) {
-				changed = -1;
-				goto cleanup;
-		}
+        diter = NewPixelIterator(dest);
+        if (!diter) {
+                changed = -1;
+                goto cleanup;
+        }
 
-		siter = NewPixelIterator(src);
-		if (!siter) {
-				changed = -1;
-				goto cleanup;
-		}
+        siter = NewPixelIterator(src);
+        if (!siter) {
+                changed = -1;
+                goto cleanup;
+        }
 
-		int processedRows = 0;
-		//fprintf(stderr, "iterating through the inplace rows\n");
-		while (true) {
-				processedRows++;
-				//fprintf(stderr, "Processing row: %d\n", processedRows);
-				size_t dwidth = 0;
-				PixelWand** drow = PixelGetNextIteratorRow(diter, &dwidth);
+        int processedRows = 0;
+        //fprintf(stderr, "iterating through the inplace rows\n");
+        while (true) {
+                processedRows++;
+                //fprintf(stderr, "Processing row: %d\n", processedRows);
+                size_t dwidth = 0;
+                PixelWand** drow = PixelGetNextIteratorRow(diter, &dwidth);
 
-				size_t swidth = 0;
-				PixelWand** srow = PixelGetNextIteratorRow(siter, &swidth);
+                size_t swidth = 0;
+                PixelWand** srow = PixelGetNextIteratorRow(siter, &swidth);
 
-				if (!drow) {
-						//fprintf(stderr, "Reached end at %d\n", processedRows);
-						break;
-				} else if (srow) {
-						if (inplace_compare_rows(drow, srow, dwidth, swidth)) {
-								changed = 1;
-						}
-				} else {
-						if (fill_row_with_red(0, drow, dwidth)) {
-								changed = 1;
-						}
-				}
+                if (!drow) {
+                        //fprintf(stderr, "Reached end at %d\n", processedRows);
+                        break;
+                } else if (srow) {
+                        if (inplace_compare_rows_v2(drow, srow, dwidth, swidth, dist)) {
+                                changed = 1;
+                        }
+                } else {
+                        if (fill_row_with_red(0, drow, dwidth)) {
+                                changed = 1;
+                        }
+                }
 
-				// We always have to sync, since we're writing
-				// transparent pixels too.
-				if (!PixelSyncIterator(diter)) {
-						//fprintf(stderr, "Failed to sync iterator\n");
-						changed = -1;
-						goto cleanup;
-				}
-		}
+                // We always have to sync, since we're writing
+                // transparent pixels too.
+                if (!PixelSyncIterator(diter)) {
+                        //fprintf(stderr, "Failed to sync iterator\n");
+                        changed = -1;
+                        goto cleanup;
+                }
+        }
 
 
-		MagickSetImageColorspace(dest, RGBColorspace);
+        MagickSetImageColorspace(dest, RGBColorspace);
 
 cleanup:
-		if (diter) DestroyPixelIterator(diter);
-		if (siter) DestroyPixelIterator(siter);
-		return changed;
-		//return -processedRows;
+        if (diter) DestroyPixelIterator(diter);
+        if (siter) DestroyPixelIterator(siter);
+
+        // If the destination is shorter, then we're not going to
+        // process rest of the rows, so we should check that here.
+        return changed || MagickGetImageHeight(dest) < MagickGetImageHeight(src);
+        //return -processedRows;
 }
 
+extern int screenshotbot_inplace_compare(MagickWand* dest,
+                                         MagickWand* src) {
+        return screenshotbot_inplace_compare_v2(dest, src, 0);
+}
 
 extern MagickBooleanType
 screenshotbot_resize(MagickWand *wand,
@@ -340,7 +363,7 @@ screenshotbot_resize(MagickWand *wand,
                 /* this is the only reason we're compiling this */
                 LanczosFilter
 #if MagickLibVersion < 0x700
-				,1.0
+                ,1.0
 #endif
-		 );
+         );
 }

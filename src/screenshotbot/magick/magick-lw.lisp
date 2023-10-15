@@ -460,6 +460,12 @@
      (src (:pointer wand)))
   :result-type :int)
 
+(fli:define-foreign-function screenshotbot-inplace-compare-v2
+    ((dest (:pointer wand))
+     (src (:pointer wand))
+     (dist :int))
+  :result-type :int)
+
 (defun set-wand-alpha-channel (wand)
   (check-boolean (magick-set-image-alpha-channel wand 'SetAlphaChannel)
                  wand))
