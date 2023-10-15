@@ -19,6 +19,7 @@
   (:import-from #:util/object-id
                 #:make-oid)
   (:import-from #:screenshotbot/model/recorder-run
+                #:compare-tolerance
                 #:compare-threshold)
   (:import-from #:screenshotbot/model/api-key
                 #:api-key-description)
@@ -75,7 +76,9 @@
    (%created-at :initform (get-universal-time)
                 :accessor %created-at)
    (threshold :initform nil
-              :accessor compare-threshold)))
+              :accessor compare-threshold)
+   (tolerance :initform nil
+              :accessor compare-tolerance)))
 
 
 (defclass test-image ()

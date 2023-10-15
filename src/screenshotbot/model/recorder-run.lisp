@@ -86,6 +86,7 @@
    #:pull-request-id
    #:compared-against
    #:compare-threshold
+   #:compare-tolerance
    #:not-fast-forward-promotion-warning
    #:run-screenshot-map
    #:make-recorder-run

@@ -34,18 +34,27 @@
 
 (defclass threshold-comparer (base-image-comparer)
   ((threshold :initarg :threshold
-              :reader compare-threshold)))
+              :reader compare-threshold)
+   (tolerance :initarg :tolerance
+              :reader compare-tolerance)))
 
 (defmethod make-image-comparer (run)
-  (let ((threshold (recorder-run:compare-threshold run)))
-    (cond
-      ((and threshold
-            (numberp threshold)
-            (> threshold 0))
-       (make-instance 'threshold-comparer
-                      :threshold threshold))
-      (t
-       (make-instance 'base-image-comparer)))))
+  (flet ((gt-0 (x)
+           "Check if x is greater than zero, and is a number."
+           (and
+            (numberp x)
+            (> x 0))))
+   (let ((threshold (recorder-run:compare-threshold run))
+         (tolerance (recorder-run:compare-tolerance run)))
+     (cond
+       ((or
+         (gt-0 threshold)
+         (gt-0 tolerance))
+        (make-instance 'threshold-comparer
+                       :threshold (or threshold 0)
+                       :tolerance (or tolerance 0)))
+       (t
+        (make-instance 'base-image-comparer))))))
 
 
 (defmethod image= ((self threshold-comparer)
@@ -81,6 +90,7 @@
                (with-image-comparison (before after
                                        :result result
                                        :in-place-p t)
+                 ;; TODO(T844): factor in tolerance
                  (let ((bad-pixels (get-non-alpha-pixels
                                     result
                                     ;; Why +2 instead of +1? I think it might
