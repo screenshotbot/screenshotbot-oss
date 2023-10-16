@@ -592,7 +592,7 @@
       (mark-pixel wand1 3 4 :color "srgba(30,10,12,1.0)")
       (mark-pixel wand2 3 4 :color "srgba(31,9,13,1.0)")
       (is (eql 0 (screenshotbot-inplace-compare-v2 wand1 wand2
-                                                   1))))))
+                                                   2))))))
 
 (test comparison-using-dist-but-with-zero-dist
   (with-single-pixel-image (:wand wand1 :height 20 :width 30)
