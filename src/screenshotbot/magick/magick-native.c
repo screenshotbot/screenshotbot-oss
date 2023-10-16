@@ -239,7 +239,11 @@ static bool inplace_compare_rows_v2(PixelWand** drow, PixelWand** srow,
                                     int dist) {
         int x;
         bool changed = false;
-        int sq_dist = 4 * dist * dist;
+        long sq_dist = 4 * dist * dist;
+
+#if MAGICK_QUANTUM_DEPTH = 16
+        sq_dist *= 256 * 256;
+#end
 
 #define CQ(name,i) (name(drow[i]) == name(srow[i]))
 #define DIST(name,i) (((long)name(drow[i])) - ((long)name(srow[i])))
