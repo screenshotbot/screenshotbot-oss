@@ -2,6 +2,7 @@
   (:use #:cl)
   (:shadow #:find)
   (:import-from #:bknr.datastore
+                #:snapshot-subsystem-async
                 #:persistent-class)
   (:import-from #:screenshotbot/model/transient-object
                 #:make-transient-clone
@@ -63,8 +64,6 @@
                 #:decode)
   (:import-from #:bknr.datastore
                 #:restore-subsystem)
-  (:import-from #:bknr.datastore
-                #:snapshot-subsystem)
   (:import-from #:bknr.datastore
                 #:close-subsystem)
   (:import-from #:bknr.indices
@@ -219,33 +218,36 @@ If the images are identical, we return t, else we return NIL."
         (setf *stored-cache*
               (fset:less *stored-cache* var))))))
 
-(defmethod snapshot-subsystem ((store bknr.datastore:store) (self image-comparison-subsystem))
-  (log:info "Snapshotting image-comparison subsystem")
+(defmethod snapshot-subsystem-async ((store bknr.datastore:store) (self image-comparison-subsystem))
   (gc-comparisons)
-  (with-open-file (output (store-subsystem-snapshot-pathname store self)
-                          :direction :output
-                          :element-type '(unsigned-byte 8)
-                          :if-does-not-exist :create
-                          :if-exists :supersede)
-    (encode +snapshot-version+ output)
-    ;; write the number of objects too
-    (encode (fset:size *stored-cache*) output)
-    (labels ((write-single (obj)
-               (encode (image-comparison-before obj) output)
-               (encode (image-comparison-after obj) output)
-               (encode (image-comparison-result obj) output)
-               (encode
-                (if (identical-p obj) 1 0)
-                output))
-             (write-imcs (set)
-               (cond
-                 ((fset:empty? set)
-                  nil)
-                 (t
-                  (let ((next (fset:arb set)))
-                    (write-single next)
-                    (write-imcs (fset:less set next)))))))
-      (write-imcs *stored-cache*))))
+  (let ((pathname (store-subsystem-snapshot-pathname store self))
+        (stored-cache *stored-cache*))
+    (lambda ()
+      (log:info "Snapshotting image-comparison subsystem")
+      (with-open-file (output pathname
+                              :direction :output
+                              :element-type '(unsigned-byte 8)
+                              :if-does-not-exist :create
+                              :if-exists :supersede)
+        (encode +snapshot-version+ output)
+        ;; write the number of objects too
+        (encode (fset:size stored-cache) output)
+        (labels ((write-single (obj)
+                   (encode (image-comparison-before obj) output)
+                   (encode (image-comparison-after obj) output)
+                   (encode (image-comparison-result obj) output)
+                   (encode
+                    (if (identical-p obj) 1 0)
+                    output))
+                 (write-imcs (set)
+                   (cond
+                     ((fset:empty? set)
+                      nil)
+                     (t
+                      (let ((next (fset:arb set)))
+                        (write-single next)
+                        (write-imcs (fset:less set next)))))))
+          (write-imcs stored-cache))))))
 
 (defmethod restore-subsystem ((store bknr.datastore:store) (self image-comparison-subsystem) &key until)
   (declare (ignore until))
