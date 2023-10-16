@@ -34,6 +34,9 @@
   #+ (and lispworks linux)
   (:import-from #:bknr.cluster/server
                 #:leaderp)
+  (:import-from #:util/throttler
+                #:throttle!
+                #:throttler)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:make-scheduled-job
@@ -44,6 +47,11 @@
    #:*scheduled-job*))
 (in-package :scheduled-jobs)
 
+
+(defvar *safety-throttler* (make-instance 'throttler
+                                          :tokens 600)
+  "A throttler to prevent bugs in scheduled-jobs from taking over system
+resources.")
 
 (defclass threaded-executor ()
   ())
@@ -109,6 +117,7 @@ we're not looking in to what the object references."
 (defvar *call-pending-scheduled-jobs-lock* (bt:make-lock "call-pending-scheduled-job"))
 
 (defun %call-pending-scheduled-jobs ()
+  (throttle! *safety-throttler* :key t)
   (let ((now (now)))
     (when (bt:with-lock-held (*lock*)
             (let ((next (next-scheduled-job)))

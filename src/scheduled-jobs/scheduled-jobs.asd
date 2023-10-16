@@ -64,6 +64,7 @@
   :serial t
   :depends-on (#:cl-cron
                #:scheduled-jobs/headers
+               #:util/throttler
                #:util
                #:util/threading)
   :components ((lib-source-file "ccronexpr")
