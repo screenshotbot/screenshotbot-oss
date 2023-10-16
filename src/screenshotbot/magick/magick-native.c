@@ -337,13 +337,16 @@ extern int screenshotbot_inplace_compare_v2(MagickWand* dest,
 
         MagickSetImageColorspace(dest, RGBColorspace);
 
+        if (MagickGetImageHeight(dest) < MagickGetImageHeight(src)) {
+                changed = 1;
+        }
 cleanup:
         if (diter) DestroyPixelIterator(diter);
         if (siter) DestroyPixelIterator(siter);
 
         // If the destination is shorter, then we're not going to
         // process rest of the rows, so we should check that here.
-        return changed || MagickGetImageHeight(dest) < MagickGetImageHeight(src);
+        return changed;
         //return -processedRows;
 }
 
