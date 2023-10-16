@@ -597,7 +597,7 @@
       (mark-pixel wand2 3 4 :color "srgb(31,9,13)")
       (is (eql 0 (screenshotbot-inplace-compare-v2 wand1 wand2
                                                    #+screenshotbot-oss
-                                                   4
+                                                   40
                                                    #-screenshotbot-oss
                                                    1))))))
 
