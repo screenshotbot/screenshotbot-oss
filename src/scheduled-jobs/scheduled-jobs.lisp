@@ -53,6 +53,9 @@
   "A throttler to prevent bugs in scheduled-jobs from taking over system
 resources.")
 
+(defvar *enabledp* t
+  "A flag to disable scheduled jobs if there's a bug")
+
 (defclass threaded-executor ()
   ())
 
@@ -118,30 +121,31 @@ we're not looking in to what the object references."
 
 (defun %call-pending-scheduled-jobs ()
   (throttle! *safety-throttler* :key t)
-  (let ((now (now)))
-    (when (bt:with-lock-held (*lock*)
-            (let ((next (next-scheduled-job)))
-              (and
-               next
-               (< (at next) now))))
-      (multiple-value-bind (next)
-          ;; TODO: refactor this logic, but be very very careful
-          (bt:with-lock-held (*lock*)
-            (let ((next (next-scheduled-job)))
-              (setf (%at next) nil)
-             next))
-        (cond
-         ((null next)
-          :no-more)
-         (t
-          (unwind-protect
-               (call-job *executor*
-                         (lambda (&rest args)
-                           (let ((*scheduled-job* next))
-                             (apply (scheduled-job-function next) args)))
-                         (scheduled-job-args next))
-            (%reschedule-job next now))
-          (%call-pending-scheduled-jobs)))))))
+  (when *enabledp*
+   (let ((now (now)))
+     (when (bt:with-lock-held (*lock*)
+             (let ((next (next-scheduled-job)))
+               (and
+                next
+                (< (at next) now))))
+       (multiple-value-bind (next)
+           ;; TODO: refactor this logic, but be very very careful
+           (bt:with-lock-held (*lock*)
+             (let ((next (next-scheduled-job)))
+               (setf (%at next) nil)
+               next))
+         (cond
+           ((null next)
+            :no-more)
+           (t
+            (unwind-protect
+                 (call-job *executor*
+                           (lambda (&rest args)
+                             (let ((*scheduled-job* next))
+                               (apply (scheduled-job-function next) args)))
+                           (scheduled-job-args next))
+              (%reschedule-job next now))
+            (%call-pending-scheduled-jobs))))))))
 
 (deftransaction update-at (next at)
   "Transaction to update both the AT slot, and the queue at the same
@@ -182,9 +186,9 @@ the queue. Internal detail."
    :name "schedule-job"))
 
 (def-cron call-pending-scheduled-job ()
-  #+nil
-  (when (and
-         (boundp 'bknr.datastore:*store*)
-         #+ (and lispworks linux)
-         (leaderp bknr.datastore:*store*))
-   (call-pending-scheduled-jobs)))
+  (when *enabledp*
+    (when (and
+           (boundp 'bknr.datastore:*store*)
+           #+ (and lispworks linux)
+           (leaderp bknr.datastore:*store*))
+      (call-pending-scheduled-jobs))))
