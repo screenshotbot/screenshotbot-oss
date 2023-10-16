@@ -241,7 +241,7 @@ static bool inplace_compare_rows_v2(PixelWand** drow, PixelWand** srow,
         bool changed = false;
         long sq_dist = 4 * dist * dist;
 
-#if MAGICK_QUANTUM_DEPTH = 16
+#if MAGICK_QUANTUM_DEPTH == 16
         sq_dist *= 256 * 256;
 #end
 
