@@ -124,14 +124,15 @@ we're not looking in to what the object references."
               (and
                next
                (< (at next) now))))
-     (multiple-value-bind (next)
-         (bt:with-lock-held (*lock*)
-           (next-scheduled-job))
-       (cond
+      (multiple-value-bind (next)
+          ;; TODO: refactor this logic, but be very very careful
+          (bt:with-lock-held (*lock*)
+            (let ((next (next-scheduled-job)))
+              (setf (%at next) nil)
+             next))
+        (cond
          ((null next)
           :no-more)
-         ((> (at next) now)
-          (error "We should not be here, we should've handled this earlier"))
          (t
           (unwind-protect
                (call-job *executor*
