@@ -172,6 +172,7 @@ the queue. Internal detail."
    :name "schedule-job"))
 
 (def-cron call-pending-scheduled-job ()
+  #+nil
   (when (and
          (boundp 'bknr.datastore:*store*)
          #+ (and lispworks linux)
