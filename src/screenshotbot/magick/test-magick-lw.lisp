@@ -584,21 +584,23 @@
     (is (equal "srgb(10,0,0)" (get-px-as-string wand 10 19)))
     (is (equal "srgba(0,0,0,0)" (get-px-as-string wand 3 3)))))
 
-(test comparison-using-dist
+(test comparison-using-dist-preconditions
   (with-single-pixel-image (:wand wand1 :height 20 :width 30)
     (with-single-pixel-image (:wand wand2 :height 20 :width 30)
       (is (eql 0 (screenshotbot-inplace-compare-v2 wand1 wand2
-                                                   1)))
-      (mark-pixel wand1 3 4 :color "srgba(30,10,12,1.0)")
-      (mark-pixel wand2 3 4 :color "srgba(31,9,13,1.0)")
+                                                   1))))))
+
+(test comparison-using-dist
+  (with-single-pixel-image (:wand wand1 :height 20 :width 30)
+    (with-single-pixel-image (:wand wand2 :height 20 :width 30)
+      (mark-pixel wand1 3 4 :color "srgb(30,10,12)")
+      (mark-pixel wand2 3 4 :color "srgb(31,9,13)")
       (is (eql 0 (screenshotbot-inplace-compare-v2 wand1 wand2
-                                                   2))))))
+                                                   1))))))
 
 (test comparison-using-dist-but-with-zero-dist
   (with-single-pixel-image (:wand wand1 :height 20 :width 30)
     (with-single-pixel-image (:wand wand2 :height 20 :width 30)
-      (is (eql 0 (screenshotbot-inplace-compare-v2 wand1 wand2
-                                                   1)))
       (mark-pixel wand1 3 4 :color "srgb(30,10,12)")
       (mark-pixel wand2 3 4 :color "srgb(31,9,13)")
       (is (eql 1 (screenshotbot-inplace-compare-v2 wand1 wand2
@@ -610,7 +612,13 @@
       (mark-pixel wand1 3 4 :color "srgb(30,10,12)")
       (mark-pixel wand2 3 4 :color "srgb(31,9,13)")
       (is (eql 1 (screenshotbot-inplace-compare-v2 wand1 wand2
-                                                   1)))
+                                                   1))))))
+
+(test comparison-using-dist-but-difference-size-reverse
+  (with-single-pixel-image (:wand wand1 :height 21 :width 30)
+    (with-single-pixel-image (:wand wand2 :height 20 :width 30)
+      (mark-pixel wand1 3 4 :color "srgb(30,10,12)")
+      (mark-pixel wand2 3 4 :color "srgb(31,9,13)")
       (is (eql 1 (screenshotbot-inplace-compare-v2 wand2 wand1
                                                    1))))))
 
@@ -620,7 +628,4 @@
       (mark-pixel wand1 3 4 :color "srgb(30,10,12)")
       (mark-pixel wand2 3 4 :color "srgb(31,9,13)")
       (is (eql 1 (screenshotbot-inplace-compare-v2 wand1 wand2
-                                                   1)))
-      #+nil
-      (is (eql 1 (screenshotbot-inplace-compare-v2 wand2 wand1
                                                    1))))))
