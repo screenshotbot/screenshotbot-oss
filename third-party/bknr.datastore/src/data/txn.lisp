@@ -643,6 +643,15 @@ transaction, if any."
 ;;; Subsystems
 
 (defgeneric snapshot-subsystem (store subsystem))
+
+(defgeneric snapshot-subsystem-async (store subsystem)
+  (:documentation "A two-phase snapshot: the first phase runs in a lock, and then it
+returns a lambda which is called in a background thread
+afterwards. This is only supported in bknr.cluster. The default behavior is just to call snapshot-subsystem and return an no-op lambda.")
+  (:method ((store t) (subsystem t))
+    (snapshot-subsystem store subsystem)
+    (lambda ())))
+
 (defgeneric close-subsystem (store subsystem))
 
 (defmethod close-subsystem ((store store) (subsystem t)))
@@ -691,7 +700,7 @@ pathname until a non-existant directory name has been found."
                    (dolist (subsystem (store-subsystems store))
                      (when *store-debug*
                        (report-progress "Snapshotting subsystem ~A of ~A~%" subsystem store))
-                     (snapshot-subsystem store subsystem)
+                     (funcall (snapshot-subsystem-async store subsystem))
                      (when *store-debug*
                        (report-progress "Successfully snapshotted ~A of ~A~%" subsystem store)))
                    (setf (store-transaction-run-time store) 0)
