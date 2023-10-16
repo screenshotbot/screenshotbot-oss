@@ -589,8 +589,8 @@
     (with-single-pixel-image (:wand wand2 :height 20 :width 30)
       (is (eql 0 (screenshotbot-inplace-compare-v2 wand1 wand2
                                                    1)))
-      (mark-pixel wand1 3 4 :color "srgb(30,10,12)")
-      (mark-pixel wand2 3 4 :color "srgb(31,9,13)")
+      (mark-pixel wand1 3 4 :color "srgba(30,10,12,1.0)")
+      (mark-pixel wand2 3 4 :color "srgba(31,9,13,1.0)")
       (is (eql 0 (screenshotbot-inplace-compare-v2 wand1 wand2
                                                    1))))))
 
