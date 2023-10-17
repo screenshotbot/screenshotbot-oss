@@ -779,7 +779,7 @@ set-differences on O and the returned value from this."
 #+bknr.cluster
 (defmethod safe-snapshot-impl ((store cluster-store-mixin) &key comment
                                                              (force t))
-  (when force
+  (when (and force #+bknr.cluster (leaderp store))
     ;; bknr.cluster will not take a snapshot if there have been no new
     ;; transactions. But if we're doing a reload from code, we
     ;; probably want to force a new snapshot.
