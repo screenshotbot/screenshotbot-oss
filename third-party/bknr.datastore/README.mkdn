@@ -9,6 +9,7 @@ very fantastic bknr.datastore.
 * Lispworks support: we've been running this in LW for several years now.
 * Multiple hook points to support things like file locks, and multiple datastore reading but only one writing.
 * Slot accessors on STORE-OBJECTs no longer need to be wrapped in WITH-TRANSACTION.
+* Snapshot for object-subsystem is parallel: i.e. it runs on multiple threads to speed up the encoding process.
 * WITH-TRANSACTION is a no-op
   - In particular, we no longer support rollbacks
   - WITH-TRANSACTION is generally complicated, difficult for a n00b to understand, and has a lot of rough edges (for instance, it does not rollback changes to indices)

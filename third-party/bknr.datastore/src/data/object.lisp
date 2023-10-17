@@ -35,7 +35,11 @@
 (defclass store-object-subsystem ()
   ((next-object-id :initform 0
                    :accessor next-object-id
-                   :documentation "Next object ID to assign to a new object")))
+                   :documentation "Next object ID to assign to a new object")
+   (snapshot-threads :initarg :snapshot-threads
+                     :initform 4
+                     :reader snapshot-threads
+                     :documentation "Number of threads to use when snapshotting.")))
 
 (defun store-object-subsystem ()
   (let ((subsystem (find-if (alexandria:rcurry #'typep 'store-object-subsystem)
@@ -690,9 +694,68 @@ the slots are read from the snapshot and ignored."
         (encode-current-object-id s)
         (map-store-objects (lambda (object) (when (subtypep (type-of object) 'store-object)
                                               (encode-create-object class-layouts object s))))
-        (map-store-objects (lambda (object) (when (subtypep (type-of object) 'store-object)
-                                              (encode-set-slots class-layouts object s))))
+
+        (let ((objects))
+          (map-store-objects (lambda (object) (when (subtypep (type-of object) 'store-object)
+                                                (push object objects))))
+
+          (encode-object-slots subsystem class-layouts (reverse objects) s))
         t))))
+
+(defun safe-make-thread (fn)
+  (bt:make-thread
+   (lambda ()
+    (ignore-errors
+     (handler-bind ((error (lambda (e)
+                             #+lispworks
+                             (dbg:output-backtrace :verbose t)
+                             #-lispworks
+                             (trivial-backtrace:print-backtrace e))))
+       (funcall fn))))))
+
+(defun encode-object-slots (subsystem class-layouts objects stream)
+  (labels ((make-batches (objects batch-size)
+             (if (<= (length objects) batch-size)
+                 (list objects)
+                 (list*
+                  (subseq objects 0 batch-size)
+                  (make-batches
+                   (subseq objects batch-size)
+                   batch-size)))))
+    (let* ((batch-size (ceiling (length objects) (snapshot-threads subsystem)))
+           (batches (make-batches objects batch-size))
+           (streams (loop for nil in batches
+                          collect (uiop:with-temporary-file (:pathname p)
+                                    (open p :direction :io
+                                            :if-exists :supersede
+                                            :element-type '(unsigned-byte 8)))))
+           (lock (bt:make-lock))
+           (count 0))
+
+      (unwind-protect
+           (let ((threads
+                   (loop for batch in batches
+                         for s in streams
+                         collect
+                         (let ((s s)
+                               (batch batch))
+                           (safe-make-thread
+                            (lambda ()
+                              (loop for object in batch
+                                    do (encode-set-slots class-layouts object s))
+                              (bt:with-lock-held (lock)
+                                (incf count))))))))
+             (mapc #'bt:join-thread threads)
+
+             (unless (= count (length threads))
+               (error "Some threads failed to complete"))
+
+             ;; Finally combine all the streams together
+             (loop for s in streams do
+               (file-position s 0)
+               (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
+             (finish-output stream))
+        (mapc #'close streams)))))
 
 (defmethod close-subsystem ((store store) (subsystem store-object-subsystem))
   (dolist (class-name (all-store-classes))
