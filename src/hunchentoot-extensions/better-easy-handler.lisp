@@ -337,3 +337,13 @@ Apache log analysis tools.)"
        (markup:write-html response))
       (t
        response))))
+
+
+(defmethod hunchentoot:acceptor-log-access :around ((acceptor base-acceptor) &key return-code)
+  (declare (ignore return-code))
+  (handler-case
+      (call-next-method)
+    (cl-base64:incomplete-base64-data ()
+      ;; Quieten some noise from bad requests sending in incomplete
+      ;; Base 64 data. See T859.
+      (values))))
