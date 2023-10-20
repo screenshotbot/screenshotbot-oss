@@ -292,7 +292,9 @@ error."
                     is-trunk)
    (unless images
      (error 'empty-run-error))
-   (let ((screenshots (build-screenshot-objects images metadata-provider)))
+   (let ((screenshots (build-screenshot-objects images metadata-provider))
+         ;; TODO: move out of make-run
+         (run-context (make-instance 'run-context:flags-run-context)))
      ;;(log:info "screenshot records: ~s" screenshots)
      (let* ((branch-hash
               (if has-branch-hash-p branch-hash
@@ -324,6 +326,7 @@ error."
                                 :override-commit-hash flags:*override-commit-hash*
                                 :create-github-issue-p create-github-issue
                                 :cleanp (cleanp repo)
+                                :tags (run-context:tags run-context)
                                 :gitlab-merge-request-iid (safe-parse-int *gitlab-merge-request-iid*)
                                 :phabricator-diff-id (safe-parse-int *phabricator-diff-id*)
                                 :trunkp is-trunk)))

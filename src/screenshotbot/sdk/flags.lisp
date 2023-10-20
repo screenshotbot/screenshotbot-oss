@@ -52,7 +52,8 @@
    #:*finalize*
    #:*batch*
    #:*work-branch*
-   #:*main-branch-commit-hash*))
+   #:*main-branch-commit-hash*
+   #:*tags*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -323,3 +324,9 @@ defaults to http://localhost:4095, and authentication is disabled.")
 commit are complete. This is not required to be called, but if
 used provides a better developer experience when later builds
  are waiting on this commit.")
+
+(define-flag *tags*
+  :selector "tags"
+  :default-value nil
+  :type (or null string)
+  :help "A comma separated list of tags to associate with these runs. Tags are arbitrary and will be shown next to the run names, and let's you filter runs by tags.")

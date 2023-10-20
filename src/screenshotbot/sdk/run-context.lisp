@@ -37,7 +37,8 @@
    #:batch
    #:gitlab-merge-request-iid
    #:phabricator-diff-id
-   #:with-flags-from-run-context)
+   #:with-flags-from-run-context
+   #:tags)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:e #:screenshotbot/sdk/env)
                     (#:git #:screenshotbot/sdk/git)))
@@ -94,7 +95,10 @@
                       :reader compare-threshold)
    (batch :initarg :batch
           :initform nil
-          :reader batch)))
+          :reader batch)
+   (tags :initarg :tags
+         :initform nil
+         :reader tags)))
 
 (defclass env-reader-run-context ()
   ((env :initarg :env
@@ -214,6 +218,9 @@ pull-request looks incorrect."
         (error "Could not rev-parse origin/~a" branch))
       hash))))
 
+(defun parse-tags (tags-str)
+  (when tags-str
+    (str:split "," tags-str)))
 
 (defclass flags-run-context (env-reader-run-context
                              run-context)
@@ -231,7 +238,8 @@ pull-request looks incorrect."
    :channel flags:*channel*
    :override-commit-hash flags:*override-commit-hash*
    :compare-threshold flags:*compare-threshold*
-   :batch flags:*batch*))
+   :batch flags:*batch*
+   :tags (parse-tags flags:*tags*)))
 
 (def-easy-macro with-flags-from-run-context (self &fn fn)
   "Temporary hack to enable using both flags and run-context everywhere."
