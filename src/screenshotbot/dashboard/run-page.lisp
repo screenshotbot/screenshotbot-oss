@@ -44,6 +44,7 @@
   (:import-from #:screenshotbot/model/image
                 #:image-dimensions)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-tags
                 #:gitlab-merge-request-iid
                 #:run-screenshot-map
                 #:compare-threshold
@@ -110,6 +111,12 @@
         (with-login (:company (recorder-run-company run)
                      :allow-url-redirect t)
           (render)))))))
+
+(deftag render-run-tags (&key tags)
+  <span>
+    ,@(loop for tag in tags
+            collect <span class= "badge bg-light text-dark ms-1" >,(progn tag)</span>)
+  </span>)
 
 (deftag page-nav-dropdown (children &key title)
   (let ()
@@ -383,6 +390,7 @@
           <:time class= "timeago" datetime= (created-at run)>
             ,(created-at run)
           </:time>
+          <render-run-tags tags= (recorder-run-tags run) />
         </h4>
 
         <div class= "d-flex justify-content-between mt-3 mb-3">

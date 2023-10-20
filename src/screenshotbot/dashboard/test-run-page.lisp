@@ -92,3 +92,16 @@
              (list (make-instance 'not-fast-forward-promotion-warning))))
       (wrap-snapshot ()
         (render-run-page run2)))))
+
+(screenshot-test run-page-with-tags
+  (with-fixture state ()
+    (let ((run2 (make-recorder-run
+                 :company company
+                 :channel channel
+                 :company company
+                 :previous-run run
+                 :tags (list "9823" "release-branch")
+                 :screenshots (list (make-screenshot im1)))))
+
+      (wrap-snapshot ()
+        (render-run-page run2)))))
