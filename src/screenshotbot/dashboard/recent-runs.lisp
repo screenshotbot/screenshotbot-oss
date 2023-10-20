@@ -146,10 +146,11 @@
   (%recent-runs))
 
 (defhandler (nil :uri "/runs/by-tag/:tag") (tag)
-  (let ((runs (runs-for-tag (current-company) tag)))
-    (cond
-      ((= 1 (length runs))
-       (hex:safe-redirect
-        (run-link (car runs))))
-      (t
-       (render-recent-runs runs)))))
+  (with-login ()
+   (let ((runs (runs-for-tag (current-company) tag)))
+     (cond
+       ((= 1 (length runs))
+        (hex:safe-redirect
+         (run-link (car runs))))
+       (t
+        (render-recent-runs runs))))))
