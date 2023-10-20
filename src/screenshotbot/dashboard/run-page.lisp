@@ -113,10 +113,11 @@
           (render)))))))
 
 (deftag render-run-tags (&key tags)
-  <span>
-    ,@(loop for tag in tags
-            collect <span class= "badge bg-light text-dark ms-1" >,(progn tag)</span>)
-  </span>)
+  (when tags ;; avoid whitespace
+    <span>
+      ,@(loop for tag in tags
+              collect <span class= "badge bg-light text-dark ms-1" >,(progn tag)</span>)
+    </span>))
 
 (deftag page-nav-dropdown (children &key title)
   (let ()

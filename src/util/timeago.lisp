@@ -52,6 +52,4 @@
         (t
          (values (local-time:timestamp-to-universal timestamp) timestamp)))
     (let* ((timestamp (format-ts key)))
-      <:time class= (when (> key (- (get-universal-time) (* 30 24 3600))) "timeago") datetime= timestamp title= (format-timestring nil local-time :format local-time:+rfc-1123-format+) >
-      ,(human-render-local-time local-time)
-      </:time>)))
+      <:time class= (when (> key (- (get-universal-time) (* 30 24 3600))) "timeago") datetime= timestamp title= (format-timestring nil local-time :format local-time:+rfc-1123-format+) >,(human-render-local-time local-time)</:time>)))

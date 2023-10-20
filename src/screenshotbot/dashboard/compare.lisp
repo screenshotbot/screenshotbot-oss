@@ -28,6 +28,7 @@
   (:import-from #:screenshotbot/report-api
                 #:render-diff-report)
   (:import-from #:screenshotbot/dashboard/run-page
+                #:render-run-tags
                 #:modal-id
                 #:render-modal
                 #:screenshots-viewer
@@ -109,6 +110,7 @@
   (:import-from #:alexandria
                 #:when-let)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-tags
                 #:run-build-url)
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
@@ -781,6 +783,7 @@
       <input class= "form-control search d-inline-block" type= "text" autocomplete= "off"
       placeholder= "Search..."
       data-target= ".report-result" />
+      <render-run-tags tags= (recorder-run-tags run) />
       </div>
       </div>
 
@@ -861,7 +864,7 @@
 (deftag link-to-run (&key run)
   (cond
     (run
-     <a href= (hex:make-url "/runs/:id" :id (oid run))>run from ,(timeago :timestamp (created-at run))</a>)
+     <span><a href= (hex:make-url "/runs/:id" :id (oid run))>run from ,(timeago :timestamp (created-at run))</a><render-run-tags tags= (recorder-run-tags run) /></span>)
     (t
      <span>empty run</span>)))
 
