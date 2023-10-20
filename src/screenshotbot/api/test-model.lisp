@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/api/model
+                #:failed-run
                 #:screenshot
                 #:screenshot-list
                 #:decode-json
@@ -53,6 +54,17 @@
     (is (typep ret 'version))
     (is (equal 2 (slot-value ret 'version)))))
 
+(test missing-fields-is-initformed
+  (let ((ret
+         (decode-json (str:trim " {\"foo\": \"car\"} ")
+                      'failed-run)))
+    (is (typep ret 'failed-run))
+    (is (equal nil (slot-value ret 'dto::id))))
+  (let ((ret
+          (decode-json (str:trim " {\"foo\": \"car\"} ")
+                       'version)))
+    (is (typep ret 'version))
+    (is-false (slot-boundp ret 'version))))
 
 (test parse-screenshot-list
   (assert-that
