@@ -18,6 +18,8 @@
   (:import-from #:screenshotbot/server
                 #:logged-in-p)
   (:import-from #:screenshotbot/api/recorder-run
+                #:validation-error
+                #:validate-dto
                 #:%put-run
                 #:run-to-dto
                 #:warmup-image-caches
@@ -251,3 +253,19 @@
       (is-true run)
       (assert-that (recorder-run-batch run)
                    (is-null)))))
+
+
+(test validate-tag-name-too-long
+  (with-fixture state ()
+    (finishes
+      (validate-dto (make-instance 'dto:run
+                                   :tags nil)))
+    (finishes
+      (validate-dto (make-instance 'dto:run
+                                   :tags (list "foo" "bar"))))
+    (signals validation-error
+      (validate-dto (make-instance
+                     'dto:run
+                     :tags (list
+                            (make-array 200 :element-type 'character
+                                            :initial-element #\a)))))))

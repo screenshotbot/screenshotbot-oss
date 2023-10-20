@@ -40,6 +40,7 @@
   (:import-from #:screenshotbot/model/screenshot-map
                 #:make-screenshot-map)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-tags
                 #:make-recorder-run)
   (:import-from #:util/misc
                 #:not-null!
@@ -140,6 +141,7 @@
                  :commit-hash (recorder-run-commit run)
                  :merge-base (recorder-run-merge-base run)
                  :channel (?. channel-name (recorder-run-channel run))
+                 :tags (recorder-run-tags run)
                  :pull-request (pull-request-url run)))
 
 (defapi (api-run-put :uri "/api/run" :method :put :use-yason t) ()
@@ -212,10 +214,28 @@
 (defun emptify (x)
   (if (str:emptyp x) nil x))
 
+(define-condition validation-error (error)
+  ((message :initarg :message))
+  (:report (lambda (e out)
+            (format out (slot-value e 'message)))))
+
+(defmethod validate-dto ((run dto:run))
+  (flet ((verify (test message &rest args)
+           (unless test
+             (error 'validation-error
+                    :message
+                    (apply #'format nil message args)))))
+    (verify (< (length (dto:run-tags run)) 10)
+            "Only 10 tags are allowed on a run")
+    (dolist (tag (dto:run-tags run))
+      (verify (< (length tag) 100)
+              "Tag too long: ~a" tag))))
 
 (defmethod %put-run (company (run dto:run))
   (unless (dto:trunkp run)
     (throttle! *non-production-throttler* :key (not-null! (current-user))))
+
+  (validate-dto run)
 
   (let* ((channel (find-or-create-channel company (dto:run-channel run)))
          (screenshots (screenshot-records-api-to-internal
@@ -252,6 +272,7 @@
                         :phabricator-diff-id (dto:phabricator-diff-id run)
                         :gitlab-merge-request-iid (dto:gitlab-merge-request-iid run)
                         :github-repo (dto:run-repo run)
+                        :tags (dto:run-tags run)
                         :compare-threshold (dto:compare-threshold run))))
 
     (with-transaction ()
