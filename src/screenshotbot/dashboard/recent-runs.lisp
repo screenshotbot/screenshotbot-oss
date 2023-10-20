@@ -19,6 +19,7 @@
                 #:ui/a
                 #:ui/div)
   (:import-from #:screenshotbot/dashboard/run-page
+                #:run-link
                 #:commit)
   (:import-from #:screenshotbot/dashboard/run-page
                 #:run-page)
@@ -31,6 +32,7 @@
   (:import-from #:screenshotbot/dashboard/review-link
                 #:review-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:runs-for-tag
                 #:runs-for-company)
   (:export #:recent-runs))
 (in-package :screenshotbot/dashboard/recent-runs)
@@ -142,3 +144,12 @@
 
 (defmethod default-logged-in-page ((installation t))
   (%recent-runs))
+
+(defhandler (nil :uri "/runs/by-tag/:tag") (tag)
+  (let ((runs (runs-for-tag (current-company) tag)))
+    (cond
+      ((= 1 (length runs))
+       (hex:safe-redirect
+        (run-link (car runs))))
+      (t
+       (render-recent-runs runs)))))
