@@ -65,8 +65,14 @@ might get logged in the webserver logs."
          (warn-for-bad-versions (version-number version))
          (version-number version))))))
 
+(defun bad-version-p (remote-version)
+  (>
+   (abs
+    (- remote-version *api-version*))
+   1))
+
 (defun warn-for-bad-versions (remote-version)
-  (when (/= remote-version *api-version*)
+  (when (bad-version-p remote-version)
     (log:warn "Server is running API version ~a, but this client uses version ~a. ~%
 
 This is most likely supported, however, it's more likely to have

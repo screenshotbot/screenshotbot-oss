@@ -7,7 +7,8 @@
 (defpackage :screenshotbot/sdk/test-version-check
   (:use #:cl
         #:fiveam)
-  (:import-from #:screenshotbot/sdk/version-check)
+  (:import-from #:screenshotbot/sdk/version-check
+                #:bad-version-p)
   (:import-from #:util/request
                 #:http-request)
   (:import-from #:cl-mock
@@ -17,6 +18,8 @@
                 #:fetch-version
                 #:remote-version
                 #:api-context)
+  (:import-from #:screenshotbot/api/model
+                #:*api-version*)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/test-version-check)
@@ -62,3 +65,11 @@
                                         :hostname "...")))
         (is (eql 189 (remote-version api-context)))
         (is (eql 189 (remote-version api-context)))))))
+
+(test bad-version-p ()
+  (let ((*api-version* 102))
+    (is-true (bad-version-p 99))
+    (is-true (bad-version-p 107))
+    (is-false (bad-version-p 102))
+    (is-false (bad-version-p 101))
+    (is-false (bad-version-p 103))))
