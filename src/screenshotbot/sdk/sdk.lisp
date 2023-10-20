@@ -479,30 +479,31 @@ pull-request looks incorrect."
 
     (validate-pull-request)
 
-    (or-setf flags:*build-url*
-             (e:build-url env))
+    ;; TODO: we shouldn't refer to the flags from this point onwards,
+    ;; instead just using the run-context.
 
-    (or-setf flags:*repo-url*
-             (e:repo-url env))
+    (setf flags:*build-url*
+          (run-context:build-url run-ctx))
 
-    (or-setf flags:*work-branch*
-             (e:work-branch env))
+    (setf flags:*repo-url*
+          (run-context:repo-url run-ctx))
 
-    (unless flags:*pull-request*
-      (setf flags:*pull-request*
-            (e:pull-request-url env)))
+    (setf flags:*work-branch*
+          (run-context:work-branch run-ctx))
 
-    (when (equal "unnamed-channel" flags:*channel*)
-      (when-let ((channel (e:guess-channel-name env)))
-        (setf flags:*channel* channel)))
+    (setf flags:*pull-request*
+          (run-context:pull-request-url run-ctx))
+
+    (setf flags:*channel*
+          (run-context:channel run-ctx))
 
     (setf
      flags:*override-commit-hash*
      (run-context:override-commit-hash run-ctx))
 
-    (unless flags:*main-branch*
-      (setf flags:*main-branch*
-            (guess-master-branch (git-repo))))))
+    (setf
+     flags:*main-branch*
+     (run-context:main-branch run-ctx))))
 
 (defun link-to-github-pull-request (repo-url pull-id)
   (let ((key (cond
