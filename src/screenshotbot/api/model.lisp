@@ -57,12 +57,13 @@
              #:comparison
              #:comparison-samep
              #:comparison-title
-             #:comparison-url))
+             #:comparison-url
+             #:run-tags))
 
 (in-package :screenshotbot/api/model)
 
 ;; Please update CHANGELOG.md
-(defparameter *api-version* 7)
+(defparameter *api-version* 8)
 
 (defclass version ()
   ((version :initarg :version
@@ -285,7 +286,13 @@
           :initform nil
           :json-type (or null :string)
           :reader run-batch
-          :documentation "The batch name associated with this run"))
+          :documentation "The batch name associated with this run")
+   (tags :initarg :tags
+         :json-key "tags"
+         :initform nil
+         :json-type (or null :string)
+         :reader run-tags
+         :documentation "A list of arbitrary tags associated with this run"))
   (:metaclass ext-json-serializable-class))
 
 (defclass report ()
