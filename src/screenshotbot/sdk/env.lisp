@@ -294,23 +294,44 @@ get this from the Git repository directly."))
 (defmethod validp ((self github-actions-env-reader))
   (getenv self "GITHUB_ACTION"))
 
+(defmethod pull-request-action-p ((self github-actions-env-reader))
+  (equal "pull_request" (getenv self "GITHUB_EVENT_NAME")))
+
 (defmethod pull-request-url ((self github-actions-env-reader))
-  nil)
+  (let ((ref (getenv self "GITHUB_REF")))
+   (when (pull-request-action-p self)
+     (multiple-value-bind (res parts)
+         (cl-ppcre:scan-to-strings
+          "refs/pull/(.*)/merge"
+          ref)
+       (cond
+         (res
+          (format nil "~a/pull/~a"
+                  (repo-url self)
+                  (elt parts 0)))
+         (t
+          (warn "could not parse pull request id from ~a" ref)
+          nil))))))
 
 (defmethod sha1 ((self github-actions-env-reader))
   (let ((sha (getenv self "GITHUB_SHA")))
-    (let* ((repo (make-instance 'git-repo))
-           (message (git-message repo)))
-      (multiple-value-bind (res parts)
-          (cl-ppcre:scan-to-strings
-           ".*Merge (.*) into .*"
-           message)
-        (cond
-          (res
-           (elt parts 0))
-          (t
-           (warn "Could not parse ~a" message)
-           sha))))))
+    (cond
+      ((pull-request-action-p self)
+       (log:info "Parsing commit request from GitHub Actions merge commit")
+       (let* ((repo (make-instance 'git-repo))
+              (message (git-message repo)))
+         (multiple-value-bind (res parts)
+             (cl-ppcre:scan-to-strings
+              ".*Merge (.*) into .*"
+              message)
+           (cond
+             (res
+              (elt parts 0))
+             (t
+              (warn "Could not parse ~a" message)
+              sha)))))
+      (t
+       sha))))
 
 (defmethod github-server-url ((self github-actions-env-reader))
   (getenv self "GITHUB_SERVER_URL"))

@@ -121,5 +121,27 @@
     (if-called 'git-message
                (lambda (git-repo)
                  " Merge 02520edac7d38b71bacaee1c32d3c7f5cd880f8b into 38181385c139952159a3cf69950f8ff658395efb  "))
-    (let ((reader (make-instance 'github-actions-env-reader)))
+    (let ((reader (make-instance 'github-actions-env-reader
+                                 :overrides `(("GITHUB_EVENT_NAME" . "pull_request")
+                                              ("GITHUB_SHA" . "bleh")))))
       (is (equal "02520edac7d38b71bacaee1c32d3c7f5cd880f8b" (sha1 reader))))))
+
+(test github-reads-env-when-not-pull-request
+  (cl-mock:with-mocks ()
+    (if-called 'git-message
+               (lambda (git-repo)
+                 " Merge 02520edac7d38b71bacaee1c32d3c7f5cd880f8b into 38181385c139952159a3cf69950f8ff658395efb  "))
+    (let ((reader (make-instance 'github-actions-env-reader
+                                 :overrides `(("GITHUB_EVENT_NAME" . "push")
+                                              ("GITHUB_SHA" . "bleh")))))
+      (is (equal "bleh" (sha1 reader)))
+      (is-false (pull-request-url reader)))))
+
+(test github-reads-pull-request-correctly
+  (cl-mock:with-mocks ()
+    (let ((reader (make-instance 'github-actions-env-reader
+                                 :overrides `(("GITHUB_EVENT_NAME" . "pull_request")
+                                              ("GITHUB_SERVER_URL" . "https://github.com")
+                                              ("GITHUB_REPOSITORY" . "tdrhq/fast-example")
+                                              ("GITHUB_REF" . "refs/pull/22/merge")))))
+      (is (equal "https://github.com/tdrhq/fast-example/pull/22" (pull-request-url reader))))))
