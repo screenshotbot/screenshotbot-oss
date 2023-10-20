@@ -428,7 +428,10 @@ compare against the actual merge base.")))
     (:documentation "A warning that this was not a fast-forward when the run was promoted")))
 
 (def-store-migration ("Add compare tolerance" :version 7)
-  (screenshotbot/model/core:ensure-slot-boundp 'recorder-run '%compare-tolerance))
+  (ensure-slot-boundp 'recorder-run '%compare-tolerance))
+
+(def-store-migration ("Add tags to model" :version 8)
+  (ensure-slot-boundp 'recorder-run 'tags))
 
 (defmethod runs-for-tag (company tag)
   (let ((runs (%runs-for-tag tag)))
