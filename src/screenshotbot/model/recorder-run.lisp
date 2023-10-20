@@ -113,6 +113,11 @@
   'fset-set-index
   :slot-name 'company)
 
+(defindex +tags-index+
+  'bknr.indices:hash-list-index
+  :test #'equal
+  :slot-name 'tags)
+
 (with-class-validation
   (defclass recorder-run (object-with-oid)
     ((channel
@@ -239,13 +244,19 @@ associated report is rendered.")
      (created-at
       :initform nil
       :accessor %created-at)
+     (tags
+      :initarg :tags
+      :accessor recorder-run-tags
+      :index +tags-index+
+      :index-reader %runs-for-tag)
      (batch :initform nil
             :initarg :batch
             :accessor recorder-run-batch
             :documentation "The batch object associated with this run"))
     (:metaclass has-created-at)
     (:default-initargs :screenshot-map (error "need screenshot-map")
-                       :compare-tolerance nil)))
+                       :compare-tolerance nil
+                       :tags nil)))
 
 (defindex +unchanged-run-index+
   'fset-set-index
@@ -418,3 +429,9 @@ compare against the actual merge base.")))
 
 (def-store-migration ("Add compare tolerance" :version 7)
   (screenshotbot/model/core:ensure-slot-boundp 'recorder-run '%compare-tolerance))
+
+(defmethod runs-for-tag (company tag)
+  (let ((runs (%runs-for-tag tag)))
+    (loop for run in runs
+          if (eql company (recorder-run-company run))
+            collect run)))

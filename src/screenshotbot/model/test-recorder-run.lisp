@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:runs-for-tag
                 #:channel-runs
                 #:make-recorder-run
                 #:pull-request-id
@@ -26,6 +27,7 @@
   (:import-from #:bknr.datastore
                 #:blob-pathname)
   (:import-from #:fiveam-matchers/lists
+                #:has-item
                 #:contains)
   (:import-from #:screenshotbot/user-api
                 #:recorder-run-commit
@@ -34,6 +36,8 @@
                 #:has-length)
   (:import-from #:screenshotbot/model/channel
                 #:production-run-for)
+  (:import-from #:screenshotbot/model/company
+                #:company)
 
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-recorder-run)
@@ -43,6 +47,7 @@
 (def-fixture state ()
   (with-test-store ()
     (let ((run (make-recorder-run))
+          (company (make-instance 'company))
           (promotion-log (make-instance 'promotion-log)))
      (&body))))
 
@@ -92,3 +97,23 @@
     (let* ((channel (make-instance 'channel))
            (run (make-recorder-run)))
       (is (equal nil (recorder-run-commit run))))))
+
+(test finding-runs-by-tags
+  (with-fixture state ()
+    (let* ((company2 (make-instance 'company))
+           (run1 (make-recorder-run
+                     :company company
+                     :tags (list "foo" "bar")))
+           (run2 (make-recorder-run
+                  :company company
+                  :tags (list "bar")))
+           (run3 (make-recorder-run
+                  :company company))
+           (run4 (make-recorder-run
+                  :company company2
+                  :tags (list "foo"))))
+      (assert-that (runs-for-tag company "foo")
+                   (contains run1))
+      (assert-that (runs-for-tag company "bar")
+                   (has-item run1)
+                   (has-item run2)))))
