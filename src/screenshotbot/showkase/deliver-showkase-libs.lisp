@@ -19,7 +19,7 @@
                                 *project-path*
                                 (if *release-build* 3 0)
                                 :keep-symbols nil
-                                :library-name "screenshotbot-showkase"
+                                :library-name "sbshowkase"
                                 :keep-macros t
                                 :keep-pretty-printer t
                                 :keep-debug-mode (unless *release-build* :all))

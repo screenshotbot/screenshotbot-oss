@@ -32,12 +32,29 @@ public class SbInstrumentation extends Instrumentation {
     public void onCreate(Bundle arguments) {
         Log.i("SbInss", "onCreate called");
         super.onCreate(arguments);
+
         start();
     }
+
 
     @Override
     public void onStart() {
         Log.i("SbInss", "onStart");
-        finish(0, new Bundle());
+        LispworksManager.initLispworks(getTargetContext(), getContext(),
+                                       new Runnable() {
+                                           @Override
+                                           public void run() {
+                                               finish(0, new Bundle());
+                                           }
+                                       }
+
+                                       );
+        Log.i("SbInss", "waiting 2 s");
+
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
