@@ -32,6 +32,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
     implementation 'com.backblaze.b2:b2-sdk-core:3.1.0'
     implementation 'com.backblaze.b2:b2-sdk-okhttp:3.1.0'
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
 
     implementation files('libs/lispworks.aar')
 }
