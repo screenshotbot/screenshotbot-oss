@@ -26,10 +26,18 @@
    (compose-component :initarg :compose-component
                       :reader compose-component)))
 
-(defun get-components (module)
- (iter (for var in-java  (#_getComponentList (get-metadata module)))
-       (collect (make-instance 'component
-                               :name (#_getComponentName var)
-                               :compose-component (#_getComponent var)))))
+(defmethod make-component-view ((self component))
+  (let ((view (new-instance (lw-ji:find-java-class "androidx.compose.ui.platform.ComposeView")
+                            *context*
+                            nil
+                            0 #| defStyleAttr? what goes here|#)))
+    (#_setContent view (compose-component self))
+    view))
 
-;; (mapcar #'name (get-components "com.airbnb.android.showkasesample.RootModule"))
+(defun get-components (module)
+  (iter (for var in-java  (#_getComponentList (get-metadata module)))
+        (collect (make-instance 'component
+                                :name (#_getComponentName var)
+                                :compose-component (#_getComponent var)))))
+
+;; (make-component-view (car (get-components "com.airbnb.android.showkasesample.RootModule")))
