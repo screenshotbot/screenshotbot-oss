@@ -1,0 +1,34 @@
+package io.screenshotbot;
+
+import android.app.Activity;
+import android.app.Instrumentation;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.os.Debug;
+import android.util.Log;
+//import com.lispworks.Manager;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Constructor;
+
+public class SbInstrumentation extends Instrumentation {
+    @Override
+    public void onCreate(Bundle arguments) {
+        Log.i("SbInss", "onCreate called");
+        super.onCreate(arguments);
+        start();
+    }
+
+    @Override
+    public void onStart() {
+        Log.i("SbInss", "onStart");
+        finish(0, new Bundle());
+    }
+}

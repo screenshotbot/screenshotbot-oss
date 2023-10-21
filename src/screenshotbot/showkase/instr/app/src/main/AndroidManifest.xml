@@ -17,6 +17,7 @@
         </activity>
     </application>
 
-    <instrumentation android:name="io.screenshotbot.SbInstrumentation" />
+    <instrumentation android:name="io.screenshotbot.SbInstrumentation"
+                     android:targetPackage="com.airbnb.android.showkasesample" />
 
 </manifest>
