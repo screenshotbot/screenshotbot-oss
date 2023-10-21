@@ -7,7 +7,7 @@ VERSION=8-0-0
 
 LISPOUT=instr
 MAIN=$(LISPOUT)/app/src/main
-LIB=libscreenshotbot-showkase.so
+LIB=libsbshowkase.so
 
 DELIVER=src/screenshotbot/showkase/deliver-showkase-libs.lisp
 
