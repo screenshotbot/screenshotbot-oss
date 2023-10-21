@@ -68,7 +68,9 @@
 
 
 ;; (histogram)
-;; (random-sample:random-sample (objects-of-type 'system:tlatter) 100)
+;; (random-sample:random-sample (objects-of-type 'lw:simple-text-string) 100)
+;; (weighted-random-sample (objects-of-type 'lw:simple-text-string) #'hcl:find-object-size)
+
 
 (fli:define-foreign-function fmemopen
     ((buf :lisp-simple-1d-array)

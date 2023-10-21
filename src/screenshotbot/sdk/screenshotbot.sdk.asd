@@ -12,7 +12,6 @@
                :pkg
                :quri
                :ironclad/core
-               :hunchentoot
                :cl-json
                :cxml
                :log4cl

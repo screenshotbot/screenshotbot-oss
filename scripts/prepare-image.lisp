@@ -47,8 +47,12 @@
    `(:output-translations
      :inherit-configuration
      (,(namestring root)
-      ,(format nil "~abuild/asdf-cache/~a/" root
-               (uiop:implementation-identifier))))))
+      ,(format nil "~abuild/asdf-cache/~a~a/" root
+               (uiop:implementation-identifier)
+               #+android-delivery
+               "-android"
+               #-android-delivery
+               "")))))
 (compile 'update-output-translations)
 (update-output-translations *cwd*)
 
