@@ -1,11 +1,14 @@
 (defpackage :screenshotbot/showkase/lib
   (:use #:cl
         #:iterate
-        #:util/java))
+        #:util/java)
+  (:export
+   #:*context*))
 (in-package :screenshotbot/showkase/lib)
 
 (named-readtables:in-readtable java-syntax)
 
+(defvar *context*)
 
 (defun list-methods (class)
   (mapcar #_getName (array->list (#_getMethods class))))
@@ -29,4 +32,4 @@
                                :name (#_getComponentName var)
                                :compose-component (#_getComponent var)))))
 
-;; (get-components "com.airbnb.android.showkasesample.RootModule")
+;; (mapcar #'name (get-components "com.airbnb.android.showkasesample.RootModule"))

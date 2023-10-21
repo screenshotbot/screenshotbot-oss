@@ -40,11 +40,12 @@ public class SbInstrumentation extends Instrumentation {
     @Override
     public void onStart() {
         Log.i("SbInss", "onStart");
+        Context targetContext = getTargetContext();
         LispworksManager.initLispworks(getTargetContext(), getContext(),
                                        new Runnable() {
                                            @Override
                                            public void run() {
-                                               LispCalls.callObjectV("SCREENSHOTBOT/SHOWKASE/MAIN::MAIN");
+                                               LispCalls.callObjectV("SCREENSHOTBOT/SHOWKASE/MAIN::RUN", targetContext);
                                                //finish(0, new Bundle());
                                            }
                                        }
