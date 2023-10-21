@@ -19,5 +19,6 @@
                  "slynk/retro"
                  "slynk-named-readtables"
                  "util.java"
-                 )
-    :components ((:file "main")))
+                 :iterate)
+    :components ((:file "lib")
+                 (:file "main")))
