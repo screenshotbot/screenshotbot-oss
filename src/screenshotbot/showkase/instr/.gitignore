@@ -12,3 +12,5 @@ build
 /captures
 .externalNativeBuild
 .cxx
+*.lwheap
+*.so

@@ -12,7 +12,7 @@
 
 (defvar *release-build* nil)
 (defvar *project-path*
-  (merge-pathnames #P"src/screenshotbot/showkase/lispout/" (hcl:get-working-directory))
+  (merge-pathnames #P"src/screenshotbot/showkase/instr/" (hcl:get-working-directory))
   "Points to the directory where the OthelloDemo project is")
 
 (hcl:deliver-to-android-project 'screenshotbot/showkase/main:main
