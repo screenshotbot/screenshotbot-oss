@@ -14,4 +14,7 @@
   "FOO")
 
 (defun main ()
+  (slynk:create-server :port 4005
+                       :dont-close t)
+  (sleep 3000)
   (format t "Lispworks internal call SbInss"))

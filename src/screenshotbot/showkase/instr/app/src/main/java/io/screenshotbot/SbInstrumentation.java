@@ -44,7 +44,8 @@ public class SbInstrumentation extends Instrumentation {
                                        new Runnable() {
                                            @Override
                                            public void run() {
-                                               finish(0, new Bundle());
+                                               LispCalls.callObjectV("SCREENSHOTBOT/SHOWKASE/MAIN::MAIN");
+                                               //finish(0, new Bundle());
                                            }
                                        }
 

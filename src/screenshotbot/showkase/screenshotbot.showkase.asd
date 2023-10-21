@@ -5,5 +5,16 @@
 
 (defsystem :screenshotbot.showkase
   :depends-on (:screenshotbot.sdk/library
-               :slynk)
+               :slynk
+               "slynk/arglists"
+               "slynk/fancy-inspector"
+               "slynk/package-fu"
+               "slynk/mrepl"
+               "slynk/trace-dialog"
+               "slynk/profiler"
+               "util/posix"
+               "slynk/stickers"
+               "slynk/indentation"
+               "slynk/retro"
+               "slynk-named-readtables")
   :components ((:file "main")))
