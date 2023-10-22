@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
     buildToolsVersion "33.0.2"
     defaultConfig {
         applicationId "com.example.project"
@@ -24,15 +24,16 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.facebook.testing.screenshot:core:0.15.0'
+    implementation "androidx.lifecycle:lifecycle-runtime-testing:2.7.0-alpha03"
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
-    implementation 'com.backblaze.b2:b2-sdk-core:3.1.0'
-    implementation 'com.backblaze.b2:b2-sdk-okhttp:3.1.0'
+    //implementation 'com.backblaze.b2:b2-sdk-core:3.1.0'
+    //implementation 'com.backblaze.b2:b2-sdk-okhttp:3.1.0'
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
 
     implementation files('libs/lispworks.aar')

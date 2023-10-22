@@ -39,6 +39,7 @@ public class SbInstrumentation extends Instrumentation {
         ScreenshotRunner.onCreate(this, arguments);
 
         Context targetContext = getTargetContext();
+        Context context = getContext();
         LispworksManager.initLispworks(getTargetContext(), getContext(),
                                        new Runnable() {
                                            @Override
@@ -49,7 +50,7 @@ public class SbInstrumentation extends Instrumentation {
                                                Thread th = new Thread() {
                                                        @Override
                                                        public void run() {
-                                                           LispCalls.callObjectV("SCREENSHOTBOT/SHOWKASE/MAIN::RUN", targetContext);
+                                                           LispCalls.callObjectV("SCREENSHOTBOT/SHOWKASE/MAIN::RUN", context, targetContext);
                                                            Log.i("SbInss", "Done initing slynk");
                                                        }
                                                    };

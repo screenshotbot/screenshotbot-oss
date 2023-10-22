@@ -3,12 +3,14 @@
         #:iterate
         #:util/java)
   (:export
-   #:*context*))
+   #:*context*
+   #:*target-context*))
 (in-package :screenshotbot/showkase/lib)
 
 (named-readtables:in-readtable java-syntax)
 
 (defvar *context*)
+(defvar *target-context*)
 
 (defun list-methods (class)
   (mapcar #_getName (array->list (#_getMethods class))))
@@ -46,7 +48,6 @@
                                 :width (#_getWidthDp var)
                                 :compose-component (#_getComponent var)))))
 
-hcl:*android-main-process-for-testing*
 
 
 (defvar *f* 0)
@@ -78,9 +79,15 @@ hcl:*android-main-process-for-testing*
    (lambda ()
      (incf *f*))))
 
+#+nil
+(mapcar #_getName (array->list (#_getParameterTypes (second (array->list (#_getDeclaredMethods (lw-ji:find-java-class "androidx.lifecycle.ViewTreeLifecycleOwner")))))))
 
+(lw-ji:define-java-callers "androidx.lifecycle.ViewTreeLifecycleOwner"
+  (set-lifecycle-owner "set"))
 
-
+(defun init-lifecycle-owner (view)
+  (let ((lo (new-instance #,androidx.lifecycle.testing.TestLifecycleOwner)))
+    (set-lifecycle-owner view lo)))
 
 (defun screenshot (component)
   (let* ((lock (bt:make-lock))
@@ -91,25 +98,35 @@ hcl:*android-main-process-for-testing*
        (lambda ()
          (setf res :bar)
          (bt:with-lock-held (lock)
-           (let* ((view (make-component-view component))
-                  (detacher (#_dispatchAttach #,com.facebook.testing.screenshot.WindowAttachment
-                                              view))
-                  (view-helper (#_setupView #,com.facebook.testing.screenshot.ViewHelpers
-                                            view)))
-             (unwind-protect
-                  (progn
-                    (when (width component)
-                      (#_setExactWidthDp view-helper
-                                         (width component)))
-                    (when (height component)
-                      (#_setExactHeightDp view-helper
-                                          (height component)))
+           (let* ((fragment (new-instance #,androidx.fragment.app.Fragment))
+                  (view (make-component-view component)))
+             (#_setContentView fragment view)
+             ;;(init-lifecycle-owner view)
+             (let ((detacher (#_dispatchAttach #,com.facebook.testing.screenshot.WindowAttachment
+                                               view))
+                   (view-helper (#_setupView #,com.facebook.testing.screenshot.ViewHelpers
+                                             view)))
+              (unwind-protect
+                   (progn
+                     (when (width component)
+                       (#_setExactWidthDp view-helper
+                                          (width component)))
+                     (when (height component)
+                       (#_setExactHeightDp view-helper
+                                           (height component)))
 
-                    (setf res (#_draw (#_layout view-helper)))
-                    (setf res :foo)
-                    (bt:condition-notify cv))
-               (#_detach detacher))))))
+                     (setf res (#_draw (#_layout view-helper)))
+                     (setf res :foo)
+                     (bt:condition-notify cv))
+                (#_detach detacher)))))))
       ;;(bt:condition-wait cv lock)
       res)))
+
+(defun launch-activity ()
+  (let ((context *context*))
+    (let ((intent (new-instance #,android.content.Intent
+                                context (lw-ji:find-java-class "com.example.project.MainActivity"))))
+      (#_setFlags intent 268435456 )
+      (#_startActivity context intent))))
 
 ;; (screenshot (car (get-components "com.airbnb.android.showkasesample.RootModule")))
