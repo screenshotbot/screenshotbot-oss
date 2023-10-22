@@ -50,7 +50,7 @@ public class SbInstrumentation extends Instrumentation {
                                                Thread th = new Thread() {
                                                        @Override
                                                        public void run() {
-                                                           LispCalls.callObjectV("SCREENSHOTBOT/SHOWKASE/MAIN::RUN", context, targetContext);
+                                                           LispCalls.callObjectV("SCREENSHOTBOT/SHOWKASE/MAIN::RUN", context, targetContext, SbInstrumentation.this);
                                                            Log.i("SbInss", "Done initing slynk");
                                                        }
                                                    };

@@ -4,13 +4,15 @@
         #:util/java)
   (:export
    #:*context*
-   #:*target-context*))
+   #:*target-context*
+   #:*instrumentation*))
 (in-package :screenshotbot/showkase/lib)
 
 (named-readtables:in-readtable java-syntax)
 
 (defvar *context*)
 (defvar *target-context*)
+(defvar *instrumentation*)
 
 (defun list-methods (class)
   (mapcar #_getName (array->list (#_getMethods class))))

@@ -2,7 +2,8 @@
   (:use #:cl)
   (:import-from #:screenshotbot/showkase/lib
                 #:*context*
-                #:*target-context*)
+                #:*target-context*
+                #:*instrumentation*)
   (:export
    #:main
    #:run
@@ -17,9 +18,10 @@
 (defun sample ()
   "FOO")
 
-(defun run (context target-context)
+(defun run (context target-context instrumentation)
   (setf *context* context)
   (setf *target-context* target-context)
+  (setf *instrumentation* instrumentation)
 
   (slynk:create-server :port 4005
                        :dont-close t)
