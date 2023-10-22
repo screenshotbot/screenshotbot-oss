@@ -35,6 +35,8 @@ public class LispworksManager {
         Manager.setLispTempDir(targetContext.getCacheDir().toString());
         Manager.setClassLoader(LispworksManager.class.getClassLoader());
 
+        assert(context != null);
+
         Manager.setErrorReporter(new LispErrorReporter() {
                 @Override
                 public boolean report(String errorString, String filename)  {

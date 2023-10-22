@@ -25,6 +25,9 @@ import com.lispworks.Manager;
 import com.lispworks.Manager.LispErrorReporter;
 import java.io.File;
 import java.io.InputStream;
+import android.os.*;
+
+import com.facebook.testing.screenshot.ScreenshotRunner;
 
 
 public class SbInstrumentation extends Instrumentation {
@@ -33,30 +36,63 @@ public class SbInstrumentation extends Instrumentation {
         Log.i("SbInss", "onCreate called");
         super.onCreate(arguments);
 
-        start();
-    }
+        ScreenshotRunner.onCreate(this, arguments);
 
-
-    @Override
-    public void onStart() {
-        Log.i("SbInss", "onStart");
         Context targetContext = getTargetContext();
         LispworksManager.initLispworks(getTargetContext(), getContext(),
                                        new Runnable() {
                                            @Override
                                            public void run() {
-                                               LispCalls.callObjectV("SCREENSHOTBOT/SHOWKASE/MAIN::RUN", targetContext);
+                                               if (Looper.myLooper() == Looper.getMainLooper()) {
+                                                   Log.i("SbInss", "callback is running on main thread");
+                                               }
+                                               Thread th = new Thread() {
+                                                       @Override
+                                                       public void run() {
+                                                           LispCalls.callObjectV("SCREENSHOTBOT/SHOWKASE/MAIN::RUN", targetContext);
+                                                           Log.i("SbInss", "Done initing slynk");
+                                                       }
+                                                   };
+                                               th.start();
                                                //finish(0, new Bundle());
                                            }
                                        }
 
                                        );
-        Log.i("SbInss", "waiting 2 s");
+
+
+
+        start();
+    }
+
+
+
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Log.i("SbInss", "onStart");
+
+        Looper looper = Looper.getMainLooper();
+        Handler handler = new Handler(looper);
+        handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Log.i("SbInss", "handler called");
+                    Log.i("SbInss", "waiting 2 s");
+                }
+            });
 
         try {
-            Thread.sleep(2);
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        ScreenshotRunner.onDestroy();
+        super.onDestroy();
     }
 }
