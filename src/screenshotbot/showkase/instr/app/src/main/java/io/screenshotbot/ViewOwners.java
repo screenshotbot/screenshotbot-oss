@@ -13,11 +13,12 @@ public class ViewOwners {
     public static class MyLifecycleOwner implements LifecycleOwner {
         private Lifecycle registry = null;
 
+        public MyLifecycleOwner() {
+            registry = new LifecycleRegistry(this);
+        }
+
         @Override
         public Lifecycle getLifecycle() {
-            if (registry == null) {
-                registry = new LifecycleRegistry(this);
-            }
             return registry;
         }
 
@@ -28,13 +29,13 @@ public class ViewOwners {
         private SavedStateRegistry registry;
         private LifecycleOwner lifecycleOwner;
 
-        public MySavedStateRegistryOwner(LifecycleOwner lifecycleOwner) {
+        public MySavedStateRegistryOwner(LifecycleOwner _lifecycleOwner) {
+            this.lifecycleOwner = _lifecycleOwner;
             controller = SavedStateRegistryController.create(this);
             controller.performRestore(null);
 
             registry = controller.getSavedStateRegistry();
 
-            this.lifecycleOwner = lifecycleOwner;
         }
 
         @Override

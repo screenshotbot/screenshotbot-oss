@@ -38,9 +38,14 @@
   (let ((view (new-instance (lw-ji:find-java-class "androidx.compose.ui.platform.ComposeView")
                             *context*
                             nil
-                            0 #| defStyleAttr? what goes here|#)))
+                            0 #| defStyleAttr? what goes here|#))
+        (frame (new-instance #,android.widget.FrameLayout
+                             *context*)))
+
     (#_setContent view (compose-component self))
-    view))
+    (#_addView frame view)
+
+    (values frame view)))
 
 (defun get-components (module)
   (iter (for var in-java  (#_getComponentList (get-metadata module)))
@@ -87,9 +92,20 @@
 (lw-ji:define-java-callers "androidx.lifecycle.ViewTreeLifecycleOwner"
   (set-lifecycle-owner "set"))
 
+(lw-ji:define-java-callers "androidx.savedstate.ViewTreeSavedStateRegistryOwner"
+  (set-saved-state-registry-owner "set"))
+
 (defun init-lifecycle-owner (view)
   (let ((lo (new-instance #,androidx.lifecycle.testing.TestLifecycleOwner)))
     (set-lifecycle-owner view lo)))
+
+(defun make-lifecycle-owner ()
+  (new-instance #,io.screenshotbot.ViewOwners$MySavedStateRegistryOwner
+                (new-instance #,io.screenshotbot.ViewOwners$MyLifecycleOwner)))
+
+(defun lg (msg)
+  (#_i #,android.util.Log "SbInss" msg))
+
 
 (defun screenshot (component)
   (let* ((lock (bt:make-lock))
@@ -98,31 +114,44 @@
     (bt:with-lock-held (lock)
       (hcl:android-funcall-in-main-thread
        (lambda ()
+         (lg "this is being called")
          (setf res :bar)
          (bt:with-lock-held (lock)
-           (let* ((fragment (new-instance #,androidx.fragment.app.Fragment))
-                  (view (make-component-view component)))
-             (#_setContentView fragment view)
+           (multiple-value-bind (frame view)
+               (make-component-view component)
+             (let ((lo (make-lifecycle-owner)))
+               (set-lifecycle-owner frame lo)
+               (set-saved-state-registry-owner frame lo)
+               #+nil(set-lifecycle-owner view lo))
+
+             ;;(#_setContentView fragment view)
              ;;(init-lifecycle-owner view)
              (let ((detacher (#_dispatchAttach #,com.facebook.testing.screenshot.WindowAttachment
-                                               view))
+                                               frame))
                    (view-helper (#_setupView #,com.facebook.testing.screenshot.ViewHelpers
-                                             view)))
-              (unwind-protect
-                   (progn
-                     (when (width component)
-                       (#_setExactWidthDp view-helper
-                                          (width component)))
-                     (when (height component)
-                       (#_setExactHeightDp view-helper
-                                           (height component)))
+                                             frame)))
+               (unwind-protect
+                    (progn
+                      (lg "before setting dim")
+                      (#_setExactWidthDp view-helper
+                                         (or
+                                          (width component)
+                                          10))
+                      (#_setExactHeightDp view-helper
+                                          (or
+                                           (height component)
+                                           10))
 
-                     (setf res (#_draw (#_layout view-helper)))
-                     (setf res :foo)
-                     (bt:condition-notify cv))
-                (#_detach detacher)))))))
-      ;;(bt:condition-wait cv lock)
-      res)))
+                      (lg "After setting dims")
+
+                      (setf res :car)
+                      (setf res (#_draw (#_layout view-helper)))
+
+                      ;;(Setf res :dar)
+                      (bt:condition-notify cv))
+                 (#_detach detacher)))))))
+      (bt:condition-wait cv lock))
+    res))
 
 (defun launch-activity ()
   (let ((context *context*))
