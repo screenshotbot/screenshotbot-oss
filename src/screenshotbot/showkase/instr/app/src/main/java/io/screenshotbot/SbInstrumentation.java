@@ -25,7 +25,9 @@ import com.lispworks.Manager;
 import com.lispworks.Manager.LispErrorReporter;
 import java.io.File;
 import java.io.InputStream;
+import java.io.*;
 import android.os.*;
+import android.graphics.*;
 
 import com.facebook.testing.screenshot.ScreenshotRunner;
 
@@ -61,13 +63,14 @@ public class SbInstrumentation extends Instrumentation {
 
                                        );
 
-
-
         start();
     }
 
-
-
+    public void writeBitmap(Bitmap bitmap, String file) throws IOException {
+        try (OutputStream os = new FileOutputStream(file)) {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, os);
+        }
+    }
 
     @Override
     public void onStart() {

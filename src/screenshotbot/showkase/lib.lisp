@@ -136,11 +136,11 @@
                       (#_setExactWidthDp view-helper
                                          (or
                                           (width component)
-                                          10))
+                                          200))
                       (#_setExactHeightDp view-helper
                                           (or
                                            (height component)
-                                           10))
+                                           200))
 
                       (lg "After setting dims")
 
@@ -153,6 +153,13 @@
       (bt:condition-wait cv lock))
     res))
 
+(defun write-bitmap (bitmap file)
+  (log:info "Writing bitmap to ~a" file)
+  (#_writeBitmap *instrumentation* bitmap (namestring file)))
+
+(defun get-screenshot-dir ()
+  (format nil "~a/" (#_toString (#_getDataDir *target-context*))))
+
 (defun launch-activity ()
   (let ((context *context*))
     (let ((intent (new-instance #,android.content.Intent
@@ -160,4 +167,4 @@
       (#_setFlags intent 268435456 )
       (#_startActivity context intent))))
 
-;; (screenshot (car (get-components "com.airbnb.android.showkasesample.RootModule")))
+;; (write-bitmap (screenshot (car (get-components "com.airbnb.android.showkasesample.RootModule"))) (path:catfile (get-screenshot-dir) "hello.png"))
