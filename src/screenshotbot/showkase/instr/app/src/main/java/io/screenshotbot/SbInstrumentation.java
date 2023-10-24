@@ -34,6 +34,7 @@ import org.junit.*;
 import org.junit.runners.model.*;
 import org.junit.runner.*;
 import org.junit.rules.*;
+import androidx.compose.ui.test.junit4.ComposeTestRule;
 
 public class SbInstrumentation extends Instrumentation {
     @Override
@@ -112,4 +113,5 @@ public class SbInstrumentation extends Instrumentation {
             };
         testRule.apply(stmt, Description.EMPTY).evaluate();
     }
+
 }

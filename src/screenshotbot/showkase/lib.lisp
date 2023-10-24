@@ -170,6 +170,10 @@
 (defun test-component ()
   (car (get-components "com.airbnb.android.showkasesample.RootModule")))
 
+(easy-macros:def-easy-macro with-compose-test-rule (&binding rule &fn fn)
+  (let ((rule (#_createTestRule #,io.screenshotbot.Factory)))
+    (fn rule)))
+
 
 ;; (Test-component)
 

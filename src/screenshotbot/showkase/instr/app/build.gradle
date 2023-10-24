@@ -1,4 +1,10 @@
+plugins {
+    id 'org.jetbrains.kotlin.android' version '1.9.10'
+}
+
 apply plugin: 'com.android.application'
+
+
 
 android {
     compileSdkVersion 34
@@ -18,8 +24,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
+        sourceCompatibility = 17
+        targetCompatibility = 17
     }
 }
 
