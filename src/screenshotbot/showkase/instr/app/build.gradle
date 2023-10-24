@@ -35,6 +35,9 @@ dependencies {
     implementation 'com.facebook.testing.screenshot:core:0.15.0'
     implementation 'androidx.compose.ui:ui-test-junit4:1.5.4'
     implementation "androidx.lifecycle:lifecycle-runtime-testing:2.7.0-alpha03"
+
+    implementation('com.github.sergio-sastre.AndroidUiTestingUtils:utils:2.0.1')
+
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
