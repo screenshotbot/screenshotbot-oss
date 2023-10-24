@@ -168,7 +168,7 @@
       (#_startActivity context intent))))
 
 (defun test-component ()
-  (car (get-components "com.airbnb.android.showkasesample.RootModule"))))
+  (car (get-components "com.airbnb.android.showkasesample.RootModule")))
 
 
 ;; (Test-component)
