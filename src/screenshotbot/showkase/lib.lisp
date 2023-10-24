@@ -167,4 +167,10 @@
       (#_setFlags intent 268435456 )
       (#_startActivity context intent))))
 
-;; (write-bitmap (screenshot (car (get-components "com.airbnb.android.showkasesample.RootModule"))) (path:catfile (get-screenshot-dir) "hello.png"))
+(defun test-component ()
+  (car (get-components "com.airbnb.android.showkasesample.RootModule"))))
+
+
+;; (Test-component)
+
+;; (write-bitmap (screenshot (test-component) (path:catfile (get-screenshot-dir) "hello.png"))q
