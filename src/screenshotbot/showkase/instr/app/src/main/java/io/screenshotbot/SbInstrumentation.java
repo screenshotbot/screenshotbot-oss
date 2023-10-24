@@ -30,7 +30,10 @@ import android.os.*;
 import android.graphics.*;
 
 import com.facebook.testing.screenshot.ScreenshotRunner;
-
+import org.junit.*;
+import org.junit.runners.model.*;
+import org.junit.runner.*;
+import org.junit.rules.*;
 
 public class SbInstrumentation extends Instrumentation {
     @Override
@@ -98,5 +101,15 @@ public class SbInstrumentation extends Instrumentation {
     public void onDestroy() {
         ScreenshotRunner.onDestroy();
         super.onDestroy();
+    }
+
+    public void applyTestRule(TestRule testRule, Runnable runnable) throws Throwable {
+        Statement stmt = new Statement() {
+                @Override
+                public void evaluate() {
+                    runnable.run();
+                }
+            };
+        testRule.apply(stmt, Description.EMPTY).evaluate();
     }
 }
