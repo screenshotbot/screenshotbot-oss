@@ -91,3 +91,17 @@
                     (yason:encode run out))))
       (assert-that output
                    (contains-string "\"screenshots\":[]")))))
+
+
+(test can-encode-run-tags
+  (let ((Run (make-instance 'dto:run
+                            :tags (list "Foo" "bar"))))
+    (finishes
+      (with-output-to-string (out)
+        (yason:encode run out))))
+
+    (let ((Run (make-instance 'dto:run
+                            :tags nil)))
+      (finishes
+        (with-output-to-string (out)
+          (yason:encode run out)))))

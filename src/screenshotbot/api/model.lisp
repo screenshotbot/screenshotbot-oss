@@ -290,7 +290,7 @@
    (tags :initarg :tags
          :json-key "tags"
          :initform nil
-         :json-type (or null :string)
+         :json-type (:list :string)
          :reader run-tags
          :documentation "A list of arbitrary tags associated with this run"))
   (:metaclass ext-json-serializable-class))
