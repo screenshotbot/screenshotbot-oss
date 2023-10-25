@@ -106,7 +106,6 @@
 (defun lg (msg)
   (#_i #,android.util.Log "SbInss" msg))
 
-
 (defun screenshot (component)
   (let* ((lock (bt:make-lock))
          (cv (bt:make-condition-variable))
@@ -161,10 +160,12 @@
   (format nil "~a/" (#_toString (#_getDataDir *target-context*))))
 
 (defun launch-activity ()
-  (let ((context *context*))
+  (let ((context *target-context*))
     (let ((intent (new-instance #,android.content.Intent
-                                context (lw-ji:find-java-class "com.example.project.MainActivity"))))
+                                context (lw-ji:find-java-class "com.airbnb.android.showkase.ui.ShowkaseBrowserActivity"))))
       (#_setFlags intent 268435456 )
+      (#_putExtra intent "SHOKASE_ROOT_MODULE"
+                  "com.airbnb.android.showkasesample.RootModule")
       (#_startActivity context intent))))
 
 (defun test-component ()
