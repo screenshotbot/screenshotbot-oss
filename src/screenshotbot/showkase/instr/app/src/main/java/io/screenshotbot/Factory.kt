@@ -18,6 +18,8 @@ import com.facebook.testing.screenshot.Screenshot
 import org.junit.runner.Description
 import android.app.Activity
 import androidx.test.core.app.ActivityScenario
+import android.view.*
+import android.graphics.*
 
 
 fun createTestRule() : ComposeTestRule {
@@ -35,6 +37,14 @@ fun ActivityScenarioForComposableRule.setContent(
         it.setContent { content() }
     }
 
+fun viewToBitmap(view: View): Bitmap? {
+    val bmp = Bitmap.createBitmap(view.getWidth(), view.getHeight(),
+                                  Bitmap.Config.ARGB_8888);
+    val canvas = Canvas(bmp);
+    view.draw(canvas);
+    return bmp;
+}
+
 fun composableToBitmap(composable: @Composable () -> Unit): Bitmap? {
     val rule: ActivityScenarioForComposableRule = ActivityScenarioForComposableRule(
             config = ComposableConfigItem(
@@ -46,14 +56,15 @@ fun composableToBitmap(composable: @Composable () -> Unit): Bitmap? {
             )
     )
 
+    var bmp: Bitmap? = null
+
     val stmt = object : Statement() {
         override fun evaluate() {
             rule.setContent(composable);
-            Screenshot.snap(rule.composeView)
-                    .record()
+            bmp = viewToBitmap(rule.composeView);
         }
     }
 
     rule.apply(stmt, Description.EMPTY);
-    return null
+    return bmp;
 }
