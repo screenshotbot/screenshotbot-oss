@@ -305,7 +305,11 @@ error."
                        (warn "Could not rev-parse origin/~a" branch))
                      hash))))
             (commit (if has-commit-p commit (current-commit repo)))
-            (merge-base (if has-merge-base-p merge-base (merge-base repo branch-hash commit)))
+            (merge-base (cond
+                          (has-merge-base-p merge-base)
+                          ((not branch-hash)
+                           nil)
+                          (t (merge-base repo branch-hash commit))))
             (github-repo (if has-github-repo-p
                              github-repo
                              (repo-link repo)))
