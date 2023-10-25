@@ -349,3 +349,17 @@
   (with-fixture state ()
     (let ((check (make-check run)))
       (is (equal "foobar-channel" (check-key check))))))
+
+(test if-merge-base-is-null-then-do-nothing
+  "If the git merge-base command failed on the CI server, then this will be null."
+  (with-fixture state ()
+    (let ((run (make-recorder-run
+                :company company
+                :channel channel
+                :merge-base nil
+                :commit-hash "foo")))
+      (cl-mock:with-mocks ()
+        (cl-mock:if-called 'retrieve-run
+                   (lambda (retriver channel merge-base run)
+                     (error "should not be called")))
+       (maybe-promote promoter run)))))

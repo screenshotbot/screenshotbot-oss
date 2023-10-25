@@ -289,6 +289,8 @@
        (format-log run :info "Not a valid repo for this promoter"))
       ((not (plugin-installed? promoter company repo-url))
        (format-log run :info "Plugin is not installed for this company/repository"))
+      ((not (recorder-run-merge-base run))
+       (format-log run :info "No merge base on run, this is probably a bug on the CI job (Usually missing a `git fetch origin main`"))
       ((equal (recorder-run-merge-base run)
               (recorder-run-commit run))
        (format-log run :info "Ignoring since the merge-base is same as the commit-hash"))
