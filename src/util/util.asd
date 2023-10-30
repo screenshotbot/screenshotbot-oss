@@ -332,6 +332,7 @@
                :util/disk-size
                :util/phabricator
                :util/logger
+               :util/timeago
                :util/json-mop
                :util/throttler
                :util/request
@@ -348,6 +349,7 @@
                              (:file "test-misc")
                              (:file "test-copy-file")
                              (:file "test-request")
+                             (:file "test-timeago")
                              (:file "test-json-mop")
                              (:file "test-lparallel")
                              (:file "test-hash-lock")

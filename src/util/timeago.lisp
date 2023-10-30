@@ -45,11 +45,12 @@
                         :format '(:long-month " " :day " " :year)))))
 
 (markup:deftag timeago (&key timestamp)
-  (multiple-value-bind (key local-time)
-      (cond
-        ((numberp timestamp)
-         (values timestamp (local-time:universal-to-timestamp timestamp)))
-        (t
-         (values (local-time:timestamp-to-universal timestamp) timestamp)))
-    (let* ((timestamp (format-ts key)))
-      <:time class= (when (> key (- (get-universal-time) (* 30 24 3600))) "timeago") datetime= timestamp title= (format-timestring nil local-time :format local-time:+rfc-1123-format+) >,(human-render-local-time local-time)</:time>)))
+  (when timestamp
+   (multiple-value-bind (key local-time)
+       (cond
+         ((numberp timestamp)
+          (values timestamp (local-time:universal-to-timestamp timestamp)))
+         (t
+          (values (local-time:timestamp-to-universal timestamp) timestamp)))
+     (let* ((timestamp (format-ts key)))
+       <:time class= (when (> key (- (get-universal-time) (* 30 24 3600))) "timeago") datetime= timestamp title= (format-timestring nil local-time :format local-time:+rfc-1123-format+) >,(human-render-local-time local-time)</:time>))))
