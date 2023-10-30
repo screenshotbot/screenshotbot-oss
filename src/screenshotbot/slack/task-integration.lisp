@@ -22,7 +22,9 @@
   (:import-from #:screenshotbot/model/channel
                 #:channel-slack-channels)
   (:import-from #:screenshotbot/model/report
-                #:report-channel))
+                #:report-channel)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-tags))
 (in-package :screenshotbot/slack/task-integration)
 
 (defclass slack-task-integration (task-integration)
@@ -33,6 +35,21 @@
 (defmethod enabledp ((inst slack-task-integration))
   (let ((company (task-integration-company inst)))
     (default-slack-config company)))
+
+(defun render-tags (report)
+  (let ((tags (recorder-run-tags (report-run report))))
+   (cond
+     (tags
+      (format nil " (from run with tags ~a)" (str:join ", " tags)))
+     (t
+      ""))))
+
+(defun render-text (report)
+  (format nil "Screenshots changed in *~a*~a~%<~a|~a>"
+          (channel-name (report-channel report))
+          (render-tags report)
+          (report-link report)
+          (report-title report)))
 
 (defmethod send-task ((inst slack-task-integration) report)
   (let ((company (task-integration-company inst)))
@@ -50,11 +67,7 @@
                                ,(alexandria:alist-hash-table
                                 `((:type . "section")
                                   (:text . (("type" . "mrkdwn")
-                                            ("text" .
-                                             ,(format nil "Screenshots changed in *~a*~%<~a|~a>"
-                                                      (channel-name (report-channel report))
-                                                      (report-link report)
-                                                      (report-title report)))))))))
+                                            ("text" . ,(render-text report))))))))
                   (slack-error (e)
                     ;; the slack API error has already been logged, so we should
                     ;; not propagate this.

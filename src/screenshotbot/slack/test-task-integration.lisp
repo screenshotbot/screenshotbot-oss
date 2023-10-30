@@ -15,6 +15,8 @@
                 #:find-or-create-slack-config
                 #:slack-post-on-channel)
   (:import-from #:screenshotbot/slack/task-integration
+                #:render-text
+                #:render-tags
                 #:slack-task-integration)
   (:import-from #:util/store
                 #:with-test-store)
@@ -34,13 +36,19 @@
                 #:channel)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/strings
+                #:matches-regex)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/slack/test-task-integration)
 
 
 (util/fiveam:def-suite)
 
-(def-fixture state ()
+(def-fixture state (&key tags)
   (with-installation ()
    (with-test-store ()
      (let ((posts))
@@ -50,7 +58,11 @@
                       (push args posts)))
          (let* ((company (make-instance 'company))
                 (channel (make-instance 'channel :name "foobar"))
+                (run (make-recorder-run
+                      :screenshots nil
+                      :tags tags))
                 (report (make-instance 'report :channel channel
+                                       :run run
                                        :title "foobar"))
                 (self (make-instance 'slack-task-integration
                                      :company company))
@@ -79,3 +91,24 @@
                   :at-start t)
       (send-task self report)
       (is-true called))))
+
+(test render-tags
+  (with-fixture state (:tags (list "foo"))
+    (is
+     (equal " (from run with tags foo)"
+            (render-tags report))))
+  (with-fixture state (:tags (list "foo" "bar"))
+    (is
+     (equal " (from run with tags foo, bar)"
+            (render-tags report))))
+  (with-fixture state (:tags nil)
+    (is
+     (equal ""
+            (render-tags report))))  )
+
+(test render-text
+  (with-fixture state ()
+    (assert-that
+     (render-text report)
+     (matches-regex
+      "Screenshots changed in *foobar*<https://example.com/report/.*|foobar>"))))
