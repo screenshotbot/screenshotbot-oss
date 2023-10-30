@@ -30,7 +30,8 @@
    #:fset-set-index
    #:fset-unique-index
    #:fset-set-compat-index
-   #:index-least))
+   #:index-least
+   #:fset-many-to-many-index))
 (in-package :util/store/fset-index)
 
 (defvar *index-id* 0)
@@ -107,6 +108,11 @@
 (defclass fset-set-index (abstract-fset-index)
   ((map :initform (fset:empty-map (fset:empty-set)))))
 
+(defclass fset-many-to-many-index (fset-set-index)
+  ()
+  (:documentation "An index where a slot can have multiple values, and you can
+look up every record that has one of those slot values."))
+
 (defclass fset-set-compat-index (fset-set-index)
   ()
   (:documentation "Like fset-set-index, but behaves similarly to hash-index. For example,
@@ -155,6 +161,19 @@ the index reader returns a list in reverse sorted order instead of a set."))
                     key
                     obj))))))
 
+(defmethod index-add ((self fset-many-to-many-index)
+                      obj)
+  (update-map self (map)
+    (reduce
+     (lambda (map key)
+       (fset:with map
+                  key
+                  (fset:with
+                   (fset:lookup map key)
+                   obj)))
+     (index-object-key self obj)
+     :initial-value map)))
+
 (defmethod index-add ((self fset-set-index)
                       obj)
   (let ((key (index-object-key self obj)))
@@ -191,6 +210,19 @@ the index reader returns a list in reverse sorted order instead of a set."))
          (fset:less map key))
         (t
          map)))))
+
+(defmethod index-remove ((self fset-many-to-many-index)
+                         obj)
+  (update-map self (map)
+    (reduce
+     (lambda (map key)
+       (fset:with map
+                  key
+                  (fset:less
+                   (fset:lookup map key)
+                   obj)))
+     (index-object-key self obj)
+     :initial-value map)))
 
 (defmethod index-remove ((self fset-set-index) obj)
   (let ((key (index-object-key self obj)))

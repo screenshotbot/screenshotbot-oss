@@ -11,6 +11,7 @@
                 #:index-remove
                 #:indexed-class)
   (:import-from #:util/store/fset-index
+                #:fset-many-to-many-index
                 #:index-object-key
                 #:index-least
                 #:%map
@@ -57,10 +58,17 @@
         :index-values second-index-values))
   (:metaclass indexed-class))
 
+(defclass test-object-3 ()
+  ((tags :initarg :tags
+         :index-type fset-many-to-many-index
+         :index-reader object-by-tag
+         :index-values test-object-3-values))
+  (:metaclass indexed-class))
+
 (def-fixture state ()
   (with-test-store ()
     (flet ((clear-indices ()
-             (loop for class in '(test-object test-object-2)
+             (loop for class in '(test-object test-object-2 test-object-3)
                    do
                       (mapcar
                        #'clear-slot-indices
@@ -267,3 +275,21 @@
       (is (equal (list "foo" "foo")
                  (index-object-key (make-instance 'fset-set-index :slots '(arg arg))
                                    obj))))))
+
+(test simple-many-to-many-index
+  (with-fixture state ()
+    (let ((one (make-instance 'test-object-3
+                              :tags (list "foo" "bar"))))
+      (is (fset:equal? (fset:convert 'fset:set (list one))
+                       (object-by-tag "foo")))
+      (is (fset:equal? (fset:convert 'fset:set (list one))
+                       (object-by-tag "bar")))
+      (let ((two (make-instance 'test-object-3
+                                :tags (list "car" "bar"))))
+        (is (fset:equal? (fset:convert 'fset:set (list one two))
+                         (object-by-tag "bar")))
+        (is (fset:equal? (fset:convert 'fset:set (list one))
+                         (object-by-tag "foo")))
+        (destroy-object two)
+        (is (fset:equal? (fset:convert 'fset:set (list one))
+                         (object-by-tag "bar")))))))
