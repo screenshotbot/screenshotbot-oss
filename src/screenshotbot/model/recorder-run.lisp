@@ -44,6 +44,7 @@
   (:import-from #:util/store/store
                 #:defindex)
   (:import-from #:util/store/fset-index
+                #:fset-many-to-many-index
                 #:fset-set-index)
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
@@ -113,9 +114,8 @@
   'fset-set-index
   :slot-name 'company)
 
-(defindex +tags-index+
-  'bknr.indices:hash-list-index
-  :test #'equal
+(defindex +tags-index-v2+
+  'fset-many-to-many-index
   :slot-name 'tags)
 
 (with-class-validation
@@ -247,7 +247,7 @@ associated report is rendered.")
      (tags
       :initarg :tags
       :accessor recorder-run-tags
-      :index +tags-index+
+      :index +tags-index-v2+
       :index-reader %runs-for-tag)
      (batch :initform nil
             :initarg :batch
@@ -434,7 +434,7 @@ compare against the actual merge base.")))
   (ensure-slot-boundp 'recorder-run 'tags))
 
 (defmethod runs-for-tag (company tag)
-  (let ((runs (%runs-for-tag tag)))
+  (let ((runs (fset:convert 'list (%runs-for-tag tag))))
     (loop for run in runs
           if (eql company (recorder-run-company run))
             collect run)))
