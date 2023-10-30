@@ -170,6 +170,16 @@ the queue. Internal detail."
       (t
        (delete-object next)))))
 
+(defun reschedule-all-jobs ()
+  (loop for scheduled-job in (bknr.datastore:class-instances 'scheduled-job)
+        if (and
+            (not  (at scheduled-job))
+            (cronexpr scheduled-job))
+          do
+             (warn "Scheduled job has missing AT field: ~a" scheduled-job)
+             (%reschedule-job scheduled-job (now))))
+
+
 (defun call-pending-scheduled-jobs ()
   (bt:with-lock-held (*call-pending-scheduled-jobs-lock*)
     (%call-pending-scheduled-jobs)))
