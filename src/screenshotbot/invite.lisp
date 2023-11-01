@@ -62,7 +62,8 @@
   (%invite-page))
 
 (defhandler (invite-page :uri "/invite" :method :get) ()
-  (render-invite-page (installation)))
+  (with-login ()
+    (render-invite-page (installation))))
 
 (defun %invite-page ()
   <simple-card-page form-action= "/invite" >
