@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:assert-no-loops
                 #:runs-for-tag
                 #:channel-runs
                 #:make-recorder-run
@@ -30,6 +31,7 @@
                 #:has-item
                 #:contains)
   (:import-from #:screenshotbot/user-api
+                #:recorder-previous-run
                 #:recorder-run-commit
                 #:channel)
   (:import-from #:fiveam-matchers/has-length
@@ -117,3 +119,19 @@
       (assert-that (runs-for-tag company "bar")
                    (has-item run1)
                    (has-item run2)))))
+
+(test assert-no-loops
+  (with-fixture state ()
+    (let ((run (make-recorder-run
+                :previous-run (make-recorder-run
+                               :previous-run (make-recorder-run
+                                              :previous-run nil)))))
+      (finishes (assert-no-loops run))
+      (setf (recorder-previous-run (recorder-previous-run (recorder-previous-run run)))
+            run)
+      (signals simple-error
+        (assert-no-loops run)))
+    (let ((run (make-recorder-run
+                :previous-run (make-recorder-run
+                               :previous-run nil))))
+      (finishes (assert-no-loops run)))))

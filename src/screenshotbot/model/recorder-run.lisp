@@ -258,6 +258,23 @@ associated report is rendered.")
                        :compare-tolerance nil
                        :tags nil)))
 
+(defun assert-no-loops (recorder-run)
+  (flet ((next (run)
+           (when run
+            (recorder-previous-run run))))
+   (when recorder-run
+     (labels ((work (slow fast)
+                (cond
+                  ((not fast)
+                   ;; there's no loop here.
+                   t)
+                  ((eql slow fast)
+                   (error "There's a loop in this run history at ~a" slow))
+                  (t
+                   (work (next slow)
+                         (next (next fast)))))))
+       (work recorder-run (next recorder-run))))))
+
 (defindex +unchanged-run-index+
   'fset-set-index
   :slot-name 'commit)

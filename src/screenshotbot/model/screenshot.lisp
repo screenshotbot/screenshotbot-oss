@@ -27,6 +27,7 @@
   (:import-from #:screenshotbot/model/channel
                 #:channel-promoted-runs)
   (:import-from #:screenshotbot/model/recorder-run
+                #:assert-no-loops
                 #:run-screenshot-map
                 #:active-run
                 #:master-branch
@@ -295,6 +296,7 @@
 (defun get-screenshot-history (channel screenshot-name &key (iterator nil))
   (let* ((branch (master-branch channel))
          (run (active-run channel branch)))
+    (assert-no-loops run)
     (flet ((find-by-image (run screenshot)
              (when run
                (loop for s in (recorder-run-screenshots run)
