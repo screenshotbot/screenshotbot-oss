@@ -37,6 +37,7 @@
   (:import-from #:screenshotbot/sdk/git
                 #:git-repo)
   (:import-from #:screenshotbot/model/recorder-run
+                #:assert-no-loops
                 #:make-recorder-run
                 #:not-fast-forward-promotion-warning
                 #:recorder-run-warnings)
@@ -186,3 +187,25 @@ situation. Can also happen on a developer branch."
       (assert-that (recorder-run-warnings new-master-run)
                    (contains
                     (has-typep 'not-fast-forward-promotion-warning))))))
+
+(test unrelated-branch-does-not-create-a-loop
+  "When promoting unrelated branches, you could sometimes create a loop in
+the promotion history."
+  (with-fixture state ()
+    (%maybe-promote-run run1 channel :wait-timeout 0)
+    (let ((new-master-run (make-run :branch "master"
+                                    :commit-hash "a6"
+                                    :branch-hash "a6")))
+      (%maybe-promote-run run2 channel :wait-timeout 0)
+      (assert-that (activep run2)
+                   (described-as "Sanity check"
+                     (equal-to t)))
+
+      (log:info "Starting next run")
+      (%maybe-promote-run new-master-run channel :wait-timeout 0)
+
+      (is-false (activep run2))
+      (is-true (activep new-master-run))
+
+      (%maybe-promote-run run2 channel :wait-timeout 0)
+      (assert-no-loops run2))))

@@ -251,17 +251,28 @@
                    t))
           (log :error "Another run got promoted while we were debating this one."))
          (t
-          (when previous-run
+          (flet ((previous-run-is-ancestor-p ()
+                   (channel-ancestorp
+                    channel
+                    (recorder-run-commit previous-run)
+                    (recorder-run-commit run)))
+                 (call-finalize ()
+                   (finalize-promotion run previous-run
+                                       channel branch)))
             ;; Because of the check on line marked `TAG`, we know run
             ;; is not an ancestor of previous-run. If the other
             ;; direction is also not true, then we apply the warning
-            (unless (channel-ancestorp
-                     channel
-                     (recorder-run-commit previous-run)
-                     (recorder-run-commit run))
-              (add-not-fast-forward-promotion-warning run)))
-          (finalize-promotion run previous-run
-                              channel branch)))))))
+            (cond
+              ((and previous-run (not (previous-run-is-ancestor-p)))
+               (cond
+                 ((< (store-object-id run)
+                     (store-object-id previous-run))
+                  (log :info "Not promoting this because this run was created before the previous-run"))
+                 (t
+                  (add-not-fast-forward-promotion-warning run)
+                  (call-finalize))))
+              (t
+               (call-finalize))))))))))
 
 (defun add-not-fast-forward-promotion-warning (run)
   (with-transaction ()
