@@ -26,8 +26,11 @@
 
 (defvar *lock* (bt:make-lock))
 
+(defclass abstract-screenshot-key ()
+  ())
+
 (with-class-validation
-  (defclass screenshot-key (store-object)
+  (defclass screenshot-key (abstract-screenshot-key store-object)
     ((%name :type string
            :initarg :name
            :accessor screenshot-name
@@ -48,11 +51,26 @@
       :accessor screenshot-masks))
     (:metaclass persistent-class)))
 
+(defclass fake-screenshot-key (abstract-screenshot-key)
+  ((name :initarg :name
+         :initform nil
+         :accessor screenshot-name)
+   (lang :initarg :lang
+         :initform nil
+         :accessor screenshot-lang)
+   (device :initarg :device
+           :initform nil
+           :accessor screenshot-device)
+   (masks
+    :initarg :masks
+    :initform nil
+    :accessor screenshot-masks)))
+
 (defmethod print-object ((self screenshot-key) out)
   (format out "#<KEY ~a>" (screenshot-name self)))
 
-(defmethod fset:compare ((a screenshot-key)
-                         (b screenshot-key))
+(defmethod fset:compare ((a abstract-screenshot-key)
+                         (b abstract-screenshot-key))
   (let ((a-name (screenshot-name a))
         (b-name (screenshot-name b)))
     (cond
@@ -68,6 +86,11 @@
         #'screenshot-lang
         #'screenshot-device
         #'screenshot-masks)))))
+
+(defmethod fset:compare ((a screenshot-key)
+                         (b screenshot-key))
+  ;; TODO: delete
+  (call-next-method))
 
 (defun ensure-screenshot-key (&key name lang device masks)
   (flet ((find-existing ()

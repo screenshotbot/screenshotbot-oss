@@ -27,6 +27,7 @@
   (:import-from #:screenshotbot/model/channel
                 #:channel-promoted-runs)
   (:import-from #:screenshotbot/model/recorder-run
+                #:run-screenshot-map
                 #:active-run
                 #:master-branch
                 #:recorder-run
@@ -48,6 +49,7 @@
                 #:oid
                 #:oid-p)
   (:import-from #:screenshotbot/model/screenshot-key
+                #:fake-screenshot-key
                 #:screenshot-masks
                 #:screenshot-key
                 #:ensure-screenshot-key)
@@ -55,6 +57,8 @@
                 #:when-let)
   (:import-from #:screenshotbot/model/image-comparer
                 #:make-image-comparer)
+  (:import-from #:screenshotbot/model/screenshot-map
+                #:to-map)
   (:export
    #:constant-string
    #:get-constant
@@ -268,15 +272,30 @@
 (defmethod %with-local-image ((screenshot abstract-screenshot) fn)
   (%with-local-image (screenshot-image screenshot) fn))
 
+(defun find-in-run (run screenshot-name)
+  (when run
+    (let ((map (to-map (run-screenshot-map run))))
+      (multiple-value-bind (rank containsp)
+          (fset:rank map (make-instance 'fake-screenshot-key
+                                        :name screenshot-name))
+        (flet ((from-rank (rank)
+                 (when (< rank (fset:size map))
+                   (multiple-value-bind (key value)
+                       (fset:at-rank map rank)
+                     (when (equal (screenshot-name key) screenshot-name)
+                       (make-screenshot
+                        :key key
+                        :image value))))))
+         (cond
+           (containsp
+            (from-rank rank))
+           (t
+            (from-rank (1+ rank)))))))))
+
 (defun get-screenshot-history (channel screenshot-name &key (iterator nil))
   (let* ((branch (master-branch channel))
          (run (active-run channel branch)))
-    (flet ((find-in-run (run screenshot-name)
-             (when run
-              (loop for s in (recorder-run-screenshots run)
-                    if (string= screenshot-name (screenshot-name s))
-                      return s)))
-           (find-by-image (run screenshot)
+    (flet ((find-by-image (run screenshot)
              (when run
                (loop for s in (recorder-run-screenshots run)
                      if (image=
