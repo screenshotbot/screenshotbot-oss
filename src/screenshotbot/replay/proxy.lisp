@@ -30,6 +30,8 @@
   (:import-from #:http-proxy/server
                 #:allowedp
                 #:http-proxy)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:*proxy-port*
@@ -213,5 +215,10 @@
               (log:info "Deleting file ~a" file)
               (delete-file file))))
 
-(def-cron clean-old-screenshots (:step-min 5)
-  (clean-old-screenshots))
+;; We can't use def-cron here because there's no datastore
+(cl-cron:make-cron-job
+ (lambda ()
+   (ignore-and-log-errors ()
+     (clean-old-screenshots)))
+ :hash-key 'clean-old-screenshots
+ :step-min 5)
