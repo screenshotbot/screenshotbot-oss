@@ -259,16 +259,23 @@
   (apply #'format t args)
   (finish-output t))
 
+(def-easy-macro maybe-with-control-socket (&key enable-store &fn fn)
+  (cond
+    (enable-store
+     (with-control-socket ()
+       (fn)))
+    (t
+     (fn))))
+
 (def-easy-macro with-common-setup (&key enable-store jvm &fn fn)
   (maybe-with-debugger ()
     (with-lparallel-kernel ()
-      (with-control-socket ()
+      (maybe-with-control-socket (:enable-store enable-store)
         (with-slynk ()
           (unwind-on-interrupt ()
             #+lispworks
             (when jvm
               (jvm:jvm-init))
-
             (fn))))
       ;; unwind if an interrupt happens
       (log:config :sane :immediate-flush t)
