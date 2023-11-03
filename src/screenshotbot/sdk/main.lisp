@@ -167,7 +167,9 @@
     (cond
       (unrecognized
        (cond
-         ((not (str:emptyp (uiop:getenv "SCREENSHOTBOT_CLI_V2")))
+         ((or
+           (not (str:emptyp (uiop:getenv "SCREENSHOTBOT_CLI_V2")))
+           (str:s-member argv "dev"))
           (log:info "Enabling V2 of Screenshotbot CLI interface")
           (try-clingon argv))
          (t
