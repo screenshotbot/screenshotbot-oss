@@ -294,12 +294,13 @@ error."
      (error 'empty-run-error))
    (let ((screenshots (build-screenshot-objects images metadata-provider))
          ;; TODO: move out of make-run
-         (run-context (make-instance 'run-context:flags-run-context)))
+         (run-context (make-instance 'run-context:flags-run-context
+                                     :env (e:make-env-reader))))
      ;;(log:info "screenshot records: ~s" screenshots)
      (let* ((branch-hash
               (if has-branch-hash-p branch-hash
                   (or
-                   flags:*main-branch-commit-hash*
+                   (run-context:main-branch-hash run-context)
                    (let ((hash (rev-parse repo branch)))
                      (unless hash
                        (warn "Could not rev-parse origin/~a" branch))
@@ -317,22 +318,24 @@ error."
                                 :channel channel
                                 :screenshots screenshots
                                 :main-branch branch
-                                :work-branch flags:*work-branch*
+                                :work-branch (run-context:work-branch run-context)
                                 :main-branch-hash branch-hash
                                 :github-repo github-repo
                                 :merge-base merge-base
                                 :periodic-job-p periodic-job-p
-                                :build-url flags:*build-url*
-                                :compare-threshold flags:*compare-threshold*
-                                :batch flags:*batch*
+                                :build-url (run-context:build-url run-context)
+                                :compare-threshold (run-context:compare-threshold run-context)
+                                :batch (run-context:batch run-context)
                                 :pull-request pull-request
                                 :commit-hash commit
-                                :override-commit-hash flags:*override-commit-hash*
+                                :override-commit-hash (run-context:override-commit-hash run-context)
                                 :create-github-issue-p create-github-issue
                                 :cleanp (cleanp repo)
                                 :tags (run-context:tags run-context)
-                                :gitlab-merge-request-iid (safe-parse-int *gitlab-merge-request-iid*)
-                                :phabricator-diff-id (safe-parse-int *phabricator-diff-id*)
+                                :gitlab-merge-request-iid (safe-parse-int
+                                                           (run-context:gitlab-merge-request-iid run-context))
+                                :phabricator-diff-id (safe-parse-int
+                                                      (run-context:phabricator-diff-id run-context))
                                 :trunkp is-trunk)))
        (if (remote-supports-put-run api-context)
            (put-run api-context run)
