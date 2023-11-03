@@ -159,6 +159,8 @@
   (clingon:make-command
    :name "dev"
    :description "Tools that are run from a developer device (as opposed to CI)"
+   :handler (lambda (cmd)
+              (clingon:print-usage-and-exit cmd t))
    :sub-commands
    (list
     (record/command)
