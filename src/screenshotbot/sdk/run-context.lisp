@@ -234,6 +234,7 @@ pull-request looks incorrect."
    :productionp flags:*production*
    :build-url flags:*build-url*
    :gitlab-merge-request-iid flags:*gitlab-merge-request-iid*
+   :work-branch flags:*work-branch*
    :phabricator-diff-id flags:*phabricator-diff-id*
    :channel flags:*channel*
    :override-commit-hash flags:*override-commit-hash*

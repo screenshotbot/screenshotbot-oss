@@ -146,3 +146,9 @@
       (with-flags-from-run-context (rc)
         ;; just test one thing for now
         (is (equal "foobar" flags:*channel*))))))
+
+(test copies-work-branch
+  (with-fixture state ()
+    (let ((flags:*work-branch* "foo"))
+      (is (equal "foo"
+                 (run-context:work-branch (make-instance 'flags-run-context)))))))
