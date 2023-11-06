@@ -84,7 +84,7 @@
   (:metaclass persistent-class))
 
 (defun bitbucket-settings-for-company (company)
-  (sort (%bitbucket-settings-for-company company) #'>
+  (sort (copy-list (%bitbucket-settings-for-company company)) #'>
         :key #'bknr.datastore:store-object-id))
 
 (defun access-token-for-args (args &key company)

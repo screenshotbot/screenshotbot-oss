@@ -105,14 +105,15 @@
   (position (batch-item-status item) *order*))
 
 (defun sort-items (items)
-  (sort items (lambda (a b)
-                (or
-                 (|<| (status-order a) (status-order b))
-                 (and
-                  (= (status-order a) (status-order b))
-                  (string-lessp
-                   (channel-name (batch-item-channel a))
-                   (channel-name (batch-item-channel b))))))))
+  (sort (copy-list items)
+        (lambda (a b)
+          (or
+           (|<| (status-order a) (status-order b))
+           (and
+                (= (status-order a) (status-order b))
+                (string-lessp
+                 (channel-name (batch-item-channel a))
+                 (channel-name (batch-item-channel b))))))))
 
 (defmethod render-batch (batch)
   (let ((items (fset:convert 'list (sort-items (fset:convert 'list (batch-items batch))))))

@@ -116,4 +116,4 @@
       (is
        (equal
         (mapcar #'car (to-alist map))
-        (sort keys #'string< :key #'screenshot-name))))))
+        (sort (copy-list keys) #'string< :key #'screenshot-name))))))

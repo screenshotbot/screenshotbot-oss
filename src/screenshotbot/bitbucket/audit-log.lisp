@@ -93,7 +93,7 @@
   (append
    (audit-logs-for-company company 'audit-log)
    (let ((elems (%bitbucket-audit-logs-for-company company)))
-     (uniq (sort elems #'> :key 'bknr.datastore:store-object-id)))))
+     (uniq (sort (copy-list elems) #'> :key 'bknr.datastore:store-object-id)))))
 
 (defun parse-error-response (response result-code audit-log)
   (let* ((response-obj (json:decode-json-from-string response))

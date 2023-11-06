@@ -238,7 +238,7 @@ to the directory that was just snapshotted.")
 (defun store-subsystems ()
   (mapcar #'make-instance
           (mapcar #'first
-                  (sort *subsystems* #'< :key #'second))))
+                  (sort (copy-list *subsystems*) #'< :key #'second))))
 
 
 (defun prepare-store-for-test (&key (dir "~/test-store/")
@@ -569,7 +569,7 @@ to the directory that was just snapshotted.")
 
 (defun all-store-objects-in-memory (&key full)
   (flet ((make-sorted (x)
-           (sort x #'< :key #'store-object-id)))
+           (sort (copy-list x) #'< :key #'store-object-id)))
     (let ((from-bknr (make-sorted (bknr.datastore:all-store-objects))))
       (cond
         ((null full)
@@ -912,7 +912,7 @@ this variable in LET forms, but you can SETF it if you like."
   (values))
 
 (defmethod generate-sync-test-for-subsystem (store (subsystem store-object-subsystem) output)
-  (dolist (obj (sort (all-store-objects) #'< :key #'store-object-id))
+  (dolist (obj (sort (copy-list (all-store-objects)) #'< :key #'store-object-id))
     (format output "~a " obj)
     (generate-sync-test-for-object obj output)
     (format output "~%")))

@@ -219,8 +219,7 @@
     (let ((table (make-hash-table :test #'equal)))
       (loop for repo in repos do
         (setf (gethash (repo-id repo) table) t))
-      (sort
-       (a:hash-table-keys table)
+      (sort (a:hash-table-keys table)
        #'string<))))
 
 (defun verified-repo-p (repo company)

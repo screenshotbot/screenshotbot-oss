@@ -23,7 +23,8 @@ upload screenshots and generate reports~%~%")
 command to multiple subcommands. Use `recorder help` to get documentation
 for subcommands.~%~%")
   (format t "Options:~%~%")
-  (loop for (name . flag) in (sort com.google.flag::*registered-flags* #'string< :key #'car) do
+  (loop for (name . flag) in (sort (copy-list com.google.flag::*registered-flags*)
+                                   #'string< :key #'car) do
     (let* ((lines (mapcar #'str:trim (str:lines (com.google.flag::help flag))))
            (lines (loop for line in lines
                         for start from 0

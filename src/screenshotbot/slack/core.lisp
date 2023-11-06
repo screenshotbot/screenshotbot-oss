@@ -122,7 +122,7 @@
 
 (defun latest-slack-token (company)
   (let ((token
-         (car (sort (slack-tokens-for-company company)
+         (car (sort (copy-list (slack-tokens-for-company company))
                     #'> :key '%created-at))))
     (when token
      (values (access-token token) token))))
