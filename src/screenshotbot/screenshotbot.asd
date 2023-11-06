@@ -149,6 +149,7 @@
                  (:file "finalized-commit")
                  (:file "screenshot")
                  (:file "api-key")
+                 (:file "commit-graph-v2")
                  (:file "commit-graph")
                  (:file "test-object")
                  (:file "note")
@@ -389,6 +390,7 @@
                              (:file "test-company")
                              (:file "test-image")
                              (:file "test-image-comparison")
+                             (:file "test-commit-graph-v2")
                              (:file "test-commit-graph")
                              (:file "test-acceptable")))
                (:module "webdriver"
