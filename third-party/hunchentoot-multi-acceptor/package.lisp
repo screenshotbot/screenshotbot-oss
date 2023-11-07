@@ -6,4 +6,5 @@
   (:export #:multi-acceptor
            #:*default-acceptor*
            :listen-fd
-           #:add-acceptor))
+           #:add-acceptor
+           #:default-acceptor))

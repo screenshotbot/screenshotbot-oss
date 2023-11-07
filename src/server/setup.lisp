@@ -81,9 +81,17 @@
      "Enable the debugger on the main thread, this lets us debug issues with loading snapshots and transaction logs."
      :params ("DEBUGGER"))))
 
+(defclass my-default-acceptor (hex:secure-acceptor
+                               hunchentoot:easy-acceptor)
+  ())
+
 (defclass my-acceptor (#+lispworks acceptor-with-existing-socket
                        hunchentoot-multi-acceptor:multi-acceptor)
-  ())
+  ()
+  (:default-initargs
+   :default-acceptor (make-instance 'my-default-acceptor
+                                    :port 1
+                                    :name 'hunchentoot-multi-acceptor:default-acceptor)))
 
 (defvar *multi-acceptor*)
 
