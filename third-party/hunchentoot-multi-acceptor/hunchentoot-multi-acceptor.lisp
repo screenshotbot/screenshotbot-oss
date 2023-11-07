@@ -7,17 +7,17 @@
 
 (defclass multi-acceptor (acceptor)
   ((sub-acceptors :initform nil :accessor sub-acceptors)
+   (default-acceptor :initform (make-instance 'hunchentoot:easy-acceptor
+                                              :port 1
+                                              :name 'default-acceptor)
+                     :initarg :default-acceptor
+                     :reader default-acceptor)
    (listen-fd :initarg :listen-fd
               :initform nil
               :accessor listen-fd)))
 
 (defmethod initialize-instance :after ((acceptor multi-acceptor) &key &allow-other-keys)
   (setf (acceptor-request-class acceptor) 'multi-request))
-
-(defvar *default-acceptor*
-  (make-instance 'hunchentoot:easy-acceptor
-                 :port 1
-                 :name 'default-acceptor))
 
 (hunchentoot:define-easy-handler (default-route :uri "/" :acceptor-names (list 'default-acceptor)) ()
   (format nil "Default Acceptor (for: ~a)" (hunchentoot:host)))
@@ -66,7 +66,7 @@
              if (equal (car sub) host)
                do (dispatch-acceptor (cdr sub)))
 
-       (dispatch-acceptor *default-acceptor*)))))
+       (dispatch-acceptor (default-acceptor acceptor))))))
 
 (defun listen-on-fd (fd &key element-type)
   #+sbcl(let ((sock (make-instance 'sb-bsd-sockets:inet-socket
