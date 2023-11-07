@@ -48,14 +48,17 @@ remaining elements (unfiltered)"
 (def-easy-macro with-batches (&binding batch
                                        list &fn fn &key (batch-size 10)
                                        &binding index)
-  (labels ((call-next (list ctr)
+
+  (labels ((wrapped-fn (batch ctr)
+             (restart-case
+                 (funcall fn batch ctr)
+               (restart-batch ()
+                 (wrapped-fn batch ctr))))
+           (call-next (list ctr)
              (multiple-value-bind (batch rest)
                  (util/lists:head list batch-size)
                (when batch
-                 (restart-case
-                     (funcall fn batch ctr)
-                   (restart-batch ()
-                     (call-next list ctr)))
+                 (wrapped-fn batch ctr)
                  (call-next rest (+ ctr (length batch)))))))
     (call-next list 0)))
 

@@ -9,6 +9,7 @@
         #:util/lists
         #:fiveam)
   (:import-from #:util/lists
+                #:with-batches
                 #:make-batches)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-lists)
@@ -51,3 +52,11 @@
               1
               (make-batches '(1 2 3 4 5 6 7 8)
                             :batch-size 3)))))
+
+(test with-batches-is-tail-call-optimized
+  (let ((list (loop for i from 0 below 1000000
+                    collect i)))
+    (let ((num 0))
+      (with-batches (batch list)
+        (incf num))
+      (is (eql 100000 num)))))
