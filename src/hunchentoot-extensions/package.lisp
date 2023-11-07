@@ -38,4 +38,5 @@
            #:handle-async-error
            #:register-plugin
            #:process-plugin-request
-           #:dispatch-plugin-request))
+           #:dispatch-plugin-request
+           #:secure-acceptor))

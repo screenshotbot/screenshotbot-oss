@@ -22,7 +22,12 @@
 (defmethod url-handler-prefix ((url-handler url-handler))
   "")
 
-(defclass base-acceptor (hunchentoot:easy-acceptor)
+(defclass secure-acceptor ()
+  ()
+  (:documentation "A base class to add some security checks. This is extracted to a
+different class so it can be used with multi-acceptor too."))
+
+(defclass base-acceptor (secure-acceptor hunchentoot:easy-acceptor)
   ((db-config :initarg :db-config
               :accessor acceptor-db-config)))
 
@@ -318,14 +323,17 @@ Apache log analysis tools.)"
                    (log-crash-extras acceptor condition)))
                util/threading:*extras*)))
         (with-warning-logger ()
-          (cond
-            ((str:starts-with-p "/~" (hunchentoot:script-name request))
-             (setf (hunchentoot:return-code*) hunchentoot:+http-not-found+)
-             (hunchentoot:abort-request-handler))
-            (t
-             (call-next-method)))))
+          (call-next-method)))
     (redispatch-request ()
       (hunchentoot:acceptor-dispatch-request acceptor request))))
+
+(defmethod hunchentoot:acceptor-dispatch-request :around ((acceptor secure-acceptor) request)
+  (cond
+    ((str:starts-with-p "/~" (hunchentoot:script-name request))
+     (setf (hunchentoot:return-code*) hunchentoot:+http-not-found+)
+     (hunchentoot:abort-request-handler))
+    (t
+     (call-next-method))))
 
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor base-acceptor) request)
   (let ((response (call-next-method)))
