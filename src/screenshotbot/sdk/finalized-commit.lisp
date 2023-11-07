@@ -36,7 +36,7 @@
                   commit
                   (current-commit repo))))
     (sdk:request api-context
-                 "/api/unchanged-run"
+                 "/api/finalized-commit"
                  :method :post
                  :content
                  (make-instance 'dto:finalized-commit
