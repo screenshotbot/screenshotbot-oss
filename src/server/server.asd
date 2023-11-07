@@ -27,6 +27,7 @@
                "util/health-check"
                "util/threading"
                "util/phabricator"
+               "hunchentoot-extensions"
                "bknr.datastore"
                "hunchentoot-multi-acceptor")
   :serial t
