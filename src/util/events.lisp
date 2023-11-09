@@ -26,7 +26,8 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:event-engine
-   #:with-tracing))
+   #:with-tracing
+   #:delete-old-data))
 (in-package :util/events)
 
 (defvar *events* nil)
@@ -49,6 +50,9 @@
 
 
 (defmethod push-event-impl (engine name &rest args)
+  nil)
+
+(defmethod delete-old-data (engine)
   nil)
 
 (defclass event ()
@@ -140,6 +144,12 @@
     (atomics:atomic-push
      ev *events*)))
 
+(defmethod delete-old-data ((engine db-engine))
+  (with-db (db engine)
+    (clsql:execute-command
+     "delete from event where created_at < date_sub(now(), interval 1 month) "
+     :database db)))
+
 (defmethod flush-events (engine)
   (values))
 
@@ -180,3 +190,6 @@
       (push-event :trace :name (string name)
                          :time (local-time:timestamp-difference
                                 (local-time:now) start-time)))))
+
+(def-cron delete-old-data (:minute 0 :hour 7)
+  (delete-old-data (event-engine (safe-installation))))
