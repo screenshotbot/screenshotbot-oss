@@ -161,6 +161,7 @@
 
 (defun signup-post (&key email password full-name accept-terms-p plan redirect
                       invite)
+  (throttle! *signup-throttler* :key (hunchentoot:real-remote-addr))
   (let ((errors))
     (flet ((check (name test message)
              (unless test
@@ -202,7 +203,6 @@
            :plan plan)))
         (t
          ;; everything looks good, let's create our user
-         (throttle! *signup-throttler* :key (hunchentoot:real-remote-addr))
          (let ((user (make-user
                       :full-name full-name
                       :email email)))
