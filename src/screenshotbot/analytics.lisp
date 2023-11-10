@@ -165,7 +165,8 @@
 
 (defmethod cleanup-old-analytics ((engine db-engine))
   (with-db (db engine)
-    (clsql:execute-command db "delete from analytics where ts < date_sub(now(), interval 1 month);")))
+    (clsql:execute-command "delete from analytics where ts < date_sub(now(), interval 1 month);"
+                           :database db)))
 
 (def-cron cleanup-old-analytics (:minute 30 :hour 7)
   (cleanup-old-analytics (event-engine (safe-installation))))
