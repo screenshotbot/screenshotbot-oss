@@ -199,6 +199,10 @@
                        (hunchentoot:handle-static-file
                         (bknr.datastore:blob-pathname existing)))))
       (cond
+        ((> (run-size run) (* 100 1024))
+         <simple-card-page>
+           <div>This run is too large (,(run-size run)kB) to download with this tool. Contact support@screenshotbot.io for alternative options.</div>
+         </simple-card-page>)
         ((null existing)
          <simple-card-page>
            <h5 class= "card-title" >Download as a ZIP file</h5>
