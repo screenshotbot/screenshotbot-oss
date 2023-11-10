@@ -23,6 +23,7 @@
   (:import-from #:screenshotbot/login/oidc
                 #:end-session-endpoint)
   (:import-from #:screenshotbot/login/common
+                #:ip-throttler
                 #:oauth-signin-link)
   (:import-from #:screenshotbot/installation
                 #:standard-auth-provider
@@ -34,11 +35,15 @@
                 #:with-injection)
   (:import-from #:screenshotbot/impersonation
                 #:impersonation)
+  (:import-from #:util/throttler
+                #:throttle!)
   (:export #:auth-header-logo))
 (in-package :screenshotbot/login/login)
 
 (markup:enable-reader)
 
+(defvar *throttler* (make-instance 'ip-throttler
+                                   :tokens 1200))
 
 (markup:deftag auth-header-logo ()
   <a href="/" class= "text-light" >
@@ -139,6 +144,7 @@
     (signin-get :redirect redirect)))
 
 (defun signin-post (&key email password redirect)
+  (throttle! *throttler*)
   (let (errors
         (user (user-with-email email)))
     (flet ((check (name test message)
