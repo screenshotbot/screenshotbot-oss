@@ -32,7 +32,9 @@
   (:import-from #:screenshotbot/screenshot-api
                 #:make-screenshot)
   (:import-from #:screenshotbot/testing
-                #:with-installation))
+                #:with-installation)
+  (:import-from #:fiveam-matchers/strings
+                #:matches-regex))
 (in-package :screenshotbot/model/test-downloadable-run)
 
 (util/fiveam:def-suite)
@@ -94,4 +96,5 @@
         (build-archive d1))
       (zip:with-zipfile (reader (blob-pathname d1))
         (assert-that (alexandria:hash-table-keys (zip:zipfile-entries reader))
-                     (contains "foobar.png"))))))
+                     (contains
+                      (matches-regex ".*/foobar.png")))))))

@@ -61,6 +61,7 @@
   (:import-from #:screenshotbot/ui/confirmation-page
                 #:confirmation-page)
   (:import-from #:screenshotbot/user-api
+                #:current-company
                 #:adminp)
   (:import-from #:screenshotbot/model/company
                 #:company-admins)
@@ -77,6 +78,13 @@
                 #:simple-card-page)
   (:import-from #:screenshotbot/screenshot-api
                 #:make-screenshot)
+  (:import-from #:util/throttler
+                #:throttle!
+                #:throttler)
+  (:import-from #:screenshotbot/model/downloadable-run
+                #:downloadable-run-state
+                #:find-or-create-downloadable-run
+                #:find-downloadable-run)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -89,6 +97,9 @@
 (in-package :screenshotbot/dashboard/run-page)
 
 (named-readtables:in-readtable markup:syntax)
+
+(defvar *download-throttler* (make-instance 'throttler
+                                            :tokens 100))
 
 (defvar *create-issue-popup* nil
   "On the non-OSS Screenshotbot, we have a feature to Jira tasks
@@ -168,6 +179,47 @@
               (> (dimension-height dim) +limit+)
               (> (dimension-width dim) +limit+))
             collect screenshot)))
+
+(defun download-run (run)
+  (with-login ()
+    (let* ((existing (find-downloadable-run run))
+           (prepare (nibble ()
+                      (throttle! *download-throttler* :key (current-company))
+                      (find-or-create-downloadable-run run :prepare t)
+                      (sleep 1)
+                      (download-run run)))
+           (refresh (nibble ()
+                      (sleep 1)
+                      (download-run run)))
+           (download (nibble ()
+                      (throttle! *download-throttler* :key (current-company))
+                       (setf (hunchentoot:header-out :content-disposition)
+                             (format nil "attachment; filename=~a.zip"
+                                     (oid run)))
+                       (hunchentoot:handle-static-file
+                        (bknr.datastore:blob-pathname existing)))))
+      (cond
+        ((null existing)
+         <simple-card-page>
+           <h5 class= "card-title" >Download as a ZIP file</h5>
+           <form class= "mt-3" action=prepare >
+             <input class= "btn btn-primary" type= "submit" value= "Build archive" />
+           </form>
+         </simple-card-page>)
+        ((eql :pending (downloadable-run-state existing))
+         <simple-card-page>
+           <h5 class= "card-title" >Download as a ZIP file</h5>
+           <div>
+             Building archive <a href= refresh >Refresh</a>
+           </div>
+         </simple-card-page>)
+        (t
+         <simple-card-page>
+           <h5 class= "card-title" >Download as a ZIP file</h5>
+           <div>
+             <a href= download >Download</a>
+           </div>
+         </simple-card-page>)))))
 
 (deftag view-git-graph (repo)
   (let* ((commit-graph (commit-graph-dag (commit-graph (car repo))))
@@ -261,10 +313,12 @@
                                  List of screenshots with large dimensions ,(length (screenshots-above-16k-dim run))
                                  <ul>
                                    ,@(loop for x in (screenshots-above-16k-dim run)
-                                           collect <li>
-                                     <a href= (make-url 'run-page :id (oid run) :name (screenshot-name x))>
-                                       ,(screenshot-name x)
-                                                   </a></li>)
+                                           collect
+                                           <li>
+                                             <a href= (make-url 'run-page :id (oid run) :name (screenshot-name x))>
+                                               ,(screenshot-name x)
+                                             </a>
+                                           </li>)
                                  </ul>
                                </app-template>)>
                                List
@@ -310,13 +364,16 @@
                             (hex:safe-redirect 'run-page
                                                 :id (oid run))))
         (debug-info (nibble ()
-                      (advanced-run-page :run run))))
+                      (advanced-run-page :run run)))
+        (download-run (nibble ()
+                        (download-run run))))
     <page-nav-dropdown title= "Advanced">
       <a href= promotion-logs >Promotion Logs</a>
       <a href= rerun-promotions >Re-Run Promotions</a>
       <a href=debug-info >Debug Info</a>
       ,(when (start-review-enabled-p (installation) run)
          <a href= (format nil "/review/~a" (oid run)) >Start Review</a>)
+      <a href= download-run >Download run</a>
     </page-nav-dropdown>))
 
 (defun create-filter-matcher (filter &key key)

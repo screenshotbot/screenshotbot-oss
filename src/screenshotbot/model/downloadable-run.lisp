@@ -19,7 +19,17 @@
                 #:screenshot-name
                 #:recorder-run-screenshots)
   (:import-from #:screenshotbot/model/image
-                #:with-local-image))
+                #:with-local-image)
+  (:import-from #:util/threading
+                #:make-thread)
+  (:import-from #:util/object-id
+                #:oid)
+  (:export
+   #:schedule
+   #:downloadable-run-state
+   #:downloadable-run
+   #:find-or-create-downloadable-run
+   #:find-downloadable-run))
 (in-package :screenshotbot/model/downloadable-run)
 
 (defindex +run-index+
@@ -32,20 +42,25 @@
   (defclass downloadable-run (blob)
     ((%run :initarg :run
            :index +run-index+
-           :index-reader %downloadable-run-for-run
+           :index-reader find-downloadable-run
            :reader %run)
      (%created-at
       :initarg :created-at ;; for tests
-      :reader created-at))
+      :reader created-at)
+     (state :initform :pending
+            :accessor downloadable-run-state))
     (:metaclass persistent-class)
     (:default-initargs :created-at (get-universal-time))
     (:documentation "Represents a downloadable artifact, a zip/tar of all of the
 screenshots in a run.")))
 
-(defun find-or-create-downloadable-run (run)
+(defun find-or-create-downloadable-run (run &key (prepare nil))
   (bt:with-lock-held (*lock*)
-    (or (%downloadable-run-for-run run)
-        (make-instance 'downloadable-run :run run))))
+    (or (find-downloadable-run run)
+        (let ((res (make-instance 'downloadable-run :run run)))
+          (when prepare
+            (schedule res))
+          res))))
 
 (defmethod build-archive ((self downloadable-run))
   (zip:with-output-to-zipfile (zip-writer (blob-pathname self) :if-exists :supersede)
@@ -53,8 +68,17 @@ screenshots in a run.")))
       (with-local-image (file screenshot)
         (with-open-file (data file :direction :input :element-type '(unsigned-byte 8))
           (zip:write-zipentry zip-writer
-                              (format nil "~a.png" (screenshot-name screenshot))
+                              (format nil "~a/~a.png"
+                                      (oid (%run self))
+                                      (screenshot-name screenshot))
                               data))))))
+
+(defmethod schedule ((self downloadable-run))
+  (make-thread
+   (lambda ()
+     (unwind-protect
+          (build-archive self)
+       (setf (downloadable-run-state self) :done)))))
 
 (defun delete-old-runs ()
   (let ((boundary (- (get-universal-time) (* 24 3600 7))))
