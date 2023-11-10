@@ -562,6 +562,7 @@
                       <li>
                         <a href= (nibble () (mask-editor (recorder-run-channel run) screenshot
                            :redirect (run-link run)))
+                           target= "_blank"
                            >Edit Masks</a>
 
                       </li>

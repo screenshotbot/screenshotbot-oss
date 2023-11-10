@@ -564,7 +564,7 @@
             <a href= (nibble (:name :mask-editor) (mask-editor (recorder-run-channel run) s
                :redirect script-name
                :overlay (make-overlay-image x s)))
-               >
+               target= "_blank" >
               Edit Masks
             </a>
           </li>
