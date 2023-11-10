@@ -28,6 +28,7 @@
                :bknr.impex
                :util/logger
                :lparallel
+               :zip
                :util/lparallel
                :cl-store
                :core.installation
@@ -140,6 +141,7 @@
                  (:file "screenshot-key")
                  (:file "screenshot-map")
                  (:file "recorder-run")
+                 (:file "downloadable-run")
                  (:file "batch")
                  (:file "report" :depends-on ("recorder-run"))
                  (:file "image-comparison")
@@ -377,6 +379,7 @@
                              (:file "test-auto-cleanup")
                              (:file "test-transient-object")
                              (:file "test-recorder-run")
+                             (:file "test-downloadable-run")
                              (:file "test-batch")
                              (:file "test-finalized-commit")
                              (:file "test-screenshot")
