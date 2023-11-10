@@ -18,6 +18,7 @@
   (:import-from #:screenshotbot/mailer
                 #:send-mail)
   (:import-from #:screenshotbot/login/common
+                #:ip-throttler
                 #:auth-template)
   (:import-from #:bknr.datastore
                 #:with-transaction)
@@ -26,8 +27,7 @@
                 #:throttler))
 (in-package :screenshotbot/login/forgot-password)
 
-(defvar *throttler* (make-instance 'throttler
-                                   :tokens 100))
+(defvar *throttler* (make-instance 'ip-throttler))
 
 (markup:enable-reader)
 
@@ -123,7 +123,7 @@
 
 (defun forgot-password-page ()
   (let ((submit (nibble (email)
-                  (throttle! *throttler* :key (hunchentoot:real-remote-addr))
+                  (throttle! *throttler*)
                   (let ((user (user-with-email email)))
                     (cond
                       (user

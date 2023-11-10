@@ -41,6 +41,9 @@
                 #:def-easy-macro)
   (:import-from #:screenshotbot/model/recorder-run
                 #:runs-for-company)
+  (:import-from #:util/throttler
+                #:throttle!
+                #:throttler)
   (:export
    #:*current-company-override*
    #:with-oauth-state-and-redirect
@@ -281,3 +284,11 @@
         </body>))
 
   </html>)
+
+(defclass ip-throttler (throttler)
+  ()
+  (:default-initargs :tokens 10))
+
+(defmethod throttle! ((self ip-throttler) &key key &allow-other-keys)
+  (call-next-method
+   self :key (hunchentoot:real-remote-addr)))
