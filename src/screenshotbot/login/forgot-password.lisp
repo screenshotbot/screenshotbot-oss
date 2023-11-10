@@ -20,9 +20,14 @@
   (:import-from #:screenshotbot/login/common
                 #:auth-template)
   (:import-from #:bknr.datastore
-                #:with-transaction))
+                #:with-transaction)
+  (:import-from #:util/throttler
+                #:throttle!
+                #:throttler))
 (in-package :screenshotbot/login/forgot-password)
 
+(defvar *throttler* (make-instance 'throttler
+                                   :tokens 100))
 
 (markup:enable-reader)
 
@@ -118,6 +123,7 @@
 
 (defun forgot-password-page ()
   (let ((submit (nibble (email)
+                  (throttle! *throttler* :key (hunchentoot:real-remote-addr))
                   (let ((user (user-with-email email)))
                     (cond
                       (user

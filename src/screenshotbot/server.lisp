@@ -32,6 +32,8 @@
   #+ (and lispworks linux)
   (:import-from #:bknr.cluster/server
                 #:leaderp)
+  (:import-from #:util/throttler
+                #:throttled-error)
   (:export
    #:defhandler
    #:with-login
@@ -174,7 +176,12 @@
     (handler-case
         (funcall impl)
       (no-access-error (e)
-        (no-access-error-page)))))
+        (no-access-error-page))
+      (throttled-error (e)
+        (declare (ignore e))
+        (setf (hunchentoot:return-code*) 429)
+        (warn "Too many request: ~a" e)
+        "Too many requests"))))
 
 (defmacro defhandler ((name &key uri method intern
                               want-login) params &body body)
