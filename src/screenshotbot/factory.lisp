@@ -22,6 +22,7 @@
                 #:compare-tolerance
                 #:compare-threshold)
   (:import-from #:screenshotbot/model/api-key
+                #:expires-at
                 #:api-key-description)
   (:export #:test-user
            #:test-company
@@ -100,6 +101,9 @@
                 :accessor api-key-description)
    (secret :initarg :secret
            :accessor api-key-secret-key)))
+
+(defmethod expires-at ((self test-api-key))
+  nil)
 
 (defclass test-screenshot ()
   ((name :initarg :name

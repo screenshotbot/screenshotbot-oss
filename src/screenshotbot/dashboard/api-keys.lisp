@@ -26,6 +26,7 @@
                 #:taskie-page-title
                 #:taskie-list)
   (:import-from #:screenshotbot/model/api-key
+                #:expires-at
                 #:render-api-token
                 #:cli-api-key
                 #:api-key-description)
@@ -36,7 +37,9 @@
                 #:current-user)
   (:import-from #:util/throttler
                 #:throttle!
-                #:throttler))
+                #:throttler)
+  (:import-from #:util/timeago
+                #:timeago))
 (in-package :screenshotbot/dashboard/api-keys)
 
 (markup:enable-reader)
@@ -103,7 +106,7 @@
                         (company (current-company))
                         (script-name "/api-keys"))
   (declare (ignore script-name))
-  (let* ((api-keys (user-api-keys user company))
+  (let* ((api-keys (reverse (user-api-keys user company)))
          (create-api-key (nibble ()
                            (%create-api-key user company))))
     <dashboard-template title= "Screenshotbot: API Keys" >
@@ -116,7 +119,7 @@
 
       ,(taskie-list
         :items api-keys
-        :headers (list "API Key" "Secret" "Description" "Actions")
+        :headers (list "API Key" "Secret" "Description" "Expires" "Actions")
         :empty-message "You haven't created an API Key yet"
         :checkboxes nil
         :row-generator (lambda (api-key)
@@ -132,7 +135,16 @@
                              <span>,(progn coded-secret)</span>
                                <span class= "d-inline-block text-truncate" style= "max-width: 20em" title= (api-key-description api-key) >
                                  ,(or (api-key-description api-key) "")
-                                </span>
+                               </span>
+
+                               <span>
+                                 ,(let ((expires (expires-at api-key)))
+                                    (cond
+                                      (expires
+                                       (timeago :timestamp expires))
+                                      (t
+                                       "Never")))
+                               </span>
 
                              <span>
                                <a href= (nibble () (edit-api-key api-key)) >

@@ -75,6 +75,9 @@
      :api-key (generate-api-key)
      :api-secret-key (generate-api-secret))))
 
+(defmethod expires-at ((self api-key))
+  nil)
+
 (with-class-validation
   (defclass cli-api-key (api-key)
     ((expires-at
@@ -150,7 +153,7 @@
     (slot-makunbound api-key 'api-key)))
 
 (defmethod user-api-keys ((user user) (company company))
-  (loop for api-key in (all-api-keys)
+  (loop for api-key in (bknr.datastore:class-instances 'api-key)
         if (and (eq user (api-key-user api-key))
                 (eq company (api-key-company api-key)))
           collect api-key))
