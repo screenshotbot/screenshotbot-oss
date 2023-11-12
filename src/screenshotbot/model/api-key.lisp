@@ -32,7 +32,8 @@
    #:make-transient-key
    #:api-key-key
    #:api-key-secret-key
-   #:api-key-description))
+   #:api-key-description
+   #:render-api-token))
 (in-package :screenshotbot/model/api-key)
 
 (with-class-validation
@@ -136,6 +137,11 @@
 
 (defmethod model-id ((api-key api-key))
   (store-object-id api-key))
+
+(defmethod render-api-token ((self api-key))
+  (format nil "cli-~a:~a"
+          (store-object-id self)
+          (api-key-secret-key self)))
 
 
 (defmethod delete-api-key ((api-key api-key))

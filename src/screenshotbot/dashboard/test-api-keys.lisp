@@ -10,6 +10,7 @@
           #:fiveam
           #:screenshotbot/api-key-api)
   (:import-from #:screenshotbot/dashboard/api-keys
+                #:api-key-cli-generate
                 #:with-description
                 #:%api-key-page)
   (:import-from #:screenshotbot/factory
@@ -25,8 +26,16 @@
                 #:with-fake-request
                 #:screenshot-static-page)
   (:import-from #:screenshotbot/testing
+                #:with-test-user
                 #:with-installation
-                #:screenshot-test))
+                #:screenshot-test)
+  (:import-from #:cl-mock
+                #:if-called
+                #:answer)
+  (:import-from #:screenshotbot/model/api-key
+                #:render-api-token)
+  (:import-from #:util/store/store
+                #:with-test-store))
 
 (util/fiveam:def-suite)
 
@@ -64,3 +73,15 @@
      (auth:with-sessions ()
        (with-description (description)
          (values))))))
+
+(screenshot-test cli-generation-page
+  (with-installation ()
+    (with-test-store ()
+     (with-fake-request ()
+       (with-test-user (:logged-in-p t)
+         (auth:with-sessions ()
+           (cl-mock:with-mocks ()
+             (if-called 'render-api-token
+                        (lambda (key)
+                          "cli-0000:xyzd"))
+             (api-key-cli-generate))))))))

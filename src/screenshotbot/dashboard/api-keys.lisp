@@ -26,12 +26,23 @@
                 #:taskie-page-title
                 #:taskie-list)
   (:import-from #:screenshotbot/model/api-key
+                #:render-api-token
+                #:cli-api-key
                 #:api-key-description)
   (:import-from #:easy-macros
-                #:def-easy-macro))
+                #:def-easy-macro)
+  (:import-from #:screenshotbot/user-api
+                #:current-company
+                #:current-user)
+  (:import-from #:util/throttler
+                #:throttle!
+                #:throttler))
 (in-package :screenshotbot/dashboard/api-keys)
 
 (markup:enable-reader)
+
+(defvar *throttler* (make-instance 'throttler
+                                   :tokens 100))
 
 (def-easy-macro with-description (&binding final-description &key description (action "Create Key") &fn fn)
   <simple-card-page form-action= (nibble (description) (fn description)) >
@@ -142,3 +153,30 @@
 (defhandler (api-keys :uri "/api-keys") ()
   (with-login ()
    (%api-key-page)))
+
+(defhandler (api-key-cli-generate :uri "/api-keys/cli") ()
+  (with-login ()
+    (throttle! *throttler* :key (current-user))
+    (let ((key (make-instance 'cli-api-key
+                              :user (current-user)
+                              :company (current-company))))
+      <simple-card-page max-width= "40rem" >
+        <div class= "card-header">
+          <h3>Grant Account Access</h3>
+        </div>
+
+        <div class= "row">
+          <p>Copy-paste the API Token below to grant access to your account.</p>
+
+          <div class= "mt-2 mb-3" >
+            <label for= "token" class= "form-label" >API Token</label>
+            <input type= "text" value= (render-api-token key) name= "token" class= "form-control" />
+          </div>
+
+          <p>This will authorize the requesting script to act on your behalf permanently. If you change your mind you can revoke this token from the <a href= "/api-keys">API Keys</a> page.</p>
+        </div>
+
+        <div class= "card-footer">
+          <a href= "/" class= "btn btn-secondary">Cancel</a>
+        </div>
+      </simple-card-page>)))
