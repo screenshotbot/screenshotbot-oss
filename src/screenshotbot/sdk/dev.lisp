@@ -36,6 +36,8 @@
                 #:encode-json)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:screenshotbot/sdk/install
+                #:install-credentials)
   (:export
    #:dev/command)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)
@@ -155,6 +157,14 @@
                         (log:info "See changes at ~a" (dto:comparison-url comparison))
                         (uiop:quit 1))))))))))
 
+(defun install/command ()
+  (clingon:make-command
+   :name "install"
+   :description "Installs API keys to connect to your Screenshotbot server"
+   :handler (lambda (cmd)
+              (with-sentry ()
+                (install-credentials (getopt cmd :hostname))))))
+
 (defun dev/command ()
   (clingon:make-command
    :name "dev"
@@ -164,4 +174,5 @@
    :sub-commands
    (list
     (record/command)
-    (verify/command))))
+    (verify/command)
+    (install/command))))

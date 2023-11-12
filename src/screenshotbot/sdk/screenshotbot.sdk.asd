@@ -54,6 +54,7 @@
                (:file "sdk")
                (:file "sentry")
                (:file "cli-common")
+               (:file "install")
                (:file "dev")
                (:file "failed-run")
                (:file "unchanged-run")
