@@ -67,11 +67,26 @@
       :accessor api-key-description)
      (expired-p
       :type boolean
+      :reader expired-p
       :initform nil))
     (:metaclass persistent-class)
     (:default-initargs
      :api-key (generate-api-key)
      :api-secret-key (generate-api-secret))))
+
+(with-class-validation
+  (defclass cli-api-key (api-key)
+    ((expires-at
+      :initarg :expires-at
+      :accessor expires-at))
+    (:metaclass persistent-class)
+    (:default-initargs
+     :expires-at (+ 3600 (get-universal-time)))))
+
+(defmethod expired-p ((self cli-api-key))
+  (and
+   (expires-at self)
+   (< (expires-at self) (get-universal-time))))
 
 (defvar *transient-keys* (make-mp-hash-table :test #'equal))
 
@@ -92,10 +107,17 @@
   (:documentation "A transient key generated for communication between
   the replay service and this server."))
 
+(defmethod expired-p ((self transient-api-key))
+  nil)
+
 (defun %find-api-key (str)
-  (or
-   (%%find-api-key str)
-   (gethash str *transient-keys*)))
+  (let ((result (or
+                 (%%find-api-key str)
+                 (gethash str *transient-keys*))))
+    (when (and
+           result
+           (not (expired-p result)))
+      result)))
 
 (defun make-transient-key (&key user company)
   (let ((key (make-instance 'transient-api-key
