@@ -14,6 +14,7 @@
                 #:api-key-key
                 #:api-key)
   (:import-from #:screenshotbot/model/api-key
+                #:cleanup-expired-api-keys
                 #:make-transient-key
                 #:expired-p
                 #:cli-api-key
@@ -21,7 +22,9 @@
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
   (:import-from #:fiveam-matchers/strings
-                #:matches-regex))
+                #:matches-regex)
+  (:import-from #:fiveam-matchers/lists
+                #:contains))
 (in-package :screenshotbot/model/test-api-key)
 
 
@@ -53,6 +56,27 @@
                                   :expires-at (- (get-universal-time) 3600))))
       (is (eql nil
                (%find-api-key (api-key-key api-key)))))))
+
+(test cleanup-expired-api-keys
+  (with-fixture state ()
+    (let ((api-key-1 (make-instance 'cli-api-key))
+          (api-key-2 (make-instance 'cli-api-key
+                                    :expires-at (- (get-universal-time) 3600)))
+          (api-key-3 (make-instance 'cli-api-key
+                                    :expires-at (- (get-universal-time) 3800))))
+      (cleanup-expired-api-keys)
+      (assert-that (bknr.datastore:class-instances 'cli-api-key)
+                   (contains api-key-1)))))
+
+(test cleanup-expired-api-keys-for-everything
+  (with-fixture state ()
+    (let ((api-key-2 (make-instance 'cli-api-key
+                                    :expires-at (- (get-universal-time) 3600)))
+          (api-key-3 (make-instance 'cli-api-key
+                                    :expires-at (- (get-universal-time) 3800))))
+      (cleanup-expired-api-keys)
+      (assert-that (bknr.datastore:class-instances 'cli-api-key)
+                   (contains)))))
 
 (test cli-api-key-that-never-expires
   (with-fixture state ()

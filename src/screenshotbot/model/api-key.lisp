@@ -22,6 +22,13 @@
                 #:with-class-validation)
   (:import-from #:util/misc
                 #:make-mp-hash-table)
+  (:import-from #:util/store/store
+                #:defindex)
+  (:import-from #:util/store/fset-index
+                #:index-least
+                #:fset-set-index)
+  (:import-from #:util/cron
+                #:def-cron)
   (:export
    #:api-key
    #:%find-api-key
@@ -35,6 +42,10 @@
    #:api-key-description
    #:render-api-token))
 (in-package :screenshotbot/model/api-key)
+
+(defindex +expires-index+
+  'fset-set-index
+  :slot-name 'expires-at)
 
 (with-class-validation
   (defclass api-key (store-object)
@@ -82,6 +93,7 @@
   (defclass cli-api-key (api-key)
     ((expires-at
       :initarg :expires-at
+      :index +expires-index+
       :accessor expires-at))
     (:metaclass persistent-class)
     (:default-initargs
@@ -169,3 +181,13 @@
         if (and (eq user (api-key-user api-key))
                 (eq company (api-key-company api-key)))
           collect api-key))
+
+(defmethod cleanup-expired-api-keys ()
+  (let ((next (index-least +expires-index+))
+        (now (get-universal-time)))
+    (when (and next (< (expires-at next) now))
+      (bknr.datastore:delete-object next)
+      (cleanup-expired-api-keys))))
+
+(def-cron cleanup-expired-api-keys (:step-min 5)
+  (cleanup-expired-api-keys))
