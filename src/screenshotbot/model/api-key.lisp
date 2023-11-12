@@ -85,7 +85,12 @@
       :accessor expires-at))
     (:metaclass persistent-class)
     (:default-initargs
+     :api-key nil ;; We're going to use cli-NNN instead
      :expires-at (+ 3600 (get-universal-time)))))
+
+(defmethod api-key-key ((self cli-api-key))
+  (format nil "cli-~a"
+          (store-object-id self)))
 
 (defmethod expired-p ((self cli-api-key))
   (and
@@ -116,7 +121,14 @@
 
 (defun %find-api-key (str)
   (let ((result (or
-                 (%%find-api-key str)
+                 (cond
+                   ((str:starts-with-p "cli-" str)
+                    (let ((res (bknr.datastore:store-object-with-id
+                                (parse-integer (second (str:split "-" str :limit 2))))))
+                      (when (typep res 'cli-api-key)
+                        res)))
+                   (t
+                    (%%find-api-key str)))
                  (gethash str *transient-keys*))))
     (when (and
            result

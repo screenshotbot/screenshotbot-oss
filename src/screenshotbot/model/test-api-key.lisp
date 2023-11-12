@@ -17,7 +17,11 @@
                 #:make-transient-key
                 #:expired-p
                 #:cli-api-key
-                #:%find-api-key))
+                #:%find-api-key)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/strings
+                #:matches-regex))
 (in-package :screenshotbot/model/test-api-key)
 
 
@@ -53,8 +57,16 @@
 (test cli-api-key-that-never-expires
   (with-fixture state ()
     (let ((api-key (make-instance 'cli-api-key :expires-at nil)))
+      (assert-that (api-key-key api-key)
+                   (matches-regex "cli-.*"))
       (is (eql api-key
                (%find-api-key (api-key-key api-key)))))))
+
+(test we-cant-cheat-our-way-with-api-id
+  (with-fixture state ()
+    (let ((api-key-old (make-instance 'api-key)))
+      (is-false
+       (%find-api-key (format nil "cli-~a" (bknr.datastore:store-object-id api-key-old)))))))
 
 (test transient-api-keys-are-never-expired
   (is-false (expired-p (make-transient-key :user :company))))
