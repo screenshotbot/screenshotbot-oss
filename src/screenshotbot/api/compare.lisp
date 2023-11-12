@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/api/core
                 #:defapi)
   (:import-from #:screenshotbot/user-api
+                #:current-company
                 #:can-view!)
   (:import-from #:util/store/object-id
                 #:oid
@@ -18,6 +19,7 @@
                 #:diff-report-empty-p
                 #:make-diff-report)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-company
                 #:recorder-run)
   (:import-from #:core/installation/installation
                 #:installation-domain)
@@ -28,6 +30,8 @@
 (in-package :screenshotbot/api/compare)
 
 (defun %api-compare-runs (run to)
+  (assert-company run)
+  (assert-company to)
   (let ((diff-report (make-diff-report run to)))
     (if (diff-report-empty-p diff-report)
         (make-instance 'dto:comparison
@@ -39,6 +43,14 @@
                                     (installation-domain (installation))
                                     (oid run)
                                     (oid to))))))
+
+(defun assert-company (run)
+  "A site-admin key could technically read every run, and a key from one
+user could technically read runs from every company they are part
+of. So we add an extra assertion here. We probably need to make this
+part of the access check framework."
+  (assert run)
+  (assert (eql (current-company) (recorder-run-company run))))
 
 (defapi (api-compare-runs :uri "/api/run/:id/compare/:to") (id to)
   (flet ((find-run (id)
