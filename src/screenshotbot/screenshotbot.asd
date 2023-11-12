@@ -443,7 +443,8 @@
                              (:file "test-image")
                              (:file "test-promote")
                              (:file "test-send-tasks")
-                             (:file "test-recorder-runs")))
+                             (:file "test-recorder-runs")
+                             (:file "test-version")))
                (:module "web-build"
                 :components ((:file "test-scheduler")
                              (:file "test-project")))))

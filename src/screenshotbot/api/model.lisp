@@ -63,14 +63,19 @@
 (in-package :screenshotbot/api/model)
 
 ;; Please update CHANGELOG.md
-(defparameter *api-version* 8)
+(defparameter *api-version* 9)
 
 (defclass version ()
   ((version :initarg :version
             :json-key "version"
             :json-type :number
-            :reader version-number))
-  (:metaclass json-serializable-class))
+            :reader version-number)
+   (url :initarg :url
+        :json-key "url"
+        :json-type (or null :string)
+        :reader installation-url
+        :documentation "The installation's URL"))
+  (:metaclass ext-json-serializable-class))
 
 (defmethod encode-json (object)
   (with-output-to-string (out)

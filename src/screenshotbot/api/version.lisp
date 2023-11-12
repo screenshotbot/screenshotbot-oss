@@ -11,9 +11,15 @@
   (:import-from #:screenshotbot/api/model
                 #:version
                 #:*api-version*
-                #:encode-json))
+                #:encode-json)
+  (:import-from #:core/installation/installation
+                #:installation-domain)
+  (:import-from #:screenshotbot/installation
+                #:installation))
 (in-package :screenshotbot/api/version)
 
-(defhandler (nil :uri "/api/version") ()
+(defhandler (api-version :uri "/api/version") ()
   (encode-json
-   (make-instance 'version :version *api-version*)))
+   (make-instance 'version
+                  :version *api-version*
+                  :url (installation-domain (installation)))))

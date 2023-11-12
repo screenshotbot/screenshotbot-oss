@@ -1,6 +1,7 @@
 
 Version
 
+* 9: Introduced the installation URL in version
 * 8: Add `tags` to recorder-run
 * 7: POST /api/finalized-commit added
 * 6: POST /api/unchanged-run added
