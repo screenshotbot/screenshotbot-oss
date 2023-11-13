@@ -9,11 +9,16 @@
   (:import-from #:screenshotbot/sdk/hostname
                 #:api-hostname)
   (:import-from #:screenshotbot/sdk/api-context
+                #:json-api-context
                 #:api-context)
   (:import-from #:alexandria
                 #:assoc-value)
   (:import-from #:util/health-check
                 #:run-health-checks)
+  (:import-from #:screenshotbot/sdk/install
+                #:credential-file)
+  (:import-from #:screenshotbot/api/model
+                #:decode-json)
   (:export
    #:with-clingon-api-context
    #:common-run-options
@@ -30,7 +35,8 @@
   (cond
     (desktop
      (make-instance 'desktop-api-context))
-    (t
+    ((and (not (str:emptyp api-key))
+          (not (str:emptyp api-secret)))
      (let ((key api-key)
            (secret api-secret))
        (when (str:emptyp key)
@@ -43,7 +49,12 @@
          (make-instance 'api-context
                         :key key
                         :secret secret
-                        :hostname hostname))))))
+                        :hostname hostname))))
+    ((path:-e (credential-file))
+     (decode-json (uiop:read-file-string (credential-file))
+                  'json-api-context))
+    (t
+     (error "You must provide a --api-key and --api-secret. (Alternatively, run `~screenshotbot/recorder dev install` and follow the instructions to install a key."))))
 
 (def-easy-macro with-clingon-api-context (&binding api-context cmd &fn fn)
   (let ((api-context (apply #'make-api-context

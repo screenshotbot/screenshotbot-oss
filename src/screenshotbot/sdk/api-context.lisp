@@ -8,6 +8,8 @@
   (:use #:cl)
   (:import-from #:screenshotbot/api/model
                 #:*api-version*)
+  (:import-from #:util/json-mop
+                #:ext-json-serializable-class)
   (:export
    #:api-context
    #:key
@@ -46,3 +48,19 @@
 (defclass desktop-api-context (base-api-context)
   ((hostname :reader hostname
              :initform "http://localhost:4095")))
+
+(defclass json-api-context (api-context)
+  ((hostname :initarg :hostname
+             :json-key "hostname"
+             :json-type :string
+             :reader hostname)
+   (key :initarg :key
+            :json-key "apiKey"
+            :json-type :string
+            :reader key)
+   (secret :initarg :secret
+           :json-key "apiSecretKey"
+           :json-type :string
+           :reader secret))
+  (:metaclass ext-json-serializable-class)
+  (:documentation "An API context that can be serialized"))

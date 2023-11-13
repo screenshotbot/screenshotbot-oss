@@ -12,6 +12,7 @@
                 #:installation-url
                 #:encode-json)
   (:import-from #:screenshotbot/sdk/api-context
+                #:json-api-context
                 #:api-context
                 #:fetch-version)
   (:export
@@ -39,18 +40,6 @@ Then paste the Token on that page below.
     (install-pasted hostname line)
     (format t "~%Your credentials are now installed~%~%")))
 
-(defclass credential ()
-  ((hostname :initarg :hostname
-             :json-key "hostname"
-             :json-type :string)
-   (api-key :initarg :key
-            :json-key "apiKey"
-            :json-type :string)
-   (api-secret :initarg :secret
-               :json-key "apiSecretKey"
-               :json-type :string))
-  (:metaclass ext-json-serializable-class))
-
 (defun credential-file ()
   (ensure-directories-exist
    (pathname "~/.config/screenshotbot/credentials")))
@@ -61,7 +50,7 @@ Then paste the Token on that page below.
       (destructuring-bind (key secret) (str:split ":" (str:trim line))
         (write-string
          (encode-json
-          (make-instance 'credential
+          (make-instance 'json-api-context
                          :hostname hostname
                          :key key
                          :secret secret))
