@@ -18,7 +18,7 @@ function prepareMaskEditor() {
 
         if (!im || im.complete) {
             console.log("image was already available");
-            callback();
+            setTimeout(callback, 0);
         } else {
             console.log("waiting in the background");
             im.onload = callback;
