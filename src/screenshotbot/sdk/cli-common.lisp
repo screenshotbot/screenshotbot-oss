@@ -54,7 +54,7 @@
      (decode-json (uiop:read-file-string (credential-file))
                   'json-api-context))
     (t
-     (error "You must provide a --api-key and --api-secret. (Alternatively, run `~screenshotbot/recorder dev install` and follow the instructions to install a key."))))
+     (error "You must provide a --api-key and --api-secret. (Alternatively, run `~~screenshotbot/recorder dev install` and follow the instructions to install a key."))))
 
 (def-easy-macro with-clingon-api-context (&binding api-context cmd &fn fn)
   (let ((api-context (apply #'make-api-context
