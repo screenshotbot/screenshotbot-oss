@@ -9,20 +9,31 @@
   (:import-from #:util/json-mop
                 #:ext-json-serializable-class)
   (:import-from #:screenshotbot/api/model
+                #:installation-url
                 #:encode-json)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:api-context
+                #:fetch-version)
   (:export
    #:install-credentials))
 (in-package :screenshotbot/sdk/install)
 
+(defun fix-hostname (hostname)
+  (multiple-value-bind (number version)
+      (fetch-version (make-instance 'api-context :hostname hostname))
+    (declare (ignore number))
+    (installation-url version)))
+
 (defun install-credentials (hostname)
-  (format t "LOGIN
+  (let ((hostname (fix-hostname hostname)))
+    (format t "LOGIN
 Open this page in your browser and log in if necessary:
 
 ~a
 
 Then paste the Token on that page below.
 
-    Paste Token from that page: " (quri:merge-uris "/api-keys/cli" hostname))
+    Paste Token from that page: " (quri:merge-uris "/api-keys/cli" hostname)))
   (finish-output t)
   (let ((line (str:trim (read-line))))
     (install-pasted hostname line)

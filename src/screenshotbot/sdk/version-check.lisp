@@ -27,7 +27,8 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:*client-version*
-   #:remote-supports-put-run))
+   #:remote-supports-put-run
+   #:fetch-version))
 (in-package :screenshotbot/sdk/version-check)
 
 (defparameter *client-version* (asdf:system-version
@@ -63,7 +64,9 @@ might get logged in the webserver logs."
                          (log:error "/api/version failed with code ~a" ret)
                          (error "/api/version failed")))))
          (warn-for-bad-versions (version-number version))
-         (version-number version))))))
+         (values
+          (version-number version)
+          version))))))
 
 (defun bad-version-p (remote-version)
   (>
