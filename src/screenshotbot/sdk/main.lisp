@@ -135,7 +135,8 @@
 
 (defun maybe-setup-ssl ()
   #+ (and lispworks linux)
-  (let* ((potential-paths (list "/usr/lib/libssl.so.3"))
+  (let* ((potential-paths (list "/usr/lib/libssl.so.3"
+                                "/usr/lib/libssl.so.1.1"))
          (path (loop for path in potential-paths
                      if (path:-e path)
                        return path)))
