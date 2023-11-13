@@ -33,11 +33,15 @@
    #:type
    #:api-result
    #:api-response
-   #:*dtd*))
+   #:*dtd*
+   #:*api-key*))
 (in-package :screenshotbot/api/core)
 
 (defparameter *dtd*
   (asdf:system-relative-pathname :screenshotbot "dtd/api.dtd"))
+
+(defvar *api-key* nil
+  "The current API key being used")
 
 (def-easy-macro with-api-key (&binding api-key &binding api-secret &fn fn)
   (multiple-value-bind (key secret) (hunchentoot:authorization)
@@ -68,12 +72,13 @@
        (auth:request-account hunchentoot:*request*) (api-key-company key))
       (unless (current-user)
         (error 'api-error
-               :message (format nil "API key appears to be invalid or non-existant, got: ~a" api-key))))))
+               :message (format nil "API key appears to be invalid or non-existant, got: ~a" api-key)))
+      key)))
 
 (defun %funcall-with-api-handling (fn)
   (log:trace "Got parameters: ~s" (hunchentoot:post-parameters hunchentoot:*request*))
-  (authenticate-api-request hunchentoot:*request*)
-  (funcall fn))
+  (let ((*api-key* (authenticate-api-request hunchentoot:*request*)))
+    (funcall fn)))
 
 (def-easy-macro with-error-handling (&fn fn)
   "Converts internal errors into a JSON renderable object.

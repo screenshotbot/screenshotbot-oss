@@ -237,6 +237,7 @@
                  (:file "unchanged-run")
                  (:file "finalized-commit")
                  (:file "image")
+                 (:file "api-key")
                  (:file "promote")
                  (:file "recorder-run" :depends-on ("promote"))
                  (:file "compare")

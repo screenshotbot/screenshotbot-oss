@@ -15,6 +15,8 @@
                 #:json-api-context
                 #:api-context
                 #:fetch-version)
+  (:import-from #:screenshotbot/sdk/sdk
+                #:request)
   (:export
    #:install-credentials))
 (in-package :screenshotbot/sdk/install)
@@ -48,10 +50,16 @@ Then paste the Token on that page below.
   (let ((file (credential-file)))
     (with-open-file (stream file :direction :output :if-exists :supersede)
       (destructuring-bind (key secret) (str:split ":" (str:trim line))
-        (write-string
-         (encode-json
-          (make-instance 'json-api-context
+        (let ((api-ctx (make-instance 'json-api-context
                          :hostname hostname
                          :key key
-                         :secret secret))
-         stream)))))
+                         :secret secret)))
+          (request
+           api-ctx
+           "/api/finalize-cli"
+           :method :post
+           :parameters `(("hostname" . ,(uiop:hostname))))
+          (write-string
+           (encode-json
+            api-ctx)
+           stream))))))
