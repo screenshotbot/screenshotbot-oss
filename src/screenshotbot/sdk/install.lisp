@@ -34,13 +34,23 @@ Open this page in your browser and log in if necessary:
 
 ~a
 
-Then paste the Token on that page below.
-
-    Paste Token from that page: " (quri:merge-uris "/api-keys/cli" hostname)))
+Then paste the Token on that page below." (quri:merge-uris "/api-keys/cli" hostname)))
   (finish-output t)
-  (let ((line (str:trim (read-line))))
-    (install-pasted hostname line)
-    (format t "~%Your credentials are now installed~%~%")))
+
+
+  (flet ((prompt ()
+           (format t "
+
+    Paste Token from that page: ")
+           (finish-output t)))
+    (prompt)
+    (loop for line = (str:trim (read-line))
+          while (str:emptyp line)
+          do (prompt)
+          finally
+             (install-pasted hostname line)
+             (format t "~%Your credentials are now installed~%~%"))))
+
 
 (defun credential-file ()
   (ensure-directories-exist
