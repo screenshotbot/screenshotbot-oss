@@ -73,10 +73,10 @@
                (im2 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-2.png"))
                (im3 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-3.png"))
                (objs))
-           (flet ((make-screenshot (img)
+           (flet ((make-screenshot (img &key (name "foobar"))
                     (let* ((image (make-image :pathname img :for-tests t)))
                       (make-screenshot
-                       :name "foobar"
+                       :name name
                        :image image))))
              (&body))))))))
 
@@ -157,6 +157,33 @@
                    :channel channel
                    :company company
                    :screenshots (list (make-screenshot im2))))
+             (report (make-instance 'report
+                                    :title "foobar"
+                                    :run one
+                                    :previous-run two)))
+        (snap-all-images)
+        (screenshot-static-page
+         :screenshotbot
+         "report-page-only-added-screenshots"
+         (render-report-page report :skip-access-checks t))))))
+
+(test report-with-a-screenshot-with-a-changed-name
+  (with-fixture state ()
+    (with-test-user (:user user
+                     :company company
+                     :logged-in-p t)
+      (let* ((channel (make-instance 'channel
+                                     :company company
+                                     :name "bleh"
+                                     :github-repo "git@github.com:a/b.gitq"))
+             (one (make-recorder-run
+                   :channel channel
+                   :company company
+                   :screenshots nil))
+             (two (make-recorder-run
+                   :channel channel
+                   :company company
+                   :screenshots (list (make-screenshot im2 :name "renamed-foobar"))))
              (report (make-instance 'report
                                     :title "foobar"
                                     :run one
