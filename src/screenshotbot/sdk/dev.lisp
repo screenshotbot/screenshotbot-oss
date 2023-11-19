@@ -62,15 +62,23 @@
    (make-option
     :string
     :long-name "directory"
+    :short-name #\d
     :description "The directory with screenshots to record"
     :initial-value nil
     :required t
-    :key :directory)))
+    :key :directory)
+   (make-option
+    :flag
+    :long-name "recursive"
+    :short-name #\r
+    :description "Whether to recursively parse the directory for screenshots"
+    :initial-value nil
+    :key :recursivep)))
 
 (defmethod productionp ((self dev-run-context))
   nil)
 
-(defun %make-run-and-get-id (api-ctx &key directory channel)
+(defun %make-run-and-get-id (api-ctx &key directory channel recursivep)
   (let ((ctx (make-instance 'dev-run-context
                             :productionp nil
                             :channel channel
@@ -79,7 +87,8 @@
       (make-directory-run
        api-ctx
        (make-instance 'image-directory
-                      :directory directory)
+                      :directory directory
+                      :recursivep recursivep)
        :channel channel
        :repo (make-instance 'null-repo)))))
 
@@ -90,7 +99,8 @@
     (%make-run-and-get-id
      api-ctx
      :channel (getopt cmd :channel)
-     :directory (getopt cmd :directory))))
+     :directory (getopt cmd :directory)
+     :recursivep (getopt cmd :recursivep))))
 
 (defun homedir ()
   (path:-d (uiop:getenv "HOME")))
