@@ -9,15 +9,21 @@
   (:import-from #:screenshotbot/user-api
                 #:Screenshot-name)
   (:import-from #:screenshotbot/model/image
+                #:image-hash
                 #:image=)
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run-screenshots)
   (:import-from #:screenshotbot/screenshot-api
                 #:screenshot-image)
   (:import-from #:screenshotbot/model/screenshot
+                #:abstract-screenshot
                 #:screenshot-masks)
   (:import-from #:screenshotbot/model/image-comparer
                 #:make-image-comparer)
+  (:import-from #:alexandria
+                #:when-let)
+  (:import-from #:util/misc
+                #:?.)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:change
@@ -37,7 +43,12 @@
    #:group-title
    #:actual-item
    #:group-item-subtitle
-   #:diff-report-empty-p))
+   #:diff-report-empty-p
+   #:deleted-hashes-set
+   #:added-hashes-set
+   #:group-renamed-p))
+
+
 (in-package :screenshotbot/diff-report)
 
 (defvar *cache* (trivial-garbage:make-weak-hash-table :test #'equal
@@ -59,6 +70,21 @@
    (masks :initarg :masks
           :reader change-masks)))
 
+(defmethod screenshot-hash ((screenshot abstract-screenshot))
+  (?. image-hash (screenshot-image screenshot)))
+
+(defun make-image-hashes (screenshots)
+  (reduce
+   (lambda (result screenshot)
+     (when-let ((hash (screenshot-hash screenshot)))
+       (cond
+         (hash
+          (fset:with result hash))
+         (t
+          result))))
+   screenshots
+   :initial-value (fset:empty-set)))
+
 (defclass diff-report ()
   ((added :initarg :added
           :reader diff-report-added
@@ -70,12 +96,24 @@
             :initform nil
             :accessor diff-report-changes
             :documentation "List of all CHANGEs")
+   (deleted-hashes-set :accessor deleted-hashes-set
+                       :initform (fset:empty-set)
+                       :documentation "A set of all the image hashes in the added set")
+   (added-hashes-set :accessor added-hashes-set
+                     :initform (fset:empty-set)
+                     :documentation "A set of all the image hashes in the deleted set")
    (added-groups :initform nil
                  :accessor %added-groups)
    (deleted-groups :initform nil
                    :accessor %deleted-groups)
    (changes-groups :initform nil
                    :accessor %changes-groups)))
+
+(defmethod initialize-instance :after ((self diff-report) &key deleted added)
+  (setf (deleted-hashes-set self)
+        (make-image-hashes deleted))
+  (setf (added-hashes-set self)
+        (make-image-hashes added)))
 
 (defclass group-item ()
   ((subtitle :reader group-item-subtitle
@@ -87,21 +125,49 @@
   ((title :initarg :title
           :reader group-title)
    (items :initarg :items
-          :reader group-items)))
+          :reader group-items)
+   (diff-report :initarg :diff-report
+                :initform nil
+                :reader group-diff-report
+                :documentation "the diff report this group belongs to.")))
 
-(defun make-groups (items &key key subtitle)
+(defclass changed-group (group)
+  ())
+
+(defclass added-group (group)
+  ())
+
+(defclass deleted-group (group)
+  ())
+
+(defmethod group-renamed-p ((group group))
+  "Check if the given group is just a renamed"
+  (when-let ((diff-report (group-diff-report group)))
+   (let ((compare-to
+           (etypecase group
+             (added-group
+              (deleted-hashes-set diff-report))
+             (deleted-group
+              (added-hashes-set diff-report)))))
+     (every (lambda (group-item)
+              (fset:lookup compare-to (screenshot-hash (actual-item group-item))))
+            (group-items group)))))
+
+
+(defun make-groups (type items &key key subtitle (diff-report (error "must provide :diff-report")))
   (let ((res (make-hash-table :test #'equal)))
     (loop for item in items
           do (push item
                    (gethash (funcall key item) res nil)))
     (loop for key being the hash-keys of res
-          collect (make-instance 'group
-                                  :title key
-                                  :items
-                                  (loop for item in (gethash key res)
-                                        collect (make-instance 'group-item
-                                                                :subtitle (funcall subtitle item)
-                                                                :actual-item item))))))
+          collect (make-instance type
+                                 :title key
+                                 :diff-report diff-report
+                                 :items
+                                 (loop for item in (gethash key res)
+                                       collect (make-instance 'group-item
+                                                              :subtitle (funcall subtitle item)
+                                                              :actual-item item))))))
 (defun get-only-screenshot-name (screenshot)
   (car
    (str:split "--" (screenshot-name screenshot) :limit 2)))
@@ -116,25 +182,29 @@
   (util:or-setf
    (%changes-groups self)
    (let ((changes (diff-report-changes self)))
-     (make-groups changes :key (lambda (change)
-                                 (get-only-screenshot-name (before change)))
-                          :subtitle (lambda (change)
-                                      (get-tab-title (before change)))))))
+     (make-groups 'changed-group changes
+                  :key (lambda (change)
+                         (get-only-screenshot-name (before change)))
+                  :diff-report self
+                  :subtitle (lambda (change)
+                              (get-tab-title (before change)))))))
 
 (defmethod added-groups ((self diff-report))
   (util:or-setf
    (%added-groups self)
    (let ((added (diff-report-added self)))
-     (make-groups added
+     (make-groups 'added-group added
                   :key #'get-only-screenshot-name
+                  :diff-report self
                   :subtitle #'get-tab-title))))
 
 (defmethod deleted-groups ((self diff-report))
   (util:or-setf
    (%deleted-groups self)
    (let ((deleted (diff-report-deleted self)))
-     (make-groups deleted
+     (make-groups 'deleted-group deleted
                   :key #'get-only-screenshot-name
+                  :diff-report self
                   :subtitle #'get-tab-title))))
 
 

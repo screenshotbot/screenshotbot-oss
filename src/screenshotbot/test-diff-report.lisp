@@ -12,6 +12,9 @@
                 #:local-image
                 #:recorder-run)
   (:import-from #:screenshotbot/diff-report
+                #:group-renamed-p
+                #:added-groups
+                #:make-image-hashes
                 #:*cache*
                 #:change
                 #:diff-report-deleted
@@ -106,3 +109,24 @@
                                          run2)))
       (is (eql 0 (length (diff-report-changes diff-report))))
       (is (eql 1 (length (diff-report-deleted diff-report)))))))
+
+
+(test make-image-hashes
+  (with-fixture state ()
+   (let ((screenshots
+           (list
+            (make-screenshot :image img :name "foo")
+            (make-screenshot :image img2 :name "bar"))))
+     (is (eql
+          2
+          (fset:size (make-image-hashes screenshots)))))))
+
+(test group-renamed-p
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "foo"))))
+           (run2 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "renamed"))))
+           (diff-report (make-diff-report run1 run2)))
+
+      (is (group-renamed-p (car (added-groups diff-report)))))))

@@ -78,6 +78,8 @@
                 #:get-non-alpha-pixels
                 #:with-wand)
   (:import-from #:screenshotbot/diff-report
+                #:group-renamed-p
+                #:group
                 #:deleted-groups
                 #:added-groups
                 #:diff-report-changes
@@ -955,7 +957,12 @@
 
                          <screenshot-box  screenshot=screenshot title= (diff-report:group-title group) />
                        </a>))
-                :header <h4 class= "screenshot-title" >,(highlight-search-term search (diff-report:group-title group)) </h4>)
+                :header
+                <h4 class= "screenshot-title" >
+                  ,(highlight-search-term search (diff-report:group-title group))
+                  ,(when (group-renamed-p group)
+                     <span class= "badge bg-warning">Renamed</span>)
+                </h4>)
             </div>
           </div>)
         :num 12

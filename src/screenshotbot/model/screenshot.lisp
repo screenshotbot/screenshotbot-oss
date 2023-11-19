@@ -70,7 +70,8 @@
    #:screenshot-lang
    #:make-screenshot
    #:screenshot
-   #:get-screenshot-history))
+   #:get-screenshot-history
+   #:abstract-screenshot))
 (in-package :screenshotbot/model/screenshot)
 
 
