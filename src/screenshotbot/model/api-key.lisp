@@ -179,6 +179,7 @@
 (defmethod user-api-keys ((user user) (company company))
   (loop for api-key in (bknr.datastore:class-instances 'api-key)
         if (and (eq user (api-key-user api-key))
+                (slot-boundp api-key 'api-key) ;; See T929
                 (eq company (api-key-company api-key)))
           collect api-key))
 
