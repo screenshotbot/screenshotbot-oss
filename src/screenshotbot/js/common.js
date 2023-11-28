@@ -520,7 +520,7 @@ function prepareReportJs () {
                 refresh();
                 resetMenu();
                 $(name, modal).addClass("fw-bold");
-                e.preventDefaults();
+                e.preventDefault();
             }).css("cursor", "pointer");
         }
 
