@@ -135,6 +135,7 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
         }
 
         function drawMasks() {
+            ctx.globalAlpha = 1;
             for (var mask of masks) {
                 ctx.beginPath();
 
@@ -150,8 +151,24 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
 
         updateTransform();
         for(let i in layers) {
-            ctx.globalAlpha = layers[i].alpha || 1;
-            doDraw(images[i]);
+
+            function getAlpha(layer) {
+                var alpha = layer.alpha;
+                if (alpha === 0) {
+                    return 0;
+                } else if (!alpha) {
+                    return 1;
+                } else if ((typeof alpha) === "number") {
+                    return alpha;
+                } else {
+                    return alpha();
+                }
+            }
+
+            ctx.globalAlpha = getAlpha(layers[i]);
+            if (ctx.globalAlpha > 0) {
+                doDraw(images[i]);
+            }
         }
 
         drawMasks();
@@ -272,6 +289,8 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
         document.removeEventListener("pointerup", onMouseEnd);
         document.removeEventListener("pointercancel", onMouseEnd);
     });
+
+    $(canvasContainer).on("sb:refresh", scheduleDraw);
 
     function getEventPositionOnCanvas(e) {
         var rect = canvasEl.getBoundingClientRect();
@@ -478,6 +497,37 @@ function prepareReportJs () {
         loading.show();
         img.hide();
 
+        var beforeAlpha = 0.2;
+        var diffAlpha = 1;
+        var afterAlpha = 0;
+
+
+        function refresh() {
+            $(canvasContainer).trigger("sb:refresh");
+        }
+
+        function resetMenu() {
+            $(".view-item").removeClass("fw-bold");
+        }
+        resetMenu();
+
+        function setupViewItem(name, before, diff, after) {
+            return $(name, modal).click((e) => {
+                console.log("Switching to updated view");
+                beforeAlpha = before;
+                diffAlpha = diff;
+                afterAlpha = after;
+                refresh();
+                resetMenu();
+                $(name, modal).addClass("fw-bold");
+                e.preventDefaults();
+            }).css("cursor", "pointer");
+        }
+
+        setupViewItem(".view-updated", 0, 0, 1);
+        setupViewItem(".view-diff", 0.2, 1, 0)
+            .addClass("fw-bold");
+        setupViewItem(".view-previous", 1, 0, 0);
 
         $sb.ajax({
             url: src,
@@ -491,13 +541,18 @@ function prepareReportJs () {
                 console.log("Loading into canvas", data);
                 loadIntoCanvas(canvasContainer.get(0),
                                [{
-                                   alpha: 0.2,
+                                   alpha: () => beforeAlpha,
                                    src: data.background,
                                },
                                 {
-                                    alpha: 1,
+                                    alpha: () => diffAlpha,
                                     src: data.src,
-                                }],
+                                },
+                                {
+                                    alpha: () => afterAlpha,
+                                    src: data.afterImage,
+                                }
+                               ],
                                data.masks, {
                     onImagesLoaded: function () {
                         zoomToChange.prop("disabled", false);

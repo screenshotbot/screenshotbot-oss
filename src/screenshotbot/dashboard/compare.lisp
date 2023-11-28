@@ -313,6 +313,7 @@
                                       (metrics-page image-comparison masks))))
            (:src . ,(make-image-cdn-url (image-public-url (image-comparison-result image-comparison) :size size)))
            (:background . ,(make-image-cdn-url (image-public-url (screenshot-image (before-image self)) :size size)))
+           (:after-image . ,(make-image-cdn-url (image-public-url (screenshot-image (after-image self)) :size size)))
            (:masks .
                    ,(or
                      (loop for mask in masks
@@ -626,9 +627,29 @@
             </button>
             <ul class="dropdown-menu">
               <li>
+                <a class= "dropdown-item view-item view-diff">
+                  Show Diff
+                </a>
+              </li>
+              <li>
+                <a class= "dropdown-item view-item view-previous">
+                  Show Previous Image
+                </a>
+              </li>
+              <li>
+                <a class= "dropdown-item view-item view-updated">
+                  Show Updated Image
+                </a>
+              </li>
+              <li>
+                <hr class= "dropdown-divider" />
+              </li>
+              <li>
                 <a class= "dropdown-item metrics-link" href= "#" >
                   Metrics
                 </a>
+
+
               </li>
 
             </ul>
