@@ -73,7 +73,7 @@
         <mdi name= "menu" />
       </button>
 
-      <a href="/" class="align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+      <a href="/runs" class="align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
 
 
         <span class="logo logo-lg fs-4">

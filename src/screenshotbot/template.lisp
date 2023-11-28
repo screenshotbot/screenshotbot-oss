@@ -36,6 +36,7 @@
   (:import-from #:markup
                 #:deftag)
   (:import-from #:screenshotbot/server
+                #:home-url
                 #:screenshotbot-template
                 #:acceptor
                 #:defhandler
@@ -206,7 +207,7 @@
       <section class="full-height">
         <div class= "container mt-3">
 
-          <a href= "/"><img src= "/assets/images/logo-dark-scaled.webp" style=
+          <a href= (home-url) ><img src= "/assets/images/logo-dark-scaled.webp" style=
                             "max-height: 2em; width: auto; margin-bottom: 1em; margin-top: 2em; object-position: top 0 left -0.4rem" /></a>
           <h1>The page you're looking for doesn't exist.</h1>
 
@@ -246,7 +247,7 @@
 
              <p>If this is blocking you, please reach out to <a href= "mailto:support@screenshotbot.io">support@screenshotbot.io</a>.</p>
 
-             <p><a href= "/">Home</a>  ,(progn "|")
+             <p><a href= (home-url) >Home</a>  ,(progn "|")
              <a href= "javascript:history.back()">Back to previous page</a></p>
 
            </div>

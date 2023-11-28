@@ -11,6 +11,7 @@
         #:screenshotbot/user-api
         #:screenshotbot/api-key-api)
   (:import-from #:screenshotbot/server
+                #:home-url
                 #:defhandler)
   (:import-from #:screenshotbot/template
                 #:mdi
@@ -189,6 +190,6 @@
         </div>
 
         <div class= "card-footer">
-          <a href= "/" class= "btn btn-secondary">Cancel</a>
+          <a href= (home-url) class= "btn btn-secondary">Cancel</a>
         </div>
       </simple-card-page>)))

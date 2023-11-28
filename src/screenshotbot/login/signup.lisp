@@ -108,7 +108,7 @@
         or Sign Up with
     </div>)
 
-(deftag signup-get (&key invite-code plan (redirect "/")
+(deftag signup-get (&key invite-code plan (redirect "/runs")
                     alert)
   (when invite-code
     (hex:safe-redirect (format nil "/invite/signup/~a" invite-code)))
@@ -259,7 +259,7 @@
              <section>
                <div class= "container full-height">
                  Thank you, your email has been confirmed.
-                 <a href= "/">Click here to go back to the home page.</a>
+                 <a href= "/runs">Click here to go back to the dashboard.</a>
                </div>
              </section>
            </auth-template>)))))

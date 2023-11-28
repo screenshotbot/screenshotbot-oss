@@ -12,6 +12,7 @@
         #:screenshotbot/report-api
         #:screenshotbot/taskie)
   (:import-from #:screenshotbot/server
+                #:home-url
                 #:staging-p
                 #:with-login
                 #:defhandler)
@@ -104,7 +105,7 @@
       </div>
 
       <div class= "card-footer">
-        <a href= "/" class = "btn btn-lg btn-primary">Home</a>
+        <a href= (home-url) class = "btn btn-lg btn-primary">Home</a>
       </div>
     </div>
   </app-template>)

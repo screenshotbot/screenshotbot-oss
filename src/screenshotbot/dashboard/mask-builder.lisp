@@ -28,7 +28,7 @@
 
 (markup:enable-reader)
 
-(defun mask-editor (channel screenshot &key (redirect "/")
+(defun mask-editor (channel screenshot &key (redirect "/runs")
                                          overlay)
   (with-login ()
    (let* ((dim (image-dimensions screenshot))

@@ -7,6 +7,7 @@
 (uiop:define-package :screenshotbot/invite
   (:use #:cl #:alexandria)
   (:import-from #:screenshotbot/server
+                #:redirect-home
                 #:with-login
                 #:defhandler
                 #:*disable-mail*)
@@ -163,7 +164,7 @@
         (with-transaction ()
           (push invite (unaccepted-invites (current-user)))
           (setf (invite-used-p invite) t))
-        (hex:safe-redirect "/"))))))
+        (redirect-home))))))
 
 (defhandler (invite-successful :uri "/invite/success/:email") (email)
   <simple-card-page>
@@ -225,7 +226,7 @@
        (company-invites (invite-company invite))
        invite))
     (Setf (current-company) (invite-company invite)))
-  (hex:safe-redirect "/"))
+  (redirect-home))
 
 (defhandler (invite-accept  :uri  "/invite/accept") (invite-id)
   (let ((invite (store-object-with-id (parse-integer invite-id))))

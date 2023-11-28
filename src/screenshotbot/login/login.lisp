@@ -94,7 +94,7 @@
     </div>
   </form>))
 
-(deftag signin-get (&key (redirect "/") (alert nil))
+(deftag signin-get (&key (redirect "/runs") (alert nil))
   (assert redirect)
   (if-let ((provider (default-oidc-provider (installation))))
     (hex:safe-redirect (oauth-signin-link provider redirect))
@@ -137,7 +137,7 @@
 
 (defhandler (nil :uri "/signin" :method :get) (after-logout redirect)
   (declare (ignore after-logout))
-  (let ((redirect (or redirect "/")))
+  (let ((redirect (or redirect "/runs")))
     (when (logged-in-p)
       (hex:safe-redirect redirect))
 

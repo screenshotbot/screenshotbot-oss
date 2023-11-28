@@ -64,7 +64,9 @@
    #:*init-hooks*
    #:register-init-hook
    #:call-init-hooks
-   #:request)
+   #:request
+   #:redirect-home
+   #:home-url)
   (:local-nicknames (#:threading #:util/threading)))
 (in-package :screenshotbot/server)
 
@@ -275,6 +277,14 @@ Disallow: /n")))
 
 (defmethod render-landing-page ((self installation))
   (hex:safe-redirect "/login"))
+
+(defun home-url ()
+  (if (logged-in-p)
+      "/runs"
+      "/"))
+
+(defun redirect-home ()
+  (hex:safe-redirect "/runs"))
 
 (server:register-acceptor *acceptor*
                           "screenshotbot.io"

@@ -13,6 +13,8 @@
         #:screenshotbot/model/user
         #:screenshotbot/invite)
   (:import-from #:screenshotbot/server
+                #:home-url
+                #:redirect-home
                 #:defhandler)
   (:import-from #:bknr.datastore
                 #:with-transaction)
@@ -87,7 +89,7 @@
         <i class= "uil uil-user-plus" />
         Invite Members
       </a>
-      <a href= "/" class= "btn btn-secondary">
+      <a href= (home-url) class= "btn btn-secondary">
         <i class= "mdi mdi-home" />
         Home
       </a>
@@ -101,4 +103,4 @@
   (can-view! company)
   (setf (current-company) company)
   (push-event "company.switched")
-  (hex:safe-redirect "/"))
+  (redirect-home))
