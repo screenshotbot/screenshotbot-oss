@@ -27,7 +27,8 @@
    #:%at
    #:job
    #:cronexpr
-   #:next-scheduled-job))
+   #:next-scheduled-job
+   #:find-jobs-by-function))
 (in-package :scheduled-jobs/model)
 
 (defvar *lock* (bt:make-recursive-lock))
@@ -69,6 +70,11 @@
             :accessor wrapper
             :transient t))
   (:metaclass persistent-class))
+
+(defun find-jobs-by-function (function)
+  (loop for job in (bknr.datastore:class-instances 'scheduled-job)
+        if (eql function (scheduled-job-function job))
+          collect job))
 
 (defun next-scheduled-job ()
   (index-least +scheduled-job-index+))
