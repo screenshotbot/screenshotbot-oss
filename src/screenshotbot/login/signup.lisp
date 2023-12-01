@@ -172,6 +172,9 @@
              (util:token-safe-for-email-p full-name)
              "That name looks invalid")
       (check :full-name
+             (str:containsp " " (str:trim full-name))
+             "Please provide a first and last name")
+      (check :full-name
              (< (length full-name) 150)
              "Name is too long")
       (check :password
