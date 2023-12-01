@@ -12,6 +12,7 @@
                 #:image-hash
                 #:image=)
   (:import-from #:screenshotbot/model/recorder-run
+                #:group-separator
                 #:recorder-run-screenshots)
   (:import-from #:screenshotbot/screenshot-api
                 #:screenshot-image)
@@ -107,7 +108,10 @@
    (deleted-groups :initform nil
                    :accessor %deleted-groups)
    (changes-groups :initform nil
-                   :accessor %changes-groups)))
+                   :accessor %changes-groups)
+   (%group-separator :initarg :group-separator
+                     :initform "--"
+                     :reader group-separator)))
 
 (defmethod initialize-instance :after ((self diff-report) &key deleted added)
   (setf (deleted-hashes-set self)
@@ -130,6 +134,9 @@
                 :initform nil
                 :reader group-diff-report
                 :documentation "the diff report this group belongs to.")))
+
+(defmethod group-separator ((self group))
+  (group-separator (group-diff-report self)))
 
 (defclass changed-group (group)
   ())
@@ -168,14 +175,14 @@
                                        collect (make-instance 'group-item
                                                               :subtitle (funcall subtitle item)
                                                               :actual-item item))))))
-(defun get-only-screenshot-name (screenshot)
+(defun get-only-screenshot-name (screenshot run)
   (car
-   (str:split "--" (screenshot-name screenshot) :limit 2)))
+   (str:split (group-separator run) (screenshot-name screenshot) :limit 2)))
 
 
-(defun get-tab-title (screenshot)
+(defun get-tab-title (screenshot run)
   (cadr
-   (str:split "--" (screenshot-name screenshot) :limit 2)))
+   (str:split (group-separator run) (screenshot-name screenshot) :limit 2)))
 
 
 (defmethod changes-groups ((self diff-report))
@@ -184,28 +191,28 @@
    (let ((changes (diff-report-changes self)))
      (make-groups 'changed-group changes
                   :key (lambda (change)
-                         (get-only-screenshot-name (before change)))
+                         (get-only-screenshot-name (before change) self))
                   :diff-report self
                   :subtitle (lambda (change)
-                              (get-tab-title (before change)))))))
+                              (get-tab-title (before change) self))))))
 
 (defmethod added-groups ((self diff-report))
   (util:or-setf
    (%added-groups self)
    (let ((added (diff-report-added self)))
      (make-groups 'added-group added
-                  :key #'get-only-screenshot-name
+                  :key (alexandria:rcurry #'get-only-screenshot-name self)
                   :diff-report self
-                  :subtitle #'get-tab-title))))
+                  :subtitle (alexandria:rcurry #'get-tab-title self)))))
 
 (defmethod deleted-groups ((self diff-report))
   (util:or-setf
    (%deleted-groups self)
    (let ((deleted (diff-report-deleted self)))
      (make-groups 'deleted-group deleted
-                  :key #'get-only-screenshot-name
+                  :key (alexandria:rcurry #'get-only-screenshot-name self)
                   :diff-report self
-                  :subtitle #'get-tab-title))))
+                  :subtitle (alexandria:rcurry #'get-tab-title self)))))
 
 
 (defun diff-report-title (diff-report)
@@ -246,7 +253,8 @@
                     to-names names
                     :key #'screenshot-name
                     :test #'equal)
-          :changes (%find-changes (make-image-comparer run) names to-names)))
+          :changes (%find-changes (make-image-comparer run) names to-names)
+          :group-separator (group-separator run)))
     (retry-make-diff-report ()
       (make-diff-report run to))))
 

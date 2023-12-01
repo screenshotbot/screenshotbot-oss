@@ -969,7 +969,7 @@
                       collect
                       (make-instance
                        'tab
-                       :title (get-tab-title screenshot)
+                       :title (get-tab-title screenshot group)
                        :content
                        <a href= "#"
                           class= "screenshot-run-image"

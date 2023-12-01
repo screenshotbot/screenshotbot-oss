@@ -12,6 +12,9 @@
                 #:local-image
                 #:recorder-run)
   (:import-from #:screenshotbot/diff-report
+                #:group-title
+                #:deleted-groups
+                #:changes-groups
                 #:group-renamed-p
                 #:added-groups
                 #:make-image-hashes
@@ -32,7 +35,13 @@
                 #:installation
                 #:*installation*)
   (:import-from #:screenshotbot/model/recorder-run
-                #:make-recorder-run))
+                #:group-separator
+                #:make-recorder-run)
+  (:import-from #:fiveam-matchers/core
+                #:equal-to
+                #:assert-that)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length))
 (in-package :screenshotbot/test-diff-report)
 
 (util/fiveam:def-suite)
@@ -130,3 +139,94 @@
            (diff-report (make-diff-report run1 run2)))
 
       (is (group-renamed-p (car (added-groups diff-report)))))))
+
+
+(test grouping-changed
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "foo--one")
+                                     (make-screenshot :image img :name "foo--two"))))
+           (run2 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img2 :name "foo--one")
+                                     (make-screenshot :image img2 :name "foo--two"))))
+           (diff-report (make-diff-report run1 run2)))
+      (is (eql 1 (length (changes-groups diff-report)))))))
+
+(test grouping-not-grouped-with-different-separator
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :group-separator "!!"
+                  :screenshots (list (make-screenshot :image img :name "foo--one")
+                                     (make-screenshot :image img :name "foo--two"))))
+           (run2 (make-recorder-run
+                  :group-separator "!!"
+                  :screenshots (list (make-screenshot :image img2 :name "foo--one")
+                                     (make-screenshot :image img2 :name "foo--two"))))
+           (diff-report (make-diff-report run1 run2)))
+      (is (equal "!!" (group-separator run2)))
+      (is (equal "!!" (group-separator diff-report)))
+      (assert-that (changes-groups diff-report)
+                   (has-length 2)))))
+
+(test grouping-changed-with-different-separator
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :group-separator "!!"
+                  :screenshots (list (make-screenshot :image img :name "foo!!one")
+                                     (make-screenshot :image img :name "foo!!two"))))
+           (run2 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img2 :name "foo!!one")
+                                     (make-screenshot :image img2 :name "foo!!two"))))
+           (diff-report (make-diff-report run1 run2)))
+      (assert-that (changes-groups diff-report)
+                   (has-length 1)))))
+
+
+(test grouping-added-removed
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "foo--one")
+                                     (make-screenshot :image img :name "foo--two"))))
+           (run2 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img2 :name "bar--one")
+                                     (make-screenshot :image img2 :name "bar--two"))))
+           (diff-report (make-diff-report run1 run2)))
+      (assert-that (added-groups diff-report)
+                   (has-length 1))
+      (assert-that (deleted-groups diff-report)
+                   (has-length 1)))))
+
+(test grouping-added-removed-not-grouped-with-different-separator
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :group-separator "!!"
+                  :screenshots (list (make-screenshot :image img :name "foo--one")
+                                     (make-screenshot :image img :name "foo--two"))))
+           (run2 (make-recorder-run
+                  :group-separator "!!"
+                  :screenshots (list (make-screenshot :image img2 :name "bar--one")
+                                     (make-screenshot :image img2 :name "bar--two"))))
+           (diff-report (make-diff-report run1 run2)))
+      (assert-that (added-groups diff-report)
+                   (has-length 2))
+      (assert-that (deleted-groups diff-report)
+                   (has-length 2)))))
+
+(test grouping-added-removed-with-diff-separator
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :group-separator "!!"
+                  :screenshots (list (make-screenshot :image img :name "foo!!one")
+                                     (make-screenshot :image img :name "foo!!two"))))
+           (run2 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img2 :name "bar!!one")
+                                     (make-screenshot :image img2 :name "bar!!two"))))
+           (diff-report (make-diff-report run1 run2)))
+      (assert-that (added-groups diff-report)
+                   (has-length 1))
+      (assert-that (group-title (car (added-groups diff-report)))
+                   (equal-to "foo"))
+      (assert-that (deleted-groups diff-report)
+                   (has-length 1))
+      (assert-that (group-title (car (deleted-groups diff-report)))
+                   (equal-to "bar")))))

@@ -95,7 +95,8 @@
    #:runs-for-company
    #:recorder-run-work-branch
    #:recorder-run-batch
-   #:recorder-run-repo-url)
+   #:recorder-run-repo-url
+   #:group-separator)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -252,7 +253,9 @@ associated report is rendered.")
      (batch :initform nil
             :initarg :batch
             :accessor recorder-run-batch
-            :documentation "The batch object associated with this run"))
+            :documentation "The batch object associated with this run")
+     (%group-separator :initarg :group-separator
+                       :reader group-separator))
     (:metaclass has-created-at)
     (:default-initargs :screenshot-map (error "need screenshot-map")
                        :compare-tolerance nil
@@ -455,3 +458,7 @@ compare against the actual merge base.")))
     (loop for run in runs
           if (eql company (recorder-run-company run))
             collect run)))
+
+(defmethod group-separator :around ((run recorder-run))
+  (or (ignore-errors (call-next-method))
+      "--"))
