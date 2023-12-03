@@ -54,14 +54,23 @@
                  (run-health-checks))))
    :options (list* (common-options))))
 
+(def-easy-macro with-screenshotbot-config (cmd &fn fn)
+  (cond
+    ((find-package :screenshotbot/pro/installation)
+     (unless (clingon:getopt cmd :config)
+       (error "Must provide a --config file"))
+     (with-global-binding ((*config-file* (clingon:getopt cmd :config)))
+       #-screenshotbotoss
+       (uiop:call-function "screenshotbot/pro/installation:init-pro-installation")
+       (fn)))
+    (t
+     (when (clingon:getopt cmd :config)
+       (error "--config is not supported here"))
+     (fn))))
+
 (def-easy-macro with-run-or-verify-setup (cmd &key enable-store jvm &fn fn)
   (process-common-options cmd)
-  #-screenshotbot-oss
-  (unless (clingon:getopt cmd :config)
-    (error "Must provide a --config file"))
-  (with-global-binding ((*config-file* (clingon:getopt cmd :config)))
-    #-screenshotbotoss
-    (uiop:call-function "screenshotbot/pro/installation:init-pro-installation")
+  (with-screenshotbot-config (cmd)
     (with-store (cmd)
       (when-let ((secrets (clingon:getopt cmd :secrets)))
         (log:info "Loading secrets from ~a" secrets)
@@ -126,6 +135,8 @@
                       :acceptor
                       (apply-socket
                        (cond
+                         (acceptor
+                          acceptor)
                          ((and
                            nil ;; Disable for now.
                            (clingon:getopt cmd :only-screenshotbot-p))
@@ -217,6 +228,7 @@
     :initial-value 4005
     :key :slynk-port)))
 
+
 (defun main/command (&key enable-store jvm acceptor)
   (clingon:make-command :name "App Server"
                         :handler #'main/handler
@@ -228,8 +240,9 @@
                           (verify/command :enable-store enable-store
                                           :jvm jvm)
                           #-screenshotbot-oss
-                          (uiop:call-function
-                           "screenshotbot/pro/installation:gen-config/command")
+                          (when (find-package :screenshotbot/pro/installation)
+                            (uiop:call-function
+                             "screenshotbot/pro/installation:gen-config/command"))
                           (save-passphrases/command)
                           (run/command :enable-store enable-store
                                        :jvm jvm

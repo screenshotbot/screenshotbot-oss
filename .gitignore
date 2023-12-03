@@ -43,3 +43,4 @@ tmp-upload
 .vagrant
 .env
 a.out
+cl-cron.log
