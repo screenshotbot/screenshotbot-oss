@@ -104,11 +104,17 @@
 
 (defmethod check-integrity ((commit-graph commit-graph))
   (declare (optimize (debug 3) (speed 0)))
-  (when-let ((dag (%commit-graph-dag commit-graph)))
+  (when-let ((dag (commit-graph-dag commit-graph)))
     (dag:check-integrity dag)))
 
 (defun check-integrity-for-all ()
   (mapc #'check-integrity (bknr.datastore:class-instances 'commit-graph)))
 
+(defun load-all ()
+  (mapc #'commit-graph-dag (bknr.datastore:class-instances 'commit-graph)))
+
 (def-cron flush-dags (:step-min 5)
   (flush-dags))
+
+(def-cron load-all-dags (:step-min 10)
+  (load-all))
