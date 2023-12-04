@@ -66,6 +66,7 @@
                #:scheduled-jobs/headers
                #:util/throttler
                #:util
+               #:util/health-check
                #:util/threading)
   :components ((lib-source-file "ccronexpr")
                (:file "model")

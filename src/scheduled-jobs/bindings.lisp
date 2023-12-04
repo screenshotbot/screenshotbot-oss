@@ -9,6 +9,8 @@
   (:import-from #:local-time
                 #:unix-to-timestamp
                 #:timestamp-to-unix)
+  (:import-from #:util/health-check
+                #:def-health-check)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#:fli #:util/fake-fli))
@@ -91,3 +93,6 @@
          (fli-cron-expr self)
          (+ (universal-to-unix-time now) offset)))
        offset)))
+
+(def-health-check verify-ccronexpr-is-loaded ()
+  (cron-parse-expr "*/3 * * * * *"))
