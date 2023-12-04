@@ -214,7 +214,7 @@ different class so it can be used with multi-acceptor too."))
   (intern (format nil "~a-~a" uri method) *package*))
 
 (defun prod-request? ()
-  (destructuring-bind (host port) (str:split ":" (hunchentoot:host))
+  (destructuring-bind (host &optional (port 80)) (str:split ":" (hunchentoot:host))
     (declare (ignore port))
     (not (str:starts-with-p "staging." host))))
 
