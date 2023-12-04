@@ -234,6 +234,7 @@
 
 (defsystem :util/cron
   :depends-on (:cl-cron
+               :bknr.datastore
                :util/threading)
   :components ((:file "cron")))
 
