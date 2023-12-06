@@ -15,6 +15,8 @@
            :reader prefix)
    (project :initarg :project
             :reader project)
+   (metadata :initarg :metadata
+             :reader metadata)
    (source-machine-imagoe :initarg :source-machine-image
                          :reader source-machine-image)))
 
@@ -28,14 +30,23 @@
   (let* ((id (mongoid:oid-str (mongoid:oid)))
          (vm-name (str:downcase (format nil "~a-~a" (prefix self) id))))
     (uiop:run-program
-     (list*
-      "gcloud" "compute" "instances" "create"
-      vm-name
-      "--zone" (zone self)
-      "--min-cpu-platform" "Intel Cascadelake"
-      "--machine-type"
-      (machine-type self)
-      (image-args self))
+     (remove-if
+      #'null
+      (list*
+       "gcloud" "compute" "instances" "create"
+       vm-name
+       "--zone" (zone self)
+       "--min-cpu-platform" "Intel Cascadelake"
+       (when (metadata self)
+         "--metadata")
+       (when (metadata self)
+         (str:join
+          ","
+          (loop for (key . value) in (metadata self)
+                collect (format nil "~a=~a" key value))))
+       "--machine-type"
+       (machine-type self)
+       (image-args self)))
      :error-output *standard-output*
      :output *standard-output*)
     (make-instance 'gcloud-vm
