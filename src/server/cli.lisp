@@ -54,23 +54,32 @@
                  (run-health-checks))))
    :options (list* (common-options))))
 
-(def-easy-macro with-screenshotbot-config (cmd &fn fn)
+(def-easy-macro with-screenshotbot-config (cmd
+                                           &key (config-loader
+                                                 (error "must provide :config-loader"))
+                                           &fn fn)
   (cond
-    ((find-package :screenshotbot/pro/installation)
+    (config-loader
      (unless (clingon:getopt cmd :config)
        (error "Must provide a --config file"))
      (with-global-binding ((*config-file* (clingon:getopt cmd :config)))
-       #-screenshotbotoss
-       (uiop:call-function "screenshotbot/pro/installation:init-pro-installation")
+       (funcall config-loader)
        (fn)))
     (t
      (when (clingon:getopt cmd :config)
        (error "--config is not supported here"))
      (fn))))
 
-(def-easy-macro with-run-or-verify-setup (cmd &key enable-store jvm &fn fn)
+(defun car-bar ()
+  ())
+
+(defun foo-bar (&key (def (car-bar))))
+
+(def-easy-macro with-run-or-verify-setup (cmd &key enable-store jvm
+                                              (config-loader (error "missing :config-loader"))
+                                              &fn fn)
   (process-common-options cmd)
-  (with-screenshotbot-config (cmd)
+  (with-screenshotbot-config (cmd :config-loader config-loader)
     (with-store (cmd)
       (when-let ((secrets (clingon:getopt cmd :secrets)))
         (log:info "Loading secrets from ~a" secrets)
@@ -83,11 +92,12 @@
   (when (clingon:getopt cmd :verbose)
     (log:config :debug)))
 
-(defun verify/command (&key enable-store jvm)
+(defun verify/command (&key enable-store jvm (config-loader (error "must provider :config-loader")))
   (clingon:make-command
    :name "verify"
    :handler (lambda (cmd)
-              (with-run-or-verify-setup (cmd :enable-store enable-store :jvm jvm)
+              (with-run-or-verify-setup (cmd :enable-store enable-store :jvm jvm
+                                             :config-loader config-loader)
                 (%verify :profile-store (clingon:getopt cmd :profile))))
    :options (list*
              (make-option
@@ -123,11 +133,13 @@
     (setf (existing-socket acceptor) socket))
   acceptor)
 
-(defun run/command (&key enable-store jvm acceptor)
+(defun run/command (&key enable-store jvm acceptor
+                      (config-loader (error "must provide :config-loader)")))
   (clingon:make-command
    :name "run"
    :handler (lambda (cmd)
-              (with-run-or-verify-setup (cmd :enable-store enable-store :jvm jvm)
+              (with-run-or-verify-setup (cmd :enable-store enable-store :jvm jvm
+                                             :config-loader config-loader)
                 #+lispworks
                 (sys:set-signal-handler 10
                                         'sigusr1-handler)
@@ -229,7 +241,8 @@
     :key :slynk-port)))
 
 
-(defun main/command (&key enable-store jvm acceptor)
+(defun main/command (&key enable-store jvm acceptor
+                       (config-loader (error "must provide :config-loader")))
   (clingon:make-command :name "App Server"
                         :handler #'main/handler
                         :sub-commands
@@ -238,6 +251,7 @@
                           (self-test/command :enable-store enable-store
                                              :jvm jvm)
                           (verify/command :enable-store enable-store
+                                          :config-loader config-loader
                                           :jvm jvm)
                           #-screenshotbot-oss
                           (when (find-package :screenshotbot/pro/installation)
@@ -245,6 +259,7 @@
                              "screenshotbot/pro/installation:gen-config/command"))
                           (save-passphrases/command)
                           (run/command :enable-store enable-store
+                                       :config-loader config-loader
                                        :jvm jvm
                                        :acceptor acceptor)
                           #+lispworks
@@ -254,7 +269,8 @@
   (and (second args)
        (eql #\- (elt (second args) 0))))
 
-(defun main (&key (jvm t) acceptor (enable-store t))
+(defun main (&key (jvm t) acceptor (enable-store t)
+               (config-loader (error "must provide :config-loader (can be nil)")))
   (handler-bind ((error (lambda (e)
                           (format t "Got error during init process: ~a~%" e)
                           #+lispworks
@@ -268,6 +284,7 @@
       (let ((args #-lispworks (cdr (uiop:raw-command-line-arguments))
                   #+lispworks (cdr sys:*line-arguments-list*)))
         (let ((app (main/command :jvm jvm :enable-store enable-store
+                                 :config-loader config-loader
                                  :acceptor acceptor)))
           (clingon:run app args)
           (uiop:quit 0)))))))
