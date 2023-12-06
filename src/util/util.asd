@@ -324,6 +324,7 @@
                :util/hash-lock
                :util/lparallel
                :util/health-check
+               :util/gcloud
                :util/lru-cache
                :util/copy-file
                :fiveam-matchers
@@ -388,3 +389,8 @@
                :util/atomics
                :atomics)
   :components ((:file "events")))
+
+(defsystem :util/gcloud
+  :serial t
+  :depends-on (:cl-mongo-id)
+  :components ((:file "gcloud")))
