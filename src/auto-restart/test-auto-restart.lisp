@@ -154,7 +154,7 @@
 
 (test actually-do-automatic-retries
   (let ((res nil))
-    (with-auto-restart (:retries 3)
+    (with-auto-restart (:retries 3 :sleep 0.1)
       (defun foo ()
         "dfdf"
         (declare (inline))
@@ -237,8 +237,6 @@
       t))
   (is (equal "hello world" (documentation #'foo 'function))))
 
-
-
 (test maybe-invoke-restart
   (let ((count 0)
         (seen nil))
@@ -253,3 +251,29 @@
     (foo)
     (is (eql 3 count))
     (is (equal (list 3 2 1) seen))))
+
+(define-condition my-error (error)
+  ())
+
+(with-auto-restart (:retries 1000 :sleep 0)
+  (defun crashes-after-many-attempts ()
+    (error 'my-error)))
+
+(test tail-call-optimized
+  (signals my-error
+    (crashes-after-many-attempts)))
+
+
+(with-auto-restart (:attempt attempt)
+  (defun nested-inner ()
+    (unless (= attempt 1)
+      (error "inner function didn't reset attempts, got ~a" attempt))))
+
+(with-auto-restart (:attempt attempt)
+  (defun nested-outer ()
+    (assert (= attempt 1))
+    (nested-inner)))
+
+(test nested-calls-maintains-attempts
+  (finishes
+    (nested-outer)))

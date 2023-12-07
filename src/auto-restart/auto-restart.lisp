@@ -21,6 +21,10 @@
 
 (defvar *attempt* 0)
 
+(defvar *error-handler* nil)
+
+(defvar *restart-handler* nil)
+
 (defvar *global-enable-auto-retries-p* t
   "Globally enable or disable automatic retries. Useful for unit tests.")
 
@@ -75,25 +79,46 @@ attempt. Attempts will be 1-indexed (1, 2, 3 ... ).
         (,@before-args
          ,doc
          ,@decls
-         (let ((*attempt* (1+ *attempt*)))
-           (restart-case
-               (flet ((body (,attempt)
-                        (declare (ignorable ,attempt))
-                        ,@body))
-                 (let ((attempt *attempt*))
-                   (flet ((error-handler (e)
-                            (declare (ignore e))
-                            (when (and *global-enable-auto-retries-p* (< attempt ,retries))
-                              (let ((sleep-time (funcall ,sleep-var attempt)))
-                                (unless (= 0 sleep-time)
-                                  (sleep sleep-time)))
-                              (invoke-restart ',restart-name))))
-                     (handler-bind ((error #'error-handler))
-                       (let ((my-attempt *attempt*))
-                         (let ((*attempt* 0))
-                           (body my-attempt)))))))
-             (,restart-name ()
-               (apply #',fn-name ,@ (fix-args-for-funcall var-names))))))))))
+         (flet ((top-level-body ()
+                  (flet ((body (,attempt)
+                           (declare (ignorable ,attempt))
+                           ,@body))
+                    (let ((attempt *attempt*))
+                      (setf *error-handler*
+                            (lambda (e)
+                              (declare (ignore e))
+                              (when (and *global-enable-auto-retries-p* (< attempt ,retries))
+                                (let ((sleep-time (funcall ,sleep-var attempt)))
+                                  (unless (= 0 sleep-time)
+                                    (sleep sleep-time)))
+                                (invoke-restart ',restart-name))))
+                      (setf *restart-handler*
+                            (lambda ()
+                              (apply #',fn-name ,@ (fix-args-for-funcall var-names))))
+                      ;; If we make a call to another auto-restart
+                      ;; function, then that function should still see
+                      ;; *attempt* as 0.
+                      (let ((*attempt* 0))
+                        (body attempt))))))
+           (cond
+             ((eql 0 *attempt*)
+              (let ((*attempt* 1)
+                    (*error-handler* nil)
+                    (*restart-handler* (lambda ()
+                                         ;; The first time we call we just call the function
+                                         (top-level-body))))
+                (block success
+                  (loop
+                    (restart-case
+                        (handler-bind ((error (lambda (e)
+                                                (funcall *error-handler* e))))
+                          (return-from success (funcall *restart-handler*)))
+                      (,restart-name ()
+                        ;; Retry in our loop
+                        (values)))))))
+             (t
+              (incf *attempt*)
+              (top-level-body)))))))))
 
 (defun fix-args-for-funcall (var-names)
   (let ((state :default))
