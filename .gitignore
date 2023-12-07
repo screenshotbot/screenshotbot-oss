@@ -44,3 +44,6 @@ tmp-upload
 .env
 a.out
 cl-cron.log
+
+# HubSpot config file
+hubspot.config.yml
