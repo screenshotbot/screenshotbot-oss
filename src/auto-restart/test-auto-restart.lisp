@@ -243,7 +243,6 @@
     (with-auto-restart (:attempt attempt)
       (defun foo ()
         (push attempt seen)
-        (log:info "in here: ~a" auto-restart::*attempt*)
         (incf count)
         (assert (< count 10))
         (when (< attempt 3)
