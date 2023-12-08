@@ -461,10 +461,21 @@
   #+lispworks
   (with-slots (cache) type-locator
     (symbol-macrolet ((place (gethash sym cache)))
-      (multiple-value-bind (ret present-p) place
-        (if present-p
-            ret
+      (multiple-value-bind (ret) place
+        (or ret
             (setf place (%%locate-uncached type-locator sym)))))))
+
+(defun wait-for-java ()
+  #+lispworks
+  (loop for i from 0 to 300
+        if (ignore-errors (lw-ji:find-java-class "java.lang.String"))
+          return t
+        else do
+          (progn
+            (log:info "Java not ready yet, sleeping for 1s")
+            (sleep 1))
+        finally
+        (error "JVM did not load in five minutes")))
 
 (defun class-to-lispworks-locator (typename)
   (if (and

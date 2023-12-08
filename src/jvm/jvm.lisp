@@ -55,7 +55,7 @@
     (pushnew
      (relpath (asdf:output-file 'asdf:compile-op (asdf:find-system :jvm/lispcalls)) (root))
      class-path)
-    (log:debug "Using classpath: ~S" class-path)
+    (log:info "Using classpath: ~S" class-path)
 
     class-path))
 
