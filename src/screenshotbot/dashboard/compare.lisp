@@ -672,7 +672,7 @@
                  (with-local-image (file image)
                    (with-wand (wand :file file)
                      (loop for _ from 0 to 3
-                           for i from 0 to (car (array-dimensions pixels))
+                           for i from 0 below (car (array-dimensions pixels))
                            collect
                            (get-px-as-string wand
                                              (aref pixels i 0)
