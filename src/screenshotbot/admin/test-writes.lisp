@@ -23,12 +23,15 @@
   (declare (ignore msg)))
 
 (defun do-test ()
-  (tx-noop "message")
-  <html>
-    <body>
-      Success. <a href= "/admin/test-writes">Go Back.</a>
-    </body>
-  </html>)
+  (let ((output (with-output-to-string (*trace-output*)
+                  (time (tx-noop "message")))) )
+    <html>
+      <body>
+        Success. <a href= "/admin/test-writes">Go Back.</a>
+
+        <pre>,(progn output)</pre>
+      </body>
+    </html>))
 
 (defadminhandler (test-writes :uri "/admin/test-writes") ()
   <admin-app-template>
