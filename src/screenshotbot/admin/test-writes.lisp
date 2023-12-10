@@ -22,11 +22,16 @@
 (deftransaction tx-noop (msg)
   (declare (ignore msg)))
 
-(defun do-test (&key (count 1))
+(defun do-test (&key (count 1) (profile nil))
   (let ((output (with-output-to-string (*trace-output*)
-                  (time
-                   (loop for i below count do
-                     (tx-noop "message"))))) )
+                  (flet ((inner-work ()
+                           (loop for i below count do
+                             (tx-noop "message"))))
+                   (if profile
+                       (#+lispworks hcl:profile #-lispworks time
+                        (inner-work))
+                       (time
+                        (inner-work)))))) )
     <html>
       <body>
         Success. <a href= "/admin/test-writes">Go Back.</a>
@@ -43,6 +48,10 @@
 
     <form action= (nibble ()  (do-test :count 100) ) >
       <input type= "submit" value= "Benchmark 100 times" />
+    </form>
+
+    <form action= (nibble ()  (do-test :count 1000 :profile t) ) >
+      <input type= "submit" value= "Profile 1000 times" />
     </form>
   </admin-app-template>)
 
