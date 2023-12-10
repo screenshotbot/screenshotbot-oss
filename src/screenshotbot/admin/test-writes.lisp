@@ -22,9 +22,11 @@
 (deftransaction tx-noop (msg)
   (declare (ignore msg)))
 
-(defun do-test ()
+(defun do-test (&key (count 1))
   (let ((output (with-output-to-string (*trace-output*)
-                  (time (tx-noop "message")))) )
+                  (time
+                   (loop for i below count do
+                     (tx-noop "message"))))) )
     <html>
       <body>
         Success. <a href= "/admin/test-writes">Go Back.</a>
@@ -37,6 +39,10 @@
   <admin-app-template>
     <form action= (nibble ()  (do-test) ) >
       <input type= "submit" />
+    </form>
+
+    <form action= (nibble ()  (do-test :count 100) ) >
+      <input type= "submit" value= "Benchmark 100 times" />
     </form>
   </admin-app-template>)
 
