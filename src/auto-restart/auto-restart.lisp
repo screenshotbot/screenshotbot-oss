@@ -19,11 +19,7 @@
   (:documentation "When calling with-auto-restart, we expect the
   restart to be defined inside the body, not before it."))
 
-(defvar *attempt* 0)
-
-(defvar *error-handler* nil)
-
-(defvar *restart-handler* nil)
+(defvar *frame* nil)
 
 (defvar *global-enable-auto-retries-p* t
   "Globally enable or disable automatic retries. Useful for unit tests.")
@@ -31,6 +27,11 @@
 (defun exponential-backoff (base)
   `(lambda (attempt)
      (expt ,base attempt)))
+
+(defstruct frame
+  attempt
+  error-handler
+  restart-handler)
 
 (defmacro with-auto-restart ((&key (retries 0)
                                 (sleep (exponential-backoff 2))
@@ -83,41 +84,43 @@ attempt. Attempts will be 1-indexed (1, 2, 3 ... ).
                   (flet ((body (,attempt)
                            (declare (ignorable ,attempt))
                            ,@body))
-                    (let ((attempt *attempt*))
-                      (setf *error-handler*
+                    (let ((attempt (frame-attempt *frame*)))
+                      (setf (frame-error-handler *frame*)
                             (lambda (e)
                               (declare (ignore e))
-                              (when (and *global-enable-auto-retries-p* (< attempt ,retries))
-                                (let ((sleep-time (funcall ,sleep-var attempt)))
-                                  (unless (= 0 sleep-time)
-                                    (sleep sleep-time)))
-                                (invoke-restart ',restart-name))))
-                      (setf *restart-handler*
+                              (cond
+                                ((and *global-enable-auto-retries-p* (< attempt ,retries))
+                                 (let ((sleep-time (funcall ,sleep-var attempt)))
+                                   (unless (= 0 sleep-time)
+                                     (sleep sleep-time)))
+                                (invoke-restart ',restart-name)))))
+                      (setf (frame-restart-handler *frame*)
                             (lambda ()
                               (apply #',fn-name ,@ (fix-args-for-funcall var-names))))
                       ;; If we make a call to another auto-restart
-                      ;; function, then that function should still see
-                      ;; *attempt* as 0.
-                      (let ((*attempt* 0))
+                      ;; it should not see the same frame
+                      (let ((*frame* nil))
                         (body attempt))))))
            (cond
-             ((eql 0 *attempt*)
-              (let ((*attempt* 1)
-                    (*error-handler* nil)
-                    (*restart-handler* (lambda ()
-                                         ;; The first time we call we just call the function
-                                         (top-level-body))))
+             ((null *frame*)
+              (let* ((frame (make-frame
+                             :attempt 1
+                             :error-handler nil
+                             :restart-handler (lambda ()
+                                                ;; The first time we call we just call the function
+                                                (top-level-body))))
+                     (*frame* frame))
                 (block success
                   (loop
                     (restart-case
                         (handler-bind ((error (lambda (e)
-                                                (funcall *error-handler* e))))
-                          (return-from success (funcall *restart-handler*)))
+                                                (funcall (frame-error-handler frame) e))))
+                          (return-from success (funcall (frame-restart-handler frame))))
                       (,restart-name ()
                         ;; Retry in our loop
                         (values)))))))
              (t
-              (incf *attempt*)
+              (incf (frame-attempt *frame*))
               (top-level-body)))))))))
 
 (defun fix-args-for-funcall (var-names)

@@ -276,3 +276,41 @@
 (test nested-calls-maintains-attempts
   (finishes
     (nested-outer)))
+
+(with-auto-restart () ;; this auto-restart is important for the test
+                      ;; we're trying to test.
+ (defun nested-inner-with (counter)
+   (unless (= counter 3)
+     (error "inner function still failing, got ~a" counter))))
+
+(with-auto-restart (:retries 3 :attempt attempt :sleep 0)
+  (defun nested-outer-with-inner-failures ()
+    (nested-inner-with attempt)
+    attempt))
+
+(test nested-calls-maintains-attempts
+  (is (eql
+       3
+       (nested-outer-with-inner-failures))))
+
+(defvar *nested-inner-2-counter*)
+
+(with-auto-restart (:retries 5 :sleep 0) ;; this auto-restart is important for the test
+                      ;; we're trying to test.
+  (defun nested-inner-with-2 (counter)
+    (incf *nested-inner-2-counter*)
+    (unless (= counter 3)
+      (error "inner function still failing, got ~a" counter))))
+
+(with-auto-restart (:retries 3 :attempt attempt :sleep 0)
+  (defun nested-outer-with-inner-failures-2 ()
+    (nested-inner-with-2 attempt)
+    attempt))
+
+(test nested-calls-maintains-attempts-2
+  (let ((*nested-inner-2-counter* 0))
+    (is (eql
+         3
+         (nested-outer-with-inner-failures-2)))
+    (is (eql
+         11 *nested-inner-2-counter*))))
