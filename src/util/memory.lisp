@@ -3,7 +3,8 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:process-mem-usage
-   #:arena-size))
+   #:arena-size
+   #:histogram))
 (in-package :util/memory)
 
 (defun safe-type-of (x)
