@@ -492,8 +492,8 @@ to the directory that was just snapshotted.")
   (:report (lambda (e out)
              (with-slots (diff-1 diff-2) e
                (format out "The two hash tables have different keys. ~%Missing keys in new-hash-table: ~s~% Missing keys in old hash-table: ~s~%"
-                       diff-1
-                       diff-2)))))
+                       (head diff-1 100)
+                       (head diff-2 100))))))
 
 (defun assert-hash-tables= (h1 h2)
   (unless (eql (hash-table-test h1)
