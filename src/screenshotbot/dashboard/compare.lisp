@@ -845,7 +845,7 @@
          <li><a role= "button" class= "dropdown-item" href=url target= "_blank">
              <mdi name= "build" /> View Build</a></li>)
       ,(when (and
-              (adminp (current-user))
+              (?. adminp (current-user))
               *summarizer*)
          <li><a class= "dropdown-item" href= (nibble () (funcall *summarizer* report)) > [Admin] Summarize</a></li>)
       ,(progn
