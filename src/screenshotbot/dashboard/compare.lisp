@@ -55,6 +55,7 @@
   (:import-from #:bknr.datastore
                 #:make-blob-from-file)
   (:import-from #:screenshotbot/user-api
+                #:adminp
                 #:can-view!
                 #:current-user
                 #:created-at
@@ -130,6 +131,8 @@
    after
    identical-p
    result))
+
+(defvar *summarizer* nil)
 
 (named-readtables:in-readtable markup:syntax)
 
@@ -841,6 +844,10 @@
       ,(when-let ((url (?. run-build-url run)))
          <li><a role= "button" class= "dropdown-item" href=url target= "_blank">
              <mdi name= "build" /> View Build</a></li>)
+      ,(when (and
+              (adminp (current-user))
+              *summarizer*)
+         <li><a class= "dropdown-item" href= (nibble () (funcall *summarizer* report)) > [Admin] Summarize</a></li>)
       ,(progn
          #+screenshotbot-oss
          (progn
