@@ -240,7 +240,7 @@ different class so it can be used with multi-acceptor too."))
   (handler-bind ((warning #'util/threading:log-sentry))
     (funcall fn)))
 
-#-screenshotbot-oss
+#-(or screenshotbot-oss eaase-oss)
 (defmethod hunchentoot:maybe-invoke-debugger :after (condition)
   (when (and hunchentoot:*catch-errors-p*
              (not *disable-sentry*)
