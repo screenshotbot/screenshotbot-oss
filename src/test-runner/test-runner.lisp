@@ -54,10 +54,11 @@
    (%find-tests "third-party/bknr.datastore/")))
 
 (defun %find-tests (pathname)
-  (let* ((index (ql::ensure-system-index pathname)))
-    (when index
-      (with-open-file (stream index)
-        (remove-if 'null
+  (when (path:-d pathname)
+   (let* ((index (ql::ensure-system-index pathname)))
+     (when index
+       (with-open-file (stream index)
+         (remove-if 'null
                     (loop for line = (read-line stream nil)
                           while line
                           collect
@@ -74,7 +75,7 @@
                               (t
                                (let ((x (asdf:find-system (format nil "~a/tests" system) nil)))
                                  (when x
-                                   (asdf:component-name x))))))))))))
+                                   (asdf:component-name x)))))))))))))
 
 
 (defun screenshot-tests ()
