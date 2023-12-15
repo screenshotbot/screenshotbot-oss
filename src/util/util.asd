@@ -62,7 +62,7 @@
                "drakma"
                "cl-json"
                "hunchentoot-extensions"
-               #-screenshotbot-oss
+               #-(or screenshotbot-oss eaase-oss)
                "stripe"
                "log4cl"
                "util/threading"
@@ -83,7 +83,7 @@
                (:file "package")
                (:file "mockable")
                (:file "asdf")
-               #-screenshotbot-oss
+               #- (or screenshotbot-oss eaase-oss)
                (:file "payment-method")
                (:file "countries")
                (:file "google-analytics")
@@ -223,7 +223,7 @@
                :lparallel
                :atomics
                :trivial-backtrace
-               #-screenshotbot-oss
+               #- (or screenshotbot-oss eaase-oss)
                :sentry
                :trivial-garbage
                :easy-macros

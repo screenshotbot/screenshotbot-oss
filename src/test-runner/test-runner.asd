@@ -8,7 +8,7 @@
                :trivial-features
                :log4cl
                :fiveam
-               #-(or jipr screenshotbot-oss eaase-oss)
+               #-(:or :jipr :screenshotbot-oss :eaase-oss)
                :sentry
                :graphs
                :str
