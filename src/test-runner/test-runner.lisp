@@ -80,9 +80,11 @@
 
 (defun screenshot-tests ()
   "Tests that generate screenshots should always be run"
-  (list "screenshotbot/tests"
-        #- (or screenshotbot-oss eaase-oss)
-        "screenshotbot.pro/tests"))
+  (list
+   #- (or eaase-oss)
+   "screenshotbot/tests"
+   #- (or screenshotbot-oss eaase-oss)
+   "screenshotbot.pro/tests"))
 
 (defun load-systems ()
   (let ((systems (or
