@@ -143,7 +143,7 @@ fails."
 
   (tmpdir:with-tmpdir (tmpdir)
     ;; on CCL, the JVM is already loaded before the main systems
-    #+(and lispworks (not jipr))
+    #+(and lispworks (not jipr) (not eaase-oss))
     (unless (position "-no-jvm" system:*line-arguments-list* :test #'equal)
       (jvm:jvm-init))
     (funcall fn))

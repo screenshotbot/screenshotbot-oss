@@ -3,12 +3,12 @@
   ;; Most of these dependencies are because we need these to be loaded
   ;; before we can load any test deps with
   ;; dspect:*redefinition-action*.
-  :depends-on (#-jipr
+  :depends-on (#-(or jipr eaase-oss)
                :jvm
                :trivial-features
                :log4cl
                :fiveam
-               #-(or jipr screenshotbot-oss)
+               #-(or jipr screenshotbot-oss eaase-oss)
                :sentry
                :graphs
                :str
