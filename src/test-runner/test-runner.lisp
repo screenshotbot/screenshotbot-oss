@@ -81,7 +81,7 @@
 (defun screenshot-tests ()
   "Tests that generate screenshots should always be run"
   (list "screenshotbot/tests"
-        #-screenshotbot-oss
+        #- (or screenshotbot-oss eaase-oss)
         "screenshotbot.pro/tests"))
 
 (defun load-systems ()
@@ -94,7 +94,7 @@
                    (screenshot-tests)
                    :test #'string-equal)))
         (test-redefinitions-p (not (str:emptyp (uiop:getenv "TDRHQ_TEST_REDEF")))))
-    #-screenshotbot-oss
+    #- (or screenshotbot-oss eaase-oss)
     (progn
       #-ccl
       (when (uiop:getenv "JENKINS_URL")
