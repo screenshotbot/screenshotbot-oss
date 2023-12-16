@@ -4,19 +4,28 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defsystem :build-utils
+(defsystem :build-utils/core
   :serial t
   :depends-on (:tmpdir
-               :alexandria
-               :parenscript ;; for js-package
-               :str)
+               :str
+               :alexandria)
   :components ((:file "wild-module")
                (:file "common")
                (:file "remote-file")
-               (:file "jar-file")
-               (:file "js-package")
-               (:file "css-package")
-               (:file "all")))
+               (:file "jar-file")))
+
+(defsystem :build-utils/js-package
+  :serial t
+  :depends-on (:build-utils/core
+               :parenscript)
+  :components ((:file "js-package")
+               (:file "css-package")))
+
+(defsystem :build-utils
+  :serial t
+  :depends-on (:build-utils/core
+               :build-utils/js-package)
+  :components ((:file "all")))
 
 (defsystem :build-utils/deliver-script
   :serial t

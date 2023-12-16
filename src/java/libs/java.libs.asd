@@ -5,7 +5,7 @@
 
 (defsystem java.libs
    :class "build-utils:java-library"
-   :defsystem-depends-on (:build-utils)
+   :defsystem-depends-on (:build-utils/core)
    :components (
 ("build-utils:jar-file" "slf4j-simple-1.7.25")
 ("build-utils:jar-file" "jira-rest-java-client-core-5.2.4")
