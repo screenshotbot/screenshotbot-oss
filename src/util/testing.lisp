@@ -14,13 +14,16 @@
                 #:def-easy-macro)
   (:import-from #:util/misc
                 #:with-global-binding)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:with-fake-request
    #:in-test-p
    #:screenshot-static-page
    #:with-local-acceptor
-   #:with-global-binding))
+   #:with-global-binding
+   #:define-screenshot-test-init))
 (in-package :util/testing)
 
 (defvar *in-test-p* nil)
@@ -64,47 +67,67 @@
                                                :remote-addr "127.0.0.1")))
     ,@body))
 
-(let ((prepared nil))
-  (defun maybe-prepare-screenshot-assets (dir)
-    (unless prepared
+
+(defvar *prepared* (make-hash-table))
+
+(defun maybe-prepare-screenshot-assets (name dir
+                                        &key static-assets
+                                          generated-css-assets)
+  (or
+   (gethash name *prepared*)
+   (setf
+    (gethash name *prepared*)
+    (prog1
+        t
       (copy-directory:copy
-       #.(asdf:system-relative-pathname :screenshotbot "static/assets/")
+       static-assets
        (path:catdir dir "assets/"))
       (flet ((copy-css (target output)
                (asdf:compile-system target)
                (uiop:copy-file
                 (car (asdf:output-files 'asdf:compile-op target))
                 (path:catfile dir output))))
-        (copy-css :screenshotbot.css-assets "assets/css/default.css")
-        #-screenshotbot-oss
-        (progn
-         (copy-css :screenshotbot.pro.css/extended-dashboard
-                   "assets/css/extended-dashboard.css")
-         (copy-css :screenshotbot.pro.css
-                   "assets/css/new-landing.css")))
-      (setf prepared t))))
+        (loop for (key . val) in generated-css-assets do
+          (copy-css key val)))))))
+
+(defvar *screenshot-test-inits* nil)
+
+(defmacro define-screenshot-test-init (project &key static-assets generated-css-assets)
+  `(let ((static-assets (asdf:system-relative-pathname ',project ,static-assets)))
+       (setf (assoc-value *screenshot-test-inits* ',project :test #'string-equal)
+             (lambda ()
+               (maybe-prepare-screenshot-assets
+                ',project
+                (static-web-output-dir ',project)
+                :static-assets static-assets
+                :generated-css-assets ,generated-css-assets)))))
+
 
 (let ((cache (make-hash-table :test #'equal)))
- (defun screenshot-static-page (project name content)
-   (let ((output (util:or-setf
-                  (gethash (list project name) cache)
-                  (asdf:system-relative-pathname project "static-web-output/"))))
-     (let ((output-file (path:catfile output (format nil "~a/index.html" name))))
-       (ensure-directories-exist output-file)
-       (maybe-prepare-screenshot-assets output)
-       (with-open-file (file output-file
-                             :direction :output
-                             :external-format :utf-8
-                             :if-exists :supersede)
-         (let ((content (typecase content
-                          (string content)
-                          (t
-                           (cl-mock:with-mocks ()
-                             (cl-mock:if-called 'nibble:nibble-url (lambda (nibble)
-                                                                     "#"))
-                             (markup:write-html content))))))
-           (write-string content file))
-         (fiveam:pass "Screenshot written"))))))
+  (defun static-web-output-dir (project)
+    (util:or-setf
+     (gethash project cache)
+     (asdf:system-relative-pathname project "static-web-output/"))))
+
+(defun screenshot-static-page (project name content)
+  (let ((output (static-web-output-dir project)))
+    (let ((output-file (path:catfile output (format nil "~a/index.html" name))))
+      (ensure-directories-exist output-file)
+      (funcall
+       (assoc-value *screenshot-test-inits* project :test #'string-equal))
+      (with-open-file (file output-file
+                            :direction :output
+                            :external-format :utf-8
+                            :if-exists :supersede)
+        (let ((content (typecase content
+                         (string content)
+                         (t
+                          (cl-mock:with-mocks ()
+                            (cl-mock:if-called 'nibble:nibble-url (lambda (nibble)
+                                                                    "#"))
+                            (markup:write-html content))))))
+          (write-string content file))
+        (fiveam:pass "Screenshot written")))))
 
 (defmacro with-local-acceptor ((host &key prepare-acceptor-callback (acceptor (gensym))) (name &rest args) &body body)
   "Create a debuggable single threaded acceptor for running tests"

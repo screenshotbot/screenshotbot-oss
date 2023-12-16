@@ -25,6 +25,7 @@
   (:import-from #:screenshotbot/login/common
                 #:*current-company-override*)
   (:import-from #:util/testing
+                #:define-screenshot-test-init
                 #:with-global-binding
                 #:screenshot-static-page
                 #:with-fake-request)
@@ -134,3 +135,14 @@
               (make-instance 'screenshotbot-template)))
         (progn
           ,@body)))))
+
+(define-screenshot-test-init :screenshotbot
+  :static-assets "static/assets/"
+  :generated-css-assets
+  `((:screenshotbot.css-assets . "assets/css/default.css")
+    #-screenshotbot-oss
+    (:screenshotbot.pro.css/extended-dashboard . "assets/css/extended-dashboard.css")
+    #-screenshotbot-oss
+    (:screenshotbot.pro.css . "assets/css/new-landing.css")))
+
+
