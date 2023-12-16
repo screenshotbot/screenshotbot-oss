@@ -3,11 +3,6 @@
   (:use :cl :asdf))
 (in-package :java.libs-asdf)
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-   (unless (find-package :build-utils)
-     (asdf:operate 'asdf:load-op :build-utils)
-     (use-package :build-utils)))
-
 (defsystem java.libs
    :class build-utils:java-library
    :defsystem-depends-on (:build-utils)
