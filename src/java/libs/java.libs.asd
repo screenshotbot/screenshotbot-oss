@@ -4,7 +4,7 @@
 (in-package :java.libs-asdf)
 
 (defsystem java.libs
-   :class build-utils:java-library
+   :class "build-utils:java-library"
    :defsystem-depends-on (:build-utils)
    :components (
 ("build-utils:jar-file" "slf4j-simple-1.7.25")
