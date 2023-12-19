@@ -62,7 +62,7 @@
                 "123286e88a6791ed7f8b8811c90406d6917258ac")
 
 ;; TODO: automatically generate hashes
-#+screenshotbot-oss
+#+(or screenshotbot-oss eaase-oss)
 (progn
   (quick-patch:register "https://github.com/moderninterpreters/markup" "master")
   (quick-patch:register "https://github.com/moderninterpreters/cl-sentry-client" "master")
