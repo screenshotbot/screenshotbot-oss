@@ -23,7 +23,8 @@
    #:screenshot-static-page
    #:with-local-acceptor
    #:with-global-binding
-   #:define-screenshot-test-init))
+   #:define-screenshot-test-init
+   #:clean-up-static-web-outputs))
 (in-package :util/testing)
 
 (defvar *in-test-p* nil)
@@ -128,6 +129,18 @@
                             (markup:write-html content))))))
           (write-string content file))
         (fiveam:pass "Screenshot written")))))
+
+(defun clean-up-static-web-outputs ()
+  (dolist (project (mapcar #'car *screenshot-test-inits*)) do
+    (let ((dir (asdf:system-relative-pathname project "static-web-output/")))
+      (when (path:-d dir)
+        (uiop:delete-directory-tree
+         dir
+         :validate (lambda (x)
+                     (declare (ignore x))
+                     t))))))
+
+
 
 (defmacro with-local-acceptor ((host &key prepare-acceptor-callback (acceptor (gensym))) (name &rest args) &body body)
   "Create a debuggable single threaded acceptor for running tests"

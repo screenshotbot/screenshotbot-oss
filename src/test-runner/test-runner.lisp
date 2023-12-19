@@ -5,6 +5,8 @@
                 #:with-global-binding)
   (:import-from #:util/threading
                 #:*log-sentry-p*)
+  (:import-from #:util/testing
+                #:clean-up-static-web-outputs)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:init
@@ -34,20 +36,11 @@
     (setf *trace-output* null-file)
     (log:config :fatal)))
 
-(defun clean-up-screenshotbot-screenshots ()
-  #-eaase-oss ;; TODO: figure out at runtime
-  (let ((dir (asdf:system-relative-pathname :screenshotbot "static-web-output/")))
-    (when (path:-d dir)
-      (uiop:delete-directory-tree dir
-                                  :validate (lambda (x)
-                                              (declare (ignore x))
-                                              t)))))
-
 (defun init ()
   #+ccl
   (init-jvm-for-ccl)
   (load-systems)
-  (clean-up-screenshotbot-screenshots))
+  (clean-up-static-web-outputs))
 
 (defun find-tests ()
   (append
