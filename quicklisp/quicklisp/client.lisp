@@ -46,11 +46,13 @@
 
 (defgeneric quickfind (system &key prompt)
   (:method (system &key prompt)
-    (call-with-autoloading-system-and-dependencies
-     system
-     (lambda ()
-       (asdf:find-system system))
-     :prompt prompt)))
+    (let ((result))
+     (call-with-autoloading-system-and-dependencies
+      system
+      (lambda ()
+        (setf result (asdf:find-system system)))
+      :prompt prompt)
+      result)))
 
 (defmethod quickload :around (systems &key verbose prompt explain
                                       &allow-other-keys)

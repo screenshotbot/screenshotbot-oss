@@ -74,11 +74,12 @@
                                system)
                               (t
                                (let ((test-name (format nil "~a/tests" system)))
-                                 (handler-case
-                                     (ql:quickfind test-name)
-                                   (asdf:missing-component ()
-                                     nil))
-                                 (let ((x (asdf:find-component test-name nil)))
+
+                                 (let ((x
+                                         (handler-case
+                                             (ql:quickfind test-name)
+                                           (asdf:missing-component ()
+                                             nil))))
                                    (when x
                                      (asdf:component-name x))))))))))))))
 
