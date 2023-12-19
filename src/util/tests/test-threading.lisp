@@ -250,7 +250,7 @@
 (defmethod sentry-client::client-capture-exception ((self fake-sentry) e &rest args &key &allow-other-keys)
   (push e (captured self)))
 
-#-screenshotbot-oss
+#-(or screenshotbot-oss eaase-oss)
 (test max-pool-logs-errors
   (with-fixture state ()
     (with-global-binding ((*log-sentry-p* t)

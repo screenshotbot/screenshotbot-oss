@@ -35,6 +35,7 @@
     (log:config :fatal)))
 
 (defun clean-up-screenshotbot-screenshots ()
+  #-eaase-oss ;; TODO: figure out at runtime
   (let ((dir (asdf:system-relative-pathname :screenshotbot "static-web-output/")))
     (when (path:-d dir)
       (uiop:delete-directory-tree dir

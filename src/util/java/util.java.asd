@@ -25,6 +25,7 @@
                (:file "iterate")
                (:file "all")))
 
+#-eaase-oss
 (defsystem :util.java/tests
     :serial t
   :depends-on (:fiveam
