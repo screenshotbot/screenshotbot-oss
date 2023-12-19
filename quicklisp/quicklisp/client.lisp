@@ -44,6 +44,14 @@
                  (register-local-projects)
                  (go :start)))))))))
 
+(defgeneric quickfind (system &key prompt)
+  (:method (system &key prompt)
+    (call-with-autoloading-system-and-dependencies
+     system
+     (lambda ()
+       (asdf:find-system system))
+     :prompt prompt)))
+
 (defmethod quickload :around (systems &key verbose prompt explain
                                       &allow-other-keys)
   (declare (ignorable systems verbose prompt explain))

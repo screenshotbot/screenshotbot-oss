@@ -160,21 +160,13 @@
      (format t "~&; Loading ~S~%" (name strategy))
      (asdf:load-system (name strategy) :verbose nil))))
 
-(defun autoload-system-and-dependencies (name &key prompt)
-  "Try to load the system named by NAME, automatically loading any
-Quicklisp-provided systems first, and catching ASDF missing
-dependencies too if possible."
-  (setf name (string-downcase name))
+(defun call-with-autoloading-system-and-dependencies (name fn &key prompt)
   (with-simple-restart (abort "Give up on ~S" name)
     (let ((tried-so-far (make-hash-table :test 'equalp)))
       (tagbody
        retry
          (handler-case
-             (let ((strategy (compute-load-strategy name)))
-               (show-load-strategy strategy)
-               (when (or (not prompt)
-                         (press-enter-to-continue))
-                 (apply-load-strategy strategy)))
+             (funcall fn)
            (asdf:missing-dependency-of-version (c)
              ;; Nothing Quicklisp can do to recover from this, so just
              ;; resignal
@@ -197,6 +189,20 @@ dependencies too if possible."
                   ;; nothing to autoload
                   (error c))))))))
     name))
+
+(defun autoload-system-and-dependencies (name &key prompt)
+  "Try to load the system named by NAME, automatically loading any
+Quicklisp-provided systems first, and catching ASDF missing
+dependencies too if possible."
+  (setf name (string-downcase name))
+  (call-with-autoloading-system-and-dependencies
+   name
+   (lambda ()
+    (let ((strategy (compute-load-strategy name)))
+      (show-load-strategy strategy)
+      (when (or (not prompt)
+                (press-enter-to-continue))
+        (apply-load-strategy strategy))))))
 
 (defvar *initial-dist-url*
   "http://beta.quicklisp.org/dist/quicklisp.txt")

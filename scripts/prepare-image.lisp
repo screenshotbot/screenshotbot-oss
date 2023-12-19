@@ -104,7 +104,10 @@
 
                  (when (equal src dest)
                    (error "Trying to overwrite the same file"))
-                 (unless (uiop:file-exists-p dest)
+                 (when (or
+                        (not (uiop:file-exists-p dest))
+                        (< (file-write-date dest)
+                           (file-write-date src)))
                    (uiop:copy-file
                     src
                     (ensure-directories-exist

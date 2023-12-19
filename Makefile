@@ -23,10 +23,6 @@ endif
 
 LW_VERSION=8-0-0
 LW_PREFIX=/opt/software/lispworks
-QUICKLISP_DEPS=quicklisp/dists/quicklisp/distinfo.txt \
-    quicklisp/dists/quicklisp/releases.txt \
-	quicklisp/dists/quicklisp/systems.txt
-
 
 ifeq ($(UNAME),Linux)
 define timeout

@@ -301,6 +301,7 @@
   (:export #:dist-version
            #:dist-url)
   (:export #:quickload
+           #:quickfind
            #:*quickload-prompt*
            #:*quickload-verbose*
            #:*quickload-explain*

@@ -73,9 +73,14 @@
                               ((str:ends-with-p ".test" system)
                                system)
                               (t
-                               (let ((x (asdf:find-system (format nil "~a/tests" system) nil)))
-                                 (when x
-                                   (asdf:component-name x)))))))))))))
+                               (let ((test-name (format nil "~a/tests" system)))
+                                 (handler-case
+                                     (ql:quickfind test-name)
+                                   (asdf:missing-component ()
+                                     nil))
+                                 (let ((x (asdf:find-component test-name nil)))
+                                   (when x
+                                     (asdf:component-name x))))))))))))))
 
 
 (defun screenshot-tests ()
