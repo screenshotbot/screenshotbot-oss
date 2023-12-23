@@ -395,3 +395,9 @@
   :serial t
   :depends-on (:cl-mongo-id)
   :components ((:file "gcloud")))
+
+#+lispworks
+(defsystem :util/ssl
+    :serial t
+    :depends-on ()
+    :components ((:file "ssl")))
