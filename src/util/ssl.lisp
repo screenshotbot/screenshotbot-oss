@@ -96,7 +96,7 @@ a1yOubCHt09QsDkyvBTWP3VX541g1voHDCcYMOyzrdv/KQHfwl/ojnEAg1t9HzA=
      (comm:create-ssl-client-context
       :verify-callback (lambda (socket-stream)
                          (verify-callback socket-stream
-                                          :allowed-cert-p
+                                          :allowed-certs
                                           (list x509)))    
       :openssl-trusted-file :default
       :openssl-trusted-directory :default))))
