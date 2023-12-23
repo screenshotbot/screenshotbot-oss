@@ -11,7 +11,8 @@
                 #:to-json-value
                 #:json-type)
   (:export
-   #:json-mop-to-string))
+   #:json-mop-to-string
+   #:ext-json-serializable-class))
 (in-package :util/json-mop)
 
 (defclass ext-json-serializable-class (json-mop:json-serializable-class)
