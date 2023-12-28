@@ -22,6 +22,7 @@
                (:file "better-easy-handler")
                (:file "postdata")
                (:file "async")
+               (:file "asdf-acceptor")
                (:file "webp")))
 
 (defsystem :hunchentoot-extensions/tests
