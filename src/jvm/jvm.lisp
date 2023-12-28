@@ -17,8 +17,11 @@
   (:export :jvm-init
            :*libjvm*
            :free-memory
-           :total-memory))
+   :total-memory
+   :*initedp*))
 (in-package :jvm)
+
+(defvar *initedp* nil)
 
 #+lispworks
 (eval-when (:compile-toplevel  :load-toplevel)
@@ -114,6 +117,8 @@
     (asdf:load-system :cl+j)
     (funcall (find-symbol "JAVA-INIT" "CL+J")))
 
+  (setf *initedp* t)
+
   #+(and :lispworks (not :screenshotbot-oss))
   (lw-ji:find-java-class "io.tdrhq.TdrhqS3"))
 
@@ -125,11 +130,15 @@
 
 (defun total-memory ()
   #+lispworks
-  (%total-memory (get-runtime)))
+  (if *initedp*
+      (%total-memory (get-runtime))
+      0))
 
 (defun free-memory ()
   #+lispworks
-  (%free-memory (get-runtime)))
+  (if *initedp*
+      (%free-memory (get-runtime))
+      0))
 
 #+lispworks
 (def-health-check lispcalls.jar-is-accessible ()
