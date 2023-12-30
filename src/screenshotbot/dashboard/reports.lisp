@@ -79,7 +79,7 @@
          ((or
            (not report)
            (not (typep report 'report)))
-          (warn "Invalid report link")
+          (push-event :invalid-report :id id)
           ;; We don't use template because this is messing up our Google
           ;; Analytics. This is most likely trigged by Microsoft Outlook's
           ;; preview.
