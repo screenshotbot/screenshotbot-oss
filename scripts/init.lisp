@@ -58,8 +58,9 @@
 
 (assert (not (find-package :bordeaux-threads)))
 
-(register-tdrhq "bordeaux-threads"
-                "123286e88a6791ed7f8b8811c90406d6917258ac")
+;; See https://github.com/thephoeron/cl-isaac/pull/13
+(quick-patch:register "https://github.com/svetlyak40wt/cl-isaac"
+                      "77a51b88d7d0e78f7517d744fff4a3135727b3b6")
 
 ;; TODO: automatically generate hashes
 #+(or screenshotbot-oss eaase-oss)
