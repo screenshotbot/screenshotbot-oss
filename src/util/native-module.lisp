@@ -12,7 +12,8 @@
    #:make-native-module
    #:load-module
    #:make-system-module
-   #:*lib-cache-dir*)
+   #:*lib-cache-dir*
+   #:define-embedded-module)
   (:local-nicknames #-lispworks (#:fli #:util/fake-fli)))
 (in-package :util/native-module)
 
@@ -158,3 +159,11 @@
     (when needs-verify
       (funcall (verify self)))
     t))
+
+(defmacro define-embedded-module (module)
+  #+lispworks
+  (let ((action-name (format nil "Loading embeded module ~a in ~a" module (package-name *package*))))
+    `(unless (hcl:delivered-image-p)
+       (lw:define-action "Delivery actions" ,action-name
+         (lambda ()
+           (embed-module ,module))))))

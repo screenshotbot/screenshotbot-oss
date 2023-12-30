@@ -28,15 +28,7 @@
                          :defaults *library-file-dir*))))
 
 (defmethod perform ((o load-op) (c lib-source-file))
-  (let ((output (output-file 'compile-op c)))
-    #+nil
-    (fli:disconnect-module :ccronexpr)
-    #+lispworks
-    (fli:register-module
-     :ccronexpr
-     :real-name output)
-    #-lispworks
-    (cffi:load-foreign-library output)))
+  t)
 
 (defmethod perform ((o compile-op) (c lib-source-file))
   (let ((output-file (car (output-files o c))))
@@ -65,6 +57,7 @@
   :depends-on (#:cl-cron
                #:scheduled-jobs/headers
                #:util/throttler
+               #:util/native-module
                #:util
                #:util/health-check
                #:util/threading)

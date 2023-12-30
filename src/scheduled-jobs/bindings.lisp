@@ -14,11 +14,21 @@
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#:fli #:util/fake-fli))
+  (:import-from #:util/native-module
+                #:load-module
+                #:define-embedded-module
+                #:make-native-module)
   (:export
    #:cron-parse-expr
    #:cron-next
    #:invalid-cron-expr))
 (in-package :scheduled-jobs/bindings)
+
+(defvar *native-module* (make-native-module 'ccronexpr
+                                            :scheduled-jobs
+                                            "ccronexpr"))
+
+(define-embedded-module *native-module*)
 
 (fli:define-c-struct fli-cron-expr
     (seconds (:c-array :uint8 8))
@@ -52,6 +62,7 @@
 
 
 (defun cron-parse-expr (expr)
+  (load-module *native-module*)
   (fli:with-dynamic-foreign-objects ((err (:pointer :char) :fill 0))
    (let ((fli-cron-expr (fli:malloc :type 'fli-cron-expr)))
      (%cron-parse-expr
