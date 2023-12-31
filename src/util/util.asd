@@ -272,7 +272,8 @@
   :components ((:file "lparallel")))
 
 (defsystem :util/native-module
-  :depends-on (:util/fake-fli)
+  :depends-on (:util/fake-fli
+               :util/misc)
   :components ((:file "native-module")))
 
 (defsystem :util/fake-fli
@@ -316,7 +317,11 @@
   :components ((:file "json-mop")))
 
 (defsystem :util/throttler
-  :depends-on ()
+  :depends-on (:local-time
+               :fset
+               :atomics
+               :easy-macros
+               :cl-fad)
   :serial t
   :components ((:file "throttler")))
 

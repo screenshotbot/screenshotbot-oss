@@ -142,7 +142,7 @@
     (fli:disconnect-module (name self))
     (setf (loaded-p self) nil))
   (let ((needs-verify nil))
-   (util:or-setf
+   (util/misc:or-setf
     (loaded-p self)
     (progn
       (cond
