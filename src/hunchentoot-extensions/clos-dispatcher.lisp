@@ -47,6 +47,10 @@
   (:method ((input markup:abstract-xml-tag))
     (markup:write-html input)))
 
+(defmethod dispatch-clos-request ((self clos-dispatcher) dispatcher)
+  (setf (hunchentoot:header-out "X-clos-acceptor") "1")
+  (%normalize (funcall dispatcher)))
+
 (defmethod hunchentoot:acceptor-dispatch-request ((self clos-dispatcher) request)
   (let ((script-name (hunchentoot:script-name request)))
     (let ((binding (gethash script-name *bindings*)))
@@ -56,7 +60,7 @@
            (loop for class in classes
                  for dispatcher = (gethash class binding)
                  if dispatcher
-                   return (%normalize (funcall dispatcher))
+                   return (dispatch-clos-request self dispatcher)
                  finally
                  (call-next-method))))
         (t

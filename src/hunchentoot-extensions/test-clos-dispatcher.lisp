@@ -24,6 +24,10 @@
 (defclass another-acceptor (simple-acceptor)
   ())
 
+(def-fixture state ()
+  (let ((hunchentoot:*reply* (make-instance 'hunchentoot:reply)))
+    (&body)))
+
 (hex:def-clos-dispatch ((self simple-acceptor) "/hello") ()
   "hello world")
 
@@ -32,27 +36,29 @@
                 :reader hunchentoot:script-name)))
 
 (test simple-dispatch
- (is (equal "hello world"
-            (hunchentoot:acceptor-dispatch-request
-             (make-instance 'another-acceptor)
-             (make-instance 'fake-request
-                            :script-name "/hello")))))
+  (with-fixture state ()
+   (is (equal "hello world"
+              (hunchentoot:acceptor-dispatch-request
+               (make-instance 'another-acceptor)
+               (make-instance 'fake-request
+                              :script-name "/hello"))))))
 
 (test simple-dispatch-on-parent
- (is (equal "hello world"
-            (hunchentoot:acceptor-dispatch-request
-             (make-instance 'simple-acceptor)
-             (make-instance 'fake-request
-                            :script-name "/hello")))))
+  (with-fixture state ()
+   (is (equal "hello world"
+              (hunchentoot:acceptor-dispatch-request
+               (make-instance 'simple-acceptor)
+               (make-instance 'fake-request
+                              :script-name "/hello"))))))
 
 (test failed-dispatch
-  (is (equal nil
-             (catch 'hunchentoot::handler-done
-               (let ((hunchentoot:*reply* (make-instance 'hunchentoot:reply)))
-                 (hunchentoot:acceptor-dispatch-request
-                  (make-instance 'another-acceptor)
-                  (make-instance 'fake-request
-                                 :script-name "/hello2")))))))
+  (with-fixture state ()
+   (is (equal nil
+              (catch 'hunchentoot::handler-done
+                (hunchentoot:acceptor-dispatch-request
+                 (make-instance 'another-acceptor)
+                 (make-instance 'fake-request
+                                :script-name "/hello2")))))))
 
 (hex:def-clos-dispatch ((self simple-acceptor) "/hello3") ()
   "one")
@@ -61,11 +67,12 @@
   "two")
 
 (test use-the-highest-precedence-possible
- (is (equal "two"
-            (hunchentoot:acceptor-dispatch-request
-             (make-instance 'another-acceptor)
-             (make-instance 'fake-request
-                            :script-name "/hello3")))))
+  (with-fixture state ()
+   (is (equal "two"
+              (hunchentoot:acceptor-dispatch-request
+               (make-instance 'another-acceptor)
+               (make-instance 'fake-request
+                              :script-name "/hello3"))))))
 
 (hex:def-clos-dispatch ((self simple-acceptor) "/markup") ()
   <html>
@@ -73,10 +80,11 @@
   </html>)
 
 (test handles-markup
-  (assert-that
-   (hunchentoot:acceptor-dispatch-request
-    (make-instance 'simple-acceptor)
-    (make-instance 'fake-request
-                   :script-name "/markup"))
-   (contains-string "<html>")
-   (contains-string "hello")))
+  (with-fixture state ()
+   (assert-that
+    (hunchentoot:acceptor-dispatch-request
+     (make-instance 'simple-acceptor)
+     (make-instance 'fake-request
+                    :script-name "/markup"))
+    (contains-string "<html>")
+    (contains-string "hello"))))
