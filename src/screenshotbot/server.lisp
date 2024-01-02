@@ -102,6 +102,7 @@
   (path:catdir *root* #p"static/"))
 
 (defclass acceptor (#+lispworks acceptor-with-existing-socket
+                    hex:clos-dispatcher
                     util:base-acceptor
                     hunchensocket:websocket-acceptor
                     hex:acceptor-with-plugins) ()
