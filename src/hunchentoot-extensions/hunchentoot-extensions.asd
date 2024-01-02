@@ -38,6 +38,7 @@
                :fiveam)
   :components ((:file "test-acceptor-with-plugins")
                (:file "test-random-port")
+               (:file "test-clos-dispatcher")
                (:file "test-better-easy-handler")
                (:file "test-url")
                (:file "test-async")))
