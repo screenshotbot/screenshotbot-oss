@@ -41,6 +41,12 @@
         (lambda ()
           ,@body)))))
 
+(defgeneric %normalize (input)
+  (:method ((input string))
+    input)
+  (:method ((input markup:abstract-xml-tag))
+    (markup:write-html input)))
+
 (defmethod hunchentoot:acceptor-dispatch-request ((self clos-dispatcher) request)
   (let ((script-name (hunchentoot:script-name request)))
     (let ((binding (gethash script-name *bindings*)))
@@ -50,7 +56,7 @@
            (loop for class in classes
                  for dispatcher = (gethash class binding)
                  if dispatcher
-                   return (funcall dispatcher)
+                   return (%normalize (funcall dispatcher))
                  finally
                  (call-next-method))))
         (t

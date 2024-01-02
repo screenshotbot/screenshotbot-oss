@@ -6,10 +6,16 @@
 
 (defpackage :hunchentoot-extensions/test-clos-dispatcher
   (:use #:cl
-        #:fiveam))
+        #:fiveam)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that))
 (in-package :hunchentoot-extensions/test-clos-dispatcher)
 
 (util/fiveam:def-suite)
+
+(named-readtables:in-readtable markup:syntax)
 
 (defclass simple-acceptor (hex:clos-dispatcher
                            hunchentoot:acceptor)
@@ -60,3 +66,17 @@
              (make-instance 'another-acceptor)
              (make-instance 'fake-request
                             :script-name "/hello3")))))
+
+(hex:def-clos-dispatch ((self simple-acceptor) "/markup") ()
+  <html>
+  hello
+  </html>)
+
+(test handles-markup
+  (assert-that
+   (hunchentoot:acceptor-dispatch-request
+    (make-instance 'simple-acceptor)
+    (make-instance 'fake-request
+                   :script-name "/markup"))
+   (contains-string "<html>")
+   (contains-string "hello")))
