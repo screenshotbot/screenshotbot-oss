@@ -32,6 +32,13 @@
              (make-instance 'fake-request
                             :script-name "/hello")))))
 
+(test simple-dispatch-on-parent
+ (is (equal "hello world"
+            (hunchentoot:acceptor-dispatch-request
+             (make-instance 'simple-acceptor)
+             (make-instance 'fake-request
+                            :script-name "/hello")))))
+
 (test failed-dispatch
   (is (equal nil
              (catch 'hunchentoot::handler-done
@@ -40,3 +47,16 @@
                   (make-instance 'another-acceptor)
                   (make-instance 'fake-request
                                  :script-name "/hello2")))))))
+
+(hex:def-clos-dispatch ((self simple-acceptor) "/hello3") ()
+  "one")
+
+(hex:def-clos-dispatch ((self another-acceptor) "/hello3") ()
+  "two")
+
+(test use-the-highest-precedence-possible
+ (is (equal "two"
+            (hunchentoot:acceptor-dispatch-request
+             (make-instance 'another-acceptor)
+             (make-instance 'fake-request
+                            :script-name "/hello3")))))
