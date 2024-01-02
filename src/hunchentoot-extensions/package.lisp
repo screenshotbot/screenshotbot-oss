@@ -39,4 +39,6 @@
            #:register-plugin
            #:process-plugin-request
            #:dispatch-plugin-request
-           #:secure-acceptor))
+           #:secure-acceptor
+           #:clos-dispatcher
+           #:def-clos-dispatch))

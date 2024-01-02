@@ -19,6 +19,7 @@
                (:file "existing-socket")
                (:file "random-port")
                (:file "acceptor-with-plugins")
+               (:file "clos-dispatcher")
                (:file "better-easy-handler")
                (:file "postdata")
                (:file "async")
