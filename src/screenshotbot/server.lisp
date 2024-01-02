@@ -238,6 +238,9 @@
 (defhandler (nil :uri "/force-crash") ()
   (error "ouch"))
 
+(hex:def-clos-dispatch ((self acceptor) "/force-crash2") ()
+  (error "ouch2"))
+
 ;; (ignore-and-log-errors ()  (error "foo"))
 
 
