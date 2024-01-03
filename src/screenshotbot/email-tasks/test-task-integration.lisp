@@ -32,8 +32,6 @@
                 #:make-user
                 #:users-for-company
                 #:user-personal-company)
-  (:import-from #:screenshotbot/login/common
-                #:*current-company-override*)
   (:import-from #:screenshotbot/testing
                 #:screenshot-test
                 #:with-installation

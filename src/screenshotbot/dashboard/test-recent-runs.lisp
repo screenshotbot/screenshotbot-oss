@@ -30,8 +30,6 @@
                 #:user-with-email)
   (:import-from #:screenshotbot/dashboard/recent-runs
                 #:find-recent-runs)
-  (:import-from #:screenshotbot/login/common
-                #:*current-company-override*)
   (:import-from #:screenshotbot/user-api
                 #:pull-request-url)
   (:import-from #:util/testing

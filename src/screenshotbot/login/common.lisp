@@ -45,7 +45,6 @@
                 #:throttle!
                 #:throttler)
   (:export
-   #:*current-company-override*
    #:with-oauth-state-and-redirect
    #:make-redirect-nibble
    #:signin-get
@@ -60,8 +59,6 @@
 (in-package :screenshotbot/login/common)
 
 (markup:enable-reader)
-
-(defvar *current-company-override* nil)
 
 (defclass abstract-oauth-provider (auth-provider)
   ((oauth-name :initarg :oauth-name

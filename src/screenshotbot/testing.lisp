@@ -22,8 +22,6 @@
   (:import-from #:screenshotbot/user-api
                 #:current-company
                 #:current-user)
-  (:import-from #:screenshotbot/login/common
-                #:*current-company-override*)
   (:import-from #:util/testing
                 #:define-screenshot-test-init
                 #:with-global-binding
@@ -98,8 +96,7 @@
                 (setf (auth:request-user hunchentoot:*request*) ,user)
                 (setf (auth:request-account hunchentoot:*request*)
                       ,company)
-                (let ((*current-company-override* ,company))
-                  (body)))))
+                (body))))
            (t
             (body)))))))
 
@@ -144,5 +141,3 @@
     (:screenshotbot.pro.css/extended-dashboard . "assets/css/extended-dashboard.css")
     #-screenshotbot-oss
     (:screenshotbot.pro.css . "assets/css/new-landing.css")))
-
-
