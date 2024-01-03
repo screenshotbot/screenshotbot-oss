@@ -10,6 +10,11 @@
                  :port 1
                  :name 'default-acceptor))
 
+(defvar *top-level-acceptor* nil
+  "This will be bound to the multi-acceptor before binding
+hunchentoot:*acceptor*. This let's your code get access to the
+top-level acceptor (e.g. you might want to get the acceptor-port)")
+
 (defclass multi-acceptor (acceptor)
   ((sub-acceptors :initform nil :accessor sub-acceptors)
    (default-acceptor :initform *default-acceptor*
@@ -59,7 +64,8 @@
 (defmethod process-request ((request multi-request))
    (flet ((dispatch-acceptor (acceptor)
             (return-from process-request
-              (let* ((*acceptor* acceptor)
+              (let* ((*top-level-acceptor* *acceptor*)
+                     (*acceptor* acceptor)
                      (*request* (copy-request request *acceptor*)))
                 (process-request *request*)))))
 

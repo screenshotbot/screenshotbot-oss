@@ -7,4 +7,5 @@
            #:*default-acceptor*
            :listen-fd
            #:add-acceptor
-           #:default-acceptor))
+           #:default-acceptor
+           #:*top-level-acceptor*))
