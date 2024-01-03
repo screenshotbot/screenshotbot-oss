@@ -406,3 +406,9 @@
     :serial t
     :depends-on ()
     :components ((:file "ssl")))
+
+(defsystem :util/symbol-detector
+  :serial t
+  :depends-on (:markup
+               :named-readtables)
+  :components ((:file "symbol-detector")))
