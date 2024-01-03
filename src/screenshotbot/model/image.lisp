@@ -738,6 +738,8 @@ recognized the file, we'll return nil."
        (with-local-image (file image)
          (trivial-file-size:file-size-in-octets file))
      (no-image-uploaded-yet ()
+       0)
+     (zs3::xml-binding-error ()
        0))))
 
 ;;(length (all-soft-expired-images))
