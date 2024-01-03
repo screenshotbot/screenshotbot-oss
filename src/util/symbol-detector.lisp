@@ -11,8 +11,8 @@
 (in-package :util/symbol-detector)
 
 (defun fix-content (content)
-  (let ((content (str:replace-all "#:" "__" content))
-        (content (str:replace-all ":" "_" content)))
+  (let* ((content (str:replace-all "#:" "__" content))
+         (content (str:replace-all ":" "_" content)))
     content))
 
 (defun detect (filename)
@@ -60,11 +60,17 @@
                           '(named-readtables:in-readtable
                             markup:enable-reader))
                   (string-equal
-                   "markup_enable-reader" (string-downcase (symbol-name (car expr)))))
+                   "markup_enable-reader" (string-downcase (symbol-name (car expr))))
+                  (string-equal
+                   "named-readtables_in-readtable" (string-downcase (symbol-name (car expr)))))
                 do
                    (setf readtable (named-readtables::ensure-readtable
-                                    (or (second expr)
-                                        'markup:syntax)))
+                                    (let ((rt (second expr)))
+                                      (cond
+                                        ((string-equal "markup_syntax" (string rt))
+                                         'markup:syntax)
+                                        (t
+                                         'markup:syntax)))))
               else
                 do
                    (process-symbols expr)))
@@ -92,10 +98,13 @@
                                                      collect (cons p x))
                                              #'string<
                                              :key (lambda (x) (package-name (car x))))
-            unless (eql (find-package :keyword)
-                        package)
+            unless (or
+                    (eql (find-package :keyword)
+                         package)
+                    (eql (find-package :cl)
+                         package))
             do
-               (format t "(:import from #:~a" (string-downcase (package-name package)))
+               (format t "(:import-from #:~a" (string-downcase (package-name package)))
                (loop for symbol in (sort symbols #'string< :key #'symbol-name)
                      do (format t "~%   #:~a" (string-downcase (symbol-name symbol))))
                (format t ")~%"))
@@ -103,6 +112,6 @@
       (dolist (sym (get-external-symbols package))
         (format t "~%   #:~a" (string-downcase (symbol-name sym)))))
 
-    (format t ")~%")))
+    (format t "))~%")))
 
-;; (format t "~a" (generate-defpackage "/home/arnold/builds/web/src/screenshotbot/login/common.lisp"))
+;; (format t "~a" (generate-defpackage "/home/arnold/builds/web/src/screenshotbot/login/signup.lisp"))

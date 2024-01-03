@@ -4,42 +4,59 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/login/signup
-  (:use #:cl
-        #:alexandria
-        #:markup
-        #:nibble
-        #:screenshotbot/login/login
-        #:screenshotbot/login/common
-        #:screenshotbot/user-api
-        #:util/form-errors
-        #:screenshotbot/model/user
-        #:screenshotbot/model/invite
-        #:screenshotbot/model/company
-        #:screenshotbot/ignore-and-log-errors)
-  (:import-from #:screenshotbot/server
-                #:logged-in-p
-                #:*disable-mail*
-                #:defhandler)
-  (:import-from #:screenshotbot/installation
-                #:multi-org-feature
-                #:auth-providers
-                #:mailer*
-                #:installation
-                #:auth-provider-signup-form
-                #:standard-auth-provider)
-  (:import-from #:screenshotbot/mailer
-                #:send-mail)
-  (:import-from #:util
-                #:oid
-                #:find-by-oid)
+(defpackage :screenshotbot/login/signup
+  (:use :cl)
   (:import-from #:bknr.datastore
                 #:with-transaction)
+  (:import-from #:markup/markup
+                #:deftag)
+  (:import-from #:nibble
+                #:nibble)
+  (:import-from #:screenshotbot/installation
+                #:auth-provider-signup-form
+                #:auth-providers
+                #:installation
+                #:mailer*
+                #:standard-auth-provider)
   (:import-from #:screenshotbot/login/common
-                #:after-create-user)
+                #:after-create-user
+                #:auth-template
+                #:signin-get)
+  (:import-from #:screenshotbot/mailer
+                #:send-mail)
+  (:import-from #:screenshotbot/model/invite
+                #:invite
+                #:invite-code
+                #:invite-email
+                #:invite-with-code
+                #:invites-with-email)
+  (:import-from #:screenshotbot/model/user
+                #:confirmation-confirmed-p
+                #:email
+                #:email-confirmation-code
+                #:finish-confirmation
+                #:make-user
+                #:secret-code
+                #:user-first-name
+                #:user-with-email)
+  (:import-from #:screenshotbot/server
+                #:*disable-mail*
+                #:defhandler
+                #:logged-in-p)
+  (:import-from #:screenshotbot/user-api
+                #:current-user
+                #:signup-get
+                #:unaccepted-invites
+                #:user
+                #:user-email)
+  (:import-from #:util/form-errors
+                #:with-form-errors)
+  (:import-from #:util/store/object-id
+                #:find-by-oid
+                #:oid)
   (:import-from #:util/throttler
-                #:throttle!
-                #:keyed-throttler)
+                #:keyed-throttler
+                #:throttle!)
   (:export
    #:signup-get
    #:signup-get-page
