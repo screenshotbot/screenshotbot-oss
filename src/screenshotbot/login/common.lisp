@@ -153,24 +153,25 @@
    (boundp 'hunchentoot:*request*)
    (auth:request-user hunchentoot:*request*)))
 
+(defgeneric company-for-request (installation request)
+  (:method ((installation multi-org-feature) request)
+    (cond
+      ((not (logged-in-p))
+       nil)
+      (t
+       (guess-best-company
+        (auth:session-value :company)
+        (auth:request-user request)))))
+  (:method (installation request)
+    (get-singleton-company (installation))))
+
 (defmethod auth:authenticate-request ((request screenshotbot/server:request))
   (unless (auth:request-user request) ;; Might happen in tests
     (alexandria:when-let ((user (auth:session-value :user)))
       (check-type user user)
       (setf (auth:request-user request) user)))
   (unless (auth:request-account request)
-    (alexandria:when-let ((company
-                           (typecase (installation)
-                             (multi-org-feature
-                              (cond
-                                ((not (logged-in-p))
-                                 nil)
-                                (t
-                                 (guess-best-company
-                                  (auth:session-value :company)
-                                  (auth:request-user request)))))
-                             (t
-                              (get-singleton-company (installation))))))
+    (alexandria:when-let ((company (company-for-request (installation) request)))
       (setf (auth:request-account request) company))))
 
 (defun guess-best-company (company user)
