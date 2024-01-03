@@ -2,6 +2,8 @@
   (:use #:cl)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:common-lisp
+                #:with-open-stream)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:http-request
@@ -53,14 +55,58 @@
           (handle-error e)))))))
 
 
-(defclass engine ()
+(defclass force-ip-address-engine ()
   ())
+
+(defclass core-engine ()
+  ())
+
+(defclass engine (core-engine)
+  ())
+
 
 (defvar *engine* (make-instance 'engine)
   "Default request engine. Does not cache, does not use cookies, does not
 use stream pools.")
 
-(defmethod http-request-impl ((engine engine)
+(defmethod http-request-impl ((engine force-ip-address-engine) url
+                              &rest args
+                              &key force-address (force-port 80)
+                                (connection-timeout 20)
+                                (read-timeout 20)
+                                (write-timeout 20)
+                              &allow-other-keys)
+  (cond
+    (force-address
+     (let ((stream (flex:make-flexi-stream
+                    (chunga:make-chunked-stream
+                     #+lispworks
+                     (comm:open-tcp-stream
+                      force-address force-port
+                      :element-type 'flex:octet
+                      :timeout connection-timeout
+                      :read-timeout read-timeout
+                      :write-timeout write-timeout
+                      :errorp t)
+                     #-lispworks
+                     (usocket:socket-stream
+                      (usocket:socket-connect host port
+                                              :element-type 'octet
+                                              :timeout connection-timeout
+                                              :nodelay :if-supported)))
+                    :external-format drakma::+latin-1+)))
+       (with-open-stream (stream stream)
+         (apply #'call-next-method
+                engine url
+                :stream stream
+                (alexandria:remove-from-plist args :force-address :force-port)))))
+    (t
+     (call-next-method))))
+
+(defmethod http-request-impl ((engine engine) url &key &allow-other-keys)
+  (call-next-method))
+
+(defmethod http-request-impl ((engine core-engine)
                               url &rest args &key headers-as-hash-table
                                                want-string
                                                ensure-success
