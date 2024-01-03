@@ -11,8 +11,6 @@
         #:markup
         #:nibble
         #:screenshotbot/login/common
-        #:screenshotbot/login/github-oauth
-        #:screenshotbot/login/google-oauth
         #:screenshotbot/model/github
         #:screenshotbot/model/user
         #:screenshotbot/user-api

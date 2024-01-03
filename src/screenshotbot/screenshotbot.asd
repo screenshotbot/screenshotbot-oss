@@ -257,14 +257,14 @@
     :serial t
     :components ((:file "common")
                  (:file "oidc")
+                 (:file "login")
+                 (:file "signup")
+                 (:file "forgot-password")
+                 (:file "populate")
                  (:file "github-oauth")
                  (:file "github-oauth-ui")
                  (:file "google-oauth")
-                 (:file "aws-cognito")
-                 (:file "login")
-                 (:file "populate")
-                 (:file "signup")
-                 (:file "forgot-password")))
+                 (:file "aws-cognito")))
    (:module "company"
     :serial t
     :components ((:file "new")

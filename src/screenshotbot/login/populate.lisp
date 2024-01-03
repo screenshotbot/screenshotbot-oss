@@ -26,6 +26,16 @@
                 #:md5-file)
   (:import-from #:screenshotbot/dashboard/ensure-company
                 #:populate-company)
+  (:import-from #:screenshotbot/login/common
+                #:after-create-user)
+  (:import-from #:screenshotbot/installation
+                #:multi-org-feature)
+  (:import-from #:screenshotbot/model/user
+                #:user-personal-company)
+  (:import-from #:alexandria
+                #:when-let)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors)
   (:export #:populate-company)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/login/populate)
@@ -73,6 +83,16 @@
                                :previous-run run
                                :title "1 screenshots changed [demo]")))
           (add-company-report company report))))))
+
+(defmethod after-create-user ((installation multi-org-feature)
+                              user)
+  ;; With multi-org-mode, each user will have an associated
+  ;; personal company, in that case this might be a good time
+  ;; to populate it with dummy data.
+  (when-let ((company (user-personal-company user)))
+    (ignore-and-log-errors ()
+      (populate-company company))))
+
 
 ;; (populate-company (user-personal-company (arnold)))
 

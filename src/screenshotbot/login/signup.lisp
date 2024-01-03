@@ -11,15 +11,12 @@
         #:nibble
         #:screenshotbot/login/login
         #:screenshotbot/login/common
-        #:screenshotbot/login/google-oauth
         #:screenshotbot/user-api
         #:util/form-errors
         #:screenshotbot/model/user
         #:screenshotbot/model/invite
         #:screenshotbot/model/company
-        #:screenshotbot/ignore-and-log-errors
-        #:screenshotbot/login/github-oauth
-        #:screenshotbot/login/populate)
+        #:screenshotbot/ignore-and-log-errors)
   (:import-from #:screenshotbot/server
                 #:logged-in-p
                 #:*disable-mail*
@@ -235,15 +232,6 @@
             (hex:safe-redirect "/upgrade"))
            (t
             (hex:safe-redirect redirect))))))))
-
-(defmethod after-create-user ((installation multi-org-feature)
-                              user)
-  ;; With multi-org-mode, each user will have an associated
-  ;; personal company, in that case this might be a good time
-  ;; to populate it with dummy data.
-  (when-let ((company (user-personal-company user)))
-    (ignore-and-log-errors ()
-      (populate-company company))))
 
 (defhandler (confirm-email :uri "/confirm-email/:id/:code" :method :get)
             (code id)
