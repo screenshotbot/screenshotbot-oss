@@ -19,7 +19,9 @@
                  ((symbolp expr)
                   (unless (eql package (symbol-package expr))
                     (setf (gethash (symbol-package expr) result)
-                          expr)))
+                          (list*
+                           expr
+                           (gethash (symbol-package expr) result)))))
                  ((consp expr)
                   (process-symbols (car expr))
                   (process-symbols (cdr expr))))))
@@ -46,6 +48,6 @@
                 do
                    (process-symbols expr)))
       (loop for package being the hash-keys of result
-            collect (cons package (gethash package result))))))
+            collect (cons package (remove-duplicates (gethash package result)))))))
 
 ;; (detect "/home/arnold/builds/web/src/screenshotbot/login/common.lisp")
