@@ -55,7 +55,7 @@ nil)")
 
 (defun arnold/clean-up-defpackage ()
   (interactive)
-  (sly-inspector-eval "(ql:quickload :util/symbol-detector)")
+  (sly-eval `(ql:quickload :util/symbol-detector))
   (save-excursion
     (let* ((filename (buffer-file-name))
            (package
