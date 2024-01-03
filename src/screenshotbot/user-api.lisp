@@ -26,7 +26,6 @@
    #:access-token
    #:commit-link
    #:company-runs
-   #:needs-user!
    #:recorder-run-commit
    #:activep
    #:recorder-previous-run

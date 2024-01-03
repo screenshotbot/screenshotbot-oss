@@ -93,11 +93,6 @@
   (setf (auth:request-user hunchentoot:*request*) user)
   user)
 
-(defun needs-user! ()
-  (unless (logged-in-p)
-    (hex:safe-redirect "/")))
-
-
 (defun server-with-login (fn &key needs-login signup alert company
                            ;; Redirect a GET request back to the
                            ;; original URL instead of a nibble.
