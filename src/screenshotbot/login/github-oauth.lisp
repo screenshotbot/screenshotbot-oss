@@ -4,56 +4,44 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/login/github-oauth
-  (:use :cl)
-  (:import-from #:alexandria
-                #:assoc-value)
+(uiop:define-package :screenshotbot/login/github-oauth
+  (:use #:cl
+        #:alexandria
+        #:screenshotbot/login/common
+        #:util/java
+        #:screenshotbot/model/user
+        #:screenshotbot/user-api
+        #:screenshotbot/model/company
+        #:screenshotbot/github/access-checks
+        #:screenshotbot/model/github)
+  (:import-from #:screenshotbot/server
+                #:defhandler)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:auth-providers)
+  (:import-from #:screenshotbot/github/jwt-token
+                #:github-request)
+  (:import-from #:util #:make-url)
   (:import-from #:bknr.datastore
                 #:store-objects-with-class
                 #:with-transaction)
-  (:import-from #:hunchentoot-extensions
-                #:make-url)
-  (:import-from #:nibble
-                #:nibble)
+  (:import-from #:screenshotbot/login/oidc
+                #:access-token-str
+                #:update-oidc-user
+                #:oauth-get-access-token)
   (:import-from #:screenshotbot/events
                 #:push-event)
-  (:import-from #:screenshotbot/github/access-checks
-                #:github-client
-                #:github-user-service)
-  (:import-from #:screenshotbot/github/jwt-token
-                #:github-request)
-  (:import-from #:screenshotbot/installation
-                #:auth-providers
-                #:installation)
-  (:import-from #:screenshotbot/login/common
-                #:abstract-oauth-provider
-                #:oauth-callback
-                #:oauth-signin-link
-                #:oauth-signup-link)
-  (:import-from #:screenshotbot/login/oidc
-                #:update-oidc-user)
-  (:import-from #:screenshotbot/model/github
-                #:%find-github-user-by-id
-                #:github-login
-                #:known-emails)
-  (:import-from #:screenshotbot/model/user
-                #:email
-                #:github-user
-                #:oauth-user-user
-                #:oauth-users)
-  (:import-from #:screenshotbot/user-api
-                #:access-token
-                #:current-user
-                #:user)
+  (:import-from #:nibble
+                #:nibble)
   (:export
-   #:github-oauth-provider
+   #:prepare-gh-user
    #:make-gh-oauth-link
    #:oauth-get-access-token
-   #:prepare-gh-user))
+   #:github-oauth-provider))
 (in-package :screenshotbot/login/github-oauth)
 
 
-(named-readtables:in-readtable util/java:java-syntax)
+(named-readtables:in-readtable java-syntax)
 
 
 (defclass github-oauth-provider (abstract-oauth-provider)
