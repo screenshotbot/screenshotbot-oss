@@ -5,37 +5,50 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/login/login
-  (:use #:cl
-        #:alexandria
-        #:markup
-        #:nibble
-        #:screenshotbot/login/common
-        #:screenshotbot/model/github
-        #:screenshotbot/model/user
-        #:screenshotbot/user-api
-        #:util/form-errors)
-  (:import-from #:screenshotbot/server
-                #:logged-in-p
-                #:defhandler)
-  (:import-from #:screenshotbot/login/oidc
+(defpackage :screenshotbot/login/login
+  (:use :cl)
+  (:import-from #:alexandria
+                #:if-let)
+  (:import-from #:markup/markup
+                #:deftag
+                #:unescaped)
+  (:import-from #:nibble
+                #:nibble)
+  (:import-from #:oidc/oidc
                 #:end-session-endpoint)
-  (:import-from #:screenshotbot/login/common
-                #:ip-throttler
-                #:oauth-signin-link)
-  (:import-from #:screenshotbot/installation
-                #:standard-auth-provider
-                #:default-oidc-provider
-                #:installation
-                #:auth-provider-signin-form
-                #:auth-providers)
-  (:import-from #:screenshotbot/injector
-                #:with-injection)
+  (:import-from #:screenshotbot/cdn
+                #:img)
   (:import-from #:screenshotbot/impersonation
                 #:impersonation)
+  (:import-from #:screenshotbot/injector
+                #:with-injection)
+  (:import-from #:screenshotbot/installation
+                #:auth-provider-signin-form
+                #:auth-providers
+                #:default-oidc-provider
+                #:installation
+                #:standard-auth-provider)
+  (:import-from #:screenshotbot/login/common
+                #:auth-template
+                #:ip-throttler
+                #:oauth-signin-link
+                #:signin-get)
+  (:import-from #:screenshotbot/model/user
+                #:email
+                #:user-with-email)
+  (:import-from #:screenshotbot/server
+                #:defhandler
+                #:logged-in-p)
+  (:import-from #:screenshotbot/user-api
+                #:current-user
+                #:signup-get
+                #:user)
+  (:import-from #:util/form-errors
+                #:with-form-errors)
   (:import-from #:util/throttler
                 #:throttle!)
-  (:export #:auth-header-logo))
+  (:export
+   #:auth-header-logo))
 (in-package :screenshotbot/login/login)
 
 (markup:enable-reader)
