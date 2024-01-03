@@ -10,14 +10,30 @@
    #:detect))
 (in-package :util/symbol-detector)
 
+(defun fix-content (content)
+  (let ((content (str:replace-all "#:" "__" content))
+        (content (str:replace-all ":" "_" content)))
+    content))
+
 (defun detect (filename)
-  (let ((result (make-hash-table))
-        (package (find-package "CL"))
-        (readtable *readtable*))
+  (let* ((result (make-hash-table))
+         (package (find-package "CL"))
+         (readtable *readtable*)
+         (content (uiop:read-file-string filename)))
+    (log:info "Content is: ~a" content)
     (labels ((process-symbols (expr)
                (cond
                  ((symbolp expr)
-                  (unless (eql package (symbol-package expr))
+                  (unless (or
+                           (eql package (symbol-package expr))
+                           (str:containsp "_" (symbol-name expr))
+                           (member expr
+                                   '(markup/markup::make-escaped
+                                     markup/markup::make-merge-tag
+                                     markup/markup::make-toplevel-node
+                                     markup/markup::make-xml-tag
+                                     system::bq-list
+                                     system::bq-list*)))
                     (setf (gethash (symbol-package expr) result)
                           (list*
                            expr
@@ -26,7 +42,7 @@
                   (process-symbols (car expr))
                   (process-symbols (cdr expr))))))
 
-      (with-open-file (stream filename :direction :input)
+      (let ((stream (make-string-input-stream content)))
         (loop for expr = (let ((*package* package)
                                (*readtable* readtable))
                            (read stream nil nil))
@@ -36,10 +52,15 @@
                 do
                    (log:info "using package ~s" (second expr))
                    (setf package (find-package (second expr)))
-
-              if (member (car expr)
-                         '(named-readtables:in-readtable
-                           markup:enable-reader))
+                   (setf stream (make-string-input-stream
+                                 (fix-content
+                                  (uiop:slurp-input-stream 'string stream))))
+              if (or
+                  (member (car expr)
+                          '(named-readtables:in-readtable
+                            markup:enable-reader))
+                  (string-equal
+                   "markup_enable-reader" (string-downcase (symbol-name (car expr)))))
                 do
                    (setf readtable (named-readtables::ensure-readtable
                                     (or (second expr)
@@ -54,6 +75,12 @@
 
 ;; (detect "/home/arnold/builds/web/src/screenshotbot/login/common.lisp")
 
+(defun get-external-symbols (package)
+  (let ((res))
+    (do-external-symbols (sym package)
+      (push sym res))
+    (sort res #'string<)))
+
 (defun generate-defpackage (file)
   (with-output-to-string (*standard-output*)
     (multiple-value-bind (package-map package)
@@ -65,11 +92,17 @@
                                                      collect (cons p x))
                                              #'string<
                                              :key (lambda (x) (package-name (car x))))
+            unless (eql (find-package :keyword)
+                        package)
             do
                (format t "(:import from #:~a" (string-downcase (package-name package)))
                (loop for symbol in (sort symbols #'string< :key #'symbol-name)
                      do (format t "~%   #:~a" (string-downcase (symbol-name symbol))))
-               (format t ")~%")))
+               (format t ")~%"))
+      (format t "(:export ")
+      (dolist (sym (get-external-symbols package))
+        (format t "~%   #:~a" (string-downcase (symbol-name sym)))))
+
     (format t ")~%")))
 
 ;; (format t "~a" (generate-defpackage "/home/arnold/builds/web/src/screenshotbot/login/common.lisp"))
