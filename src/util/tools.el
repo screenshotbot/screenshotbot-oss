@@ -63,9 +63,11 @@ nil)")
              `(util/symbol-detector::generate-defpackage
                ,filename))))
       (goto-char 0)
-      (search-forward "(defpackage")
+      (re-search-forward "\\(defpackage\\|uiop:define-package\\)")
       (goto-char (line-beginning-position))
       (paredit-kill)
       (save-excursion
-        (insert package))
+        (insert package)
+        ;; Delete the inserted whitespace
+        (paredit-backward-delete))
       (indent-sexp))))

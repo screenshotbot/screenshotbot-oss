@@ -4,63 +4,71 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/login/oidc
-  (:use #:cl
-        #:alexandria
-        #:nibble
-        #:oidc
-        #:screenshotbot/model/user
-        #:screenshotbot/login/common)
-  (:import-from #:screenshotbot/user-api
-                #:user
-                #:current-user)
+(defpackage :screenshotbot/login/oidc
+  (:use :cl)
   (:import-from #:bknr.datastore
-                #:store-object
-                #:with-transaction
                 #:persistent-class
+                #:store-object
+                #:with-transaction)
+  (:import-from #:bknr.indices
                 #:hash-index)
-  (:import-from #:screenshotbot/model/user
-                #:make-user
-                #:oauth-user-user
-                #:oauth-user-full-name
-                #:oauth-user-avatar
-                #:oauth-user-email)
-  (:import-from #:screenshotbot/login/common
-                #:after-create-user)
-  (:import-from #:screenshotbot/installation
-                #:installation)
   (:import-from #:nibble
                 #:nibble)
+  (:import-from #:oidc/oidc
+                #:after-authentication
+                #:logout-link
+                #:make-oidc-auth-link
+                #:oidc)
   (:import-from #:screenshotbot/events
                 #:push-event)
-  (:import-from #:oidc/oidc
-                #:logout-link)
+  (:import-from #:screenshotbot/installation
+                #:installation)
+  (:import-from #:screenshotbot/login/common
+                #:abstract-oauth-provider
+                #:after-create-user
+                #:oauth-callback
+                #:oauth-logo-svg
+                #:oauth-signin-link
+                #:oauth-signup-link)
+  (:import-from #:screenshotbot/model/user
+                #:email
+                #:make-user
+                #:oauth-user-avatar
+                #:oauth-user-email
+                #:oauth-user-full-name
+                #:oauth-user-user
+                #:oauth-users
+                #:user-with-email)
+  (:import-from #:screenshotbot/user-api
+                #:current-user
+                #:user
+                #:user-email)
   (:export
-   #:client-id
-   #:client-secret
-   #:oidc-provider
-   #:issuer
-   #:scope
-   #:discover
-   #:authorization-endpoint
-   #:token-endpoint
-   #:userinfo-endpoint
    #:access-token-class
    #:access-token-str
-   #:oidc-callback
-   #:prepare-oidc-user
-   #:oidc-user
-   #:oauth-user-email
-   #:oauth-user-full-name
-   #:oauth-user-avatar
+   #:authorization-endpoint
+   #:client-id
+   #:client-secret
+   #:discover
+   #:end-session-endpoint
+   #:find-existing-oidc-user
    #:find-oidc-user-by-id
    #:find-oidc-users-by-user-id
-   #:oauth-user-user
    #:identifier
+   #:issuer
+   #:oauth-user-avatar
+   #:oauth-user-email
+   #:oauth-user-full-name
+   #:oauth-user-user
+   #:oidc-callback
+   #:oidc-provider
    #:oidc-provider-identifier
-   #:find-existing-oidc-user
-   #:end-session-endpoint
-   #:update-oidc-user))
+   #:oidc-user
+   #:prepare-oidc-user
+   #:scope
+   #:token-endpoint
+   #:update-oidc-user
+   #:userinfo-endpoint))
 (in-package :screenshotbot/login/oidc)
 
 (defclass oidc-provider (abstract-oauth-provider
