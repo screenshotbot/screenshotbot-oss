@@ -52,3 +52,20 @@ nil)")
 
 (add-hook 'lisp-mode-hook
           'arnold--lisp-mode-hook)
+
+(defun arnold/clean-up-defpackage ()
+  (interactive)
+  (sly-inspector-eval "(ql:quickload :util/symbol-detector)")
+  (save-excursion
+    (let* ((filename (buffer-file-name))
+           (package
+            (sly-eval
+             `(util/symbol-detector::generate-defpackage
+               ,filename))))
+      (goto-char 0)
+      (search-forward "(defpackage")
+      (goto-char (line-beginning-position))
+      (paredit-kill)
+      (save-excursion
+        (insert package))
+      (indent-sexp))))

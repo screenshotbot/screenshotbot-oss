@@ -15,11 +15,13 @@
          (content (str:replace-all ":" "_" content)))
     content))
 
-(defun detect (filename)
+(defun detect (&key filename content)
   (let* ((result (make-hash-table))
          (package (find-package "CL"))
          (readtable *readtable*)
-         (content (uiop:read-file-string filename)))
+         (content (or
+                   content
+                   (uiop:read-file-string filename))))
     (log:info "Content is: ~a" content)
     (labels ((process-symbols (expr)
                (cond
@@ -88,10 +90,10 @@
       (push sym res))
     (sort res #'string<)))
 
-(defun generate-defpackage (file)
+(defun generate-defpackage (filename)
   (with-output-to-string (*standard-output*)
     (multiple-value-bind (package-map package)
-        (detect file)
+        (detect :filename filename)
       (format t "(defpackage :~a
   (:use :cl)~%" (string-downcase (package-name package)))
       (loop for (package . symbols) in (sort (loop for (p . x) in package-map
