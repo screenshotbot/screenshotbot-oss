@@ -4,27 +4,32 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/login/forgot-password
-  (:use #:cl
-        #:alexandria
-        #:markup
-        #:nibble
-        #:screenshotbot/model/user
-        #:util/form-errors)
-  (:import-from #:screenshotbot/server
-                #:defhandler)
-  (:import-from #:screenshotbot/installation
-                #:mailer*)
-  (:import-from #:screenshotbot/mailer
-                #:send-mail)
-  (:import-from #:screenshotbot/login/common
-                #:ip-throttler
-                #:auth-template)
+(defpackage :screenshotbot/login/forgot-password
+  (:use :cl)
   (:import-from #:bknr.datastore
                 #:with-transaction)
+  (:import-from #:markup/markup
+                #:deftag)
+  (:import-from #:nibble
+                #:nibble)
+  (:import-from #:screenshotbot/installation
+                #:mailer*)
+  (:import-from #:screenshotbot/login/common
+                #:auth-template
+                #:ip-throttler)
+  (:import-from #:screenshotbot/mailer
+                #:send-mail)
+  (:import-from #:screenshotbot/model/user
+                #:email
+                #:user-with-email)
+  (:import-from #:screenshotbot/server
+                #:defhandler)
+  (:import-from #:screenshotbot/user-api
+                #:user)
+  (:import-from #:util/form-errors
+                #:with-form-errors)
   (:import-from #:util/throttler
-                #:throttle!
-                #:throttler))
+                #:throttle!))
 (in-package :screenshotbot/login/forgot-password)
 
 (defvar *throttler* (make-instance 'ip-throttler))

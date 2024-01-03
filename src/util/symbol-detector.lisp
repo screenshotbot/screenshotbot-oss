@@ -32,6 +32,7 @@
                                      markup/markup::make-merge-tag
                                      markup/markup::make-toplevel-node
                                      markup/markup::make-xml-tag
+                                     uiop:define-package
                                      system::bq-list
                                      system::bq-list*)))
                     (setf (gethash (symbol-package expr) result)
@@ -114,4 +115,4 @@
 
     (format t "))~%")))
 
-;; (format t "~a" (generate-defpackage "/home/arnold/builds/web/src/screenshotbot/login/signup.lisp"))
+;; (format t "~a" (generate-defpackage "/home/arnold/builds/web/src/screenshotbot/login/forgot-password.lisp"))
