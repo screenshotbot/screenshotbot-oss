@@ -5,23 +5,26 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/login/test-oidc
-  (:use #:cl
-        #:fiveam)
-  (:import-from #:util/store/store
-                #:with-test-store)
-  (:import-from #:util/testing
-                #:with-fake-request)
+  (:use :cl)
+  (:import-from #:cl-mock
+                #:if-called)
+  (:import-from #:it.bese.fiveam
+                #:def-fixture
+                #:is
+                #:test
+                #:with-fixture)
+  (:import-from #:oidc/oidc
+                #:after-authentication)
   (:import-from #:screenshotbot/login/oidc
                 #:oidc-provider)
   (:import-from #:screenshotbot/testing
                 #:with-test-user)
-  (:import-from #:oidc/oidc
-                #:after-authentication)
   (:import-from #:util/store/object-id
                 #:oid)
-  (:import-from #:cl-mock
-                #:if-called
-                #:answer))
+  (:import-from #:util/store/store
+                #:with-test-store)
+  (:import-from #:util/testing
+                #:with-fake-request))
 (in-package :screenshotbot/login/test-oidc)
 
 (util/fiveam:def-suite)

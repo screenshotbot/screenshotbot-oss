@@ -111,10 +111,14 @@
                (loop for symbol in (sort symbols #'string< :key #'symbol-name)
                      do (format t "~%   #:~a" (string-downcase (symbol-name symbol))))
                (format t ")~%"))
-      (format t "(:export ")
-      (dolist (sym (get-external-symbols package))
-        (format t "~%   #:~a" (string-downcase (symbol-name sym)))))
-
-    (format t "))~%")))
+      (cond
+        ((get-external-symbols package)
+         (format t "(:export ")
+         (dolist (sym (get-external-symbols package))
+           (format t "~%   #:~a" (string-downcase (symbol-name sym))))
+         (format t ")"))
+        (t
+         (file-position *standard-output* (1- (file-position *standard-output*))))))
+    (format t ")~%")))
 
 ;; (format t "~a" (generate-defpackage "/home/arnold/builds/web/src/screenshotbot/login/forgot-password.lisp"))
