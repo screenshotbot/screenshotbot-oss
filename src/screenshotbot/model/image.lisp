@@ -127,7 +127,8 @@
    #:image-metadata
    #:find-image-by-oid
    #:base-image-comparer
-   #:dimension=))
+   #:dimension=
+   #:image-size))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
@@ -727,5 +728,16 @@ recognized the file, we'll return nil."
               (soft-expiration-time im :months months)
               now)
             collect im)))
+
+(defvar *image-size-cache* (make-hash-table))
+
+(defmethod image-size (image)
+  (util:or-setf
+   (gethash image *image-size-cache*)
+   (handler-case
+       (with-local-image (file image)
+         (trivial-file-size:file-size-in-octets file))
+     (no-image-uploaded-yet ()
+       0))))
 
 ;;(length (all-soft-expired-images))
