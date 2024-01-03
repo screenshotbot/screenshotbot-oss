@@ -5,7 +5,8 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/login/oidc
-  (:use :cl)
+  (:use #:cl
+        #:oidc)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:store-object
