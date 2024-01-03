@@ -4,40 +4,52 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/login/populate
-  (:use #:cl
-        #:alexandria
-        #:screenshotbot/model/company
-        #:screenshotbot/model/user
-        #:screenshotbot/model/report
-        #:screenshotbot/model/screenshot
-        #:screenshotbot/model/image
-        #:screenshotbot/model/recorder-run)
-  (:import-from #:util #:oid)
-  (:import-from #:screenshotbot/server
-                #:document-root)
+(defpackage :screenshotbot/login/populate
+  (:use :cl)
+  (:import-from #:alexandria
+                #:when-let)
   (:import-from #:bknr.datastore
-                #:with-transaction
-                #:store-object-with-id)
+                #:store-object-with-id
+                #:with-transaction)
   (:import-from #:screenshotbot/api/recorder-run
                 #:%recorder-run-post
                 #:run-response-id)
-  (:import-from #:util/digests
-                #:md5-file)
   (:import-from #:screenshotbot/dashboard/ensure-company
                 #:populate-company)
-  (:import-from #:screenshotbot/login/common
-                #:after-create-user)
   (:import-from #:screenshotbot/installation
                 #:multi-org-feature)
+  (:import-from #:screenshotbot/login/common
+                #:after-create-user)
+  (:import-from #:screenshotbot/model/company
+                #:add-company-report
+                #:company)
+  (:import-from #:screenshotbot/model/image
+                #:image
+                #:make-image)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:active-run
+                #:recorder-run)
   (:import-from #:screenshotbot/model/user
                 #:user-personal-company)
-  (:import-from #:alexandria
-                #:when-let)
+  (:import-from #:screenshotbot/report-api
+                #:report)
+  (:import-from #:screenshotbot/screenshot-api
+                #:local-image)
+  (:import-from #:screenshotbot/server
+                #:document-root)
+  (:import-from #:screenshotbot/user-api
+                #:recorder-previous-run
+                #:recorder-run-channel
+                #:user)
+  (:import-from #:util/digests
+                #:md5-file)
+  (:import-from #:util/store/object-id
+                #:oid)
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
-  (:export #:populate-company)
-  (:local-nicknames (#:dto #:screenshotbot/api/model)))
+  (:local-nicknames (#:dto #:screenshotbot/api/model))
+  (:export
+   #:populate-company))
 (in-package :screenshotbot/login/populate)
 
 (defun md5sum-file (file)

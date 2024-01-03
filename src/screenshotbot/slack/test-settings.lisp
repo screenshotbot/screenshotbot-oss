@@ -5,22 +5,30 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/slack/test-settings
-  (:use #:cl
-        #:alexandria
-        #:bknr.datastore
-        #:fiveam
-        #:screenshotbot/model
-        #:screenshotbot/slack/core
-        #:screenshotbot/slack/settings
-        #:screenshotbot/login/common)
-  (:import-from #:util/store
+  (:use :cl)
+  (:import-from #:core/installation/installation
+                #:*installation*)
+  (:import-from #:it.bese.fiveam
+                #:def-fixture
+                #:is
+                #:test
+                #:with-fixture)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:multi-org-feature)
+  (:import-from #:screenshotbot/model/company
+                #:company
+                #:default-slack-config)
+  (:import-from #:screenshotbot/slack/core
+                #:slack-token)
+  (:import-from #:screenshotbot/slack/settings
+                #:post-settings-slack)
+  (:import-from #:screenshotbot/user-api
+                #:access-token)
+  (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:util/testing
-                #:with-fake-request)
-  (:import-from #:screenshotbot/installation
-                #:*installation*
-                #:installation
-                #:multi-org-feature))
+                #:with-fake-request))
 (in-package :screenshotbot/slack/test-settings)
 
 (util/fiveam:def-suite)
