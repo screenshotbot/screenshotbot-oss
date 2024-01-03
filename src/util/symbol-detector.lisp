@@ -47,7 +47,29 @@
               else
                 do
                    (process-symbols expr)))
-      (loop for package being the hash-keys of result
-            collect (cons package (remove-duplicates (gethash package result)))))))
+      (values
+       (loop for package being the hash-keys of result
+             collect (cons package (remove-duplicates (gethash package result))))
+       package))))
 
 ;; (detect "/home/arnold/builds/web/src/screenshotbot/login/common.lisp")
+
+(defun generate-defpackage (file)
+  (with-output-to-string (*standard-output*)
+    (multiple-value-bind (package-map package)
+        (detect file)
+      (format t "(defpackage :~a
+  (:use :cl)~%" (string-downcase (package-name package)))
+      (loop for (package . symbols) in (sort (loop for (p . x) in package-map
+                                                   if p
+                                                     collect (cons p x))
+                                             #'string<
+                                             :key (lambda (x) (package-name (car x))))
+            do
+               (format t "(:import from #:~a" (string-downcase (package-name package)))
+               (loop for symbol in (sort symbols #'string< :key #'symbol-name)
+                     do (format t "~%   #:~a" (string-downcase (symbol-name symbol))))
+               (format t ")~%")))
+    (format t ")~%")))
+
+;; (format t "~a" (generate-defpackage "/home/arnold/builds/web/src/screenshotbot/login/common.lisp"))
