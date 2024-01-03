@@ -118,7 +118,19 @@
            (format t "~%   #:~a" (string-downcase (symbol-name sym))))
          (format t ")"))
         (t
-         (file-position *standard-output* (1- (file-position *standard-output*))))))
+         (file-position *standard-output* (1- (file-position *standard-output*)))))
+      #+lispworks
+      (alexandria:when-let ((nicknames (hcl:package-local-nicknames package)))
+        (setf nicknames (sort (copy-seq nicknames) #'string< :key #'car))
+        (format t "~%")
+        (format t "  (:local-nicknames ")
+        (format t "~a"
+                (str:join #\Newline
+                          (loop for (key . package) in nicknames
+                                collect (format nil "(#:~a #:~a)" (string-downcase key)
+                                                (string-downcase (package-name package))))))
+        (format t ")")))
+
     (format t ")~%")))
 
 ;; (format t "~a" (generate-defpackage "/home/arnold/builds/web/src/screenshotbot/login/forgot-password.lisp"))
