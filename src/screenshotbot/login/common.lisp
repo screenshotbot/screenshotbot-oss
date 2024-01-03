@@ -4,58 +4,70 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/login/common
-  (:use #:cl
-        #:alexandria
-        #:screenshotbot/user-api
-        #:screenshotbot/model/user
-        #:nibble
-        #:screenshotbot/model/company)
-  (:import-from #:screenshotbot/server
-                #:logged-in-p
-                #:defhandler
-                #:*nibble-plugin*
-                #:server-with-login)
-  (:import-from #:screenshotbot/template
-                #:landing-head)
-  (:import-from #:screenshotbot/installation
-                #:call-with-ensure-user-prepared
-                #:installation
-                #:*installation*
-                #:multi-org-feature
-                #:auth-provider-signin-form
-                #:auth-provider-signup-form
-                #:auth-provider)
-  (:use-reexport #:screenshotbot/cdn)
-  (:import-from #:screenshotbot/user-api
-                #:signup-get)
+(defpackage :screenshotbot/login/common
+  (:use :cl)
   (:import-from #:local-time
                 #:timestamp-
                 #:timestamp>)
+  (:import-from #:nibble
+                #:nibble
+                #:nibble-id)
+  (:import-from #:screenshotbot/cdn
+                #:img)
+  (:import-from #:screenshotbot/installation
+                #:auth-provider
+                #:auth-provider-signin-form
+                #:auth-provider-signup-form
+                #:call-with-ensure-user-prepared
+                #:installation
+                #:multi-org-feature)
   (:import-from #:screenshotbot/model/company
-                #:sso-auth-provider
-                #:get-singleton-company)
-  (:import-from #:screenshotbot/sso/model
-                #:call-with-company-login)
-  (:import-from #:easy-macros
-                #:def-easy-macro)
+                #:company
+                #:get-singleton-company
+                #:sso-auth-provider)
   (:import-from #:screenshotbot/model/recorder-run
                 #:runs-for-company)
+  (:import-from #:screenshotbot/model/user
+                #:companies
+                #:user-personal-company)
+  (:import-from #:screenshotbot/server
+                #:*nibble-plugin*
+                #:defhandler
+                #:logged-in-p
+                #:server-with-login)
+  (:import-from #:screenshotbot/sso/model
+                #:call-with-company-login)
+  (:import-from #:screenshotbot/template
+                #:landing-head)
+  (:import-from #:screenshotbot/user-api
+                #:can-view
+                #:can-view!
+                #:created-at
+                #:current-company
+                #:current-user
+                #:signup-get
+                #:user
+                #:user-companies)
   (:import-from #:util/throttler
                 #:throttle!
                 #:throttler)
   (:export
-   #:with-oauth-state-and-redirect
-   #:make-redirect-nibble
-   #:signin-get
+   #:abstract-oauth-provider
+   #:after-create-user
    #:auth-template
-   #:oauth-name
+   #:img
+   #:img-with-fallback
+   #:link
+   #:make-image-cdn-url
+   #:make-redirect-nibble
    #:oauth-callback
    #:oauth-logo-svg
+   #:oauth-name
    #:oauth-signin-link
    #:oauth-signup-link
-   #:abstract-oauth-provider
-   #:after-create-user))
+   #:script
+   #:signin-get
+   #:with-oauth-state-and-redirect))
 (in-package :screenshotbot/login/common)
 
 (markup:enable-reader)
