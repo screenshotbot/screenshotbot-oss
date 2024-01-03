@@ -11,7 +11,8 @@
 (in-package :util/symbol-detector)
 
 (defun fix-content (content)
-  (let* ((content (str:replace-all "#:" "__" content))
+  (let* ((content (str:replace-all "#_" "__" content) #| java |#)
+         (content (str:replace-all "#:" "__" content))
          (content (str:replace-all ":" "_" content)))
     content))
 
