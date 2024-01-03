@@ -61,9 +61,6 @@
 
 (markup:enable-reader)
 
-(defclass user-view ()
-  ())
-
 (defvar *current-company-override* nil)
 
 (defclass abstract-oauth-provider (auth-provider)
@@ -93,9 +90,6 @@
         <span class= "ms-1">,(oauth-name auth-provider) </span>
       </a>
     </div>)
-
-(defmethod auth:user-class ((user-view user-view))
-  'user)
 
 (defun (setf current-user) (user &key expires-in)
   (setf (auth:session-value :user :expires-in expires-in) user)
