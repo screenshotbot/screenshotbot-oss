@@ -45,7 +45,7 @@
       (format *standard-output* "Inside block~%")
       (handler-bind ((error (lambda (e)
                               (declare (ignore e))
-                              (dbg:output-backtrace :verbose *standard-output*)
+                              (dbg:output-backtrace :brief *standard-output*)
                               (return-from nil :fail))))
         (eval (read-from-string expr))
         (format *standard-output* "End of block~%")
