@@ -70,7 +70,7 @@
    #:with-oauth-state-and-redirect))
 (in-package :screenshotbot/login/common)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defclass abstract-oauth-provider (auth-provider)
   ((oauth-name :initarg :oauth-name
