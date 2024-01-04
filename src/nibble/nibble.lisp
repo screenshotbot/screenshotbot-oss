@@ -123,8 +123,8 @@
                                                     hex:*acceptor-plugin*)
                                  :user
                                  (cond
-                                   ((boundp 'hunchentoot:*acceptor*)
-                                    (nibble-current-user hunchentoot:*acceptor*))
+                                   ((boundp 'hunchentoot:*request*)
+                                    (auth:request-user hunchentoot:*request*))
                                    (t
                                     ;; We're most likely running in tests. As a
                                     ;; safety measure, let's set it up
@@ -143,15 +143,6 @@
 
 (defmethod render-nibble ((plugin nibble-plugin) (nibble nibble))
   (render-nibble plugin (nibble-id nibble)))
-
-(defmethod nibble-current-user (acceptor)
-  "Override this to ensure that if the user logs out, we will not
-  allow them to see the nibble page. In order for the page to be
-  available, both the session and the logged in user should be the
-  same when the nibble was created and when the nibble is viewed
-
-  The objects returned by this are compared with EQL"
-  nil)
 
 (defun safe-parameter (arg)
   (hunchentoot:parameter (str:downcase arg)))
@@ -218,7 +209,7 @@
                             ;; weren't logged in, and they are logged
                             ;; in now, that's always okay
                             nibble-user
-                            (not (eql (nibble-current-user hunchentoot:*acceptor*)
+                            (not (eql (auth:request-user hunchentoot:*request*)
                                       nibble-user))))
                          (nibble-render-logged-out
                           hunchentoot:*acceptor*

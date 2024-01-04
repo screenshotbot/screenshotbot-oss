@@ -181,9 +181,6 @@
         (user-personal-company user)
         (car (user-companies user))))))
 
-(defmethod nibble:nibble-current-user ((acceptor screenshotbot/server:acceptor))
-  (current-user))
-
 (defun (setf current-company) (company)
   (can-view! company)
   (setf (auth:session-value :company) company
