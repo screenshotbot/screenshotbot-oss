@@ -12,8 +12,6 @@
   (:import-from #:nibble
                 #:nibble
                 #:nibble-id)
-  (:import-from #:screenshotbot/cdn
-                #:img)
   (:import-from #:screenshotbot/installation
                 #:auth-provider
                 #:auth-provider-signin-form
@@ -52,17 +50,12 @@
   (:export
    #:abstract-oauth-provider
    #:after-create-user
-   #:img
-   #:img-with-fallback
-   #:link
-   #:make-image-cdn-url
    #:make-redirect-nibble
    #:oauth-callback
    #:oauth-logo-svg
    #:oauth-name
    #:oauth-signin-link
    #:oauth-signup-link
-   #:script
    #:signin-get
    #:with-oauth-state-and-redirect))
 (in-package :screenshotbot/login/common)
