@@ -151,35 +151,35 @@
                                              :email email)
                          (forgot-password-page))))))))
     <auth-template simple=t >
-      <div class= "account-pages mt-5 mb-5">
+      <div class= "mt-5 mb-5">
         <div class= "container">
           <div class= "row justify-content-center">
-            <div class= "col-lg-5">
+            <div class= "col-lg-4">
               <form action=submit method= "POST">
               <div class= "card">
                 <div class= "card-header">
                   <h3>Recover your password</h3>
                 </div>
-            <div class= "card-body">
-              <div class= "form-group">
-                <label for= "email">Email</label>
-                <input class= "form-control" type= "email" id= "email"
-                       name= "email"
-                       placeholder= "crofton@example.com" />
+                <div class= "card-body">
+                  <div class= "form-group mb-3">
+                    <label for= "email" class= "form-label" >Email</label>
+                    <input class= "form-control" type= "email" id= "email"
+                           name= "email"
+                           placeholder= "xyz@example.com" />
+                  </div>
+                </div>
+
+                <div class= "card-footer">
+                  <input type="submit" class= "btn btn-lg btn-primary" value= "Recover Password" />
+                </div>
+                </div>
+              </form>
               </div>
             </div>
 
-            <div class= "card-footer">
-              <input type="submit" class= "btn btn-primary form-control" value= "Recover Password" />
-            </div>
           </div>
-              </form>
-            </div>
-          </div>
-
-      </div>
-    </div>
-   </auth-template>))
+        </div>
+    </auth-template>))
 
 (defhandler (nil :uri "/forgot-password") ()
   (forgot-password-page ))
