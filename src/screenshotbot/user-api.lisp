@@ -5,7 +5,9 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (uiop/package:define-package :screenshotbot/user-api
-    (:use #:cl #:alexandria)
+  (:use #:cl #:alexandria)
+  (:import-from #:auth
+                #:current-user #| T984 |#)
   (:export
    #:current-user
    #:user

@@ -27,3 +27,13 @@
   (auth:with-sessions ()
     (authenticate-request request)
     (call-next-method)))
+
+(defun current-user ()
+  (and
+   (boundp 'hunchentoot:*request*)
+   (auth:request-user hunchentoot:*request*)))
+
+(defun (setf current-user) (user &key expires-in)
+  (setf (auth:session-value :user :expires-in expires-in) user)
+  (setf (auth:request-user hunchentoot:*request*) user)
+  user)

@@ -40,7 +40,6 @@
                 #:can-view!
                 #:created-at
                 #:current-company
-                #:current-user
                 #:signup-get
                 #:user
                 #:user-companies)
@@ -90,11 +89,6 @@
       </a>
     </div>)
 
-(defun (setf current-user) (user &key expires-in)
-  (setf (auth:session-value :user :expires-in expires-in) user)
-  (setf (auth:request-user hunchentoot:*request*) user)
-  user)
-
 (defun server-with-login (fn &key needs-login signup alert company
                            ;; Redirect a GET request back to the
                            ;; original URL instead of a nibble.
@@ -108,7 +102,7 @@
                (lambda ()
                  (call-with-ensure-user-prepared
                   (installation)
-                  (current-user)
+                  (auth:current-user)
                   fn)))
               (t fn))))
    (cond
@@ -119,7 +113,7 @@
       (call-with-company-login (sso-auth-provider company)
                                company
                                fn))
-     ((and needs-login (not (current-user)))
+     ((and needs-login (not (auth:current-user)))
       (funcall
        (if signup #'signup-get #'signin-get)
        :alert alert
@@ -136,10 +130,7 @@
       (funcall fn)))))
 
 
-(defun current-user ()
-  (and
-   (boundp 'hunchentoot:*request*)
-   (auth:request-user hunchentoot:*request*)))
+
 
 (defgeneric company-for-request (installation request)
   (:method ((installation multi-org-feature) request)
@@ -197,7 +188,7 @@
       (auth:request-account hunchentoot:*request*)))
 
 (defun logged-in-p ()
-  (current-user))
+  (auth:current-user))
 
 
 (defun %with-oauth-state-and-redirect (state body)

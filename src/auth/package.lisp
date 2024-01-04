@@ -61,4 +61,5 @@
            #:find-user-session-value-by-hash
            #:request-user
            #:request-account
-           #:csrf-token))
+           #:csrf-token
+           #:current-user))
