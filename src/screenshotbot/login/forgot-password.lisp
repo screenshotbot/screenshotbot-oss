@@ -15,7 +15,6 @@
   (:import-from #:screenshotbot/installation
                 #:mailer*)
   (:import-from #:screenshotbot/login/common
-                #:auth-template
                 #:ip-throttler)
   (:import-from #:screenshotbot/mailer
                 #:send-mail)
@@ -29,7 +28,9 @@
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/throttler
-                #:throttle!))
+                #:throttle!)
+  (:import-from #:screenshotbot/login/template
+                #:auth-template))
 (in-package :screenshotbot/login/forgot-password)
 
 (defvar *throttler* (make-instance 'ip-throttler))

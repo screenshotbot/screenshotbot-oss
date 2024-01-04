@@ -29,7 +29,6 @@
                 #:installation
                 #:standard-auth-provider)
   (:import-from #:screenshotbot/login/common
-                #:auth-template
                 #:ip-throttler
                 #:oauth-signin-link
                 #:signin-get)
@@ -47,6 +46,8 @@
                 #:with-form-errors)
   (:import-from #:util/throttler
                 #:throttle!)
+  (:import-from #:screenshotbot/login/template
+                #:auth-template)
   (:export
    #:auth-header-logo))
 (in-package :screenshotbot/login/login)

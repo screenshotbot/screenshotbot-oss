@@ -20,7 +20,6 @@
                 #:standard-auth-provider)
   (:import-from #:screenshotbot/login/common
                 #:after-create-user
-                #:auth-template
                 #:signin-get)
   (:import-from #:screenshotbot/mailer
                 #:send-mail)
@@ -57,6 +56,8 @@
   (:import-from #:util/throttler
                 #:keyed-throttler
                 #:throttle!)
+  (:import-from #:screenshotbot/login/template
+                #:auth-template)
   (:export
    #:signup-get
    #:signup-get-page

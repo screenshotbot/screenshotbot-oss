@@ -256,6 +256,7 @@
    (:module "login"
     :serial t
     :components ((:file "common")
+                 (:file "template")
                  (:file "oidc")
                  (:file "login")
                  (:file "signup")
