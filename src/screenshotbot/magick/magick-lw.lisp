@@ -175,11 +175,11 @@
 
 (fli:define-foreign-function (magick-wand-genesis "MagickWandGenesis")
     ()
-  :result-type :int)
+  :result-type :void)
 
 (fli:define-foreign-function (magick-wand-terminus "MagickWandTerminus")
     ()
-  :result-type :int)
+  :result-type :void)
 
 (fli:define-foreign-function (new-magick-wand "NewMagickWand")
     ()
