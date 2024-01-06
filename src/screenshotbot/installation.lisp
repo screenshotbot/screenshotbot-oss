@@ -7,7 +7,8 @@
 ;;;; Singleton state representing the current installation
 
 (uiop/package:define-package :screenshotbot/installation
-    (:use #:cl #:screenshotbot/plugin)
+  (:use #:cl #:screenshotbot/plugin
+        #:core/installation/auth-provider)
   (:import-from #:screenshotbot/mailer
                 #:noop-mailer)
   (:import-from #:core/installation/installation
@@ -86,18 +87,8 @@ every user will have only one company that they are an owner of."))
 (defun mailer* (&optional (installation (installation)))
   (mailer installation))
 
-(defclass auth-provider ()
-  ())
-
 (defclass standard-auth-provider (auth-provider)
   ())
-
-(defgeneric auth-provider-signin-form (auth-provider redirect))
-
-(defgeneric auth-provider-signup-form (auth-provider invite-code
-                                       plan
-                                       redirect))
-
 
 (defclass email-auth-provider ()
   ())

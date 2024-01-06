@@ -7,4 +7,5 @@
 (defsystem #:core.installation
   :serial t
   :depends-on (:util.store #| remove |#)
-  :components ((:file "installation")))
+  :components ((:file "installation")
+               (:file "auth-provider")))
