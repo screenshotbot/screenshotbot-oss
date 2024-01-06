@@ -128,11 +128,10 @@
 
 (defmethod load-module :around (self &key force)
   (handler-bind ((error (lambda (e)
-                          (declare (ignore e))
                           ;; If a module does fail, it's probably very
                           ;; early on, so we want to print some
                           ;; additional debugging information.
-                          (log:info "Error loading module: ~a" self))))
+                          (log:error "Error loading module: ~a with ~a" self e))))
     (call-next-method)))
 
 (defmethod load-module ((self native-module) &key force)

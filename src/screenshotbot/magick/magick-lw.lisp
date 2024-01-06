@@ -617,7 +617,6 @@
      (color (:pointer pixel-wand)))
   :result-type :boolean)
 
-
 (fli:define-foreign-function (pixel-get-color-as-string "PixelGetColorAsString")
     ((wand (:pointer pixel-wand)))
   :result-type (:pointer :char))
