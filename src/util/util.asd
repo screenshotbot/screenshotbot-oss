@@ -241,6 +241,7 @@
 
 (defsystem :util/request
   :depends-on (:drakma
+               :str
                :log4cl
                :easy-macros)
   :serial t
@@ -412,3 +413,8 @@
   :depends-on (:markup
                :named-readtables)
   :components ((:file "symbol-detector")))
+
+(defsystem :util/http-ping
+  :serial t
+  :depends-on (:util/request)
+  :components ((:file "http-ping")))
