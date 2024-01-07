@@ -254,7 +254,7 @@
 (defmethod can-view ((channel channel) user)
   (or
    (publicp channel)
-   (is-user-id-same channel user)))
+   (can-view (company channel) user)))
 
 (defmethod production-run-for ((channel channel)
                                &key commit

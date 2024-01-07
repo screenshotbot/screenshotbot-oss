@@ -8,8 +8,6 @@
   (:use :cl)
   (:import-from #:auth
                 #:current-user)
-  (:import-from #:screenshotbot/model/company
-                #:company)
   (:import-from #:screenshotbot/server
                 #:error-obj
                 #:error-user
@@ -19,15 +17,13 @@
                 #:can-public-view
                 #:can-view
                 #:can-view!
-                #:user
-                #:user-companies)
+                #:user)
   (:export
    #:can-edit
    #:can-edit!
    #:can-public-view
    #:can-view
-   #:can-view!
-   #:is-user-id-same))
+   #:can-view!))
 (in-package :screenshotbot/model/view)
 
 ;; This file adds logic to check if a specific object can be viewed by
@@ -39,12 +35,6 @@
 
 (defmethod print-object ((e no-access-error) out)
   (format out "User ~S can't access ~S" (error-user e) (error-obj e)))
-
-(defun is-user-id-same (obj top-user)
-  (let ((company (company obj)))
-    (loop for my-company in (user-companies top-user)
-          if (eql my-company company)
-            do (return t))))
 
 (defun can-view! (&rest objects)
   (let ((user (current-user)))

@@ -577,7 +577,7 @@
   (local-image-url image))
 
 (defmethod can-view ((image image) user)
-  (is-user-id-same image user))
+  (can-view (company image) user))
 
 (defclass metadata ()
   ((image-format :initarg :image-format
