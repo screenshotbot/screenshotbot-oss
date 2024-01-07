@@ -45,6 +45,7 @@
       (format *standard-output* "Inside block~%")
       (handler-bind ((error (lambda (e)
                               (declare (ignore e))
+                              (format t "Got error: ~a~%" e)
                               (dbg:output-backtrace :brief *standard-output*)
                               (return-from nil :fail))))
         (eval (read-from-string expr))
