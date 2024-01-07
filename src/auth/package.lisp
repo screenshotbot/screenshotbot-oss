@@ -69,4 +69,5 @@
            #:can-edit
            #:can-edit!
            #:can-public-view
-           #:no-access-error))
+           #:no-access-error
+           #:current-company))

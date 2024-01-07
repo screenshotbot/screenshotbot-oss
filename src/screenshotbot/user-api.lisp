@@ -12,7 +12,8 @@
                 #:can-view!
                 #:can-public-view
                 #:can-edit
-                #:can-edit!)
+                #:can-edit!
+                #:current-company)
   (:export
    #:current-user
    #:user

@@ -26,7 +26,6 @@
                 #:defhandler
                 #:server-with-login)
   (:import-from #:screenshotbot/user-api
-                #:current-company
                 #:signup-get)
   (:import-from #:util/throttler
                 #:throttle!
@@ -123,16 +122,6 @@
     (alexandria:when-let ((company (company-for-request *installation* request)))
       (setf (auth:request-account request) company))))
 
-
-(defun (setf current-company) (company)
-  (can-view! company)
-  (setf (auth:session-value :company) company
-        (auth:request-account hunchentoot:*request*) company))
-
-(defun current-company ()
-  (and
-      (boundp 'hunchentoot:*request*)
-      (auth:request-account hunchentoot:*request*)))
 
 (defun %with-oauth-state-and-redirect (state body)
   (let* ((nibble-id (and state (parse-integer state)))

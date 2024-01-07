@@ -12,7 +12,8 @@
   :components ((:file "package")
                (:file "auth")
                (:file "request")
-               (:file "view")))
+               (:file "view")
+               (:file "company")))
 
 (defsystem "auth/tests"
   :serial t
