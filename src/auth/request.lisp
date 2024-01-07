@@ -37,3 +37,6 @@
   (setf (auth:session-value :user :expires-in expires-in) user)
   (setf (auth:request-user hunchentoot:*request*) user)
   user)
+
+(defun logged-in-p ()
+  (auth:current-user))

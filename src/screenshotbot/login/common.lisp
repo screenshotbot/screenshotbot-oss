@@ -22,7 +22,6 @@
                 #:nibble-id)
   (:import-from #:screenshotbot/server
                 #:defhandler
-                #:logged-in-p
                 #:server-with-login)
   (:import-from #:screenshotbot/user-api
                 #:can-view!
@@ -135,10 +134,6 @@
   (and
       (boundp 'hunchentoot:*request*)
       (auth:request-account hunchentoot:*request*)))
-
-(defun logged-in-p ()
-  (auth:current-user))
-
 
 (defun %with-oauth-state-and-redirect (state body)
   (let* ((nibble-id (and state (parse-integer state)))

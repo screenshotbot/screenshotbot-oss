@@ -34,6 +34,8 @@
                 #:leaderp)
   (:import-from #:util/throttler
                 #:throttled-error)
+  (:import-from #:auth
+                #:logged-in-p)
   (:export
    #:defhandler
    #:with-login

@@ -62,4 +62,5 @@
            #:request-user
            #:request-account
            #:csrf-token
-           #:current-user))
+           #:current-user
+           #:logged-in-p))
