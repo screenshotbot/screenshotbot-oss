@@ -34,6 +34,8 @@
                 #:fset-unique-index)
   (:import-from #:core/installation/auth
                 #:company-for-request)
+  (:import-from #:core/installation/auth-provider
+                #:company-sso-auth-provider)
   (:export
    #:company
    #:company-reports
@@ -68,7 +70,6 @@
    #:jira-config
    #:add-company-run
    #:company-owner
-   #:sso-auth-provider
    #:add-company-report))
 (in-package :screenshotbot/model/company)
 
@@ -131,7 +132,7 @@
       :index-reader company-with-singletonp)
      (sso-auth-provider
       :initform nil
-      :accessor sso-auth-provider)
+      :accessor company-sso-auth-provider)
      (images
       :initarg :company-images
       :initform nil

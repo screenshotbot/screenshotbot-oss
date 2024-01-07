@@ -10,6 +10,7 @@
                 #:call-with-ensure-user-prepared
                 #:company-for-request)
   (:import-from #:core/installation/auth-provider
+                #:company-sso-auth-provider
                 #:auth-provider
                 #:auth-provider-signin-form
                 #:auth-provider-signup-form)
@@ -18,8 +19,6 @@
   (:import-from #:nibble
                 #:nibble
                 #:nibble-id)
-  (:import-from #:screenshotbot/model/company
-                #:sso-auth-provider)
   (:import-from #:screenshotbot/server
                 #:defhandler
                 #:logged-in-p
@@ -97,8 +96,8 @@
      ((and
        needs-login
        company
-       (sso-auth-provider company))
-      (call-with-company-login (sso-auth-provider company)
+       (company-sso-auth-provider company))
+      (call-with-company-login (company-sso-auth-provider company)
                                company
                                fn))
      ((and needs-login (not (auth:current-user)))
