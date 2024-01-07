@@ -6,29 +6,21 @@
 
 (defpackage :screenshotbot/login/common
   (:use :cl)
-  (:import-from #:local-time
-                #:timestamp-
-                #:timestamp>)
-  (:import-from #:nibble
-                #:nibble
-                #:nibble-id)
   (:import-from #:core/installation/auth
-                #:company-for-request
-                #:call-with-ensure-user-prepared)
+                #:call-with-ensure-user-prepared
+                #:company-for-request)
   (:import-from #:core/installation/auth-provider
                 #:auth-provider
                 #:auth-provider-signin-form
                 #:auth-provider-signup-form)
-  (:import-from #:screenshotbot/installation
-                #:multi-org-feature)
+  (:import-from #:core/installation/installation
+                #:*installation*)
+  (:import-from #:nibble
+                #:nibble
+                #:nibble-id)
   (:import-from #:screenshotbot/model/company
                 #:company
                 #:sso-auth-provider)
-  (:import-from #:screenshotbot/model/recorder-run
-                #:runs-for-company)
-  (:import-from #:screenshotbot/model/user
-                #:companies
-                #:user-personal-company)
   (:import-from #:screenshotbot/server
                 #:defhandler
                 #:logged-in-p
@@ -36,18 +28,13 @@
   (:import-from #:screenshotbot/sso/model
                 #:call-with-company-login)
   (:import-from #:screenshotbot/user-api
-                #:can-view
                 #:can-view!
-                #:created-at
                 #:current-company
                 #:signup-get
-                #:user
-                #:user-companies)
+                #:user)
   (:import-from #:util/throttler
                 #:throttle!
                 #:throttler)
-  (:import-from #:core/installation/installation
-                #:*installation*)
   (:export
    #:abstract-oauth-provider
    #:after-create-user
@@ -132,15 +119,6 @@
       (funcall fn)))))
 
 
-(defmethod company-for-request ((installation multi-org-feature) request)
-  (cond
-    ((not (logged-in-p))
-     nil)
-    (t
-     (guess-best-company
-      (auth:session-value :company)
-      (auth:request-user request)))))
-
 (defmethod auth:authenticate-request ((request screenshotbot/server:request))
   (unless (auth:request-user request) ;; Might happen in tests
     (alexandria:when-let ((user (auth:session-value :user)))
@@ -150,34 +128,11 @@
     (alexandria:when-let ((company (company-for-request *installation* request)))
       (setf (auth:request-account request) company))))
 
-(defun guess-best-company (company user)
-  (when user
-   (if (and company (can-view company user))
-       company
-       (or
-        (most-recent-company (user-companies user))
-        (user-personal-company user)
-        (car (user-companies user))))))
 
 (defun (setf current-company) (company)
   (can-view! company)
   (setf (auth:session-value :company) company
         (auth:request-account hunchentoot:*request*) company))
-
-(defun most-recent-company (companies)
-  "Returns the most recently updated company in the list. If none are
-  updated in the last month, then return the personal company"
-  (cdar
-   (sort
-    (let ((cutoff (timestamp- (local-time:now) 60 :day)))
-      (loop for company in companies
-            for run = (fset:greatest (runs-for-company company))
-            for created-at = (when run (created-at run))
-            if (and created-at (timestamp> created-at cutoff))
-              collect
-              (cons created-at company)))
-    #'timestamp>
-      :key #'car)))
 
 (defun current-company ()
   (and
