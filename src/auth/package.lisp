@@ -64,4 +64,7 @@
            #:csrf-token
            #:current-user
            #:logged-in-p
+           #:can-view
+           #:can-view!
+           #:can-public-view
            #:no-access-error))

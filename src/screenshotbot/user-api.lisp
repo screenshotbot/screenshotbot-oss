@@ -7,7 +7,10 @@
 (uiop/package:define-package :screenshotbot/user-api
   (:use #:cl #:alexandria)
   (:import-from #:auth
-                #:current-user #| T984 |#)
+                #:current-user #| T984 |#
+                #:can-view
+                #:can-view!
+                #:can-public-view)
   (:export
    #:current-user
    #:user

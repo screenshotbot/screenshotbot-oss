@@ -8,12 +8,12 @@
   (:use :cl)
   (:import-from #:auth
                 #:current-user
-                #:no-access-error)
+                #:no-access-error
+                #:can-view
+                #:can-view!)
   (:import-from #:screenshotbot/user-api
                 #:adminp
                 #:can-public-view
-                #:can-view
-                #:can-view!
                 #:user)
   (:export
    #:can-edit
@@ -25,24 +25,6 @@
 
 ;; This file adds logic to check if a specific object can be viewed by
 ;; the given user
-
-(defgeneric can-view (obj user))
-
-(defgeneric can-public-view (obj))
-
-(defun can-view! (&rest objects)
-  (let ((user (current-user)))
-    (dolist (obj objects)
-      (unless (or
-               (can-public-view obj)
-               (and user
-                    (can-view obj user)))
-        (restart-case
-            (error 'no-access-error
-                    :user user
-                    :obj obj)
-          (give-access-anyway ()
-            nil))))))
 
 (defmethod can-view :around (obj (user user))
   (or
