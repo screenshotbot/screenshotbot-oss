@@ -32,6 +32,8 @@
                 #:defindex)
   (:import-from #:util/store/fset-index
                 #:fset-unique-index)
+  (:import-from #:core/installation/auth
+                #:company-for-request)
   (:export
    #:company
    #:company-reports
@@ -320,3 +322,6 @@
     (check-type company company)
     (check-type report store-object)
     (push report (company-reports company)))
+
+(defmethod company-for-request ((installation installation) request)
+  (get-singleton-company installation))

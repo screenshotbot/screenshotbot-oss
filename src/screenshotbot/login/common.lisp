@@ -13,6 +13,7 @@
                 #:nibble
                 #:nibble-id)
   (:import-from #:core/installation/auth
+                #:company-for-request
                 #:call-with-ensure-user-prepared)
   (:import-from #:core/installation/auth-provider
                 #:auth-provider
@@ -22,7 +23,6 @@
                 #:multi-org-feature)
   (:import-from #:screenshotbot/model/company
                 #:company
-                #:get-singleton-company
                 #:sso-auth-provider)
   (:import-from #:screenshotbot/model/recorder-run
                 #:runs-for-company)
@@ -132,8 +132,6 @@
       (funcall fn)))))
 
 
-(defgeneric company-for-request (installation request))
-
 (defmethod company-for-request ((installation multi-org-feature) request)
   (cond
     ((not (logged-in-p))
@@ -142,9 +140,6 @@
      (guess-best-company
       (auth:session-value :company)
       (auth:request-user request)))))
-
-(defmethod company-for-request (installation request)
-  (get-singleton-company *installation*))
 
 (defmethod auth:authenticate-request ((request screenshotbot/server:request))
   (unless (auth:request-user request) ;; Might happen in tests

@@ -7,7 +7,8 @@
 (defpackage :core/installation/auth
   (:use #:cl)
   (:export
-   #:call-with-ensure-user-prepared))
+   #:call-with-ensure-user-prepared
+   #:company-for-request))
 (in-package :core/installation/auth)
 
 (defgeneric call-with-ensure-user-prepared (installation user
@@ -16,3 +17,5 @@
     (funcall fn))
   (:documentation "A web callback to ensure that a user is prepared before rending a
 with-login page."))
+
+(defgeneric company-for-request (installation request))
