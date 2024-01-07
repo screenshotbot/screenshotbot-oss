@@ -47,7 +47,6 @@
    #:*reuben-ip*
    #:*disable-mail*
    #:*seleniump*
-   #:*nibble-plugin*
    #:*domain*
    #:logged-in-p
    #:dashboard
@@ -102,6 +101,7 @@
   (path:catdir *root* #p"static/"))
 
 (defclass acceptor (#+lispworks acceptor-with-existing-socket
+                    nibble:nibble-acceptor-mixin
                     hex:clos-dispatcher
                     util:base-acceptor
                     hunchensocket:websocket-acceptor
@@ -130,15 +130,10 @@
 (defun register-init-hook (name function)
   (setf (alexandria:assoc-value *init-hooks* name) function))
 
-(defvar *nibble-plugin* (make-instance 'nibble:nibble-plugin
-                                        :prefix "/n/"
-                                        :wrapper '%handler-wrap))
-
-
-(defun prepare-acceptor-plugins (acceptor)
-  (pushnew *nibble-plugin* (hex:acceptor-plugins acceptor)))
-
-(prepare-acceptor-plugins *acceptor*)
+(defmethod render-nibble :around ((self acceptor) (id number))
+  (%handler-wrap
+   (lambda ()
+     (call-next-method))))
 
 ;; (hunchentoot:start *acceptor*)
 

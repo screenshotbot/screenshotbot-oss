@@ -37,7 +37,6 @@
   (:import-from #:util/random-port
                 #:random-port)
   (:import-from #:screenshotbot/server
-                #:prepare-acceptor-plugins
                 #:acceptor)
   (:import-from #:screenshotbot/api/recorder-run
                 #:*synchronous-promotion*)
@@ -200,9 +199,7 @@
 
 (test process-results
   (with-installation (:globally t)
-   (with-local-acceptor (host
-                         :prepare-acceptor-callback (lambda (acceptor)
-                                                      (prepare-acceptor-plugins acceptor)))
+   (with-local-acceptor (host)
        ('acceptor)
      (with-fixture state (:host host)
        (unwind-protect
@@ -229,7 +226,6 @@
      (with-fixture state (:host (format nil "http://127.0.0.1:~a" port))
        (let ((acceptor (make-instance 'acceptor
                                       :port port)))
-         (prepare-acceptor-plugins acceptor)
          (hunchentoot:start acceptor)
 
          (unwind-protect

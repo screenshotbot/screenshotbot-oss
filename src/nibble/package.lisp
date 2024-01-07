@@ -13,6 +13,6 @@
            #:get-nibble
            #:render-nibble
            #:nibble-id
-           #:nibble-plugin
            #:defnibble
-           #:nibble-current-user))
+           #:nibble-current-user
+           #:nibble-acceptor-mixin))

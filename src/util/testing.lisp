@@ -6,8 +6,6 @@
 
 (defpackage :util/testing
   (:use #:cl)
-  (:import-from #:nibble
-                #:nibble-plugin)
   (:import-from #:hunchentoot
                 #:acceptor)
   (:import-from #:easy-macros
@@ -46,10 +44,10 @@
     additional-post-params
     (call-next-method))))
 
-(defclass test-acceptor (hex:base-acceptor
+(defclass test-acceptor (nibble:nibble-acceptor-mixin
+                         hex:base-acceptor
                          hex:acceptor-with-plugins)
-  ()
-  (:default-initargs :acceptor-plugins (list (make-instance 'nibble-plugin))))
+  ())
 
 (defmacro with-fake-request ((&key  (acceptor '(quote test-acceptor)) (host "localhost")
                                 (script-name "/")

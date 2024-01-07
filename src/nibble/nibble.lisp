@@ -27,10 +27,10 @@
          :initform nil)
    (calledp :initform nil
             :accessor calledp)
-   (acceptor-plugin :initarg :acceptor-plugin
-                    :initform nil
-                    :reader nibble-acceptor-plugin
-                    :documentation "The plugin where this nibble was created from")
+   (acceptor :initarg :acceptor
+             :initform nil
+             :reader nibble-acceptor
+             :documentation "The acceptor where this nibble was created from")
    (session :initarg :session)
    (user :initarg :user
          :initform nil
@@ -38,9 +38,6 @@
    (check-session-p :initarg :check-session-p
                     :initform nil)
    (ts :initarg :ts)))
-
-(defmethod print-object ((nibble nibble) out)
-  (format out "#<NIBBLE ~a>" (ignore-errors (slot-value nibble 'impl))))
 
 (defun all-nibbles ()
   (bt:with-lock-held (*lock*)
@@ -59,11 +56,10 @@
                do (bt:with-lock-held (*lock*)
                     (remhash (nibble-id nib) *nibbles*)))))))
 
-(defclass nibble-plugin (hex:acceptor-plugin)
-  ((wrapper :initarg :wrapper
-            :initform 'funcall
-            :accessor nibble-plugin-wrapper))
-  (:default-initargs :prefix "/n/"))
+(defclass nibble-acceptor-mixin ()
+  ((nibble-prefix :initarg :nibble-prefix
+                  :reader nibble-prefix))
+  (:default-initargs :nibble-prefix "/n/"))
 
 (defun make-id (ts)
   ;; We'll end up with a 120bit integer.
@@ -119,8 +115,8 @@
                                  :impl impl
                                  :name name
                                  :session (current-session)
-                                 :acceptor-plugin (when (boundp 'hex:*acceptor-plugin*)
-                                                    hex:*acceptor-plugin*)
+                                 :acceptor (when (boundp 'hunchentoot:*acceptor*)
+                                                    hunchentoot:*acceptor*)
                                  :user
                                  (cond
                                    ((boundp 'hunchentoot:*request*)
@@ -138,10 +134,17 @@
                                  :id id)))
     (push-nibble id nibble)))
 
-(hex:define-plugin-handler (run-nibble :uri "/:id" :plugin-name 'nibble-plugin) (id)
-  (render-nibble hex:*acceptor-plugin* id))
+(defmethod hunchentoot:acceptor-dispatch-request ((self nibble-acceptor-mixin)
+                                                  request)
+  (cond
+    ((str:starts-with-p (nibble-prefix self) (hunchentoot:script-name request))
+     (render-nibble self (parse-integer
+                          (third
+                           (str:split "/" (hunchentoot:script-name request))))))
+    (t
+     (call-next-method))))
 
-(defmethod render-nibble ((plugin nibble-plugin) (nibble nibble))
+(defmethod render-nibble ((plugin nibble-acceptor-mixin) (nibble nibble))
   (render-nibble plugin (nibble-id nibble)))
 
 (defun safe-parameter (arg)
@@ -162,64 +165,67 @@
              (with-slots (name) self
                (format stream "Expired nibble with name ~a was accessed" name)))))
 
-(defmethod render-nibble ((plugin nibble-plugin) id)
-  (funcall
-   (nibble-plugin-wrapper plugin)
-   (lambda ()
-     (let ((id (cond
-                 ((stringp id) (parse-integer id))
-                 (t id))))
-       (let ((nibble (get-nibble id)))
-         (cond
-           ((null nibble)
-            (warn 'expired-nibble :name (safe-parameter :_n))
-            (setf (hunchentoot:return-code*) 410 #| GONE |# )
-            (setf (hunchentoot:header-out :x-expired-nibble) "1")
-            <html>
-              <body>
-                The page you're looking for has expired.
-                <a href= "/">Go back</a>
-              </body>
-            </html>)
-           (t
-            (with-slots (impl args session once check-session-p) nibble
-              (let ((args (loop for arg in args
-                                collect (safe-parameter arg))))
-                (flet ((final-render ()
-                         (when once
-                           ;; we need to make sure only one call of this nibble
-                           ;; happens.
-                           (bt:with-lock-held (*lock*)
-                             (when (calledp nibble)
-                               (error "Calling nibble multiple times"))
-                             (setf (calledp nibble) t)))
-                         (let ((hex:*acceptor-plugin* (nibble-acceptor-plugin nibble)))
-                          (apply impl args))))
-                 (cond
-                   ((and (boundp 'hunchentoot:*request*) check-session-p)
-                    ;; Before we call final-render, we should check
-                    ;; the session and logged in user.
-                    (let ((current-session (current-session)))
-                      (cond
-                        ((not (auth:session= session current-session))
-                         (render-incorrect-session plugin))
-                        ((let ((nibble-user (nibble-user nibble)))
-                           (and
-                            ;; if the nibble was created when they
-                            ;; weren't logged in, and they are logged
-                            ;; in now, that's always okay
-                            nibble-user
-                            (not (eql (auth:request-user hunchentoot:*request*)
-                                      nibble-user))))
-                         (nibble-render-logged-out
-                          hunchentoot:*acceptor*
-                          nibble))
-                        (t
-                         (final-render)))))
-                   (t
-                    (final-render)))))))))))))
+(defmethod render-nibble ((plugin nibble-acceptor-mixin) (id string))
+  (render-nibble plugin (parse-integer id)))
 
-(defmethod render-incorrect-session ((plugin nibble-plugin))
+(defmethod maybe-render-html ((self string))
+  self)
+
+(defmethod maybe-render-html ((self markup:abstract-xml-tag))
+  (markup:write-html self))
+
+(defmethod render-nibble ((plugin nibble-acceptor-mixin) (id number))
+  (maybe-render-html
+   (let ((nibble (get-nibble id)))
+     (cond
+       ((null nibble)
+        (warn 'expired-nibble :name (safe-parameter :_n))
+        (setf (hunchentoot:return-code*) 410 #| GONE |# )
+        (setf (hunchentoot:header-out :x-expired-nibble) "1")
+        <html>
+        <body>
+        The page you're looking for has expired.
+        <a href= "/">Go back</a>
+        </body>
+        </html>)
+       (t
+        (with-slots (impl args session once check-session-p) nibble
+          (let ((args (loop for arg in args
+                            collect (safe-parameter arg))))
+            (flet ((final-render ()
+                     (when once
+                       ;; we need to make sure only one call of this nibble
+                       ;; happens.
+                       (bt:with-lock-held (*lock*)
+                         (when (calledp nibble)
+                           (error "Calling nibble multiple times"))
+                         (setf (calledp nibble) t)))
+                     (apply impl args)))
+              (cond
+                ((and (boundp 'hunchentoot:*request*) check-session-p)
+                 ;; Before we call final-render, we should check
+                 ;; the session and logged in user.
+                 (let ((current-session (current-session)))
+                   (cond
+                     ((not (auth:session= session current-session))
+                      (render-incorrect-session plugin))
+                     ((let ((nibble-user (nibble-user nibble)))
+                        (and
+                         ;; if the nibble was created when they
+                         ;; weren't logged in, and they are logged
+                         ;; in now, that's always okay
+                         nibble-user
+                         (not (eql (auth:request-user hunchentoot:*request*)
+                                   nibble-user))))
+                      (nibble-render-logged-out
+                       hunchentoot:*acceptor*
+                       nibble))
+                     (t
+                      (final-render)))))
+                (t
+                 (final-render)))))))))))
+
+(defmethod render-incorrect-session ((plugin nibble-acceptor-mixin))
   <html>
     <body>
       <h1>You cannot view this page.</h1>
@@ -232,17 +238,20 @@
 (defun nibble-full-url (nibble)
   (apply #'hex:make-full-url
    hunchentoot:*request*
-   'run-nibble
-   :id (slot-value nibble 'id)
-   (when (nibble-name nibble)
-     `(:_n ,(string-downcase (nibble-name nibble))))))
+   (nibble-url nibble)))
 
 (defun nibble-url (nibble)
-  (apply #'hex:make-url
-           'run-nibble
-            :id (slot-value nibble 'id)
-            (when (nibble-name nibble)
-              `(:_n ,(string-downcase (nibble-name nibble))))))
+  (let ((url (format nil "~a~a"
+                 (nibble-prefix (nibble-acceptor nibble))
+                 (slot-value nibble 'id))))
+    (cond
+     ((nibble-name nibble)
+      (format nil "~a?_n=~a"
+              url
+              (string-downcase
+               (nibble-name nibble))))
+     (t
+      url))))
 
 
 (defmethod markup:format-attr-val (stream (nibble nibble))
@@ -263,3 +272,6 @@
 
 (cl-cron:make-cron-job 'gc :minute 43
                        :hash-key 'gc)
+
+(defmethod print-object ((nibble nibble) out)
+  (format out "#<NIBBLE ~a>" (ignore-errors (slot-value nibble 'impl))))

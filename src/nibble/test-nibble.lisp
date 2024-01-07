@@ -7,7 +7,6 @@
                 #:nibble-url
                 #:nibble-current-user
                 #:defnibble
-                #:nibble-plugin
                 #:nibble
                 #:render-nibble)
   (:local-nicknames (#:a #:alexandria)))
@@ -16,7 +15,7 @@
 (def-suite* :nibble)
 (def-suite* :nibble/test-nibble :in :nibble)
 
-(defclass fake-acceptor ()
+(defclass fake-acceptor (nibble:nibble-acceptor-mixin)
   ())
 
 (defmethod nibble-current-user ((acceptor fake-acceptor))
@@ -24,15 +23,13 @@
 
 (def-fixture state ()
   (let ((hunchentoot:*acceptor* (make-instance 'fake-acceptor)))
-   (let ((plugin (make-instance 'nibble-plugin
-                                 :prefix "/n/")))
-     (&body))))
+   (&body)))
 
 (test preconditions
   (with-fixture state ()
    (is (equal "foobar"
               (render-nibble
-               plugin
+               hunchentoot:*acceptor*
                (nibble ()
                  "foobar"))))))
 
@@ -44,7 +41,7 @@
   (with-fixture state ()
     (is (equal "foobar2"
                (render-nibble
-                plugin
+                hunchentoot:*acceptor*
                 (nibble foo))))))
 
 (defnibble foo-with-args (name)
@@ -56,7 +53,7 @@
       (auth:with-sessions ()
        (is (equal "hello arnold"
                   (render-nibble
-                   plugin
+                   hunchentoot:*acceptor*
                    (nibble foo-with-args))))))))
 
 (test with-name-renders-url
@@ -67,18 +64,6 @@
                        "")))
          (is (str:ends-with-p "?_n=foobar"
                               (nibble-url  nibble))))))))
-
-(test acceptor-plugin-is-bound
-  (with-fixture state ()
-    (util/testing:with-fake-request ()
-      (auth:with-sessions ()
-        (let ((result))
-         (let ((nibble (let ((hex:*acceptor-plugin* :test))
-                         (nibble (:name :foobar)
-                           (setf result hex:*acceptor-plugin*)
-                           ""))))
-           (render-nibble plugin nibble)
-           (is (eql result :test))))))))
 
 (test render-nibble
   (with-fixture state ()
@@ -92,7 +77,7 @@
 (test expired-nibble
   (with-fixture state ()
     (util/testing:with-fake-request ()
-      (render-nibble plugin "342343243343432232213123123")
+      (render-nibble hunchentoot:*acceptor* "342343243343432232213123123")
       (is (eql 410 (hunchentoot:return-code hunchentoot:*reply*)))
       (is (equal "1" (hunchentoot:header-out :x-expired-nibble))))))
 
@@ -100,4 +85,4 @@
   (with-fixture state ()
     (util/testing:with-fake-request ()
       (signals expired-nibble
-       (render-nibble plugin "342343243343432232213123123")))))
+       (render-nibble hunchentoot:*acceptor* "342343243343432232213123123")))))

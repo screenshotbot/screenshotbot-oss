@@ -30,7 +30,6 @@
                 #:companies
                 #:user-personal-company)
   (:import-from #:screenshotbot/server
-                #:*nibble-plugin*
                 #:defhandler
                 #:logged-in-p
                 #:server-with-login)
@@ -206,7 +205,7 @@
   (declare (ignore code)) ;; will be read from the nibble
   (assert state)
   (nibble:render-nibble
-   *nibble-plugin*
+   hunchentoot:*acceptor*
    state))
 
 (defmacro with-oauth-state-and-redirect ((state) &body body)
