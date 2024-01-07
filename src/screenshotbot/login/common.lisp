@@ -18,7 +18,6 @@
                 #:auth-provider-signup-form)
   (:import-from #:screenshotbot/installation
                 #:call-with-ensure-user-prepared
-                #:installation
                 #:multi-org-feature)
   (:import-from #:screenshotbot/model/company
                 #:company
@@ -46,6 +45,8 @@
   (:import-from #:util/throttler
                 #:throttle!
                 #:throttler)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:export
    #:abstract-oauth-provider
    #:after-create-user
@@ -101,7 +102,7 @@
               (ensure-prepared
                (lambda ()
                  (call-with-ensure-user-prepared
-                  (installation)
+                  *installation*
                   (auth:current-user)
                   fn)))
               (t fn))))
@@ -142,7 +143,7 @@
         (auth:session-value :company)
         (auth:request-user request)))))
   (:method (installation request)
-    (get-singleton-company (installation))))
+    (get-singleton-company *installation*)))
 
 (defmethod auth:authenticate-request ((request screenshotbot/server:request))
   (unless (auth:request-user request) ;; Might happen in tests
@@ -150,7 +151,7 @@
       (check-type user user)
       (setf (auth:request-user request) user)))
   (unless (auth:request-account request)
-    (alexandria:when-let ((company (company-for-request (installation) request)))
+    (alexandria:when-let ((company (company-for-request *installation* request)))
       (setf (auth:request-account request) company))))
 
 (defun guess-best-company (company user)
