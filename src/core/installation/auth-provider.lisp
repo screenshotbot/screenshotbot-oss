@@ -10,7 +10,8 @@
    #:auth-provider
    #:auth-provider-signin-form
    #:auth-provider-signup-form
-   #:company-sso-auth-provider))
+   #:company-sso-auth-provider
+   #:call-with-company-login))
 (in-package :core/installation/auth-provider)
 
 (defclass auth-provider ()
@@ -28,3 +29,6 @@
   (:documentation "An self-service SSO auth provider for the given company. This is an
 incomplete implementation, but we plan to build this out at some point
 of time."))
+
+(defmethod call-with-company-login (auth-provider company fn)
+  (:documentation "Given the auth provider, generate a page with the given auth-provider."))

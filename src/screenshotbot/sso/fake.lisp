@@ -9,6 +9,8 @@
         #:screenshotbot/sso/model)
   (:import-from #:nibble
                 #:nibble)
+  (:import-from #:core/installation/auth-provider
+                #:call-with-company-login)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/sso/fake)
 
@@ -16,7 +18,7 @@
 
 (defmethod call-with-company-login ((sso fake-sso-auth-provider)
                                     company
-                                    fn &key)
+                                    fn)
   <html>
     <body>
       See page <a href= (nibble () (funcall fn)) >here.</a>

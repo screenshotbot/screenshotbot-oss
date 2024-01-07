@@ -12,12 +12,9 @@
                 #:persistent-class)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:call-with-company-login
    #:fake-sso-auth-provider))
 (in-package :screenshotbot/sso/model)
 
 (defclass fake-sso-auth-provider (store-object)
   ()
   (:metaclass persistent-class))
-
-(defgeneric call-with-company-login (auth-provider company fn &key &allow-other-keys))

@@ -10,6 +10,7 @@
                 #:call-with-ensure-user-prepared
                 #:company-for-request)
   (:import-from #:core/installation/auth-provider
+                #:call-with-company-login
                 #:company-sso-auth-provider
                 #:auth-provider
                 #:auth-provider-signin-form
@@ -23,8 +24,6 @@
                 #:defhandler
                 #:logged-in-p
                 #:server-with-login)
-  (:import-from #:screenshotbot/sso/model
-                #:call-with-company-login)
   (:import-from #:screenshotbot/user-api
                 #:can-view!
                 #:current-company
