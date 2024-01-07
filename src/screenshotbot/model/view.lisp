@@ -4,23 +4,30 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/model/view
-  (:use #:cl
-        #:screenshotbot/user-api
-        #:alexandria)
-  (:import-from #:screenshotbot/server
-                #:no-access-error
-                #:error-user
-                #:error-obj)
+(defpackage :screenshotbot/model/view
+  (:use :cl)
+  (:import-from #:auth
+                #:current-user)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:screenshotbot/server
+                #:error-obj
+                #:error-user
+                #:no-access-error)
+  (:import-from #:screenshotbot/user-api
+                #:adminp
+                #:can-public-view
+                #:can-view
+                #:can-view!
+                #:user
+                #:user-companies)
   (:export
+   #:can-edit
+   #:can-edit!
+   #:can-public-view
    #:can-view
    #:can-view!
-   #:can-public-view
-   #:is-user-id-same
-   #:can-edit!
-   #:can-edit))
+   #:is-user-id-same))
 (in-package :screenshotbot/model/view)
 
 ;; This file adds logic to check if a specific object can be viewed by
