@@ -11,7 +11,8 @@
                "session-token")
   :components ((:file "package")
                (:file "auth")
-               (:file "request")))
+               (:file "request")
+               (:file "view")))
 
 (defsystem "auth/tests"
   :serial t

@@ -35,6 +35,7 @@
   (:import-from #:util/throttler
                 #:throttled-error)
   (:import-from #:auth
+                #:no-access-error
                 #:logged-in-p)
   (:export
    #:defhandler
@@ -52,14 +53,9 @@
    #:*domain*
    #:logged-in-p
    #:dashboard
-   #:error-user
    #:make-thread
-   #:error-obj
    #:*acceptor*
-   #:no-access-error
    #:prepare-acceptor-plugins
-   #:error-obj
-   #:error-user
    #:*seleniump*
    #:no-access-error-page
    #:*init-hooks*
@@ -156,12 +152,6 @@
 (defun pp (x)
   (log:info "~S" x)
   x)
-
-(define-condition no-access-error (error)
-  ((user :initarg :user
-         :accessor error-user)
-   (obj :initarg :obj
-        :accessor error-obj)))
 
 (def-easy-macro with-sentry-extras (&fn fn)
   (let ((threading:*extras*

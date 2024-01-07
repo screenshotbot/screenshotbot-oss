@@ -7,10 +7,7 @@
 (defpackage :screenshotbot/model/view
   (:use :cl)
   (:import-from #:auth
-                #:current-user)
-  (:import-from #:screenshotbot/server
-                #:error-obj
-                #:error-user
+                #:current-user
                 #:no-access-error)
   (:import-from #:screenshotbot/user-api
                 #:adminp
@@ -32,9 +29,6 @@
 (defgeneric can-view (obj user))
 
 (defgeneric can-public-view (obj))
-
-(defmethod print-object ((e no-access-error) out)
-  (format out "User ~S can't access ~S" (error-user e) (error-obj e)))
 
 (defun can-view! (&rest objects)
   (let ((user (current-user)))
