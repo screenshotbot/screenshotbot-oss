@@ -131,19 +131,19 @@
       (funcall fn)))))
 
 
+(defgeneric company-for-request (installation request))
 
+(defmethod company-for-request ((installation multi-org-feature) request)
+  (cond
+    ((not (logged-in-p))
+     nil)
+    (t
+     (guess-best-company
+      (auth:session-value :company)
+      (auth:request-user request)))))
 
-(defgeneric company-for-request (installation request)
-  (:method ((installation multi-org-feature) request)
-    (cond
-      ((not (logged-in-p))
-       nil)
-      (t
-       (guess-best-company
-        (auth:session-value :company)
-        (auth:request-user request)))))
-  (:method (installation request)
-    (get-singleton-company *installation*)))
+(defmethod company-for-request (installation request)
+  (get-singleton-company *installation*))
 
 (defmethod auth:authenticate-request ((request screenshotbot/server:request))
   (unless (auth:request-user request) ;; Might happen in tests
