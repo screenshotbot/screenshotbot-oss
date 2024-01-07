@@ -10,7 +10,9 @@
                 #:current-user #| T984 |#
                 #:can-view
                 #:can-view!
-                #:can-public-view)
+                #:can-public-view
+                #:can-edit
+                #:can-edit!)
   (:export
    #:current-user
    #:user

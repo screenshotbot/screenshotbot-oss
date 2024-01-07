@@ -22,7 +22,9 @@
   (:documentation "Can the USER view object OBJ?"))
 
 (defgeneric can-public-view (obj)
-  (:documentation "Can the public (non-logged-in user?) view the object OBJ?"))
+  (:documentation "Can the public (non-logged-in user?) view the object OBJ?")
+  (:method (obj)
+    nil))
 
 
 (defun can-view! (&rest objects)
@@ -38,3 +40,21 @@
                     :obj obj)
           (give-access-anyway ()
             nil))))))
+
+(defgeneric can-edit (obj user)
+  (:method (obj user)
+    nil)
+  (:documentation "Can the USER edit object OBJ?"))
+
+(defmethod can-edit! (&rest objects)
+  (let ((user (current-user)))
+    (dolist (obj objects)
+      (unless (can-edit obj user)
+        (error 'no-access-error :user user :obj obj)))))
+
+(defmethod can-edit :around (obj user)
+  "In order to edit something, we also need to be able to view it."
+  (and
+   user
+   (can-view obj user)
+   (call-next-method)))

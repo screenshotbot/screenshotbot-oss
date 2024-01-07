@@ -20,4 +20,5 @@
                :util/testing
                :fiveam-matchers
                :util/fiveam)
-  :components ((:file "test-auth")))
+  :components ((:file "test-auth")
+               (:file "test-view")))

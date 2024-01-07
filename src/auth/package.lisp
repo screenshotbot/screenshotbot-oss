@@ -66,5 +66,7 @@
            #:logged-in-p
            #:can-view
            #:can-view!
+           #:can-edit
+           #:can-edit!
            #:can-public-view
            #:no-access-error))
