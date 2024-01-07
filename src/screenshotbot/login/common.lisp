@@ -27,8 +27,7 @@
                 #:server-with-login)
   (:import-from #:screenshotbot/user-api
                 #:current-company
-                #:signup-get
-                #:user)
+                #:signup-get)
   (:import-from #:util/throttler
                 #:throttle!
                 #:throttler)
@@ -119,7 +118,6 @@
 (defmethod auth:authenticate-request ((request screenshotbot/server:request))
   (unless (auth:request-user request) ;; Might happen in tests
     (alexandria:when-let ((user (auth:session-value :user)))
-      (check-type user user)
       (setf (auth:request-user request) user)))
   (unless (auth:request-account request)
     (alexandria:when-let ((company (company-for-request *installation* request)))
