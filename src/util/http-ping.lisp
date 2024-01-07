@@ -13,7 +13,12 @@
 (in-package :util/http-ping)
 
 (defun http-ping (url)
-  (log:info "Hacky: To exit, C-c and then type (quit)")
+  (format t "===========================================~%")
+  (format t "~%")
+  (format t "  REMINDER: use /test-headers as a convenience endpoint for enterprise
+  installs, otherwise it tries to redirect to an OIDC nibble.~%~%")
+  (format t "  Hacky: To exit, C-c and then type (quit)~%~%")
+  (format t "===========================================~%")
   (when (str:emptyp url)
     (error "Need a url argument"))
   (let ((good 0)
@@ -31,9 +36,11 @@
               (lambda ()
                 (handler-case
                     (progn
-                      (http-request
-                       url
-                       :ensure-success t)
+                      (let ((content (http-request
+                                      url
+                                      :ensure-success t)))
+                        ;;(log:info "Got content: ~a" content)
+                        )
                       (bt:with-lock-held (lock)
                         (incf good)))
                   (error (e)
