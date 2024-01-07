@@ -8,4 +8,5 @@
   :serial t
   :depends-on (:util.store #| remove |#)
   :components ((:file "installation")
-               (:file "auth-provider")))
+               (:file "auth-provider")
+               (:file "auth")))

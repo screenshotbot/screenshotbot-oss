@@ -8,7 +8,8 @@
 
 (uiop/package:define-package :screenshotbot/installation
   (:use #:cl #:screenshotbot/plugin
-        #:core/installation/auth-provider)
+        #:core/installation/auth-provider
+        #:core/installation/auth)
   (:import-from #:screenshotbot/mailer
                 #:noop-mailer)
   (:import-from #:core/installation/installation
@@ -115,10 +116,3 @@ every user will have only one company that they are an owner of."))
      ,@body))
 
 (defgeneric default-logged-in-page (installation))
-
-(defgeneric call-with-ensure-user-prepared (installation user
-                                            fn)
-  (:method (installation user fn)
-    (funcall fn))
-  (:documentation "A web callback to ensure that a user is prepared before rending a
-with-login page."))

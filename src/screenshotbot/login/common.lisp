@@ -12,12 +12,13 @@
   (:import-from #:nibble
                 #:nibble
                 #:nibble-id)
+  (:import-from #:core/installation/auth
+                #:call-with-ensure-user-prepared)
   (:import-from #:core/installation/auth-provider
                 #:auth-provider
                 #:auth-provider-signin-form
                 #:auth-provider-signup-form)
   (:import-from #:screenshotbot/installation
-                #:call-with-ensure-user-prepared
                 #:multi-org-feature)
   (:import-from #:screenshotbot/model/company
                 #:company
