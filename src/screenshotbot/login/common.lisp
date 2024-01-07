@@ -6,15 +6,17 @@
 
 (defpackage :screenshotbot/login/common
   (:use :cl)
+  (:import-from #:auth
+                #:can-view!)
   (:import-from #:core/installation/auth
                 #:call-with-ensure-user-prepared
                 #:company-for-request)
   (:import-from #:core/installation/auth-provider
-                #:call-with-company-login
-                #:company-sso-auth-provider
                 #:auth-provider
                 #:auth-provider-signin-form
-                #:auth-provider-signup-form)
+                #:auth-provider-signup-form
+                #:call-with-company-login
+                #:company-sso-auth-provider)
   (:import-from #:core/installation/installation
                 #:*installation*)
   (:import-from #:nibble
@@ -24,7 +26,6 @@
                 #:defhandler
                 #:server-with-login)
   (:import-from #:screenshotbot/user-api
-                #:can-view!
                 #:current-company
                 #:signup-get
                 #:user)
