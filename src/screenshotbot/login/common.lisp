@@ -19,7 +19,6 @@
                 #:nibble
                 #:nibble-id)
   (:import-from #:screenshotbot/model/company
-                #:company
                 #:sso-auth-provider)
   (:import-from #:screenshotbot/server
                 #:defhandler
