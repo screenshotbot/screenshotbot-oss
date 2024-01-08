@@ -24,8 +24,6 @@
                 #:oidc)
   (:import-from #:screenshotbot/events
                 #:push-event)
-  (:import-from #:screenshotbot/installation
-                #:installation)
   (:import-from #:screenshotbot/login/common
                 #:abstract-oauth-provider
                 #:after-create-user
@@ -47,6 +45,8 @@
                 #:user-email)
   (:import-from #:util/store/store
                 #:with-class-validation)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:export
    #:access-token-class
    #:access-token-str
@@ -202,7 +202,7 @@ user as used in Screenshotbot)"
        (setf (user-email user) email)))
 
     (when first-time-p
-     (after-create-user (installation) user))
+      (after-create-user *installation* user))
     user))
 
 
