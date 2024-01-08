@@ -28,9 +28,7 @@
   (:documentation "An acceptor mixin that let's you create routes for scripts using CLOS."))
 
 
-(defmacro def-clos-dispatch (((var class) script-name) vars &body body)
-  (when vars
-    (error "Using vars is not supported yet"))
+(defmacro def-clos-dispatch (((var class) script-name) params &body body)
   `(bt:with-lock-held (*lock*)
      (let ((old
              (util/misc:or-setf
@@ -40,7 +38,9 @@
         (gethash (find-class ',class) old)
         (lambda (,var)
           (declare (ignorable ,var))
-          ,@body)))))
+          (let ,(loop for param in params
+                      collect `(,param (hunchentoot:parameter ,(string-downcase param))))
+            ,@body))))))
 
 (defgeneric %normalize (input)
   (:method ((input string))
