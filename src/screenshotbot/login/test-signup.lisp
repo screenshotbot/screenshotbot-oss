@@ -12,6 +12,7 @@
                 #:*disable-mail*)
   (:import-from #:screenshotbot/login/signup
                 #:render-signup-confirmation
+                #:signup-get
                 #:signup-post)
   (:import-from #:screenshotbot/model/company
                 #:prepare-singleton-company
@@ -26,8 +27,6 @@
   (:import-from #:util/testing
                 #:screenshot-static-page
                 #:with-fake-request)
-  (:import-from #:screenshotbot/user-api
-                #:signup-get)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:screenshotbot/login/github-oauth

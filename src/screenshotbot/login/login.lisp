@@ -31,6 +31,7 @@
   (:import-from #:screenshotbot/login/common
                 #:ip-throttler
                 #:oauth-signin-link
+                #:signup-get
                 #:signin-get)
   (:import-from #:screenshotbot/model/user
                 #:email
@@ -40,7 +41,6 @@
                 #:logged-in-p)
   (:import-from #:screenshotbot/user-api
                 #:current-user
-                #:signup-get
                 #:user)
   (:import-from #:util/form-errors
                 #:with-form-errors)

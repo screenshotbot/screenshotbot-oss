@@ -20,6 +20,7 @@
                 #:standard-auth-provider)
   (:import-from #:screenshotbot/login/common
                 #:after-create-user
+                #:signup-get
                 #:signin-get)
   (:import-from #:screenshotbot/mailer
                 #:send-mail)
@@ -44,7 +45,6 @@
                 #:logged-in-p)
   (:import-from #:screenshotbot/user-api
                 #:current-user
-                #:signup-get
                 #:unaccepted-invites
                 #:user
                 #:user-email)

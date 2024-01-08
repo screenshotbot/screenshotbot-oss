@@ -17,7 +17,6 @@
   (:export
    #:current-user
    #:user
-   #:signup-get
    #:user-full-name
    #:singletonp
    #:user-companies
@@ -65,4 +64,3 @@
 
 
 (declaim (ftype (function ()) current-user))
-(declaim (ftype (function (&key &allow-other-keys)) signup-get))

@@ -25,8 +25,6 @@
   (:import-from #:screenshotbot/server
                 #:defhandler
                 #:server-with-login)
-  (:import-from #:screenshotbot/user-api
-                #:signup-get)
   (:import-from #:util/throttler
                 #:throttle!
                 #:throttler)
@@ -40,6 +38,7 @@
    #:oauth-signin-link
    #:oauth-signup-link
    #:signin-get
+   #:signup-get
    #:with-oauth-state-and-redirect))
 (in-package :screenshotbot/login/common)
 
