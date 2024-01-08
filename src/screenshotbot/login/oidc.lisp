@@ -4,9 +4,11 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+;; CAREFUL: BKNR.DATASTORE CLASSES IN HERE!
 (defpackage :screenshotbot/login/oidc
-  (:use #:cl
-        #:oidc)
+  (:use :cl)
+  (:import-from #:auth
+                #:current-user)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:store-object
@@ -41,7 +43,6 @@
                 #:oauth-users
                 #:user-with-email)
   (:import-from #:screenshotbot/user-api
-                #:current-user
                 #:user
                 #:user-email)
   (:export
