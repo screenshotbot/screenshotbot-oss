@@ -119,7 +119,7 @@
                                                                    value)
        (assert (symbolp slot-name))
        (cond
-         ,@ (loop for (slot old-slot acc) in slots
+         ,@ (loop for (slot nil nil) in slots
                   collect
                   `((string= ,(str:substring 1 nil (string slot)) (string slot-name))
                     (log:info "Renaming slot ~a for ~a" ,(str:substring 1 nil (string slot)) self)
@@ -127,7 +127,7 @@
             (t
              (call-next-method))))
 
-     ,@(loop for (slot old-slot acc) in slots
+     ,@(loop for (nil old-slot acc) in slots
               collect
               `(defmethod ,acc :around ((self oidc-user))
                  (cond
@@ -136,7 +136,7 @@
                    (t
                     (call-next-method)))))
 
-     ,@(loop for (slot old-slot acc) in slots
+     ,@(loop for (nil old-slot acc) in slots
              collect
              `(defmethod (setf ,acc) :after (val (self oidc-user))
                (slot-makunbound self ',old-slot)
