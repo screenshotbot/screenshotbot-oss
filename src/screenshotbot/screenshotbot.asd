@@ -341,7 +341,6 @@
                (:file "test-artifacts")
                (:file "test-promote-api")
                (:file "test-diff-report")
-               (:file "test-events" :if-feature (:not :windows))
                (:file "test-mailer")
                (:file "test-secret")
                (:file "test-async")

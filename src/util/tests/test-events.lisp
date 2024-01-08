@@ -4,10 +4,10 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/test-events
+(defpackage :util/tests/test-events
   (:use #:cl
         #:fiveam)
-  (:import-from #:screenshotbot/events
+  (:import-from #:util/events
                 #:with-tracing
                 #:event-engine
                 #:with-event
@@ -29,7 +29,7 @@
                 #:installation-domain
                 #:*installation*)
   (:local-nicknames (#:a #:alexandria)))
-(in-package :screenshotbot/test-events)
+(in-package :util/tests/test-events)
 
 (util/fiveam:def-suite)
 

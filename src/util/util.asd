@@ -344,6 +344,7 @@
                :util/timeago
                :util/json-mop
                :util/throttler
+               :util/events
                :util/request
                :util/fiveam)
   :defsystem-depends-on (:trivial-features)
@@ -370,6 +371,7 @@
                              (:file "test-sizeof")
                              (:file "test-models")
                              (:file "test-disk-size")
+                             (:file "test-events" :if-feature (:not :windows))
                              (:file "test-cdn")
                              (:file "test-bind-form")
                              (:file "test-lru-cache")
