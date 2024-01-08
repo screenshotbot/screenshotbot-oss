@@ -14,6 +14,7 @@
   (:import-from #:util/misc
                 #:or-setf)
   (:import-from #:util/threading
+                #:with-extras
                 #:safe-interrupt-checkpoint)
   (:import-from #:util/digests
                 #:sha256-file)
@@ -497,66 +498,67 @@
         (find-meta html)))))
 
 (defun http-get (url &key (force-binary t)
-                     (force-string nil)
+                       (force-string nil)
                        (cache t))
-  (let* ((url (quri:uri url))
-         (cache-key (format
-                     nil "~a-~a-v6"
-                     (ironclad:byte-array-to-hex-string (ironclad:digest-sequence :sha256 (flexi-streams:string-to-octets  (quri:render-uri url))))
-                     force-binary)))
-    (with-cache-file (output (%lru-cache) (make-pathname :name cache-key :type "data"))
-      (with-cache-file (info (%lru-cache) (make-pathname :name cache-key :type "info-v3"))
-       (flet ((read-cached ()
-                (let ((info (cl-store:restore info)))
-                  (log:debug "Opening from cache: ~a" output)
-                  (values
-                   (open output :element-type (cond
-                                                (force-binary
-                                                 '(unsigned-byte 8))
-                                                (force-string
-                                                 'character)
-                                                (t
-                                                 'character))
-                                :external-format (or
-                                                  (unless force-binary
-                                                    (guess-external-format info output))
-                                                  :default))
-                   (remote-response-status info)
-                   (remote-response-headers info))))
-              (good-cache-p (file)
-                (uiop:file-exists-p file)))
-         (cond
-           ((and cache (every #'good-cache-p (list info output))
-                 (let ((info (cl-store:restore info)))
-                   (and
-                    (slot-boundp info 'request-time) #| Compatibility with old cache|#
-                    (max-age info)
-                    (< (get-universal-time)
-                       (+ (max-age info) (request-time info))))))
-            (write-replay-log "Using cached asset for ~a" url)
-            (read-cached))
-           (t
-            ;; we're not cached yet
-            (multiple-value-bind (stream %status %headers)
-                (handler-case
-                    (http-get-without-cache url :force-binary t)
-                  (puri:uri-parse-error (e)
-                    (write-replay-log "Invalid URL: ~a, will treat as 500" url)
-                    (values
-                     (make-string-input-stream "")
-                     500
-                     +empty-headers+)))
-              (with-open-file (output output :element-type '(unsigned-byte 8)
-                                             :if-exists :supersede
-                                             :direction :output)
-                (uiop:copy-stream-to-stream stream output :element-type '(unsigned-byte 8)))
-              (cl-store:store (make-instance 'remote-response
-                                              :status %status
-                                              :request-time (get-universal-time)
-                                              :headers %headers)
-                              info))
-            (log:debug "Caching for the first time ~a" output)
-            (read-cached))))))))
+  (with-extras (("fetch-url" url))
+    (let* ((url (quri:uri url))
+           (cache-key (format
+                       nil "~a-~a-v6"
+                       (ironclad:byte-array-to-hex-string (ironclad:digest-sequence :sha256 (flexi-streams:string-to-octets  (quri:render-uri url))))
+                       force-binary)))
+      (with-cache-file (output (%lru-cache) (make-pathname :name cache-key :type "data"))
+        (with-cache-file (info (%lru-cache) (make-pathname :name cache-key :type "info-v3"))
+          (flet ((read-cached ()
+                   (let ((info (cl-store:restore info)))
+                     (log:debug "Opening from cache: ~a" output)
+                     (values
+                      (open output :element-type (cond
+                                                   (force-binary
+                                                    '(unsigned-byte 8))
+                                                   (force-string
+                                                    'character)
+                                                   (t
+                                                    'character))
+                                   :external-format (or
+                                                     (unless force-binary
+                                                       (guess-external-format info output))
+                                                     :default))
+                      (remote-response-status info)
+                      (remote-response-headers info))))
+                 (good-cache-p (file)
+                   (uiop:file-exists-p file)))
+            (cond
+              ((and cache (every #'good-cache-p (list info output))
+                    (let ((info (cl-store:restore info)))
+                      (and
+                       (slot-boundp info 'request-time) #| Compatibility with old cache|#
+                       (max-age info)
+                       (< (get-universal-time)
+                          (+ (max-age info) (request-time info))))))
+               (write-replay-log "Using cached asset for ~a" url)
+               (read-cached))
+              (t
+               ;; we're not cached yet
+               (multiple-value-bind (stream %status %headers)
+                   (handler-case
+                       (http-get-without-cache url :force-binary t)
+                     (puri:uri-parse-error (e)
+                       (write-replay-log "Invalid URL: ~a, will treat as 500" url)
+                       (values
+                        (make-string-input-stream "")
+                        500
+                        +empty-headers+)))
+                 (with-open-file (output output :element-type '(unsigned-byte 8)
+                                                :if-exists :supersede
+                                                :direction :output)
+                   (uiop:copy-stream-to-stream stream output :element-type '(unsigned-byte 8)))
+                 (cl-store:store (make-instance 'remote-response
+                                                :status %status
+                                                :request-time (get-universal-time)
+                                                :headers %headers)
+                                 info))
+               (log:debug "Caching for the first time ~a" output)
+               (read-cached)))))))))
 
 (with-auto-restart ()
  (defmethod fetch-asset ((context context) url tmpdir (snapshot snapshot))
