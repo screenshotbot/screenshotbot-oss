@@ -346,6 +346,21 @@ Apache log analysis tools.)"
       (t
        response))))
 
+(defmacro def-named-url (name url)
+  "Give a hardcoded URL a symbol name or an alias. This might be useful
+for giving a name to a def-clos-dispatch, or giving an existing
+endpoint an alias."
+  (multiple-value-bind (regex vars parse-tree)
+      (make-uri-regex url)
+    (declare (ignore regex))
+    (when vars
+      (error "Using :vars in def-named-url is unsupported. It could make sense in
+some context, but not in most cases where this is used."))
+    `(progn
+       (setf (alexandria:assoc-value *url-list* ',name)
+             (make-instance 'url-handler
+                            :parse-tree ',parse-tree
+                            :request-args nil)))))
 
 (defmethod hunchentoot:acceptor-log-access :around ((acceptor base-acceptor) &key return-code)
   (declare (ignore return-code))

@@ -41,4 +41,5 @@
            #:dispatch-plugin-request
            #:secure-acceptor
            #:clos-dispatcher
-           #:def-clos-dispatch))
+           #:def-clos-dispatch
+           #:def-named-url))

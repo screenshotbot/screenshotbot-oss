@@ -1,4 +1,6 @@
-(defpackage :util.test-better-easy-handler
+(util/fiveam:def-suite)
+
+(defpackage :hunchentoot-extensions/test-better-easy-handler
   (:use :cl
         :fiveam
         :hex)
@@ -12,10 +14,12 @@
                 :*url-list*)
   (:import-from :cl-ppcre
                 :scan-to-strings)
+  (:import-from #:hunchentoot-extensions
+                #:def-named-url)
   (:export))
-(in-package :util.test-better-easy-handler)
+(in-package :hunchentoot-extensions/test-better-easy-handler)
 
-(def-suite* :util.test-better-easy-handler)
+(util/fiveam:def-suite)
 
 (test split-url-parts
   (is (equal (list "foo" "/bar")
@@ -88,3 +92,9 @@
 (test doesnt-match-subdirs
   (let ((regex (make-uri-regex "/foo/:bar")))
     (is-false (scan-to-strings regex "/foo/dfdfd/hello/world"))))
+
+(def-named-url foo "/bar/car/dar/foo")
+
+(test named-url-gets-mapped
+  (is (equal "/bar/car/dar/foo"
+             (hex:make-url 'foo))))
