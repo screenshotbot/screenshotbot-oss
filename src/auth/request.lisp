@@ -6,7 +6,11 @@
 
 (defpackage :auth/request
   (:use #:cl
-        #:auth))
+        #:auth)
+  (:import-from #:core/installation/installation
+                #:*installation*)
+  (:import-from #:core/installation/auth
+                #:company-for-request))
 (in-package :auth/request)
 
 (defclass authenticated-request (hunchentoot:request)
@@ -27,6 +31,15 @@
   (auth:with-sessions ()
     (authenticate-request request)
     (call-next-method)))
+
+(defmethod auth:authenticate-request ((request authenticated-request))
+  (unless (auth:request-user request) ;; Might happen in tests
+    (alexandria:when-let ((user (auth:session-value :user)))
+      (setf (auth:request-user request) user)))
+  (unless (auth:request-account request)
+    (alexandria:when-let ((company (company-for-request *installation* request)))
+      (setf (auth:request-account request) company))))
+
 
 (defun current-user ()
   (and

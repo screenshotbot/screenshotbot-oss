@@ -114,6 +114,9 @@
                    hunchensocket::websocket-request)
   ())
 
+;; TODO: delete
+(defmethod auth:authenticate-request ((request request))
+  (call-next-method))
 
 (defvar *acceptor*
   (make-instance 'acceptor
