@@ -61,6 +61,3 @@
    #:user-notices
    #:personalp))
 (in-package :screenshotbot/user-api)
-
-
-(declaim (ftype (function ()) current-user))
