@@ -100,6 +100,7 @@
 
 (defclass acceptor (#+lispworks acceptor-with-existing-socket
                     nibble:nibble-acceptor-mixin
+                    auth:auth-acceptor-mixin
                     hex:clos-dispatcher
                     util:base-acceptor
                     hunchensocket:websocket-acceptor

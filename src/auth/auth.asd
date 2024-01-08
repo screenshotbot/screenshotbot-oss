@@ -13,7 +13,8 @@
                (:file "auth")
                (:file "request")
                (:file "view")
-               (:file "company")))
+               (:file "company")
+               (:file "acceptor")))
 
 (defsystem "auth/tests"
   :serial t

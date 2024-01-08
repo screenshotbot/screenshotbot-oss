@@ -70,4 +70,5 @@
            #:can-edit!
            #:can-public-view
            #:no-access-error
-           #:current-company))
+           #:current-company
+           #:auth-acceptor-mixin))
