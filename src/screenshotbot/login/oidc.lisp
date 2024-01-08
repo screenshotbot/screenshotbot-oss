@@ -15,6 +15,8 @@
                 #:with-transaction)
   (:import-from #:bknr.indices
                 #:hash-index)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:oidc/oidc
@@ -22,8 +24,6 @@
                 #:logout-link
                 #:make-oidc-auth-link
                 #:oidc)
-  (:import-from #:screenshotbot/events
-                #:push-event)
   (:import-from #:screenshotbot/login/common
                 #:abstract-oauth-provider
                 #:after-create-user
@@ -43,10 +43,10 @@
   (:import-from #:screenshotbot/user-api
                 #:user
                 #:user-email)
+  (:import-from #:util/events
+                #:push-event)
   (:import-from #:util/store/store
                 #:with-class-validation)
-  (:import-from #:core/installation/installation
-                #:*installation*)
   (:export
    #:access-token-class
    #:access-token-str
