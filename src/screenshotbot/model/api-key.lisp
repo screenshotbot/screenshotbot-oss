@@ -113,7 +113,7 @@
 
 (defclass transient-api-key ()
   ((api-key
-    :initform (generate-api-key)
+    :initform (format nil "tmp_~a" (generate-api-key))
     :reader api-key-key)
    (api-key-secret
     :initform (generate-api-secret)
