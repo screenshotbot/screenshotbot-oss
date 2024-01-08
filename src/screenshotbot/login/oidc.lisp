@@ -45,6 +45,8 @@
   (:import-from #:screenshotbot/user-api
                 #:user
                 #:user-email)
+  (:import-from #:util/store/store
+                #:with-class-validation)
   (:export
    #:access-token-class
    #:access-token-str
@@ -85,24 +87,25 @@
    :callback-endpoint 'oauth-callback))
 
 
-(defclass oidc-user (store-object)
-  ((email :initarg :email
-          :accessor oauth-user-email)
-   (full-name :initarg :full-name
-              :accessor oauth-user-full-name)
-   (avatar :initarg :avatar
-           :accessor oauth-user-avatar)
-   (user-id :initarg :user-id
-            :index-type hash-index
-            :initform nil
-            :index-initargs (:test 'equal)
-            :index-reader find-oidc-users-by-user-id)
-   (user :initarg :user
-         :initform nil
-         :accessor oauth-user-user)
-   (identifier :initarg :identifier
-               :accessor oidc-provider-identifier))
-  (:metaclass persistent-class))
+(with-class-validation
+  (defclass oidc-user (store-object)
+    ((email :initarg :email
+            :accessor oauth-user-email)
+     (full-name :initarg :full-name
+                :accessor oauth-user-full-name)
+     (avatar :initarg :avatar
+             :accessor oauth-user-avatar)
+     (user-id :initarg :user-id
+              :index-type hash-index
+              :initform nil
+              :index-initargs (:test 'equal)
+              :index-reader find-oidc-users-by-user-id)
+     (user :initarg :user
+           :initform nil
+           :accessor oauth-user-user)
+     (identifier :initarg :identifier
+                 :accessor oidc-provider-identifier))
+    (:metaclass persistent-class)))
 
 ;; (token-endpoint (make-instance 'oidc-provider :issuer "https://accounts.google.com"))
 
