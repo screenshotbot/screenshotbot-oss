@@ -38,7 +38,8 @@
               (%make-hash-table :test #'eql))))
        (setf
         (gethash (find-class ',class) old)
-        (lambda ()
+        (lambda (,var)
+          (declare (ignorable ,var))
           ,@body)))))
 
 (defgeneric %normalize (input)
@@ -49,7 +50,7 @@
 
 (defmethod dispatch-clos-request ((self clos-dispatcher) dispatcher)
   (setf (hunchentoot:header-out "X-clos-acceptor") "1")
-  (%normalize (funcall dispatcher)))
+  (%normalize (funcall dispatcher self)))
 
 (defmethod hunchentoot:acceptor-dispatch-request ((self clos-dispatcher) request)
   (let ((script-name (hunchentoot:script-name request)))
