@@ -90,6 +90,7 @@
 (with-class-validation
   (defclass oidc-user (store-object)
     ((email
+      :initarg :old-email-slot
       :documentation "Old email slot. After a few restarts, it should all be unbound and should be safe to delete.")
      (%email :initarg :email
              :accessor oauth-user-email)
@@ -102,34 +103,48 @@
               :initform nil
               :index-initargs (:test 'equal)
               :index-reader find-oidc-users-by-user-id)
-     (user :initarg :user
-           :initform nil
-           :accessor oauth-user-user)
+     (user :initarg :old-user-slot
+           :documentation "Old user slot. After a few restarts, it should all be unbound and should be safe to delete")
+     (%user :initarg :user
+            :initform nil
+            :accessor oauth-user-user)
      (identifier :initarg :identifier
                  :accessor oidc-provider-identifier))
     (:metaclass persistent-class)))
 
-(defmethod bknr.datastore:convert-slot-value-while-restoring ((self oidc-user)
-                                                              slot-name
-                                                              value)
-  (assert (symbolp slot-name))
-  (cond
-    ((string= "EMAIL" (string slot-name))
-     (log:info "Renaming slot EMAIL for ~a" self)
-     (call-next-method self '%email value))
-    (t
-     (call-next-method))))
+(defmacro define-slot-renames (&rest slots)
+  `(progn
+     (defmethod bknr.datastore:convert-slot-value-while-restoring ((self oidc-user)
+                                                                   slot-name
+                                                                   value)
+       (assert (symbolp slot-name))
+       (cond
+         ,@ (loop for (slot old-slot acc) in slots
+                  collect
+                  `((string= ,(str:substring 1 nil (string slot)) (string slot-name))
+                    (log:info "Renaming slot ~a for ~a" ,(str:substring 1 nil (string slot)) self)
+                    (call-next-method self ',slot value)))
+            (t
+             (call-next-method))))
 
-(defmethod oauth-user-email :around ((self oidc-user))
-  (cond
-    ((slot-boundp self 'email)
-     (slot-value self 'email))
-    (t
-     (call-next-method))))
+     ,@(loop for (slot old-slot acc) in slots
+              collect
+              `(defmethod ,acc :around ((self oidc-user))
+                 (cond
+                   ((slot-boundp self ',old-slot)
+                    (slot-value self ',old-slot))
+                   (t
+                    (call-next-method)))))
 
-(defmethod (setf oauth-user-email) :after (val (self oidc-user))
-  (slot-makunbound self 'email)
-  val)
+     ,@(loop for (slot old-slot acc) in slots
+             collect
+             `(defmethod (setf ,acc) :after (val (self oidc-user))
+               (slot-makunbound self ',old-slot)
+                val))))
+
+(define-slot-renames
+    (%email email oauth-user-email)
+  (%user user oauth-user-user))
 
 ;; (token-endpoint (make-instance 'oidc-provider :issuer "https://accounts.google.com"))
 

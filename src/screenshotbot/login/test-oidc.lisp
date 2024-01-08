@@ -16,6 +16,7 @@
   (:import-from #:oidc/oidc
                 #:after-authentication)
   (:import-from #:screenshotbot/login/oidc
+                #:%user
                 #:%email
                 #:oidc-user
                 #:oidc-provider)
@@ -28,6 +29,7 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/model/user
+                #:oauth-user-user
                 #:oauth-user-email)
   (:import-from #:bknr.datastore
                 #:convert-slot-value-while-restoring))
@@ -77,4 +79,25 @@
      (fiveam:is-false (slot-boundp self 'screenshotbot/login/oidc::email))
      (convert-slot-value-while-restoring
       self 'email "car")
-     (is (equal "car" (oauth-user-email self))))))
+     (is (equal "car" (oauth-user-email self)))
+     (is (equal "ack" (oauth-user-email
+                       (make-instance 'oidc-user
+                                      :old-email-slot "ack")))))))
+
+(test user-slot
+  "These tests are temporary for a migration, you can delete it once the
+%user and user slots are merged."
+  (with-fixture state ()
+   (let ((self (make-instance 'oidc-user
+                              :user "foo")))
+     (is (equal "foo" (oauth-user-user self)))
+     (setf (oauth-user-user self) "bleh")
+     (is (equal "bleh" (oauth-user-user self)))
+     (is (equal "bleh" (slot-value self '%user)))
+     (fiveam:is-false (slot-boundp self 'screenshotbot/login/oidc::user))
+     (convert-slot-value-while-restoring
+      self 'user "car")
+     (is (equal "car" (oauth-user-user self)))
+     (is (equal "ack" (oauth-user-user
+                       (make-instance 'oidc-user
+                                      :old-user-slot "ack")))))))
