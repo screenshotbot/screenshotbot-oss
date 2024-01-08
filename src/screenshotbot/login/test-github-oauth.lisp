@@ -44,18 +44,9 @@
      (prepare-singleton-company)
      (&body))))
 
-(defmacro dlet (((k v)) &body body)
-  `(progn
-     (let ((,k ,v))
-       (unwind-protect
-            (progn ,@body)
-         (let ((gh (github-user ,k)))
-           (delete-object gh)
-           (delete-object ,k))))))
-
 (test create-new-user
   (with-fixture state ()
-    (dlet ((user (%prepare-test-user)))
+    (let ((user (%prepare-test-user)))
       (is (typep user 'user))
       (is-false (null (github-user user)))
       (is (equal *test-email* (user-email user)))
@@ -65,19 +56,19 @@
 
 (test second-time-with-the-same-user
   (with-fixture state ()
-    (dlet ((user (%prepare-test-user)))
-     (let ((user2 (%prepare-test-user)))
-       (is (eql (store-object-id user) (store-object-id user2)))))))
+    (let ((user (%prepare-test-user)))
+      (let ((user2 (%prepare-test-user)))
+        (is (eql (store-object-id user) (store-object-id user2)))))))
 
 (test second-time-change-args
   (with-fixture state ()
-    (dlet ((user (%prepare-test-user)))
-     (let* ((user (prepare-gh-user
-                   :emails (list "sam@example.com")
-                   :user-id 22
-                   :full-name "Sam Currie"
-                   :avatar "https://oddflowerstudio.com/profilepic")))
-       (is (equal "sam@example.com" (user-email user)))
-       (is (equal "Sam Currie" (user-full-name user)))
-       (is (equal "https://oddflowerstudio.com/profilepic"
-                  (user-image-url user)))))))
+    (let ((user (%prepare-test-user)))
+      (let* ((user (prepare-gh-user
+                    :emails (list "sam@example.com")
+                    :user-id 22
+                    :full-name "Sam Currie"
+                    :avatar "https://oddflowerstudio.com/profilepic")))
+        (is (equal "sam@example.com" (user-email user)))
+        (is (equal "Sam Currie" (user-full-name user)))
+        (is (equal "https://oddflowerstudio.com/profilepic"
+                   (user-image-url user)))))))
