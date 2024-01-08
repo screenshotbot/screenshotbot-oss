@@ -15,8 +15,7 @@
                 #:test
                 #:with-fixture)
   (:import-from #:screenshotbot/login/common
-                #:signin-get)
-  (:import-from #:screenshotbot/server
+                #:signin-get
                 #:server-with-login)
   (:import-from #:screenshotbot/testing
                 #:with-installation)

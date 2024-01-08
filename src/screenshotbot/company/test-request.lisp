@@ -37,8 +37,6 @@
                 #:recorder-run)
   (:import-from #:bknr.datastore
                 #:with-transaction)
-  (:import-from #:screenshotbot/server
-                #:server-with-login)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:util/testing

@@ -43,7 +43,6 @@
    #:acceptor
    #:%handler-wrap
    #:staging-p
-   #:server-with-login
    #:*root*
    #:*is-localhost*
    #:document-root
@@ -261,13 +260,13 @@ Disallow: /n")))
                          (allow-url-redirect nil)
                          (alert nil)) &body body)
   ;; server-with-login is implemented in login/common.lisp
-  `(server-with-login (lambda () ,@body)
-                      :needs-login ,needs-login
-                      :signup ,signup
-                      :company ,company
-                      :ensure-prepared ,ensure-prepared
-                      :allow-url-redirect ,allow-url-redirect
-                      :alert ,alert))
+  `(screenshotbot/login/common:server-with-login (lambda () ,@body)
+                                                 :needs-login ,needs-login
+                                                 :signup ,signup
+                                                 :company ,company
+                                                 :ensure-prepared ,ensure-prepared
+                                                 :allow-url-redirect ,allow-url-redirect
+                                                 :alert ,alert))
 
 (defhandler (nil :uri "/") ()
   (cond

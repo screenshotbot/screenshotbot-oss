@@ -22,8 +22,6 @@
   (:import-from #:nibble
                 #:nibble
                 #:nibble-id)
-  (:import-from #:screenshotbot/server
-                #:server-with-login)
   (:import-from #:util/throttler
                 #:throttle!
                 #:throttler)
@@ -38,7 +36,8 @@
    #:oauth-signup-link
    #:signin-get
    #:signup-get
-   #:with-oauth-state-and-redirect))
+   #:with-oauth-state-and-redirect
+   #:server-with-login))
 (in-package :screenshotbot/login/common)
 
 (named-readtables:in-readtable markup:syntax)

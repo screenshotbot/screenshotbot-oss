@@ -15,12 +15,23 @@
   :depends-on ()
   :components ((:file "mask-rect-api")))
 
+(defsystem :screenshotbot/login
+  :serial t
+  :depends-on (:auth
+               :hunchentoot-extensions
+               :nibble
+               :core.installation
+               :util/throttler)
+  :components ((:module "login"
+                :components ((:file "common")))))
+
 (defsystem :screenshotbot
   :serial t
   :author "Arnold Noronha <arnold@screenshotbot.io>"
   :license "Mozilla Public License, v 2.0"
   :defsystem-depends-on (:trivial-features)
   :depends-on (:util
+               :screenshotbot/login
                :markup
                :gravatar
                :util/posix
@@ -255,8 +266,7 @@
                  (:file "fake")))
    (:module "login"
     :serial t
-    :components ((:file "common")
-                 (:file "template")
+    :components ((:file "template")
                  (:file "oidc")
                  (:file "login")
                  (:file "signup")
