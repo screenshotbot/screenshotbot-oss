@@ -89,8 +89,10 @@
 
 (with-class-validation
   (defclass oidc-user (store-object)
-    ((email :initarg :email
-            :accessor oauth-user-email)
+    ((email
+      :documentation "Old email slot. After a few restarts, it should all be unbound and should be safe to delete.")
+     (%email :initarg :email
+             :accessor oauth-user-email)
      (full-name :initarg :full-name
                 :accessor oauth-user-full-name)
      (avatar :initarg :avatar
@@ -106,6 +108,28 @@
      (identifier :initarg :identifier
                  :accessor oidc-provider-identifier))
     (:metaclass persistent-class)))
+
+(defmethod bknr.datastore:convert-slot-value-while-restoring ((self oidc-user)
+                                                              slot-name
+                                                              value)
+  (assert (symbolp slot-name))
+  (cond
+    ((string= "EMAIL" (string slot-name))
+     (log:info "Renaming slot EMAIL for ~a" self)
+     (call-next-method self '%email value))
+    (t
+     (call-next-method))))
+
+(defmethod oauth-user-email :around ((self oidc-user))
+  (cond
+    ((slot-boundp self 'email)
+     (slot-value self 'email))
+    (t
+     (call-next-method))))
+
+(defmethod (setf oauth-user-email) :after (val (self oidc-user))
+  (slot-makunbound self 'email)
+  val)
 
 ;; (token-endpoint (make-instance 'oidc-provider :issuer "https://accounts.google.com"))
 

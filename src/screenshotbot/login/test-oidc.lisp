@@ -16,6 +16,8 @@
   (:import-from #:oidc/oidc
                 #:after-authentication)
   (:import-from #:screenshotbot/login/oidc
+                #:%email
+                #:oidc-user
                 #:oidc-provider)
   (:import-from #:screenshotbot/testing
                 #:with-test-user)
@@ -24,7 +26,11 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:screenshotbot/model/user
+                #:oauth-user-email)
+  (:import-from #:bknr.datastore
+                #:convert-slot-value-while-restoring))
 (in-package :screenshotbot/login/test-oidc)
 
 (util/fiveam:def-suite)
@@ -56,3 +62,19 @@
                            :user-id (oid user)
                            :email "arnold@tdrhq.com")
      (is (eql 30 got-expires-in)))))
+
+
+(test email-slot
+  "These tests are temporary for a migration, you can delete it once the
+%email and email slots are merged."
+  (with-fixture state ()
+   (let ((self (make-instance 'oidc-user
+                              :email "foo")))
+     (is (equal "foo" (oauth-user-email self)))
+     (setf (oauth-user-email self) "bleh")
+     (is (equal "bleh" (oauth-user-email self)))
+     (is (equal "bleh" (slot-value self '%email)))
+     (fiveam:is-false (slot-boundp self 'screenshotbot/login/oidc::email))
+     (convert-slot-value-while-restoring
+      self 'email "car")
+     (is (equal "car" (oauth-user-email self))))))
