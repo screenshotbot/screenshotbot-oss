@@ -266,8 +266,8 @@
                  (:file "fake")))
    (:module "login"
     :serial t
-    :components ((:file "template")
-                 (:file "oidc")
+    :components ((:file "oidc")
+                 (:file "template")
                  (:file "login")
                  (:file "signup")
                  (:file "forgot-password")
