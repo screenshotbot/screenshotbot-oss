@@ -58,3 +58,24 @@
   (let ((obj (make-instance 'my-object)))
     (finishes
       (util:safe-snapshot))))
+
+
+(defclass two-slots-with-same-name (store-object)
+  ((cl-user::arg :accessor arg1)
+   (arg :accessor arg2))
+  (:metaclass permissive-persistent-class))
+
+(test* different-slot-with-same-symbol-name-have-the-same-value ()
+  (let ((obj (make-instance 'two-slots-with-same-name)))
+    (setf (arg1 obj) "hello")
+    (is (equal "hello" (arg2 obj)))))
+
+(defclass two-slots-with-%-name (store-object)
+  ((arg :accessor arg1)
+   (%arg :accessor arg2))
+  (:metaclass permissive-persistent-class))
+
+(test* different-slot-with-%-prefix ()
+  (let ((obj (make-instance 'two-slots-with-%-name)))
+    (setf (arg1 obj) "hello")
+    (is (equal "hello" (arg2 obj)))))

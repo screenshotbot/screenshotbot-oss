@@ -58,6 +58,14 @@ work."))
 (defmethod clear-slot-indices ((slot value-map-slot))
   nil)
 
+(defun slot-key (slot)
+  (let ((key (symbol-name (clos:slot-definition-name slot))))
+    (cond
+      ((str:starts-with-p "%" key)
+       (str:substring 1 nil key))
+      (t
+       key))))
+
 (defmethod (setf clos:slot-value-using-class) (new-value
                                                (class permissive-persistent-class)
                                                obj
@@ -66,7 +74,7 @@ work."))
     ((ignorable-slot-p slot)
      (call-next-method))
     (t
-     (setf (gethash (string (clos:slot-definition-name slot)) (value-map obj))
+     (setf (gethash (slot-key slot) (value-map obj))
            new-value))))
 
 (defmethod clos:slot-value-using-class ((class permissive-persistent-class)
@@ -76,7 +84,7 @@ work."))
     ((ignorable-slot-p slot)
      (call-next-method))
     (t
-     (gethash (string (clos:slot-definition-name slot)) (value-map obj)))))
+     (gethash (slot-key slot) (value-map obj)))))
 
 (defmethod value-map (self)
   (slot-value self 'value-map))
@@ -88,4 +96,4 @@ work."))
     ((ignorable-slot-p slot)
      (call-next-method))
     (t
-     (nth-value 1 (gethash (string (clos:slot-definition-name slot)) (value-map obj))))))
+     (nth-value 1 (gethash (slot-key slot) (value-map obj))))))
