@@ -162,9 +162,6 @@
                                         &allow-other-keys)
   (call-next-method))
 
-(defmethod model-id ((api-key api-key))
-  (store-object-id api-key))
-
 (defmethod render-api-token ((self api-key))
   (format nil "cli-~a:~a"
           (store-object-id self)

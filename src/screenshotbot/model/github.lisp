@@ -19,7 +19,6 @@
                 #:oauth-user-full-name
                 #:oauth-user-user)
   (:import-from #:screenshotbot/user-api
-                #:model-id
                 #:user)
   (:import-from #:util/store/store
                 #:with-class-validation)
@@ -74,6 +73,3 @@
      (github-login self))
     (t
      (%oauth-user-full-name self))))
-
-(defmethod model-id ((inst github-user))
-  (store-object-id inst))

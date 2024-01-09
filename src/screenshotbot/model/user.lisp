@@ -274,9 +274,6 @@
         if (typep oauth-user 'github-user)
           do (return oauth-user)))
 
-(defmethod model-id ((user user))
-  (store-object-id user))
-
 (defmethod user-full-name ((user user))
   (or (%user-full-name user)
       (when (oauth-users user)

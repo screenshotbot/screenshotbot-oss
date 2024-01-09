@@ -52,7 +52,6 @@
    #:company-reports
    #:created-at
    #:report-num-changes
-   #:model-id
    #:channel
    #:api-key-user
    #:api-key-company

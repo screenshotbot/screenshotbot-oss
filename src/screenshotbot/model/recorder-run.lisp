@@ -20,7 +20,6 @@
   (:import-from #:screenshotbot/user-api
                 #:user
                 #:user-companies
-                #:model-id
                 #:recorder-run-screenshots
                 #:recorder-run-channel
                 #:recorder-previous-run
@@ -330,9 +329,6 @@ associated report is rendered.")
     (with-transaction ()
      (setf (recorder-previous-run run) nil))
     (setf (active-run channel branch) previous-run)))
-
-(defmethod model-id ((inst store-object))
-  (store-object-id inst))
 
 (defmethod promotion-log ((run recorder-run))
   (make-instance 'transient-promotion-log
