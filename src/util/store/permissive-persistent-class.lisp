@@ -41,10 +41,7 @@ work."))
   (let ((original-slots (call-next-method)))
     (list*
      (make-instance 'value-map-slot
-                    :name 'value-map
-                    :initform nil
-                    :initfunction #'(lambda ()
-                                      (make-hash-table :test #'equal)))
+                    :name 'value-map)
      (loop for slot in original-slots
            if (and
                (typep slot 'persistent-effective-slot-definition)
@@ -87,7 +84,10 @@ work."))
      (gethash (slot-key slot) (value-map obj)))))
 
 (defmethod value-map (self)
-  (slot-value self 'value-map))
+  (if (slot-boundp self 'value-map)
+      (slot-value self 'value-map)
+      (setf (slot-value self 'value-map)
+            (make-hash-table :test #'equal))))
 
 (defmethod clos:slot-boundp-using-class ((class permissive-persistent-class)
                                          obj

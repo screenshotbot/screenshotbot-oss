@@ -14,7 +14,12 @@
                 #:delete-object
                 #:store-object)
   (:import-from #:util/store/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
+  (:import-from #:fiveam-matchers/core
+                #:is-equal-to
+                #:assert-that))
 (in-package :util/store/test-permissive-persistent-class)
 
 (util/fiveam:def-suite)
@@ -79,3 +84,16 @@
   (let ((obj (make-instance 'two-slots-with-%-name)))
     (setf (arg1 obj) "hello")
     (is (equal "hello" (arg2 obj)))))
+
+(test reload-object
+  (tmpdir:with-tmpdir (dir)
+    (with-test-store (:dir dir)
+      (make-instance 'my-object :arg "car")
+      (util:safe-snapshot))
+    (assert-that (bknr.datastore:all-store-objects)
+                 (has-length 0))
+    (with-test-store (:dir dir)
+      (assert-that (bknr.datastore:all-store-objects)
+                   (has-length 1))
+      (assert-that (arg (car (bknr.datastore:all-store-objects)))
+                   (is-equal-to "car")))))
