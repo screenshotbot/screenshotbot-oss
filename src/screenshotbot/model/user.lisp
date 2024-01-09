@@ -58,6 +58,8 @@
    #:user-personal-company
    #:oauth-user-full-name
    #:user-notices
+   #:oauth-user-email
+   #:oauth-user-user
    #:personalp
    #:adminp
    #:unaccepted-invites

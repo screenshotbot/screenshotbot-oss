@@ -4,36 +4,37 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/model/github
-  (:use #:cl
-        #:screenshotbot/user-api
-        #:alexandria)
+(defpackage :screenshotbot/model/github
+  (:use :cl)
   (:import-from #:bknr.datastore
+                #:persistent-class
                 #:store-object
-                #:unique-index
-                #:store-object-id
-                #:persistent-class)
+                #:store-object-id)
+  (:import-from #:bknr.indices
+                #:unique-index)
   (:import-from #:screenshotbot/model/user
                 #:github-user
-                #:oauth-user-full-name
-                #:oauth-user-user
                 #:oauth-user-avatar
-                #:oauth-user-email)
-  (:import-from #:util/store
+                #:oauth-user-email
+                #:oauth-user-full-name
+                #:oauth-user-user)
+  (:import-from #:screenshotbot/user-api
+                #:model-id
+                #:user)
+  (:import-from #:util/store/store
                 #:with-class-validation)
   (:export
-   #:oauth-access-token
-   #:github-access-token
-   #:github-user)
-  (:export
    #:%find-github-user-by-id
+   #:access-token-string
+   #:github-access-token
+   #:github-login
+   #:github-user
+   #:known-emails
+   #:oauth-access-token
+   #:oauth-user-avatar
    #:oauth-user-email
    #:oauth-user-full-name
-   #:oauth-user-avatar
-   #:oauth-user-user
-   #:github-login
-   #:known-emails
-   #:access-token-string))
+   #:oauth-user-user))
 (in-package :screenshotbot/model/github)
 
 (with-class-validation
