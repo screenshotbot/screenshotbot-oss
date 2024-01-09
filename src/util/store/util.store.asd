@@ -32,6 +32,7 @@
                (:file "export")
                (:file "fset")
                (:file "fset-index")
+               (:file "permissive-persistent-class")
                (:file "store-migrations")))
 
 (defsystem :util.store/tests
@@ -46,4 +47,5 @@
                (:file "test-delayed-accessors")
                (:file "test-checksums")
                (:file "test-fset")
-               (:file "test-fset-index")))
+               (:file "test-fset-index")
+               (:file "test-permissive-persistent-class")))
