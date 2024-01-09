@@ -11,6 +11,7 @@
                 #:value-map
                 #:permissive-persistent-class)
   (:import-from #:bknr.datastore
+                #:persistent-class
                 #:delete-object
                 #:store-object)
   (:import-from #:util/store/store
@@ -28,6 +29,11 @@
   ((arg :initarg :arg
         :accessor arg))
   (:metaclass permissive-persistent-class))
+
+(defclass my-object-old (store-object)
+  ((arg :initarg :arg
+        :accessor arg))
+  (:metaclass persistent-class))
 
 (def-fixture state ()
   (with-test-store ()
@@ -103,3 +109,44 @@
     (slot-makunbound obj 'arg)
     (is-false (slot-boundp obj 'arg))
     (is (equal 0 (hash-table-count (value-map obj))))))
+
+(test saves-transactions
+  (tmpdir:with-tmpdir (dir)
+    (with-test-store (:dir dir)
+      (let ((obj (make-instance 'my-object :arg "car")))
+        (util:safe-snapshot)
+        (setf (arg obj) "foo")))
+    (assert-that (bknr.datastore:all-store-objects)
+                 (has-length 0))
+    (with-test-store (:dir dir)
+      (assert-that (bknr.datastore:all-store-objects)
+                   (has-length 1))
+      (assert-that (arg (car (bknr.datastore:all-store-objects)))
+                   (is-equal-to "foo")))))
+
+
+#+nil ;; Test is broken, bug in core bknr.datastore
+(test saves-transactions-for-makunbound
+  (tmpdir:with-tmpdir (dir)
+    (with-test-store (:dir dir)
+      (let ((obj (make-instance 'my-object :arg "car")))
+        (util:safe-snapshot)
+        (slot-makunbound obj 'arg)))
+    (assert-that (bknr.datastore:all-store-objects)
+                 (has-length 0))
+    (with-test-store (:dir dir)
+      (let ((obj (car (bknr.datastore:all-store-objects))))
+        (is-false (slot-boundp obj 'arg))))))
+
+#+nil ;; Test is broken, bug in core bknr.datastore
+(test saves-transactions-for-makunbound-on-regular-persistent-class
+  (tmpdir:with-tmpdir (dir)
+    (with-test-store (:dir dir)
+      (let ((obj (make-instance 'my-object-old :arg "car")))
+        (util:safe-snapshot)
+        (slot-makunbound obj 'arg)))
+    (assert-that (bknr.datastore:all-store-objects)
+                 (has-length 0))
+    (with-test-store (:dir dir)
+      (let ((obj (car (bknr.datastore:all-store-objects))))
+        (is-false (slot-boundp obj 'arg))))))
