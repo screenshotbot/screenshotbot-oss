@@ -97,3 +97,16 @@ work."))
      (call-next-method))
     (t
      (nth-value 1 (gethash (slot-key slot) (value-map obj))))))
+
+(defmethod clos:slot-makunbound-using-class ((class permissive-persistent-class)
+                                             obj
+                                             #+lispworks
+                                             (slot-name symbol)
+                                             #-lispworks
+                                             (slot persistent-effective-slot-definition))
+  (let (#+lispworks (slot (clos:find-slot-definition slot-name class)))
+   (cond
+     ((ignorable-slot-p slot)
+      (call-next-method))
+     (t
+      (remhash (slot-key slot) (value-map obj))))))

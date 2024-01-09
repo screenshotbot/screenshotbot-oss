@@ -97,3 +97,9 @@
                    (has-length 1))
       (assert-that (arg (car (bknr.datastore:all-store-objects)))
                    (is-equal-to "car")))))
+
+(test* makunbound ()
+  (let ((obj (make-instance 'my-object :arg "car")))
+    (slot-makunbound obj 'arg)
+    (is-false (slot-boundp obj 'arg))
+    (is (equal 0 (hash-table-count (value-map obj))))))
