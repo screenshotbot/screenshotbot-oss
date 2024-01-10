@@ -91,9 +91,10 @@
           (setf (active-run (recorder-run-channel run-2) "master") run-2))
         (let ((report
                (make-instance 'report
-                               :run run-2
-                               :previous-run run
-                               :title "1 screenshots changed [demo]")))
+                              :run run-2
+                              :channel (recorder-run-channel run-2)
+                              :previous-run run
+                              :title "1 screenshots changed [demo]")))
           (add-company-report company report))))))
 
 (defmethod after-create-user ((installation multi-org-feature)
