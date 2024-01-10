@@ -20,7 +20,9 @@
                 #:has-length)
   (:import-from #:fiveam-matchers/core
                 #:is-equal-to
-                #:assert-that))
+                #:assert-that)
+  (:import-from #:bknr.indices
+                #:unique-index))
 (in-package :util/store/test-permissive-persistent-class)
 
 (util/fiveam:def-suite)
@@ -150,3 +152,18 @@
     (with-test-store (:dir dir)
       (let ((obj (car (bknr.datastore:all-store-objects))))
         (is-false (slot-boundp obj 'arg))))))
+
+(defclass obj-with-index (store-object)
+  ((arg :initarg :arg
+        :accessor arg
+        :index-type unique-index
+        :index-initargs (:test #'equal)
+        :index-reader obj-for-arg))
+  (:metaclass permissive-persistent-class))
+
+(test* indices-still-works ()
+  (let ((obj (make-instance 'obj-with-index :arg "foo")))
+    (is (eql obj (obj-for-arg "foo")))
+    (setf (arg obj) "bar")
+    (is (eql obj (obj-for-arg "bar")))
+    (is-false (obj-for-arg "foo"))))
