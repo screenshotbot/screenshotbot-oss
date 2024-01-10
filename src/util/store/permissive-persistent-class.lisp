@@ -121,7 +121,15 @@ work."))
     ((ignorable-slot-p slot)
      (call-next-method))
     (t
-     (gethash (slot-key slot) (value-map obj)))))
+     (multiple-value-bind (res exists-p)
+         (gethash (slot-key slot) (value-map obj))
+       (cond
+         (exists-p
+          res)
+         (t
+          (error 'unbound-slot
+                 :name (clos:slot-definition-name slot)
+                 :instance obj)))))))
 
 (defmethod value-map (self)
   (if (slot-boundp self 'value-map)

@@ -199,3 +199,8 @@ permissive-persistent-class showing the initform twice.)"
     (let ((obj (make-instance 'old-obj-with-initform)))
       (is (> (arg obj) 1))
       (is (= (arg obj) 2)))))
+
+(test* unbound-slot-crashes-as-expected ()
+  (let ((obj (make-instance 'my-object)))
+    (signals unbound-slot
+      (arg obj))))
