@@ -22,6 +22,8 @@
                 #:user)
   (:import-from #:util/store/store
                 #:with-class-validation)
+  (:import-from #:util/store/permissive-persistent-class
+                #:permissive-persistent-class)
   (:export
    #:%find-github-user-by-id
    #:access-token-string
@@ -65,7 +67,7 @@
      (user :initarg :user
            :initform nil
            :accessor oauth-user-user))
-    (:metaclass persistent-class)))
+    (:metaclass permissive-persistent-class)))
 
 (defmethod oauth-user-full-name ((self github-user))
   (cond
