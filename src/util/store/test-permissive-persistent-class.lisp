@@ -167,3 +167,35 @@
     (setf (arg obj) "bar")
     (is (eql obj (obj-for-arg "bar")))
     (is-false (obj-for-arg "foo"))))
+
+(defvar *counter*)
+
+(defun incf-counter ()
+  (incf *counter*))
+
+(defclass obj-with-initform (store-object)
+  ((arg :initarg :arg
+        :initform (incf-counter)
+        :accessor arg))
+  (:metaclass permissive-persistent-class))
+
+(test* obj-with-initform ()
+  (let ((*counter* 1))
+    (let ((obj (make-instance 'obj-with-initform)))
+      (is (eql (arg obj) 2)))))
+
+(defclass old-obj-with-initform (store-object)
+  ((arg :initarg :arg
+        :initform (progn
+                    (incf *counter*))
+        :accessor arg))
+  (:metaclass persistent-class))
+
+(test* old-obj-with-initform ()
+  "This is just making sure that the standard persistent-class only
+calls the initform once. (We were seeing a bug with the
+permissive-persistent-class showing the initform twice.)"
+  (let ((*counter* 1))
+    (let ((obj (make-instance 'old-obj-with-initform)))
+      (is (> (arg obj) 1))
+      (is (= (arg obj) 2)))))

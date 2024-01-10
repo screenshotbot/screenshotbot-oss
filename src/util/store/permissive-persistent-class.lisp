@@ -52,21 +52,45 @@ work."))
            :type (clos:slot-definition-type slot)
            :indices (slot-value slot 'bknr.indices::indices)))))
 
+(defun should-original-slot-be-virtual-p (slot)
+  (and
+   (typep slot 'persistent-effective-slot-definition)
+   (not (ignorable-slot-p slot))))
+
 (defmethod clos:compute-slots ((class permissive-persistent-class))
   (let ((original-slots (call-next-method)))
     (list*
      (make-instance 'value-map-slot
-                    :name 'value-map)
+                    :name 'value-map
+                    :initform nil
+                    :initfunction (lambda ()
+                                    (initialize-hash-table original-slots)))
      (loop for slot in original-slots
-           if (and
-               (typep slot 'persistent-effective-slot-definition)
-               (not (ignorable-slot-p slot)))
+           if (should-original-slot-be-virtual-p slot)
              collect
              (copy-slot class slot
-                        :allocation :virtual)
+                        :allocation :virtual
+                        :initform nil
+                        :initfunction nil)
            else
              collect slot))))
 
+(defun initialize-hash-table (slots)
+  (let ((res (make-hash-table :test #'equal)))
+    (loop for slot in slots
+          if (should-original-slot-be-virtual-p slot)
+            do
+               (let ((initfunction
+                       (or
+                        (clos:slot-definition-initfunction slot)
+                        (when (clos:slot-definition-initform slot)
+                          (lambda ()
+                            (eval (clos:slot-definition-initform slot)))))))
+                 (log:info "Calling initfunction ~a on ~a" slot initfunction)
+                 (when initfunction
+                   (setf (gethash (slot-key slot) res)
+                         (funcall initfunction)))))
+    res))
 
 (defmethod clear-slot-indices ((slot value-map-slot))
   nil)
