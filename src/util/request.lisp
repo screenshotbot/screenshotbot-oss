@@ -42,18 +42,19 @@
                  (t
                   ""))
                502 nil)))
-      (handler-case
-          (funcall fn)
-        #+lispworks
-        (comm:ssl-verification-failure (e)
-          (handle-error e))
-        #+lispworks
-        (comm:ssl-failure (e)
-          (handle-error e))
-        #+lispworks
-        (comm:socket-create-error (e)
-          (handle-error e)))))))
-
+       (macrolet ((handle-errors (errors &body body)
+                    `(handler-case
+                         (progn ,@body)
+                       ,@ (loop for error in errors
+                                collect
+                                `(,error (e)
+                                         (handle-error e))))))
+         (handle-errors #+lispworks (comm:ssl-verification-failure
+                                     comm:ssl-failure
+                                     comm:socket-create-error
+                                     comm:ssl-closed)
+                        #-lispworks ()
+                        (funcall fn)))))))
 
 (defclass force-ip-address-engine ()
   ())

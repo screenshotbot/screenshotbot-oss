@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/request
+                #:wrap-ssl-errors
                 #:fix-bad-chars
                 #:http-request
                 #:make-header-hash-table)
@@ -123,3 +124,13 @@
              (fix-bad-chars "https://www.google.com?foo=bar")))
     (is (equal "https://www.google.com?foo=bar%7Ccar"
              (fix-bad-chars "https://www.google.com?foo=bar|car"))))
+
+#+lispworks
+(test wrap-ssl-errors
+  (multiple-value-bind (body ret)
+      (wrap-ssl-errors ()
+        (error 'comm:ssl-closed))
+    (is (eql 502 ret)))
+  (signals comm:ssl-closed
+    (wrap-ssl-errors (:ensure-success t)
+      (error 'comm:ssl-closed))))
