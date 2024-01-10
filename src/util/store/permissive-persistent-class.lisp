@@ -37,6 +37,21 @@ work."))
   (member (clos:slot-definition-name slot)
           '(id last-change)))
 
+(defmethod copy-slot (class (slot persistent-effective-slot-definition) &rest args)
+  (apply #'make-instance 'persistent-effective-slot-definition
+         (append
+          args
+          (list
+           :class class
+           :name (clos:slot-definition-name slot)
+           :relaxed-object-reference (slot-value slot 'bknr.datastore::relaxed-object-reference)
+           :transient (slot-value slot 'bknr.datastore::transient)
+           :initform (clos:slot-definition-initform slot)
+           :initfunction (clos:slot-definition-initfunction slot)
+           :initargs (clos:slot-definition-initargs slot)
+           :type (clos:slot-definition-type slot)
+           :indices (slot-value slot 'bknr.indices::indices)))))
+
 (defmethod clos:compute-slots ((class permissive-persistent-class))
   (let ((original-slots (call-next-method)))
     (list*
@@ -46,10 +61,11 @@ work."))
            if (and
                (typep slot 'persistent-effective-slot-definition)
                (not (ignorable-slot-p slot)))
-             do
-                (setf (closer-mop:slot-definition-allocation slot) :virtual)
-           finally
-           (return original-slots)))))
+             collect
+             (copy-slot class slot
+                        :allocation :virtual)
+           else
+             collect slot))))
 
 
 (defmethod clear-slot-indices ((slot value-map-slot))
