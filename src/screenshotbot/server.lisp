@@ -252,7 +252,9 @@
 Disallow: /")
     (t
      "User-agent: *
-Disallow: /n")))
+Disallow: /n
+Disallow: /runs/by-tag
+")))
 
 (defmacro with-login ((&key (needs-login t) (signup nil)
                          (company nil)
