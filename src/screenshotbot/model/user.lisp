@@ -27,7 +27,12 @@
                 #:company-owner
                 #:get-singleton-company
                 #:company)
-  (:import-from #:auth #:password-hash)
+  (:import-from #:auth
+                #:password-hash
+                #:oauth-user-avatar
+                #:oauth-user-full-name
+                #:oauth-user-user
+                #:oauth-user-email)
   (:import-from #:bknr.datastore
                 #:store-objects-with-class)
   (:import-from #:bknr.indices

@@ -8,14 +8,15 @@
   (:use :cl)
   (:import-from #:bknr.datastore
                 #:store-object)
-  (:import-from #:bknr.indices
-                #:unique-index)
-  (:import-from #:screenshotbot/model/user
-                #:github-user
+  (:import-from #:auth
                 #:oauth-user-avatar
                 #:oauth-user-email
                 #:oauth-user-full-name
                 #:oauth-user-user)
+  (:import-from #:bknr.indices
+                #:unique-index)
+  (:import-from #:screenshotbot/model/user
+                #:github-user)
   (:import-from #:util/store/permissive-persistent-class
                 #:permissive-persistent-class)
   (:import-from #:util/store/store
