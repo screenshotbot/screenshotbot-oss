@@ -7,9 +7,7 @@
 (defpackage :screenshotbot/model/github
   (:use :cl)
   (:import-from #:bknr.datastore
-                #:persistent-class
-                #:store-object
-                #:store-object-id)
+                #:store-object)
   (:import-from #:bknr.indices
                 #:unique-index)
   (:import-from #:screenshotbot/model/user
@@ -18,10 +16,10 @@
                 #:oauth-user-email
                 #:oauth-user-full-name
                 #:oauth-user-user)
-  (:import-from #:util/store/store
-                #:with-class-validation)
   (:import-from #:util/store/permissive-persistent-class
                 #:permissive-persistent-class)
+  (:import-from #:util/store/store
+                #:with-class-validation)
   (:export
    #:%find-github-user-by-id
    #:access-token-string
