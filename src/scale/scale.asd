@@ -3,6 +3,7 @@
   :depends-on (:util/request
                :str
                :quri
+               :util.store
                :alexandria
                :auto-restart
                :ironclad

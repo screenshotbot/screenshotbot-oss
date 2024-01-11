@@ -23,6 +23,7 @@
   (:import-from #:local-time
                 #:timestamp=)
   (:import-from #:bknr.datastore
+                #:persistent-class
                 #:store-object)
   (:import-from #:bknr.datastore
                 #:persistent-class)
@@ -37,11 +38,17 @@
   (:import-from #:bknr.datastore
                 #:deftransaction)
   (:import-from #:util/store/store
+                #:verify-old-class
                 #:*ensure-directories-cache*
                 #:fast-ensure-directories-exist
                 #:safe-mp-store)
   (:import-from #:bknr.datastore
-                #:truncate-log))
+                #:truncate-log)
+  (:import-from #:fiveam-matchers/core
+                #:error-with-string-matching
+                #:signals-error-matching)
+  (:import-from #:util/store/permissive-persistent-class
+                #:permissive-persistent-class))
 (in-package :util/store/test-store)
 
 
@@ -348,3 +355,29 @@
         (is (equalp path (fast-ensure-directories-exist path)))
         ;; We shouldn't have actually hit the disk to do this
         (is-false (path:-d (path:catdir dir "foo/bar/")))))))
+
+(defclass dummy-class-2 ()
+  ((a) (b) (c)))
+
+
+(test verify-old-class-with-persistent-class
+  (finishes
+   (verify-old-class 'dummy-class-2
+                     '((a) (b) (c))
+                     'persistent-class))
+  (signals-error-matching ()
+   (verify-old-class 'dummy-class-2
+                     '((a) (b) (cl-user::c))
+                     'persistent-class)
+   (error-with-string-matching
+    "missing slots: (C)"))
+  (finishes
+    (verify-old-class 'dummy-class-2
+                      '((a) (cl-user::b) (c))
+                      'permissive-persistent-class))
+  (signals-error-matching ()
+    (verify-old-class 'dummy-class-2
+                      '((cl-user::b) (c))
+                      'permissive-persistent-class)
+    (error-with-string-matching
+     "missing slots: (A)")))

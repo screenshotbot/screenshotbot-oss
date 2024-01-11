@@ -14,6 +14,8 @@
   (:import-from #:bknr.indices
                 #:destroyed-p
                 #:clear-slot-indices)
+  (:import-from #:util/store/store
+                #:slot-key-for-verification)
   (:local-nicknames #+sbcl
                     (#:clos #:closer-mop))
   (:export
@@ -95,13 +97,16 @@ work."))
 (defmethod clear-slot-indices ((slot value-map-slot))
   nil)
 
-(defun slot-key (slot)
-  (let ((key (symbol-name (clos:slot-definition-name slot))))
+(defun slot-key-from-name (symbol)
+  (let ((key (symbol-name symbol)))
     (cond
       ((str:starts-with-p "%" key)
        (str:substring 1 nil key))
       (t
        key))))
+
+(defun slot-key (slot)
+  (slot-key-from-name (clos:slot-definition-name slot)))
 
 (defmethod (setf clos:slot-value-using-class) (new-value
                                                (class permissive-persistent-class)
@@ -158,3 +163,7 @@ work."))
       (call-next-method))
      (t
       (remhash (slot-key slot) (value-map obj))))))
+
+(defmethod slot-key-for-verification ((metaclass (eql 'permissive-persistent-class))
+                                      slot)
+  (slot-key-from-name slot))
