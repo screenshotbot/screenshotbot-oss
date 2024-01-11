@@ -269,11 +269,6 @@
 (defmethod print-object ((user user) out)
   (format out "#<USER ~a>" (user-email user)))
 
-(defmethod github-user ((user user))
-  (loop for oauth-user in (oauth-users user)
-        if (typep oauth-user 'github-user)
-          do (return oauth-user)))
-
 (defmethod user-full-name ((user user))
   (or (%user-full-name user)
       (when (oauth-users user)

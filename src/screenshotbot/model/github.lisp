@@ -73,3 +73,10 @@
      (github-login self))
     (t
      (%oauth-user-full-name self))))
+
+(defmethod github-user (user)
+  "Get the github-user associated with a given user"
+  (warn "Calling github-user method, we thought this was unsed")
+  (loop for gu in (bknr.datastore:class-instances 'github-user)
+        if (eql user (oauth-user-user gu))
+          return gu))
