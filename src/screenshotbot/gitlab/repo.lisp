@@ -8,7 +8,7 @@
   (:use #:cl
         #:alexandria
         #:screenshotbot/model/channel)
-  (:import-from #:screenshotbot/model
+  (:import-from #:screenshotbot/model/channel
                 #:make-gitlab-repo)
   (:import-from #:screenshotbot/secret
                 #:secret

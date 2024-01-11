@@ -4,44 +4,48 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/test-diff-report
-    (:use #:cl #:alexandria #:fiveam)
-  (:import-from #:screenshotbot/model
-                #:channel
-                #:make-screenshot
-                #:local-image
-                #:recorder-run)
+(defpackage :screenshotbot/test-diff-report
+  (:use :cl)
+  (:import-from #:core/installation/installation
+                #:*installation*)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that
+                #:equal-to)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
+  (:import-from #:it.bese.fiveam
+                #:def-fixture
+                #:is
+                #:test
+                #:with-fixture)
   (:import-from #:screenshotbot/diff-report
-                #:group-title
-                #:deleted-groups
-                #:changes-groups
-                #:group-renamed-p
-                #:added-groups
-                #:make-image-hashes
                 #:*cache*
+                #:added-groups
                 #:change
-                #:diff-report-deleted
-                #:diff-report-added
+                #:changes-groups
+                #:deleted-groups
                 #:diff-report
+                #:diff-report-added
                 #:diff-report-changes
-                #:diff-report-changes
+                #:diff-report-deleted
+                #:diff-report-title
+                #:group-renamed-p
+                #:group-title
                 #:make-diff-report
-                #:diff-report-title)
-  (:import-from #:util/store
-                #:with-test-store)
+                #:make-image-hashes)
+  (:import-from #:screenshotbot/installation
+                #:installation)
   (:import-from #:screenshotbot/model/image
                 #:make-image)
-  (:import-from #:screenshotbot/installation
-                #:installation
-                #:*installation*)
   (:import-from #:screenshotbot/model/recorder-run
                 #:group-separator
                 #:make-recorder-run)
-  (:import-from #:fiveam-matchers/core
-                #:equal-to
-                #:assert-that)
-  (:import-from #:fiveam-matchers/has-length
-                #:has-length))
+  (:import-from #:screenshotbot/screenshot-api
+                #:make-screenshot)
+  (:import-from #:screenshotbot/user-api
+                #:channel)
+  (:import-from #:util/store/store
+                #:with-test-store))
 (in-package :screenshotbot/test-diff-report)
 
 (util/fiveam:def-suite)

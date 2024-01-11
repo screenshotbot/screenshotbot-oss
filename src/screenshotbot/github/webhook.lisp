@@ -11,7 +11,7 @@
                 #:persistent-class
                 #:hash-index
                 #:with-transaction)
-  (:import-from #:screenshotbot/model
+  (:import-from #:screenshotbot/model/channel
                 #:github-get-canonical-repo)
   (:import-from #:screenshotbot/server
                 #:defhandler)

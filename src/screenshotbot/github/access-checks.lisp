@@ -19,7 +19,7 @@
   (:import-from #:screenshotbot/secret
                 #:defsecret
                 #:secret)
-  (:import-from #:screenshotbot/model
+  (:import-from #:screenshotbot/model/recorder-run
                 #:github-repo)
   (:import-from #:screenshotbot/git-repo
                 #:public-repo-p
