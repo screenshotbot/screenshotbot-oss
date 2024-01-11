@@ -796,7 +796,6 @@ set-differences on O and the returned value from this."
     (funcall hook *store* dir)))
 
 (defmethod slot-key-for-verification (metaclass slot)
-  (log:info "Got metaclass: ~a" metaclass)
   slot)
 
 (defun verify-old-class (class-name slots metaclass)
