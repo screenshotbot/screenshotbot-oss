@@ -4,25 +4,34 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/login/test-github-oauth
-  (:use #:cl
-        #:alexandria
-        #:bknr.datastore
-        #:fiveam
-        #:screenshotbot/model/user
-        #:screenshotbot/model/github
-        #:screenshotbot/api-key-api)
-  (:import-from #:screenshotbot/login/github-oauth
-                #:prepare-gh-user)
+(defpackage :screenshotbot/login/test-github-oauth
+  (:use :cl)
   (:import-from #:bknr.datastore
                 #:store-object-id)
+  (:import-from #:core/installation/installation
+                #:*installation*)
+  (:import-from #:it.bese.fiveam
+                #:def-fixture
+                #:is
+                #:is-false
+                #:test
+                #:with-fixture)
   (:import-from #:screenshotbot/installation
-                #:*installation*
                 #:installation)
+  (:import-from #:screenshotbot/login/github-oauth
+                #:prepare-gh-user)
   (:import-from #:screenshotbot/model/company
                 #:prepare-singleton-company)
-  (:import-from #:util/store
+  (:import-from #:screenshotbot/model/user
+                #:github-user)
+  (:import-from #:screenshotbot/user-api
+                #:user
+                #:user-email
+                #:user-full-name
+                #:user-image-url)
+  (:import-from #:util/store/store
                 #:with-test-store))
+(in-package :screenshotbot/login/test-github-oauth)
 
 (util/fiveam:def-suite)
 
