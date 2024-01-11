@@ -18,8 +18,6 @@
                 #:oauth-user-email
                 #:oauth-user-full-name
                 #:oauth-user-user)
-  (:import-from #:screenshotbot/user-api
-                #:user)
   (:import-from #:util/store/store
                 #:with-class-validation)
   (:import-from #:util/store/permissive-persistent-class
