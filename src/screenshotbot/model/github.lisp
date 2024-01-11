@@ -15,18 +15,17 @@
                 #:oauth-user-user)
   (:import-from #:bknr.indices
                 #:unique-index)
-  (:import-from #:screenshotbot/model/user
-                #:github-user)
   (:import-from #:util/store/permissive-persistent-class
                 #:permissive-persistent-class)
   (:import-from #:util/store/store
                 #:with-class-validation)
+  (:import-from #:util/store/migrations
+                #:ensure-symbol-in-package)
   (:export
    #:%find-github-user-by-id
    #:access-token-string
    #:github-access-token
    #:github-login
-   #:github-user
    #:known-emails
    #:oauth-access-token
    #:oauth-user-avatar
@@ -34,6 +33,13 @@
    #:oauth-user-full-name
    #:oauth-user-user))
 (in-package :screenshotbot/model/github)
+
+(ensure-symbol-in-package
+ #:github-user
+ :old #:screenshotbot/model/user
+ :new #:screenshotbot/model/github)
+
+(export 'github-user)
 
 (with-class-validation
   (defclass github-user (store-object)

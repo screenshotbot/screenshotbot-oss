@@ -44,6 +44,8 @@
                 #:push-event)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:screenshotbot/model/github
+                #:github-user)
   (:export
    #:user
    #:email-confirmation-code
