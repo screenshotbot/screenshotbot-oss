@@ -26,8 +26,7 @@
   (:import-from #:screenshotbot/github/jwt-token
                 #:github-request)
   (:import-from #:screenshotbot/installation
-                #:auth-providers
-                #:installation)
+                #:auth-providers)
   (:import-from #:screenshotbot/login/common
                 #:abstract-oauth-provider
                 #:oauth-callback
@@ -48,6 +47,8 @@
                 #:access-token
                 #:current-user
                 #:user)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:export
    #:github-oauth-provider
    #:make-gh-oauth-link
@@ -68,7 +69,7 @@
    :oauth-name "GitHub"))
 
 (defun github-oauth-provider ()
-  (loop for auth-provider in (auth-providers (installation))
+  (loop for auth-provider in (auth-providers *installation*)
         if (typep auth-provider 'github-oauth-provider)
           return auth-provider))
 
