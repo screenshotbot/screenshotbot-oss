@@ -76,4 +76,5 @@
            #:oauth-user-full-name
            #:oauth-user-email
            #:oauth-user-user
-           #:user-email))
+           #:user-email
+           #:installation-user-with-email))

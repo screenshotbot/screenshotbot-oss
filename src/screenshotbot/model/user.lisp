@@ -46,6 +46,8 @@
                 #:?.)
   (:import-from #:screenshotbot/model/github
                 #:github-user)
+  (:import-from #:core/installation/auth
+                #:find-user)
   (:export
    #:user
    #:email-confirmation-code
@@ -336,3 +338,6 @@
 
 (defmethod (setf user-email) :after (email (user user))
   (update-lowercase-email-map user))
+
+(defmethod find-user ((self installation) &key email)
+  (user-with-email email))

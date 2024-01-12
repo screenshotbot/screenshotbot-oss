@@ -8,7 +8,8 @@
   (:use #:cl)
   (:export
    #:call-with-ensure-user-prepared
-   #:company-for-request))
+   #:company-for-request
+   #:find-user))
 (in-package :core/installation/auth)
 
 (defgeneric call-with-ensure-user-prepared (installation user
@@ -19,3 +20,5 @@
 with-login page."))
 
 (defgeneric company-for-request (installation request))
+
+(defgeneric find-user (installation &key email))

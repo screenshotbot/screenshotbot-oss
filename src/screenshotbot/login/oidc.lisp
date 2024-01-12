@@ -36,17 +36,18 @@
                 #:oauth-signin-link
                 #:oauth-signup-link)
   (:import-from #:screenshotbot/model/user
-                #:email
+                #:email ;; TODO: goes away
                 #:make-user
                 #:oauth-user-user
-                #:oauth-users
-                #:user-with-email)
+                #:oauth-users)
   (:import-from #:screenshotbot/user-api
-                #:user)
+                #:user #| TODO: goes away |#)
   (:import-from #:util/events
                 #:push-event)
   (:import-from #:util/store/store
                 #:with-class-validation)
+  (:import-from #:core/installation/auth
+                #:find-user)
   (:export
    #:access-token-class
    #:access-token-str
@@ -188,7 +189,7 @@ user as used in Screenshotbot)"
   (multiple-value-bind (user first-time-p)
     (or
      (oauth-user-user oauth-user)
-     (user-with-email email)
+     (find-user *installation* :email email)
      (values (make-user :email email) t))
     (with-transaction (:ensure-two-way-mapping)
       ;; ensure two way mapping.
