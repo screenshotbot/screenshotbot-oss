@@ -6,22 +6,29 @@
 
 (defpackage :screenshotbot/login/signup
   (:use :cl)
+  (:import-from #:auth
+                #:current-user
+                #:logged-in-p
+                #:user-email)
   (:import-from #:bknr.datastore
                 #:with-transaction)
+  (:import-from #:core/installation/auth-provider
+                #:auth-provider-signup-form)
   (:import-from #:markup/markup
                 #:deftag)
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/installation
-                #:auth-provider-signup-form
                 #:auth-providers
                 #:installation
                 #:mailer*
                 #:standard-auth-provider)
   (:import-from #:screenshotbot/login/common
                 #:after-create-user
-                #:signup-get
-                #:signin-get)
+                #:signin-get
+                #:signup-get)
+  (:import-from #:screenshotbot/login/template
+                #:auth-template)
   (:import-from #:screenshotbot/mailer
                 #:send-mail)
   (:import-from #:screenshotbot/model/invite
@@ -41,13 +48,10 @@
                 #:user-with-email)
   (:import-from #:screenshotbot/server
                 #:*disable-mail*
-                #:defhandler
-                #:logged-in-p)
+                #:defhandler)
   (:import-from #:screenshotbot/user-api
-                #:current-user
                 #:unaccepted-invites
-                #:user
-                #:user-email)
+                #:user)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/store/object-id
@@ -56,8 +60,6 @@
   (:import-from #:util/throttler
                 #:keyed-throttler
                 #:throttle!)
-  (:import-from #:screenshotbot/login/template
-                #:auth-template)
   (:export
    #:signup-get
    #:signup-get-page

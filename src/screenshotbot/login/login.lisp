@@ -9,6 +9,11 @@
   (:use :cl)
   (:import-from #:alexandria
                 #:if-let)
+  (:import-from #:auth
+                #:current-user
+                #:logged-in-p)
+  (:import-from #:core/installation/auth-provider
+                #:auth-provider-signin-form)
   (:import-from #:markup/markup
                 #:deftag
                 #:unescaped)
@@ -23,7 +28,6 @@
   (:import-from #:screenshotbot/injector
                 #:with-injection)
   (:import-from #:screenshotbot/installation
-                #:auth-provider-signin-form
                 #:auth-providers
                 #:default-oidc-provider
                 #:installation
@@ -31,23 +35,21 @@
   (:import-from #:screenshotbot/login/common
                 #:ip-throttler
                 #:oauth-signin-link
-                #:signup-get
-                #:signin-get)
+                #:signin-get
+                #:signup-get)
+  (:import-from #:screenshotbot/login/template
+                #:auth-template)
   (:import-from #:screenshotbot/model/user
                 #:email
                 #:user-with-email)
   (:import-from #:screenshotbot/server
-                #:defhandler
-                #:logged-in-p)
+                #:defhandler)
   (:import-from #:screenshotbot/user-api
-                #:current-user
                 #:user)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/throttler
                 #:throttle!)
-  (:import-from #:screenshotbot/login/template
-                #:auth-template)
   (:export
    #:auth-header-logo))
 (in-package :screenshotbot/login/login)
