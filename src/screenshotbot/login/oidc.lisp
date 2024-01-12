@@ -9,6 +9,7 @@
   (:use :cl)
   (:import-from #:auth
                 #:current-user
+                #:user-email
                 #:oauth-user-avatar
                 #:oauth-user-email
                 #:oauth-user-full-name)
@@ -41,8 +42,7 @@
                 #:oauth-users
                 #:user-with-email)
   (:import-from #:screenshotbot/user-api
-                #:user
-                #:user-email)
+                #:user)
   (:import-from #:util/events
                 #:push-event)
   (:import-from #:util/store/store

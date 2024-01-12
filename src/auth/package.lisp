@@ -75,4 +75,5 @@
            #:oauth-user-avatar
            #:oauth-user-full-name
            #:oauth-user-email
-           #:oauth-user-user))
+           #:oauth-user-user
+           #:user-email))

@@ -13,6 +13,7 @@
                 #:can-public-view
                 #:can-edit
                 #:can-edit!
+                #:user-email
                 #:current-company)
   (:export
    #:current-user
