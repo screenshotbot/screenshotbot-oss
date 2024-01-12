@@ -8,7 +8,10 @@
 (defpackage :screenshotbot/login/oidc
   (:use :cl)
   (:import-from #:auth
-                #:current-user)
+                #:current-user
+                #:oauth-user-avatar
+                #:oauth-user-email
+                #:oauth-user-full-name)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:store-object
@@ -34,9 +37,6 @@
   (:import-from #:screenshotbot/model/user
                 #:email
                 #:make-user
-                #:oauth-user-avatar
-                #:oauth-user-email
-                #:oauth-user-full-name
                 #:oauth-user-user
                 #:oauth-users
                 #:user-with-email)

@@ -37,6 +37,7 @@
                                      markup/markup::make-xml-tag
                                      uiop:define-package
                                      system::bq-list
+                                     system::bq-append
                                      system::bq-list*)))
                     (setf (gethash (symbol-package expr) result)
                           (list*
