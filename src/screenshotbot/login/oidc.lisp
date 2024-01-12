@@ -36,10 +36,6 @@
                 #:oauth-logo-svg
                 #:oauth-signin-link
                 #:oauth-signup-link)
-  (:import-from #:screenshotbot/model/user
-                #:email)
-  (:import-from #:screenshotbot/user-api
-                #:user)
   (:import-from #:util/events
                 #:push-event)
   (:import-from #:util/store/store
