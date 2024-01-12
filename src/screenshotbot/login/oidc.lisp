@@ -9,10 +9,11 @@
   (:use :cl)
   (:import-from #:auth
                 #:current-user
-                #:user-email
                 #:oauth-user-avatar
                 #:oauth-user-email
-                #:oauth-user-full-name)
+                #:oauth-user-full-name
+                #:oauth-user-user
+                #:user-email)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:store-object
@@ -36,11 +37,10 @@
                 #:oauth-signin-link
                 #:oauth-signup-link)
   (:import-from #:screenshotbot/model/user
-                #:email ;; TODO: goes away
-                #:oauth-user-user
+                #:email
                 #:oauth-users)
   (:import-from #:screenshotbot/user-api
-                #:user #| TODO: goes away |#)
+                #:user)
   (:import-from #:util/events
                 #:push-event)
   (:import-from #:util/store/store
