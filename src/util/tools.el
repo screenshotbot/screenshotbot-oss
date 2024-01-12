@@ -71,3 +71,7 @@ nil)")
         ;; Delete the inserted whitespace
         (paredit-backward-delete))
       (indent-sexp))))
+
+(defun arnold/inspect-symbol ()
+  (interactive)
+  (sly-inspect (format "'%s" (upcase (thing-at-point 'symbol)))))
