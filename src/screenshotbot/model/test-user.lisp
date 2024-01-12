@@ -36,6 +36,11 @@
                 #:with-test-store)
   (:import-from #:bknr.datastore
                 #:with-transaction)
+  (:import-from #:fiveam-matchers/misc
+                #:is-not-null)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that
+                #:is-equal-to)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-user)
 
@@ -155,3 +160,12 @@
     (make-user :email "foo@example.com")
     (signals user-email-exists
       (make-user :email "IT@example.com"))))
+
+(test simple-find-or-create-user
+  (with-fixture state ()
+    (assert-that
+     (auth:find-or-create-user *installation* :email "foo@example.com")
+     (is-not-null))
+    (assert-that
+     (auth:find-or-create-user *installation* :email "foo@example.com")
+     (is-equal-to (first (bknr.datastore:class-instances 'user))))))

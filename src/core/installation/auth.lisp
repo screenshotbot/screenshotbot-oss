@@ -20,5 +20,3 @@
 with-login page."))
 
 (defgeneric company-for-request (installation request))
-
-(defgeneric find-user (installation &key email))

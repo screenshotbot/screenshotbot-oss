@@ -13,6 +13,7 @@
   :components ((:file "package")
                (:file "auth")
                (:file "request")
+               (:file "model")
                (:file "view")
                (:file "company")
                (:file "acceptor")))

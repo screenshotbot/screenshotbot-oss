@@ -46,8 +46,6 @@
                 #:?.)
   (:import-from #:screenshotbot/model/github
                 #:github-user)
-  (:import-from #:core/installation/auth
-                #:find-user)
   (:export
    #:user
    #:email-confirmation-code
@@ -87,6 +85,8 @@
    #:default-company
    #:make-user))
 (in-package :screenshotbot/model/user)
+
+(defvar *lock* (bt:make-lock))
 
 (def-store-local *lowercase-email-map*
     (make-hash-table :test #'equal)
@@ -339,5 +339,8 @@
 (defmethod (setf user-email) :after (email (user user))
   (update-lowercase-email-map user))
 
-(defmethod find-user ((self installation) &key email)
-  (user-with-email email))
+(defmethod auth:find-or-create-user ((self installation) &key email)
+  (bt:with-lock-held (*lock*)
+   (or
+    (values (user-with-email email) nil)
+    (values (make-user :email email) t))))
