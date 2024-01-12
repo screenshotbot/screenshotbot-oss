@@ -23,7 +23,8 @@
                :core.installation
                :util/throttler)
   :components ((:module "login"
-                :components ((:file "common")))))
+                :components ((:file "common")
+                             (:file "github")))))
 
 (defsystem :screenshotbot
   :serial t
@@ -144,7 +145,6 @@
                  (:file "auto-cleanup")
                  (:file "company")
                  (:file "sharing")
-                 (:file "github")
                  (:file "user")
                  (:file "invite")
                  (:file "view")

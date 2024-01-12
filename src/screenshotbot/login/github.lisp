@@ -4,9 +4,9 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/model/github
+(defpackage :screenshotbot/login/github
   (:use :cl)
-  (:nicknames :screenshotbot/login/github)
+  (:nicknames :screenshotbot/model/github)
   (:import-from #:bknr.datastore
                 #:store-object)
   (:import-from #:auth
@@ -33,7 +33,7 @@
    #:oauth-user-email
    #:oauth-user-full-name
    #:oauth-user-user))
-(in-package :screenshotbot/model/github)
+(in-package :screenshotbot/login/github)
 
 (ensure-symbol-in-package
  #:github-user
