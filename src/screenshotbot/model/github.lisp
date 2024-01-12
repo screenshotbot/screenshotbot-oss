@@ -6,6 +6,7 @@
 
 (defpackage :screenshotbot/model/github
   (:use :cl)
+  (:nicknames :screenshotbot/login/github)
   (:import-from #:bknr.datastore
                 #:store-object)
   (:import-from #:auth
