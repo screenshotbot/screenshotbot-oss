@@ -140,7 +140,7 @@
       :accessor email-confirmations)
      (oauth-users
       :initform nil
-      :accessor oauth-users)
+      :accessor auth:oauth-users)
      (companies
       :initarg :companies
       :initform nil
@@ -280,9 +280,9 @@
 
 (defmethod user-full-name ((user user))
   (or (%user-full-name user)
-      (when (oauth-users user)
-        (assert (car (oauth-users user)))
-        (oauth-user-full-name (car (oauth-users user))))))
+      (when (auth:oauth-users user)
+        (assert (car (auth:oauth-users user)))
+        (oauth-user-full-name (car (auth:oauth-users user))))))
 
 (defun user-personal-company (user)
   (loop for company in (user-companies user)
@@ -320,7 +320,7 @@
 
 (defmethod user-image-url (user &rest args)
   (let ((known-avatar
-          (?. oauth-user-avatar (car (oauth-users user)))))
+          (?. oauth-user-avatar (car (auth:oauth-users user)))))
     (cond
       ((str:emptyp known-avatar)
        (format nil "~a" (apply 'gravatar:image-url

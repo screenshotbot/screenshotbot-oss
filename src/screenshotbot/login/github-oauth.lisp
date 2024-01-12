@@ -41,8 +41,7 @@
   (:import-from #:screenshotbot/model/user
                 #:email
                 #:github-user
-                #:oauth-user-user
-                #:oauth-users)
+                #:oauth-user-user)
   (:import-from #:screenshotbot/user-api
                 #:access-token
                 #:current-user
@@ -185,17 +184,3 @@
           (pushnew email (known-emails gh-user)
                    :test 'equal)))
       ret)))
-
-(defun fix-bad-user-oauth-user-mapping ()
-  "Migration. Don't use for anything in particular"
-  (loop for x in (store-objects-with-class 'user) do
-  (dolist (y (oauth-users x))
-    (log:info "In here with ~a, ~a (actually: ~a)" x y (oauth-user-user y))
-    (restart-case
-        (unless (eql x (oauth-user-user y))
-          (error "got mismatch: ~a, ~a (actuall: ~a" x y (oauth-user-user y)))
-      (ignore ()
-        nil)
-      (fix-oauth-user-user ()
-        (with-transaction ()
-          (setf (oauth-user-user y) x)))))))

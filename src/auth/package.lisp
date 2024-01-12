@@ -78,4 +78,5 @@
            #:oauth-user-user
            #:user-email
            #:installation-user-with-email
-           #:find-or-create-user))
+           #:find-or-create-user
+           #:oauth-users))

@@ -37,8 +37,7 @@
                 #:oauth-signin-link
                 #:oauth-signup-link)
   (:import-from #:screenshotbot/model/user
-                #:email
-                #:oauth-users)
+                #:email)
   (:import-from #:screenshotbot/user-api
                 #:user)
   (:import-from #:util/events
@@ -189,7 +188,7 @@ user as used in Screenshotbot)"
      (auth:find-or-create-user *installation* :email email))
     (with-transaction (:ensure-two-way-mapping)
       ;; ensure two way mapping.
-      (pushnew oauth-user (oauth-users user))
+      (pushnew oauth-user (auth:oauth-users user))
       (setf (oauth-user-user oauth-user) user))
     ;; what happens if there's another user with the current email?
     ;; For instance, if the Oauth session changed their email address?
