@@ -27,11 +27,10 @@
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:screenshotbot/impersonation
+                #:make-impersonation
                 #:admin-user
                 #:impersonatedp
                 #:impersonation)
-  (:import-from #:screenshotbot/injector
-                #:with-injection)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:create-note-page
@@ -53,9 +52,8 @@
   (flet ((create-with (author)
            (apply '%create-note-page
                    :author author
-                   args))
-         )
-   (with-injection (impersonation)
+                   args)))
+   (let ((impersonation (make-impersonation)))
      (cond
        ((impersonatedp impersonation)
         (let ((admin-user (admin-user impersonation)))
