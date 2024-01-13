@@ -37,7 +37,8 @@
    #:signin-get
    #:signup-get
    #:with-oauth-state-and-redirect
-   #:server-with-login))
+   #:server-with-login
+   #:auth-template-impl))
 (in-package :screenshotbot/login/common)
 
 (named-readtables:in-readtable markup:syntax)
@@ -144,3 +145,10 @@
 (defmethod throttle! ((self ip-throttler) &key key &allow-other-keys)
   (call-next-method
    self :key (hunchentoot:real-remote-addr)))
+
+(defgeneric auth-template-impl (installation children &key body-class simple))
+
+(markup:deftag auth-template (children &key body-class simple)
+  (auth-template-impl *installation*
+                      children :body-class body-class
+                               :simple simple))

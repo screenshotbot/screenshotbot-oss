@@ -36,8 +36,7 @@
                 #:ip-throttler
                 #:oauth-signin-link
                 #:signin-get
-                #:signup-get)
-  (:import-from #:screenshotbot/login/template
+                #:signup-get
                 #:auth-template)
   (:import-from #:screenshotbot/model/user
                 #:email

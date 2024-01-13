@@ -26,8 +26,7 @@
   (:import-from #:screenshotbot/login/common
                 #:after-create-user
                 #:signin-get
-                #:signup-get)
-  (:import-from #:screenshotbot/login/template
+                #:signup-get
                 #:auth-template)
   (:import-from #:screenshotbot/mailer
                 #:send-mail)

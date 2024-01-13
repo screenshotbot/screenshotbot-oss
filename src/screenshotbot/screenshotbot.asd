@@ -271,15 +271,15 @@
                  (:file "fake")))
    (:module "login"
     :serial t
-    :components ((:file "template")
-                 (:file "login")
+    :components ((:file "login")
                  (:file "signup")
                  (:file "forgot-password")
                  (:file "populate")
                  (:file "github-oauth")
                  (:file "github-oauth-ui")
                  (:file "google-oauth")
-                 (:file "aws-cognito")))
+                 (:file "aws-cognito")
+                 (:file "template")))
    (:module "company"
     :serial t
     :components ((:file "new")

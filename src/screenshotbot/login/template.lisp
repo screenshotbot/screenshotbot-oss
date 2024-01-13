@@ -9,12 +9,17 @@
   (:import-from #:screenshotbot/cdn
                 #:img)
   (:import-from #:screenshotbot/template
-                #:landing-head))
+                #:landing-head)
+  (:import-from #:screenshotbot/login/common
+                #:auth-template-impl
+                #:auth-template)
+  (:import-from #:screenshotbot/installation
+                #:installation))
 (in-package :screenshotbot/login/template)
 
 (named-readtables:in-readtable markup:syntax)
 
-(markup:deftag auth-template (children &key body-class simple)
+(defmethod auth-template-impl ((self installation) children &key body-class simple)
   <html lang= "en" >
     <landing-head>
       ,(progn
