@@ -13,20 +13,22 @@
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:core/installation/auth-provider
-                #:auth-provider-signup-form)
+                #:auth-provider-signup-form
+                #:auth-providers)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:import-from #:markup/markup
                 #:deftag)
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/installation
-                #:auth-providers
-                #:mailer*
-                #:standard-auth-provider)
+                #:mailer*)
   (:import-from #:screenshotbot/login/common
                 #:after-create-user
+                #:auth-template
                 #:signin-get
                 #:signup-get
-                #:auth-template)
+                #:standard-auth-provider)
   (:import-from #:screenshotbot/mailer
                 #:send-mail)
   (:import-from #:screenshotbot/model/invite
@@ -58,8 +60,6 @@
   (:import-from #:util/throttler
                 #:keyed-throttler
                 #:throttle!)
-  (:import-from #:core/installation/installation
-                #:*installation*)
   (:export
    #:signup-get
    #:signup-post))
