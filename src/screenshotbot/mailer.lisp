@@ -4,21 +4,18 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/mailer
-    (:use #:cl #:alexandria)
-    (:import-from #:util/threading
-                  #:make-thread
-                  #:max-pool
-                  #:ignore-and-log-errors)
-    (:import-from #:screenshotbot/async
-                  #:sb/future)
+(defpackage :screenshotbot/mailer
+  (:use :cl)
+  (:import-from #:util/threading
+                #:make-thread
+                #:max-pool)
   (:export
-   #:noop-mailer
-   #:smtp-mailer
-   #:local-smtp-mailer
    #:background-mailer
+   #:host
+   #:local-smtp-mailer
+   #:noop-mailer
    #:send-mail
-   #:host))
+   #:smtp-mailer))
 (in-package :screenshotbot/mailer)
 
 (defclass mailer ()
