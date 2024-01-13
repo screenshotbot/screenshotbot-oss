@@ -40,7 +40,6 @@
            #:load-countries
            #:load-states
            #:dont-send-the-mail
-           #:*disable-emails*
            #:prepare-store-for-test
            #:prepare-store
            #:add-get-param-to-url

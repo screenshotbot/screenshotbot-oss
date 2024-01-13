@@ -103,21 +103,20 @@
   (restart-case
       (multiple-value-bind (from display-name)
           (parse-from from display-name)
-       (unless util:*disable-emails*
-         (cl-smtp:send-email
-          (host mailer)
-          (or from (from mailer))
-          (fix-email-list to)
-          subject
-          (util:html2text html-message)
-          :ssl (ssl mailer)
-          :bcc (fix-email-list bcc)
-          :port (port mailer)
-          :reply-to reply-to
-          :display-name display-name
-          :authentication (authentication mailer)
-          :port (port mailer)
-          :html-message (markup:write-html html-message))))
+       (cl-smtp:send-email
+        (host mailer)
+        (or from (from mailer))
+        (fix-email-list to)
+        subject
+        (util:html2text html-message)
+        :ssl (ssl mailer)
+        :bcc (fix-email-list bcc)
+        :port (port mailer)
+        :reply-to reply-to
+        :display-name display-name
+        :authentication (authentication mailer)
+        :port (port mailer)
+        :html-message (markup:write-html html-message)))
     (dont-send-the-mail ()
       nil)))
 

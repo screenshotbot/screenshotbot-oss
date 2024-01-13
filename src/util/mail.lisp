@@ -8,7 +8,6 @@
 
 (markup:enable-reader)
 
-(defvar *disable-emails* nil)
 (defun parse-email-list (s)
   (cond
     ((stringp s)
@@ -39,7 +38,7 @@ that as a link which can be used for phishing."
         if (or (pathnamep a) (stringp a))
           do (assert (path:-e a)))
   (restart-case
-      (unless *disable-emails*
+     (progn
        (cl-smtp:send-email
         "localhost"
         from
