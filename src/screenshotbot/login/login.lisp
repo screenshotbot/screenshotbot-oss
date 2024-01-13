@@ -13,7 +13,11 @@
                 #:current-user
                 #:logged-in-p)
   (:import-from #:core/installation/auth-provider
-                #:auth-provider-signin-form)
+                #:auth-provider-signin-form
+                #:auth-providers
+                #:default-oidc-provider)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:import-from #:markup/markup
                 #:deftag
                 #:unescaped)
@@ -22,24 +26,20 @@
   (:import-from #:oidc/oidc
                 #:end-session-endpoint)
   (:import-from #:screenshotbot/impersonation
-                #:make-impersonation
-                #:impersonation)
+                #:impersonation
+                #:make-impersonation)
   (:import-from #:screenshotbot/installation
-                #:auth-providers
-                #:default-oidc-provider
                 #:standard-auth-provider)
   (:import-from #:screenshotbot/login/common
+                #:auth-template
                 #:ip-throttler
                 #:oauth-signin-link
                 #:signin-get
-                #:signup-get
-                #:auth-template)
+                #:signup-get)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/throttler
                 #:throttle!)
-  (:import-from #:core/installation/installation
-                #:*installation*)
   (:export
    #:auth-header-logo))
 (in-package :screenshotbot/login/login)
