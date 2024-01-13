@@ -84,5 +84,5 @@
   "Get the github-user associated with a given user"
   (warn "Calling github-user method, we thought this was unsed")
   (loop for gu in (bknr.datastore:class-instances 'github-user)
-        if (eql user (oauth-user-user gu))
+        if (eql user (ignore-errors (oauth-user-user gu)))
           return gu))
