@@ -21,15 +21,14 @@
                 #:deftag)
   (:import-from #:nibble
                 #:nibble)
-  (:import-from #:screenshotbot/installation
-                #:mailer*)
   (:import-from #:screenshotbot/login/common
                 #:after-create-user
                 #:auth-template
                 #:signin-get
                 #:signup-get
                 #:standard-auth-provider)
-  (:import-from #:screenshotbot/mailer
+  (:import-from #:core/installation/mailer
+                #:mailer*
                 #:send-mail)
   (:import-from #:screenshotbot/model/invite
                 #:invite
