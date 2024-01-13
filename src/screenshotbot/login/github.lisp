@@ -87,8 +87,8 @@
      (%oauth-user-full-name self))))
 
 (defmethod github-user (user)
-  "Get the github-user associated with a given user"
-  (warn "Calling github-user method, we thought this was unsed")
+  "Get the github-user associated with a given user. I think it's only
+used by pro/admin code."
   (loop for gu in (bknr.datastore:class-instances 'github-user)
         if (eql user (ignore-errors (oauth-user-user gu)))
           return gu))
