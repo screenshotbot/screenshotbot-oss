@@ -1,20 +1,27 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 (defpackage :screenshotbot/impersonation
-  (:use #:cl)
+  (:use :cl)
+  (:import-from #:auth
+                #:current-user)
   (:import-from #:clues/injectable
                 #:injectable)
   (:import-from #:screenshotbot/user-api
-                #:current-user
                 #:user)
   (:import-from #:util/cookies
                 #:cookies
                 #:get-cookie
                 #:set-cookie)
-  (:local-nicknames (#:a #:alexandria))
   (:export
-   #:impersonatedp
    #:impersonate
+   #:impersonatedp
    #:impersonation
-   #:logout))
+   #:logout)
+  (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/impersonation)
 
 (defclass impersonation ()
