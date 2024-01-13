@@ -37,8 +37,6 @@
                 #:auth-template)
   (:import-from #:screenshotbot/model/user
                 #:user-with-email)
-  (:import-from #:screenshotbot/server
-                #:defhandler)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/throttler
@@ -54,7 +52,7 @@
 (defvar *throttler* (make-instance 'ip-throttler
                                    :tokens 1200))
 
-(defhandler (nil :uri "/login") ()
+(hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/login") ()
   (hex:safe-redirect "/signin"))
 
 
@@ -133,7 +131,7 @@
         <!-- end page -->
       </auth-template>)))
 
-(defhandler (nil :uri "/signin" :method :get) (after-logout redirect)
+(hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/signin") (after-logout redirect)
   (declare (ignore after-logout))
   (let ((redirect (or redirect "/runs")))
     (when (logged-in-p)
@@ -178,7 +176,7 @@
   (setf (current-user) nil)
   (hex:safe-redirect "/"))
 
-(defhandler (nil :uri "/account/oauth-signout-callback") ()
+(hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/account/oauth-signout-callback") ()
   (hard-signout))
 
 (defun signout-from-oidc (auth-provider)
@@ -193,7 +191,7 @@
       (t
        (hard-signout)))))
 
-(defhandler (nil :uri "/signout") ()
+(hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/signout") ()
   (with-injection (impersonation)
     (screenshotbot/impersonation:logout impersonation)
     (if-let ((default-auth-provider (default-oidc-provider *installation*)))

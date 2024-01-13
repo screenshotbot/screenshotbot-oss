@@ -62,7 +62,6 @@
                 #:*installation*)
   (:export
    #:signup-get
-   #:signup-get-page
    #:signup-post))
 (in-package :screenshotbot/login/signup)
 
@@ -169,10 +168,10 @@
 
     </auth-template>))
 
-(defhandler (signup-get-page :uri "/signup" :method :get) (invite-code
-                                                           plan)
-    (when (logged-in-p)
-      (hex:safe-redirect "/runs"))
+
+(hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/signup") (invite-code plan)
+  (when (logged-in-p)
+    (hex:safe-redirect "/runs"))
 
   (signup-get :invite-code invite-code :plan plan))
 
@@ -310,8 +309,3 @@
      :to email
      :subject "Welcome to Screenshotbot"
      :html-message (render-signup-confirmation first-name confirmation))))
-
-(defhandler (nil :uri "/send-test-confirmation") ()
-  (let ((conf (make-instance 'email-confirmation-code
-                             :email "arnstein87@gmail.com")))
-   (send-signup-confirmation "arnstein87@gmail.com" "Arnold" conf)))
