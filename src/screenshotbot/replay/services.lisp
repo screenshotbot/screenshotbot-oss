@@ -6,19 +6,6 @@
 
 (defpackage :screenshotbot/replay/services
   (:use #:cl)
-  (:import-from #:scale/vagrant
-                #:vagrant)
-  (:import-from #:scale/core
-                #:ssh-sudo
-                #:add-url
-                #:ssh-run
-                #:with-instance)
-  (:import-from #:scale/linode
-                #:linode)
-  (:import-from #:scale/image
-                #:image-spec-serialized-key
-                #:with-imaged-instance
-                #:defimage)
   (:import-from #:screenshotbot/replay/proxy
                 #:selenium-host
                 #:selenium-port)
@@ -111,68 +98,10 @@
                           5004))
                   :type nil))
 
-(defun install-firefox (instance version)
-  ;; See https://github.com/browser-actions/setup-firefox/blob/master/src/DownloadURL.ts
-  (ssh-sudo instance (list "apt-get" "install" "-y" "libasound2"
-                           ;; just install all the damn deps
-                           "firefox-esr"
-                           ;; Required to uncompress the downloaded
-                           ;; file, at least on the Linode image.
-                           "bzip2"))
-  (add-url
-   instance
-   (format nil
-           "https://ftp.mozilla.org/pub/firefox/releases/~a/linux-x86_64/en-US/firefox-~a.tar.bz2" version version)
-   "firefox.tar.bz2")
-  (ssh-run instance "ls -l")
-  (ssh-run instance "file firefox.tar.bz2")
-  (ssh-run
-   instance
-   "tar xvjf firefox.tar.bz2")
-  (ssh-run instance "ls -l")
-  (ssh-run instance "firefox/firefox --version"))
-
-(defun install-geckodriver (instance)
-  (add-url
-   instance
-   "https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux64.tar.gz"
-   "geckodriver.tar.gz")
-
-  (ssh-run
-   instance
-   "tar xvzf geckodriver.tar.gz"))
-
-(defimage (debian-base :instance instance)
-          ()
-          :debian-11
-  (ssh-sudo instance (list "apt-get" "update"))
-  (ssh-sudo instance "apt-get install -y xvfb"))
-
-(defimage (firefox :instance instance :version 3)
-    (version)
-    debian-base
-  (install-firefox instance version)
-  (install-geckodriver instance))
-
-(defun call-firefox-using-scale-provider (fn provider)
-  (with-imaged-instance (machine (firefox :version "102.0") provider :size :small)
-    ;;(ssh-run machine "./geckodriver --binary firefox/firefox")
-    (funcall fn)))
-
-#+nil
-(call-firefox-using-scale-provider
- (lambda () (log:info "with image!")) (make-instance 'vagrant))
 
 (defun call-with-selenium-server (fn &key type)
-  (cond
-    #+nil
-    ((and (not (linode?))
-          (equal "firefox" type))
-     (call-firefox-using-scale-provider fn
-                                        (scale-provider)))
-    (t
-     (funcall fn
-              (selenium-server :type type)))))
+  (funcall fn
+           (selenium-server :type type)))
 
 (defmacro with-selenium-server ((var &rest args) &body body)
   `(call-with-selenium-server

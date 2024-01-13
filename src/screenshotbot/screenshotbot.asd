@@ -529,7 +529,6 @@
                :screenshotbot/replay-core
                :ironclad/core
                :cl-json
-               :scale
                :ironclad/digests
                :screenshotbot.sdk
                :str
