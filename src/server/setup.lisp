@@ -391,31 +391,32 @@
 
 #+lispworks
 (defun wait-for-processes ()
-  (dotimes (i 30)
-    (safe-log "[~a/30] Wait for processes" i)
-    (let* ((processes
-             (set-difference (mp:list-all-processes) mp:*initial-processes*))
-           (processes
-             (loop for p in processes
-                   unless (or
-                           (eql p (mp:get-current-process))
-                           (member (mp:process-name p)
-                                   '("Hierarchy Watcher"
-                                     "The idle process"
-                                     "Initial delivery process"
-                                     "Restart Function Process")
-                                   :test 'string=))
-                     collect p)))
+  (let ((wait-time 10))
+   (dotimes (i wait-time)
+     (safe-log "[~a/~a] Wait for processes" i wait-time)
+     (let* ((processes
+              (set-difference (mp:list-all-processes) mp:*initial-processes*))
+            (processes
+              (loop for p in processes
+                    unless (or
+                            (eql p (mp:get-current-process))
+                            (member (mp:process-name p)
+                                    '("Hierarchy Watcher"
+                                      "The idle process"
+                                      "Initial delivery process"
+                                      "Restart Function Process")
+                                    :test 'string=))
+                      collect p)))
 
-      (cond
-        (processes
-         (log:info "Threads remaining: ~S" processes)
-         (log4cl:flush-all-appenders)
-         (sleep 1))
-        (t
-         ;; nothing left!
-         (log:info "Should be a safe shutdown!")
-         (return-from wait-for-processes nil)))))
+       (cond
+         (processes
+          (log:info "Threads remaining: ~S" processes)
+          (log4cl:flush-all-appenders)
+          (sleep 1))
+         (t
+          ;; nothing left!
+          (log:info "Should be a safe shutdown!")
+          (return-from wait-for-processes nil))))))
   (log:info "We waited for threads to cleanup but nothing happened, so we're going for a force uiop:quit")
   (log4cl:flush-all-appenders)
   (uiop:quit))
