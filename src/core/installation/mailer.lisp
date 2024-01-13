@@ -137,5 +137,7 @@
        :pool *mailer-pool*
        :name "email thread"))))
 
+(defgeneric mailer (installation))
+
 (defun mailer* (&optional (installation *installation*))
   (mailer installation))
