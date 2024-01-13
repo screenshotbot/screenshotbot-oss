@@ -19,9 +19,12 @@
   (:import-from #:util/store/permissive-persistent-class
                 #:permissive-persistent-class)
   (:import-from #:util/store/store
+                #:defindex
                 #:with-class-validation)
   (:import-from #:util/store/migrations
                 #:ensure-symbol-in-package)
+  (:import-from #:util/store/fset-index
+                #:fset-unique-index)
   (:export
    #:%find-github-user-by-id
    #:access-token-string
@@ -42,13 +45,16 @@
 
 (export 'github-user)
 
+(defindex +gh-user-id-index+
+  'fset-unique-index
+  :slot-name 'gh-user-id)
+
 (with-class-validation
   (defclass github-user (store-object)
     ((gh-user-id :type integer
                  :initarg :gh-user-id
-                 :index-type unique-index
+                 :index +gh-user-id-index+
                  :initform nil
-                 :index-initargs (:test 'equal)
                  :index-reader %find-github-user-by-id)
      (email :type (or null string)
             :initarg :email
