@@ -38,7 +38,8 @@
    #:signup-get
    #:with-oauth-state-and-redirect
    #:server-with-login
-   #:auth-template-impl))
+   #:auth-template-impl
+   #:standard-auth-provider))
 (in-package :screenshotbot/login/common)
 
 (named-readtables:in-readtable markup:syntax)
@@ -152,3 +153,6 @@
   (auth-template-impl *installation*
                       children :body-class body-class
                                :simple simple))
+
+(defclass standard-auth-provider (auth-provider)
+  ())

@@ -28,14 +28,13 @@
   (:import-from #:screenshotbot/impersonation
                 #:impersonation
                 #:make-impersonation)
-  (:import-from #:screenshotbot/installation
-                #:standard-auth-provider)
   (:import-from #:screenshotbot/login/common
                 #:auth-template
                 #:ip-throttler
                 #:oauth-signin-link
                 #:signin-get
-                #:signup-get)
+                #:signup-get
+                #:standard-auth-provider)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/throttler

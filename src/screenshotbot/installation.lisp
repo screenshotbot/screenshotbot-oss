@@ -16,6 +16,8 @@
                 #:*installation*
                 #:abstract-installation
                 #:installation-domain)
+  (:import-from #:screenshotbot/login/common
+                #:standard-auth-provider)
   (:export
    #:installation
    #:installation-domain
@@ -87,9 +89,6 @@ every user will have only one company that they are an owner of."))
 
 (defun mailer* (&optional (installation (installation)))
   (mailer installation))
-
-(defclass standard-auth-provider (auth-provider)
-  ())
 
 (defclass email-auth-provider ()
   ())
