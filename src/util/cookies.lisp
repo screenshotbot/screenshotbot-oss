@@ -6,8 +6,6 @@
 
 (defpackage :util/cookies
   (:use #:cl)
-  (:import-from #:clues/injectable
-                #:injectable)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:cookies
@@ -27,8 +25,7 @@
          :reader host)
    (proto :initform (hunchentoot:header-in* :x-forwarded-proto)
           :initarg :proto
-          :reader proto))
-  (:metaclass injectable))
+          :reader proto)))
 
 (defun host-without-port (self)
   (car (str:split ":" (host self))))

@@ -50,7 +50,6 @@
                "easy-macros"
                "alexandria"
                "uuid"
-               "clues"
                "tmpdir"
                "cl-mop"
                "secure-random"

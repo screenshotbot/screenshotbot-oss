@@ -21,7 +21,6 @@
                :hunchentoot-extensions
                :nibble
                :core.installation
-               :clues
                :util
                :util/throttler
                :util/events
@@ -113,7 +112,6 @@
                :cl-json)
   :components
   ((:static-file "dtd/api" :type "dtd")
-   (:file "injector")
    (:file "ignore-and-log-errors")
    (:file "analytics" :depends-on ("ignore-and-log-errors"))
    (:file "plugin")

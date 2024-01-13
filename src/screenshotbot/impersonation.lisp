@@ -8,8 +8,6 @@
   (:use :cl)
   (:import-from #:auth
                 #:current-user)
-  (:import-from #:clues/injectable
-                #:injectable)
   (:import-from #:util/cookies
                 #:cookies
                 #:get-cookie
@@ -24,10 +22,8 @@
 (in-package :screenshotbot/impersonation)
 
 (defclass impersonation ()
-  ((cookies :inject cookies
-            :initarg :cookies
-            :reader cookies))
-  (:metaclass injectable))
+  ((cookies :initarg :cookies
+            :reader cookies)))
 
 (defmethod impersonate ((self impersonation) user)
   (let ((admin-user (current-user)))
