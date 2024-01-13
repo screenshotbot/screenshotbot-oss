@@ -21,8 +21,6 @@
                 #:nibble)
   (:import-from #:oidc/oidc
                 #:end-session-endpoint)
-  (:import-from #:screenshotbot/cdn
-                #:img)
   (:import-from #:screenshotbot/impersonation
                 #:impersonation)
   (:import-from #:screenshotbot/injector
@@ -57,12 +55,6 @@
 
 (defvar *throttler* (make-instance 'ip-throttler
                                    :tokens 1200))
-
-(markup:deftag auth-header-logo ()
-  <a href="/" class= "text-light" >
-    <img src= "/assets/images/logo-light.png"
-         class= "auth-brand-image" />
-    </a>)
 
 (defhandler (nil :uri "/login") ()
   (hex:safe-redirect "/signin"))
@@ -119,11 +111,6 @@
         <div class="account-pages mt-5 mb-5">
           ,(progn alert)
           <div class="card">
-
-            <!-- Logo -->
-            <div class="card-header pt-4 pb-4 text-center bg-primary">
-              <auth-header-logo />
-            </div>
 
             <div class="">
               <h4 class="text-dark-50 ps-4 mt-0 font-weight-bold">Sign In</h4>
