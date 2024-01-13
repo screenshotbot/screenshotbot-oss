@@ -117,7 +117,6 @@
    (:file "analytics" :depends-on ("ignore-and-log-errors"))
    (:file "plugin")
    (:file "async")
-   (:file "mailer")
    (:file "installation")
    (:file "server" :depends-on ("analytics"))
    (:module "s3"

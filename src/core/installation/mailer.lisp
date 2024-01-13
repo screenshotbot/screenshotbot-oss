@@ -5,18 +5,22 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/mailer
+  (:nicknames :core/installation/mailer)
   (:use :cl)
   (:import-from #:util/threading
                 #:make-thread
                 #:max-pool)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:export
    #:background-mailer
    #:host
    #:local-smtp-mailer
    #:noop-mailer
    #:send-mail
-   #:smtp-mailer))
-(in-package :screenshotbot/mailer)
+   #:smtp-mailer
+   #:mailer*))
+(in-package :core/installation/mailer)
 
 (defclass mailer ()
   ((from :initarg :from
@@ -108,7 +112,7 @@
         (or from (from mailer))
         (fix-email-list to)
         subject
-        (util:html2text html-message)
+        (util/html2text:html2text html-message)
         :ssl (ssl mailer)
         :bcc (fix-email-list bcc)
         :port (port mailer)
@@ -132,3 +136,6 @@
            (apply #'send-mail (delegate mailer) args)))
        :pool *mailer-pool*
        :name "email thread"))))
+
+(defun mailer* (&optional (installation *installation*))
+  (mailer installation))

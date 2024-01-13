@@ -6,7 +6,10 @@
 
 (defsystem #:core.installation
   :serial t
-  :depends-on (:util.store #| remove |#)
+  :depends-on (#:util.store #| remove |#
+               #:util/html2text
+               #:cl-smtp)
   :components ((:file "installation")
                (:file "auth-provider")
+               (:file "mailer")
                (:file "auth")))

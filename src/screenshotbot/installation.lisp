@@ -10,8 +10,10 @@
   (:use #:cl #:screenshotbot/plugin
         #:core/installation/auth-provider
         #:core/installation/auth)
-  (:import-from #:screenshotbot/mailer
-                #:noop-mailer)
+  (:import-from #:core/installation/mailer
+                #:noop-mailer
+                #:mailer*
+                #:mailer)
   (:import-from #:core/installation/installation
                 #:*installation*
                 #:abstract-installation
@@ -87,12 +89,8 @@
   (:documentation "When added with multi-org-feature, this ensures that
 every user will have only one company that they are an owner of."))
 
-(defun mailer* (&optional (installation (installation)))
-  (mailer installation))
-
 (defclass email-auth-provider ()
   ())
-
 
 (defclass null-s3-store ()
   ())
