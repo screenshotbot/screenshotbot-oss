@@ -342,7 +342,6 @@
                (:file "test-artifacts")
                (:file "test-promote-api")
                (:file "test-diff-report")
-               (:file "test-mailer")
                (:file "test-secret")
                (:file "test-async")
                (:file "test-settings-api")

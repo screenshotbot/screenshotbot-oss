@@ -4,23 +4,23 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/test-mailer
-    (:use #:cl
-          #:fiveam
-          #:alexandria)
+(defpackage :core/installation/test-mailer
+  (:use :cl)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that
+                #:equal-to)
+  (:import-from #:it.bese.fiveam
+                #:is
+                #:test)
   (:import-from #:screenshotbot/mailer
-                #:fix-email-list
                 #:background-mailer
-                #:send-mail
+                #:fix-email-list
+                #:host
+                #:local-smtp-mailer
                 #:parse-from
                 #:port
-                #:host
-                #:local-smtp-mailer)
-  (:import-from #:fiveam-matchers
-                #:equal-to
-                #:assert-that
-                #:is-equal-to))
-(in-package :screenshotbot/test-mailer)
+                #:send-mail))
+(in-package :core/installation/test-mailer)
 
 (util/fiveam:def-suite)
 

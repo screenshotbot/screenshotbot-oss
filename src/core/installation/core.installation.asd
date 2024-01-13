@@ -13,3 +13,9 @@
                (:file "auth-provider")
                (:file "mailer")
                (:file "auth")))
+
+(defsystem #:core.installation/tests
+  :serial t
+  :depends-on (#:core.installation
+               #:util/fiveam)
+  :components ((:file "test-mailer")))
