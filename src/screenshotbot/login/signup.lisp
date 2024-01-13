@@ -20,7 +20,6 @@
                 #:nibble)
   (:import-from #:screenshotbot/installation
                 #:auth-providers
-                #:installation
                 #:mailer*
                 #:standard-auth-provider)
   (:import-from #:screenshotbot/login/common
@@ -59,6 +58,8 @@
   (:import-from #:util/throttler
                 #:keyed-throttler
                 #:throttle!)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:export
    #:signup-get
    #:signup-get-page
@@ -146,8 +147,8 @@
                     <h4 class="text-dark-50 mt-0 font-weight-bold">Sign Up</h4>
                   </div>
 
-                  ,@ (let ((len (length (auth-providers (installation)))))
-                       (loop for auth-provider in (auth-providers (installation))
+                  ,@ (let ((len (length (auth-providers *installation*))))
+                       (loop for auth-provider in (auth-providers *installation*)
                              for idx from 0
                              collect
                              (auth-provider-signup-form auth-provider invite-code
@@ -244,7 +245,7 @@
              (send-signup-confirmation (user-email user)
                                        (user-first-name user)
                                        confirmation))
-           (after-create-user (installation) user))
+           (after-create-user *installation* user))
 
          (cond
            ((string= (string-upcase plan) (string :professional))

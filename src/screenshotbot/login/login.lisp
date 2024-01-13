@@ -28,7 +28,6 @@
   (:import-from #:screenshotbot/installation
                 #:auth-providers
                 #:default-oidc-provider
-                #:installation
                 #:standard-auth-provider)
   (:import-from #:screenshotbot/login/common
                 #:ip-throttler
@@ -47,6 +46,8 @@
                 #:with-form-errors)
   (:import-from #:util/throttler
                 #:throttle!)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:export
    #:auth-header-logo))
 (in-package :screenshotbot/login/login)
@@ -101,7 +102,7 @@
 
 (deftag signin-get (&key (redirect "/runs") (alert nil))
   (assert redirect)
-  (if-let ((provider (default-oidc-provider (installation))))
+  (if-let ((provider (default-oidc-provider *installation*)))
     (hex:safe-redirect (oauth-signin-link provider redirect))
     (let ((signup (nibble ()
                     (signup-get :redirect redirect
@@ -117,7 +118,7 @@
             </div>
 
             <div class="card-body p-4">
-              ,@ (loop for auth-provider in (auth-providers (installation))
+              ,@ (loop for auth-provider in (auth-providers *installation*)
                        collect
                        (auth-provider-signin-form auth-provider redirect))
             </div> <!-- end card-body -->
@@ -198,6 +199,6 @@
 (defhandler (nil :uri "/signout") ()
   (with-injection (impersonation)
     (screenshotbot/impersonation:logout impersonation)
-    (if-let ((default-auth-provider (default-oidc-provider (installation))))
+    (if-let ((default-auth-provider (default-oidc-provider *installation*)))
       (signout-from-oidc default-auth-provider)
       (hard-signout))))
