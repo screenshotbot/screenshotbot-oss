@@ -10,7 +10,8 @@
 ;;; restarts mal richtig machen
 
 #+lispworks
-(defvar *global-lock* (mp:make-lock :sharing t :recursivep t)
+(defvar *global-lock* (mp:make-lock :sharing t :recursivep t
+                                    :name "BKNR sharing lock")
   "A global lock that will lock all writes while classes/indexes are
 being reinitialized")
 
