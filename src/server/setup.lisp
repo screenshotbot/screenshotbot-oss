@@ -400,12 +400,15 @@
               (loop for p in processes
                     unless (or
                             (eql p (mp:get-current-process))
-                            (member (mp:process-name p)
-                                    '("Hierarchy Watcher"
-                                      "The idle process"
-                                      "Initial delivery process"
-                                      "Restart Function Process")
-                                    :test 'string=))
+                            (let ((name (mp:process-name p)))
+                              (some
+                               (lambda (substring)
+                                 (str:containsp substring name))
+                               '("Hierarchy Watcher"
+                                 "The idle process"
+                                 "Initial delivery process"
+                                 "Restart Function Process"
+                                 "Process for thread created by foreign code"))))
                       collect p)))
 
        (cond
