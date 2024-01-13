@@ -36,12 +36,9 @@
                 #:signup-get
                 #:auth-template)
   (:import-from #:screenshotbot/model/user
-                #:email
                 #:user-with-email)
   (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:screenshotbot/user-api
-                #:user)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/throttler
