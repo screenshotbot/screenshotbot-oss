@@ -18,12 +18,14 @@
    #:impersonate
    #:impersonatedp
    #:impersonation
-   #:logout)
+   #:logout
+   #:make-impersonation)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/impersonation)
 
 (defclass impersonation ()
   ((cookies :inject cookies
+            :initarg :cookies
             :reader cookies))
   (:metaclass injectable))
 
@@ -43,3 +45,10 @@
 (defmethod logout ((self impersonation))
   (setf (auth:session-value :admin-user)  nil)
   (set-cookie (cookies self) "imp" ""))
+
+(defun make-impersonation ()
+  "In the past, we temporarily used a home-grown injector
+mechanism. That's why this impersonation class is so un-idiomatically
+designed."
+  (make-instance 'impersonation
+                 :cookies (make-instance 'cookies)))

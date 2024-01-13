@@ -22,9 +22,8 @@
   (:import-from #:oidc/oidc
                 #:end-session-endpoint)
   (:import-from #:screenshotbot/impersonation
+                #:make-impersonation
                 #:impersonation)
-  (:import-from #:screenshotbot/injector
-                #:with-injection)
   (:import-from #:screenshotbot/installation
                 #:auth-providers
                 #:default-oidc-provider
@@ -192,7 +191,7 @@
        (hard-signout)))))
 
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/signout") ()
-  (with-injection (impersonation)
+  (let ((impersonation (make-impersonation)))
     (screenshotbot/impersonation:logout impersonation)
     (if-let ((default-auth-provider (default-oidc-provider *installation*)))
       (signout-from-oidc default-auth-provider)
