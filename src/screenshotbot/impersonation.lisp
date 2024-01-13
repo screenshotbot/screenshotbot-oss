@@ -10,8 +10,6 @@
                 #:current-user)
   (:import-from #:clues/injectable
                 #:injectable)
-  (:import-from #:screenshotbot/user-api
-                #:user)
   (:import-from #:util/cookies
                 #:cookies
                 #:get-cookie
@@ -29,7 +27,7 @@
             :reader cookies))
   (:metaclass injectable))
 
-(defmethod impersonate ((self impersonation) (user user))
+(defmethod impersonate ((self impersonation) user)
   (let ((admin-user (current-user)))
     (setf (current-user) user)
     (set-cookie (cookies self)

@@ -21,11 +21,14 @@
                :hunchentoot-extensions
                :nibble
                :core.installation
+               :clues
+               :util
                :util/throttler
                :util/events
                :util.store
                :oidc)
-  :components ((:module "login"
+  :components ((:file "impersonation")
+               (:module "login"
                 :components ((:file "common")
                              (:file "github")
                              (:file "oidc")))))
@@ -171,7 +174,6 @@
                  (:file "test-object")
                  (:file "note")))
    (:file "audit-log")
-   (:file "impersonation")
    (:file "diff-report")
    (:file "invite")
    (:module "dashboard"
