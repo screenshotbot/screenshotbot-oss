@@ -34,8 +34,6 @@
                 #:signin-get
                 #:signup-get
                 #:auth-template)
-  (:import-from #:screenshotbot/model/user
-                #:user-with-email)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/throttler
@@ -141,7 +139,7 @@
 (defun signin-post (&key email password redirect)
   (throttle! *throttler*)
   (let (errors
-        (user (user-with-email email)))
+        (user (auth:find-user *installation* :email email)))
     (flet ((check (name test message)
              (unless test
                (push (cons name message) errors))))

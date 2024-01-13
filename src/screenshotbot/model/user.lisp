@@ -339,6 +339,9 @@
 (defmethod (setf user-email) :after (email (user user))
   (update-lowercase-email-map user))
 
+(defmethod auth:find-user ((self installation) &key email)
+  (user-with-email email))
+
 (defmethod auth:find-or-create-user ((self installation) &key email)
   (bt:with-lock-held (*lock*)
    (or
