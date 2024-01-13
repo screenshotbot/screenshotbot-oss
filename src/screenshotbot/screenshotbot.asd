@@ -21,10 +21,14 @@
                :hunchentoot-extensions
                :nibble
                :core.installation
-               :util/throttler)
+               :util/throttler
+               :util/events
+               :util.store
+               :oidc)
   :components ((:module "login"
                 :components ((:file "common")
-                             (:file "github")))))
+                             (:file "github")
+                             (:file "oidc")))))
 
 (defsystem :screenshotbot
   :serial t
@@ -265,8 +269,7 @@
                  (:file "fake")))
    (:module "login"
     :serial t
-    :components ((:file "oidc")
-                 (:file "template")
+    :components ((:file "template")
                  (:file "login")
                  (:file "signup")
                  (:file "forgot-password")
