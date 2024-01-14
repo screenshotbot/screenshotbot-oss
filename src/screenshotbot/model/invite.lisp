@@ -9,8 +9,6 @@
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:store-object)
-  (:import-from #:screenshotbot/notice-api
-                #:invite-company)
   (:import-from #:util
                 #:make-secret-code)
   (:import-from #:util/store/store

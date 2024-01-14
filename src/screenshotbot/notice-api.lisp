@@ -5,7 +5,9 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (uiop/package:define-package :screenshotbot/notice-api
-    (:use #:cl #:alexandria)
+  (:use #:cl #:alexandria)
+  (:import-from #:screenshotbot/model/invite
+                #:invite-company)
   (:export
    #:invite-company
    #:notice-title

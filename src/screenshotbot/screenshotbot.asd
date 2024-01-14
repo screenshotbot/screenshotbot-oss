@@ -27,6 +27,8 @@
                :util.store
                :oidc)
   :components ((:file "impersonation")
+               (:module "model"
+                :components ((:file "invite")))
                (:module "login"
                 :components ((:file "common")
                              (:file "github")
@@ -151,7 +153,6 @@
                  (:file "company")
                  (:file "sharing")
                  (:file "user")
-                 (:file "invite")
                  (:file "view")
                  (:file "image")
                  (:file "screenshot-key")
