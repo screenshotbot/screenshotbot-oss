@@ -9,9 +9,6 @@
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:store-object)
-  (:import-from #:screenshotbot/model/company
-                #:all-companies
-                #:company-invites)
   (:import-from #:screenshotbot/notice-api
                 #:invite-company)
   (:import-from #:util
@@ -54,16 +51,14 @@
    (format out "#<INVITE ~a>" email)))
 
 (defmethod initialize-instance :after ((invite invite) &key company &allow-other-keys)
-  (assert company)
-  (push invite (company-invites company)))
+  (assert company))
 
 (defun all-invites (&key company)
-  (cond
-    (company
-     (company-invites company))
-    (t
-     (loop for company in (all-companies)
-           appending (company-invites company)))))
+  (loop for invite in (bknr.datastore:class-instances 'invite)
+        if (or
+            (not company)
+            (eql company (invite-company invite)))
+          collect invite))
 
 (defun invites-with-email (email &key company)
   (loop for invite in (all-invites :company company)

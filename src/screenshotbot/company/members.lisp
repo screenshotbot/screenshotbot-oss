@@ -19,13 +19,13 @@
   (:import-from #:screenshotbot/model/company
                 #:company-admin-p
                 #:company-admins
-                #:company-owner
-                #:company-invites)
+                #:company-owner)
   (:import-from #:screenshotbot/model/user
                 #:users-for-company)
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/model/invite
+                #:all-invites
                 #:invite-email)
   (:import-from #:bknr.datastore
                 #:with-transaction)
@@ -100,8 +100,7 @@
   (confirmation-page
    :yes (nibble ()
           (with-transaction ()
-            (a:deletef (company-invites company)
-                     invite))
+            (bknr.datastore:delete-object invite))
           (hex:safe-redirect "/settings/members"))
    :no "/settings/members"
    <span>Delete invitation to ,(invite-email invite)?</span>))
@@ -132,7 +131,7 @@
 
        ,(taskie-list
          :headers '("Name" "Email" "Status" "Actions")
-         :items (company-invites company)
+         :items (all-invites :company company)
          :checkboxes nil
          :empty-message "No pending invites"
          :row-generator (lambda (invite)

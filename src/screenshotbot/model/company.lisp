@@ -41,7 +41,6 @@
    #:company-reports
    #:github-config
    #:access-token
-   #:company-invites
    #:company-channels
    #:jira-config-url
    #:jira-config-username
@@ -109,7 +108,7 @@
       :accessor company-reports)
      (invites
       :initform nil
-      :accessor company-invites)
+      :documentation "DEPRECATED")
      (channels
       :initarg :channels
       :initform nil

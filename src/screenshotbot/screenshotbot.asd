@@ -390,6 +390,7 @@
                              (:file "test-common")))
                (:module "model"
                 :components ((:file "test-core")
+                             (:file "test-invite")
                              (:file "test-auto-cleanup")
                              (:file "test-transient-object")
                              (:file "test-recorder-run")
