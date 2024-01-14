@@ -226,20 +226,8 @@
                    password))
            (setf (current-user) user)
 
-           (let ((invites (remove-if #'null
-                                     (remove-duplicates
-                                      (list*
-                                       invite
-                                       (invites-with-email email))))))
-             (with-transaction ()
-               (setf (unaccepted-invites user)
-                invites)))
-
-           (let ((confirmation (make-instance 'email-confirmation-code
-                                               :user user)))
-             (send-signup-confirmation (user-email user)
-                                       (user-first-name user)
-                                       confirmation))
+           (process-existing-invites user email :current-invite invite)
+           (prepare-and-send-email-confirmation user)
            (after-create-user *installation* user))
 
          (cond
@@ -247,6 +235,30 @@
             (hex:safe-redirect "/upgrade"))
            (t
             (hex:safe-redirect redirect))))))))
+
+(defun prepare-and-send-email-confirmation (user)
+  "Send an email confirmation to the USER"
+  (let ((confirmation (make-instance 'email-confirmation-code
+                                     :user user)))
+    (send-signup-confirmation (user-email user)
+                              (user-first-name user)
+                              confirmation)))
+
+(defun process-existing-invites (user email &key current-invite)
+  "When the USER is created, the user might have existing invites. Do
+any processing related to those invites here.
+
+CURRENT-INVITE is the current invite being used while signing up. This
+might not be an existing invite because when you sign up you might use
+a different email."
+  (let ((invites (remove-if #'null
+                            (remove-duplicates
+                             (list*
+                              current-invite
+                              (invites-with-email email))))))
+    (with-transaction ()
+      (setf (unaccepted-invites user)
+            invites))))
 
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/confirm-email") (code id)
   (handler-case
