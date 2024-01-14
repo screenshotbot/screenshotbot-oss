@@ -5,19 +5,34 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/dashboard/notices
-  (:use #:cl
-        #:alexandria
-        #:screenshotbot/user-api
-        #:screenshotbot/template
-        #:screenshotbot/invite
-        #:screenshotbot/notice-api
-        #:bknr.datastore)
-  (:import-from #:markup #:deftag)
+  (:use :cl)
+  (:import-from #:auth
+                #:current-user)
+  (:import-from #:bknr.datastore
+                #:store-object-id
+                #:with-transaction)
+  (:import-from #:markup/markup
+                #:deftag
+                #:unescaped)
+  (:import-from #:nibble
+                #:nibble)
+  (:import-from #:screenshotbot/invite
+                #:accept-invite)
+  (:import-from #:screenshotbot/notice-api
+                #:invite-company
+                #:notice-summary
+                #:notice-title)
   (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:util #:oid #:make-url)
-  (:import-from #:nibble
-                #:nibble))
+  (:import-from #:screenshotbot/template
+                #:user-notice-list)
+  (:import-from #:screenshotbot/user-api
+                #:company-name
+                #:unaccepted-invites
+                #:user
+                #:user-notices)
+  (:import-from #:util/store/object-id
+                #:oid))
 (in-package :screenshotbot/dashboard/notices)
 
 (markup:enable-reader)
