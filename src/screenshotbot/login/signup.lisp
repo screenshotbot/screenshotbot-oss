@@ -45,8 +45,6 @@
                 #:secret-code
                 #:user-first-name
                 #:user-with-email)
-  (:import-from #:screenshotbot/server
-                #:defhandler)
   (:import-from #:screenshotbot/user-api
                 #:unaccepted-invites
                 #:user)
@@ -250,8 +248,7 @@
            (t
             (hex:safe-redirect redirect))))))))
 
-(defhandler (confirm-email :uri "/confirm-email/:id/:code" :method :get)
-            (code id)
+(hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/confirm-email") (code id)
   (handler-case
       (let ((confirmation (find-by-oid id)))
         (unless (string= code (secret-code confirmation))
@@ -277,7 +274,7 @@
                                    confirmation
                                    &key (confirmation-link
                                          (hex:make-full-url hunchentoot:*request*
-                                                             'confirm-email
+                                                             "/confirm-email"
                                                              :id (oid confirmation)
                                                              :code (secret-code confirmation))))
    <html>

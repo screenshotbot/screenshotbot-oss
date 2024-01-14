@@ -324,3 +324,8 @@ Disallow: /runs/by-tag
   (hex:safe-redirect
    (nibble:nibble ()
      "hello world")))
+
+(defhandler (nil :uri "/confirm-email/:id/:code" :method :get)
+            (code id)
+  (hex:safe-redirect "/confirm-email"
+                     :id id :code code))
