@@ -46,7 +46,6 @@
                 #:user-first-name
                 #:user-with-email)
   (:import-from #:screenshotbot/server
-                #:*disable-mail*
                 #:defhandler)
   (:import-from #:screenshotbot/user-api
                 #:unaccepted-invites
@@ -303,8 +302,7 @@
   </html>)
 
 (defun send-signup-confirmation (email first-name confirmation)
-  (unless *disable-mail*
-    (send-mail (mailer*)
-     :to email
-     :subject "Welcome to Screenshotbot"
-     :html-message (render-signup-confirmation first-name confirmation))))
+  (send-mail (mailer*)
+             :to email
+             :subject "Welcome to Screenshotbot"
+             :html-message (render-signup-confirmation first-name confirmation)))

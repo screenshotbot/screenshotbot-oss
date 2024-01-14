@@ -8,8 +8,6 @@
     (:use #:cl
           #:alexandria
           #:fiveam)
-  (:Import-from #:screenshotbot/server
-                #:*disable-mail*)
   (:import-from #:screenshotbot/login/signup
                 #:render-signup-confirmation
                 #:signup-get
@@ -49,13 +47,12 @@
            (let* ((company (get-singleton-company *installation*)))
              (unwind-protect
                   (auth:with-sessions ()
-                    (let ((*disable-mail* t))
-                      (let ((ret (signup-post  :email "arnold@tdrhq.com"
-                                               :password "foobar23"
-                                               :full-name "Arnold Noronha"
-                                               :accept-terms-p t
-                                               :plan :professional)))
-                        (error "should not get here: ~s" ret))))
+                    (let ((ret (signup-post  :email "arnold@tdrhq.com"
+                                             :password "foobar23"
+                                             :full-name "Arnold Noronha"
+                                             :accept-terms-p t
+                                             :plan :professional)))
+                      (error "should not get here: ~s" ret)))
                (bknr.datastore:delete-object company))))))
      (pass))))
 

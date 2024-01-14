@@ -9,8 +9,7 @@
   (:import-from #:screenshotbot/server
                 #:redirect-home
                 #:with-login
-                #:defhandler
-                #:*disable-mail*)
+                #:defhandler)
   (:import-from #:screenshotbot/model/invite
                 #:invite-used-p
                 #:invite-with-code
@@ -190,29 +189,28 @@
                    :invite-code (invite-code invite)))
 
 (defun send-email-for-invite (invite)
-  (unless *disable-mail*
-    (send-mail
-     (mailer (installation))
-     :subject (format nil "~a has invited you to join ~a on Screenshotbot"
-                      (user-full-name
-                       (inviter invite))
-                      (company-name
-                       (invite-company invite)))
-     :to (invite-email invite)
-     :html-message
-     <html>
-       <body>
-         <p>You have been invited to participate in your organization's Screenshotbot
-           account.</p>
+  (send-mail
+   (mailer (installation))
+   :subject (format nil "~a has invited you to join ~a on Screenshotbot"
+                    (user-full-name
+                     (inviter invite))
+                    (company-name
+                     (invite-company invite)))
+   :to (invite-email invite)
+   :html-message
+   <html>
+     <body>
+       <p>You have been invited to participate in your organization's Screenshotbot
+         account.</p>
 
-         <p><a href= (invite-signup-link invite)>Click here to sign up or join</a>.</p>
+       <p><a href= (invite-signup-link invite)>Click here to sign up or join</a>.</p>
 
-         <p>Your friendly neighborhood bot, <br/>
-           Screenshotbot</p>
-       </body>
-     </html>)
-    (with-transaction ()
-      (incf (email-count invite)))))
+       <p>Your friendly neighborhood bot, <br/>
+         Screenshotbot</p>
+     </body>
+   </html>)
+  (with-transaction ()
+    (incf (email-count invite))))
 
 (defun accept-invite (invite)
   (when (member invite (unaccepted-invites (current-user)))

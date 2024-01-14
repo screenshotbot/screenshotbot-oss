@@ -47,7 +47,6 @@
    #:*is-localhost*
    #:document-root
    #:*reuben-ip*
-   #:*disable-mail*
    #:*seleniump*
    #:*domain*
    #:logged-in-p
@@ -85,11 +84,6 @@
 (defsecret :trello-secret
   "Trello Secret used for OAuth. You must still connect your
   Organization to Trello from the /settings/trello")
-
-(defvar *disable-mail* nil
-  "Disable emails. In the future this should be part of NOOP-MAILER,
-  but this is here because we have historical code using it. We might
-  be able to remove it soon.")
 
 (defclass screenshotbot-template ()
   ())
