@@ -37,9 +37,8 @@
                 #:invite-email
                 #:invite-with-code
                 #:invites-with-email)
-  (:import-from #:screenshotbot/model/user
-                #:email-confirmation-code)
   (:import-from #:auth/model/email-confirmation
+                #:email-confirmation-code
                 #:finish-confirmation
                 #:secret-code)
   (:import-from #:util/form-errors
