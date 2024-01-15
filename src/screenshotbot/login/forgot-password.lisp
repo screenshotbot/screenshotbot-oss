@@ -30,10 +30,11 @@
 
 (defvar *throttler* (make-instance 'ip-throttler))
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defclass change-password-request ()
   ((used-up-p :initform nil
+              :initarg :used-up-p
               :accessor used-up-p)))
 
 (deftag forgot-password-confirmation (&key email)
@@ -59,6 +60,8 @@
              "Password needs to be at least 8 letters long")
       (check :confirm-password (equal password confirm-password)
              "Passwords don't match")
+      (check nil (not (used-up-p req))
+             "The password reset code has expired or has already been")
       (log:info "Password errors: ~s" errors)
       (cond
         (errors
@@ -77,42 +80,41 @@
            </div>
          </auth-template>)))))
 
-(defhandler (change-password-used-up :uri "/change-password-used-up") ()
-  <auth-template>
-    <p>That code has expired or has already been used</p>
-  </auth-template>)
-
 (deftag reset-password-after-confirmation (&key user req)
-  (when (used-up-p req)
-    (hex:safe-redirect 'change-password-used-up))
-  (let ((finish-reset (nibble (password confirm-password)
-                        (finish-password-reset :user user
-                                               :req req
-                                               :password password
-                                               :confirm-password confirm-password))))
-    <auth-template>
-      <div class= "container">
-        <form method= "POST" action=finish-reset >
-          <div class= "card">
-            <div class= "card-body">
-              <div class= "form-group">
-                <label for= "password">Password</label>
-                <input type= "password" id= "password" name= "password"
-                       class= "form-control" />
-              </div>
-              <div class= "form-group">
-                <label for= "password">Confirm Password</label>
-                <input type= "password" id= "confirm-password" name= "confirm-password"
-                       class= "form-control" />
-              </div>
-            </div>
-            <div class= "card-footer">
-              <input type= "submit" class= "btn btn-primary form-control" value= "Update Password" />
-            </div>
-          </div>
-        </form>
-      </div>
-    </auth-template>))
+  (cond
+    ((used-up-p req)
+     <auth-template simple=t >
+       <p>That code has expired or has already been used</p>
+     </auth-template>)
+    (t
+     (let ((finish-reset (nibble (password confirm-password)
+                           (finish-password-reset :user user
+                                                  :req req
+                                                  :password password
+                                                  :confirm-password confirm-password))))
+       <auth-template simple=t >
+         <div class= "container">
+           <form method= "POST" action=finish-reset >
+             <div class= "card">
+               <div class= "card-body">
+                 <div class= "form-group">
+                   <label for= "password">Password</label>
+                   <input type= "password" id= "password" name= "password"
+                          class= "form-control" />
+                 </div>
+                 <div class= "form-group">
+                   <label for= "password">Confirm Password</label>
+                   <input type= "password" id= "confirm-password" name= "confirm-password"
+                          class= "form-control" />
+                 </div>
+               </div>
+               <div class= "card-footer">
+                 <input type= "submit" class= "btn btn-primary form-control" value= "Update Password" />
+               </div>
+             </div>
+           </form>
+         </div>
+       </auth-template>))))
 
 (defun password-recovery-mail (&key confirm)
   <html>
