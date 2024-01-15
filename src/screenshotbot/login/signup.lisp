@@ -38,7 +38,6 @@
                 #:invites-with-email)
   (:import-from #:screenshotbot/model/user
                 #:confirmation-confirmed-p
-                #:email
                 #:email-confirmation-code
                 #:finish-confirmation
                 #:make-user
