@@ -19,7 +19,8 @@
    #:noop-mailer
    #:send-mail
    #:smtp-mailer
-   #:mailer*))
+   #:mailer*
+   #:mailer))
 (in-package :core/installation/mailer)
 
 (defclass mailer ()

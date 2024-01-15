@@ -9,6 +9,7 @@
           #:alexandria
           #:fiveam)
   (:import-from #:screenshotbot/login/signup
+                #:prepare-and-send-email-confirmation
                 #:process-existing-invites
                 #:render-signup-confirmation
                 #:signup-get
@@ -76,7 +77,7 @@
 (def-fixture state ()
   (with-test-store ()
     (let ((company (make-instance 'company)))
-      (with-installation (:installation (make-instance 'multi-org-feature))
+      (with-installation (:installation (make-instance 'multi-org-install))
         (&body)))))
 
 (def-fixture screenshots (&key (providers (list (make-instance 'standard-auth-provider))))
@@ -165,3 +166,11 @@
          (unaccepted-invites user)
          (contains invite-2
                    invite))))))
+
+(test prepare-and-send-email-confirmation
+  (with-fixture state ()
+    (let ((user (make-user :email "foo@example.com"
+                           :full-name "Arnold Noronha")))
+      (with-fake-request ()
+       (finishes
+         (prepare-and-send-email-confirmation user))))))
