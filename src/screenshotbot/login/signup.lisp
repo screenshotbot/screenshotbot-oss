@@ -46,8 +46,7 @@
                 #:user-first-name
                 #:user-with-email)
   (:import-from #:screenshotbot/user-api
-                #:unaccepted-invites
-                #:user)
+                #:unaccepted-invites)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/store/object-id
