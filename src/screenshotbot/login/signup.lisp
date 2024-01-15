@@ -38,7 +38,6 @@
                 #:invite-with-code
                 #:invites-with-email)
   (:import-from #:screenshotbot/model/user
-                #:confirmation-confirmed-p
                 #:email-confirmation-code
                 #:finish-confirmation
                 #:secret-code)
@@ -265,8 +264,6 @@ a different email."
           ;; todo: handle expired links
           (t
            (finish-confirmation confirmation)
-           (with-transaction ()
-            (setf (confirmation-confirmed-p confirmation) t))
            <auth-template>
              <section>
                <div class= "container full-height">
