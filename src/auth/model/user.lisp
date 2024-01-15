@@ -16,3 +16,8 @@ was a new user."))
 
 (defgeneric make-user (installation &key email full-name)
   (:documentation "Create a user for the installation"))
+
+(defgeneric user-full-name (user))
+
+(defmethod user-first-name (user)
+  (car (str:split " " (user-full-name user))))

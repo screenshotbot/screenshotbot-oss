@@ -11,6 +11,7 @@
                 #:oauth-user-avatar
                 #:oauth-user-email
                 #:oauth-user-full-name
+                #:user-first-name
                 #:oauth-user-user
                 #:password-hash
                 #:user-email)
@@ -296,10 +297,6 @@
   (loop for company in (user-companies user)
         if (personalp company)
           do (return company)))
-
-
-(defmethod user-first-name ((user user))
-  (car (str:split " " (user-full-name user))))
 
 
 (with-class-validation

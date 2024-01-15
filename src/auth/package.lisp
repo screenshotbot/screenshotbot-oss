@@ -82,4 +82,6 @@
            #:find-user
            #:oauth-users
            #:make-user
-           #:unaccepted-invites))
+           #:unaccepted-invites
+           #:user-full-name
+           #:user-first-name))

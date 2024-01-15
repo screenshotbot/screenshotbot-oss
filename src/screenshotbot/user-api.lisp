@@ -11,6 +11,7 @@
                 #:can-view
                 #:can-view!
                 #:can-public-view
+                #:user-full-name
                 #:can-edit
                 #:can-edit!
                 #:user-email

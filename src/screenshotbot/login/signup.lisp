@@ -9,7 +9,8 @@
   (:import-from #:auth
                 #:current-user
                 #:logged-in-p
-                #:user-email)
+                #:user-email
+                #:user-first-name)
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:core/installation/auth-provider
@@ -40,8 +41,7 @@
                 #:confirmation-confirmed-p
                 #:email-confirmation-code
                 #:finish-confirmation
-                #:secret-code
-                #:user-first-name)
+                #:secret-code)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/store/object-id
