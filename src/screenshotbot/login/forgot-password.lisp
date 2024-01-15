@@ -12,24 +12,20 @@
                 #:deftag)
   (:import-from #:nibble
                 #:nibble)
-  (:import-from #:screenshotbot/installation
-                #:mailer*)
   (:import-from #:screenshotbot/login/common
                 #:auth-template
                 #:ip-throttler)
   (:import-from #:screenshotbot/mailer
+                #:mailer*
                 #:send-mail)
-  (:import-from #:screenshotbot/model/user
-                #:email
-                #:user-with-email)
   (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:screenshotbot/user-api
-                #:user)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/throttler
-                #:throttle!))
+                #:throttle!)
+  (:import-from #:core/installation/installation
+                #:*installation*))
 (in-package :screenshotbot/login/forgot-password)
 
 (defvar *throttler* (make-instance 'ip-throttler))
@@ -129,7 +125,7 @@
 (defun forgot-password-page ()
   (let ((submit (nibble (email)
                   (throttle! *throttler*)
-                  (let ((user (user-with-email email)))
+                  (let ((user (auth:find-user *installation* :email email)))
                     (cond
                       (user
                        (let* ((request (make-instance 'change-password-request))
