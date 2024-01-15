@@ -9,6 +9,7 @@
           #:alexandria
           #:fiveam)
   (:import-from #:screenshotbot/login/signup
+                #:process-existing-invites
                 #:render-signup-confirmation
                 #:signup-get
                 #:signup-post)
@@ -17,6 +18,7 @@
                 #:get-singleton-company
                 #:company)
   (:import-from #:screenshotbot/installation
+                #:multi-org-feature
                 #:standard-auth-provider
                 #:*installation*
                 #:installation)
@@ -30,7 +32,18 @@
   (:import-from #:screenshotbot/login/github-oauth
                 #:github-oauth-provider)
   (:import-from #:screenshotbot/testing
-                #:screenshot-test))
+                #:with-installation
+                #:screenshot-test)
+  (:import-from #:screenshotbot/model/invite
+                #:invite)
+  (:import-from #:screenshotbot/model/user
+                #:make-user)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:screenshotbot/user-api
+                #:unaccepted-invites)
+  (:import-from #:fiveam-matchers/lists
+                #:contains))
 
 (util/fiveam:def-suite)
 
@@ -54,7 +67,17 @@
                                              :plan :professional)))
                       (error "should not get here: ~s" ret)))
                (bknr.datastore:delete-object company))))))
-     (pass))))
+      (pass))))
+
+(defclass multi-org-install (multi-org-feature
+                             installation)
+  ())
+
+(def-fixture state ()
+  (with-test-store ()
+    (let ((company (make-instance 'company)))
+      (with-installation (:installation (make-instance 'multi-org-feature))
+        (&body)))))
 
 (def-fixture screenshots (&key (providers (list (make-instance 'standard-auth-provider))))
   (let ((*installation* (make-instance 'installation
@@ -114,3 +137,31 @@
      "Arnold"
      "dfdsfs23rsfdsf"
      :confirmation-link "https://example.com")))
+
+(test process-existing-invites
+  (with-fixture state ()
+    (let ((invite (make-instance 'invite :email "foo@example.com"
+                                 :company company)))
+      (make-instance 'invite :email "bar@example.com"
+                     :company company)
+      (let ((user (make-user :email "foo@example.com")))
+        (process-existing-invites
+         user "foo@example.com")
+        (assert-that
+         (unaccepted-invites user)
+         (contains invite))))))
+
+(test process-existing-invites-when-signing-up-with-a-different-email
+  (with-fixture state ()
+    (let ((invite (make-instance 'invite :email "foo@example.com"
+                                         :company (make-instance 'company)))
+          (invite-2 (make-instance 'invite :email "bar@example.com"
+                                           :company company)))
+      (let ((user (make-user :email "foo@example.com")))
+        (process-existing-invites
+         user "foo@example.com"
+         :current-invite invite-2)
+        (assert-that
+         (unaccepted-invites user)
+         (contains invite-2
+                   invite))))))
