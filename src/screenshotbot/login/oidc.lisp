@@ -18,8 +18,6 @@
                 #:persistent-class
                 #:store-object
                 #:with-transaction)
-  (:import-from #:bknr.indices
-                #:hash-index)
   (:import-from #:core/installation/installation
                 #:*installation*)
   (:import-from #:nibble
@@ -39,7 +37,10 @@
   (:import-from #:util/events
                 #:push-event)
   (:import-from #:util/store/store
+                #:defindex
                 #:with-class-validation)
+  (:import-from #:util/store/fset-index
+                #:fset-set-index)
   (:export
    #:access-token-class
    #:access-token-str
@@ -50,7 +51,6 @@
    #:end-session-endpoint
    #:find-existing-oidc-user
    #:find-oidc-user-by-id
-   #:find-oidc-users-by-user-id
    #:identifier
    #:issuer
    #:oauth-user-avatar
@@ -79,6 +79,9 @@
    :oauth-name "Generic OIDC"
    :callback-endpoint 'oauth-callback))
 
+(defindex +user-id-index+
+  'fset-set-index
+  :slot-name 'user-id)
 
 (with-class-validation
   (defclass oidc-user (store-object)
@@ -92,9 +95,7 @@
      (avatar :initarg :avatar
              :accessor oauth-user-avatar)
      (user-id :initarg :user-id
-              :index-type hash-index
-              :initform nil
-              :index-initargs (:test 'equal)
+              :index +user-id-index+
               :index-reader find-oidc-users-by-user-id)
      (user :initarg :old-user-slot
            :documentation "Old user slot. After a few restarts, it should all be unbound and should be safe to delete")
@@ -206,10 +207,10 @@ user as used in Screenshotbot)"
   mapped to."))
 
 (defmethod find-existing-oidc-user ((auth oidc-provider) user-id)
-  (loop for x in (find-oidc-users-by-user-id user-id)
-        if (eql (oidc-provider-identifier auth)
-                (oidc-provider-identifier x))
-          return x))
+  (fset:do-set (x (find-oidc-users-by-user-id user-id))
+    (when (eql (oidc-provider-identifier auth)
+               (oidc-provider-identifier x))
+      (return x))))
 
 (defmethod prepare-oidc-user ((auth oidc-provider)
                               &rest all
