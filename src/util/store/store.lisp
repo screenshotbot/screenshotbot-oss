@@ -644,7 +644,9 @@ to the directory that was just snapshotted.")
         (fix-by-default
          (handler-bind ((error (lambda (e)
                                  (when-let ((restart (find-restart 'fix-the-index)))
-                                   (log:info "Calling restart for ~a" e)
+                                   ;; Note: log:info will not show up
+                                   ;; in Capistrano output.
+                                   (format t "Calling restart for ~a~%" e)
                                    (invoke-restart restart)))))
            (work)))
         (t
