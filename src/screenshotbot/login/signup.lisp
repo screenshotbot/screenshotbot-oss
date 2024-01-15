@@ -40,7 +40,6 @@
                 #:confirmation-confirmed-p
                 #:email-confirmation-code
                 #:finish-confirmation
-                #:make-user
                 #:secret-code
                 #:user-first-name)
   (:import-from #:util/form-errors
@@ -213,7 +212,8 @@
            :plan plan)))
         (t
          ;; everything looks good, let's create our user
-         (let ((user (make-user
+         (let ((user (auth:make-user
+                      *installation*
                       :full-name full-name
                       :email email)))
            (with-transaction ()

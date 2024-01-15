@@ -355,3 +355,6 @@
    (or
     (values (user-with-email email) nil)
     (values (make-user :email email) t))))
+
+(defmethod auth:make-user ((self installation) &rest args &key &allow-other-keys)
+  (apply #'make-user args))

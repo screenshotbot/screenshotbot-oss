@@ -13,3 +13,6 @@
   (:documentation "Finds a user by email, or creates a new user if no such user
 exists. Returns two values: the user and a boolean indicating if it
 was a new user."))
+
+(defgeneric make-user (installation &key email full-name)
+  (:documentation "Create a user for the installation"))

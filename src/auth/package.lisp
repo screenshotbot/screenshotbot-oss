@@ -81,4 +81,5 @@
            #:find-or-create-user
            #:find-user
            #:oauth-users
+           #:make-user
            #:unaccepted-invites))
