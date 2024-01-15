@@ -15,7 +15,7 @@
                 #:persistent-class
                 #:store-object)
   (:import-from #:auth/model/email-confirmation
-                #:confirm-email
+                #:finish-confirmation
                 #:user-email-confirmed-p
                 #:email-confirmation-code))
 (in-package :auth/model/test-email-confirmation)
@@ -38,5 +38,5 @@
                    :email "foo@example.com"
                    :user user)))
       (is-false (user-email-confirmed-p user))
-      (confirm-email cc)
+      (finish-confirmation cc)
       (is-true (user-email-confirmed-p user)))))

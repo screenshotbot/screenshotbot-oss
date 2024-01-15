@@ -21,7 +21,7 @@
    #:confirmation-confirmed-p
    #:confirmation-user
    #:user-email-confirmed-p
-   #:confirm-email))
+   #:finish-confirmation))
 (in-package :auth/model/email-confirmation)
 
 (defindex +user-index+
@@ -48,7 +48,7 @@
       :accessor confirmation-user))
     (:metaclass persistent-class)))
 
-(defmethod confirm-email ((self email-confirmation-code))
+(defmethod finish-confirmation ((self email-confirmation-code))
   (setf (confirmation-confirmed-p self) t))
 
 (defmethod user-email-confirmed-p (user)
