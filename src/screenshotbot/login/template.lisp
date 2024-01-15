@@ -36,8 +36,13 @@
 
     ,(cond
        (simple
-        <body class= "">
-          ,@ (progn children)
+        <body class= "dashboard" >
+                    <div class= "content-page bg-light-lighten mt-3">
+            <div class= "container body-vh-100" style= "max-width: 40em" >
+                          ,@ (progn children)
+            </div>
+          </div>
+
         </body>)
        (t
         <body class= (format nil "auth-pages ~a" body-class) >

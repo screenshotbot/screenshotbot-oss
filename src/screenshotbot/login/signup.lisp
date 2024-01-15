@@ -255,11 +255,11 @@ a different email."
             invites))))
 
 (defun confirmation-success ()
-  <auth-template>
+  <auth-template simple=t >
     <section>
       <div class= "container full-height">
-        Thank you, your email has been confirmed.
-        <a href= "/runs">Click here to go back to the dashboard.</a>
+        <p>Thank you, your email has been confirmed.</p>
+        <p><a href= "/runs">Click here to go back to the dashboard.</a></p>
       </div>
     </section>
   </auth-template>)
