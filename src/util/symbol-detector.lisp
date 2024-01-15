@@ -23,7 +23,6 @@
          (content (or
                    content
                    (uiop:read-file-string filename))))
-    (log:info "Content is: ~a" content)
     (labels ((process-symbols (expr)
                (cond
                  ((symbolp expr)
@@ -44,10 +43,10 @@
                            expr
                            (gethash (symbol-package expr) result)))))
                  ((consp expr)
+                  ;;(format t "processing: ~S~%" expr)
                   (process-symbols (car expr))
                   (process-symbols (cdr expr))))))
 
-      (process-symbols (get-external-symbols package))
       (let ((stream (make-string-input-stream content)))
         (loop for expr = (let ((*package* package)
                                (*readtable* readtable))
@@ -58,6 +57,7 @@
                 do
                    (log:info "using package ~s" (second expr))
                    (setf package (find-package (second expr)))
+                   (process-symbols (get-external-symbols package))
                    (setf stream (make-string-input-stream
                                  (fix-content
                                   (uiop:slurp-input-stream 'string stream))))
@@ -82,6 +82,9 @@
                    (process-symbols expr)))
       (values
        (loop for package being the hash-keys of result
+             if (and package
+                     (not (equal "KEYWORD" (package-name package)))
+                     (not (equal "COMMON-LISP" (package-name package))))
              collect (cons package (remove-duplicates (gethash package result))))
        package))))
 
