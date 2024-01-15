@@ -26,15 +26,18 @@
                :util/throttler
                :util/events
                :util.store
+               :clavier
                :oidc)
   :components ((:file "impersonation")
                (:module "model"
                 :components ((:file "invite")))
                (:module "login"
+                :serial t
                 :components ((:file "common")
                              (:file "github")
                              (:file "oidc")
-                             (:file "login")))))
+                             (:file "login")
+                             (:file "signup")))))
 
 (defsystem :screenshotbot
   :serial t
@@ -271,8 +274,7 @@
                  (:file "fake")))
    (:module "login"
     :serial t
-    :components ((:file "signup")
-                 (:file "forgot-password")
+    :components ((:file "forgot-password")
                  (:file "populate")
                  (:file "github-oauth")
                  (:file "github-oauth-ui")
