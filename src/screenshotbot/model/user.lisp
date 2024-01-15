@@ -127,7 +127,8 @@
                     :initform nil
                     :accessor auth:password-hash)
      (confirmed-p :type boolean
-                  :accessor confirmed-p)
+                  :writer (setf confirmed-p)
+                  :documentation "Don't think we're actually reading this from anywhere. Look at user-email-confirmed-p instead.")
      (professionalp
       :type boolean
       :initarg :professionalp
