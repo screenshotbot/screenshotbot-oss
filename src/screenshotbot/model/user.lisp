@@ -56,6 +56,9 @@
   (:import-from #:util/store/store
                 #:def-store-local
                 #:with-class-validation)
+  (:import-from #:auth/model/email-confirmation
+                #:secret-code
+                #:finish-confirmation)
   (:export
    #:adminp
    #:arnold
@@ -316,7 +319,7 @@
       :accessor confirmation-user))
     (:metaclass persistent-class)))
 
-(defun finish-confirmation (confirmation)
+(defmethod finish-confirmation ((confirmation email-confirmation-code))
   (let ((user (confirmation-user confirmation)))
     (with-transaction ()
       (push confirmation (email-confirmations user))
