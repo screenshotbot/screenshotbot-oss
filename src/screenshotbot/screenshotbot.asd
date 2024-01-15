@@ -390,6 +390,7 @@
                              (:file "test-login")
                              (:file "test-signup")
                              (:file "test-common")))
+               (:file "test-invite")
                (:module "model"
                 :components ((:file "test-core")
                              (:file "test-invite")

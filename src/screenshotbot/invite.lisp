@@ -31,8 +31,7 @@
                 #:with-transaction
                 #:store-object-with-id)
   (:import-from #:screenshotbot/model/company
-                #:company-name
-                #:company-invites)
+                #:company-name)
   (:import-from #:screenshotbot/user-api
                 #:current-company
                 #:current-user)
@@ -213,18 +212,18 @@
     (incf (email-count invite))))
 
 (defun accept-invite (invite)
-  (when (member invite (unaccepted-invites (current-user)))
+  (%accept-invite invite (current-user))
+  (Setf (current-company) (invite-company invite))
+  (redirect-home))
+
+(defun %accept-invite (invite user)
+  (when (member invite (unaccepted-invites user))
     ;; Let's do the accept
     (with-transaction ()
-      (deletef (unaccepted-invites (current-user)) invite)
+      (deletef (unaccepted-invites user) invite)
       (pushnew
        (invite-company invite)
-       (user-companies (current-user)))
-      (deletef
-       (company-invites (invite-company invite))
-       invite))
-    (Setf (current-company) (invite-company invite)))
-  (redirect-home))
+       (user-companies user)))))
 
 (defhandler (invite-accept  :uri  "/invite/accept") (invite-id)
   (let ((invite (store-object-with-id (parse-integer invite-id))))
