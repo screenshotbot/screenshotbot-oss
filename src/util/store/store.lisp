@@ -539,9 +539,9 @@ to the directory that was just snapshotted.")
                                              slot-name
                                              :test test
                                              :unique-index-p unique-index-p)))
+      (format t "Total number of elements: ~d~%" (length all-elts))
       (restart-case
           (progn
-            (format t "Total number of elements: ~d~%" (length all-elts))
             (assert-hash-tables= hash-table
                                  new-hash-table))
         (fix-the-index ()
@@ -616,29 +616,39 @@ to the directory that was just snapshotted.")
     (a:hash-table-keys hash-table)))
 
 (auto-restart:with-auto-restart (:retries 3 :sleep 1)
-  (defun validate-indices (&key (full nil))
-    (let* ((objects (all-store-objects-in-memory :full full))
-           (classes (fast-remove-duplicates
-                     (loop for class in (fast-remove-duplicates (mapcar 'class-of objects))
-                           append (closer-mop:class-precedence-list class)))))
-      (log:info "Got ~a objects and ~a classes"
-                (length objects)
-                (length classes))
-      (loop for class in classes
-            do
-               (loop for direct-slot in (closer-mop:class-direct-slots class)
-                     for slot-name = (closer-mop:slot-definition-name direct-slot)
-                     for slot = (find-effective-slot class slot-name)
-                     if (or
-                         (bknr.indices::index-direct-slot-definition-index direct-slot)
-                         (bknr.indices::index-direct-slot-definition-index-type direct-slot))
-                       if (not (eql 'bknr.datastore::id slot-name))
-                         do
-                            (let ((indices (bknr.indices::index-effective-slot-definition-indices slot)))
-                              (assert indices)
-                              (validate-class-index (class-name class)
-                                                    slot-name))))
-      t)))
+  (defun validate-indices (&key (full nil) (fix-by-default nil))
+    (flet ((work ()
+             (let* ((objects (all-store-objects-in-memory :full full))
+                    (classes (fast-remove-duplicates
+                              (loop for class in (fast-remove-duplicates (mapcar 'class-of objects))
+                                    append (closer-mop:class-precedence-list class)))))
+               (log:info "Got ~a objects and ~a classes"
+                         (length objects)
+                         (length classes))
+               (loop for class in classes
+                     do
+                        (loop for direct-slot in (closer-mop:class-direct-slots class)
+                              for slot-name = (closer-mop:slot-definition-name direct-slot)
+                              for slot = (find-effective-slot class slot-name)
+                              if (or
+                                  (bknr.indices::index-direct-slot-definition-index direct-slot)
+                                  (bknr.indices::index-direct-slot-definition-index-type direct-slot))
+                                if (not (eql 'bknr.datastore::id slot-name))
+                                  do
+                                     (let ((indices (bknr.indices::index-effective-slot-definition-indices slot)))
+                                       (assert indices)
+                                       (validate-class-index (class-name class)
+                                                             slot-name))))
+               t)))
+      (cond
+        (fix-by-default
+         (handler-bind ((error (lambda (e)
+                                 (when-let ((restart (find-restart 'fix-the-index)))
+                                   (log:info "Calling restart for ~a" e)
+                                   (invoke-restart restart)))))
+           (work)))
+        (t
+         (work))))))
 
 (defmethod all-subsystem-objects (subsystem)
   nil)

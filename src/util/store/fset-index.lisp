@@ -286,5 +286,5 @@ the index reader returns a list in reverse sorted order instead of a set."))
                  :slot-name slot-name
                  :actual-map (%map index)
                  :expected-map (%map tmp))
-        (fix-fset-index ()
+        (util/store/store::fix-the-index ()
           (setf (%map index) (%map tmp)))))))

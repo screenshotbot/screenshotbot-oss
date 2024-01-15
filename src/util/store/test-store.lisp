@@ -4,51 +4,61 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :util/store/test-store
-    (:use #:cl
-          #:fiveam
-          #:alexandria)
-    (:import-from #:util/store
-                  #:with-snapshot-lock
-                  #:*snapshot-hooks*
-                  #:dispatch-snapshot-hooks
-                  #:location-for-oid
-                  #:def-store-local
-                  #:find-any-refs
-                  #:register-ref
-                  #:with-test-store
-                #:parse-timetag
-                #:*object-store*
-                #:object-store)
-  (:import-from #:local-time
-                #:timestamp=)
+(defpackage :util/store/test-store
+  (:use :cl)
   (:import-from #:bknr.datastore
+                #:*store*
+                #:all-store-objects
+                #:deftransaction
+                #:delete-object
                 #:persistent-class
-                #:store-object)
-  (:import-from #:bknr.datastore
-                #:persistent-class)
-  (:import-from #:bknr.datastore
-                #:all-store-objects)
-  (:import-from #:bknr.indices
-                #:hash-index)
-  (:import-from #:bknr.datastore
-                #:delete-object)
-  (:import-from #:bknr.datastore
-                #:*store*)
-  (:import-from #:bknr.datastore
-                #:deftransaction)
-  (:import-from #:util/store/store
-                #:verify-old-class
-                #:*ensure-directories-cache*
-                #:fast-ensure-directories-exist
-                #:safe-mp-store)
-  (:import-from #:bknr.datastore
+                #:store-object
                 #:truncate-log)
+  (:import-from #:bknr.indices
+                #:hash-index
+                #:index-remove
+                #:index-values)
   (:import-from #:fiveam-matchers/core
+                #:assert-that
                 #:error-with-string-matching
                 #:signals-error-matching)
+  (:import-from #:fiveam-matchers/lists
+                #:contains)
+  (:import-from #:it.bese.fiveam
+                #:def-fixture
+                #:fail
+                #:finishes
+                #:is
+                #:is-false
+                #:is-true
+                #:pass
+                #:signals
+                #:test
+                #:with-fixture)
+  (:import-from #:local-time
+                #:timestamp=)
+  (:import-from #:util/store/fset-index
+                #:corrupted-index
+                #:fset-set-index)
   (:import-from #:util/store/permissive-persistent-class
-                #:permissive-persistent-class))
+                #:permissive-persistent-class)
+  (:import-from #:util/store/store
+                #:*ensure-directories-cache*
+                #:*object-store*
+                #:*snapshot-hooks*
+                #:def-store-local
+                #:defindex
+                #:dispatch-snapshot-hooks
+                #:fast-ensure-directories-exist
+                #:find-any-refs
+                #:location-for-oid
+                #:object-store
+                #:parse-timetag
+                #:safe-mp-store
+                #:validate-indices
+                #:verify-old-class
+                #:with-snapshot-lock
+                #:with-test-store))
 (in-package :util/store/test-store)
 
 
@@ -381,3 +391,32 @@
                       'permissive-persistent-class)
     (error-with-string-matching
      "missing slots: (A)")))
+
+(def-fixture validate-indices ()
+  (with-test-store ()
+    (&body)))
+
+(defindex +my-object-index+
+  'fset-set-index
+  :slot-name 'key)
+
+(defclass my-object (store-object)
+  ((key :initarg :key
+        :index +my-object-index+
+        :accessor key))
+  (:metaclass persistent-class))
+
+(test validate-indices-happy-path
+  (with-fixture validate-indices ()
+    (finishes (validate-indices))
+    (let ((obj (make-instance 'my-object :key "foo")))
+      (finishes (validate-indices))
+      (index-remove +my-object-index+ obj)
+      (let ((auto-restart:*global-enable-auto-retries-p* nil))
+        (signals corrupted-index
+          (validate-indices)))
+
+      (is-false (index-values +my-object-index+))
+      (validate-indices :fix-by-default t)
+      (assert-that (index-values +my-object-index+)
+                   (contains obj)))))
