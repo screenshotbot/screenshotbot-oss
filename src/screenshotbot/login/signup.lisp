@@ -42,8 +42,7 @@
                 #:finish-confirmation
                 #:make-user
                 #:secret-code
-                #:user-first-name
-                #:user-with-email)
+                #:user-first-name)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/store/object-id
@@ -198,7 +197,7 @@
              (clavier::valid-email-address-p email)
              "That doesn't look like a valid email address")
       (check :email
-             (not (user-with-email (string-downcase email)))
+             (not (auth:find-user *installation* :email (string-downcase email)))
              "That email address is already in use.")
       (check :accept-terms-p
              accept-terms-p
