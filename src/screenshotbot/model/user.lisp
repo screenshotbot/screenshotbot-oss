@@ -57,6 +57,7 @@
                 #:def-store-local
                 #:with-class-validation)
   (:import-from #:auth/model/email-confirmation
+                #:user-email-confirmed-p
                 #:secret-code
                 #:finish-confirmation)
   (:export
@@ -128,6 +129,7 @@
                     :accessor auth:password-hash)
      (confirmed-p :type boolean
                   :writer (setf confirmed-p)
+                  :reader %confirmed-p
                   :documentation "Don't think we're actually reading this from anywhere. Look at user-email-confirmed-p instead.")
      (professionalp
       :type boolean
@@ -359,3 +361,8 @@
 
 (defmethod auth:make-user ((self installation) &rest args &key &allow-other-keys)
   (apply #'make-user args))
+
+(defmethod user-email-confirmed-p ((user user))
+  (or
+   (call-next-method)
+   (%confirmed-p user)))
