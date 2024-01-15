@@ -80,4 +80,5 @@
            #:installation-user-with-email
            #:find-or-create-user
            #:find-user
-           #:oauth-users))
+           #:oauth-users
+           #:unaccepted-invites))

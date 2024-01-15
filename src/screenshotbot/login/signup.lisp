@@ -45,8 +45,6 @@
                 #:secret-code
                 #:user-first-name
                 #:user-with-email)
-  (:import-from #:screenshotbot/user-api
-                #:unaccepted-invites)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/store/object-id
@@ -256,7 +254,7 @@ a different email."
                               current-invite
                               (invites-with-email email))))))
     (with-transaction ()
-      (setf (unaccepted-invites user)
+      (setf (auth:unaccepted-invites user)
             invites))))
 
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/confirm-email") (code id)

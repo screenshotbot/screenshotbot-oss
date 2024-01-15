@@ -41,8 +41,6 @@
                 #:make-user)
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
-  (:import-from #:screenshotbot/user-api
-                #:unaccepted-invites)
   (:import-from #:fiveam-matchers/lists
                 #:contains))
 
@@ -149,7 +147,7 @@
         (process-existing-invites
          user "foo@example.com")
         (assert-that
-         (unaccepted-invites user)
+         (auth:unaccepted-invites user)
          (contains invite))))))
 
 (test process-existing-invites-when-signing-up-with-a-different-email
@@ -163,7 +161,7 @@
          user "foo@example.com"
          :current-invite invite-2)
         (assert-that
-         (unaccepted-invites user)
+         (auth:unaccepted-invites user)
          (contains invite-2
                    invite))))))
 

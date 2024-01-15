@@ -134,7 +134,8 @@
       :accessor user-notices)
      (unaccepted-invites
       :initform nil
-      :accessor unaccepted-invites)
+      :accessor unaccepted-invites
+      :accessor auth:unaccepted-invites)
      (lock
       :transient t
       :initform (bt:make-lock))
