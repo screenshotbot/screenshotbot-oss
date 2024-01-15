@@ -18,6 +18,7 @@
 (defsystem :screenshotbot/login
   :serial t
   :depends-on (:auth
+               :auth.model
                :hunchentoot-extensions
                :nibble
                :core.installation

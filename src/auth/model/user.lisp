@@ -4,10 +4,10 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :auth/model
+(defpackage :auth/model/user
   (:use #:cl
         #:auth))
-(in-package :auth/model)
+(in-package :auth/model/user)
 
 (defgeneric find-or-create-user (installation &key email)
   (:documentation "Finds a user by email, or creates a new user if no such user
