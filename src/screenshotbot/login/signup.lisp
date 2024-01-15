@@ -255,6 +255,16 @@ a different email."
       (setf (auth:unaccepted-invites user)
             invites))))
 
+(defun confirmation-success ()
+  <auth-template>
+    <section>
+      <div class= "container full-height">
+        Thank you, your email has been confirmed.
+        <a href= "/runs">Click here to go back to the dashboard.</a>
+      </div>
+    </section>
+  </auth-template>)
+
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/confirm-email") (code id)
   (handler-case
       (let ((confirmation (find-by-oid id)))
@@ -265,14 +275,7 @@ a different email."
           ;; todo: handle expired links
           (t
            (finish-confirmation confirmation)
-           <auth-template>
-             <section>
-               <div class= "container full-height">
-                 Thank you, your email has been confirmed.
-                 <a href= "/runs">Click here to go back to the dashboard.</a>
-               </div>
-             </section>
-           </auth-template>)))))
+           (confirmation-success))))))
 
 
 (defun render-signup-confirmation (first-name

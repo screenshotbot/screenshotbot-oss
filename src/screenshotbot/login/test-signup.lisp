@@ -9,6 +9,7 @@
           #:alexandria
           #:fiveam)
   (:import-from #:screenshotbot/login/signup
+                #:confirmation-success
                 #:prepare-and-send-email-confirmation
                 #:process-existing-invites
                 #:render-signup-confirmation
@@ -136,6 +137,10 @@
      "Arnold"
      "dfdsfs23rsfdsf"
      :confirmation-link "https://example.com")))
+
+(screenshot-test email-confirmation-complete
+  (with-fixture screenshots ()
+    (confirmation-success)))
 
 (test process-existing-invites
   (with-fixture state ()
