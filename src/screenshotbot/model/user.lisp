@@ -4,86 +4,93 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/model/user
-  (:use #:cl
-        #:alexandria
-        #:screenshotbot/user-api
-        #:screenshotbot/notice-api
-        #:screenshotbot/api-key-api)
-  (:import-from #:bknr.datastore
-                #:store-object-id
-                #:with-transaction
-                #:persistent-class)
-  (:import-from #:screenshotbot/installation
-                #:one-owned-company-per-user
-                #:multi-org-feature
-                #:installation)
-  (:import-from #:bknr.indices
-                #:unique-index)
-  (:import-from #:util
-                #:make-secret-code
-                #:object-with-oid)
-  (:import-from #:screenshotbot/model/company
-                #:company-owner
-                #:get-singleton-company
-                #:company)
+(defpackage :screenshotbot/model/user
+  (:use :cl)
   (:import-from #:auth
-                #:password-hash
+                #:current-user
                 #:oauth-user-avatar
+                #:oauth-user-email
                 #:oauth-user-full-name
                 #:oauth-user-user
-                #:oauth-user-email)
+                #:password-hash
+                #:user-email)
   (:import-from #:bknr.datastore
-                #:store-objects-with-class)
+                #:persistent-class
+                #:store-objects-with-class
+                #:with-transaction)
   (:import-from #:bknr.indices
-                #:destroy-object)
-  (:import-from #:util/store
-                #:with-class-validation
-                #:def-store-local)
-  (:import-from #:screenshotbot/events
+                #:destroy-object
+                #:unique-index)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:multi-org-feature
+                #:one-owned-company-per-user)
+  (:import-from #:screenshotbot/login/github
+                #:github-user)
+  (:import-from #:screenshotbot/model/company
+                #:company
+                #:company-owner
+                #:get-singleton-company)
+  (:import-from #:screenshotbot/notice-api
+                #:notice-summary
+                #:notice-title)
+  (:import-from #:screenshotbot/user-api
+                #:adminp
+                #:all-users
+                #:personalp
+                #:unaccepted-invites
+                #:user
+                #:user-companies
+                #:user-full-name
+                #:user-image-url
+                #:user-notices)
+  (:import-from #:util
+                #:make-secret-code)
+  (:import-from #:util/events
                 #:push-event)
   (:import-from #:util/misc
                 #:?.)
-  (:import-from #:screenshotbot/model/github
-                #:github-user)
+  (:import-from #:util/store/object-id
+                #:object-with-oid)
+  (:import-from #:util/store/store
+                #:def-store-local
+                #:with-class-validation)
   (:export
-   #:user
-   #:email-confirmation-code
-   #:user-notice)
-  (:export
+   #:adminp
    #:arnold
-   #:user-with-email
+   #:companies
+   #:confirmation-confirmed-p
+   #:confirmed-p
+   #:default-company
+   #:email
+   #:email-confirmation-code
+   #:email-confirmations
+   #:finish-confirmation
+   #:github-user
+   #:make-user
+   #:notices
+   #:oauth-user-avatar
+   #:oauth-user-email
+   #:oauth-user-full-name
+   #:oauth-user-user
+   #:oauth-users
+   #:password-hash
+   #:personalp
+   #:professionalp
+   #:secret-code
+   #:unaccepted-invites
+   #:user
+   #:user-companies
+   #:user-email
+   #:user-first-name
    #:user-full-name
    #:user-image-url
-   #:github-user
-   #:secret-code
-   #:professionalp
-   #:oauth-user-avatar
-   #:user-first-name
-   #:oauth-users
-   #:confirmation-confirmed-p
-   #:user-personal-company
-   #:oauth-user-full-name
+   #:user-notice
    #:user-notices
-   #:oauth-user-email
-   #:oauth-user-user
-   #:personalp
-   #:adminp
-   #:unaccepted-invites
-   #:user-companies
-   #:with-user-lock
-   #:user-email
-   #:finish-confirmation)
-  (:export
-   #:companies
-   #:confirmed-p
-   #:email
-   #:email-confirmations
-   #:password-hash
-   #:notices
+   #:user-personal-company
+   #:user-with-email
    #:users-for-company
-   #:default-company
-   #:make-user))
+   #:with-user-lock))
 (in-package :screenshotbot/model/user)
 
 (defvar *lock* (bt:make-lock))
