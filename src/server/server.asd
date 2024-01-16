@@ -69,8 +69,11 @@
 
 (defsystem :server/tests
   :depends-on (:server
+               :server/config
                :cl-mock
                :util/fiveam
+               :fiveam-matchers
                :server/slynk)
   :components ((:file "test-server")
+               (:file "test-config")
                (:file "test-slynk-preparer")))

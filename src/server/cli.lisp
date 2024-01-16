@@ -270,7 +270,7 @@
        (eql #\- (elt (second args) 0))))
 
 (defun main (&key (jvm t) acceptor (enable-store t)
-               (config-loader (error "must provide :config-loader (can be nil)")))
+               (config-loader #'server/config:load-config))
   (handler-bind ((error (lambda (e)
                           (format t "Got error during init process: ~a~%" e)
                           #+lispworks
