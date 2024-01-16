@@ -110,7 +110,8 @@
 
 (defsystem :util/html2text
   :serial t
-  :depends-on (:html2text)
+  :depends-on (:html2text
+               :markup)
   :components ((:file "html2text")))
 
 #+lispworks

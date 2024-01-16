@@ -4,10 +4,13 @@
                :util
                :util.store)
   :components ((:file "user")
+               (:file "invite")
                (:file "email-confirmation")))
 
 (defsystem :auth.model/tests
   :serial t
   :depends-on (:auth.model
+               :fiveam-matchers
                :util/fiveam)
-  :components ((:file "test-email-confirmation")))
+  :components ((:file "test-email-confirmation")
+               (:file "test-invite")))

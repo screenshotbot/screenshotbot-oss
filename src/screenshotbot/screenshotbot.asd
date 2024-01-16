@@ -28,9 +28,7 @@
                :util.store
                :clavier
                :oidc)
-  :components ((:module "model"
-                :components ((:file "invite")))
-               (:module "login"
+  :components ((:module "login"
                 :serial t
                 :components ((:file "impersonation")
                              (:file "common")
@@ -396,7 +394,6 @@
                (:file "test-invite")
                (:module "model"
                 :components ((:file "test-core")
-                             (:file "test-invite")
                              (:file "test-auto-cleanup")
                              (:file "test-transient-object")
                              (:file "test-recorder-run")
