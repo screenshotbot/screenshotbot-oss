@@ -8,9 +8,14 @@
   (:use :cl)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:auth
+                #:current-user)
   (:import-from #:bknr.datastore
-                #:store-objects-with-class
                 #:with-transaction)
+  (:import-from #:core/installation/auth-provider
+                #:auth-providers)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:import-from #:hunchentoot-extensions
                 #:make-url)
   (:import-from #:nibble
@@ -18,35 +23,29 @@
   (:import-from #:oidc/oidc
                 #:access-token-str
                 #:oauth-get-access-token)
-  (:import-from #:screenshotbot/events
-                #:push-event)
   (:import-from #:screenshotbot/github/access-checks
                 #:github-api-request)
   (:import-from #:screenshotbot/github/jwt-token
                 #:github-request)
-  (:import-from #:screenshotbot/installation
-                #:auth-providers)
   (:import-from #:screenshotbot/login/common
                 #:abstract-oauth-provider
                 #:oauth-callback
                 #:oauth-signin-link
                 #:oauth-signup-link)
-  (:import-from #:screenshotbot/login/oidc
-                #:update-oidc-user)
-  (:import-from #:screenshotbot/model/github
+  (:import-from #:screenshotbot/login/github
                 #:%find-github-user-by-id
                 #:github-login
-                #:known-emails)
-  (:import-from #:screenshotbot/model/user
-                #:email
                 #:github-user
-                #:oauth-user-user)
+                #:known-emails)
+  (:import-from #:screenshotbot/login/oidc
+                #:update-oidc-user)
+  (:import-from #:screenshotbot/model/user
+                #:email)
   (:import-from #:screenshotbot/user-api
                 #:access-token
-                #:current-user
                 #:user)
-  (:import-from #:core/installation/installation
-                #:*installation*)
+  (:import-from #:util/events
+                #:push-event)
   (:export
    #:github-oauth-provider
    #:make-gh-oauth-link
