@@ -37,7 +37,8 @@
                              (:file "github")
                              (:file "oidc")
                              (:file "login")
-                             (:file "signup")))))
+                             (:file "signup")
+                             (:file "forgot-password")))))
 
 (defsystem :screenshotbot
   :serial t
@@ -274,8 +275,7 @@
                  (:file "fake")))
    (:module "login"
     :serial t
-    :components ((:file "forgot-password")
-                 (:file "populate")
+    :components ((:file "populate")
                  (:file "github-oauth")
                  (:file "github-oauth-ui")
                  (:file "google-oauth")
