@@ -17,26 +17,7 @@
 
 (defsystem :screenshotbot/login
   :serial t
-  :depends-on (:auth
-               :auth.model
-               :hunchentoot-extensions
-               :nibble
-               :core.installation
-               :util
-               :util/throttler
-               :util/events
-               :util.store
-               :clavier
-               :oidc)
-  :components ((:module "login"
-                :serial t
-                :components ((:file "impersonation")
-                             (:file "common")
-                             (:file "github")
-                             (:file "oidc")
-                             (:file "login")
-                             (:file "signup")
-                             (:file "forgot-password")))))
+  :depends-on (:auth.login))
 
 (defsystem :screenshotbot
   :serial t
