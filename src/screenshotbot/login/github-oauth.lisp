@@ -21,8 +21,7 @@
   (:import-from #:screenshotbot/events
                 #:push-event)
   (:import-from #:screenshotbot/github/access-checks
-                #:github-client
-                #:github-user-service)
+                #:github-api-request)
   (:import-from #:screenshotbot/github/jwt-token
                 #:github-request)
   (:import-from #:screenshotbot/installation
@@ -148,19 +147,18 @@
 
 (defun get-user-from-gh-access-token (access-token)
   (let ((access-token (access-token-str access-token)))
-    (let* ((client (github-client :oauth-token access-token))
-           (user-service (github-user-service client))
-           (user (#_getUser user-service))
+    (let* ((response (github-api-request "/user"
+                                         :access-token access-token))
            (emails  (restart-case
                         (get-github-emails access-token)
                       (use-bad-email ()
-                        (list (#_getEmail user))))))
+                        (list (assoc-value response :email))))))
       (prepare-gh-user
        :emails emails
-       :user-id (#_getId user)
-       :github-login (#_getLogin user)
-       :full-name (#_getName user)
-       :avatar (#_getAvatarUrl user)))))
+       :user-id (assoc-value response :id)
+       :github-login (assoc-value response :login)
+       :full-name (assoc-value response :name)
+       :avatar (assoc-value response :avatar--url)))))
 
 
 (defun prepare-gh-user (&key emails user-id full-name avatar
