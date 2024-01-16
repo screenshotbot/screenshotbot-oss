@@ -7,6 +7,7 @@
 ;; CAREFUL: BKNR.DATASTORE CLASSES IN HERE!
 (defpackage :screenshotbot/login/oidc
   (:use :cl)
+  (:nicknames :auth/login/oidc)
   (:import-from #:auth
                 #:current-user
                 #:oauth-user-avatar

@@ -7,6 +7,7 @@
 
 (defpackage :screenshotbot/login/login
   (:use :cl)
+  (:nicknames :auth/login/login)
   (:import-from #:alexandria
                 #:if-let)
   (:import-from #:auth

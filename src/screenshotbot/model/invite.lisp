@@ -6,6 +6,7 @@
 
 (defpackage :screenshotbot/model/invite
   (:use :cl)
+  (:nicknames :auth/model/invite)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:store-object)

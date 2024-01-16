@@ -6,6 +6,7 @@
 
 (defpackage :screenshotbot/login/forgot-password
   (:use :cl)
+  (:nicknames :auth/login/forgot-password)
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:markup/markup

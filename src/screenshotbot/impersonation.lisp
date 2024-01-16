@@ -6,6 +6,7 @@
 
 (defpackage :screenshotbot/impersonation
   (:use :cl)
+  (:nicknames :auth/impersonation)
   (:import-from #:auth
                 #:current-user)
   (:import-from #:util/cookies

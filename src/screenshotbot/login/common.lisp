@@ -6,6 +6,7 @@
 
 (defpackage :screenshotbot/login/common
   (:use :cl)
+  (:nicknames :auth/login/common)
   (:import-from #:auth
                 #:can-view!)
   (:import-from #:core/installation/auth

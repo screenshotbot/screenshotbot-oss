@@ -6,6 +6,7 @@
 
 (defpackage :screenshotbot/login/signup
   (:use :cl)
+  (:nicknames :auth/login/signup)
   (:import-from #:auth
                 #:current-user
                 #:logged-in-p
