@@ -275,10 +275,10 @@
                  (:file "fake")))
    (:module "login"
     :serial t
-    :components ((:file "populate")
-                 (:file "github-oauth")
+    :components ((:file "github-oauth")
                  (:file "github-oauth-ui")
                  (:file "google-oauth")
+                 (:file "populate")
                  (:file "aws-cognito")
                  (:file "template")))
    (:module "company"
