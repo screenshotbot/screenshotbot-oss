@@ -5,26 +5,28 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/login/test-forgot-password
-  (:use #:cl
-        #:fiveam)
+  (:use :cl)
+  (:import-from #:core/installation/installation
+                #:*installation*)
+  (:import-from #:it.bese.fiveam
+                #:def-fixture
+                #:with-fixture)
+  (:import-from #:screenshotbot/installation
+                #:installation)
+  (:import-from #:screenshotbot/login/common
+                #:standard-auth-provider)
+  (:import-from #:screenshotbot/login/forgot-password
+                #:change-password-request
+                #:forgot-password-page
+                #:reset-password-after-confirmation)
+  (:import-from #:screenshotbot/model/user
+                #:make-user)
   (:import-from #:screenshotbot/testing
                 #:screenshot-test)
   (:import-from #:util/store/store
                 #:with-test-store)
-  (:import-from #:screenshotbot/login/forgot-password
-                #:reset-password-after-confirmation
-                #:change-password-request
-                #:forgot-password-page)
-  (:import-from #:screenshotbot/login/common
-                #:standard-auth-provider)
-  (:import-from #:screenshotbot/installation
-                #:installation)
   (:import-from #:util/testing
-                #:with-fake-request)
-  (:import-from #:core/installation/installation
-                #:*installation*)
-  (:import-from #:screenshotbot/model/user
-                #:make-user))
+                #:with-fake-request))
 (in-package :screenshotbot/login/test-forgot-password)
 
 

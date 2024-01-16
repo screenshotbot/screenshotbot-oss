@@ -5,23 +5,27 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/login/test-google-oauth
-  (:use #:cl
-        #:fiveam)
+  (:use :cl)
+  (:import-from #:alexandria
+                #:assoc-value)
+  (:import-from #:auth
+                #:with-sessions)
+  (:import-from #:it.bese.fiveam
+                #:def-fixture
+                #:finishes
+                #:is
+                #:signals
+                #:test
+                #:with-fixture)
+  (:import-from #:oidc/oidc
+                #:discover
+                #:make-oidc-auth-link
+                #:verify-userinfo)
   (:import-from #:screenshotbot/login/google-oauth
                 #:google-domain
                 #:google-oauth-provider)
-  (:import-from #:oidc/oidc
-                #:discover
-                #:verify-userinfo
-                #:make-oidc-auth-link)
   (:import-from #:util/testing
-                #:with-fake-request)
-  (:import-from #:auth
-                #:with-sessions)
-  (:import-from #:alexandria
-                #:assoc-value)
-  (:import-from #:util/mock-recording
-                #:with-recording))
+                #:with-fake-request))
 (in-package :screenshotbot/login/test-google-oauth)
 
 (util/fiveam:def-suite)

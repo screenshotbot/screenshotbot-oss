@@ -6,6 +6,11 @@
 
 (defpackage :screenshotbot/login/test-oidc
   (:use :cl)
+  (:import-from #:auth
+                #:oauth-user-email
+                #:oauth-user-user)
+  (:import-from #:bknr.datastore
+                #:convert-slot-value-while-restoring)
   (:import-from #:cl-mock
                 #:if-called)
   (:import-from #:it.bese.fiveam
@@ -16,10 +21,10 @@
   (:import-from #:oidc/oidc
                 #:after-authentication)
   (:import-from #:screenshotbot/login/oidc
-                #:%user
                 #:%email
-                #:oidc-user
-                #:oidc-provider)
+                #:%user
+                #:oidc-provider
+                #:oidc-user)
   (:import-from #:screenshotbot/testing
                 #:with-test-user)
   (:import-from #:util/store/object-id
@@ -27,12 +32,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:util/testing
-                #:with-fake-request)
-  (:import-from #:screenshotbot/model/user
-                #:oauth-user-user
-                #:oauth-user-email)
-  (:import-from #:bknr.datastore
-                #:convert-slot-value-while-restoring))
+                #:with-fake-request))
 (in-package :screenshotbot/login/test-oidc)
 
 (util/fiveam:def-suite)

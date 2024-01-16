@@ -5,17 +5,18 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/login/test-login
-  (:use #:cl
-        #:fiveam)
+  (:use :cl)
+  (:import-from #:it.bese.fiveam
+                #:test)
   (:import-from #:screenshotbot/login/common
                 #:signin-get)
+  (:import-from #:screenshotbot/testing
+                #:with-installation)
+  (:import-from #:util/form-errors
+                #:with-form-errors)
   (:import-from #:util/testing
                 #:screenshot-static-page
                 #:with-fake-request)
-  (:import-from #:util/form-errors
-                #:with-form-errors)
-  (:import-from #:screenshotbot/testing
-                #:with-installation)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/login/test-login)
 

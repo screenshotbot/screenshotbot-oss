@@ -6,6 +6,9 @@
 
 (defpackage :screenshotbot/login/test-github-oauth
   (:use :cl)
+  (:import-from #:auth
+                #:user-email
+                #:user-full-name)
   (:import-from #:bknr.datastore
                 #:store-object-id)
   (:import-from #:core/installation/installation
@@ -18,16 +21,14 @@
                 #:with-fixture)
   (:import-from #:screenshotbot/installation
                 #:installation)
+  (:import-from #:screenshotbot/login/github
+                #:github-user)
   (:import-from #:screenshotbot/login/github-oauth
                 #:prepare-gh-user)
   (:import-from #:screenshotbot/model/company
                 #:prepare-singleton-company)
-  (:import-from #:screenshotbot/model/user
-                #:github-user)
   (:import-from #:screenshotbot/user-api
                 #:user
-                #:user-email
-                #:user-full-name
                 #:user-image-url)
   (:import-from #:util/store/store
                 #:with-test-store))

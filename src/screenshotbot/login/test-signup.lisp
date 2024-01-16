@@ -4,46 +4,53 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/login/test-signup
-    (:use #:cl
-          #:alexandria
-          #:fiveam)
+(defpackage :screenshotbot/login/test-signup
+  (:use :cl)
+  (:import-from #:auth/model/invite
+                #:invite)
+  (:import-from #:core/installation/installation
+                #:*installation*)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:contains)
+  (:import-from #:it.bese.fiveam
+                #:def-fixture
+                #:finishes
+                #:pass
+                #:test
+                #:with-fixture)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:multi-org-feature)
+  (:import-from #:screenshotbot/login/common
+                #:signup-get
+                #:standard-auth-provider)
+  (:import-from #:screenshotbot/login/github-oauth
+                #:github-oauth-provider)
   (:import-from #:screenshotbot/login/signup
                 #:confirmation-success
                 #:prepare-and-send-email-confirmation
                 #:process-existing-invites
                 #:render-signup-confirmation
-                #:signup-get
                 #:signup-post)
   (:import-from #:screenshotbot/model/company
-                #:prepare-singleton-company
+                #:company
                 #:get-singleton-company
-                #:company)
-  (:import-from #:screenshotbot/installation
-                #:multi-org-feature
-                #:standard-auth-provider
-                #:*installation*
-                #:installation)
-  (:import-from #:util/store
+                #:prepare-singleton-company)
+  (:import-from #:screenshotbot/model/user
+                #:make-user)
+  (:import-from #:screenshotbot/testing
+                #:screenshot-test
+                #:with-installation)
+  (:import-from #:util/form-errors
+                #:with-form-errors)
+  (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:util/testing
                 #:screenshot-static-page
-                #:with-fake-request)
-  (:import-from #:util/form-errors
-                #:with-form-errors)
-  (:import-from #:screenshotbot/login/github-oauth
-                #:github-oauth-provider)
-  (:import-from #:screenshotbot/testing
-                #:with-installation
-                #:screenshot-test)
-  (:import-from #:screenshotbot/model/invite
-                #:invite)
-  (:import-from #:screenshotbot/model/user
-                #:make-user)
-  (:import-from #:fiveam-matchers/core
-                #:assert-that)
-  (:import-from #:fiveam-matchers/lists
-                #:contains))
+                #:with-fake-request))
+(in-package :screenshotbot/login/test-signup)
 
 (util/fiveam:def-suite)
 
