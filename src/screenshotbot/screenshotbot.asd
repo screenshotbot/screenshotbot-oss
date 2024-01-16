@@ -28,12 +28,12 @@
                :util.store
                :clavier
                :oidc)
-  :components ((:file "impersonation")
-               (:module "model"
+  :components ((:module "model"
                 :components ((:file "invite")))
                (:module "login"
                 :serial t
-                :components ((:file "common")
+                :components ((:file "impersonation")
+                             (:file "common")
                              (:file "github")
                              (:file "oidc")
                              (:file "login")
