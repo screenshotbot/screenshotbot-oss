@@ -18,8 +18,6 @@
   (:import-from #:screenshotbot/mailer
                 #:mailer*
                 #:send-mail)
-  (:import-from #:screenshotbot/server
-                #:defhandler)
   (:import-from #:util/form-errors
                 #:with-form-errors)
   (:import-from #:util/throttler
@@ -178,5 +176,5 @@
         </div>
     </auth-template>))
 
-(defhandler (nil :uri "/forgot-password") ()
+(hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/forgot-password") ()
   (forgot-password-page ))
