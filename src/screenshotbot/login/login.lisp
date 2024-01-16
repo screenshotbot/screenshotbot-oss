@@ -92,7 +92,10 @@
     </div>
   </form>))
 
-(deftag signin-get (&key (redirect "/runs") (alert nil))
+(defmethod default-login-redirect (request)
+  "/runs")
+
+(deftag signin-get (&key (redirect (default-login-redirect hunchentoot:*request*)) (alert nil))
   (assert redirect)
   (if-let ((provider (default-oidc-provider *installation*)))
     (hex:safe-redirect (oauth-signin-link provider redirect))
@@ -130,7 +133,7 @@
 
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/signin") (after-logout redirect)
   (declare (ignore after-logout))
-  (let ((redirect (or redirect "/runs")))
+  (let ((redirect (or redirect (default-login-redirect hunchentoot:*request*))))
     (when (logged-in-p)
       (hex:safe-redirect redirect))
 

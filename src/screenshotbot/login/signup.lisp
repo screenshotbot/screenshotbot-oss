@@ -50,6 +50,8 @@
   (:import-from #:util/throttler
                 #:keyed-throttler
                 #:throttle!)
+  (:import-from #:screenshotbot/login/login
+                #:default-login-redirect)
   (:export
    #:signup-get
    #:signup-post))
@@ -114,7 +116,7 @@
         or Sign Up with
     </div>)
 
-(deftag signup-get (&key invite-code plan (redirect "/runs")
+(deftag signup-get (&key invite-code plan (redirect (default-login-redirect hunchentoot:*request*))
                     alert)
   (when invite-code
     (hex:safe-redirect (format nil "/invite/signup/~a" invite-code)))
@@ -161,7 +163,7 @@
 
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/signup") (invite-code plan)
   (when (logged-in-p)
-    (hex:safe-redirect "/runs"))
+    (hex:safe-redirect (default-login-redirect hunchentoot:*request*)))
 
   (signup-get :invite-code invite-code :plan plan))
 
@@ -260,7 +262,7 @@ a different email."
     <section>
       <div class= "container full-height">
         <p>Thank you, your email has been confirmed.</p>
-        <p><a href= "/runs">Click here to go back to the dashboard.</a></p>
+        <p><a href= (default-login-redirect hunchentoot:*request*) >Click here to go back to the dashboard.</a></p>
       </div>
     </section>
   </auth-template>)
