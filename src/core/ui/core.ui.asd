@@ -14,7 +14,8 @@
                (:file "assets")
                (:file "simple-card-page")
                (:file "mdi")
-               (:file "paginated")))
+               (:file "paginated")
+               (:file "left-side-bar")))
 
 (defsystem :core.ui/tests
   :serial t

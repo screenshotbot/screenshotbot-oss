@@ -27,21 +27,12 @@
   (:import-from #:screenshotbot/cdn
                 #:img-with-fallback)
   (:import-from #:oidc/oidc
-                #:logout-link))
+                #:logout-link)
+  (:import-from #:core/ui/left-side-bar
+                #:left-nav-item))
 (in-package :screenshotbot/left-side-bar)
 
 (named-readtables:in-readtable markup:syntax)
-
-(deftag left-nav-item (children &key href image-class target
-                       (script-name (error "need script-name")))
-  (declare (ignore target))
-  (let ((activep (str:starts-with-p href script-name)))
-    <li class= "nav-item"  >
-      <a href= href class= (format nil "nav-link ~a text-white" (if activep "active" "")) >
-        <mdi name=image-class />
-        <span class= "text">,@children </span>
-      </a>
-    </li>))
 
 (deftag bs-icon (&key name)
   <img src= (format nil "/assets/images/icons/~a.svg" name) alt=name />)
