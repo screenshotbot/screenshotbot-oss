@@ -13,7 +13,8 @@
    #:ensure-asset
    #:define-css
    #:handle-asdf-output
-   #:%handle-asdf-output))
+   #:%handle-asdf-output
+   #:define-js))
 (in-package :core/ui/assets)
 
 (defvar *lock* (bt:make-lock "assets-lock"))
@@ -48,6 +49,18 @@ cause the asset to be immediately compiled."
          (handle-asdf-output 'asdf:compile-op  ,asdf-target))
        (hex:def-clos-dispatch ((self ,class) ,map-uri) ()
          (handle-asdf-output 'asdf:compile-op ,asdf-target 1)))))
+
+(defmacro define-js (class url system)
+  (let ((map-url (format nil "~a.map" url)))
+    `(progn
+       (ensure-asset ,system)
+       (hex:def-clos-dispatch ((self ,class) ,url) ()
+         (setf (hunchentoot:content-type*) "application/javascript")
+         (setf (hunchentoot:header-out :x-sourcemap) ,map-url)
+         (handle-asdf-output 'asdf:compile-op ,system))
+       (hex:def-clos-dispatch ((self ,class) ,map-url) ()
+         (handle-asdf-output 'asdf:compile-op ,system 1)))))
+
 
 
 (defmethod %handle-asdf-output (installation

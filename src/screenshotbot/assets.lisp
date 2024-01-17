@@ -28,6 +28,7 @@
   (:import-from #:core/installation/installation
                 #:installation-domain)
   (:import-from #:core/ui/assets
+                #:define-js
                 #:handle-asdf-output
                 #:%handle-asdf-output
                 #:define-css
@@ -155,15 +156,5 @@ rm -f $INSTALLER
   (let ((cache (pre-compiled-assets installation)))
     (elt (gethash component cache) output-num)))
 
-(defmacro define-js (url system)
-  (let ((map-url (format nil "~a.map" url)))
-    `(progn
-       (ensure-asset ,system)
-       (defhandler (nil :uri ,url) ()
-         (setf (hunchentoot:content-type*) "application/javascript")
-         (setf (hunchentoot:header-out :x-sourcemap) ,map-url)
-         (handle-asdf-output 'asdf:compile-op ,system))
-       (defhandler (nil :uri ,map-url) ()
-         (handle-asdf-output 'asdf:compile-op ,system 1)))))
 
-(define-js "/assets/js/dashboard.js" :screenshotbot.js-assets)
+(define-js acceptor "/assets/js/dashboard.js" :screenshotbot.js-assets)
