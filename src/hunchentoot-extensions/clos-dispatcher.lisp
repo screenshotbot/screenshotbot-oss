@@ -46,7 +46,11 @@
   (:method ((input string))
     input)
   (:method ((input markup:abstract-xml-tag))
-    (markup:write-html input)))
+    (markup:write-html input))
+  (:method (input)
+    "This could happen if the dispatcher handled the request directly, and
+returned NIL or didn't care about the return value."
+    input))
 
 (defmethod dispatch-clos-request ((self clos-dispatcher) dispatcher)
   (setf (hunchentoot:header-out "X-clos-acceptor") "1")
