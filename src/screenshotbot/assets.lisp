@@ -27,23 +27,20 @@
                 #:installation)
   (:import-from #:core/installation/installation
                 #:installation-domain)
+  (:import-from #:core/ui/assets
+                #:handle-asdf-output
+                #:%handle-asdf-output
+                #:define-css
+                #:*asset-list*
+                #:ensure-asset)
   (:export
    #:define-css
+   #:*asset-list*
+   #:ensure-asset
    #:define-js))
 (in-package :screenshotbot/assets)
-
 (named-readtables:in-readtable :interpol-syntax)
 
-(defvar *asset-list* nil
-  "This is used in the desktop app, to precompute assets into memory.
-
-In other situations, you can use this to iterate through all the
-possible assets.")
-
-(defun ensure-asset (system)
-  "Just adds the system to the list of asset-cache. Note that this not
-cause the asset to be immediately compiled."
-  (pushnew system *asset-list*))
 
 (defhandler (static-recorder-master :uri "/release/recorder-master.jar") ()
   (hunchentoot:handle-static-file #P "/home/arnold/builds/silkwrmsdk/binary/build/libs/binary-0.1.0-all.jar"))
@@ -63,25 +60,6 @@ cause the asset to be immediately compiled."
 
 (defhandler (nil :uri "/recorder-master.jar") ()
   (hex:safe-redirect "/release/recorder-master.jar"))
-
-(defmacro handle-asdf-output (op component &optional (output-num 0))
-  (let ((output-files (eval `(util:relative-output-files ,op (asdf:find-component ,component nil)))))
-    `(%handle-asdf-output
-      (installation)
-      ,op
-      ,component
-      ',output-files
-      ,output-num)))
-
-(defmacro define-css (class uri asdf-target)
-  (let ((map-uri (format nil "~a.map" uri)))
-    `(progn
-       (ensure-asset ,asdf-target)
-       (hex:def-clos-dispatch ((self ,class) ,uri) ()
-         (setf (hunchentoot:content-type*)  "text/css; charset=utf-8")
-         (handle-asdf-output 'asdf:compile-op  ,asdf-target))
-       (hex:def-clos-dispatch ((self ,class) ,map-uri) ()
-         (handle-asdf-output 'asdf:compile-op ,asdf-target 1)))))
 
 (define-css acceptor "/assets/css/default.css" :screenshotbot.css-assets)
 
@@ -168,25 +146,6 @@ rm -f $INSTALLER
 
 (defvar *lock* (bt:make-lock "assets-lock"))
 
-
-(defmethod %handle-asdf-output (installation
-                                op
-                                component
-                                output-files
-                                output-num )
-  (bt:with-lock-held (*lock*)
-    (let ((output (elt output-files output-num)))
-      (when (or
-             (staging-p)
-             ;; in case we delete ~/.cache
-             (not (path:-e output)))
-        (asdf:operate op component))
-      (assert (path:-e output))
-      (handler-case
-          (hunchentoot:handle-static-file output)
-        #+lispworks
-        (comm:socket-io-error (e)
-          (values))))))
 
 (defmethod %handle-asdf-output ((installation desktop-installation)
                                 op
