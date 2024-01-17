@@ -9,6 +9,7 @@
         #:alexandria
         #:screenshotbot/artifacts)
   (:import-from #:screenshotbot/server
+                #:acceptor
                 #:staging-p
                 #:defhandler)
   (:import-from #:screenshotbot/artifacts
@@ -72,17 +73,17 @@ cause the asset to be immediately compiled."
       ',output-files
       ,output-num)))
 
-(defmacro define-css (uri asdf-target)
+(defmacro define-css (class uri asdf-target)
   (let ((map-uri (format nil "~a.map" uri)))
     `(progn
        (ensure-asset ,asdf-target)
-       (defhandler (nil :uri ,uri) ()
+       (hex:def-clos-dispatch ((self ,class) ,uri) ()
          (setf (hunchentoot:content-type*)  "text/css; charset=utf-8")
          (handle-asdf-output 'asdf:compile-op  ,asdf-target))
-       (defhandler (nil :uri ,map-uri) ()
+       (hex:def-clos-dispatch ((self ,class) ,map-uri) ()
          (handle-asdf-output 'asdf:compile-op ,asdf-target 1)))))
 
-(define-css "/assets/css/default.css" :screenshotbot.css-assets)
+(define-css acceptor "/assets/css/default.css" :screenshotbot.css-assets)
 
 (defun generate-.sh (name)
   (let ((domain (or
