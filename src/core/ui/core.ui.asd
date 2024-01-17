@@ -8,10 +8,12 @@
   :serial t
   :depends-on (:markup
                :trivial-garbage
+               :screenshotbot.magick ;; for image processing
                :fset)
   :components ((:file "template")
                (:file "post")
                (:file "assets")
+               (:file "image")
                (:file "simple-card-page")
                (:file "mdi")
                (:file "paginated")

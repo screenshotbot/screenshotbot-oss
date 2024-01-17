@@ -29,6 +29,7 @@
   (:import-from #:oidc/oidc
                 #:logout-link)
   (:import-from #:core/ui/left-side-bar
+                #:left-side-bar-container
                 #:left-nav-item))
 (in-package :screenshotbot/left-side-bar)
 
@@ -55,35 +56,16 @@
 (defmethod company-switcher (installation &key user)
   (declare (ignore user))
   nil)
+
 (deftag left-side-bar (&key user company script-name)
   (declare (optimize (speed 0) (debug 3)))
-  <div class="d-flex flex-column text-white bg-dark leftside-menu collapse" >
-
-    <div class= "text-center p-3" >
-      <button type= "button" href= "#" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".leftside-menu" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <mdi name= "menu" />
-      </button>
-
-      <a href="/runs" class="align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-
-
-        <span class="logo logo-lg fs-4">
-          <img-with-fallback src= "/assets/images/logo-light-scaled.webp"
-                             alt= "Screenshotbot logo"
-                             loading= "lazy" />
-        </span>
-        <span class="logo logo-sm fs-4">
-          <img-with-fallback src= "/assets/images/logo-small-light-scaled.webp"
-                             alt= "Screenshotbot logo"
-                             loading= "lazy" />
-        </span>
-      </a>
-    </div>
-  <hr class= "mt-0" />
-
+  <left-side-bar-container
+    logo-small-src="/assets/images/logo-small-light-scaled.webp"
+    logo-src="/assets/images/logo-light-scaled.webp"
+    logo-alt="Screenshotbot logo" >
     ,(render-menu-items (installation) :user user :company company :script-name script-name)
     ,(render-user-menu (installation) :user user :company company)
-  </div>)
+  </left-side-bar-container>)
 
 (defmethod web-projects-supported-p (installation)
   t)

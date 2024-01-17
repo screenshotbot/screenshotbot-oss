@@ -6,13 +6,11 @@
 
 (uiop/package:define-package :screenshotbot/cdn
     (:use #:cl)
-  (:import-from #:screenshotbot/magick
-                #:ping-image-dimensions
-                #:*magick*)
   (:import-from #:screenshotbot/server
                 #:document-root)
-  (:import-from #:util/misc
-                #:make-mp-hash-table)
+  (:import-from #:core/ui/image
+                #:img-with-fallback
+                #:image-dimensions)
   (:export #:script #:link #:img
            #:make-image-cdn-url
            #:img-with-fallback))
@@ -51,34 +49,3 @@
   ;; si: screenshot-image
   (let ((util.cdn:*cdn-cache-key* "si-3" ))
     (util.cdn:make-cdn url)))
-
-(defvar *dim-cache* (make-mp-hash-table :test #'equal)
-  "Cache of image dimensions for every possible image.")
-
-(defun image-dimensions (url)
-  (when (str:starts-with-p "/assets/" url)
-    (multiple-value-bind (result present-p)
-        (gethash url *dim-cache*)
-      (cond
-        (present-p
-         result)
-        (t
-         (setf (Gethash url *dim-cache*)
-               (ignore-errors
-                (ping-image-dimensions
-                 *magick*
-                 (path:catfile (document-root) (str:substring 1 nil url))))))))))
-
-;; Technically should not be here, but can't think of a better place
-;; for now.
-(markup:deftag img-with-fallback (&key class src alt loading)
-  (assert (str:containsp ".webp" src))
-  (let ((dims (image-dimensions src)))
-    <picture class=class >
-      <source srcset= (cdn-for-image-url src) />
-      <:img src= (cdn-for-image-url (str:replace-all ".webp" ".png" src))
-            width= (first dims)
-            height= (second dims)
-            loading=loading
-            alt=alt />
-    </picture>))
