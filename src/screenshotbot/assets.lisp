@@ -58,8 +58,7 @@ cause the asset to be immediately compiled."
     (let ((util.cdn:*cdn-cache-key* (format nil "~d"
                                             (ignore-errors
                                              (file-write-date (output-file))))))
-     (hunchentoot:redirect (util.cdn:make-cdn "/release/recorder-linux.sh"))))
-)
+     (hunchentoot:redirect (util.cdn:make-cdn "/release/recorder-linux.sh")))))
 
 (defhandler (nil :uri "/recorder-master.jar") ()
   (hex:safe-redirect "/release/recorder-master.jar"))
