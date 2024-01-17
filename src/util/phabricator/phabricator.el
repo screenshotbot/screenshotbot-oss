@@ -53,11 +53,11 @@
         (cl-loop for res being the hash-values of buildables
                  for status = (gethash "status" res)
                  if (equal "failed" status)
-                 do (incf failed)
+                 do (cl-incf failed)
                  if (equal "pending" status)
-                 do (incf waiting)
+                 do (cl-incf waiting)
                  if (equal "passed" status)
-                 do (incf passed))
+                 do (cl-incf passed))
         (cond
          ((> failed 0)
           "failed")
@@ -70,22 +70,36 @@
      (t
       "No buildables"))))
 
+(defun differential--set-contents ()
+  (with-current-buffer (differential--buffer)
+    (setq tabulated-list-entries
+          (cl-loop for rev across (differential-query-all)
+                   for i from 1
+                   collect
+                   (list (gethash "id" rev)
+                         (vector
+                          (format "D%s" (gethash "id" rev))
+                          (gethash "branch" rev)
+                          (differential--format-status (gethash "statusName" rev))
+                          (differential--build-status rev)
+                          (gethash "title" rev)))))
+    (tabulated-list-init-header)
+    (tabulated-list-print)))
+
 (defun differential-revision-list ()
   (interactive)
   (let ((buffer (differential--buffer)))
     (with-current-buffer buffer
       (differential-mode)
-      (setq tabulated-list-entries
-            (cl-loop for rev across (differential-query-all)
-                     for i from 1
-                     collect
-                     (list (gethash "id" rev)
-                           (vector
-                            (format "D%s" (gethash "id" rev))
-                            (gethash "branch" rev)
-                            (differential--format-status (gethash "statusName" rev))
-                            (differential--build-status rev)
-                            (gethash "title" rev)))))
-      (tabulated-list-init-header)
-      (tabulated-list-print)
+      (differential--set-contents)
+      (differential--define-keybindings)
       (display-buffer buffer))))
+
+(defun differential--reload ()
+  (interactive)
+  (differential--set-contents)
+  (message "Reloaded."))
+
+(defun differential--define-keybindings ()
+  (define-key differential-mode-map
+    (kbd "g") #'differential--reload))
