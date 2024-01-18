@@ -168,7 +168,7 @@
 (defmethod render-nibble ((plugin nibble-acceptor-mixin) (id string))
   (render-nibble plugin (parse-integer id)))
 
-(defmethod maybe-render-html ((self string))
+(defmethod maybe-render-html (self)
   self)
 
 (defmethod maybe-render-html ((self markup:abstract-xml-tag))

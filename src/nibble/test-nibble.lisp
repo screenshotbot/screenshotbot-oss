@@ -99,4 +99,16 @@
   (with-fixture state ()
     (util/testing:with-fake-request ()
       (auth:with-sessions ()
-       (nibble-full-url (nibble ()))))))
+        (nibble-full-url (nibble ()))))))
+
+(test rendering-a-nibble-that-already-sent-a-response
+  (with-fixture state ()
+    (util/testing:with-fake-request ()
+      (auth:with-sessions ()
+        (finishes
+          (render-nibble
+           hunchentoot:*acceptor*
+           (nibble ()
+             ;; We might have already returned a response by this
+             ;; point.
+             nil)))))))
