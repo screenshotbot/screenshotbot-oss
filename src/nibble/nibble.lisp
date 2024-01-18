@@ -236,7 +236,7 @@
   </html>)
 
 (defun nibble-full-url (nibble)
-  (apply #'hex:make-full-url
+  (hex:make-full-url
    hunchentoot:*request*
    (nibble-url nibble)))
 

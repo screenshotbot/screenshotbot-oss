@@ -1,7 +1,14 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 (defpackage :nibble/test-nibble
   (:use #:cl
         #:fiveam)
   (:import-from #:nibble
+                #:nibble-full-url
                 #:expired-nibble
                 #:make-id
                 #:nibble-url
@@ -86,3 +93,10 @@
     (util/testing:with-fake-request ()
       (signals expired-nibble
        (render-nibble hunchentoot:*acceptor* "342343243343432232213123123")))))
+
+
+(test nibble-full-url-happy-path
+  (with-fixture state ()
+    (util/testing:with-fake-request ()
+      (auth:with-sessions ()
+       (nibble-full-url (nibble ()))))))
