@@ -23,7 +23,7 @@
                 #:defhandler)
   (:import-from #:screenshotbot/dashboard/run-page
                 #:history-page)
-  (:import-from #:screenshotbot/taskie
+  (:import-from #:core/ui/taskie
                 #:timeago)
   (:import-from #:util
                 #:oid)

@@ -26,7 +26,7 @@
   (:import-from #:screenshotbot/model/core
                 #:ensure-slot-boundp
                 #:has-created-at)
-  (:import-from #:screenshotbot/taskie
+  (:import-from #:core/ui/taskie
                 #:timeago
                 #:taskie-timestamp
                 #:taskie-row

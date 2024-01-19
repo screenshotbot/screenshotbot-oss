@@ -22,7 +22,7 @@
                 #:shared-report-page)
   (:import-from #:util/object-id
                 #:oid-array)
-  (:import-from #:screenshotbot/taskie
+  (:import-from #:core/ui/taskie
                 #:taskie-list
                 #:taskie-page-title
                 #:taskie-row

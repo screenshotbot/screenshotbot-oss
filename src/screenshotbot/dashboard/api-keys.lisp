@@ -33,7 +33,7 @@
                 #:defhandler
                 #:home-url
                 #:with-login)
-  (:import-from #:screenshotbot/taskie
+  (:import-from #:core/ui/taskie
                 #:taskie-list
                 #:taskie-page-title
                 #:taskie-row)

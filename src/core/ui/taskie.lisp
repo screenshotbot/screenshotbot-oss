@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/taskie
+(defpackage :core/ui/taskie
   (:use :cl)
   (:import-from #:bknr.datastore
                 #:store-object-id)
@@ -30,7 +30,7 @@
    #:taskie-timestamp
    #:timeago
    #:with-pagination))
-(in-package :screenshotbot/taskie)
+(in-package :core/ui/taskie)
 
 (markup:enable-reader)
 

@@ -117,7 +117,6 @@
    (:file "plan")
    (:file "template")
    (:file "left-side-bar")
-   (:file "taskie")
    (:module "ui"
     :components ((:file "core")
                  (:file "confirmation-page")
@@ -327,7 +326,6 @@
                (:file "test-installation")
                (:file "test-assets")
                (:file "test-template")
-               (:file "test-taskie")
                (:file "test-audit-log")
                (:file "test-abstract-pr-promoter")
                (:file "test-batch-promoter")

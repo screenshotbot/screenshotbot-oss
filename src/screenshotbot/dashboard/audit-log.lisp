@@ -10,7 +10,7 @@
   (:import-from #:screenshotbot/user-api
                 #:current-company
                 #:created-at)
-  (:import-from #:screenshotbot/taskie
+  (:import-from #:core/ui/taskie
                 #:timeago)
   (:import-from #:markup
                 #:deftag)

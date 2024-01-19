@@ -10,7 +10,7 @@
         #:screenshotbot/template
         #:screenshotbot/user-api
         #:screenshotbot/report-api
-        #:screenshotbot/taskie)
+        #:core/ui/taskie)
   (:import-from #:screenshotbot/server
                 #:home-url
                 #:staging-p
@@ -42,7 +42,7 @@
                 #:share)
   (:import-from #:util/object-id
                 #:oid-array)
-  (:import-from #:screenshotbot/taskie
+  (:import-from #:core/ui/taskie
                 #:taskie-page-title)
   (:import-from #:screenshotbot/model/report
                 #:acceptable-report

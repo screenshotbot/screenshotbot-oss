@@ -24,7 +24,7 @@
                 #:batch-item
                 #:batch-item-channel
                 #:batch-items)
-  (:import-from #:screenshotbot/taskie
+  (:import-from #:core/ui/taskie
                 #:taskie-row
                 #:taskie-list)
   (:import-from #:anaphora

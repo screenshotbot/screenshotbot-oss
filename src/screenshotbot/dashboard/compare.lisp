@@ -90,7 +90,7 @@
                 #:get-tab-title)
   (:import-from #:bknr.datastore
                 #:cascading-delete-object)
-  (:import-from #:screenshotbot/taskie
+  (:import-from #:core/ui/taskie
                 #:timeago)
   (:import-from #:util/misc
                 #:?.)

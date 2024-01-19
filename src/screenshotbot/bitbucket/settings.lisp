@@ -41,7 +41,7 @@
                 #:build-status-audit-log)
   (:import-from #:core/ui/paginated
                 #:paginated)
-  (:import-from #:screenshotbot/taskie
+  (:import-from #:core/ui/taskie
                 #:timeago)
   (:import-from #:screenshotbot/pro/bitbucket/core
                 #:http-success-response?)

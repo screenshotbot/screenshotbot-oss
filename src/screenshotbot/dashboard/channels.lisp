@@ -9,7 +9,7 @@
         #:alexandria
         #:screenshotbot/template
         #:screenshotbot/user-api
-        #:screenshotbot/taskie
+        #:core/ui/taskie
         #:nibble
         #:screenshotbot/ui)
   (:import-from #:screenshotbot/server
@@ -29,7 +29,7 @@
                 #:oid)
   (:import-from #:screenshotbot/dashboard/run-page
                 #:run-page)
-  (:import-from #:screenshotbot/taskie
+  (:import-from #:core/ui/taskie
                 #:taskie-page-title)
   (:import-from #:screenshotbot/model/company
                 #:company-admin-p

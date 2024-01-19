@@ -90,7 +90,7 @@
   1)
 
 (test simple-recorder-run-row
-  (let ((screenshotbot/taskie::*checkboxes* t))
+  (let ((core/ui/taskie::*checkboxes* t))
    (let ((run (make-instance 'test-run)))
      (recorder-run-row :run run)
      (pass))))

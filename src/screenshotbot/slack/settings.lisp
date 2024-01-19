@@ -26,7 +26,7 @@
                 #:slack-channel
                 #:slack-error-response
                 #:slack-error)
-  (:import-from #:screenshotbot/taskie
+  (:import-from #:core/ui/taskie
                 #:timeago)
   (:import-from #:screenshotbot/ui/confirmation-page
                 #:confirmation-page)

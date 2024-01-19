@@ -31,7 +31,7 @@
                 #:with-transaction)
   (:import-from #:screenshotbot/ui/confirmation-page
                 #:confirmation-page)
-  (:import-from #:screenshotbot/taskie
+  (:import-from #:core/ui/taskie
                 #:taskie-list
                 #:taskie-row
                 #:taskie-page-title)

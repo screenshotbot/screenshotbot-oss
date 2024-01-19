@@ -9,7 +9,7 @@
         #:alexandria
         #:screenshotbot/user-api
         #:screenshotbot/template
-        #:screenshotbot/taskie
+        #:core/ui/taskie
         #:markup)
   (:import-from #:screenshotbot/server
                 #:with-login

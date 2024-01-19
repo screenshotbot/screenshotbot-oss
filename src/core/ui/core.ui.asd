@@ -17,10 +17,12 @@
                (:file "simple-card-page")
                (:file "mdi")
                (:file "paginated")
+               (:file "taskie")
                (:file "left-side-bar")))
 
 (defsystem :core.ui/tests
   :serial t
   :depends-on (:core.ui
                :util/fiveam)
-  :components ((:file "test-paginated")))
+  :components ((:file "test-paginated")
+               (:file "test-taskie")))

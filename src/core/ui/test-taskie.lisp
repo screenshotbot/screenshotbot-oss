@@ -4,14 +4,21 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/test-taskie
-    (:use #:cl
-          #:alexandria
-          #:screenshotbot/taskie
-          #:fiveam)
-  (:import-from #:screenshotbot/taskie
-                #:timeago
-                #:with-pagination))
+(defpackage :core/ui/test-taskie
+  (:use :cl)
+  (:import-from #:it.bese.fiveam
+                #:finishes
+                #:is
+                #:is-false
+                #:test)
+  (:import-from #:core/ui/taskie
+                #:taskie-list
+                #:taskie-row
+                #:taskie-timestamp
+                #:with-pagination)
+  (:import-from #:util/timeago
+                #:timeago))
+(in-package :core/ui/test-taskie)
 
 (util/fiveam:def-suite)
 
