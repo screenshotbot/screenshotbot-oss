@@ -15,16 +15,6 @@
   :depends-on ()
   :components ((:file "mask-rect-api")))
 
-(defsystem :screenshotbot/api
-  :serial t
-  :depends-on (:bknr.datastore
-               :util/misc
-               :util/misc
-               :util.store)
-  :components ((:file "api-key-api")
-               (:module "model"
-                :components ((:file "api-key")))))
-
 (defsystem :screenshotbot
   :serial t
   :author "Arnold Noronha <arnold@screenshotbot.io>"
@@ -36,7 +26,7 @@
                :gravatar
                :util/posix
                :util/throttler
-               :screenshotbot/api
+               :core.api
                :bknr.impex
                :util/logger
                :lparallel
