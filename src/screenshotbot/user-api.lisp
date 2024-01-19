@@ -16,6 +16,10 @@
                 #:can-edit!
                 #:user-email
                 #:current-company)
+  (:import-from #:screenshotbot/model/api-key
+                #:api-key-company
+                #:api-key-user
+                #:user-api-keys)
   (:export
    #:current-user
    #:user

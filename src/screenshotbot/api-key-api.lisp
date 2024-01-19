@@ -5,7 +5,12 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (uiop/package:define-package :screenshotbot/api-key-api
-    (:use #:cl #:alexandria)
+  (:use #:cl #:alexandria)
+  (:import-from #:screenshotbot/model/api-key
+                #:api-key-key
+                #:api-key
+                #:api-key-secret-key
+                #:delete-api-key)
   (:export
    #:api-key-key
    #:api-key

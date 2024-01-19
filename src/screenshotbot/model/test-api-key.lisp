@@ -14,6 +14,7 @@
                 #:api-key-key
                 #:api-key)
   (:import-from #:screenshotbot/model/api-key
+                #:generate-api-key
                 #:cleanup-expired-api-keys
                 #:make-transient-key
                 #:expired-p
@@ -94,3 +95,8 @@
 
 (test transient-api-keys-are-never-expired
   (is-false (expired-p (make-transient-key :user :company))))
+
+(test generate-api-key
+  (is (equal 20 (length (generate-api-key))))
+  (is (not (equal (generate-api-key)
+                  (generate-api-key)))))

@@ -13,18 +13,6 @@
                 #:with-transaction)
   (:import-from #:bknr.indices
                 #:unique-index)
-  (:import-from #:screenshotbot/api-key-api
-                #:api-key
-                #:api-key-key
-                #:api-key-secret-key
-                #:delete-api-key)
-  (:import-from #:screenshotbot/model/core
-                #:generate-api-key
-                #:generate-api-secret)
-  (:import-from #:screenshotbot/user-api
-                #:api-key-company
-                #:api-key-user
-                #:user-api-keys)
   (:import-from #:util/cron
                 #:def-cron)
   (:import-from #:util/misc
@@ -48,6 +36,36 @@
    #:make-transient-key
    #:render-api-token))
 (in-package :screenshotbot/model/api-key)
+
+(defvar *lock* (bt:make-lock "random-string"))
+
+(defvar *generator* (make-instance 'secure-random::open-ssl-generator))
+
+(defun %all-alpha (&optional (from #\a) (to #\z))
+  (let ((From (char-code from))
+        (to (char-code to)))
+    (assert (< from to))
+   (loop for i from from to to collect
+        (code-char i))))
+
+(defun %random (num)
+  (secure-random:number num *generator*))
+
+(defun generate-random-string (length chars)
+  (bt:with-lock-held (*lock*)
+    (coerce (loop repeat length collect (aref chars (%random (length chars))))
+            'string)))
+
+
+(defun generate-api-key ()
+  (generate-random-string 20 (concatenate 'string (%all-alpha #\A #\Z)
+                                          (%all-alpha #\0 #\9))))
+
+(Defun generate-api-secret ()
+  (generate-random-string 40 (concatenate 'string
+                                          (%all-alpha #\A #\Z)
+                                          (%all-alpha #\a #\z)
+                                          (%all-alpha #\0 #\9))))
 
 (defindex +expires-index+
   'fset-set-index

@@ -15,6 +15,15 @@
   :depends-on ()
   :components ((:file "mask-rect-api")))
 
+(defsystem :screenshotbot/api
+  :serial t
+  :depends-on (:bknr.datastore
+               :util/misc
+               :util/misc
+               :util.store)
+  :components ((:module "model"
+                :components ((:file "api-key")))))
+
 (defsystem :screenshotbot
   :serial t
   :author "Arnold Noronha <arnold@screenshotbot.io>"
@@ -26,6 +35,7 @@
                :gravatar
                :util/posix
                :util/throttler
+               :screenshotbot/api
                :bknr.impex
                :util/logger
                :lparallel
@@ -147,7 +157,6 @@
                  (:file "image-comparer")
                  (:file "finalized-commit")
                  (:file "screenshot")
-                 (:file "api-key")
                  (:file "commit-graph-v2")
                  (:file "commit-graph")
                  (:file "test-object")

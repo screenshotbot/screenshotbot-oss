@@ -14,8 +14,3 @@
 
 
 (util/fiveam:def-suite)
-
-(test generate-api-key
-  (is (equal 20 (length (generate-api-key))))
-  (is (not (equal (Generate-api-key)
-                  (generate-api-key)))))
