@@ -177,12 +177,15 @@
   (with-transaction ()
     (slot-makunbound api-key 'api-key)))
 
-(defmethod user-api-keys ((user user) (company company))
+(defmethod user-api-keys (user company)
   (loop for api-key in (bknr.datastore:class-instances 'api-key)
         if (and (eq user (api-key-user api-key))
                 (slot-boundp api-key 'api-key) ;; See T929
                 (eq company (api-key-company api-key)))
           collect api-key))
+
+(defmethod user-api-keys ((user user) (company company))
+  (call-next-method))
 
 (defmethod cleanup-expired-api-keys ()
   (let ((next (index-least +expires-index+))
