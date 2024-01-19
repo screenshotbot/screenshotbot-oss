@@ -21,7 +21,8 @@
                :util/misc
                :util/misc
                :util.store)
-  :components ((:module "model"
+  :components ((:file "api-key-api")
+               (:module "model"
                 :components ((:file "api-key")))))
 
 (defsystem :screenshotbot
@@ -118,7 +119,6 @@
    (:file "cdn")
    (:file "user-api")
    (:file "notice-api")
-   (:file "api-key-api")
    (:file "report-api")
    (:file "promote-api")
    (:file "screenshot-api")

@@ -4,13 +4,12 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+
+;; This package is no longer needed, technically. It could be safe to
+;; delete this, and replace it all with model/api-key. But, it WILL
+;; require a server restart, so beware.
 (uiop/package:define-package :screenshotbot/api-key-api
   (:use #:cl #:alexandria)
-  (:import-from #:screenshotbot/model/api-key
-                #:api-key-key
-                #:api-key
-                #:api-key-secret-key
-                #:delete-api-key)
   (:export
    #:api-key-key
    #:api-key

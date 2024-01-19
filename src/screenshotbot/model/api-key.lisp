@@ -23,6 +23,11 @@
   (:import-from #:util/store/store
                 #:defindex
                 #:with-class-validation)
+  (:import-from #:screenshotbot/api-key-api
+                #:api-key-key
+                #:api-key
+                #:api-key-secret-key
+                #:delete-api-key)
   (:export
    #:%find-api-key
    #:all-api-keys
