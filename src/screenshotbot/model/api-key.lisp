@@ -4,42 +4,52 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/model/api-key
-  (:use #:cl
-        #:alexandria
-        #:screenshotbot/model/core
-        #:screenshotbot/user-api
-        #:screenshotbot/api-key-api)
+(defpackage :screenshotbot/model/api-key
+  (:use :cl)
   (:import-from #:bknr.datastore
+                #:persistent-class
                 #:store-object
                 #:store-object-id
-                #:with-transaction
-                #:unique-index
-                #:persistent-class)
+                #:with-transaction)
+  (:import-from #:bknr.indices
+                #:unique-index)
+  (:import-from #:screenshotbot/api-key-api
+                #:api-key
+                #:api-key-key
+                #:api-key-secret-key
+                #:delete-api-key)
   (:import-from #:screenshotbot/model/company
                 #:company)
-  (:import-from #:util/store
-                #:with-class-validation)
-  (:import-from #:util/misc
-                #:make-mp-hash-table)
-  (:import-from #:util/store/store
-                #:defindex)
-  (:import-from #:util/store/fset-index
-                #:index-least
-                #:fset-set-index)
+  (:import-from #:screenshotbot/model/core
+                #:generate-api-key
+                #:generate-api-secret)
+  (:import-from #:screenshotbot/user-api
+                #:api-key-company
+                #:api-key-user
+                #:created-at
+                #:user
+                #:user-api-keys)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:util/misc
+                #:make-mp-hash-table)
+  (:import-from #:util/store/fset-index
+                #:fset-set-index
+                #:index-least)
+  (:import-from #:util/store/store
+                #:defindex
+                #:with-class-validation)
   (:export
-   #:api-key
    #:%find-api-key
-   #:api-key-user
    #:all-api-keys
+   #:api-key
    #:api-key-company
-   #:delete-api-key
-   #:make-transient-key
+   #:api-key-description
    #:api-key-key
    #:api-key-secret-key
-   #:api-key-description
+   #:api-key-user
+   #:delete-api-key
+   #:make-transient-key
    #:render-api-token))
 (in-package :screenshotbot/model/api-key)
 
