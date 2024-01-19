@@ -14,6 +14,10 @@
   (:import-from #:core/ui/simple-card-page
                 #:confirmation-page
                 #:simple-card-page)
+  (:import-from #:core/ui/taskie
+                #:taskie-list
+                #:taskie-page-title
+                #:taskie-row)
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:nibble
@@ -23,6 +27,8 @@
                 #:api-key-key
                 #:api-key-secret-key
                 #:delete-api-key)
+  (:import-from #:screenshotbot/login/common
+                #:with-login)
   (:import-from #:screenshotbot/model/api-key
                 #:api-key-description
                 #:cli-api-key
@@ -31,12 +37,7 @@
                 #:user-api-keys)
   (:import-from #:screenshotbot/server
                 #:defhandler
-                #:home-url
-                #:with-login)
-  (:import-from #:core/ui/taskie
-                #:taskie-list
-                #:taskie-page-title
-                #:taskie-row)
+                #:home-url)
   (:import-from #:screenshotbot/template
                 #:dashboard-template)
   (:import-from #:screenshotbot/user-api

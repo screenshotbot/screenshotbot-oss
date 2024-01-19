@@ -37,6 +37,8 @@
   (:import-from #:auth
                 #:no-access-error
                 #:logged-in-p)
+  (:import-from #:screenshotbot/login/common
+                #:with-login)
   (:export
    #:defhandler
    #:with-login
@@ -249,20 +251,6 @@ Disallow: /")
 Disallow: /n
 Disallow: /runs/by-tag
 ")))
-
-(defmacro with-login ((&key (needs-login t) (signup nil)
-                         (company nil)
-                         (ensure-prepared t)
-                         (allow-url-redirect nil)
-                         (alert nil)) &body body)
-  ;; server-with-login is implemented in login/common.lisp
-  `(screenshotbot/login/common:server-with-login (lambda () ,@body)
-                                                 :needs-login ,needs-login
-                                                 :signup ,signup
-                                                 :company ,company
-                                                 :ensure-prepared ,ensure-prepared
-                                                 :allow-url-redirect ,allow-url-redirect
-                                                 :alert ,alert))
 
 (defhandler (nil :uri "/") ()
   (cond

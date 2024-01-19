@@ -40,7 +40,8 @@
    #:with-oauth-state-and-redirect
    #:server-with-login
    #:auth-template-impl
-   #:standard-auth-provider))
+   #:standard-auth-provider
+   #:with-login))
 (in-package :screenshotbot/login/common)
 
 (named-readtables:in-readtable markup:syntax)
@@ -157,3 +158,16 @@
 
 (defclass standard-auth-provider (auth-provider)
   ())
+
+(defmacro with-login ((&key (needs-login t) (signup nil)
+                         (company nil)
+                         (ensure-prepared t)
+                         (allow-url-redirect nil)
+                         (alert nil)) &body body)
+  `(server-with-login (lambda () ,@body)
+                      :needs-login ,needs-login
+                      :signup ,signup
+                      :company ,company
+                      :ensure-prepared ,ensure-prepared
+                      :allow-url-redirect ,allow-url-redirect
+                      :alert ,alert))
