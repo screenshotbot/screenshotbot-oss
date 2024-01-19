@@ -165,12 +165,6 @@
           key)
     key))
 
-;; TODO: delete
-(defmethod initialize-instance :around ((obj api-key)
-                                        &rest args
-                                        &key api-key api-secret-key
-                                        &allow-other-keys)
-  (call-next-method))
 
 (defmethod render-api-token ((self api-key))
   (format nil "cli-~a:~a"
