@@ -18,16 +18,12 @@
                 #:api-key-key
                 #:api-key-secret-key
                 #:delete-api-key)
-  (:import-from #:screenshotbot/model/company
-                #:company)
   (:import-from #:screenshotbot/model/core
                 #:generate-api-key
                 #:generate-api-secret)
   (:import-from #:screenshotbot/user-api
                 #:api-key-company
                 #:api-key-user
-                #:created-at
-                #:user
                 #:user-api-keys)
   (:import-from #:util/cron
                 #:def-cron)
@@ -60,11 +56,9 @@
 (with-class-validation
   (defclass api-key (store-object)
     ((user
-      :type user
       :initarg :user
       :accessor api-key-user)
      (company
-      :type company
       :initarg :company
       :initform nil
       :accessor api-key-company)
@@ -183,9 +177,6 @@
                 (slot-boundp api-key 'api-key) ;; See T929
                 (eq company (api-key-company api-key)))
           collect api-key))
-
-(defmethod user-api-keys ((user user) (company company))
-  (call-next-method))
 
 (defmethod cleanup-expired-api-keys ()
   (let ((next (index-least +expires-index+))
