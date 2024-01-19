@@ -5,37 +5,42 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/dashboard/api-keys
-  (:use #:cl
-        #:alexandria
-        #:nibble
-        #:screenshotbot/user-api
-        #:screenshotbot/api-key-api)
-  (:import-from #:screenshotbot/server
-                #:home-url
-                #:defhandler)
-  (:import-from #:screenshotbot/template
-                #:mdi
-                #:dashboard-template)
-  (:import-from #:screenshotbot/ui
-                #:confirmation-page)
-  (:import-from #:core/ui/simple-card-page
-                #:simple-card-page)
-  (:import-from #:screenshotbot/server
-                #:with-login)
-  (:import-from #:screenshotbot/taskie
-                #:taskie-row
-                #:taskie-page-title
-                #:taskie-list)
-  (:import-from #:screenshotbot/model/api-key
-                #:expires-at
-                #:render-api-token
-                #:cli-api-key
-                #:api-key-description)
-  (:import-from #:easy-macros
-                #:def-easy-macro)
-  (:import-from #:screenshotbot/user-api
+  (:use :cl)
+  (:import-from #:auth
                 #:current-company
                 #:current-user)
+  (:import-from #:core/ui/mdi
+                #:mdi)
+  (:import-from #:core/ui/simple-card-page
+                #:confirmation-page
+                #:simple-card-page)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
+  (:import-from #:nibble
+                #:nibble)
+  (:import-from #:screenshotbot/api-key-api
+                #:api-key
+                #:api-key-key
+                #:api-key-secret-key
+                #:delete-api-key)
+  (:import-from #:screenshotbot/model/api-key
+                #:api-key-description
+                #:cli-api-key
+                #:expires-at
+                #:render-api-token
+                #:user-api-keys)
+  (:import-from #:screenshotbot/server
+                #:defhandler
+                #:home-url
+                #:with-login)
+  (:import-from #:screenshotbot/taskie
+                #:taskie-list
+                #:taskie-page-title
+                #:taskie-row)
+  (:import-from #:screenshotbot/template
+                #:dashboard-template)
+  (:import-from #:screenshotbot/user-api
+                #:user)
   (:import-from #:util/throttler
                 #:throttle!
                 #:throttler)
