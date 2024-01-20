@@ -24,10 +24,11 @@
     ((str:starts-with-p *prefix*
                         (hunchentoot:script-name*))
      (let ((font-name (str:substring (length *prefix*) nil (hunchentoot:script-name*))))
-       (assert (not (str:containsp "/" font-name)))
+       (assert (not (str:starts-with-p "/" font-name)))
        (assert (not (str:containsp ".." font-name)))
        (assert (not (str:containsp "~" font-name)))
        (assert (not (str:containsp "\\" font-name)))
+       (assert (not (str:containsp "//" font-name)))
        (assert (path:-d *fonts-dir*))
 
        (hunchentoot:handle-static-file
