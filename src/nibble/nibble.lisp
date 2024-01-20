@@ -246,6 +246,9 @@
 
 
 (defun guess-src ()
+  "The original root script that generated this nibble. This isn't
+stored in the nibble itself, because we want this for debugging
+purposes to be maintained across server restarts."
   (when (boundp 'hunchentoot:*request*)
     (let ((param (hunchentoot:parameter "_src")))
      (cond
