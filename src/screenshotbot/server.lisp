@@ -39,6 +39,8 @@
                 #:logged-in-p)
   (:import-from #:screenshotbot/login/common
                 #:with-login)
+  (:import-from #:core/api/acceptor
+                #:api-acceptor-mixin)
   (:export
    #:defhandler
    #:with-login
@@ -96,6 +98,7 @@
 (defclass acceptor (#+lispworks acceptor-with-existing-socket
                     nibble:nibble-acceptor-mixin
                     auth:auth-acceptor-mixin
+                    api-acceptor-mixin
                     hex:clos-dispatcher
                     util:base-acceptor
                     hunchensocket:websocket-acceptor
