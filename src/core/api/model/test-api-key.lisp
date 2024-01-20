@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/model/test-api-key
+(defpackage :core/api/model/test-api-key
   (:use #:cl
         #:fiveam)
   (:import-from #:util/store
@@ -26,7 +26,11 @@
                 #:matches-regex)
   (:import-from #:fiveam-matchers/lists
                 #:contains))
-(in-package :screenshotbot/model/test-api-key)
+(in-package :core/api/model/test-api-key)
+
+
+(util/fiveam:def-suite)
+
 
 
 (util/fiveam:def-suite)
