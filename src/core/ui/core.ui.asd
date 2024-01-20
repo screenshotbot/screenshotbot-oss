@@ -9,6 +9,7 @@
   :depends-on (:markup
                :trivial-garbage
                :screenshotbot.magick ;; for image processing
+               :util/timeago
                :fset)
   :components ((:file "template")
                (:file "post")

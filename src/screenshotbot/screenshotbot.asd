@@ -165,7 +165,6 @@
                  (:file "recent-runs")
                  (:file "notices")
                  (:file "new-compare")
-                 (:file "api-keys")
                  (:file "channels")
                  (:file "reports")
                  (:file "bisect")

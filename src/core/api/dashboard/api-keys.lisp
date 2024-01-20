@@ -35,8 +35,6 @@
                 #:expires-at
                 #:render-api-token
                 #:user-api-keys)
-  (:import-from #:screenshotbot/user-api
-                #:user)
   (:import-from #:util/throttler
                 #:throttle!
                 #:throttler)
