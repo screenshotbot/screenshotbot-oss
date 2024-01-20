@@ -35,8 +35,6 @@
                 #:expires-at
                 #:render-api-token
                 #:user-api-keys)
-  (:import-from #:screenshotbot/server
-                #:defhandler)
   (:import-from #:screenshotbot/user-api
                 #:user)
   (:import-from #:util/throttler
@@ -45,7 +43,9 @@
   (:import-from #:util/timeago
                 #:timeago)
   (:import-from #:core/ui/template
-                #:app-template))
+                #:app-template)
+  (:import-from #:core/api/acceptor
+                #:api-acceptor-mixin))
 (in-package :screenshotbot/dashboard/api-keys)
 
 (markup:enable-reader)
@@ -168,11 +168,11 @@
                            </taskie-row>)))
     </app-template>))
 
-(defhandler (api-keys :uri "/api-keys") ()
+(hex:def-clos-dispatch ((self api-acceptor-mixin) "/api-keys") ()
   (with-login ()
    (%api-key-page)))
 
-(defhandler (api-key-cli-generate :uri "/api-keys/cli") ()
+(defun api-key-cli-generate ()
   (with-login ()
     (throttle! *throttler* :key (current-user))
     (let ((key (make-instance 'cli-api-key
@@ -198,3 +198,6 @@
           <a href= "/api-keys" class= "btn btn-secondary">Cancel</a>
         </div>
       </simple-card-page>)))
+
+(hex:def-clos-dispatch ((self api-acceptor-mixin) "/api-keys/cli") ()
+  (api-key-cli-generate))
