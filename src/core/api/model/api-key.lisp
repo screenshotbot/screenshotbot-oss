@@ -6,6 +6,7 @@
 
 (defpackage :screenshotbot/model/api-key
   (:use :cl)
+  (:nicknames :core/api/model/api-key)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:store-object

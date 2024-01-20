@@ -10,6 +10,7 @@
 ;; require a server restart, so beware.
 (uiop/package:define-package :screenshotbot/api-key-api
   (:use #:cl #:alexandria)
+  (:nicknames :core/api/api-key-api)
   (:export
    #:api-key-key
    #:api-key
