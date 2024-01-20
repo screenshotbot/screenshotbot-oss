@@ -12,6 +12,8 @@
                (:module "dashboard"
                 :components ((:file "api-keys")))))
 
+;; NOTE: dashboard/test-api-keys is still in screenshotbot
+;; TODO(T1005, T1006)
 (defsystem :core.api/tests
   :serial t
   :depends-on (:core.api
