@@ -9,7 +9,9 @@
         #:alexandria
         #:screenshotbot/admin/core
         #:screenshotbot/user-api
-        #:screenshotbot/model/user))
+        #:screenshotbot/model/user)
+  (:import-from #:core/ui/simple-card-page
+                #:confirmation-page))
 (in-package :screenshotbot/admin/index)
 
 (markup:enable-reader)

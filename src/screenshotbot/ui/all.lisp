@@ -6,6 +6,6 @@
 
 (uiop:define-package :screenshotbot/ui
   (:use #:cl #:alexandria)
-  (:use-reexport #:screenshotbot/ui/confirmation-page
-                 #:screenshotbot/ui/core))
+  (:use-reexport #:screenshotbot/ui/core
+                 #:core/ui/simple-card-page))
 (in-package :screenshotbot/ui)

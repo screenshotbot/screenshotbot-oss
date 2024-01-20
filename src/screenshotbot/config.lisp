@@ -58,7 +58,7 @@
 
 (screenshotbot/admin/core:defadminhandler (reload-config-page :uri "/admin/reload-config") ()
   (hex:safe-redirect (nibble:nibble (:once t)
-                       (screenshotbot/ui:confirmation-page
+                       (core/ui/simple-card-page:confirmation-page
                         :yes (nibble:nibble (:once t)
                                (load-config)
                                (hex:safe-redirect "/admin"))

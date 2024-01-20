@@ -119,7 +119,6 @@
    (:file "left-side-bar")
    (:module "ui"
     :components ((:file "core")
-                 (:file "confirmation-page")
                  (:file "all")))
    (:file "artifacts")
    (:file "assets")

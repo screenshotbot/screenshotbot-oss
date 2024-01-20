@@ -58,7 +58,7 @@
                 #:commit-graph)
   (:import-from #:dag
                 #:ordered-commits)
-  (:import-from #:screenshotbot/ui/confirmation-page
+  (:import-from #:core/ui/simple-card-page
                 #:confirmation-page)
   (:import-from #:screenshotbot/user-api
                 #:current-company

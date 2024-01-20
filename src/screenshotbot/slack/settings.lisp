@@ -28,7 +28,7 @@
                 #:slack-error)
   (:import-from #:core/ui/taskie
                 #:timeago)
-  (:import-from #:screenshotbot/ui/confirmation-page
+  (:import-from #:core/ui/simple-card-page
                 #:confirmation-page)
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)

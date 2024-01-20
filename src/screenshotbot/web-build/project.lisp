@@ -49,7 +49,7 @@
   (:import-from #:screenshotbot/ui/core
                 #:ui/div
                 #:ui/a)
-  (:import-from #:screenshotbot/ui/confirmation-page
+  (:import-from #:core/ui/simple-card-page
                 #:confirmation-modal
                 #:confirmation-page)
   (:import-from #:hunchentoot-extensions

@@ -8,7 +8,9 @@
   (:use #:cl #:alexandria)
   (:import-from #:core/ui/template
                 #:app-template)
-  (:export #:simple-card-page))
+  (:export #:simple-card-page
+           #:confirmation-page
+           #:confirmation-modal))
 (in-package :core/ui/simple-card-page)
 
 (markup:enable-reader)
@@ -56,3 +58,41 @@
         </div>
       </div>
     </app-template>))
+
+
+(markup:deftag confirmation-page (children &key  yes no
+                                  (danger nil))
+  <simple-card-page>
+    <p>,@(progn children)</p>
+    <div class= "card-footer">
+      <a href= yes class= (format nil "btn ~a" (if danger "btn-danger" "btn-primary")) >Yes</a>
+      <a href= no class= "btn btn-secondary">No</a>
+    </div>
+  </simple-card-page>)
+
+(markup:deftag confirmation-modal (children &key yes title)
+  (let ((id (format nil "a-~a" (random 1000000))))
+    <div class= "modal fade" id=id tabindex= "-1" role= "dialog">
+      <div class= "modal-dialog" role= "dialog">
+        <div class= "modal-content">
+
+          ,(when title
+          <div class= "modal-header">
+            <strong>,(progn title)</strong>
+          </div>)
+
+    <div class= "modal-body">
+      ,@children
+    </div>
+
+    <div class= "modal-footer">
+      <form action=yes method= "post">
+        <input type= "submit" value= "Yes" class= "btn btn-primary" />
+      </form>
+      <input type= "button" class= "btn btn-secondary" value= "No"
+             data-bs-dismiss= "modal"
+             data-bs-target= (format nil "#~a" id) />
+    </div>
+        </div>
+      </div>
+    </div>))

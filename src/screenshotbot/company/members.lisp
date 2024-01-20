@@ -29,7 +29,7 @@
                 #:invite-email)
   (:import-from #:bknr.datastore
                 #:with-transaction)
-  (:import-from #:screenshotbot/ui/confirmation-page
+  (:import-from #:core/ui/simple-card-page
                 #:confirmation-page)
   (:import-from #:core/ui/taskie
                 #:taskie-list

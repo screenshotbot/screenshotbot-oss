@@ -47,7 +47,7 @@
                 #:http-success-response?)
   (:import-from #:util/store
                 #:with-class-validation)
-  (:import-from #:screenshotbot/ui/confirmation-page
+  (:import-from #:core/ui/simple-card-page
                 #:confirmation-page)
   (:import-from #:util/health-check
                 #:def-health-check)

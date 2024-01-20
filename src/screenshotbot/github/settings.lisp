@@ -67,7 +67,7 @@
                 #:paginated)
   (:import-from #:screenshotbot/dashboard/audit-log
                 #:render-audit-logs)
-  (:import-from #:screenshotbot/ui/confirmation-page
+  (:import-from #:core/ui/simple-card-page
                 #:confirmation-page)
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
