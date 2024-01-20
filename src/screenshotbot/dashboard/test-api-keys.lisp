@@ -4,46 +4,60 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(pkg:define-package :screenshotbot/dashboard/test-api-keys
-    (:use #:cl
-          #:alexandria
-          #:fiveam
-          #:screenshotbot/api-key-api)
-  (:import-from #:screenshotbot/dashboard/api-keys
-                #:api-key-cli-generate
-                #:with-description
-                #:%api-key-page)
-  (:import-from #:screenshotbot/factory
-                #:test-user
-                #:test-api-key
-                #:*company*)
-  (:import-from #:screenshotbot/installation
-                #:installation
-                #:*installation*)
-  (:import-from #:screenshotbot/template
-                #:*template-override*)
-  (:import-from #:util/testing
-                #:with-fake-request
-                #:screenshot-static-page)
-  (:import-from #:screenshotbot/testing
-                #:with-test-user
-                #:with-installation
-                #:screenshot-test)
+(defpackage :screenshotbot/dashboard/test-api-keys
+  (:use :cl)
   (:import-from #:cl-mock
-                #:if-called
-                #:answer)
+                #:if-called)
+  (:import-from #:core/installation/installation
+                #:*installation*)
+  (:import-from #:core/ui/template
+                #:*app-template*)
+  (:import-from #:it.bese.fiveam
+                #:def-fixture
+                #:test
+                #:with-fixture)
+  (:import-from #:screenshotbot/dashboard/api-keys
+                #:%api-key-page
+                #:api-key-cli-generate
+                #:with-description)
+  (:import-from #:screenshotbot/factory
+                #:*company*
+                #:test-api-key
+                #:test-user)
+  (:import-from #:screenshotbot/installation
+                #:installation)
   (:import-from #:screenshotbot/model/api-key
                 #:render-api-token)
+  (:import-from #:screenshotbot/server
+                #:screenshotbot-template)
+  (:import-from #:screenshotbot/testing
+                #:screenshot-test
+                #:with-installation
+                #:with-test-user)
   (:import-from #:util/store/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:util/testing
+                #:screenshot-static-page
+                #:with-fake-request))
+(in-package :screenshotbot/dashboard/test-api-keys)
+
+
+(util/fiveam:def-suite)
+
+
 
 (util/fiveam:def-suite)
 
 (markup:enable-reader)
 
+(def-fixture state ()
+  (let* ((*installation* (make-instance 'installation))
+         (*app-template* (make-instance 'screenshotbot-template)))
+    (&body)))
+
 
 (test simple-page-test
-  (let* ((*installation* (make-instance 'installation)))
+  (with-fixture state ()
     (with-fake-request ()
       (auth:with-sessions ()
        (screenshot-static-page
@@ -57,7 +71,7 @@
                         :company *company*)))))))
 
 (test empty-api-keys-page-test
-  (let* ((*installation* (make-instance 'installation)))
+  (with-fixture state ()
     (with-fake-request ()
       (auth:with-sessions ()
        (screenshot-static-page

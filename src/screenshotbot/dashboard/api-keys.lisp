@@ -37,15 +37,15 @@
                 #:user-api-keys)
   (:import-from #:screenshotbot/server
                 #:defhandler)
-  (:import-from #:screenshotbot/template
-                #:dashboard-template)
   (:import-from #:screenshotbot/user-api
                 #:user)
   (:import-from #:util/throttler
                 #:throttle!
                 #:throttler)
   (:import-from #:util/timeago
-                #:timeago))
+                #:timeago)
+  (:import-from #:core/ui/template
+                #:app-template))
 (in-package :screenshotbot/dashboard/api-keys)
 
 (markup:enable-reader)
@@ -115,7 +115,7 @@
   (let* ((api-keys (reverse (user-api-keys user company)))
          (create-api-key (nibble ()
                            (%create-api-key user company))))
-    <dashboard-template title= "Screenshotbot: API Keys" >
+    <app-template title= "Screenshotbot: API Keys" >
       <taskie-page-title title="API keys" >
             <form method= "post">
               <input type= "submit" formaction=create-api-key formmethod= "post"
@@ -166,7 +166,7 @@
                                </form>
                              </span>
                            </taskie-row>)))
-    </dashboard-template>))
+    </app-template>))
 
 (defhandler (api-keys :uri "/api-keys") ()
   (with-login ()
