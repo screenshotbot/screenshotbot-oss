@@ -36,8 +36,7 @@
                 #:render-api-token
                 #:user-api-keys)
   (:import-from #:screenshotbot/server
-                #:defhandler
-                #:home-url)
+                #:defhandler)
   (:import-from #:screenshotbot/template
                 #:dashboard-template)
   (:import-from #:screenshotbot/user-api
@@ -196,6 +195,6 @@
         </div>
 
         <div class= "card-footer">
-          <a href= (home-url) class= "btn btn-secondary">Cancel</a>
+          <a href= "/api-keys" class= "btn btn-secondary">Cancel</a>
         </div>
       </simple-card-page>)))
