@@ -160,10 +160,12 @@
 
 (define-condition expired-nibble (warning)
   ((name :initarg :name
-         :initform nil))
+         :initform nil)
+   (src :initarg :src
+        :initform nil))
   (:report (lambda (self stream)
-             (with-slots (name) self
-               (format stream "Expired nibble with name ~a was accessed" name)))))
+             (with-slots (name src) self
+               (format stream "Expired nibble with name ~a (from ~a) was accessed" name src)))))
 
 (defmethod render-nibble ((plugin nibble-acceptor-mixin) (id string))
   (render-nibble plugin (parse-integer id)))
@@ -240,18 +242,24 @@
    hunchentoot:*request*
    (nibble-url nibble)))
 
+
+(defun guess-src ()
+  (when (boundp 'hunchentoot:*request*)
+    (let ((param (hunchentoot:parameter "_src")))
+     (cond
+       (param
+        param)
+       (t
+        (hunchentoot:script-name*))))))
+
 (defun nibble-url (nibble)
-  (let ((url (format nil "~a~a"
-                 (nibble-prefix (nibble-acceptor nibble))
-                 (slot-value nibble 'id))))
-    (cond
-     ((nibble-name nibble)
-      (format nil "~a?_n=~a"
-              url
-              (string-downcase
-               (nibble-name nibble))))
-     (t
-      url))))
+  (quri:render-uri
+   (quri:make-uri
+    :query `(("_src" . ,(guess-src))
+             ("_n" . ,(string-downcase (nibble-name nibble))))
+    :defaults (format nil "~a~a"
+                      (nibble-prefix (nibble-acceptor nibble))
+                      (slot-value nibble 'id)))))
 
 
 (defmethod markup:format-attr-val (stream (nibble nibble))

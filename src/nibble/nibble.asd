@@ -9,6 +9,7 @@
   :depends-on (:log4cl
                :auth
                :cl-cron
+               :quri
                :hunchentoot-extensions
                :secure-random)
   :components ((:file "package")
@@ -18,6 +19,7 @@
   :serial t
   :depends-on (:nibble
                   :util/testing
-                  :util/fiveam
-                  :fiveam)
+                :fiveam-matchers
+                :util/fiveam
+                :fiveam)
   :components ((:file "test-nibble")))

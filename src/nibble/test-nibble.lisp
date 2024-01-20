@@ -16,6 +16,11 @@
                 #:defnibble
                 #:nibble
                 #:render-nibble)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/strings
+                #:starts-with
+                #:contains-string)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :nibble/test-nibble)
 
@@ -69,8 +74,11 @@
       (auth:with-sessions ()
        (let ((nibble (nibble (:name :foobar)
                        "")))
-         (is (str:ends-with-p "?_n=foobar"
-                              (nibble-url  nibble))))))))
+
+         (is (str:ends-with-p "&_n=foobar"
+                              (nibble-url  nibble)))
+         (assert-that (nibble-url nibble)
+                      (starts-with "/n/")))))))
 
 (test render-nibble
   (with-fixture state ()
@@ -112,3 +120,11 @@
              ;; We might have already returned a response by this
              ;; point.
              nil)))))))
+
+(test expired-nibble-format
+  (assert-that (format nil "~a"
+                       (make-condition 'expired-nibble
+                                       :name "foo"
+                                       :src "bleh"))
+               (contains-string "foo")
+               (contains-string "bleh")))
