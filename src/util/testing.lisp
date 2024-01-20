@@ -81,6 +81,10 @@
       (copy-directory:copy
        static-assets
        (path:catdir dir "assets/"))
+      (copy-directory:copy
+       (asdf:system-relative-pathname :core.ui
+                                      "assets/fonts/")
+       (path:catdir dir "assets/fonts/"))
       (flet ((copy-css (target output)
                (asdf:compile-system target)
                (uiop:copy-file

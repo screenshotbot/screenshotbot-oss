@@ -41,6 +41,8 @@
                 #:with-login)
   (:import-from #:core/api/acceptor
                 #:api-acceptor-mixin)
+  (:import-from #:core/ui/fonts
+                #:fonts-acceptor-mixin)
   (:export
    #:defhandler
    #:with-login
@@ -101,6 +103,7 @@
                     api-acceptor-mixin
                     hex:clos-dispatcher
                     util:base-acceptor
+                    fonts-acceptor-mixin
                     hunchensocket:websocket-acceptor
                     hex:acceptor-with-plugins) ()
   (:default-initargs

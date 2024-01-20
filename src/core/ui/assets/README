@@ -1,0 +1,3 @@
+These assets are currently served by fonts-acceptor-mixin. If you want
+to add other shared assets here, you might want to modify and rename
+that mixin.

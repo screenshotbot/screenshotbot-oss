@@ -161,7 +161,6 @@
     (push-src-dir "third-party")
     (push-src-dir "lisp")))
 (compile 'update-project-directories)
-
 (defun update-root (cwd)
   (update-output-translations cwd)
   (update-project-directories cwd))

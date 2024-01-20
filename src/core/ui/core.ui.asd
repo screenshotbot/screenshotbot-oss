@@ -19,6 +19,7 @@
                (:file "mdi")
                (:file "paginated")
                (:file "taskie")
+               (:file "fonts")
                (:file "left-side-bar")))
 
 (defsystem :core.ui/tests
