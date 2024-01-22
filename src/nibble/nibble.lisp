@@ -181,9 +181,10 @@
    (let ((nibble (get-nibble id)))
      (cond
        ((null nibble)
-        (warn 'expired-nibble
-              :name (safe-parameter :_n)
-              :src (safe-parameter :_src))
+        (unless (str:containsp "Bytespider" (hunchentoot:user-agent))
+          (warn 'expired-nibble
+                :name (safe-parameter :_n)
+                :src (safe-parameter :_src)))
         (setf (hunchentoot:return-code*) 410 #| GONE |# )
         (setf (hunchentoot:header-out :x-expired-nibble) "1")
         <html>
