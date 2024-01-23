@@ -9,10 +9,10 @@
                 #:make-control-socket))
 (in-package :server/control-socket)
 
-(def-easy-macro with-control-socket  (&fn fn)
-  (let* ((store-dir (object-store))
-         (socket-file (ensure-directories-exist
-                       (path:catfile store-dir "sockets/"
+(def-easy-macro with-control-socket  (&key store-dir &fn fn)
+  (let* ((socket-file (ensure-directories-exist
+                       (path:catfile (user-homedir-pathname)
+                                     "sockets/"
                                      (format nil "~a.sock" (util/posix:getpid))))))
 
     (when (probe-file socket-file)
