@@ -182,17 +182,19 @@
   (make-instance class-name :directory directory :subsystems subsystems))
 
 (defun close-store ()
-  (makunbound '*store*))
+  (let ((store *store*))
+    (makunbound '*store*)
+    (close-store-object store)))
 
-(defmacro with-store-guard ((&optional (store '*store*)) &rest body)
+(defmacro with-store-guard ((&optional (store '*store*)) &body body)
   "Execute BODY in the context of the guard of STORE."
   `(funcall (store-guard ,store) #'(lambda () ,@body)))
 
-(defmacro with-log-guard ((&optional (store '*store*)) &rest body)
+(defmacro with-log-guard ((&optional (store '*store*)) &body body)
   "Execute BODY in the context of the log file guard of STORE."
   `(funcall (store-log-guard ,store) #'(lambda () ,@body)))
 
-(defmacro with-store-state ((state &optional (store '*store*)) &rest body)
+(defmacro with-store-state ((state &optional (store '*store*)) &body body)
   (let ((old-state (gensym)))
     `(let ((,old-state (store-state ,store)))
        (setf (store-state ,store) ,state)
@@ -400,7 +402,7 @@ itself,"
            (push (intern (symbol-name arg) :keyword) result))
          (push arg result))))))
 
-(defmacro deftransaction (name (&rest args) &rest body)
+(defmacro deftransaction (name (&rest args) &body body)
   "Define a transaction function tx-NAME and a function NAME executing
 tx-NAME in the context of the current store. The arguments to NAME
 will be serialized to the transaction-log, and must be supported by
@@ -529,9 +531,8 @@ to the log file in an atomic group"))
 (defvar *transaction-statistics* (make-statistics-table))
 
 (defmethod execute-transaction ((store store) (transaction transaction))
-  (with-statistics-log (*transaction-statistics* (transaction-function-symbol transaction))
-    (with-transaction-log (transaction)
-      (execute-unlogged transaction))))
+  (with-transaction-log (transaction)
+    (execute-unlogged transaction)))
 
 (defun execute (transaction)
   "Interface routine to execute a transaction, called through
@@ -617,17 +618,8 @@ transaction, if any."
              :original-error e))))
 
 (defun do-with-transaction (label thunk)
-  (when (in-transaction-p)
-    (error 'anonymous-transaction-in-transaction))
-  (let ((txn (make-instance 'anonymous-transaction :label label))
-        (next-object-id (next-object-id (store-object-subsystem))))
-    (with-transaction-log (txn)
-      (handler-case
-          (funcall thunk)
-        (error (e)
-          (setf (next-object-id (store-object-subsystem)) next-object-id)
-          (anonymous-transaction-undo txn)
-          (error e))))))
+  (with-store-guard ()
+    (funcall thunk)))
 
 (defmacro with-transaction ((&optional label) &body body)
   `(do-with-transaction ,(if (symbolp label) (symbol-name label) label)
@@ -651,6 +643,15 @@ transaction, if any."
 ;;; Subsystems
 
 (defgeneric snapshot-subsystem (store subsystem))
+
+(defgeneric snapshot-subsystem-async (store subsystem)
+  (:documentation "A two-phase snapshot: the first phase runs in a lock, and then it
+returns a lambda which is called in a background thread
+afterwards. This is only supported in bknr.cluster. The default behavior is just to call snapshot-subsystem and return an no-op lambda.")
+  (:method ((store t) (subsystem t))
+    (snapshot-subsystem store subsystem)
+    (lambda ())))
+
 (defgeneric close-subsystem (store subsystem))
 
 (defmethod close-subsystem ((store store) (subsystem t)))
@@ -699,7 +700,7 @@ pathname until a non-existant directory name has been found."
                    (dolist (subsystem (store-subsystems store))
                      (when *store-debug*
                        (report-progress "Snapshotting subsystem ~A of ~A~%" subsystem store))
-                     (snapshot-subsystem store subsystem)
+                     (funcall (snapshot-subsystem-async store subsystem))
                      (when *store-debug*
                        (report-progress "Successfully snapshotted ~A of ~A~%" subsystem store)))
                    (setf (store-transaction-run-time store) 0)
@@ -710,13 +711,23 @@ pathname until a non-existant directory name has been found."
 
 (defvar *show-transactions* nil)
 
-#+ (and lispworks linux)
+#+ (and lispworks (or linux darwin))
 (cffi:defcfun (ffi-truncate "truncate") :int
   (path :string)
-  (pos :long))
+  ;; this next one is off_t, which is __darwin_off_t on Mac, and
+  ;; __kernel_off_t on Linux. On Darwin that is int64, on Linux that is long.
+  ;; (which should both be the same on 64 bit systems, but being careful anyway).
+  ;; https://opensource.apple.com/source/xnu/xnu-1504.9.17/bsd/sys/_types.h.auto.html
+  ;;
+  (pos #+darwin :int64 #+linux :long))
 
 (defun truncate-log (pathname position)
-  (let ((backup (make-pathname :type "backup" :defaults pathname)))
+  (let ((backup (make-pathname :type (format nil "backup-~a-~a-~a"
+                                             (get-universal-time)
+                                             position
+                                             (random 1000))
+                               :defaults pathname)))
+    (warn "Truncating transaction-log file ~a to ~a" pathname position)
     (report-progress "~&; creating log file backup: ~A~%" backup)
     (with-open-file (s pathname
                        :element-type '(unsigned-byte 8)
@@ -730,9 +741,9 @@ pathname until a non-existant directory name has been found."
   (unix:unix-truncate (ext:unix-namestring pathname) position)
   #+sbcl
   (sb-posix:truncate (namestring pathname) position)
-  #+(or openmcl (and lispworks linux))
+  #+(or openmcl (and lispworks (or linux darwin)))
   (ffi-truncate (namestring pathname) position)
-  #-(or cmu sbcl openmcl (and lispworks linux))
+  #-(or cmu sbcl openmcl (and lispworks (or linux darwin)))
   (error "don't know how to truncate files on this platform"))
 
 (defun load-transaction-log (pathname &key until)
@@ -758,16 +769,20 @@ pathname until a non-existant directory name has been found."
                 (let ((*txn-log-stream* s))
                   (execute-unlogged txn))))))
       (discard ()
-        :report (lambda (stream) (format stream "Discard transaction log before failing transaction ~A." txn))
-        (truncate-log pathname position)
-        ;; Should maybe throw instead of recursively restoring?  Maybe
-        ;; not, we'll never go into depths > 1 anyway.
-        (restore)))))
+        :report (lambda (stream) (format stream "Discard rest of the transaction log" txn))
+        (truncate-log pathname position)))))
 
 (defgeneric restore-subsystem (store subsystem &key until))
 
 (defun restore (&optional until)
   (restore-store *store* :until until))
+
+
+(defmethod restore-transaction-log ((store store) transaction-log &key until)
+  (when (probe-file transaction-log)
+    (report-progress "loading transaction log ~A~%" transaction-log)
+    (setf (store-transaction-run-time store) 0)
+    (load-transaction-log transaction-log :until until)))
 
 (defmethod restore-store ((store store) &key until)
   (ensure-store-random-state store)
@@ -789,10 +804,7 @@ pathname until a non-existant directory name has been found."
                      (when *store-debug*
                        (report-progress "Restoring the subsystem ~A of ~A~%" subsystem store))
                      (restore-subsystem store subsystem :until until))
-                   (when (probe-file transaction-log)
-                     (report-progress "loading transaction log ~A~%" transaction-log)
-                     (setf (store-transaction-run-time store) 0)
-                     (load-transaction-log transaction-log :until until))
+                   (restore-transaction-log store transaction-log :until until)
                    (setf error nil))
               (when error
                 (dolist (subsystem (store-subsystems store))

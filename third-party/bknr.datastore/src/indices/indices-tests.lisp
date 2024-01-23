@@ -1,27 +1,37 @@
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (or (find-package :bknr.indices.tests)
-      (defpackage :bknr.indices.tests
-	(:use :cl :bknr.indices :unit-test))))
-
+(defpackage :bknr.indices.tests
+  (:use :cl :bknr.indices
+        :fiveam-matchers
+        :fiveam))
 (in-package :bknr.indices.tests)
 
-(define-test-class index-test-class
-    ((index :initarg :index)))
+(def-suite* :bknr.indices)
 
 (defvar *test-index* nil)
 
-(defmethod run-test :around ((test index-test-class) &optional (output *debug-io*))
+
+(def-fixture index-test-class (index &optional (output *debug-io*))
   (declare (ignore output))
-  (let ((*test-index* (slot-value test 'index)))
+  (let ((*test-index* index))
     (index-clear *test-index*)
-    (call-next-method)))
+    (unwind-protect
+         (&body)
+      (index-clear *test-index*))))
 
 (defmacro define-index-test (name (&rest index-initargs) &rest body)
-  `(make-instance 'index-test-class
-    :unit :index
-    :name ',name
-    :index (index-create ,@index-initargs)
-    :body #'(lambda () ,@body)))
+  `(test ,name
+     (with-fixture index-test-class ((index-create ,@index-initargs))
+       ,@body)))
+
+(defmacro test-equal (&rest args)
+  `(is (equal ,@args)))
+
+(defmacro test-assert (&rest args)
+  `(is-true ,@args))
+
+(defmacro test-condition (expr (%quote condition))
+  (declare (ignore %quote))
+  `(signals ,condition
+     ,expr))
 
 (defclass indexed-object ()
   ((a :initarg :a :reader indexed-object-a)
@@ -103,20 +113,19 @@
   (index-mapvalues *test-index* #'(lambda (obj) (index-remove *test-index* obj)))
   (test-equal (index-values *test-index*) nil))
 
-(define-test-class indexed-class-test-class
-    ((classes :initarg :classes)))
-
-(defmethod run-test :before ((test indexed-class-test-class) &optional (output *debug-io*))
-  (declare (ignore output))
-  (let ((classes (slot-value test 'classes)))
-    (map nil #'clear-class-indices (mapcar #'find-class classes))))
+(def-fixture indexed-class-test-class (classes)
+  (flet ((clear ()
+           (map nil #'clear-class-indices (mapcar #'find-class classes))))
+   (unwind-protect
+        (progn
+          (clear)
+          (&body))
+     (clear))))
 
 (defmacro define-indexed-class-test (name (&rest classes) &rest body)
-  `(make-instance 'indexed-class-test-class
-    :unit :index
-    :name ',name
-    :classes ',classes
-    :body #'(lambda () ,@body)))
+  `(test ,name
+     (with-fixture indexed-class-test-class (',classes)
+       ,@body)))
 
 (defclass gorilla ()
   ((name :initarg :name :reader gorilla-name
@@ -132,8 +141,8 @@
 	(lucy (make-instance 'gorilla :name "Lucy" :description :aggressive))
 	(robert (make-instance 'gorilla :name "Robert" :description :playful)))
     (test-equal (length (all-gorillas)) 3)
-    (test-assert (member john (all-gorillas)))
-    (test-assert (member lucy (all-gorillas)))
+    (is (member john (all-gorillas)))
+    (is (member lucy (all-gorillas)))
     (test-assert (member robert (all-gorillas)))
 
     (test-equal (length (gorillas-with-description :aggressive)) 2)
@@ -289,7 +298,7 @@
       (test-equal (length (all-test-slots)) 6)
       (test-assert (subsetp (list t1 t2 t3 t4 t5 t6) (all-test-slots)))
       (test-equal (all-test-slot4s) (list t6)))))
-      
+
 (defclass test-class ()
   ((x :initarg :x :reader test-class-x)
    (y :initarg :y :reader test-class-y)
@@ -339,26 +348,33 @@
 
 (define-indexed-class-test test-class-index (child1 child2 base-object)
   (let ((c1 (make-instance 'child1))
-	(c2 (make-instance 'child1))
-	(c3 (make-instance 'child1))
-	(c4 (make-instance 'child2))
-	(c5 (make-instance 'child2)))
-    (test-equal (length (all-objects)) 5)
-    (test-assert (subsetp (list c1 c2 c3 c4 c5) (all-objects)))
-    (test-equal (length (objects-with-class 'child1)) 3)
-    (test-assert (subsetp (list c1 c2 c3) (objects-with-class 'child1)))
-    (test-equal (length (objects-with-class 'child2)) 2)
-    (test-assert (subsetp (list c4 c5) (objects-with-class 'child2)))
-    (test-equal (length (objects-with-class 'base-object)) 5)
-    (test-assert (subsetp (list c1 c2 c3 c4 c5) (objects-with-class 'base-object)))
-    (test-equal (length (objects-of-class 'child1)) 3)
-    (test-assert (subsetp (list c1 c2 c3) (objects-of-class 'child1)))
-    (test-equal (length (objects-of-class 'child2)) 2)
-    (test-assert (subsetp (list c4 c5) (objects-of-class 'child2)))
-    (test-equal (objects-of-class 'base-object) nil)
-    (test-equal (length (all-class-names)) 2)
-    (test-assert (member 'child1 (all-class-names)))
-    (test-assert (member 'child2 (all-class-names)))))
+        (c2 (make-instance 'child1))
+        (c3 (make-instance 'child1))
+        (c4 (make-instance 'child2))
+        (c5 (make-instance 'child2)))
+    (assert-that (all-objects)
+                 (has-length 5))
+    (is (subsetp (list c1 c2 c3 c4 c5) (all-objects)))
+    (assert-that (objects-with-class 'child1)
+                 (has-length 3))
+    (is (subsetp (list c1 c2 c3) (objects-with-class 'child1)))
+    (assert-that (objects-with-class 'child2)
+                 (has-length 2))
+    (is (subsetp (list c4 c5) (objects-with-class 'child2)))
+    (assert-that (objects-with-class 'base-object)
+                 (has-length 5))
+    (is (subsetp (list c1 c2 c3 c4 c5) (objects-with-class 'base-object)))
+    (assert-that (objects-of-class 'child1)
+                 (has-length 3))
+    (is (subsetp (list c1 c2 c3) (objects-of-class 'child1)))
+    (assert-that (objects-of-class 'child2)
+                 (has-length  2))
+    (is (subsetp (list c4 c5) (objects-of-class 'child2)))
+    (is-false (objects-of-class 'base-object))
+    (assert-that (all-class-names)
+                (has-length 2))
+    (is (member 'child1 (all-class-names)))
+    (is (member 'child2 (all-class-names)))))
 
 (defclass var-test ()
   ((blorg :index-type string-unique-index
@@ -458,5 +474,3 @@
 			    ("Rock" "Metal" "Heavy") ("Reggae") ("Reggae" "Dub"))
 			  (all-track-categories) :test #'equal))
     (test-equal nil (tracks-with-category '("Rock" "Metal" "Trash")))))
-    
-   

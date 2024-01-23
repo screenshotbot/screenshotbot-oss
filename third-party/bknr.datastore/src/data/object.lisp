@@ -35,7 +35,11 @@
 (defclass store-object-subsystem ()
   ((next-object-id :initform 0
                    :accessor next-object-id
-                   :documentation "Next object ID to assign to a new object")))
+                   :documentation "Next object ID to assign to a new object")
+   (snapshot-threads :initarg :snapshot-threads
+                     :initform 4
+                     :reader snapshot-threads
+                     :documentation "Number of threads to use when snapshotting.")))
 
 (defun store-object-subsystem ()
   (let ((subsystem (find-if (alexandria:rcurry #'typep 'store-object-subsystem)
@@ -54,7 +58,7 @@
 
 (defvar *suppress-schema-warnings* nil)
 
-(deftransaction update-instances-for-changed-class (class)
+(defun update-instances-for-changed-class (class)
   (let ((instance-count (length (class-instances class))))
     (when (plusp instance-count)
       (unless *suppress-schema-warnings*
@@ -62,9 +66,17 @@
                          instance-count class))
       (mapc #'reinitialize-instance (class-instances class)))))
 
+(defvar *wait-for-tx-p* t
+  "If true, we wait for the transaction to apply before proceeding. This
+is only applicable for bknr.cluster.")
+
 (defmethod reinitialize-instance :after ((class persistent-class) &key)
   (when (and (boundp '*store*) *store*)
-    (update-instances-for-changed-class (class-name class))
+    (let (#+lispworks (*wait-for-tx-p* nil))
+      ;; At least on Lispworks, we might be inside here when the
+      ;; entire process is blocked, which means any transactions being
+      ;; applied on another thread will never run.
+      (update-instances-for-changed-class (class-name class)))
     (unless *suppress-schema-warnings*
       (report-progress "~&; class ~A has been changed. To ensure correct schema ~
                               evolution, please snapshot your datastore.~%"
@@ -110,39 +122,30 @@ reads will return nil.")))
       (slot-makunbound object slot-name)
       (setf (slot-value object slot-name) value)))
 
-(defmethod (setf slot-value-using-class) :before ((newval t)
+(defmethod (setf slot-value-using-class) :around ((newval t)
                                                   (class persistent-class)
                                                   object
                                                   (slotd persistent-effective-slot-definition))
-  (unless (transient-slot-p slotd)
-    (let ((slot-name (slot-definition-name slotd)))
-      (unless (or (in-transaction-p)
-                  (member slot-name '(last-change id)))
-        (error 'persistent-slot-modified-outside-of-transaction :slot-name slot-name :object object))
-      (when (in-anonymous-transaction-p)
-        (push (list #'undo-set-slot
-                    object
-                    (slot-definition-name slotd)
-                    (if (slot-boundp object (slot-definition-name slotd))
-                        (slot-value object (slot-definition-name slotd))
-                        'unbound))
-              (anonymous-transaction-undo-log *current-transaction*)))
-      (when (and (not (eq :restore (store-state *store*)))
-                 (not (member slot-name '(last-change id))))
-        (setf (slot-value object 'last-change) (current-transaction-timestamp))))))
+  (let ((slot-name (slot-definition-name slotd)))
+    (cond
+      ((or
+        (in-transaction-p)
+        (transient-slot-p slotd)
+        (member slot-name '(last-change id))
+        ;; If we're restoring then we don't need to create a new transaction
+        (eq :restore (store-state *store*)))
+       (call-next-method))
+     (t
+      ;; If we're not in a transaction, or this is not a transient
+      ;; slot, we don't make the change directly, instead we just
+      ;; create a transaction for it. The transaction should call
+      ;; slot-value-using-class again.
+      (execute (make-instance 'transaction
+                              :function-symbol 'tx-change-slot-values
+                              :timestamp (get-universal-time)
+                              :args (list object (slot-definition-name slotd) newval)))
+      newval))))
 
-(defmethod (setf slot-value-using-class) :after (newval
-                                                 (class persistent-class)
-                                                 object
-                                                 (slotd persistent-effective-slot-definition))
-  (when (and (not (transient-slot-p slotd))
-             (in-anonymous-transaction-p)
-             (not (member (slot-definition-name slotd) '(last-change id))))
-    (encode (make-instance 'transaction
-                           :timestamp (transaction-timestamp *current-transaction*)
-                           :function-symbol 'tx-change-slot-values
-                           :args (list object (slot-definition-name slotd) newval))
-            (anonymous-transaction-log-buffer *current-transaction*))))
 
 (define-condition transient-slot-cannot-have-initarg (store-error)
   ((class :initarg :class)
@@ -239,29 +242,67 @@ reads will return nil.")))
 #+allegro
 (aclmop::finalize-inheritance (find-class 'store-object))
 
-(defmethod initialize-instance :around ((object store-object) &rest initargs &key)
-  (setf (slot-value object 'id) (allocate-next-object-id))
+(defmethod fix-make-instance-args ((class persistent-class)
+                                   initargs)
+  (list*
+   class
+   (append
+    initargs
+    (let ((used-keys (loop for key in initargs by #'cddr
+                           collect key)))
+      (loop for initarg in (closer-mop:class-default-initargs class)
+            unless (member (first initarg)
+                           used-keys)
+              appending (list
+                         (first initarg)
+                         (funcall (third initarg))))))))
+
+(defmethod make-instance :around ((class persistent-class) &rest initargs
+                                  &key
+                                    id)
+  "There are three ways make-instance can be called:
+
+   * Outside of a transaction, in which case we have to encode a
+     transaction, but also use default-initargs
+
+   * Inside a deftransaction, in which case we use default-initargs
+     immediately, but don't encode a transaction
+
+   * When commiting or replaying a transaction. As with the last
+     case (in-transaction-p) will be true here, but :id will truthy
+     since we have already processed default-initargs.
+"
   (cond
-    ((not (in-transaction-p))
-     (with-store-guard ()
-       (let ((transaction (make-instance 'transaction
-                                         :function-symbol 'make-instance
-                                         :timestamp (get-universal-time)
-                                         :args (cons (class-name (class-of object))
-                                                     (append (list :id (slot-value object 'id))
-                                                             initargs)))))
-         (with-statistics-log (*transaction-statistics* (transaction-function-symbol transaction))
-           (with-transaction-log (transaction)
-             (call-next-method))))))
-    ((in-anonymous-transaction-p)
-     (encode (make-instance 'transaction
-                            :function-symbol 'make-instance
-                            :timestamp (transaction-timestamp *current-transaction*)
-                            :args (cons (class-name (class-of object)) initargs))
-             (anonymous-transaction-log-buffer *current-transaction*))
-     (call-next-method))
+    ((or
+      (in-transaction-p)
+      (eq :restore (store-state *store*)))
+     (cond
+       (id
+        (call-next-method))
+       (t
+        (apply #'tx-make-instance
+               (fix-make-instance-args class initargs)))))
     (t
-     (call-next-method))))
+     (with-store-guard ()
+       (let ((transaction
+               (destructuring-bind (class . args)
+                   (fix-make-instance-args
+                    class initargs)
+                (make-instance 'transaction
+                               :function-symbol 'tx-make-instance
+                               :timestamp (get-universal-time)
+                               :args (list*
+                                      (class-name class)
+                                      args)))))
+         (execute transaction))))))
+
+(defun tx-make-instance (class &rest args)
+  ;; class might either be a symbol, or a class depending on whether
+  ;; this was a toplevel transaction or called inside another
+  ;; transaction.
+  (apply #'make-instance class
+         :id (allocate-next-object-id)
+         args))
 
 (defvar *allocate-object-id-lock* (bt:make-lock "Persistent Object ID Creation"))
 
@@ -541,6 +582,16 @@ the slots are read from the snapshot and ignored."
         :report "Delete the object."
         (delete-object object)))))
 
+(define-condition encoding-destroyed-object (error)
+  ((id :initarg :id)
+   (slot :initarg :slot)
+   (container :initarg :container))
+  (:report (lambda (e out)
+             (with-slots (slot container id) e
+               (format out
+                       "Encoding reference to destroyed object with ID ~A from slot ~A of object ~A with ID ~A."
+                       id slot (type-of container) (store-object-id container))))))
+
 (defmethod encode-object ((object store-object) stream)
   (if (object-destroyed-p object)
       (let* ((*indexed-class-override* t)
@@ -556,16 +607,25 @@ the slots are read from the snapshot and ignored."
           (%encode-integer id stream)
           (return-from encode-object))
 
-        (if *current-slot-relaxed-p*
-            ;; the slot can contain references to deleted objects, just warn
-            (progn
-              (warn "Encoding reference to destroyed object with ID ~A from slot ~A of object ~A with ID ~A."
-                    id slot (type-of container) (store-object-id container))
-              (%write-tag #\o stream)
-              (%encode-integer id stream))
-            ;; the slot can't contain references to deleted objects, throw an error
-            (error "Encoding reference to destroyed object with ID ~A from slot ~A of object ~A with ID ~A."
-                   id slot (type-of container) (store-object-id container))))
+        (flet ((encode-relaxed ()
+                 (warn "Encoding reference to destroyed object with ID ~A from slot ~A of object ~A with ID ~A."
+                       id slot (type-of container) (store-object-id container))
+                 (%write-tag #\o stream)
+                 (%encode-integer id stream)))
+          (if *current-slot-relaxed-p*
+             ;; the slot can contain references to deleted objects, just warn
+              (encode-relaxed)
+              ;; the slot can't contain references to deleted objects, throw an error
+              (restart-case
+                  (error 'encoding-destroyed-object
+                         :id id
+                         :slot slot
+                         :container container)
+                (encode-relaxed-slot ()
+                  (encode-relaxed))
+                (make-slot-unbound-and-encode-relaxed ()
+                  (encode-relaxed)
+                  (slot-makunbound container slot))))))
 
       ;; Go ahead and serialize the object reference
       (progn (%write-tag #\o stream)
@@ -634,9 +694,68 @@ the slots are read from the snapshot and ignored."
         (encode-current-object-id s)
         (map-store-objects (lambda (object) (when (subtypep (type-of object) 'store-object)
                                               (encode-create-object class-layouts object s))))
-        (map-store-objects (lambda (object) (when (subtypep (type-of object) 'store-object)
-                                              (encode-set-slots class-layouts object s))))
+
+        (let ((objects))
+          (map-store-objects (lambda (object) (when (subtypep (type-of object) 'store-object)
+                                                (push object objects))))
+
+          (encode-object-slots subsystem class-layouts (reverse objects) s))
         t))))
+
+(defun safe-make-thread (fn)
+  (bt:make-thread
+   (lambda ()
+    (ignore-errors
+     (handler-bind ((error (lambda (e)
+                             #+lispworks
+                             (dbg:output-backtrace :verbose t)
+                             #-lispworks
+                             (trivial-backtrace:print-backtrace e))))
+       (funcall fn))))))
+
+(defun encode-object-slots (subsystem class-layouts objects stream)
+  (labels ((make-batches (objects batch-size)
+             (if (<= (length objects) batch-size)
+                 (list objects)
+                 (list*
+                  (subseq objects 0 batch-size)
+                  (make-batches
+                   (subseq objects batch-size)
+                   batch-size)))))
+    (let* ((batch-size (ceiling (length objects) (snapshot-threads subsystem)))
+           (batches (make-batches objects batch-size))
+           (streams (loop for nil in batches
+                          collect (uiop:with-temporary-file (:pathname p)
+                                    (open p :direction :io
+                                            :if-exists :supersede
+                                            :element-type '(unsigned-byte 8)))))
+           (lock (bt:make-lock))
+           (count 0))
+
+      (unwind-protect
+           (let ((threads
+                   (loop for batch in batches
+                         for s in streams
+                         collect
+                         (let ((s s)
+                               (batch batch))
+                           (safe-make-thread
+                            (lambda ()
+                              (loop for object in batch
+                                    do (encode-set-slots class-layouts object s))
+                              (bt:with-lock-held (lock)
+                                (incf count))))))))
+             (mapc #'bt:join-thread threads)
+
+             (unless (= count (length threads))
+               (error "Some threads failed to complete"))
+
+             ;; Finally combine all the streams together
+             (loop for s in streams do
+               (file-position s 0)
+               (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
+             (finish-output stream))
+        (mapc #'close streams)))))
 
 (defmethod close-subsystem ((store store) (subsystem store-object-subsystem))
   (dolist (class-name (all-store-classes))

@@ -50,7 +50,7 @@ SLOT-NAME is used as a key to the internal hash-table.")
 
 (defmethod index-remove ((index slot-index) object)
   (remhash (slot-value object (slot-index-slot-name index)) (slot-index-hash-table index)))
-  
+
 (defmethod index-keys ((index slot-index))
   (loop for key being the hash-keys of (slot-index-hash-table index)
 	collect key))
@@ -124,7 +124,7 @@ the hash-table entry already contains a value, an error is signalled."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Slot-bound keyword index
 
-;;; A slot-bound index storing multiple objects under one key. 
+;;; A slot-bound index storing multiple objects under one key.
 
 (defclass hash-index (slot-index)
   ())
@@ -163,7 +163,7 @@ the hash-table entry already contains a value, an error is signalled."
 (defclass class-index (hash-index)
   ((index-superclasses :initarg :index-superclasses :initform nil
 		       :reader class-index-index-superclasses)))
-  
+
 (defmethod initialize-instance :after ((index class-index) &key index-superclasses)
   (setf (slot-value index 'index-superclasses)
 	index-superclasses))
@@ -175,7 +175,7 @@ the hash-table entry already contains a value, an error is signalled."
                (if (nth-value 1 (gethash key hash-table))
                    (push object (gethash key hash-table))
                    (setf (gethash key hash-table) (list object))))))
-    
+
     (if (class-index-index-superclasses index)
 	(dolist (class (cons (class-of object)
 			     (class-all-indexed-superclasses (class-of object))))
@@ -390,7 +390,7 @@ the hash-table entry already contains a value, an error is thrown."
   (map-skip-list #'(lambda (key val) (declare (ignore key))
 			   (funcall fun val))
 		 (skip-list-index-skip-list index)))
-  
+
 (defmethod index-clear ((index skip-list-index))
   (with-slots (skip-list) index
     (setf skip-list (make-instance 'skip-list))))
@@ -401,7 +401,7 @@ the hash-table entry already contains a value, an error is thrown."
 internal skip-list if the skip-list order function is the same, or by
 iterating over the values of the old-list and reentering them into
 the new skip-list."
-  (let ((new-list (skip-list-index-skip-list new-index)) 
+  (let ((new-list (skip-list-index-skip-list new-index))
 	(old-list (skip-list-index-skip-list old-index)))
     (setf (skip-list-index-skip-list new-list) old-list)
     new-index))
@@ -478,7 +478,7 @@ the new skip-list."
 
 (defmethod index-reinitialize ((new-index class-skip-index)
 			       (old-index class-skip-index))
-  (let* ((new-hash (class-skip-index-hash-table new-index)) 
+  (let* ((new-hash (class-skip-index-hash-table new-index))
 	 (old-hash (class-skip-index-hash-table old-index)))
     (if (eql (hash-table-test old-hash)
 	     (hash-table-test new-hash))
@@ -496,4 +496,4 @@ the new skip-list."
   (loop for key being the hash-keys of (class-skip-index-hash-table index)
 	collect key))
 
-;;; XXX class-skip-index set 2 times for every store-object 
+;;; XXX class-skip-index set 2 times for every store-object
