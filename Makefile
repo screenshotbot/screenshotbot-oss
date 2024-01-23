@@ -39,8 +39,8 @@ endif
 JIPR=../jippo
 LW=build/lw-console-$(LW_VERSION)$(ARCH)
 LW_CORE=lispworks-unknown-location
-SRC_DIRS=src local-projects third-party
-LISP_FILES=$(shell find $(SRC_DIRS) -name '*.lisp') $(shell find $(SRC_DIRS) -name '*.asd')
+SRC_DIRS=src local-projects third-party scripts quicklisp
+LISP_FILES=$(shell find $(SRC_DIRS) -name '*.lisp') $(shell find $(SRC_DIRS) -name '*.asd') $(shell find $(SRC_DIRS) -name '*.c') $(shell find $(SRC_DIRS) -name '*.cpp')
 LW_SCRIPT=$(call timeout,15m) $(LW) -quiet -build
 SBCL_SCRIPT=$(sbcl) --script
 TMPFILE=$(shell mktemp)
