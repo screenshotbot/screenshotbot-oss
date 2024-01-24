@@ -57,8 +57,10 @@
                    :company company
                    :server "https://dev.azure.com"
                    :access-token "foo")
-    (assert-that
-     (plugin-parse-repo (azure-plugin)
-                        company
-                        "https://testsbot@dev.azure.com/testsbot/fast-example/_git/fast-example")
-     (has-typep 'azure-git-repo))))
+    (let ((repo (plugin-parse-repo (azure-plugin)
+                                   company
+                                   "https://testsbot@dev.azure.com/testsbot/fast-example/_git/fast-example")))
+      (assert-that
+       repo
+      (has-typep 'azure-git-repo))
+      (is (eql company (screenshotbot/git-repo::company repo))))))

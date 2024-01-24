@@ -63,6 +63,7 @@
     (let ((hostname (quri:uri-host (quri:uri (azure-server settings)))))
       (when (str:containsp hostname repo-url)
         (make-instance 'azure-git-repo
+                       :company company
                        :link repo-url)))))
 
 (defun azure-plugin (&key (installation (installation)))
