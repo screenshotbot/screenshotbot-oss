@@ -32,6 +32,7 @@
                (:file "export")
                (:file "fset")
                (:file "fset-index")
+               (:file "encodable")
                (:file "permissive-persistent-class")
                (:file "store-migrations")))
 
@@ -48,4 +49,5 @@
                (:file "test-checksums")
                (:file "test-fset")
                (:file "test-fset-index")
+               (:file "test-encodable")
                (:file "test-permissive-persistent-class")))
