@@ -2,6 +2,7 @@
   :serial t
   :depends-on (:markup
                :auth.login
+               :parenscript
                :core.ui
                :util/timeago
                :util.store)
