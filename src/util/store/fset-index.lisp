@@ -21,6 +21,7 @@
   (:import-from #:bknr.indices
                 #:slot-index)
   (:import-from #:alexandria
+                #:when-let
                 #:curry)
   (:import-from #:util/store/store
                 #:validate-index-values)
@@ -151,7 +152,8 @@ the index reader returns a list in reverse sorted order instead of a set."))
   (update-map self (map)
     (let ((key (index-object-key self obj)))
       (cond
-        ((fset:lookup map key)
+        ((when-let ((prev (fset:lookup map key)))
+           (not (eql prev obj)))
          (error 'index-existing-error
                 :index self
                 :key key

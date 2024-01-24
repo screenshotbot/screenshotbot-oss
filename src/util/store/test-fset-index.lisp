@@ -187,6 +187,13 @@
       ;; Make sure the index hasn't been modified
       (is (eql obj (search-by-arg "foo"))))))
 
+(test adding-the-same-object-twice-doesnt-show-uniqueness-error
+  (with-fixture state ()
+    (let ((obj (make-instance 'test-object :arg "foo"))
+          (index (make-instance 'fset-unique-index :slots '(arg))))
+      (index-add index obj)
+      (finishes (index-add index obj)))))
+
 (test validate-index-happy-path
   (with-fixture state ()
     (let ((obj (make-instance 'test-object :arg "foo")))
