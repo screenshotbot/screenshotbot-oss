@@ -19,6 +19,7 @@
   (:import-from #:util/misc
                 #:make-mp-hash-table)
   (:import-from #:util/store/fset-index
+                #:fset-unique-index
                 #:fset-set-index
                 #:index-least)
   (:import-from #:util/store/store
@@ -31,7 +32,6 @@
                 #:delete-api-key)
   (:export
    #:%find-api-key
-   #:all-api-keys
    #:api-key
    #:api-key-company
    #:api-key-description
@@ -77,6 +77,10 @@
   'fset-set-index
   :slot-name 'expires-at)
 
+(defindex +key-index+
+  'fset-unique-index
+  :slot-name 'api-key)
+
 (with-class-validation
   (defclass api-key (store-object)
     ((user
@@ -90,10 +94,8 @@
       :type string
       :accessor api-key-key
       :initarg :api-key
-      :index-type unique-index
-      :index-initargs (:test #'equal)
+      :index +key-index+
       :index-reader %%find-api-key
-      :index-values all-api-keys
       :initform nil)
      (api-secret-key
       :type string
