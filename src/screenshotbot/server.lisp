@@ -256,6 +256,8 @@ Disallow: /")
      "User-agent: *
 Disallow: /n
 Disallow: /runs/by-tag
+Disallow: /badge
+Disallow: /active-run
 ")))
 
 (defhandler (nil :uri "/") ()
