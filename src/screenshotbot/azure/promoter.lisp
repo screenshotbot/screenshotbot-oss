@@ -47,6 +47,7 @@
                 #:channel-name))
 (in-package :screenshotbot/azure/promoter)
 
+
 (defclass azure-promoter (abstract-pr-promoter)
   ())
 
@@ -88,38 +89,45 @@
      (elt parts (+ host-pos 2))
      (car (last parts)))))
 
+#|
+Documentation here: https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-statuses/create?view=azure-devops-rest-7.1&tabs=HTTP#gitstatusstate
+|#
+
 (defvar +succeeded+ "succeeded")
 (defvar +failed+ "failed")
+(defvar +pending+ "pending")
 
 (defmethod push-remote-check ((self azure-promoter)
                               run
                               (check check))
-  (let ((settings (azure-settings-for-company
-                   (recorder-run-company run))))
-    (multiple-value-bind (org project repo)
-        (parse-org-and-project (github-repo run)
-                               (azure-hostname settings))
-      (let ((azure (make-instance 'azure
-                                  :hostname (azure-hostname settings)
-                                  :token (azure-access-token settings)
-                                  :organization org
-                                  :project project)))
-        (create-pull-request-status
-         azure
-         (make-instance 'pull-request-status
-                        :description (format nil "Screenshotbot: ~a"
-                                             (check-title check))
-                        :state (ecase (check-status check)
-                                 (:accepted +succeeded+)
-                                 (:rejected +failed+)
-                                 (:success +succeeded+)
-                                 (:failure +failed+)
-                                 (:action-required +failed+))
-                        :target-url (details-url check)
-                        :context (make-instance 'git-status-context
-                                                :name (check-key check)))
-         :repository-id repo
-         :pull-request-id (pull-request-id run))))))
+  (util/threading:with-extras (("run" run))
+    (let ((settings (azure-settings-for-company
+                     (recorder-run-company run))))
+      (multiple-value-bind (org project repo)
+          (parse-org-and-project (github-repo run)
+                                 (azure-hostname settings))
+        (let ((azure (make-instance 'azure
+                                    :hostname (azure-hostname settings)
+                                    :token (azure-access-token settings)
+                                    :organization org
+                                    :project project)))
+          (create-pull-request-status
+           azure
+           (make-instance 'pull-request-status
+                          :description (format nil "Screenshotbot: ~a"
+                                               (check-title check))
+                          :state (ecase (check-status check)
+                                   (:accepted +succeeded+)
+                                   (:pending +pending+)
+                                   (:rejected +failed+)
+                                   (:success +succeeded+)
+                                   (:failure +failed+)
+                                   (:action-required +failed+))
+                          :target-url (details-url check)
+                          :context (make-instance 'git-status-context
+                                                  :name (check-key check)))
+           :repository-id repo
+           :pull-request-id (pull-request-id run)))))))
 
 (defmethod make-promoter-for-acceptable ((acceptable azure-acceptable))
   (make-instance 'azure-promoter))
