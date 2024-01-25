@@ -96,6 +96,7 @@
                      (incf key-count))
                  (null-value (condition)
                    (declare (ignore condition)) nil))))
+    #+nil ;; Arnold disabled this warning,
     (when (zerop key-count) (warn 'no-values-parsed
                                   :hash-table input
                                   :class-name class))
