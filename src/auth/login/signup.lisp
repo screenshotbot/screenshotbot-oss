@@ -52,6 +52,8 @@
                 #:throttle!)
   (:import-from #:screenshotbot/login/login
                 #:default-login-redirect)
+  (:import-from #:util/events
+                #:push-event)
   (:export
    #:signup-get
    #:signup-post))
@@ -167,12 +169,23 @@
 
   (signup-get :invite-code invite-code :plan plan))
 
+(defun valid-email-address-p (string)
+  "This comes from clavier::valid-email-address-p, but fixed for
+bugs. (See corresponding tests.)"
+  (not (null
+	(ppcre:scan "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,12}$" string))))
+
 (defun signup-post (&key email password full-name accept-terms-p plan redirect
                       invite)
   (throttle! *signup-throttler* :key (hunchentoot:real-remote-addr))
   (let ((errors))
     (flet ((check (name test message)
              (unless test
+               (push-event :signup-failure
+                           :test (string test)
+                           :email email
+                           :full-name full-name
+                           :message message)
                (push (cons name message) errors))))
       (check :password (and password (>= (length password) 8))
              "Please use at least 8 letters for the password")
@@ -195,7 +208,7 @@
              (not (str:emptyp (str:trim full-name)))
              "We would really like you to introduce yourself!")
       (check :email
-             (clavier::valid-email-address-p email)
+             (valid-email-address-p email)
              "That doesn't look like a valid email address")
       (check :email
              (not (auth:find-user *installation* :email (string-downcase email)))

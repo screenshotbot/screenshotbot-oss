@@ -15,6 +15,8 @@
   (:import-from #:fiveam-matchers/lists
                 #:contains)
   (:import-from #:it.bese.fiveam
+                #:is-false
+                #:is-true
                 #:def-fixture
                 #:finishes
                 #:pass
@@ -29,6 +31,7 @@
   (:import-from #:screenshotbot/login/github-oauth
                 #:github-oauth-provider)
   (:import-from #:screenshotbot/login/signup
+                #:valid-email-address-p
                 #:confirmation-success
                 #:prepare-and-send-email-confirmation
                 #:process-existing-invites
@@ -184,3 +187,8 @@
       (with-fake-request ()
        (finishes
          (prepare-and-send-email-confirmation user))))))
+
+(test valid-email-address-p
+  (is-true (valid-email-address-p "arnold@example.com"))
+  (is-false (valid-email-address-p "foo@foo@example.com"))
+  (is-true (valid-email-address-p "reuxxx.norxxxx@proximite.group")))
