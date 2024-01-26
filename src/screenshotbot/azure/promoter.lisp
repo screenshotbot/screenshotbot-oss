@@ -126,6 +126,7 @@ Documentation here: https://learn.microsoft.com/en-us/rest/api/azure/devops/git/
                           :target-url (details-url check)
                           :context (make-instance 'git-status-context
                                                   :name (check-key check)))
+           :company (recorder-run-company run)
            :repository-id repo
            :pull-request-id (pull-request-id run)))))))
 

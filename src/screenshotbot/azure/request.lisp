@@ -9,7 +9,13 @@
   (:import-from #:util/json-mop
                 #:ext-json-serializable-class)
   (:import-from #:util/request
-                #:http-request))
+                #:http-request)
+  (:import-from #:screenshotbot/audit-log
+                #:with-audit-log)
+  (:import-from #:screenshotbot/azure/audit-log
+                #:pr-update-request)
+  (:import-from #:alexandria
+                #:assoc-value))
 (in-package :screenshotbot/azure/request)
 
 
@@ -87,22 +93,32 @@
                :headers headers
                :format-control "Got failure: ~a"
                :format-arguments (list response)))
+       ((str:containsp "text/html" (assoc-value headers :content-type))
+        (error 'azure-error
+               :headers headers
+               :format-control "API returned HTML, not JSON. This is likely because the Personal Access Token is incorrect."))
        (t
         (json-mop:json-to-clos response response-type))))))
 
 (defmethod create-pull-request-status (azure status
                                        &key repository-id
+                                         company
                                          pull-request-id)
   (declare (optimize (speed 0) (debug 3)))
-  (azure-request
-   azure
-   (format nil
-           "git/repositories/~a/pullRequests/~a/statuses"
-           repository-id
-           pull-request-id)
-   :method :post
-   :response-type 'pull-request-status
-   :content status))
+  (with-audit-log (audit-log (make-instance 'pr-update-request
+                                            :pr-id pull-request-id
+                                            :company company
+                                            :repository-id repository-id))
+    (declare (ignore audit-log))
+    (azure-request
+     azure
+     (format nil
+             "git/repositories/~a/pullRequests/~a/statuses"
+             repository-id
+             pull-request-id)
+     :method :post
+     :response-type 'pull-request-status
+     :content status)))
 
 #|
 https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies?view=azure-devops&tabs=browser#build-validation

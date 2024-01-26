@@ -200,7 +200,8 @@
                  (:file "all")))
    (:module "azure"
     :serial t
-    :components ((:file "request")
+    :components ((:file "audit-log")
+                 (:file "request")
                  (:file "plugin")
                  (:file "settings")
                  (:file "promoter")))

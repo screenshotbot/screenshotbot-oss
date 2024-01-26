@@ -23,7 +23,17 @@
   (:import-from #:bknr.datastore
                 #:delete-object)
   (:import-from #:core/ui/simple-card-page
-                #:confirmation-page))
+                #:confirmation-page)
+  (:import-from #:screenshotbot/azure/audit-log
+                #:audit-log-repository-id
+                #:pr-id
+                #:pr-update-request
+                #:audit-log)
+  (:import-from #:screenshotbot/dashboard/audit-log
+                #:describe-audit-log
+                #:render-audit-logs)
+  (:import-from #:screenshotbot/azure/request
+                #:repository-id))
 (in-package :screenshotbot/azure/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -116,7 +126,15 @@
           </div>
         </div>
       </form>
+
+      ,(render-audit-logs
+        :type 'audit-log)
     </settings-template>))
+
+(defmethod describe-audit-log ((self pr-update-request))
+  <span>
+    Update Pull Request <tt>,(pr-id self)</tt> for ,(audit-log-repository-id self)
+  </span>)
 
 (defsettings azure-settings
   :name "azure"
