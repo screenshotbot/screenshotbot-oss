@@ -1,7 +1,9 @@
 (defpackage :bknr.datastore.tests
   (:use #:cl #:bknr.datastore #:bknr.indices
         #:fiveam
-        #:fiveam-matchers))
+        #:fiveam-matchers)
+  (:import-from #:bknr.datastore
+                #:%log-crash))
 (in-package :bknr.datastore.tests)
 
 (def-suite* :bknr.datastore.tests)
@@ -384,3 +386,11 @@
     (make-instance 'object-with-ensure-init))
   (assert-that (mapcar #'arg (class-instances 'object-with-ensure-init))
                (contains 5 5)))
+
+(define-condition fake-error (error)
+  ())
+
+(defdstest %log-crash-happy-path ()
+  (signals fake-error ;; as opposed to any errors from log-crash
+   (handler-bind ((error #'%log-crash))
+     (error 'fake-error))))

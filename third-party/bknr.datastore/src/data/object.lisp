@@ -702,16 +702,19 @@ the slots are read from the snapshot and ignored."
           (encode-object-slots subsystem class-layouts (reverse objects) s))
         t))))
 
+(defun %log-crash (e)
+  (format t "Error in background snapshot thread: ~a~%" e)
+  #+lispworks
+  (dbg:output-backtrace :brief t)
+  #-lispworks
+  (trivial-backtrace:print-backtrace e))
+
 (defun safe-make-thread (fn)
   (bt:make-thread
    (lambda ()
-    (ignore-errors
-     (handler-bind ((error (lambda (e)
-                             #+lispworks
-                             (dbg:output-backtrace :verbose t)
-                             #-lispworks
-                             (trivial-backtrace:print-backtrace e))))
-       (funcall fn))))))
+     (ignore-errors
+      (handler-bind ((error #'%log-crash))
+        (funcall fn))))))
 
 (defun encode-object-slots (subsystem class-layouts objects stream)
   (labels ((make-batches (objects batch-size)
