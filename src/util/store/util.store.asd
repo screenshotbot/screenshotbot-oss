@@ -41,12 +41,14 @@
   :depends-on (:util.store
                :fiveam-matchers
                :util.store/aws
+               :util.store/raft-state
                :util/fiveam)
   :components ((:file "test-store-version")
                (:file "test-store")
                (:file "test-objectid")
                (:file "test-migrations")
                (:file "test-delayed-accessors")
+               (:file "test-raft-state-http" :if-feature (:and :lispworks :linux))
                (:file "test-checksums")
                (:file "test-fset")
                (:file "test-fset-index")
@@ -58,3 +60,9 @@
   :depends-on (:util.store
                :util/request)
   :components ((:file "aws-store")))
+
+(defsystem :util.store/raft-state
+  :serial t
+  :depends-on (:util.store
+               :hunchentoot)
+  :components ((:file "raft-state-http" :if-feature (:and :lispworks :linux))))

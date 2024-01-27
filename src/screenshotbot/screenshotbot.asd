@@ -29,6 +29,7 @@
                :core.api
                :bknr.impex
                :util/logger
+               :util.store/raft-state
                :lparallel
                :zip
                :util/lparallel

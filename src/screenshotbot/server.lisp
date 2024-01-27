@@ -291,22 +291,6 @@ Disallow: /active-run
    fn
    args))
 
-#+ (and lispworks linux)
-(hunchentoot:define-easy-handler (raft-state
-                                  :uri (lambda (request)
-                                         ;; We want to be handle things like
-                                         ;; `/raft-state/production` so that we can run multiple
-                                         ;; servers on the same machine, and have nginx proxy
-                                         ;; correctly.
-                                         (str:starts-with-p "/raft-state"
-                                                            (hunchentoot:script-name request)))) ()
-  (cond
-    ((leaderp bknr.datastore:*store*)
-     "leader")
-    (t
-     (setf (hunchentoot:return-code*) 400)
-     "other")))
-
 
 #+screenshotbot-oss
 (setf hunchentoot-multi-acceptor:*default-acceptor*
