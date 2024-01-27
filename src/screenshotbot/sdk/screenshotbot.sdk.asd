@@ -12,6 +12,7 @@
                :pkg
                :quri
                :ironclad/core
+               :core.cli
                :cl-json
                :cxml
                :log4cl

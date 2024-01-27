@@ -41,17 +41,16 @@
   (:import-from #:screenshotbot/sdk/common-flags
                 #:*api-key*
                 #:*hostname*
-                #:*api-secret*))
+                #:*api-secret*)
+  (:import-from #:core/cli/sentry
+                #:default-sentry-output-stream
+                #:with-cli-sentry))
 (in-package :screenshotbot/sdk/sentry)
 
 (def-easy-macro with-sentry (&key (on-error (lambda ()
                                               (uiop:quit 1)))
+                                  (stream (default-sentry-output-stream))
                                   (dry-run nil)
-                                  (stream
-                                   #+lispworks
-                                   (system:make-stderr-stream)
-                                   #-lispworks
-                                   *standard-output*)
                                   &fn fn)
   #-screenshotbot-oss
   (sentry-client:initialize-sentry-client
@@ -74,22 +73,9 @@
                   ("hostname" (uiop:hostname))
                   #+lispworks
                   ("openssl-version" (comm:openssl-version)))
-      (let ((error-handler (lambda (e)
-                             (format stream "~%~a~%~%" e)
-                             #+lispworks
-                             (dbg:output-backtrace (if flags:*verbose* :bug-form :brief)
-                                                   :stream stream)
-                             #-lispworks
-                             (trivial-backtrace:print-backtrace e stream)
-                             (unless dry-run
-                               #-screenshotbot-oss
-                               (util/threading:log-sentry e))
-                             (funcall on-error))))
-        (let ((*warning-count* 0))
-          (handler-bind (#+lispworks
-                         (error error-handler))
-            ;; We put the warning handler inside here, so that if an
-            ;; error happens in the warning handler, we can log that.
-            (handler-bind (#+lispworks
-                           (warning #'maybe-log-sentry))
-              (funcall fn))))))))
+
+
+      (with-cli-sentry (:verbose flags:*verbose* :dry-run dry-run
+                        :stream stream
+                        :on-error on-error)
+        (funcall fn)))))
