@@ -64,17 +64,7 @@
                   ("build_creator"
                    (uiop:getenv "BUILDKITE_BUILD_CREATOR"))
                   ("cli-version" *client-version*)
-                  ("build-url" flags:*build-url*)
-                  #+lispworks
-                  ("cmd-line-trimmed"
-                   (mapcar
-                    #'trim-arg
-                    sys:*line-arguments-list*))
-                  ("hostname" (uiop:hostname))
-                  #+lispworks
-                  ("openssl-version" (comm:openssl-version)))
-
-
+                  ("build-url" flags:*build-url*))
       (with-cli-sentry (:verbose flags:*verbose* :dry-run dry-run
                         :stream stream
                         :on-error on-error)

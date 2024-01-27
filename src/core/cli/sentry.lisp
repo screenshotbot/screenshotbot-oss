@@ -33,22 +33,30 @@
                                       (on-error (lambda ()
                                                   (uiop:quit 1)))
                                       &fn fn)
-  (let ((error-handler (lambda (e)
-                         (format stream "~%~a~%~%" e)
-                         #+lispworks
-                         (dbg:output-backtrace (if verbose :bug-form :brief)
-                                               :stream stream)
-                         #-lispworks
-                         (trivial-backtrace:print-backtrace e stream)
-                         (unless dry-run
-                           #-screenshotbot-oss
-                           (util/threading:log-sentry e))
-                         (funcall on-error))))
-    (let ((*warning-count* 0))
-      (handler-bind (#+lispworks
-                     (error error-handler))
-        ;; We put the warning handler inside here, so that if an
-        ;; error happens in the warning handler, we can log that.
-        (handler-bind (#+lispworks
-                       (warning #'maybe-log-sentry))
-          (funcall fn))))))
+  (with-extras (#+lispworks
+                ("cmd-line-trimmed"
+                 (mapcar
+                  #'trim-arg
+                  sys:*line-arguments-list*))
+                ("hostname" (uiop:hostname))
+                #+lispworks
+                ("openssl-version" (comm:openssl-version)))
+   (let ((error-handler (lambda (e)
+                          (format stream "~%~a~%~%" e)
+                          #+lispworks
+                          (dbg:output-backtrace (if verbose :bug-form :brief)
+                                                :stream stream)
+                          #-lispworks
+                          (trivial-backtrace:print-backtrace e stream)
+                          (unless dry-run
+                            #-screenshotbot-oss
+                            (util/threading:log-sentry e))
+                          (funcall on-error))))
+     (let ((*warning-count* 0))
+       (handler-bind (#+lispworks
+                      (error error-handler))
+         ;; We put the warning handler inside here, so that if an
+         ;; error happens in the warning handler, we can log that.
+         (handler-bind (#+lispworks
+                        (warning #'maybe-log-sentry))
+           (funcall fn)))))))
