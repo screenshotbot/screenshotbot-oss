@@ -222,6 +222,7 @@
                :fset
                :lparallel
                :atomics
+               :log4cl
                :trivial-backtrace
                #- (or screenshotbot-oss eaase-oss)
                :sentry
