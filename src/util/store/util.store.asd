@@ -40,6 +40,7 @@
   :serial t
   :depends-on (:util.store
                :fiveam-matchers
+               :util.store/aws
                :util/fiveam)
   :components ((:file "test-store-version")
                (:file "test-store")
@@ -51,3 +52,9 @@
                (:file "test-fset-index")
                (:file "test-encodable")
                (:file "test-permissive-persistent-class")))
+
+(defsystem :util.store/aws
+  :serial t
+  :depends-on (:util.store
+               :util/request)
+  :components ((:file "aws-store")))
