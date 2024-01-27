@@ -158,9 +158,10 @@ test-lw: submodule $(LW) build/affected-files.txt
 test-store: submodule $(LW)
 	$(LW_SCRIPT) ./run-store-tests.lisp
 
-build: | build/cache-key $(DISTINFO)
+build/.keep: | build/cache-key $(DISTINFO)
 # build/build? Temporary fix for LW8-darwin
 	$(MKDIR) build
+	touch $@
 
 clean-fasl: .PHONY
 	find src -name *.64ufasl -delete
@@ -189,12 +190,12 @@ screenshotbot-tests: $(LW) .PHONY
 sdk-tests: $(LW) .PHONY
 	$(LW_SCRIPT) ./scripts/jenkins.lisp -system screenshotbot.sdk/tests -no-jvm
 
-$(LW): build $(IMAGE_DEPS)
+$(LW): build/.keep $(IMAGE_DEPS)
 	echo in here
 # $$PWD is workaround over LW issue #42471
 	$(ARCH_CMD) $(LW_CORE) -build scripts/build-image.lisp
 
-$(sbcl): build $(IMAGE_DEPS) .PHONY
+$(sbcl): build/.keep $(IMAGE_DEPS) .PHONY
 	$(SBCL_CORE) --script scripts/build-image.lisp
 
 selenium-tests: $(LW)
@@ -204,7 +205,7 @@ selenium-tests: $(LW)
 selenium-tests-without-x: $(LW)
 	$(LW_SCRIPT) scripts/run-selenium-tests.lisp
 
-$(CCL_IMAGE): build $(IMAGE_DEPS)
+$(CCL_IMAGE): build/.keep $(IMAGE_DEPS)
 	rm -f $@
 	$(CCL_CORE) -l scripts/build-image.lisp
 	chmod a+x $@
