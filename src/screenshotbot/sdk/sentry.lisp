@@ -56,11 +56,10 @@
   (sentry-client:initialize-sentry-client
    sentry:*dsn* :client-class 'sentry:delivered-client)
   (with-tags (("cli-client" "true")
-              ("api_hostname" *hostname*)
-              ("api_id"  *api-key*)
-              ("channel" flags:*channel*))
-    (with-extras (("api_id"  *api-key*)
-                  ("features" *features*)
+              #+lispworks ("api_hostname" *hostname*)
+              #+lispworks ("api_id"  *api-key*)
+              #+lispworks ("channel" flags:*channel*))
+    (with-extras (("features" *features*)
                   ("build_creator"
                    (uiop:getenv "BUILDKITE_BUILD_CREATOR"))
                   ("cli-version" *client-version*)

@@ -7,7 +7,7 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
-  :version "2.7.25"
+  :version "2.7.26"
   :depends-on (:com.google.flag
                :pkg
                :quri
@@ -109,6 +109,7 @@
                (:file "test-git")
                (:file "test-env")
                (:file "test-dev")
+               (:file "test-sentry")
                (:file "test-cli-common")
                (:file "test-android")
                (:file "test-sdk")

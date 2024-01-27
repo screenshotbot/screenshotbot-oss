@@ -11,7 +11,6 @@
                 #:with-mocks)
   (:import-from #:screenshotbot/sdk/main
                 #:warn-when-obsolete-flags
-                #:trim-arg
                 #:*api-secret*
                 #:*api-key*
                 #:*hostname*
@@ -106,11 +105,6 @@
         (is (equal "https://staging.screenshotbot.io"
                    (api-context:hostname ctx)))))))
 
-
-(test trim-arg
-  (with-fixture state ()
-    (is (equal "foo" (trim-arg "foo")))
-    (is (equal "--f...bar" (trim-arg "--foobar")))))
 
 
 (test warn-when-obsolete-flags

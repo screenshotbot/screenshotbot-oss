@@ -214,17 +214,6 @@
        (warn "No --directory provided")
        (uiop:quit 1)))))
 
-(defun trim-arg (arg)
-  (let ((size 6)
-        (prefix 3))
-   (cond
-     ((<= (length arg) size)
-      arg)
-     (t
-      (format nil "~a...~a"
-              (str:substring 0 prefix arg)
-              (str:substring (- (length arg) (- size prefix)) nil arg))))))
-
 (defun main (&rest args)
   (uiop:setup-command-line-arguments)
 

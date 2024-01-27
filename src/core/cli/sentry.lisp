@@ -20,6 +20,18 @@
    #:with-cli-sentry))
 (in-package :core/cli/sentry)
 
+(defun trim-arg (arg)
+  (let ((size 6)
+        (prefix 3))
+   (cond
+     ((<= (length arg) size)
+      arg)
+     (t
+      (format nil "~a...~a"
+              (str:substring 0 prefix arg)
+              (str:substring (- (length arg) (- size prefix)) nil arg))))))
+
+
 (defun default-sentry-output-stream ()
   #+lispworks
   (system:make-stderr-stream)
