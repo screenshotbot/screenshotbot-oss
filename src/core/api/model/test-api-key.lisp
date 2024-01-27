@@ -14,6 +14,7 @@
                 #:api-key-key
                 #:api-key)
   (:import-from #:screenshotbot/model/api-key
+                #:api-key-for-secret
                 #:generate-api-key
                 #:cleanup-expired-api-keys
                 #:make-transient-key
@@ -104,3 +105,10 @@
   (is (equal 20 (length (generate-api-key))))
   (is (not (equal (generate-api-key)
                   (generate-api-key)))))
+
+(test find-api-key-by-secret
+  (with-fixture state ()
+    (let ((api-key (make-instance 'api-key)))
+      (is (eql api-key
+               (api-key-for-secret
+                (api-key-secret-key api-key)))))))

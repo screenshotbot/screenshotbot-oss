@@ -40,7 +40,8 @@
    #:api-key-user
    #:delete-api-key
    #:make-transient-key
-   #:render-api-token))
+   #:render-api-token
+   #:api-key-for-secret))
 (in-package :screenshotbot/model/api-key)
 
 (defvar *lock* (bt:make-lock "random-string"))
@@ -81,6 +82,10 @@
   'fset-unique-index
   :slot-name 'api-key)
 
+(defindex +secret-index+
+  'fset-unique-index
+  :slot-name 'api-secret-key)
+
 (with-class-validation
   (defclass api-key (store-object)
     ((user
@@ -101,6 +106,8 @@
       :type string
       :initarg :api-secret-key
       :accessor api-key-secret-key
+      :index +secret-index+
+      :index-reader api-key-for-secret
       :initform nil)
      (%description
       :type string
