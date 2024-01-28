@@ -90,13 +90,13 @@ a1yOubCHt09QsDkyvBTWP3VX541g1voHDCcYMOyzrdv/KQHfwl/ojnEAg1t9HzA=
   "For a given SSL certificate, cache of the corresponding context")
 
 (defun make-ssl-context (&key certificate)
-  (util:or-setf
+  (util/misc:or-setf
    (gethash certificate *context-cache*)
    (let ((x509 (read-x509-from-string certificate)))
      (comm:create-ssl-client-context
       :verify-callback (lambda (socket-stream)
                          (verify-callback socket-stream
                                           :allowed-certs
-                                          (list x509)))    
+                                          (list x509)))
       :openssl-trusted-file :default
       :openssl-trusted-directory :default))))

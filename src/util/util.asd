@@ -408,7 +408,7 @@
 #+lispworks
 (defsystem :util/ssl
     :serial t
-    :depends-on ()
+    :depends-on (:util/misc)
     :components ((:file "ssl")))
 
 (defsystem :util/symbol-detector
