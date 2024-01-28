@@ -139,7 +139,6 @@ rm -f $INSTALLER
 
 ;; (call-hooks "recorder-linux")
 (define-platform-asset "recorder")
-(define-platform-asset "selenium-proxy")
 
 (defhandler (recorder-incorrect :uri "/recorder") ()
   (setf (hunchentoot:return-code*) 404)
