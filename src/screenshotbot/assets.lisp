@@ -145,9 +145,6 @@ rm -f $INSTALLER
   (setf (hunchentoot:return-code*) 404)
   "Page not found. Did you mean /recorder.sh? Or for Windows, this would be /recorder-win.exe")
 
-(defvar *lock* (bt:make-lock "assets-lock"))
-
-
 (defmethod %handle-asdf-output ((installation desktop-installation)
                                 op
                                 component
