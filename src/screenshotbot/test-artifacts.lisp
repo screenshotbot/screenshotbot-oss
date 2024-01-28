@@ -18,24 +18,41 @@
                 #:artifact-link
                 #:call-hooks
                 #:def-artifact-hook)
-  (:import-from #:screenshotbot/testing
-                #:with-installation)
   (:import-from #:util/store/store
                 #:*object-store*
                 #:object-store)
   (:import-from #:util/testing
                 #:with-local-acceptor)
+  (:import-from #:util/misc
+                #:with-global-binding)
+  (:import-from #:core/installation/installation
+                #:abstract-installation
+                #:*installation*)
+  (:import-from #:screenshotbot/installation
+                #:installation-cdn)
+  (:import-from #:core/installation/auth
+                #:company-for-request)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-artifacts)
 
 
 (util/fiveam:def-suite)
 
+(defclass my-installation (abstract-installation)
+  ())
+
+(defmethod installation-cdn ((self my-installation))
+  "https://example.com")
+
+(defmethod company-for-request ((self my-installation) request)
+  nil)
+
 (def-fixture state ()
   (tmpdir:with-tmpdir (dir)
     (assert (not (boundp '*object-store*)))
     (let ((old-hooks *artifact-hooks*))
-      (with-installation (:globally t)
+      (with-global-binding ((*installation* (make-instance 'my-installation
+                                                           :domain "foobar.com")))
        (unwind-protect
             (progn
               (setf *object-store* (namestring dir))

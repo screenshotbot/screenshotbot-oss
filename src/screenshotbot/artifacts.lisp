@@ -12,13 +12,12 @@
   (:import-from #:bknr.indices
                 #:unique-index)
   (:import-from #:core/installation/installation
+                #:*installation*
                 #:installation-domain)
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:hunchentoot-extensions
                 #:make-url)
-  (:import-from #:screenshotbot/installation
-                #:installation)
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:util/store/store
@@ -93,7 +92,7 @@
            (util.cdn:make-cdn url))
           (t
            (format nil "~a~a"
-                   (installation-domain (installation))
+                   (installation-domain *installation*)
                    url)))))))
 
 (def-easy-macro def-artifact-hook (key artifact-name &fn fn)
