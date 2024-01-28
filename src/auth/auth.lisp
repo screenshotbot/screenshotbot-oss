@@ -179,7 +179,7 @@
 
 (defvar *current-session*)
 
-(defvar *iterations* 20000)
+(defparameter *iterations* 2000)
 
 (defun session= (session1 session2)
   (and
