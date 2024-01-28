@@ -4,41 +4,35 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/assets
-  (:use #:cl
-        #:alexandria
-        #:screenshotbot/artifacts)
-  (:import-from #:screenshotbot/server
-                #:acceptor
-                #:staging-p
-                #:defhandler)
-  (:import-from #:screenshotbot/artifacts
-                #:artifact-file-name
-                #:call-hooks)
-  (:import-from #:util/store
-                #:add-datastore-hook)
-  (:import-from #:util.cdn
-                #:*cdn-domain*)
-  (:import-from #:screenshotbot/installation
-                #:installation-cdn
-                #:desktop-installation
-                #:pre-compiled-assets
-                #:installation-domain
-                #:installation)
+(defpackage :screenshotbot/assets
+  (:use :cl)
   (:import-from #:core/installation/installation
                 #:installation-domain)
   (:import-from #:core/ui/assets
-                #:define-js
-                #:handle-asdf-output
                 #:%handle-asdf-output
-                #:define-css
                 #:*asset-list*
+                #:define-css
+                #:define-js
                 #:ensure-asset)
+  (:import-from #:screenshotbot/artifacts
+                #:artifact-file-name
+                #:artifact-link
+                #:def-artifact-hook)
+  (:import-from #:screenshotbot/installation
+                #:desktop-installation
+                #:installation
+                #:installation-cdn
+                #:pre-compiled-assets)
+  (:import-from #:screenshotbot/server
+                #:acceptor
+                #:defhandler)
+  (:import-from #:util/store/store
+                #:add-datastore-hook)
   (:export
-   #:define-css
    #:*asset-list*
-   #:ensure-asset
-   #:define-js))
+   #:define-css
+   #:define-js
+   #:ensure-asset))
 (in-package :screenshotbot/assets)
 (named-readtables:in-readtable :interpol-syntax)
 
