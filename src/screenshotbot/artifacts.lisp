@@ -4,37 +4,31 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(uiop:define-package :screenshotbot/artifacts
-  (:use #:cl #:alexandria)
-  (:import-from #:screenshotbot/server
-                #:*domain*
-                #:defhandler)
-  (:import-from #:screenshotbot/secret
-                #:defsecret
-                #:secret)
-  (:import-from #:util
-                #:make-url
-                #:*delivered-image*)
+(defpackage :screenshotbot/artifacts
+  (:use :cl)
   (:import-from #:bknr.datastore
-                #:persistent-class
-                #:unique-index
-                #:blob)
-  (:import-from #:screenshotbot/installation
-                #:installation
+                #:blob
+                #:persistent-class)
+  (:import-from #:bknr.indices
+                #:unique-index)
+  (:import-from #:core/installation/installation
                 #:installation-domain)
-  (:import-from #:util/store
-                #:object-store)
-  (:import-from #:bknr.datastore
-                #:store-directory)
-  (:import-from #:bknr.datastore
-                #:*store*)
   (:import-from #:easy-macros
                 #:def-easy-macro)
-  (:export #:artifact-with-name
-           #:artifact-link
-           #:md5-hex
-           #:artifact
-           #:def-artifact-hook)
+  (:import-from #:hunchentoot-extensions
+                #:make-url)
+  (:import-from #:screenshotbot/installation
+                #:installation)
+  (:import-from #:screenshotbot/server
+                #:defhandler)
+  (:import-from #:util/store/store
+                #:object-store)
+  (:export
+   #:artifact
+   #:artifact-link
+   #:artifact-with-name
+   #:def-artifact-hook
+   #:md5-hex)
   (:local-nicknames (#:dns-client #:org.shirakumo.dns-client)))
 (in-package :screenshotbot/artifacts)
 

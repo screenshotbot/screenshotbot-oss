@@ -1,27 +1,30 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 (defpackage :screenshotbot/test-artifacts
-  (:use #:cl
-        #:fiveam)
-  (:import-from #:util/store
-                #:*object-store*
-                #:with-test-store
-                #:object-store)
-  (:import-from #:bknr.datastore
-                #:*store*)
-  (:import-from #:bknr.datastore
-                #:store-directory)
-  (:import-from #:util/testing
-                #:with-local-acceptor
-                #:with-fake-request)
-  (:import-from #:screenshotbot/secret
-                #:secret)
+  (:use :cl)
+  (:import-from #:it.bese.fiveam
+                #:def-fixture
+                #:finishes
+                #:is
+                #:test
+                #:with-fixture)
   (:import-from #:screenshotbot/artifacts
-                #:def-artifact-hook
-                #:call-hooks
                 #:*artifact-hooks*
                 #:*in-test-p*
-                #:artifact-link)
+                #:artifact-link
+                #:call-hooks
+                #:def-artifact-hook)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
+  (:import-from #:util/store/store
+                #:*object-store*
+                #:object-store)
+  (:import-from #:util/testing
+                #:with-local-acceptor)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-artifacts)
 
