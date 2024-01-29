@@ -9,3 +9,8 @@
   :depends-on (:core.cli
                :util/fiveam)
   :components ((:file "test-sentry")))
+
+(defsystem :core.cli/deliver
+  :serial t
+  :depends-on (:core.cli)
+  :components ((:file "deliver")))

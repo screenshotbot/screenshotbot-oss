@@ -36,11 +36,15 @@ else
 
 endif
 
+define wild_src
+$(call FIND,$(SRC_DIRS), $(1))
+endef
+
 JIPR=../jippo
 LW=build/lw-console-$(LW_VERSION)$(ARCH)
 LW_CORE=lispworks-unknown-location
 SRC_DIRS=src local-projects third-party scripts quicklisp
-LISP_FILES=$(FIND $(SRC_DIRS) '*.lisp') $(FIND $(SRC_DIRS) '*.asd') $(FIND $(SRC_DIRS) '*.c') $(FIND $(SRC_DIRS) '*.cpp')
+LISP_FILES=$(call wild_src, '*.lisp') $(call wild_src, '*.asd') $(call will_src,'*.c') $(call wild_src,'*.cpp')
 LW_SCRIPT=$(call timeout,15m) $(LW) -quiet -build
 SBCL_SCRIPT=$(sbcl) --script
 TMPFILE=$(shell mktemp)
@@ -65,7 +69,7 @@ else
 	UNAME=$(shell uname -s)
 	MKDIR=mkdir -p
 	TOUCH=touch
-	FIND=$(shell find $1 -name $2)
+	FIND=$(shell find $(1) -name $(2))
 	RM=rm -f
 endif
 
@@ -74,7 +78,7 @@ DISTINFO=quicklisp/dists/quicklisp/distinfo.txt
 ARC=build/arc/bin/arc
 
 REVISION_ID=$(shell echo '{"ids":["$(DIFF_ID)"]}' | $(ARC) call-conduit differential.querydiffs -- | jq -r '.["response"]["$(DIFF_ID)"]["revisionID"]')
-QUICKLISP_DEPS=$(FIND quicklisp '*.txt') $(FIND quicklisp'*.lisp')
+QUICKLISP_DEPS=$(call FIND,quicklisp,'*.txt') $(call FIND,quicklisp,'*.lisp')
 IMAGE_DEPS=scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO) scripts/prepare-image.lisp scripts/init.lisp scripts/asdf.lisp $(QUICKLISP_DEPS)
 
 ifeq ($(UNAME),Linux)
