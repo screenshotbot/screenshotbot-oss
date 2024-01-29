@@ -60,11 +60,13 @@ ifeq ($(OS), Windows_NT)
 	MKDIR=mkdir -pf
 	TOUCH=powershell -command New-Item
 	FIND=$(shell gci -r $2 | Select FullName)
+	RM=echo
 else
 	UNAME=$(shell uname -s)
 	MKDIR=mkdir -p
 	TOUCH=touch
 	FIND=$(shell find $1 -name $2)
+	RM=rm -f
 endif
 
 CYGWIN=$(findstring CYGWIN,$(UNAME))
