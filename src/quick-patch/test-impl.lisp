@@ -57,7 +57,7 @@
           (checkout-all dir)
           (assert-that (mapcar #'namestring *central-registry*)
                        (has-item
-                        (matches-regex ".*cl-slack/$"))))
+                        (matches-regex ".*cl-slack[/\\\\]$"))))
         (pass)))))
 
 

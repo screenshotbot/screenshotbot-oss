@@ -45,9 +45,13 @@
 (def-fixture git-repo ()
   #-screenshotbot-oss
   (tmpdir:with-tmpdir (dir)
-    (uiop:run-program (list "git" "init" (namestring dir)))
-    (let ((repo (make-instance 'git-repo :dir dir)))
-      (&body))))
+    (unwind-protect 
+        (progn
+          (uiop:run-program (list "git" "init" (namestring dir)))
+          (let ((repo (make-instance 'git-repo :dir dir)))
+            (&body)))
+      #+(or windows mswindows)
+      (uiop:run-program (list "attrib" "-r" (namestring (path:catfile dir "*.*")) "/s")))))
 
 (test get-current-commit
   (with-fixture git-repo ()
