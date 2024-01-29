@@ -40,7 +40,7 @@ JIPR=../jippo
 LW=build/lw-console-$(LW_VERSION)$(ARCH)
 LW_CORE=lispworks-unknown-location
 SRC_DIRS=src local-projects third-party scripts quicklisp
-LISP_FILES=$(shell find $(SRC_DIRS) -name '*.lisp') $(shell find $(SRC_DIRS) -name '*.asd') $(shell find $(SRC_DIRS) -name '*.c') $(shell find $(SRC_DIRS) -name '*.cpp')
+LISP_FILES=$(FIND $(SRC_DIRS) '*.lisp') $(FIND $(SRC_DIRS) '*.asd') $(FIND $(SRC_DIRS) '*.c') $(FIND $(SRC_DIRS) '*.cpp')
 LW_SCRIPT=$(call timeout,15m) $(LW) -quiet -build
 SBCL_SCRIPT=$(sbcl) --script
 TMPFILE=$(shell mktemp)
@@ -58,9 +58,13 @@ endef
 ifeq ($(OS), Windows_NT)
 	UNAME=Windows
 	MKDIR=mkdir -pf
+	TOUCH=powershell -command New-Item
+	FIND=$(shell gci -r $2 | Select FullName)
 else
 	UNAME=$(shell uname -s)
 	MKDIR=mkdir -p
+	TOUCH=touch
+	FIND=$(shell find $1 -name $2)
 endif
 
 CYGWIN=$(findstring CYGWIN,$(UNAME))
@@ -68,7 +72,7 @@ DISTINFO=quicklisp/dists/quicklisp/distinfo.txt
 ARC=build/arc/bin/arc
 
 REVISION_ID=$(shell echo '{"ids":["$(DIFF_ID)"]}' | $(ARC) call-conduit differential.querydiffs -- | jq -r '.["response"]["$(DIFF_ID)"]["revisionID"]')
-QUICKLISP_DEPS=$(shell find quicklisp -name '*.txt') $(shell find quicklisp -name '*.lisp')
+QUICKLISP_DEPS=$(FIND quicklisp '*.txt') $(FIND quicklisp'*.lisp')
 IMAGE_DEPS=scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO) scripts/prepare-image.lisp scripts/init.lisp scripts/asdf.lisp $(QUICKLISP_DEPS)
 
 ifeq ($(UNAME),Linux)
@@ -159,9 +163,7 @@ test-store: submodule $(LW)
 	$(LW_SCRIPT) ./run-store-tests.lisp
 
 build/.keep: | build/cache-key $(DISTINFO)
-# build/build? Temporary fix for LW8-darwin
-	$(MKDIR) build
-	touch $@
+	$(TOUCH) $@
 
 clean-fasl: .PHONY
 	find src -name *.64ufasl -delete
