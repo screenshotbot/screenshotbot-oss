@@ -13,6 +13,8 @@
 
 (defpackage :cl-mongo-id
   (:use :cl)
+  (:import-from #:cl-intbytes
+                #:int64->octets)
   (:export :oid
            :oid-str
            :get-timestamp
@@ -31,6 +33,25 @@
 ;; 5-byte sequence randomly chosen per instance of the process.
 (defvar *random-value*)
 
+(defun get-current-pid (&key if-not-exists-return)
+  "Get the current process' PID. This function does it's best to be cross-
+   implementation. If it isn't able to grab the PID from the system, it defaults
+   to returning whatever value is passed into the :if-not-exists-return key."
+  #+clisp
+  (system::process-id)
+  #+(and lispworks unix)
+  (system::getpid)
+  #+(and sbcl unix)
+  (sb-unix:unix-getpid)
+  #+(and cmu unix)
+  (unix:unix-getpid)
+  #+openmcl
+  (ccl::getpid)
+  #+ecl
+  (ext:getpid)
+  #-(or clisp (and lispworks unix) (and sbcl unix) (and cmu unix) (and openmcl unix) openmcl ecl)
+  if-not-exists-return)
+
 (defun reset-state ()
   "Resets (or sets) the random state associated with the current
 process. This is useful when cl-mongo-id is loaded into an image that
@@ -38,9 +59,37 @@ is deployed to multiple machines. In that case you should call
 RESET-STATE at the start of the process.
 
 On SBCL, CCL and Lispworks, this is done automatically when a saved
-image is restored."
-  (setf *id-inc* (secure-random:number (ash 1 24)))
-  (setf *random-value* (secure-random:bytes 5 secure-random:*generator*)))
+image is restored.
+
+The spec is okay with using non-cryptographic random numbers. But in
+that case we're expected to seed the RNG with something that depends
+on timestamp, pid, and hostname. The in-build RNG in CL doesn't give
+us a way to explicitly seed an RNG, so instead we generate the random
+numbers and XOR it with the hash. (The XOR operation will keep the
+final output random, and will also make it unlikely that two servers
+will end up generating the random numbers.)"
+  (let ((state (make-random-state t))
+        (hash (sxhash (format nil "~a.~a.~a"
+                              (local-time:now)
+                              (get-current-pid)
+                              (uiop:hostname)))))
+    (flet ((safe-random (number)
+             (mod
+              (logxor (random number)
+                      hash)
+              number)))
+      (setf *id-inc* (safe-random (ash 1 24)))
+      (let* ((value (safe-random (ash 1 40)))
+             (octets (int64->octets value)))
+        (let ()
+          (setf *random-value*
+                (subseq octets 0 5))))))
+  ;; For easy debugging, we return the state (since we need to
+  ;; visually check if the outputs look random enough. Unit tests can
+  ;; be tricky to check).
+  (values
+   (cl-intbytes:int32->octets *id-inc*)
+   *random-value*))
 
 (reset-state)
 
@@ -135,22 +184,3 @@ image is restored."
   (bt:with-lock-held (*id-inc-lock*)
     (setf *id-inc* (logand #xFFFFFF (1+ *id-inc*)))
     *id-inc*))
-
-(defun get-current-pid (&key if-not-exists-return)
-  "Get the current process' PID. This function does it's best to be cross-
-   implementation. If it isn't able to grab the PID from the system, it defaults
-   to returning whatever value is passed into the :if-not-exists-return key."
-  #+clisp
-  (system::process-id)
-  #+(and lispworks unix)
-  (system::getpid)
-  #+(and sbcl unix)
-  (sb-unix:unix-getpid)
-  #+(and cmu unix)
-  (unix:unix-getpid)
-  #+openmcl
-  (ccl::getpid)
-  #+ecl
-  (ext:getpid)
-  #-(or clisp (and lispworks unix) (and sbcl unix) (and cmu unix) (and openmcl unix) openmcl ecl)
-  if-not-exists-return)

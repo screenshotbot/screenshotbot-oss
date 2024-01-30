@@ -45,7 +45,8 @@
 (defun find-tests ()
   (append
    (%find-tests "src/")
-   (%find-tests "third-party/bknr.datastore/")))
+   (%find-tests "third-party/bknr.datastore/")
+   (%find-tests "local-projects/cl-mongo-id/")))
 
 (defun %find-tests (pathname)
   (when (path:-d pathname)
