@@ -13,6 +13,7 @@
                :util/threading
                :local-time
                :atomics
+               :util.store/encodable
                :alexandria
                :fset
                :cl-mongo-id
@@ -32,9 +33,13 @@
                (:file "export")
                (:file "fset")
                (:file "fset-index")
-               (:file "encodable")
                (:file "permissive-persistent-class")
                (:file "store-migrations")))
+
+(defsystem :util.store/encodable
+  :serial t
+  :depends-on (:bknr.datastore)
+  :components ((:file "encodable")))
 
 (defsystem :util.store/tests
   :serial t
