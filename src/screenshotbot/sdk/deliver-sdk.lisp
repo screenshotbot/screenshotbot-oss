@@ -37,6 +37,7 @@
 (compile 'template-builder)
 
 (core/cli/deliver:deliver-end-user-cli
+ :restart-fn 'screenshotbot/sdk/main:main
  :deliver-script *load-truename*
  :output-file (output-file)
  :template-builder-fn #'template-builder)

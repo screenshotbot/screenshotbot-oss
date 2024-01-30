@@ -12,5 +12,6 @@
 
 (defsystem :core.cli/deliver
   :serial t
-  :depends-on (:core.cli)
+  :depends-on (:core.cli
+               :build-utils/deliver-script)
   :components ((:file "deliver")))

@@ -31,7 +31,8 @@
     (let ((output (compile-file path)))
       (load output))))
 
-(defun deliver-main (output-file template-builder-fn)
+(defun deliver-main (output-file template-builder-fn
+                     &key restart-fn)
   (when (find-package :cl+ssl)
     (error "CL+SSL is present in this image, this can lead to problems when delivering this
 on Mac. (e.g., the image will try to load libcrypto etc."))
@@ -55,7 +56,7 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
   #+(and linux arm64)
   (setf (symbol-function 'sys::set-signals-mask) #'lw:false)
 
-  (build-utils/deliver-script:default-deliver 'screenshotbot/sdk/main:main
+  (build-utils/deliver-script:default-deliver restart-fn
                                               output-file
                                               5
                                               :keep-function-name t
@@ -76,6 +77,7 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
 
 
 (defun deliver-end-user-cli (&key deliver-script
+                               restart-fn
                                output-file
                                template-builder-fn)
   (setf (fdefinition 'sentry-client::lw-find-dspec-location)
@@ -85,7 +87,8 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
   (ensure-directories-exist output-file)
 
   #-darwin
-  (deliver-main output-file template-builder-fn)
+  (deliver-main output-file template-builder-fn
+                :restart-fn restart-fn)
 
   #+darwin
   (cond
