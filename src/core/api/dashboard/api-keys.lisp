@@ -43,10 +43,11 @@
   (:import-from #:core/ui/template
                 #:app-template)
   (:import-from #:core/api/acceptor
+                #:api-token-mode-p
                 #:api-acceptor-mixin))
 (in-package :screenshotbot/dashboard/api-keys)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defvar *throttler* (make-instance 'throttler
                                    :tokens 100))
@@ -80,10 +81,18 @@
      </div>
      <p>Please copy paste the API secret, you won't have access to it again. But you will be able to create new API keys as needed.</p>
 
-     <div>
-     <b>API Key</b>: ,(api-key-key api-key)<br />
-     <b>API Secret</b>: ,(api-key-secret-key api-key)
-     </div>
+     ,(cond
+        ((api-token-mode-p hunchentoot:*acceptor*)
+         <div>
+           <b>API Token</b>:
+           ,(api-key-secret-key api-key)
+         </div>)
+        (t
+         <div>
+           <b>API Key</b>: ,(api-key-key api-key)<br />
+           <b>API Secret</b>: ,(api-key-secret-key api-key)
+         </div>))
+
 
      <div class= "card-footer">
      <a href= "/api-keys">Go back</a>
@@ -123,7 +132,12 @@
 
       ,(taskie-list
         :items api-keys
-        :headers (list "API Key" "Secret" "Description" "Expires" "Actions")
+        :headers (list
+                  (if (api-token-mode-p hunchentoot:*acceptor*)
+                      ""  "API Key")
+                  (if (api-token-mode-p hunchentoot:*acceptor*)
+                      "Token" "Secret")
+                  "Description" "Expires" "Actions")
         :empty-message "You haven't created an API Key yet"
         :checkboxes nil
         :row-generator (lambda (api-key)
@@ -135,7 +149,10 @@
                                                   (%confirm-delete api-key))))
 
                            <taskie-row>
-                             <span class= "" >,(api-key-key api-key)</span>
+                             <span>
+                               ,(unless (api-token-mode-p hunchentoot:*acceptor*)
+                                  <span class= "" >,(api-key-key api-key)</span>)
+                             </span>
                              <span>,(progn coded-secret)</span>
                                <span class= "d-inline-block text-truncate" style= "max-width: 20em" title= (api-key-description api-key) >
                                  ,(or (api-key-description api-key) "")

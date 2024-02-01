@@ -7,8 +7,11 @@
 (defpackage :core/api/acceptor
   (:use #:cl)
   (:export
-   #:api-acceptor-mixin))
+   #:api-acceptor-mixin
+   #:api-token-mode-p))
 (in-package :core/api/acceptor)
 
 (defclass api-acceptor-mixin ()
-  ())
+  ((api-token-mode-p :initarg :api-token-mode-p
+                     :initform nil
+                     :reader api-token-mode-p)))

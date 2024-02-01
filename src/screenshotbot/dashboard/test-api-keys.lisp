@@ -37,14 +37,19 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:util/testing
+                #:test-acceptor
                 #:screenshot-static-page
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:core/api/acceptor
+                #:api-acceptor-mixin))
 (in-package :screenshotbot/dashboard/test-api-keys)
 
 
 (util/fiveam:def-suite)
 
-
+(defclass my-acceptor (api-acceptor-mixin
+                       test-acceptor)
+  ())
 
 (util/fiveam:def-suite)
 
@@ -58,7 +63,7 @@
 
 (test simple-page-test
   (with-fixture state ()
-    (with-fake-request ()
+    (with-fake-request (:acceptor 'my-acceptor)
       (auth:with-sessions ()
        (screenshot-static-page
         :screenshotbot
@@ -72,7 +77,7 @@
 
 (test empty-api-keys-page-test
   (with-fixture state ()
-    (with-fake-request ()
+    (with-fake-request (:acceptor 'my-acceptor)
       (auth:with-sessions ()
        (screenshot-static-page
         :screenshotbot
