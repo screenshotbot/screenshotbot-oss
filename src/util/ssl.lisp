@@ -65,24 +65,27 @@ a1yOubCHt09QsDkyvBTWP3VX541g1voHDCcYMOyzrdv/KQHfwl/ojnEAg1t9HzA=
                             (local-cert)))))
     (some
     (lambda (allowed)
-      (= 0
-         (x509-cmp allowed
-                   cert)))
+      (when allowed
+        (= 0
+           (x509-cmp allowed
+                     cert))))
     (remove-if #'null
                allowed-certs))))
 
 (defun verify-callback (socket-stream &key allowed-certs)
   (let ((certs (comm:ssl-connection-copy-peer-certificates socket-stream)))
     (unwind-protect
-         (loop for cert across certs
+        (when certs
+          (loop for cert across certs
                if (not (allowed-cert-p cert :allowed-certs allowed-certs))
                  return nil
                finally
-                  (return t))
+                  (return t)))
       (comm:release-certificates-vector certs))))
 
 (defvar *intern-ssl-context*
   (comm:create-ssl-client-context :verify-callback #'verify-callback
+                                  :implementation :openssl
                                   :openssl-trusted-file :default
                                   :openssl-trusted-directory :default))
 
@@ -94,6 +97,7 @@ a1yOubCHt09QsDkyvBTWP3VX541g1voHDCcYMOyzrdv/KQHfwl/ojnEAg1t9HzA=
    (gethash certificate *context-cache*)
    (let ((x509 (read-x509-from-string certificate)))
      (comm:create-ssl-client-context
+      :implementation :openssl
       :verify-callback (lambda (socket-stream)
                          (verify-callback socket-stream
                                           :allowed-certs

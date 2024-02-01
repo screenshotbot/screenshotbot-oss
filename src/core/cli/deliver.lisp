@@ -32,14 +32,15 @@
       (load output))))
 
 (defun deliver-main (output-file template-builder-fn
-                     &key restart-fn)
+                     &key restart-fn universal)
   (when (find-package :cl+ssl)
     (error "CL+SSL is present in this image, this can lead to problems when delivering this
 on Mac. (e.g., the image will try to load libcrypto etc."))
   (when (find-package :bknr.cluster/server)
     (error "BKNR.CLUSTER is present in this image"))
-  #-darwin ;; universal binary, output file should be temporary
-  (safe-delete-file output-file)
+  (unless universal
+    (safe-delete-file output-file))
+
   #+lispworks
   (include-template-file template-builder-fn)
 
@@ -78,6 +79,7 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
 
 (defun deliver-end-user-cli (&key deliver-script
                                restart-fn
+                               (universal #+darwin t)
                                output-file
                                template-builder-fn)
   (setf (fdefinition 'sentry-client::lw-find-dspec-location)
@@ -88,13 +90,15 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
 
   (flet ((call-next ()
            (deliver-main output-file template-builder-fn
-                         :restart-fn restart-fn)))
-    #-darwin
-    (call-next)
-    #+darwin
+                         :restart-fn restart-fn
+                         :universal universal)))
     (cond
-      ((hcl:building-universal-intermediate-p)
-       (call-next))
-      (t
-       (safe-delete-file output-file)
-       (hcl:save-universal-from-script deliver-script)))))
+     (universal
+      (cond
+       ((hcl:building-universal-intermediate-p)
+        (call-next))
+       (t
+        (safe-delete-file output-file)
+        (hcl:save-universal-from-script deliver-script))))
+     (t
+      (call-next)))))
