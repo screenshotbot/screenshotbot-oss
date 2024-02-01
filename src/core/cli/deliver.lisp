@@ -86,14 +86,15 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
 
   (ensure-directories-exist output-file)
 
-  #-darwin
-  (deliver-main output-file template-builder-fn
-                :restart-fn restart-fn)
-
-  #+darwin
-  (cond
-    ((hcl:building-universal-intermediate-p)
-     (deliver-main output-file template-builder-fn))
-    (t
-     (safe-delete-file output-file)
-     (hcl:save-universal-from-script deliver-script))))
+  (flet ((call-next ()
+           (deliver-main output-file template-builder-fn
+                         :restart-fn restart-fn)))
+    #-darwin
+    (call-next)
+    #+darwin
+    (cond
+      ((hcl:building-universal-intermediate-p)
+       (call-next))
+      (t
+       (safe-delete-file output-file)
+       (hcl:save-universal-from-script deliver-script)))))
