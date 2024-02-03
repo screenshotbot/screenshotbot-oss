@@ -156,7 +156,9 @@
     </form>))
 
 (defun verify-repo (repo access-token)
-  (let ((errors))
+  (let* ((errors)
+         (repo (str:trim repo))
+         (repo-id (ignore-errors (get-repo-id repo))))
     (flet ((check (field test message)
              (unless test
                (push (cons field message)
@@ -164,11 +166,12 @@
       (check :repo
              (and
               (cl-ppcre:scan "https://github.com/.*/.*" repo)
-              (ignore-errors (get-repo-id repo)))
-             "Does not look like a valid GitHub repo")
-      (check :repo
-             (not (str:s-member (verified-repos (current-company)) (get-repo-id repo)))
-             "We're already tracking a repo with that ID")
+              repo-id)
+             "You must provide a valid GitHub repository")
+      (when repo-id
+        (check :repo
+               (not (str:s-member (verified-repos (current-company)) repo-id))
+               "We're already tracking a repo with that ID"))
 
       (cond
         (errors
