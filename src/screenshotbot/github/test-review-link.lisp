@@ -19,6 +19,6 @@
 (test github-review-link
   (let ((repo (make-instance 'github-repo
                              :link "git@github.com:tdrhq/fast-example.git")))
-    (is (equal "https://github.com/tdrhq/fast-example/pulls/2"
+    (is (equal "https://github.com/tdrhq/fast-example/pull/2"
                (get-canonical-pull-request-url
                 repo 2)))))

@@ -17,7 +17,7 @@
 (in-package :screenshotbot/github/review-link)
 
 (defmethod get-canonical-pull-request-url ((repo github-repo) pull-request-id)
-  (format nil "~a/pulls/~d"
+  (format nil "~a/pull/~d"
           (github-get-canonical-repo
            (repo-link repo))
           pull-request-id))
