@@ -27,7 +27,8 @@
   (:export
    #:event-engine
    #:with-tracing
-   #:delete-old-data))
+   #:delete-old-data
+   #:db-engine))
 (in-package :util/events)
 
 (defvar *events* nil)
