@@ -11,6 +11,7 @@
   (:export
    #:make-native-module
    #:load-module
+   #:embed-module
    #:make-system-module
    #:*lib-cache-dir*
    #:define-embedded-module)
@@ -111,7 +112,7 @@
          (find-module (module-pathname self))))
   (setf (embedded-p self) t))
 
-(defmethod load-embedded-module ((self native-module))
+(defmethod load-embedded-module ((self native-module) &key (load t))
   (let ((output (path:catfile *lib-cache-dir* (make-pathname
                                                :directory `(:relative)
                                                :defaults (module-pathname self)))))
@@ -122,9 +123,10 @@
                             :element-type '(unsigned-byte 8))
       (write-sequence (module-data self)
                       stream))
-    (fli:register-module (name self)
-                         :real-name output
-                         :connection-style :immediate)))
+    (when load
+      (fli:register-module (name self)
+                           :real-name output
+                           :connection-style :immediate))))
 
 (defmethod load-module :around (self &key force)
   (handler-bind ((error (lambda (e)
