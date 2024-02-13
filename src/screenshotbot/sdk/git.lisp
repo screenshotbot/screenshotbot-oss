@@ -23,9 +23,21 @@
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/git)
 
-(defun git-root ()
-  (pathname (format nil "~a/"
-                    ($ "git" "rev-parse" "--show-toplevel"))))
+(defun git-root (&key (directory (uiop:getcwd)) (errorp t))
+  (declare (optimize (speed 0) (debug 3)))
+  (cond
+    ((path:-d (path:catdir directory ".git/"))
+     directory)
+    ((>= 1 (length (pathname-directory directory)))
+     (if errorp
+         (error "Could not find git root")
+         nil))
+    (t
+     (git-root
+      :directory (make-pathname
+                  :directory (butlast (pathname-directory directory))
+                  :defaults directory)
+      :errorp errorp))))
 
 (defclass git-repo ()
   ((link :initarg :link

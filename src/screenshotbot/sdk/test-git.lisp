@@ -9,6 +9,7 @@
             (:use #:cl
                   #:fiveam)
             (:import-from #:screenshotbot/sdk/git
+                          #:git-root
                           #:git-message
                           #:read-graph
                           #:rev-parse
@@ -19,6 +20,8 @@
                           #:git-repo
                           #:$)
             (:import-from #:fiveam-matchers/core
+                          #:error-with-string-matching
+                          #:signals-error-matching
                           #:assert-that)
             (:import-from #:fiveam-matchers/strings
                           #:contains-string)
@@ -45,7 +48,7 @@
 (def-fixture git-repo ()
   #-screenshotbot-oss
   (tmpdir:with-tmpdir (dir)
-    (unwind-protect 
+    (unwind-protect
         (progn
           (uiop:run-program (list "git" "init" (namestring dir)))
           (let ((repo (make-instance 'git-repo :dir dir)))
@@ -93,3 +96,22 @@
   (with-fixture git-repo ()
     (make-commit repo "foobar")
     (is (equal "..." (git-message repo)))))
+
+(test get-git-root
+  (tmpdir:with-tmpdir (dir)
+    (ensure-directories-exist (path:catdir dir "foo/bar/car/"))
+    (ensure-directories-exist (path:catdir dir "foo/.git/"))
+    (ensure-directories-exist (path:catdir dir "car/dar/"))
+    (is (equalp
+         (path:catdir dir "foo/")
+         (git-root :directory (path:catdir dir "foo/bar/car/") :errorp t)))
+    (is (equalp
+         (path:catdir dir "foo/")
+         (git-root :directory (path:catdir dir "foo/") :errorp t)))
+    (is (equalp
+         nil
+         (git-root :directory (path:catdir dir "car/dar/") :errorp nil)))
+    (signals-error-matching
+        ()
+        (git-root :directory (path:catdir dir "car/dar/") :errorp t)
+        (error-with-string-matching "Could not find git root"))))
