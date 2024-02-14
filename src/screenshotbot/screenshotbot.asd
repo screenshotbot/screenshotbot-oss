@@ -286,7 +286,8 @@
     :serial t
     :components ((:file "common")))
    (:file "config")
-   (:file "cleanup")))
+   (:file "cleanup")
+   (:file "metrics")))
 
 (defsystem :screenshotbot/testing-lib
   :serial t
