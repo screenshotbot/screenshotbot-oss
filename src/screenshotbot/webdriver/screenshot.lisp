@@ -73,7 +73,7 @@
 (defparameter *buf-size* 1024
   "A buffer size for base64 decoding")
 
-#-lispworks
+#-(and lispworks linux)
  (defun read-base64-stream-to-file (stream output)
   (with-open-file (output output
                           :direction :output
@@ -86,9 +86,9 @@
      (read-base64-stream-to-stream
       stream output))))
 
-#-lispworks
+#-(and lispworks linux)
 (defun read-base64-stream-to-stream (input output)
--  ;; Can we do this faster?
+  ;; Can we do this faster?
   (handler-case
       (progn
         (base64:base64-stream-to-stream
@@ -98,7 +98,7 @@
       (assert (eql (char-code #\") (base64::bad-base64-character-code e))))))
 
 
-#+lispworks
+#+(and lispworks linux #| See the Mac test failures on, e.g., D8933 |#)
 (defun read-base64-stream-to-file (stream output)
   (with-open-file (output output :element-type '(unsigned-byte 8)
                                  :direction :output)
