@@ -19,6 +19,7 @@
                 #:ui/a
                 #:ui/div)
   (:import-from #:screenshotbot/dashboard/run-page
+                #:render-run-tags
                 #:run-link
                 #:commit)
   (:import-from #:screenshotbot/dashboard/run-page
@@ -32,6 +33,7 @@
   (:import-from #:screenshotbot/dashboard/review-link
                 #:review-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-tags
                 #:runs-for-tag
                 #:runs-for-company)
   (:export #:recent-runs))
@@ -69,9 +71,12 @@
 
 (deftag recorder-run-row (&key run)
   (taskie-row :object run
-              (ui/a :href
-                    (format nil "/runs/~a" (oid run))
-                    (channel-name (recorder-run-channel run)))
+              <span>
+                ,(ui/a :href
+                       (format nil "/runs/~a" (oid run))
+                       (channel-name (recorder-run-channel run)))
+                <render-run-tags tags= (recorder-run-tags run) />
+              </span>
               (ui/div
                (let ((review-link (review-link :run run)))
                  (cond

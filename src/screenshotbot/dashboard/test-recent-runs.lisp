@@ -38,6 +38,7 @@
   (:import-from #:markup
                 #:write-html)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-tags
                 #:%pull-request-url
                 #:gitlab-merge-request-iid
                 #:phabricator-diff-id)
@@ -55,7 +56,11 @@
     :reader gitlab-merge-request-iid)
    (pull-request-url
     :initform nil
-    :reader pull-request-url)))
+    :reader pull-request-url)
+   (tags
+    :initform nil
+    :initarg :tags
+    :reader recorder-run-tags)))
 
 (defclass test-channel ()
   ())
@@ -100,7 +105,10 @@
     (with-fake-request ()
       (auth:with-sessions ()
        (let ((runs (loop for i from 1 to 100 collect
-                                             (make-instance 'test-run))))
+                                             (make-instance 'test-run
+                                                            :tags (if (= i 2)
+                                                                      (list "foo")
+                                                                      nil)))))
          (let ((company (make-instance 'test-company :runs runs)))
            (screenshot-static-page
             :screenshotbot
