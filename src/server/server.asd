@@ -10,31 +10,37 @@
   :serial t
   :components ((:file "interrupts")))
 
+(defsystem "server/util"
+    :depends-on (:bordeaux-threads)
+    :components ((:file "util" :if-feature (:and :lispworks :linux)))
+    :description "This system gets reloaded before we reload any complex code, which let's us put reloading logic in here. It also means we must keep the dependencies minimal")
+
 (defsystem "server"
-  :depends-on ("cl-cli"
-               "util.store"
-               "cl-cron"
-               "server/interrupts"
-               #+ (or ccl lispworks)
-               "jvm"
-               #+lispworks
-               "util/remote-debugging"
-               "bordeaux-threads"
-               "lparallel"
-               "serapeum"
-               (:feature (:and :lispworks (:not :mswindows)) "control-socket")
-               "easy-macros"
-               "util/health-check"
-               "util/threading"
-               "util/phabricator"
-               "hunchentoot-extensions"
-               "bknr.datastore"
-               "hunchentoot-multi-acceptor")
-  :serial t
-  :components ((:file "interrupts")
-               (:file "health-checks")
-               (:file "control-socket" :if-feature (:and :lispworks (:not :mswindows)))
-               (:file "setup")))
+    :depends-on ("cl-cli"
+                 "util.store"
+                 "cl-cron"
+                 "server/interrupts"
+                 #+ (or ccl lispworks)
+                 "jvm"
+                 #+lispworks
+                 "util/remote-debugging"
+                 "bordeaux-threads"
+                 "lparallel"
+                 "serapeum"
+                 (:feature (:and :lispworks (:not :mswindows)) "control-socket")
+                 "easy-macros"
+                 "util/health-check"
+                 "util/threading"
+                 "util/phabricator"
+                 "hunchentoot-extensions"
+                 "bknr.datastore"
+                 "hunchentoot-multi-acceptor")
+    :serial t
+    :components ((:file "interrupts")
+                 (:file "health-checks")
+                 (:file "control-socket" :if-feature (:and :lispworks (:not :mswindows)))
+                 (:file "setup")
+                 (:file "util")))
 
 (defsystem #:server/config
   :depends-on ()
