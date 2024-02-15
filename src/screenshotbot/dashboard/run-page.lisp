@@ -85,6 +85,8 @@
                 #:downloadable-run-state
                 #:find-or-create-downloadable-run
                 #:find-downloadable-run)
+  (:import-from #:screenshotbot/model/channel
+                #:all-active-runs)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -130,13 +132,13 @@
               collect <span class= "badge bg-light text-dark ms-1" >,(progn tag)</span>)
     </span>))
 
-(deftag page-nav-dropdown (children &key title)
+(deftag page-nav-dropdown (children &key title (btn-class "btn-secondary"))
   (let ()
 
     (mquery:add-class (mquery:$ "a" children) "dropdown-item")
 
     <div class="dropdown">
-  <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+  <button class= (format nil "btn btn-sm ~a dropdown-toggle" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     ,(progn title)
   </button>
   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
@@ -433,6 +435,22 @@
           collect
           (render-run-warning run warning))))
 
+(defun %compare-to-link (run to)
+  (make-url "/runs/:id/compare/:to" :id (oid run)
+                                    :to (oid to)))
+
+(deftag comparison-menu (&key run)
+  (let* ((channel (recorder-run-channel run))
+         (active-runs (all-active-runs channel)))
+    (when active-runs
+       <page-nav-dropdown title= "Compare" btn-class= "btn-outline-success" >
+         ,@ (loop for (branch . other-run) in active-runs
+                  if other-run
+                    collect
+                  <markup:merge-tag>
+                    <a href= (%compare-to-link run other-run) >To <tt>,(progn branch)</tt></a>
+               </markup:merge-tag>)
+       </page-nav-dropdown>)))
 
 
 (defun render-run-page (run &key name)
@@ -470,6 +488,7 @@
 
         ,(when (can-edit run (current-user))
            <div class= "">
+             <comparison-menu run=run />
              <run-advanced-menu run=run />
            </div>)
         </div>
