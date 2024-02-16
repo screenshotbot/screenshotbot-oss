@@ -6,8 +6,12 @@
 
 (in-package :cl-user)
 
+(when (boundp '*prepare-image-called-p*)
+  (error "Prepare image was already called in this image, calling it again will lead to a bad state."))
+
 #+lispworks
 (require "java-interface" )
+
 
 ;; For SBCL, if you don't have SBCL_HOME set, then we won't be able to require this later.
 #+sbcl
@@ -265,3 +269,5 @@
 (push (pathname (format nil "~a/build-utils/" *cwd*))
       asdf:*central-registry*)
 (ql:register-local-projects)
+
+(setf *prepare-image-called-p* t)
