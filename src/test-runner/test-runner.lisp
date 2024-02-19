@@ -136,7 +136,7 @@
 (defun debugger-hook (condition old-hook)
   "On LW <= 8.0.1 there's a bug that causes LW to crash when a thread
 fails."
-  (format *test-trace-io* "A background thread crashed:~%")
+  (format *test-trace-io* "A background thread crashed: ~a~%" condition)
   (dbg:output-backtrace :brief *test-trace-io*)
   (invoke-restart 'cl:abort))
 
