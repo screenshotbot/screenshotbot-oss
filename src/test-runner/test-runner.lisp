@@ -171,6 +171,7 @@ fails."
       (uiop:quit 1)))
 
 (defun main ()
+  (setup-backtrace)
   (with-global-binding ((*log-sentry-p* nil))
     (call-with-main-wrapper
      (lambda ()
@@ -194,6 +195,10 @@ fails."
         (format t "Guessed suite name as: ~a" guessed)
         guessed))))
 
+(defun setup-backtrace ()
+  "Ensure we're showing the backtrace on error"
+  (setf fiveam:*on-error* :backtrace))
+
 (defun image-main ()
   "The main function when called the test-runner is saved to build/t"
   (call-with-main-wrapper
@@ -202,6 +207,7 @@ fails."
      (let ((systems (loop for name in (cdr system:*line-arguments-list*)
                           if (not (eql #\- (elt name 0)))
                             collect name)))
+       (setup-backtrace)
        (format t "Running tests: ~S~%" systems)
        (dolist (system systems)
          (ql:quickload (fix-system-name system)))
