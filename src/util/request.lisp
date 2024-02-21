@@ -134,11 +134,15 @@ use stream pools.")
 
     (multiple-value-bind (res status headers)
         (wrap-ssl-errors (:ensure-success ensure-success :want-stream want-stream)
-          (apply #'drakma:http-request url
-                 :want-stream want-stream
-                 :additional-headers additional-headers
-                 :verify verify
-                 args))
+          (let ((drakma:*text-content-types*
+                  (list*
+                   (cons "application" "json")
+                   drakma:*text-content-types*)))
+           (apply #'drakma:http-request url
+                  :want-stream want-stream
+                  :additional-headers additional-headers
+                  :verify verify
+                  args)))
       (flet ((maybe-ensure-success (&optional response)
                (declare (ignore response))
                (when (and ensure-success
