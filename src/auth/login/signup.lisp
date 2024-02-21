@@ -175,6 +175,19 @@ bugs. (See corresponding tests.)"
   (not (null
 	(ppcre:scan "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,12}$" string))))
 
+(defun validate-name (check-fn full-name)
+  (flet ((check (&rest args)
+           (apply check-fn args)))
+    (check :full-name
+           (util:token-safe-for-email-p full-name)
+           "That name looks invalid")
+    (check :full-name
+           (< (length full-name) 150)
+           "Name is too long")
+    (check :full-name
+           (not (str:emptyp (str:trim full-name)))
+           "We would really like you to introduce yourself!")))
+
 (defun signup-post (&key email password full-name accept-terms-p plan redirect
                       invite)
   (throttle! *signup-throttler* :key (hunchentoot:real-remote-addr))
@@ -189,24 +202,19 @@ bugs. (See corresponding tests.)"
                (push (cons name message) errors))))
       (check :password (and password (>= (length password) 8))
              "Please use at least 8 letters for the password")
-      (check :full-name
-             (util:token-safe-for-email-p full-name)
-             "That name looks invalid")
+
+      (validate-name #'check full-name)
+
       (check :full-name
              (str:containsp " " (str:trim full-name))
-             "Please provide a first and last name")
-      (check :full-name
-             (< (length full-name) 150)
-             "Name is too long")
+             "Please provide a first and last name (we know names sometimes don't have a last name, but unfortunately we need this to prevent bots. Put in a placeholder last name, and you can change it later!)")
+
       (check :password
              (< (length password) 150)
              "Password is too long")
       (check :email
              (< (length email) 150)
              "Password is too long")
-      (check :full-name
-             (not (str:emptyp (str:trim full-name)))
-             "We would really like you to introduce yourself!")
       (check :email
              (valid-email-address-p email)
              "That doesn't look like a valid email address")
