@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/sdk/run-context
   (:use #:cl)
   (:import-from #:screenshotbot/sdk/git
+                #:git-root
                 #:current-commit
                 #:rev-parse)
   (:import-from #:alexandria
@@ -105,7 +106,12 @@
         :reader env)))
 
 (defmethod git-repo ((self env-reader-run-context))
-  (make-instance 'git:git-repo))
+  (cond
+    ((git-root :errorp nil)
+     (make-instance 'git:git-repo))
+    (t
+     (log:warn "This is not running inside a Git repo. Please contact support@screenshotbot.io for advice, since the behavior in this case can be very different.")
+     (make-instance 'git:null-repo))))
 
 (defmethod build-url :around ((self env-reader-run-context))
   (or

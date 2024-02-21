@@ -301,10 +301,11 @@ error."
               (if has-branch-hash-p branch-hash
                   (or
                    (run-context:main-branch-hash run-context)
-                   (let ((hash (rev-parse repo branch)))
-                     (unless hash
-                       (warn "Could not rev-parse origin/~a" branch))
-                     hash))))
+                   (when branch
+                     (let ((hash (rev-parse repo branch)))
+                       (unless hash
+                         (log:warn "Could not rev-parse origin/~a" branch))
+                       hash)))))
             (commit (if has-commit-p commit (current-commit repo)))
             (merge-base (cond
                           (has-merge-base-p merge-base)
@@ -562,6 +563,9 @@ pull-request looks incorrect."
                   (cons "repo-url" (repo-link repo))
                   (cons "branch" branch)
                   (cons "graph-json" json)))))
+
+(defmethod update-commit-graph (api-context (repo null-repo) branch)
+  (log:info "Not updating the commit graph, since there's no repo"))
 
 (defun git-repo ()
   (let ((root (ignore-errors (git-root))))
