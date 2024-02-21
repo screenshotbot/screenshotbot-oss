@@ -199,7 +199,7 @@ pull-request looks incorrect."
     (t
      (git:cleanp (git-repo self)))))
 
-(defun guess-master-branch (repo)
+(defmethod guess-master-branch (repo)
   (flet ((check (x)
            (rev-parse repo x)))
     (cond
@@ -209,6 +209,9 @@ pull-request looks incorrect."
        "master")
       (t
        (error "Could not guess the main branch, please use --main-branch argument")))))
+
+(defmethod guess-master-branch ((repo git:null-repo))
+  nil)
 
 (defmethod main-branch ((self env-reader-run-context))
   (or
