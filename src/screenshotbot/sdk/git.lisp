@@ -123,11 +123,12 @@
       nil)))
 
 (defmethod fetch-remote-branch ((repo git-repo) branch)
-  (log:info "Running: git fetch origin ~a" branch)
-  (handler-case
-      ($ (git-command repo) "fetch" "origin" branch)
-    (error (e)
-      (warn "Git fetch failed with ~a" e))))
+  (unless (str:emptyp branch)
+    (log:info "Running: git fetch origin ~a" branch)
+    (handler-case
+        ($ (git-command repo) "fetch" "origin" branch)
+      (error (e)
+        (warn "Git fetch failed with ~a" e)))))
 
 (defmethod fetch-remote-branch ((repo null-repo) branch)
   (values))
