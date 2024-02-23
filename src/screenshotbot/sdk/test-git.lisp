@@ -9,6 +9,7 @@
             (:use #:cl
                   #:fiveam)
             (:import-from #:screenshotbot/sdk/git
+                          #:fetch-remote-branch
                           #:git-root
                           #:git-message
                           #:read-graph
@@ -31,16 +32,18 @@
 
 (util/fiveam:def-suite)
 
-(defun run-in-dir (repo cmd)
+(defun run-in-dir (repo cmd &rest args)
   (let ((cmd (cl-ppcre:regex-replace
               "^git " cmd
               "git -c user.name=FooBar -c user.email=foo@example.com ")))
-   (uiop:run-program (format nil "cd ~a && ~a" (namestring (repo-dir repo)) cmd))))
+    (apply #'uiop:run-program (format nil "cd ~a && ~a" (namestring (repo-dir repo)) cmd)
+           args)))
 
 (defun make-commit (repo content)
   (let ((file (path:catfile (repo-dir repo) "file.txt")))
    (with-open-file (stream file
-                           :direction :output)
+                           :direction :output
+                           :if-exists :supersede)
      (write-string content stream))
     (run-in-dir repo "git add file.txt" )
     (run-in-dir repo "git commit -a -m ...")))
@@ -83,6 +86,24 @@
     (is-false (rev-parse repo "bleh"))
     (is-true
      (rev-parse repo "car"))))
+
+(test fetch-remote-branch
+  (with-fixture git-repo ()
+    (tmpdir:with-tmpdir (clone-root)
+      (run-in-dir repo "git checkout -b master")
+      (make-commit repo "foobar")
+      (uiop:run-program (format nil "cd ~a && git clone ~a cloned-repo"
+                                clone-root
+                                (namestring dir))
+                        :error-output *standard-output*)
+      (make-commit repo "new-commit")
+      (let ((rev (str:trim (run-in-dir repo "git rev-parse HEAD"
+                                       :output 'string))))
+        (is (not (str:emptyp rev)))
+        (let ((clone (make-instance 'git-repo :dir (path:catdir clone-root "cloned-repo/"))))
+          (fetch-remote-branch clone "master")
+          (is (equal rev
+                     (rev-parse clone "master"))))))))
 
 (test read-dag-from-repo
   (with-fixture git-repo ()

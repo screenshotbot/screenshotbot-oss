@@ -19,7 +19,8 @@
    #:current-commit
    #:current-branch
    #:cleanp
-   #:git-message)
+   #:git-message
+   #:fetch-remote-branch)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/git)
 
@@ -120,6 +121,16 @@
       ($ (git-command repo) "rev-parse" "-q" "--verify" (format nil "origin/~a" branch))
     (error
       nil)))
+
+(defmethod fetch-remote-branch ((repo git-repo) branch)
+  (log:info "Running: git fetch origin ~a" branch)
+  (handler-case
+      ($ (git-command repo) "fetch" "origin" branch)
+    (error (e)
+      (warn "Git fetch failed with ~a" e))))
+
+(defmethod fetch-remote-branch ((repo null-repo) branch)
+  (values))
 
 (defmethod rev-parse ((repo null-repo) branch)
   nil)

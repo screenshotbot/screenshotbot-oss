@@ -27,6 +27,7 @@
                 #:image-directory
                 #:image-directory-with-diff-dir)
   (:import-from #:screenshotbot/sdk/git
+                #:fetch-remote-branch
                 #:null-repo
                 #:git-root
                 #:git-repo
@@ -551,6 +552,7 @@ pull-request looks incorrect."
       res)))
 
 (defmethod update-commit-graph (api-context repo branch)
+  (fetch-remote-branch repo branch)
   (log:info "Updating commit graph")
   (let* ((dag (read-graph repo))
          (json (with-output-to-string (s)
