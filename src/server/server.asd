@@ -82,4 +82,5 @@
                :server/slynk)
   :components ((:file "test-server")
                (:file "test-config")
+               (:file "test-util" :if-feature :lispworks)
                (:file "test-slynk-preparer")))
