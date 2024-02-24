@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/sdk/env)
   (:import-from #:screenshotbot/sdk/env
+                #:remove-.git
                 #:*all-readers*
                 #:gitlab-ci-env-reader
                 #:github-actions-env-reader
@@ -145,3 +146,20 @@
                                               ("GITHUB_REPOSITORY" . "tdrhq/fast-example")
                                               ("GITHUB_REF" . "refs/pull/22/merge")))))
       (is (equal "https://github.com/tdrhq/fast-example/pull/22" (pull-request-url reader))))))
+
+(test remove-.git
+  (is (equal "foo" (remove-.git "foo")))
+  (is (equal "foo" (remove-.git "foo.git")))
+  (is (equal "foogit" (remove-.git "foogit"))))
+
+(test guess-channel-name-from-repo-url
+  (flet ((guess-for (name)
+           (let ((reader (make-instance 'circleci-env-reader
+                                        :overrides `(("CIRCLE_REPOSITORY_URL" . ,name)))))
+             (guess-channel-name reader))))
+    (is (equal "fast-example" (guess-for "https://github.com/tdrhq/fast-example.git")))
+    (is (equal "fast-example" (guess-for "https://github.com/tdrhq/fast-example")))
+    (is (equal "fast-example" (guess-for "https://github.com/tdrhq/fast-example/")))
+
+    ;; We should never return an empty string
+    (is (equal nil (guess-for "https://github.com/bad/.git")))))

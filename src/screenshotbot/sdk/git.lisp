@@ -130,12 +130,20 @@
       (error (e)
         (warn "Git fetch failed with ~a" e)))))
 
+(defmethod origin (repo)
+  "origin")
+
 (defmethod fetch-remote-branch ((repo null-repo) branch)
   (values))
 
 (defmethod rev-parse ((repo null-repo) branch)
   nil)
 
+(defmethod get-remote-url ((repo null-repo))
+  nil)
+
+(defmethod get-remote-url ((repo git-repo))
+  ($ (git-command) "get-url" (origin repo)))
 
 (def-health-check verify-git-is-present ()
   (uiop:run-program (list "git" "--help")))

@@ -58,7 +58,10 @@ get this from the Git repository directly."))
   nil)
 
 (defmethod guess-channel-name ((self base-env-reader))
-  nil)
+  (when-let ((repo-url (repo-url self)))
+    (let ((ret (remove-.git (car (last (remove-if #'str:emptyp (str:split "/" repo-url)))))))
+      (unless (str:emptyp ret)
+        ret))))
 
 (defmethod work-branch ((self env-reader))
   nil)
@@ -161,6 +164,9 @@ get this from the Git repository directly."))
 
 (defmethod sha1 ((self netlify-env-reader))
   (getenv self "COMMIT_REF"))
+
+(defun remove-.git (name)
+  (cl-ppcre:regex-replace "[.]git$" name ""))
 
 (defmethod validp ((self netlify-env-reader))
   (equal "true" (getenv self "NETLIFY")))
