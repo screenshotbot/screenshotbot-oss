@@ -552,7 +552,8 @@ pull-request looks incorrect."
       res)))
 
 (defmethod update-commit-graph (api-context repo branch)
-  (fetch-remote-branch repo branch)
+  ;;;; See T1055
+  ;; (fetch-remote-branch repo branch)
   (log:info "Updating commit graph")
   (let* ((dag (read-graph repo))
          (json (with-output-to-string (s)
