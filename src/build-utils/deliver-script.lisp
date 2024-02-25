@@ -61,6 +61,9 @@
   ((label :initarg :label)
    (type :initform "sh")
    (archive :initarg :archive)
+   (include-openssl-p :initform nil
+                    :initarg :include-openssl-p
+                    :reader include-openssl-p)
    (startup-component :initarg :startup-component)))
 
 
@@ -78,6 +81,26 @@
   (when (uiop:file-exists-p x)
     (delete-file x)))
 
+(defun copy-openssl (dir)
+  "Copies the system libssl and libcrypto files to the dir"
+  (let ((src-dir
+          #+ (and linux x86-64)
+          "/usr/lib/x86_64-linux-gnu/lib~a.so"
+          #+ (and linux arm64)
+          "/usr/lib/aarch64-linux-gnu/lib~a.so"
+          #+ (and darwin arm64)
+          "/opt/homebrew/lib/lib~a.dylib"
+          #+ (and darwin x86-64)
+          "/opt/openssl-x86-64/lib/lib~a.dylib"))
+    (loop for name in (list "crypto" "ssl")
+          for src-file = (format nil src-dir name)
+          do
+             (uiop:copy-file src-file
+                             (make-pathname
+                              :name (pathname-name src-file)
+                              :type (pathname-type src-file)
+                              :defaults dir)))))
+
 (defun do-perform (tmpdir o m)
   (with-slots (archive label startup-component license) m
     (loop for component in (cons m archive)
@@ -94,6 +117,8 @@
                                             :directory (pathname-directory tmpdir))))
                      (uiop:copy-file from to)
                      (uiop:run-program (list "chmod" "a+x" (namestring to))))))))
+    (when (include-openssl-p m)
+      (copy-openssl tmpdir))
 
     (uiop:run-program (list #-darwin "makeself"
                             #+darwin "/opt/homebrew/bin/makeself"
