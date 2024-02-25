@@ -27,7 +27,9 @@
             (:import-from #:fiveam-matchers/strings
                           #:contains-string)
             (:import-from #:fiveam-matchers/has-length
-                          #:has-length))
+                          #:has-length)
+            (:import-from #:easy-macros
+                          #:def-easy-macro))
 (in-package :screenshotbot/sdk/test-git)
 
 (util/fiveam:def-suite)
@@ -48,16 +50,25 @@
     (run-in-dir repo "git add file.txt" )
     (run-in-dir repo "git commit -a -m ...")))
 
-(def-fixture git-repo ()
-  #-screenshotbot-oss
+(defun make-directory-deletable (dir)
+  "On windows, git might have read-only files"
+  (declare (ignorable dir))
+  #+(or windows mswindows)
+  (uiop:run-program (list "attrib" "-r" (namestring (path:catfile dir "*.*")) "/s")))
+
+(def-easy-macro with-tmpdir (&binding dir &fn fn)
   (tmpdir:with-tmpdir (dir)
     (unwind-protect
-        (progn
-          (uiop:run-program (list "git" "init" (namestring dir)))
-          (let ((repo (make-instance 'git-repo :dir dir)))
-            (&body)))
-      #+(or windows mswindows)
-      (uiop:run-program (list "attrib" "-r" (namestring (path:catfile dir "*.*")) "/s")))))
+         (fn dir)
+      (make-directory-deletable dir))))
+
+(def-fixture git-repo ()
+  #-screenshotbot-oss
+  (with-tmpdir (dir)
+    (progn
+      (uiop:run-program (list "git" "init" (namestring dir)))
+      (let ((repo (make-instance 'git-repo :dir dir)))
+        (&body)))))
 
 (test get-current-commit
   (with-fixture git-repo ()
@@ -89,7 +100,7 @@
 
 (test fetch-remote-branch
   (with-fixture git-repo ()
-    (tmpdir:with-tmpdir (clone-root)
+    (with-tmpdir (clone-root)
       (run-in-dir repo "git checkout -b master")
       (make-commit repo "foobar")
       (uiop:run-program (format nil "cd ~a && git clone ~a cloned-repo"
@@ -119,7 +130,7 @@
     (is (equal "..." (git-message repo)))))
 
 (test get-git-root
-  (tmpdir:with-tmpdir (dir)
+  (with-tmpdir (dir)
     (ensure-directories-exist (path:catdir dir "foo/bar/car/"))
     (ensure-directories-exist (path:catdir dir "foo/.git/"))
     (ensure-directories-exist (path:catdir dir "car/dar/"))
