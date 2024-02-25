@@ -45,12 +45,16 @@
     (util/native-module::load-embedded-module *libcrypto* :load nil)
     (util/native-module::load-embedded-module *libssl* :load nil)
 
-    (comm:set-ssl-library-path 
+    (comm:set-ssl-library-path
      (list
       (path:catfile dir "libcrypto-3-x64.dll")
       (path:catfile dir "libssl-3-x64.dll")))
 
     (comm:ensure-ssl)))
+
+(defun compile-and-load-template-file (path)
+  (let ((output (compile-file path)))
+    (load output)))
 
 #+lispworks
 (defun include-template-file (template-builder)
@@ -63,8 +67,7 @@
       (fli:print-collected-template-info :output-stream out))
     (format t "~%~%The FLI template content is: ~A~%~%~%" (uiop:read-file-string path))
 
-    (let ((output (compile-file path)))
-      (load output))))
+    (compile-and-load-template-file path)))
 
 (defun deliver-main (output-file template-builder-fn
                      &key restart-fn universal (level 5))
@@ -77,7 +80,20 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
     (safe-delete-file output-file))
 
   #+lispworks
-  (include-template-file template-builder-fn)
+  (when nil
+    ;; We used to generate and load the template during the deliver
+    ;; process. But that causes instability in the sense that OpenSSL
+    ;; is loaded into the image. We've noticed that that the template
+    ;; is always fixed, and only required for Mac, so that's what
+    ;; we'll do.
+    ;;
+    ;; Enable this temporarily to see what the expected version of the
+    ;; template should look like.
+    (include-template-file template-builder-fn))
+
+  #+ (and lispworks darwin)
+  (compile-and-load-template-file
+   (asdf:system-relative-pathname :core.cli "darwin-template.lisp"))
 
   #+mswindows
   (embed-ssl)
@@ -95,7 +111,7 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
   #+(and linux arm64)
   (setf (symbol-function 'sys::set-signals-mask) #'lw:false)
 
-  (build-utils/deliver-script:default-deliver 
+  (build-utils/deliver-script:default-deliver
    (lambda ()
      #+mswindows
      (install-ssl)
