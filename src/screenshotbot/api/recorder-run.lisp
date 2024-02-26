@@ -40,6 +40,7 @@
   (:import-from #:screenshotbot/model/screenshot-map
                 #:make-screenshot-map)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-author
                 #:recorder-run-tags
                 #:make-recorder-run)
   (:import-from #:util/misc
@@ -139,6 +140,7 @@
                         (installation-domain (installation))))
                  :main-branch-hash (recorder-run-branch run)
                  :commit-hash (recorder-run-commit run)
+                 :author (recorder-run-author run)
                  :merge-base (recorder-run-merge-base run)
                  :channel (?. channel-name (recorder-run-channel run))
                  :tags (recorder-run-tags run)
@@ -229,7 +231,10 @@
             "Only 10 tags are allowed on a run")
     (dolist (tag (dto:run-tags run))
       (verify (< (length tag) 100)
-              "Tag too long: ~a" tag))))
+              "Tag too long: ~a" tag))
+    (when (dto:run-author run)
+      (verify (< (length (dto:run-author run)) 100)
+              "Author name too long"))))
 
 (defmethod %put-run (company (run dto:run))
   (unless (dto:trunkp run)
@@ -258,6 +263,7 @@
                         :batch batch
                         :screenshots screenshots
                         :commit-hash (dto:run-commit run)
+                        :author (dto:run-author run)
                         :create-github-issue-p (dto:should-create-github-issue-p run)
                         :trunkp (dto:trunkp run)
                         :periodic-job-p (dto:periodic-job-p run)

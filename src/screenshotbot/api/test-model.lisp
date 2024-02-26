@@ -105,3 +105,8 @@
       (finishes
         (with-output-to-string (out)
           (yason:encode run out)))))
+
+(test run-author-is-nil-if-not-bound
+  (let ((run (decode-json "{\"batch\": \"foo\"} "
+                          'dto:run)))
+    (is (eql nil (dto:run-author run)))))

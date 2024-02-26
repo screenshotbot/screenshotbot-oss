@@ -58,12 +58,13 @@
              #:comparison-samep
              #:comparison-title
              #:comparison-url
-             #:run-tags))
+             #:run-tags
+             #:run-author))
 
 (in-package :screenshotbot/api/model)
 
 ;; Please update CHANGELOG.md
-(defparameter *api-version* 9)
+(defparameter *api-version* 10)
 
 (defclass version ()
   ((version :initarg :version
@@ -297,7 +298,13 @@
          :initform nil
          :json-type (:list :string)
          :reader run-tags
-         :documentation "A list of arbitrary tags associated with this run"))
+         :documentation "A list of arbitrary tags associated with this run")
+   (author :initarg :author
+           :reader run-author
+           :json-key "author"
+           :initform nil
+           :json-type (or null :string)
+           :documentation "The author of this run. This is used when implementing policies around reviews."))
   (:metaclass ext-json-serializable-class))
 
 (defclass report ()
