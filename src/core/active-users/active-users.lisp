@@ -16,6 +16,8 @@
                 #:persistent-class)
   (:import-from #:bknr.indices
                 #:index-get)
+  (:import-from #:util/cron
+                #:def-cron)
   (:export
    #:mark-active-user))
 (in-package :core/active-users/active-users)
@@ -42,11 +44,30 @@
     (local-time:format-timestring nil ts
                                   :format `(:year "-" (:month 2) "-" (:day 2)))))
 
-(defun mark-active-user (&key user company date)
-  (bt:with-lock-held (*lock*)
+(defun mark-active-user-impl (&key user company date)
+  (when (and user company)
     (let ((date (format-date date)))
       (unless (index-get +lookup-index+ (list date user company))
         (make-instance 'active-user
                        :user user
                        :company company
                        :date date)))))
+
+(defvar *events* nil)
+
+(defun mark-active-user (&rest args)
+  "We don't want to wait on locks in the happy path, and we don't want
+reads to depend on writes."
+  (atomics:atomic-push
+   (lambda ()
+     (apply #'mark-active-user-impl args))
+   *events*))
+
+(defun flush-events ()
+  (bt:with-lock-held (*lock*)
+   (let ((events (util/atomics:atomic-exchange *events* nil)))
+     (loop for event in events
+           do (funcall event)))))
+
+(def-cron flush-events ()
+  (flush-events))

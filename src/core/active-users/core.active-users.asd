@@ -1,6 +1,8 @@
 (defsystem :core.active-users
   :serial t
   :depends-on (:util.store
+               :util/atomics
+               :util/cron
                :local-time)
   :components ((:file "active-users")))
 
