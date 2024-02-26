@@ -95,7 +95,8 @@
    #:recorder-run-work-branch
    #:recorder-run-batch
    #:recorder-run-repo-url
-   #:group-separator)
+   #:group-separator
+   #:recorder-run-author)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -254,11 +255,21 @@ associated report is rendered.")
             :accessor recorder-run-batch
             :documentation "The batch object associated with this run")
      (%group-separator :initarg :group-separator
-                       :reader group-separator))
+                       :reader group-separator)
+     (%author :initarg :author
+              :reader recorder-run-author
+              :documentation "The author, or owner of this run. This will be used for logic to ensure that authors cannot review their own runs. See T1056."))
     (:metaclass has-created-at)
     (:default-initargs :screenshot-map (error "need screenshot-map")
                        :compare-tolerance nil
+                       :author nil
                        :tags nil)))
+
+(defmethod recorder-run-author :around ((run recorder-run))
+  (handler-case
+      (call-next-method)
+    (unbound-slot (e)
+      nil)))
 
 (defun assert-no-loops (recorder-run)
   (flet ((next (run)

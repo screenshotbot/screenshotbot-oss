@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-author
+                #:%author
                 #:assert-no-loops
                 #:runs-for-tag
                 #:channel-runs
@@ -135,3 +137,9 @@
                 :previous-run (make-recorder-run
                                :previous-run nil))))
       (finishes (assert-no-loops run)))))
+
+(test unbound-slot-for-author
+  (with-fixture state ()
+    (let ((run (make-recorder-run)))
+      (slot-makunbound run '%author)
+      (is (eql nil (recorder-run-author run))))))
