@@ -23,6 +23,7 @@
                 #:register-init-hook
                 #:*init-hooks*)
   (:import-from #:util/threading
+                #:with-extras
                 #:ignore-and-log-errors)
   (:import-from #:util/misc
                 #:make-mp-hash-table)
@@ -117,6 +118,10 @@
   ())
 
 (register-promoter 'master-promoter)
+
+(defmethod maybe-promote :around (promoter run)
+  (with-extras (("run" run))
+    (call-next-method)))
 
 (defmethod maybe-promote ((promoter master-promoter) run)
   (maybe-promote-run run))
