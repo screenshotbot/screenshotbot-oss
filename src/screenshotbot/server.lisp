@@ -43,6 +43,8 @@
                 #:api-acceptor-mixin)
   (:import-from #:core/ui/fonts
                 #:fonts-acceptor-mixin)
+  (:import-from #:core/active-users/active-users
+                #:mark-active-user)
   (:export
    #:defhandler
    #:with-login
@@ -115,9 +117,9 @@
                    hunchensocket::websocket-request)
   ())
 
-;; TODO: delete
-(defmethod auth:authenticate-request ((request request))
-  (call-next-method))
+(defmethod auth:authenticate-request :after ((request request))
+  (mark-active-user :user (auth:request-user request)
+                    :company (auth:request-account request)))
 
 (defvar *acceptor*
   (make-instance 'acceptor

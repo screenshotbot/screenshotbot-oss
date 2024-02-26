@@ -44,7 +44,7 @@
     (local-time:format-timestring nil ts
                                   :format `(:year "-" (:month 2) "-" (:day 2)))))
 
-(defun mark-active-user-impl (&key user company date)
+(defun mark-active-user-impl (&key user company (date (get-universal-time)))
   (when (and user company)
     (let ((date (format-date date)))
       (unless (index-get +lookup-index+ (list date user company))

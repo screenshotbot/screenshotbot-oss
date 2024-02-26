@@ -24,6 +24,7 @@
                :auth.login
                :markup
                :gravatar
+               :core.active-users
                :util/posix
                :util/throttler
                :core.api
