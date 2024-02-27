@@ -123,7 +123,8 @@
 
 (defvar *acceptor*
   (make-instance 'acceptor
-                 :port 4001
+                 :port #-screenshotbot-oss 4001
+                       #+screenshotbot-oss 4091 ;; Called directly from launch.lisp
                  :name 'screenshotbot-acceptor
                  :document-root (document-root)))
 
