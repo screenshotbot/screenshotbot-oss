@@ -1,7 +1,7 @@
 FROM debian:stable AS magick_base
 
 
-RUN apt-get update && apt-get install -y libyaml-dev git-core libpng-dev zlib1g-dev libpng16-16  zlib1g gcc makeself exiftool build-essential logrotate imagemagick libmagickwand-dev sbcl openjdk-11-jre-headless
+RUN apt-get update && apt-get install -y libyaml-dev git-core libpng-dev zlib1g-dev libpng16-16  zlib1g gcc makeself exiftool build-essential logrotate imagemagick libmagickwand-dev sbcl
 
 
 FROM magick_base AS builder
