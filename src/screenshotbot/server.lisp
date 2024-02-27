@@ -295,7 +295,7 @@ Disallow: /active-run
 
 
 #+screenshotbot-oss
-(setf hunchentoot-multi-acceptor:*default-acceptor*
+(setf (hunchentoot-multi-acceptor:default-acceptor server::*multi-acceptor*)
       *acceptor*)
 
 (defhandler (nil :uri "/test-headers") ()

@@ -19,7 +19,7 @@ top-level acceptor (e.g. you might want to get the acceptor-port)")
   ((sub-acceptors :initform nil :accessor sub-acceptors)
    (default-acceptor :initform *default-acceptor*
                      :initarg :default-acceptor
-                     :reader default-acceptor)
+                     :accessor default-acceptor)
    (listen-fd :initarg :listen-fd
               :initform nil
               :accessor listen-fd)))
