@@ -20,6 +20,6 @@
 (screenshotbot/config:load-config)
 
 (unless (member "compile" (uiop:command-line-arguments) :test 'string=)
-  (server:main))
+  (server:main :acceptor screenshotbot/server:*acceptor*))
 
 (uiop:quit)

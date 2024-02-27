@@ -293,11 +293,6 @@ Disallow: /active-run
    fn
    args))
 
-
-#+screenshotbot-oss
-(setf (hunchentoot-multi-acceptor:default-acceptor server::*multi-acceptor*)
-      *acceptor*)
-
 (defhandler (nil :uri "/test-headers") ()
   (format nil ":~a:" (hunchentoot:header-in* :x-forwarded-proto)))
 
