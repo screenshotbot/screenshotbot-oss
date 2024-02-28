@@ -107,7 +107,17 @@
            :accessor batch-item-run)
      (%report :initarg :report
               :initform nil
-              :accessor batch-item-report))
+              :accessor batch-item-report)
+     ;; These two locks are currently not in use. See batch-promoter,
+     ;; and delete this comment once we're using it.
+     (lock :initform (bt:make-lock "batch-lock")
+           :transient t
+           :reader lock
+           :documentation "A lock to make sure that ")
+     (push-lock :initform (bt:make-lock "batch-push-lock")
+                :transient t
+                :reader push-lock
+                :documentation "A lock to make sure only one promoter is updating the PR."))
     (:metaclass persistent-class)))
 
 (defvar *lock* (bt:make-lock))
