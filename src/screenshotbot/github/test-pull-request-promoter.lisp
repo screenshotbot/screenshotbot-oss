@@ -116,36 +116,37 @@
 
 (def-fixture state (&key (run-retriever 'my-run-retriever))
   (with-installation ()
-   (with-test-store ()
-     (cl-mock:with-mocks ()
-       (cl-mock:if-called 'verified-repo-p
-                          (lambda (repo company)
-                            t))
-       (cl-mock:if-called 'app-installed-p
-                          (lambda (repo)
-                            t))
-       (cl-mock:answer (github-plugin)
-         (make-instance 'github-plugin
-                        :app-id "dummy-app-id"
-                        :private-key "dummy-private-key"))
-       (cl-mock:if-called 'github-update-pull-request
-                          (lambda (&rest args)))
-       (let ((company (make-instance 'company))
-             (promoter (make-instance 'pull-request-promoter
-                                      :pull-request-info
-                                      (make-instance 'pull-request-info)
-                                      :run-retriever
-                                      (make-instance run-retriever))))
-         (flet ((the-only-report ()
-                  (let ((reports (class-instances 'report)))
-                    (trivia:match reports
-                      (nil
-                       nil)
-                      ((list report)
-                       report)
-                      (t
-                       (error "Expected to have only one report but got: ~a" reports))))))
-          (&body)))))))
+    (with-test-store ()
+      (cl-mock:with-mocks ()
+        (cl-mock:if-called 'verified-repo-p
+                           (lambda (repo company)
+                             t))
+        (cl-mock:if-called 'app-installed-p
+                           (lambda (repo)
+                             t))
+        (cl-mock:answer (github-plugin)
+          (make-instance 'github-plugin
+                         :app-id "dummy-app-id"
+                         :private-key "dummy-private-key"))
+        (cl-mock:if-called 'github-update-pull-request
+                           (lambda (&rest args)))
+        (let ((auto-restart:*global-enable-auto-retries-p* nil)
+              (company (make-instance 'company))
+              (promoter (make-instance 'pull-request-promoter
+                                       :pull-request-info
+                                       (make-instance 'pull-request-info)
+                                       :run-retriever
+                                       (make-instance run-retriever))))
+          (flet ((the-only-report ()
+                   (let ((reports (class-instances 'report)))
+                     (trivia:match reports
+                       (nil
+                        nil)
+                       ((list report)
+                        report)
+                       (t
+                        (error "Expected to have only one report but got: ~a" reports))))))
+            (&body)))))))
 
 (test run-without-pr-does-not-create-report
   (with-fixture state ()

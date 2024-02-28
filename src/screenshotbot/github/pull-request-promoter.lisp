@@ -127,23 +127,24 @@
       (t
        (call-next-method)))))
 
-(defmethod push-remote-check ((promoter pull-request-promoter)
-                              run check)
-  (let ((args (make-github-args run check))
-        (audit-log-args (list
-                         :company (recorder-run-company run)
-                         :commit (check-sha check))))
-    (with-audit-log (updated-check-run
-                     (trivia:match (check-user check)
-                       (nil
-                        (apply #'make-instance 'updated-check-run
-                               audit-log-args))
-                       (user
-                        (apply #'make-instance 'user-updated-check-run
-                               :user user
-                               audit-log-args))))
-      (declare (ignore updated-check-run))
-      (apply #'github-update-pull-request args))))
+(auto-restart:with-auto-restart (:retries 5)
+  (defmethod push-remote-check ((promoter pull-request-promoter)
+                                run check)
+    (let ((args (make-github-args run check))
+          (audit-log-args (list
+                           :company (recorder-run-company run)
+                           :commit (check-sha check))))
+      (with-audit-log (updated-check-run
+                       (trivia:match (check-user check)
+                         (nil
+                          (apply #'make-instance 'updated-check-run
+                                 audit-log-args))
+                         (user
+                          (apply #'make-instance 'user-updated-check-run
+                                 :user user
+                                 audit-log-args))))
+        (declare (ignore updated-check-run))
+        (apply #'github-update-pull-request args)))))
 
 (defmethod promoter-pull-id ((promoter pull-request-promoter)
                              run)
