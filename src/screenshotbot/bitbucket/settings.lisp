@@ -87,28 +87,29 @@
   (sort (copy-list (%bitbucket-settings-for-company company)) #'>
         :key #'bknr.datastore:store-object-id))
 
-(defun access-token-for-args (args &key company)
-  (with-audit-log (audit-log
-                   (make-instance 'access-token-audit-log
-                                  :company company
-                                  :grant-type (a:assoc-value args "grant_type" :test #'string-equal)))
-    (let ((plugin (bitbucket-plugin)))
-      (multiple-value-bind (stream result-code)
-          (util/request:http-request
-           (format nil "https://bitbucket.org/site/oauth2/access_token")
-           :parameters args
-           :basic-authorization (list (bitbucket-plugin-key plugin)
-                                      (bitbucket-plugin-secret plugin))
-           :method :post
-           :want-stream t)
-        (let ((body (uiop:slurp-input-stream 'string stream)))
-         (cond
-           ((http-success-response? result-code)
-            (json:decode-json-from-string
-             body))
-           (t
-            (parse-error-response
-             body result-code audit-log))))))))
+(auto-restart:with-auto-restart (:retries 3)
+  (defun access-token-for-args (args &key company)
+    (with-audit-log (audit-log
+                     (make-instance 'access-token-audit-log
+                                    :company company
+                                    :grant-type (a:assoc-value args "grant_type" :test #'string-equal)))
+      (let ((plugin (bitbucket-plugin)))
+        (multiple-value-bind (stream result-code)
+            (util/request:http-request
+             (format nil "https://bitbucket.org/site/oauth2/access_token")
+             :parameters args
+             :basic-authorization (list (bitbucket-plugin-key plugin)
+                                        (bitbucket-plugin-secret plugin))
+             :method :post
+             :want-stream t)
+          (let ((body (uiop:slurp-input-stream 'string stream)))
+            (cond
+              ((http-success-response? result-code)
+               (json:decode-json-from-string
+                body))
+              (t
+               (parse-error-response
+                body result-code audit-log)))))))))
 
 (defun ! (x)
   (assert x)

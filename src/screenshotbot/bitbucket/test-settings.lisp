@@ -21,9 +21,10 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-   (let ((company (make-instance 'company)))
-     (&body))))
+  (let ((auto-restart:*global-enable-auto-retries-p* nil))
+   (with-test-store ()
+     (let ((company (make-instance 'company)))
+       (&body)))))
 
 (test preconditions
   (with-fixture state ()
