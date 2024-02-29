@@ -170,8 +170,11 @@
        (cond
          ((or
            (not (str:emptyp (uiop:getenv "SCREENSHOTBOT_CLI_V2")))
-           (str:s-member argv "dev"))
-          (log:info "Enabling V2 of Screenshotbot CLI interface")
+           (str:s-member argv "dev")
+           (str:s-member argv "ci")
+           #+nil ;; References "ci record" which doesn't exit
+           (str:s-member argv "help"))
+          (log:debug "Enabling V2 of Screenshotbot CLI interface")
           (try-clingon argv))
          (t
            (format t "Unrecognized arguments: ~a~%" (Str:join " " unrecognized))
