@@ -30,6 +30,7 @@
   (:import-from #:screenshotbot/async
                 #:magick-future)
   (:import-from #:util/threading
+                #:with-extras
                 #:ignore-and-log-errors)
   (:import-from #:screenshotbot/user-api
                 #:current-company)
@@ -144,24 +145,25 @@
 
 (defun handle-resized-image (image size &key warmup
                                           type)
-  (with-hash-lock-held ((list image size type) *image-resize-lock*)
-    (cond
-      (warmup
-       (with-semaphore ()
-        (%build-resized-image image size)))
-      (t
-       (let ((output-file
-               (with-semaphore ()
-                 (%build-resized-image
-                  image size
-                  :type (cond
-                          ((string= type "png")
-                           :png)
-                          (t
-                           :webp))))))
-         (handle-static-file
-          output-file
-          (format nil "image/~a" (pathname-type output-file))))))))
+  (with-extras (("image" image))
+   (with-hash-lock-held ((list image size type) *image-resize-lock*)
+     (cond
+       (warmup
+        (with-semaphore ()
+          (%build-resized-image image size)))
+       (t
+        (let ((output-file
+                (with-semaphore ()
+                  (%build-resized-image
+                   image size
+                   :type (cond
+                           ((string= type "png")
+                            :png)
+                           (t
+                            :webp))))))
+          (handle-static-file
+           output-file
+           (format nil "image/~a" (pathname-type output-file)))))))))
 
 (defun send-404 (reason)
   (setf (hunchentoot:header-out :content-type) "text/html")
