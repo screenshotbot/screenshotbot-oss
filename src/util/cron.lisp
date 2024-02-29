@@ -9,6 +9,7 @@
   (:import-from #:alexandria
                 #:remove-from-plist)
   (:import-from #:util/threading
+                #:with-tags
                 #:ignore-and-log-errors)
   (:local-nicknames (#:a #:alexandria))
   (:export
@@ -32,7 +33,8 @@
 
 (defun call-with-cron-wrapper (fn)
   (ignore-and-log-errors ()
-    (util/threading:call-with-thread-fixes fn)))
+    (with-tags (("hostname" (uiop:hostname)))
+      (util/threading:call-with-thread-fixes fn))))
 
 (defmethod cron-enabled-on-store-p (store)
   t)
