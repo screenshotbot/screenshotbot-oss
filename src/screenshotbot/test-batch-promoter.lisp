@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/batch
+                #:state-invalidated-p
                 #:batch-item
                 #:batch)
   (:import-from #:util/store/store
@@ -15,6 +16,7 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:make-recorder-run)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-status
                 #:push-remote-check
                 #:push-remote-check-via-batching
                 #:make-check
@@ -24,6 +26,8 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/batch-promoter
+                #:compute-check-if-invalidated
+                #:compute-check
                 #:compute-title
                 #:compute-status)
   (:import-from #:screenshotbot/model/company
@@ -106,3 +110,20 @@
                               (list
                                (make-instance 'batch-item
                                               :title "some thing some thing"))))))))
+
+
+(test compute-check-if-invalidated
+  (with-fixture state ()
+    (let* ((batch (make-instance 'batch :commit "abcd"
+                                 :company company
+                                        :name "FooBar"))
+           (item (make-instance 'batch-item :batch batch
+                                :run run
+                                            :channel channel
+                                            :status :rejected)))
+      (setf (state-invalidated-p batch) t)
+      (let ((check (compute-check-if-invalidated batch :user)))
+        (is-true check)
+        (is (eql :rejected (check-status check))))
+      (is (eql nil (state-invalidated-p batch)))
+      (is (null (compute-check-if-invalidated batch :user))))))

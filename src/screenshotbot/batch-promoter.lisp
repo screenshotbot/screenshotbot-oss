@@ -47,23 +47,17 @@
                 #:installation-domain)
   (:import-from #:screenshotbot/installation
                 #:installation)
-  (:import-from #:util/hash-lock
-                #:with-hash-lock-held
-                #:hash-lock))
+  (:local-nicknames (#:batch #:screenshotbot/model/batch)))
 (in-package :screenshotbot/batch-promoter)
 
 (named-readtables:in-readtable markup:syntax)
-
-(defvar *lock* (bt:make-lock))
-
-(defvar *push-lock* (make-instance 'hash-lock))
 
 (auto-restart:with-auto-restart ()
  (defmethod push-remote-check-via-batching (promoter
                                             batch
                                             run
                                             check)
-   (with-hash-lock-held (batch *push-lock*)
+   (bt:with-lock-held ((batch:lock batch))
      (let ((item (or
                   (find-batch-item batch :channel (recorder-run-channel run))
                   (make-instance 'batch-item
@@ -74,15 +68,31 @@
        (setf (batch-item-report item) (report check))
        (setf (batch-item-status item) (check-status check))
        (setf (batch-item-title item) (check-title check))
+       (setf (batch:state-invalidated-p batch) t)))
 
-       (unless (check-status check)
-         (warn "Got a NIL status for ~a" run))
+   (unless (check-status check)
+     (warn "Got a NIL status for ~a" run))
 
-       (push-remote-check
-        promoter
-        batch
-        (compute-check batch
-                       :user (check-user check)))))))
+   (bt:with-lock-held ((batch:push-lock batch))
+     (let ((check (compute-check-if-invalidated
+                   batch (check-user check))))
+       (when check
+         (push-remote-check
+          promoter
+          batch
+          check))
+       ;; Avoid returning any unwanted values
+       nil))))
+
+(defun compute-check-if-invalidated (batch user)
+  (bt:with-lock-held ((batch:lock batch))
+    (when (batch:state-invalidated-p batch)
+      (prog1
+          (compute-check batch
+                         :user user)
+        ;; This next change needs to be made while the lock is held
+        ;; for concurrency reasons
+        (setf (batch:state-invalidated-p batch) nil)))))
 
 (defun compute-status (item)
   (let ((statuses (fset:image #'batch-item-status item)))

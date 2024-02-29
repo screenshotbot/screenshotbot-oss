@@ -37,7 +37,10 @@
    #:batch-item-report
    #:batch-commit
    #:batch-item-status
-   #:batch-item-title))
+   #:batch-item-title
+   #:lock
+   #:push-lock
+   #:state-invalidated-p))
 (in-package :screenshotbot/model/batch)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -76,7 +79,19 @@
                            :reader phabricator-diff-id)
      (%pull-request-url :initarg :pull-request-url
                         :initform nil
-                        :reader pull-request-url))
+                        :reader pull-request-url)
+     (lock :initform (bt:make-lock "batch-lock")
+           :transient t
+           :reader lock
+           :documentation "A lock to make sure that ")
+     (push-lock :initform (bt:make-lock "batch-push-lock")
+                :transient t
+                :reader push-lock
+                :documentation "A lock to make sure only one promoter is updating the PR.")
+     (state-invalidated-p :initform nil
+                          :transient t
+                          :accessor state-invalidated-p
+                          :documentation "The current state was invalidated since the last push to remote (GitHub/Bitbucket etc.)."))
     (:metaclass persistent-class)))
 
 (defmethod name (batch)
@@ -108,16 +123,10 @@
      (%report :initarg :report
               :initform nil
               :accessor batch-item-report)
-     ;; These two locks are currently not in use. See batch-promoter,
-     ;; and delete this comment once we're using it.
-     (lock :initform (bt:make-lock "batch-lock")
-           :transient t
-           :reader lock
-           :documentation "A lock to make sure that ")
-     (push-lock :initform (bt:make-lock "batch-push-lock")
-                :transient t
-                :reader push-lock
-                :documentation "A lock to make sure only one promoter is updating the PR."))
+     ;; Oops, accident. Leaving it around to be safe. Can be cleared
+     ;; in the future before a restart.
+     (lock :transient t)
+     (push-lock :transient t))
     (:metaclass persistent-class)))
 
 (defvar *lock* (bt:make-lock))
