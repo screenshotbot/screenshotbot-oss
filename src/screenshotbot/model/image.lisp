@@ -91,6 +91,8 @@
                 #:unique-index)
   (:import-from #:bknr.datastore
                 #:store-object)
+  (:import-from #:util/threading
+                #:with-extras)
   ;; classes
   (:export
    #:image
@@ -601,19 +603,20 @@
 (def-store-local *metadata-cache* (make-hash-table))
 
 (defmethod image-metadata ((image abstract-image))
-  (util:or-setf
-   (gethash image *metadata-cache*)
-   (with-local-image (file image)
-     (destructuring-bind (width height type)
-         (ping-image-metadata (magick) file)
-       (assert (member type '("WEBP" "PNG" "JPEG")
-                       :test #'string=))
-       (make-instance 'metadata
-                      :image-format (intern type "KEYWORD")
-                      :dimensions
-                      (make-instance 'dimension
-                                     :height height
-                                     :width width))))))
+  (with-extras (("image" image))
+    (util:or-setf
+     (gethash image *metadata-cache*)
+     (with-local-image (file image)
+       (destructuring-bind (width height type)
+           (ping-image-metadata (magick) file)
+         (assert (member type '("WEBP" "PNG" "JPEG")
+                         :test #'string=))
+         (make-instance 'metadata
+                        :image-format (intern type "KEYWORD")
+                        :dimensions
+                        (make-instance 'dimension
+                                       :height height
+                                       :width width)))))))
 
 (defmethod invalidate-image-metadata ((image abstract-image))
   (remhash image *metadata-cache*))
