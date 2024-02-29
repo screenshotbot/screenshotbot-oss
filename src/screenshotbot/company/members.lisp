@@ -25,7 +25,6 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/model/invite
-                #:all-invites
                 #:invite-email)
   (:import-from #:bknr.datastore
                 #:with-transaction)
@@ -37,6 +36,8 @@
                 #:taskie-page-title)
   (:import-from #:screenshotbot/template
                 #:mdi)
+  (:import-from #:auth/model/invite
+                #:all-unused-invites)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/company/members)
 
@@ -131,7 +132,7 @@
 
        ,(taskie-list
          :headers '("Name" "Email" "Status" "Actions")
-         :items (all-invites :company company)
+         :items (all-unused-invites :company company)
          :checkboxes nil
          :empty-message "No pending invites"
          :row-generator (lambda (invite)

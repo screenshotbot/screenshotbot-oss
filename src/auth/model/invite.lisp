@@ -24,7 +24,8 @@
    #:invite-used-p
    #:invite-with-code
    #:inviter
-   #:invites-with-email))
+   #:invites-with-email
+   #:all-unused-invites))
 (in-package :screenshotbot/model/invite)
 
 (with-class-validation
@@ -58,6 +59,9 @@
             (not company)
             (eql company (invite-company invite)))
           collect invite))
+
+(defun all-unused-invites (&key company)
+  (remove-if #'invite-used-p (all-invites :company company)))
 
 (defun invites-with-email (email &key company)
   (loop for invite in (all-invites :company company)

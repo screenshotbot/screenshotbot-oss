@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:auth/model/invite
+                #:invite-used-p
+                #:all-unused-invites
                 #:invite-code
                 #:invite-with-code
                 #:invites-with-email
@@ -57,3 +59,11 @@
   (with-fixture state ()
     (assert-that (invite-with-code (invite-code invite))
                  (is-equal-to invite))))
+
+(test all-unused-invites ()
+  (with-fixture state ()
+    (assert-that (all-unused-invites :company company)
+                 (contains invite))
+    (setf (invite-used-p invite) t)
+    (assert-that (all-unused-invites :company company)
+                 (contains))))
