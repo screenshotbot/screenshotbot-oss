@@ -1,6 +1,7 @@
 
 Version
 
+* 11: Add batch model and POST /api/batch
 * 10: Add author field to run
 * 9: Introduced the installation URL in version
 * 8: Add `tags` to recorder-run

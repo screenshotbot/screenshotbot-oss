@@ -59,12 +59,16 @@
              #:comparison-title
              #:comparison-url
              #:run-tags
-             #:run-author))
+             #:run-author
+             #:batch
+             #:batch-repo
+             #:batch-commit
+             #:batch-name))
 
 (in-package :screenshotbot/api/model)
 
 ;; Please update CHANGELOG.md
-(defparameter *api-version* 10)
+(defparameter *api-version* 11)
 
 (defclass version ()
   ((version :initarg :version
@@ -147,6 +151,38 @@
            :reader finalized-commit-hash))
   (:metaclass ext-json-serializable-class))
 
+(defclass batch ()
+  ((id :initarg :id
+       :json-type (or null :number)
+       :initform nil
+       :json-key "id")
+   (repo :initarg :github-repo
+         :json-key "repo"
+         :json-type (or null :string)
+         :initform nil
+         :reader batch-repo
+         :documentation "The repository URL")
+   (commit :initarg :commit
+           :json-key "commit"
+           :json-type (or null :string)
+           :reader batch-commit)
+   (name :initarg :name
+         :json-key "name"
+         :json-type :string
+         :reader batch-name)
+   (phabrictor-diff-id :initarg :phabricator-diff-id
+                       :json-key "phabricatorDiff"
+                       :json-type (or null :number)
+                       :initform nil
+                       :reader phabricator-diff-id
+                       :documentation "A Phabricator Diff ID associated with the run, if any.")
+   (pull-request-url :initarg :pull-request
+                     :json-key "pullRequestUrl"
+                     :json-type (or null :string)
+                     :initform nil
+                     :reader pull-request-url
+                     :documentation "The pull request URL associated with this run, if any."))
+  (:metaclass ext-json-serializable-class))
 
 (defclass screenshot ()
   ((name :initarg :name
