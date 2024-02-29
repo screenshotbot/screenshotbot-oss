@@ -94,16 +94,20 @@
         ;; for concurrency reasons
         (setf (batch:state-invalidated-p batch) nil)))))
 
-(defun compute-status (item)
-  (let ((statuses (fset:image #'batch-item-status item)))
-    (loop for status in (list :rejected
-                              :failure
-                              :action-required
-                              :pending
-                              :accepted
-                              :success)
-          if (fset:contains? statuses status)
-            return status)))
+(defun compute-status (items)
+  (cond
+    ((fset:empty? items)
+     :success)
+    (t
+     (let ((statuses (fset:image #'batch-item-status items)))
+       (loop for status in (list :rejected
+                                 :failure
+                                 :action-required
+                                 :pending
+                                 :accepted
+                                 :success)
+             if (fset:contains? statuses status)
+               return status)))))
 
 (defun compute-title (items)
   (cond
@@ -133,9 +137,13 @@
                                 (installation-domain (installation))))
                  :status (compute-status (batch-items batch))
                  :summary
-                 (if (gk:check :markdown-summary (recorder-run-company batch) :default t)
-                     (build-check-summary batch)
-                     "Please review the changes to make sure they look reasonable")))
+                 (cond
+                   ((fset:empty? (batch-items batch))
+                    "Nothing to review")
+                   (t
+                    (if (gk:check :markdown-summary (recorder-run-company batch) :default t)
+                        (build-check-summary batch)
+                        "Please review the changes to make sure they look reasonable")))))
 
 (defun build-check-summary (batch)
   (markup:write-html

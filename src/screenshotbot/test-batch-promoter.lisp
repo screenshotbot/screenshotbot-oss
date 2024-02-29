@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/batch
+                #:batch-items
                 #:state-invalidated-p
                 #:batch-item
                 #:batch)
@@ -16,6 +17,8 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:make-recorder-run)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-summary
+                #:check-title
                 #:check-status
                 #:push-remote-check
                 #:push-remote-check-via-batching
@@ -127,3 +130,15 @@
         (is (eql :rejected (check-status check))))
       (is (eql nil (state-invalidated-p batch)))
       (is (null (compute-check-if-invalidated batch :user))))))
+
+(test compute-status-for-empty-batch
+  (with-fixture state ()
+    (is (eql :success (compute-status (batch-items batch))))))
+
+(test compute-check-for-empty-batch
+  (with-fixture state ()
+    (let ((check
+            (compute-check batch :user :my-user)))
+      (is (equal :success (check-status check)))
+      (is (equal "No screenshots changed" (check-title check)))
+      (is (equal "Nothing to review" (check-summary check))))))
