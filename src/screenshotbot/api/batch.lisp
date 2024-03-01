@@ -20,6 +20,29 @@
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/batch)
 
+(define-condition validation-error (error)
+  ((message :initarg :message))
+  (:report (lambda (e out)
+            (format out (slot-value e 'message)))))
+
+(defmethod validate-dto ((batch dto:batch))
+  (flet ((verify (test message &rest args)
+           (unless test
+             (error 'validation-error
+                    :message
+                    (apply #'format nil message args)))))
+    (verify (< (length (dto:batch-name batch)) 256)
+            "Batch name too long")
+    (verify (eql (length (dto:batch-commit batch)) 40)
+            "Commit should be exactly 40 characters long")
+    (verify (< (length (dto:batch-repo batch)) 256)
+            "Batch repo too long")
+    (verify (< (length (dto:pull-request-url batch)) 256)
+            "Pull request URL too long")
+    (verify (or (null (dto:phabricator-diff-id batch))
+                (numberp (dto:phabricator-diff-id batch)))
+            "Phabricator diff id must be a number")))
+
 (defapi (post-batch :uri "/api/batch" :method :post :use-yason t) ()
   (let ((body (hunchentoot:raw-post-data :force-text t)))
     (let ((dto (json-mop:json-to-clos body 'dto:batch)))
@@ -27,6 +50,7 @@
        (make-batch-from-dto dto (auth:current-company))))))
 
 (defun make-batch-from-dto (dto company)
+  (validate-dto dto)
   (find-or-create-batch
    :company company
    :repo (dto:batch-repo dto)

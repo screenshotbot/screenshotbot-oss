@@ -27,6 +27,11 @@
 
 (util/fiveam:def-suite)
 
+(defun make-hash (str)
+  (replace
+   (copy-seq "0000000000000000000000000000000000000000")
+   str))
+
 (def-fixture state ()
   (with-test-store ()
     (let* ((company (make-instance 'company))
@@ -34,20 +39,20 @@
                    :company company
                    :name "foo"
                    :repo "https://github.com/tdrhq/fast-example"
-                   :commit "abcd")))
+                   :commit (make-hash "abcd"))))
       (&body))))
 
 (test batch-to-dto-happy-path
   (with-fixture state ()
     (let ((dto (batch-to-dto batch)))
-      (is (equal "abcd" (dto:batch-commit dto))))))
+      (is (equal (make-hash "abcd") (dto:batch-commit dto))))))
 
 (test make-batch-from-dto
   (with-fixture state ()
     (let ((dto (make-instance 'dto:batch
                               :name "foo"
                               :github-repo "https://github.com/tdrhq/fast-example"
-                              :commit "abcdef")))
+                              :commit (make-hash "abcdef"))))
       (let ((batch (make-batch-from-dto dto company)))
         (is (eql company (recorder-run-company batch)))
-        (is (equal "abcdef" (batch-commit batch)))))))
+        (is (equal (make-hash "abcdef") (batch-commit batch)))))))
