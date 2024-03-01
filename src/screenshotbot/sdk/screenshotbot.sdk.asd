@@ -100,8 +100,10 @@
                :fiveam
                :fiveam-matchers
                :screenshotbot
+               :util/fake-clingon
                :util/fiveam)
   :components ((:file "test-bundle")
+               (:file "test-unchanged-run")
                (:file "test-version-check")
                (:file "test-main")
                (:file "test-run-context")
