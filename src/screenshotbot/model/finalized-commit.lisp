@@ -13,7 +13,11 @@
                 #:defindex
                 #:with-class-validation)
   (:import-from #:util/store/fset-index
-                #:fset-set-index))
+                #:fset-set-index)
+  (:export
+   #:finalized-commit-company
+   #:finalized-commit
+   #:finalized-commit-hash))
 (in-package :screenshotbot/model/finalized-commit)
 
 (defindex +commit-index+
@@ -23,7 +27,7 @@
 (with-class-validation
  (defclass finalized-commit (store-object)
    ((%company :initarg :company
-              :reader company)
+              :reader finalized-commit-company)
     (%commit :initarg :commit
              :index +commit-index+
              :reader finalized-commit-hash
@@ -32,5 +36,5 @@
 
 (defun commit-finalized-p (company commit)
   (fset:do-set (fc (%finalized-commits-for-commit commit))
-    (when  (eql company (company fc))
+    (when  (eql company (finalized-commit-company fc))
       (return t))))

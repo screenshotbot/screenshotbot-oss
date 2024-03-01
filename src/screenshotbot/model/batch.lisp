@@ -40,7 +40,8 @@
    #:batch-item-title
    #:lock
    #:push-lock
-   #:state-invalidated-p))
+   #:state-invalidated-p
+   #:finalize-batch))
 (in-package :screenshotbot/model/batch)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -139,6 +140,14 @@
                       collect `(equal ,key (,key batch))))
           (return batch))))
 
+(defun find-batches-for-commit (&key commit company)
+  (fset:convert
+   'list
+   (fset:filter
+    (lambda (batch)
+      (eql (company batch) company))
+    (batches-for-commit commit))))
+
 (defun find-or-create-batch (&rest args
                              &key &allow-other-keys)
   (bt:with-lock-held (*lock*)
@@ -155,3 +164,6 @@
 
 (defmethod can-view ((self batch) user)
   (can-view (company self) user))
+
+(defgeneric finalize-batch (batch)
+  (:documentation "Called when the batch is finalized, typically because the commit is finalized. See implementation in batch-promoter"))

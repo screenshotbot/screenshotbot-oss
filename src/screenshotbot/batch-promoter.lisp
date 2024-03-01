@@ -15,6 +15,7 @@
                 #:push-remote-check
                 #:push-remote-check-via-batching)
   (:import-from #:screenshotbot/model/batch
+                #:finalize-batch
                 #:batch-item-title
                 #:batch-item-status
                 #:batch
@@ -171,3 +172,6 @@
                 </td>
               </tr>)
      </table>)))
+
+(defmethod finalize-batch ((self batch))
+  (log:info "Finalize batch not implemented yet."))

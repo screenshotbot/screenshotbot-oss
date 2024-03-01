@@ -9,12 +9,16 @@
   (:import-from #:screenshotbot/api/model
                 #:decode-json)
   (:import-from #:screenshotbot/model/finalized-commit
+                #:finalized-commit-company
                 #:finalized-commit-hash
                 #:finalized-commit)
   (:import-from #:screenshotbot/user-api
                 #:current-company)
   (:import-from #:screenshotbot/api/core
                 #:defapi)
+  (:import-from #:screenshotbot/model/batch
+                #:finalize-batch
+                #:find-batches-for-commit)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/finalized-commit)
 
@@ -30,7 +34,14 @@
                                 :use-yason t) ()
   (assert (current-company))
   (let ((input (%parse-body)))
-    (to-dto
-     (make-instance 'finalized-commit
-                    :company (current-company)
-                    :commit (dto:finalized-commit-hash input)))))
+    (let ((finalized-commit (make-instance 'finalized-commit
+                                           :company (current-company)
+                                           :commit (dto:finalized-commit-hash input))))
+      (trigger-callbacks finalized-commit)
+      (to-dto finalized-commit))))
+
+(defun trigger-callbacks (finalized-commit)
+  (loop for batch in (find-batches-for-commit
+                      :commit (finalized-commit-hash finalized-commit)
+                      :company (finalized-commit-company finalized-commit))
+        do (finalize-batch batch)))

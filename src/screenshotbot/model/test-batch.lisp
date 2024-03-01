@@ -13,6 +13,7 @@
                 #:find-or-create-channel
                 #:company)
   (:import-from #:screenshotbot/model/batch
+                #:find-batches-for-commit
                 #:batch-item
                 #:find-batch-item
                 #:find-or-create-batch)
@@ -20,7 +21,11 @@
                 #:can-view
                 #:user)
   (:import-from #:screenshotbot/testing
-                #:with-installation))
+                #:with-installation)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:contains))
 (in-package :screenshotbot/model/test-batch)
 
 (util/fiveam:def-suite)
@@ -72,3 +77,30 @@
                   :commit "abcd"
                   :name "foobar")))
       (is-false (can-view batch user)))))
+
+(test find-batches-for-company ()
+  (with-fixture state ()
+    (let ((other-company (make-instance 'company)))
+      (let ((batch-1 (find-or-create-batch
+                      :repo "https://foo.git"
+                      :company company
+                      :commit "abcd"
+                      :name "foobar"))
+            (batch-2 (find-or-create-batch
+                      :repo "https://foo.git"
+                      :company company
+                      :commit "abcd"
+                      :name "foobar-another"))
+            (batch-3 (find-or-create-batch
+                      :repo "https://foo.git"
+                      :company other-company
+                      :commit "abcd"))
+            (batch-4 (find-or-create-batch
+                      :repo "https://foo.git"
+                      :company company
+                      :commit "a000")))
+        (is (not (eql batch-2 batch-1)))
+        (assert-that (find-batches-for-commit :commit "abcd"
+                                              :company company)
+                     (contains
+                      batch-1 batch-2))))))
