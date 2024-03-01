@@ -22,6 +22,7 @@
   (:use-reexport #:util/ret-let
                  #:util/copying
                  #:util/store
+                 #:util/store/validate
                  #:util/misc
                  #:util/bind-form
                  #:util/html2text

@@ -34,7 +34,8 @@
                (:file "fset")
                (:file "fset-index")
                (:file "permissive-persistent-class")
-               (:file "store-migrations")))
+               (:file "store-migrations")
+               (:file "validate")))
 
 (defsystem :util.store/encodable
   :serial t
@@ -56,6 +57,7 @@
                (:file "test-raft-state-http" :if-feature (:and :lispworks :linux))
                (:file "test-checksums")
                (:file "test-fset")
+               (:file "test-validate")
                (:file "test-fset-index")
                (:file "test-encodable")
                (:file "test-permissive-persistent-class")))

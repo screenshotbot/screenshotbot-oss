@@ -15,15 +15,10 @@
                 #:store-object
                 #:truncate-log)
   (:import-from #:bknr.indices
-                #:hash-index
-                #:index-remove
-                #:index-values)
+                #:hash-index)
   (:import-from #:fiveam-matchers/core
-                #:assert-that
                 #:error-with-string-matching
                 #:signals-error-matching)
-  (:import-from #:fiveam-matchers/lists
-                #:contains)
   (:import-from #:it.bese.fiveam
                 #:def-fixture
                 #:fail
@@ -33,13 +28,9 @@
                 #:is-true
                 #:pass
                 #:signals
-                #:test
-                #:with-fixture)
+                #:test)
   (:import-from #:local-time
                 #:timestamp=)
-  (:import-from #:util/store/fset-index
-                #:corrupted-index
-                #:fset-set-index)
   (:import-from #:util/store/permissive-persistent-class
                 #:permissive-persistent-class)
   (:import-from #:util/store/store
@@ -47,7 +38,6 @@
                 #:*object-store*
                 #:*snapshot-hooks*
                 #:def-store-local
-                #:defindex
                 #:dispatch-snapshot-hooks
                 #:fast-ensure-directories-exist
                 #:find-any-refs
@@ -55,7 +45,6 @@
                 #:object-store
                 #:parse-timetag
                 #:safe-mp-store
-                #:validate-indices
                 #:verify-old-class
                 #:with-snapshot-lock
                 #:with-test-store))
@@ -391,32 +380,3 @@
                       'permissive-persistent-class)
     (error-with-string-matching
      "missing slots: (A)")))
-
-(def-fixture validate-indices ()
-  (with-test-store ()
-    (&body)))
-
-(defindex +my-object-index+
-  'fset-set-index
-  :slot-name 'key)
-
-(defclass my-object (store-object)
-  ((key :initarg :key
-        :index +my-object-index+
-        :accessor key))
-  (:metaclass persistent-class))
-
-(test validate-indices-happy-path
-  (with-fixture validate-indices ()
-    (finishes (validate-indices))
-    (let ((obj (make-instance 'my-object :key "foo")))
-      (finishes (validate-indices))
-      (index-remove +my-object-index+ obj)
-      (let ((auto-restart:*global-enable-auto-retries-p* nil))
-        (signals corrupted-index
-          (validate-indices)))
-
-      (is-false (index-values +my-object-index+))
-      (validate-indices :fix-by-default t)
-      (assert-that (index-values +my-object-index+)
-                   (contains obj)))))
