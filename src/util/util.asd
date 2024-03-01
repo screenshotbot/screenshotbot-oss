@@ -347,6 +347,7 @@
                :util/throttler
                :util/events
                :util/request
+               :util/fake-clingon
                :util/fiveam)
   :defsystem-depends-on (:trivial-features)
   :serial t
@@ -355,6 +356,7 @@
                              (:static-file "test-file-compressed" :type "txt.gz")
                              (:file "test-ret-let")
                              (:file "test-mail")
+                             (:file "test-fake-clingon")
                              (:file "test-throttler")
                              (:file "test-logger")
                              (:file "test-misc")
@@ -421,3 +423,8 @@
   :serial t
   :depends-on (:util/request)
   :components ((:file "http-ping")))
+
+(defsystem :util/fake-clingon
+  :serial t
+  :depends-on (:clingon)
+  :components ((:file "fake-clingon")))
