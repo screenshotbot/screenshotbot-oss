@@ -85,7 +85,7 @@
 (defmethod promotion-logger ((run recorder-run))
   (call-next-method))
 
-(defmethod format-log ((run recorder-run)
+(defmethod format-log (run #| or batch |#
                        level message &rest args)
   (let ((logger (promotion-logger run)))
     (apply #'format-log
