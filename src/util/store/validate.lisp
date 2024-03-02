@@ -18,7 +18,9 @@
   (:import-from #:util/store/store
                 #:fix-the-index
                 #:validate-index-values)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:validate-indices))
 (in-package :util/store/validate)
 
 (defvar *recent-validation-errors* nil)

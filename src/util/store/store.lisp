@@ -70,7 +70,6 @@
    #:with-test-store
    #:*object-store*
    #:store-subsystems
-   #:validate-indices
    #:register-ref
    #:find-any-refs
    #:safe-snapshot
