@@ -374,7 +374,7 @@
        (setf (publicp channel) publicp)))))
 
 (defmethod finalize-batch ((self batch))
-  (when (gk:check :finalize-batch :default nil)
+  (when (gk:check :finalize-batch (recorder-run-company self) :default nil)
     (make-thread
      (lambda ()
        (maybe-promote (make-instance 'default-promoter)
