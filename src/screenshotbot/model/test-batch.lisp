@@ -25,7 +25,11 @@
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
-                #:contains))
+                #:contains)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:promotion-log)
+  (:import-from #:bknr.datastore
+                #:blob-pathname))
 (in-package :screenshotbot/model/test-batch)
 
 (util/fiveam:def-suite)
@@ -104,3 +108,14 @@
                                               :company company)
                      (contains
                       batch-1 batch-2))))))
+
+
+(test promotion-log-for-batch
+  (with-fixture state ()
+    (let ((batch (find-or-create-batch
+                  :repo "dfdf"
+                  :company company
+                  :commit "abcd")))
+      (is (pathnamep
+           (blob-pathname
+            (promotion-log batch)))))))

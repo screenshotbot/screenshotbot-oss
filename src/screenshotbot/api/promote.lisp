@@ -74,13 +74,16 @@
     (t
      (warn "Attempted to call promotion log when no promotion is running: ~a" message))))
 
-(defmethod promotion-logger ((run recorder-run))
+(defmethod promotion-logger (run #| or batch! |#)
   (util:or-setf
    (gethash run *loggers*)
    (make-instance 'logger
                   :file (blob-pathname
                          (promotion-log run)))
    :thread-safe t))
+
+(defmethod promotion-logger ((run recorder-run))
+  (call-next-method))
 
 (defmethod format-log ((run recorder-run)
                        level message &rest args)

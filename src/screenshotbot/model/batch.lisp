@@ -18,11 +18,14 @@
   (:import-from #:bknr.indices
                 #:index-get)
   (:import-from #:util/store/object-id
+                #:oid-array
                 #:find-by-oid
                 #:object-with-oid)
   (:import-from #:screenshotbot/user-api
                 #:can-view)
   (:import-from #:screenshotbot/model/recorder-run
+                #:transient-promotion-log
+                #:promotion-log
                 #:recorder-run-repo-url
                 #:phabricator-diff-id
                 #:pull-request-url
@@ -167,3 +170,7 @@
 
 (defgeneric finalize-batch (batch)
   (:documentation "Called when the batch is finalized, typically because the commit is finalized. See implementation in batch-promoter"))
+
+(defmethod promotion-log ((batch batch))
+  (make-instance 'transient-promotion-log
+                 :oid-array (oid-array batch)))
