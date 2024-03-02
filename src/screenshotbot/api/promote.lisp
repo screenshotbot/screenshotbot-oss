@@ -23,6 +23,7 @@
                 #:register-init-hook
                 #:*init-hooks*)
   (:import-from #:util/threading
+                #:make-thread
                 #:with-extras
                 #:ignore-and-log-errors)
   (:import-from #:util/misc
@@ -36,6 +37,9 @@
                 #:recorder-run-warnings
                 #:not-fast-forward-promotion-warning
                 #:promotion-log)
+  (:import-from #:screenshotbot/model/batch
+                #:finalize-batch
+                #:batch)
   (:export
    #:with-promotion-log
    #:default-promoter)
@@ -368,3 +372,15 @@
    (let ((publicp (%channel-publicp channel)))
      (with-transaction ()
        (setf (publicp channel) publicp)))))
+
+(defmethod finalize-batch ((self batch))
+  (when (gk:check :finalize-batch :default nil)
+    (make-thread
+     (lambda ()
+       (maybe-promote (make-instance 'default-promoter)
+                      self))
+     :name "finalize-batch")))
+
+(defmethod maybe-promote ((promoter master-promoter) (batch batch))
+  ;; Do nothing!
+  (values))
