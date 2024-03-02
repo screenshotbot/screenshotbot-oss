@@ -16,11 +16,10 @@
   (:import-from #:bknr.indices
                 #:slot-index)
   (:import-from #:util/store/store
+                #:validate-indices ;; To make it easier to deploy
                 #:fix-the-index
                 #:validate-index-values)
-  (:local-nicknames (#:a #:alexandria))
-  (:export
-   #:validate-indices))
+  (:local-nicknames (#:a #:alexandria)))
 (in-package :util/store/validate)
 
 (defvar *recent-validation-errors* nil)
