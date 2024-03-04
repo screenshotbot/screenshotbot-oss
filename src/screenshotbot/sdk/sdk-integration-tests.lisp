@@ -150,7 +150,31 @@
   (with-repo
       (run (list *sdk*
                  "--channel" "bleh"
-                 "--mark-unchanged-from" "abcd"))))
+                 "--mark-unchanged-from" "abcd")))
+
+  (log:info "## TESTING `ci mark-unchanged`")
+  (with-repo
+      (run (list *sdk*
+                 "ci" "mark-unchanged"
+                 "--channel" "bleh"
+                 "--other-commit" "abcd"))))
+
+(defun test-mark-unchanged-with-batch ()
+  (log:info "## TESTING --mark-unchanged-from with batch")
+  (with-repo
+      (run (list *sdk*
+                 "--channel" "bleh"
+                 "--batch" "test-batch"
+                 "--mark-unchanged-from" "abcd")))
+
+  (log:info "## TESTING `ci mark-unchanged` with batch")
+  (with-repo
+      (run (list *sdk*
+                 "ci" "mark-unchanged"
+                 "--channel" "bleh"
+                 "--batch" "test-batch"
+                 "--other-commit" "abcd"))))
+
 
 (defun run-self-tests ()
   (log:info "Running self tests")
@@ -170,6 +194,7 @@
   (test-static-website)
 
   (test-mark-unchanged)
+  (test-mark-unchanged-with-batch)
 
   (test-verbose-logs)
 
