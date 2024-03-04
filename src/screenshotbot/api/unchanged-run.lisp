@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/model/company
                 #:find-or-create-channel)
   (:import-from #:screenshotbot/api/recorder-run
+                #:after-run-created
                 #:batch-for-run)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/unchanged-run)
@@ -38,14 +39,16 @@
          :use-yason t) ()
   (assert (current-company))
   (let ((input (parse-body 'dto:unchanged-run)))
-    (to-dto
-     (make-instance 'unchanged-run
-                    :channel (find-or-create-channel
-                              (current-company)
-                              (dto:unchanged-run-channel input))
-                    :commit (dto:unchanged-run-commit input)
-                    :batch (batch-for-run (current-company) input)
-                    :work-branch (dto:work-branch input)
-                    :merge-base (dto:merge-base input)
-                    :override-commit-hash (dto:override-commit-hash input)
-                    :other-commit (dto:unchanged-run-other-commit input)))))
+    (let ((unchanged-run
+            (make-instance 'unchanged-run
+                           :channel (find-or-create-channel
+                                     (current-company)
+                                     (dto:unchanged-run-channel input))
+                           :commit (dto:unchanged-run-commit input)
+                           :batch (batch-for-run (current-company) input)
+                           :work-branch (dto:work-branch input)
+                           :merge-base (dto:merge-base input)
+                           :override-commit-hash (dto:override-commit-hash input)
+                           :other-commit (dto:unchanged-run-other-commit input))))
+      (after-run-created unchanged-run)
+      (to-dto unchanged-run))))

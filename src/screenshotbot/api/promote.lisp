@@ -42,6 +42,8 @@
   (:import-from #:screenshotbot/model/batch
                 #:finalize-batch
                 #:batch)
+  (:import-from #:screenshotbot/promote-api
+                #:maybe-send-tasks)
   (:export
    #:with-promotion-log
    #:default-promoter)
@@ -385,4 +387,11 @@
 
 (defmethod maybe-promote ((promoter master-promoter) (batch batch))
   ;; Do nothing!
+  (values))
+
+(defmethod maybe-promote ((promoter master-promoter) (run unchanged-run))
+  ;; Do nothing!
+  (values))
+
+(defmethod maybe-send-tasks ((promoter master-promoter) (run unchanged-run))
   (values))

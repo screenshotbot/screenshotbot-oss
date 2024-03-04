@@ -40,6 +40,7 @@
   (:import-from #:screenshotbot/model/screenshot-map
                 #:make-screenshot-map)
   (:import-from #:screenshotbot/model/recorder-run
+                #:unchanged-run
                 #:recorder-run-author
                 #:recorder-run-tags
                 #:make-recorder-run)
@@ -170,7 +171,7 @@
         #'promotion
         :name (format nil "Promotion ~a" (recorder-run-channel recorder-run)))))))
 
-(defun warmup-image-caches (run)
+(defmethod warmup-image-caches (run)
   (log:info "Warming up small screenshots for ~s" run)
   (loop for screenshot in (recorder-run-screenshots run)
         do
@@ -183,6 +184,9 @@
            (progn
              (handle-resized-image (screenshot-image screenshot)
                                    :full-page :warmup t))))
+
+(defmethod warmup-image-caches ((run unchanged-run))
+  (values))
 
 (defun %recorder-run-post (&rest args
                            &key channel

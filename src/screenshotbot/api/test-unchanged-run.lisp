@@ -21,6 +21,8 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:unchanged-run-for-commit
                 #:unchanged-run-other-commit)
+  (:import-from #:screenshotbot/api/recorder-run
+                #:*synchronous-promotion*)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/test-unchanged-run)
 
@@ -29,8 +31,9 @@
 
 (def-fixture state ()
   (cl-mock:with-mocks ()
-   (with-test-store ()
-     (&body))))
+    (with-test-store ()
+      (let ((*synchronous-promotion* t))
+       (&body)))))
 
 
 (test simple-create-api
