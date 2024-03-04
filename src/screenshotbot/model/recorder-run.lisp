@@ -324,7 +324,10 @@ associated report is rendered.")
                   :reader recorder-run-work-branch)
     (%batch :initarg :batch
             :accessor recorder-run-batch
-            :documentation "The batch object associated with this run"))
+            :documentation "The batch object associated with this run")
+    (promotion-complete-p
+     :initform nil
+     :accessor promotion-complete-p))
    (:metaclass persistent-class)
    (:default-initargs :batch nil
                       :override-commit-hash nil
