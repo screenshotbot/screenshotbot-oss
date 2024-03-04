@@ -52,6 +52,7 @@
                                 :commit commit
                                 :channel (run-context:channel run-context)
                                 :other-commit other-commit
+                                :work-branch (run-context:work-branch run-context)
                                 :batch (run-context:batch run-context)
                                 :github-repo (run-context:repo-url run-context)
                                 :override-commit-hash (run-context:override-commit-hash run-context)
