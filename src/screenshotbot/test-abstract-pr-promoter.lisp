@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:push-remote-check-via-batching
                 #:check-key
                 #:make-check
                 #:actual-sha
@@ -37,6 +38,7 @@
   (:import-from #:screenshotbot/promote-api
                 #:maybe-promote)
   (:import-from #:screenshotbot/model/recorder-run
+                #:unchanged-run
                 #:make-recorder-run
                 #:compared-against
                 #:merge-base-failed-warning
@@ -57,6 +59,7 @@
   (:import-from #:screenshotbot/diff-report
                 #:diff-report-empty-p)
   (:import-from #:cl-mock
+                #:if-called
                 #:answer)
   (:import-from #:fiveam-matchers/strings
                 #:contains-string)
@@ -71,7 +74,9 @@
   (:import-from #:screenshotbot/model/finalized-commit
                 #:finalized-commit)
   (:import-from #:screenshotbot/diff-report
-                #:diff-report-empty-p))
+                #:diff-report-empty-p)
+  (:import-from #:screenshotbot/model/batch
+                #:find-or-create-batch))
 (in-package :screenshotbot/test-abstract-pr-promoter)
 
 
@@ -358,8 +363,38 @@
                 :channel channel
                 :merge-base nil
                 :commit-hash "foo")))
-      (cl-mock:with-mocks ()
-        (cl-mock:if-called 'retrieve-run
-                   (lambda (retriver channel merge-base run)
-                     (error "should not be called")))
-       (maybe-promote promoter run)))))
+      (cl-mock:if-called 'retrieve-run
+                         (lambda (retriver channel merge-base run)
+                           (error "should not be called")))
+      (maybe-promote promoter run))))
+
+
+(test unchanged-run-without-batch-should-do-nothing
+  (with-fixture state ()
+    (let ((unchanged-run (make-instance 'unchanged-run
+                                        :commit "abdc")))
+      (finishes
+        (maybe-promote promoter unchanged-run)))))
+
+(def-fixture unchanged-run ()
+  (let* ((batch (find-or-create-batch
+                 :commit "abcd"
+                 :company company))
+         (unchanged-run (make-instance 'unchanged-run
+                                       :merge-base "car"
+                                       :commit "abcd"
+                                       :channel channel
+                                       :batch batch)))
+    (&body)))
+
+(test unchanged-run-happy-promotion-path
+  (with-fixture state ()
+    (gk:create :unchanged-run-promotion)
+    (gk:enable :unchanged-run-promotion)
+    (with-fixture unchanged-run ()
+      (let ((promoted nil))
+        (if-called 'push-remote-check-via-batching
+                   (lambda (&rest args)
+                     (setf promoted t)))
+        (maybe-promote promoter unchanged-run)
+        (is-true promoted)))))

@@ -44,6 +44,8 @@
                 #:get-parent-commit
                 #:repo-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:abstract-run
+                #:unchanged-run
                 #:override-commit-hash
                 #:recorder-run-batch
                 #:recorder-run
@@ -244,7 +246,7 @@
                                             check))
 
 (defmethod push-remote-check :around (promoter
-                                      (run recorder-run)
+                                      (run abstract-run)
                                       check)
   (let ((batch (recorder-run-batch run)))
     (cond
@@ -268,16 +270,24 @@
     :status state
     :user user)))
 
-(defmethod actual-sha ((run recorder-run))
+(defmethod actual-sha ((run abstract-run))
   (or
    (override-commit-hash run)
    (recorder-run-commit run)))
 
-(defmethod make-check ((run recorder-run) &rest args)
+(defmethod make-check ((run abstract-run) &rest args)
   (apply #'make-instance 'check
          :sha (actual-sha run)
          :key (channel-name (recorder-run-channel run))
          args))
+
+
+(defmethod run-details-url ((run recorder-run))
+  (make-details-url 'screenshotbot/dashboard/run-page:run-page
+                    :id (oid run)))
+
+(defmethod run-details-url ((run unchanged-run))
+  (make-details-url "/unchanged-runs/:id" :id (bknr.datastore:store-object-id run)))
 
 (defmethod maybe-promote ((promoter abstract-pr-promoter)
                           run)
@@ -304,8 +314,7 @@
                                 (identity run))))
          (flet ((make-run-check (&rest args)
                   (apply #'make-check run
-                         :details-url (make-details-url 'screenshotbot/dashboard/run-page:run-page
-                                                        :id (oid run))
+                         :details-url (run-details-url run)
                          args)))
            (unless (lparallel:fulfilledp base-run-promise)
              (format-log run :info "Base commit is not available yet, waiting for upto 5 minutes")
@@ -314,8 +323,7 @@
               run
               (make-check run
                           :status :pending
-                          :details-url (make-details-url 'screenshotbot/dashboard/run-page:run-page
-                                                         :id (oid run))
+                          :details-url (run-details-url run)
                           :title (format nil "Waiting for screenshots on ~a to be available"
                                          (str:substring 0 4 (pr-merge-base promoter run))))))
            (let* ((base-run (lparallel:force base-run-promise))
@@ -347,6 +355,9 @@
       (push (make-instance 'merge-base-failed-warning
                            :compared-against base-run)
             (recorder-run-warnings run)))))
+
+(defmethod warn-if-not-merge-base (promoter (run unchanged-run) base-run)
+  (values))
 
 (defgeneric promoter-pull-id (promoter run)
   (:documentation "Get a unique identifier identify the pull request for this run. This
@@ -387,7 +398,20 @@ Revision. It will be tested with EQUAL"))
               if acceptable
                 return acceptable)))))
 
-(defun make-check-result-from-diff-report (promoter run base-run)
+(defmethod make-check-result-from-diff-report (promoter (run unchanged-run)
+                                           base-run)
+  ;; TODO: technically it might be possible to generate a report at
+  ;; this point, because screenshots *might* have changed from the
+  ;; base-run.  But for now, we're assuming that if we're passing an
+  ;; unchanged-run, then, the user has determined that there are no
+  ;; changes from the base.
+  (make-check run
+              :status :success
+              :title "No screenshots changed"
+              :summary "No action required on your part"
+              :details-url (run-details-url run)))
+
+(defmethod make-check-result-from-diff-report (promoter run base-run)
   (let ((diff-report (make-diff-report run base-run)))
    (cond
      ((diff-report-empty-p diff-report)
@@ -460,3 +484,8 @@ Revision. It will be tested with EQUAL"))
 
 (defmethod maybe-send-tasks ((promoter abstract-pr-promoter) run)
   (values))
+
+(defmethod maybe-promote :around ((promoter abstract-pr-promoter) (run unchanged-run))
+  (when (recorder-run-batch run)
+    (when (gk:check :unchanged-run-promotion (recorder-run-company run))
+      (call-next-method))))

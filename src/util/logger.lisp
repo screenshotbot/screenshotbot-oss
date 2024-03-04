@@ -12,12 +12,16 @@
                 #:when-let)
   (:export
    #:logger
-   #:format-log))
+   #:format-log
+   #:noop-logger))
 (in-package :util/logger)
 
 (defclass logger ()
   ((lock :initform (bt:make-lock "logger lock"))
    (file :initarg :file)))
+
+(defclass noop-logger ()
+  ())
 
 (def-easy-macro with-logger-stream (logger &binding stream &fn fn)
   (with-slots (file lock) logger
@@ -41,10 +45,16 @@
     (apply #'format stream message args)
     (format stream "~%")))
 
-
 (defmethod format-log  ((logger null)
                         level
                         message
                         &rest args)
   ;; Sanity check to make sure our format args are correct in tests
   (apply #'format nil message args))
+
+(defmethod format-log  ((logger noop-logger)
+                        level
+                        message
+                        &rest args)
+  (log:info "~a"
+            (apply #'format nil message args)))

@@ -29,11 +29,13 @@
   (:import-from #:util/misc
                 #:make-mp-hash-table)
   (:import-from #:util/logger
+                #:noop-logger
                 #:logger
                 #:format-log)
   (:import-from #:bknr.datastore
                 #:blob-pathname)
   (:import-from #:screenshotbot/model/recorder-run
+                #:unchanged-run
                 #:recorder-run-warnings
                 #:not-fast-forward-promotion-warning
                 #:promotion-log)
@@ -81,6 +83,9 @@
                   :file (blob-pathname
                          (promotion-log run)))
    :thread-safe t))
+
+(defmethod promotion-logger ((run unchanged-run))
+  (make-instance 'noop-logger))
 
 (defmethod promotion-logger ((run recorder-run))
   (call-next-method))

@@ -96,7 +96,8 @@
    #:recorder-run-batch
    #:recorder-run-repo-url
    #:group-separator
-   #:recorder-run-author)
+   #:recorder-run-author
+   #:abstract-run)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -119,8 +120,12 @@
   'fset-many-to-many-index
   :slot-name 'tags)
 
+(defclass abstract-run (store-object)
+  ()
+  (:metaclass persistent-class))
+
 (with-class-validation
-  (defclass recorder-run (object-with-oid)
+  (defclass recorder-run (object-with-oid abstract-run)
     ((channel
       :initarg :channel
       :initform nil
@@ -297,18 +302,32 @@ associated report is rendered.")
    (call-next-method)
    (override-commit-hash run)))
 
-(defclass unchanged-run (store-object)
+(defclass unchanged-run (abstract-run)
   ((commit :initarg :commit
            :reader unchanged-run-commit
            :index +unchanged-run-index+
-           :index-reader %unchanged-runs-for-commit)
+           :index-reader %unchanged-runs-for-commit
+           :reader recorder-run-commit)
    (other-commit :initarg :other-commit
             :reader unchanged-run-other-commit
             :documentation "The commit that this is going to be a copy of")
    (channel :initarg :channel
             :initform nil
-            :reader unchanged-run-channel))
+            :reader unchanged-run-channel
+            :reader recorder-run-channel)
+   (%merge-base :initarg :merge-base
+                :reader recorder-run-merge-base)
+   (%override-commit-hash :initarg :override-commit-hash
+                          :reader override-commit-hash)
+   (%work-branch :initarg :work-branch
+                 :reader recorder-run-work-branch)
+   (%batch :initarg :batch
+           :accessor recorder-run-batch
+           :documentation "The batch object associated with this run"))
   (:metaclass persistent-class)
+  (:default-initargs :batch nil
+                     :override-commit-hash nil
+                     :merge-base nil)
   (:documentation "Annotates that this commit should have identical screenshots to the other commit"))
 
 (defun unchanged-run-for-commit (channel commit)
@@ -469,3 +488,6 @@ compare against the actual merge base.")))
 (defmethod group-separator :around ((run recorder-run))
   (or (ignore-errors (call-next-method))
       "--"))
+
+(defmethod recorder-run-company ((self unchanged-run))
+  (screenshotbot/model/company:company (unchanged-run-channel self)))
