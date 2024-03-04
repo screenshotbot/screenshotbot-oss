@@ -33,6 +33,7 @@
   (:import-from #:screenshotbot/report-api
                 #:report)
   (:import-from #:screenshotbot/model/recorder-run
+                #:unchanged-run
                 #:recorder-run-company
                 #:github-repo)
   (:import-from #:hunchentoot-extensions
@@ -73,16 +74,30 @@
    (unless (check-status check)
      (warn "Got a NIL status for ~a" run))
 
-   (bt:with-lock-held ((batch:push-lock batch))
-     (let ((check (compute-check-if-invalidated
-                   batch (check-user check))))
-       (when check
-         (push-remote-check
-          promoter
-          batch
-          check))
-       ;; Avoid returning any unwanted values
-       nil))))
+   (maybe-push-remote-check promoter batch :user (check-user check))))
+
+(defmethod push-remote-check-via-batching (promoter
+                                           batch
+                                           (run unchanged-run)
+                                           check)
+  (declare (ignore check))
+
+  ;; Note that an unchanged run will not cause the batch state to be
+  ;; invalidated. This means if it's a new batch without any runs,
+  ;; this check will go through, otherwise nothing happens right now.
+  (maybe-push-remote-check promoter batch :user nil))
+
+(defmethod maybe-push-remote-check (promoter batch &key (user (error "must provide user for audit-logs")))
+  (bt:with-lock-held ((batch:push-lock batch))
+    (let ((check (compute-check-if-invalidated
+                  batch user)))
+      (when check
+        (push-remote-check
+         promoter
+         batch
+         check))
+      ;; Avoid returning any unwanted values
+      nil)))
 
 (defun compute-check-if-invalidated (batch user)
   (bt:with-lock-held ((batch:lock batch))

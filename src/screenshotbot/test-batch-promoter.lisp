@@ -15,8 +15,10 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/recorder-run
+                #:unchanged-run
                 #:make-recorder-run)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check
                 #:check-summary
                 #:check-title
                 #:check-status
@@ -34,7 +36,12 @@
                 #:compute-title
                 #:compute-status)
   (:import-from #:screenshotbot/model/company
-                #:company))
+                #:company)
+  (:import-from #:fiveam-matchers/core
+                #:has-typep
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:contains))
 (in-package :screenshotbot/test-batch-promoter)
 
 (util/fiveam:def-suite)
@@ -77,6 +84,40 @@
                   :title "bar"
                   :sha "foo")))
     (is (eql 1 (length (checks promoter))))))
+
+(test simple-batching-test-for-unchanged-run
+  (with-fixture state ()
+    (let ((unchanged-run (make-instance 'unchanged-run
+                                        :channel channel
+                                        :batch batch)))
+      (finishes
+        (push-remote-check-via-batching
+         promoter
+         batch
+         unchanged-run
+         :ignored-check)))
+    (assert-that (checks promoter)
+                 (contains (has-typep 'check)))))
+
+(test multiple-unchanged-runs
+  (with-fixture state ()
+    (let ((unchanged-run (make-instance 'unchanged-run
+                                        :channel channel
+                                        :batch batch)))
+      (finishes
+        (push-remote-check-via-batching
+         promoter
+         batch
+         unchanged-run
+         :ignored-check))
+      (finishes
+        (push-remote-check-via-batching
+         promoter
+         batch
+         unchanged-run
+         :ignored-check)))
+    (assert-that (checks promoter)
+                 (contains (has-typep 'check)))))
 
 (test compute-status-happy-path
   (with-fixture state ()

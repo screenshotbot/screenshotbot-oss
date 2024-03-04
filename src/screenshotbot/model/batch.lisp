@@ -92,7 +92,7 @@
                 :transient t
                 :reader push-lock
                 :documentation "A lock to make sure only one promoter is updating the PR.")
-     (state-invalidated-p :initform nil
+     (state-invalidated-p :initform t
                           :transient t
                           :accessor state-invalidated-p
                           :documentation "The current state was invalidated since the last push to remote (GitHub/Bitbucket etc.)."))
