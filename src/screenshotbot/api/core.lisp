@@ -24,6 +24,8 @@
                 #:ext-json-serializable-class)
   (:import-from #:screenshotbot/events
                 #:with-tracing)
+  (:import-from #:util/events
+                #:push-event)
   (:export
    #:defapi
    #:result
@@ -77,6 +79,8 @@
 
 (defun %funcall-with-api-handling (fn)
   (log:trace "Got parameters: ~s" (hunchentoot:post-parameters hunchentoot:*request*))
+  (push-event :api-client-version
+              :version (hunchentoot:header-in* :x-client-version))
   (let ((*api-key* (authenticate-api-request hunchentoot:*request*)))
     (funcall fn)))
 
