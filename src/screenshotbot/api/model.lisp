@@ -118,6 +118,10 @@
            :reader failed-run-commit))
   (:metaclass ext-json-serializable-class))
 
+(defclass abstract-run-dto ()
+  ()
+  (:metaclass ext-json-serializable-class))
+
 (defclass unchanged-run (abstract-run-dto)
   ((id :initarg :id
        :json-type (or null :number)
@@ -205,10 +209,6 @@
            :json-type (or null :string)
            :json-key "device"
            :reader screenshot-device))
-  (:metaclass ext-json-serializable-class))
-
-(defclass abstract-run-dto ()
-  ()
   (:metaclass ext-json-serializable-class))
 
 (defclass run (abstract-run-dto)
