@@ -149,7 +149,13 @@
                        :json-type (or null :number)
                        :initform nil
                        :reader phabricator-diff-id
-                       :documentation "A Phabricator Diff ID associated with the run, if any."))
+                       :documentation "A Phabricator Diff ID associated with the run, if any.")
+   (work-branch :initarg :work-branch
+                :json-key "workBranch"
+                :json-type (or null :string)
+                :initform nil
+                :reader work-branch
+                :documentation "The branch on which the CI job was run"))
   (:metaclass ext-json-serializable-class))
 
 (defclass unchanged-run (abstract-run-dto)
@@ -310,12 +316,6 @@
                 :initform nil
                 :reader main-branch
                 :documentation "The main branch, usually `main` or `master`.")
-   (work-branch :initarg :work-branch
-                :json-key "workBranch"
-                :json-type (or null :string)
-                :initform nil
-                :reader work-branch
-                :documentation "The branch on which the CI job was run")
    (gitlab-merge-request-iid :initarg :gitlab-merge-request-iid
                              :json-key "gitlabMergeRequestIID"
                              :json-type (or null :number)

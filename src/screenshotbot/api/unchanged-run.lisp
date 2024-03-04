@@ -45,4 +45,5 @@
                               (dto:unchanged-run-channel input))
                     :commit (dto:unchanged-run-commit input)
                     :batch (batch-for-run (current-company) input)
+                    :work-branch (dto:work-branch input)
                     :other-commit (dto:unchanged-run-other-commit input)))))
