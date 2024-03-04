@@ -25,7 +25,8 @@
   (:import-from #:screenshotbot/sdk/cli-common
                 #:root-options
                 #:make-api-context)
-  (:local-nicknames (#:dto #:screenshotbot/api/model)))
+  (:local-nicknames (#:dto #:screenshotbot/api/model)
+                    (#:run-context #:screenshotbot/sdk/run-context)))
 (in-package :screenshotbot/sdk/test-unchanged-run)
 
 (util/fiveam:def-suite)
@@ -55,9 +56,13 @@
 
 (test handle-cmd-happy-path
   (with-fixture state ()
-    (handle-cmd (make-fake-clingon (append
-                                    (root-options)
-                                    (all-args))
-                                   :channel "bleh"
-                                   :commit "0001"
-                                   :other-commit "0002"))))
+    (cl-mock:if-called 'run-context:merge-base
+                       (lambda (ctx)
+                         "0001"))
+    (finishes
+     (handle-cmd (make-fake-clingon (append
+                                     (root-options)
+                                     (all-args))
+                                    :channel "bleh"
+                                    :commit "0001"
+                                    :other-commit "0002")))))

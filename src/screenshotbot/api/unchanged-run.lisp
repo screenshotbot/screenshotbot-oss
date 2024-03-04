@@ -46,4 +46,6 @@
                     :commit (dto:unchanged-run-commit input)
                     :batch (batch-for-run (current-company) input)
                     :work-branch (dto:work-branch input)
+                    :merge-base (dto:merge-base input)
+                    :override-commit-hash (dto:override-commit-hash input)
                     :other-commit (dto:unchanged-run-other-commit input)))))

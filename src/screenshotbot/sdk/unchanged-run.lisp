@@ -56,6 +56,7 @@
                                 :batch (run-context:batch run-context)
                                 :github-repo (run-context:repo-url run-context)
                                 :override-commit-hash (run-context:override-commit-hash run-context)
+                                :merge-base (run-context:merge-base run-context)
                                 :pull-request (run-context:pull-request-url run-context)
                                 :phabricator-diff-id (run-context:phabricator-diff-id run-context)))))
 

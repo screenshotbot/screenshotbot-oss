@@ -155,7 +155,13 @@
                 :json-type (or null :string)
                 :initform nil
                 :reader work-branch
-                :documentation "The branch on which the CI job was run"))
+                :documentation "The branch on which the CI job was run")
+   (merge-base :initarg :merge-base
+               :json-key "mergeBase"
+               :json-type (or null :string)
+               :initform nil
+               :reader merge-base
+               :documentation "The commit hash of the merge base of this commit with the main branch."))
   (:metaclass ext-json-serializable-class))
 
 (defclass unchanged-run (abstract-run-dto)
@@ -304,12 +310,6 @@
               :initform nil
               :reader build-url
               :documentation "The URL of the build job that created this run")
-   (merge-base :initarg :merge-base
-               :json-key "mergeBase"
-               :json-type (or null :string)
-               :initform nil
-               :reader merge-base
-               :documentation "The commit hash of the merge base of this commit with the main branch.")
    (main-branch :initarg :main-branch
                 :json-key "mainBranch"
                 :json-type (or null :string)
