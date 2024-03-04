@@ -68,7 +68,7 @@
                                  `(("details_url" . ,details-url)))
                           ("status" . ,(or status ""))
                           ("output" . ,output)))))
-      (log:info "Got response: ~S" response)
+      (log:debug "Got response: ~S" response)
       response)))
 
 
