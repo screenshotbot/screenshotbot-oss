@@ -59,7 +59,7 @@
                                 :phabricator-diff-id (run-context:phabricator-diff-id run-context)))))
 
 (defun suffix (arg)
-  (format nil "~a. This is currently only used if `--batch` is provided, and in most cases we can guess this automatically in your CI." arg))
+  (format nil "~a This is currently only used if `--batch` is provided, and in most cases we can guess this automatically in your CI." arg))
 
 (defclass unchanged-run-run-context (run-context:env-reader-run-context
                              run-context:run-context)
