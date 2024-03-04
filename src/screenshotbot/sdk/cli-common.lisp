@@ -74,6 +74,39 @@
   "recorder ci record --directory /path/to/screenshots --channel channel-name
   recorder dev [record|verify] <options>")
 
+(defun root-options ()
+  (list
+   (make-option
+    :string
+    :long-name "api-key"
+    :initial-value nil
+    :description "The Screenshotbot API Key"
+    :env-vars (list "SCREENSHOTBOT_API_KEY")
+    :key :api-key)
+   (make-option
+    :string
+    :long-name "api-secret"
+    :initial-value nil
+    :key :api-secret
+    :env-vars (list "SCREENSHOTBOT_API_SECRET")
+    :description "The Screenshotbot API Secret")
+   (make-option
+    :string
+    :key :hostname
+    :long-name "api-hostname"
+    :initial-value "https://api.screenshotbot.io"
+    :env-vars (list "SCREENSHOTBOT_API_HOSTNAME")
+    :description "The API hostname used as an endpoint. You will need to supply this if using this in the OSS version of Screenshotbot, or if you're an Enterprise customer with a dedicated installation.")
+   (make-option
+    :boolean
+    :key :desktop
+    :long-name "desktop"
+    :description "Whether the server is running on the Desktop version of Screenshotbot.")
+   (make-option
+    :boolean
+    :key :verbose
+    :long-name "verbose"
+    :description "Verbose logging")))
 (defun root/command ()
   (make-instance
    'root-command
@@ -85,38 +118,7 @@ upload screenshots and generate reports with Screenshotbot.
 This is the documentation for the experimental V2 of the CLI interface. To
 view the documentation for the stable interface, run `recorder --help`
 as opposed to `recorder help`."
-   :options (list
-             (make-option
-              :string
-              :long-name "api-key"
-              :initial-value nil
-              :description "The Screenshotbot API Key"
-              :env-vars (list "SCREENSHOTBOT_API_KEY")
-              :key :api-key)
-             (make-option
-              :string
-              :long-name "api-secret"
-              :initial-value nil
-              :key :api-secret
-              :env-vars (list "SCREENSHOTBOT_API_SECRET")
-              :description "The Screenshotbot API Secret")
-             (make-option
-              :string
-              :key :hostname
-              :long-name "api-hostname"
-              :initial-value "https://api.screenshotbot.io"
-              :env-vars (list "SCREENSHOTBOT_API_HOSTNAME")
-              :description "The API hostname used as an endpoint. You will need to supply this if using this in the OSS version of Screenshotbot, or if you're an Enterprise customer with a dedicated installation.")
-             (make-option
-              :boolean
-              :key :desktop
-              :long-name "desktop"
-              :description "Whether the server is running on the Desktop version of Screenshotbot.")
-             (make-option
-              :boolean
-              :key :verbose
-              :long-name "verbose"
-              :description "Verbose logging"))
+   :options (root-options)
    :sub-commands
    (list
     (self-test/command)

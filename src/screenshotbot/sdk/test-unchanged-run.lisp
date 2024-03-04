@@ -15,33 +15,49 @@
   (:import-from #:util/fake-clingon
                 #:make-fake-clingon)
   (:import-from #:screenshotbot/sdk/unchanged-run
-                #:all-args
-                #:maybe-create-batch)
+                #:handle-cmd
+                #:mark-unchanged-run
+                #:all-args)
   (:import-from #:screenshotbot/sdk/run-context
                 #:run-context)
   (:import-from #:screenshotbot/sdk/api-context
-                #:remote-version))
+                #:remote-version)
+  (:import-from #:screenshotbot/sdk/cli-common
+                #:root-options
+                #:make-api-context)
+  (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/test-unchanged-run)
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
   (with-mocks ()
-    (&body)))
-
-(defclass fake-run-context (run-context)
-  ((env :initarg :env)))
-
-(test happy-path-create-patch ()
-  (with-fixture state ()
     (let ((called nil))
+      (cl-mock:if-called 'make-api-context
+                         (lambda (&rest args)
+                           :fake-api-context))
       (cl-mock:if-called 'request
                          (lambda (api-ctx api &key method content)
-                           (setf called t)))
-      (answer (remote-version :api-context) 11)
-      (maybe-create-batch
-       :api-context
-       (make-fake-clingon (all-args) :batch "foo" :commit "bleh" :channel "car")
-       :run-context-type 'fake-run-context
-       :env-reader nil)
-      (is-true called))))
+                           (setf called content)))
+      (answer (remote-version :fake-api-context) 11)
+      (&body))))
+
+(test mark-unchanged-run-happy-path ()
+  (with-fixture state ()
+    (mark-unchanged-run
+     :fake-api-context
+     :other-commit "abcd"
+     :run-context (make-instance 'run-context
+                                 :channel "bleh"))
+    (is-true called)
+    (is (equal "bleh" (dto:unchanged-run-channel called)))
+    (is (equal "abcd" (dto:unchanged-run-other-commit called)))))
+
+(test handle-cmd-happy-path
+  (with-fixture state ()
+    (handle-cmd (make-fake-clingon (append
+                                    (root-options)
+                                    (all-args))
+                                   :channel "bleh"
+                                   :commit "0001"
+                                   :other-commit "0002"))))
