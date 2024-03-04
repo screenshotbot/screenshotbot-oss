@@ -110,3 +110,13 @@
   (let ((run (decode-json "{\"batch\": \"foo\"} "
                           'dto:run)))
     (is (eql nil (dto:run-author run)))))
+
+(test abstract-run-args-are-parsed
+  (let ((run (decode-json "{\"batch\": \"foo\"} "
+                          'dto:run)))
+    (is (equal "foo" (dto:run-batch run)))))
+
+(test abstract-run-args-are-encoded
+  (let ((run (make-instance 'dto:run :batch "foo")))
+    (assert-that (encode-json run)
+                 (contains-string "\"batch\":\"foo\""))))

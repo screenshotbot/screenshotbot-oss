@@ -18,6 +18,8 @@
                 #:current-company)
   (:import-from #:screenshotbot/model/company
                 #:find-or-create-channel)
+  (:import-from #:screenshotbot/api/recorder-run
+                #:batch-for-run)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/unchanged-run)
 
@@ -42,4 +44,5 @@
                               (current-company)
                               (dto:unchanged-run-channel input))
                     :commit (dto:unchanged-run-commit input)
+                    :batch (batch-for-run (current-company) input)
                     :other-commit (dto:unchanged-run-other-commit input)))))

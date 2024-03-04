@@ -119,7 +119,37 @@
   (:metaclass ext-json-serializable-class))
 
 (defclass abstract-run-dto ()
-  ()
+  ((batch :initarg :batch
+          :json-key "batch"
+          :initform nil
+          :json-type (or null :string)
+          :reader run-batch
+          :documentation "The batch name associated with this run")
+   (repo :initarg :github-repo
+         :json-key "repo"
+         :json-type (or null :string)
+         :initform nil
+         ;; Internally this is github-repo :/
+         :reader run-repo
+         :documentation "The repository URL")
+   (override-commit-hash :initarg :override-commit-hash
+                         :json-key "overrideCommitHash"
+                         :json-type (or null :string)
+                         :initform nil
+                         :reader override-commit-hash
+                         :documentation "The Git hash associated with the current run. This might be different from `commit` if the CI job had a step of rebasing the changes onto the master branch.")
+   (pull-request-url :initarg :pull-request
+                     :json-key "pullRequestUrl"
+                     :json-type (or null :string)
+                     :initform nil
+                     :reader pull-request-url
+                     :documentation "The pull request URL associated with this run, if any.")
+   (phabrictor-diff-id :initarg :phabricator-diff-id
+                       :json-key "phabricatorDiff"
+                       :json-type (or null :number)
+                       :initform nil
+                       :reader phabricator-diff-id
+                       :documentation "A Phabricator Diff ID associated with the run, if any."))
   (:metaclass ext-json-serializable-class))
 
 (defclass unchanged-run (abstract-run-dto)
@@ -136,7 +166,8 @@
            :json-key "commit"
            :json-type (or null :string)
            :initform nil
-           :reader unchanged-run-commit)
+           :reader unchanged-run-commit
+           :reader run-commit)
    (other-commit :initarg :other-commit
                  :json-key "other-commit"
                  :json-type (or null :string)
@@ -255,24 +286,12 @@
     :json-type :bool
     :initform nil
     :reader cleanp)
-   (pull-request-url :initarg :pull-request
-                     :json-key "pullRequestUrl"
-                     :json-type (or null :string)
-                     :initform nil
-                     :reader pull-request-url
-                     :documentation "The pull request URL associated with this run, if any.")
    (main-branch-hash :initarg :main-branch-hash
                      :json-key "mainBranchCommit"
                      :json-type (or null :string)
                      :initform nil
                      :reader main-branch-hash
                      :documentation "The Git hash of the main branch at the time that this run was created.")
-   (override-commit-hash :initarg :override-commit-hash
-                         :json-key "overrideCommitHash"
-                         :json-type (or null :string)
-                         :initform nil
-                         :reader override-commit-hash
-                         :documentation "The Git hash associated with the current run. This might be different from `commit` if the CI job had a step of rebasing the changes onto the master branch.")
    (build-url :initarg :build-url
               :json-key "buildUrl"
               :json-type (or null :string)
@@ -297,25 +316,12 @@
                 :initform nil
                 :reader work-branch
                 :documentation "The branch on which the CI job was run")
-   (phabrictor-diff-id :initarg :phabricator-diff-id
-                       :json-key "phabricatorDiff"
-                       :json-type (or null :number)
-                       :initform nil
-                       :reader phabricator-diff-id
-                       :documentation "A Phabricator Diff ID associated with the run, if any.")
    (gitlab-merge-request-iid :initarg :gitlab-merge-request-iid
                              :json-key "gitlabMergeRequestIID"
                              :json-type (or null :number)
                              :initform nil
                              :reader gitlab-merge-request-iid
                              :documentation "A GitLab merge request IID associated with the run, if any.")
-   (repo :initarg :github-repo
-         :json-key "repo"
-         :json-type (or null :string)
-         :initform nil
-         ;; Internally this is github-repo :/
-         :reader run-repo
-         :documentation "The repository URL")
    (compare-threshold :initarg :compare-threshold
                       :json-key "compareThreshold"
                       :json-type (or null :number)
@@ -327,12 +333,6 @@
         :json-type (or null :string)
         :reader recorder-run-url
         :documentation "The URL of this run")
-   (batch :initarg :batch
-          :json-key "batch"
-          :initform nil
-          :json-type (or null :string)
-          :reader run-batch
-          :documentation "The batch name associated with this run")
    (tags :initarg :tags
          :json-key "tags"
          :initform nil

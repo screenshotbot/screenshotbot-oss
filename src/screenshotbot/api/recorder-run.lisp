@@ -236,6 +236,18 @@
       (verify (< (length (dto:run-author run)) 100)
               "Author name too long"))))
 
+(defmethod batch-for-run (company run)
+  (when-let ((batch (dto:run-batch run)))
+    (find-or-create-batch
+     :company company
+     :repo (dto:run-repo run)
+     :commit (or
+              (emptify (dto:override-commit-hash run))
+              (dto:run-commit run))
+     :name batch
+     :pull-request-url (dto:pull-request-url run)
+     :phabricator-diff-id (dto:phabricator-diff-id run))))
+
 (defmethod %put-run (company (run dto:run))
   (unless (dto:trunkp run)
     (throttle! *non-production-throttler* :key (not-null! (current-user))))
@@ -247,16 +259,7 @@
                        company
                        channel
                        (dto:run-screenshots run)))
-         (batch (when-let ((batch (dto:run-batch run)))
-                  (find-or-create-batch
-                   :company company
-                   :repo (dto:run-repo run)
-                   :commit (or
-                             (emptify (dto:override-commit-hash run))
-                             (dto:run-commit run))
-                   :name batch
-                   :pull-request-url (dto:pull-request-url run)
-                   :phabricator-diff-id (dto:phabricator-diff-id run))))
+         (batch (batch-for-run company run))
          (recorder-run (make-recorder-run
                         :company company
                         :channel channel

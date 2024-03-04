@@ -49,3 +49,21 @@
                   "foo")))
         (is (not (null ur)))
         (is (equal "bar" (unchanged-run-other-commit ur)))))))
+
+(test create-unchanged-run-with-batch
+  (with-fixture state ()
+    (let ((unchanged-run-dto (make-instance 'dto:unchanged-run
+                                            :channel "bleh"
+                                            :batch "foobar"
+                                            :commit "foo"
+                                            :other-commit "bar")))
+      (answer (parse-body 'dto:unchanged-run)
+        unchanged-run-dto)
+      (with-test-user (:logged-in-p t :company company)
+        (finishes
+          (%post-unchanged-run)))
+      (let ((ur (unchanged-run-for-commit
+                  (car (bknr.datastore:class-instances 'channel))
+                  "foo")))
+        (is (not (null ur)))
+        (is (equal "bar" (unchanged-run-other-commit ur)))))))
