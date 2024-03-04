@@ -381,13 +381,7 @@
      (with-transaction ()
        (setf (publicp channel) publicp)))))
 
-(defmethod finalize-batch ((self batch))
-  (when (gk:check :finalize-batch (recorder-run-company self) :default nil)
-    (make-thread
-     (lambda ()
-       (maybe-promote (make-instance 'default-promoter)
-                      self))
-     :name "finalize-batch")))
+(defmethod finalize-batch ((self batch)))
 
 (defmethod maybe-promote ((promoter master-promoter) (batch batch))
   ;; Do nothing!
