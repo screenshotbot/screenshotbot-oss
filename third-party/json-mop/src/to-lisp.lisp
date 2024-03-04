@@ -85,17 +85,21 @@
 (defmethod json-to-clos ((input hash-table) class &rest initargs)
   (let ((lisp-object (apply #'make-instance class initargs))
         (key-count 0))
-    (loop for slot in (closer-mop:class-direct-slots (find-class class))
-          do (awhen (json-key-name slot)
-               (handler-case
-                   (progn
-                     (setf (slot-value lisp-object
-                                       (closer-mop:slot-definition-name slot))
-                           (to-lisp-value (gethash it input :null)
-                                          (json-type slot)))
-                     (incf key-count))
-                 (null-value (condition)
-                   (declare (ignore condition)) nil))))
+    ;; Arnold added this next line. See
+    ;; https://github.com/gschjetne/json-mop/pull/2, which handled
+    ;; to-json, but not to-lisp.
+    (loop for class in (closer-mop:class-precedence-list (find-class class)) do
+      (loop for slot in (closer-mop:class-direct-slots class)
+            do (awhen (json-key-name slot)
+                 (handler-case
+                     (progn
+                       (setf (slot-value lisp-object
+                                         (closer-mop:slot-definition-name slot))
+                             (to-lisp-value (gethash it input :null)
+                                            (json-type slot)))
+                       (incf key-count))
+                   (null-value (condition)
+                     (declare (ignore condition)) nil)))))
     #+nil ;; Arnold disabled this warning,
     (when (zerop key-count) (warn 'no-values-parsed
                                   :hash-table input
