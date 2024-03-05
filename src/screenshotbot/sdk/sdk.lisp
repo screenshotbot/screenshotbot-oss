@@ -344,13 +344,14 @@ error."
            (put-run api-context run)
            (put-run-via-old-api api-context run))))))
 
-(defmethod put-run ((api-context api-context) run)
-  (let ((result (request api-context
-                         "/api/run" :method :put
-                                    :content run)))
-    (log:info "Created run: ~a" (assoc-value result :url))
-    (make-instance 'dto:run
-                   :id (assoc-value result :id))))
+(auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
+  (defmethod put-run ((api-context api-context) run)
+    (let ((result (request api-context
+                           "/api/run" :method :put
+                                      :content run)))
+      (log:info "Created run: ~a" (assoc-value result :url))
+      (make-instance 'dto:run
+                     :id (assoc-value result :id)))))
 
 (defun put-run-via-old-api (api-context run)
   (flet ((bool (x) (if x "true" "false")))
