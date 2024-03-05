@@ -13,7 +13,7 @@
 (in-package :screenshotbot/gitlab/webhook)
 
 (defclass gitlab-update-build-status-payload (webhook-payload)
-  ((repo-id :initarg :repo-id
+  ((repo-id :initarg :project-path
             :json-key "repoId"
             :json-type :string
             :documentation "The repository ID. e.g. myorg/myproject. Typically, you'll url-encode this when passing it to the GitLab API. e.g. /projects/myorg%2Fmyproject/statuses/abcd0000.")
@@ -28,12 +28,14 @@
    (target-url :initarg :target-url
                :json-key "targetUrl"
                :json-type :string
-               :json-type "The URL to be linked to. i.e. The ")
+               :documentation "The URL to be linked to, typically a link to Screenshotbot ")
    (name :initarg :name
          :json-key "name"
          :json-type :string)
    (description :initarg :description
                 :json-key "description"
-                :json-type :string))
+                :json-type :string)
+   (company :initarg :company
+            :documentation "Ignored in the JSON payload"))
   (:metaclass ext-json-serializable-class)
   (:default-initargs :event "gitlab.update-build-status"))

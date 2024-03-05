@@ -32,6 +32,7 @@
                 #:current-user
                 #:current-company)
   (:import-from #:screenshotbot/gitlab/settings
+                #:enable-webhooks-p
                 #:gitlab-request
                 #:gitlab-settings
                 #:company
@@ -68,6 +69,10 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run-repo-url
                 #:gitlab-merge-request-iid)
+  (:import-from #:screenshotbot/webhook/webhook
+                #:send-webhook)
+  (:import-from #:screenshotbot/gitlab/webhook
+                #:gitlab-update-build-status-payload)
   (:export
    #:merge-request-promoter
    #:gitlab-acceptable))
@@ -90,8 +95,9 @@
   (alexandria:when-let ((plugin (gitlab-settings-for-company company)))
     (and
      (gitlab-url plugin)
-     (gitlab-token plugin))))
-
+     (or
+      (not (str:emptyp (gitlab-token plugin)))
+      (enable-webhooks-p plugin)))))
 
 (defun safe-get-mr-id (run)
   (let ((mr-id (format nil "~a" (gitlab-merge-request-iid run))))
@@ -196,8 +202,16 @@
 
 (defmethod push-remote-check ((promoter merge-request-promoter)
                               run check)
-  (let ((args (make-gitlab-args run check)))
-    (apply #'post-build-status args)))
+  (let* ((args (make-gitlab-args run check))
+         (company (recorder-run-company run))
+         (settings (gitlab-settings-for-company company)))
+    (when (gitlab-token settings)
+      (apply #'post-build-status args))
+    (when (enable-webhooks-p settings)
+      (send-webhook
+       company
+       (apply #'make-instance 'gitlab-update-build-status-payload
+              args)))))
 
 (auto-restart:with-auto-restart ()
   (defmethod maybe-send-tasks ((promoter merge-request-promoter) run)

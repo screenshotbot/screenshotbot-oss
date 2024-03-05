@@ -32,12 +32,16 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:push-remote-check
+                #:make-check
                 #:promoter-pull-id
                 #:retrieve-run
                 #:valid-repo?
                 #:plugin-installed?
                 #:send-task-args)
   (:import-from #:screenshotbot/gitlab/settings
+                #:enable-webhooks-p
+                #:gitlab-token
                 #:gitlab-settings)
   (:import-from #:screenshotbot/gitlab/repo
                 #:gitlab-repo)
@@ -154,3 +158,12 @@
                         "/projects/tdrhq%2Ffast-example/merge_requests/7")
       "{\"diff_refs\": {\"base_sha\":\"foo\"}}")
     (is (equal "foo" (base-sha (get-merge-request run))))))
+
+
+(test push-remote-check-with-only-webhook-payload
+  (with-fixture state ()
+    (setf (enable-webhooks-p settings) t)
+    (setf (gitlab-token settings) nil)
+    (let ((promoter (make-instance 'merge-request-promoter)))
+      (push-remote-check promoter
+                         run (make-check run :status :accepted :title "1 accepted")))))
