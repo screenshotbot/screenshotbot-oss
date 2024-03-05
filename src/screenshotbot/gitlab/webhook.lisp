@@ -24,17 +24,19 @@
    (state :initarg :state
           :json-key "state"
           :json-type :string
-          :documentation "The state of the build status, one of: success, failed orpending")
+          :documentation "The state of the build status, one of: success, failed or pending")
    (target-url :initarg :target-url
                :json-key "targetUrl"
                :json-type :string
-               :documentation "The URL to be linked to, typically a link to Screenshotbot ")
+               :documentation "The URL to be linked to, typically a link to Screenshotbot report or a run.")
    (name :initarg :name
          :json-key "name"
-         :json-type :string)
+         :json-type :string
+         :documentation "The name of the build status. Typically it might just say \"Screenshotbot\" but if used with batching it might be something different.")
    (description :initarg :description
                 :json-key "description"
-                :json-type :string)
+                :json-type :string
+                :documentation "The description of the build status")
    (company :initarg :company
             :documentation "Ignored in the JSON payload"))
   (:metaclass ext-json-serializable-class)
