@@ -146,6 +146,7 @@
          :additional-headers `(("X-client-version" . ,*client-version*))
          :content content
          :external-format-out :utf-8
+         :read-timeout 45
          :parameters (cond
                        ((remote-supports-basic-auth-p api-context)
                         parameters)
