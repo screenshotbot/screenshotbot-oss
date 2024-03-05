@@ -56,7 +56,9 @@
   (:import-from #:screenshotbot/dashboard/review-link
                 #:get-canonical-pull-request-url
                 #:describe-pull-request)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria))
+  (:export
+   #:enable-webhooks-p))
 (in-package :screenshotbot/gitlab/settings)
 
 (markup:enable-reader)
@@ -73,8 +75,14 @@
          :accessor gitlab-url)
     (token :initarg :token
            :accessor gitlab-token
-           :documentation "Personal Access Token, to be specific"))
+           :documentation "Personal Access Token, to be specific")
+    (%enable-webhooks-p :initarg :enable-webhooks-p
+                        :accessor enable-webhooks-p))
+   (:default-initargs :enable-webhooks-p nil)
    (:metaclass persistent-class)))
+
+(defmethod enable-webhooks-p :around ((self gitlab-settings))
+  (ignore-errors (call-next-method)))
 
 (defmethod plugin-parse-repo ((plugin gitlab-plugin)
                               company
