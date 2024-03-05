@@ -47,6 +47,8 @@
                 #:fset-set-index)
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
+  (:import-from #:util/events
+                #:with-tracing)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)

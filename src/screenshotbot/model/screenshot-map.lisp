@@ -32,6 +32,8 @@
                 #:company-name)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:util/events
+                #:with-tracing)
   (:export
    #:screenshot-map
    #:screenshot-map-as-list
@@ -218,19 +220,20 @@ will not consider it as a possibility.")
       (find-best-in (head (screenshot-maps-for-channel channel) *lookback-count*)))))
 
 (defun make-screenshot-map (channel screenshots)
-  (multiple-value-bind (prev delta-size)
-      (pick-best-existing-map channel screenshots)
-    (cond
-      ((and prev (zerop delta-size))
-       prev)
-      (prev
-       (make-from-previous screenshots
-                           prev
-                           channel))
-      (t
-       (make-instance 'screenshot-map
-                      :channel channel
-                      :screenshots screenshots)))))
+  (with-tracing ("make-screenshot-map")
+    (multiple-value-bind (prev delta-size)
+        (pick-best-existing-map channel screenshots)
+      (cond
+        ((and prev (zerop delta-size))
+         prev)
+        (prev
+         (make-from-previous screenshots
+                             prev
+                             channel))
+        (t
+         (make-instance 'screenshot-map
+                        :channel channel
+                        :screenshots screenshots))))))
 
 (defun build-usage-map ()
   (labels ((build (rest result)

@@ -60,6 +60,8 @@
   (:import-from #:util/throttler
                 #:throttle!
                 #:keyed-throttler)
+  (:import-from #:util/events
+                #:with-tracing)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -259,10 +261,11 @@
   (validate-dto run)
 
   (let* ((channel (find-or-create-channel company (dto:run-channel run)))
-         (screenshots (screenshot-records-api-to-internal
-                       company
-                       channel
-                       (dto:run-screenshots run)))
+         (screenshots (with-tracing ("screenshot-records-api-to-internal")
+                        (screenshot-records-api-to-internal
+                         company
+                         channel
+                         (dto:run-screenshots run))))
          (batch (batch-for-run company run))
          (recorder-run (make-recorder-run
                         :company company
