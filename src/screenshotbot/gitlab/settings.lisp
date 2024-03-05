@@ -98,7 +98,7 @@
 
 (defvar *lock* (bt:make-lock))
 
-(defun finish-save-settings (gitlab-url token)
+(defun finish-save-settings (gitlab-url token enable-webhooks)
   (let ((company (current-company)))
    (let ((settings (bt:with-lock-held (*lock*)
                      (or
@@ -107,30 +107,39 @@
                                      :company company)))))
      (with-transaction ()
        (setf (gitlab-url settings) gitlab-url)
-       (setf (gitlab-token settings) token))
+       (setf (gitlab-token settings)
+             (if (str:emptyp token)
+                 nil
+                 token))
+       (setf (enable-webhooks-p settings)
+             (not (null enable-webhooks))))
      (make-instance 'config-updated-audit-log
                     :company company
                     :user (current-user))
      (hex:safe-redirect "/settings/gitlab"))))
 
-(defun save-settings (gitlab-url token)
+(defun save-settings (gitlab-url token enable-webhooks)
   (let ((errors))
     (flet ((check (key test message)
              (unless test
                (push (cons key message) errors))))
       (check :gitlab-url (not (str:emptyp gitlab-url))
              "GitLab URL cannot be empty")
-      (check :token (not (str:emptyp token))
-             "Personal Access Token cannot be empty")
+      (check :token
+             (or
+              (not (str:emptyp token))
+              enable-webhooks)
+             "Personal Access Token cannot be empty (or you must Enable Webhooks as an alternative)")
       (cond
         (errors
          (with-form-errors (:gitlab-url gitlab-url
                             :token token
                             :errors errors
+                            :enable-webhooks enable-webhooks
                             :was-validated t)
            (settings-page)))
         (t
-         (finish-save-settings gitlab-url token))))))
+         (finish-save-settings gitlab-url token enable-webhooks))))))
 
 (defun test-gitlab-settings ()
   (flet ((settings-page (&rest args)
@@ -161,13 +170,13 @@
 (defun settings-page (&key error success)
   (let* ((settings (gitlab-settings-for-company (current-company)))
          (current-token (?. gitlab-token settings))
-         (save (nibble (gitlab-url token)
+         (save (nibble (gitlab-url token enable-webhooks)
                  (let ((token (cond
                                 ((equal token +unchanged+)
                                  current-token)
                                 (t
                                  token))))
-                  (save-settings gitlab-url token))))
+                  (save-settings gitlab-url token enable-webhooks))))
          (disable-test-settings (ps (setf (ps:@ (get-element-by-id "test-settings") disabled) t)))
          (test (nibble ()
                  (test-gitlab-settings))))
@@ -197,8 +206,22 @@
               <div class= "mb-3">
                 <label for= "token" class= "form-label">Personal Access Token</label>
                 <input id= "token" type= "password" name= "token" class= "form-control"
-                       value= (when settings +unchanged+)
+                       value= (when (and settings (not (str:emptyp (gitlab-token settings)))) +unchanged+)
                        oninput= disable-test-settings />
+              </div>
+
+              <div class= "form-check">
+                <input class= "form-check-input" type= "checkbox" id= "enableWebhooks"
+                       name= "enable-webhooks"
+                       checked=(when (?. enable-webhooks-p settings) "checked") />
+                <label class= "form-check-label" for= "enableWebhooks">
+                  Enable webhooks
+                </label>
+              </div>
+              <div class= "">
+                <p class= "text-muted">
+                  You can provide either a Personal Access Token, or use webhooks for your GitLab integration. Usually, you probably should use the Personal Access Token, but look at the documentation for more details.
+                </p>
               </div>
           </div>
 
