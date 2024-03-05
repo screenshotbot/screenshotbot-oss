@@ -221,6 +221,7 @@
                  (:file "plugin")
                  (:file "review-link")
                  (:file "settings")
+                 (:file "webhook")
                  (:file "merge-request-promoter")
                  (:file "all")))
    (:module "api"
