@@ -38,4 +38,9 @@
    (company :initarg :company
             :documentation "Ignored in the JSON payload"))
   (:metaclass ext-json-serializable-class)
-  (:default-initargs :event "gitlab.update-build-status"))
+  (:default-initargs :event "gitlab.update-build-status")
+  (:documentation "If webhooks are enabled for GitLab integration, this webhook is
+dispatched each time we update your GitLab build status. This webhook
+is also dispatched if you don't provide us a GitLab access token, so
+it can be used to set up an integration with GitLab in a manner that
+restricts Screenshotbot's access to your GitLab."))

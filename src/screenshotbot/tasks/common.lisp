@@ -101,6 +101,8 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
            :json-key "report"
            :json-type dto:report
            :documentation "The report object that was generated"))
+  (:documentation "This event is dispatched when a promotion happens on a branch that
+    resulted in a report.")
   (:metaclass ext-json-serializable-class)
   (:default-initargs :event "channel.promotion"))
 
