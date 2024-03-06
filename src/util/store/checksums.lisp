@@ -93,6 +93,8 @@
 
 
 (defmethod encode-object :around ((transaction transaction) stream)
+  (call-next-method)
+  #+nil
   (encode-checksumed-object transaction stream
                             (lambda (transaction stream)
                               (call-next-method transaction stream))))
@@ -120,4 +122,3 @@
          (log:warn "LOADED WITH TRUNCATED TRANSACTION LOG!"))
         (t
          (log:info "Transaction log was loaded successfully without truncation"))))))
-

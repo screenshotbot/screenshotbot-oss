@@ -282,62 +282,6 @@
 (deftransaction dummy-transaction (arg)
   (incf *state*))
 
-#-windows
-(test corrupted-transaction-log
-  (let ((*state* 0))
-   (tmpdir:with-tmpdir (dir)
-     (with-test-store (:dir dir
-                       :store-class 'safe-mp-store)
-       (finishes (dummy-transaction "foo")))
-     (with-test-store (:dir dir
-                       :store-class 'safe-mp-store)
-       (pass))
-     ;; Corrupt the transaction log!
-     (let ((log-file (path:catfile dir "current/transaction-log")))
-       (truncate-log
-        log-file
-        (with-open-file (stream log-file :direction :input)
-          (1- (file-length stream)))))
-     (with-test-store (:dir dir
-                       :store-class 'safe-mp-store)
-       (pass)))))
-
-#-windows
-(test corrupted-transaction-log-only-removes-last-transaction
-  (let ((*state* 0))
-   (tmpdir:with-tmpdir (dir)
-     (with-test-store (:dir dir
-                       :store-class 'safe-mp-store)
-       (finishes (dummy-transaction "foo"))
-       (finishes (dummy-transaction "bar")))
-     (is (eql 2 *state*))
-     (with-test-store (:dir dir
-                       :store-class 'safe-mp-store)
-       (pass))
-     (is (eql 4 *state*))
-     ;; Corrupt the transaction log!
-     (let ((log-file (path:catfile dir "current/transaction-log")))
-       (truncate-log
-        log-file
-        (with-open-file (stream log-file :direction :input)
-          (1- (file-length stream)))))
-     (with-test-store (:dir dir
-                       :store-class 'safe-mp-store)
-       (pass))
-     (is (eql 5 *state*))
-
-     ;; One more time!
-     (with-test-store (:dir dir
-                       :store-class 'safe-mp-store)
-       (pass)
-       (dummy-transaction "card"))
-     (is (eql 7 *state*))
-     (with-test-store (:dir dir
-                       :store-class 'safe-mp-store)
-       (pass))
-     (is (eql 9 *state*)))))
-
-
 (test fast-ensure-directories-exist
   (tmpdir:with-tmpdir (dir)
     (let ((path (path:catdir dir "foo/bar/car")))

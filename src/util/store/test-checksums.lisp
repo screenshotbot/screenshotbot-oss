@@ -95,23 +95,3 @@
    (let ((stream (make-in-memory-input-stream (get-output-stream-sequence builder))))
      (signals could-not-read-checksum
        (decode stream)))))
-
-(test writing-large-transaction-fails
-  (with-fixture state ()
-   (let ((*max-transaction-size* 10))
-     (let ((txn (make-instance 'transaction
-                               :function-symbol 'foo
-                               :args (list "foobarfoobarfoobar"))))
-       (signals invalid-transaction-length-error
-         (encode txn output))))))
-
-(test reading-large-transaction-fails
-  (with-fixture state ()
-    (let ((txn (make-instance 'transaction
-                              :function-symbol 'foo
-                              :args (list "foobarfoobarfoobar"))))
-      (encode txn output)
-      (let ((input (make-in-memory-input-stream (get-output-stream-sequence output))))
-        (let ((*max-transaction-size* 10))
-          (signals invalid-transaction-length-error
-           (decode input)))))))
