@@ -20,11 +20,17 @@
   (:import-from #:screenshotbot/report-api
                 #:screenshot-device
                 #:screenshot-lang)
+  (:import-from #:util/hash-lock
+                #:with-hash-lock-held
+                #:hash-lock)
   (:export
    #:screenshot-masks))
 (in-package :screenshotbot/model/screenshot-key)
 
-(defvar *lock* (bt:make-lock))
+(defvar *hash-lock* (make-instance 'hash-lock :test #'equal)
+  "Hash lock on the screenshot name. If we use a global lock, then we'll
+limit the throughput of creating new screenshot-keys to about
+200/s. Under load it probably would be worse.")
 
 (defclass abstract-screenshot-key ()
   ())
@@ -103,7 +109,7 @@
             return key)))
    (or
     (find-existing)
-    (bt:with-lock-held (*lock*)
+    (with-hash-lock-held (name *hash-lock*)
       (find-existing)
       (make-instance 'screenshot-key
                      :name name
