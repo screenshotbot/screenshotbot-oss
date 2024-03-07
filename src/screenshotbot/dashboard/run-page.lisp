@@ -296,8 +296,12 @@
             <li>Override Commit hash for Pull Requests: ,(commit :repo repo :hash (override-commit-hash run))</li>
             <li>Main Branch: ,(recorder-run-branch run)</li>
             <li>Branch: ,(recorder-run-work-branch run)</li>
-            <li>Commit on branch: ,(commit :repo repo :hash (ignore-errors
+            <li>Commit on main branch: ,(commit :repo repo :hash (ignore-errors
                                                              (recorder-run-branch-hash run)))</li>
+            <li>
+              Author: ,(or (recorder-run-author run)
+                             "No author provided")
+            </li>
             <li>Merge base: ,(commit :repo repo :hash (recorder-run-merge-base run))</li>
             <li>Pull request: ,(or (pull-request-url run) "NA")</li>
             <li>Phabricator Diff-id: ,(or (phabricator-diff-id run) "NA")</li>
