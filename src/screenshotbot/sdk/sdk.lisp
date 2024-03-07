@@ -325,6 +325,7 @@ error."
                                 :main-branch-hash branch-hash
                                 :github-repo github-repo
                                 :merge-base merge-base
+                                :author (run-context:author run-context)
                                 :periodic-job-p periodic-job-p
                                 :build-url (run-context:build-url run-context)
                                 :compare-threshold (run-context:compare-threshold run-context)

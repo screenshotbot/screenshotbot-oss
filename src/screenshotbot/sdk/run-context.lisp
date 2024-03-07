@@ -39,7 +39,8 @@
    #:gitlab-merge-request-iid
    #:phabricator-diff-id
    #:with-flags-from-run-context
-   #:tags)
+   #:tags
+   #:author)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:e #:screenshotbot/sdk/env)
                     (#:git #:screenshotbot/sdk/git)))
@@ -61,6 +62,9 @@
    (repo-url :initarg :repo-url
              :initform nil
              :reader repo-url)
+   (author :initarg :author
+           :initform nil
+           :reader author)
    (productionp :initarg :productionp
                 :initform nil
                 :reader productionp)
@@ -247,6 +251,7 @@ pull-request looks incorrect."
    :phabricator-diff-id flags:*phabricator-diff-id*
    :channel flags:*channel*
    :override-commit-hash flags:*override-commit-hash*
+   :author flags:*author*
    :compare-threshold flags:*compare-threshold*
    :batch flags:*batch*
    :tags (parse-tags flags:*tags*)))

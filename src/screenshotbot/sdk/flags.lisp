@@ -53,7 +53,8 @@
    #:*batch*
    #:*work-branch*
    #:*main-branch-commit-hash*
-   #:*tags*))
+   #:*tags*
+   #:*author*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -330,3 +331,9 @@ used provides a better developer experience when later builds
   :default-value nil
   :type (or null string)
   :help "A comma separated list of tags to associate with these runs. Tags are arbitrary and will be shown next to the run names, and let's you filter runs by tags.")
+
+(define-flag *author*
+  :selector "author"
+  :default-value nil
+  :type (or null string)
+  :help "Author for this run. Either in the form of \"Full Name <email@example.com>\" or just \"email@example.com\". The email is used to enforce review rules. ")
