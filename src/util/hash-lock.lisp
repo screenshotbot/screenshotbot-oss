@@ -5,14 +5,7 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :util/hash-lock
-  (:use #:cl)
-  (:import-from #:easy-macros
-                #:def-easy-macro)
-  (:import-from #:lparallel.promise
-                #:fulfill
-                #:promise
-                #:chain
-                #:future)
+  (:use :cl)
   (:export
    #:hash-lock
    #:with-hash-lock-held)
@@ -22,14 +15,9 @@
 (defclass object-state ()
   ((item-lock :initform (bt:make-lock)
               :reader item-lock)
-   (future-queue :accessor future-queue
-                 :initform nil)
-   (future-running-p :initform nil)
    (count :initform 0
           :accessor %count
-          :documentation "Total number of threads that are waiting or running. This does not
- include future-queue, but will include any future that is currently
- running.")))
+          :documentation "Total number of threads that are waiting or running.")))
 
 (defclass hash-lock ()
   ((lock :initform (bt:make-lock "hash-lock")
