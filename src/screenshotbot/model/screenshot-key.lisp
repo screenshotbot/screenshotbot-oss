@@ -87,11 +87,6 @@
         #'screenshot-device
         #'screenshot-masks)))))
 
-(defmethod fset:compare ((a screenshot-key)
-                         (b screenshot-key))
-  ;; TODO: delete
-  (call-next-method))
-
 (defun ensure-screenshot-key (&key name lang device masks)
   (flet ((find-existing ()
            (loop for key in (screenshot-keys-for-name name)
