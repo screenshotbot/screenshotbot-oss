@@ -20,7 +20,8 @@
    #:current-branch
    #:cleanp
    #:git-message
-   #:fetch-remote-branch)
+   #:fetch-remote-branch
+   #:author)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/git)
 
@@ -140,7 +141,7 @@
   nil)
 
 (defmethod author ((repo git-repo))
-  ($ (git-command repo) "log" "--format=%ae" "-n" "-3"))
+  ($ (git-command repo) "log" "--format=%ae" "-n" "1"))
 
 (defmethod author ((repo null-repo))
   nil)

@@ -152,4 +152,5 @@
 (test get-git-author
   (with-fixture git-repo ()
     (make-commit repo "foobar")
+    (make-commit repo "bleh")
     (is (equal "foo@example.com" (author repo)))))

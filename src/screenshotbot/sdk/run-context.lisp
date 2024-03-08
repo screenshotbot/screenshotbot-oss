@@ -117,6 +117,11 @@
      (log:warn "This is not running inside a Git repo. Please contact support@screenshotbot.io for advice, since the behavior in this case can be very different.")
      (make-instance 'git:null-repo))))
 
+(defmethod author :around ((self env-reader-run-context))
+  (or
+   (call-next-method)
+   (git:author (git-repo self))))
+
 (defmethod build-url :around ((self env-reader-run-context))
   (or
    (call-next-method)
