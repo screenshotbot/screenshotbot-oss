@@ -9,6 +9,7 @@
             (:use #:cl
                   #:fiveam)
             (:import-from #:screenshotbot/sdk/git
+                          #:author
                           #:fetch-remote-branch
                           #:git-root
                           #:git-message
@@ -147,3 +148,8 @@
         ()
         (git-root :directory (path:catdir dir "car/dar/") :errorp t)
         (error-with-string-matching "Could not find git root"))))
+
+(test get-git-author
+  (with-fixture git-repo ()
+    (make-commit repo "foobar")
+    (is (equal "foo@example.com" (author repo)))))

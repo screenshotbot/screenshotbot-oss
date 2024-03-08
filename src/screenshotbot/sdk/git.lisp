@@ -139,6 +139,12 @@
 (defmethod rev-parse ((repo null-repo) branch)
   nil)
 
+(defmethod author ((repo git-repo))
+  ($ (git-command repo) "log" "--format=%ae" "-n" "-3"))
+
+(defmethod author ((repo null-repo))
+  nil)
+
 (defmethod get-remote-url ((repo null-repo))
   nil)
 
