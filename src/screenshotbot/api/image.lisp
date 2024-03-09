@@ -28,6 +28,8 @@
                 #:authenticate-api-request)
   (:import-from #:screenshotbot/model/company
                 #:find-image-by-id)
+  (:import-from #:util/events
+                #:with-tracing)
   (:export
    #:verify-image
    #:with-raw-post-data-as-tmp-file))
@@ -130,11 +132,12 @@
 
 (defhandler (api-upload-image-blob :uri "/api/image/blob" :method :put) (oid)
   (authenticate-api-request hunchentoot:*request*)
-  (let ((image (find-image-by-id (current-company) oid)))
-    (with-raw-post-data-as-tmp-file (p)
-      (update-image image :pathname p)
-      (verify-image image)
-      "0")))
+  (with-tracing ("image-blob-put")
+    (let ((image (find-image-by-id (current-company) oid)))
+      (with-raw-post-data-as-tmp-file (p)
+        (update-image image :pathname p)
+        (verify-image image)
+        "0"))))
 
 (defmethod verify-image ((image local-image))
   "local-images don't need verification"
