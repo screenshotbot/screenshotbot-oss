@@ -20,10 +20,13 @@
   (:import-from #:fiveam-matchers/strings
                 #:contains-string)
   (:import-from #:fiveam-matchers/core
+                #:has-typep
                 #:assert-that)
   (:import-from #:screenshotbot/model/recorder-run
                 #:unchanged-run
-                #:make-recorder-run))
+                #:make-recorder-run)
+  (:import-from #:screenshotbot/model/review-policy
+                #:anyone-can-review))
 
 (util/fiveam:def-suite)
 
@@ -115,6 +118,8 @@
 (test review-policy-happy-path
   (with-fixture state ()
     (let ((channel (make-instance 'channel :name "foobar")))
-      (is (eql :allow-author (review-policy channel)))
+      (assert-that (review-policy channel)
+                   (has-typep 'anyone-can-review))
       (slot-makunbound channel '%review-policy)
-      (is (eql nil (review-policy channel))))))
+      (assert-that (review-policy channel)
+                   (has-typep 'anyone-can-review)))))

@@ -47,6 +47,8 @@
                 #:company-runs)
   (:import-from #:util/store
                 #:with-class-validation)
+  (:import-from #:screenshotbot/model/review-policy
+                #:anyone-can-review)
   (:export
    #:channel
    #:set-channel-screenshot-mask
@@ -142,15 +144,22 @@
      :accessor channel-slack-channels)
     (%review-policy
      :initarg :review-policy
-     :reader review-policy))
+     :reader %review-policy))
    (:metaclass persistent-class)
    (:default-initargs :review-policy :allow-author)))
 
 (defmethod print-object ((self channel) stream)
   (format stream "#<CHANNEL ~a>" (ignore-errors (channel-name self))))
 
-(defmethod review-policy :around ((self channel))
-  (ignore-errors (call-next-method)))
+(defmethod %review-policy :around ((self channel))
+  (or
+   (ignore-errors (call-next-method))
+   :allow-author))
+
+(defmethod review-policy ((self channel))
+  (ecase (%review-policy self)
+    (:allow-author
+     (make-instance 'anyone-can-review))))
 
 (defmethod channel-company ((channel channel))
   (company channel))

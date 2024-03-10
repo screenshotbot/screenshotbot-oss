@@ -142,6 +142,7 @@
                  (:file "batch")
                  (:file "report" :depends-on ("recorder-run"))
                  (:file "image-comparison")
+                 (:file "review-policy")
                  (:file "channel")
                  (:file "failed-run")
                  (:file "image-comparer")
