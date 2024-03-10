@@ -139,11 +139,18 @@
      :accessor %created-at)
     (%slack-channels
      :initform nil
-     :accessor channel-slack-channels))
-   (:metaclass persistent-class)))
+     :accessor channel-slack-channels)
+    (%review-policy
+     :initarg :review-policy
+     :reader review-policy))
+   (:metaclass persistent-class)
+   (:default-initargs :review-policy :allow-author)))
 
 (defmethod print-object ((self channel) stream)
   (format stream "#<CHANNEL ~a>" (ignore-errors (channel-name self))))
+
+(defmethod review-policy :around ((self channel))
+  (ignore-errors (call-next-method)))
 
 (defmethod channel-company ((channel channel))
   (company channel))

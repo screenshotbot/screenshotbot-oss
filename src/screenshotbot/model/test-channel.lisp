@@ -12,6 +12,8 @@
         #:screenshotbot/model/company
         #:fiveam)
   (:import-from #:screenshotbot/model/channel
+                #:review-policy
+                #:%review-policy
                 #:get-full-repo-from-repo)
   (:import-from #:util/store
                 #:with-test-store)
@@ -109,3 +111,10 @@
                                :name "foobar"))))
     (assert-that (prin1-to-string (make-instance 'channel))
                  (contains-string "CHANNEL"))))
+
+(test review-policy-happy-path
+  (with-fixture state ()
+    (let ((channel (make-instance 'channel :name "foobar")))
+      (is (eql :allow-author (review-policy channel)))
+      (slot-makunbound channel '%review-policy)
+      (is (eql nil (review-policy channel))))))
