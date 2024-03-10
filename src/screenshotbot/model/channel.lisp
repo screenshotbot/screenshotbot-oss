@@ -67,7 +67,8 @@
    #:all-active-runs
    #:channel-subscribers
    #:commit-to-run-map
-   #:channel-slack-channels)
+   #:channel-slack-channels
+   #:review-policy-name)
 
   ;; forward decls
   (:export
@@ -145,20 +146,20 @@
      :accessor channel-slack-channels)
     (%review-policy
      :initarg :review-policy
-     :accessor %review-policy))
+     :accessor review-policy-name))
    (:metaclass persistent-class)
    (:default-initargs :review-policy :allow-author)))
 
 (defmethod print-object ((self channel) stream)
   (format stream "#<CHANNEL ~a>" (ignore-errors (channel-name self))))
 
-(defmethod %review-policy :around ((self channel))
+(defmethod review-policy-name :around ((self channel))
   (or
    (ignore-errors (call-next-method))
    :allow-author))
 
 (defmethod review-policy ((self channel))
-  (ecase (%review-policy self)
+  (ecase (review-policy-name self)
     (:allow-author
      (make-instance 'anyone-can-review))
     (:disallow-author

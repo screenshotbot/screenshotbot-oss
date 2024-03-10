@@ -12,6 +12,7 @@
         #:screenshotbot/model/company
         #:fiveam)
   (:import-from #:screenshotbot/model/channel
+                #:review-policy-name
                 #:review-policy
                 #:%review-policy
                 #:get-full-repo-from-repo)
@@ -124,6 +125,6 @@
       (slot-makunbound channel '%review-policy)
       (assert-that (review-policy channel)
                    (has-typep 'anyone-can-review))
-      (setf (%review-policy channel) :disallow-author)
+      (setf (review-policy-name channel) :disallow-author)
       (assert-that (review-policy channel)
                    (has-typep 'disallow-author-review-policy)))))
