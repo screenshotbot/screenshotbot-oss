@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/model/review-policy
   (:use #:cl)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-author
                 #:recorder-run)
   (:import-from #:screenshotbot/report-api
                 #:report-run
@@ -24,3 +25,23 @@
 
 (defmethod can-review? (policy (report report) user)
   (can-review? policy (report-run report) user))
+
+(defclass disallow-author-review-policy ()
+  ())
+
+(defun parse-email (email)
+  (when email
+   (multiple-value-bind (res parts)
+       (cl-ppcre:scan-to-strings ".* <(.*)>" (str:trim email))
+     (cond
+       (res
+        (elt parts 0))
+       (t
+        email)))))
+
+(defmethod can-review? ((self disallow-author-review-policy) (run recorder-run) user)
+  (let ((author (parse-email (recorder-run-author run)))
+        (email (auth:user-email user)))
+    (cond
+      (t
+       (not (string-equal (str:trim email) (str:trim author)))))))

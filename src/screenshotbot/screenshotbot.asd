@@ -386,6 +386,7 @@
                              (:file "test-report")
                              (:file "test-user")
                              (:file "test-channel")
+                             (:file "test-review-policy")
                              (:file "test-company")
                              (:file "test-image")
                              (:file "test-image-comparison")
