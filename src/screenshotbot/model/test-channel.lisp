@@ -26,6 +26,7 @@
                 #:unchanged-run
                 #:make-recorder-run)
   (:import-from #:screenshotbot/model/review-policy
+                #:disallow-author-review-policy
                 #:anyone-can-review))
 
 (util/fiveam:def-suite)
@@ -122,4 +123,7 @@
                    (has-typep 'anyone-can-review))
       (slot-makunbound channel '%review-policy)
       (assert-that (review-policy channel)
-                   (has-typep 'anyone-can-review)))))
+                   (has-typep 'anyone-can-review))
+      (setf (%review-policy channel) :disallow-author)
+      (assert-that (review-policy channel)
+                   (has-typep 'disallow-author-review-policy)))))

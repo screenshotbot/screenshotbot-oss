@@ -48,6 +48,7 @@
   (:import-from #:util/store
                 #:with-class-validation)
   (:import-from #:screenshotbot/model/review-policy
+                #:disallow-author-review-policy
                 #:anyone-can-review)
   (:export
    #:channel
@@ -144,7 +145,7 @@
      :accessor channel-slack-channels)
     (%review-policy
      :initarg :review-policy
-     :reader %review-policy))
+     :accessor %review-policy))
    (:metaclass persistent-class)
    (:default-initargs :review-policy :allow-author)))
 
@@ -159,7 +160,9 @@
 (defmethod review-policy ((self channel))
   (ecase (%review-policy self)
     (:allow-author
-     (make-instance 'anyone-can-review))))
+     (make-instance 'anyone-can-review))
+    (:disallow-author
+     (make-instance 'disallow-author-review-policy))))
 
 (defmethod channel-company ((channel channel))
   (company channel))
