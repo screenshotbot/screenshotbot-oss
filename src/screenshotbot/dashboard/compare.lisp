@@ -117,6 +117,12 @@
                 #:run-build-url)
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
+  (:import-from #:screenshotbot/model/review-policy
+                #:can-review?)
+  (:import-from #:screenshotbot/model/channel
+                #:review-policy)
+  (:import-from #:screenshotbot/model/report
+                #:report-channel)
   (:export
    #:render-acceptable
    #:render-diff-report
@@ -186,10 +192,21 @@
         <button class= (format nil"btn  btn-secondary dropdown-toggle ~a" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           ,(progn btn-text)
         </button>
-        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
-          ,(form-menu :title "Accept" :action "accept")
-          ,(form-menu :title "Reject" :action "reject")
-        </div>
+
+        ,(cond
+           ((can-review? (review-policy (report-channel (acceptable-report acceptable)))
+                         (acceptable-report acceptable)
+                         (auth:current-user))
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
+              ,(form-menu :title "Accept" :action "accept")
+              ,(form-menu :title "Reject" :action "reject")
+            </div>)
+           (t
+            <div class="dropdown-menu p-4 text-muted" style="max-width: 200px;">
+              <p class= "mb-0" >
+                The review policy for this channel does not let authors review their own screenshots.
+              </p>
+            </div>))
       </markup:merge-tag>)))
 
 (defhandler (compare-page :uri "/runs/:id/compare/:to") (id to)
