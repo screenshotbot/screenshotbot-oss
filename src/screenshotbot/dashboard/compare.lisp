@@ -193,20 +193,21 @@
           ,(progn btn-text)
         </button>
 
-        ,(cond
-           ((can-review? (review-policy (report-channel (acceptable-report acceptable)))
-                         (acceptable-report acceptable)
-                         (auth:current-user))
-            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
-              ,(form-menu :title "Accept" :action "accept")
-              ,(form-menu :title "Reject" :action "reject")
-            </div>)
-           (t
-            <div class="dropdown-menu p-4 text-muted" style="max-width: 200px;">
-              <p class= "mb-0" >
-                The review policy for this channel does not let authors review their own screenshots.
-              </p>
-            </div>))
+        ,(let ((channel (report-channel (acceptable-report acceptable))))
+           (cond
+             ((can-review? (review-policy channel)
+                           (acceptable-report acceptable)
+                           (auth:current-user))
+              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
+                ,(form-menu :title "Accept" :action "accept")
+                ,(form-menu :title "Reject" :action "reject")
+              </div>)
+             (t
+              <div class="dropdown-menu p-4 text-muted" style="max-width: 200px;">
+                <p class= "mb-0" >
+                  The <a href= (format nil "/channels/~a#review-policy" (store-object-id channel))>review policy</a> for this channel does not let authors review their own screenshots.
+                </p>
+              </div>)))
       </markup:merge-tag>)))
 
 (defhandler (compare-page :uri "/runs/:id/compare/:to") (id to)
