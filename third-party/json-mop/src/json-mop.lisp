@@ -39,8 +39,7 @@
               :reader json-type)))
 
 (defmethod json-key-name ((slot closer-mop:standard-direct-slot-definition))
-  (warn 'slot-not-serializable
-        :slot-name (closer-mop:slot-definition-name slot)))
+  nil)
 
 (defmethod closer-mop:direct-slot-definition-class ((class json-serializable-class)
                                                     &rest initargs)
