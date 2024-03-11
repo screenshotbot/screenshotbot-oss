@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/dashboard/explain
                 #:explain)
   (:import-from #:screenshotbot/model/channel
+                #:review-policy-name
                 #:with-channel-lock
                 #:channel-slack-channels
                 #:channel-subscribers
@@ -112,31 +113,58 @@
       </div>
     </div>))
 
-(deftag slack-card (&key channel)
-  (let ((slack-update (nibble (slack-channels :method :post)
-                        (slack-card-post channel slack-channels)))
+(deftag settings-card (&key channel)
+  (let ((slack-update (nibble (slack-channels review-policy :method :post)
+                        (slack-card-post channel
+                                         :slack-channels slack-channels
+                                         :review-policy review-policy)))
         (slack-channels (str:join ", "
                            (mapcar (curry #'str:concat "#")
                            (channel-slack-channels channel)))))
     <div class= "card mt-3">
       <div class= "card-body">
-        <h4 class= "card-title">
-          Notify on Slack
+        <h4 class= "card-title mb-3">
+          Settings
         </h4>
-        <p class= "text-muted">If you have configured <a href= "/settings/slack">Slack</a>, these Slack channels will always be notified of <tt>,(safe-channel-name channel)</tt>'s changes.</p>
+
 
         <form method= "POST" action=slack-update >
-          <div class= "input-group">
+          <div class= "mb-3">
+            <label for= "slack-channels" class= "form-label">Slack channels to notify
+              <explain>
+                If you have configured <a href= "/settings/slack">Slack</a>, these Slack channels will always be notified of <tt>,(safe-channel-name channel)</tt>'s changes.
+              </explain>
+            </label>
             <input name= "slack-channels" class= "form-control"
+                   id= "slack-channels"
                    value= slack-channels
                    placeholder= "#channel1, #channel2" />
-            <input type= "submit" class= "btn btn-primary" value= "Save" />
+<div class= "mt-1 mb-2 d-none" class= "text-muted">If you have configured <a href= "/settings/slack">Slack</a>, these Slack channels will always be notified of <tt>,(safe-channel-name channel)</tt>'s changes.</div>
+
           </div>
+
+          <div class= "mb-3" >
+            <label for= "review-policy" class= "form-label" >Review policy
+              <explain>
+                This setting only affects screenshot on Pull Requests or Merge Requests. Our
+                recommendation is to allow authors to review their own screenshots.
+              </explain>
+            </label>
+            ,(flet ((selected (name)
+                      (when (string-equal name (string (review-policy-name channel)))
+                        "selected")))
+               <select class="form-select" id= "review-policy" name= "review-policy" >
+                 <option value="allow-author" selected= (selected "allow-author") >Authors can accept their own changes (Default) </option>
+                 <option value="disallow-author" selected= (selected "disallow-author") >Authors cannot accept their own changes</option>
+               </select>)
+          </div>
+
+          <input type= "submit" class= "btn btn-primary" value= "Save" />
         </form>
       </div>
     </div>))
 
-(defun slack-card-post (channel slack-channels)
+(defun settings-card-post (channel &key slack-channels review-policy)
   (with-error-builder (:check check :errors errors)
     (flet ((parse-channel (channel)
              (let ((channel (str:trim channel)))
@@ -147,10 +175,15 @@
                                        (mapcar #'str:trim
                                                (mapcar (curry #'str:replace-all "#" "")
                                                 (str:split "," slack-channels))))))
+
+        (assert (str:s-member '("allow-author" "disallow-author")
+                              review-policy))
         (assert (< (length slack-channels) 100))
-        (with-transaction ()
-          (setf (channel-slack-channels channel)
-                slack-channels)))
+
+        (setf (channel-slack-channels channel)
+              slack-channels)
+        (setf (review-policy-name channel)
+              (find-symbol (str:upcase review-policy) :keyword)))
       (go-back channel))))
 
 (defhandler (single-channel-page :uri "/channels/:id") (id)
@@ -199,7 +232,7 @@
 
         <subscription-card channel=channel />
 
-        <slack-card channel=channel />
+        <settings-card channel=channel />
 
         <div class= "card mt-3">
           <div class= "card-body">
