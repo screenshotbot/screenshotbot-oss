@@ -115,9 +115,9 @@
 
 (deftag settings-card (&key channel)
   (let ((slack-update (nibble (slack-channels review-policy :method :post)
-                        (slack-card-post channel
-                                         :slack-channels slack-channels
-                                         :review-policy review-policy)))
+                        (settings-card-post channel
+                                            :slack-channels slack-channels
+                                            :review-policy review-policy)))
         (slack-channels (str:join ", "
                            (mapcar (curry #'str:concat "#")
                            (channel-slack-channels channel)))))
