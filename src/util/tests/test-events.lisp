@@ -28,6 +28,9 @@
   (:import-from #:core/installation/installation
                 #:installation-domain
                 #:*installation*)
+  (:import-from #:fiveam-matchers/lists
+                #:has-item
+                #:contains)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/tests/test-events)
 
@@ -119,3 +122,18 @@
                 'result)))
      (assert-that events
                   (has-length 1)))))
+
+(test with-tracing-happy-path-with-args
+  (with-fixture state ()
+   (let ((events))
+     (cl-mock:if-called 'push-event
+                        (lambda (name &rest args)
+                          (push (list* name args) events)))
+     (is (eql 'result
+              (with-tracing (:foobar :extra-tag 2)
+                'result)))
+     (assert-that events
+                  (has-length 1))
+     (assert-that events
+                  (contains
+                   (has-item :extra-tag))))))

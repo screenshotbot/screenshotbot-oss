@@ -184,13 +184,14 @@
 
 ;; (push-event :test-sdf)
 
-(def-easy-macro with-tracing (name &fn fn)
+(def-easy-macro with-tracing (name &rest extra-args &fn fn)
   (let ((start-time (local-time:now)))
     (unwind-protect
          (funcall fn)
-      (push-event :trace :name (string name)
-                         :time (local-time:timestamp-difference
-                                (local-time:now) start-time)))))
+      (apply #'push-event :trace :name (string name)
+                                 :time (local-time:timestamp-difference
+                                        (local-time:now) start-time)
+                                 extra-args))))
 
 (def-cron delete-old-data (:minute 0 :hour 7)
   (delete-old-data (event-engine (safe-installation))))
