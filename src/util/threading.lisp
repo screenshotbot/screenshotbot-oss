@@ -285,32 +285,30 @@ thread, not a thread itself."
         (make-thread
          (lambda ()
            (log:debug "Creating timer thread")
-           (timer-thread))))
+           (timer-thread))
+         :name "Timer thread"))
       (bt:condition-notify *timer-cv*))))
 
 (defun timer-thread ()
   (bt:with-lock-held (*timer-lock*)
-    (labels ((work ()
-               (let ((current-time (get-universal-time)))
-                (cond
-                  ((fset:empty? *timers*)
-                   ;; We're done for now
-                   (values))
-                  (t
-                   (let ((next (fset:least *timers*)))
-                     (cond
-                       ((<= (ts next) current-time)
-                        (log:debug "Timestamp is ready: ~a for ~a"
-                                   (ts next) current-time)
-                        (apply #'make-thread (args next))
-                        (setf *timers* (fset:less *timers* next))
-                        (work))
-                       (t
-                        (let ((secs (- (ts next) current-time)))
-                          (log:debug "Sleeping for ~a" secs)
-                          (bt:condition-wait *timer-cv* *timer-lock* :timeout secs))
-                        (work)))))))))
-      (work))))
+    (loop
+      (let ((current-time (get-universal-time)))
+        (cond
+          ((fset:empty? *timers*)
+           ;; We're done for now
+           (return-from timer-thread nil))
+          (t
+           (let ((next (fset:least *timers*)))
+             (cond
+               ((<= (ts next) current-time)
+                (log:debug "Timestamp is ready: ~a for ~a"
+                           (ts next) current-time)
+                (apply #'make-thread (args next))
+                (setf *timers* (fset:less *timers* next)))
+               (t
+                (let ((secs (- (ts next) current-time)))
+                  (log:debug "Sleeping for ~a" secs)
+                  (bt:condition-wait *timer-cv* *timer-lock* :timeout secs)))))))))))
 
 (def-easy-macro scheduled-future (timeout &rest args &fn fn)
   (let ((promise (lparallel:promise)))
