@@ -29,6 +29,8 @@
   (:import-from #:alexandria
                 #:when-let)
   (:import-from #:util/store/store
+                #:object-neighbors
+                #:find-any-refs
                 #:defindex)
   (:import-from #:util/store/fset-index
                 #:fset-unique-index)
@@ -325,3 +327,26 @@
 
 (defmethod company-for-request ((installation installation) request)
   (get-singleton-company installation))
+
+(defun reverse-graph ()
+  (let ((graph (make-hash-table)))
+    (loop for obj in (bknr.datastore:all-store-objects) do
+      (loop for neighbor in (object-neighbors obj)
+            if (typep neighbor 'bknr.datastore:store-object)
+            do
+               (push obj (gethash neighbor graph ))))
+    graph))
+
+
+(defmethod company-graph ((self company))
+  "Get all objects belonging to a company"
+  (let ((graph (reverse-graph)))
+    (let ((seen (make-hash-table)))
+      (labels ((dfs (obj)
+                 (unless (gethash obj seen)
+                   (setf (gethash obj seen) t)
+                   (loop for neighbor in (gethash obj graph)
+                         do (dfs neighbor)))))
+        (dfs self)
+        (loop for obj being the hash-keys of seen
+              collect obj)))))

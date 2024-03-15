@@ -377,7 +377,8 @@ associated report is rendered.")
 
 (defmethod bknr.datastore::destroy-object :before ((run recorder-run))
   (when-let ((channel (recorder-run-channel run)))
-    (remove-run-from-channel channel run)))
+    (unless (bknr.datastore::object-destroyed-p channel)
+      (remove-run-from-channel channel run))))
 
 (defmethod can-view ((run recorder-run) user)
   (can-view (recorder-run-channel run) user))
