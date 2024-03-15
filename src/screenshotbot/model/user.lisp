@@ -244,7 +244,9 @@
 (defmethod destroy-object :before ((user user))
   (loop for company in (user-companies user)
         do
-           (when (eql user (company-owner company))
+           (when (and
+                  (not (bknr.datastore::object-destroyed-p company))
+                  (eql user (company-owner company)))
              (setf (company-owner company) nil))))
 
 (defmethod users-for-company ((company company))
