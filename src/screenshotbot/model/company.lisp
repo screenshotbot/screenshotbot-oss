@@ -332,10 +332,10 @@
   (let ((graph (make-hash-table)))
     (loop for obj in (bknr.datastore:all-store-objects) do
       (loop for neighbor in (object-neighbors obj)
-            if (typep neighbor 'bknr.datastore:store-object)
             do
                (push obj (gethash neighbor graph ))))
     graph))
+
 
 (defmethod company-graph ((self company))
   (call-next-method))
@@ -351,4 +351,5 @@
                          do (dfs neighbor)))))
         (dfs self)
         (loop for obj being the hash-keys of seen
-              collect obj)))))
+              if (typep obj 'bknr.datastore:store-object)
+                collect obj)))))
