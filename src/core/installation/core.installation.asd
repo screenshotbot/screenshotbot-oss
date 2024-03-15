@@ -6,8 +6,9 @@
 
 (defsystem #:core.installation
   :serial t
-  :depends-on (#:util.store #| remove |#
-               #:util/html2text
+  :depends-on (#:util/html2text
+               #:lparallel
+               #:util/threading
                #:cl-smtp)
   :components ((:file "installation")
                (:file "auth-provider")

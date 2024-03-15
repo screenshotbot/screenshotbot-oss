@@ -9,19 +9,9 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:abstract-installation
+   #:*installation*
    #:installation-domain))
 (in-package :core/installation/installation)
-
-(util/migrations:ensure-symbol-in-package
- #:*installation*
- :old #:screenshotbot/installation
- :new #:core/installation/installation)
-(export '*installation*)
-
-(util/migrations:ensure-symbol-in-package
- #:domain
- :old #:screenshotbot/installation
- :new #:core/installation/installation)
 
 (defclass abstract-installation ()
   ((domain :initarg :domain
