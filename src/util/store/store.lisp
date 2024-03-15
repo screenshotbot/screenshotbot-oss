@@ -454,6 +454,12 @@ that this object directly references."
                               (closer-mop:slot-definition-name slotd))))
             slot-value)))
 
+(defmethod object-neighbors ((x list))
+  (copy-seq x))
+
+(defmethod object-neighbors ((x vector))
+  (loop for a across x
+        collect a))
 
 (defmethod find-any-refs (objects)
   "Similar to BKNR.DATASTORE:FIND-REFS, but all elements in the transitive paths from U - O to O.
