@@ -43,6 +43,7 @@
                 #:head)
   #+bknr.cluster
   (:import-from #:bknr.cluster/store
+                #:on-snapshot-save-impl
                 #:cluster-store-mixin
                 #:backward-compatibility-mixin)
   #+bknr.cluster
@@ -59,6 +60,8 @@
                 #:log-sentry)
   (:import-from #:util/misc
                 #:safe-ensure-directories-exist)
+  (:import-from #:util/events
+                #:with-tracing)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -721,3 +724,8 @@ this variable in LET forms, but you can SETF it if you like."
 (defmethod generate-sync-test-for-object (obj output))
 
 (defgeneric validate-index-values (index all-elts slot-name))
+
+(defmethod on-snapshot-save-impl :around ((store base-raft-store) snapshot-writer done)
+  "Add timing for snapshots"
+  (with-tracing (:snapshot)
+    (call-next-method)))

@@ -11,6 +11,7 @@
                :easy-macros
                :auto-restart
                :util/threading
+               :util/events
                :local-time
                :atomics
                :util.store/encodable
