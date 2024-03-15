@@ -330,12 +330,21 @@
 
 (defun reverse-graph ()
   (let ((graph (make-hash-table)))
-    (loop for obj in (bknr.datastore:all-store-objects) do
-      (loop for neighbor in (object-neighbors obj)
+    (let ((seen (make-hash-table))
+          (queue (make-array 0 :adjustable t :fill-pointer t))
+          (start 0))
+      (loop for obj in (bknr.datastore:all-store-objects) do
+        (vector-push-extend obj queue))
+      (loop while (< start (length queue))
+            for obj = (aref queue (1- (incf start)))
             do
-               (push obj (gethash neighbor graph ))))
+               (unless (gethash obj seen)
+                 (setf (gethash obj seen) t)
+                 (loop for neighbor in (object-neighbors obj)
+                       do
+                          (push obj (gethash neighbor graph))
+                          (vector-push-extend neighbor queue)))))
     graph))
-
 
 (defmethod company-graph ((self company))
   (call-next-method))

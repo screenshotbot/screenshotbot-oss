@@ -454,8 +454,18 @@ that this object directly references."
                               (closer-mop:slot-definition-name slotd))))
             slot-value)))
 
-(defmethod object-neighbors ((x list))
-  (copy-seq x))
+(defmethod object-neighbors ((x cons))
+  (loop for item on x
+        if (consp x)
+          collect (car x)
+        else
+          collect x))
+
+(defmethod object-neighbors ((x null))
+  nil)
+
+(defmethod object-neighbors (x)
+  nil)
 
 (defmethod object-neighbors ((x vector))
   (loop for a across x
