@@ -729,3 +729,29 @@ this variable in LET forms, but you can SETF it if you like."
   "Add timing for snapshots"
   (with-tracing (:snapshot)
     (call-next-method)))
+
+(defun find-deleted-references ()
+  (let ((seen (make-hash-table))
+        (queue (make-array 0 :adjustable t :fill-pointer t))
+        (start 0))
+    (loop for obj in (bknr.datastore:all-store-objects)
+          do (vector-push-extend obj queue))
+    (loop while (< start (length queue))
+          do
+             (let ((next (elt queue (1- (incf start)))))
+               (unless (gethash next seen)
+                 (setf (gethash next seen) t)
+                 (block nil
+                  (loop for neighbor in (object-neighbors next)
+                        if (typep neighbor 'store-object)
+                          do
+                             (cond
+                               ((bknr.datastore::object-destroyed-p neighbor)
+                                (restart-case
+                                    (error "Object ~a references a destroyed object ~a"  next neighbor)
+                                  (delete-this-object ()
+                                    (bknr.datastore:delete-object next)
+                                    ;; We don't want to keep accessing this object
+                                    (return))))
+                               (t
+                                (vector-push-extend neighbor queue))))))))))
