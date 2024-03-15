@@ -337,9 +337,11 @@
                (push obj (gethash neighbor graph ))))
     graph))
 
-
 (defmethod company-graph ((self company))
-  "Get all objects belonging to a company"
+  (call-next-method))
+
+(defmethod company-graph (self)
+  "Get all objects belonging to an object, even though we call it company-graph"
   (let ((graph (reverse-graph)))
     (let ((seen (make-hash-table)))
       (labels ((dfs (obj)
