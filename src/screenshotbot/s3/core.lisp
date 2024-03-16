@@ -81,9 +81,10 @@
 (defmethod s3-store-fetch-remote ((store null-s3-store) file key)
   (error "Recovering images not supported: Can't fetch remote file from null s3 store"))
 
-(defmethod s3-store-fetch-remote ((store s3-store) file key)
-  (with-store (store)
-    (zs3:get-file (bucket store) key file)))
+(auto-restart:with-auto-restart (:retries 3)
+  (defmethod s3-store-fetch-remote ((store s3-store) file key)
+    (with-store (store)
+      (zs3:get-file (bucket store) key file))))
 
 #|
 (upload-file *store* "/home/arnold/builds/web/backup.sh"
