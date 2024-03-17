@@ -56,6 +56,7 @@
            #:print-store-object
 
            #:delete-object
+           #:destroy-object
            #:delete-objects
            #:cascade-delete-p
            #:cascading-delete-object
