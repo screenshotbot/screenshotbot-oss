@@ -24,7 +24,8 @@
    #:ignore-and-log-errors
    #:*warning-count*
    #:with-extras
-   #:with-tags)
+   #:with-tags
+   #:wait-for-pool)
 )
 (in-package :util/threading)
 
@@ -222,6 +223,16 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
    (lock :initform (bt:make-lock)
          :reader lock))
   (:documentation "A thread pool that has a maximum number of parallel threads running."))
+
+(defmethod wait-for-pool ((self max-pool) &key (timeout 30))
+  "Mostly for testing purposes, wait until the pool is inactive"
+  (let ((end-time (+ timeout (get-universal-time))))
+    (loop until (bt:with-lock-held ((lock self))
+                  (= 0 (slot-value self 'thread-count)))
+          do
+             (when (> (get-universal-time) end-time)
+               (error "Pool didn't end in time"))
+             (sleep 0.05))))
 
 (defmethod maybe-process-queue ((self max-pool))
   (bt:with-lock-held ((lock self))

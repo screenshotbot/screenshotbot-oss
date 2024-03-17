@@ -695,6 +695,8 @@ recognized the file, we'll return nil."
                    (setf (slot-value image 'hash) hash))
                  hash)))))
 
+(defun delete-image-blob (oid))
+
 (defun img-tmp-dir ()
   (ensure-directories-exist
    (path:catdir

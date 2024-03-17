@@ -266,7 +266,9 @@
                               :pool max-pool)))
           (bt:join-thread (lparallel:force future-thread)))
         (is (eql 1 ctr))
-        (is (eql 1 (length (captured sentry-client::*sentry-client*))))))))
+        (is (eql 1 (length (captured sentry-client::*sentry-client*))))
+        (finishes
+         (wait-for-pool max-pool))))))
 
 (test simple-timer-test
   (dotimes (i 3)
