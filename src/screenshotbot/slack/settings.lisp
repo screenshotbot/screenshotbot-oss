@@ -99,7 +99,8 @@
   (multiple-value-bind (token-str last-token) (latest-slack-token (current-company))
     (declare (ignore token-str))
     (let ((errors nil))
-      (check-type last-token slack-token)
+      (when last-token
+       (check-type last-token slack-token))
       (flet ((check (field check message)
                (unless check
                  (push (cons field message)
