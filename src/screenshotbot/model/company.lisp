@@ -200,6 +200,7 @@
     ((access-token
       :initarg :access-token
       :initform nil
+      :relaxed-object-reference t
       :accessor access-token)
      (channel
       :initarg :channel
