@@ -16,11 +16,13 @@
         #:screenshotbot/slack/core
         #:screenshotbot/settings-api)
   (:import-from #:bknr.datastore
+                #:delete-object
                 #:with-transaction)
   (:import-from #:screenshotbot/slack/plugin
                 #:client-id
                 #:slack-plugin)
   (:import-from #:screenshotbot/slack/core
+                #:slack-tokens-for-company
                 #:audit-log
                 #:audit-log-error
                 #:slack-channel
@@ -42,15 +44,19 @@
 
 (markup:enable-reader)
 
+(defun disconnect-slack (company)
+  (let ((slack-config (find-or-create-slack-config company)))
+    (mapc #'delete-object (slack-tokens-for-company company))
+    (setf (access-token slack-config) nil)))
+
 (deftag add-to-slack (&key company)
   (with-plugin (slack-plugin)
    (let* ((slack-config (find-or-create-slack-config company))
           (disconnect (nibble (:method :post)
                         (confirmation-page
                          :yes (nibble ()
-                                (with-transaction ()
-                                  (setf (access-token slack-config) nil)
-                                  (hex:safe-redirect "/settings/slack")))
+                                (disconnect-slack company)
+                                (hex:safe-redirect "/settings/slack"))
                          :no "/settings/slack"
                          <div>
                            <p>Are you sure you want to disconnect the Slack connection?</p>

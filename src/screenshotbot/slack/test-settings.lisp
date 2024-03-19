@@ -21,16 +21,22 @@
                 #:company
                 #:default-slack-config)
   (:import-from #:screenshotbot/slack/core
+                #:slack-tokens-for-company
                 #:find-or-create-slack-config
                 #:slack-token)
   (:import-from #:screenshotbot/slack/settings
+                #:disconnect-slack
                 #:post-settings-slack)
   (:import-from #:screenshotbot/user-api
                 #:access-token)
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length))
 (in-package :screenshotbot/slack/test-settings)
 
 (util/fiveam:def-suite)
@@ -64,3 +70,26 @@
   (with-fixture state ()
     (is (typep (find-or-create-slack-config company)
                'slack-config))))
+
+(test delete-slack-tokens
+  (with-fixture state ()
+    (make-instance 'slack-token :company company
+                                :access-token "bar")
+    (make-instance 'slack-token :company company
+                                :access-token "car")
+    (disconnect-slack company)
+    (assert-that (slack-tokens-for-company company)
+                 (has-length 0))))
+
+(test delete-doesnt-delete-other-company-tokens
+  (with-fixture state ()
+    (let ((other-company (make-instance 'company)))
+      (make-instance 'slack-token :company other-company
+                                  :access-token "bar")
+      (make-instance 'slack-token :company company
+                                  :access-token "bar")
+      (disconnect-slack company)
+      (assert-that (slack-tokens-for-company company)
+                   (has-length 0))
+      (assert-that (slack-tokens-for-company other-company)
+                   (has-length 1)))))
