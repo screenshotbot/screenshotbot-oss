@@ -75,7 +75,8 @@
                        ;; the slack API error has already been logged, so we should
                        ;; not propagate this.
                        (values)))))))
-        (post-on-channel (slack-config-channel it))
+        (when (enabledp it)
+          (post-on-channel (slack-config-channel it)))
 
         (mapc #'post-on-channel
               (channel-slack-channels

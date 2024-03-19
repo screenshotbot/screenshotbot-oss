@@ -125,3 +125,12 @@
       (send-task self report))
     (assert-that posts
                  (has-length 0))))
+
+(test when-channels-only-notification-set-global
+  (with-fixture state ()
+    (setf (channel-slack-channels channel) (list "foobar"))
+    (setf (enabledp (default-slack-config company)) nil)
+    (finishes
+      (send-task self report))
+    (assert-that posts
+                 (has-length 1))))
