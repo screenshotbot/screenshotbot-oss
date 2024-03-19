@@ -417,13 +417,15 @@ to the directory that was just snapshotted.")
   (leaderp store))
 
 (defun cron-snapshot ()
-  (ignore-and-log-errors ()
+  (make-thread
+   (lambda ()
     (when (and
            (boundp 'bknr.datastore:*store*)
            #+bknr.cluster
            (leaderp bknr.datastore:*store*))
-     (log:info "Snapshotting bknr.datastore")
-     (safe-snapshot "cron-job" nil))))
+      (log:info "Snapshotting bknr.datastore")
+      (safe-snapshot "cron-job" nil)))
+   :name "snapshot-thread"))
 
 (cl-cron:make-cron-job 'cron-snapshot
                         :minute 0
