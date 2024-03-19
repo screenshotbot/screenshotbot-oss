@@ -90,10 +90,10 @@
       </simple-card-page>)))
 
 (defun find-or-create-slack-config (company)
-  (or
+  (util:or-setf
    (default-slack-config company)
    (make-instance 'slack-config
-                   :channel "#general")))
+                  :channel "#general")))
 
 (defun post-settings-slack (default-channel enabledp)
   (multiple-value-bind (token-str last-token) (latest-slack-token (current-company))

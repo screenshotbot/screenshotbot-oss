@@ -17,9 +17,11 @@
                 #:installation
                 #:multi-org-feature)
   (:import-from #:screenshotbot/model/company
+                #:slack-config
                 #:company
                 #:default-slack-config)
   (:import-from #:screenshotbot/slack/core
+                #:find-or-create-slack-config
                 #:slack-token)
   (:import-from #:screenshotbot/slack/settings
                 #:post-settings-slack)
@@ -57,3 +59,8 @@
        "#general"
        t))
     (is (eql token (access-token (default-slack-config company))))))
+
+(test find-or-create-should-create-if-not-exists
+  (with-fixture state ()
+    (is (typep (find-or-create-slack-config company)
+               'slack-config))))
