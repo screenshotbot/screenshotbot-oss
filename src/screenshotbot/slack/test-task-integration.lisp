@@ -33,6 +33,7 @@
   (:import-from #:screenshotbot/user-api
                 #:access-token)
   (:import-from #:screenshotbot/model/channel
+                #:channel-slack-channels
                 #:channel)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
@@ -42,6 +43,8 @@
                 #:assert-that)
   (:import-from #:fiveam-matchers/strings
                 #:matches-regex)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/slack/test-task-integration)
 
@@ -112,3 +115,13 @@
      (render-text report)
      (matches-regex
       "Screenshots changed in *foobar*<https://example.com/report/.*|foobar>"))))
+
+(test when-channels-are-set-without-slack-config
+  (with-fixture state ()
+    (setf (channel-slack-channels channel) (list "foobar"))
+    (setf (enabledp (default-slack-config company)) nil)
+    (setf (access-token (default-slack-config company)) nil)
+    (finishes
+      (send-task self report))
+    (assert-that posts
+                 (has-length 0))))

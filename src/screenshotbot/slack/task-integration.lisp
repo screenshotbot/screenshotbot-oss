@@ -24,7 +24,9 @@
   (:import-from #:screenshotbot/model/report
                 #:report-channel)
   (:import-from #:screenshotbot/model/recorder-run
-                #:recorder-run-tags))
+                #:recorder-run-tags)
+  (:import-from #:util/misc
+                #:?.))
 (in-package :screenshotbot/slack/task-integration)
 
 (defclass slack-task-integration (task-integration)
@@ -51,29 +53,29 @@
           (report-link report)
           (report-title report)))
 
+
 (defmethod send-task ((inst slack-task-integration) report)
   (let ((company (task-integration-company inst)))
     (assert (enabledp inst))
     (let ((it (default-slack-config company)))
       (flet ((post-on-channel (channel)
-               (log:info "Channel is: ~a" channel)
                (unless (str:emptyp channel)
-                (handler-case
-                    (slack-post-on-channel
-                     :channel channel
-                     :company company
-                     :token (access-token (access-token it))
-                     :blocks `#(
-                               ,(alexandria:alist-hash-table
-                                `((:type . "section")
-                                  (:text . (("type" . "mrkdwn")
-                                            ("text" . ,(render-text report))))))))
-                  (slack-error (e)
-                    ;; the slack API error has already been logged, so we should
-                    ;; not propagate this.
-                    (values))))))
-        (when it
-          (post-on-channel (slack-config-channel it)))
+                 (when-let ((token (?. access-token (?. access-token it))))
+                   (handler-case
+                       (slack-post-on-channel
+                        :channel channel
+                        :company company
+                        :token token
+                        :blocks `#(
+                                   ,(alexandria:alist-hash-table
+                                     `((:type . "section")
+                                       (:text . (("type" . "mrkdwn")
+                                                 ("text" . ,(render-text report))))))))
+                     (slack-error (e)
+                       ;; the slack API error has already been logged, so we should
+                       ;; not propagate this.
+                       (values)))))))
+        (post-on-channel (slack-config-channel it))
 
         (mapc #'post-on-channel
               (channel-slack-channels
