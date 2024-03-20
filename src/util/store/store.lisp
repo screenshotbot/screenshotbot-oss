@@ -55,6 +55,7 @@
   (:import-from #:util/cron
                 #:cron-enabled-on-store-p)
   (:import-from #:util/threading
+                #:make-thread
                 #:ignore-and-log-errors
                 #:with-extras
                 #:log-sentry)
