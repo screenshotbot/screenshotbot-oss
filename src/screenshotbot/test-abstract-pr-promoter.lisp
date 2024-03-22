@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:make-run-check
                 #:push-remote-check-via-batching
                 #:check-key
                 #:make-check
@@ -367,6 +368,13 @@
                          (lambda (retriver channel merge-base run)
                            (error "should not be called")))
       (maybe-promote promoter run))))
+
+(test make-run-check
+  (with-fixture state ()
+    (assert-that (make-run-check run
+                                 :status :success
+                                 :title "foobar")
+                 (has-typep 'check))))
 
 
 (test unchanged-run-without-batch-should-do-nothing

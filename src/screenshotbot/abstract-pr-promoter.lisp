@@ -289,6 +289,12 @@
 (defmethod run-details-url ((run unchanged-run))
   (make-details-url "/unchanged-runs/:id" :id (bknr.datastore:store-object-id run)))
 
+(defun make-run-check (run &rest args)
+  "Creates a check that points directly to the run"
+  (apply #'make-check run
+         :details-url (run-details-url run)
+         args))
+
 (defmethod maybe-promote ((promoter abstract-pr-promoter)
                           run)
   (let* ((repo (channel-repo (recorder-run-channel run)))
@@ -312,38 +318,36 @@
                                 (pr-merge-base promoter run)
                                 ;; We're using the run as a logger!
                                 (identity run))))
-         (flet ((make-run-check (&rest args)
-                  (apply #'make-check run
-                         :details-url (run-details-url run)
-                         args)))
-           (unless (lparallel:fulfilledp base-run-promise)
-             (format-log run :info "Base commit is not available yet, waiting for upto 5 minutes")
-             (push-remote-check
-              promoter
-              run
-              (make-check run
-                          :status :pending
-                          :details-url (run-details-url run)
-                          :title (format nil "Waiting for screenshots on ~a to be available"
-                                         (str:substring 0 4 (pr-merge-base promoter run))))))
-           (let* ((base-run (lparallel:force base-run-promise))
-                  (merge-base (pr-merge-base promoter run))
-                  (check (cond
-                           ((null merge-base)
-                            (format-log run :info "No base-commit provided in run")
-                            (make-run-check
-                             :status :failure
-                             :title "Base SHA not available for comparison, please check CI setup"
-                             :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
-                           (t
-                            (format-log run :info "Base run is available, preparing notification from diff-report")
-                            (when base-run
-                              (warn-if-not-merge-base promoter run base-run))
-                            (make-check-result-from-diff-report
-                             promoter
-                             run
-                             base-run)))))
-             (push-remote-check promoter run check))))))))
+         (unless (lparallel:fulfilledp base-run-promise)
+           (format-log run :info "Base commit is not available yet, waiting for upto 5 minutes")
+           (push-remote-check
+            promoter
+            run
+            ;; TODO: this can use make-run-check? For a different diff.
+            (make-check run
+                        :status :pending
+                        :details-url (run-details-url run)
+                        :title (format nil "Waiting for screenshots on ~a to be available"
+                                       (str:substring 0 4 (pr-merge-base promoter run))))))
+         (let* ((base-run (lparallel:force base-run-promise))
+                (merge-base (pr-merge-base promoter run))
+                (check (cond
+                         ((null merge-base)
+                          (format-log run :info "No base-commit provided in run")
+                          (make-run-check
+                           run
+                           :status :failure
+                           :title "Base SHA not available for comparison, please check CI setup"
+                           :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
+                         (t
+                          (format-log run :info "Base run is available, preparing notification from diff-report")
+                          (when base-run
+                            (warn-if-not-merge-base promoter run base-run))
+                          (make-check-result-from-diff-report
+                           promoter
+                           run
+                           base-run)))))
+           (push-remote-check promoter run check)))))))
 
 (defmethod warn-if-not-merge-base ((promoter abstract-pr-promoter)
                                    (run recorder-run)
