@@ -390,8 +390,6 @@
 
 (test unchanged-run-happy-promotion-path
   (with-fixture state ()
-    (gk:create :unchanged-run-promotion)
-    (gk:enable :unchanged-run-promotion)
     (with-fixture unchanged-run ()
       (let ((promoted nil))
         (if-called 'push-remote-check-via-batching
@@ -405,8 +403,6 @@
 supporting merge queues. In particular, since unchanged-runs never
 result in reviews, it is safe to promote on non-PR branches. See T1088."
   (with-fixture state ()
-    (gk:create :unchanged-run-promotion)
-    (gk:enable :unchanged-run-promotion)
     (with-fixture unchanged-run (:work-branch "master")
       (let ((promoted nil))
         (if-called 'push-remote-check-via-batching
