@@ -372,31 +372,30 @@ Revision. It will be tested with EQUAL"))
           return acceptable))
 
 (defmethod previous-review (promoter run)
-  (when (gk:check :auto-review-pr (recorder-run-company run) :default t)
-    (when-let ((pull-id (promoter-pull-id promoter run)))
-      (format-log run :info "Looking for previous reports on ~a" pull-id)
-      (let ((cut-off (timestamp- (local-time:now) 30 :day))
-            (channel (recorder-run-channel run)))
-        (loop for previous-run in (channel-runs channel)
-              while (timestamp< cut-off (created-at previous-run))
-              for acceptable
-                =
-                (flet ((p (x message)
-                         (format-log run :info "For ~a: ~a: Got ~a" previous-run message x)
-                         x))
-                  (and
-                   (not (eql previous-run run))
-                   (timestamp< (created-at previous-run)
-                               (created-at run))
-                   (equal (promoter-pull-id promoter previous-run) pull-id)
-                   (p (diff-report-empty-p
-                       (make-diff-report run previous-run))
-                      "Check if diff-report is empty")
-                   (p
-                    (review-status previous-run)
-                    "Check if report is accepted or rejected")))
-              if acceptable
-                return acceptable)))))
+  (when-let ((pull-id (promoter-pull-id promoter run)))
+    (format-log run :info "Looking for previous reports on ~a" pull-id)
+    (let ((cut-off (timestamp- (local-time:now) 30 :day))
+          (channel (recorder-run-channel run)))
+      (loop for previous-run in (channel-runs channel)
+            while (timestamp< cut-off (created-at previous-run))
+            for acceptable
+              =
+              (flet ((p (x message)
+                       (format-log run :info "For ~a: ~a: Got ~a" previous-run message x)
+                       x))
+                (and
+                 (not (eql previous-run run))
+                 (timestamp< (created-at previous-run)
+                             (created-at run))
+                 (equal (promoter-pull-id promoter previous-run) pull-id)
+                 (p (diff-report-empty-p
+                     (make-diff-report run previous-run))
+                    "Check if diff-report is empty")
+                 (p
+                  (review-status previous-run)
+                  "Check if report is accepted or rejected")))
+            if acceptable
+              return acceptable))))
 
 (defmethod make-check-result-from-diff-report (promoter (run unchanged-run)
                                            base-run)
