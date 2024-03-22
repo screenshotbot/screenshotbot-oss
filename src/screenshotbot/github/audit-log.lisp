@@ -28,7 +28,8 @@
   (:export
    #:updated-check-run
    #:user-updated-check-run
-   #:check-collaborator))
+   #:check-collaborator
+   #:updated-check-run-check))
 (in-package :screenshotbot/github/audit-log)
 
 (markup:enable-reader)
@@ -51,7 +52,10 @@
 
 (defclass updated-check-run (github-audit-log)
   ((commit :initarg :commit
-           :reader commit))
+           :reader commit)
+   (check :transient t
+          :accessor updated-check-run-check
+          :documentation "This is only used for debugging old checks"))
   (:metaclass persistent-class))
 
 (defmethod describe-audit-log ((self updated-check-run))
@@ -63,7 +67,10 @@
   ((%%user :initarg :user
            :reader %user)
    (commit :initarg :commit
-           :reader commit))
+           :reader commit)
+   (check :transient t
+          :accessor updated-check-run-check
+          :documentation "This is only used for debugging old checks"))
   (:metaclass persistent-class))
 
 (defmethod describe-audit-log ((self user-updated-check-run))

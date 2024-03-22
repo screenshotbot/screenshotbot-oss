@@ -47,6 +47,7 @@
                 #:acceptable-report
                 #:report-company)
   (:import-from #:screenshotbot/github/audit-log
+                #:updated-check-run-check
                 #:user-updated-check-run
                 #:updated-check-run)
   (:import-from #:screenshotbot/abstract-pr-promoter
@@ -143,7 +144,7 @@
                           (apply #'make-instance 'user-updated-check-run
                                  :user user
                                  audit-log-args))))
-        (declare (ignore updated-check-run))
+        (setf (updated-check-run-check updated-check-run) check)
         (apply #'github-update-pull-request args)))))
 
 (defmethod promoter-pull-id ((promoter pull-request-promoter)
