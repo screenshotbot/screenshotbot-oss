@@ -376,7 +376,7 @@
       (finishes
         (maybe-promote promoter unchanged-run)))))
 
-(def-fixture unchanged-run ()
+(def-fixture unchanged-run (&key (work-branch "foobar"))
   (let* ((batch (find-or-create-batch
                  :commit "abcd"
                  :company company))
@@ -384,6 +384,7 @@
                                        :merge-base "car"
                                        :commit "abcd"
                                        :channel channel
+                                       :work-branch work-branch
                                        :batch batch)))
     (&body)))
 
@@ -392,6 +393,21 @@
     (gk:create :unchanged-run-promotion)
     (gk:enable :unchanged-run-promotion)
     (with-fixture unchanged-run ()
+      (let ((promoted nil))
+        (if-called 'push-remote-check-via-batching
+                   (lambda (&rest args)
+                     (setf promoted t)))
+        (maybe-promote promoter unchanged-run)
+        (is-true promoted)))))
+
+(test unchanged-run-will-still-promote-even-on-master-branch
+  "This was an accidental behavior, but is the correct behavior when
+supporting merge queues. In particular, since unchanged-runs never
+result in reviews, it is safe to promote on non-PR branches. See T1088."
+  (with-fixture state ()
+    (gk:create :unchanged-run-promotion)
+    (gk:enable :unchanged-run-promotion)
+    (with-fixture unchanged-run (:work-branch "master")
       (let ((promoted nil))
         (if-called 'push-remote-check-via-batching
                    (lambda (&rest args)
