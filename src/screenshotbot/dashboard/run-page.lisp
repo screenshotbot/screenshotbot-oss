@@ -362,17 +362,30 @@
 (defmethod start-review-enabled-p ((installation t) (run t))
   nil)
 
+(defun re-run-promotions (run)
+  (flet ((go-back ()
+           (hex:safe-redirect 'run-page
+                              :id (oid run))))
+   (confirmation-page
+    :yes (nibble ()
+           (make-thread
+            (lambda ()
+              (log:info "Starting re-run promotion thread")
+              (start-promotion-thread
+               run)))
+           (go-back))
+    :no (nibble ()
+          (go-back))
+    <p class= "card-title" >Re-run promotion scripts?</p>
+    <p>You probably don't want to do this, unless you know what you're doing. Re-running promotions can send spurious promotion notifications to subscribers, and can sometimes alter the history of screenshots.</p>
+
+    <p>This might still be useful when you're testing out an integration with an external service for notifications, such as Slack or Jira.</p>)))
+
 (deftag run-advanced-menu (&key run)
   (let ((promotion-logs (nibble ()
                           (promotion-log-page run)))
         (rerun-promotions (nibble ()
-                            (make-thread
-                             (lambda ()
-                               (log:info "Starting re-run promotion thread")
-                               (start-promotion-thread
-                                run)))
-                            (hex:safe-redirect 'run-page
-                                                :id (oid run))))
+                            (re-run-promotions run)))
         (debug-info (nibble ()
                       (advanced-run-page :run run)))
         (download-run (nibble ()
