@@ -127,7 +127,10 @@
 (defun has-merge-queue-branch (run)
   (let ((branch (recorder-run-work-branch run)))
     (and branch
-         (str:starts-with-p "gh-readonly-queue/" branch))))
+         (or
+          (str:starts-with-p "gh-readonly-queue/" branch)
+          ;; For ease of testing merge queue behavior:
+          (str:starts-with-p "sbfake-gh-readonly-queue-" branch)))))
 
 ;; TODO: delete
 (defmethod maybe-promote ((promoter pull-request-promoter) run)
