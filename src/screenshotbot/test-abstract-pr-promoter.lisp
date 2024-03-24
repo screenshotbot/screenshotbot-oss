@@ -412,9 +412,11 @@ supporting merge queues. In particular, since unchanged-runs never
 result in reviews, it is safe to promote on non-PR branches. See T1088."
   (with-fixture state ()
     (with-fixture unchanged-run (:work-branch "master")
-      (let ((promoted nil))
-        (if-called 'push-remote-check-via-batching
-                   (lambda (&rest args)
-                     (setf promoted t)))
+      (let ((checks))
+        (if-called 'push-remote-check
+                   (lambda (promoter run check)
+                     (push check checks)))
         (maybe-promote promoter unchanged-run)
-        (is-true promoted)))))
+        (is-true checks)
+        (assert-that checks (has-length 1))
+        (is (equal "No screenshots changed" (check-title (car checks))))))))
