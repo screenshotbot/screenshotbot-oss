@@ -118,15 +118,17 @@
     (elt parts 0)))
 
 
+(defun has-merge-queue-branch (run)
+  (let ((branch (recorder-run-work-branch run)))
+    (and branch
+         (str:starts-with-p "gh-readonly-queue/" branch))))
 
 (defmethod maybe-promote ((promoter pull-request-promoter) run)
-  (let ((branch (recorder-run-work-branch run)))
-    (cond
-      ((and branch
-            (str:starts-with-p "gh-readonly-queue/" branch))
-       (format-log run :into "This is a merge queue run, so we are not going to push any remoe check."))
-      (t
-       (call-next-method)))))
+  (cond
+    ((has-merge-queue-branch run)
+     (format-log run :into "This is a merge queue run, so we are not going to push any remoe check."))
+    (t
+     (call-next-method))))
 
 (auto-restart:with-auto-restart (:retries 5)
   (defmethod push-remote-check ((promoter pull-request-promoter)
