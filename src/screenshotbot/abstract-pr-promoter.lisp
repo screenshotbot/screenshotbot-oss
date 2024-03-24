@@ -322,6 +322,11 @@ reviewable.)"
       ((not (recorder-run-merge-base run))
        (format-log run :info "No merge base on run, this is probably a bug on the CI job (Usually missing a `git fetch origin main`"))
       ((unreviewable-run-p promoter run)
+       ;; TODO(T1096): do we have to worry about overwriting a
+       ;; previously reviewable report? This might happen if a commit
+       ;; was part of a PR, and then merged into the main branch, and
+       ;; the build was run both times. Perhaps in this case we should
+       ;; keep a track of history of notifications?
        (push-remote-check
         promoter
         run
