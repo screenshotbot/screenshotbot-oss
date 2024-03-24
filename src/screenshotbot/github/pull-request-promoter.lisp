@@ -51,6 +51,7 @@
                 #:user-updated-check-run
                 #:updated-check-run)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:unreviewable-run-p
                 #:check-key
                 #:check-sha
                 #:make-promoter-for-acceptable
@@ -118,17 +119,19 @@
     (elt parts 0)))
 
 
+(defmethod unreviewable-run-p ((promoter pull-request-promoter) (run recorder-run))
+  (or
+   (has-merge-queue-branch run)
+   (call-next-method)))
+
 (defun has-merge-queue-branch (run)
   (let ((branch (recorder-run-work-branch run)))
     (and branch
          (str:starts-with-p "gh-readonly-queue/" branch))))
 
+;; TODO: delete
 (defmethod maybe-promote ((promoter pull-request-promoter) run)
-  (cond
-    ((has-merge-queue-branch run)
-     (format-log run :into "This is a merge queue run, so we are not going to push any remoe check."))
-    (t
-     (call-next-method))))
+  (call-next-method))
 
 (auto-restart:with-auto-restart (:retries 5)
   (defmethod push-remote-check ((promoter pull-request-promoter)

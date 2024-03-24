@@ -44,6 +44,8 @@
                 #:get-parent-commit
                 #:repo-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-branch
+                #:recorder-run-work-branch
                 #:abstract-run
                 #:unchanged-run
                 #:override-commit-hash
@@ -295,6 +297,18 @@
          :details-url (run-details-url run)
          args))
 
+(defmethod unreviewable-run-p (promoter (run recorder-run))
+  "Check if the run is running on a main branch, or some other flow
+which is not reviewable but where we still need to send check
+results. (In particular, on GitHub merge-queue runs are also not
+reviewable.)"
+  (and (recorder-run-branch run)
+       (equal (recorder-run-work-branch run)
+              (recorder-run-branch run))))
+
+(defmethod unreviewable-run-p ((promoter t) (run unchanged-run))
+  t)
+
 (defmethod maybe-promote ((promoter abstract-pr-promoter)
                           run)
   (let* ((repo (channel-repo (recorder-run-channel run)))
@@ -307,6 +321,13 @@
        (format-log run :info "Plugin is not installed for this company/repository"))
       ((not (recorder-run-merge-base run))
        (format-log run :info "No merge base on run, this is probably a bug on the CI job (Usually missing a `git fetch origin main`"))
+      ((unreviewable-run-p promoter run)
+       (push-remote-check
+        promoter
+        run
+        (make-run-check run :status :success
+                            :title "Nothing to review"
+                            :summary "NA")))
       ((equal (recorder-run-merge-base run)
               (recorder-run-commit run))
        (format-log run :info "Ignoring since the merge-base is same as the commit-hash"))

@@ -376,6 +376,27 @@
                                  :title "foobar")
                  (has-typep 'check))))
 
+(test on-main-branch-push-a-green-check
+  "If the git merge-base command failed on the CI server, then this will be null."
+  (with-fixture state ()
+    (let ((checks)
+          (run (make-recorder-run
+                :company company
+                :channel channel
+                :work-branch "master"
+                :branch "master"
+                :merge-base "foo"
+                :commit-hash "foo")))
+      (cl-mock:if-called 'retrieve-run
+                         (lambda (retriver channel merge-base run)
+                           (error "should not be called")))
+      (cl-mock:if-called 'push-remote-check
+                         (lambda (promoter run check)
+                           (push check checks)))
+      (maybe-promote promoter run)
+      (assert-that checks
+                   (contains (has-typep 'check))))))
+
 
 (test unchanged-run-without-batch-should-do-nothing
   (with-fixture state ()
@@ -419,4 +440,4 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
         (maybe-promote promoter unchanged-run)
         (is-true checks)
         (assert-that checks (has-length 1))
-        (is (equal "No screenshots changed" (check-title (car checks))))))))
+        (is (equal "Nothing to review" (check-title (car checks))))))))

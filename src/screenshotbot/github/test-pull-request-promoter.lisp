@@ -238,7 +238,34 @@
                   :merge-base "car"
                   :commit-hash "foo")))
         (maybe-promote promoter run)
-        (is-false check)))))
+        (is-true check)
+        (is (eql :success (check-status check)))
+        (is (equal "Nothing to review" (check-title check)))))))'
+
+(test run-on-main-is-ignored----sort-of
+  (with-fixture state ()
+    (let ((*base-run* (make-recorder-run
+                        :company company
+                        :channel (make-instance 'dummy-channel)
+                        :merge-base "dfdfdf"
+                        :commit-hash "car"))
+          (check))
+      (cl-mock:if-called 'push-remote-check
+                         (lambda (promoter run %check)
+                           (declare (ignore promoter run))
+                           (setf check %check)))
+      (let ((run (make-recorder-run
+                  :company company
+                  :channel (make-instance 'dummy-channel)
+                  :work-branch "master"
+                  :branch "master"
+                  :pull-request "https://github.com/tdrhq/fast-example/pull/2"
+                  :merge-base "car"
+                  :commit-hash "foo")))
+        (maybe-promote promoter run)
+        (is-true check)
+        (is (eql :success (check-status check)))
+        (is (equal "Nothing to review" (check-title check)))))))
 
 (test without-a-base-run-we-get-an-error
   (with-fixture state ()
