@@ -289,6 +289,8 @@
 
 
 
+(defhandler (nil :uri "/reports" :method :get) ()
+  (hex:safe-redirect "/report"))
 
 (defhandler (report-list :uri "/report" :method :get
                          :want-login t) ()
