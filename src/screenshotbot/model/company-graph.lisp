@@ -39,7 +39,14 @@ remove these from the graph."
                  (setf (gethash obj seen) t)
                  (loop for neighbor in (object-neighbors obj)
                        if (not (ignorable-atom neighbor))
-                       do
+                         do
+                            (unless (or
+                                     (typep neighbor 'bknr.datastore:store-object)
+                                     (listp neighbor)
+                                     (arrayp neighbor)
+                                     (typep neighbor 'util/store/object-id:oid)
+                                     (typep neighbor 'screenshotbot/model/screenshot::lite-screenshot))
+                              (log:warn "found an object of weird type: ~a" neighbor))
                           (push obj (gethash neighbor graph))
                           (when undirected
                             (push neighbor (gethash obj graph)))
