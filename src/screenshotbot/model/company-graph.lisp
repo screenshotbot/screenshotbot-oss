@@ -9,6 +9,8 @@
   (:import-from #:util/store/store
                 #:object-neighbors
                 #:find-any-refs)
+  (:import-from #:screenshotbot/model/user
+                #:user-with-email)
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:export
@@ -47,20 +49,22 @@ remove these from the graph."
                                      (typep neighbor 'util/store/object-id:oid)
                                      (typep neighbor 'screenshotbot/model/screenshot::lite-screenshot))
                               (log:warn "found an object of weird type: ~a" neighbor))
-                          (push obj (gethash neighbor graph))
-                          (when undirected
-                            (push neighbor (gethash obj graph)))
-                          (vector-push-extend neighbor queue)))))
+                            (push obj (gethash neighbor graph))
+                            (when undirected
+                              (push neighbor (gethash obj graph)))
+                            (vector-push-extend neighbor queue)))))
     graph))
 
 (defmethod company-graph ((self company))
   (call-next-method))
 
-(defun find-reachable-store-objects (graph self)
+(defun find-reachable-store-objects (graph self &key exclude)
   (let ((seen (make-hash-table))
         (queue (make-array 0 :adjustable t :fill-pointer t))
         (from (make-hash-table)) ;; where we came from, to generate a path
         (start 0))
+    (loop for e in exclude
+          do (setf (gethash e seen) t))
     (vector-push-extend self queue)
     (loop while (< start (length queue))
           for obj = (aref queue (1- (incf start)))
@@ -89,7 +93,8 @@ indirectly to a company. This is useful for copying a company and its
 objects to a new instances. To see why this is implemented this way,
 see the full-graph-finds-everything test."
   (let ((graph (reverse-graph :undirected t)))
-    (find-reachable-store-objects graph self)))
+    (find-reachable-store-objects graph self :exclude
+                                  (list (user-with-email "arnold@tdrhq.com")))))
 
 (defun find-a-path (src dest)
   "Find a path from src to dest in the undirected full graph. For debugging"
