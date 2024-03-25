@@ -12,10 +12,20 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:export
-   #:company-graph))
+   #:company-graph
+   #:company-full-graph))
 (in-package :screenshotbot/model/company-graph)
 
-(defun reverse-graph ()
+(defun ignorable-atom (obj)
+  "We know these objects can't eventually refer any other objects, so we
+remove these from the graph."
+  (or
+   (stringp obj)
+   (numberp obj)
+   (symbolp obj)))
+
+(defun reverse-graph (&key (undirected nil))
+  "Creates the graph as a hash-table."
   (let ((graph (make-hash-table)))
     (let ((seen (make-hash-table))
           (queue (make-array 0 :adjustable t :fill-pointer t))
@@ -28,24 +38,38 @@
                (unless (gethash obj seen)
                  (setf (gethash obj seen) t)
                  (loop for neighbor in (object-neighbors obj)
+                       if (not (ignorable-atom neighbor))
                        do
                           (push obj (gethash neighbor graph))
+                          (when undirected
+                            (push neighbor (gethash obj graph)))
                           (vector-push-extend neighbor queue)))))
     graph))
 
 (defmethod company-graph ((self company))
   (call-next-method))
 
+(defun find-reachable-store-objects (graph self)
+  (let ((seen (make-hash-table)))
+    (labels ((dfs (obj)
+               (unless (gethash obj seen)
+                 (setf (gethash obj seen) t)
+                 (loop for neighbor in (gethash obj graph)
+                       do (dfs neighbor)))))
+      (dfs self)
+      (loop for obj being the hash-keys of seen
+            if (typep obj 'bknr.datastore:store-object)
+              collect obj))))
+
 (defmethod company-graph (self)
   "Get all objects belonging to an object, even though we call it company-graph"
   (let ((graph (reverse-graph)))
-    (let ((seen (make-hash-table)))
-      (labels ((dfs (obj)
-                 (unless (gethash obj seen)
-                   (setf (gethash obj seen) t)
-                   (loop for neighbor in (gethash obj graph)
-                         do (dfs neighbor)))))
-        (dfs self)
-        (loop for obj being the hash-keys of seen
-              if (typep obj 'bknr.datastore:store-object)
-                collect obj)))))
+    (find-reachable-store-objects graph self)))
+
+(defmethod company-full-graph (self)
+  "Get all the objects that refer or are referenced by, directly or
+indirectly to a company. This is useful for copying a company and its
+objects to a new instances. To see why this is implemented this way,
+see the full-graph-finds-everything test."
+  (let ((graph (reverse-graph :undirected t)))
+    (find-reachable-store-objects graph self)))
