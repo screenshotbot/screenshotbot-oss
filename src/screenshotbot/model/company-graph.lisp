@@ -50,16 +50,20 @@ remove these from the graph."
   (call-next-method))
 
 (defun find-reachable-store-objects (graph self)
-  (let ((seen (make-hash-table)))
-    (labels ((dfs (obj)
-               (unless (gethash obj seen)
-                 (setf (gethash obj seen) t)
-                 (loop for neighbor in (gethash obj graph)
-                       do (dfs neighbor)))))
-      (dfs self)
-      (loop for obj being the hash-keys of seen
-            if (typep obj 'bknr.datastore:store-object)
-              collect obj))))
+  (let ((seen (make-hash-table))
+        (queue (make-array 0 :adjustable t :fill-pointer t))
+        (start 0))
+    (vector-push-extend self queue)
+    (loop while (< start (length queue))
+          for obj = (aref queue (1- (incf start)))
+          do
+             (unless (gethash obj seen)
+               (setf (gethash obj seen) t)
+               (loop for neighbor in (gethash obj graph)
+                     do (vector-push-extend neighbor queue))))
+    (loop for obj being the hash-keys of seen
+          if (typep obj 'bknr.datastore:store-object)
+            collect obj)))
 
 (defmethod company-graph (self)
   "Get all objects belonging to an object, even though we call it company-graph"
