@@ -111,6 +111,7 @@
             <h3>Webhooks</h3>
           </div>
           <div class= "card-body">
+            <div class= "alert alert-danger d-none" />
             <div class= "form-group mb-3">
               <label for= "endpoint" class= "form-label" >Webhook Endpoint</label>
               <input type= "text" class= "form-control" placeholder= "https://example.com/screenshotbot/webhook" id= "endpoint" name= "endpoint" value= (?. endpoint config) />
