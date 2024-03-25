@@ -59,6 +59,7 @@ remove these from the graph."
 (defun find-reachable-store-objects (graph self)
   (let ((seen (make-hash-table))
         (queue (make-array 0 :adjustable t :fill-pointer t))
+        (from (make-hash-table)) ;; where we came from, to generate a path
         (start 0))
     (vector-push-extend self queue)
     (loop while (< start (length queue))
@@ -67,10 +68,15 @@ remove these from the graph."
              (unless (gethash obj seen)
                (setf (gethash obj seen) t)
                (loop for neighbor in (gethash obj graph)
-                     do (vector-push-extend neighbor queue))))
-    (loop for obj being the hash-keys of seen
-          if (typep obj 'bknr.datastore:store-object)
-            collect obj)))
+                     do
+                        (unless (gethash neighbor from)
+                          (setf (gethash neighbor from) obj))
+                        (vector-push-extend neighbor queue))))
+    (values
+     (loop for obj being the hash-keys of seen
+           if (typep obj 'bknr.datastore:store-object)
+             collect obj)
+     from)))
 
 (defmethod company-graph (self)
   "Get all objects belonging to an object, even though we call it company-graph"
@@ -84,3 +90,15 @@ objects to a new instances. To see why this is implemented this way,
 see the full-graph-finds-everything test."
   (let ((graph (reverse-graph :undirected t)))
     (find-reachable-store-objects graph self)))
+
+(defun find-a-path (src dest)
+  "Find a path from src to dest in the undirected full graph. For debugging"
+  (let ((graph (reverse-graph :undirected t)))
+    (multiple-value-bind (reach backlinks)
+        (find-reachable-store-objects graph src)
+      (declare (ignore reach))
+      (loop for x = (gethash dest backlinks)
+            while (and x (not (eql src x)))
+            do
+               (setf dest x)
+               (log:info "<-- ~a" x)))))
