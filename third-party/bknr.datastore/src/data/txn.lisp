@@ -499,7 +499,7 @@ to the log file in an atomic group"))
   (finish-output stream)
   #+cmu
   (unix:unix-fsync (kernel::fd-stream-fd stream))
-  #+sbcl
+  #+(and sbcl (not :windows))
   (sb-posix:fsync (sb-sys:fd-stream-fd stream)))
 
 (defvar *disable-sync* nil)
