@@ -95,7 +95,17 @@ is provided, add each of the directories to asdf:*central-registry*"
          (run-program-with-errors (list
                                    "git" "clone"
                                    repo
-                                   (namestring  cache-dir)))
+                                   (namestring  cache-dir)
+                                   ;; Should this be configurable? In
+                                   ;; most cases we aren't editing the
+                                   ;; cloned repository directly, so
+                                   ;; it's okay to disable
+                                   ;; autocrlf. In particular, couple
+                                   ;; of common repositories will fail
+                                   ;; to compile under SBCL without
+                                   ;; autocrlf.
+                                   #+windows #+windows
+                                   "--config" "autocrlf=false"))
          (checkout))))))
 
 (defun name-from-repo-name (repo-name)
