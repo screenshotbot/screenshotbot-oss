@@ -105,7 +105,7 @@ is provided, add each of the directories to asdf:*central-registry*"
                                    ;; to compile under SBCL without
                                    ;; autocrlf.
                                    #+ (or windows win32 mswindows) #+ (or windows win32 mswindows)
-                                   "--config" "autocrlf=false"))
+                                   "--config" "core.autocrlf=false"))
          (checkout))))))
 
 (defun name-from-repo-name (repo-name)
