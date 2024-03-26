@@ -49,6 +49,19 @@ jobs:
             mkdir -p ~/.config/screenshotbot/object-store/current/
             sbcl --script launch.lisp --verify-store
 
+  launch:
+    docker:
+      - image: cimg/base:2021.04
+    steps:
+      - checkout
+      - run:
+          <<: *install_deps
+      - run:
+          name: Build CLI
+          command: |
+            sbcl --script scripts/build-cli.lisp
+
+
 workflows:
   tests:
     jobs:
@@ -56,3 +69,6 @@ workflows:
   launch:
     jobs:
       - launch
+  build_cli:
+    jobs:
+      - build_cli
