@@ -499,7 +499,7 @@ to the log file in an atomic group"))
   (finish-output stream)
   #+cmu
   (unix:unix-fsync (kernel::fd-stream-fd stream))
-  #+(and sbcl (not :windows))
+  #+(and sbcl (not :win32))
   (sb-posix:fsync (sb-sys:fd-stream-fd stream)))
 
 (defvar *disable-sync* nil)
@@ -739,11 +739,11 @@ pathname until a non-existant directory name has been found."
   (report-progress "~&; truncating transaction log at position ~D.~%" position)
   #+cmu
   (unix:unix-truncate (ext:unix-namestring pathname) position)
-  #+sbcl
+  #+(and sbcl (not :win32))
   (sb-posix:truncate (namestring pathname) position)
   #+(or openmcl (and lispworks (or linux darwin)))
   (ffi-truncate (namestring pathname) position)
-  #-(or cmu sbcl openmcl (and lispworks (or linux darwin)))
+  #-(or cmu (and sbcl (not :win32)) openmcl (and lispworks (or linux darwin)))
   (error "don't know how to truncate files on this platform"))
 
 (defun load-transaction-log (pathname &key until)
