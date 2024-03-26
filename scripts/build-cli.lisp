@@ -10,7 +10,7 @@
 (ql:quickload :screenshotbot.sdk)
 
 (defvar *output* (make-pathname
-                  :type (#+(or windows win32) "exe")
+                  :type (or #+(or windows win32) "exe")
                   :name "screenshotbot-cli"))
 
 #+sbcl
