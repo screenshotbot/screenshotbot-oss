@@ -104,7 +104,7 @@ is provided, add each of the directories to asdf:*central-registry*"
                                    ;; of common repositories will fail
                                    ;; to compile under SBCL without
                                    ;; autocrlf.
-                                   #+windows #+windows
+                                   #+ (or windows win32 mswindows) #+ (or windows win32 mswindows)
                                    "--config" "autocrlf=false"))
          (checkout))))))
 
