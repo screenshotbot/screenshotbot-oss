@@ -9,7 +9,9 @@
 
 (ql:quickload :screenshotbot.sdk)
 
-(defvar *output* "screenshotbot-cli")
+(defvar *output* (make-pathname
+                  :type (#+(or windows win32) "exe")
+                  :name "screenshotbot-cli"))
 
 #+sbcl
 (sb-ext:save-lisp-and-die *output*
