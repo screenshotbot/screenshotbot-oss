@@ -13,6 +13,9 @@
                 #:user-with-email)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:bknr.datastore
+                #:store-object-subsystem
+                #:snapshot-subsystem-helper)
   (:export
    #:company-graph
    #:company-full-graph))
@@ -107,3 +110,18 @@ see the full-graph-finds-everything test."
             do
                (setf dest x)
                (log:info "<-- ~a" x)))))
+
+(defun save-graph (company file)
+  "Save all the objects related to a company to a snapshot. Useful for
+moving a company to a new instance."
+  (let ((objects (company-full-graph company)))
+    (with-open-file (s file
+                       :direction :output
+                       :element-type '(unsigned-byte 8))
+      (snapshot-subsystem-helper
+       (loop for subsystem in (bknr.datastore::store-subsystems bknr.datastore:*store*)
+             if (typep subsystem 'store-object-subsystem)
+               return subsystem)
+       s
+       :map-store-objects (lambda (fn)
+                            (mapc fn objects))))))
