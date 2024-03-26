@@ -688,19 +688,22 @@ the slots are read from the snapshot and ignored."
                        :element-type '(unsigned-byte 8)
                        :if-does-not-exist :create
                        :if-exists :supersede)
-      (let ((class-layouts (make-hash-table)))
+      (snapshot-subsystem-helper subsystem s))))
+
+(defun snapshot-subsystem-helper (subsystem stream &key (map-store-objects #'map-store-objects))
+  (let ((class-layouts (make-hash-table)))
         (with-transaction (:prepare-for-snapshot)
-          (map-store-objects #'prepare-for-snapshot))
-        (encode-current-object-id s)
-        (map-store-objects (lambda (object) (when (subtypep (type-of object) 'store-object)
-                                              (encode-create-object class-layouts object s))))
+          (funcall map-store-objects #'prepare-for-snapshot))
+        (encode-current-object-id stream)
+        (funcall map-store-objects (lambda (object) (when (subtypep (type-of object) 'store-object)
+                                              (encode-create-object class-layouts object stream))))
 
         (let ((objects))
-          (map-store-objects (lambda (object) (when (subtypep (type-of object) 'store-object)
+          (funcall map-store-objects (lambda (object) (when (subtypep (type-of object) 'store-object)
                                                 (push object objects))))
 
-          (encode-object-slots subsystem class-layouts (reverse objects) s))
-        t))))
+          (encode-object-slots subsystem class-layouts (reverse objects) stream))
+        t))
 
 (defun %log-crash (e)
   (format t "Error in background snapshot thread: ~a~%" e)
