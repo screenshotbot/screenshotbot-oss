@@ -39,6 +39,10 @@
 (defun init ()
   #+ccl
   (init-jvm-for-ccl)
+  ;; On Windows, we need an extended stack. This isn't just for the
+  ;; tests, we need it just to even load all the systems.
+  #+(and lispworks :mswindows)
+  (hcl:extend-current-stack)
   (load-systems)
   (clean-up-static-web-outputs))
 
