@@ -5,6 +5,7 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (load "scripts/prepare-image")
+(load "scripts/init")
 
 (ql:quickload :screenshotbot.sdk)
 
