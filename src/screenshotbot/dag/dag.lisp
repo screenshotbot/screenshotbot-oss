@@ -303,7 +303,8 @@ nodes (as a set), else we return a list."
   nil)
 
 (defmethod merge-base ((dag dag) commit-1 commit-2)
-  (or
-   ;; Micro optimization: First look only at the last 100 nodes.
-   (merge-base-for-depth dag commit-1 commit-2 :depth 100)
-   (merge-base-for-depth dag commit-1 commit-2 :depth 1000)))
+  (bt:with-timeout (30)
+    (or
+     ;; Micro optimization: First look only at the last 100 nodes.
+     (merge-base-for-depth dag commit-1 commit-2 :depth 100)
+     (merge-base-for-depth dag commit-1 commit-2 :depth 1000))))
