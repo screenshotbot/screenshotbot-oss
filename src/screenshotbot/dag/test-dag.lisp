@@ -10,6 +10,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:dag
+                #:merge-base
                 #:reachable-nodes
                 #:assert-commit
                 #:ordered-commits
@@ -301,3 +302,11 @@ for you."
        (is-not (has-item "bb"))
        (has-item "aa")
        (has-length 2)))))
+
+(test merge-base
+  (with-fixture state ()
+    (add-edge "cc" "bb" :dag dag)
+    (is (equal "bb" (merge-base dag "aa" "cc")))
+    (add-edge "dd" "ee")
+    (is (equal nil (merge-base dag "aa" "dd")))
+    (is (equal "aa" (merge-base dag "aa" "aa")))))
