@@ -381,13 +381,18 @@
 
     <p>This might still be useful when you're testing out an integration with an external service for notifications, such as Slack or Jira.</p>)))
 
+(defhandler (%advanced-run-page :uri "/runs/:oid/debug") (oid)
+  (with-login ()
+    (let ((run (find-by-oid oid 'recorder-run)))
+      (can-view! run)
+      (advanced-run-page :run run))))
+
 (deftag run-advanced-menu (&key run)
   (let ((promotion-logs (nibble ()
                           (promotion-log-page run)))
         (rerun-promotions (nibble ()
                             (re-run-promotions run)))
-        (debug-info (nibble ()
-                      (advanced-run-page :run run)))
+        (debug-info (make-url '%advanced-run-page :oid (oid run)))
         (download-run (nibble ()
                         (download-run run))))
     <page-nav-dropdown title= "Advanced">
