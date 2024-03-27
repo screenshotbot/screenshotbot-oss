@@ -259,20 +259,27 @@ time we see a new node.
 If RETURN-SEEN is T, then we return a hash table with all the seen
 nodes (as a set), else we return a list."
   (let ((seen (make-hash-table))
-        (queue (list commit)))
+        (depths (make-hash-table :test #'equal))
+        (queue (make-array 0 :adjustable t :fill-pointer t))
+        (start 0))
 
-    (loop for i below depth
-          while queue
+    (vector-push-extend commit queue)
+    (setf (gethash commit depths) 1)
+
+    (loop while (< start (length queue))
+          for commit-hash = (aref queue start)
           do
-             (loop for commit-hash in queue do
-               (let ((commit (get-commit dag commit-hash)))
-                 (when (and commit (not (gethash commit seen)))
-                   (setf (gethash commit seen) t)
-                   (funcall seen-callback commit)
-                   (setf queue
-                         (loop for commit-hash in queue
-                               appending
-                               (parents (get-commit dag commit-hash))))))))
+             (incf start)
+             (let ((commit (get-commit dag commit-hash))
+                   (this-depth (gethash commit-hash depths)))
+               (when (and commit (not (gethash commit seen)))
+                 (setf (gethash commit seen) t)
+                 (funcall seen-callback commit)
+                 (when (< this-depth depth)
+                  (loop for parent in (parents commit) do
+                    (unless (gethash parent depths)
+                      (setf (gethash parent depths) (1+ this-depth)))
+                    (vector-push-extend parent queue))))))
     (cond
       (return-seen
        seen)
@@ -303,8 +310,7 @@ nodes (as a set), else we return a list."
   nil)
 
 (defmethod merge-base ((dag dag) commit-1 commit-2)
-  (bt:with-timeout (30)
-    (or
-     ;; Micro optimization: First look only at the last 100 nodes.
-     (merge-base-for-depth dag commit-1 commit-2 :depth 100)
-     (merge-base-for-depth dag commit-1 commit-2 :depth 1000))))
+  (or
+   ;; Micro optimization: First look only at the last 100 nodes.
+   (merge-base-for-depth dag commit-1 commit-2 :depth 100)
+   (merge-base-for-depth dag commit-1 commit-2 :depth 1000)))

@@ -11,6 +11,8 @@
   (:import-from #:alexandria
                 #:when-let
                 #:when-let*)
+  (:import-from #:util/events
+                #:with-tracing)
   (:export
    #:generic-git-repo
    #:commit-graph
@@ -58,6 +60,7 @@
   "#")
 
 (defmethod compute-merge-base (repo commit-1 commit-2)
-  (dag:merge-base (commit-graph-dag (commit-graph repo))
-                  commit-1
-                  commit-2))
+  (with-tracing (:merge-base :commit-1 commit-1 :commit-2 commit-2)
+    (dag:merge-base (commit-graph-dag (commit-graph repo))
+                    commit-1
+                    commit-2)))
