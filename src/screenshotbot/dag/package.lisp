@@ -33,5 +33,6 @@
            #:ordered-commits
            #:sha
            #:author
-           #:check-integrity))
+           #:check-integrity
+           #:merge-base))
 (in-package :dag)

@@ -41,9 +41,11 @@
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:screenshotbot/git-repo
+                #:compute-merge-base
                 #:get-parent-commit
                 #:repo-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-branch-hash
                 #:recorder-run-branch
                 #:recorder-run-work-branch
                 #:abstract-run
@@ -229,7 +231,15 @@
 (defgeneric make-acceptable (promoter report &rest args))
 
 (defmethod pr-merge-base ((promoter abstract-pr-promoter) run)
-  (recorder-run-merge-base run))
+  (or
+   (recorder-run-merge-base run)
+   (when (gk:check :server-merge-base (recorder-run-company run) :default t)
+    (when-let ((repo (channel-repo (recorder-run-channel run)))
+               (master-commit (recorder-run-branch-hash run))
+               (this-commit (recorder-run-commit run)))
+      (compute-merge-base repo
+                          master-commit
+                          this-commit)))))
 
 (defun make-details-url (&rest args)
   (format nil
@@ -319,7 +329,7 @@ reviewable.)"
        (format-log run :info "Not a valid repo for this promoter"))
       ((not (plugin-installed? promoter company repo-url))
        (format-log run :info "Plugin is not installed for this company/repository"))
-      ((not (recorder-run-merge-base run))
+      ((not (pr-merge-base promoter run))
        (format-log run :info "No merge base on run, this is probably a bug on the CI job (Usually missing a `git fetch origin main`"))
       ((unreviewable-run-p promoter run)
        ;; TODO(T1096): do we have to worry about overwriting a

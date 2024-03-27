@@ -20,7 +20,8 @@
    #:repo-link
    #:commit-link
    #:find-or-create-commit-graph
-   #:commit-graph-dag))
+   #:commit-graph-dag
+   #:compute-merge-base))
 (in-package :screenshotbot/git-repo)
 
 
@@ -55,3 +56,8 @@
 
 (defmethod commit-link ((repo generic-git-repo) hash)
   "#")
+
+(defmethod compute-merge-base (repo commit-1 commit-2)
+  (dag:merge-base (commit-graph-dag (commit-graph repo))
+                  commit-1
+                  commit-2))

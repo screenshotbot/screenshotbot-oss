@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:pr-merge-base
                 #:make-run-check
                 #:push-remote-check-via-batching
                 #:check-key
@@ -65,6 +66,9 @@
   (:import-from #:fiveam-matchers/strings
                 #:contains-string)
   (:import-from #:screenshotbot/git-repo
+                #:commit-graph-dag
+                #:commit-graph
+                #:compute-merge-base
                 #:get-parent-commit)
   (:import-from #:screenshotbot/model/failed-run
                 #:failed-run)
@@ -327,6 +331,7 @@
                    (contains
                     another-run)))))
 
+
 (test warn-if-not-merge-base-does-nothing-in-the-good-path
   (with-fixture state ()
     (warn-if-not-merge-base
@@ -441,3 +446,38 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
         (is-true checks)
         (assert-that checks (has-length 1))
         (is (equal "Nothing to review" (check-title (car checks))))))))
+
+
+(test pr-merge-base-will-compute-from-graph-if-needed
+  (with-fixture state ()
+    (let ((merge-base-args))
+      (if-called 'compute-merge-base
+                 (lambda (&rest args)
+                   (setf merge-base-args args)
+                   "bleh"))
+      (let ((run (make-recorder-run
+                  :merge-base nil
+                  :channel channel
+                  :branch-hash "bb"
+                  :commit-hash "aa")))
+        (is
+         (equal "bleh"
+                (pr-merge-base
+                 promoter
+                 run))
+         (is (equal (list "aa" "bbc")
+                    (cdr merge-base-args))))))))
+
+(test pr-merge-base-integration-happy-path
+  (with-fixture state ()
+    (let ((merge-base-args))
+      (let ((run (make-recorder-run
+                  :merge-base nil
+                  :channel channel
+                  :branch-hash "bb"
+                  :commit-hash "aa")))
+        (is
+         (equal nil
+                (pr-merge-base
+                 promoter
+                 run)))))))
