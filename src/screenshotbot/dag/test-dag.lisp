@@ -4,12 +4,13 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot.dag.test-dag
+(defpackage :screenshotbot/dag/test-dag
   (:use #:cl
         #:dag
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:dag
+                #:reachable-nodes
                 #:assert-commit
                 #:ordered-commits
                 #:commit-map
@@ -33,8 +34,7 @@
                 #:contains)
   (:import-from #:alexandria
                 #:assoc-value))
-
-(in-package :screenshotbot.dag.test-dag)
+(in-package :screenshotbot/dag/test-dag)
 
 (util/fiveam:def-suite)
 
@@ -274,3 +274,19 @@ for you."
     (error (e)
       (assert-that (format nil "~a" e)
                    (contains-string "`foo` does not")))))
+
+(test reachable-nodes
+  (with-fixture state ()
+    (let ((dag (make-instance 'dag)))
+      (add-edge "bb" nil :dag dag)
+      (add-edge "aa" "bb" :dag dag)
+      (is (fset:set? (reachable-nodes dag "aa")))
+      (assert-that
+       (mapcar #'sha
+               (fset:convert 'list (reachable-nodes dag "aa")))
+       (has-item "aa")
+       (has-item "bb"))
+      (assert-that
+       (mapcar #'sha
+               (fset:convert 'list (reachable-nodes dag "bb")))
+       (contains "bb")))))

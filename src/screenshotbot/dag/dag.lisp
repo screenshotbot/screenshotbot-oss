@@ -46,7 +46,8 @@
    (commits :initform (make-hash-table :test 'equal)
             :accessor commit-map)
    (pathname :initarg :pathname
-             :documentation "For debugging only")))
+             :documentation "For debugging only")
+   (reachable-cache :initform (make-hash-table))))
 
 (defmethod all-commits ((dag dag))
   (loop for commit being the hash-values of (commit-map dag)
@@ -193,6 +194,7 @@ tree. This version uses the Kahn's algorithm instead of DFS"
            commit
            line)))
 
+
 (defun read-from-stream (stream &key (format :json))
   (let ((dag (make-instance 'dag :pathname (or
                                             (ignore-errors
@@ -246,3 +248,24 @@ tree. This version uses the Kahn's algorithm instead of DFS"
         (assert commit)
         (add-commit dag commit)
         (assert (gethash node-id (commit-map dag)))))))
+
+(defmethod reachable-nodes ((dag dag) commit)
+  (declare (optimize (speed 0) (debug 3)))
+  (let ((seen (make-hash-table)))
+    (labels ((dfs (commit-hash)
+               (assert (stringp commit-hash))
+               (let ((commit (get-commit dag commit-hash)))
+                 (cond
+                   ((not commit)
+                    (error "unipml"))
+                   ((gethash commit seen)
+                    nil)
+                   (t
+                    (setf (gethash commit seen) t)
+                    (loop for parent in (parents commit)
+                          do (dfs parent)))))))
+      (dfs commit)
+      (fset:convert
+       'fset:set
+       (loop for node being the hash-keys of seen
+             collect node)))))
