@@ -249,23 +249,20 @@ tree. This version uses the Kahn's algorithm instead of DFS"
         (add-commit dag commit)
         (assert (gethash node-id (commit-map dag)))))))
 
-(defmethod reachable-nodes ((dag dag) commit)
-  (declare (optimize (speed 0) (debug 3)))
-  (let ((seen (make-hash-table)))
-    (labels ((dfs (commit-hash)
-               (assert (stringp commit-hash))
+(defmethod reachable-nodes ((dag dag) commit &key (depth 1000))
+  (let ((seen (make-hash-table))
+        (queue (list commit)))
+
+    (loop for i below depth
+          while queue
+          do
+             (loop for commit-hash in queue do
                (let ((commit (get-commit dag commit-hash)))
-                 (cond
-                   ((not commit)
-                    (error "unipml"))
-                   ((gethash commit seen)
-                    nil)
-                   (t
-                    (setf (gethash commit seen) t)
-                    (loop for parent in (parents commit)
-                          do (dfs parent)))))))
-      (dfs commit)
-      (fset:convert
-       'fset:set
-       (loop for node being the hash-keys of seen
-             collect node)))))
+                 (when (and commit (not (gethash commit seen)))
+                   (setf (gethash commit seen) t)
+                   (setf queue
+                         (loop for commit-hash in queue
+                               appending
+                               (parents (get-commit dag commit-hash))))))))
+    (loop for node being the hash-keys of seen
+          collect node)))

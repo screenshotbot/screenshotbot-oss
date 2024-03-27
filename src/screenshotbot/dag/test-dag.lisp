@@ -280,13 +280,24 @@ for you."
     (let ((dag (make-instance 'dag)))
       (add-edge "bb" nil :dag dag)
       (add-edge "aa" "bb" :dag dag)
-      (is (fset:set? (reachable-nodes dag "aa")))
       (assert-that
        (mapcar #'sha
-               (fset:convert 'list (reachable-nodes dag "aa")))
+               (reachable-nodes dag "aa"))
        (has-item "aa")
        (has-item "bb"))
       (assert-that
        (mapcar #'sha
-               (fset:convert 'list (reachable-nodes dag "bb")))
-       (contains "bb")))))
+               (reachable-nodes dag "bb"))
+       (contains "bb"))
+
+      (add-edge "dd" "aa" :dag dag)
+      (assert-that
+       (mapcar #'sha
+               (reachable-nodes dag "dd"))
+       (has-item "bb"))
+      (assert-that
+       (mapcar #'sha
+               (reachable-nodes dag "dd" :depth 2))
+       (is-not (has-item "bb"))
+       (has-item "aa")
+       (has-length 2)))))
