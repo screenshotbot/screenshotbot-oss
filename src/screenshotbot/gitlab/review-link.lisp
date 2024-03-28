@@ -13,16 +13,20 @@
                 #:gitlab-repo)
   (:import-from #:screenshotbot/model/recorder-run
                 #:gitlab-merge-request-iid)
+  (:import-from #:screenshotbot/model/commit-graph
+                #:normalize-url)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/gitlab/review-link)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
+
+(defun gitlab-review-link (repo run)
+  (format nil "~a/-/merge_requests/~a"
+          (normalize-url (repo-link repo))
+          (gitlab-merge-request-iid run)))
 
 (defmethod review-link-impl ((repo gitlab-repo) run)
   (when (gitlab-merge-request-iid run)
-    <a href= (format nil "~a/-/merge_requests/~a"
-              (repo-link repo)
-                              (gitlab-merge-request-iid run))
-       >
+    <a href= (gitlab-review-link repo run) >
       Merge Request
     </a>))

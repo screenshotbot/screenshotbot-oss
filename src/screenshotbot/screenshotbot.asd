@@ -408,6 +408,7 @@
                              (:file "test-webhook")))
                (:module "gitlab"
                 :components ((:file "test-settings")
+                             (:file "test-review-link")
                              (:file "test-merge-request-promoter")))
                (:module "azure"
                 :components ((:file "test-plugin")
