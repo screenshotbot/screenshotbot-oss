@@ -97,3 +97,14 @@
         (equal-to
          first-version))
        (is-not-null)))))
+
+(test pulls-the-graph-for-the-right-company
+  (with-fixture state ()
+    (let ((other-cg (find-or-create-commit-graph other-company "https://github.com/tdrhq/fast-example.git"))
+          (cg (find-or-create-commit-graph company "https://github.com/tdrhq/fast-example.git")))
+      (assert-that
+       (find-or-create-commit-graph company "https://github.com/tdrhq/fast-example")
+       (equal-to cg))
+      (assert-that
+       (find-or-create-commit-graph other-company "https://github.com/tdrhq/fast-example")
+       (equal-to other-cg)))))
