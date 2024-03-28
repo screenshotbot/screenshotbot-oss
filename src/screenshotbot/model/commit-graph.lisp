@@ -52,6 +52,7 @@
      (%normalized-repo-url :type string
                            :accessor normalized-repo-url
                            :index +normalized-repo-url-index+
+                           :index-reader find-by-normalized-url
                            :initarg :normalized-url)
      (company :initarg :company
               :accessor company
@@ -89,6 +90,13 @@ to the same repo, the graph will still be the same."
 
 (defmethod find-commit-graph ((company company) (url string))
   (log:info "Finding commit graph for company ~a and repo ~a" company url)
+  (or
+   (fset:do-set (cg (find-by-normalized-url (normalize-url url)))
+     (when (eql company (company cg))
+       (return cg)))
+   (%find-by-unnormalized-url company url)))
+
+(defun %find-by-unnormalized-url (company url)
   (loop for commit-graph in (store-objects-with-class 'commit-graph)
         if (and
             (eql (company commit-graph) company)

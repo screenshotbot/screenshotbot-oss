@@ -14,14 +14,24 @@
   (:import-from #:screenshotbot/model/commit-graph
                 #:normalize-url
                 #:needs-flush-p
-                #:flush-dags))
+                #:flush-dags)
+  (:import-from #:cl-mock
+                #:answer
+                #:if-called)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that
+                #:equal-to
+                #:is-not)
+  (:import-from #:fiveam-matchers/misc
+                #:is-not-null))
 (in-package :screenshotbot/model/test-commit-graph)
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
   (with-test-store ()
-    (let ((company (make-instance 'company)))
+    (let ((company (make-instance 'company))
+          (other-company (make-instance 'company)))
       (let ((dag (make-instance 'dag:dag)))
         (dag:add-commit dag (make-instance 'dag:commit
                                        :sha "aa") )
@@ -63,3 +73,27 @@
              (normalize-url "git@github.com:tdrhq/fast-example/")))
   (is (equal "https://github.com/tdrhq/fast-example"
              (normalize-url "ssh://git@github.com:tdrhq/fast-example/"))))
+
+(test find-or-create-normalized-commit-graph
+  (with-fixture state ()
+    (is (eql
+         (find-or-create-commit-graph company "https://github.com/tdrhq/fast-example")
+         (find-or-create-commit-graph company "https://github.com/tdrhq/fast-example.git")))))
+
+(test if-normalization-algorithm-changes-we-still-use-url
+  (with-fixture state ()
+    (let ((original (find-or-create-commit-graph company "https://github.com/tdrhq/fast-example")))
+      (cl-mock:with-mocks ()
+        (answer (normalize-url "https://github.com/tdrhq/fast-example") "foo")
+        (is (eql original
+                 (find-or-create-commit-graph company "https://github.com/tdrhq/fast-example")))))))
+
+(test we-only-return-a-commit-graph-for-the-right-company
+  (with-fixture state ()
+    (let ((first-version (find-or-create-commit-graph other-company "https://github.com/tdrhq/fast-example.git")))
+      (assert-that
+       (find-or-create-commit-graph company "https://github.com/tdrhq/fast-example")
+       (is-not
+        (equal-to
+         first-version))
+       (is-not-null)))))
