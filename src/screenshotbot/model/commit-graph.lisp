@@ -68,16 +68,17 @@
 (defun normalize-url (repo-url)
   "Normalizing is relatively safe. Even if two distinct repos normalize
 to the same repo, the graph will still be the same."
-  (flet ((remove-prefixes (repo-url)
-           (cl-ppcre:regex-replace-all
-            "^git@" repo-url "https://")))
-    (let ((suffixes (list "/" ".git")))
-      (loop for suffix in suffixes
-            if (str:ends-with-p suffix repo-url)
-              return (normalize-url (str:substring 0 (- (length repo-url)
-                                                        (length suffix))
-                                                   repo-url))
-            finally (return (remove-prefixes repo-url))))))
+  (let ((repo-url (str:downcase repo-url)))
+   (flet ((remove-prefixes (repo-url)
+            (cl-ppcre:regex-replace-all
+             "^git@" repo-url "https://")))
+     (let ((suffixes (list "/" ".git")))
+       (loop for suffix in suffixes
+             if (str:ends-with-p suffix repo-url)
+               return (normalize-url (str:substring 0 (- (length repo-url)
+                                                         (length suffix))
+                                                    repo-url))
+             finally (return (remove-prefixes repo-url)))))))
 
 
 (defmethod find-commit-graph ((company company) (url string))
