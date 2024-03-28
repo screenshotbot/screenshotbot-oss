@@ -22,6 +22,10 @@
                 #:def-cron)
   (:import-from #:alexandria
                 #:when-let)
+  (:import-from #:util/store/fset-index
+                #:fset-set-index)
+  (:import-from #:util/store/store
+                #:defindex)
   (:export
    #:commit-graph
    #:repo-url
@@ -33,12 +37,20 @@
 
 (defvar *flush-lock* (bt:make-lock "dag-flush-lock"))
 
+(defindex +normalized-repo-url-index+
+  'fset-set-index
+  :slot-name '%normalized-repo-url)
+
 (with-class-validation
   (defclass commit-graph (bknr.datastore:blob)
     ((url :type string
           :initform nil
           :accessor repo-url
           :initarg :url)
+     (%normalized-repo-url :type string
+                           :accessor normalized-repo-url
+                           :index +normalized-repo-url-index+
+                           :initarg :normalized-url)
      (company :initarg :company
               :accessor company
               :initform nil)
@@ -52,6 +64,21 @@
                     :transient t
                     :accessor needs-flush-p))
     (:metaclass persistent-class)))
+
+(defun normalize-url (repo-url)
+  "Normalizing is relatively safe. Even if two distinct repos normalize
+to the same repo, the graph will still be the same."
+  (flet ((remove-prefixes (repo-url)
+           (cl-ppcre:regex-replace-all
+            "^git@" repo-url "https://")))
+    (let ((suffixes (list "/" ".git")))
+      (loop for suffix in suffixes
+            if (str:ends-with-p suffix repo-url)
+              return (normalize-url (str:substring 0 (- (length repo-url)
+                                                        (length suffix))
+                                                   repo-url))
+            finally (return (remove-prefixes repo-url))))))
+
 
 (defmethod find-commit-graph ((company company) (url string))
   (log:info "Finding commit graph for company ~a and repo ~a" company url)
@@ -68,6 +95,7 @@
        (find-commit-graph company url)
        (make-instance 'commit-graph
                       :url url
+                      :normalized-url (normalize-url url)
                       :company company)))))
 
 (defmethod commit-graph-dag ((obj commit-graph))

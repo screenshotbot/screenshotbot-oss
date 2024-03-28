@@ -12,6 +12,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/commit-graph
+                #:normalize-url
                 #:needs-flush-p
                 #:flush-dags))
 (in-package :screenshotbot/model/test-commit-graph)
@@ -46,3 +47,13 @@
       (finishes
         (flush-dags))
       (is-false (needs-flush-p cg)))))
+
+(test normalize-url
+  (is (equal "https://github.com/tdrhq/fast-example"
+             (normalize-url "https://github.com/tdrhq/fast-example.git")))
+  (is (equal "https://github.com/tdrhq/fast-example"
+             (normalize-url "https://github.com/tdrhq/fast-example.git/")))
+  (is (equal "https://github.com/tdrhq/fast-example"
+             (normalize-url "https://github.com/tdrhq/fast-example/")))
+  (is (equal "https://github.com/tdrhq/fast-example"
+             (normalize-url "git@github.com/tdrhq/fast-example/"))))
