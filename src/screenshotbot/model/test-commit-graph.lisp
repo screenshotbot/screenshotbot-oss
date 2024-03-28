@@ -58,4 +58,8 @@
   (is (equal "https://github.com/tdrhq/fast-example"
              (normalize-url "https://github.com/tdrhq/Fast-Example/")))
   (is (equal "https://github.com/tdrhq/fast-example"
-             (normalize-url "git@github.com/tdrhq/fast-example/"))))
+             (normalize-url "git@github.com/tdrhq/fast-example/")))
+  (is (equal "https://github.com/tdrhq/fast-example"
+             (normalize-url "git@github.com:tdrhq/fast-example/")))
+  (is (equal "https://github.com/tdrhq/fast-example"
+             (normalize-url "ssh://git@github.com:tdrhq/fast-example/"))))

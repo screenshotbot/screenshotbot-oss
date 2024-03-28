@@ -69,9 +69,13 @@
   "Normalizing is relatively safe. Even if two distinct repos normalize
 to the same repo, the graph will still be the same."
   (let ((repo-url (str:downcase repo-url)))
-   (flet ((remove-prefixes (repo-url)
-            (cl-ppcre:regex-replace-all
-             "^git@" repo-url "https://")))
+    (flet ((remove-prefixes (repo-url)
+             (let ((git-prefix "^(ssh[:/]//)?git@"))
+               (cond
+                 ((cl-ppcre:scan git-prefix repo-url)
+                  (cl-ppcre:regex-replace-all
+                   git-prefix (str:replace-all ":" "/" repo-url) "https://"))
+                 (t repo-url)))))
      (let ((suffixes (list "/" ".git")))
        (loop for suffix in suffixes
              if (str:ends-with-p suffix repo-url)
