@@ -26,6 +26,8 @@
                 #:fset-set-index)
   (:import-from #:util/store/store
                 #:defindex)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
   (:export
    #:commit-graph
    #:repo-url
@@ -151,3 +153,8 @@ to the same repo, the graph will still be the same."
 
 (def-cron load-all-dags (:step-min 10)
   (load-all))
+
+(def-store-migration ("Add normalized repos" :version 9)
+  (loop for cg in (bknr.datastore:class-instances 'commit-graph)
+        if (repo-url cg)
+          do (setf (normalized-repo-url cg) (normalize-url (repo-url cg)))))
