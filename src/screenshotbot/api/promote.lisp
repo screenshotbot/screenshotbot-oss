@@ -35,6 +35,7 @@
   (:import-from #:bknr.datastore
                 #:blob-pathname)
   (:import-from #:screenshotbot/model/recorder-run
+                #:gitlab-merge-request-iid
                 #:unchanged-run
                 #:recorder-run-warnings
                 #:not-fast-forward-promotion-warning
@@ -207,6 +208,8 @@
            (cond
              ((pull-request-url run)
               (log :error "Looks like there's a Pull Request attached, not promoting"))
+             ((gitlab-merge-request-iid run)
+              (log :error "Looks like there's a GitLab Merge Request attached, not promoting"))
              ((periodic-job-p run)
               (log :info "This is a periodic job, running promotions")
               (finalize-promotion

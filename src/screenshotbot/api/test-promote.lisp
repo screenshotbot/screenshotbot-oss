@@ -37,6 +37,7 @@
   (:import-from #:screenshotbot/sdk/git
                 #:git-repo)
   (:import-from #:screenshotbot/model/recorder-run
+                #:gitlab-merge-request-iid
                 #:assert-no-loops
                 #:make-recorder-run
                 #:not-fast-forward-promotion-warning
@@ -145,6 +146,24 @@
     (is (eql
          run1
          (recorder-previous-run run2)))))
+
+(test dont-promote-a-run-with-a-merge-request
+  (with-fixture state ()
+    (setf (slot-value run2 'gitlab-merge-request-iid) 3443)
+    (%maybe-promote-run run1 channel)
+    (%maybe-promote-run run2 channel)
+
+    (is-false (activep run2))
+    (is-true (activep run1))))
+
+(test dont-promote-a-run-with-a-pull-request
+  (with-fixture state ()
+    (setf (slot-value run2 'screenshotbot/model/recorder-run::pull-request) "foobar")
+    (%maybe-promote-run run1 channel)
+    (%maybe-promote-run run2 channel)
+
+    (is-false (activep run2))
+    (is-true (activep run1))))
 
 
 (test dont-promote-run-with-identical-hash
