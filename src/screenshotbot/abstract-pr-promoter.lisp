@@ -343,7 +343,7 @@ reviewable.)"
         (make-run-check run :status :success
                             :title "Nothing to review"
                             :summary "NA")))
-      ((equal (recorder-run-merge-base run)
+      ((equal (pr-merge-base promoter run)
               (recorder-run-commit run))
        (format-log run :info "Ignoring since the merge-base is same as the commit-hash"))
       (t
