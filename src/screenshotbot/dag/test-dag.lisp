@@ -10,6 +10,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:dag
+                #:ancestorp
                 #:merge-base
                 #:reachable-nodes
                 #:assert-commit
@@ -310,3 +311,11 @@ for you."
     (add-edge "dd" "ee")
     (is (equal nil (merge-base dag "aa" "dd")))
     (is (equal "aa" (merge-base dag "aa" "aa")))))
+
+(test ancestorp
+  (with-fixture state ()
+    (add-edge "cc" "aa" :dag dag)
+    (is (ancestorp dag "bb" "cc"))
+    (is (ancestorp dag "cc" "cc"))
+    (is (ancestorp dag "aa" "cc"))
+    (is (not (ancestorp dag "cc" "bb")))))
