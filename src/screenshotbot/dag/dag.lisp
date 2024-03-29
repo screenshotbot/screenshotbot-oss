@@ -75,12 +75,17 @@ have a partial graph."
     (gethash id (commit-map dag))))
 
 (defmethod bfs-search ((dag dag) start end)
+  "This is technically an iterative DFS. We could replace this with
+REACHABLE-NODES, or use a simple-queue instead of the stack, but for
+now I'm avoiding this, because it can be hard to test edge cases of
+this behavior in prod.. In the future, consider making either of these
+changes."
   (let ((seen (make-hash-table :test 'equal))
-        (queue nil))
+        (stack nil))
     (setf (gethash start seen) t)
-    (push start queue)
-    (loop while queue do
-      (let ((next (pop queue)))
+    (push start stack)
+    (loop while stack do
+      (let ((next (pop stack)))
         (when (equal (commit-node-id end)
                      (commit-node-id next))
           (return-from bfs-search t))
@@ -92,7 +97,7 @@ have a partial graph."
               do
                  (unless (gethash parent seen)
                    (setf (gethash parent seen) t)
-                   (push parent queue)))))
+                   (push parent stack)))))
     nil))
 
 (defmethod ancestorp ((dag dag) (sha-old string) (sha-new string))
