@@ -304,6 +304,18 @@ for you."
        (has-item "aa")
        (has-length 2)))))
 
+(test we-get-callbacks-for-nodes-that-arent-present
+  (with-fixture state ()
+    (let ((dag (make-instance 'dag)))
+      (add-edge "cc" "dd" :dag dag)
+
+      (let ((seen nil))
+        (reachable-nodes dag "cc"
+                         :seen-callback (lambda (commit)
+                                          (push (sha commit) seen)))
+        (assert-that seen
+                     (contains "dd" "cc"))))))
+
 (test merge-base
   (with-fixture state ()
     (add-edge "cc" "bb" :dag dag)

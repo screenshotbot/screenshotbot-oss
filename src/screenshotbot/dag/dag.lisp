@@ -272,14 +272,21 @@ nodes (as a set), else we return a list."
              (incf start)
              (let ((commit (get-commit dag commit-hash))
                    (this-depth (gethash commit-hash depths)))
-               (when (and commit (not (gethash commit seen)))
-                 (setf (gethash commit seen) t)
-                 (funcall seen-callback commit)
-                 (when (< this-depth depth)
-                  (loop for parent in (parents commit) do
-                    (unless (gethash parent depths)
-                      (setf (gethash parent depths) (1+ this-depth)))
-                    (vector-push-extend parent queue))))))
+               (cond
+                 (commit
+                  (when (not (gethash commit seen))
+                    (setf (gethash commit seen) t)
+                    (funcall seen-callback commit)
+                    (when (< this-depth depth)
+                      (loop for parent in (parents commit) do
+                        (unless (gethash parent depths)
+                          (setf (gethash parent depths) (1+ this-depth)))
+                        (vector-push-extend parent queue)))))
+                 (t
+                  ;; This node isn't present in the graph, but we
+                  ;; still want to indicate that we've seen it.
+                  (funcall seen-callback
+                           (make-instance 'commit :sha commit-hash))))))
     (cond
       (return-seen
        seen)
