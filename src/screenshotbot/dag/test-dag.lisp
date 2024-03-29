@@ -318,4 +318,6 @@ for you."
     (is (ancestorp dag "bb" "cc"))
     (is (ancestorp dag "cc" "cc"))
     (is (ancestorp dag "aa" "cc"))
+    ;; What if the commit doesn't exist at all?
+    (is (ancestorp dag "a1" "a1"))
     (is (not (ancestorp dag "cc" "bb")))))
