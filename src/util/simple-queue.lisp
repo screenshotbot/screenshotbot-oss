@@ -22,7 +22,7 @@
 (defun make-queue ()
   (make-instance 'queue))
 
-(defun enqueue (queue value)
+(defmethod enqueue (value (queue queue))
   (let ((new-tail (cons value nil)))
     (cond
       ((not (head queue))
