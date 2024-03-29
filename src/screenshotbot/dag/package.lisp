@@ -21,6 +21,11 @@
                 #:encode)
   (:import-from #:alexandria
                 #:curry)
+  (:import-from #:util/simple-queue
+                #:dequeue
+                #:queue-emptyp
+                #:enqueue
+                #:make-queue)
   (:export #:dag
            #:add-commit
            #:commit

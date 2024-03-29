@@ -260,14 +260,14 @@ If RETURN-SEEN is T, then we return a hash table with all the seen
 nodes (as a set), else we return a list."
   (let ((seen (make-hash-table))
         (depths (make-hash-table :test #'equal))
-        (queue (make-array 0 :adjustable t :fill-pointer t))
+        (queue (make-queue))
         (start 0))
 
-    (vector-push-extend commit queue)
+    (enqueue commit queue)
     (setf (gethash commit depths) 1)
 
-    (loop while (< start (length queue))
-          for commit-hash = (aref queue start)
+    (loop while (not (queue-emptyp queue))
+          for commit-hash = (dequeue queue)
           do
              (incf start)
              (let ((commit (get-commit dag commit-hash))
@@ -281,7 +281,7 @@ nodes (as a set), else we return a list."
                       (loop for parent in (parents commit) do
                         (unless (gethash parent depths)
                           (setf (gethash parent depths) (1+ this-depth)))
-                        (vector-push-extend parent queue)))))
+                        (enqueue parent queue)))))
                  (t
                   ;; This node isn't present in the graph, but we
                   ;; still want to indicate that we've seen it.

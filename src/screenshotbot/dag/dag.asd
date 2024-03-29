@@ -8,6 +8,7 @@
   :serial t
   :depends-on (:graph
                :pkg
+               :util/simple-queue
                :bknr.datastore
                :ironclad)
   :components ((:file "package")
