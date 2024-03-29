@@ -327,8 +327,13 @@
   :serial t
   :components ((:file "throttler")))
 
+(defsystem :util/simple-queue
+  :depends-on ()
+  :components ((:file "simple-queue")))
+
 (defsystem :util/tests
   :depends-on (:util
+               :util/simple-queue
                :util/hash-lock
                :util/lparallel
                :util/health-check
@@ -377,6 +382,7 @@
                              (:file "test-events" :if-feature (:not :windows))
                              (:file "test-cdn")
                              (:file "test-bind-form")
+                             (:file "test-simple-queue")
                              (:file "test-lru-cache")
                              #-(or darwin mswindows)
                              (:file "test-html2text")
