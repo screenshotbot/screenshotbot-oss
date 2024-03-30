@@ -297,6 +297,10 @@ error."
    (let ((screenshots (build-screenshot-objects images metadata-provider))
          ;; TODO: move out of make-run
          (run-context (make-instance 'run-context:flags-run-context
+                                     :channel channel
+                                     :pull-request-url pull-request
+                                     :productionp is-trunk
+                                     :create-github-issue-p create-github-issue
                                      :env (e:make-env-reader))))
      ;;(log:info "screenshot records: ~s" screenshots)
      (let* ((branch-hash
@@ -316,7 +320,7 @@ error."
                              github-repo
                              (repo-link repo)))
             (run (make-instance 'dto:run
-                                :channel channel
+                                :channel (run-context:channel run-context)
                                 :screenshots screenshots
                                 :main-branch branch
                                 :work-branch (run-context:work-branch run-context)
@@ -328,17 +332,17 @@ error."
                                 :build-url (run-context:build-url run-context)
                                 :compare-threshold (run-context:compare-threshold run-context)
                                 :batch (run-context:batch run-context)
-                                :pull-request pull-request
+                                :pull-request (run-context:pull-request-url run-context)
                                 :commit-hash commit
                                 :override-commit-hash (run-context:override-commit-hash run-context)
-                                :create-github-issue-p create-github-issue
+                                :create-github-issue-p (run-context:create-github-issue-p run-context)
                                 :cleanp (cleanp repo)
                                 :tags (run-context:tags run-context)
                                 :gitlab-merge-request-iid (safe-parse-int
                                                            (run-context:gitlab-merge-request-iid run-context))
                                 :phabricator-diff-id (safe-parse-int
                                                       (run-context:phabricator-diff-id run-context))
-                                :trunkp is-trunk)))
+                                :trunkp (run-context:productionp run-context))))
        (if (remote-supports-put-run api-context)
            (put-run api-context run)
            (put-run-via-old-api api-context run))))))
