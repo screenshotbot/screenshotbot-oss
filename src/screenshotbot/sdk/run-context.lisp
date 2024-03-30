@@ -198,8 +198,9 @@ pull-request looks incorrect."
 (defmethod merge-base :around ((self env-reader-run-context))
   (or
    (call-next-method)
-   (when-let ((repo (git-repo self)))
-     (git:merge-base repo (main-branch-hash self) (commit-hash self)))))
+   (when-let ((repo (git-repo self))
+              (main-branch-hash (main-branch-hash self)))
+     (git:merge-base repo main-branch-hash (commit-hash self)))))
 
 (defmethod repo-clean-p :around ((self env-reader-run-context))
   (cond
