@@ -225,7 +225,8 @@
                       :repo repo))
           (is-true (typep %content 'dto:run))
           (is (equal "0001" (dto:merge-base %content)))
-          (is (equal "bdfd" (dto:run-commit %content))))))))
+          (is (equal "bdfd" (dto:run-commit %content)))
+          (is (equal "https://github.com/tdrhq/fast-example" (dto:run-repo %content))))))))
 
 (test make-run-on-empty-directory-crashes-appropriately
   (with-fixture state  ()

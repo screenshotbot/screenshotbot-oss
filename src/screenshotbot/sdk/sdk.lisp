@@ -297,6 +297,7 @@ error."
    (let ((screenshots (build-screenshot-objects images metadata-provider))
          ;; TODO: move out of make-run
          (run-context (make-instance 'run-context:flags-run-context
+                                     :repo-url (repo-link repo)
                                      :channel channel
                                      :pull-request-url pull-request
                                      :productionp is-trunk
@@ -318,7 +319,7 @@ error."
                           (t (run-context:merge-base run-context))))
             (github-repo (if has-github-repo-p
                              github-repo
-                             (repo-link repo)))
+                             (run-context:repo-url run-context)))
             (run (make-instance 'dto:run
                                 :channel (run-context:channel run-context)
                                 :screenshots screenshots
