@@ -282,6 +282,7 @@ error."
                   images &rest args
                   &key repo
                     channel
+                    run-context
                     pull-request
                     branch
                     (branch-hash nil has-branch-hash-p)
@@ -294,17 +295,19 @@ error."
                     is-trunk)
    (unless images
      (error 'empty-run-error))
-   (let ((screenshots (build-screenshot-objects images metadata-provider))
-         ;; TODO: move out of make-run
-         (run-context (make-instance 'run-context:flags-run-context
-                                     :repo-url (repo-link repo)
-                                     :channel channel
-                                     :pull-request-url pull-request
-                                     :productionp is-trunk
-                                     :create-github-issue-p create-github-issue
-                                     :env (e:make-env-reader))))
+   (let ((run-context (or
+                       run-context
+                       ;; TODO: move out of make-run:
+                       (make-instance 'run-context:flags-run-context
+                                      :repo-url (repo-link repo)
+                                      :channel channel
+                                      :pull-request-url pull-request
+                                      :productionp is-trunk
+                                      :create-github-issue-p create-github-issue
+                                      :env (e:make-env-reader)))))
      ;;(log:info "screenshot records: ~s" screenshots)
-     (let* ((branch-hash
+     (let* ((screenshots (build-screenshot-objects images metadata-provider))
+            (branch-hash
               (if has-branch-hash-p branch-hash
                   (or
                    (run-context:main-branch-hash run-context)

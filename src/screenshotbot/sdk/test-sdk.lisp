@@ -64,6 +64,7 @@
   (:import-from #:util/request
                 #:http-request)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
+                    (#:run-context #:screenshotbot/sdk/run-context)
                     (#:a #:alexandria)
                     (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/test-sdk)
@@ -227,6 +228,40 @@
           (is (equal "0001" (dto:merge-base %content)))
           (is (equal "bdfd" (dto:run-commit %content)))
           (is (equal "https://github.com/tdrhq/fast-example" (dto:run-repo %content))))))))
+
+
+(test make-run-with-context-uses-information-from-the-context
+  (with-fixture state ()
+    (let ((%content))
+      (if-called 'request
+                 (lambda (api-context uri &key method content)
+                   (setf %content content)
+                   nil))
+      (let ((repo :dummy-repo))
+        (answer (rev-parse repo "main") "abcd")
+        (answer (current-commit repo) "bdfd")
+        (answer (current-branch repo) "my-branch")
+        (if-called 'merge-base
+                   (lambda (git-repo main-branch commit-hash)
+                     "0001"))
+        (answer (repo-link repo) "https://github.com/tdrhq/fast-example")
+        (answer (cleanp repo) t)
+        (let ((context (make-instance 'api-context
+                                      :remote-version *api-version*)))
+          (finishes
+            (make-run context
+                      `(((:id . "foo")
+                         (:name . "car")))
+                      :branch "main"
+                      :repo repo
+                      :run-context (make-instance 'run-context:run-context
+                                                  :commit-hash "0002"
+                                                  :merge-base "0003"
+                                                  :repo-url "https://example.com/foo.git")))
+          (is-true (typep %content 'dto:run))
+          (is (equal "0003" (dto:merge-base %content)))
+          (is (equal "0002" (dto:run-commit %content)))
+          (is (equal "https://example.com/foo.git" (dto:run-repo %content))))))))
 
 (test make-run-on-empty-directory-crashes-appropriately
   (with-fixture state  ()
