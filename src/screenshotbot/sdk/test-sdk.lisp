@@ -210,7 +210,9 @@
         (answer (rev-parse repo "main") "abcd")
         (answer (current-commit repo) "bdfd")
         (answer (current-branch repo) "my-branch")
-        (answer (merge-base "abcd" "bdfd" "abcd"))
+        (if-called 'merge-base
+                   (lambda (git-repo main-branch commit-hash)
+                     "0001"))
         (answer (repo-link repo) "https://github.com/tdrhq/fast-example")
         (answer (cleanp repo) t)
         (let ((context (make-instance 'api-context
@@ -221,8 +223,8 @@
                          (:name . "car")))
                       :branch "main"
                       :repo repo))
-          (is-true (typep %content 'dto:run)))))
-    ))
+          (is-true (typep %content 'dto:run))
+          (is (equal "0001" (dto:merge-base %content))))))))
 
 (test make-run-on-empty-directory-crashes-appropriately
   (with-fixture state  ()
