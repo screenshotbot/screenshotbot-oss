@@ -312,7 +312,7 @@ error."
                        (unless hash
                          (log:warn "Could not rev-parse origin/~a" branch))
                        hash)))))
-            (commit (if has-commit-p commit (current-commit repo)))
+            (commit (if has-commit-p commit (run-context:commit-hash run-context)))
             (merge-base (cond
                           (has-merge-base-p merge-base)
                           (t (run-context:merge-base run-context))))

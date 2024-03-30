@@ -224,7 +224,8 @@
                       :branch "main"
                       :repo repo))
           (is-true (typep %content 'dto:run))
-          (is (equal "0001" (dto:merge-base %content))))))))
+          (is (equal "0001" (dto:merge-base %content)))
+          (is (equal "bdfd" (dto:run-commit %content))))))))
 
 (test make-run-on-empty-directory-crashes-appropriately
   (with-fixture state  ()
