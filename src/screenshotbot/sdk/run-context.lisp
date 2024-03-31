@@ -40,7 +40,8 @@
    #:phabricator-diff-id
    #:with-flags-from-run-context
    #:tags
-   #:author)
+   #:author
+   #:default-flags-run-context)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:e #:screenshotbot/sdk/env)
                     (#:git #:screenshotbot/sdk/git)))
@@ -241,8 +242,7 @@ pull-request looks incorrect."
   (when tags-str
     (str:split "," tags-str)))
 
-(defclass flags-run-context (env-reader-run-context
-                             run-context)
+(defclass default-flags-run-context ()
   ()
   (:default-initargs
    :main-branch flags:*main-branch*
@@ -260,7 +260,13 @@ pull-request looks incorrect."
    :author flags:*author*
    :compare-threshold flags:*compare-threshold*
    :batch flags:*batch*
-   :tags (parse-tags flags:*tags*)))
+   :tags (parse-tags flags:*tags*))
+  (:documentation "Just uses the the flags as initargs"))
+
+(defclass flags-run-context (default-flags-run-context
+                             env-reader-run-context
+                             run-context)
+  ())
 
 (def-easy-macro with-flags-from-run-context (self &fn fn)
   "Temporary hack to enable using both flags and run-context everywhere."
