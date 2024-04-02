@@ -54,7 +54,8 @@
    #:*work-branch*
    #:*main-branch-commit-hash*
    #:*tags*
-   #:*author*))
+   #:*author*
+   #:*merge-base-commit-hash*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -229,6 +230,19 @@ Netlify, Azure DevOps, BuildKits, and Bitbucket Pipelines.")
   must be the full hash, partial hashes or tag names are not
   suitable.
   Automatically detected on: CircleCI, Bitrise")
+
+(define-flag *merge-base-commit-hash*
+  :selector "merge-base-commit-hash"
+  :default-value nil
+  :type (or null string)
+  :help "Override the merge base commit. In most cases, you do not
+need to provide this, and it will be computed automatically (as
+`git merge-base main this-branch`).The merge base is only use on PR
+commits, to figure out which commit to compare screenshots against.
+
+This might be useful to override if you don't have access to the
+repository when calling this CLI, or implementing custom behavior with
+stacked Pull Requests.")
 
 (define-flag *firebase-output*
   :selector "firebase-output"

@@ -256,6 +256,7 @@ pull-request looks incorrect."
    :work-branch flags:*work-branch*
    :phabricator-diff-id flags:*phabricator-diff-id*
    :channel flags:*channel*
+   :merge-base flags:*merge-base-commit-hash*
    :override-commit-hash flags:*override-commit-hash*
    :author flags:*author*
    :compare-threshold flags:*compare-threshold*
