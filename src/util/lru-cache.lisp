@@ -46,11 +46,11 @@
          :reader item-size)))
 
 (defmethod file-atime ((self lru-cache) file)
-  #+lispworks
-  (let ((stat (sys:get-file-stat file)))
-    (sys:file-stat-last-access stat))
-  #-lispworks
-  (file-write-date file))
+  (or
+   #+(and lispworks (not mswindows))
+   (let ((stat (sys:get-file-stat file)))
+     (sys:file-stat-last-access stat))
+   (file-write-date file)))
 
 (defmethod read-all-files ((self lru-cache) directory)
   (let (ret)

@@ -219,3 +219,12 @@
       (is (equal 6 (cache-size cache)))
       (is-true (path:-e (path:catfile dir "foo-1.txt")))
       (is-false (path:-e (path:catfile dir "foo-0.txt"))))))
+
+(test file-atime
+  (with-fixture state ()
+    (let ((cache (make-instance 'lru-cache
+                                :dir dir
+                                :max-size 10)))
+      (uiop:with-temporary-file (:pathname p)
+        (is (numberp
+             (file-atime cache p)))))))
