@@ -241,11 +241,19 @@
     (#_getIssues repo-id
                  (new-instance #,java.util.HashMap))))
 
+(defvar *public-repo-p-cache* (make-hash-table :test #'equal))
+
 (defmethod public-repo-p ((repo github-repo))
   (when (secret :github-api-secret)
-   (let ((repo-id (get-repo-id (repo-link repo))))
-     (apply #'get-repo-stars
-            (str:split "/" repo-id)))))
+    ;; We use the fake list to make it easier to work with the NIL
+    ;; case.
+    (first
+     (util:or-setf
+      (gethash (repo-link repo) *public-repo-p-cache*)
+      (let ((repo-id (get-repo-id (repo-link repo))))
+        (list
+         (not (null (apply #'get-repo-stars
+                           (str:split "/" repo-id))))))))))
 
 (defun github-integration-test ()
   (let ((repo (make-instance 'github-repo :link "https://github.com/tdrhq/screenshotbot-example")))

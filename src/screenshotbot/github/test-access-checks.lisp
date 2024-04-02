@@ -10,6 +10,7 @@
         #:screenshotbot/github/access-checks
         #:screenshotbot/user-api)
   (:import-from #:screenshotbot/github/access-checks
+                #:*public-repo-p-cache*
                 #:get-repo-id
                 #:get-repo-stars
                 #:repo-string-identifier)
@@ -25,6 +26,11 @@
 (in-package :screenshotbot/github/test-access-checks)
 
 (util/fiveam:def-suite)
+
+(def-fixture state ()
+  (unwind-protect
+       (&body)
+    (clrhash *public-repo-p-cache*)))
 
 #-sbcl ;; java
 (test simple-creation
@@ -84,19 +90,27 @@
                 (get-repo-stars "tdrhq" "slite"))))))
 
 (test public-repo-p
-  (cl-mock:with-mocks ()
-    (answer (secret :github-api-secret) "secret")
-    (answer (get-repo-stars "foo" "bar")
-      20)
-    (is-true
-     (public-repo-p (make-instance 'github-repo
-                                   :link "git@github.com:foo/bar")))))
+  (with-fixture state ()
+   (cl-mock:with-mocks ()
+     (answer (secret :github-api-secret) "secret")
+     (answer (get-repo-stars "foo" "bar")
+       20)
+     (is (eql t
+              (public-repo-p (make-instance 'github-repo
+                                            :link "git@github.com:foo/bar"))))
+     (answer (get-repo-stars "foo" "bar")
+       nil)
+     ;; Ensure this is cached:
+     (is (eql t
+              (public-repo-p (make-instance 'github-repo
+                                            :link "git@github.com:foo/bar")))))))
 
 (test public-repo-not-public
-  (cl-mock:with-mocks ()
-    (answer (secret :github-api-secret) "secret")
-    (answer (get-repo-stars "foo" "bar")
-      nil)
-    (is-false
-     (public-repo-p (make-instance 'github-repo
-                                   :link "git@github.com:foo/bar")))))
+  (with-fixture state ()
+   (cl-mock:with-mocks ()
+     (answer (secret :github-api-secret) "secret")
+     (answer (get-repo-stars "foo" "bar")
+       nil)
+     (is-false
+      (public-repo-p (make-instance 'github-repo
+                                    :link "git@github.com:foo/bar"))))))
