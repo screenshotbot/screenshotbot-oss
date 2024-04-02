@@ -71,4 +71,8 @@
                        for count being the hash-values of ht
                        collect (list key count))))
       (setf items (sort items #'> :key #'second))
-      (subseq items 0 6))))
+      (cond
+        ((< (length items) 5)
+         items)
+        (t
+         (subseq items 0 6))))))
