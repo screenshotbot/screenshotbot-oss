@@ -344,7 +344,7 @@ reviewable.)"
                             :title "Nothing to review"
                             :summary "NA")))
       ((equal (pr-merge-base promoter run)
-              (recorder-run-commit run))
+              (actual-sha run))
        (format-log run :info "Ignoring since the merge-base is same as the commit-hash"))
       (t
        (format-log run :info "Base commit is: ~S" (pr-merge-base promoter run))
