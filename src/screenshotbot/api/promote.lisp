@@ -45,6 +45,8 @@
                 #:batch)
   (:import-from #:screenshotbot/promote-api
                 #:maybe-send-tasks)
+  (:import-from #:util/cron
+                #:def-cron)
   (:export
    #:with-promotion-log
    #:default-promoter)
@@ -174,16 +176,22 @@
     (retry-channel-ancestor-p ()
       (channel-ancestorp channel commit1 commit2))))
 
+(defvar *publicp-cache* (make-hash-table))
+
+(def-cron clear-publicp-cache (:minute 10 :step-hour 6)
+  (clrhash *publicp-cache*))
 
 (defmethod %channel-publicp ((channel channel))
-  (restart-case
-      (let ((publicp (public-repo-p (channel-repo channel))))
-        (with-transaction ()
-          (setf (publicp channel) publicp)))
-    (continue ()
-      nil)
-    (retry ()
-      (%channel-publicp channel))))
+  (util/misc:or-setf
+   (gethash channel *publicp-cache*)
+   (restart-case
+       (let ((publicp (public-repo-p (channel-repo channel))))
+         (with-transaction ()
+           (setf (publicp channel) publicp)))
+     (continue ()
+       nil)
+     (retry ()
+       (%channel-publicp channel)))))
 
 (defun maybe-promote-run (run &rest args &key channel
                                            (wait-timeout (if *disable-ancestor-checks-p*
