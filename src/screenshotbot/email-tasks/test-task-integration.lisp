@@ -163,6 +163,7 @@
          (assert-that (users-to-email channel)
                       (contains user)))))))
 
+#-screenshotbot-oss
 (test include-arnold-when-user-exists
   (with-fixture state ()
     (with-test-user (:user user :company company)
