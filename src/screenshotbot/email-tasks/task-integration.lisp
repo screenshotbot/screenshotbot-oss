@@ -85,7 +85,10 @@
 (defun users-to-email (channel)
   "Who should we email when this channel changes? Returns a list of users."
   (let ((company (channel-company channel)))
-    (include-arnold
+    (funcall
+     (if (gk:check :cc-arnold (channel-company channel))
+         #'include-arnold
+         #'identity)
      (union
       (remove-if-not
        (curry #'can-view channel)

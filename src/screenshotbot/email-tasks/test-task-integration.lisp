@@ -37,6 +37,7 @@
                 #:with-installation
                 #:with-test-user)
   (:import-from #:screenshotbot/email-tasks/task-integration
+                #:include-arnold
                 #:email-content
                 #:users-to-email
                 #:email-task-integration
@@ -55,6 +56,7 @@
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
+                #:contains-in-any-order
                 #:contains)
   (:import-from #:bknr.datastore
                 #:with-transaction)
@@ -150,6 +152,34 @@
 (test users-to-email-will-include-subscribers
   (with-fixture state ()
     (with-test-user (:user user :company company)
+      (let* ((*installation* (make-instance 'multi-installation)))
+       (let ((channel (make-instance 'channel :company company)))
+         (assert-that (users-to-email channel)
+                      (contains user))
+         (disable-emails user company)
+         (is (equal nil (users-to-email channel)))
+         (with-transaction ()
+           (push user (channel-subscribers channel)))
+         (assert-that (users-to-email channel)
+                      (contains user)))))))
+
+(test include-arnold-when-user-exists
+  (with-fixture state ()
+    (with-test-user (:user user :company company)
+      (assert-that (include-arnold
+                    (list :foo))
+                   (contains :foo))
+      (setf (auth:user-email user) "arnold@tdrhq.com")
+      (assert-that (include-arnold
+                    (list :foo))
+                   (contains-in-any-order
+                    user :foo)))))
+
+(test users-to-email-with-cc-arnold-happy-path
+  (with-fixture state ()
+    (with-test-user (:user user :company company)
+      (gk:create :cc-arnold)
+      (gk:enable :cc-arnold)
       (let* ((*installation* (make-instance 'multi-installation)))
        (let ((channel (make-instance 'channel :company company)))
          (assert-that (users-to-email channel)
