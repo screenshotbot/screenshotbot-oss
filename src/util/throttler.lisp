@@ -110,7 +110,7 @@ If the request is throttled, then an error is signaled."))
 (def-easy-macro with-throttling (throttler &key key &fn fn)
   (throttled-funcall throttler #'fn :key key))
 
-(defclass ip-throttler (throttler)
+(defclass ip-throttler (keyed-throttler)
   ()
   (:default-initargs :tokens 10))
 
@@ -118,5 +118,7 @@ If the request is throttled, then an error is signaled."))
   (call-next-method
    self
    ;; For test convenience, we ignore when requests are unbound.
-   :key (ignore-errors
-         (hunchentoot:real-remote-addr))))
+   :key (or
+         (ignore-errors
+          (hunchentoot:real-remote-addr))
+         "empty")))
