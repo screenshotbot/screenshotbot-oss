@@ -12,7 +12,8 @@
                 #:timestamp-difference)
   (:export
    #:keyed-throttler
-   #:throttle!))
+   #:throttle!
+   #:ip-throttler))
 (in-package :util/throttler)
 
 (defclass throttler ()
@@ -108,3 +109,14 @@ If the request is throttled, then an error is signaled."))
 
 (def-easy-macro with-throttling (throttler &key key &fn fn)
   (throttled-funcall throttler #'fn :key key))
+
+(defclass ip-throttler (throttler)
+  ()
+  (:default-initargs :tokens 10))
+
+(defmethod throttle! ((self ip-throttler) &key key &allow-other-keys)
+  (call-next-method
+   self
+   ;; For test convenience, we ignore when requests are unbound.
+   :key (ignore-errors
+         (hunchentoot:real-remote-addr))))
