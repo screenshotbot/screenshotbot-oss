@@ -12,10 +12,6 @@
 (markup:enable-reader)
 
 (defun html2text (markup)
-  (cond
-   ((or (uiop:os-windows-p) (uiop:os-macosx-p))
-    "Please view in HTML to view this email")
-   (t
-    (let* ((markup (if (stringp markup) markup
-                       (markup:write-html markup))))
-      (html2text:html2text markup)))))
+  (let* ((markup (if (stringp markup) markup
+                     (markup:write-html markup))))
+    (html2text:html2text markup)))
