@@ -17,6 +17,7 @@
                  (:file "oidc")
                  (:file "login")
                  (:file "signup")
+                 (:file "saml")
                  (:file "forgot-password")))
 
 (defsystem :auth.login/tests
