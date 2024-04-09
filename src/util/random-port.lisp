@@ -5,7 +5,8 @@
                 #:def-easy-macro)
   (:import-from #:util/misc
                 #:make-mp-hash-table)
-  (:export #:random-port))
+  (:export #:random-port
+           #:with-random-port))
 (in-package :util/random-port)
 
 (defvar *ports* (make-mp-hash-table))
