@@ -156,7 +156,9 @@
 
 (defsystem :util/random-port
   :serial t
-  :depends-on (:usocket)
+  :depends-on (:usocket
+               :util/misc
+               :easy-macros)
   :components ((:file "random-port")))
 
 (defsystem :util/form-state
@@ -368,6 +370,7 @@
                              (:file "test-copy-file")
                              (:file "test-request")
                              (:file "test-timeago")
+                             (:file "test-random-port")
                              (:file "test-json-mop")
                              (:file "test-lparallel")
                              (:file "test-hash-lock")
