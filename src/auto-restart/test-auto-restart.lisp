@@ -314,3 +314,28 @@
          (nested-outer-with-inner-failures-2)))
     (is (eql
          11 *nested-inner-2-counter*))))
+
+(define-condition dummy-error (error)
+  ())
+
+(with-auto-restart (:retries 3 :sleep 0 :auto-restartable-errors '(dummy-error))
+  (defun call-with-crash (fn)
+    (funcall fn)))
+
+(test specify-auto-restartable-errors
+  (let ((count 0))
+    (signals dummy-error
+     (call-with-crash
+      (lambda ()
+        (incf count)
+        (error 'dummy-error))))
+    (is (eql 3 count))))
+
+(test ignore-errors-that-are-not-specified-as-auto-restartable
+  (let ((count 0))
+    (signals error
+      (call-with-crash
+       (lambda ()
+         (incf count)
+         (error 'error))))
+    (is (eql 1 count))))

@@ -33,15 +33,26 @@
   error-handler
   restart-handler)
 
+(defun %is-error-of-type (e error-classes)
+  (loop for class in error-classes
+        if (typep e class)
+          return t
+        finally
+           (return nil)))
+
 (defmacro with-auto-restart ((&key (retries 0)
                                 (sleep (exponential-backoff 2))
                                 (attempt (gensym "attempt"))
-                                (restart-name))
+                                (restart-name)
+                                (auto-restartable-errors ''(error)))
                              &body body)
   "Enable auto-restarts for a DEFUN.
 
 ATTEMPT will be a variable name that will be bound to the current
 attempt. Attempts will be 1-indexed (1, 2, 3 ... ).
+
+AUTO-RESTARTABLE-ERRORS is evaluated to get a list of error classes
+for which we're allowed to auto-restart. It defaults to `'(ERROR)`.
 "
   (assert (= 1 (length body)))
 
@@ -87,13 +98,13 @@ attempt. Attempts will be 1-indexed (1, 2, 3 ... ).
                     (let ((attempt (frame-attempt *frame*)))
                       (setf (frame-error-handler *frame*)
                             (lambda (e)
-                              (declare (ignore e))
                               (cond
-                                ((and *global-enable-auto-retries-p* (< attempt ,retries))
+                                ((and *global-enable-auto-retries-p* (< attempt ,retries)
+                                      (%is-error-of-type e ',(eval auto-restartable-errors)))
                                  (let ((sleep-time (funcall ,sleep-var attempt)))
                                    (unless (= 0 sleep-time)
                                      (sleep sleep-time)))
-                                (invoke-restart ',restart-name)))))
+                                 (invoke-restart ',restart-name)))))
                       (setf (frame-restart-handler *frame*)
                             (lambda ()
                               (apply #',fn-name ,@ (fix-args-for-funcall var-names))))
