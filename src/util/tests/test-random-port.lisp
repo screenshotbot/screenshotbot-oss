@@ -14,23 +14,29 @@
 
 (util/fiveam:def-suite)
 
+(def-fixture state ()
+  (clrhash *ports*)
+  (&body))
+
 (test test-happy-path ()
-  (let ((calledp nil))
-    (with-random-port (port)
-      (is (> port 10000))
-      (setf calledp t))
-    (is-true calledp)
-    (is (eql 0 (hash-table-count *ports*)))))
+  (with-fixture state ()
+   (let ((calledp nil))
+     (with-random-port (port)
+       (is (> port 10000))
+       (setf calledp t))
+     (is-true calledp)
+     (is (eql 0 (hash-table-count *ports*))))))
 
 (test test-we-dont-pick-something-weve-seen ()
-  (dotimes (i 5)
-   (let ((*ports* (make-hash-table)))
+  (with-fixture state ()
+   (dotimes (i 5)
+     (let ((*ports* (make-hash-table)))
 
-     (loop for i from 0 to 35000
-           do (setf (gethash i *ports*) t))
+       (loop for i from 0 to 35000
+             do (setf (gethash i *ports*) t))
 
-     (let ((calledp nil))
-       (with-random-port (port)
-         (is (> port 35000))
-         (setf calledp t))
-       (is-true calledp)))))
+       (let ((calledp nil))
+         (with-random-port (port)
+           (is (> port 35000))
+           (setf calledp t))
+         (is-true calledp))))))
