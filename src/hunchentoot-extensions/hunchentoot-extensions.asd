@@ -11,6 +11,7 @@
                :markup
                :quri
                :easy-macros
+               :closer-mop
                :do-urlencode
                :util/threading
                :log4cl)
