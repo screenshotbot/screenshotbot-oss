@@ -29,6 +29,7 @@
   (:import-from #:screenshotbot/login/github
                 #:github-user)
   (:import-from #:screenshotbot/model/company
+                #:company-admin-p
                 #:company
                 #:company-owner
                 #:get-singleton-company)
@@ -60,6 +61,11 @@
                 #:user-email-confirmed-p
                 #:secret-code
                 #:finish-confirmation)
+  (:import-from #:auth/model/roles
+                #:owner
+                #:admin
+                #:user-role
+                #:standard-member)
   (:export
    #:adminp
    #:arnold
@@ -368,3 +374,17 @@
   (or
    (call-next-method)
    (%confirmed-p user)))
+
+(defmethod user-role ((company company) (user user))
+  "To support transitioning to the new role based access control, we
+override user-role."
+  (or
+   (call-next-method)
+   (when (member company (user-companies user))
+     (cond
+       ((eql user (company-owner company))
+        (make-instance 'owner))
+       ((company-admin-p company user)
+        (make-instance 'admin))
+       (t
+        (make-instance 'standard-member))))))

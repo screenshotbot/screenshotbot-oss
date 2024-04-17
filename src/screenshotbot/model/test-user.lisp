@@ -14,6 +14,7 @@
                 #:user
                 #:user-companies)
   (:import-from #:screenshotbot/model/company
+                #:company-admin-p
                 #:get-singleton-company
                 #:prepare-singleton-company
                 #:personalp
@@ -39,8 +40,14 @@
   (:import-from #:fiveam-matchers/misc
                 #:is-not-null)
   (:import-from #:fiveam-matchers/core
+                #:has-typep
                 #:assert-that
                 #:is-equal-to)
+  (:import-from #:auth/model/roles
+                #:owner
+                #:admin
+                #:standard-member
+                #:user-role)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-user)
 
@@ -169,3 +176,23 @@
     (assert-that
      (auth:find-or-create-user *installation* :email "foo@example.com")
      (is-equal-to (first (bknr.datastore:class-instances 'user))))))
+
+(test user-roles-from-old-model
+  (with-fixture state ()
+    (let* ((company (make-instance 'company))
+           (user (make-user :email "foo@example.com"
+                            :companies (list company))))
+      (assert-that (user-role
+                    company user)
+                   (has-typep 'standard-member))
+      (is-false (company-admin-p company user))
+      (setf (company-admins company)
+            (list user))
+      (is-true (company-admin-p company user))
+      (assert-that (user-role
+                    company user)
+                   (has-typep 'admin))
+      (setf (company-owner company) user)
+      (assert-that (user-role
+                    company user)
+                   (has-typep 'owner)))))

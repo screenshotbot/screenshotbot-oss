@@ -36,6 +36,8 @@
                 #:company-for-request)
   (:import-from #:core/installation/auth-provider
                 #:company-sso-auth-provider)
+  (:import-from #:auth/model/roles
+                #:user-role)
   (:export
    #:company
    #:company-reports
