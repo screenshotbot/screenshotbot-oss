@@ -76,15 +76,15 @@
                    :user user))))
 
 (markup:deftag center-box (children)
-      <dashboard-template left-nav-bar=nil >
-      <div class= "container body-vh-100" style= "max-width: 40em" >
-        <div class= "row h-100">
-            <div class= "my-auto" style= "padding-bottom: 20vh;" >
-              ,@children
-            </div>
+  <dashboard-template left-nav-bar=nil >
+    <div class= "container body-vh-100" style= "max-width: 40em" >
+      <div class= "row h-100">
+        <div class= "my-auto" style= "padding-bottom: 20vh;" >
+          ,@children
         </div>
       </div>
-    </dashboard-template>)
+    </div>
+  </dashboard-template>)
 
 (defun %accept-invite (user invite &key accept reject)
   <center-box>
