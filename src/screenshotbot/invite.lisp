@@ -49,6 +49,7 @@
                 #:nibble)
   (:import-from #:screenshotbot/plan
                 #:plan)
+  (:local-nicknames (#:roles #:auth/model/roles))
   (:export
    #:invite-page
    #:render-invite-page
@@ -88,7 +89,7 @@
 (defmethod can-invite-more-users-p (company plan)
   t)
 
-(defhandler (nil :uri "/invite" :method :post) (email)
+(defhandler (invite-post :uri "/invite" :method :post) (email)
   (when (personalp (current-company))
     (hex:safe-redirect 'invite-page))
   (let ((errors))
@@ -100,8 +101,7 @@
       (check :email (let ((user (user-with-email email)))
                       (or
                        (not user)
-                       (not (member (current-company)
-                                    (user-companies user)))))
+                       (roles:has-role-p (current-company) user t)))
              "A user with that email is already a part of this organization")
       (check :email (not (invites-with-email email
                                             :company (current-company)))
@@ -126,7 +126,7 @@
          (let ((invite (make-instance 'invite
                                       :company (current-company)
                                       :inviter (current-user)
-  :email email)))
+                                      :email email)))
            (let ((user (user-with-email email)))
              (when user
                (with-transaction ()
@@ -154,8 +154,7 @@
                     :invite invite
                     :ensure-prepared nil)
          (cond
-           ((member (invite-company invite)
-                    (user-companies (current-user)))
+           ((roles:has-role-p (invite-company invite) (current-user) t)
             <simple-card-page>
               <p>You are already a member of this organization.</p>
             </simple-card-page>)

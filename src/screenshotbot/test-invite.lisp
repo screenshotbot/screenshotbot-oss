@@ -26,6 +26,7 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/invite
+                #:invite-post
                 #:invite-signup-page
                 #:%accept-invite
                 #:accept-invite)
@@ -39,7 +40,8 @@
   (:import-from #:fiveam-matchers/strings
                 #:contains-string)
   (:import-from #:auth/model/invite
-                #:invite-code))
+                #:invite-code)
+  (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/test-invite)
 
 (util/fiveam:def-suite)
@@ -99,4 +101,18 @@
              (markup:write-html
               page)
              (contains-string "already a member of this org"))
+            page))))))
+
+(screenshot-test inviting-a-user-that-already-exists
+  (with-fixture state ()
+    (with-installation ()
+      (with-test-user (:user user :company company :logged-in-p t)
+        (let ((user-2 (make-user :email "car@example.com")))
+          (setf (roles:user-role company user) 'roles:standard-member)
+          (let ((page (invite-post :email "car@example.com")))
+            (assert-that
+             (markup:write-html
+              page)
+             (contains-string
+              "A user with that email is already a part"))
             page))))))
