@@ -14,4 +14,5 @@
                :fiveam-matchers
                :util/fiveam)
   :components ((:file "test-email-confirmation")
-               (:file "test-invite")))
+               (:file "test-invite")
+               (:file "test-roles")))
