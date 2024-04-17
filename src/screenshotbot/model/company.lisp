@@ -31,6 +31,7 @@
   (:import-from #:util/store/store
                 #:defindex)
   (:import-from #:util/store/fset-index
+                #:fset-set-index
                 #:fset-unique-index)
   (:import-from #:core/installation/auth
                 #:company-for-request)
@@ -139,10 +140,16 @@
       :documentation "deprecated list of images. do not use."))
     (:metaclass persistent-class)))
 
+(defindex +parent-index+
+  'fset-set-index
+  :slot-name 'parent)
+
 (with-class-validation
   (defclass sub-company (company)
     ((parent :initarg :parent
              :initform nil
+             :index +parent-index+
+             :index-reader sub-companies-of
              :reader company-parent))
     (:metaclass persistent-class)
     (:documentation "A child organization, by default has all the permissions of the
