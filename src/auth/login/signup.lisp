@@ -54,6 +54,8 @@
                 #:default-login-redirect)
   (:import-from #:util/events
                 #:push-event)
+  (:import-from #:util/misc
+                #:?.)
   (:export
    #:signup-get
    #:signup-post))
@@ -65,12 +67,10 @@
                                           :tokens 200)
   "Throttles signups by IP address")
 
-(defmethod auth-provider-signup-form ((auth-provider standard-auth-provider) invite-code
+(defmethod auth-provider-signup-form ((auth-provider standard-auth-provider) invite
                                       plan
                                       redirect)
-  (let* ((invite (unless (str:emptyp invite-code)
-                   (invite-with-code invite-code)))
-         (invite-email (when invite (invite-email invite)))
+  (let* ((invite-email (?. invite-email invite))
          (post (nibble (email password full-name accept-terms-p plan)
                 (signup-post
                  :email email
@@ -82,7 +82,7 @@
                  :redirect redirect))))
     <form action=post method= "POST" >
 
-      <input type= "hidden" name= "invite-code" value=invite-code />
+      <input type= "hidden" name= "invite-code" value= (?. invite-code invite) />
       <input type= "hidden" name= "plan" value=plan />
       <div class="form-group mb-3">
         <input name= "full-name" class="form-control" type="text" id="fullname" placeholder="Full Name" required= "required" />
@@ -118,15 +118,12 @@
         or Sign Up with
     </div>)
 
-(deftag signup-get (&key invite-code plan (redirect (default-login-redirect hunchentoot:*request*))
+(deftag signup-get (&key plan (redirect (default-login-redirect hunchentoot:*request*))
+                    invite
                     alert)
-  (when invite-code
-    (hex:safe-redirect (format nil "/invite/signup/~a" invite-code)))
   (let ((login (nibble ()
                  (signin-get :redirect redirect
-                             :alert alert)))
-        (invite (when invite-code
-                  (invite-with-code invite-code))))
+                             :alert alert))))
     <auth-template body-class= "signup" >
       <div class="account-pages mt-5 mb-5">
         <div class="container">
@@ -144,7 +141,7 @@
                        (loop for auth-provider in (auth-providers *installation*)
                              for idx from 0
                              collect
-                             (auth-provider-signup-form auth-provider invite-code
+                             (auth-provider-signup-form auth-provider invite
                                                         plan
                                                         redirect)
                              if (and (eql idx 0) (> len 1))
@@ -163,11 +160,11 @@
     </auth-template>))
 
 
-(hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/signup") (invite-code plan)
+(hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/signup") (plan)
   (when (logged-in-p)
     (hex:safe-redirect (default-login-redirect hunchentoot:*request*)))
 
-  (signup-get :invite-code invite-code :plan plan))
+  (signup-get :plan plan))
 
 (defun valid-email-address-p (string)
   "This comes from clavier::valid-email-address-p, but fixed for

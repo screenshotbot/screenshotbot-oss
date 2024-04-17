@@ -151,6 +151,7 @@
         </simple-card-page>)
       (t
        (with-login (:signup t :alert (invite-alert invite)
+                    :invite invite
                     :ensure-prepared nil)
          (cond
            ((member (invite-company invite)

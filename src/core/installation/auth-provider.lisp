@@ -21,7 +21,7 @@
 
 (defgeneric auth-provider-signin-form (auth-provider redirect))
 
-(defgeneric auth-provider-signup-form (auth-provider invite-code
+(defgeneric auth-provider-signup-form (auth-provider invite
                                        plan
                                        redirect))
 

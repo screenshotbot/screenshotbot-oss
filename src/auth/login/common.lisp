@@ -64,7 +64,7 @@
     (values)))
 
 (defmethod auth-provider-signup-form ((auth-provider abstract-oauth-provider)
-                                      invite-code
+                                      invite
                                       plan
                                       redirect)
     <div class= "form-group mt-3 text-center mb-3">
@@ -75,6 +75,9 @@
     </div>)
 
 (defun server-with-login (fn &key needs-login signup alert company
+                           ;; The invite object that triggered this
+                           ;; flow.
+                           invite
                            ;; Redirect a GET request back to the
                            ;; original URL instead of a nibble.
                            (allow-url-redirect nil)
@@ -99,7 +102,7 @@
                                company
                                fn))
      ((and needs-login (not (auth:current-user)))
-      (funcall
+      (apply
        (if signup #'signup-get #'signin-get)
        :alert alert
        :redirect
@@ -110,7 +113,9 @@
           (hunchentoot:request-uri*))
          (t
           (nibble (:name :after-login)
-            (funcall fn))))))
+            (funcall fn))))
+       (when signup
+         (list :invite invite))))
      (t
       (funcall fn)))))
 
@@ -161,11 +166,13 @@
 
 (defmacro with-login ((&key (needs-login t) (signup nil)
                          (company nil)
+                         (invite nil)
                          (ensure-prepared t)
                          (allow-url-redirect nil)
                          (alert nil)) &body body)
   `(server-with-login (lambda () ,@body)
                       :needs-login ,needs-login
+                      :invite ,invite
                       :signup ,signup
                       :company ,company
                       :ensure-prepared ,ensure-prepared
