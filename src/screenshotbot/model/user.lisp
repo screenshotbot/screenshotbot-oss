@@ -67,6 +67,7 @@
                 #:admin
                 #:user-role
                 #:standard-member)
+  (:local-nicknames (#:roles #:auth/model/roles))
   (:export
    #:adminp
    #:arnold
@@ -389,3 +390,10 @@ override user-role."
         (make-instance 'admin))
        (t
         (make-instance 'standard-member))))))
+
+(defmethod (setf roles:user-role) :after (value (company company) (user user))
+  (when value
+    (pushnew company (user-companies user))))
+
+(defmethod (setf roles:user-role) :after ((value null) (company company) (user user))
+  (alexandria:removef (user-companies user)  company))

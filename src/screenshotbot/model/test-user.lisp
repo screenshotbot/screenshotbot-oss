@@ -40,6 +40,7 @@
   (:import-from #:fiveam-matchers/misc
                 #:is-not-null)
   (:import-from #:fiveam-matchers/core
+                #:is-not
                 #:has-typep
                 #:assert-that
                 #:is-equal-to)
@@ -48,7 +49,11 @@
                 #:admin
                 #:standard-member
                 #:user-role)
-  (:local-nicknames (#:a #:alexandria)))
+  (:import-from #:fiveam-matchers/lists
+                #:has-item
+                #:contains)
+  (:local-nicknames (#:a #:alexandria)
+                    (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/model/test-user)
 
 
@@ -196,3 +201,15 @@
       (assert-that (user-role
                     company user)
                    (has-typep 'owner)))))
+
+(test user-companies-is-updated
+  "This test could probably removed in the future. It's a backward compatibility test."
+  (with-fixture state ()
+    (let* ((company (make-instance 'company))
+           (user (make-user :email "foo@example.com")))
+      (setf (roles:user-role company user) 'roles:standard-member)
+      (assert-that (user-companies user)
+                   (has-item company))
+      (setf (roles:user-role company user) nil)
+      (assert-that (user-companies user)
+                   (is-not (has-item company))))))
