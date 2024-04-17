@@ -64,15 +64,16 @@
     results))
 
 (defun top-5 (items)
-  (let ((ht (make-hash-table)))
-    (dolist (item items)
-      (incf (gethash item ht 0)))
-    (let ((items (loop for key being the hash-keys of ht
-                       for count being the hash-values of ht
-                       collect (list key count))))
-      (setf items (sort items #'> :key #'second))
-      (cond
-        ((< (length items) 5)
-         items)
-        (t
-         (subseq items 0 6))))))
+  (let ((count 100))
+   (let ((ht (make-hash-table)))
+     (dolist (item items)
+       (incf (gethash item ht 0)))
+     (let ((items (loop for key being the hash-keys of ht
+                        for count being the hash-values of ht
+                        collect (list key count))))
+       (setf items (sort items #'> :key #'second))
+       (cond
+         ((< (length items) count)
+          items)
+         (t
+          (subseq items 0 (1+ count))))))))

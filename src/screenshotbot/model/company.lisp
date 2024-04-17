@@ -138,6 +138,15 @@
       :documentation "deprecated list of images. do not use."))
     (:metaclass persistent-class)))
 
+(with-class-validation
+  (defclass sub-company (company)
+    ((parent :initarg :parent
+             :initform nil
+             :reader company-parent))
+    (:metaclass persistent-class)
+    (:documentation "A child organization, by default has all the permissions of the
+parent organization.")))
+
 (defmethod print-object ((self company) out)
   (format out "#<COMPANY ~a>" (ignore-errors (company-name self))))
 
@@ -277,6 +286,11 @@
 
 (defmethod can-view ((company company) user)
   (member company (user-companies user)))
+
+(defmethod can-view ((company sub-company) user)
+  (or
+   (call-next-method)
+   (can-view (company-parent company) user)))
 
 (defgeneric company (obj)
   (:documentation "For a given obj, figure out which company it belongs to"))
