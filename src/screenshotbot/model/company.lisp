@@ -36,10 +36,6 @@
                 #:company-for-request)
   (:import-from #:core/installation/auth-provider
                 #:company-sso-auth-provider)
-  (:import-from #:auth/model/roles
-                #:has-role-p
-                #:admin
-                #:user-role)
   (:export
    #:company
    #:company-reports
@@ -73,7 +69,8 @@
    #:jira-config
    #:add-company-run
    #:company-owner
-   #:add-company-report))
+   #:add-company-report)
+  (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/model/company)
 
 (defindex +singleton-index+
@@ -289,7 +286,7 @@ parent organization.")))
      channel)))
 
 (defmethod can-view ((company company) user)
-  (member company (user-companies user)))
+  (roles:has-role-p company user 'roles:read-only))
 
 (defmethod can-view ((company sub-company) user)
   (or
@@ -330,7 +327,7 @@ parent organization.")))
     (push run (company-runs company)))
 
 (defmethod company-admin-p ((company company) user)
-  (has-role-p company user 'admin))
+  (roles:has-role-p company user 'roles:admin))
 
 (deftransaction
     add-company-report (company report)

@@ -21,7 +21,17 @@
   (:export
    #:set-role
    #:user-role
-   #:has-role-p))
+   #:has-role-p
+   #:read-only
+   #:reviewer
+   #:disabled-user
+   #:standard-member
+   #:integrations-developer
+   #:owner
+   #:guest
+   #:external-member
+   #:site-admin
+   #:admin))
 (in-package :auth/model/roles)
 
 ;;;; See https://phabricator.tdrhq.com/w/user_roles/
@@ -41,7 +51,7 @@
 (defclass standard-member (read-only reviewer)
   ())
 
-(defclass integrations-developers (standard-member)
+(defclass integrations-developer (standard-member)
   ()
   (:documentation "Can access settings related to creating integrations"))
 
