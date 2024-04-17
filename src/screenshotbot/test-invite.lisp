@@ -18,12 +18,14 @@
                 #:installation
                 #:multi-org-feature)
   (:import-from #:screenshotbot/testing
+                #:screenshot-test
                 #:with-installation)
   (:import-from #:screenshotbot/model/invite
                 #:invite)
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/invite
+                #:invite-signup-page
                 #:%accept-invite
                 #:accept-invite)
   (:import-from #:fiveam-matchers/core
@@ -32,7 +34,9 @@
   (:import-from #:fiveam-matchers/lists
                 #:has-item)
   (:import-from #:screenshotbot/user-api
-                #:unaccepted-invites))
+                #:unaccepted-invites)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string))
 (in-package :screenshotbot/test-invite)
 
 (util/fiveam:def-suite)
@@ -49,7 +53,6 @@
             (other-user (make-user :email "bar@example.com")))
        (&body)))))
 
-
 (test simple-accept-invite
   (with-fixture state ()
     (let ((invite (make-instance 'invite
@@ -63,3 +66,20 @@
       (%accept-invite invite other-user)
       (assert-that (users-for-company company)
                    (has-item other-user)))))
+
+(test if-invite-doesnt-exist-we-get-error-page
+  (with-fixture state ()
+    (with-fake-request ()
+      (with-installation ()
+        (auth:with-sessions ()
+          (assert-that
+           (markup:write-html
+            (invite-signup-page :invite-code "foo"))
+           (contains-string "invite link has expired" )))))))
+
+(screenshot-test invite-expired-page
+  (with-fixture state ()
+    (with-fake-request ()
+      (with-installation ()
+        (auth:with-sessions ()
+          (invite-signup-page :invite-code "foo"))))))

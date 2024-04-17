@@ -143,26 +143,28 @@
 
 (defhandler (invite-signup-page :uri "/invite/signup/:invite-code") (invite-code)
   (let ((invite (invite-with-code invite-code)))
-   (with-login (:signup t :alert (when invite (invite-alert invite))
-                :ensure-prepared nil)
-     (cond
+    (cond
        ((or (null invite)
             (invite-used-p invite))
         <simple-card-page>
           <p>The invite link has expired. Please ask your administrator to send you a new link.</p>
         </simple-card-page>)
-       ((member (invite-company invite)
-                (user-companies (current-user)))
-        (hex:safe-redirect
-         (nibble ()
-           <simple-card-page>
-           <p>You are already a member of this organization.</p>
-           </simple-card-page>)))
-       (t
-        (with-transaction ()
-          (push invite (unaccepted-invites (current-user)))
-          (setf (invite-used-p invite) t))
-        (redirect-home))))))
+      (t
+       (with-login (:signup t :alert (invite-alert invite)
+                    :ensure-prepared nil)
+         (cond
+           ((member (invite-company invite)
+                    (user-companies (current-user)))
+            (hex:safe-redirect
+             (nibble ()
+               <simple-card-page>
+               <p>You are already a member of this organization.</p>
+               </simple-card-page>)))
+           (t
+            (with-transaction ()
+              (push invite (unaccepted-invites (current-user)))
+              (setf (invite-used-p invite) t))
+            (redirect-home))))))))
 
 (defhandler (invite-successful :uri "/invite/success/:email") (email)
   <simple-card-page>
