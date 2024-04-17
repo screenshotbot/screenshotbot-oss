@@ -4,6 +4,7 @@
                :util
                :util.store)
   :components ((:file "user")
+               (:file "roles")
                (:file "invite")
                (:file "email-confirmation")))
 
