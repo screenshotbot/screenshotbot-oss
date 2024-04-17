@@ -108,5 +108,8 @@
      (role-type role))))
 
 (defmethod has-role-p (company user type)
+  "Check if a user has a role of type TYPE. It is allowed to use T as a
+type to check if the user is part of the company at all."
   (assert (find-class type))
-  (typep (user-role company user) type))
+  (when-let ((role (user-role company user)))
+    (typep role type)))

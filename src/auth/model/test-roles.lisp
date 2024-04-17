@@ -10,6 +10,9 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:auth/model/roles
+                #:read-only
+                #:reviewer
+                #:has-role-p
                 #:standard-member
                 #:guest
                 #:user-role)
@@ -32,3 +35,13 @@
     (setf (user-role :foo :bar) 'standard-member)
     (assert-that (user-role :foo :bar)
                  (has-typep 'standard-member))))
+
+(test has-role-p
+  (with-fixture state ()
+    (setf (user-role :foo :bar) 'guest)
+    (is-true (has-role-p :foo :bar 'guest))
+    (is-false (has-role-p :foo :bar 'reviewer))
+    (is-true (has-role-p :foo :bar t))
+    (is-false (has-role-p :foo :car t))
+    (setf (user-role :foo :bar) 'standard-member)
+    (is-true (has-role-p :foo :bar 'read-only))))
