@@ -55,7 +55,7 @@
    #:accept-invite))
 (in-package :screenshotbot/invite)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defmethod render-invite-page (installation)
   (%invite-page))
@@ -155,11 +155,9 @@
          (cond
            ((member (invite-company invite)
                     (user-companies (current-user)))
-            (hex:safe-redirect
-             (nibble ()
-               <simple-card-page>
-               <p>You are already a member of this organization.</p>
-               </simple-card-page>)))
+            <simple-card-page>
+              <p>You are already a member of this organization.</p>
+            </simple-card-page>)
            (t
             (with-transaction ()
               (push invite (unaccepted-invites (current-user)))

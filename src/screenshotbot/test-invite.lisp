@@ -18,6 +18,7 @@
                 #:installation
                 #:multi-org-feature)
   (:import-from #:screenshotbot/testing
+                #:with-test-user
                 #:screenshot-test
                 #:with-installation)
   (:import-from #:screenshotbot/model/invite
@@ -36,7 +37,9 @@
   (:import-from #:screenshotbot/user-api
                 #:unaccepted-invites)
   (:import-from #:fiveam-matchers/strings
-                #:contains-string))
+                #:contains-string)
+  (:import-from #:auth/model/invite
+                #:invite-code))
 (in-package :screenshotbot/test-invite)
 
 (util/fiveam:def-suite)
@@ -83,3 +86,17 @@
       (with-installation ()
         (auth:with-sessions ()
           (invite-signup-page :invite-code "foo"))))))
+
+(screenshot-test already-a-member
+  (with-fixture state ()
+    (with-installation ()
+      (with-test-user (:user invitee :company company :logged-in-p t)
+        (let ((invite (make-instance 'invite
+                                     :inviter user
+                                     :company company)))
+          (let ((page (invite-signup-page :invite-code (invite-code invite))))
+            (assert-that
+             (markup:write-html
+              page)
+             (contains-string "already a member of this org"))
+            page))))))
