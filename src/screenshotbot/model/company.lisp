@@ -37,6 +37,7 @@
   (:import-from #:core/installation/auth-provider
                 #:company-sso-auth-provider)
   (:import-from #:auth/model/roles
+                #:admin
                 #:user-role)
   (:export
    #:company
@@ -328,11 +329,7 @@ parent organization.")))
     (push run (company-runs company)))
 
 (defmethod company-admin-p ((company company) user)
-  (or
-   (eql user (company-owner company))
-   (member user (company-admins company))
-   ;; superadmin is always a company admin
-   (adminp user)))
+  (typep (user-role company user) 'admin))
 
 (deftransaction
     add-company-report (company report)

@@ -29,6 +29,7 @@
   (:import-from #:screenshotbot/login/github
                 #:github-user)
   (:import-from #:screenshotbot/model/company
+                #:company-admins
                 #:company-admin-p
                 #:company
                 #:company-owner
@@ -384,7 +385,7 @@ override user-role."
      (cond
        ((eql user (company-owner company))
         (make-instance 'owner))
-       ((company-admin-p company user)
+       ((member user (company-admins company))
         (make-instance 'admin))
        (t
         (make-instance 'standard-member))))))
