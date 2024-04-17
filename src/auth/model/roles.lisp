@@ -20,7 +20,8 @@
                 #:when-let)
   (:export
    #:set-role
-   #:user-role))
+   #:user-role
+   #:has-role-p))
 (in-package :auth/model/roles)
 
 ;;;; See https://phabricator.tdrhq.com/w/user_roles/
@@ -95,3 +96,7 @@
                               (list user company))))
     (make-instance
      (role-type role))))
+
+(defmethod has-role-p (company user type)
+  (assert (find-class type))
+  (typep (user-role company user) type))
