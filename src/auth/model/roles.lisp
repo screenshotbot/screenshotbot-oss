@@ -31,7 +31,9 @@
    #:guest
    #:external-member
    #:site-admin
-   #:admin))
+   #:admin
+   #:users-for-company
+   #:companies-for-user))
 (in-package :auth/model/roles)
 
 ;;;; See https://phabricator.tdrhq.com/w/user_roles/
@@ -74,10 +76,22 @@
   'fset-unique-index
   :slots '(%user %company))
 
+(defindex +company-index+
+  'fset-set-index
+  :slot-name '%company)
+
+(defindex +user-index+
+  'fset-set-index
+  :slot-name '%user)
+
 (defclass user-roles (store-object)
   ((%user :initarg :user
+          :index +user-index+
+          :index-reader user-roles-for-user
           :accessor role-user)
    (%company :initarg :company
+             :index +company-index+
+             :index-reader user-roles-for-company
              :accessor role-company)
    (role :initarg :role
          :accessor role-type
@@ -106,6 +120,16 @@
                               (list user company))))
     (make-instance
      (role-type role))))
+
+(defmethod users-for-company (company)
+  (fset:convert
+   'list
+   (fset:image #'role-user (user-roles-for-company company))))
+
+(defmethod companies-for-user (user)
+  (fset:convert
+   'list
+   (fset:image #'role-company (user-roles-for-user user))))
 
 (defmethod has-role-p (company user type)
   "Check if a user has a role of type TYPE. It is allowed to use T as a

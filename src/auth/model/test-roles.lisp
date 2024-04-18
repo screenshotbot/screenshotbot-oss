@@ -10,6 +10,8 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:auth/model/roles
+                #:companies-for-user
+                #:users-for-company
                 #:read-only
                 #:reviewer
                 #:has-role-p
@@ -18,7 +20,9 @@
                 #:user-role)
   (:import-from #:fiveam-matchers/core
                 #:has-typep
-                #:assert-that))
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:contains))
 (in-package :auth/model/test-roles)
 
 (util/fiveam:def-suite)
@@ -45,3 +49,11 @@
     (is-false (has-role-p :foo :car t))
     (setf (user-role :foo :bar) 'standard-member)
     (is-true (has-role-p :foo :bar 'read-only))))
+
+(test lookup-by-company-and-index
+  (with-fixture state ()
+    (setf (user-role :foo :bar) 'guest)
+    (assert-that (users-for-company :foo)
+                 (contains :bar))
+    (assert-that (companies-for-user :bar)
+                 (contains :foo))))
