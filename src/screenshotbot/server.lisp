@@ -45,6 +45,8 @@
                 #:fonts-acceptor-mixin)
   (:import-from #:core/active-users/active-users
                 #:mark-active-user)
+  (:import-from #:util/events
+                #:push-event)
   (:export
    #:defhandler
    #:with-login
@@ -174,6 +176,7 @@
     (handler-case
         (funcall impl)
       (no-access-error (e)
+        (push-event :no-access-error)
         (no-access-error-page))
       (throttled-error (e)
         (declare (ignore e))

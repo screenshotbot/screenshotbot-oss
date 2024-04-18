@@ -8,13 +8,19 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/server
+                #:%handler-wrap
                 #:request)
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/testing
+                #:with-test-user
                 #:with-installation)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-server)
 
@@ -30,4 +36,15 @@
                                      :headers-in nil)))
          (auth:with-sessions ()
            (finishes
-            (auth:authenticate-request request))))))))
+             (auth:authenticate-request request))))))))
+
+(test no-access-error-happy-path
+  (with-test-store ()
+    (with-test-user (:user user :logged-in-p t)
+      (let ((body
+              (%handler-wrap
+               (lambda ()
+                 (error 'auth:no-access-error)))))
+        (assert-that
+         (markup:write-html body)
+         (contains-string "You do not have permission to access this page"))))))
