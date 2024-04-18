@@ -276,7 +276,7 @@ the index reader returns a list in reverse sorted order instead of a set."))
 
 (defmethod validate-index-values ((index abstract-fset-index) all-elts slot-name)
   (declare (optimize (debug 3) (speed 0)))
-  (let ((tmp (make-instance (type-of index) :slots (list slot-name))))
+  (let ((tmp (make-instance (type-of index) :slots (%slots index))))
     (loop for elt in all-elts
           do (index-add tmp elt))
     (unless (fset:equal? (%map tmp)

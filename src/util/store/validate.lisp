@@ -19,6 +19,8 @@
                 #:validate-indices ;; To make it easier to deploy
                 #:fix-the-index
                 #:validate-index-values)
+  (:import-from #:util/store/fset-index
+                #:abstract-fset-index)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/store/validate)
 
