@@ -219,11 +219,10 @@
 (defun %accept-invite (invite user)
   (when (member invite (unaccepted-invites user))
     ;; Let's do the accept
-    (with-transaction ()
-      (deletef (unaccepted-invites user) invite)
-      (pushnew
-       (invite-company invite)
-       (user-companies user)))))
+    (setf (roles:user-role (invite-company invite) user)
+          ;; TODO: We should be able to default this to roles:guest
+          'roles:standard-member)
+    (deletef (unaccepted-invites user) invite)))
 
 (defhandler (invite-accept  :uri  "/invite/accept") (invite-id)
   (let ((invite (store-object-with-id (parse-integer invite-id))))
