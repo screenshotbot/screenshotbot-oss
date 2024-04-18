@@ -52,7 +52,7 @@
           "#<~a ~a on ~a size {~d}>"
           (string (type-of self))
           (index-id self)
-          (car (%slots self))
+          (%slots self)
           (fset:size (%map self))))
 
 (defmacro update-map (self (map) &body expr)
