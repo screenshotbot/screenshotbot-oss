@@ -24,7 +24,6 @@
                 #:user-with-email
                 #:personalp
                 #:professionalp
-                #:user-companies
                 #:unaccepted-invites
                 #:user-full-name)
   (:import-from #:bknr.datastore
