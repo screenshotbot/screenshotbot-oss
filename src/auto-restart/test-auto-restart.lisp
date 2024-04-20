@@ -339,3 +339,11 @@
          (incf count)
          (error 'error))))
     (is (eql 1 count))))
+
+(auto-restart:with-auto-restart ()
+  (defun %%%can-use-declarations%%% ()
+    (declare (optimize (debug 3)))
+    :foo))
+
+(test can-use-declarations
+  (is (eql :foo (%%%can-use-declarations%%%))))

@@ -89,7 +89,7 @@ for which we're allowed to auto-restart. It defaults to `'(ERROR)`.
       `(let ((,sleep-var ,sleep)
              (,retries-var ,retries))
         (,@before-args
-         ,doc
+         ,@(when doc (list doc))
          ,@decls
          (flet ((top-level-body ()
                   (flet ((body (,attempt)
