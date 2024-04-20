@@ -148,24 +148,25 @@
           (setf (bknr.indices::slot-index-hash-table index)
                 new-hash-table))))))
 
-(defun validate-class-index (class-name slot-name)
-  (declare (optimize (debug 3)))
-  (format t "Testing ~a, ~a~%" class-name slot-name)
-  (restart-case
-      (let* ((class (find-class class-name))
-             (slot (find-effective-slot class slot-name))
-             (indices (bknr.indices::index-effective-slot-definition-indices slot)))
-        (dolist (index indices)
-          (let ((all-elts (store-objects-with-class class-name)))
-            (handler-bind ((error (lambda (e)
-                                    (declare (ignore e))
-                                    (format t "Errors while processing index for ~a ~a ~a~%" class slot indices))))
-              (restart-case
-                  (validate-index-values index all-elts slot-name)
-                (continue-testing-other-indices ()
-                  (values)))))))
-    (retry--validate-class-index ()
-      (validate-class-index class-name slot-name))))
+(auto-restart:with-auto-restart (:retries 4 :sleep 1)
+  (defun validate-class-index (class-name slot-name)
+    (declare (optimize (debug 3)))
+    (format t "Testing ~a, ~a~%" class-name slot-name)
+    (restart-case
+        (let* ((class (find-class class-name))
+               (slot (find-effective-slot class slot-name))
+               (indices (bknr.indices::index-effective-slot-definition-indices slot)))
+          (dolist (index indices)
+            (let ((all-elts (store-objects-with-class class-name)))
+              (handler-bind ((error (lambda (e)
+                                      (declare (ignore e))
+                                      (format t "Errors while processing index for ~a ~a ~a~%" class slot indices))))
+                (restart-case
+                    (validate-index-values index all-elts slot-name)
+                  (continue-testing-other-indices ()
+                    (values)))))))
+      (retry--validate-class-index ()
+        (validate-class-index class-name slot-name)))))
 
 (defun all-store-objects-in-memory (&key full)
   (flet ((make-sorted (x)
@@ -216,39 +217,38 @@
           do (setf (gethash x hash-table) t))
     (a:hash-table-keys hash-table)))
 
-(auto-restart:with-auto-restart (:retries 3 :sleep 1)
-  (defun validate-indices (&key (full nil) (fix-by-default nil))
-    (flet ((work ()
-             (let* ((objects (all-store-objects-in-memory :full full))
-                    (classes (fast-remove-duplicates
-                              (loop for class in (fast-remove-duplicates (mapcar 'class-of objects))
-                                    append (closer-mop:class-precedence-list class)))))
-               (log:info "Got ~a objects and ~a classes"
-                         (length objects)
-                         (length classes))
-               (loop for class in classes
-                     do
-                        (loop for direct-slot in (closer-mop:class-direct-slots class)
-                              for slot-name = (closer-mop:slot-definition-name direct-slot)
-                              for slot = (find-effective-slot class slot-name)
-                              if (or
-                                  (bknr.indices::index-direct-slot-definition-index direct-slot)
-                                  (bknr.indices::index-direct-slot-definition-index-type direct-slot))
-                                if (not (eql 'bknr.datastore::id slot-name))
-                                  do
-                                     (let ((indices (bknr.indices::index-effective-slot-definition-indices slot)))
-                                       (assert indices)
-                                       (validate-class-index (class-name class)
-                                                             slot-name))))
-               t)))
-      (cond
-        (fix-by-default
-         (handler-bind ((error (lambda (e)
-                                 (when-let ((restart (find-restart 'fix-the-index)))
-                                   ;; Note: log:info will not show up
-                                   ;; in Capistrano output.
-                                   (format t "Calling restart for ~a~%" e)
-                                   (invoke-restart restart)))))
-           (work)))
-        (t
-         (work))))))
+(defun validate-indices (&key (full nil) (fix-by-default nil))
+  (flet ((work ()
+           (let* ((objects (all-store-objects-in-memory :full full))
+                  (classes (fast-remove-duplicates
+                            (loop for class in (fast-remove-duplicates (mapcar 'class-of objects))
+                                  append (closer-mop:class-precedence-list class)))))
+             (log:info "Got ~a objects and ~a classes"
+                       (length objects)
+                       (length classes))
+             (loop for class in classes
+                   do
+                      (loop for direct-slot in (closer-mop:class-direct-slots class)
+                            for slot-name = (closer-mop:slot-definition-name direct-slot)
+                            for slot = (find-effective-slot class slot-name)
+                            if (or
+                                (bknr.indices::index-direct-slot-definition-index direct-slot)
+                                (bknr.indices::index-direct-slot-definition-index-type direct-slot))
+                              if (not (eql 'bknr.datastore::id slot-name))
+                                do
+                                   (let ((indices (bknr.indices::index-effective-slot-definition-indices slot)))
+                                     (assert indices)
+                                     (validate-class-index (class-name class)
+                                                           slot-name))))
+             t)))
+    (cond
+      (fix-by-default
+       (handler-bind ((error (lambda (e)
+                               (when-let ((restart (find-restart 'fix-the-index)))
+                                 ;; Note: log:info will not show up
+                                 ;; in Capistrano output.
+                                 (format t "Calling restart for ~a~%" e)
+                                 (invoke-restart restart)))))
+         (work)))
+      (t
+       (work)))))
