@@ -148,6 +148,10 @@
   :test 'equalp
   :slot-name 'oid)
 
+(defindex +image-hash-index+ 'hash-index
+  :test #'equalp
+  :slot-name 'hash)
+
 (defparameter +image-state-filesystem+ 1
   "Image is saved on the local filesystem")
 
@@ -166,8 +170,7 @@
           :index-reader %find-image-by-oid)
      (hash :initarg :hash
            :reader image-hash ;; NOTE: Returns a vector!
-           :index-type hash-index
-           :index-initargs (:test 'equalp)
+           :index +image-hash-index+
            :index-reader images-for-original-hash)
      (state :initarg :state
             :initform nil
