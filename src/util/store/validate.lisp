@@ -148,7 +148,7 @@
           (setf (bknr.indices::slot-index-hash-table index)
                 new-hash-table))))))
 
-(auto-restart:with-auto-restart (:retries 4 :sleep 1)
+(auto-restart:with-auto-restart (:retries 4)
   (defun validate-class-index (class-name slot-name)
     (declare (optimize (debug 3)))
     (format t "Testing ~a, ~a~%" class-name slot-name)
