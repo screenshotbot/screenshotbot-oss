@@ -421,9 +421,13 @@ to the directory that was just snapshotted.")
   (make-thread
    (lambda ()
     (when (and
-           (boundp 'bknr.datastore:*store*)
-           #+bknr.cluster
-           (leaderp bknr.datastore:*store*))
+           (boundp 'bknr.datastore:*store*))
+      #+bknr.cluster
+      (unless (leaderp bknr.datastore:*store*)
+        ;; TODO: Coordinate snapshots via RPC from the leader, so that
+        ;; we never have to worry about two snapshots happening at the
+        ;; same time.
+        (sleep (+ 300 (random (* 2 3600)))))
       (log:info "Snapshotting bknr.datastore")
       (safe-snapshot "cron-job" nil)))
    :name "snapshot-thread"))
