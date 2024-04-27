@@ -37,6 +37,10 @@
                 #:company-for-request)
   (:import-from #:core/installation/auth-provider
                 #:company-sso-auth-provider)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
+  (:import-from #:screenshotbot/model/core
+                #:ensure-slot-boundp)
   (:export
    #:company
    #:company-reports
@@ -348,3 +352,6 @@ parent organization.")))
 
 (defmethod company-for-request ((installation installation) request)
   (get-singleton-company installation))
+
+(def-store-migration ("Add :redirect-url to companies" :version 10)
+  (ensure-slot-boundp 'company '%redirect-url))
