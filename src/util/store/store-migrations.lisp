@@ -45,10 +45,10 @@
   (let ((migration (assoc-value *migrations* version)))
     (cond
       (migration
-       (log:info "Running migration: ~a" (name migration))
+       (format t "Running migration: ~a~%" (name migration))
        (funcall (body migration)))
       (t
-       (log:info "No migrations to run for version: ~a" version)))))
+       (format t "No migrations to run for version: ~a~%" version)))))
 
 (defun bump-version ()
   (let ((version *snapshot-store-version*))
@@ -64,15 +64,15 @@
   (when (needs-work-p)
     (when snapshot
       (util/store:safe-snapshot
-       (format nil "Before running migrations (current version: ~a)" *snapshot-store-version*)))
+       (format t "Before running migrations (current version: ~a)~%" *snapshot-store-version*)))
     (loop while (needs-work-p)
           do
              (progn
-               (log:info "Current store version is ~a" *snapshot-store-version*)
+               (format t "Current store version is ~a~%" *snapshot-store-version*)
                (bump-version)))
     (when snapshot
      (util/store:safe-snapshot
-      (format nil "After running migrations (current version: ~a)" *snapshot-store-version*)))))
+      (format t "After running migrations (current version: ~a)~%" *snapshot-store-version*)))))
 
 (def-store-migration ("Dummy migration for version test" :version 2)
   (log:info "Nothing to do in this migration"))
