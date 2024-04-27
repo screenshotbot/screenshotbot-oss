@@ -137,8 +137,12 @@
      (images
       :initarg :company-images
       :initform nil
-      :documentation "deprecated list of images. do not use."))
-    (:metaclass persistent-class)))
+      :documentation "deprecated list of images. do not use.")
+     (%redirect-url
+      :initarg :redirect-url
+      :documentation "Redirect this company to this URL. This is used if we want to migrate a company to a different domain."))
+    (:metaclass persistent-class)
+    (:default-initargs :redirect-url nil)))
 
 (defindex +parent-index+
   'fset-set-index
