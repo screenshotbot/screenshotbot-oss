@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/model/company-graph
   (:use #:cl)
   (:import-from #:util/store/store
+                #:location-for-oid
                 #:object-neighbors
                 #:find-any-refs)
   (:import-from #:screenshotbot/model/user
@@ -14,8 +15,16 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:bknr.datastore
+                #:class-instances
                 #:store-object-subsystem
                 #:snapshot-subsystem-helper)
+  (:import-from #:screenshotbot/model/image
+                #:image-filesystem-pathname
+                #:image)
+  (:import-from #:util/copy-file
+                #:copy-file-fast)
+  (:import-from #:util/store/object-id
+                #:oid-array)
   (:export
    #:company-graph
    #:company-full-graph))
@@ -125,3 +134,14 @@ moving a company to a new instance."
        s
        :map-store-objects (lambda (fn)
                             (mapc fn objects))))))
+
+(defun save-images (company &key output)
+  (let ((images (loop for img in (class-instances 'image)
+                      if (eql company (company img))
+                        collect img))
+        (image-blobs (ensure-directories-exist (path:catdir output "image-blobs/"))))
+    (loop for img in images
+          do (copy-file-fast (image-filesystem-pathname img)
+                             (location-for-oid
+                              image-blobs
+                              (oid-array img))))))

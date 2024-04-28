@@ -405,13 +405,14 @@
    oid))
 
 (defun make-image (&rest args &key hash blob pathname
-                   for-tests &allow-other-keys)
+                                oid ;; for test convenience
+                                for-tests &allow-other-keys)
   (when blob
     (error "don't specify blob"))
   (unless (or hash pathname)
     (error "Must provide at least one of hash or pathname"))
   (let* ((args (alexandria:remove-from-plist args :pathname :for-tests))
-         (oid (%make-oid))
+         (oid (or oid (%make-oid)))
          (hash (cond
                  ((stringp hash)
                   (ironclad:hex-string-to-byte-array hash))

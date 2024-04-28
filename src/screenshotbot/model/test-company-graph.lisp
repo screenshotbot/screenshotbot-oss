@@ -14,6 +14,7 @@
                 #:with-installation
                 #:with-test-user)
   (:import-from #:screenshotbot/model/company-graph
+                #:save-images
                 #:company-full-graph
                 #:company-graph)
   (:import-from #:fiveam-matchers/lists
@@ -23,7 +24,11 @@
                 #:assert-that)
   (:import-from #:bknr.datastore
                 #:store-object
-                #:persistent-class))
+                #:persistent-class)
+  (:import-from #:screenshotbot/model/image
+                #:make-image)
+  (:import-from #:util/store/object-id
+                #:oid))
 (in-package :screenshotbot/model/test-company-graph)
 
 (util/fiveam:def-suite)
@@ -70,3 +75,18 @@
                      (has-item user)
                      (has-item company2)
                      (has-item company))))))
+
+(test copies-images
+  (with-fixture state ()
+    (with-test-user (:company company)
+      (let ((img (make-image :pathname (asdf:system-relative-pathname :screenshotbot "fixture/rose.png")
+                             :oid #(1 2 3 4 1 2 3 4 1 2 3 4)
+                             :company company)))
+        (is (equal "010203040102030401020304" (oid img)))
+        (tmpdir:with-tmpdir (dir)
+          (finishes
+            (save-images company :output dir))
+          (is-true
+           (path:-d (path:catdir dir "image-blobs/01/")))
+          (is-true
+           (path:-e (path:catfile dir "image-blobs/01/02/03040102030401020304"))))))))
