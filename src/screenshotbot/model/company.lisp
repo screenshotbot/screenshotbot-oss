@@ -41,6 +41,9 @@
                 #:def-store-migration)
   (:import-from #:screenshotbot/model/core
                 #:ensure-slot-boundp)
+  (:import-from #:core/installation/installation
+                #:installation-domain
+                #:*installation*)
   (:export
    #:company
    #:company-reports
@@ -144,6 +147,7 @@
       :documentation "deprecated list of images. do not use.")
      (%redirect-url
       :initarg :redirect-url
+      :reader redirect-url
       :documentation "Redirect this company to this URL. This is used if we want to migrate a company to a different domain."))
     (:metaclass persistent-class)
     (:default-initargs :redirect-url nil)))
@@ -301,7 +305,19 @@ parent organization.")))
      channel)))
 
 (defmethod can-view ((company company) user)
-  (roles:has-role-p company user 'roles:read-only))
+  (and
+   (roles:has-role-p company user 'roles:read-only)
+   (company-domain-matches-installation-p company)))
+
+(defun company-domain-matches-installation-p (company)
+  (let ((redirect-url (redirect-url company)))
+    (cond
+      ((null redirect-url)
+       t)
+      (t
+       (equal
+        (installation-domain *installation*)
+        redirect-url)))))
 
 (defmethod can-view ((company sub-company) user)
   (or

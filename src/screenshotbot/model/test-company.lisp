@@ -22,7 +22,10 @@
                 #:with-installation)
   (:import-from #:screenshotbot/installation
                 #:installation
-                #:multi-org-feature))
+                #:multi-org-feature)
+  (:import-from #:core/installation/installation
+                #:*installation*
+                #:installation-domain))
 (in-package :screenshotbot/model/test-company)
 
 (util/fiveam:def-suite)
@@ -67,3 +70,16 @@
       (let ((user (make-user :companies (list child))))
         (is-false (auth:can-view company user))
         (is-true (auth:can-view child user))))))
+
+
+(test can-view-respects-redirect-url
+  (with-fixture state ()
+    (let* ((company (make-instance 'company))
+           (company-with-redirect (make-instance 'company :redirect-url "https://one.example.com"))
+           (company-with-redirect-2 (make-instance 'company :redirect-url "https://example.com")))
+      (let ((user (make-user :companies (list company-with-redirect company company-with-redirect-2))))
+        (is-true (auth:can-view company user))
+        (is-false (auth:can-view company-with-redirect user))
+        (is-true (auth:can-view company-with-redirect-2 user))
+        (let ((*installation* (make-instance 'my-installation :domain "https://one.example.com")))
+          (is-true (auth:can-view company-with-redirect user)))))))
