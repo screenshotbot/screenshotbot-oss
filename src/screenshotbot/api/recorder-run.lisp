@@ -61,6 +61,7 @@
                 #:throttle!
                 #:keyed-throttler)
   (:import-from #:util/events
+                #:push-event
                 #:with-tracing)
   (:export
    #:%recorder-run-post
@@ -296,6 +297,13 @@
     (with-transaction ()
       (setf (github-repo channel)
             (dto:run-repo run)))
+    (push-event :run-created
+                :oid (oid recorder-run)
+                :company (oid company)
+                ;; This let's us monitor that a specific company is
+                ;; using the right domain name. See T1124.
+                :api-hostname (when (boundp 'hunchentoot:*request*)
+                                (hunchentoot:host)))
     (prepare-recorder-run :run recorder-run)
     (list
      (make-instance 'create-run-response
