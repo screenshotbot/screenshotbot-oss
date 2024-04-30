@@ -148,7 +148,10 @@
                                      (let-the-bisect-begin iterator
                                                            :end-run run))))
                         (cond
-                          ((eql screenshot bad-screenshot)
+                          ;; Is this check good enough? What happens
+                          ;; when the same screenshot appears multiple
+                          ;; times in the history?
+                          ((fset:equal? screenshot bad-screenshot)
                            <li>
                              <span class= "text-danger">Bisect ending point (<em>bad</em> screenshot) </span>
                            </li>)
