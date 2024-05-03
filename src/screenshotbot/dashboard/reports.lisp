@@ -60,6 +60,8 @@
                 #:user-full-name)
   (:import-from #:util/timeago
                 #:timeago)
+  (:import-from #:screenshotbot/model/company
+                #:maybe-redirect-for-company)
   (:export #:report-page #:report-link
            #:shared-report-page))
 (in-package :screenshotbot/dashboard/reports)
@@ -89,6 +91,7 @@
             </div>
           </simple-card-page>)
          (t
+          (maybe-redirect-for-company (report-company report))
           (with-login (:needs-login (not (can-public-view report))
                        :allow-url-redirect t
                        :company (report-company report))
@@ -115,9 +118,9 @@
            (apply 'render-report-page
                   report
                   (append new-args args))))
-   (check-type report report)
+    (check-type report report)
     (unless skip-access-checks
-     (can-view! report))
+      (can-view! report))
 
     (cond
       ((hunchentoot:parameter "v2")

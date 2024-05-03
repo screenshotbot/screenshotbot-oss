@@ -77,7 +77,8 @@
    #:jira-config
    #:add-company-run
    #:company-owner
-   #:add-company-report)
+   #:add-company-report
+   #:maybe-redirect-for-company)
   (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/model/company)
 
@@ -371,3 +372,9 @@ parent organization.")))
 
 (def-store-migration ("Add :redirect-url to companies" :version 10)
   (ensure-slot-boundp 'company '%redirect-url))
+
+
+(defun maybe-redirect-for-company (company)
+  "When called within a hunchentoot requests, redirects to the redirect
+URL for the company, if there is one."
+  nil)

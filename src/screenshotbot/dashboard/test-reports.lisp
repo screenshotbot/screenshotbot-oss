@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/reports
+                #:report-page
                 #:render-acceptable-history
                 #:submit-share-report)
   (:import-from #:util/store
@@ -32,6 +33,16 @@
   (:import-from #:screenshotbot/model/report
                 #:acceptable-history-item
                 #:base-acceptable)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string)
+  (:import-from #:util/store/object-id
+                #:oid)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run)
+  (:import-from #:screenshotbot/model/company
+                #:company)
+  (:import-from #:screenshotbot/user-api
+                #:channel)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-reports)
 
@@ -75,3 +86,18 @@
                                                               :user user)))))
       (fix-timestamps
        (render-acceptable-history acceptable)))))
+
+(test report-page-happy-path ()
+  (with-fixture state ()
+    (with-test-user (:user user :company company :logged-in-p t)
+     (let* ((channel (make-instance 'channel :company company :name "bleh"))
+            (run1 (make-recorder-run :company company :channel channel))
+            (run2 (make-recorder-run :company company :channel channel))
+            (report (make-instance 'report
+                                   :title "1 changes"
+                                   :run run1
+                                   :previous-run run2)))
+       (assert-that
+        (markup:write-html
+         (report-page :id (oid report)))
+        (contains-string "1 changes"))))))
