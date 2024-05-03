@@ -148,7 +148,7 @@
       :documentation "deprecated list of images. do not use.")
      (%redirect-url
       :initarg :redirect-url
-      :reader redirect-url
+      :accessor redirect-url
       :documentation "Redirect this company to this URL. This is used if we want to migrate a company to a different domain."))
     (:metaclass persistent-class)
     (:default-initargs :redirect-url nil)))
@@ -377,4 +377,9 @@ parent organization.")))
 (defun maybe-redirect-for-company (company)
   "When called within a hunchentoot requests, redirects to the redirect
 URL for the company, if there is one."
-  nil)
+  (when-let  ((redirect-url (redirect-url company)))
+    (hunchentoot:redirect
+     (quri:render-uri
+      (quri:merge-uris
+       (quri:uri (hunchentoot:request-uri*))
+       redirect-url)))))

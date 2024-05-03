@@ -22,6 +22,7 @@
   (:import-from #:bknr.datastore
                 #:class-instances)
   (:import-from #:fiveam-matchers/core
+                #:equal-to
                 #:has-typep
                 #:assert-that)
   (:import-from #:nibble
@@ -40,9 +41,12 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:make-recorder-run)
   (:import-from #:screenshotbot/model/company
+                #:redirect-url
                 #:company)
   (:import-from #:screenshotbot/user-api
                 #:channel)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-reports)
 
@@ -87,9 +91,9 @@
       (fix-timestamps
        (render-acceptable-history acceptable)))))
 
-(test report-page-happy-path ()
-  (with-fixture state ()
-    (with-test-user (:user user :company company :logged-in-p t)
+(def-fixture report-page (&key (logged-in-p t))
+  (with-test-store ()
+    (with-test-user (:user user :company company :logged-in-p logged-in-p)
      (let* ((channel (make-instance 'channel :company company :name "bleh"))
             (run1 (make-recorder-run :company company :channel channel))
             (run2 (make-recorder-run :company company :channel channel))
@@ -97,7 +101,29 @@
                                    :title "1 changes"
                                    :run run1
                                    :previous-run run2)))
-       (assert-that
-        (markup:write-html
-         (report-page :id (oid report)))
-        (contains-string "1 changes"))))))
+       (&body)))))
+
+(test report-page-happy-path ()
+  (with-fixture report-page ()
+    (assert-that
+     (markup:write-html
+      (report-page :id (oid report)))
+     (contains-string "1 changes"))))
+
+
+(def-easy-macro get-redirect (&fn fn)
+  (catch 'hunchentoot::handler-done
+    (funcall fn))
+  (hunchentoot:header-out :location))
+
+(test report-page-redirects ()
+  (with-fixture report-page ()
+    (assert-that
+     (get-redirect ()
+       (report-page :id (oid report)))
+     (equal-to nil))
+    (setf (redirect-url company) "https://foo.example.com")
+    (assert-that
+     (get-redirect ()
+       (report-page :id (oid report)))
+     (Contains-string "https://foo.example.com/"))))
