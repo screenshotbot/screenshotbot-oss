@@ -27,11 +27,14 @@
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
   (:import-from #:screenshotbot/dashboard/run-page
+                #:run-page
                 #:render-run-page)
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:easy-macros
-                #:def-easy-macro))
+                #:def-easy-macro)
+  (:import-from #:util/store/object-id
+                #:oid))
 (in-package :screenshotbot/dashboard/test-run-page)
 
 (util/fiveam:def-suite)
@@ -105,3 +108,8 @@
 
       (wrap-snapshot ()
         (render-run-page run2)))))
+
+(test run-page-happy-path
+  (with-fixture state ()
+    (finishes
+     (run-page :id (oid run)))))

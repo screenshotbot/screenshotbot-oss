@@ -115,6 +115,7 @@
 
 (defhandler (run-page :uri "/runs/:id" :method :get) (id name)
   (let* ((run (find-by-oid id 'recorder-run)))
+    (maybe-redirect-for-company (recorder-run-company run))
     (flet ((render ()
              (render-run-page run :name name)))
      (cond
@@ -383,9 +384,8 @@
 
 (defhandler (%advanced-run-page :uri "/runs/:oid/debug") (oid)
   (with-login ()
-    (let ((run (find-by-oid oid 'recorder-run)))
-      (can-view! run)
-      (advanced-run-page :run run))))
+    (can-view! run)
+    (advanced-run-page :run run)))
 
 (deftag run-advanced-menu (&key run)
   (let ((promotion-logs (nibble ()
