@@ -138,7 +138,7 @@
 (defun register-init-hook (name function)
   (setf (alexandria:assoc-value *init-hooks* name) function))
 
-(defmethod render-nibble :around ((self acceptor) (id number))
+(defmethod nibble:nibble-funcall :around ((self acceptor) nibble)
   (%handler-wrap
    (lambda ()
      (call-next-method))))

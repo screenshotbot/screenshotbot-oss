@@ -170,6 +170,19 @@
 (defmethod render-nibble ((plugin nibble-acceptor-mixin) (id string))
   (render-nibble plugin (parse-integer id)))
 
+(defmethod nibble-funcall ((plugin nibble-acceptor-mixin) nibble)
+  (with-slots (once impl args) nibble
+    (when once
+      ;; we need to make sure only one call of this nibble
+      ;; happens.
+      (bt:with-lock-held (*lock*)
+        (when (calledp nibble)
+          (error "Calling nibble multiple times"))
+        (setf (calledp nibble) t)))
+    (let ((args (loop for arg in args
+                      collect (safe-parameter arg))))
+      (apply impl args))))
+
 (defmethod maybe-render-html (self)
   self)
 
@@ -194,41 +207,32 @@
         </body>
         </html>)
        (t
-        (with-slots (impl args session once check-session-p) nibble
-          (let ((args (loop for arg in args
-                            collect (safe-parameter arg))))
-            (flet ((final-render ()
-                     (when once
-                       ;; we need to make sure only one call of this nibble
-                       ;; happens.
-                       (bt:with-lock-held (*lock*)
-                         (when (calledp nibble)
-                           (error "Calling nibble multiple times"))
-                         (setf (calledp nibble) t)))
-                     (apply impl args)))
-              (cond
-                ((and (boundp 'hunchentoot:*request*) check-session-p)
-                 ;; Before we call final-render, we should check
-                 ;; the session and logged in user.
-                 (let ((current-session (current-session)))
-                   (cond
-                     ((not (auth:session= session current-session))
-                      (render-incorrect-session plugin))
-                     ((let ((nibble-user (nibble-user nibble)))
-                        (and
-                         ;; if the nibble was created when they
-                         ;; weren't logged in, and they are logged
-                         ;; in now, that's always okay
-                         nibble-user
-                         (not (eql (auth:request-user hunchentoot:*request*)
-                                   nibble-user))))
-                      (nibble-render-logged-out
-                       hunchentoot:*acceptor*
-                       nibble))
-                     (t
-                      (final-render)))))
-                (t
-                 (final-render)))))))))))
+        (with-slots (session check-session-p) nibble
+          (flet ((final-render ()
+                   (nibble-funcall plugin nibble)))
+            (cond
+              ((and (boundp 'hunchentoot:*request*) check-session-p)
+               ;; Before we call final-render, we should check
+               ;; the session and logged in user.
+               (let ((current-session (current-session)))
+                 (cond
+                   ((not (auth:session= session current-session))
+                    (render-incorrect-session plugin))
+                   ((let ((nibble-user (nibble-user nibble)))
+                      (and
+                       ;; if the nibble was created when they
+                       ;; weren't logged in, and they are logged
+                       ;; in now, that's always okay
+                       nibble-user
+                       (not (eql (auth:request-user hunchentoot:*request*)
+                                 nibble-user))))
+                    (nibble-render-logged-out
+                     hunchentoot:*acceptor*
+                     nibble))
+                   (t
+                    (final-render)))))
+              (t
+               (final-render))))))))))
 
 (defmethod render-incorrect-session ((plugin nibble-acceptor-mixin))
   <html>

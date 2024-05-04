@@ -15,4 +15,5 @@
            #:nibble-id
            #:defnibble
            #:nibble-current-user
-           #:nibble-acceptor-mixin))
+           #:nibble-acceptor-mixin
+           #:nibble-funcall))
