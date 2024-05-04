@@ -282,9 +282,13 @@
   (list
    (get-singleton-company installation)))
 
+(define-condition cant-set-user-companies (error)
+  ()
+  (:report "Can't set user-companies without multi-org-feature"))
+
 (defmethod (setf user-companies-for-installation) (companies (user user) installation)
   (declare (ignore companies user installation))
-  (error "Can't set user-companies with multi-org-feature"))
+  (error 'cant-set-user-companies))
 
 (with-class-validation
   (defclass user-notice (util:object-with-unindexed-oid)
@@ -393,7 +397,15 @@ override user-role."
 
 (defmethod (setf roles:user-role) :after (value (company company) (user user))
   (when value
-    (pushnew company (user-companies user))))
+    (handler-case
+        (pushnew company (user-companies user))
+      (cant-set-user-companies (e)
+        ;;ignored
+        (values)))))
 
 (defmethod (setf roles:user-role) :after ((value null) (company company) (user user))
-  (alexandria:removef (user-companies user)  company))
+  (handler-case
+      (alexandria:removef (user-companies user)  company)
+    (cant-set-user-companies (e)
+      ;; ignored
+      (values))))

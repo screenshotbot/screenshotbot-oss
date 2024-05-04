@@ -2,6 +2,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/api/core
+                #:authenticate-request-from-key
+                #:authenticate-api-request
                 #:result
                 #:api-error
                 #:error-result-message
@@ -22,6 +24,22 @@
                 #:contains-string)
   (:import-from #:util/json-mop
                 #:json-mop-to-string)
+  (:import-from #:util/store/store
+                #:with-test-store)
+  (:import-from #:screenshotbot/testing
+                #:with-installation
+                #:with-test-user)
+  (:import-from #:core/api/model/api-key
+                #:api-key)
+  (:import-from #:util/testing
+                #:with-fake-request)
+  (:import-from #:auth/model/roles
+                #:user-role)
+  (:import-from #:screenshotbot/user-api
+                #:user-companies)
+  (:import-from #:screenshotbot/installation
+                #:multi-org-feature
+                #:installation)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/api/test-core)
 
@@ -113,3 +131,31 @@
 (test api-result-can-be-encoded
   (assert-that (json-mop-to-string (make-instance 'result :success t))
                (contains-string "success")))
+
+(defclass my-installation (multi-org-feature
+                           installation)
+  ())
+
+(def-fixture state ()
+  (with-installation (:installation (make-instance 'my-installation))
+   (with-test-store ()
+     (with-test-user (:user user :company company)
+       (let ((api-key (make-instance 'api-key
+                                     :user user
+                                     :company company)))
+         (&body))))))
+
+(test authenticate-api-request
+  (with-fixture state ()
+    (with-fake-request ()
+      (finishes
+       (authenticate-request-from-key hunchentoot:*request*
+                                      api-key)))))
+
+(test if-you-create-an-api-key-for-a-company-you-no-longer-can-view
+  (with-fixture state ()
+    (with-fake-request ()
+      (setf (user-role company user) nil)
+      (signals auth:no-access-error
+        (authenticate-request-from-key hunchentoot:*request*
+                                       api-key)))))
