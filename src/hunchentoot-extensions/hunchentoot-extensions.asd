@@ -9,6 +9,7 @@
   :depends-on (:hunchentoot
                :str
                :markup
+               :auto-restart
                :quri
                :easy-macros
                :closer-mop
@@ -24,6 +25,7 @@
                (:file "better-easy-handler")
                (:file "postdata")
                (:file "async")
+               (:file "forward")
                (:file "asdf-acceptor")
                (:file "webp")))
 

@@ -26,6 +26,9 @@
                 #:with-tracing)
   (:import-from #:util/events
                 #:push-event)
+  (:import-from #:screenshotbot/model/company
+                #:redirect-url
+                #:maybe-redirect-for-company)
   (:export
    #:defapi
    #:result
@@ -80,9 +83,13 @@
   (setf
    (auth:request-user hunchentoot:*request*) (api-key-user key))
 
-  (auth:can-view! (api-key-company key))
-  (setf
-   (auth:request-account hunchentoot:*request*) (api-key-company key))
+  (let ((company (api-key-company key)))
+    (when (redirect-url company)
+      (hex:forward-request (redirect-url company)))
+    (auth:can-view! company)
+    (setf
+     (auth:request-account hunchentoot:*request*) company))
+
   key)
 
 (defun %funcall-with-api-handling (fn)
