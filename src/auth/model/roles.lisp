@@ -107,9 +107,12 @@
   (bt:with-lock-held (*lock*)
     (let ((role (index-get +user-role-index+ (list user company))))
       (cond
+        ((and role (not value))
+         ;; delete the role
+         (bknr.datastore:delete-object role))
         (role
          (setf (role-type role) value))
-        (t
+        (value
          (make-instance 'user-roles
                         :user user
                         :company company

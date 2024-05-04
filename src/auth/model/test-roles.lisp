@@ -50,6 +50,16 @@
     (setf (user-role :foo :bar) 'standard-member)
     (is-true (has-role-p :foo :bar 'read-only))))
 
+(test deleting-a-role
+  (with-fixture state ()
+    (setf (user-role :foo :bar) 'guest)
+    (is-true (has-role-p :foo :bar 'guest))
+    (setf (user-role :foo :bar) nil)
+    (is-false (has-role-p :foo :bar 'guest))
+    ;; Delete a second time!
+    (setf (user-role :foo :bar) nil)
+    (is-false (has-role-p :foo :bar 'guest))))
+
 (test lookup-by-company-and-index
   (with-fixture state ()
     (setf (user-role :foo :bar) 'guest)
