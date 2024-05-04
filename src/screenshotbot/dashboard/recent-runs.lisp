@@ -44,7 +44,9 @@
 (hex:declare-handler 'run-page)
 
 (defun find-recent-runs ()
-  (runs-for-company (current-company)))
+  (let ((company (current-company)))
+    (can-view! company)
+    (runs-for-company company)))
 
 (deftag conditional-commit (&key repo hash)
 
@@ -152,10 +154,12 @@
 
 (defhandler (nil :uri "/runs/by-tag/:tag") (tag)
   (with-login ()
-   (let ((runs (runs-for-tag (current-company) tag)))
-     (cond
-       ((= 1 (length runs))
-        (hex:safe-redirect
-         (run-link (car runs))))
-       (t
-        (render-recent-runs runs))))))
+    (let ((company (current-company)))
+      (can-view! company)
+      (let ((runs (runs-for-tag company tag)))
+        (cond
+          ((= 1 (length runs))
+           (hex:safe-redirect
+            (run-link (car runs))))
+          (t
+           (render-recent-runs runs)))))))
