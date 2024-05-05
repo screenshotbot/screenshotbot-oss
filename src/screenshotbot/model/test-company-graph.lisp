@@ -87,7 +87,7 @@
         (is (equal "010203040102030401020304" (oid img)))
         (tmpdir:with-tmpdir (dir)
           (finishes
-            (save-images company :output dir))
+            (save-images (company-full-graph company) :output dir))
           (is-true
            (path:-d (path:catdir dir "image-blobs/01/")))
           (is-true

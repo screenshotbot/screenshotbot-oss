@@ -153,10 +153,10 @@ moving a company to a new instance."
      :map-store-objects (lambda (fn)
                           (mapc fn objects)))))
 
-(defun save-images (company &key output)
-  (let ((images (loop for img in (class-instances 'image)
-                      if (eql company (company img))
-                        collect img))
+(defun save-images (objects &key output)
+  (let ((images (loop for obj in objects
+                      if (typep obj 'image)
+                        collect obj))
         (image-blobs (ensure-directories-exist (path:catdir output "image-blobs/"))))
     (pmapc
      (lambda (img)
