@@ -147,6 +147,7 @@ moving a company to a new instance."
                         collect img))
         (image-blobs (ensure-directories-exist (path:catdir output "image-blobs/"))))
     (loop for img in images
+          if (path:-e (image-filesystem-pathname img))
           do (copy-file-fast (image-filesystem-pathname img)
                              (location-for-oid
                               image-blobs
