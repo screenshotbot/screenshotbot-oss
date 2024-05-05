@@ -27,7 +27,10 @@
   (:import-from #:util/copy-file
                 #:copy-file-fast)
   (:import-from #:util/store/object-id
+                #:oid
                 #:oid-array)
+  (:import-from #:util/misc
+                #:safe-ensure-directories-exist)
   (:export
    #:company-graph
    #:company-full-graph))
@@ -151,7 +154,20 @@ moving a company to a new instance."
           do (copy-file-fast (image-filesystem-pathname img)
                              (location-for-oid
                               image-blobs
-                              (oid-array img))))))
+                              (oid-array img))))
+
+    (loop for img in images
+          do (copy-image-cache img :output output))))
+
+(defun copy-image-cache (img &key output)
+  (dolist (size '("300x300" "600x600" "2000x2000"))
+    (let ((args (list (oid img :stringp nil) :suffix size :type "webp")))
+     (let ((src (apply #'location-for-oid #P "image-cache/" args))
+           (dest (apply #'location-for-oid (path:catdir output "image-cache/") args)))
+       (when (path:-e src)
+         (copy-file-fast
+          src
+          (safe-ensure-directories-exist dest)))))))
 
 (defun copy-blobs (objects &key output)
   "unimplemented. I don't think we use this."
