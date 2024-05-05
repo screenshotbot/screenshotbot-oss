@@ -194,8 +194,9 @@ moving a company to a new instance."
 
 (defun copy-keys (output)
   (dolist (key '("aes-128-key.txt" "blowfish-key.txt"))
-    (copy-file-fast (path:catfile (store-directory *store*) key)
-                    (path:catfile output key))))
+    (uiop:copy-file
+     (path:catfile (store-directory *store*) key)
+     (path:catfile output key))))
 
 (defun copy-other-snapshot-files (output)
   #+bknr.cluster
