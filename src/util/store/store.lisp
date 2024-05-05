@@ -478,6 +478,13 @@ that this object directly references."
   (loop for a across x
         collect a))
 
+(defmethod object-neighbors ((x standard-object))
+  (let ((slots (closer-mop:class-slots (class-of x))))
+    (loop for slot in slots
+          for slot-name = (closer-mop:slot-definition-name slot)
+          if (slot-boundp x slot-name)
+            collect (slot-value x slot-name))))
+
 (defmethod find-any-refs (objects)
   "Similar to BKNR.DATASTORE:FIND-REFS, but all elements in the transitive paths from U - O to O.
 
