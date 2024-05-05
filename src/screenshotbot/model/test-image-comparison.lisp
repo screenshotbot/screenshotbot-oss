@@ -14,6 +14,7 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:screenshotbot/model/image-comparison
+                #:image-comparison-after
                 #:image-comparison-result
                 #:find-image-comparison-from-cache
                 #:image-comparison-before
@@ -136,6 +137,12 @@
         (is (equal "foo1"
                    (image-comparison-before (fset:greatest *stored-cache*))))))))
 
+(defun check-for-bad-state ()
+  #+lispworks ;; For reasons I don't yet understand, this failed on SBCL
+  (fset:do-set (imc *stored-cache*)
+    (is-true (image-comparison-before imc))
+    (is-true (image-comparison-after imc))
+    (is-true (image-comparison-result imc))))
 
 (test saving-and-restoring-actual-image-objects
   (with-fixture stored-cache ()
@@ -146,10 +153,12 @@
                (s2 (make-image :pathname im2)))
            (make-image-comparison :before s1 :after s2 :result s2)
            (is (eql 1 (fset:size *stored-cache*)))
+           (check-for-bad-state)
            (util:safe-snapshot)))
        (is (eql 0 (fset:size *stored-cache*)))
        (with-test-store (:dir dir)
-         (is (eql 1 (fset:size *stored-cache*))))))))
+         (is (eql 1 (fset:size *stored-cache*)))
+         (check-for-bad-state))))))
 
 (test finding-image-comparisons
   (with-fixture stored-cache ()
@@ -174,8 +183,10 @@
            (make-image-comparison :before s1 :after s2 :result s2)
            (make-image-comparison :before s2 :after s2 :result s2)
            (is (eql 2 (fset:size *stored-cache*)))
+           (check-for-bad-state)
            (delete-object s1)
            (util:safe-snapshot)))
        (is (eql 0 (fset:size *stored-cache*)))
        (with-test-store (:dir dir)
-         (is (eql 1 (fset:size *stored-cache*))))))))
+         (is (eql 1 (fset:size *stored-cache*)))
+         (check-for-bad-state))))))
