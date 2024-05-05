@@ -13,6 +13,7 @@
   (:import-from #:screenshotbot/model/user
                 #:user-with-email)
   (:import-from #:screenshotbot/model/company
+                #:company-with-name
                 #:company)
   (:import-from #:bknr.datastore
                 #:class-instances
@@ -150,11 +151,16 @@ moving a company to a new instance."
                               (oid-array img))))))
 
 (defun copy-blobs (objects &key output)
-  "unimplemented. I don't think we use this.")
+  "unimplemented. I don't think we use this."
+  nil)
 
 (defun save-graph-and-blobs (company &key output)
-  (let ((objects (company-ful-graph company)))
-    (save-objects objects (ensure-directories-exist
-                           (path:catfile output "snapshot/store-object-subsystem-snapshot")))
-    (save-images company :output output)
-    (copy-blobs objects :output output)))
+  (let ((company (typecase company
+                   (string
+                    (company-with-name company))
+                   (t company))))
+    (let ((objects (company-full-graph company)))
+      (save-objects objects (ensure-directories-exist
+                             (path:catfile output "snapshot/store-object-subsystem-snapshot")))
+      (save-images company :output output)
+      (copy-blobs objects :output output))))
