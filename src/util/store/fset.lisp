@@ -12,7 +12,9 @@
                 #:%read-tag
                 #:%write-tag
                 #:encode-object
-                #:decode-object))
+                #:decode-object)
+  (:import-from #:util/store/store
+                #:object-neighbors))
 (in-package :util/store/fset)
 
 (defmethod decode-object ((code (eql #\F)) stream)
@@ -41,3 +43,14 @@
   (fset:do-map (key val map)
     (encode key stream)
     (encode val stream)))
+
+
+(defmethod object-neighbors ((map fset:map))
+  (let ((ret))
+    (fset:do-map (key val map)
+      (push key ret)
+      (push val ret))
+    ret))
+
+(defmethod object-neighbors ((set fset:set))
+  (fset:convert 'list set))
