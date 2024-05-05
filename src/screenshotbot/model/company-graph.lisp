@@ -39,6 +39,12 @@
    #:company-full-graph))
 (in-package :screenshotbot/model/company-graph)
 
+(defvar *lparallelp* t)
+
+(defun pmapc (fn objs)
+  (funcall (if *lparallelp* #'lparallel:pmapc #'mapc)
+           fn objs))
+
 (defun ignorable-atom (obj)
   "We know these objects can't eventually refer any other objects, so we
 remove these from the graph."
@@ -152,15 +158,15 @@ moving a company to a new instance."
                       if (eql company (company img))
                         collect img))
         (image-blobs (ensure-directories-exist (path:catdir output "image-blobs/"))))
-    (loop for img in images
-          if (path:-e (image-filesystem-pathname img))
-          do (copy-file-fast (image-filesystem-pathname img)
-                             (location-for-oid
-                              image-blobs
-                              (oid-array img))))
-
-    (loop for img in images
-          do (copy-image-cache img :output output))))
+    (pmapc
+     (lambda (img)
+       (when (path:-e (image-filesystem-pathname img))
+         (copy-file-fast (image-filesystem-pathname img)
+                         (location-for-oid
+                          image-blobs
+                          (oid-array img))))
+       (copy-image-cache img :output output))
+     images)))
 
 (defun copy-image-cache (img &key output)
   (dolist (size '("300x300" "600x600" "2000x2000"))
@@ -175,7 +181,7 @@ moving a company to a new instance."
 (defun copy-blobs (objects &key output)
   "As of now, this is mostly needed for commit-graphs"
   (let ((blob-root (ensure-directories-exist (path:catdir output "blob-root/"))))
-    (lparallel:pmapc
+    (pmapc
      (lambda (obj)
        (when (path:-e (blob-pathname obj))
          (copy-file-fast

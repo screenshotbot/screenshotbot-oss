@@ -14,6 +14,7 @@
                 #:with-installation
                 #:with-test-user)
   (:import-from #:screenshotbot/model/company-graph
+                #:*lparallelp*
                 #:save-images
                 #:company-full-graph
                 #:company-graph)
@@ -34,9 +35,10 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-    (with-installation (:installation (make-instance 'multi-org-test-installation))
-     (&body))))
+  (let ((*lparallelp* nil))
+   (with-test-store ()
+     (with-installation (:installation (make-instance 'multi-org-test-installation))
+       (&body)))))
 
 (test happy-path-graph
   (with-fixture state ()
