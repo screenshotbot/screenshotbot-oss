@@ -36,7 +36,8 @@
                 #:safe-ensure-directories-exist)
   (:export
    #:company-graph
-   #:company-full-graph))
+   #:company-full-graph)
+  (:local-nicknames (#:image-comparison #:screenshotbot/model/image-comparison)))
 (in-package :screenshotbot/model/company-graph)
 
 (defvar *lparallelp* t)
@@ -204,7 +205,6 @@ moving a company to a new instance."
             (bknr.cluster/server::data-path *store*)
             "snapshot/snapshot_*/"))))
    (loop for name in (list
-                       "image-comparison-subsystem-snapshot"
                        "random-state"
                        "version-subsystem-snapshot")
          do
@@ -212,7 +212,30 @@ moving a company to a new instance."
                   if (equal (pathname-name src) name)
                     do
                        (log:info "Copying ~a" src)
-                  (uiop:copy-file src (path:catfile output "snapshot/" name))))))
+                       (uiop:copy-file src (path:catfile output "snapshot/" name))))))
+
+(defun save-image-comparison-snapshot (objects output)
+  (let ((ht (make-hash-table)))
+    (dolist (obj objects)
+      (setf (gethash obj ht) t))
+    (let ((res (fset:empty-set))j)
+      (fset:do-set (imc image-comparison::*stored-cache*)
+        (flet ((has? (x) (or
+                          (not x)
+                          (gethash x ht))))
+          (when (and
+                 (has? (image-comparison::image-comparison-before imc))
+                 (has? (image-comparison::image-comparison-after imc))
+                 ;; This is breaking thigs. But for now it ends up
+                 ;; posting an empty image-comparison snapshot. Which
+                 ;; is okay. In the future, it might be that the
+                 ;; company graph is not going through these objects.
+                 (has? (image-comparison::image-comparison-result imc)))
+            (log:info "Copying: ~a" imc)
+            (setf
+             res (fset:with res imc)))))
+      (log:info "Writing: ~a" res)
+      (image-comparison::write-snapshot output res))))
 
 (defun save-graph-and-blobs (company &key output)
   (let ((company (typecase company
@@ -222,6 +245,9 @@ moving a company to a new instance."
     (let ((objects (company-full-graph company)))
       (save-objects objects (ensure-directories-exist
                              (path:catfile output "snapshot/store-object-subsystem-snapshot")))
+      (save-image-comparison-snapshot
+       objects
+       (path:catfile output "snapshot/image-comparison-subsystem-snapshot"))
       (save-images objects :output output)
       (copy-blobs objects :output output)
       (copy-keys output)
