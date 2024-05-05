@@ -210,8 +210,9 @@ If the images are identical, we return t, else we return NIL."
   (fset:do-set (var *stored-cache*)
     (flet ((destroyed? (obj)
              (or (not obj)
-                 (when (typep obj 'store-object)
-                   (object-destroyed-p obj)))))
+                 (and
+                  (typep obj 'store-object)
+                  (object-destroyed-p obj)))))
       (when (or (destroyed? (image-comparison-before var))
                 (destroyed? (image-comparison-after var))
                 (destroyed? (image-comparison-result var)))
@@ -250,7 +251,7 @@ If the images are identical, we return t, else we return NIL."
           (write-imcs stored-cache))))))
 
 (defmethod restore-subsystem ((store bknr.datastore:store) (self image-comparison-subsystem) &key until)
-  (declare (ignore until))
+  (declare (ignore until) (optimize (debug 3)))
   (log:info "Restoring image-comparison subsystem")
   (let ((snapshot-file (store-subsystem-snapshot-pathname store self)))
     (when (probe-file snapshot-file)
@@ -270,7 +271,15 @@ If the images are identical, we return t, else we return NIL."
                                                    (1 t)
                                                    (0 nil)))))
               (let ((objs (loop for i from 0 below size
-                                collect (read-single))))
+                                for obj = (read-single)
+                                ;; When we copy this snapshot to
+                                ;; different server, some images may
+                                ;; not be available.
+                                #+lispworks #+lispworks
+                                if (and
+                                    (image-comparison-before obj)
+                                    (image-comparison-after obj))
+                                  collect obj)))
                 (setf *stored-cache*
                       (fset:convert 'fset:set objs)))))))))
   (log:info "Loaded ~a image-comparison objects" (fset:size *stored-cache*)))
