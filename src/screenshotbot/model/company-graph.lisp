@@ -16,6 +16,9 @@
                 #:company-with-name
                 #:company)
   (:import-from #:bknr.datastore
+                #:blob
+                #:store-object-id
+                #:blob-pathname
                 #:*store*
                 #:store-directory
                 #:class-instances
@@ -170,8 +173,17 @@ moving a company to a new instance."
           (safe-ensure-directories-exist dest)))))))
 
 (defun copy-blobs (objects &key output)
-  "unimplemented. I don't think we use this."
-  nil)
+  "As of now, this is mostly needed for commit-graphs"
+  (let ((blob-root (ensure-directories-exist (path:catdir output "blob-root/"))))
+    (lparallel:pmapc
+     (lambda (obj)
+       (when (path:-e (blob-pathname obj))
+         (copy-file-fast
+          (blob-pathname obj)
+          (path:catfile blob-root (format nil "~a" (store-object-id obj))))))
+     (loop for object in objects
+           if (typep object 'blob)
+             collect object))))
 
 (defun copy-keys (output)
   (dolist (key '("aes-128-key.txt" "blowfish-key.txt"))
