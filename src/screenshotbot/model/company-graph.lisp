@@ -124,16 +124,19 @@ see the full-graph-finds-everything test."
   "Save all the objects related to a company to a snapshot. Useful for
 moving a company to a new instance."
   (let ((objects (company-full-graph company)))
-    (with-open-file (s file
-                       :direction :output
-                       :element-type '(unsigned-byte 8))
-      (snapshot-subsystem-helper
-       (loop for subsystem in (bknr.datastore::store-subsystems bknr.datastore:*store*)
-             if (typep subsystem 'store-object-subsystem)
-               return subsystem)
-       s
-       :map-store-objects (lambda (fn)
-                            (mapc fn objects))))))
+    (save-objects objects file)))
+
+(defun save-objects (objects file)
+  (with-open-file (s file
+                     :direction :output
+                     :element-type '(unsigned-byte 8))
+    (snapshot-subsystem-helper
+     (loop for subsystem in (bknr.datastore::store-subsystems bknr.datastore:*store*)
+           if (typep subsystem 'store-object-subsystem)
+             return subsystem)
+     s
+     :map-store-objects (lambda (fn)
+                          (mapc fn objects)))))
 
 (defun save-images (company &key output)
   (let ((images (loop for img in (class-instances 'image)
@@ -145,3 +148,13 @@ moving a company to a new instance."
                              (location-for-oid
                               image-blobs
                               (oid-array img))))))
+
+(defun copy-blobs (objects &key output)
+  "unimplemented. I don't think we use this.")
+
+(defun save-graph-and-blobs (company &key output)
+  (let ((objects (company-ful-graph company)))
+    (save-objects objects (ensure-directories-exist
+                           (path:catfile output "snapshot/store-object-subsystem-snapshot")))
+    (save-images company :output output)
+    (copy-blobs objects :output output)))
