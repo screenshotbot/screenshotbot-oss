@@ -196,6 +196,24 @@ moving a company to a new instance."
     (copy-file-fast (path:catfile (store-directory *store*) key)
                     (path:catfile output key))))
 
+(defun copy-other-snapshot-files (output)
+  #+bknr.cluster
+  (let ((snapshot-files
+          (directory
+           (path:catfile
+            (bknr.cluster/server::data-path *store*)
+            "snapshot/snapshot_*/"))))
+   (loop for name in (list
+                       "image-comparison-subsystem-snapshot"
+                       "random-state"
+                       "version-subsystem-snapshot")
+         do
+            (loop for src in snapshot-files
+                  if (equal (pathname-name src) name)
+                    do
+                       (log:info "Copying ~a" src)
+                  (uiop:copy-file src (path:catfile output "snapshot/" name))))))
+
 (defun save-graph-and-blobs (company &key output)
   (let ((company (typecase company
                    (string
@@ -204,6 +222,7 @@ moving a company to a new instance."
     (let ((objects (company-full-graph company)))
       (save-objects objects (ensure-directories-exist
                              (path:catfile output "snapshot/store-object-subsystem-snapshot")))
-      (save-images company :output output)
+      (save-images objects :output output)
       (copy-blobs objects :output output)
-      (copy-keys output))))
+      (copy-keys output)
+      (copy-other-snapshot-files output))))
