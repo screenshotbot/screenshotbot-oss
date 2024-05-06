@@ -190,14 +190,24 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
 
 (defvar *unlimited-pool* (make-instance' unlimited-pool))
 
+(defvar *propagated-symbols* nil
+  "A list of symbols whose value will always be propagated to child
+threads.")
+
 (defun make-thread (body &key (pool *unlimited-pool*) name)
-  (make-thread-impl
-   pool
-   (lambda ()
-     (ignore-and-log-errors ()
-       (with-tags (("hostname" (uiop:hostname)))
-         (funcall body))))
-   :name name))
+  (let ((bindings (loop for sym in *propagated-symbols*
+                        if (boundp sym)
+                          collect (cons sym (symbol-value sym)))))
+    (make-thread-impl
+     pool
+     (lambda ()
+       (ignore-and-log-errors ()
+         (with-tags (("hostname" (uiop:hostname)))
+           (progv
+               (mapcar #'car bindings)
+               (mapcar #'cdr bindings)
+            (funcall body)))))
+     :name name)))
 
 (defmethod make-thread-impl ((self unlimited-pool) fn &key name)
   (bt:make-thread

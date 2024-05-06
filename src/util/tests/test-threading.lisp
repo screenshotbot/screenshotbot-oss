@@ -9,6 +9,7 @@
         #:fiveam
         #:util/threading)
   (:import-from #:util/threading
+                #:*propagated-symbols*
                 #:scheduled-future
                 #:schedule-timer
                 #:*trace-stream*
@@ -306,3 +307,30 @@
        (lparallel:force
         (scheduled-future (-100)
           :done)))))
+
+
+(defvar *x*)
+
+(defvar *x-with-default* :global-value)
+
+(test propagated
+  (with-fixture state ()
+    (let ((*propagated-symbols* '(*x*)))
+      (let ((*x* :from-test)
+            (got-val))
+        (let ((thread (make-thread
+                       (lambda ()
+                         (setf got-val *x*)))))
+          (bt:join-thread thread))
+        (is (eql :from-test got-val))))))
+
+(test propagated-even-with-defaults
+  (with-fixture state ()
+    (let ((*propagated-symbols* '(*x-with-default*)))
+      (let ((*x-with-default* :from-test)
+            (got-val))
+        (let ((thread (make-thread
+                       (lambda ()
+                         (setf got-val *x-with-default*)))))
+          (bt:join-thread thread))
+        (is (eql :from-test got-val))))))
