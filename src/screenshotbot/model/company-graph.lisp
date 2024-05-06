@@ -185,7 +185,8 @@ moving a company to a new instance."
     (pmapc
      (lambda (obj)
        (when (path:-e (blob-pathname obj))
-         (copy-file-fast
+         (log:info "Copying blob: ~a" obj)
+         (uiop:copy-file
           (blob-pathname obj)
           (path:catfile blob-root (format nil "~a" (store-object-id obj))))))
      (loop for object in objects
