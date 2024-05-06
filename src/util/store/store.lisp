@@ -463,10 +463,10 @@ that this object directly references."
 
 (defmethod object-neighbors ((x cons))
   (loop for item on x
-        if (consp x)
-          collect (car x)
+        if (consp item)
+          collect (car item)
         else
-          collect x))
+          collect item))
 
 (defmethod object-neighbors ((x null))
   nil)

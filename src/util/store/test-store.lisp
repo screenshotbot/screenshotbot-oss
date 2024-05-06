@@ -17,6 +17,7 @@
   (:import-from #:bknr.indices
                 #:hash-index)
   (:import-from #:fiveam-matchers/core
+                #:assert-that
                 #:error-with-string-matching
                 #:signals-error-matching)
   (:import-from #:it.bese.fiveam
@@ -34,6 +35,7 @@
   (:import-from #:util/store/permissive-persistent-class
                 #:permissive-persistent-class)
   (:import-from #:util/store/store
+                #:object-neighbors
                 #:*ensure-directories-cache*
                 #:*object-store*
                 #:*snapshot-hooks*
@@ -47,7 +49,9 @@
                 #:safe-mp-store
                 #:verify-old-class
                 #:with-snapshot-lock
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:fiveam-matchers/lists
+                #:contains-in-any-order))
 (in-package :util/store/test-store)
 
 
@@ -324,3 +328,10 @@
                       'permissive-persistent-class)
     (error-with-string-matching
      "missing slots: (A)")))
+
+
+(test object-neighbors-for-list
+  (assert-that
+   (object-neighbors '(1 2 3))
+   (contains-in-any-order
+     1 2 3)))
