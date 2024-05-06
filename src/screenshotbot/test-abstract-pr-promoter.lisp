@@ -81,7 +81,9 @@
   (:import-from #:screenshotbot/diff-report
                 #:diff-report-empty-p)
   (:import-from #:screenshotbot/model/batch
-                #:find-or-create-batch))
+                #:find-or-create-batch)
+  (:import-from #:util/threading
+                #:make-thread))
 (in-package :screenshotbot/test-abstract-pr-promoter)
 
 
@@ -252,7 +254,7 @@
                                     :run-retriever (make-instance 'controlled-run-retreiver
                                                                   :promise promise)))
            (done nil)
-           (thread (bt:make-thread
+           (thread (make-thread
                     (lambda ()
                       (maybe-promote promoter run)
                       (setf done t)))))
