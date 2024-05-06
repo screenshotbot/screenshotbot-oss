@@ -10,15 +10,25 @@
   (:export
    #:abstract-installation
    #:*installation*
-   #:installation-domain))
+   #:installation-domain
+   #:installation-name))
 (in-package :core/installation/installation)
 
 (defclass abstract-installation ()
   ((domain :initarg :domain
            :initform "https://example.com"
-           :reader installation-domain)))
+           :reader installation-domain)
+   (name :initform :name
+         :initarg :name
+         :reader installation-name
+         :documentation "A symbol representing an installation name. This
+name will be used from data to represent which installation it belongs to.")))
 
 (defmethod installation-domain ((self null))
   nil)
+
+(defvar *secondary-installations* nil
+  "Non default installations, when allowing for multiple installations
+per process.")
 
 (defvar *installation*)
