@@ -9,8 +9,10 @@
   :depends-on (#:util/html2text
                #:lparallel
                #:util/threading
+               #:easy-macros
                #:cl-smtp)
   :components ((:file "installation")
+               (:file "request")
                (:file "auth-provider")
                (:file "mailer")
                (:file "auth")))
@@ -19,4 +21,5 @@
   :serial t
   :depends-on (#:core.installation
                #:util/fiveam)
-  :components ((:file "test-mailer")))
+  :components ((:file "test-mailer")
+               (:file "test-request")))

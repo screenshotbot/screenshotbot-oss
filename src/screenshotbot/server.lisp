@@ -47,6 +47,8 @@
                 #:mark-active-user)
   (:import-from #:util/events
                 #:push-event)
+  (:import-from #:core/installation/request
+                #:with-installation-for-request)
   (:export
    #:defhandler
    #:with-login
@@ -218,26 +220,27 @@
       (t
        (setf (hunchentoot:return-code*) 502)
        (hunchentoot:abort-request-handler))))
-  (with-tags (("hostname" (uiop:hostname)))
-   (let ((*app-template* (make-instance 'screenshotbot-template)))
-     (auth:with-sessions ()
-       (push-analytics-event)
-       (let ((script-name (hunchentoot:script-name request))
-             (util.cdn:*cdn-domain*
-               (installation-cdn (installation))))
-         (cond
-           ((staging-p)
-            (setf (hunchentoot:header-out "Cache-Control") "no-cache"))
-           ((cl-ppcre:scan *asset-regex* script-name)
-            (setf (hunchentoot:header-out "Cache-Control") "max-age=3600000")))
-         (setf (hunchentoot:header-out "X-Frame-Options") "DENY")
-         (when (and
-                (str:starts-with-p "/assets" script-name)
-                (not *is-localhost*))
-           (setf (hunchentoot:header-out
-                  "Access-Control-Allow-Origin")
-                 (installation-domain (installation))))
-         (call-next-method))))))
+  (with-installation-for-request (request)
+   (with-tags (("hostname" (uiop:hostname)))
+     (let ((*app-template* (make-instance 'screenshotbot-template)))
+       (auth:with-sessions ()
+         (push-analytics-event)
+         (let ((script-name (hunchentoot:script-name request))
+               (util.cdn:*cdn-domain*
+                 (installation-cdn (installation))))
+           (cond
+             ((staging-p)
+              (setf (hunchentoot:header-out "Cache-Control") "no-cache"))
+             ((cl-ppcre:scan *asset-regex* script-name)
+              (setf (hunchentoot:header-out "Cache-Control") "max-age=3600000")))
+           (setf (hunchentoot:header-out "X-Frame-Options") "DENY")
+           (when (and
+                  (str:starts-with-p "/assets" script-name)
+                  (not *is-localhost*))
+             (setf (hunchentoot:header-out
+                    "Access-Control-Allow-Origin")
+                   (installation-domain (installation))))
+           (call-next-method)))))))
 
 (defhandler (nil :uri "/force-crash") ()
   (error "ouch"))
