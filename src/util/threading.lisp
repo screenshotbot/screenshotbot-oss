@@ -25,7 +25,8 @@
    #:*warning-count*
    #:with-extras
    #:with-tags
-   #:wait-for-pool)
+   #:wait-for-pool
+   #:*propagated-symbols*)
 )
 (in-package :util/threading)
 

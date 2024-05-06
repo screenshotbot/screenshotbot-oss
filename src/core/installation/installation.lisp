@@ -32,3 +32,5 @@ name will be used from data to represent which installation it belongs to.")))
 per process.")
 
 (defvar *installation*)
+
+(pushnew '*installation* util/threading:*propagated-symbols*)
