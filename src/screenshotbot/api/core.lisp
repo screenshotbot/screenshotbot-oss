@@ -86,7 +86,9 @@
   (let ((company (api-key-company key)))
     (when (redirect-url company)
       (hex:forward-request (redirect-url company)))
-    (auth:can-view! company)
+    ;; Do not check this! Old keys will still be valid against the
+    ;; company!
+    ;;(auth:can-view! company)
     (setf
      (auth:request-account hunchentoot:*request*) company))
 

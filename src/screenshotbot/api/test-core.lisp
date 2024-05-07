@@ -156,6 +156,7 @@
   (with-fixture state ()
     (with-fake-request ()
       (setf (user-role company user) nil)
-      (signals auth:no-access-error
+      ;; The API key might still be used by CI jobs! See T1138
+      (finishes
         (authenticate-request-from-key hunchentoot:*request*
                                        api-key)))))
