@@ -211,19 +211,26 @@ moving a company to a new instance."
           src
           (safe-ensure-directories-exist dest)))))))
 
-(defun copy-blobs (objects &key output)
-  "As of now, this is mostly needed for commit-graphs"
-  (let ((blob-root (ensure-directories-exist (path:catdir output "blob-root/"))))
-    (pmapc
-     (lambda (obj)
-       (when (path:-e (blob-pathname obj))
-         (log:info "Copying blob: ~a" obj)
-         (uiop:copy-file
-          (blob-pathname obj)
-          (path:catfile blob-root (format nil "~a" (store-object-id obj))))))
-     (loop for object in objects
-           if (typep object 'blob)
-             collect object))))
+(defun check-graph (objects)
+  (loop for object in objects
+        if (string-equal :log-file (type-of object))
+          do (error "bad object: ~a" object)))
+
+(auto-restart:with-auto-restart ()
+ (defun copy-blobs (objects &key output)
+   "As of now, this is mostly needed for commit-graphs"
+   (check-graph objects)
+   (let ((blob-root (ensure-directories-exist (path:catdir output "blob-root/"))))
+     (pmapc
+      (lambda (obj)
+        (when (path:-e (blob-pathname obj))
+          (log:info "Copying blob: ~a" obj)
+          (uiop:copy-file
+           (blob-pathname obj)
+           (path:catfile blob-root (format nil "~a" (store-object-id obj))))))
+      (loop for object in objects
+            if (typep object 'blob)
+              collect object)))))
 
 (defun copy-keys (output)
   (dolist (key '("aes-128-key.txt" "blowfish-key.txt"))
@@ -277,12 +284,15 @@ moving a company to a new instance."
                     (company-with-name company))
                    (t company))))
     (let ((objects (company-full-graph company)))
-      (save-objects objects (ensure-directories-exist
-                             (path:catfile output "snapshot/store-object-subsystem-snapshot")))
+      (check-graph objects)
+      (save-objects (copy-seq objects) (ensure-directories-exist
+                               (path:catfile output "snapshot/store-object-subsystem-snapshot")))
       (save-image-comparison-snapshot
-       objects
+       (copy-seq objects)
        (path:catfile output "snapshot/image-comparison-subsystem-snapshot"))
-      (save-images objects :output output)
+      (log:info "Saving images")
+      (save-images (copy-seq objects) :output output)
+      (log:info "Saving blobs")
       (copy-blobs objects :output output)
       (copy-keys output)
       (copy-other-snapshot-files output))))
