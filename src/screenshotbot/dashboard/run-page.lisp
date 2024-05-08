@@ -384,8 +384,9 @@
 
 (defhandler (%advanced-run-page :uri "/runs/:oid/debug") (oid)
   (with-login ()
-    (can-view! run)
-    (advanced-run-page :run run)))
+    (let ((run (find-by-oid  oid 'recorder-run)))
+      (can-view! run)
+      (advanced-run-page :run run))))
 
 (deftag run-advanced-menu (&key run)
   (let ((promotion-logs (nibble ()
