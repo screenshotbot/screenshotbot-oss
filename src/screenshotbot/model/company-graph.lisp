@@ -68,13 +68,22 @@ remove these from the graph."
   (unless (adminp (screenshotbot/model/note::user note))
     (call-next-method)))
 
+(defun all-starting-store-objects ()
+  (let ((all (bknr.datastore:all-store-objects)))
+    (loop for obj in all
+          if (not
+              (or
+               (typep obj 'gatekeeper/gatekeeper::gatekeeper)
+               (typep obj 'gatekeeper/gatekeeper::access-control)))
+            collect obj)))
+
 (defun reverse-graph (&key (undirected nil))
   "Creates the graph as a hash-table."
   (let ((graph (make-hash-table)))
     (let ((seen (make-hash-table))
           (queue (make-array 0 :adjustable t :fill-pointer t))
           (start 0))
-      (loop for obj in (bknr.datastore:all-store-objects) do
+      (loop for obj in (all-starting-store-objects) do
         (vector-push-extend obj queue))
       (loop while (< start (length queue))
             for obj = (aref queue (1- (incf start)))
