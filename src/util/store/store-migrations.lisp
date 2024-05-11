@@ -42,6 +42,7 @@
   (setf *snapshot-store-version* version))
 
 (defun run-migration-for-version (version)
+  (format t "Current thread is: ~a~%" (bt:current-thread))
   (let ((migration (assoc-value *migrations* version)))
     (cond
       (migration
