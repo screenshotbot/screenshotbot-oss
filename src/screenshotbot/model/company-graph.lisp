@@ -68,6 +68,11 @@ remove these from the graph."
   (unless (adminp (screenshotbot/model/note::user note))
     (call-next-method)))
 
+(defmethod object-neighbors-for-graph ((self screenshotbot/model/screenshot::lite-screenshot))
+  (list*
+   (screenshotbot/model/image:find-image-by-oid (screenshotbot/model/screenshot::image-oid self))
+   (call-next-method)))
+
 (defun all-starting-store-objects ()
   (let ((all (bknr.datastore:all-store-objects)))
     (loop for obj in all
@@ -277,7 +282,7 @@ moving a company to a new instance."
             (log:info "Copying: ~a" imc)
             (setf
              res (fset:with res imc)))))
-      (log:info "Writing: ~a" res)
+      (log:info "Writing: ~a image-comparisons" (fset:size res))
       (image-comparison::write-snapshot output res))))
 
 (defun save-graph-and-blobs (company &key output)
