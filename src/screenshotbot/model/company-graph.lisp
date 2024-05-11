@@ -300,3 +300,14 @@ moving a company to a new instance."
       (copy-blobs objects :output output)
       (copy-keys output)
       (copy-other-snapshot-files output))))
+
+
+(defun parse-inconsistencies (msg)
+  (let ((lines (str:lines msg)))
+    (iter:iterate (iter:for line iter:in lines)
+      (multiple-value-bind (match parts)
+          (cl-ppcre:scan-to-strings
+           "Reference to inexistent object with id (.*) from"
+           line)
+        (when match
+          (iter:collect (bknr.datastore:store-object-with-id (parse-integer (elt parts 0)))))))))
