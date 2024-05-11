@@ -11,7 +11,10 @@
                 #:object-neighbors
                 #:find-any-refs)
   (:import-from #:screenshotbot/model/user
-                #:user-with-email)
+                #:user-with-email
+                #:adminp)
+  (:import-from #:screenshotbot/model/note
+                #:note)
   (:import-from #:screenshotbot/model/company
                 #:company-with-name
                 #:company)
@@ -42,6 +45,10 @@
 
 (defvar *lparallelp* t)
 
+(defvar *root-company* nil
+  "The root company on which we are doing the current graph work. For
+convenience.")
+
 (defun pmapc (fn objs)
   (funcall (if *lparallelp* #'lparallel:pmapc #'mapc)
            fn objs))
@@ -53,6 +60,13 @@ remove these from the graph."
    (stringp obj)
    (numberp obj)
    (symbolp obj)))
+
+(defmethod object-neighbors-for-graph (x)
+  (object-neighbors x))
+
+(defmethod object-neighbors-for-graph ((note note))
+  (unless (adminp (screenshotbot/model/note::user note))
+    (call-next-method)))
 
 (defun reverse-graph (&key (undirected nil))
   "Creates the graph as a hash-table."
@@ -67,7 +81,7 @@ remove these from the graph."
             do
                (unless (gethash obj seen)
                  (setf (gethash obj seen) t)
-                 (loop for neighbor in (object-neighbors obj)
+                 (loop for neighbor in (object-neighbors-for-graph obj)
                        if (not (ignorable-atom neighbor))
                          do
                             (unless (or
@@ -120,9 +134,10 @@ remove these from the graph."
 indirectly to a company. This is useful for copying a company and its
 objects to a new instances. To see why this is implemented this way,
 see the full-graph-finds-everything test."
-  (let ((graph (reverse-graph :undirected t)))
-    (find-reachable-store-objects graph self :exclude
-                                  (list (user-with-email "arnold@tdrhq.com")))))
+  (let ((*root-company* self))
+   (let ((graph (reverse-graph :undirected t)))
+     (find-reachable-store-objects graph self :exclude
+                                   (list (user-with-email "arnold@tdrhq.com"))))))
 
 (defun find-a-path (src dest)
   "Find a path from src to dest in the undirected full graph. For debugging"
