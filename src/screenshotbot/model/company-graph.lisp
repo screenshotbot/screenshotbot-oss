@@ -120,13 +120,11 @@ remove these from the graph."
    (every (alexandria:rcurry #'typep 'screenshotbot/model/image::mask-rect)
           neighbor)))
 
-(defun find-reachable-store-objects (graph self &key exclude)
+(defun find-reachable-store-objects (graph self)
   (let ((seen (make-hash-table))
         (queue (make-array 0 :adjustable t :fill-pointer t))
         (from (make-hash-table)) ;; where we came from, to generate a path
         (start 0))
-    (loop for e in exclude
-          do (setf (gethash e seen) t))
     (vector-push-extend self queue)
     (loop while (< start (length queue))
           for obj = (aref queue (1- (incf start)))
@@ -157,8 +155,7 @@ objects to a new instances. To see why this is implemented this way,
 see the full-graph-finds-everything test."
   (let ((*root-company* self))
    (let ((graph (reverse-graph :undirected t)))
-     (find-reachable-store-objects graph self :exclude
-                                   (list (user-with-email "arnold@tdrhq.com"))))))
+     (find-reachable-store-objects graph self))))
 
 (defun find-a-path (src dest)
   "Find a path from src to dest in the undirected full graph. For debugging"
@@ -216,6 +213,7 @@ moving a company to a new instance."
           (safe-ensure-directories-exist dest)))))))
 
 (defun check-graph (objects)
+  #+nil
   (loop for object in objects
         if (string-equal :log-file (type-of object))
           do (error "bad object: ~a" object)))
