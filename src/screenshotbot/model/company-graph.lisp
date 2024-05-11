@@ -109,12 +109,16 @@ remove these from the graph."
 (defmethod company-graph ((self company))
   (call-next-method))
 
-(defmethod should-continue-traversing-p (x)
+(defmethod should-continue-traversing-p (obj neighbor)
   "Should we keep traversing when we're at this object?"
   t)
 
-(defmethod should-continue-traversing-p ((x screenshotbot/model/screenshot-key::screenshot-key))
-  nil)
+(defmethod should-continue-traversing-p ((x screenshotbot/model/screenshot-key::screenshot-key)
+                                         neighbor)
+  (and
+   (listp neighbor)
+   (every (alexandria:rcurry #'typep 'screenshotbot/model/image::mask-rect)
+          neighbor)))
 
 (defun find-reachable-store-objects (graph self &key exclude)
   (let ((seen (make-hash-table))
@@ -129,12 +133,12 @@ remove these from the graph."
           do
              (unless (gethash obj seen)
                (setf (gethash obj seen) t)
-               (when (should-continue-traversing-p obj)
-                 (loop for neighbor in (gethash obj graph)
+               (loop for neighbor in (gethash obj graph)
+                     if (should-continue-traversing-p obj neighbor)
                        do
                           (unless (gethash neighbor from)
                             (setf (gethash neighbor from) obj))
-                          (vector-push-extend neighbor queue)))))
+                          (vector-push-extend neighbor queue))))
     (values
      (loop for obj being the hash-keys of seen
            if (typep obj 'bknr.datastore:store-object)
