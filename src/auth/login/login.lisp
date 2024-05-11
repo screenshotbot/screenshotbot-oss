@@ -18,6 +18,7 @@
                 #:auth-providers
                 #:default-oidc-provider)
   (:import-from #:core/installation/installation
+                #:site-alert
                 #:*installation*)
   (:import-from #:markup/markup
                 #:deftag
@@ -105,6 +106,7 @@
       <auth-template>
 
         <div class="account-pages mt-5 mb-5">
+          ,(site-alert *installation*)
           ,(progn alert)
           <div class="card">
 

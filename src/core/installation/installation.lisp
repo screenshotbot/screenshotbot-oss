@@ -34,3 +34,6 @@ per process.")
 (defvar *installation*)
 
 (pushnew '*installation* util/threading:*propagated-symbols*)
+
+(defmethod site-alert (installation)
+  nil)

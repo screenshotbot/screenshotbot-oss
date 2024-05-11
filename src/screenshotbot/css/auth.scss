@@ -34,7 +34,9 @@
     .alert {
         width: 49.3rem;
 
-        background: #dd5068;
+        .alert-danger {
+            background: #dd5068;
+        }
 
         padding: 1em;
         h4 {

@@ -51,6 +51,7 @@
   (:import-from #:core/ui/template
                 #:render-template)
   (:import-from #:core/installation/installation
+                #:site-alert
                 #:installation-domain))
 
 (named-readtables:in-readtable markup:syntax)
@@ -142,6 +143,9 @@
         ;; fix this, I shouldn't need this, but it breaks the CSS if
         ;; it isn't here.
         <div id= "user-notice-list" class= "row" />))
+
+    ,(site-alert (installation))
+
               ,@children
             </div> <!-- container -->
 
