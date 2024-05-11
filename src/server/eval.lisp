@@ -75,7 +75,7 @@
                      (dbg:ide-eval-form-in-remote
                       final-expr
                       :output-stream *standard-output*
-                      :timeout 300
+                      :timeout 1200
                       :connection conn)
                    (ignore-errors
                     (write-string (uiop:read-file-string tmp)))
