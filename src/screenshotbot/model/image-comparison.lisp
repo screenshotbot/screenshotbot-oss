@@ -72,6 +72,8 @@
                 #:store-object)
   (:import-from #:util/store/store
                 #:all-subsystem-objects)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -295,3 +297,10 @@ If the images are identical, we return t, else we return NIL."
   (setf *stored-cache* (fset:empty-set)))
 
 (defsubsystem image-comparison-subsystem :priority 20)
+
+(def-store-migration ("Add company slot to previous results" :version 11)
+  (fset:do-set (imc *stored-cache*)
+    (alexandria:when-let ((after (image-comparison-after imc))
+                          (result (image-comparison-result imc)))
+      (unless (company result)
+        (setf (company result) (company after))))))
