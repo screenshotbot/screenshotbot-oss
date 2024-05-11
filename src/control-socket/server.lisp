@@ -35,7 +35,8 @@
         (let ((socket (unix-sockets:accept-unix-socket (socket self))))
           (make-thread
            (lambda ()
-            (dispatch-request self socket)))))
+             (dispatch-request self socket))
+           :name "control-socket-worker-thread")))
     (stop-control-socket ()
       (log:info "Stopping supervisor")
       (unix-sockets:close-unix-socket (socket self)))))
