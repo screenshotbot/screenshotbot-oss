@@ -253,7 +253,7 @@ moving a company to a new instance."
                   if (equal (pathname-name src) name)
                     do
                        (log:info "Copying ~a" src)
-                       (uiop:copy-file src (path:catfile output "snapshot/" name))))))
+                       (uiop:copy-file src (path:catfile output "current/" name))))))
 
 (defun save-image-comparison-snapshot (objects output)
   (let ((ht (make-hash-table)))
@@ -286,10 +286,10 @@ moving a company to a new instance."
     (let ((objects (company-full-graph company)))
       (check-graph objects)
       (save-objects (copy-seq objects) (ensure-directories-exist
-                               (path:catfile output "snapshot/store-object-subsystem-snapshot")))
+                               (path:catfile output "current/store-object-subsystem-snapshot")))
       (save-image-comparison-snapshot
        (copy-seq objects)
-       (path:catfile output "snapshot/image-comparison-subsystem-snapshot"))
+       (path:catfile output "current/image-comparison-subsystem-snapshot"))
       (log:info "Saving images")
       (save-images (copy-seq objects) :output output)
       (log:info "Saving blobs")
