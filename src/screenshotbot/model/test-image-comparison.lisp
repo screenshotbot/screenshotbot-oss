@@ -45,6 +45,8 @@
                 #:with-wand)
   (:import-from #:bknr.datastore
                 #:delete-object)
+  (:import-from #:screenshotbot/model/company
+                #:company)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#:fli #:util/fake-fli)))
@@ -104,6 +106,26 @@
         ;; We used to test that this object is the same as before, but
         ;; with sqlite that might no longer be the case.
         (is-true (find-image-comparison-on-images before after))))))
+
+(test propagates-company
+  (with-fixture state ()
+    (let ((before (make-image :pathname im1 :company :company-1))
+          (after (make-image :pathname im2 :company :company-2)))
+      (let ((result (find-image-comparison-on-images before after)))
+        (is
+         (eql
+          :company-2
+          (company (image-comparison-result result)))))))
+  ;; What if we swap the before and after? As implemented now, order
+  ;; matters.
+  (with-fixture state ()
+    (let ((before (make-image :pathname im1 :company :company-1))
+          (after (make-image :pathname im2 :company :company-2)))
+      (let ((result (find-image-comparison-on-images after before #| here |#)))
+        (is
+         (eql
+          :company-1
+          (company (image-comparison-result result))))))))
 
 
 (def-easy-macro with-file-copy (&binding result file &fn fn)

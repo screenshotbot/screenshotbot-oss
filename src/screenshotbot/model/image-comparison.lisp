@@ -168,7 +168,8 @@ If the images are identical, we return t, else we return NIL."
                             before
                             after
                             p)))
-         (let* ((image (make-image :pathname p)))
+         (let* ((image (make-image :pathname p
+                                   :company (company after))))
            (make-image-comparison
             :before before
             :after after
