@@ -36,6 +36,7 @@
                 #:oid
                 #:oid-array)
   (:import-from #:util/misc
+                #:?.
                 #:safe-ensure-directories-exist)
   (:export
    #:company-graph
@@ -70,7 +71,7 @@ remove these from the graph."
 
 (defmethod object-neighbors-for-graph ((self screenshotbot/model/screenshot::lite-screenshot))
   (list*
-   (screenshotbot/model/image:find-image-by-oid (screenshotbot/model/screenshot::image-oid self))
+   (?. screenshotbot/model/image:find-image-by-oid (screenshotbot/model/screenshot::image-oid self))
    (call-next-method)))
 
 (defun all-starting-store-objects ()
