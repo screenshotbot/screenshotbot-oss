@@ -9,10 +9,17 @@
         #:fiveam
         #:encrypt)
   (:import-from #:encrypt
+                #:add-padding
+                #:encrypt-number
                 #:*aes-128-cipher*
                 #:get-blowfish-cipher
                 #:*blowfish-cipher*
                 #:blowfish-key)
+  (:import-from #:fiveam-matchers/core
+                #:equal-to
+                #:assert-that)
+  (:import-from #:fiveam-matchers/strings
+                #:starts-with)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :encrypt/test-encrypt)
 
@@ -130,3 +137,27 @@
         (is (equalp
              mongoid
              (decrypt-mongoid "aZ5wagzYQY5Xwt9lowj1JA..")))))))
+
+(test add-padding-doesnt-pad-multiples-of-8
+  (let ((input #(64 13 3 0 0 0 0 0 0 0 0 0 0 0 0 0)))
+    (is (eql 16 (length (add-padding input)))))
+  (let ((input #(64 13 3 0 0 0 0 0 0 0 0 0 0 0 0)))
+    (is (eql 16 (length (add-padding input))))))
+;; (length (encrypt-number 200))
+
+(test encrypt-number
+  (with-fixture state ()
+    (let ((encrypted (encrypt-number 200000)))
+      (assert-that
+       encrypted
+       (starts-with "encn_"))
+      (assert-that
+       (decrypt-number encrypted)
+       (equal-to 200000)))
+    (let ((encrypted (encrypt-number 200000000000000)))
+      (assert-that
+       encrypted
+       (starts-with "encn_"))
+      (assert-that
+       (decrypt-number encrypted)
+       (equal-to 200000000000000)))))

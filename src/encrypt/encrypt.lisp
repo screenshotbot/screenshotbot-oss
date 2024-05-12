@@ -11,7 +11,9 @@
   (:export :encrypt
    :decrypt
            :encrypt-mongoid
-           :decrypt-mongoid))
+           :decrypt-mongoid
+           :encrypt-number
+           :decrypt-number))
 
 (in-package #:encrypt)
 
@@ -66,7 +68,7 @@
 (defun add-padding (a)
   (let ((pad-length 8))
    (let ((l (length a)))
-     (let ((padding (make-array (- pad-length (mod l pad-length)) :initial-element *zero-byte*)))
+     (let ((padding (make-array  (mod (- pad-length (mod l pad-length)) pad-length) :initial-element *zero-byte*)))
        (coerce-to-byte-array (concatenate 'vector a padding))))))
 
 (defun remove-padding (a)
@@ -77,6 +79,7 @@
 
 (defun encrypt (a)
   (encrypt-array (ironclad:ascii-string-to-byte-array a)))
+
 
 (defun encrypt-array (arr &optional (cipher (get-blowfish-cipher))
                             (base64-padding 0)
@@ -109,6 +112,8 @@
     (subseq in-array 0 length)))
 
 (defconstant +mongoid-length+ 12)
+
+(defconstant +num-max-bytes+ 32)
 
 (defun encrypt-mongoid (mongoid)
   "For encrypting mongoids, we use AES-128. Using a 64-bit blowfish key
@@ -144,3 +149,19 @@
     (t
      (decrypt-array encrypted-mongoid +mongoid-length+
                     (get-aes-128-cipher)))))
+
+
+(defun encrypt-number (x)
+  (assert (< x (ash 1 (* 8 +num-max-bytes+))))
+  (format nil "encn_~a"
+          (encrypt-array (cl-intbytes:int->octets x +num-max-bytes+)
+                         (get-aes-128-cipher)
+                         +num-max-bytes+)))
+
+(defun decrypt-number (encrypted-number)
+  (assert (str:starts-with-p "encn_" encrypted-number))
+  (let ((base64 (str:substring 5 nil encrypted-number)))
+    (cl-intbytes:octets->int
+     (decrypt-array base64 +num-max-bytes+
+                    (get-aes-128-cipher))
+     +num-max-bytes+)))
