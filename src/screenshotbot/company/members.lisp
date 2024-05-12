@@ -88,7 +88,6 @@
       <span>,(mailto (user-email user)) </span>
       <span>
         ,(roles:role-friendly-name role)
-        ,(format nil "~a ~a ~a" company user role)
       </span>
       <span>
         ,(when can-delete-p
@@ -120,28 +119,22 @@
       </span>
     </taskie-row>))
 
-(defmethod render-invites (installation company)
-  <markup:merge-tag>
-    ,(taskie-page-title
-      :title "Pending Invites"
-      <a href= "/invite" class= "btn btn-success btn-sm">Invite Member</a>)
-
-    ,(taskie-list
-      :headers '("Name" "Email" "Status" "Actions")
-      :items (all-unused-invites :company company)
-      :checkboxes nil
-      :empty-message "No pending invites"
-      :row-generator (lambda (invite)
-                       (render-invite-row invite company)))
-  </markup:merge-tag>)
-
 (defun members-page ()
   (settings-template
    (let ((company (current-company)))
 
      <markup:merge-tag>
-       ,(render-invites )
+       ,(taskie-page-title
+         :title "Pending Invites"
+         <a href= "/invite" class= "btn btn-success btn-sm">Invite Member</a>)
 
+       ,(taskie-list
+         :headers '("Name" "Email" "Status" "Actions")
+         :items (all-unused-invites :company company)
+         :checkboxes nil
+         :empty-message "No pending invites"
+         :row-generator (lambda (invite)
+                          (render-invite-row invite company)))
 
        ,(taskie-page-title :title "Members" :class "pt-3")
 
