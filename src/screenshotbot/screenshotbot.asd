@@ -336,7 +336,8 @@
                (:file "test-abstract-pr-promoter")
                (:file "test-batch-promoter")
                (:module "company"
-                :components ((:file "test-request")))
+                :components ((:file "test-request")
+                             (:file "test-rename")))
                (:module "webhook"
                 :components ((:file "test-model")
                              (:file "test-webhook")
