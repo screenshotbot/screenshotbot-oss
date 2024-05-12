@@ -287,7 +287,14 @@ parent organization.")))
           "Default")
          (t
           name))))
-    ((singletonp company)
+    ((and
+      (singletonp company)
+      (or
+       (not (slot-boundp company 'name))
+       (not (slot-value company 'name))))
+     ;; TODO: we probably don't need this. We could probably fix this
+     ;; in a migration in the future to make sure that every singleton
+     ;; company has a name.
      "Singleton Company")
     (t
      (let ((name (slot-value company 'name)))
