@@ -160,7 +160,7 @@
 (defhandler (bitbucket-oauth-callback :uri "/bitbucket/oauth-callback") (code state)
   "BitBucket Oauth consumers only allow one single redirect URL, so we don't want to use /account/oauth-callback here. Instead we want to create a custom callback that handles multiple redirect URLs."
   (declare (ignore code))
-  (nibble:render-nibble hunchentoot:*acceptor* state))
+  (nibble:render-nibble hunchentoot:*acceptor* (encrypt:decrypt-number state)))
 
 (defun redirect-to-oauth ()
 
@@ -169,7 +169,7 @@
    (hunchentoot:redirect
     (format nil "https://bitbucket.org/site/oauth2/authorize?client_id=~a&response_type=code&state=~a"
             (bitbucket-plugin-key (bitbucket-plugin))
-            (nibble-id callback)))))
+            (encrypt:encrypt-number (nibble-id callback))))))
 
 (defun disconnect ()
   (let ((actually-disconnect
