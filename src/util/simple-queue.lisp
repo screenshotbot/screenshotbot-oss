@@ -10,20 +10,26 @@
    #:make-queue
    #:dequeue
    #:enqueue
-   #:queue-emptyp))
+   #:queue-emptyp
+   #:queue-length
+   #:queue-items))
 (in-package :util/simple-queue)
 
 (defclass queue ()
   ((head :accessor head
          :initform nil)
    (tail :accessor tail
-         :initform nil)))
+         :initform nil)
+   (length :initform 0
+           :reader queue-length
+           :accessor %queue-length)))
 
 (defun make-queue ()
   (make-instance 'queue))
 
 (defmethod enqueue (value (queue queue))
   (let ((new-tail (cons value nil)))
+    (incf (%queue-length queue))
     (cond
       ((not (head queue))
        (setf (head queue) new-tail)
@@ -36,8 +42,12 @@
   (let ((head (head queue)))
     (setf (head queue) (cdr head))
     (unless (head queue)
+      (decf (%queue-length queue))
       (setf (tail queue) nil))
     (car head)))
 
 (defun queue-emptyp (queue)
   (null (head queue)))
+
+(defun queue-items (queue)
+  (copy-seq (head queue)))
