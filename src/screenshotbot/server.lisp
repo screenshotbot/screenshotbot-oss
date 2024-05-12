@@ -188,7 +188,7 @@
 
 (defmacro defhandler ((name &key uri method intern
                               want-login) params &body body)
-  (multiple-value-bind (body decls) (uiop:parse-body body)
+  (multiple-value-bind (body decls) (uiop:parse-body body :documentation t)
     `(util:better-easy-handler (,name :uri ,uri :method ,method :acceptor-names '(screenshotbot-acceptor)
                                       :intern ,intern)
         ,params
