@@ -303,7 +303,9 @@
                 ;; This let's us monitor that a specific company is
                 ;; using the right domain name. See T1124.
                 :api-hostname (when (boundp 'hunchentoot:*request*)
-                                (hunchentoot:host)))
+                                (or
+                                 (hunchentoot:header-in* :x-forwarded-host)
+                                 (hunchentoot:host))))
     (prepare-recorder-run :run recorder-run)
     (list
      (make-instance 'create-run-response
