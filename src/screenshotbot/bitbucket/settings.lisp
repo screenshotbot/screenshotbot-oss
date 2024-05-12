@@ -57,6 +57,9 @@
                 #:when-let*)
   (:import-from #:screenshotbot/server
                 #:defhandler)
+  (:import-from #:core/installation/installation
+                #:*installation*
+                #:installation-domain)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:refresh-token))
@@ -159,8 +162,26 @@
 
 (defhandler (bitbucket-oauth-callback :uri "/bitbucket/oauth-callback") (code state)
   "BitBucket Oauth consumers only allow one single redirect URL, so we don't want to use /account/oauth-callback here. Instead we want to create a custom callback that handles multiple redirect URLs."
-  (declare (ignore code))
-  (nibble:render-nibble hunchentoot:*acceptor* (encrypt:decrypt-number state)))
+  (cond
+    ((str:containsp "," state)
+     (destructuring-bind (state domain) (str:split "," state)
+       ;; Do we need to validate the domain? Probably not, an attacker
+       ;; would need to know the client secret to misuse the code. We
+       ;; can't force another Screenshotbot server to misuse the code,
+       ;; because we're encrypting the nibble id with the encryption
+       ;; key of the originating domain. However, if we want to be
+       ;; extra safe we could probably add a verification here to make
+       ;; sure that domain is always a subdomain of the current
+       ;; installation-domain.
+       (hunchentoot:redirect
+        (quri:render-uri
+         (quri:make-uri
+          :path "/bitbucket/oauth-callback"
+          :query `(("code" . ,code)
+                   ("state" . ,state))
+          :defaults domain)))))
+    (t
+     (nibble:render-nibble hunchentoot:*acceptor* (encrypt:decrypt-number state)))))
 
 (defun redirect-to-oauth ()
 
@@ -169,7 +190,9 @@
    (hunchentoot:redirect
     (format nil "https://bitbucket.org/site/oauth2/authorize?client_id=~a&response_type=code&state=~a"
             (bitbucket-plugin-key (bitbucket-plugin))
-            (encrypt:encrypt-number (nibble-id callback))))))
+            (format nil "~a,~a"
+                    (encrypt:encrypt-number (nibble-id callback))
+                    (installation-domain *installation*))))))
 
 (defun disconnect ()
   (let ((actually-disconnect
