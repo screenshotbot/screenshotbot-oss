@@ -387,3 +387,6 @@ URL for the company, if there is one."
       (quri:merge-uris
        (quri:uri (hunchentoot:request-uri*))
        redirect-url)))))
+
+(def-store-migration ("Add default :invitation-role" :version 12)
+  (ensure-slot-boundp 'company 'invitation-role :value 'roles:standard-member))
