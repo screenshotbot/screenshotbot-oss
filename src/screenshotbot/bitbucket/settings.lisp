@@ -55,6 +55,8 @@
                 #:company-with-name)
   (:import-from #:alexandria
                 #:when-let*)
+  (:import-from #:screenshotbot/server
+                #:defhandler)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:refresh-token))
@@ -154,6 +156,11 @@
      (cond
        (token token)
        (t (error "could not get token: ~a" response))))))
+
+(defhandler (bitbucket-oauth-callback :uri "/bitbucket/oauth-callback") (code state)
+  "BitBucket Oauth consumers only allow one single redirect URL, so we don't want to use /account/oauth-callback here. Instead we want to create a custom callback that handles multiple redirect URLs."
+  (declare (ignore code))
+  (nibble:render-nibble hunchentoot:*acceptor* state))
 
 (defun redirect-to-oauth ()
 
