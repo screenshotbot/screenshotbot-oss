@@ -38,7 +38,8 @@
                 #:mdi)
   (:import-from #:auth/model/invite
                 #:all-unused-invites)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria)
+                    (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/company/members)
 
 (markup:enable-reader)
@@ -79,17 +80,14 @@
             (member (current-user) (company-admins company))))
          (delete (nibble ()
                    (assert can-delete-p)
-                   (delete-user user company))))
+                   (delete-user user company)))
+         (role (roles:user-role company user)))
     <taskie-row>
       <span><img class= "rounded-circle avatar" src= (user-image-url user) /></span>
       <span >,(user-full-name user)</span>
       <span>,(mailto (user-email user)) </span>
       <span>
-        ,(cond
-           (adminp
-            "Admin")
-           (t
-            "Member"))
+        ,(roles:role-friendly-name role)
       </span>
       <span>
         ,(when can-delete-p

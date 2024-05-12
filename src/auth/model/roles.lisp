@@ -33,7 +33,10 @@
    #:site-admin
    #:admin
    #:users-for-company
-   #:companies-for-user))
+   #:companies-for-user
+   #:hidden-user
+   #:hidden-admin
+   #:role-friendly-name))
 (in-package :auth/model/roles)
 
 ;;;; See https://phabricator.tdrhq.com/w/user_roles/
@@ -63,6 +66,14 @@
 (defclass owner (admin)
   ())
 
+(defclass hidden-user (role)
+  ()
+  (:documentation "Will not show up on the members page"))
+
+(defclass hidden-admin (admin hidden-user)
+  ()
+  (:documentation "Typically manually set for enterprise installs for site-admins"))
+
 (defclass guest (read-only)
   ())
 
@@ -71,6 +82,13 @@
 
 (defclass site-admin (owner)
   ())
+
+(defmethod role-friendly-name ((role role))
+  (cond
+    ((eql (type-of role) 'standard-member)
+     "Member")
+    (t
+     (str:sentence-case (format nil "~a" (type-of role))))))
 
 (defindex +user-role-index+
   'fset-unique-index
