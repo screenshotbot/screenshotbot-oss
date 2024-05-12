@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/misc
+                #:ntrim-list
                 #:random-selection
                 #:safe-with-open-file
                 #:relpath
@@ -107,3 +108,9 @@
   (dotimes (i 100)
     (assert
      (random-selection (list 1 2 3 4 5 6 7 8 9 10) :weight (lambda (x) (* x x))))))
+
+(test ntrim-list
+  (let ((x (list 1 2 3 4 5)))
+    (ntrim-list x 3)
+    (is (equal (list 1 2 3) x))
+    (finishes (ntrim-list nil 3))))

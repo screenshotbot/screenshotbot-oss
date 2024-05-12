@@ -18,7 +18,8 @@
    #:make-mp-hash-table
    #:relpath
    #:safe-with-open-file
-   #:nested-assoc-value))
+   #:nested-assoc-value
+   #:ntrim-list))
 (in-package :util/misc)
 
 
@@ -201,3 +202,12 @@ In the error case, it's hard to distinguish between a real error (e.g.
             else
               do
                  (decf pick (funcall weight obj))))))
+
+(defun ntrim-list (list n)
+  "An in-place trimming of a list. Useful to clear an in-memory log list"
+  (assert (> n 0))
+  (loop for cell on list
+        for i from 1 below n
+        finally
+           (when cell
+             (setf (cdr cell) nil))))

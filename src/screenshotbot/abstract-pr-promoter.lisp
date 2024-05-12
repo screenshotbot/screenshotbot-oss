@@ -90,6 +90,10 @@
                 #:scheduled-future)
   (:import-from #:screenshotbot/model/finalized-commit
                 #:commit-finalized-p)
+  (:import-from #:util/cron
+                #:def-cron)
+  (:import-from #:util/misc
+                #:ntrim-list)
   (:export
    #:check
    #:check-status
@@ -115,7 +119,8 @@
 
 (in-package :screenshotbot/abstract-pr-promoter)
 
-(defvar *logs* nil)
+(defvar *logs* nil
+  "See trim-logs cron job that clears these references.")
 
 (defun print-logs (&key (substring ""))
   (loop for log in *logs*
@@ -528,3 +533,6 @@ Revision. It will be tested with EQUAL"))
   (when (recorder-run-batch run)
     (log:info "calling promotion for unchanged-run")
     (call-next-method)))
+
+(def-cron trim-jobs (:minute 0 :step-hour 1)
+  (ntrim-list *logs* 10000))
