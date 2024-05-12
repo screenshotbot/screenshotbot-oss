@@ -30,6 +30,7 @@
                 #:with-transaction
                 #:store-object-with-id)
   (:import-from #:screenshotbot/model/company
+                #:company-invitation-role
                 #:company-name)
   (:import-from #:screenshotbot/user-api
                 #:current-company
@@ -58,7 +59,8 @@
 (named-readtables:in-readtable markup:syntax)
 
 (defmethod user-can-invite-p (company user)
-  t)
+  (roles:has-role-p company user
+                    (company-invitation-role company)))
 
 (defmethod render-invite-page (installation)
   (%invite-page))
