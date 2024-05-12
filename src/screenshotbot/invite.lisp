@@ -57,12 +57,28 @@
 
 (named-readtables:in-readtable markup:syntax)
 
+(defmethod user-can-invite-p (company user)
+  t)
+
 (defmethod render-invite-page (installation)
   (%invite-page))
 
 (defhandler (invite-page :uri "/invite" :method :get) ()
   (with-login ()
-    (render-invite-page (installation))))
+    (cond
+      ((not (user-can-invite-p (auth:current-company)
+                               (auth:current-user)))
+       (no-permission-to-invite))
+      (t
+       (render-invite-page (installation))))))
+
+(defun no-permission-to-invite ()
+  <simple-card-page>
+    <p>
+    You do not have permission to invite members to this organization.
+    Please contact support@screenshotbot.io if you think this is an error.
+    </p>
+  </simple-card-page>)
 
 (defun %invite-page ()
   <simple-card-page form-action= "/invite" >
@@ -97,6 +113,8 @@
                (push (cons name message) errors))))
       (check :email (not (str:emptyp email))
            "We need an email before we can invite")
+      (check :email (user-can-invite-p (auth:current-company) (auth:current-user))
+             "You do not have the permission to invite a user")
       (check :email (let ((user (user-with-email email)))
                       (or
                        (not user)

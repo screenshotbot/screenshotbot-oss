@@ -26,6 +26,8 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/invite
+                #:invite-page
+                #:user-can-invite-p
                 #:invite-post
                 #:invite-signup-page
                 #:%accept-invite
@@ -116,3 +118,15 @@
              (contains-string
               "A user with that email is already a part"))
             page))))))
+
+(screenshot-test no-permission-to-invite
+  (with-fixture state ()
+    (cl-mock:with-mocks ()
+     (with-installation ()
+       (with-test-user (:user user :company company :logged-in-p t)
+         (cl-mock:answer (user-can-invite-p company user) nil)
+         (let ((page (invite-page)))
+           (assert-that
+            (markup:write-html page)
+            (contains-string "You do not have permission"))
+           page))))))
