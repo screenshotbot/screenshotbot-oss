@@ -149,9 +149,13 @@
      (%redirect-url
       :initarg :redirect-url
       :accessor redirect-url
-      :documentation "Redirect this company to this URL. This is used if we want to migrate a company to a different domain."))
+      :documentation "Redirect this company to this URL. This is used if we want to migrate a company to a different domain.")
+     (invitation-role
+      :initarg :invitation-role
+      :accessor company-invitation-role))
     (:metaclass persistent-class)
-    (:default-initargs :redirect-url nil)))
+    (:default-initargs :redirect-url nil
+                       :invitation-role 'roles:standard-member)))
 
 (defindex +parent-index+
   'fset-set-index
