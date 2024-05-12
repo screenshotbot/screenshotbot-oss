@@ -29,14 +29,16 @@
      (multiple-value-bind (response code headers)
          (drakma:http-request
           dest-uri
-          :additional-headers (loop for (key . value) in (hunchentoot:headers-in request)
-                                    unless (member key '(:content-length :user-agent :host
-                                                         :|:AUTHORITY:|
-                                                         :|:METHOD:|
-                                                         :|:PATH:|
-                                                         :|:SCHEME:|
-                                                         :accept-encoding))
-                                      collect (cons key value))
+          :additional-headers (list*
+                               (cons :x-forwarded-host (hunchentoot:host request))
+                               (loop for (key . value) in (hunchentoot:headers-in request)
+                                     unless (member key '(:content-length :user-agent :host
+                                                          :|:AUTHORITY:|
+                                                          :|:METHOD:|
+                                                          :|:PATH:|
+                                                          :|:SCHEME:|
+                                                          :accept-encoding))
+                                       collect (cons key value)))
           :method (hunchentoot:Request-method request)
           :force-binary t
           :want-stream t
