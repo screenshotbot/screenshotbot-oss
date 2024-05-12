@@ -58,6 +58,13 @@
           :documentation "This is only used for debugging old checks"))
   (:metaclass persistent-class))
 
+(defmethod (setf updated-check-run-check) :around (value audit-log)
+  "The checks are stored in abstract-pr-promoter's *logs* list, so as
+long as that list is not trimmed, we'll hold onto the the check here."
+  (call-next-method
+   (trivial-garbage:make-weak-pointer value)
+   audit-log))
+
 (defmethod describe-audit-log ((self updated-check-run))
   <span>
     Updated check run on commit <commit-tag>,(commit self)</commit-tag>

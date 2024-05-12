@@ -24,6 +24,7 @@
                :auth.login
                :markup
                :gravatar
+               :trivial-garbage
                :core.active-users
                :util/posix
                :util/throttler
