@@ -142,7 +142,10 @@
        ,(taskie-list
          :headers '("" "Name" "Email" "Status" "Actions")
          :class "with-avatar"
-         :items (users-for-company company)
+         :items (remove-if
+                 (lambda (user)
+                   (roles:has-role-p company user 'roles:hidden-user))
+                 (users-for-company company))
          :checkboxes nil
          :empty-message "No users"
          :row-generator (lambda (user)
