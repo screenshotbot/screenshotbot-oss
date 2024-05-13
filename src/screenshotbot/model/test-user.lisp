@@ -183,7 +183,7 @@
       (assert-that (user-role
                     company user)
                    (has-typep 'admin))
-      (setf (company-owner company) user)
+      (setf (slot-value company 'screenshotbot/model/company::owner) user)
       (assert-that (user-role
                     company user)
                    (has-typep 'owner)))))

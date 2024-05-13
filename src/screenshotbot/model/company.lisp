@@ -102,7 +102,6 @@
       :initform nil)
      (owner
       :reader %company-owner
-      :writer (setf company-owner)
       :initform :roles
       :documentation "It used to be the actual company owner, but if it's :roles, then
  the owner will be pulled from user-roles.")
