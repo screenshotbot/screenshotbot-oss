@@ -84,20 +84,6 @@
          (loop for company in companies
                do (delete-object company)))))))
 
-(test remove-reference-from-companies-for-testing
-  (with-fixture state ()
-   (let ((user (make-user)))
-     (let ((company (car (user-companies user))))
-       (unwind-protect
-            (is-true (company-owner company))
-         (delete-object user))
-
-       (unwind-protect
-            (progn
-              (is-false (company-owner company)))
-         (delete-object company))))))
-
-
 (test but-with-regular-installation-singleton-company-is-not-deleted
   (with-test-store ()
    (let ((*installation* (make-instance 'installation)))

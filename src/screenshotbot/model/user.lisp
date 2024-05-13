@@ -250,12 +250,7 @@
   (values))
 
 (defmethod destroy-object :before ((user user))
-  (loop for company in (user-companies user)
-        do
-           (when (and
-                  (not (bknr.datastore::object-destroyed-p company))
-                  (eql user (company-owner company)))
-             (setf (company-owner company) nil))))
+  "TODO: 5/13/24: delete")
 
 (defmethod users-for-company ((company company))
   ;; this is inefficient, but.. it gets the job done and isn't called
