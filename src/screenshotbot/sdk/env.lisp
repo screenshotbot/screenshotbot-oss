@@ -358,7 +358,7 @@ get this from the Git repository directly."))
           (github-repo self)))
 
 (defmethod work-branch ((self github-actions-env-reader))
-  (getenv self "GITHUB_BASE_REF"))
+  (getenv self "GITHUB_HEAD_REF"))
 
 (defparameter *all-readers*
   '(circleci-env-reader
