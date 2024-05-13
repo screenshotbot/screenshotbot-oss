@@ -12,7 +12,6 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/user
-                #:users-for-company
                 #:make-user)
   (:import-from #:screenshotbot/installation
                 #:installation
@@ -68,10 +67,10 @@
                                  :email "bar@example.com")))
       (setf (unaccepted-invites other-user)
             (list invite))
-      (assert-that (users-for-company company)
+      (assert-that (roles:users-for-company company)
                    (is-not (has-item other-user)))
       (%accept-invite invite other-user)
-      (assert-that (users-for-company company)
+      (assert-that (roles:users-for-company company)
                    (has-item other-user)))))
 
 (test if-invite-doesnt-exist-we-get-error-page
