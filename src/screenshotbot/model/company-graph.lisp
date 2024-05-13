@@ -163,9 +163,9 @@ see the full-graph-finds-everything test."
    (let ((graph (reverse-graph :undirected t)))
      (find-reachable-store-objects graph self))))
 
-(defun find-a-path (src dest)
+(defun find-a-path (src dest &key (undirected t))
   "Find a path from src to dest in the undirected full graph. For debugging"
-  (let ((graph (reverse-graph :undirected t)))
+  (let ((graph (reverse-graph :undirected undirected)))
     (multiple-value-bind (reach backlinks)
         (find-reachable-store-objects graph src)
       (declare (ignore reach))
