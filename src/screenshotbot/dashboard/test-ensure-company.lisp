@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/ensure-company
+                #:prepare-company
                 #:ensure-company-or-invite
                 #:%new-company)
   (:import-from #:screenshotbot/testing
@@ -89,3 +90,13 @@
            ;; The body should not be called in this case because the user
            ;; wasn't prepared
            (is (eql 1 val))))))))
+
+(test prepare-company-happy-path
+  (with-test-store ()
+    (with-installation (:installation (make-instance 'my-installation))
+      (with-fake-request ()
+        (auth:with-sessions ()
+         (let ((user (make-instance 'user)))
+           (setf (auth:current-user) user)
+           (finishes
+            (prepare-company user "foobar"))))))))

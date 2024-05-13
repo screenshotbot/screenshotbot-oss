@@ -172,15 +172,18 @@
                           :was-validated t)
          (funcall form)))
       (t
-       (let* ((company (make-instance 'company
-                                      :name name
-                                      :admins (list user)
-                                      :owner user)))
-         (with-transaction ()
-           (push
-            company
-            (user-companies user)))
-         (setf (current-company) company)
-         (push-event :company.new)
-         (populate-company company)
-         (hex:safe-redirect redirect))))))
+       (prepare-company user name)
+       (hex:safe-redirect redirect)))))
+
+(defun prepare-company (user name)
+  (let* ((company (make-instance 'company
+                                 :name name
+                                 :admins (list user)
+                                 :owner user)))
+    (with-transaction ()
+      (push
+       company
+       (user-companies user)))
+    (setf (current-company) company)
+    (push-event :company.new)
+    (populate-company company)))
