@@ -37,7 +37,8 @@
    #:hidden-user
    #:hidden-admin
    #:role-friendly-name
-   #:ensure-role-p))
+   #:ensure-role-p
+   #:company-owner))
 (in-package :auth/model/roles)
 
 ;;;; See https://phabricator.tdrhq.com/w/user_roles/
@@ -147,6 +148,16 @@
   (fset:convert
    'list
    (fset:image #'role-user (user-roles-for-company company))))
+
+(defmethod find-users-for-role (company role)
+  (let ((user-roles (user-roles-for-company company)))
+    )
+  )
+
+(defmethod company-owner (company)
+  (fset:do-set (user-role (user-roles-for-company company))
+    (when (eql 'owner (role-type user-role))
+      (return (role-user user-role)))))
 
 (defmethod companies-for-user (user)
   (fset:convert

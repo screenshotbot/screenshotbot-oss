@@ -17,6 +17,7 @@
   (:import-from #:screenshotbot/model/user
                 #:make-user)
   (:import-from #:screenshotbot/model/company
+                #:company-owner
                 #:sub-company)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
@@ -25,7 +26,8 @@
                 #:multi-org-feature)
   (:import-from #:core/installation/installation
                 #:*installation*
-                #:installation-domain))
+                #:installation-domain)
+  (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/model/test-company)
 
 (util/fiveam:def-suite)
@@ -83,3 +85,27 @@
         (is-true (auth:can-view company-with-redirect-2 user))
         (let ((*installation* (make-instance 'my-installation :domain "https://one.example.com")))
           (is-true (auth:can-view company-with-redirect user)))))))
+
+(test company-owner
+  (with-fixture state ()
+    (let* ((user (make-user))
+           (company (make-instance 'company :owner user)))
+      (is (eql user (company-owner company))))))
+
+(test company-owner-when-owner-is-role
+  (with-fixture state ()
+    (let* ((user (make-user))
+           (company (make-instance 'company :owner :roles)))
+      (make-instance 'roles::user-roles :user user
+                                        :company company
+                                        :role 'roles:owner)
+      (is (eql user (company-owner company))))))
+
+(test company-owner-when-no-owner-exists
+  (with-fixture state ()
+    (let* ((user (make-user))
+           (company (make-instance 'company :owner :roles)))
+      (make-instance 'roles::user-roles :user user
+                                        :company company
+                                        :role 'roles:standard-member)
+      (is (eql nil (company-owner company))))))

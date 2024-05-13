@@ -102,8 +102,11 @@
       :initform nil)
      (owner
       :initarg :owner
-      :accessor company-owner
-      :initform nil)
+      :reader %company-owner
+      :writer (setf company-owner)
+      :initform nil
+      :documentation "It used to be the actual company owner, but if it's :roles, then
+ the owner will be pulled from user-roles.")
      (admins
       :initarg :admins
       :initform nil
@@ -397,3 +400,12 @@ URL for the company, if there is one."
 
 (def-store-migration ("Add default :invitation-role" :version 12)
   (ensure-slot-boundp 'company 'invitation-role :value 'roles:standard-member))
+
+(defmethod company-owner ((self company))
+  (let ((owner (%company-owner self)))
+    (cond
+      ((eql :roles owner)
+       (roles:company-owner self))
+      (t
+       (warn "Using old company-owner schema")
+       owner))))
