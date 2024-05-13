@@ -9,7 +9,8 @@
         #:screenshotbot/model/company
         #:screenshotbot/model/user
         #:screenshotbot/model/recorder-run
-        #:screenshotbot/model/report))
+        #:screenshotbot/model/report)
+  (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/metrics)
 
 (defvar *company* #+nil(company-with-name ""))
@@ -23,7 +24,7 @@
                       (format nil "~a-~a" name interval) )
                      val)))
         (metric :num-users
-                (length (users-for-company *company*)))
+                (length (roles:users-for-company *company*)))
         (let ((runs (loop for run in (fset:convert 'list (runs-for-company *company*))
                           if (local-time:timestamp> (screenshotbot/user-api:created-at run) (local-time:timestamp- (local-time:now) interval :day))
                             collect run)))
