@@ -101,10 +101,9 @@
       :accessor personalp
       :initform nil)
      (owner
-      :initarg :owner
       :reader %company-owner
       :writer (setf company-owner)
-      :initform nil
+      :initform :roles
       :documentation "It used to be the actual company owner, but if it's :roles, then
  the owner will be pulled from user-roles.")
      (admins
@@ -159,6 +158,10 @@
     (:metaclass persistent-class)
     (:default-initargs :redirect-url nil
                        :invitation-role 'roles:standard-member)))
+
+(defmethod initialize-instance :after ((self company) &rest args &key owner)
+  (when (and owner (not (eql :roles owner)))
+    (roles:ensure-has-role self owner 'roles:owner)))
 
 (defindex +parent-index+
   'fset-set-index

@@ -110,3 +110,8 @@
                                         :company company
                                         :role 'roles:standard-member)
       (is (eql nil (company-owner company))))))
+
+(test make-instance-doesnt-accept-invalid-args
+  (with-fixture state ()
+    (signals #+lispworks conditions:unknown-keyword-error #-lispworks error
+      (make-instance 'company :dfdfdfd 2))))
