@@ -410,5 +410,5 @@ URL for the company, if there is one."
       ((eql :roles owner)
        (roles:company-owner self))
       (t
-       (warn "Using old company-owner schema")
+       ;;(warn "Using old company-owner schema")
        owner))))
