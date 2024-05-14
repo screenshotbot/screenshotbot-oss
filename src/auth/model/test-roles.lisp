@@ -11,7 +11,7 @@
                 #:with-test-store)
   (:import-from #:auth/model/roles
                 #:admin
-                #:ensure-role-p
+                #:ensure-has-role
                 #:companies-for-user
                 #:users-for-company
                 #:read-only
@@ -73,12 +73,12 @@
 
 (test ensure-a-role
   (with-fixture state ()
-    (ensure-role-p :foo :bar 'standard-member)
+    (ensure-has-role :foo :bar 'standard-member)
     (is-true (has-role-p :foo :bar 'standard-member))
     (is-false (has-role-p :foo :bar 'admin))
-    (ensure-role-p :foo :bar 'admin)
+    (ensure-has-role :foo :bar 'admin)
     (is-true (has-role-p :foo :bar 'standard-member))
     (is-true (has-role-p :foo :bar 'admin))
-    (ensure-role-p :foo :bar 'standard-member)
+    (ensure-has-role :foo :bar 'standard-member)
     (is-true (has-role-p :foo :bar 'standard-member))
     (is-true (has-role-p :foo :bar 'admin))))

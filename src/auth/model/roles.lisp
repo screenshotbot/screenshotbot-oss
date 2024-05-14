@@ -37,8 +37,8 @@
    #:hidden-user
    #:hidden-admin
    #:role-friendly-name
-   #:ensure-role-p
-   #:company-owner))
+   #:company-owner
+   #:ensure-has-role))
 (in-package :auth/model/roles)
 
 ;;;; See https://phabricator.tdrhq.com/w/user_roles/
@@ -171,7 +171,7 @@ type to check if the user is part of the company at all."
   (when-let ((role (user-role company user)))
     (typep role type)))
 
-(defmethod ensure-role-p (company user type)
+(defmethod ensure-has-role (company user type)
   "Ensures that the user has at least this role. If the role is not
 satisfied, then it is set to this role."
   (unless (has-role-p company user type)
