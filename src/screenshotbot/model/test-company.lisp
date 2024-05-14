@@ -89,7 +89,8 @@
 (test company-owner
   (with-fixture state ()
     (let* ((user (make-user))
-           (company (make-instance 'company :owner user)))
+           (company (make-instance 'company)))
+      (setf (slot-value company 'screenshotbot/model/company::owner) user)
       (is (eql user (company-owner company))))))
 
 (test company-owner-when-owner-is-role
