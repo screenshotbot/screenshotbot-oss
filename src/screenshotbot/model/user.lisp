@@ -383,8 +383,6 @@ override user-role."
    (call-next-method)
    (when (member company (user-companies user))
      (cond
-       ((eql user (company-owner company))
-        (make-instance 'owner))
        ((member user (company-admins company))
         (make-instance 'admin))
        (t
