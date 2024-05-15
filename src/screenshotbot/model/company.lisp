@@ -404,6 +404,18 @@ URL for the company, if there is one."
 (def-store-migration ("Add default :invitation-role" :version 12)
   (ensure-slot-boundp 'company 'invitation-role :value 'roles:standard-member))
 
+(defun ensure-company-using-roles (company)
+  "This is only used for a migration"
+  (when-let ((owner (slot-value company 'owner)))
+    (unless (eql :roles owner)
+      (setf (slot-value company 'owner) :roles)
+      (roles:ensure-has-role company owner 'roles:owner))))
+
+(def-store-migration ("Ensure company owner uses roles" :version 13)
+  (ensure-slot-boundp 'company 'owner)
+  (mapc #'ensure-company-using-roles
+        (bknr.datastore:class-instances 'company)))
+
 (defmethod company-owner ((self company))
   (let ((owner (%company-owner self)))
     (cond

@@ -17,6 +17,7 @@
   (:import-from #:screenshotbot/model/user
                 #:make-user)
   (:import-from #:screenshotbot/model/company
+                #:ensure-company-using-roles
                 #:company-owner
                 #:sub-company)
   (:import-from #:screenshotbot/testing
@@ -115,3 +116,18 @@
   (with-fixture state ()
     (signals #+lispworks conditions:unknown-keyword-error #-lispworks error
       (make-instance 'company :dfdfdfd 2))))
+
+(test ensure-company-using-roles
+  (with-fixture state ()
+    (let* ((user (make-user))
+           (company (make-instance 'company)))
+      (setf (slot-value company 'screenshotbot/model/company::owner) user)
+      (ensure-company-using-roles company)
+      (is (eql :roles (slot-value company 'screenshotbot/model/company::owner)))
+      (is-true
+       (roles:has-role-p company user 'roles:owner))
+
+      ;; what if they're already migrated?
+      (ensure-company-using-roles company)
+      (is-false
+       (roles:has-role-p company :roles 'roles:owner)))))
