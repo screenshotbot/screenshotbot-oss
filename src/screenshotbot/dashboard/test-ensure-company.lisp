@@ -29,7 +29,11 @@
                 #:call-with-ensure-user-prepared
                 #:installation
                 #:multi-org-feature
-                #:one-owned-company-per-user))
+                #:one-owned-company-per-user)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that))
 (in-package :screenshotbot/dashboard/test-ensure-company)
 
 
@@ -99,4 +103,7 @@
          (let ((user (make-instance 'user)))
            (setf (auth:current-user) user)
            (finishes
-            (prepare-company user "foobar"))))))))
+             (prepare-company user "foobar"))
+           (assert-that
+            (user-companies user)
+            (has-length 1))))))))

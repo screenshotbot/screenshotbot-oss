@@ -180,10 +180,6 @@
                                  :name name
                                  :admins (list user)
                                  :owner user)))
-    (with-transaction ()
-      (push
-       company
-       (user-companies user)))
     (setf (current-company) company)
     (push-event :company.new)
     (populate-company company)))
