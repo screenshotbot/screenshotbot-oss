@@ -153,6 +153,10 @@
     (push-event :oauth.signup)
     (hex:safe-redirect (make-oidc-auth-link auth redirect))))
 
+(defgeneric on-user-sign-in (auth user)
+  (:documentation "Called when a user is signed in with SSO. This might be a good time
+to ensure the user is added to a specific company etc.")
+  (:method (auth user)))
 
 (defmethod after-authentication ((auth oidc-provider) &key
                                                        user-id
@@ -166,6 +170,7 @@
                :email email
                :full-name full-name
                :avatar avatar)))
+    (on-user-sign-in auth user)
     (setf (current-user :expires-in (expiration-seconds auth)) user)))
 
 (defun update-oidc-user (oauth-user &key
@@ -222,7 +227,7 @@ user as used in Screenshotbot)"
                       (make-instance 'oidc-user
                                      :user-id user-id
                                      :identifier (oidc-provider-identifier auth)))))
-    (apply 'update-oidc-user
+      (apply 'update-oidc-user
            oidc-user all)))
 
 (defmethod oauth-logo-svg ((auth oidc-provider))
