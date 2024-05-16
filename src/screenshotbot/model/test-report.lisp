@@ -28,7 +28,6 @@
                 #:with-installation
                 #:with-test-user)
   (:import-from #:screenshotbot/user-api
-                #:user-companies
                 #:channel
                 #:can-view)
   (:import-from #:fiveam-matchers/lists
@@ -101,7 +100,7 @@
               (report (make-instance 'report
                                      :run run1
                                      :previous-run run2)))
-         (assert-that (user-companies user)
+         (assert-that (roles:companies-for-user user)
                       (has-item company))
          (is-true user)
          (is-true (can-view report user)))))))
@@ -117,7 +116,7 @@
               (report (make-instance 'report
                                      :run run1
                                      :previous-run run2)))
-         (assert-that (user-companies user)
+         (assert-that (roles:companies-for-user user)
                       (has-item company))
          (is-true user)
          (is-true (can-view report user)))))))
