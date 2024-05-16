@@ -11,7 +11,6 @@
                 #:defsettings)
   (:import-from #:screenshotbot/user-api
                 #:user-image-url
-                #:user-companies
                 #:current-user
                 #:user-email
                 #:user-full-name
@@ -53,14 +52,11 @@
   <a href= (format nil "mailto:~a" x)>,(progn x)</a>)
 
 (defun delete-user (user company &aux (back "/settings/members"))
-  (assert (not (has-role-p company user 'roles:admin)))
+  (assert (not (roles:has-role-p company user 'roles:admin)))
   (confirmation-page
    :yes (nibble ()
-          (with-transaction ()
-            (a:deletef
-             (user-companies user)
-             company)
-            (hex:safe-redirect back)))
+          (setf (roles:user-role company user) nil)
+          (hex:safe-redirect back))
    :no back
    <p>Remove ,(user-full-name user) from this Organization?</p>))
 
