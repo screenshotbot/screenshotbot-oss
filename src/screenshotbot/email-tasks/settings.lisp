@@ -10,7 +10,6 @@
                 #:settings-template
                 #:defsettings)
   (:import-from #:screenshotbot/user-api
-                #:user-companies
                 #:current-user
                 #:personalp
                 #:current-company
@@ -34,7 +33,7 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/email-tasks/settings)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defclass email-setting (store-object)
   ((%user :initarg :user
@@ -81,7 +80,7 @@
     (when company-oid
       (let ((company (find-by-oid company-oid)))
         (check-type company company)
-        (assert (member company (user-companies user)))
+        (assert (roles:has-role-p company user t))
         ;; If we're here, we're probably clicking the email control
         ;; link in an email. Since we need to change the setting for
         ;; specific organization, let's change the organization, and
