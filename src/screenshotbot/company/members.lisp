@@ -18,7 +18,6 @@
                 #:current-company)
   (:import-from #:screenshotbot/model/company
                 #:company-admin-p
-                #:company-admins
                 #:company-owner)
   (:import-from #:screenshotbot/model/user
                 #:users-for-company)
@@ -54,7 +53,7 @@
   <a href= (format nil "mailto:~a" x)>,(progn x)</a>)
 
 (defun delete-user (user company &aux (back "/settings/members"))
-  (assert (not (member user (company-admins company))))
+  (assert (not (has-role-p company user 'roles:admin)))
   (confirmation-page
    :yes (nibble ()
           (with-transaction ()
@@ -77,7 +76,7 @@
          (can-delete-p
            (and
             (not adminp)
-            (member (current-user) (company-admins company))))
+            (company-admin-p company (current-user))))
          (delete (nibble ()
                    (assert can-delete-p)
                    (delete-user user company)))
