@@ -40,7 +40,7 @@
 
 (defmethod company-switcher ((installation multi-org-feature) &key user)
   <markup:merge-tag>
-  ,@ (loop for company in (user-companies user)
+  ,@ (loop for company in (roles:companies-for-user user)
            collect
            (let ((company company))
              <li><a href= (nibble () (company-switch-page company)) class="dropdown-item">
