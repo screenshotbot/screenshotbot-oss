@@ -23,7 +23,6 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/user-api
-                #:user-companies
                 #:user)
   (:import-from #:screenshotbot/installation
                 #:call-with-ensure-user-prepared
@@ -63,7 +62,7 @@
                                        :inviter user
                                        :company company)))
            (let ((test-user (make-instance 'user :full-name "Another user")))
-             (is (eql nil (user-companies test-user)))
+             (is (eql nil (roles:companies-for-user test-user)))
              (let ((ret (ensure-company-or-invite
                          test-user
                          (lambda ()
@@ -105,5 +104,5 @@
            (finishes
              (prepare-company user "foobar"))
            (assert-that
-            (user-companies user)
+            (roles:companies-for-user user)
             (has-length 1))))))))

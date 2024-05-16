@@ -12,8 +12,7 @@
                 #:unaccepted-invites
                 #:current-company
                 #:current-user
-                #:adminp
-                #:user-companies)
+                #:adminp)
   (:import-from #:screenshotbot/installation
                 #:call-with-ensure-user-prepared
                 #:one-owned-company-per-user)
@@ -58,7 +57,7 @@
 
 (defun ensure-company-or-invite (user fn invites)
   (cond
-    ((user-companies user)
+    ((roles:companies-for-user user)
      (funcall fn))
     (invites
      (let ((invite (car invites)))
@@ -161,7 +160,7 @@
               please contact us.")
       (check :name
              (or (adminp user)
-                 (< (length (user-companies user)) 4))
+                 (< (length (roles:companies-for-user user)) 4))
              "You have reached the limit of organizations you can
              create. We have this limit just to prevent abuse. Please
              contact us to create this organization for you."))
