@@ -429,3 +429,8 @@ URL for the company, if there is one."
   (dolist (company (bknr.datastore:class-instances 'company))
     (dolist (user (slot-value company 'admins))
       (roles:ensure-has-role company user 'roles:admin))))
+
+(def-store-migration ("Clear company-admins slot" :version 15)
+  ;; We accidentally forgot to do this in the previous migration
+  (dolist (company (bknr.datastore:class-instances 'company))
+    (setf (slot-value company 'admins) nil)))
