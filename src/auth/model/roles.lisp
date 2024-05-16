@@ -6,6 +6,7 @@
 
 (defpackage :auth/model/roles
   (:use #:cl)
+  (:nicknames #:roles)
   (:import-from #:util/store/store
                 #:defindex)
   (:import-from #:util/store/fset-index
