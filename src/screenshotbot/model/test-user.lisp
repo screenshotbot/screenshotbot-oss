@@ -186,3 +186,16 @@
       (setf (roles:user-role company user) nil)
       (assert-that (user-companies user)
                    (is-not (has-item company))))))
+
+
+(test companies-for-user-from-roles-handles-old-schema
+  "this can probably be deleted in the future once this migration is complete. See T1160."
+  (with-fixture state ()
+    (let* ((company (make-instance 'company :name "TestCompany"))
+           (user (make-instance 'user :email "foo@example.com")))
+      (setf (slot-value user 'screenshotbot/model/user::companies)
+            (list company))
+      (assert-that (user-companies user)
+                   (contains company))
+      (assert-that (roles:companies-for-user user)
+                   (contains company)))))

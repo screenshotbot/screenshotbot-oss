@@ -397,3 +397,8 @@ override user-role."
     (cant-set-user-companies (e)
       ;; ignored
       (values))))
+
+(defmethod roles:companies-for-user :around ((user user))
+  (union
+   (call-next-method)
+   (%user-companies user)))
