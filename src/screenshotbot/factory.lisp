@@ -121,10 +121,6 @@
 (defmethod screenshotbot/model/user:user-full-name ((u test-user))
   "Arnold Noronha")
 
-(Defmethod screenshotbot/model/user:user-companies ((u test-user))
-  (list
-   *company*))
-
 (defmethod screenshotbot/model/user:adminp ((u test-user))
   nil)
 
