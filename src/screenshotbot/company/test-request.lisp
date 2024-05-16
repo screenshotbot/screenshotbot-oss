@@ -41,6 +41,10 @@
                 #:with-installation)
   (:import-from #:util/testing
                 #:with-fake-request)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/company/test-request)
 
@@ -60,7 +64,10 @@
     (let ((*installation* (make-instance 'installation)))
       (prepare-singleton-company)
       (is-true (get-singleton-company *installation*))
-      (is-true (guess-best-company nil (make-instance 'user))))))
+      (let ((user (make-instance 'user)))
+        (assert-that (roles:companies-for-user user)
+                     (has-length 1))
+        (is-true (guess-best-company nil user))))))
 
 (defclass multi-org (multi-org-feature
                      installation)

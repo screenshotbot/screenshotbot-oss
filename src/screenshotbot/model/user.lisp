@@ -401,4 +401,4 @@ override user-role."
 (defmethod roles:companies-for-user :around ((user user))
   (union
    (call-next-method)
-   (%user-companies user)))
+   (user-companies user)))

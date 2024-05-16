@@ -12,7 +12,6 @@
                 #:multi-org-feature)
   (:import-from #:screenshotbot/user-api
                 #:created-at
-                #:user-companies
                 #:can-view)
   (:import-from #:screenshotbot/model/user
                 #:user-personal-company)
@@ -37,9 +36,9 @@
    (if (and company (can-view company user))
        company
        (or
-        (most-recent-company (user-companies user))
+        (most-recent-company (roles:companies-for-user user))
         (user-personal-company user)
-        (car (user-companies user))))))
+        (car (roles:companies-for-user user))))))
 
 (defun most-recent-company (companies)
   "Returns the most recently updated company in the list. If none are
