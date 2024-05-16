@@ -128,9 +128,6 @@
 (defmethod screenshotbot/model/user:adminp ((u test-user))
   nil)
 
-(defmethod screenshotbot/model/company:company-admins ((c test-company))
-  nil)
-
 (defmethod screenshotbot/model/user:unaccepted-invites ((u test-user))
   nil)
 
