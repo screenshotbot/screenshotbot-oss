@@ -20,7 +20,6 @@
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:screenshotbot/model/company
-                #:company-admins
                 #:company-owner)
   (:import-from #:screenshotbot/server
                 #:*domain*)
@@ -55,13 +54,12 @@
 
 (defun %run-now (project)
   (let ((company (company project)))
-   (actually-run-now
-    project
-    :user (or
-           (company-owner company)
-           (car (company-admins company)))
-    :company company
-    :host (installation-domain (installation)))))
+    (assert (company-owner company))
+    (actually-run-now
+     project
+     :user (company-owner company)
+     :company company
+     :host (installation-domain (installation)))))
 
 (defun update-next-job-at (project)
   (with-transaction ()

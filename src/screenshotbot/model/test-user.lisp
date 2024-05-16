@@ -19,7 +19,6 @@
                 #:prepare-singleton-company
                 #:personalp
                 #:company
-                #:company-admins
                 #:company-owner)
   (:import-from #:screenshotbot/installation
                 #:multi-org-feature
@@ -76,9 +75,7 @@
             (is (equal 1 (length companies)))
             (let ((company (car companies)))
               (is-true (personalp company))
-              (is (equal (list user)
-                         (company-admins company))))
-            (pass))
+              (is-true (roles:has-role-p company user 'roles:admin))))
        (let ((companies (user-companies user)))
          (delete-object user)
          (loop for company in companies
@@ -95,8 +92,8 @@
                   companies))
        (loop for company in (bknr.datastore:store-objects-with-class 'company)
              do
-                (is (not (member user (ignore-errors (company-admins company)))))
-                (is (not (eql user (ignore-errors (company-owner company))))))
+                (is-false (roles:has-role-p company user 'roles:admin))
+                (is-false (roles:has-role-p company user 'roles:owner)))
        (delete-object user)
        (pass)))))
 
@@ -177,7 +174,7 @@
                     company user)
                    (has-typep 'standard-member))
       (is-false (company-admin-p company user))
-      (setf (company-admins company)
+      (setf (slot-value company 'screenshotbot/model/company::admins)
             (list user))
       (is-true (company-admin-p company user))
       (assert-that (user-role
