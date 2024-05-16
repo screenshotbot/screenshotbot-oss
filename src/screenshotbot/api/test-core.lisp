@@ -35,8 +35,6 @@
                 #:with-fake-request)
   (:import-from #:auth/model/roles
                 #:user-role)
-  (:import-from #:screenshotbot/user-api
-                #:user-companies)
   (:import-from #:screenshotbot/installation
                 #:multi-org-feature
                 #:installation)
