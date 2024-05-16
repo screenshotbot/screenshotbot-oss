@@ -26,6 +26,8 @@
                 #:screenshot-test)
   (:import-from #:util/testing
                 #:with-fake-request)
+  (:import-from #:screenshotbot/model/user
+                #:make-user)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/web-build/test-project)
 
@@ -36,7 +38,8 @@
   (with-installation ()
    (with-test-store ()
      (cl-mock:with-mocks ()
-       (let* ((company (make-instance 'company))
+       (let* ((user (make-user))
+              (company (make-instance 'company :owner user))
               (project (make-instance 'web-project :name "foobar"
                                                    :company company)))
          (&body))))))

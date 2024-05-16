@@ -91,8 +91,7 @@
                 #:invalid-cron-expr
                 #:cron-parse-expr)
   (:import-from #:screenshotbot/model/company
-                #:company-owner
-                #:company-admins)
+                #:company-owner)
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:installation-domain)
@@ -107,7 +106,8 @@
   (:local-nicknames (#:a #:alexandria)
                     (#:integration #:screenshotbot/replay/integration)
                     (#:frontend #:screenshotbot/replay/frontend)
-                    (#:data #:bknr.datastore))
+                    (#:data #:bknr.datastore)
+                    (#:roles #:auth/model/roles))
   (:export
    #:browser
    #:get-browsers
@@ -563,11 +563,10 @@
      (warn "Stale scheduled job for project: ~a" scheduled-jobs:*scheduled-job*))
     (t
      (let ((company (company project)))
+       (assert (company-owner company))
        (actually-run-now
         project
-        :user (or
-               (company-owner company)
-               (car (company-admins company)))
+        :user (company-owner company)
         :company company
         :host (installation-domain (installation)))))))
 
