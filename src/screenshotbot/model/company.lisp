@@ -66,7 +66,6 @@
    #:company-admins
    #:jira-config
    #:phabricator-config
-   #:all-companies
    #:slack-config
    #:phabricator-config-for-company
    #:company-with-singletonp
@@ -267,13 +266,6 @@ parent organization.")))
       :initform nil
       :accessor enabledp))
     (:metaclass persistent-class)))
-
-;; eh, we could do better
-(defun all-companies ()
-  (remove-duplicates
-   (loop for user in (all-users)
-         appending (user-companies user))))
-
 
 (defmethod (setf company-admins) (val (company company))
   ;; always have at least one admin
