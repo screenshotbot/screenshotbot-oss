@@ -63,8 +63,6 @@
   (:import-from #:screenshotbot/user-api
                 #:current-company
                 #:adminp)
-  (:import-from #:screenshotbot/model/company
-                #:company-admins)
   (:import-from #:util/misc
                 #:?.)
   (:import-from #:screenshotbot/model/view
@@ -87,6 +85,8 @@
                 #:find-downloadable-run)
   (:import-from #:screenshotbot/model/channel
                 #:all-active-runs)
+  (:import-from #:screenshotbot/model/company
+                #:company-admin-p)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -344,8 +344,8 @@
            class= "btn btn-secondary">Debug Git Graph</a>
         ,(when (and (activep run)
                     (or
-                     (adminp (current-user))
-                     (member (current-user) (company-admins (current-company)))))
+                     (company-admin-p (current-company) (current-user))
+                     (adminp (current-user))))
            <a
              href=(nibble () (unpromote-run-flow run))
              class="btn btn-danger" >
