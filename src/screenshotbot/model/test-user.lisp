@@ -173,13 +173,7 @@
       (assert-that (user-role
                     company user)
                    (has-typep 'standard-member))
-      (is-false (company-admin-p company user))
-      (setf (slot-value company 'screenshotbot/model/company::admins)
-            (list user))
-      (is-true (company-admin-p company user))
-      (assert-that (user-role
-                    company user)
-                   (has-typep 'admin)))))
+      (is-false (company-admin-p company user)))))
 
 (test user-companies-is-updated
   "This test could probably removed in the future. It's a backward compatibility test."

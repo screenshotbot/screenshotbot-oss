@@ -29,7 +29,6 @@
   (:import-from #:screenshotbot/login/github
                 #:github-user)
   (:import-from #:screenshotbot/model/company
-                #:company-admins
                 #:company-admin-p
                 #:company
                 #:company-owner
@@ -382,11 +381,7 @@ override user-role."
   (or
    (call-next-method)
    (when (member company (user-companies user))
-     (cond
-       ((member user (company-admins company))
-        (make-instance 'admin))
-       (t
-        (make-instance 'standard-member))))))
+     (make-instance 'standard-member))))
 
 (defmethod (setf roles:user-role) :after (value (company company) (user user))
   (when value
