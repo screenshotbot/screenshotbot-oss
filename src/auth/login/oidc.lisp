@@ -42,6 +42,8 @@
                 #:with-class-validation)
   (:import-from #:util/store/fset-index
                 #:fset-set-index)
+  (:import-from #:core/installation/auth-provider
+                #:on-user-sign-in)
   (:export
    #:access-token-class
    #:access-token-str
@@ -152,11 +154,6 @@
   (nibble ()
     (push-event :oauth.signup)
     (hex:safe-redirect (make-oidc-auth-link auth redirect))))
-
-(defgeneric on-user-sign-in (auth user)
-  (:documentation "Called when a user is signed in with SSO. This might be a good time
-to ensure the user is added to a specific company etc.")
-  (:method (auth user)))
 
 (defmethod after-authentication ((auth oidc-provider) &key
                                                        user-id

@@ -42,3 +42,8 @@ of time."))
 (defgeneric default-oidc-provider (installation)
   (:method (self)
     nil))
+
+(defgeneric on-user-sign-in (auth user)
+  (:documentation "Called when a user is signed in with SSO or login. This might be a
+good time to ensure the user is added to a specific company etc.")
+  (:method (auth user)))
