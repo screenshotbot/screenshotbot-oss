@@ -19,7 +19,6 @@
                 #:object-with-oid)
   (:import-from #:screenshotbot/user-api
                 #:user
-                #:user-companies
                 #:recorder-run-screenshots
                 #:recorder-run-channel
                 #:recorder-previous-run
@@ -387,9 +386,10 @@ associated report is rendered.")
   (publicp (recorder-run-channel run)))
 
 (defmethod can-edit ((run recorder-run) (user user))
-  (member
+  (roles:has-role-p
    (recorder-run-company run)
-   (user-companies user)))
+   user
+   'roles:standard-member))
 
 (defmethod activep ((run recorder-run))
   (let ((channel (recorder-run-channel run)))
