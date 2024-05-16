@@ -423,3 +423,9 @@ URL for the company, if there is one."
       (t
        (warn "Using old company-owner schema")
        owner))))
+
+(def-store-migration ("Ensure company-admins is using roles" :version 14)
+  (ensure-slot-boundp 'company 'admins)
+  (dolist (company (bknr.datastore:class-instances 'company))
+    (dolist (user (slot-value company 'admins))
+      (roles:ensure-has-role company user 'roles:admin))))
