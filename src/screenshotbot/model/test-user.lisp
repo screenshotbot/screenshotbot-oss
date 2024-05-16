@@ -198,4 +198,7 @@
       (assert-that (user-companies user)
                    (contains company))
       (assert-that (roles:companies-for-user user)
+                   (contains company))
+      (setf (roles:user-role company user) 'roles:standard-member)
+      (assert-that (roles:companies-for-user user)
                    (contains company)))))
