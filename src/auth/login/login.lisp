@@ -14,6 +14,7 @@
                 #:current-user
                 #:logged-in-p)
   (:import-from #:core/installation/auth-provider
+                #:on-user-sign-in
                 #:auth-provider-signin-form
                 #:auth-providers
                 #:default-oidc-provider)
@@ -57,7 +58,8 @@
 (defmethod auth-provider-signin-form ((auth-provider standard-auth-provider) redirect)
 
   (let ((result (nibble (email password)
-                  (signin-post :email email
+                  (signin-post auth-provider
+                               :email email
                                :password password
                                :redirect redirect))))
   <form action=result method= "POST" >
@@ -141,7 +143,7 @@
 
     (signin-get :redirect redirect)))
 
-(defun signin-post (&key email password redirect)
+(defun signin-post (auth-provider &key email password redirect)
   (throttle! *throttler*)
   (let (errors
         (user (auth:find-user *installation* :email email)))
@@ -170,6 +172,7 @@
         (signin-get)))
       (t
        (assert (auth:check-password user password))
+       (on-user-sign-in auth-provider user)
        (setf (current-user) user)
        (hex:safe-redirect redirect)))))
 

@@ -67,14 +67,16 @@
        (let ((*installation* (make-instance 'installation)))
          (prepare-singleton-company)
          (catch 'hunchentoot::handler-done
-           (let* ((company (get-singleton-company *installation*)))
+           (let* ((company (get-singleton-company *installation*))
+                  (auth-provider (make-instance 'standard-auth-provider)))
              (unwind-protect
                   (auth:with-sessions ()
-                    (let ((ret (signup-post  :email "arnold@tdrhq.com"
-                                             :password "foobar23"
-                                             :full-name "Arnold Noronha"
-                                             :accept-terms-p t
-                                             :plan :professional)))
+                    (let ((ret (signup-post auth-provider
+                                            :email "arnold@tdrhq.com"
+                                            :password "foobar23"
+                                            :full-name "Arnold Noronha"
+                                            :accept-terms-p t
+                                            :plan :professional)))
                       (error "should not get here: ~s" ret)))
                (bknr.datastore:delete-object company))))))
       (pass))))

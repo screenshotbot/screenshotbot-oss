@@ -15,6 +15,7 @@
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:core/installation/auth-provider
+                #:on-user-sign-in
                 #:auth-provider-signup-form
                 #:auth-providers)
   (:import-from #:core/installation/installation
@@ -73,6 +74,7 @@
   (let* ((invite-email (?. invite-email invite))
          (post (nibble (email password full-name accept-terms-p plan)
                 (signup-post
+                 auth-provider
                  :email email
                  :password password
                  :full-name full-name
@@ -185,7 +187,8 @@ bugs. (See corresponding tests.)"
            (not (str:emptyp (str:trim full-name)))
            "We would really like you to introduce yourself!")))
 
-(defun signup-post (&key email password full-name accept-terms-p plan redirect
+(defun signup-post (auth-provider
+                    &key email password full-name accept-terms-p plan redirect
                       invite)
   (throttle! *signup-throttler* :key (hunchentoot:real-remote-addr))
   (let ((errors))
@@ -239,6 +242,7 @@ bugs. (See corresponding tests.)"
            (with-transaction ()
              (setf (auth:user-password user)
                    password))
+           (on-user-sign-in auth-provider user)
            (setf (current-user) user)
 
            (process-existing-invites user email :current-invite invite)
