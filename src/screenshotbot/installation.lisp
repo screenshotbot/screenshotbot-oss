@@ -44,7 +44,8 @@
    #:pre-compiled-assets
    #:one-owned-company-per-user
    #:call-with-ensure-user-prepared
-   #:replay-password))
+   #:replay-password
+   #:oss-installation))
 (in-package :screenshotbot/installation)
 
 (defclass installation (abstract-installation)
@@ -76,6 +77,9 @@
   ((pre-compiled-assets :reader pre-compiled-assets
                         :initarg :pre-compiled-assets
                         :initform (make-hash-table))))
+
+(defclass oss-installation (installation)
+  ())
 
 (defclass multi-org-feature ()
   ()

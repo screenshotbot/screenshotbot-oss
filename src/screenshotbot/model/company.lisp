@@ -44,6 +44,8 @@
   (:import-from #:core/installation/installation
                 #:installation-domain
                 #:*installation*)
+  (:import-from #:auth/login/roles-auth-provider
+                #:get-company-for-auth-provider)
   (:export
    #:company
    #:company-reports

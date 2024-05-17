@@ -9,6 +9,7 @@
           #:alexandria
           #:screenshotbot/mailer)
   (:import-from #:screenshotbot/installation
+                #:oss-installation
                 #:installation)
   (:import-from #:screenshotbot/github
                 #:github-plugin)
@@ -49,7 +50,7 @@
          (load config.lisp)))
       (t
        (log:info "No config.lisp found")
-       (setf (installation) (make-instance 'installation))))))
+       (setf (installation) (make-instance 'oss-installation))))))
 
 ;;;; I suppose I'm misusing the screenshotbot/config package for bot
 ;;;; this file and for the package the config.lisp is loaded from. In
