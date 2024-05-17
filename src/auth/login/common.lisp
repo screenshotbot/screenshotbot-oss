@@ -26,6 +26,8 @@
   (:import-from #:util/throttler
                 #:throttle!
                 #:throttler)
+  (:import-from #:auth/login/roles-auth-provider
+                #:roles-auth-provider)
   (:export
    #:abstract-oauth-provider
    #:after-create-user
@@ -46,7 +48,8 @@
 
 (named-readtables:in-readtable markup:syntax)
 
-(defclass abstract-oauth-provider (auth-provider)
+(defclass abstract-oauth-provider (auth-provider
+                                   roles-auth-provider)
   ((oauth-name :initarg :oauth-name
                :accessor oauth-name)))
 
@@ -161,7 +164,8 @@
                       children :body-class body-class
                                :simple simple))
 
-(defclass standard-auth-provider (auth-provider)
+(defclass standard-auth-provider (auth-provider
+                                  roles-auth-provider)
   ())
 
 (defmacro with-login ((&key (needs-login t) (signup nil)
