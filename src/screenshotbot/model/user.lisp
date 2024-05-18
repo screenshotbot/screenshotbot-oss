@@ -16,6 +16,7 @@
                 #:password-hash
                 #:user-email)
   (:import-from #:bknr.datastore
+                #:class-instances
                 #:persistent-class
                 #:store-objects-with-class
                 #:with-transaction)
@@ -66,6 +67,10 @@
                 #:admin
                 #:user-role
                 #:standard-member)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
+  (:import-from #:screenshotbot/model/core
+                #:ensure-slot-boundp)
   (:local-nicknames (#:roles #:auth/model/roles))
   (:export
    #:adminp
@@ -411,3 +416,12 @@ override user-role."
   (union
    (call-next-method)
    (user-companies user)))
+
+
+(def-store-migration ("Migrate user-companies to roles" :version 16)
+  "Note we don't clean up the 'companies slot. That can be a future
+migration."
+  (ensure-slot-boundp 'user 'companies)
+  (dolist (user (class-instances 'user))
+    (dolist (company (user-companies user))
+      (roles:ensure-has-role company user 'roles:standard-member))))
