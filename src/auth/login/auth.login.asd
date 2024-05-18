@@ -24,5 +24,6 @@
 (defsystem :auth.login/tests
   :serial t
   :depends-on (:auth.login
-                 :util/fiveam)
+               :fiveam-matchers
+               :util/fiveam)
   :components ((:file "test-roles-auth-provider")))

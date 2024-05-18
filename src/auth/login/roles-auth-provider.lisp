@@ -24,9 +24,13 @@
 
 (defmethod on-user-sign-in :after ((self roles-auth-provider)
                                    user)
-  (let ((company (get-company-for-auth-provider
-                  *installation*
-                  self)))
+  (let ((company (cond
+                   ((company-provider self)
+                    (funcall (company-provider self)))
+                   (t
+                    (get-company-for-auth-provider
+                     *installation*
+                     self)))))
     (when company
       (roles:ensure-has-role company user 'roles:standard-member))))
 
@@ -34,5 +38,4 @@
   "By creating a method that is specialized on installation, we can make
 sure the OSS version behaves a certain way. Technically a little ugly,
 but it's a good API."
-  (when (company-provider self)
-    (funcall (company-provider self))))
+  nil)
