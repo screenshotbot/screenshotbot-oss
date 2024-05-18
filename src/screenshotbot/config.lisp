@@ -9,8 +9,7 @@
           #:alexandria
           #:screenshotbot/mailer)
   (:import-from #:screenshotbot/installation
-                #:oss-installation
-                #:installation)
+                #:oss-installation)
   (:import-from #:screenshotbot/github
                 #:github-plugin)
   (:import-from #:screenshotbot/phabricator
@@ -40,6 +39,13 @@
     (check "~/.config/screenshotbot/config.lisp")
     nil))
 
+
+(defclass installation (oss-installation)
+  ())
+
+(defun (setf installation) (val)
+  (setf (screenshotbot/installation:installation) val))
+
 (defun load-config ()
   "Load an appropriate config.lisp file if it exists"
   (let ((config.lisp (find-config.lisp)))
@@ -50,7 +56,7 @@
          (load config.lisp)))
       (t
        (log:info "No config.lisp found")
-       (setf (installation) (make-instance 'oss-installation))))))
+       (setf (screenshotbot/installation:installation) (make-instance 'oss-installation))))))
 
 ;;;; I suppose I'm misusing the screenshotbot/config package for bot
 ;;;; this file and for the package the config.lisp is loaded from. In
