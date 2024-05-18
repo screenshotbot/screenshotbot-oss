@@ -41,6 +41,8 @@
       (load-config)
       (is-true *loaded*))))
 
+;; TODO(T1171): remove this feature selector
+#+screenshotbot-oss
 (test setf-installation ()
   (with-fixture state ()
     (uiop:with-temporary-file (:pathname config :stream s :type "lisp")

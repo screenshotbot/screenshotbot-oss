@@ -39,10 +39,13 @@
     (check "~/.config/screenshotbot/config.lisp")
     nil))
 
-
+;; TODO(T1171): remove once we restart
+#+screenshotbot-oss
 (defclass installation (oss-installation)
   ())
 
+;; TODO(T1171): remove once we restart
+#+screenshotbot-oss
 (defun (setf installation) (val)
   (setf (screenshotbot/installation:installation) val))
 
