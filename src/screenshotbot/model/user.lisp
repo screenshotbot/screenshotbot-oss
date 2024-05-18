@@ -260,10 +260,11 @@
   "TODO: 5/13/24: delete")
 
 (defmethod users-for-company ((company company))
-  ;; this is inefficient, but.. it gets the job done and isn't called
-  ;; very often.
+  ;; This is currently only used by company/members.lisp. We can
+  ;; replace it with roles:users-for-company once we migrate all the
+  ;; roles. (T1156)
   (loop for user in (all-users)
-        if (member company (user-companies user))
+        if (roles:has-role-p company user t)
           collect user))
 
 (defmethod user-companies ((user user))
