@@ -22,6 +22,7 @@
   (:import-from #:bknr.datastore
                 #:deftransaction)
   (:import-from #:screenshotbot/installation
+                #:oss-installation
                 #:multi-org-feature
                 #:installation)
   (:import-from #:util/store
@@ -428,3 +429,7 @@ URL for the company, if there is one."
   ;; We accidentally forgot to do this in the previous migration
   (dolist (company (bknr.datastore:class-instances 'company))
     (setf (slot-value company 'admins) nil)))
+
+(defmethod get-company-for-auth-provider ((installation oss-installation)
+                                          auth-provider)
+  (get-singleton-company installation))
