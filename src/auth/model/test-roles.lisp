@@ -24,7 +24,9 @@
                 #:has-typep
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
-                #:contains))
+                #:contains)
+  (:import-from #:cl-mock
+                #:answer))
 (in-package :auth/model/test-roles)
 
 (util/fiveam:def-suite)
@@ -82,3 +84,14 @@
     (ensure-has-role :foo :bar 'standard-member)
     (is-true (has-role-p :foo :bar 'standard-member))
     (is-true (has-role-p :foo :bar 'admin))))
+
+(test if-user-role-is-overriden-we-still-write-the-new-role
+  (with-fixture state ()
+    (cl-mock:with-mocks ()
+      (answer (user-role 'foo 'bar) (make-instance 'roles:admin))
+      (ensure-has-role 'foo 'bar 'roles:standard-member)
+      (is (roles:has-role-p 'foo 'bar 'roles:admin)))
+
+    ;; But after we remove the override, we should still have the
+    ;; ensured-role saved.
+    (is (roles:has-role-p 'foo 'bar 'roles:admin))))

@@ -175,5 +175,14 @@ type to check if the user is part of the company at all."
 (defmethod ensure-has-role (company user type)
   "Ensures that the user has at least this role. If the role is not
 satisfied, then it is set to this role."
-  (unless (has-role-p company user type)
-    (setf (user-role company user) type)))
+  ;; user-role may be overriden, but we want to sync it if that's the
+  ;; case.
+  (let ((role (user-role company user))
+        (saved-role (bknr.indices:index-get +user-role-index+
+                                            (list company user))))
+    (cond
+      ((not (typep role type))
+       (setf (user-role company user) type))
+      ((not saved-role)
+       (setf (user-role company user)
+             (type-of role))))))
