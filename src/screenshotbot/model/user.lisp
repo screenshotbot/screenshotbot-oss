@@ -424,4 +424,5 @@ migration."
   (ensure-slot-boundp 'user 'companies)
   (dolist (user (class-instances 'user))
     (dolist (company (user-companies user))
+      (format t "Adding ~a to ~a~%" user company)
       (roles:ensure-has-role company user 'roles:standard-member))))
