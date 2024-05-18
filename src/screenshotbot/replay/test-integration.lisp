@@ -77,6 +77,8 @@
                 #:has-item)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
+  (:import-from #:screenshotbot/model/user
+                #:make-user)
   (:local-nicknames (#:a #:alexandria)
                     (#:integration #:screenshotbot/replay/integration)
                     (#:run-builder #:screenshotbot/replay/run-builder)))
@@ -143,8 +145,8 @@
                                                                     "https://www.google.com" )
                                                        :assets assets))
                     (company (make-instance 'company))
-                    (user (make-instance 'user
-                                         :companies (list company)))
+                    (user (make-user
+                           :companies (list company)))
                     (run (make-instance 'integration:run
                                         :company company
                                         :user user

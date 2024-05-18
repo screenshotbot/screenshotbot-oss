@@ -17,6 +17,7 @@
                 #:installation
                 #:desktop-installation)
   (:import-from #:screenshotbot/model/user
+                #:make-user
                 #:user)
   (:import-from #:easy-macros
                 #:def-easy-macro)
@@ -61,10 +62,10 @@
   (or
    (car (bknr.datastore:class-instances 'user))
    (let ((username (or (uiop:getenv "USER") "user")))
-     (make-instance 'user
-                    :full-name username
-                    :companies (list (get-singleton-company (installation)))
-                    :email (format nil "~a@localhost" username)))))
+     (make-user
+      :full-name username
+      :companies (list (get-singleton-company (installation)))
+      :email (format nil "~a@localhost" username)))))
 
 (defmethod auth:request-user ((request desktop-request))
   (singleton-user))

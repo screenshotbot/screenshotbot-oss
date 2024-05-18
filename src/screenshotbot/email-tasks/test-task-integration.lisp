@@ -113,10 +113,8 @@
                                    (push args calls)))
              (let* ((company (make-instance 'company :name "foo"))
                     (channel (make-instance 'channel :company company))
-                    (user1 (make-instance 'user
-                                           :companies (list company)))
-                    (user2 (make-instance 'user
-                                           :companies (list company)))
+                    (user1 (make-user :companies (list company)))
+                    (user2 (make-user :companies (list company)))
                     (report (make-instance 'report
                                            :channel channel)))
                (is (equal (list user1 user2)

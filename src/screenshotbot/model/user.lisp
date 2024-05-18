@@ -164,7 +164,6 @@
       :initform nil
       :accessor auth:oauth-users)
      (companies
-      :initarg :companies
       :initform nil
       :accessor %user-companies
       :documentation "This companies slot is only use in a multi-org
@@ -225,10 +224,18 @@
           (warn "The new index did not match the new-index for ~a" email))
         old-val)))))
 
-(defun make-user (&rest args &key companies &allow-other-keys)
-  (let ((user (apply #'make-instance 'user args)))
-    (unless companies
-      (initialize-companies-for-user user (installation)))
+(defun make-user (&rest args &key companies  &allow-other-keys)
+  (let ((user (apply #'make-instance 'user (alexandria:remove-from-plist
+                                            args
+                                            :companies))))
+    (cond
+      (companies ;; probably only in tests?
+       ;; TODO: remove. Only task-integration-tests needs it.
+       (setf (slot-value user 'companies) companies)
+       (dolist (company companies)
+         (roles:ensure-has-role company user 'roles:standard-member)))
+      (t
+       (initialize-companies-for-user user (installation))))
     (push-event :user.created)
     user))
 
