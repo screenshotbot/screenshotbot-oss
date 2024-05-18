@@ -236,13 +236,14 @@
   (values))
 
 (defmethod initialize-companies-for-user (user (installation multi-org-feature))
-  (with-transaction ()
-    (setf (%user-companies user)
-          (list
-           (make-instance 'company
-                           :personalp t
-                           :admins (list user)
-                           :owner user)))))
+  ;; Heads up, in pro-installation, we also mixin
+  ;; one-owned-company-per-user. So as of writing, this code probably
+  ;; doesn't get hit in prod, only in tests.
+  (let ((company (make-instance 'company
+                                :personalp t
+                                :admins (list user)
+                                :owner user)))
+    (roles:ensure-has-role company user 'roles:standard-member)))
 
 (defmethod initialize-companies-for-user (user (installation
                                                 one-owned-company-per-user))
