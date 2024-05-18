@@ -13,8 +13,7 @@
                 #:register-task-integration
                 #:task-integration)
   (:import-from #:screenshotbot/model/user
-                #:user-with-email
-                #:users-for-company)
+                #:user-with-email)
   (:import-from #:auto-restart
                 #:with-auto-restart)
   (:import-from #:screenshotbot/mailer
@@ -97,7 +96,7 @@
        (lambda (user)
          (emails-enabledp (email-setting :user user
                                          :company company)))
-       (users-for-company company))))))
+       (roles:users-for-company company))))))
 
 (defmethod send-task ((self email-task-integration) report)
   (dolist (user (users-to-email (report-channel report)))
