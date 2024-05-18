@@ -53,27 +53,28 @@
            (apply '%create-note-page
                    :author author
                    args)))
-   (let ((impersonation (make-impersonation)))
-     (cond
-       ((impersonatedp impersonation)
-        (let ((admin-user (admin-user impersonation)))
-          (assert admin-user)
-          <app-template>
-            (internal only) Who should we create this as?
-            <ul>
-              <li>
-                <a href= (nibble () (create-with admin-user))>,(user-full-name admin-user)</a>
-              </li>
-              <li>
-                <a href= (nibble () (create-with (current-user)))>,(user-full-name (current-user))</a>
-              </li>
-            </ul>
-          </app-template>))
-       (t
-        (create-with (current-user)))))))
+    (let ((impersonation (make-impersonation)))
+      (cond
+        ((impersonatedp impersonation)
+         (let ((admin-user (admin-user impersonation)))
+           (assert admin-user)
+           <app-template>
+             (internal only) Who should we create this as?
+             <ul>
+               <li>
+                 <a href= (nibble () (create-with admin-user))>,(user-full-name admin-user)</a>
+               </li>
+               <li>
+                 <a href= (nibble () (create-with (current-user)))>,(user-full-name (current-user))</a>
+               </li>
+             </ul>
+           </app-template>))
+        (t
+         (create-with (current-user)))))))
 
 (defun %create-note-page (&key for redirect author)
   (assert redirect)
+  (auth:can-view! for)
   <simple-card-page form-action= (nibble () (submit-create :for for :redirect redirect :author author)) >
       <div class= "card-header">
         <h4>Add a note</h4>
