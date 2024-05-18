@@ -126,7 +126,7 @@
       <div class= "mt-3" >
         ,@ (loop for note in notes collect
         <div class= "alert alert-info mt-1" >
-          <h6><b>,(render-user-name (user note))</b> added a note:</h6>
+          <h6><b>,(util/misc:?. render-user-name (user note))</b> added a note:</h6>
           <div>,(message note)</div>
         </div>)
       </div>)))
