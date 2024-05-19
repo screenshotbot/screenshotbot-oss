@@ -30,8 +30,7 @@
                 #:user-email-exists
                 #:*lowercase-email-map*
                 #:user-with-email
-                #:make-user
-                #:default-company)
+                #:make-user)
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:bknr.datastore
@@ -96,34 +95,6 @@
                 (is-false (roles:has-role-p company user 'roles:owner)))
        (delete-object user)
        (pass)))))
-
-(test default-company
-  (with-test-store ()
-   (let ((*installation* (make-instance 'pro-installation)))
-     (let* ((user (make-user)))
-       (is (eql
-            (default-company user)
-            (car (user-companies user))))))))
-
-(test default-company-for-non-pro
-  (with-test-store ()
-    (let* ((company (make-instance 'company
-                                   :singletonp t))
-           (*installation* (make-instance 'installation)))
-      (let* ((user (make-user)))
-        (is (eql
-             (default-company user)
-             company))))))
-
-(test default-company-removed-from-user-companies
-  (with-fixture state ()
-   (let* ((company (make-instance 'company))
-          (user-company (make-instance 'company))
-          (user (make-user
-                 :default-company company
-                 :companies (list user-company))))
-     (is (eql user-company
-              (default-company user))))))
 
 (test user-with-email-is-case-insensitive
   (with-fixture state ()

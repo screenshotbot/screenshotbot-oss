@@ -78,7 +78,6 @@
    #:companies
    #:confirmation-confirmed-p
    #:confirmed-p
-   #:default-company
    #:email
    #:email-confirmation-code
    #:email-confirmations
@@ -177,8 +176,6 @@
      (default-company
       :initarg :default-company
       :initform nil
-      :writer (setf default-company)
-      :reader %default-company
       :documentation "The default company when this user logs in. We'll
     change this when the user 'switches' companies in the UI. If no
     default company is provided it should default to the personal
@@ -363,11 +360,7 @@
        known-avatar))))
 
 (defmethod default-company ((user user))
-  (let ((user-companies (user-companies  user)))
-   (or
-    (find (%default-company user) user-companies)
-    (user-personal-company user)
-    (car user-companies))))
+  (error "deprecated"))
 
 (defmethod (setf user-email) :after (email (user user))
   (update-lowercase-email-map user))
