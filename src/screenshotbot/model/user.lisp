@@ -322,7 +322,7 @@
         (oauth-user-full-name (car (auth:oauth-users user))))))
 
 (defun user-personal-company (user)
-  (loop for company in (user-companies user)
+  (loop for company in (roles:companies-for-user user)
         if (personalp company)
           do (return company)))
 
