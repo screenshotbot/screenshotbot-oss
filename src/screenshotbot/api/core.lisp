@@ -72,12 +72,13 @@
                (equal api-secret-key (api-key-secret-key key)))
         (error 'api-error
                :message "API secret key doesn't match what we have on record"))
-      (authenticate-request-from-key request key)
+      (prog1
+          (authenticate-request-from-key request key)
 
-      ;; TODO: this probably never happens
-      (unless (current-user)
-        (error 'api-error
-               :message (format nil "API key appears to be invalid or non-existant, got: ~a" api-key))))))
+        ;; TODO: this probably never happens
+        (unless (current-user)
+          (error 'api-error
+                 :message (format nil "API key appears to be invalid or non-existant, got: ~a" api-key)))))))
 
 (defmethod authenticate-request-from-key ((request auth:authenticated-request) key)
   (setf
