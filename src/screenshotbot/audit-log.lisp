@@ -60,12 +60,13 @@
 (register-auto-cleanup 'base-audit-log :timestamp #'%created-at)
 
 (defmethod audit-logs-for-company (company type)
-  (reverse
-   (fset:convert 'list
-                 (fset:filter
-                  (lambda (log)
-                    (typep log type))
-                  (%audit-logs-for-company company)))))
+  (remove-if-not
+   (lambda (log)
+     (typep log type))
+   (reverse
+    (fset:convert
+     'list
+     (%audit-logs-for-company company)))))
 
 (def-easy-macro with-audit-log (&binding audit-log expr &fn fn)
   (handler-bind ((error
