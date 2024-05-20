@@ -62,9 +62,10 @@
         (auth:session-value :company)
       nil)
     (let ((*installation* (make-instance 'installation)))
-      (prepare-singleton-company)
-      (is-true (get-singleton-company *installation*))
-      (let ((user (make-instance 'user)))
+
+      (let* ((company (prepare-singleton-company))
+             (user (make-instance 'user)))
+        (setf (roles:user-role company user) 'roles:standard-member)
         (assert-that (roles:companies-for-user user)
                      (has-length 1))
         (is-true (guess-best-company nil user))))))

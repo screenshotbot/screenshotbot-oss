@@ -70,12 +70,12 @@
   (with-fixture state ()
    (let ((user (make-user)))
      (unwind-protect
-          (let ((companies (user-companies user)))
+          (let ((companies (roles:companies-for-user user)))
             (is (equal 1 (length companies)))
             (let ((company (car companies)))
               (is-true (personalp company))
               (is-true (roles:has-role-p company user 'roles:admin))))
-       (let ((companies (user-companies user)))
+       (let ((companies (roles:companies-for-user user)))
          (delete-object user)
          (loop for company in companies
                do (delete-object company)))))))
@@ -84,11 +84,7 @@
   (with-test-store ()
    (let ((*installation* (make-instance 'installation)))
      (prepare-singleton-company)
-     (let* ((user (make-user))
-            (companies (user-companies user)))
-       (is (equal (list
-                   (get-singleton-company *installation*))
-                  companies))
+     (let* ((user (make-user)))
        (loop for company in (bknr.datastore:store-objects-with-class 'company)
              do
                 (is-false (roles:has-role-p company user 'roles:admin))
@@ -145,31 +141,3 @@
                     company user)
                    (has-typep 'standard-member))
       (is-false (company-admin-p company user)))))
-
-(test user-companies-is-updated
-  "This test could probably removed in the future. It's a backward compatibility test."
-  (with-fixture state ()
-    (let* ((company (make-instance 'company))
-           (user (make-user :email "foo@example.com")))
-      (setf (roles:user-role company user) 'roles:standard-member)
-      (assert-that (user-companies user)
-                   (has-item company))
-      (setf (roles:user-role company user) nil)
-      (assert-that (user-companies user)
-                   (is-not (has-item company))))))
-
-
-(test companies-for-user-from-roles-handles-old-schema
-  "this can probably be deleted in the future once this migration is complete. See T1160."
-  (with-fixture state ()
-    (let* ((company (make-instance 'company :name "TestCompany"))
-           (user (make-instance 'user :email "foo@example.com")))
-      (setf (slot-value user 'screenshotbot/model/user::companies)
-            (list company))
-      (assert-that (user-companies user)
-                   (contains company))
-      (assert-that (roles:companies-for-user user)
-                   (contains company))
-      (setf (roles:user-role company user) 'roles:standard-member)
-      (assert-that (roles:companies-for-user user)
-                   (contains company)))))

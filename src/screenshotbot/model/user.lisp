@@ -270,30 +270,10 @@
           collect user))
 
 (defmethod user-companies ((user user))
-  (user-companies-for-installation user (installation)))
+  (error "unimplemented"))
 
 (defmethod (setf user-companies) (companies (user user))
-  (setf (user-companies-for-installation user (installation))
-        companies))
-
-(defmethod user-companies-for-installation ((user user) (installation multi-org-feature))
-  (%user-companies user))
-
-(defmethod (setf user-companies-for-installation) (companies (user user) (installation multi-org-feature))
-  (setf (%user-companies user) companies))
-
-
-(defmethod user-companies-for-installation ((user user) installation)
-  (list
-   (get-singleton-company installation)))
-
-(define-condition cant-set-user-companies (error)
-  ()
-  (:report "Can't set user-companies without multi-org-feature"))
-
-(defmethod (setf user-companies-for-installation) (companies (user user) installation)
-  (declare (ignore companies user installation))
-  (error 'cant-set-user-companies))
+  (error "unimplemented"))
 
 (with-class-validation
   (defclass user-notice (util:object-with-unindexed-oid)
@@ -385,30 +365,14 @@
 (defmethod user-role ((company company) (user user))
   "To support transitioning to the new role based access control, we
 override user-role."
-  (or
-   (call-next-method)
-   (when (member company (user-companies user))
-     (make-instance 'standard-member))))
+  (call-next-method))
 
-(defmethod (setf roles:user-role) :after (value (company company) (user user))
-  (when value
-    (handler-case
-        (pushnew company (user-companies user))
-      (cant-set-user-companies (e)
-        ;;ignored
-        (values)))))
-
-(defmethod (setf roles:user-role) :after ((value null) (company company) (user user))
-  (handler-case
-      (alexandria:removef (user-companies user)  company)
-    (cant-set-user-companies (e)
-      ;; ignored
-      (values))))
+;; TODO: remove these two
+(defmethod (setf roles:user-role) :after (value (company company) (user user)))
+(defmethod (setf roles:user-role) :after ((value null) (company company) (user user)))
 
 (defmethod roles:companies-for-user :around ((user user))
-  (union
-   (call-next-method)
-   (user-companies user)))
+  (call-next-method))
 
 
 (def-store-migration ("Migrate user-companies to roles" :version 16)
