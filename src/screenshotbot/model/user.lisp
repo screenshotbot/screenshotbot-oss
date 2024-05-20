@@ -216,6 +216,7 @@
            (gethash (str:downcase email) *lowercase-email-map*)))
      (cond
        ((and user
+             (not (bknr.datastore::object-destroyed-p user))
              (string-equal email (user-email user)))
         user)
        (t

@@ -141,3 +141,10 @@
                     company user)
                    (has-typep 'standard-member))
       (is-false (company-admin-p company user)))))
+
+(test user-with-email-shouldnt-find-a-deleted-user
+  (with-fixture state ()
+    (let ((user (make-user :email "foo@example.com")))
+      (is (eql user (user-with-email "Foo@example.com")))
+      (bknr.datastore:delete-object user)
+      (is-false (user-with-email "foo@example.com")))))
