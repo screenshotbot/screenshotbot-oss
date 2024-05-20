@@ -197,7 +197,8 @@
         (symbol-macrolet ((place (gethash email *lowercase-email-map*)))
           (let ((prev-user place))
             (cond
-              ((null prev-user)
+              ((or (null prev-user)
+                   (bknr.datastore::object-destroyed-p prev-user))
                (setf place user))
               ((not (eql prev-user user))
                (error 'user-email-exists :email (user-email user))))))))))

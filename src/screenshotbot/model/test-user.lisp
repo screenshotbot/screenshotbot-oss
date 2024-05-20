@@ -147,4 +147,6 @@
     (let ((user (make-user :email "foo@example.com")))
       (is (eql user (user-with-email "Foo@example.com")))
       (bknr.datastore:delete-object user)
-      (is-false (user-with-email "foo@example.com")))))
+      (is-false (user-with-email "foo@example.com"))
+      (is
+       (not (eql user (make-user :email "foo@example.com")))))))
