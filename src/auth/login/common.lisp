@@ -86,7 +86,8 @@
                            (allow-url-redirect nil)
                            ;; Sometimes, for instance for the invite
                            ;; flow, we want to get a callback before
-                           ;; the user is prepared.
+                           ;; the user is prepared, so we might want
+                           ;; to set this to NIL in those cases.
                            (ensure-prepared t))
   (let ((fn (cond
               (ensure-prepared
