@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/dashboard/test-api-keys
   (:use :cl)
   (:import-from #:cl-mock
+                #:answer
                 #:if-called)
   (:import-from #:core/installation/installation
                 #:*installation*)
@@ -58,12 +59,14 @@
 (def-fixture state ()
   (let* ((*installation* (make-instance 'installation))
          (*app-template* (make-instance 'screenshotbot-template)))
-    (&body)))
+    (cl-mock:with-mocks ()
+     (&body))))
 
 
 (test simple-page-test
   (with-fixture state ()
     (with-fake-request (:acceptor 'my-acceptor)
+      (answer (auth:can-view! nil))
       (auth:with-sessions ()
        (screenshot-static-page
         :screenshotbot
@@ -78,6 +81,7 @@
 (test empty-api-keys-page-test
   (with-fixture state ()
     (with-fake-request (:acceptor 'my-acceptor)
+      (answer (auth:can-view! nil))
       (auth:with-sessions ()
        (screenshot-static-page
         :screenshotbot

@@ -119,6 +119,7 @@
                         (company (current-company))
                         (script-name "/api-keys"))
   (declare (ignore script-name))
+  (auth:can-view! company)
   (let* ((api-keys (reverse (user-api-keys user company)))
          (create-api-key (nibble ()
                            (%create-api-key user company))))

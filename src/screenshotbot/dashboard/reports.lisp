@@ -297,6 +297,7 @@
 
 (defhandler (report-list :uri "/report" :method :get
                          :want-login t) ()
+  (auth:can-view! (current-company))
   (flet ((row-generator (row)
            <taskie-row object=row >
              <a href= (make-url 'report-page

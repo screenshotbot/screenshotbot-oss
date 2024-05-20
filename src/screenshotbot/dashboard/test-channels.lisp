@@ -47,7 +47,9 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation
                 #:fix-timestamps
-                #:screenshot-test))
+                #:screenshot-test)
+  (:import-from #:cl-mock
+                #:answer))
 (in-package :screenshotbot/dashboard/test-channels)
 
 (util/fiveam:def-suite)
@@ -60,11 +62,13 @@
 
 (test simple-view
   (with-installation ()
-   (let ((user (make-instance 'test-user))
-         (company (make-instance 'company-with-channels)))
-     (finishes
-      (%list-projects :user user
-                      :company company)))))
+    (cl-mock:with-mocks ()
+     (let ((user (make-instance 'test-user))
+           (company (make-instance 'company-with-channels)))
+       (answer (auth:can-view! nil))
+       (finishes
+         (%list-projects :user user
+                         :company company))))))
 
 (def-fixture state ()
   (with-installation ()
