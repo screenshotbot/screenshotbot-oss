@@ -71,6 +71,8 @@
                 #:def-store-migration)
   (:import-from #:screenshotbot/model/core
                 #:ensure-slot-boundp)
+  (:import-from #:auth/model/invite
+                #:set-user-has-seen-invite)
   (:local-nicknames (#:roles #:auth/model/roles))
   (:export
    #:adminp
@@ -385,3 +387,9 @@ migration."
     (dolist (company (user-companies user))
       (format t "Adding ~a to ~a~%" user company)
       (roles:ensure-has-role company user 'roles:standard-member))))
+
+(def-store-migration ("migrated unaccepted-invitations" :version 18)
+  (ensure-slot-boundp 'user 'unaccepted-invites)
+  (dolist (user (class-instances 'user))
+    (dolist (invite (unaccepted-invites user))
+      (set-user-has-seen-invite user invite))))
