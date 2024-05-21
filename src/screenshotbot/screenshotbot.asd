@@ -259,6 +259,7 @@
                  (:file "google-oauth")
                  (:file "populate")
                  (:file "aws-cognito")
+                 (:file "require-invite-sso-mixin")
                  (:file "template")))
    (:module "company"
     :serial t
