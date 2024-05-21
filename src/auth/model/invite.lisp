@@ -44,7 +44,7 @@
      (email :initarg :email
             :initform nil
             :index +email-index+
-            :index-reader invites-for-email
+            :index-reader %invites-with-email
             :reader invite-email)
      (used-p :initform nil
              :accessor invite-used-p)
@@ -73,9 +73,14 @@
   (remove-if #'invite-used-p (all-invites :company company)))
 
 (defun invites-with-email (email &key company)
-  (loop for invite in (all-invites :company company)
-        if (string= email (invite-email invite))
-          collect invite))
+  (let ((invites (fset:convert 'list (%invites-with-email email))))
+    (cond
+      (company
+       (loop for invite in invites
+             if (eql (invite-company invite) company)
+               collect invite))
+      (t
+       invites))))
 
 (defun invite-with-code (code &key company)
   (loop for invite in (all-invites :company company)

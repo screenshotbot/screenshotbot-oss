@@ -24,7 +24,9 @@
                 #:contains)
   (:import-from #:bknr.datastore
                 #:persistent-class
-                #:store-object))
+                #:store-object)
+  (:import-from #:fiveam-matchers/misc
+                #:is-null))
 (in-package :auth/model/test-invite)
 
 (util/fiveam:def-suite)
@@ -53,7 +55,9 @@
 (test invites-with-email ()
   (with-fixture state ()
     (assert-that (invites-with-email "foo@example.com")
-                 (contains invite))))
+                 (contains invite))
+    (assert-that (invites-with-email "foo@example.com" :company :foo)
+                 (is-null))))
 
 (test invite-with-code ()
   (with-fixture state ()
