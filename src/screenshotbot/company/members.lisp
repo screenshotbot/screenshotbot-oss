@@ -52,7 +52,7 @@
   <a href= (format nil "mailto:~a" x)>,(progn x)</a>)
 
 (defun delete-user (user company &aux (back "/settings/members"))
-  (assert (not (has-role-p company user 'roles:admin)))
+  (assert (not (roles:has-role-p company user 'roles:admin)))
   (confirmation-page
    :yes (nibble ()
           (setf (roles:user-role company user) nil)
