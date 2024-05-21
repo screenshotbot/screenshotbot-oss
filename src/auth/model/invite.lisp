@@ -13,7 +13,10 @@
   (:import-from #:util
                 #:make-secret-code)
   (:import-from #:util/store/store
+                #:defindex
                 #:with-class-validation)
+  (:import-from #:util/store/fset-index
+                #:fset-set-index)
   (:export
    #:all-invites
    #:email-count
@@ -28,6 +31,10 @@
    #:all-unused-invites))
 (in-package :screenshotbot/model/invite)
 
+(defindex +email-index+
+  'fset-set-index
+  :slot-name 'email)
+
 (with-class-validation
   (defclass invite (store-object)
     ((code :initform (make-secret-code)
@@ -36,6 +43,8 @@
               :accessor inviter)
      (email :initarg :email
             :initform nil
+            :index +email-index+
+            :index-reader invites-for-email
             :reader invite-email)
      (used-p :initform nil
              :accessor invite-used-p)
