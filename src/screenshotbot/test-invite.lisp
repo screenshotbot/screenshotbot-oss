@@ -109,7 +109,7 @@
     (with-installation ()
       (with-test-user (:user user :company company :logged-in-p t)
         (let ((user-2 (make-user :email "car@example.com")))
-          (setf (roles:user-role company user) 'roles:standard-member)
+          (setf (roles:user-role company user-2) 'roles:standard-member)
           (let ((page (invite-post :email "car@example.com")))
             (assert-that
              (markup:write-html

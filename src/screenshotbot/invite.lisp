@@ -120,7 +120,7 @@
       (check :email (let ((user (user-with-email email)))
                       (or
                        (not user)
-                       (roles:has-role-p (current-company) user t)))
+                       (not (roles:has-role-p (current-company) user t))))
              "A user with that email is already a part of this organization")
       (check :email (not (invites-with-email email
                                             :company (current-company)))
