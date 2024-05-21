@@ -35,10 +35,13 @@
   (when user
    (if (and company (can-view company user))
        company
-       (or
-        (most-recent-company (roles:companies-for-user user))
-        (user-personal-company user)
-        (car (roles:companies-for-user user))))))
+       (let ((companies (remove-if-not
+                         (alexandria:rcurry #'can-view user)
+                         (roles:companies-for-user user))))
+        (or
+         (most-recent-company companies)
+         (user-personal-company user)
+         (car companies))))))
 
 (defun most-recent-company (companies)
   "Returns the most recently updated company in the list. If none are
