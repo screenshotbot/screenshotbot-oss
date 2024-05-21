@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:auth/model/invite
+                #:set-user-has-seen-invite
                 #:invite-used-p
                 #:all-unused-invites
                 #:invite-code
@@ -71,3 +72,8 @@
     (setf (invite-used-p invite) t)
     (assert-that (all-unused-invites :company company)
                  (contains))))
+
+(test happy-path-user-has-seen-invite
+  (with-fixture state ()
+    (finishes
+     (set-user-has-seen-invite :foo invite))))

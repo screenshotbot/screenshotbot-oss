@@ -28,7 +28,8 @@
    #:invite-with-code
    #:inviter
    #:invites-with-email
-   #:all-unused-invites))
+   #:all-unused-invites
+   #:set-user-has-seen-invite))
 (in-package :screenshotbot/model/invite)
 
 (defindex +email-index+
@@ -101,3 +102,9 @@ code (probably by clicking the sign-up link from an invitation.")))
   (loop for invite in (all-invites :company company)
         if (string= code (invite-code invite))
           return invite))
+
+
+(defmethod set-user-has-seen-invite (user (invite invite))
+  (make-instance 'invite-code-proven
+                 :user user
+                 :invite invite))

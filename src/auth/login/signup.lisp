@@ -57,6 +57,8 @@
                 #:push-event)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:auth/model/invite
+                #:set-user-has-seen-invite)
   (:export
    #:signup-get
    #:signup-post))
@@ -270,6 +272,8 @@ any processing related to those invites here.
 CURRENT-INVITE is the current invite being used while signing up. This
 might not be an existing invite because when you sign up you might use
 a different email."
+  (when current-invite
+    (set-user-has-seen-invite user current-invite))
   (let ((invites (remove-if #'null
                             (remove-duplicates
                              (list*
