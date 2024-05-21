@@ -55,6 +55,21 @@
               :accessor invite-company))
     (:metaclass persistent-class)))
 
+(defindex +proof-user-index+
+  'fset-set-index
+  :slot-name '%user)
+
+(with-class-validation
+  (defclass invite-code-proven (store-object)
+    ((%user :initarg :user
+            :index +proof-user-index+
+            :reader invite-user)
+     (%invite :initarg :invite
+              :reader invite))
+    (:metaclass persistent-class)
+    (:documentation "This user has verified that they have access to the invitation
+code (probably by clicking the sign-up link from an invitation.")))
+
 (defmethod print-object ((invite invite) out)
   (with-slots (email) invite
    (format out "#<INVITE ~a>" email)))
