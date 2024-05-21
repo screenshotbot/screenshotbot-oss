@@ -24,11 +24,12 @@
 
 (define-condition disallowed-domain-error (authentication-error)
   ()
-  (:report "You may not create an account this email domain. Please use SSO instead."))
+  (:default-initargs :message
+   "You may not create an account this email domain. Please use SSO instead."))
 
 (define-condition no-invite-error (authentication-error)
   ()
-  (:report "You must have an invite to be able to login"))
+  (:default-initargs :message "You must have an invite to be able to login"))
 
 (defmethod after-authentication :around ((self require-invite-sso-mixin) &key
                                                                            email
