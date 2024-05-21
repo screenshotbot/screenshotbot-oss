@@ -498,3 +498,15 @@ compare against the actual merge base.")))
 
 (defmethod recorder-run-company ((self unchanged-run))
   (screenshotbot/model/company:company (unchanged-run-channel self)))
+
+(def-store-migration ("Ensure :company slot is set to the channel company" :version 17)
+  (ensure-slot-boundp 'recorder-run 'company)
+  (dolist (run (bknr.datastore:class-instances 'recorder-run))
+    (when (and
+           (not (recorder-run-company run))
+           (recorder-run-channel run)
+           (ignore-errors
+            (screenshotbot/model/company:company (recorder-run-channel run))))
+      (format t "Fixing run: ~a~%" run)
+      (setf (recorder-run-company run)
+            (screenshotbot/model/company:company (recorder-run-channel run) )))))
