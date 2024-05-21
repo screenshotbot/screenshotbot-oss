@@ -38,8 +38,13 @@
       (setf (auth:request-user request) user)
       (unless (auth:request-account request)
         (alexandria:when-let ((company (company-for-request *installation* request)))
-          (when (auth:can-view company user)
-            (setf (auth:request-account request) company)))))))
+          (cond
+            ((auth:can-view company user)
+             (setf (auth:request-account request) company))
+            (t
+             (warn "Could not set company for user: ~a, ~a"
+                   company
+                   user))))))))
 
 
 (defun current-user ()
