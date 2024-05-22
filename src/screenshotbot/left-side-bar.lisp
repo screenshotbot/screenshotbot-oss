@@ -182,11 +182,18 @@
     </div>))
 
 (defmethod signout-link ((self installation))
-  (cond
-    ((default-oidc-provider self)
-     (logout-link (default-oidc-provider self)))
-    (t
-     "/signout")))
+  (symbol-macrolet ((signout-link (auth:session-value :signout-link)))
+   (cond
+     ((default-oidc-provider self)
+      (logout-link (default-oidc-provider self)))
+     ((and
+       (boundp 'auth:*current-session*) ;; for tests
+       signout-link)
+      (let ((old signout-link))
+        (setf signout-link nil)
+        old))
+     (t
+      "/signout"))))
 
 (defmethod render-user-menu ((installation desktop-installation) &key &allow-other-keys)
   nil)

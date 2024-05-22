@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/login/oidc
                 #:oidc-provider)
   (:import-from #:oidc/oidc
+                #:after-authentication
                 #:client-id
                 #:authorization-endpoint
                 #:logout-link)
@@ -32,6 +33,10 @@
       You are now logged out. <a href= "/">Go back here</a>.
     </body>
   </html>)
+
+(defmethod after-authentication :after ((self aws-cognito) &key &allow-other-keys)
+  (setf (auth:session-value :signout-link)
+        (logout-link self)))
 
 (defmethod logout-link ((self aws-cognito))
   "See https://docs.aws.amazon.com/cognito/latest/developerguide/logout-endpoint.html.
