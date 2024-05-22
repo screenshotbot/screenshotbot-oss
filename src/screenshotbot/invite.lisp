@@ -238,11 +238,15 @@
     (redirect-home)))
 
 (defun %accept-invite (invite user)
-  (when (member invite (unaccepted-invites user))
+  (when (or
+         (member invite (unaccepted-invites user))
+         (string-equal (invite-email invite)
+                       (auth:user-email user)))
     ;; Let's do the accept
     (setf (roles:user-role (invite-company invite) user)
           ;; TODO: We should be able to default this to roles:guest
           'roles:standard-member)
+    (setf (invite-used-p invite) t)
     (deletef (unaccepted-invites user) invite)))
 
 (defhandler (invite-accept  :uri  "/invite/accept") (invite-id)
