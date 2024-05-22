@@ -103,14 +103,15 @@
 
 (defvar *secure-cookie-p* t)
 
-(defparameter *cookie-name* "s2")
+(defun cookie-name ()
+  "s2")
 
 (defun host-without-port ()
   (car (str:split ":" (host))))
 
 (defun set-session-cookie (token &optional domain)
   (let ((domain (or domain (host-without-port))))
-    (set-cookie *cookie-name*
+    (set-cookie (cookie-name)
                 :value token :domain domain :expires (+ (get-universal-time) (* 365 2600 24))
                 :path "/" :secure (and
                                    *secure-cookie-p*
@@ -119,14 +120,14 @@
                                     (hunchentoot:header-in* :x-forwarded-proto))))))
 
 (defun has-session? ()
-  (let ((s (cookie-in *cookie-name*)))
+  (let ((s (cookie-in (cookie-name))))
     (and s (not (equal s "")))))
 
 (defun drop-session (&optional domain)
   (set-session-cookie "" domain))
 
 (defun %current-session ()
-  (let ((token (cookie-in *cookie-name*)))
+  (let ((token (cookie-in (cookie-name))))
     (and
      token
      (not (equal "" token))
