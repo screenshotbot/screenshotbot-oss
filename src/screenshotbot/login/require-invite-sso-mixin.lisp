@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/login/require-invite-sso-mixin
   (:use #:cl)
   (:import-from #:oidc/oidc
+                #:logout-link
                 #:authentication-error
                 #:after-authentication)
   (:import-from #:auth/model/invite
@@ -16,14 +17,28 @@
                 #:user-with-email)
   (:import-from #:screenshotbot/invite
                 #:accept-invite)
+  (:import-from #:nibble
+                #:nibble)
   (:export
    #:require-invite-sso-mixin))
 (in-package :screenshotbot/login/require-invite-sso-mixin)
+
+(named-readtables:in-readtable markup:syntax)
 
 (defclass require-invite-sso-mixin ()
   ((disallow-domains :initarg :disallow-domains
                      :reader disallow-domains))
   (:documentation "If there's no invite for this SSO, then don't allow it."))
+
+(defun no-invite-handler (auth-provider)
+  <html>
+    <body>
+      <p> You must have an invitation to be able to access this site.</p>
+      <!-- at this point, (auth:session-value :signout-link) might not be set, but
+           we still want to be able to log-out of the SSO provider -->
+      <a href= (or (logout-link auth-provider) "/signout") >Sign out</a>
+    </body>
+  </html>)
 
 (define-condition disallowed-domain-error (authentication-error)
   ()
@@ -44,7 +59,7 @@
        (roles:companies-for-user user))
       (call-next-method))
      ((not (invites-with-email email))
-      (error 'no-invite-error))
+      (hex:safe-redirect (nibble () (no-invite-handler self))))
      (t
       (loop for domain in (disallow-domains self)
             if (str:ends-with-p (format nil "@~a" domain) email)
