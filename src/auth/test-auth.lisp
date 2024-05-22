@@ -10,6 +10,7 @@
   (:import-from :util/testing
                 :with-fake-request)
   (:import-from :auth
+                #:cookie-name
                 #:clean-session-values
                 #:expiry-ts
                 #:session-token
@@ -29,16 +30,22 @@
                 #:is-string
                 #:has-length
                 #:assert-that)
+  (:import-from #:core/installation/installation
+                #:*installation*
+                #:abstract-installation
+                #:installation
+                #:installation-domain)
   (:export))
 (in-package :auth/test-auth)
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (cl-mock:with-mocks ()
-   (with-test-store ()
-     (with-fake-request ()
-       (&body)))))
+  (let ((*installation* (make-instance 'abstract-installation)))
+   (cl-mock:with-mocks ()
+     (with-test-store ()
+       (with-fake-request ()
+         (&body))))))
 
 (test auth-simple-test
   (with-fixture state ()
@@ -117,3 +124,11 @@
        "bad")
       (is (equal "foobar" (auth:csrf-token)))
       (is (equal "foobar" (auth:csrf-token))))))
+
+
+(test cookie-name
+  (let ((*installation* (make-instance 'abstract-installation)))
+    (is (equal "s2" (cookie-name))))
+  (let ((*installation* (make-instance 'abstract-installation
+                                       :domain "foo.example.com")))
+    (is (equal "s3" (cookie-name)))))

@@ -28,6 +28,9 @@
                 #:fset-set-index)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:core/installation/installation
+                #:*installation*
+                #:installation-domain)
   (:export #:user-session
            #:session-value
            #:session-key

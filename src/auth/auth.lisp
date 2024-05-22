@@ -104,7 +104,14 @@
 (defvar *secure-cookie-p* t)
 
 (defun cookie-name ()
-  "s2")
+  (format nil "s~a"
+          (cond
+            ((boundp '*installation*)
+             (length
+              (str:split "."
+                         (installation-domain *installation*))))
+            (t ;; for tests
+             2))))
 
 (defun host-without-port ()
   (car (str:split ":" (host))))
