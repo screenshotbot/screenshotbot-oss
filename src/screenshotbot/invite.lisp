@@ -230,10 +230,12 @@
   (with-transaction ()
     (incf (email-count invite))))
 
-(defun accept-invite (invite)
-  (%accept-invite invite (current-user))
+(defun accept-invite (invite &key (redirect t)
+                               (user (current-user)))
+  (%accept-invite invite user)
   (Setf (current-company) (invite-company invite))
-  (redirect-home))
+  (when redirect
+    (redirect-home)))
 
 (defun %accept-invite (invite user)
   (when (member invite (unaccepted-invites user))
