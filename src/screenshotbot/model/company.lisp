@@ -433,3 +433,13 @@ URL for the company, if there is one."
 (defmethod get-company-for-auth-provider ((installation oss-installation)
                                           auth-provider)
   (get-singleton-company installation))
+
+(defmethod roles:users-for-company ((company sub-company))
+  (union
+   (call-next-method)
+   (roles:users-for-company (company-parent company))))
+
+(defmethod roles:user-role ((company sub-company) user)
+  (or
+   (call-next-method)
+   (roles:user-role (company-parent company) user)))

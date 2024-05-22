@@ -139,7 +139,7 @@
          :items (remove-if
                  (lambda (user)
                    (roles:has-role-p company user 'roles:hidden-user))
-                 (users-for-company company))
+                 (roles:users-for-company company))
          :checkboxes nil
          :empty-message "No users"
          :row-generator (lambda (user)
