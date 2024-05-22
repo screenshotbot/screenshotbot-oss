@@ -28,7 +28,9 @@
   (:import-from #:screenshotbot/events
                 #:push-event)
   (:import-from #:screenshotbot/dashboard/ensure-company
-                #:post-new-company))
+                #:post-new-company)
+  (:import-from #:screenshotbot/dashboard/explain
+                #:explain))
 (in-package :screenshotbot/company/new)
 
 (markup:enable-reader)
@@ -38,10 +40,21 @@
     <div class= "card-header">
       <h4>Create a new Organization</h4>
     </div>
-    <div class= "form-group">
+    <div class= "form-group mb-3">
       <label for= "org-name">Organization Name</label>
-      <input type= "text" class= "form-control" name= "name" placeholder= "Xyz Inc." />
+      <input type= "text" class= "form-control" name= "name" placeholder= "Acme Inc" />
     </div>
+
+    ,(when (gk:check :sub-companies (auth:current-company))
+       <div class= "form-group mb-3">
+         <label for= "parent">Parent Organization <explain>Inherits users and roles from a parent organization. Leave empty to not share users.</explain></label>
+         <select class= "form-select" name= "parent" id= "parent" >
+           <option value= "-1">None</option>
+           ,@ (loop for company in (roles:companies-for-user (auth:current-user))
+                    collect
+                    <option value= (bknr.datastore:store-object-id company) >,(company-name company)</option>)
+         </select>
+       </div>)
 
     <!--
       <div class= "form-group">
@@ -55,7 +68,7 @@
       <label for= "i-agree" class= "form-check-label" >Billing for this Organization will be on your billing information for your personal account. Depending on your plan, you might be charged for each user (apart from you) that will be added to this organization. We can transfer billing to another account on request.</label>
     </div>
     <div class= "card-footer">
-      <input type= "submit" class= "btn btn-success form-control" value= "Create" >
+      <input type= "submit" class= "btn btn-success form-control" value= "Create" />
     </div>
   </simple-card-page>)
 
@@ -70,10 +83,16 @@
      (t
       <organization-new-page />))))
 
-(defhandler (nil :uri "/organization/new" :method :post) (name i-agree)
-   (post-new-company name i-agree
-      :form #'organization-new-page
-      :redirect 'company-create-confirmation-page))
+(defhandler (nil :uri "/organization/new" :method :post) (name i-agree parent)
+  (let ((parent (when (and parent (not (equal "-1" parent)))
+                  (bknr.datastore:store-object-with-id (parse-integer parent)))))
+    (when parent
+      (check-type parent company)
+      (auth:can-view! parent))
+    (post-new-company name i-agree
+                      :form #'organization-new-page
+                      :parent parent
+                      :redirect 'company-create-confirmation-page)))
 
 (defhandler (company-create-confirmation-page
              :uri "/organizations/confirmed") ()

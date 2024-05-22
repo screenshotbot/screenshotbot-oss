@@ -22,6 +22,7 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/model/company
+                #:sub-company
                 #:company
                 #:company-with-name)
   (:import-from #:screenshotbot/events
@@ -142,6 +143,7 @@
 
 (defun post-new-company (name i-agree
                          &key form
+                           parent
                            (user (current-user))
                            redirect)
   "This is also called by /organization/new"
@@ -171,14 +173,18 @@
                           :was-validated t)
          (funcall form)))
       (t
-       (prepare-company user name)
+       (prepare-company user name :parent parent)
        (hex:safe-redirect redirect)))))
 
-(defun prepare-company (user name)
-  (let* ((company (make-instance 'company
-                                 :name name
-                                 :admins (list user)
-                                 :owner user)))
+(defun prepare-company (user name &key parent)
+  (let* ((company (apply #'make-instance (cond
+                                           (parent 'sub-company)
+                                           (t 'company))
+                         :name name
+                         :admins (list user)
+                         :owner user
+                         (when parent
+                           (list :parent parent)))))
     (setf (current-company) company)
     (push-event :company.new)
     (populate-company company)))
