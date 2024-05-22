@@ -190,8 +190,9 @@
        (boundp 'auth:*current-session*) ;; for tests
        signout-link)
       (let ((old signout-link))
-        (setf signout-link nil)
-        old))
+        (nibble ()
+          (setf signout-link nil)
+          (hex:safe-redirect old))))
      (t
       "/signout"))))
 
