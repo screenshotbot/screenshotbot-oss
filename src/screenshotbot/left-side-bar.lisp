@@ -54,6 +54,11 @@
      </li>
   </markup:merge-tag>)
 
+(defmethod company-switcher ((installation multi-org-feature) &key user)
+  (declare (ignore user))
+  ;; TODO: delete
+  (call-next-method))
+
 (defmethod company-switcher (installation &key user)
   (declare (ignore user))
   nil)
