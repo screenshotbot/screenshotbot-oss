@@ -174,9 +174,8 @@
                     :ensure-prepared nil)
          (cond
            ((roles:has-role-p (invite-company invite) (current-user) t)
-            <simple-card-page>
-              <p>You are already a member of this organization.</p>
-            </simple-card-page>)
+            (setf (auth:current-company) (invite-company invite))
+            (redirect-home))
            (t
             (with-transaction ()
               (push invite (unaccepted-invites (current-user)))
