@@ -9,6 +9,7 @@
   (:import-from #:core/installation/auth
                 #:company-for-request)
   (:import-from #:screenshotbot/installation
+                #:base-multi-org-feature
                 #:multi-org-feature)
   (:import-from #:screenshotbot/user-api
                 #:created-at
@@ -22,7 +23,7 @@
                 #:runs-for-company))
 (in-package :screenshotbot/company/request)
 
-(defmethod company-for-request ((installation multi-org-feature) request)
+(defmethod company-for-request ((installation base-multi-org-feature) request)
   (cond
     ((not (auth:request-user request))
      nil)
@@ -30,6 +31,9 @@
      (guess-best-company
       (auth:session-value :company)
       (auth:request-user request)))))
+
+(defmethod company-for-request ((installation multi-org-feature) request)
+  (call-next-method))
 
 (defun guess-best-company (company user)
   (when user
