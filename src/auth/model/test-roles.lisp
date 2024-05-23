@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:auth/model/roles
+                #:user-roles
                 #:admin
                 #:ensure-has-role
                 #:companies-for-user
@@ -95,3 +96,9 @@
     ;; But after we remove the override, we should still have the
     ;; ensured-role saved.
     (is (roles:has-role-p 'foo 'bar 'roles:admin))))
+
+(test we-cant-set-a-role-for-a-nil-user
+  (with-fixture state ()
+    (ensure-has-role 'foo nil 'roles:standard-member)
+    (assert-that (bknr.datastore:class-instances 'user-roles)
+                 (contains))))

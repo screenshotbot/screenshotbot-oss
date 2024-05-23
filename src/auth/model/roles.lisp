@@ -125,19 +125,23 @@
 (defvar *lock* (bt:make-lock))
 
 (defmethod (setf user-role) ((value symbol) company user)
-  (bt:with-lock-held (*lock*)
-    (let ((role (index-get +user-role-index+ (list user company))))
-      (cond
-        ((and role (not value))
-         ;; delete the role
-         (bknr.datastore:delete-object role))
-        (role
-         (setf (role-type role) value))
-        (value
-         (make-instance 'user-roles
-                        :user user
-                        :company company
-                        :role value))))))
+  (cond
+    ((null user) ;; This might happen in scripts
+     (warn "Not setting a role for a NIL user for company ~a" company))
+    (t
+     (bt:with-lock-held (*lock*)
+       (let ((role (index-get +user-role-index+ (list user company))))
+         (cond
+           ((and role (not value))
+            ;; delete the role
+            (bknr.datastore:delete-object role))
+           (role
+            (setf (role-type role) value))
+           (value
+            (make-instance 'user-roles
+                           :user user
+                           :company company
+                           :role value))))))))
 
 (defmethod user-role (company user)
   (when-let ((role (index-get +user-role-index+
