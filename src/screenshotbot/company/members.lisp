@@ -138,7 +138,9 @@
          :class "with-avatar"
          :items (remove-if
                  (lambda (user)
-                   (roles:has-role-p company user 'roles:hidden-user))
+                   (or
+                    (not user)
+                    (roles:has-role-p company user 'roles:hidden-user)))
                  (roles:users-for-company company))
          :checkboxes nil
          :empty-message "No users"
