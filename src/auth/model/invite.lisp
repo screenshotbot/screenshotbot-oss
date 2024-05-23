@@ -89,14 +89,15 @@ code (probably by clicking the sign-up link from an invitation.")))
   (remove-if #'invite-used-p (all-invites :company company)))
 
 (defun invites-with-email (email &key company)
-  (let ((invites (fset:convert 'list (%invites-with-email email))))
-    (cond
-      (company
-       (loop for invite in invites
-             if (eql (invite-company invite) company)
-               collect invite))
-      (t
-       invites))))
+  (remove-if #'invite-used-p
+   (let ((invites (fset:convert 'list (%invites-with-email email))))
+     (cond
+       (company
+        (loop for invite in invites
+              if (eql (invite-company invite) company)
+                collect invite))
+       (t
+        invites)))))
 
 (defun invite-with-code (code &key company)
   (loop for invite in (all-invites :company company)
