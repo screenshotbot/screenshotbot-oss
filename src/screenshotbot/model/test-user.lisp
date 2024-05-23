@@ -49,6 +49,7 @@
                 #:standard-member
                 #:user-role)
   (:import-from #:fiveam-matchers/lists
+                #:contains-in-any-order
                 #:has-item
                 #:contains)
   (:local-nicknames (#:a #:alexandria)))
@@ -159,3 +160,11 @@
       (assert-that (roles:companies-for-user user)
                    ;; order matters!
                    (contains company company-2)))))
+
+(test companies-dont-show-up-twice
+  (with-fixture state ()
+    (let* ((company (make-instance 'company))
+           (company-2 (make-instance 'sub-company :parent company :name "second"))
+           (user (make-user :companies (list company company-2))))
+      (assert-that (roles:companies-for-user user)
+                   (contains-in-any-order company company-2)))))

@@ -397,10 +397,13 @@ migration."
 
 (defmethod roles:companies-for-user :around ((user user))
   (let ((stack (call-next-method))
-        (seen nil))
+        (result nil)
+        (seen (make-hash-table)))
     (loop while stack do
       (let ((next (pop stack)))
-        (push next seen)
-        (fset:do-set (sub-company (sub-companies-of next))
-          (push sub-company stack))))
-    (reverse seen)))
+        (unless (gethash next seen)
+          (setf (gethash next seen) t)
+          (push next result)
+          (fset:do-set (sub-company (sub-companies-of next))
+            (push sub-company stack)))))
+    (reverse result)))
