@@ -30,10 +30,14 @@
   (:import-from #:screenshotbot/dashboard/ensure-company
                 #:post-new-company)
   (:import-from #:screenshotbot/dashboard/explain
-                #:explain))
+                #:explain)
+  (:import-from #:core/installation/installation
+                #:*installation*)
+  (:import-from #:screenshotbot/installation
+                #:multi-org-feature))
 (in-package :screenshotbot/company/new)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (deftag organization-new-page ()
   <simple-card-page form-action= "/organization/new" >
@@ -49,7 +53,7 @@
        <div class= "form-group mb-3">
          <label for= "parent">Parent Organization <explain>Inherits users and roles from a parent organization. Leave empty to not share users.</explain></label>
          <select class= "form-select" name= "parent" id= "parent" >
-           <option value= "-1">None</option>
+           ,(default-parent-options *installation*)
            ,@ (loop for company in (roles:companies-for-user (auth:current-user))
                     collect
                     <option value= (bknr.datastore:store-object-id company) >,(company-name company)</option>)
@@ -71,6 +75,12 @@
       <input type= "submit" class= "btn btn-success form-control" value= "Create" />
     </div>
   </simple-card-page>)
+
+(defgeneric default-parent-options (installation)
+  (:method (self)
+    nil)
+  (:method ((self multi-org-feature))
+    <option value= "-1">None</option>))
 
 (defhandler (nil :uri "/organization/new" :method :get) ()
   (let ((user (current-user)))
