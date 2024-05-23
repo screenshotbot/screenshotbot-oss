@@ -30,6 +30,7 @@
   (:import-from #:screenshotbot/login/github
                 #:github-user)
   (:import-from #:screenshotbot/model/company
+                #:sub-companies-of
                 #:company-admin-p
                 #:company
                 #:company-owner
@@ -393,3 +394,13 @@ migration."
   (dolist (user (class-instances 'user))
     (dolist (invite (unaccepted-invites user))
       (set-user-has-seen-invite user invite))))
+
+(defmethod roles:companies-for-user :around ((user user))
+  (let ((stack (call-next-method))
+        (seen nil))
+    (loop while stack do
+      (let ((next (pop stack)))
+        (push next seen)
+        (fset:do-set (sub-company (sub-companies-of next))
+          (push sub-company stack))))
+    (reverse seen)))

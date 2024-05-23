@@ -14,6 +14,7 @@
                 #:user
                 #:user-companies)
   (:import-from #:screenshotbot/model/company
+                #:sub-company
                 #:company-admin-p
                 #:get-singleton-company
                 #:prepare-singleton-company
@@ -50,8 +51,7 @@
   (:import-from #:fiveam-matchers/lists
                 #:has-item
                 #:contains)
-  (:local-nicknames (#:a #:alexandria)
-                    (#:roles #:auth/model/roles)))
+  (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-user)
 
 
@@ -150,3 +150,12 @@
       (is-false (user-with-email "foo@example.com"))
       (is
        (not (eql user (make-user :email "foo@example.com")))))))
+
+(test roles-shows-sub-companies-too
+  (with-fixture state ()
+    (let* ((company (make-instance 'company))
+           (user (make-user :companies (list company)))
+           (company-2 (make-instance 'sub-company :parent company :name "second")))
+      (assert-that (roles:companies-for-user user)
+                   ;; order matters!
+                   (contains company company-2)))))
