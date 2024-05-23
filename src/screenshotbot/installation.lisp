@@ -81,7 +81,16 @@
 (defclass oss-installation (installation)
   ())
 
-(defclass multi-org-feature ()
+
+(defclass base-multi-org-feature ()
+  ())
+
+(defclass sub-companies-feature (base-multi-org-feature)
+  ()
+  (:documentation "There can be multiple organizations, but they must all have the same
+root."))
+
+(defclass multi-org-feature (base-multi-org-feature)
   ()
   (:documentation "subclassing multi-org-feature, turns on the ability
   for each user to create their own organizations. Most installations

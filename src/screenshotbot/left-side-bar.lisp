@@ -9,6 +9,7 @@
         #:alexandria
         #:screenshotbot/user-api)
   (:import-from #:screenshotbot/installation
+                #:base-multi-org-feature
                 #:default-oidc-provider
                 #:desktop-installation
                 #:installation
@@ -38,7 +39,7 @@
 (deftag bs-icon (&key name)
   <img src= (format nil "/assets/images/icons/~a.svg" name) alt=name />)
 
-(defmethod company-switcher ((installation multi-org-feature) &key user)
+(defmethod company-switcher ((installation base-multi-org-feature) &key user)
   <markup:merge-tag>
   ,@ (loop for company in (roles:companies-for-user user)
            collect
