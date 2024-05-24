@@ -10,6 +10,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/api-key-api
+                #:delete-api-key
                 #:api-key-secret-key
                 #:api-key-key
                 #:api-key)
@@ -112,3 +113,11 @@
       (is (eql api-key
                (api-key-for-secret
                 (api-key-secret-key api-key)))))))
+
+(test delete-api-key
+  (with-fixture state ()
+    (let ((api-key (make-instance 'api-key)))
+      (finishes
+        (delete-api-key api-key))
+      (is-false
+       (slot-boundp api-key 'api-key)))))

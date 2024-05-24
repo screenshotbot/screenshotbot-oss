@@ -8,6 +8,7 @@
   (:use :cl)
   (:nicknames :core/api/model/api-key)
   (:import-from #:bknr.datastore
+                #:deftransaction
                 #:persistent-class
                 #:store-object
                 #:store-object-id
@@ -198,11 +199,18 @@
           (store-object-id self)
           (api-key-secret-key self)))
 
+(deftransaction tx-delete-api-key (api-key)
+  "History: we've been using slot-makunbound to delete api
+keys. However, slot-makunbound doesn't create a transaction
+currently (we need to fix this).
+
+In the meantime, we're using a transaction to fix this. We probably
+need a better deletion model in the future."
+  (slot-makunbound api-key 'api-key))
+
 
 (defmethod delete-api-key ((api-key api-key))
-  ;; uggh, what's the right way to delete this?
-  (with-transaction ()
-    (slot-makunbound api-key 'api-key)))
+  (tx-delete-api-key api-key))
 
 (defmethod user-api-keys (user company)
   (loop for api-key in (bknr.datastore:class-instances 'api-key)
