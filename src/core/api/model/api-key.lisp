@@ -31,6 +31,8 @@
                 #:api-key
                 #:api-key-secret-key
                 #:delete-api-key)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
   (:export
    #:%find-api-key
    #:api-key
@@ -228,3 +230,9 @@ need a better deletion model in the future."
 
 (def-cron cleanup-expired-api-keys (:step-min 5)
   (cleanup-expired-api-keys))
+
+(def-store-migration ("Propagate old api-key deletions" :version 19)
+  "See T1182"
+  (dolist (api-key (bknr.datastore:class-instances 'api-key))
+    (unless (slot-boundp api-key 'api-key)
+      (delete-api-key api-key))))

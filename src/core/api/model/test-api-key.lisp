@@ -27,7 +27,12 @@
   (:import-from #:fiveam-matchers/strings
                 #:matches-regex)
   (:import-from #:fiveam-matchers/lists
-                #:contains))
+                #:contains)
+  (:import-from #:util/store/store-version
+                #:*snapshot-store-version*
+                #:*store-version*)
+  (:import-from #:util/store/store-migrations
+                #:run-migrations))
 (in-package :core/api/model/test-api-key)
 
 
@@ -120,4 +125,17 @@
       (finishes
         (delete-api-key api-key))
       (is-false
-       (slot-boundp api-key 'api-key)))))
+       (slot-boundp api-key 'api-key))
+      (finishes
+        (delete-api-key api-key)))))
+
+(test store-migration
+  (with-fixture state ()
+    (let ((api-key-1 (make-instance 'api-key))
+          (api-key-2 (make-instance 'api-key)))
+      (delete-api-key api-key-2)
+      (let ((*snapshot-store-version* 18)
+            (*store-version* 19))
+        (run-migrations))
+      (is-true (slot-boundp api-key-1 'api-key))
+      (is-false (slot-boundp api-key-2 'api-key)))))
