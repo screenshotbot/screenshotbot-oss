@@ -156,7 +156,7 @@ to the same repo, the graph will still be the same."
 (defun load-all ()
   (mapc #'commit-graph-dag (bknr.datastore:class-instances 'commit-graph)))
 
-(def-cron flush-dags (:step-min 5)
+(def-cron flush-dags (:step-min 30)
   (flush-dags))
 
 (def-cron load-all-dags (:step-min 10)
