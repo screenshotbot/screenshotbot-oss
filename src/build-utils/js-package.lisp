@@ -104,3 +104,18 @@
          (format t "File size is: ~A" (file-length s))))
     (retry-perform ()
       (perform o j))))
+
+
+;; (get-js-component "/home/arnold/builds/web/src/common/bootstrap-5.0.0-beta2/js/src/")
+;;
+;; At time of writing, we haven't used this to actually generate any
+;; asd files, so it might be buggy.
+(defun get-js-component (dir)
+  (cond
+    ((path:-d dir)
+     (let ((name (car (last (pathname-directory dir)))))
+       `(:module ,name :components (,@ (remove-if 'null
+                                                   (loop for x in (fad:list-directory dir)
+                                                         collect (get-css-component x)))))))
+    ((equal "js" (pathname-type dir))
+     `(,(let ((*package* :cl-user)) (format nil "~s" 'js-file)) ,(pathname-name dir)))))
