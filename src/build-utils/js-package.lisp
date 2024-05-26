@@ -83,11 +83,12 @@
             (uiop:run-program
              (append
               (list
-               "java"
+               #-darwin "java"
+               #+darwin "/opt/homebrew/opt/openjdk/bin/java"
                "-jar"
                (namestring
                 (asdf:system-relative-pathname
-                 :build-utils "closure-compiler/closure-compiler-v20200830.jar"))
+                 :build-utils "closure-compiler/closure-compiler-v20240317.jar"))
                "--js_output_file"
                (namestring (car (output-files o j)))
                "--create_source_map"
