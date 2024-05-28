@@ -1016,3 +1016,7 @@ table.git-graph {
 .body-vh-100 {
     height: 100vh !important;
 }
+
+.form-control:focus, .btn:focus, .form-select:focus {
+    box-shadow: none;
+}
