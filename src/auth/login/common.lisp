@@ -54,8 +54,8 @@
                :accessor oauth-name)))
 
 (defmethod auth-provider-signin-form ((auth-provider abstract-oauth-provider) redirect)
-    <div class= "form-group mt-3 text-center mb-3">
-      <a class= "btn btn-secondary" style= "width:100%"  href= (oauth-signin-link auth-provider redirect) >
+    <div class= "form-group mt-1 text-center mb-0">
+      <a class= "btn btn-outline-secondary" style= "width:100%"  href= (oauth-signin-link auth-provider redirect) >
         ,(oauth-logo-svg auth-provider)
         <span class= "ms-1">Sign In with ,(oauth-name auth-provider) </span>
       </a>

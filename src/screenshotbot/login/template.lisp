@@ -21,7 +21,7 @@
 
 (defmethod auth-template-impl ((self installation) children &key body-class simple)
   <html lang= "en" >
-    <landing-head>
+    <landing-head simple=simple >
       ,(progn
          ;; this is required in the OSS version because of it's using
          ;; a hacky mix of the pro and OSS dashboard css.
@@ -36,7 +36,7 @@
 
     ,(cond
        (simple
-        <body class= "dashboard" >
+        <body class= "dashboard login-simple" >
                     <div class= "content-page bg-light-lighten mt-3">
             <div class= "container body-vh-100" style= "max-width: 40em" >
                           ,@ (progn children)

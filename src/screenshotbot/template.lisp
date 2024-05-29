@@ -268,10 +268,15 @@
 
 (deftag landing-head (children &key
                       (title "Screenshotbot")
-                      (style #-screenshotbot-oss
-                             "/assets/css/extended-dashboard.css"
-                             #+screenshotbot-oss
-                             "/assets/css/default.css"))
+                      (simple nil)
+                      (style))
+  (setf style (or style
+                  (if simple
+                      "/assets/css/default.css"
+                      #-screenshotbot-oss
+                      "/assets/css/extended-dashboard.css"
+                      #+screenshotbot-oss
+                      "/assets/css/default.css")))
   <head>
     <meta charset="utf-8" />
     <title>,(progn title)</title>

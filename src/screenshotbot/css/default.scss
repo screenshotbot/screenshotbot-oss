@@ -1020,3 +1020,20 @@ table.git-graph {
 .form-control:focus, .btn:focus, .form-select:focus {
     box-shadow: none;
 }
+
+body.login-simple {
+    background: white;
+}
+
+.or-wrapper {
+    .text {
+        text-align: center;
+        vertical-align: middle;
+        height: 100%;
+    }
+
+
+    .strikethrough {
+        margin-top: -0.25em;
+    }
+}

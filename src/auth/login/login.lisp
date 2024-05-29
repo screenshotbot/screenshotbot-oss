@@ -63,23 +63,19 @@
                                :password password
                                :redirect redirect))))
   <form action=result method= "POST" >
+    <div class= "alert alert-danger d-none" ></div>
     <div class="form-group mb-3">
       <input name= "email"  class="form-control" type="email" id="emailaddress" required="" placeholder="Email" />
     </div>
 
-    <div class="form-group mb-3">
+    <div class="form-group mb-0">
       <div class="input-group input-group-merge">
         <input name= "password" type="password" id="password" class="form-control" placeholder="Password" />
       </div>
-    </div>
-
+     </div>
     <div class= "d-flex justify-content-between">
-      <div class="form-check ps-0">
-        <input type="checkbox" class="form-check-input me-3" id="checkbox-signin" checked= "checked" />
-        <label class="form-check-label" for="checkbox-signin">Remember me</label>
-      </div>
-
-      <div>
+      <div />
+      <div class= "mb-3" >
         <a href="/forgot-password" class="links"><small>Forgot your password?</small></a>
       </div>
 
@@ -90,13 +86,30 @@
     </div>
 
 
-    <div class="form-group mb-0">
-      <button class="btn btn-primary" type="submit"> Sign In </button>
+    <div class="form-group mb-3" >
+      <button class="btn btn-primary" style= "width: 100%" type="submit"> Sign In </button>
     </div>
   </form>))
 
 (defmethod default-login-redirect (request)
   "/runs")
+
+(markup:deftag or-divider ()
+  <div class= "or-wrapper row" >
+    <div class= "col-5 strikethrough" >
+      <hr />
+    </div>
+    <div class= "col-2 align-middle">
+      <div class= "text" >
+        <span class= "align-middle" >
+          <em>or</em>
+        </span>
+      </div>
+    </div>
+    <div class= "col-5 strikethrough" >
+      <hr />
+    </div>
+  </div>)
 
 (deftag signin-get (&key (redirect (default-login-redirect hunchentoot:*request*)) (alert nil))
   (assert redirect)
@@ -105,21 +118,30 @@
     (let ((signup (nibble ()
                     (signup-get :redirect redirect
                                 :alert alert))))
-      <auth-template>
+      <auth-template body-class= "signin-v2" simple=t  >
 
         <div class="account-pages mt-5 mb-5">
           ,(site-alert *installation*)
           ,(progn alert)
-          <div class="card">
+          <div class="card border-0">
 
             <div class="">
               <h4 class="text-dark-50 ps-4 mt-0 font-weight-bold">Sign In</h4>
             </div>
 
             <div class="card-body p-4">
-              ,@ (loop for auth-provider in (auth-providers *installation*)
+              ,@ (loop for auth-provider-cons on (auth-providers *installation*)
+                       for count from 0
+                       for auth-provider = (car auth-provider-cons)
                        collect
-                       (auth-provider-signin-form auth-provider redirect))
+                       (let ((content (auth-provider-signin-form auth-provider redirect)))
+                         (if (and (= count 0) (cdr auth-provider-cons))
+                             <markup:merge-tag>
+                               ,(progn content)
+                               <or-divider />
+                               <div style="margin-top:2em" />
+                             </markup:merge-tag>
+                             content)))
             </div> <!-- end card-body -->
           </div>
           <!-- end card -->

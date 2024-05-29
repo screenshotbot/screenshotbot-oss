@@ -96,12 +96,12 @@
            <form method= "POST" action=finish-reset >
              <div class= "card">
                <div class= "card-body">
-                 <div class= "form-group">
+                 <div class= "form-group mb-3">
                    <label for= "password">Password</label>
                    <input type= "password" id= "password" name= "password"
                           class= "form-control" />
                  </div>
-                 <div class= "form-group">
+                 <div class= "form-group mb-3">
                    <label for= "password">Confirm Password</label>
                    <input type= "password" id= "confirm-password" name= "confirm-password"
                           class= "form-control" />
@@ -148,9 +148,8 @@
                          (forgot-password-page))))))))
     <auth-template simple=t >
       <div class= "mt-5 mb-5">
-        <div class= "container">
           <div class= "row justify-content-center">
-            <div class= "col-lg-4">
+            <div class= "col-lg-12">
               <form action=submit method= "POST">
               <div class= "card">
                 <div class= "card-header">
@@ -173,7 +172,6 @@
               </div>
             </div>
 
-          </div>
         </div>
     </auth-template>))
 
