@@ -42,6 +42,8 @@
                 #:with-form-errors)
   (:import-from #:util/throttler
                 #:throttle!)
+  (:import-from #:util.cdn
+                #:make-cdn)
   (:export
    #:auth-header-logo))
 (in-package :screenshotbot/login/login)
@@ -126,7 +128,7 @@
           <div class="card border-0">
 
             <div class="text-center">
-              <a href= "/"><img src= "/assets/images/logo-dark.webp" class= "auth-small-logo mb-3" /></a>
+              <a href= "/"><img src= (make-cdn "/assets/images/logo-dark.webp") class= "auth-small-logo mb-3" /></a>
               <p class="text-muted mt-3 font-weight-bold">Log in to your account</p>
             </div>
 
