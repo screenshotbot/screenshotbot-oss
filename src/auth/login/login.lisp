@@ -125,8 +125,9 @@
           ,(progn alert)
           <div class="card border-0">
 
-            <div class="">
-              <h4 class="text-dark-50 ps-4 mt-0 font-weight-bold">Sign In</h4>
+            <div class="text-center">
+              <a href= "/"><img src= "/assets/images/logo-dark.webp" class= "auth-small-logo mb-3" /></a>
+              <p class="text-muted mt-3 font-weight-bold">Log in to your account</p>
             </div>
 
             <div class="card-body p-4">

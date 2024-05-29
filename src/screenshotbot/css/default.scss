@@ -1023,6 +1023,18 @@ table.git-graph {
 
 body.login-simple {
     background: white;
+
+    .auth-small-logo {
+        margin-top: 4rem;
+
+        height: 3em;
+    }
+
+    @include media-breakpoint-down(md) {
+        .auth-small-logo {
+            margin-top: 1em;
+        }
+    }
 }
 
 .or-wrapper {
