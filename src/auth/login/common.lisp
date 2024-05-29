@@ -187,9 +187,10 @@
 
 (defgeneric auth-template-impl (installation children &key body-class simple))
 
-(markup:deftag auth-template (children &key body-class simple)
+(markup:deftag auth-template (children &key body-class simple full-width)
   (auth-template-impl *installation*
                       children :body-class body-class
+                      :full-width full-width
                                :simple simple))
 
 (defclass standard-auth-provider (auth-provider

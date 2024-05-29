@@ -61,6 +61,8 @@
                 #:?.)
   (:import-from #:auth/model/invite
                 #:set-user-has-seen-invite)
+  (:import-from #:util.cdn
+                #:make-cdn)
   (:export
    #:signup-get
    #:signup-post))
@@ -124,17 +126,60 @@
         or Sign Up with
     </div>)
 
+(markup:deftag sales-pitch ()
+  <div class= "sales-pitch" >
+    <ul>
+      <li><i class="material-icons">smartphone</i>
+        <strong>Enterprise-Ready</strong>
+        <p>Automate screenshot tests at scale, from 10s of screenshots to 10s of thousands per commit.</p>
+      </li>
+      <li>
+        <i class="material-icons">merge</i>
+        <strong>Pull Request integrations</strong>
+        <p>See UI changes directly in pull requests.</p>
+      </li>
+      <li>
+        <i class="material-icons">error</i>
+        <strong>Catch regressions</strong>
+        <p>Find UI regressions before your app ships</p>
+      </li>
+
+      <li>
+        <i class="material-icons">people</i>
+        <strong>Collaborate across disciplines</strong>
+        <p>Everyone loves screenshots, even if they don't code. Notify them on Slack or Email.</p>
+      </li>
+      <li class= "" >
+        <i class="material-icons">history</i>
+        <strong>Rewind History</strong>
+        <p>Bisect UI regressions with just a few clicks</p>
+      </li>
+
+      <li>
+        <i class="material-icons">code</i>
+        <strong>Use libraries of your choice</strong>
+        <p>Use your existing iOS, Android or Web screenshot testing libraries</p>
+      </li>
+</ul>
+
+    <div class= "preview-wrapper">
+      <img src= (make-cdn "/assets/images/screenshotbot-preview-screenshot-3.webp") class= "shadow-lg" />
+    </div>
+  </div>)
+
 (deftag signup-get (&key plan (redirect (default-login-redirect hunchentoot:*request*))
                     invite
                     alert)
   (let ((login (nibble ()
                  (signin-get :redirect redirect
                              :alert alert))))
-    <auth-template body-class= "signin-v2" simple=t >
+    <auth-template body-class= "signin-v2" simple=t full-width=t >
       <div class="account-pages mb-5">
         <div class="container">
 
-          ,(progn alert)
+          <div class= "row g-4">
+            <div class= "col-1" />
+            <div class= "col-md-10 col-lg-5">
               <div class="card border-0 account-card">
 
                 <div class= "card-header">
@@ -144,6 +189,7 @@
                 </div>
 
                 <div class="card-body p-4">
+                  ,(progn alert)
 
                   ,@ (let ((len (length (auth-providers *installation*))))
                        (loop for auth-provider in (auth-providers *installation*)
@@ -162,6 +208,12 @@
                   <p class="">Already have account? <a href=login class="ml-1"><b>Log In</b></a></p>
                 </div>
               </div>
+            </div>
+
+            <div class= "col-5 d-none d-lg-block">
+              <sales-pitch />
+            </div>
+          </div>
         </div>
       </div>
 

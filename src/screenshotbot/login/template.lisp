@@ -19,7 +19,8 @@
 
 (named-readtables:in-readtable markup:syntax)
 
-(defmethod auth-template-impl ((self installation) children &key body-class simple)
+(defmethod auth-template-impl ((self installation) children &key body-class simple
+                                                              full-width)
   <html lang= "en" >
     <landing-head simple=simple >
       ,(progn
@@ -38,7 +39,7 @@
        (simple
         <body class= "dashboard login-simple" >
                     <div class= "content-page bg-light-lighten mt-3">
-            <div class= "container body-vh-100" style= "max-width: 40em" >
+            <div class= "container body-vh-100" style= (unless full-width "max-width: 40em") >
                           ,@ (progn children)
             </div>
           </div>
