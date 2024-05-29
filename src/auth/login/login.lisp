@@ -32,6 +32,8 @@
                 #:impersonation
                 #:make-impersonation)
   (:import-from #:screenshotbot/login/common
+                #:auth-common-header
+                #:or-divider
                 #:auth-template
                 #:ip-throttler
                 #:oauth-signin-link
@@ -96,23 +98,6 @@
 (defmethod default-login-redirect (request)
   "/runs")
 
-(markup:deftag or-divider ()
-  <div class= "or-wrapper row" >
-    <div class= "col-5 strikethrough" >
-      <hr />
-    </div>
-    <div class= "col-2 align-middle">
-      <div class= "text" >
-        <span class= "align-middle" >
-          <em>or</em>
-        </span>
-      </div>
-    </div>
-    <div class= "col-5 strikethrough" >
-      <hr />
-    </div>
-  </div>)
-
 (deftag signin-get (&key (redirect (default-login-redirect hunchentoot:*request*)) (alert nil))
   (assert redirect)
   (if-let ((provider (default-oidc-provider *installation*)))
@@ -125,11 +110,12 @@
         <div class="account-pages mt-5 mb-5">
           ,(site-alert *installation*)
           ,(progn alert)
-          <div class="card border-0">
+          <div class="card border-0 account-card">
 
-            <div class="text-center">
-              <a href= "/"><img src= (make-cdn "/assets/images/logo-dark.webp") class= "auth-small-logo mb-3" /></a>
-              <p class="text-muted mt-3 font-weight-bold">Log in to your account</p>
+            <div class= "card-header">
+              <auth-common-header >
+                Log in to your account
+              </auth-common-header>
             </div>
 
             <div class="card-body p-4">

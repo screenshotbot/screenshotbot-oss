@@ -1023,6 +1023,17 @@ table.git-graph {
 
 body.login-simple {
     background: white;
+    .account-card .card-header {
+        background: white;
+        border: 0;
+    }
+
+    .account-card {
+        .btn-primary {
+            width: 100%;
+        }
+
+    }
 
     .auth-small-logo {
         margin-top: 4rem;
@@ -1034,6 +1045,10 @@ body.login-simple {
         .auth-small-logo {
             margin-top: 1em;
         }
+    }
+
+    .form-check input {
+        padding: 0;
     }
 }
 

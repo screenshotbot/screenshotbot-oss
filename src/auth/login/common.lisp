@@ -28,6 +28,8 @@
                 #:throttler)
   (:import-from #:auth/login/roles-auth-provider
                 #:roles-auth-provider)
+  (:import-from #:util.cdn
+                #:make-cdn)
   (:export
    #:abstract-oauth-provider
    #:after-create-user
@@ -43,7 +45,8 @@
    #:server-with-login
    #:auth-template-impl
    #:standard-auth-provider
-   #:with-login))
+   #:with-login
+   #:or-divider))
 (in-package :screenshotbot/login/common)
 
 (named-readtables:in-readtable markup:syntax)
@@ -57,7 +60,7 @@
     <div class= "form-group mt-1 text-center mb-0">
       <a class= "btn btn-outline-secondary" style= "width:100%"  href= (oauth-signin-link auth-provider redirect) >
         ,(oauth-logo-svg auth-provider)
-        <span class= "ms-1">Sign In with ,(oauth-name auth-provider) </span>
+        <span class= "ms-1">Sign in with ,(oauth-name auth-provider) </span>
       </a>
     </div>)
 
@@ -66,14 +69,38 @@
     (declare (ignore installation user))
     (values)))
 
+(markup:deftag or-divider ()
+  <div class= "or-wrapper row" >
+    <div class= "col-5 strikethrough" >
+      <hr />
+    </div>
+    <div class= "col-2 align-middle">
+      <div class= "text" >
+        <span class= "align-middle" >
+          <em>or</em>
+        </span>
+      </div>
+    </div>
+    <div class= "col-5 strikethrough" >
+      <hr />
+    </div>
+  </div>)
+
+(markup:deftag auth-common-header (children)
+  <div class="text-center">
+    <a href= "/"><img src= (make-cdn "/assets/images/logo-dark.webp") class= "auth-small-logo mb-3" /></a>
+    <p class="text-muted mt-3 font-weight-bold">,@(progn children) </p>
+  </div>
+)
+
 (defmethod auth-provider-signup-form ((auth-provider abstract-oauth-provider)
                                       invite
                                       plan
                                       redirect)
     <div class= "form-group mt-3 text-center mb-3">
-      <a class= "btn btn-secondary" style= "width:100%"  href= (oauth-signup-link auth-provider redirect) >
+      <a class= "btn btn-outline-secondary" style= "width:100%"  href= (oauth-signup-link auth-provider redirect) >
         ,(oauth-logo-svg auth-provider)
-        <span class= "ms-1">,(oauth-name auth-provider) </span>
+        <span class= "ms-1">Sign up with ,(oauth-name auth-provider) </span>
       </a>
     </div>)
 

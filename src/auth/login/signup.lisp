@@ -25,6 +25,8 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/login/common
+                #:auth-common-header
+                #:or-divider
                 #:after-create-user
                 #:auth-template
                 #:signin-get
@@ -106,12 +108,12 @@
 
 
 
-      <div class="form-check ps-0 mb-3">
-          <input name= "accept-terms-p" type="checkbox" class="form-check-input me-3" id="checkbox-signup" />
+      <div class="form-check mb-3">
+          <input name= "accept-terms-p" type="checkbox" class="form-check-input" id="checkbox-signup" />
             <label class="form-check-label" for="checkbox-signup">I accept the <a href="/terms" class="">Terms and Conditions</a></label>
       </div>
 
-      <div class="form-group mb-0 text-center">
+      <div class="form-group mb-3 text-center">
         <button class="btn btn-primary" type="submit" id= "sign-up-submit" > Sign Up </button>
       </div>
 
@@ -128,18 +130,20 @@
   (let ((login (nibble ()
                  (signin-get :redirect redirect
                              :alert alert))))
-    <auth-template body-class= "signup" >
-      <div class="account-pages mt-5 mb-5">
+    <auth-template body-class= "signin-v2" simple=t >
+      <div class="account-pages mb-5">
         <div class="container">
 
           ,(progn alert)
-              <div class="card">
+              <div class="card border-0 account-card">
+
+                <div class= "card-header">
+                  <auth-common-header>
+                    Enter your credentials to create your account
+                  </auth-common-header>
+                </div>
 
                 <div class="card-body p-4">
-
-                  <div class="">
-                    <h4 class="text-dark-50 mt-0 font-weight-bold">Sign Up</h4>
-                  </div>
 
                   ,@ (let ((len (length (auth-providers *installation*))))
                        (loop for auth-provider in (auth-providers *installation*)
@@ -149,7 +153,7 @@
                                                         plan
                                                         redirect)
                              if (and (eql idx 0) (> len 1))
-                               collect  <or-signup-with />))
+                               collect  <or-divider />))
                 </div>
               </div>
 
