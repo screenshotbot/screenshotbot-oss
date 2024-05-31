@@ -9,6 +9,7 @@
   (:import-from #:it.bese.fiveam
                 #:test)
   (:import-from #:screenshotbot/login/common
+                #:standard-auth-provider
                 #:signin-get)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
@@ -17,6 +18,8 @@
   (:import-from #:util/testing
                 #:screenshot-static-page
                 #:with-fake-request)
+  (:import-from #:screenshotbot/login/login
+                #:sign-in-after-email)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/login/test-login)
 
@@ -33,6 +36,18 @@
         (markup:write-html
          (signin-get)))))))
 
+(test login-password-test
+  (with-installation ()
+   (with-fake-request ()
+     (auth:with-sessions ()
+       (screenshot-static-page
+        :screenshotbot
+        "login"
+        (markup:write-html
+         (sign-in-after-email
+          (make-instance 'standard-auth-provider)
+          :email "foo@example.com")))))))
+
 (test login-error-screen
   (with-installation ()
    (with-fake-request ()
@@ -41,8 +56,7 @@
         :screenshotbot
         "login-error-screen"
         (markup:write-html
-         (with-form-errors (:errors `((:password . "Incorrect password"))
-                            :password "foo"
+         (with-form-errors (:errors `((:email . "Email doesn't exist"))
                             :email "blah@gmail.com"
                             :was-validated t)
            (signin-get))))))))

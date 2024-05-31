@@ -794,7 +794,6 @@ a {
 
     input, .btn {
         font-size: 0.9375rem;
-        margin-bottom: 0.625rem !important;
         padding: 0.5rem 1.25rem;
     }
 
@@ -1095,6 +1094,16 @@ body.login-simple {
             border-radius: 6px;
             opacity: 0.91;
         }
+    }
+
+    .disabled-email {
+        background: white;
+        color: $gray-500;
+        border-color: $gray-200;
+    }
+
+    .form-group:has(.disabled-email) {
+        margin-bottom: 3em !important;
     }
 }
 

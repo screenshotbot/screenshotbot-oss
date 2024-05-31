@@ -35,7 +35,7 @@
         args)
        (dolist (err errors)
          (cond
-           ((consp err)
+           ((and (consp err) (car err))
             (destructuring-bind (name . msg) err
               (let ((input ($ (mquery:namequery name))))
                 (assert input)
@@ -64,7 +64,7 @@
               (when alert
                 (mquery:remove-class alert "d-none")
                 (mquery:mqappend alert
-                                 <div>,(progn err)</div>)))))))))
+                                 <div>,(progn (if (consp err) (cdr err) err))</div>)))))))))
   (values html errors))
 
 (defmacro with-form-errors ((&rest args &key errors args-list was-validated tooltip &allow-other-keys) &body body)

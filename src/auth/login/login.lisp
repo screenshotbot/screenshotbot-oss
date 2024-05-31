@@ -41,6 +41,7 @@
                 #:signup-get
                 #:standard-auth-provider)
   (:import-from #:util/form-errors
+                #:with-error-builder
                 #:with-form-errors)
   (:import-from #:util/throttler
                 #:throttle!)
@@ -58,40 +59,111 @@
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/login") ()
   (hex:safe-redirect "/signin"))
 
+(defun fix-input-email ()
+  (ps:ps
+    (funcall
+     (let ((ctr 0))
+       (lambda ()
+         (let ((el ((ps:@ document get-element-by-id) "disabled-email")))
+           (unless (or
+                    (equal (ps:@ el value)
+                           (ps:@ el dataset actual-value))
+                    (> ctr 1000))
+             (incf ctr)
+             (setf (ps:@ el value)
+                   (ps:@ el dataset actual-value)))))))))
 
-(defmethod auth-provider-signin-form ((auth-provider standard-auth-provider) redirect)
-
-  (let ((result (nibble (email password)
+(defmethod sign-in-after-email ((auth-provider standard-auth-provider)
+                                &key
+                                email
+                                redirect)
+  (let ((result (nibble (password)
                   (signin-post auth-provider
                                :email email
                                :password password
                                :redirect redirect))))
+    <auth-template body-class="signin-v2" simple=t >
+      <div class= "account-pages mt-5 mb-5" >
+          <div class= "card border-0 account-card">
+            <div class= "card-header">
+              <auth-common-header>
+                Log in to your account
+              </auth-common-header>
+
+              <div class= "card-body p-4">
+                <div class= "alert alert-danger d-none" ></div>
+                <div class="form-group mb-3">
+
+                  <input
+                    class="form-control disabled-email" disabled= "" value=email autocompletion= "off" readonly= "" id= "disabled-email"
+                    data-actual-value=email
+                    onchange= (fix-input-email)
+                    />
+
+                </div>
+
+                <form action=result method= "POST" >
+
+
+                  <div class="form-group mb-3 mt-3">
+                    <div class="input-group input-group-merge">
+                      <input name= "password" type="password" id="password" class="form-control" placeholder="Password" />
+                    </div>
+                  </div>
+
+                  <input type= "submit" class= "btn btn-primary mb-2" value= "Log In" />
+                  <div class= "d-flex justify-content-between">
+                    <div class= "mb-3" >
+                      <a href= "/signin">Re-enter email</a>
+                    </div>
+                    <div class= "mb-3" >
+                      <a href="/forgot-password" class="links"><small>Forgot your password?</small></a>
+                    </div>
+
+                  </div>
+
+                  <div class= "float-end">
+
+                  </div>
+
+                </form>
+
+              </div>
+            </div>
+          </div>
+      </div>
+    </auth-template>))
+
+(defmethod sign-in-step1-post ((auth-provider standard-auth-provider) &key email redirect)
+  (with-error-builder (:check check :errors errors
+                       :form-builder (signin-get)
+                       :success (hex:safe-redirect
+                                 (nibble ()
+                                   (sign-in-after-email auth-provider
+                                                        :email email
+                                                        :redirect redirect))))
+    (check :email (not (str:emptyp email))
+           "Email must be provided")
+    (check :email (< (length email) 250)
+           "Email is too long")
+    (check :email (auth:find-user *installation* :email email)
+           (format nil "Could not find a user with email: ~a" email))))
+
+(defmethod auth-provider-signin-form ((auth-provider standard-auth-provider) redirect)
+
+  (let ((result (nibble (email)
+                  (sign-in-step1-post
+                   auth-provider
+                   :email email
+                   :redirect redirect))))
   <form action=result method= "POST" >
     <div class= "alert alert-danger d-none" ></div>
     <div class="form-group mb-3">
-      <input name= "email"  class="form-control" type="email" id="emailaddress" required="" placeholder="Email" />
+      <input name= "email"  class="form-control" type="email" id="emailaddress" required="" placeholder="Email" autocomplete= "username" />
     </div>
-
-    <div class="form-group mb-0">
-      <div class="input-group input-group-merge">
-        <input name= "password" type="password" id="password" class="form-control" placeholder="Password" />
-      </div>
-     </div>
-    <div class= "d-flex justify-content-between">
-      <div />
-      <div class= "mb-3" >
-        <a href="/forgot-password" class="links"><small>Forgot your password?</small></a>
-      </div>
-
-    </div>
-
-    <div class= "float-end">
-
-    </div>
-
 
     <div class="form-group mb-3" >
-      <button class="btn btn-primary" style= "width: 100%" type="submit"> Sign In </button>
+      <button class="btn btn-primary" style= "width: 100%" type="submit"> Next </button>
     </div>
   </form>))
 
@@ -151,7 +223,6 @@
   (let ((redirect (or redirect (default-login-redirect hunchentoot:*request*))))
     (when (logged-in-p)
       (hex:safe-redirect redirect))
-
     (signin-get :redirect redirect)))
 
 (defun signin-post (auth-provider &key email password redirect)
@@ -161,14 +232,14 @@
     (flet ((check (name test message)
              (unless test
                (push (cons name message) errors))))
-      (check :email (not (str:emptyp email))
+      (check nil (not (str:emptyp email))
              "Please enter an email")
       (check :password (not (str:emptyp password))
              "Please enter a password")
       (check :password (< (length password) 150)
              "Password too long")
-      (check :email user
-             "No account associated with that email address")
+      (check nil user
+             (format nil "No account associated with ~a" email))
       (when user
         (check :password (auth:password-hash user)
                "This account appears to use an OAuth (either Google or GitHub)")
@@ -178,9 +249,11 @@
                  "Password does not match the given account"))))
     (cond
       (errors
-       (with-form-errors (:email email :errors errors
+       (with-form-errors (:errors errors
                             :was-validated t)
-        (signin-get)))
+        (sign-in-after-email auth-provider
+                             :email email
+                             :redirect redirect)))
       (t
        (assert (auth:check-password user password))
        (on-user-sign-in auth-provider user)
