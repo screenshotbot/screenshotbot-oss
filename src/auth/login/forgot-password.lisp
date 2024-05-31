@@ -73,7 +73,7 @@
           (setf (auth:user-password user)
                 password))
          (setf (used-up-p req) t)
-         <auth-template>
+         <auth-template simple=t >
            <div class= "container">
              <p>Your password has changed. <a href= "/login">Go back to Login</a>.</p>
            </div>
