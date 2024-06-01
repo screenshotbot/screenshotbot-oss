@@ -42,7 +42,7 @@
      (auth:with-sessions ()
        (screenshot-static-page
         :screenshotbot
-        "login"
+        "login-password-test"
         (markup:write-html
          (sign-in-after-email
           (make-instance 'standard-auth-provider)
