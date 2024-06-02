@@ -47,6 +47,8 @@
                 #:throttle!)
   (:import-from #:util.cdn
                 #:make-cdn)
+  (:import-from #:util/events
+                #:push-event)
   (:export
    #:auth-header-logo))
 (in-package :screenshotbot/login/login)
@@ -147,7 +149,8 @@
     (check :email (< (length email) 250)
            "Email is too long")
     (check :email (auth:find-user *installation* :email email)
-           (format nil "Could not find a user with email: ~a" email))))
+           (format nil "Could not find a user with email: ~a" email))
+    (push-event :signin-attempt email)))
 
 (defmethod auth-provider-signin-form ((auth-provider standard-auth-provider) redirect)
 

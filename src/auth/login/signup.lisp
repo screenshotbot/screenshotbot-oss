@@ -161,6 +161,7 @@
                        :success (hex:safe-redirect
                                  (nibble ()
                                    (apply #'signup-after-email/get auth-provider args))))
+    (push-event :signup-attempt :email email)
     (check-email
      #'check
      :email
