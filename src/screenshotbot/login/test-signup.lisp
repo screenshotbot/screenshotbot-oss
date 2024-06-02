@@ -31,6 +31,7 @@
   (:import-from #:screenshotbot/login/github-oauth
                 #:github-oauth-provider)
   (:import-from #:screenshotbot/login/signup
+                #:signup-after-email/get
                 #:valid-email-address-p
                 #:confirmation-success
                 #:prepare-and-send-email-confirmation
@@ -137,11 +138,17 @@
      :screenshotbot
      "signup-error-screen"
      (markup:write-html
-      (with-form-errors (:errors `((:password . "Incorrect password"))
-                         :password "foo"
+      (with-form-errors (:errors `((:email . "Invalid email"))
                          :email "blah@gmail.com"
                          :was-validated t)
         (signup-get))))))
+
+(screenshot-test signup-user-info-page
+  (with-fixture screenshots ()
+    (signup-after-email/get
+     (make-instance 'standard-auth-provider)
+     :email "foo@example.com"
+     :redirect "/")))
 
 (screenshot-test signup-confirmation-email
   (with-fixture screenshots ()

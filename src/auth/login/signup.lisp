@@ -46,6 +46,7 @@
                 #:finish-confirmation
                 #:secret-code)
   (:import-from #:util/form-errors
+                #:with-error-builder
                 #:with-form-errors)
   (:import-from #:util/store/object-id
                 #:find-by-oid
@@ -74,11 +75,13 @@
                                           :tokens 200)
   "Throttles signups by IP address")
 
-(defmethod auth-provider-signup-form ((auth-provider standard-auth-provider) invite
+(defmethod signup-after-email/get ((auth-provider standard-auth-provider)
+                                    &key
+                                      invite
+                                      email
                                       plan
                                       redirect)
-  (let* ((invite-email (?. invite-email invite))
-         (post (nibble (email password full-name accept-terms-p plan)
+  (let ((post (nibble (password full-name accept-terms-p)
                 (signup-post
                  auth-provider
                  :email email
@@ -88,31 +91,103 @@
                  :accept-terms-p accept-terms-p
                  :plan plan
                  :redirect redirect))))
+    <auth-template simple=t body-class= "simple-v2" full-width=t >
+      <div class="account-pages mb-5">
+        <div class="container">
+
+          <div class= "row g-4">
+            <div class= "col-1" />
+            <div class= "col-md-10 col-lg-5">
+              <form method= "POST" action=post >
+                <div class="card border-0 account-card">
+
+                  <div class= "card-header">
+                    <auth-common-header>
+                      Create your account
+                    </auth-common-header>
+                  </div>
+
+                  <input type= "hidden" name= "email" value=email />
+                  <div class="form-group mb-3">
+                    <label for= "full-name" class= "form-label text-muted">Full name</label>
+                    <input name= "full-name" class="form-control" type="text" id="fullname" placeholder="Full Name" required= "required" />
+                  </div>
+
+
+                  <div class="form-group mb-3">
+                    <label for= "password" class= "form-label text-muted">Password</label>
+                    <div class="input-group input-group-merge">
+                      <input name= "password"  type="password" id="password" class="form-control" placeholder="Password" />
+                    </div>
+                  </div>
+
+                  <div class="form-check mb-3">
+                    <input name= "accept-terms-p" type="checkbox" class="form-check-input" id="checkbox-signup" />
+                    <label class="form-check-label" for="checkbox-signup">I accept the <a href="/terms" class="">Terms and Conditions</a></label>
+                  </div>
+
+
+                  <div class="form-group mb-3 text-center">
+                    <button class="btn btn-primary" type="submit" id= "sign-up-submit" > Complete Sign Up </button>
+                  </div>
+
+                </div>
+              </form>
+
+            </div>
+
+            <div class= "col-5 d-none d-lg-block">
+              <sales-pitch />
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </auth-template>))
+
+
+(defmethod signup-after-email/post ((auth-provider standard-auth-provider)
+                                    &rest args
+                                      &key
+                                        email
+                                        plan
+                                        invite
+                                        redirect
+                                        &allow-other-keys)
+  (with-error-builder (:check check :errors errors
+                       :form-builder (signup-get :plan plan
+                                                 :invite invite
+                                                 :redirect redirect)
+                       :success (hex:safe-redirect
+                                 (nibble ()
+                                   (apply #'signup-after-email/get auth-provider args))))
+    (check-email
+     #'check
+     :email
+     email)))
+
+(defmethod auth-provider-signup-form ((auth-provider standard-auth-provider) invite
+                                      plan
+                                      redirect)
+  (let* ((invite-email (?. invite-email invite))
+         (post (nibble (email password full-name accept-terms-p plan)
+                (signup-after-email/post
+                 auth-provider
+                 :email email
+                 :invite invite
+                 :plan plan
+                 :redirect redirect))))
     <form action=post method= "POST" >
 
       <input type= "hidden" name= "invite-code" value= (?. invite-code invite) />
       <input type= "hidden" name= "plan" value=plan />
-      <div class="form-group mb-3">
-        <input name= "full-name" class="form-control" type="text" id="fullname" placeholder="Full Name" required= "required" />
-      </div>
 
       <div class="form-group mb-3">
-        <input name= "email" class="form-control" type="email" id="email" required= "required" placeholder="Your Email"
+        <label for= "email" class= "form-label text-muted">Work email</label>
+        <input name= "email" class="form-control" type="email" id="email" required= "required"
+               placeholder= "you@work-email.com"
                value=invite-email
                />
-      </div>
-
-      <div class="form-group mb-3">
-        <div class="input-group input-group-merge">
-          <input name= "password"  type="password" id="password" class="form-control" placeholder="Password" />
-        </div>
-      </div>
-
-
-
-      <div class="form-check mb-3">
-          <input name= "accept-terms-p" type="checkbox" class="form-check-input" id="checkbox-signup" />
-            <label class="form-check-label" for="checkbox-signup">I accept the <a href="/terms" class="">Terms and Conditions</a></label>
       </div>
 
       <div class="form-group mb-3 text-center">
@@ -245,6 +320,16 @@ bugs. (See corresponding tests.)"
            (not (str:emptyp (str:trim full-name)))
            "We would really like you to introduce yourself!")))
 
+(defun check-email (check field email)
+  (flet ((check (&rest args)
+           (apply check field args)))
+    (check (< (length email) 150)
+           "Password is too long")
+    (check (valid-email-address-p email)
+           "That doesn't look like a valid email address")
+    (check (not (auth:find-user *installation* :email (string-downcase email)))
+           (format nil "That email address is already in use: ~a" email))))
+
 (defun signup-post (auth-provider
                     &key email password full-name accept-terms-p plan redirect
                       invite)
@@ -261,6 +346,10 @@ bugs. (See corresponding tests.)"
       (check :password (and password (>= (length password) 8))
              "Please use at least 8 letters for the password")
 
+      (check-email #'check
+                   :email
+                   email)
+
       (validate-name #'check full-name)
 
       (check :full-name
@@ -270,27 +359,24 @@ bugs. (See corresponding tests.)"
       (check :password
              (< (length password) 150)
              "Password is too long")
-      (check :email
-             (< (length email) 150)
-             "Password is too long")
-      (check :email
-             (valid-email-address-p email)
-             "That doesn't look like a valid email address")
-      (check :email
-             (not (auth:find-user *installation* :email (string-downcase email)))
-             "That email address is already in use.")
       (check :accept-terms-p
              accept-terms-p
              "Please accept the terms and conditions to continue")
       (cond
         (errors
-         (with-form-errors (:email email :password password
+         (hex:safe-redirect
+          (nibble ()
+            (with-form-errors (:password password
                             :full-name full-name
                             :errors errors
                             :accept-terms-p accept-terms-p
                             :was-validated t)
-          (signup-get
-           :plan plan)))
+             (signup-after-email/get
+              auth-provider
+              :email email
+              :plan plan
+              :invite invite
+              :redirect redirect)))))
         (t
          ;; everything looks good, let's create our user
          (let ((user (auth:make-user
