@@ -7,8 +7,12 @@
 (defpackage :screenshotbot/email-template
   (:use #:cl)
   (:import-from #:screenshotbot/mailer
+                #:smtp-mailer
+                #:wrap-template
                 #:mailer*
-                #:send-mail))
+                #:send-mail)
+  (:export
+   #:templated-smtp-mailer))
 (in-package :screenshotbot/email-template)
 
 (named-readtables:in-readtable markup:syntax)
@@ -90,3 +94,24 @@
  :html-message <email-template>
     <p>hello world</p>
                </email-template>)
+
+
+(defclass templated-mailer ()
+  ())
+
+(defclass templated-smtp-mailer (templated-mailer
+                                 smtp-mailer)
+  ())
+
+(defmethod wrap-template ((mailer templated-mailer) html-message)
+  (mquery:with-document ((call-next-method))
+    (cond
+      ((mquery:$ "head")
+       ;; If there's a head tag, then it's already templated. The
+       ;; with-document returns the original message.
+       nil)
+      (t
+       (return-from wrap-template
+         <email-template>
+           ,@ (markup:xml-tag-children (car (mquery:$ "body")))
+         </email-template>)))))

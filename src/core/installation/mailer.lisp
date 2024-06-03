@@ -20,7 +20,8 @@
    #:send-mail
    #:smtp-mailer
    #:mailer*
-   #:mailer))
+   #:mailer
+   #:wrap-template))
 (in-package :core/installation/mailer)
 
 (defclass mailer ()
@@ -98,6 +99,9 @@
     (t
      (parse-from emails nil))))
 
+(defmethod wrap-template (mailer html-message)
+  html-message)
+
 (defmethod send-mail ((mailer smtp-mailer)
                       &rest args
                       &key from subject to html-message
@@ -121,7 +125,7 @@
         :display-name display-name
         :authentication (authentication mailer)
         :port (port mailer)
-        :html-message (markup:write-html html-message)))
+        :html-message (markup:write-html (wrap-template mailer html-message))))
     (dont-send-the-mail ()
       nil)))
 
