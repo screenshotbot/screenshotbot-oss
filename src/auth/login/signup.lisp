@@ -91,13 +91,7 @@
                  :accept-terms-p accept-terms-p
                  :plan plan
                  :redirect redirect))))
-    <auth-template simple=t body-class= "simple-v2" full-width=t >
-      <div class="account-pages mb-5">
-        <div class="container">
-
-          <div class= "row g-4">
-            <div class= "col-1" />
-            <div class= "col-md-10 col-lg-5">
+    <sales-pitch-template>
               <form method= "POST" action=post >
                 <div class="card border-0 account-card">
 
@@ -133,18 +127,27 @@
 
                 </div>
               </form>
+    </sales-pitch-template>))
 
+(markup:deftag sales-pitch-template (children)
+  <auth-template body-class= "signin-v2" simple=t full-width=t >
+      <div class="account-pages mb-5">
+        <div class="container">
+
+          <div class= "row g-4">
+            <div class= "col-1" />
+            <div class= "col-md-10 col-lg-5">
+              ,@children
             </div>
 
             <div class= "col-5 d-none d-lg-block">
               <sales-pitch />
             </div>
-
           </div>
         </div>
       </div>
-    </auth-template>))
 
+    </auth-template>)
 
 (defmethod signup-after-email/post ((auth-provider standard-auth-provider)
                                     &rest args
@@ -160,7 +163,7 @@
                                                  :redirect redirect)
                        :success (hex:safe-redirect
                                  (nibble ()
-                                   (apply #'signup-after-email/get auth-provider args))))
+                                  ( apply #'signup-after-email/get auth-provider args))))
     (push-event :signup-attempt :email email)
     (check-email
      #'check
@@ -249,51 +252,35 @@
   (let ((login (nibble ()
                  (signin-get :redirect redirect
                              :alert alert))))
-    <auth-template body-class= "signin-v2" simple=t full-width=t >
-      <div class="account-pages mb-5">
-        <div class="container">
+    <sales-pitch-template>
+      <div class="card border-0 account-card">
 
-          <div class= "row g-4">
-            <div class= "col-1" />
-            <div class= "col-md-10 col-lg-5">
-              <div class="card border-0 account-card">
+        <div class= "card-header">
+          <auth-common-header>
+            Enter your credentials to create your account
+          </auth-common-header>
+        </div>
 
-                <div class= "card-header">
-                  <auth-common-header>
-                    Enter your credentials to create your account
-                  </auth-common-header>
-                </div>
+        <div class="card-body p-4">
+          ,(progn alert)
 
-                <div class="card-body p-4">
-                  ,(progn alert)
-
-                  ,@ (let ((len (length (auth-providers *installation*))))
-                       (loop for auth-provider in (auth-providers *installation*)
-                             for idx from 0
-                             collect
-                             (auth-provider-signup-form auth-provider invite
-                                                        plan
-                                                        redirect)
-                             if (and (eql idx 0) (> len 1))
-                               collect  <or-divider />))
-                </div>
-              </div>
-
-              <div class="row mt-3">
-                <div class="col-12 text-center">
-                  <p class="">Already have account? <a href=login class="ml-1"><b>Log In</b></a></p>
-                </div>
-              </div>
-            </div>
-
-            <div class= "col-5 d-none d-lg-block">
-              <sales-pitch />
-            </div>
-          </div>
+          ,@ (let ((len (length (auth-providers *installation*))))
+               (loop for auth-provider in (auth-providers *installation*)
+                     for idx from 0
+                     collect
+                     (auth-provider-signup-form auth-provider invite
+                                                plan
+                                                redirect)
+                     if (and (eql idx 0) (> len 1))
+                       collect  <or-divider />))
         </div>
       </div>
-
-    </auth-template>))
+      <div class="row mt-3">
+        <div class="col-12 text-center">
+          <p class="">Already have account? <a href=login class="ml-1"><b>Log In</b></a></p>
+        </div>
+      </div>
+    </sales-pitch-template>))
 
 
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/signup") (plan)
