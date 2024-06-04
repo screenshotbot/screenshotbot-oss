@@ -105,13 +105,17 @@
 
 (defmethod wrap-template ((mailer templated-mailer) html-message)
   (mquery:with-document ((call-next-method))
-    (cond
-      ((mquery:$ "head")
-       ;; If there's a head tag, then it's already templated. The
-       ;; with-document returns the original message.
-       nil)
-      (t
-       (return-from wrap-template
-         <email-template>
-           ,@ (markup:xml-tag-children (car (mquery:$ "body")))
-         </email-template>)))))
+    (let ((body (car (mquery:$ "body"))))
+     (cond
+       ((or
+         (not body)
+         (mquery:$ "head"))
+        ;; If there's a head tag, then it's already templated. The
+        ;; with-document returns the original message.
+        (Return-from wrap-template
+          html-message))
+       (t
+        (return-from wrap-template
+          <email-template>
+          ,@ (markup:xml-tag-children body)
+          </email-template>))))))

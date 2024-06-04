@@ -10,7 +10,10 @@
   (:import-from #:screenshotbot/testing
                 #:screenshot-test)
   (:import-from #:screenshotbot/email-template
-                #:email-template))
+                #:templated-mailer
+                #:email-template)
+  (:import-from #:screenshotbot/mailer
+                #:wrap-template))
 (in-package :screenshotbot/test-email-template)
 
 (util/fiveam:def-suite)
@@ -21,3 +24,26 @@
   <email-template>
     <p>Hello world!</p>
   </email-template>)
+
+
+(test wrapt-template-for-email-template
+  (let ((mailer (make-instance 'templated-mailer)))
+    (finishes
+     (wrap-template
+      mailer
+      <html>
+      <body>hello</body>
+      </html>))
+    (finishes
+      (wrap-template
+       mailer
+       <html>
+         <head></head>
+         <body>hello</body>
+       </html>))
+    (finishes
+      (wrap-template
+       mailer
+       <html>
+         <head />
+       </html>))))
