@@ -150,7 +150,7 @@
            "Email is too long")
     (check :email (auth:find-user *installation* :email email)
            (format nil "Could not find a user with email: ~a" email))
-    (push-event :signin-attempt email)))
+    (push-event :signin-attempt :email email)))
 
 (defmethod auth-provider-signin-form ((auth-provider standard-auth-provider) redirect)
 
