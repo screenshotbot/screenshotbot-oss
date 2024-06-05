@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:delete-run
+                #:runs-for-company
                 #:recorder-run-author
                 #:%author
                 #:assert-no-loops
@@ -143,3 +145,15 @@
     (let ((run (make-recorder-run)))
       (slot-makunbound run '%author)
       (is (eql nil (recorder-run-author run))))))
+
+
+(test delete-run-happy-path
+  (with-fixture state ()
+    (let ((run (make-recorder-run :company company)))
+      (assert-that (fset:convert 'list (runs-for-company company))
+                   (contains run))
+      (delete-run run)
+      (assert-that (fset:convert 'list (runs-for-company company))
+                   (contains))
+      (finishes
+        (delete-run run)))))

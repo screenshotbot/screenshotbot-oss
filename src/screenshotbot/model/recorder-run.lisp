@@ -47,7 +47,10 @@
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
   (:import-from #:util/events
+                #:push-event
                 #:with-tracing)
+  (:import-from #:util/misc
+                #:?.)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -98,7 +101,8 @@
    #:recorder-run-repo-url
    #:group-separator
    #:recorder-run-author
-   #:abstract-run)
+   #:abstract-run
+   #:delete-run)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -510,3 +514,9 @@ compare against the actual merge base.")))
       (format t "Fixing run: ~a~%" run)
       (setf (recorder-run-company run)
             (screenshotbot/model/company:company (recorder-run-channel run) )))))
+
+(defmethod delete-run (run)
+  "Not exactly deleting, but currently just detaching it from the
+company as a way of deleting."
+  (push-event :delete-run :run (oid run) :company (?. oid (recorder-run-company run)))
+  (setf (recorder-run-company run) nil))
