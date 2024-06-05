@@ -43,6 +43,7 @@
                 #:current-company
                 #:company-channels)
   (:import-from #:screenshotbot/model/recorder-run
+                #:delete-run
                 #:channel-runs
                 #:recorder-run-company
                 #:active-run)
@@ -316,18 +317,13 @@
          (setf (company-reports company)
                (remove channel (company-reports company)
                        :key #'report-channel)))
-       (detach-runs (channel-runs channel))
+       (mapc #'delete-run (channel-runs channel))
        (with-transaction ()
          (setf (company-channels company)
                (remove channel (company-channels company))))
        (with-transaction ()
          (setf (company channel) nil))))))
 
-(defun detach-runs (runs)
-  "Detach the run from the company as a way of deleting it."
-  (loop for run in runs
-        do (with-transaction ()
-             (setf (recorder-run-company run) nil))))
 
 (defun guess-channel-args (channel)
   (list
