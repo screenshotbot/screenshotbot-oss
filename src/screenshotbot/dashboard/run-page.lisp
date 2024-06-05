@@ -44,6 +44,7 @@
   (:import-from #:screenshotbot/model/image
                 #:image-dimensions)
   (:import-from #:screenshotbot/model/recorder-run
+                #:delete-run
                 #:recorder-run-tags
                 #:gitlab-merge-request-iid
                 #:run-screenshot-map
@@ -727,7 +728,5 @@
          (json:encode-json-to-string (make-instance 'js-api-success
                                                      :was-promoted t)))
         (t
-         (bknr.datastore:with-transaction ()
-           (setf (company-runs (current-company))
-                 (remove run (company-runs (current-company)))))
+         (delete-run run)
          (json:encode-json-to-string (make-instance 'js-api-success)))))))

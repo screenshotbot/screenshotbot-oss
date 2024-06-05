@@ -17,6 +17,7 @@
   (:import-from #:screenshotbot/user-api
                 #:channel)
   (:import-from #:screenshotbot/model/recorder-run
+                #:runs-for-company
                 #:make-recorder-run
                 #:not-fast-forward-promotion-warning
                 #:merge-base-failed-warning
@@ -27,6 +28,7 @@
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
   (:import-from #:screenshotbot/dashboard/run-page
+                #:run-delete-page
                 #:run-page
                 #:render-run-page)
   (:import-from #:bknr.datastore
@@ -34,7 +36,13 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:util/store/object-id
-                #:oid))
+                #:oid)
+  (:import-from #:fiveam-matchers/core
+                #:is-not
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:has-item
+                #:contains))
 (in-package :screenshotbot/dashboard/test-run-page)
 
 (util/fiveam:def-suite)
@@ -113,3 +121,15 @@
   (with-fixture state ()
     (finishes
      (run-page :id (oid run)))))
+
+
+(test run-delete-page
+  (with-fixture state ()
+    (let ((run (make-recorder-run :company company
+                                  :channel channel)))
+      (assert-that (fset:convert 'list (runs-for-company company))
+                   (has-item run))
+      (finishes
+        (run-delete-page :id (oid run)))
+      (assert-that (fset:convert 'list (runs-for-company company))
+                   (is-not (has-item run))))))
