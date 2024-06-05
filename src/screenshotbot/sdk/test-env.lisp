@@ -163,3 +163,13 @@
 
     ;; We should never return an empty string
     (is (equal nil (guess-for "https://github.com/bad/.git")))))
+
+(test pull-request-url-is-not-present-on-main-branch-on-gitlab
+  (let ((reader (make-instance 'gitlab-ci-env-reader)))
+    (is (eql nil (pull-request-url reader)))))
+
+(test pull-request-url-*is*-present-on-MR-on-gitlab
+  (let ((reader (make-instance 'gitlab-ci-env-reader
+                               :overrides `(("CI_MERGE_REQUEST_PROJECT_URL" . "https://example.com")
+                                            ("CI_MERGE_REQUEST_IID" . 1)))))
+    (is (equal "https://example.com/-/merge_requests/1" (pull-request-url reader)))))

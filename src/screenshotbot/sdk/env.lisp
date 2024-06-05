@@ -278,9 +278,11 @@ get this from the Git repository directly."))
   (getenv self "GITLAB_CI"))
 
 (defmethod pull-request-url ((self gitlab-ci-env-reader))
-  (format nil "~a/-/merge_requests/~a"
-          (getenv self "CI_MERGE_REQUEST_PROJECT_URL")
-          (getenv self "CI_MERGE_REQUEST_IID")))
+  (when-let ((url (getenv self "CI_MERGE_REQUEST_PROJECT_URL"))
+             (iid (getenv self "CI_MERGE_REQUEST_IID")))
+    (format nil "~a/-/merge_requests/~a"
+            url
+            iid)))
 
 (defmethod sha1 ((self gitlab-ci-env-reader))
   (getenv self "CI_COMMIT_SHA"))
