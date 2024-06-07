@@ -125,6 +125,10 @@
   'fset-many-to-many-index
   :slot-name 'tags)
 
+(defindex +run-channel-index+
+  'fset-set-index
+  :slot-name 'channel)
+
 (defclass abstract-run (store-object)
   ()
   (:metaclass persistent-class))
@@ -135,6 +139,8 @@
       :initarg :channel
       :initform nil
       :relaxed-object-reference t
+      :index +run-channel-index+
+      :index-reader runs-for-channel
       :accessor recorder-run-channel)
      (company
       :initarg :company
