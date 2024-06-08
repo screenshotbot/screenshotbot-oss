@@ -355,7 +355,9 @@
                :util/events
                :util/request
                :util/fake-clingon
-               :util/fiveam)
+               :util/fiveam
+               :util/fset
+               :serapeum)
   :defsystem-depends-on (:trivial-features)
   :serial t
   :components ((:module "tests"
@@ -363,6 +365,7 @@
                              (:static-file "test-file-compressed" :type "txt.gz")
                              (:file "test-ret-let")
                              (:file "test-mail")
+                             (:file "test-fset")
                              (:file "test-fake-clingon")
                              (:file "test-throttler")
                              (:file "test-logger")
@@ -437,3 +440,10 @@
   :serial t
   :depends-on (:clingon)
   :components ((:file "fake-clingon")))
+
+
+(defsystem :util/fset
+  :serial t
+  :depends-on (:fset
+               :easy-macros)
+  :components ((:file "fset")))
