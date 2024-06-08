@@ -43,8 +43,8 @@
                 #:current-company
                 #:company-channels)
   (:import-from #:screenshotbot/model/recorder-run
+                #:runs-for-channel
                 #:delete-run
-                #:channel-runs
                 #:recorder-run-company
                 #:active-run)
   (:import-from #:util/request
@@ -200,7 +200,7 @@
     'single-channel-page :id (store-object-id channel))))
 
 (defun view-channel-runs (channel)
-  (render-recent-runs (channel-runs channel)
+  (render-recent-runs (runs-for-channel channel)
                       :title (format nil "Runs for ~a" (channel-name channel))))
 
 (defun single-channel-view (channel)
@@ -317,7 +317,8 @@
          (setf (company-reports company)
                (remove channel (company-reports company)
                        :key #'report-channel)))
-       (mapc #'delete-run (channel-runs channel))
+       (fset:do-set (run (runs-for-channel channel))
+         (delete-run run))
        (with-transaction ()
          (setf (company-channels company)
                (remove channel (company-channels company))))
