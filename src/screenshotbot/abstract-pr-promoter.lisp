@@ -416,6 +416,25 @@ Revision. It will be tested with EQUAL"))
                 (acceptable-reviewer acceptable))
           return acceptable))
 
+(defun %find-reusable-acceptable (promoter run previous-run pull-id)
+  "Find an acceptable from the previous-run that can be re-used for this
+run. If the previous-run or any of its acceptables cannot be re-used,
+we return NIL."
+  (flet ((p (x message)
+           (format-log run :info "For ~a: ~a: Got ~a" previous-run message x)
+           x))
+    (and
+     (not (eql previous-run run))
+     (timestamp< (created-at previous-run)
+                 (created-at run))
+     (equal (promoter-pull-id promoter previous-run) pull-id)
+     (p (diff-report-empty-p
+         (make-diff-report run previous-run))
+        "Check if diff-report is empty")
+     (p
+      (review-status previous-run)
+      "Check if report is accepted or rejected"))))
+
 (defmethod previous-review (promoter run)
   (when-let ((pull-id (promoter-pull-id promoter run)))
     (format-log run :info "Looking for previous reports on ~a" pull-id)
@@ -424,21 +443,7 @@ Revision. It will be tested with EQUAL"))
       (loop for previous-run in (channel-runs channel)
             while (timestamp< cut-off (created-at previous-run))
             for acceptable
-              =
-              (flet ((p (x message)
-                       (format-log run :info "For ~a: ~a: Got ~a" previous-run message x)
-                       x))
-                (and
-                 (not (eql previous-run run))
-                 (timestamp< (created-at previous-run)
-                             (created-at run))
-                 (equal (promoter-pull-id promoter previous-run) pull-id)
-                 (p (diff-report-empty-p
-                     (make-diff-report run previous-run))
-                    "Check if diff-report is empty")
-                 (p
-                  (review-status previous-run)
-                  "Check if report is accepted or rejected")))
+              = (%find-reusable-acceptable promoter run previous-run pull-id)
             if acceptable
               return acceptable))))
 

@@ -7,7 +7,9 @@
 (defpackage :util/fset
   (:use #:cl)
   (:import-from #:easy-macros
-                #:def-easy-macro))
+                #:def-easy-macro)
+  (:export
+   #:do-reverse-set))
 (in-package :util/fset)
 
 (def-easy-macro do-reverse-set (&binding var set &fn fn)
