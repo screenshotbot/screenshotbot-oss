@@ -12,10 +12,18 @@
    #:do-reverse-set))
 (in-package :util/fset)
 
-(def-easy-macro do-reverse-set (&binding var set &fn fn)
-  "Loops across a set in the reverse order"
+(defun call-do-reverse-set (set fn)
   (loop until (fset:empty? set) do
     (let ((next (fset:greatest set)))
-      (fn next)
+      (funcall fn next)
       (setf set (fset:less set next))))
   nil)
+
+(defmacro do-reverse-set ((val set) &body body)
+  "Loops across a set in the reverse order. Wrapped in an implicit NIL
+block."
+  `(block nil
+     (call-do-reverse-set
+      ,set
+      (lambda (,val)
+        ,@body))))

@@ -29,6 +29,10 @@
      (contains
       3 2 1))))
 
-(collecting
-  (dolist (x (list "one" "two" "three"))
-    (collect x)))
+(test return-from-block
+  (let ((set (fset:convert 'fset:set (list 1 3 4 2 5))))
+    (is (eql
+         4
+         (do-reverse-set (var set)
+           (when (= 0 (mod var 2))
+             (return var)))))))
