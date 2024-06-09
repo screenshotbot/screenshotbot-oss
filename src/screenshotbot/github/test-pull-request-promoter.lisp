@@ -94,9 +94,7 @@
   ())
 
 (defclass dummy-channel (channel)
-  ((run :accessor channel-runs
-        :initform nil)
-   (name :accessor channel-name
+  ((name :accessor channel-name
          :initform "foo")
    (repo :transient t
          :initform (make-instance 'dummy-repo)
