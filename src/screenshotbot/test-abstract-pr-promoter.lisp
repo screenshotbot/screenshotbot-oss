@@ -34,6 +34,8 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/user-api
+                #:%created-at
+                #:created-at
                 #:channel-repo
                 #:user
                 #:channel)
@@ -57,6 +59,8 @@
   (:import-from #:fiveam-matchers/lists
                 #:contains)
   (:import-from #:screenshotbot/model/report
+                #:reports-for-run
+                #:report
                 #:base-acceptable)
   (:import-from #:screenshotbot/diff-report
                 #:diff-report-empty-p)
@@ -83,7 +87,15 @@
   (:import-from #:screenshotbot/model/batch
                 #:find-or-create-batch)
   (:import-from #:util/threading
-                #:make-thread))
+                #:make-thread)
+  (:import-from #:screenshotbot/screenshot-api
+                #:make-screenshot)
+  (:import-from #:screenshotbot/model/image
+                #:make-image)
+  (:import-from #:screenshotbot/model/user
+                #:make-user)
+  (:import-from #:alexandria
+                #:remove-from-plist))
 (in-package :screenshotbot/test-abstract-pr-promoter)
 
 
@@ -483,3 +495,57 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
                 (pr-merge-base
                  promoter
                  run)))))))
+
+(test previous-review-returns-nil-if-theres-nothing
+  (with-fixture state ()
+    (let ((run1 (make-recorder-run
+                 :channel channel)))
+      (answer (promoter-pull-id promoter run1) "foo")
+      (is (eql nil (previous-review promoter run1))))))
+
+(test previous-review-returns-the-older-run
+  (with-fixture state ()
+    (flet ((make-recorder-run (&rest args &key created-at &allow-other-keys)
+             (let ((run (apply #'make-recorder-run (remove-from-plist args :created-at))))
+               ;; As of this writing, created-at is actually ignored
+               ;; because of the base has-created-at class.
+               (setf (%created-at run) (+ (get-universal-time)
+                                          -2000
+                                          created-at))
+               run)))
+     (let* ((screenshot (make-screenshot
+                         :name "foo"
+                         :image (make-image :pathname (asdf:system-relative-pathname
+                                                       :screenshotbot
+                                                       "fixture/rose.png"))))
+            (base-run (make-recorder-run
+                       :created-at 999
+                       :screenshots nil
+                       :channel channel))
+            (run1 (make-recorder-run
+                   :created-at 1000
+                   :screenshots (list screenshot)
+                   :channel channel))
+            (run2 (make-recorder-run
+                   :created-at 1003
+                   :screenshots (list screenshot)
+                   :channel channel))
+            (run3 (make-recorder-run
+                   :created-at 1005
+                   :screenshots (list screenshot)
+                   :channel channel)))
+
+       (let* ((acceptable (make-instance 'base-acceptable
+                                         :user (make-user)
+                                         :state :accepted))
+              (report (make-instance 'report
+                                     :acceptable acceptable
+                                     :run run2
+                                     :previous-run base-run)))
+         (assert-that (reports-for-run run2)
+                      (contains report))
+         (cl-mock:if-called 'promoter-pull-id
+                            (lambda (promoter run)
+                              "foo"))
+
+         (is (eql acceptable (previous-review promoter run3))))))))
