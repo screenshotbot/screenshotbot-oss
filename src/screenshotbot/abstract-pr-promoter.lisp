@@ -45,6 +45,7 @@
                 #:get-parent-commit
                 #:repo-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:runs-for-channel
                 #:recorder-run-branch-hash
                 #:recorder-run-branch
                 #:recorder-run-work-branch
@@ -55,7 +56,6 @@
                 #:recorder-run
                 #:recorder-run-warnings
                 #:merge-base-failed-warning
-                #:channel-runs
                 #:recorder-run-merge-base
                 #:recorder-run-company)
   (:import-from #:screenshotbot/events
@@ -94,6 +94,8 @@
                 #:def-cron)
   (:import-from #:util/misc
                 #:ntrim-list)
+  (:import-from #:util/fset
+                #:do-reverse-set)
   (:export
    #:check
    #:check-status
@@ -440,7 +442,7 @@ we return NIL."
     (format-log run :info "Looking for previous reports on ~a" pull-id)
     (let ((cut-off (timestamp- (local-time:now) 30 :day))
           (channel (recorder-run-channel run)))
-      (dolist (previous-run (channel-runs channel))
+      (do-reverse-set (previous-run (runs-for-channel channel))
         (cond
           ((local-time:timestamp> cut-off (created-at previous-run))
            (return nil))

@@ -86,6 +86,7 @@
                :cl-cron
                :cl-interpol
                :dns-client
+               :util/fset
                :gzip-stream
                :zs3
                :random-sample
