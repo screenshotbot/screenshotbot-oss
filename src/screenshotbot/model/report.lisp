@@ -73,13 +73,17 @@
   'report-company-index
   :slots '(%company promotion-report-p))
 
+(defindex +report-run-index+
+  'fset-set-index
+  :slot-name 'run)
+
 (with-class-validation
   (defclass report (object-with-oid)
     ((run
       :initarg :run
       :accessor report-run
-      :index-type hash-index
-      :index-reader reports-for-run)
+      :index +report-run-index+
+      :index-reader %reports-for-run)
      (%company
       :initform nil
       :accessor %report-company)
@@ -116,6 +120,10 @@
     (:class-indices (company-index
                      :index +report-company-index+
                      :slots (%company promotion-report-p)))))
+
+(defun reports-for-run (run)
+  (fset:convert 'list
+                (%reports-for-run run)))
 
 (defmethod index-add ((index report-company-index) obj)
   (when (promotion-report-p obj)
