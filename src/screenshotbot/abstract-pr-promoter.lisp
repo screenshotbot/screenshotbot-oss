@@ -440,12 +440,14 @@ we return NIL."
     (format-log run :info "Looking for previous reports on ~a" pull-id)
     (let ((cut-off (timestamp- (local-time:now) 30 :day))
           (channel (recorder-run-channel run)))
-      (loop for previous-run in (channel-runs channel)
-            while (timestamp< cut-off (created-at previous-run))
-            for acceptable
-              = (%find-reusable-acceptable promoter run previous-run pull-id)
-            if acceptable
-              return acceptable))))
+      (dolist (previous-run (channel-runs channel))
+        (cond
+          ((local-time:timestamp> cut-off (created-at previous-run))
+           (return nil))
+          (t
+           (let ((acceptable (%find-reusable-acceptable promoter run previous-run pull-id)))
+             (when acceptable
+               (return acceptable)))))))))
 
 (defmethod make-check-result-from-diff-report (promoter (run unchanged-run)
                                            base-run)
