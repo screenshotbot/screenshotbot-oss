@@ -117,7 +117,8 @@
      :transient t)
     (channel-runs
      :initform nil
-     :transient t)
+     :transient t
+     :documentation "Deprecated: do not use. See runs-for-channel instead")
     (%commit-to-run-map
      :initform (fset:empty-map)
      :transient t
