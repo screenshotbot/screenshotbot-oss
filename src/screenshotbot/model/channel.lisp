@@ -117,8 +117,7 @@
      :transient t)
     (channel-runs
      :initform nil
-     :transient t
-     :accessor channel-runs)
+     :transient t)
     (%commit-to-run-map
      :initform (fset:empty-map)
      :transient t
@@ -189,7 +188,6 @@
 
 (defmethod push-run-to-channel ((channel channel) run)
   (bt:with-lock-held ((channel-lock channel))
-    (push run (channel-runs channel))
     (when-let ((commit (recorder-run-commit run)))
       (updatef (commit-to-run-map channel)
                commit (lambda (items)
@@ -197,7 +195,6 @@
 
 (defmethod remove-run-from-channel ((channel channel) run)
   (bt:with-lock-held ((channel-lock channel))
-    (removef (channel-runs channel) run)
     (when-let ((commit (recorder-run-commit run)))
       (updatef (commit-to-run-map channel)
                commit

@@ -8,13 +8,13 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:runs-for-channel
                 #:delete-run
                 #:runs-for-company
                 #:recorder-run-author
                 #:%author
                 #:assert-no-loops
                 #:runs-for-tag
-                #:channel-runs
                 #:make-recorder-run
                 #:pull-request-id
                 #:transient-promotion-log
@@ -80,12 +80,12 @@
                  :channel channel)))
       (assert-that (production-run-for channel :commit "car")
                    (has-length 0))
-      (assert-that (channel-runs channel)
+      (assert-that (fset:convert 'list (runs-for-channel channel))
                    (contains run))
       (assert-that (production-run-for channel :commit "bleh2")
                    (is-equal-to run))
       (bknr.datastore:delete-object run)
-      (assert-that (channel-runs channel)
+      (assert-that (fset:convert 'list (runs-for-channel channel))
                    (has-length 0))
       (assert-that (production-run-for channel :commit "bleh2")
                    (has-length 0)))))

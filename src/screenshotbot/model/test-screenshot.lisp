@@ -45,7 +45,6 @@
 
 (test no-history
   (with-fixture state ()
-    (setf (channel-runs channel) nil)
     (is (equal nil (get-screenshot-history channel "foo")))))
 
 (def-fixture history-fixture ()
@@ -85,8 +84,6 @@
         (is-true (recorder-run-screenshots run1))
         (setf (active-run channel "master") run2)
         (is-true channel)
-        (setf (channel-runs channel)
-              (list run2 run1))
         (is (equal nil (get-screenshot-history channel "blah")))
         (is (equal (list run2 run1) (channel-promoted-runs channel)))
         (is (screenshots= (list

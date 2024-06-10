@@ -24,6 +24,7 @@
                 #:has-typep
                 #:assert-that)
   (:import-from #:screenshotbot/model/recorder-run
+                #:runs-for-channel
                 #:unchanged-run
                 #:make-recorder-run)
   (:import-from #:screenshotbot/model/review-policy
@@ -52,11 +53,12 @@
    (let* ((company (make-instance 'company))
           (channel (make-instance 'channel
                                    :company company)))
-     (is (equal nil (channel-runs channel)))
+     (is (fset:empty? (runs-for-channel channel)))
      (let ((run (make-recorder-run :channel channel
                                    :company company)))
        (is (equal (list run)
-                  (channel-runs channel)))))))
+                  (fset:convert 'list
+                   (runs-for-channel channel))))))))
 
 (test find-production-run-for-commit
   (with-fixture state ()
