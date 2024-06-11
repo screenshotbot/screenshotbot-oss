@@ -176,31 +176,38 @@
    (assoc-value *channel-repo-overrides* channel)
    (%%github-repo channel)))
 
+#-lispworks
+(defvar *updatef-lock* (bt:make-lock))
+
 (defmacro updatef (map key fn)
-  (let ((m (gensym "M"))
-        (k (gensym "KEY"))
-        (ff (gensym "FN")))
-    `(let ((m ,map)
-           (k ,key)
+  (let ()
+    `(let ((k ,key)
            (ff ,fn))
-       (setf ,map (fset:with m
-                             k
-                             (funcall ff (fset:lookup m k)))))))
+
+       (flet ((update (m)
+                (fset:with m
+                           k
+                           (funcall ff (fset:lookup m k)))))
+         #+lispworks
+         (atomics:atomic-update
+          ,map #'update)
+         #-lispworks
+         (bt:with-lock-held (*updatef-lock*)
+           (setf
+            ,map (update ,map)))))))
 
 (defmethod push-run-to-channel ((channel channel) run)
-  (bt:with-lock-held ((channel-lock channel))
-    (when-let ((commit (recorder-run-commit run)))
-      (updatef (commit-to-run-map channel)
-               commit (lambda (items)
-                        (list* run items))))))
+  (when-let ((commit (recorder-run-commit run)))
+    (updatef (slot-value channel '%commit-to-run-map)
+             commit (lambda (items)
+                      (list* run items)))))
 
 (defmethod remove-run-from-channel ((channel channel) run)
-  (bt:with-lock-held ((channel-lock channel))
-    (when-let ((commit (recorder-run-commit run)))
-      (updatef (commit-to-run-map channel)
-               commit
-               (lambda (items)
-                 (remove run items))))))
+  (when-let ((commit (recorder-run-commit run)))
+    (updatef (slot-value channel '%commit-to-run-map)
+             commit
+             (lambda (items)
+               (remove run items)))))
 
 (defmacro with-channel-lock ((channel) &body body)
   `(flet ((body () ,@body))
