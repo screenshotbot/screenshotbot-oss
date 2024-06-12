@@ -233,6 +233,7 @@
     :serial t
     :components ((:file "core")
                  (:file "version")
+                 (:file "analytics-event")
                  (:file "failed-run")
                  (:file "finalized-commit")
                  (:file "batch")
@@ -445,6 +446,7 @@
                              (:file "test-unchanged-run")
                              (:file "test-finalized-commit")
                              (:file "test-commit-graph")
+                             (:file "test-analytics-event")
                              (:file "test-compare")
                              (:file "test-batch")
                              (:file "test-image")
