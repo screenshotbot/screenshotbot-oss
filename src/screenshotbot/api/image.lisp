@@ -132,7 +132,7 @@
 
 (defhandler (api-upload-image-blob :uri "/api/image/blob" :method :put) (oid)
   (authenticate-api-request hunchentoot:*request*)
-  (with-tracing ("image-blob-put")
+  (with-tracing ("image-blob-put" :oid oid)
     (let ((image (find-image-by-id (current-company) oid)))
       (with-raw-post-data-as-tmp-file (p)
         (update-image image :pathname p)
