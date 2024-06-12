@@ -266,5 +266,5 @@ will not consider it as a possibility.")
                   :company (company-name key)
                   :cost val))))
 
-(def-cron push-usage-map (:step-hour 1)
+(def-cron push-usage-map (:minute 0 :step-hour 1)
   (push-usage-map))
