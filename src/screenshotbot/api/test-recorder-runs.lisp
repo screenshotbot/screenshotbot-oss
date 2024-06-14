@@ -267,5 +267,5 @@
       (validate-dto (make-instance
                      'dto:run
                      :tags (list
-                            (make-array 200 :element-type 'character
+                            (make-array 500 :element-type 'character
                                             :initial-element #\a)))))))

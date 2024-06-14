@@ -237,7 +237,7 @@
     (verify (< (length (dto:run-tags run)) 10)
             "Only 10 tags are allowed on a run")
     (dolist (tag (dto:run-tags run))
-      (verify (< (length tag) 100)
+      (verify (< (length tag) 300)
               "Tag too long: ~a" tag))
     (when (dto:run-author run)
       (verify (< (length (dto:run-author run)) 100)
