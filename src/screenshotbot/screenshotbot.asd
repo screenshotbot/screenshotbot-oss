@@ -157,6 +157,7 @@
                  (:file "note")
                  (:file "company-graph")))
    (:file "audit-log")
+   (:file "site-admin")
    (:file "diff-report")
    (:file "invite")
    (:module "dashboard"

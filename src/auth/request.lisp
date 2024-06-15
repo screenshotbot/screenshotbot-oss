@@ -45,8 +45,8 @@
     (alexandria:when-let ((user (auth:session-value :user)))
       (setf (auth:request-user request) user)
       (setf (auth:viewer-context request)
-            (make-instance 'viewer-context:viewer-context
-                           :user user))
+            (make-default-viewer-context
+             request user))
       (unless (auth:request-account request)
         (alexandria:when-let ((company (company-for-request *installation* request)))
           (cond
@@ -63,6 +63,10 @@
    (boundp 'hunchentoot:*request*)
    (auth:request-user hunchentoot:*request*)))
 
+(defmethod make-default-viewer-context (request user)
+  (make-instance 'viewer-context:normal-viewer-context
+                 :user user))
+
 (defun (setf current-user) (user &key expires-in
                                    viewer-context)
   (setf (auth:session-value :user :expires-in expires-in) user)
@@ -70,8 +74,9 @@
   (setf (auth:viewer-context hunchentoot:*request*)
         (or
          viewer-context
-         (make-instance 'viewer-context:normal-viewer-context
-                        :user user)))
+         (make-default-viewer-context
+          hunchentoot:*request*
+          user)))
   user)
 
 (defun logged-in-p ()

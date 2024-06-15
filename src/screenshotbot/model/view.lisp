@@ -17,6 +17,10 @@
                 #:adminp
                 #:can-public-view
                 #:user)
+  (:import-from #:auth/view
+                #:can-viewer-view)
+  (:import-from #:auth/viewer-context
+                #:site-admin-viewer-context)
   (:export
    #:can-edit
    #:can-edit!
@@ -29,7 +33,12 @@
 ;; the given user
 
 (defmethod can-view :around (obj (user user))
+  ;; TODO: remove
+  (call-next-method))
+
+(defmethod can-viewer-view :around ((vc site-admin-viewer-context)
+                                    obj)
   (or
+   ;; always call next method to make sure that code gets tested.
    (call-next-method)
-   ;; super-admins can access everything
-   (adminp user)))
+   t))

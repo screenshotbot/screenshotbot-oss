@@ -36,3 +36,6 @@ super-admin priviledges by default."))
 
 (defclass anonymous-viewer-context (abstract-viewer-context)
   ())
+
+(defclass site-admin-viewer-context (normal-viewer-context)
+  ())
