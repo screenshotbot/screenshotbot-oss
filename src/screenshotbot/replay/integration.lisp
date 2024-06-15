@@ -416,7 +416,8 @@ accessing the urls or sitemap slot."
 
 (defgeneric replay-concurrency (company plan)
   (:method (company plan)
-    2))
+    ;; Keep things simple...
+    1))
 
 (defun run-in-parallel (urls &rest rest-args &key selenium-server
                                                run
