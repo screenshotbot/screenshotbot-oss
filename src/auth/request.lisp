@@ -14,18 +14,22 @@
   (:local-nicknames (#:viewer-context #:auth/viewer-context)))
 (in-package :auth/request)
 
-(defclass authenticated-request (hunchentoot:request)
+(defclass abstract-authenticated-request ()
   ((user :initarg :user
          :initform nil
          :accessor request-user)
    (%viewer-context :initarg :viewer-context
-                    :initform nil
+                    :initform (make-instance 'viewer-context:anonymous-viewer-context)
                     :accessor auth:viewer-context)
    (account :initarg :account
             :initform nil
             :accessor request-account
             :documentation "In screenshotbot this is called a `company`. But this is any account
  object that the user is accessing.")))
+
+(defclass authenticated-request (abstract-authenticated-request
+                                 hunchentoot:request)
+  ())
 
 (defmethod authenticate-request (request))
 
@@ -66,7 +70,7 @@
   (setf (auth:viewer-context hunchentoot:*request*)
         (or
          viewer-context
-         (make-instance 'viewer-context:viewer-context
+         (make-instance 'viewer-context:normal-viewer-context
                         :user user)))
   user)
 

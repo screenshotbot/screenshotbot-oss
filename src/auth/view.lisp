@@ -6,7 +6,12 @@
 
 (defpackage :auth/view
   (:use #:cl
-        #:auth))
+        #:auth)
+  (:import-from #:auth/viewer-context
+                #:anonymous-viewer-context
+                #:logged-in-viewer-context
+                #:viewer-context-user
+                #:normal-viewer-context))
 (in-package :auth/view)
 
 (define-condition no-access-error (error)
@@ -26,20 +31,37 @@
   (:method (obj)
     nil))
 
+(defmethod can-viewer-view ((vc normal-viewer-context) obj)
+  (or
+   (can-public-view obj)
+   (call-next-method)))
+
+(defmethod can-viewer-view ((vc anonymous-viewer-context) obj)
+  (can-public-view obj))
+
+(defmethod can-viewer-view ((vc logged-in-viewer-context) obj)
+  (let ((user (viewer-context-user vc)))
+    (and user
+         (can-view obj user))))
 
 (defun can-view! (&rest objects)
-  (let ((user (auth:current-user)))
+  (let ((vc (auth:viewer-context hunchentoot:*request*)))
     (dolist (obj objects)
-      (unless (or
-               (can-public-view obj)
-               (and user
-                    (can-view obj user)))
+      (unless (can-viewer-view vc obj)
         (restart-case
             (error 'no-access-error
-                    :user user
+                   :user (ignore-errors ;; may not have a user
+                          (viewer-context-user vc))
                     :obj obj)
           (give-access-anyway ()
             nil))))))
+
+(defmethod can-viewer-edit ((vc logged-in-viewer-context) obj)
+  (let ((user (viewer-context-user vc)))
+    (can-edit obj user)))
+
+(defmethod can-viewer-edit (vc obj)
+  nil)
 
 (defgeneric can-edit (obj user)
   (:method (obj user)
@@ -47,10 +69,12 @@
   (:documentation "Can the USER edit object OBJ?"))
 
 (defmethod can-edit! (&rest objects)
-  (let ((user (current-user)))
-    (dolist (obj objects)
-      (unless (can-edit obj user)
-        (error 'no-access-error :user user :obj obj)))))
+  (let ((vc (auth:viewer-context hunchentoot:*request*)))
+   (dolist (obj objects)
+     (unless (can-viewer-edit vc obj)
+       (error 'no-access-error :user (ignore-errors
+                                      (viewer-context-user vc))
+                               :obj obj)))))
 
 (defmethod can-edit :around (obj user)
   "In order to edit something, we also need to be able to view it."

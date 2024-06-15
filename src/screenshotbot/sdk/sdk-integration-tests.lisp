@@ -115,7 +115,7 @@
                   :want-string t)))
        (assert
         (equal
-         "15728640" res))))))
+         15728640 (assoc-value (json:decode-json-from-string res) :response)))))))
 
 (defun test-mark-failed ()
   (log:info "## TESTING --mark-failed")

@@ -96,6 +96,9 @@
                 (setf (auth:request-user hunchentoot:*request*) ,user)
                 (setf (auth:request-account hunchentoot:*request*)
                       ,company)
+                (setf (auth:viewer-context hunchentoot:*request*)
+                      (make-instance 'auth/viewer-context:normal-viewer-context
+                                     :user ,user))
                 (body))))
            (t
             (body)))))))
