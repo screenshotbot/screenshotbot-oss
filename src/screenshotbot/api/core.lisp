@@ -29,6 +29,8 @@
   (:import-from #:screenshotbot/model/company
                 #:redirect-url
                 #:maybe-redirect-for-company)
+  (:import-from #:auth/viewer-context
+                #:api-viewer-context)
   (:export
    #:defapi
    #:result
@@ -81,8 +83,13 @@
                  :message (format nil "API key appears to be invalid or non-existant, got: ~a" api-key)))))))
 
 (defmethod authenticate-request-from-key ((request auth:authenticated-request) key)
-  (setf
-   (auth:request-user hunchentoot:*request*) (api-key-user key))
+  (let ((user (api-key-user key)))
+    (setf
+     (auth:request-user hunchentoot:*request*) user)
+    (setf
+     (auth:viewer-context hunchentoot:*request*)
+     (make-instance 'api-viewer-context
+                    :user user)))
 
   (let ((company (api-key-company key)))
     (when (redirect-url company)
