@@ -12,6 +12,7 @@
                "session-token")
   :components ((:file "package")
                (:file "auth")
+               (:file "viewer-context")
                (:file "request")
                (:file "view")
                (:file "company")

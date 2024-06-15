@@ -85,6 +85,7 @@
            #:find-user
            #:oauth-users
            #:make-user
+           #:viewer-context
            #:unaccepted-invites
            #:user-full-name
            #:user-first-name))
