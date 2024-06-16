@@ -341,6 +341,8 @@ accessing the urls or sitemap slot."
          (json-response (json:decode-json-from-string resp))
          (oid (a:assoc-value json-response :oid))
          (md5 (a:assoc-value json-response :md-5)))
+    (when (str:emptyp oid)
+      (error "full-page-screenshot failed with response: ~a" resp))
     (log:info "Got response: ~a" resp)
     (values oid md5)))
 
