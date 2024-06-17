@@ -54,7 +54,7 @@ CCL_SCRIPT=CCL_DEFAULT_DIRECTORY=$(CCL_DEFAULT_DIRECTORY) $(CCL_CORE) -b -I $(CC
 
 LW_LIB_DIR=/opt/software/lispworks
 PRIVATE_PATCH_DIR=$(LW_LIB_DIR)/lib/8-0-0-0/private-patches/
-PRIVATE_PATCHES=$(call FIND,PRIVATE_PATCH_DIR, *.lisp)
+PRIVATE_PATCHES=$(call FIND,$(PRIVATE_PATCH_DIR),*.lisp)
 
 QUICKLISP=quicklisp/dists/quicklisp/
 COPYBARA_CMD=java -jar scripts/copybara_deploy.jar
