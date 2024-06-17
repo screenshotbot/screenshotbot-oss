@@ -52,6 +52,10 @@ JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/
 SBCL_SCRIPT=$(call timeout,5m) $(sbcl) --script
 CCL_SCRIPT=CCL_DEFAULT_DIRECTORY=$(CCL_DEFAULT_DIRECTORY) $(CCL_CORE) -b -I $(CCL_IMAGE)
 
+LW_LIB_DIR=/opt/software/lispworks
+PRIVATE_PATCH_DIR=$(LW_LIB_DIR)/lib/8-0-0-0/private-patches/
+PRIVATE_PATCHES=$(call FIND,PRIVATE_PATCH_DIR, *.lisp)
+
 QUICKLISP=quicklisp/dists/quicklisp/
 COPYBARA_CMD=java -jar scripts/copybara_deploy.jar
 
@@ -88,6 +92,7 @@ endif
 
 ifeq ($(UNAME),Darwin)
 	LW_CORE=/Applications/LispWorks\ 8.0\ \(64-bit\)/LispWorks\ \(64-bit\).app/Contents/MacOS/lispworks-8-0-0-macos64-universal
+	LW_LIB_DIR=/Applications/LispWorks\ 8.0\ \(64-bit\)/Library
 endif
 
 ifeq ($(OS),Windows_NT)
@@ -198,7 +203,7 @@ screenshotbot-tests: $(LW) .PHONY
 sdk-tests: $(LW) .PHONY
 	$(LW_SCRIPT) ./scripts/jenkins.lisp -system screenshotbot.sdk/tests -no-jvm
 
-$(LW): build/.keep $(IMAGE_DEPS)
+$(LW): build/.keep $(IMAGE_DEPS) $(PRIVATE_PATCHES)
 	echo in here
 # $$PWD is workaround over LW issue #42471
 	$(ARCH_CMD) $(LW_CORE) -build scripts/build-image.lisp
