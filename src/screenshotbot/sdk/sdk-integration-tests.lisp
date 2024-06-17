@@ -100,22 +100,26 @@
             do
                (write-sequence buff s))
       (finish-output s)
-      (let ((res (util/request:http-request
-                  (quri:render-uri
-                   (quri:merge-uris
-                    "/api/upload-test"
-                    (or
-                     (uiop:getenv "SCREENSHOTBOT_API_HOSTNAME")
-                     "https://screenshotbot.io")))
-                  :basic-authorization (list
-                                        (uiop:getenv "SCREENSHOTBOT_API_KEY")
-                                        (uiop:getenv "SCREENSHOTBOT_API_SECRET"))
-                  :method :put
-                  :content p
-                  :want-string t)))
-       (assert
-        (equal
-         "15728640" res))))))
+      (let ((start (get-internal-real-time)))
+        (let ((res (util/request:http-request
+                    (quri:render-uri
+                    (quri:merge-uris
+                     "/api/upload-test"
+                     (or
+                      (uiop:getenv "SCREENSHOTBOT_API_HOSTNAME")
+                      "https://screenshotbot.io")))
+                   :basic-authorization (list
+                                         (uiop:getenv "SCREENSHOTBOT_API_KEY")
+                                         (uiop:getenv "SCREENSHOTBOT_API_SECRET"))
+                   :method :put
+                   :content p
+                   :want-string t)))
+          (assert
+           (equal
+            "15728640" res)))
+        (assert
+         (< (- (get-internal-real-time) start)
+            5000))))))
 
 (defun test-mark-failed ()
   (log:info "## TESTING --mark-failed")
@@ -185,7 +189,8 @@
 
   (run-self-tests)
 
-  (test-large-file)
+  (dotimes (i 20)
+   (test-large-file))
 
   (test-mark-failed)
 
