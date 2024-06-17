@@ -53,6 +53,7 @@
                (:file "env")
                (:file "run-context")
                (:file "sdk")
+               (:file "health-checks")
                (:file "sentry")
                (:file "install")
                (:file "cli-common")

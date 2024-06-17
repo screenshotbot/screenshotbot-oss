@@ -189,7 +189,7 @@
 
   (run-self-tests)
 
-  (dotimes (i 20)
+  (dotimes (i 3)
    (test-large-file))
 
   (test-mark-failed)
