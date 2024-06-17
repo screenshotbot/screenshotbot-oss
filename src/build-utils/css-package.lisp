@@ -75,7 +75,7 @@
 
 (defmethod asdf:perform ((o copy-sources-op) (c css-library))
   #+nil(log:info "performing: ~a, ~a" o c)
-  (let ((output-dir (asdf:output-file o c)))
+  (let ((output-dir (ensure-directories-exist (asdf:output-file o c))))
     (uiop:delete-directory-tree output-dir
                                 :validate
                                 (lambda (x)
