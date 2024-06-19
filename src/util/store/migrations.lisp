@@ -18,7 +18,7 @@
 (defvar *moved-syms* nil
   "A store of moved symbols, in case we need to recover something bad.")
 
-(defmacro ensure-symbol-in-package (name &key old new)
+(defmacro ensure-symbol-in-package (name &key old new export)
   "Ensure the given symbol named by NAME is in the NEW package and not in
  the OLD package. If it's only in OLD it moves it. If it's only in NEW,
  it does
@@ -30,7 +30,7 @@
  error is signaled.
 "
   `(eval-when (:compile-toplevel :load-toplevel :execute)
-     (call-ensure-symbol-in-package ',name ',old ',new)))
+     (call-ensure-symbol-in-package ',name ',old ',new :export ,export)))
 
 (define-condition symbol-in-both-packages (error)
   ())
@@ -39,37 +39,40 @@
   (when (find-package package)
     (find-symbol name package)))
 
-(defun call-ensure-symbol-in-package (name old new)
+(defun call-ensure-symbol-in-package (name old new &key export)
   (let ((old-sym (find-symbol* (string name) old))
         (new-sym (find-symbol* (string name) new)))
     (pushnew (list old-sym new-sym)
              *moved-syms*
              :test #'equal)
-    (cond
-      ((and
-        (not old-sym)
-        (not new-sym))
-       (let ((sym (intern (string name) new)))
-         sym))
-      ((and
-        old-sym
-        (not new-sym))
-       (unintern old-sym old)
-       (import old-sym new)
-       old-sym)
-      ((and
-        (not old-sym)
-        new-sym)
-       (assert (eql
-                (symbol-package new-sym)
-                (find-package new)))
-       new-sym)
-      ((eql old-sym new-sym)
-       (unintern old-sym old)
-       (intern (string name) new)
-       new-sym)
-      (t
-       (error 'symbol-in-both-packages)))))
+    (let ((sym (cond
+                 ((and
+                   (not old-sym)
+                   (not new-sym))
+                  (let ((sym (intern (string name) new)))
+                    sym))
+                 ((and
+                   old-sym
+                   (not new-sym))
+                  (unintern old-sym old)
+                  (import old-sym new)
+                  old-sym)
+                 ((and
+                   (not old-sym)
+                   new-sym)
+                  (assert (eql
+                           (symbol-package new-sym)
+                           (find-package new)))
+                  new-sym)
+                 ((eql old-sym new-sym)
+                  (unintern old-sym old)
+                  (intern (string name) new)
+                  new-sym)
+                 (t
+                  (error 'symbol-in-both-packages)))))
+      (when export
+        (export sym new))
+      sym)))
 
 (defmacro clone-slot (class &key from to)
   ;; This code will do nothing if run from a bootup

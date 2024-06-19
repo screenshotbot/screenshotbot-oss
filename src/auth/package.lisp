@@ -94,6 +94,5 @@
 (util/store/migrations:ensure-symbol-in-package
  :can-viewer-view
  :old :auth/view
- :new :auth)
-
-(export 'can-viewer-view)
+ :new :auth
+ :export t)
