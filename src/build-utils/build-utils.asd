@@ -8,6 +8,7 @@
   :serial t
   :depends-on (:tmpdir
                :str
+               :cl-store
                :alexandria)
   :components ((:file "wild-module")
                (:file "common")

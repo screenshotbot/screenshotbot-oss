@@ -49,9 +49,12 @@
                               :keep-component 'base-css-file)))
 
 (defmethod asdf:output-files ((o copy-sources-op) (c css-library))
-  (list
-   (make-pathname
-    :directory `(:relative ,(format nil "~a--sources-copy" (sanitize-name (component-name c)))))))
+  (let ((name (sanitize-name (component-name c))))
+    (list
+     (make-pathname
+      :directory (list :relative)
+      :name (format nil "~a--sources-copy" name)
+      :type "store"))))
 
 (defun rel-path (child root)
   (assert child)
@@ -72,28 +75,34 @@
          final)))))
 
 
+(defclass css-file-content ()
+  ((name :initarg :name
+         :reader css-file-content-name)
+   (content :initarg :content
+            :accessor css-file-content-content)))
 
 (defmethod asdf:perform ((o copy-sources-op) (c css-library))
   #+nil(log:info "performing: ~a, ~a" o c)
-  (let ((output-dir (ensure-directories-exist (asdf:output-file o c))))
-    (uiop:delete-directory-tree output-dir
-                                :validate
-                                (lambda (x)
-                                  (validate-dir-p output-dir x)))
-    (loop for component in (asdf:required-components c :keep-component 'base-css-file)
-          for rel-path = (rel-path component c)
-          if (not (typep component 'asdf:module))
-            do
-               (let ((output (merge-pathnames
-                              (merge-pathnames
-                               rel-path
-                               (import-path c))
-                              output-dir))
-                     (input (asdf:component-pathname component)))
-                 (assert (pathname-name output))
-                 (ensure-directories-exist output)
-                 (uiop:copy-file input output)))))
-
+  (destructuring-bind (output-file)
+      (asdf:output-files o c)
+    (ensure-directories-exist output-file)
+    (let ((results nil))
+      (loop for component in (asdf:required-components c :keep-component 'base-css-file)
+            for rel-path = (rel-path component c)
+            if (not (typep component 'asdf:module))
+              do
+                 (let ((input (asdf:component-pathname component)))
+                   (push
+                    (make-instance 'css-file-content
+                                   :name (merge-pathnames
+                                          rel-path
+                                          (import-path c))
+                                   :content (uiop:read-file-string input))
+                    results)))
+      (uiop:with-staging-pathname (output-file output-file)
+        (with-open-file (stream output-file :direction :output :if-exists :overwrite
+                                :element-type '(unsigned-byte 8))
+          (cl-store:store results stream))))))
 
 (defmethod asdf:input-files ((o compile-op) (c css-system))
   (call-next-method))
@@ -166,32 +175,51 @@
 (defmethod asdf:component-depends-on ((o compile-op) (c css-system))
   `((copy-sources-op ,(asdf:component-name c))))
 
+(defun copy-css-to-dir (dep output-dir)
+  ;;(format t "Copying CSS: ~a, ~a~%" dep output-dir)
+  (let ((data (cl-store:restore (asdf:output-file 'copy-sources-op dep))))
+    (loop for css-file-content in data
+          do
+             (let ((file (ensure-directories-exist
+                          (path:catfile output-dir (css-file-content-name css-file-content)))))
+               (when (uiop:file-exists-p file)
+                 (error "This CSS file already exists, original: ~a, new ~a"
+                        (uiop:read-file-string file)
+                        (css-file-content-content css-file-content)))
+              (with-open-file (stream file
+                                      :direction :output
+                                      :external-format :utf-8)
+                (write-string (css-file-content-content css-file-content)
+                              stream))))))
+
 (defmethod asdf:perform ((o compile-op) (c css-system))
   (destructuring-bind
       (output-file source-map)
       (output-files o c)
     (let ((tmp-output (make-pathname :type "css-tmp" :defaults output-file)))
-      (multiple-value-bind (out err ret)
-          (uiop:run-program
-           `(,(sass)
-             "--style=compressed"
-             ,@ (loop for dep in (required-components c
-                                                      :other-systems t
-                                                      :keep-component 'css-library)
-                      append (list "-I" (namestring (car (output-files
-                                                          'copy-sources-op
-                                                           dep)))))
-             ,(let ((child (car (input-files 'copy-sources-op c))))
-                (namestring
-                 child))
-             ,(namestring tmp-output))
-           :element-type 'character
-           :external-format :latin-1
-           :output 'string
-           :error-output 'string
-           :ignore-error-status t)
-        (unless (= ret 0)
-          (error "Could not compile css assets: ~%~%stdout:~a~%~%stderr:~%~a~%" out err)))
+      (tmpdir:with-tmpdir (imports)
+        (loop for dep in (required-components c
+                                              :other-systems t
+                                              :keep-component 'css-library)
+              do
+                 (copy-css-to-dir
+                  dep imports))
+        (multiple-value-bind (out err ret)
+            (uiop:run-program
+             `(,(sass)
+               "--style=compressed"
+               "-I" ,(namestring imports)
+               ,(let ((child (car (input-files 'copy-sources-op c))))
+                  (namestring
+                   child))
+               ,(namestring tmp-output))
+             :element-type 'character
+             :external-format :latin-1
+             :output 'string
+             :error-output 'string
+             :ignore-error-status t)
+          (unless (= ret 0)
+            (error "Could not compile css assets: ~%~%stdout:~a~%~%stderr:~%~a~%" out err))))
       (uiop:rename-file-overwriting-target tmp-output output-file)
       (uiop:rename-file-overwriting-target (format nil "~a.map" (namestring tmp-output))
                                            source-map))))
