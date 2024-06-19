@@ -96,3 +96,9 @@
  :old :auth/view
  :new :auth
  :export t)
+
+(util/store/migrations:ensure-symbol-in-package
+ :can-viewer-edit
+ :old :auth/view
+ :new :auth
+ :export t)
