@@ -116,6 +116,6 @@
      (let ((name (car (last (pathname-directory dir)))))
        `(:module ,name :components (,@ (remove-if 'null
                                                    (loop for x in (fad:list-directory dir)
-                                                         collect (get-css-component x)))))))
+                                                         collect (get-js-component x)))))))
     ((equal "js" (pathname-type dir))
      `(,(let ((*package* :cl-user)) (format nil "~s" 'js-file)) ,(pathname-name dir)))))
