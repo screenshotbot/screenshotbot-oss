@@ -88,6 +88,7 @@
            #:viewer-context
            #:unaccepted-invites
            #:can-view-with-normal-viewer-context
+           #:can-edit-with-normal-viewer-context
            #:user-full-name
            #:user-first-name))
 (in-package :auth)

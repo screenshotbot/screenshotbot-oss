@@ -877,7 +877,8 @@
 
       </li>
 
-      ,(when (and acceptable (can-edit acceptable (current-user)))
+      ,(when (and acceptable (auth:can-viewer-edit (auth:viewer-context hunchentoot:*request*)
+                                                   acceptable))
          <li class= "nav-item" >
          <render-acceptable acceptable=acceptable />
          </li>)

@@ -45,6 +45,7 @@
   (:import-from #:util/store/object-id
                 #:oid)
   (:import-from #:auth/viewer-context
+                #:normal-viewer-context
                 #:logged-in-viewer-context)
   (:export
    #:report
@@ -196,16 +197,28 @@
     (:default-initargs :ts (get-universal-time))))
 
 (defmethod can-view ((self base-acceptable) user)
+  (auth:can-view-with-normal-viewer-context
+   user self))
+
+(defmethod auth:can-viewer-view ((vc normal-viewer-context)
+                                 (self base-acceptable))
   (and
    (slot-boundp self 'report)
-   (can-view (acceptable-report self) user)))
+   (auth:can-viewer-view vc (acceptable-report self))))
 
 (defmethod can-edit ((self base-acceptable) user)
+  (auth:can-edit-with-normal-viewer-context
+   user
+   self))
+
+(defmethod auth:can-viewer-edit ((vc normal-viewer-context)
+                                 (self base-acceptable))
   (and
-   (can-view self user)
+   (auth:can-viewer-view vc self)
    (when-let* ((report (acceptable-report self))
                (run (report-run report)))
-     (can-edit run user))))
+     (auth:can-viewer-edit vc run))))
+
 
 (defmethod find-acceptables (channel
                              &key (pull-request-id nil pull-request-provided-p))
