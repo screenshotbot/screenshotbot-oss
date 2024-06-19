@@ -36,7 +36,9 @@
                 #:assert-that)
   (:import-from #:screenshotbot/installation
                 #:installation
-                #:multi-org-feature))
+                #:multi-org-feature)
+  (:import-from #:auth/viewer-context
+                #:normal-viewer-context))
 (in-package :screenshotbot/model/test-report)
 
 (util/fiveam:def-suite)
@@ -103,7 +105,10 @@
          (assert-that (roles:companies-for-user user)
                       (has-item company))
          (is-true user)
-         (is-true (can-view report user)))))))
+         (is-true (auth:can-viewer-view
+                   (make-instance 'normal-viewer-context
+                                  :user user)
+                   report)))))))
 
 (test can-view-on-report-with-nil-previous
   (with-fixture state ()
@@ -119,4 +124,7 @@
          (assert-that (roles:companies-for-user user)
                       (has-item company))
          (is-true user)
-         (is-true (can-view report user)))))))
+         (is-true (auth:can-viewer-view
+                   (make-instance 'normal-viewer-context
+                                  :user user)
+                   report)))))))

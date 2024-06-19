@@ -44,6 +44,8 @@
                 #:can-edit)
   (:import-from #:util/store/object-id
                 #:oid)
+  (:import-from #:auth/viewer-context
+                #:logged-in-viewer-context)
   (:export
    #:report
    #:report-run
@@ -138,10 +140,15 @@
           (recorder-run-company run))))
 
 (defmethod can-view ((report report) user)
+  (auth:can-view-with-normal-viewer-context
+   user report))
+
+(defmethod auth:can-viewer-view ((vc logged-in-viewer-context)
+                                 (report report))
   (and
-   (can-view (report-run report) user)
+   (auth:can-viewer-view vc (report-run report))
    (if (report-previous-run report)
-       (can-view (report-previous-run report) user)
+       (auth:can-viewer-view vc (report-previous-run report))
        t)))
 
 (defun company-promotion-reports (company)

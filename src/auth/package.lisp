@@ -87,6 +87,7 @@
            #:make-user
            #:viewer-context
            #:unaccepted-invites
+           #:can-view-with-normal-viewer-context
            #:user-full-name
            #:user-first-name))
 (in-package :auth)

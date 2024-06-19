@@ -60,6 +60,15 @@
   (let ((user (viewer-context-user vc)))
     (can-edit obj user)))
 
+(defmethod can-view-with-normal-viewer-context (user obj)
+  "This is a helper method just to make it easier to transition from
+CAN-VIEW to CAN-VIEWER-VIEW."
+  (warn "can-view-with-normal-viewer-context called with ~a, ~a" user obj)
+  (can-viewer-view
+   (make-instance 'normal-viewer-context
+                  :user user)
+   obj))
+
 (defmethod can-viewer-edit (vc obj)
   nil)
 
