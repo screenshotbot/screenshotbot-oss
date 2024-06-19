@@ -80,7 +80,6 @@
            #:oauth-user-email
            #:oauth-user-user
            #:user-email
-           #:can-viewer-view
            #:installation-user-with-email
            #:find-or-create-user
            #:find-user
@@ -90,3 +89,11 @@
            #:unaccepted-invites
            #:user-full-name
            #:user-first-name))
+(in-package :auth)
+
+(util/store/migrations:ensure-symbol-in-package
+ :can-viewer-view
+ :old :auth/view
+ :new :auth)
+
+(export 'can-viewer-view)
