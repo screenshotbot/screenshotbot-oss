@@ -56,3 +56,13 @@
           (auth:can-view! :two))
         (signals auth:no-access-error
           (auth:can-edit! :two))))))
+
+(defmethod auth:can-viewer-view (vc (obj (eql :one)))
+  t)
+
+(test can-view-prioritizes-objects-over-vc
+  ;; If the order is reversed, currently this will fail with an error
+  (is-true
+   (auth:can-viewer-view
+    (make-instance 'normal-viewer-context :user :fake-user)
+    :one)))

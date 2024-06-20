@@ -31,6 +31,9 @@
   (:method (obj)
     nil))
 
+(defgeneric can-viewer-view (vc obj)
+  (:argument-precedence-order obj vc))
+
 (defmethod can-viewer-view ((vc normal-viewer-context) obj)
   (or
    (can-public-view obj)
