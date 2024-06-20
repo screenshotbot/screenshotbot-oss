@@ -51,6 +51,11 @@
                 #:with-tracing)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:auth/viewer-context
+                #:viewer-context-user
+                #:normal-viewer-context
+                #:logged-in-viewer-context
+                #:viewer-context)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -389,16 +394,26 @@ associated report is rendered.")
     (unless (bknr.datastore::object-destroyed-p channel)
       (remove-run-from-channel channel run))))
 
-(defmethod can-view ((run recorder-run) user)
-  (can-view (recorder-run-channel run) user))
+(defmethod auth:can-view ((run recorder-run) user)
+  (auth:can-view-with-normal-viewer-context
+   user run))
+
+(defmethod auth:can-viewer-view (vc (run recorder-run))
+  (or
+   (publicp (recorder-run-channel run))
+   (auth:can-viewer-view vc (recorder-run-channel run))))
 
 (defmethod can-public-view ((run recorder-run))
   (publicp (recorder-run-channel run)))
 
-(defmethod can-edit ((run recorder-run) (user user))
+(defmethod auth:can-edit ((run recorder-run) (user user))
+  (auth:can-edit-with-normal-viewer-context
+   user run))
+
+(defmethod auth:can-viewer-edit ((vc normal-viewer-context) (run recorder-run))
   (roles:has-role-p
    (recorder-run-company run)
-   user
+   (viewer-context-user vc)
    'roles:standard-member))
 
 (defmethod activep ((run recorder-run))

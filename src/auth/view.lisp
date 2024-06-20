@@ -84,6 +84,11 @@ CAN-EDIT to CAN-VIEWER-EDIT."
 (defmethod can-viewer-edit (vc obj)
   nil)
 
+(defmethod can-viewer-edit :around (vc obj)
+  (and
+   (auth:can-viewer-view vc obj)
+   (call-next-method)))
+
 (defgeneric can-edit (obj user)
   (:method (obj user)
     nil)

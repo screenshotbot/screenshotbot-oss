@@ -510,7 +510,9 @@
           </div>
 
 
-        ,(when (can-edit run (current-user))
+        ,(when (auth:can-viewer-edit
+                (auth:viewer-context hunchentoot:*request*)
+                run)
            <div class= "">
              <comparison-menu run=run />
              <run-advanced-menu run=run />
