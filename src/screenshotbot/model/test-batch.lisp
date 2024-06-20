@@ -29,7 +29,9 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:promotion-log)
   (:import-from #:bknr.datastore
-                #:blob-pathname))
+                #:blob-pathname)
+  (:import-from #:auth/viewer-context
+                #:normal-viewer-context))
 (in-package :screenshotbot/model/test-batch)
 
 (util/fiveam:def-suite)
@@ -80,7 +82,10 @@
                   :repo "http://foo.git"
                   :commit "abcd"
                   :name "foobar")))
-      (is-false (can-view batch user)))))
+      (is-false (auth:can-viewer-view
+                 (make-instance 'normal-viewer-context
+                                :user user)
+                 batch)))))
 
 (test find-batches-for-company ()
   (with-fixture state ()

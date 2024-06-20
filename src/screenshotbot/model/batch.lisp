@@ -31,6 +31,8 @@
                 #:pull-request-url
                 #:github-repo
                 #:recorder-run-company)
+  (:import-from #:auth/viewer-context
+                #:logged-in-viewer-context)
   (:export
    #:find-or-create-batch
    #:batch-items
@@ -165,8 +167,13 @@
     (when (eql (batch-item-channel item) channel)
       (return item))))
 
-(defmethod can-view ((self batch) user)
-  (can-view (company self) user))
+(defmethod auth:can-view ((self batch) user)
+  (auth:can-view-with-normal-viewer-context
+   user self))
+
+(defmethod auth:can-viewer-view ((vc logged-in-viewer-context)
+                                 (self batch))
+  (auth:can-viewer-view vc (company self)))
 
 (defgeneric finalize-batch (batch)
   (:documentation "Called when the batch is finalized, typically because the commit is finalized. See implementation in batch-promoter"))
