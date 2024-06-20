@@ -582,8 +582,12 @@
 (defmethod image-public-url ((image local-image) &key size)
   (local-image-url image))
 
-(defmethod can-view ((image image) user)
-  (can-view (company image) user))
+(defmethod auth:can-view ((image image) user)
+  (auth:can-view-with-normal-viewer-context
+   user image))
+
+(defmethod auth:can-viewer-view (vc (image image))
+  (auth:can-viewer-view vc (company image)))
 
 (defclass metadata ()
   ((image-format :initarg :image-format
