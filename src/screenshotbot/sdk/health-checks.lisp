@@ -12,9 +12,9 @@
 
 (defvar *crlf* (format nil "~a~a" #\Return #\Linefeed))
 
-#+lispworks
 (def-health-check upload-large-file-multiple-times ()
   ;; See T1252
+  #+(and lispworks darwin) ;; Avoid this health check on Prod
   (let ((content (make-array 333333 :element-type '(unsigned-byte 8) :initial-element 0))
         (hostname
           "screenshotbot.io"))
