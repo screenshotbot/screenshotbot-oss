@@ -18,7 +18,9 @@
                 #:with-test-store)
   (:import-from #:screenshotbot/installation
                 #:installation
-                #:multi-org-feature))
+                #:multi-org-feature)
+  (:import-from #:auth/viewer-context
+                #:normal-viewer-context))
 (in-package :screenshotbot/test-testing)
 
 
@@ -31,15 +33,17 @@
 (test ensure-user-can-view-company
   (with-fixture state ()
     (with-test-user (:user user :company company)
-      (is-true (can-view company user)))
+      (is-true (auth:can-viewer-view (make-instance 'normal-viewer-context :user user)
+                                     company)))
     (with-test-user (:user user :company company)
-      (is-true (can-view company user)))))
+      (is-true (auth:can-viewer-view (make-instance 'normal-viewer-context :user user)
+                                     company)))))
 
 (test ensure-user-can-view-company-multi-org
   (with-installation (:installation (make-instance 'multi-org-test-installation))
     (with-fixture state ()
       (with-test-user (:user user :company company)
-        (is-true (can-view company user))))))
+        (is-true (auth:can-viewer-view (make-instance 'normal-viewer-context :user user) company))))))
 
 (test with-installation-doesnt-override
   (with-installation (:installation (make-instance 'multi-org-test-installation))

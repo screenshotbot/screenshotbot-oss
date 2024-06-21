@@ -20,7 +20,11 @@
                 #:timestamp>
                 #:timestamp-)
   (:import-from #:screenshotbot/model/recorder-run
-                #:runs-for-company))
+                #:runs-for-company)
+  (:import-from #:auth/viewer-context
+                #:viewer-context-user)
+  (:import-from #:alexandria
+                #:when-let))
 (in-package :screenshotbot/company/request)
 
 (defmethod company-for-request ((installation base-multi-org-feature) request)
@@ -30,22 +34,22 @@
     (t
      (guess-best-company
       (auth:session-value :company)
-      (auth:request-user request)))))
+      (auth:viewer-context request)))))
 
 (defmethod company-for-request ((installation multi-org-feature) request)
   (call-next-method))
 
-(defun guess-best-company (company user)
-  (when user
-   (if (and company (can-view company user))
-       company
-       (let ((companies (remove-if-not
-                         (alexandria:rcurry #'can-view user)
-                         (roles:companies-for-user user))))
-        (or
-         (most-recent-company companies)
-         (user-personal-company user)
-         (car companies))))))
+(defun guess-best-company (company viewer-context)
+  (when-let ((user (viewer-context-user viewer-context)))
+    (if (and company (auth:can-viewer-view viewer-context company))
+        company
+        (let ((companies (remove-if-not
+                          (alexandria:curry #'auth:can-viewer-view viewer-context)
+                          (roles:companies-for-user user))))
+          (or
+           (most-recent-company companies)
+           (user-personal-company user)
+           (car companies))))))
 
 (defun most-recent-company (companies)
   "Returns the most recently updated company in the list. If none are

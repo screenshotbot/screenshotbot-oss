@@ -45,6 +45,8 @@
                 #:assert-that)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
+  (:import-from #:auth/viewer-context
+                #:normal-viewer-context)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/company/test-request)
 
@@ -64,11 +66,13 @@
     (let ((*installation* (make-instance 'installation)))
 
       (let* ((company (prepare-singleton-company))
-             (user (make-instance 'user)))
+             (user (make-instance 'user))
+             (vc (make-instance 'normal-viewer-context
+                                :user user)))
         (setf (roles:user-role company user) 'roles:standard-member)
         (assert-that (roles:companies-for-user user)
                      (has-length 1))
-        (is-true (guess-best-company nil user))))))
+        (is-true (guess-best-company nil vc))))))
 
 (defclass multi-org (multi-org-feature
                      installation)
@@ -78,8 +82,10 @@
   (with-fixture state ()
     (let* ((*installation* (make-instance 'multi-org))
            (user (make-user))
-           (company (user-personal-company user)))
-      (is (eql company (guess-best-company company user)) ))) ())
+           (company (user-personal-company user))
+           (vc (make-instance 'normal-viewer-context
+                              :user user)))
+      (is (eql company (guess-best-company company vc)) ))) ())
 
 (test most-recent-company
   (with-fixture state ()

@@ -28,6 +28,8 @@
   (:import-from #:core/installation/installation
                 #:*installation*
                 #:installation-domain)
+  (:import-from #:auth/viewer-context
+                #:logged-in-viewer-context)
   (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/model/test-company)
 
@@ -66,13 +68,17 @@
     (let* ((company (make-instance 'company))
            (child (make-instance 'sub-company
                                 :parent company)))
-      (let ((user (make-user :companies (list company))))
-        (is-true (auth:can-view company user))
-        (is-true (auth:can-view child user)))
+      (let* ((user (make-user :companies (list company)))
+            (vc (make-instance 'logged-in-viewer-context
+                               :user user)))
+        (is-true (auth:can-viewer-view vc company))
+        (is-true (auth:can-viewer-view vc child)))
 
-      (let ((user (make-user :companies (list child))))
-        (is-false (auth:can-view company user))
-        (is-true (auth:can-view child user))))))
+      (let* ((user (make-user :companies (list child)))
+             (vc (make-instance 'logged-in-viewer-context
+                                :user user)))
+        (is-false (auth:can-viewer-view vc company))
+        (is-true (auth:can-viewer-view vc child))))))
 
 
 (test can-view-respects-redirect-url
@@ -80,12 +86,13 @@
     (let* ((company (make-instance 'company))
            (company-with-redirect (make-instance 'company :redirect-url "https://one.example.com"))
            (company-with-redirect-2 (make-instance 'company :redirect-url "https://example.com")))
-      (let ((user (make-user :companies (list company-with-redirect company company-with-redirect-2))))
-        (is-true (auth:can-view company user))
-        (is-false (auth:can-view company-with-redirect user))
-        (is-true (auth:can-view company-with-redirect-2 user))
+      (let* ((user (make-user :companies (list company-with-redirect company company-with-redirect-2)))
+             (vc (make-instance 'logged-in-viewer-context :user user)))
+        (is-true (auth:can-viewer-view vc company))
+        (is-false (auth:can-viewer-view vc company-with-redirect))
+        (is-true (auth:can-viewer-view vc company-with-redirect-2))
         (let ((*installation* (make-instance 'my-installation :domain "https://one.example.com")))
-          (is-true (auth:can-view company-with-redirect user)))))))
+          (is-true (auth:can-viewer-view vc company-with-redirect)))))))
 
 (test company-owner
   (with-fixture state ()

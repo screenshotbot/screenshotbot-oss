@@ -47,6 +47,9 @@
                 #:*installation*)
   (:import-from #:auth/login/roles-auth-provider
                 #:get-company-for-auth-provider)
+  (:import-from #:auth/viewer-context
+                #:viewer-context-user
+                #:logged-in-viewer-context)
   (:export
    #:company
    #:company-reports
@@ -317,8 +320,15 @@ parent organization.")))
      channel)))
 
 (defmethod can-view ((company company) user)
+  (auth:can-view-with-normal-viewer-context
+   user company))
+
+(defmethod auth:can-viewer-view ((vc logged-in-viewer-context)
+                                 (company company))
   (and
-   (roles:has-role-p company user 'roles:read-only)
+   (roles:has-role-p company
+                     (viewer-context-user vc)
+                     'roles:read-only)
    (company-domain-matches-installation-p company)))
 
 (defun company-domain-matches-installation-p (company)
@@ -331,10 +341,14 @@ parent organization.")))
         (installation-domain *installation*)
         redirect-url)))))
 
-(defmethod can-view ((company sub-company) user)
+(defmethod auth:can-view ((company sub-company) user)
+  (auth:can-view-with-normal-viewer-context
+   user company))
+
+(defmethod auth:can-viewer-view ((vc logged-in-viewer-context) (company sub-company))
   (or
    (call-next-method)
-   (can-view (company-parent company) user)))
+   (auth:can-viewer-view vc (company-parent company))))
 
 (defgeneric company (obj)
   (:documentation "For a given obj, figure out which company it belongs to"))
