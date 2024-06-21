@@ -52,6 +52,8 @@
                 #:store-object-id)
   (:import-from #:alexandria
                 #:curry)
+  (:import-from #:auth/viewer-context
+                #:email-viewer-context)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/email-tasks/task-integration)
 
@@ -90,7 +92,11 @@
          #'identity)
      (union
       (remove-if-not
-       (curry #'can-view channel)
+       (lambda (user)
+         (auth:can-viewer-view
+          (make-instance 'email-viewer-context
+                         :user user)
+          channel))
        (channel-subscribers channel))
       (remove-if-not
        (lambda (user)

@@ -277,9 +277,13 @@
   (local-time:universal-to-timestamp (%created-at x)))
 
 (defmethod can-view ((channel channel) user)
+  (auth:can-view-with-normal-viewer-context
+   user channel))
+
+(defmethod auth:can-viewer-view (vc (channel channel))
   (or
    (publicp channel)
-   (can-view (company channel) user)))
+   (auth:can-viewer-view vc (company channel))))
 
 (defmethod production-run-for ((channel channel)
                                &key commit

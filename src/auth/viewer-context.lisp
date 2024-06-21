@@ -11,7 +11,8 @@
    #:viewer-context
    #:api-viewer-context
    #:normal-viewer-context
-   #:anonymous-viewer-context))
+   #:anonymous-viewer-context
+   #:email-viewer-context))
 (in-package :auth/viewer-context)
 
 (defclass abstract-viewer-context ()
@@ -39,3 +40,10 @@ super-admin priviledges by default."))
 
 (defclass site-admin-viewer-context (normal-viewer-context)
   ())
+
+(defclass email-viewer-context (logged-in-viewer-context)
+  ((user :initarg :user
+         :reader viewer-context-user))
+  (:documentation "Information being sent over an email. Technically not a 'logged-in'
+viewer context, but I suppose the user is logged in to their email
+address so it's logged in in that sense."))
