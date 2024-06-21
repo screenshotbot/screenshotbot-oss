@@ -76,7 +76,7 @@ CAN-VIEW to CAN-VIEWER-VIEW."
   "This is a helper method just to make it easier to transition from
 CAN-EDIT to CAN-VIEWER-EDIT."
   (warn "can-edit-with-normal-viewer-context called with ~a, ~a" user obj)
-  (can-viewer-edi
+  (can-viewer-edit
    (make-instance 'normal-viewer-context
                   :user user)
    obj))
