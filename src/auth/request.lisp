@@ -43,19 +43,20 @@
 (defmethod auth:authenticate-request ((request authenticated-request))
   (unless (auth:request-user request) ;; Might happen in tests
     (alexandria:when-let ((user (auth:session-value :user)))
-      (setf (auth:request-user request) user)
-      (setf (auth:viewer-context request)
-            (make-default-viewer-context
-             request user))
-      (unless (auth:request-account request)
-        (alexandria:when-let ((company (company-for-request *installation* request)))
-          (cond
-            ((auth:can-view company user)
-             (setf (auth:request-account request) company))
-            (t
-             (warn "Could not set company for user: ~a, ~a"
-                   company
-                   user))))))))
+      (let ((vc (make-default-viewer-context
+                 request user)))
+        (setf (auth:request-user request) user)
+        (setf (auth:viewer-context request)
+              vc)
+        (unless (auth:request-account request)
+          (alexandria:when-let ((company (company-for-request *installation* request)))
+            (cond
+              ((auth:can-viewer-view vc company)
+               (setf (auth:request-account request) company))
+              (t
+               (warn "Could not set company for user: ~a, ~a"
+                     company
+                     user)))))))))
 
 
 (defun current-user ()
