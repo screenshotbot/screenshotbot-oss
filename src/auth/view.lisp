@@ -39,6 +39,10 @@
    (can-public-view obj)
    (call-next-method)))
 
+(defmethod can-viewer-view (vc (obj null))
+  (warn "can-viewer-view called on NIL object")
+  nil)
+
 (defmethod can-viewer-view ((vc anonymous-viewer-context) obj)
   (can-public-view obj))
 

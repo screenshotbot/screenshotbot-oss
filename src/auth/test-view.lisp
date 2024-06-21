@@ -66,3 +66,9 @@
    (auth:can-viewer-view
     (make-instance 'normal-viewer-context :user :fake-user)
     :one)))
+
+
+(test cannot-view-null-object
+  (is-false (auth:can-viewer-view
+             (make-instance 'normal-viewer-context :user :fake-user)
+             nil)))
