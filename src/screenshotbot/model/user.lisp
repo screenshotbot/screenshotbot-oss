@@ -407,3 +407,6 @@ migration."
           (fset:do-set (sub-company (sub-companies-of next))
             (push sub-company stack)))))
     (reverse result)))
+
+(defmethod auth:can-viewer-view (obj (user user))
+  (error "You got the order wrong, user must come before obj in can-viewer-view!"))
