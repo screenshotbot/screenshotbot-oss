@@ -11,7 +11,9 @@
                 #:anonymous-viewer-context
                 #:logged-in-viewer-context
                 #:viewer-context-user
-                #:normal-viewer-context))
+                #:normal-viewer-context)
+  (:import-from #:util/events
+                #:push-event))
 (in-package :auth/view)
 
 (define-condition no-access-error (error)
@@ -92,6 +94,16 @@ CAN-EDIT to CAN-VIEWER-EDIT."
   (and
    (auth:can-viewer-view vc obj)
    (call-next-method)))
+
+(defmethod can-viewer-view :around (vc obj)
+  (let ((res (call-next-method)))
+    (unless res
+      ;; We are track failures so that a spike can indicate bugs in
+      ;; the authorization logic, or a potential attacker.
+      (push-event :can-viewer-view-failed
+                  :object (format nil "~a" obj)
+                  :vc (format nil "~a" vc)))
+    res))
 
 (defgeneric can-edit (obj user)
   (:method (obj user)
