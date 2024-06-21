@@ -161,10 +161,14 @@
   (:metaclass persistent-class)
   (:default-initargs :created-at (get-universal-time)))
 
-(defmethod can-view ((web-project web-project) (user user))
+(defmethod auth:can-view ((web-project web-project) (user user))
+  (auth:can-view-with-normal-viewer-context
+   user web-project))
+
+(defmethod auth:can-viewer-view (vc (web-project web-project))
   (let ((company (company web-project)))
     (assert company)
-    (can-view company user)))
+    (auth:can-viewer-view vc company)))
 
 (defmethod push-remote-run (build remote-run)
   (with-transaction ()
