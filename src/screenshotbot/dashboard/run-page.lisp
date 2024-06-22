@@ -604,6 +604,7 @@
                                             (screenshots-viewer-mapper self)
                                             (safe-elt (filtered-screenshots self)
                                                       (parse-integer n)))))
+                           (auth:can-view! screenshot)
                            (json:encode-json-to-string
                             `((:src . ,(image-public-url
                                         (screenshot-image screenshot)

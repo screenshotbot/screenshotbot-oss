@@ -395,3 +395,6 @@
    :device (screenshot-device screenshot)
    :masks (screenshot-masks screenshot)
    :image (screenshot-image screenshot)))
+
+(defmethod auth:can-viewer-view (vc (self abstract-screenshot))
+  (auth:can-viewer-view vc (screenshot-image self)))
