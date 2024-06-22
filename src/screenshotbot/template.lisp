@@ -32,6 +32,7 @@
                 #:installation-cdn
                 #:installation)
   (:import-from #:screenshotbot/user-api
+                #:adminp
                 #:current-company)
   (:import-from #:markup
                 #:deftag)
@@ -52,7 +53,11 @@
                 #:render-template)
   (:import-from #:core/installation/installation
                 #:site-alert
-                #:installation-domain))
+                #:installation-domain)
+  (:import-from #:util/misc
+                #:?.)
+  (:import-from #:nibble
+                #:nibble))
 
 (named-readtables:in-readtable markup:syntax)
 
@@ -308,6 +313,19 @@
         <div class= "card">
           <div class= "card-body">
             You do not have permission to access this page. If you think this is an error please reach out to <a href= "mailto:support@screenshotbot.io">support@screenshotbot.io</a>.
+
+            ,(when (?. adminp (auth:current-user))
+               (let* ((url (hunchentoot:request-uri*))
+                      (escalate (nibble ()
+                                  (assert (adminp (auth:current-user)))
+                                  (setf (auth:session-value :site-admin-privileges-enabled
+                                                            :expires-in 3600)
+                                        t)
+                                  (hex:safe-redirect url))))
+                 <form method= "POST" action=escalate >
+                   <input type= "submit" value= "Escalate privileges"
+                       class= "btn btn-danger" />
+                 </form>))
           </div>
         </div>
       </div>

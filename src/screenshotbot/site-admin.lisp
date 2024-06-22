@@ -21,9 +21,8 @@
 (defmethod make-default-viewer-context :around ((request request)
                                                 (user user))
   (cond
-    ((adminp user)
-     ;; TODO: we should explicitly promote ourselves to super-users,
-     ;; should not happen by default.
+    ((and (adminp user)
+          (auth:session-value :site-admin-privileges-enabled))
      (make-instance 'site-admin-viewer-context :user user))
     (t
      (call-next-method))))
