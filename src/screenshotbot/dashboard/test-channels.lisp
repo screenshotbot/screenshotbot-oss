@@ -49,7 +49,9 @@
                 #:fix-timestamps
                 #:screenshot-test)
   (:import-from #:cl-mock
-                #:answer))
+                #:answer)
+  (:import-from #:screenshotbot/model/user
+                #:make-user))
 (in-package :screenshotbot/dashboard/test-channels)
 
 (util/fiveam:def-suite)
@@ -74,8 +76,9 @@
   (with-installation ()
    (cl-mock:with-mocks ()
      (with-test-store ()
-       (let* ((company (make-instance 'company))
+       (let* ((company (make-instance 'company :name "Dummy company"))
               (channel (find-or-create-channel company "foobar"))
+              (user (make-user :companies (list company)))
               (run (make-recorder-run
                     :channel channel
                     :company company))
@@ -115,3 +118,7 @@
 (screenshot-test confirm-channel-deletion
   (with-fixture state ()
     (confirm-delete channel)))
+
+(screenshot-test list-of-channels
+  (with-fixture state ()
+    (%list-projects :user user :company company)))
