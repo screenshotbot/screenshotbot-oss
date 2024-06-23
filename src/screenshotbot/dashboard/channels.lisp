@@ -73,7 +73,9 @@
   (:import-from #:util/form-errors
                 #:with-error-builder)
   (:import-from #:screenshotbot/dashboard/recent-runs
-                #:render-recent-runs))
+                #:render-recent-runs)
+  (:import-from #:core/ui/mdi
+                #:mdi))
 (in-package :screenshotbot/dashboard/channels)
 
 (named-readtables:in-readtable markup:syntax)
@@ -433,6 +435,9 @@
     (with-pagination (channels channels :next-link next-link :prev-link prev-link)
       (dashboard-template :user user :company company :script-name "/channels" :title "Screenshotbot: Channels"
        <taskie-page-title title= (channel-page-title) >
+         <a href="#" class= "btn btn-secondary" >
+           <mdi name= "search" />
+         </a>
        </taskie-page-title>
 
         (taskie-list :empty-message "No projects to show! Projects are
