@@ -589,6 +589,12 @@
 (defmethod auth:can-viewer-view (vc (image image))
   (auth:can-viewer-view vc (company image)))
 
+(defmethod auth:can-viewer-view (vc (image local-image))
+  ;; Currently local-images don't have :company attached to it. We
+  ;; also don't use local-images for much except the demo image, so we
+  ;; might as well allow anyone to view it. See T1260
+  t)
+
 (defclass metadata ()
   ((image-format :initarg :image-format
                  :reader metadata-image-format)
