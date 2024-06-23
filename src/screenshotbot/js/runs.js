@@ -17,8 +17,11 @@ function updateAjaxResults($target) {
 setupLiveOnAttach(".search", function () {
     $(this).on("input", function () {
         var val = $(this).val();
-        var $target = $($(this).data("target"));
+        var targetName = $(this).data("target");
+        console.log("Got targetName", targetName);
+        var $target = $(targetName);
 
+        console.log("Got target: ", $target);
         var params = $target.data("args");
 
         params["search"] = val;
@@ -27,8 +30,16 @@ setupLiveOnAttach(".search", function () {
             clearTimeout(timeout);
         }
 
+        if (!$target.data("original")) {
+            $target.data("original", $target.children());
+        }
+
         $target.data("timeout", setTimeout(function () {
-            updateAjaxResults($target);
+            if (val == "" && $target.data("save-original")) {
+                $target.html($target.data("original"));
+            } else {
+                updateAjaxResults($target);
+            }
         }, 250));
     });
 });

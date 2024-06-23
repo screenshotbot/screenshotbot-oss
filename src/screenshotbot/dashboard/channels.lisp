@@ -73,7 +73,9 @@
   (:import-from #:util/form-errors
                 #:with-error-builder)
   (:import-from #:screenshotbot/dashboard/recent-runs
-                #:render-recent-runs))
+                #:render-recent-runs)
+  (:import-from #:core/ui/mdi
+                #:mdi))
 (in-package :screenshotbot/dashboard/channels)
 
 (named-readtables:in-readtable markup:syntax)
@@ -424,26 +426,56 @@
        (can-view! run)
        (hex:safe-redirect 'run-page :id (oid run))))))
 
+(defun %render-channels-as-taskie (channels &key next-link prev-link)
+  (taskie-list :empty-message "No projects to show! Projects are
+                                   automatically created when you start a run"
+               :items channels
+               :headers (list "Channel" "First created")
+               :next-link next-link
+               :checkboxes nil
+               :prev-link prev-link
+               :row-generator (lambda (channel)
+                                (channel-list-row :channel channel))))
+
+(defun %render-channels-for-search-query (company query)
+  (let* ((query (str:downcase query))
+         (channels (company-channels company))
+         (channels (loop for channel in channels
+                         if (str:containsp query (str:downcase (channel-name channel)))
+                           collect channel)))
+    (%render-channels-as-taskie
+     (loop for channel in channels
+           for i from 0 below 200
+           collect channel))))
+
 (defun %list-projects (&key
                          (user (current-user))
                          (company (current-company)))
   (auth:can-view! company)
-  (let ((channels (sort (copy-list (company-channels company))
+  (let ((channel-search (nibble (search)
+                          (markup:write-html
+                           (%render-channels-for-search-query company search))))
+        (channels (sort (copy-list (company-channels company))
                         '|STRING<| :key 'channel-name)))
     (with-pagination (channels channels :next-link next-link :prev-link prev-link)
       (dashboard-template :user user :company company :script-name "/channels" :title "Screenshotbot: Channels"
        <taskie-page-title title= (channel-page-title) >
+
+         <div class= "input-group mb-3">
+           <span class= "input-group-text channel-search border-0" >
+             <mdi name= "search" />
+           </span>
+           <input class= "form-control search d-inline-block border-0" type= "text" autocomplete= "off"
+                  placeholder= "Search channels"
+                  data-target= "#channel-result" />
+          </div>
        </taskie-page-title>
 
-        (taskie-list :empty-message "No projects to show! Projects are
-                                   automatically created when you start a run"
-                     :items channels
-       :headers (list "Channel" "First created")
-                     :next-link next-link
-       :checkboxes nil
-                     :prev-link prev-link
-                     :row-generator (lambda (channel)
-                                 (channel-list-row :channel channel)))))))
+       <div id= "channel-result" data-args= "{}" data-update=channel-search
+            data-save-original= "true" >
+         ,(%render-channels-as-taskie channels :next-link next-link
+                                      :prev-link prev-link)
+       </div>))))
 
 
 (defhandler (projects-page :uri "/channels") ()
