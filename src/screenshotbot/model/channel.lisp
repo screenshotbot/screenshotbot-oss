@@ -50,6 +50,8 @@
   (:import-from #:screenshotbot/model/review-policy
                 #:disallow-author-review-policy
                 #:anyone-can-review)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
   (:export
    #:channel
    #:set-channel-screenshot-mask
@@ -345,3 +347,6 @@
                  for i from 0 to 1000
                  while run
                  collect run)))))))
+
+(def-store-migration ("Ensure allow-public-badge-p is bound" :version 20)
+  (ensure-slot-boundp 'channel '%allow-public-badge-p))
