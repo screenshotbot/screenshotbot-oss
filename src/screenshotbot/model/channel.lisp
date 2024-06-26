@@ -146,9 +146,13 @@
      :accessor channel-slack-channels)
     (%review-policy
      :initarg :review-policy
-     :accessor review-policy-name))
+     :accessor review-policy-name)
+    (%allow-public-badge-p
+     :initarg :allow-public-badge-p
+     :accessor allow-public-badge-p))
    (:metaclass persistent-class)
-   (:default-initargs :review-policy :allow-author)))
+   (:default-initargs :review-policy :allow-author
+                      :allow-public-badge-p nil)))
 
 (defmethod print-object ((self channel) stream)
   (format stream "#<CHANNEL ~a>" (ignore-errors (channel-name self))))
