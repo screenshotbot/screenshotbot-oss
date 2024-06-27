@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/dashboard/explain
                 #:explain)
   (:import-from #:screenshotbot/model/channel
+                #:allow-public-badge-p
                 #:review-policy-name
                 #:with-channel-lock
                 #:channel-slack-channels
@@ -117,9 +118,10 @@
     </div>))
 
 (deftag settings-card (&key channel)
-  (let ((slack-update (nibble (slack-channels review-policy :method :post)
+  (let ((slack-update (nibble (slack-channels review-policy allow-public-badge-p :method :post)
                         (settings-card-post channel
                                             :slack-channels slack-channels
+                                            :allow-public-badge-p allow-public-badge-p
                                             :review-policy review-policy)))
         (slack-channels (str:join ", "
                            (mapcar (curry #'str:concat "#")
@@ -162,12 +164,24 @@
                </select>)
           </div>
 
+          <div class= "form-check mb-3">
+            <input class= "form-check-input" type= "checkbox"   id= "allowPublicBadge"
+                   name= "allow-public-badge-p"
+                   checked= (when (allow-public-badge-p channel) "checked") />
+            <label for= "allowPublicBadge" class= "form-check-label">Allow public Build Badge for private repositories</label>
+            <explain>
+              By default the Build Badge is only accessible to logged-in users, unless the
+              repository is public. Enabling public access will be required before using the build
+              badge on a private repository.
+            </explain>
+          </div>
+
           <input type= "submit" class= "btn btn-primary" value= "Save" />
         </form>
       </div>
     </div>))
 
-(defun settings-card-post (channel &key slack-channels review-policy)
+(defun settings-card-post (channel &key slack-channels review-policy allow-public-badge-p)
   (with-error-builder (:check check :errors errors)
     (flet ((parse-channel (channel)
              (let ((channel (str:trim channel)))
@@ -186,7 +200,9 @@
         (setf (channel-slack-channels channel)
               slack-channels)
         (setf (review-policy-name channel)
-              (find-symbol (str:upcase review-policy) :keyword)))
+              (find-symbol (str:upcase review-policy) :keyword))
+        (setf (allow-public-badge-p channel)
+              allow-public-badge-p))
       (go-back channel))))
 
 (defhandler (single-channel-page :uri "/channels/:id") (id)
@@ -375,9 +391,7 @@
                          if (string-equal channel (channel-name c))
                            return c)))
       (let ((run (active-run channel branch)))
-        (when run
-          (can-view! run)
-          run)))))
+        run))))
 
 (defvar *badge-cache* (make-mp-hash-table :test #'equal))
 
@@ -401,6 +415,9 @@
               :channel channel
               :company (or org (current-company))
               :branch branch)))
+    (unless (allow-public-badge-p (recorder-run-channel run))
+      (auth:can-view! run))
+
     (let ((data (badge-data
                  :label "Screenshotbot"
                  :message (if run (format nil "~a screenshots" (length (recorder-run-screenshots run)))
