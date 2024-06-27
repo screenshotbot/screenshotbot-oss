@@ -54,7 +54,7 @@ verified, redirects to the given redirect."
         <div class= "card border-0 account-card">
           <div class= "card-header">
             <auth-common-header>
-              Enter the code we sent to your email
+              Enter the code we sent to ,(%email state)
             </auth-common-header>
           </div>
 
