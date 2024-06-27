@@ -375,6 +375,7 @@
                              (:file "test-forgot-password")
                              (:file "test-google-oauth")
                              (:file "test-populate")
+                             (:file "test-verify-email")
                              (:file "test-oidc")
                              (:file "test-login")
                              (:file "test-signup")
