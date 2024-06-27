@@ -187,12 +187,15 @@
    (:metaclass persistent-class)
    (:default-initargs :created-at (get-universal-time))))
 
-(defmethod can-view ((self remote-run) (user user))
+(defmethod auth:can-view ((self remote-run) (user user))
+  (auth:can-view-with-normal-viewer-context
+   user self))
+
+(defmethod auth:can-viewer-view (vc (self remote-run))
   (let ((company (remote-run-company self)))
     (assert company)
     (check-type company company)
-    (can-view (remote-run-company self)
-              user)))
+    (auth:can-viewer-view vc (remote-run-company self))))
 
 (defmethod donep ((run remote-run))
   (let ((thread (gethash run *threads*)))
