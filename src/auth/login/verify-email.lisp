@@ -18,12 +18,18 @@
                 #:verify-email
                 #:sales-pitch-template)
   (:import-from #:util/form-errors
-                #:with-error-builder))
+                #:with-error-builder)
+  (:import-from #:util/throttler
+                #:throttle!
+                #:ip-throttler))
 (in-package :auth/login/verify-email)
 
 (named-readtables:in-readtable markup:syntax)
 
 (defvar *code-expiry* (* 20 60))
+
+(defvar *throttler* (make-instance 'ip-throttler
+                                   :tokens 300))
 
 (defclass state ()
   ((code :initarg :code
@@ -39,6 +45,7 @@
   "Triggers an email verification flow, and once the email has been
 verified, redirects to the given redirect."
   (assert (eql :post (hunchentoot:request-method*)))
+  (throttle! *throttler*)
   (let ((state (make-instance 'state
                               :email email
                               :redirect redirect
@@ -71,11 +78,19 @@ verified, redirects to the given redirect."
             <div class="form-group mb-3 text-center">
               <button class="btn btn-primary" type="submit" id= "sign-up-submit" > Verify Email </button>
             </div>
-
           </div>
-
         </div>
       </form>
+
+      <form method="POST" action=(nibble (:method :post) (verify-email (%email state) :redirect (%redirect state))) >
+        <div class= "form-group mb-3 text-center">
+          <button class= "btn btn-link text-muted" type= "submit" >
+            Request a new code
+          </button>
+        </div>
+      </form>
+
+
     </sales-pitch-template>))
 
 (defun enter-code-screen/post (state &key entered-code)
