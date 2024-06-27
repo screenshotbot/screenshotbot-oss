@@ -23,11 +23,15 @@
 
 (named-readtables:in-readtable markup:syntax)
 
+(defvar *code-expiry* (* 20 60))
+
 (defclass state ()
   ((code :initarg :code
          :reader %code)
    (redirect :initarg :redirect
              :reader %redirect)
+   (ts :initform (get-universal-time)
+       :reader %ts)
    (email :initarg :email
           :reader %email)))
 
@@ -89,7 +93,9 @@ verified, redirects to the given redirect."
        (let ((entered-code (parse-integer entered-code :junk-allowed t)))
          (check :entered-code
                 (equal entered-code (%code state))
-                "The code does not match what we sent over email"))))))
+                "The code does not match what we sent over email")
+         (check :entered-code (< (+ (%ts state) *code-expiry*) (get-universal-time))
+                "The code we sent you has expired. Please request a new code."))))))
 
 
 (defun send-code-email (email code)
@@ -104,6 +110,8 @@ verified, redirects to the given redirect."
          </p>
 
          <h1>,(progn code)</h1>
+
+         <p>This code expires in 20 minutes.</p>
 
          <p>Screenshotbot is an Enterprise-grade developer tool. To keep our customers secure and enable collaboration
            we must verify each user's email address.</p>
