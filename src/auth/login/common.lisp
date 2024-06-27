@@ -195,7 +195,9 @@
 
 (defclass standard-auth-provider (auth-provider
                                   roles-auth-provider)
-  ())
+  ((verify-email-p :initarg :verify-email-p
+                   :initform nil
+                   :reader verify-email-p)))
 
 (defmacro with-login ((&key (needs-login t) (signup nil)
                          (company nil)

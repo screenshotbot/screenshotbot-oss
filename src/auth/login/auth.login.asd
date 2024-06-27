@@ -18,6 +18,7 @@
                (:file "oidc")
                (:file "login")
                (:file "signup")
+               (:file "verify-email")
                (:file "saml")
                (:file "forgot-password")))
 

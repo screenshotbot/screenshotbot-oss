@@ -25,6 +25,7 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/login/common
+                #:verify-email-p
                 #:auth-common-header
                 #:or-divider
                 #:after-create-user
@@ -66,7 +67,8 @@
                 #:make-cdn)
   (:export
    #:signup-get
-   #:signup-post))
+   #:signup-post
+   #:verify-email))
 (in-package :screenshotbot/login/signup)
 
 (named-readtables:in-readtable markup:syntax)
@@ -149,6 +151,15 @@
 
     </auth-template>)
 
+(defmethod maybe-verify-email (auth-provider &key email redirect)
+  (cond
+    ((verify-email-p auth-provider)
+     (verify-email email :redirect redirect))
+    (t
+     ;; We probably want to do this by default in OSS installations.
+     (hex:safe-redirect redirect))))
+
+
 (defmethod signup-after-email/post ((auth-provider standard-auth-provider)
                                     &rest args
                                       &key
@@ -161,9 +172,12 @@
                        :form-builder (signup-get :plan plan
                                                  :invite invite
                                                  :redirect redirect)
-                       :success (hex:safe-redirect
+                       :success (maybe-verify-email
+                                 auth-provider
+                                 :email email
+                                 :redirect
                                  (nibble ()
-                                  ( apply #'signup-after-email/get auth-provider args))))
+                                   (apply #'signup-after-email/get auth-provider args))))
     (push-event :signup-attempt :email email)
     (check-email
      #'check
