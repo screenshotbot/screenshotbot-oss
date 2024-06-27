@@ -384,6 +384,7 @@ bugs. (See corresponding tests.)"
          (let ((user (auth:make-user
                       *installation*
                       :full-name full-name
+                      :confirmed-p (verify-email-p auth-provider)
                       :email email)))
            (with-transaction ()
              (setf (auth:user-password user)
@@ -392,7 +393,8 @@ bugs. (See corresponding tests.)"
            (setf (current-user) user)
 
            (process-existing-invites user email :current-invite invite)
-           (prepare-and-send-email-confirmation user)
+           (unless (verify-email-p auth-provider)
+             (prepare-and-send-email-confirmation user))
            (after-create-user *installation* user))
 
          (cond

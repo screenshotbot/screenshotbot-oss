@@ -142,6 +142,7 @@
                     :initform nil
                     :accessor auth:password-hash)
      (confirmed-p :type boolean
+                  :initarg :confirmed-p
                   :writer (setf confirmed-p)
                   :reader %confirmed-p
                   :documentation "Don't think we're actually reading this from anywhere. Look at user-email-confirmed-p instead.")
