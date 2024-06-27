@@ -109,7 +109,7 @@ verified, redirects to the given redirect."
          (check :entered-code
                 (equal entered-code (%code state))
                 "The code does not match what we sent over email")
-         (check :entered-code (< (+ (%ts state) *code-expiry*) (get-universal-time))
+         (check :entered-code (> (+ (%ts state) *code-expiry*) (get-universal-time))
                 "The code we sent you has expired. Please request a new code."))))))
 
 
