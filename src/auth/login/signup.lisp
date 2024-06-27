@@ -234,24 +234,24 @@
       <li>
         <i class="material-icons">error</i>
         <strong>Catch regressions</strong>
-        <p>Find UI regressions before your app ships</p>
+        <p>Find UI regressions before your app ships.</p>
       </li>
 
       <li>
         <i class="material-icons">people</i>
         <strong>Collaborate across disciplines</strong>
-        <p>Everyone loves screenshots, even if they don't code. Notify them on Slack or Email.</p>
+        <p>Get notified on Slack. Everyone loves screenshots!</p>
       </li>
       <li class= "" >
         <i class="material-icons">history</i>
         <strong>Rewind History</strong>
-        <p>Bisect UI regressions with just a few clicks</p>
+        <p>Bisect UI regressions with just a few clicks.</p>
       </li>
 
       <li>
         <i class="material-icons">code</i>
         <strong>Use libraries of your choice</strong>
-        <p>Use your existing iOS, Android or Web screenshot testing libraries</p>
+        <p>Use your existing iOS, Android or Web screenshot testing libraries.</p>
       </li>
 </ul>
 
