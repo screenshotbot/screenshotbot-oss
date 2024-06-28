@@ -73,8 +73,8 @@
 
 (named-readtables:in-readtable markup:syntax)
 
-(defvar *signup-throttler* (make-instance 'keyed-throttler
-                                          :tokens 200)
+(defparameter *signup-throttler* (make-instance 'keyed-throttler
+                                                :tokens 20)
   "Throttles signups by IP address")
 
 (defmethod signup-after-email/get ((auth-provider standard-auth-provider)
