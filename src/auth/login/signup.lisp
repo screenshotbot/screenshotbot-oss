@@ -178,7 +178,8 @@
                                  :redirect
                                  (nibble ()
                                    (apply #'signup-after-email/get auth-provider args))))
-    (push-event :signup-attempt :email email)
+    (push-event :signup-attempt :email email
+                :ip-address (hunchentoot:real-remote-addr))
     (check-email
      #'check
      :email
