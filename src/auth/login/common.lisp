@@ -197,7 +197,10 @@
                                   roles-auth-provider)
   ((verify-email-p :initarg :verify-email-p
                    :initform nil
-                   :reader verify-email-p)))
+                   :reader verify-email-p)
+   (recaptcha-token :initarg :recaptcha-token
+                    :initform nil
+                    :reader recaptcha-token)))
 
 (defmacro with-login ((&key (needs-login t) (signup nil)
                          (company nil)
