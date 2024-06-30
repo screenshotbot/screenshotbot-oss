@@ -13,6 +13,8 @@
                 #:user-email
                 #:user-first-name)
   (:import-from #:bknr.datastore
+                #:persistent-class
+                #:store-object
                 #:with-transaction)
   (:import-from #:core/installation/auth-provider
                 #:on-user-sign-in
@@ -65,6 +67,10 @@
                 #:set-user-has-seen-invite)
   (:import-from #:util.cdn
                 #:make-cdn)
+  (:import-from #:util/store/store
+                #:defindex)
+  (:import-from #:util/store/fset-index
+                #:fset-set-index)
   (:export
    #:signup-get
    #:signup-post
@@ -72,6 +78,8 @@
 (in-package :screenshotbot/login/signup)
 
 (named-readtables:in-readtable markup:syntax)
+
+(defvar *disabled-emails* (fset:empty-set))
 
 (defparameter *signup-throttler* (make-instance 'keyed-throttler
                                                 :tokens 20)
@@ -179,7 +187,11 @@
                                  (nibble ()
                                    (apply #'signup-after-email/get auth-provider args))))
     (push-event :signup-attempt :email email
-                :ip-address (hunchentoot:real-remote-addr))
+                                :ip-address (hunchentoot:real-remote-addr))
+
+    (check :email (not (fset:contains? *disabled-emails* email))
+           "This email is blocked from creating an account. Please reach out to us at support@screenshotbot.io")
+
     (check-email
      #'check
      :email
