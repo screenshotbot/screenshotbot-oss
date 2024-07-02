@@ -95,10 +95,11 @@
   "Throttles signups by IP address")
 
 (defmethod verify-recaptcha ((auth-provider standard-auth-provider)
-                             token)
+                             token &key email)
   (let ((score (recaptcha-verify-token (recaptcha *installation*)
                                        token)))
     (push-event :signup-risk-score
+                :email email
                 :score score)
     (cond
       ((< score 0.5)
@@ -223,7 +224,7 @@
                                       redirect)
   (let* ((invite-email (?. invite-email invite))
          (post (nibble (email password full-name accept-terms-p plan g-recaptcha-response)
-                 (verify-recaptcha auth-provider g-recaptcha-response)
+                 (verify-recaptcha auth-provider g-recaptcha-response :email email)
                  (signup-after-email/post
                   auth-provider
                   :email email
