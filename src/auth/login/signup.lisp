@@ -396,10 +396,6 @@ bugs. (See corresponding tests.)"
 
       (validate-name #'check full-name)
 
-      (check :full-name
-             (str:containsp " " (str:trim full-name))
-             "Please provide a first and last name (we know names sometimes don't have a last name, but unfortunately we need this to prevent bots. Put in a placeholder last name, and you can change it later!)")
-
       (check :password
              (< (length password) 150)
              "Password is too long")
