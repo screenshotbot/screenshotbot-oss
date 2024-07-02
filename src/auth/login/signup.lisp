@@ -71,6 +71,15 @@
                 #:defindex)
   (:import-from #:util/store/fset-index
                 #:fset-set-index)
+  (:import-from #:util/request
+                #:http-request)
+  (:import-from #:alexandria
+                #:assoc-value)
+  (:import-from #:util/recaptcha
+                #:recaptcha
+                #:recaptcha-add-head-script
+                #:recaptcha-annotate-form
+                #:recaptcha-verify-token)
   (:export
    #:signup-get
    #:signup-post
@@ -84,6 +93,18 @@
 (defparameter *signup-throttler* (make-instance 'keyed-throttler
                                                 :tokens 20)
   "Throttles signups by IP address")
+
+(defmethod verify-recaptcha ((auth-provider standard-auth-provider)
+                             token)
+  (let ((score (recaptcha-verify-token (recaptcha *installation*)
+                                       token)))
+    (push-event :signup-risk-score
+                :score score)
+    (cond
+      ((< score 0.5)
+       (error "Bot user attempted to signup"))
+      (t
+       (values)))))
 
 (defmethod signup-after-email/get ((auth-provider standard-auth-provider)
                                     &key
@@ -102,7 +123,7 @@
                  :plan plan
                  :redirect redirect))))
     <sales-pitch-template>
-              <form method= "POST" action=post >
+      <form method= "POST" action=post >
                 <div class="card border-0 account-card">
 
                   <div class= "card-header">
@@ -175,7 +196,7 @@
                                         plan
                                         invite
                                         redirect
-                                        &allow-other-keys)
+                                    &allow-other-keys)
   (with-error-builder (:check check :errors errors
                        :form-builder (signup-get :plan plan
                                                  :invite invite
@@ -201,15 +222,17 @@
                                       plan
                                       redirect)
   (let* ((invite-email (?. invite-email invite))
-         (post (nibble (email password full-name accept-terms-p plan)
-                (signup-after-email/post
-                 auth-provider
-                 :email email
-                 :invite invite
-                 :plan plan
-                 :redirect redirect))))
-    <form action=post method= "POST" >
-
+         (post (nibble (email password full-name accept-terms-p plan g-recaptcha-response)
+                 (verify-recaptcha auth-provider g-recaptcha-response)
+                 (signup-after-email/post
+                  auth-provider
+                  :email email
+                  :invite invite
+                  :plan plan
+                  :redirect redirect))))
+    (recaptcha-annotate-form
+     (recaptcha *installation*)
+     <form action=post method= "POST" id= "standard-signup-form" >
       <input type= "hidden" name= "invite-code" value= (?. invite-code invite) />
       <input type= "hidden" name= "plan" value=plan />
 
@@ -222,10 +245,13 @@
       </div>
 
       <div class="form-group mb-3 text-center">
-        <button class="btn btn-primary" type="submit" id= "sign-up-submit" > Sign Up </button>
+        <!-- this button will be transformed by recaptcha! -->
+        <button class="btn btn-primary" id= "sign-up-submit"
+                type= "submit"
+                > Sign Up </button>
       </div>
 
-    </form>))
+    </form>)))
 
 (deftag or-signup-with ()
     <div class= "or-signup-with" >
@@ -279,7 +305,9 @@
   (let ((login (nibble ()
                  (signin-get :redirect redirect
                              :alert alert))))
-    <sales-pitch-template>
+    (recaptcha-add-head-script
+     (recaptcha *installation*)
+     <sales-pitch-template>
       <div class="card border-0 account-card">
 
         <div class= "card-header">
@@ -307,7 +335,7 @@
           <p class="">Already have account? <a href=login class="ml-1"><b>Log In</b></a></p>
         </div>
       </div>
-    </sales-pitch-template>))
+    </sales-pitch-template>)))
 
 
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/signup") (plan)

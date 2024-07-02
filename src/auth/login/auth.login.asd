@@ -8,6 +8,7 @@
                :util
                :util/throttler
                :util/events
+               :util/recaptcha
                :util.store
                :clavier
                :oidc)

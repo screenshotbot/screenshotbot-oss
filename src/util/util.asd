@@ -447,3 +447,9 @@
   :depends-on (:fset
                :easy-macros)
   :components ((:file "fset")))
+
+(defsystem :util/recaptcha
+  :serial t
+  :depends-on (:util/request
+               :auto-restart)
+  :components ((:file "recaptcha")))
