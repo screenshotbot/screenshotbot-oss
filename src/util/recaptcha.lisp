@@ -39,9 +39,9 @@
 (defmethod recaptcha-verify-token ((self recaptcha)
                                    (token string))
     (let ((body `((:event . ((:token . ,token)
-                           (:expected-action . "signup")
-                           (:site-key . ,(recaptcha-site-key self)))))))
-    (multiple-value-bind (body res)
+                             (:expected-action . "signup")
+                             (:site-key . ,(recaptcha-site-key self)))))))
+      (multiple-value-bind (body res)
         (http-request
          (format nil "https://recaptchaenterprise.googleapis.com/v1/projects/screenshotbot/assessments?key=~a"
                  (recaptcha-api-key self))
@@ -56,6 +56,10 @@
 
 (defmethod recaptcha-verify-token ((self null) (token null))
   0.9)
+
+(defmethod recaptcha-verify-token ((self recaptcha) (token null))
+  "What if a bot tried to call the endpoint without the token?"
+  0.001)
 
 (defmethod recaptcha-annotate-form ((self null) form)
   form)
