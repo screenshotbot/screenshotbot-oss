@@ -20,6 +20,8 @@
                 #:installation-domain)
   (:import-from #:screenshotbot/login/common
                 #:standard-auth-provider)
+  (:import-from #:util/recaptcha
+                #:installation-with-recaptcha)
   (:export
    #:installation
    #:installation-domain
@@ -48,7 +50,8 @@
    #:oss-installation))
 (in-package :screenshotbot/installation)
 
-(defclass installation (abstract-installation)
+(defclass installation (abstract-installation
+                        installation-with-recaptcha)
   ((plugins :initform nil
             :initarg :plugins
             :accessor plugins)
