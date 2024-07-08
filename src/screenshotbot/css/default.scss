@@ -525,14 +525,14 @@ body > section:nth-child(2) {
         font-size: 0.75rem;
 
         margin-bottom: 0;
-        li {
+        & > li {
             margin-left: 0;
             list-style: none;
             display: inline;
             padding-left: 0;
         }
 
-        li + li:before {
+        & > li + li:before {
             content: " | ";
         }
 

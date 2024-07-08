@@ -561,6 +561,9 @@
       (loop for group-item in (diff-report:group-items group)
             for change = (actual-item group-item)
             for next-id = (random 1000000000000000)
+            ;; TODO(T1273): there's a bug somewhere. diff-report:before here
+            ;; becomes s, but later in change-image-row this is used
+            ;; as the after image. See %find-changes in diff-report.lisp
             for s = (diff-report:before change)
             for x = (diff-report:after change)
             collect
@@ -592,6 +595,23 @@
               Edit Masks
             </a>
           </li>
+
+          ,(let ((id (format nil "a~a" (random 10000000000))))
+             <li>
+               <a href= "#" class= "dropdown-toggle" data-bs-toggle= "dropdown"
+                  data-bs-target= id
+                  aria-expanded= "false" >Download Original</a>
+               <ul class= "dropdown-menu" >
+                 <li>
+                   <a class= "dropdown-item" href= (image-public-url (screenshot-image x) :originalp t)
+                      >Download Previous image</a>
+                 </li>
+                 <li>
+                   <a class= "dropdown-item" href= (image-public-url (screenshot-image s) :originalp t)
+                      >Download Updated image</a>
+                 </li>
+               </ul>
+             </li>)
         </ul>
       </div>
       <change-image-row before-image=(screenshot-image x)

@@ -280,9 +280,13 @@
                     (screenshot-masks s1))))
             collect
             (make-instance 'change
-                            :before s1
-                            :masks (screenshot-masks s1)
-                            :after x))))
+                           ;; TODO(T1273): this is incorrect. The
+                           ;; "to-names" are the before, and the names
+                           ;; are the after. But we're re-using this
+                           ;; correctly in the diff-viewer.
+                           :before s1
+                           :masks (screenshot-masks s1)
+                           :after x))))
 
 (defun diff-report-empty-p (diff-report)
   (not
