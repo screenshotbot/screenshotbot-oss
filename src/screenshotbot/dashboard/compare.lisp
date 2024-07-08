@@ -1022,6 +1022,14 @@
                           data-image-number=i
                           data-target= (format nil "#~a" (modal-id screenshots-viewer)) >
 
+                         <div class= "screenshot-header" >
+                           <ul class= "screenshot-options-menu" >
+                             <li>
+                               <a href= (image-public-url (screenshot-image screenshot) :originalp t)
+                                  >Download Original</a>
+                             </li>
+                           </ul>
+                         </div>
                          <screenshot-box  screenshot=screenshot title= (diff-report:group-title group) />
                        </a>))
                 :header
