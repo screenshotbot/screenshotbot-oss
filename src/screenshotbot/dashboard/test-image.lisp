@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/image
+                #:with-access-checked-image
                 #:send-404
                 #:%build-resized-image
                 #:handle-resized-image)
@@ -38,6 +39,9 @@
                 #:*log-sentry-p*)
   (:import-from #:screenshotbot/async
                 #:magick-future)
+  (:import-from #:util/store/object-id
+                #:oid-array
+                #:oid)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-image)
 
@@ -113,3 +117,10 @@
        (equal "this is a test"
         (catch 'hunchentoot::handler-done
           (send-404 "this is a test")))))))
+
+(test with-access-checked-image
+  (with-fixture state ()
+    (let ((result-im))
+      (with-access-checked-image (image (encrypt:encrypt-mongoid (oid-array im)))
+        (setf result-im image))
+      (is (eql im result-im)))))
