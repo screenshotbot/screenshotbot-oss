@@ -556,30 +556,35 @@
   (with-local-image (im image)
     (md5-file im)))
 
-(defmethod image-public-url ((image abstract-image) &key size type)
-  (let ((url
-         (let ((args nil))
-           (when size
-             (setf args `(:size ,(string-downcase size))))
-           (when type
-             (setf args (list* :type (str:downcase type) args)))
-           (apply #'make-url 'image-blob-get :oid (encrypt:encrypt-mongoid (oid-array image))
-                    args))))
-    (cond
-      (type
-       (make-image-cdn-url url))
-      (t
-       ;; the image endpoint needs to guess the type based on Accept:
-       ;; headers. So we don't cache this for now.
-       url))))
+(defmethod image-public-url ((image abstract-image) &key size type originalp)
+  (let ((eoid (encrypt:encrypt-mongoid (oid-array image))))
+    (let ((url
+            (let ((args nil))
+              (when size
+                (setf args `(:size ,(string-downcase size))))
+              (when type
+                (setf args (list* :type (str:downcase type) args)))
+              (apply #'make-url 'image-blob-get :oid eoid
+                     args))))
+      (cond
+        (originalp
+         (make-image-cdn-url
+          (make-url "/image/original/:oid"
+                    :oid eoid)))
+        (type
+         (make-image-cdn-url url))
+        (t
+         ;; the image endpoint needs to guess the type based on Accept:
+         ;; headers. So we don't cache this for now.
+         url)))))
 
-(defmethod image-public-url ((image image) &key size type)
+(defmethod image-public-url ((image image) &key size type originalp)
   (call-next-method))
 
 (defmethod image-local-url ((image image))
   (image-public-url image))
 
-(defmethod image-public-url ((image local-image) &key size)
+(defmethod image-public-url ((image local-image) &key &allow-other-keys)
   (local-image-url image))
 
 (defmethod auth:can-view ((image image) user)

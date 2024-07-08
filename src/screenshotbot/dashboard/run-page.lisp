@@ -682,6 +682,14 @@
                              Create Issue
                            </a>
                          </li>)
+
+                      <li>
+                        <a target= "_blank"
+                           href= (image-public-url (screenshot-image screenshot) :originalp t)  >
+                          Download Original
+                        </a>
+
+                      </li>
                     </ul>
                   </div>
                   <a href= (image-public-url (screenshot-image screenshot) :size :full-page :type "webp") title= (screenshot-name screenshot)

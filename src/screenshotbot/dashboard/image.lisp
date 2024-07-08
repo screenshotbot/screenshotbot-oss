@@ -170,20 +170,43 @@
   (setf (hunchentoot:return-code*) hunchentoot:+http-not-found+)
   (hunchentoot:abort-request-handler reason))
 
-(defhandler (image-blob-get :uri "/image/blob/:oid/default.webp") (oid size type)
+(def-easy-macro with-access-checked-image (&binding image oid &fn fn)
   (handler-case
       (let ((oid (encrypt:decrypt-mongoid oid)))
         (assert oid)
         (let* ((image (find-image-by-oid oid)))
-          (setf (hunchentoot:header-out :content-type) "image/png")
-          (cond
-            (size
-             (handle-resized-image image size :type type))
-            (t
-             (with-local-image (file image)
-               (handle-static-file file))))))
+          (fn image)))
     (no-image-uploaded-yet ()
       (send-404 "No image uploaded yet for this image"))))
+
+(defhandler (image-blob-get :uri "/image/blob/:oid/default.webp") (oid size type)
+  (with-access-checked-image (image oid)
+    (setf (hunchentoot:header-out :content-type) "image/png")
+    (cond
+      (size
+       (handle-resized-image image size :type type))
+      (t
+       (with-local-image (file image)
+         (handle-static-file file))))))
+
+(defhandler (image-blob-get-original :uri "/image/original/:eoid") (eoid)
+  (destructuring-bind (oid &optional type) (str:split "." eoid)
+    (with-access-checked-image (image oid)
+      (with-local-image (file image)
+        (cond
+          (type
+           (assert (str:s-member '("png" "webp" "jpeg")
+                                 type))
+           (setf (hunchentoot:header-out :content-type) (format nil "image/~a"  type))
+           (handle-static-file file))
+          (t
+           ;; No type argument provided, let's figure it out and redirect
+           (hex:safe-redirect
+            'image-blob-get-original
+            :eoid (format nil "~a.~a"
+                          eoid
+                          (str:downcase
+                           (image-format image))))))))))
 
 (def-store-migration ("Move image-cache to nested directories" :version 6)
   (dolist (image (bknr.datastore:class-instances 'image))
