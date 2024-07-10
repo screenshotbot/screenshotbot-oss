@@ -31,6 +31,7 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/batch-promoter
+                #:build-check-summary
                 #:compute-check-if-invalidated
                 #:compute-check
                 #:compute-title
@@ -38,9 +39,11 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:fiveam-matchers/core
+                #:is-not
                 #:has-typep
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
+                #:has-item
                 #:contains))
 (in-package :screenshotbot/test-batch-promoter)
 
@@ -183,3 +186,17 @@
       (is (equal :success (check-status check)))
       (is (equal "No screenshots changed" (check-title check)))
       (is (equal "Nothing to review" (check-summary check))))))
+
+
+(test ensure-no-newlines-in-summary
+  (with-fixture state ()
+    (dotimes (i 5)
+      (make-instance 'batch-item
+                     :batch batch
+                     :run run
+                     :channel channel
+                     :title "Foobar"
+                     :status :rejected))
+    (let ((summary (build-check-summary batch)))
+      (assert-that (mapcar #'str:trim (str:lines summary))
+                   (is-not (has-item "" ))))))

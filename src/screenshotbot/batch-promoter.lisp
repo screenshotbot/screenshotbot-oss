@@ -177,9 +177,7 @@
                      (installation-domain (installation))))
                      >,(channel-name (batch-item-channel item))</a>
                 </td>
-                <td>
-                  ,(batch-item-title item)
-                </td>
+                <td>,(batch-item-title item) </td>
               </tr>)
      </table>)))
 
