@@ -164,7 +164,8 @@
       :accessor company-invitation-role))
     (:metaclass persistent-class)
     (:default-initargs :redirect-url nil
-                       :invitation-role 'roles:standard-member)))
+                       :invitation-role 'roles:standard-member
+                       :emails-enabled-by-default-p t)))
 
 (defmethod initialize-instance :after ((self company) &rest args &key owner)
   (when (and owner (not (eql :roles owner)))
