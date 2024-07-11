@@ -158,7 +158,7 @@
       :documentation "Redirect this company to this URL. This is used if we want to migrate a company to a different domain.")
      (%emails-enabled-by-default-p
       :initarg :emails-enabled-by-default-p
-      :accessor enabled-enabled-by-default-p)
+      :accessor emails-enabled-by-default-p)
      (invitation-role
       :initarg :invitation-role
       :accessor company-invitation-role))
@@ -185,6 +185,9 @@
     (:metaclass persistent-class)
     (:documentation "A child organization, by default has all the permissions of the
 parent organization.")))
+
+(defmethod emails-enabled-by-default-p ((self sub-company))
+  (emails-enabled-by-default-p (company-parent self)))
 
 (defmethod print-object ((self company) out)
   (format out "#<COMPANY ~a>" (ignore-errors (company-name self))))

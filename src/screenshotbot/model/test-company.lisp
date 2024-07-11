@@ -17,6 +17,7 @@
   (:import-from #:screenshotbot/model/user
                 #:make-user)
   (:import-from #:screenshotbot/model/company
+                #:emails-enabled-by-default-p
                 #:ensure-company-using-roles
                 #:company-owner
                 #:sub-company)
@@ -138,3 +139,12 @@
       (ensure-company-using-roles company)
       (is-false
        (roles:has-role-p company :roles 'roles:owner)))))
+
+
+(test emails-enabled-by-default-for-sub-company
+  (with-fixture state ()
+    (let* ((company (make-instance 'company
+                                   :emails-enabled-by-default-p :foobar))
+           (sub-company (make-instance 'sub-company
+                                       :parent company)))
+      (is (eql :foobar (emails-enabled-by-default-p company))))))
