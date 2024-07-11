@@ -156,6 +156,9 @@
       :initarg :redirect-url
       :accessor redirect-url
       :documentation "Redirect this company to this URL. This is used if we want to migrate a company to a different domain.")
+     (%emails-enabled-by-default-p
+      :initarg :emails-enabled-by-default-p
+      :accessor enabled-enabled-by-default-p)
      (invitation-role
       :initarg :invitation-role
       :accessor company-invitation-role))
