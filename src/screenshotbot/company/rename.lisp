@@ -10,6 +10,7 @@
                 #:settings-template
                 #:defsettings)
   (:import-from #:screenshotbot/model/company
+                #:emails-enabled-by-default-p
                 #:company-invitation-role
                 #:company-with-name
                 #:company-admin-p)
@@ -45,9 +46,11 @@
 
 (defun general-company-page (&key (company (current-company))
                           success)
-  (let ((post (nibble (name invitation-role :name :company-name-change-post)
+  (let ((post (nibble (name invitation-role emails-enabled-by-default-p
+                            :name :company-name-change-post)
                 (%post :company company
                        :invitation-role invitation-role
+                       :emails-enabled-by-default-p emails-enabled-by-default-p
                        :name name))))
     <settings-template>
       <div class= "alert alert-danger d-none mt-3">
@@ -71,7 +74,7 @@
                      id= "name" />
             </div>
 
-            <div class= "form-group mt-2">
+            <div class= "form-group mt-3">
               <label for= "invitation-role" class= "form-label">Who can invite other members?</label>
               <select name= "invitation-role" id= "invitation-role" class= "form-select" >
                 ,@ (loop for (type desc role) in *roles*
@@ -79,6 +82,23 @@
                          <option value= type selected= (when (eql role (company-invitation-role company)) "selected") >,(progn desc)</option>)
               </select>
             </div>
+
+
+          </div>
+
+          <div class= "card-body">
+            <h5 class= "card-title">New user behavior</h5>
+            <div class= "form-check mt-3">
+              <input type= "checkbox" name= "emails-enabled-by-default-p"
+                     id= "emails-enabled-by-default-p"
+                     class= "form-check-input"
+                     checked= (if (emails-enabled-by-default-p company) "checked")
+                     />
+              <label for= "emails-enabled-by-default-p" class= "form-check-label">
+                For new users, enable email notifications by default
+              </label>
+            </div>
+
           </div>
 
           <div class= "card-footer">
@@ -88,15 +108,17 @@
       </form>
     </settings-template>))
 
-(defun %post (&key company name invitation-role)
+(defun %post (&key company name invitation-role emails-enabled-by-default-p)
   (let ((invitation-role-sym
           (second (assoc-value *roles* invitation-role :test #'equal))))
    (with-error-builder (:check check
                         :errors errors
                         :form-builder (general-company-page :company company)
-                        :form-args (:name name :invitation-role invitation-role)
+                        :form-args (:name name :invitation-role invitation-role
+                                          :emails-enabled-by-default-p emails-enabled-by-default-p)
                         :success (%finish-post :company company
                                                :invitation-role invitation-role-sym
+                                               :emails-enabled-by-default-p emails-enabled-by-default-p
                                                :name name))
      (check :name
             (or
@@ -113,12 +135,13 @@
      (check nil (not (personalp company))
             "This organizaton is a legacy personal organization, and its name can't be changed."))))
 
-(defun %finish-post (&key company name invitation-role)
-  (with-transaction ()
-    (setf (company-name company)
-          name)
-    (setf (company-invitation-role company)
-          invitation-role))
+(defun %finish-post (&key company name invitation-role emails-enabled-by-default-p)
+  (setf (company-name company)
+        name)
+  (setf (company-invitation-role company)
+        invitation-role)
+  (setf (emails-enabled-by-default-p company)
+        (not (not emails-enabled-by-default-p)))
   (hex:safe-redirect
    (nibble (:name :success-name-change)
      (general-company-page :company company :success t))))
