@@ -11,14 +11,20 @@
                 #:with-mocks)
   (:import-from #:screenshotbot/sdk/main
                 #:warn-when-obsolete-flags
-                #:*api-secret*
-                #:*api-key*
                 #:*hostname*
                 #:make-api-context
                 #:%main)
   (:import-from #:screenshotbot/sdk/env
                 #:api-hostname
                 #:make-env-reader)
+  (:import-from #+lispworks #:screenshotbot/sdk/common-flags
+                #-lispworks #:screenshotbot/sdk/main
+                #:*api-secret*
+                #:*api-key*)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
@@ -117,3 +123,36 @@
     (let ((flags:*ios-multi-dir* t))
       (signals simple-warning
        (warn-when-obsolete-flags)))))
+
+
+(test make-api-key-context
+  (with-fixture state ()
+    (cl-mock:if-called 'uiop:getenv
+                       (lambda (name) nil))
+    (let ((flags:*desktop* nil)
+          (*api-key* nil)
+          (*api-secret* nil))
+      (handler-case
+          (progn
+            (make-api-context)
+            (fail "expected error"))
+        (simple-error (e)
+          (assert-that (format nil "~a" e)
+                       (contains-string "SCREENSHOTBOT_API_KEY")))))
+
+    (let ((flags:*desktop* nil)
+          (*api-key* "foo")
+          (*api-secret* nil))
+      (handler-case
+          (progn
+            (make-api-context)
+            (fail "expected error"))
+        (simple-error (e)
+          (assert-that (format nil "~a" e)
+                       (contains-string "SCREENSHOTBOT_API_KEY")))))
+
+    (let ((flags:*desktop* nil)
+          (*api-key* "foo")
+          (*api-secret* "bar"))
+      (finishes
+        (make-api-context)))))
