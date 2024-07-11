@@ -30,7 +30,8 @@
                 #:company)
   (:import-from #:screenshotbot/installation
                 #:installation)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria)
+                    (#:company #:screenshotbot/model/company)))
 (in-package :screenshotbot/email-tasks/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -51,6 +52,9 @@
 (defmethod emails-enabled-by-default-p (installation)
   nil)
 
+(defmethod emails-enabled-by-default-p :after (installation)
+  (warn "Deprecated emails-enabled-by-default-p called. Should call company:emails-enabled-by-default-p instead. This function is only here for migration purposes."))
+
 (defun email-setting (&key user company)
   (flet ((old ()
            (loop for setting in (email-settings-for-user user)
@@ -64,7 +68,7 @@
         (make-instance 'email-setting
                         :user user
                         :company company
-                        :enabledp (emails-enabled-by-default-p (installation))))))))
+                        :enabledp (company:emails-enabled-by-default-p company)))))))
 
 (defun save-settings (settings enabledp)
   ;; there's not much in terms of validation to do here.

@@ -83,7 +83,8 @@
    #:add-company-run
    #:company-owner
    #:add-company-report
-   #:maybe-redirect-for-company)
+   #:maybe-redirect-for-company
+   #:emails-enabled-by-default-p)
   (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/model/company)
 
