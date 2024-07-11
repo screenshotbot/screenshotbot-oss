@@ -460,3 +460,14 @@ URL for the company, if there is one."
   (or
    (call-next-method)
    (roles:user-role (company-parent company) user)))
+
+(def-store-migration ("Add default value for emails-enabled-by-default-p" :version 21)
+  (let ((default-value
+          (funcall
+           (or
+            (symbol-function (read-from-string "screenshotbot/email-tasks/settings::emails-enabled-by-default-p"))
+            (lambda (installation)
+              (declare (ignore installation))
+              t))
+           (installation))))
+    (ensure-slot-boundp 'company '%emails-enabled-by-default-p :value default-value)))
