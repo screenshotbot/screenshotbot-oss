@@ -103,7 +103,9 @@
                 :score score)
     (cond
       ((< score 0.5)
-       (error "Bot user attempted to signup"))
+       (hex:safe-redirect
+        (nibble ()
+          "Uh oh. You don't look human. If you think this is an error, ping support@screenshotbot.io")))
       (t
        (values)))))
 
