@@ -228,6 +228,7 @@
                (let ((current-session (current-session)))
                  (cond
                    ((not (auth:session= session current-session))
+                    (warn "Incorrect session: this is not a cause for concern unless it's spiking")
                     (render-incorrect-session plugin))
                    ((let ((nibble-user (nibble-user nibble)))
                       (and
