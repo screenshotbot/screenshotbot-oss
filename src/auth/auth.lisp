@@ -177,6 +177,7 @@
   (setf (session-value :user-id) user-id))
 
 (defun generate-session-token ()
+  (push-counter-event :session-generated)
   (bt:with-lock-held (*lock*)
     (funcall *session-token-generator*)))
 

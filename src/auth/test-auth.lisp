@@ -132,3 +132,7 @@
   (let ((*installation* (make-instance 'abstract-installation
                                        :domain "foo.example.com")))
     (is (equal "s3" (cookie-name)))))
+
+(test generate-session-happey-path
+  (finishes
+    (generate-session-token)))

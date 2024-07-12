@@ -31,6 +31,8 @@
   (:import-from #:core/installation/installation
                 #:*installation*
                 #:installation-domain)
+  (:import-from #:util/events
+                #:push-counter-event)
   (:export #:user-session
            #:session-value
            #:session-key
