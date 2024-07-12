@@ -136,3 +136,15 @@
 (test generate-session-happey-path
   (finishes
     (generate-session-token)))
+
+(test session-token-doesnt-get-called-if-theres-no-token
+  (with-fixture state ()
+    (auth:with-sessions ()
+      (slot-makunbound
+       (auth:current-session)
+       'auth::session-key)
+
+      (cl-mock:answer (auth::%session-token session)
+        (error "session-token should not be read"))
+
+      (is (eql nil (auth:session-value :hello-world))))))

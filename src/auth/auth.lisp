@@ -227,11 +227,12 @@ value."
   *current-session*)
 
 (defun session-value (key &key (session (current-session)))
-  (let ((x (find-user-session-value (%session-token session)
-                                    (session-domain session)
-                                    key)))
-    (and x
-         (value x))))
+  (when (auth:session-created-p session)
+   (let ((x (find-user-session-value (%session-token session)
+                                     (session-domain session)
+                                     key)))
+     (and x
+          (value x)))))
 
 (defun fix-corrupt-session-token-generator ()
   ;; Temporary fix for T1280
