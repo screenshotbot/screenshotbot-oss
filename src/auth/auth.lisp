@@ -96,6 +96,12 @@
     :reader session-domain
     :initform (host-without-port))))
 
+(defmethod session-created-p ((self user-session-transient))
+  "Have we actually generated a session? (i.e. have set set the session
+cookie?) The session might only generated the first time we set a
+session-value, and until there there might be no session available."
+  (slot-boundp self 'session-key))
+
 (defmethod session-key ((session user-session-transient))
   (cons (%session-token session)
         (session-domain session)))

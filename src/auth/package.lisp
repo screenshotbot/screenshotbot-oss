@@ -35,6 +35,7 @@
                 #:push-counter-event)
   (:export #:user-session
            #:session-value
+           #:session-created-p
            #:session-key
            #:set-session-user-id
            #:has-session?

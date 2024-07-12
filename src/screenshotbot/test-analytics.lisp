@@ -1,3 +1,9 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 (defpackage :screenshotbot/test-analytics
   (:use #:cl
         #:fiveam)
@@ -149,3 +155,13 @@
     (assert-that (mapcar #'analytics-event-ts (all-analytics-events))
                  (described-as "After pushing to DB we deserialize timestamps"
                   (every-item (has-typep 'local-time:timestamp))))))
+
+(test push-analytics-event-when-session-is-not-yet-created
+  (with-fixture state ()
+    (with-fake-request ()
+      (auth:with-sessions ()
+        (slot-makunbound
+         (auth:current-session)
+         'auth::session-key)
+        (finishes
+          (push-analytics-event))))))

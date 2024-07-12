@@ -151,7 +151,11 @@
                             :ip-address (hunchentoot:real-remote-addr)
                             :user-agent (hunchentoot:user-agent)
                             :session
-                               (make-digest (car (auth:session-key (auth:current-session))))
+                            (cond
+                              ((auth:session-created-p (auth:current-session))
+                               (make-digest (car (auth:session-key (auth:current-session)))))
+                              (t
+                               (cons "no-session" "no-session")))
                             :referrer (hunchentoot:referer)
                             :script-name (hunchentoot:script-name hunchentoot:*request*)
                             :query-string (hunchentoot:query-string*))))
