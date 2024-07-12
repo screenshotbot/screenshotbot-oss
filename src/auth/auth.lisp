@@ -151,13 +151,16 @@
   (cl-store:restore (path:catfile (asdf:system-source-directory :auth) "dummy-init-key.out")))
 
 (defun init-session-token-generator ()
-  (setf *session-token-generator* (session-token:make-generator
-                                   #+windows
-                                   :initial-seed
-                                   #+windows
-                                   (progn
-                                     (log:warn "Using insecure seed, only use on Windows")
-                                     (read-windows-seed)))))
+  ;; The lock here shouldn't be needed but just to be safe, and
+  ;; doesn't cost us anything anyway.
+  (bt:with-lock-held (*lock*)
+    (setf *session-token-generator* (session-token:make-generator
+                                     #+windows
+                                     :initial-seed
+                                     #+windows
+                                     (progn
+                                       (log:warn "Using insecure seed, only use on Windows")
+                                       (read-windows-seed))))))
 
 (init-session-token-generator)
 
@@ -222,6 +225,17 @@ value."
                                     key)))
     (and x
          (value x))))
+
+(defun fix-corrupt-session-token-generator ()
+  ;; Temporary fix for T1280
+  (handler-case
+      (generate-session-token)
+    (error (e)
+      (warn "Session token generation test failed with: ~a" e)
+      (init-session-token-generator))))
+
+(def-cron fix-corrupt-session-token-generator (:step-min 5)
+  (fix-corrupt-session-token-generator))
 
 
 (defun (setf session-value) (value key &key (session (current-session))

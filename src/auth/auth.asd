@@ -6,6 +6,7 @@
                "core.installation"
                "util.store"
                "log4cl"
+               "util/cron"
                "cl-fad"
                "cl-store"
                "hunchentoot"
