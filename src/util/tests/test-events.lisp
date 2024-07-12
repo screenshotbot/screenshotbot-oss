@@ -8,6 +8,11 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/events
+                #:event-extras
+                #:event-name
+                #:flush-counter-events
+                #:*counter-events*
+                #:push-counter-event
                 #:with-tracing
                 #:event-engine
                 #:with-event
@@ -47,6 +52,7 @@
   (uiop:with-temporary-file (:pathname pathname)
    (cl-mock:with-mocks ()
      (setf *events* nil)
+     (setf *counter-events* nil)
      (let* ((*installation*
               (make-instance 'fake-installation
                              :event-engine
@@ -137,3 +143,27 @@
      (assert-that events
                   (contains
                    (has-item :extra-tag))))))
+
+(test counter-events
+  (with-fixture state ()
+    (push-counter-event :foobar :value 3)
+    (assert-that *counter-events*
+                 (has-length 1))
+    (flush-counter-events)
+    (assert-that *counter-events*
+                 (has-length 0))
+    (assert-that *events*
+                 (has-length 1))))
+
+(test counter-events-get-added-up
+  (with-fixture state ()
+    (push-counter-event :foobar :value 3)
+    (push-counter-event :foobar :value 6)
+    (flush-counter-events)
+    (assert-that *counter-events*
+                 (has-length 0))
+    (let ((event (first *events*)))
+      (is (equal "foobar" (event-name event)))
+      (is (equal "{\"value\":9}" (event-extras event))))
+    (assert-that *events*
+                 (has-length 1))))

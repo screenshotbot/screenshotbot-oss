@@ -28,7 +28,8 @@
    #:event-engine
    #:with-tracing
    #:delete-old-data
-   #:db-engine))
+   #:db-engine
+   #:push-counter-event))
 (in-package :util/events)
 
 (defvar *events* nil)
@@ -192,6 +193,31 @@
                                  :time (local-time:timestamp-difference
                                         (local-time:now) start-time)
                                  extra-args))))
+
+(defstruct counter-event
+  name value)
+
+(defvar *counter-events* nil)
+
+(defun push-counter-event (name &key (value 1))
+  (atomics:atomic-push
+   (make-counter-event :name name :value value)
+   *counter-events*))
+
+(defun flush-counter-events ()
+  (let ((counter-events (util/atomics:atomic-exchange *counter-events* nil))
+        (counters (make-hash-table :test #'equal)))
+    (loop for event in counter-events do
+      (incf (gethash (counter-event-name event) counters 0)
+            (counter-event-value event)))
+
+    (loop for name being the hash-keys of counters
+            using (hash-value v)
+          do
+             (push-event name :value v))))
+
+(def-cron flush-counter-events (:step-min 5)
+  (flush-counter-events))
 
 (def-cron delete-old-data (:minute 0 :hour 7)
   (delete-old-data (event-engine (safe-installation))))
