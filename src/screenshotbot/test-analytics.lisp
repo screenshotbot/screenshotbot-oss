@@ -109,7 +109,21 @@
     (with-fake-request ()
       (auth:with-sessions ()
         (push-analytics-event)
-        (is (eql 1 (length *events*)))
+        (assert-that *events*
+                     (has-length 1))
+        (write-analytics-events)
+        (assert-that (all-analytics-events)
+                     (has-length 1))))))
+
+(test push-analytics-event-when-session-not-created
+  (with-fixture state ()
+    (with-fake-request ()
+      (auth:with-sessions ()
+        (slot-makunbound (auth:current-session)
+                         'auth::session-key)
+        (push-analytics-event)
+        (assert-that *events*
+                     (has-length 1))
         (write-analytics-events)
         (assert-that (all-analytics-events)
                      (has-length 1))))))

@@ -155,7 +155,7 @@
                               ((auth:session-created-p (auth:current-session))
                                (make-digest (car (auth:session-key (auth:current-session)))))
                               (t
-                               (cons "no-session" "no-session")))
+                               "no-session"))
                             :referrer (hunchentoot:referer)
                             :script-name (hunchentoot:script-name hunchentoot:*request*)
                             :query-string (hunchentoot:query-string*))))
