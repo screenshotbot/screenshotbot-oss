@@ -35,6 +35,15 @@
                 #:abstract-installation
                 #:installation
                 #:installation-domain)
+  (:import-from #:fiveam-matchers/core
+                #:has-typep
+                #:is-not
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:contains
+                #:has-item)
+  (:import-from #:fiveam-matchers/strings
+                #:is-string)
   (:export))
 (in-package :auth/test-auth)
 
@@ -148,3 +157,21 @@
         (error "session-token should not be read"))
 
       (is (eql nil (auth:session-value :hello-world))))))
+
+(test simple-path-of-set-and-get-session-value
+  (with-fixture state ()
+    (flet ((cookies-out ()
+             (loop for (key . val) in (hunchentoot:cookies-out*)
+                   collect (list key val))))
+
+     (auth:with-sessions ()
+       (assert-that (hunchentoot:cookies-out*)
+                    (contains))
+
+       (setf (auth:session-value :foo) 22)
+
+       (assert-that (cookies-out)
+                    (contains
+                     (contains "s2" (has-typep t))))
+
+       (is (eql 22 (auth:session-value :foo)))))))

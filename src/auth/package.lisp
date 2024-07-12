@@ -36,6 +36,7 @@
   (:export #:user-session
            #:session-value
            #:session-created-p
+           #:ensure-session-created
            #:session-key
            #:set-session-user-id
            #:has-session?

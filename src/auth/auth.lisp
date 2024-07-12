@@ -90,11 +90,20 @@
 
 (defclass user-session-transient ()
   ((session-key
-    :reader %session-token
+    :accessor %session-token
     :initarg :token)
    (domain
     :reader session-domain
     :initform (host-without-port))))
+
+(defmethod %session-token :before ((self user-session-transient))
+  (unless (session-created-p self)
+    (setf (%session-token self) (generate-session-token))
+    (set-session self)))
+
+(defmethod ensure-session-created (session)
+  (%session-token session)
+  session)
 
 (defmethod session-created-p ((self user-session-transient))
   "Have we actually generated a session? (i.e. have set set the session
@@ -189,10 +198,7 @@ session-value, and until there there might be no session available."
 
 (defun %make-session ()
   "Only creates the session, does not do anything else with it"
-  (let ((session (make-instance 'user-session-transient
-                                :token
-                                (generate-session-token))))
-
+  (let ((session (make-instance 'user-session-transient)))
     session))
 
 (defvar *current-session*)
@@ -214,7 +220,6 @@ session-value, and until there there might be no session available."
      (let ((*current-session* (%current-session)))
        (unless *current-session*
          (setf *current-session* (%make-session))
-         (set-session *current-session*)
          (assert *current-session*))
        (funcall body)))))
 
@@ -246,10 +251,12 @@ value."
   (fix-corrupt-session-token-generator))
 
 
+(defvar *session-value-lock* (bt:make-lock "session-value"))
+
 (defun (setf session-value) (value key &key (session (current-session))
                                          expires-in)
   (let ((expiry-ts (when expires-in (+ (get-universal-time) expires-in))))
-    (bt:with-lock-held (*lock*)
+    (bt:with-lock-held (*session-value-lock*)
       (let ((x (find-user-session-value (%session-token session)
                                         (session-domain session)
                                         key)))

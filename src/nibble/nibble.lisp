@@ -111,10 +111,21 @@
 (defun call-nibble (&key once name args check-session-p impl)
   (let* ((ts (get-universal-time))
          (id (make-id ts))
+         (session (current-session))
          (nibble (make-instance 'nibble
                                  :impl impl
                                  :name name
-                                 :session (current-session)
+                                 :session (when session
+                                            ;; In a test, we might not
+                                            ;; always call
+                                            ;; auth:with-sessions
+                                            ;; Which will cause nibble
+                                            ;; to fail. We could
+                                            ;; potentially fix all the
+                                            ;; tests to wrap with
+                                            ;; auth:with-session, but
+                                            ;; this works for now.
+                                            (auth:ensure-session-created session))
                                  :acceptor (when (boundp 'hunchentoot:*acceptor*)
                                                     hunchentoot:*acceptor*)
                                  :user
