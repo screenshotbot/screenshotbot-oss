@@ -1017,11 +1017,7 @@
                        'tab
                        :title (get-tab-title screenshot group)
                        :content
-                       <a href= "#"
-                          class= "screenshot-run-image"
-                          data-image-number=i
-                          data-target= (format nil "#~a" (modal-id screenshots-viewer)) >
-
+                       <div>
                          <div class= "screenshot-header" >
                            <ul class= "screenshot-options-menu" >
                              <li>
@@ -1030,8 +1026,15 @@
                              </li>
                            </ul>
                          </div>
-                         <screenshot-box  screenshot=screenshot title= (diff-report:group-title group) />
-                       </a>))
+
+                         <a href= "#"
+                            class= "screenshot-run-image"
+                            data-image-number=i
+                            data-target= (format nil "#~a" (modal-id screenshots-viewer)) >
+
+                           <screenshot-box  screenshot=screenshot title= (diff-report:group-title group) />
+                         </a>
+                       </div>))
                 :header
                 <span>
                   <h4 class= "screenshot-title" >
