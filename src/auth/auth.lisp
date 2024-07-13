@@ -196,11 +196,6 @@ session-value, and until there there might be no session available."
   (bt:with-lock-held (*lock*)
     (funcall *session-token-generator*)))
 
-(defun %make-session ()
-  "Only creates the session, does not do anything else with it"
-  (let ((session (make-instance 'user-session-transient)))
-    session))
-
 (defvar *current-session*)
 
 (defparameter *iterations* 2000)
@@ -219,7 +214,7 @@ session-value, and until there there might be no session available."
     (t
      (let ((*current-session* (%current-session)))
        (unless *current-session*
-         (setf *current-session* (%make-session))
+         (setf *current-session* (make-instance 'user-session-transient))
          (assert *current-session*))
        (funcall body)))))
 
