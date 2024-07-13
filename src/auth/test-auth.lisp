@@ -98,7 +98,7 @@
       (is (equal "localhost" (session-domain (last-user-session-value))))
       (assert-that (session-token (last-user-session-value))
                    (is-string)
-                   (has-length 32)))))
+                   (has-length 40)))))
 
 (test cleans-old-values
   (With-fixture state ()

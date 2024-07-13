@@ -157,32 +157,7 @@ session-value, and until there there might be no session available."
                     :token token))))
 
 
-(defvar *session-token-generator*)
-
 (defvar *lock* (bt:make-lock "auth-lock"))
-
-#+windows
-(defun read-windows-seed ()
-  (cl-store:restore (path:catfile (asdf:system-source-directory :auth) "dummy-init-key.out")))
-
-(defun init-session-token-generator ()
-  ;; The lock here shouldn't be needed but just to be safe, and
-  ;; doesn't cost us anything anyway.
-  (bt:with-lock-held (*lock*)
-    (setf *session-token-generator* (session-token:make-generator
-                                     #+windows
-                                     :initial-seed
-                                     #+windows
-                                     (progn
-                                       (log:warn "Using insecure seed, only use on Windows")
-                                       (read-windows-seed))))))
-
-(init-session-token-generator)
-
-#+lispworks
-(lw:define-action "When starting image" "re-initialize token generator"
-  #'init-session-token-generator)
-
 
 (defun set-session (session &optional domain)
   (set-session-cookie (car (session-key session)) domain))
@@ -193,8 +168,18 @@ session-value, and until there there might be no session available."
 
 (defun generate-session-token ()
   (push-counter-event :session-generated)
+  ;; TODO: We don't need lock since OpenSSL RAND_bytes is thread-safe:
+  ;; https://mta.openssl.org/pipermail/openssl-users/2020-November/013146.html
   (bt:with-lock-held (*lock*)
-    (funcall *session-token-generator*)))
+    (base64:usb8-array-to-base64-string
+     (concatenate
+      '(vector (unsigned-byte 8))
+      ;; What if there's a bug in the random number generator, which
+      ;; is out of our control? Having a timestamp reduces the chances
+      ;; of attackers abusing collisions.
+      (cl-intbytes:int32->octets (mod (get-universal-time) (ash 1 31)))
+      (secure-random:bytes 26 secure-random:*generator*))
+     :uri t)))
 
 (defvar *current-session*)
 

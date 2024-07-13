@@ -7,10 +7,11 @@
                "util.store"
                "log4cl"
                "util/cron"
+               "secure-random"
+               "cl-intbytes"
                "cl-fad"
                "cl-store"
-               "hunchentoot"
-               "session-token")
+               "hunchentoot")
   :components ((:file "package")
                (:file "auth")
                (:file "viewer-context")
