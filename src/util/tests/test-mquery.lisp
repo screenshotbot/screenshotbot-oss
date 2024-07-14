@@ -15,7 +15,7 @@
 
 (def-suite* :util.test-mquery)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (def-fixture state ()
   (let* ((inner-div <div class= "trouble" name= "zoid" ></div>)
@@ -104,3 +104,13 @@
              (split-query-components "foo.bar.car")))
   (is (equal (list "foo" "[attr='val']")
              (split-query-components "foo[attr='val']"))))
+
+(test finds-under-merge-tags-too
+  (let ((doc <div>
+  <markup:merge-tag>
+    <div class= "foobar" />
+  </markup:merge-tag>
+             </div>))
+    (with-document (doc)
+      (is (eql 0 (length (mquery:$ ".car"))))
+      (is (eql 1 (length (mquery:$ ".foobar")))))))
