@@ -9,6 +9,8 @@
         #:fiveam
         #:screenshotbot/sdk/env)
   (:import-from #:screenshotbot/sdk/env
+                #:read-java-property
+                #:teamcity-env-reader
                 #:remove-.git
                 #:*all-readers*
                 #:gitlab-ci-env-reader
@@ -173,3 +175,17 @@
                                :overrides `(("CI_MERGE_REQUEST_PROJECT_URL" . "https://example.com")
                                             ("CI_MERGE_REQUEST_IID" . 1)))))
     (is (equal "https://example.com/-/merge_requests/1" (pull-request-url reader)))))
+
+
+(test teamcity
+  (finishes (test-happy-fns (make-instance 'teamcity-env-reader
+                                           :overrides nil))))
+
+(test read-java-property
+  (let ((input (asdf:system-relative-pathname :screenshotbot.sdk
+                                              "fixture/teamcity/teamcity.config.parameters")))
+    (is (equal "/home/buildagent"
+               (read-java-property input "teamcity.agent.jvm.user.home")))
+    (is (equal "https://github.com/tdrhq/fast-example.git"
+               (read-java-property input "vcsroot.url")))
+    (is (eql nil (read-java-property input "does.not.exist")))))

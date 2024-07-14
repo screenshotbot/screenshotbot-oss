@@ -362,6 +362,82 @@ get this from the Git repository directly."))
 (defmethod work-branch ((self github-actions-env-reader))
   (getenv self "GITHUB_HEAD_REF"))
 
+(defclass teamcity-env-reader (base-env-reader)
+  ()
+  (:documentation "https://www.jetbrains.com/help/teamcity/predefined-build-parameters.html. But
+not everything is documented here.
+
+See also:
+https://phabricator.tdrhq.com/w/teamcity_environment_variables/ for
+sample output that we generated from a local instance of TeamCity
+running in Docker."))
+
+(defmethod validp ((self teamcity-env-reader))
+  (getenv self "TEAMCITY_BUILD_PROPERTIES_FILE"))
+
+(defun unescape-property-value (input)
+  (let ((output (make-string-output-stream))
+        (escaping nil))
+    (loop for ch across input
+          do
+             (cond
+               (escaping
+                (setf escaping nil)
+                (write-char ch output))
+               ((eql #\\ ch)
+                (setf escaping t))
+               (t
+                (write-char ch output))))
+    (get-output-stream-string output)))
+
+(defun read-java-property (file key)
+  (when file
+    (with-open-file (s file :direction :input)
+      (loop for line = (read-line s nil nil)
+            while line
+            do
+               (let ((line (str:trim line)))
+                 (cond
+                   ((str:starts-with-p "#" line)
+                    (values))
+                   (t
+                    (destructuring-bind (this-key &optional value)
+                        (str:split "=" line :limit 2)
+                      (when (and value
+                                 (string-equal (str:trim this-key) key))
+                        (return-from read-java-property
+                          (unescape-property-value (str:trim value))))))))))))
+
+(defmethod teamcity-build-prop ((self teamcity-env-reader) key)
+  (read-java-property
+   (getenv self "TEAMCITY_BUILD_PROPERTIES_FILE")
+   key))
+
+(defmethod teamcity-config-prop ((self teamcity-env-reader) key)
+  (read-java-property
+   (teamcity-build-prop self "teamcity.configuration.properties.file")
+   key))
+
+(defmethod pull-request-url ((self teamcity-env-reader))
+  (let ((pull-id (teamcity-build-prop self "teamcity.pullRequest.number")))
+    (unless (str:emptyp pull-id)
+     (link-to-github-pull-request
+      (repo-url self)
+      pull-id))))
+
+(defmethod sha1 ((self teamcity-env-reader))
+  (teamcity-build-prop self "build.vcs.number"))
+
+(defmethod build-url ((self teamcity-env-reader))
+  (getenv self "BUILD_URL"))
+
+(defmethod repo-url ((self teamcity-env-reader))
+  (teamcity-config-prop self "vcsroot.url"))
+
+(defmethod work-branch ((self teamcity-env-reader))
+  (teamcity-config-prop self "teamcity.build.branch"))
+
+
 (defparameter *all-readers*
   '(circleci-env-reader
     bitrise-env-reader
@@ -370,7 +446,8 @@ get this from the Git repository directly."))
     bitbucket-pipeline-env-reader
     buildkite-env-reader
     gitlab-ci-env-reader
-    github-actions-env-reader))
+    github-actions-env-reader
+    teamcity-env-reader))
 
 
 (defun make-env-reader (&key overrides)

@@ -1,0 +1,31 @@
+#TeamCity build properties without 'system.' prefix
+#Sun Jul 14 19:39:34 BST 2024
+# Arnold: I trimmed some values
+agent.home.dir=/opt/buildagent
+agent.name=ip_172.17.0.1
+agent.ownPort=9090
+agent.work.dir=/opt/buildagent/work
+build.number=9
+build.vcs.number=0988f3e38dc92a2689d4d9e93e54e97cac7e701e
+build.vcs.number.1=0988f3e38dc92a2689d4d9e93e54e97cac7e701e
+build.vcs.number.FastExample_HttpsGithubComTdrhqFastExampleGitRefsHeadsMaster=0988f3e38dc92a2689d4d9e93e54e97cac7e701e
+java.io.tmpdir=/opt/buildagent/temp/buildTmp
+teamcity.agent.cpuBenchmark=1480
+teamcity.agent.dotnet.agent_url=http\://localhost\:9090/RPC2
+teamcity.agent.dotnet.build_id=9
+teamcity.auth.password=xxxxxxxx
+teamcity.auth.userId=TeamCityBuildId\=9
+teamcity.build.changedFiles.file=/opt/buildagent/temp/buildTmp/teamcity.changedFiles.txt
+teamcity.build.checkoutDir=/opt/buildagent/work/e4d122abb5d071c7
+teamcity.build.id=9
+teamcity.build.properties.file=/opt/buildagent/temp/buildTmp/teamcity.build.parameters
+teamcity.build.properties.file.checksum=/opt/buildagent/temp/buildTmp/teamcity.build.parameters.checksum
+teamcity.build.tempDir=/opt/buildagent/temp/buildTmp
+teamcity.build.workingDir=/opt/buildagent/work/e4d122abb5d071c7
+teamcity.buildConfName=Build
+teamcity.buildType.id=FastExample_Build
+teamcity.configuration.properties.file=/opt/buildagent/temp/buildTmp/teamcity.config.parameters
+teamcity.projectName=Fast Example
+teamcity.runner.properties.file=/opt/buildagent/temp/buildTmp/teamcity.runner.parameters
+teamcity.tests.recentlyFailedTests.file=/opt/buildagent/temp/buildTmp/teamcity.testsToRunFirst.txt
+teamcity.version=2024.03.3 (build 156364)
