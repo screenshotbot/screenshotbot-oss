@@ -6,7 +6,7 @@
 
 (in-package :nibble)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defvar *nibbles* (make-hash-table))
 (defvar *named-nibbles* nil)
@@ -252,6 +252,8 @@
       <h1>You cannot view this page.</h1>
       <p>This URL is tied to a specific browser and user. You should not share this URL, or copy-and-paste
         it into another browser.</p>
+
+      <p>If this URL wasn't shared with you, please reach out to <a href= "mailto:support@screenshotbot.io">support@screenshotbot.io</a> and let us know. It might be a bug on our end.</p>
       <a href= "/">Go back</a>
     </body>
   </html>)
