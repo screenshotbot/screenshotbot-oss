@@ -162,6 +162,7 @@
               please contact us.")
       (check :name
              (or (adminp user)
+                 parent
                  (< (length (roles:companies-for-user user)) 4))
              "You have reached the limit of organizations you can
              create. We have this limit just to prevent abuse. Please
