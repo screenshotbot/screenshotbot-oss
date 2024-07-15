@@ -2,6 +2,10 @@
 #Sun Jul 14 19:39:34 BST 2024
  # Arnold: I trimmed some values
 build.counter=9
+
+# newlines on purpose:
+
+
 build.number=9
 build.vcs.number=0988f3e38dc92a2689d4d9e93e54e97cac7e701e
 build.vcs.number.1=0988f3e38dc92a2689d4d9e93e54e97cac7e701e
