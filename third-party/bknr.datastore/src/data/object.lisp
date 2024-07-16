@@ -682,27 +682,28 @@ the slots are read from the snapshot and ignored."
   (%encode-integer (next-object-id (store-object-subsystem)) stream))
 
 (defmethod snapshot-subsystem-async ((store store) (subsystem store-object-subsystem))
-  (let ((snapshot (store-subsystem-snapshot-pathname store subsystem)))
-    (with-open-file (s snapshot
-                       :direction :output
-                       :element-type '(unsigned-byte 8)
-                       :if-does-not-exist :create
-                       :if-exists :supersede)
-      (snapshot-subsystem-helper subsystem s)))
+  (let ((snapshot-pathname (store-subsystem-snapshot-pathname store subsystem)))
+    (snapshot-subsystem-helper subsystem snapshot-pathname))
   (lambda ()))
 
 (defmethod snapshot-subsystem ((store store) (subsystem store-object-subsystem))
   (error "Unimplemented: call snapshot-subsystem-async instead!"))
 
-(defun snapshot-subsystem-helper (subsystem stream &key (map-store-objects #'map-store-objects))
+(defun snapshot-subsystem-helper (subsystem snapshot-pathname
+                                  &key (map-store-objects #'map-store-objects))
   (let ((class-layouts (make-hash-table)))
-    (with-transaction (:prepare-for-snapshot)
-      (funcall map-store-objects #'prepare-for-snapshot))
-    (encode-current-object-id stream)
-    (funcall map-store-objects
-             (lambda (object)
-               (when (subtypep (type-of object) 'store-object)
-                 (encode-create-object class-layouts object stream))))
+    (with-open-file (stream snapshot-pathname
+                            :direction :output
+                            :element-type '(unsigned-byte 8)
+                            :if-does-not-exist :create
+                            :if-exists :supersede)
+      (with-transaction (:prepare-for-snapshot)
+        (funcall map-store-objects #'prepare-for-snapshot))
+      (encode-current-object-id stream)
+      (funcall map-store-objects
+               (lambda (object)
+                 (when (subtypep (type-of object) 'store-object)
+                   (encode-create-object class-layouts object stream)))))
 
     (let ((objects))
       (funcall map-store-objects
@@ -710,7 +711,7 @@ the slots are read from the snapshot and ignored."
                  (when (subtypep (type-of object) 'store-object)
                    (push object objects))))
 
-      (encode-object-slots subsystem class-layouts (reverse objects) stream))
+      (encode-object-slots subsystem class-layouts (reverse objects) snapshot-pathname))
     t))
 
 (defun %log-crash (e)
@@ -727,7 +728,7 @@ the slots are read from the snapshot and ignored."
       (handler-bind ((error #'%log-crash))
         (funcall fn))))))
 
-(defun encode-object-slots (subsystem class-layouts objects stream)
+(defun encode-object-slots (subsystem class-layouts objects snapshot-pathname)
   (labels ((make-batches (objects batch-size)
              (if (<= (length objects) batch-size)
                  (list objects)
@@ -765,10 +766,14 @@ the slots are read from the snapshot and ignored."
                (error "Some threads failed to complete"))
 
              ;; Finally combine all the streams together
-             (loop for s in streams do
-               (file-position s 0)
-               (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
-             (finish-output stream))
+             (with-open-file (stream snapshot-pathname
+                                     :direction :output
+                                     :element-type '(unsigned-byte 8)
+                                     :if-exists :append)
+               (loop for s in streams do
+                 (file-position s 0)
+                 (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
+               (finish-output stream)))
         (mapc #'close streams)))))
 
 (defmethod close-subsystem ((store store) (subsystem store-object-subsystem))
