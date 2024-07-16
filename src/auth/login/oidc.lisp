@@ -35,8 +35,6 @@
                 #:oauth-logo-svg
                 #:oauth-signin-link
                 #:oauth-signup-link)
-  (:import-from #:util/events
-                #:push-event)
   (:import-from #:util/store/store
                 #:defindex
                 #:with-class-validation)
@@ -146,14 +144,10 @@
 ;; (token-endpoint (make-instance 'oidc-provider :issuer "https://accounts.google.com"))
 
 (defmethod oauth-signin-link ((auth oidc-provider) redirect)
-  (nibble ()
-    (push-event :oauth.signin)
-    (hex:safe-redirect (make-oidc-auth-link auth redirect))))
+  (make-oidc-auth-link auth redirect))
 
 (defmethod oauth-signup-link ((auth oidc-provider) redirect)
-  (nibble ()
-    (push-event :oauth.signup)
-    (hex:safe-redirect (make-oidc-auth-link auth redirect))))
+  (make-oidc-auth-link auth redirect))
 
 (defmethod after-authentication ((auth oidc-provider) &key
                                                        user-id
