@@ -681,24 +681,29 @@ the slots are read from the snapshot and ignored."
   (%write-tag #\I stream)
   (%encode-integer (next-object-id (store-object-subsystem)) stream))
 
-(defmethod snapshot-subsystem ((store store) (subsystem store-object-subsystem))
-  (let ((snapshot (store-subsystem-snapshot-pathname store subsystem)))
-    (with-open-file (s snapshot
-                       :direction :output
-                       :element-type '(unsigned-byte 8)
-                       :if-does-not-exist :create
-                       :if-exists :supersede)
-      (snapshot-subsystem-helper subsystem s))))
+(defmethod snapshot-subsystem-async ((store store) (subsystem store-object-subsystem))
+  (let ((snapshot-pathname (store-subsystem-snapshot-pathname store subsystem)))
+    ;; Returns a closure to complete it asynchronously
+    (snapshot-subsystem-helper subsystem snapshot-pathname)))
 
-(defun snapshot-subsystem-helper (subsystem stream &key (map-store-objects #'map-store-objects))
+(defmethod snapshot-subsystem ((store store) (subsystem store-object-subsystem))
+  (error "Unimplemented: we should've called snapshot-subsystem-async instead"))
+
+(defun snapshot-subsystem-helper (subsystem snapshot-pathname
+                                  &key (map-store-objects #'map-store-objects))
   (let ((class-layouts (make-hash-table)))
-    (with-transaction (:prepare-for-snapshot)
-      (funcall map-store-objects #'prepare-for-snapshot))
-    (encode-current-object-id stream)
-    (funcall map-store-objects
-             (lambda (object)
-               (when (subtypep (type-of object) 'store-object)
-                 (encode-create-object class-layouts object stream))))
+    (with-open-file (stream snapshot-pathname
+                            :direction :output
+                            :element-type '(unsigned-byte 8)
+                            :if-does-not-exist :create
+                            :if-exists :supersede)
+      (with-transaction (:prepare-for-snapshot)
+        (funcall map-store-objects #'prepare-for-snapshot))
+      (encode-current-object-id stream)
+      (funcall map-store-objects
+               (lambda (object)
+                 (when (subtypep (type-of object) 'store-object)
+                   (encode-create-object class-layouts object stream)))))
 
     (let ((objects))
       (funcall map-store-objects
@@ -706,8 +711,8 @@ the slots are read from the snapshot and ignored."
                  (when (subtypep (type-of object) 'store-object)
                    (push object objects))))
 
-      (encode-object-slots subsystem class-layouts (reverse objects) stream))
-    t))
+      ;; Returns a closure to complete it asynchronously
+      (encode-object-slots subsystem class-layouts (reverse objects) snapshot-pathname))))
 
 (defun %log-crash (e)
   (format t "Error in background snapshot thread: ~a~%" e)
@@ -723,7 +728,7 @@ the slots are read from the snapshot and ignored."
       (handler-bind ((error #'%log-crash))
         (funcall fn))))))
 
-(defun encode-object-slots (subsystem class-layouts objects stream)
+(defun encode-object-slots (subsystem class-layouts objects snapshot-pathname)
   (labels ((make-batches (objects batch-size)
              (if (<= (length objects) batch-size)
                  (list objects)
@@ -735,37 +740,38 @@ the slots are read from the snapshot and ignored."
     (let* ((batch-size (ceiling (length objects) (snapshot-threads subsystem)))
            (batches (make-batches objects batch-size))
            (streams (loop for nil in batches
-                          collect (uiop:with-temporary-file (:pathname p)
-                                    (open p :direction :io
-                                            :if-exists :supersede
-                                            :element-type '(unsigned-byte 8)))))
+                          collect (flex:make-in-memory-output-stream)))
            (lock (bt:make-lock))
            (count 0))
 
-      (unwind-protect
-           (let ((threads
-                   (loop for batch in batches
-                         for s in streams
-                         collect
-                         (let ((s s)
-                               (batch batch))
-                           (safe-make-thread
-                            (lambda ()
-                              (loop for object in batch
-                                    do (encode-set-slots class-layouts object s))
-                              (bt:with-lock-held (lock)
-                                (incf count))))))))
-             (mapc #'bt:join-thread threads)
+      (let ((threads
+              (loop for batch in batches
+                    for s in streams
+                    collect
+                    (let ((s s)
+                          (batch batch))
+                      (safe-make-thread
+                       (lambda ()
+                         (loop for object in batch
+                               do (encode-set-slots class-layouts object s))
+                         (bt:with-lock-held (lock)
+                           (incf count))))))))
+        (mapc #'bt:join-thread threads)
 
-             (unless (= count (length threads))
-               (error "Some threads failed to complete"))
+        (unless (= count (length threads))
+          (error "Some threads failed to complete")))
 
-             ;; Finally combine all the streams together
-             (loop for s in streams do
-               (file-position s 0)
-               (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
-             (finish-output stream))
-        (mapc #'close streams)))))
+      ;; This closure is returned from the snapshot-subsystem-async
+      (lambda ()
+        ;; Finally combine all the streams together
+        (with-open-file (stream snapshot-pathname
+                            :direction :output
+                            :element-type '(unsigned-byte 8)
+                            :if-exists :append)
+          (loop for s in streams do
+            (write-sequence (flex:get-output-stream-sequence s)
+                            stream))
+          (finish-output stream))))))
 
 (defmethod close-subsystem ((store store) (subsystem store-object-subsystem))
   (dolist (class-name (all-store-classes))
