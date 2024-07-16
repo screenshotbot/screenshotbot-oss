@@ -682,16 +682,17 @@ the slots are read from the snapshot and ignored."
   (%encode-integer (next-object-id (store-object-subsystem)) stream))
 
 (defmethod snapshot-subsystem-async ((store store) (subsystem store-object-subsystem))
-  (call-next-method))
-
-(defmethod snapshot-subsystem ((store store) (subsystem store-object-subsystem))
   (let ((snapshot (store-subsystem-snapshot-pathname store subsystem)))
     (with-open-file (s snapshot
                        :direction :output
                        :element-type '(unsigned-byte 8)
                        :if-does-not-exist :create
                        :if-exists :supersede)
-      (snapshot-subsystem-helper subsystem s))))
+      (snapshot-subsystem-helper subsystem s)))
+  (lambda ()))
+
+(defmethod snapshot-subsystem ((store store) (subsystem store-object-subsystem))
+  (error "Unimplemented: call snapshot-subsystem-async instead!"))
 
 (defun snapshot-subsystem-helper (subsystem stream &key (map-store-objects #'map-store-objects))
   (let ((class-layouts (make-hash-table)))
