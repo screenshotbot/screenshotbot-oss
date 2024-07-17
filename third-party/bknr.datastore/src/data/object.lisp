@@ -523,7 +523,10 @@ transaction log."))
                     (find-class-slots-with-interactive-renaming class slot-names)
                     slot-names)))
     (setf (gethash id layouts)
-          (cons class slots))))
+          (make-instance 'class-layout
+                         :id id
+                         :class class
+                         :slots slots))))
 
 (defun %read-slots (stream object slots)
   "Read the OBJECT from STREAM.  The individual slots of the object
@@ -561,7 +564,7 @@ the slots are read from the snapshot and ignored."
   (with-simple-restart (skip-object "Skip the object.")
     (let* ((layout-id (%decode-integer stream))
            (object-id (%decode-integer stream))
-           (class (first (gethash layout-id layouts))))
+           (class (class-layout-class (gethash layout-id layouts))))
       ;; If the class is NIL, it was not found in the currently
       ;; running Lisp image and objects of this class will be ignored.
       (when class
@@ -577,7 +580,7 @@ the slots are read from the snapshot and ignored."
          (object-id (%decode-integer stream))
          (object (store-object-with-id object-id)))
     (restart-case
-        (%read-slots stream object (cdr (gethash layout-id layouts)))
+        (%read-slots stream object (class-layout-slots (gethash layout-id layouts)))
       (skip-object-initialization ()
         :report "Skip object initialization.")
       (delete-object ()
@@ -815,7 +818,9 @@ the slots are read from the snapshot and ignored."
       (with-open-file (s snapshot
                          :element-type '(unsigned-byte 8)
                          :direction :input)
-        (let ((class-layouts (make-hash-table))
+        (let ((class-layouts
+                ;; Map from class-id -> class-layout
+                (make-hash-table))
               (created-objects 0)
               (reported-objects-count 0)
               (read-slots 0)
