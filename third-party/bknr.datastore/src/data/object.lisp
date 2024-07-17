@@ -372,11 +372,6 @@ transaction log."))
 (defmethod store-object-persistent-slots ((object store-object))
   (mapcar #'slot-definition-name (class-persistent-slots (class-of object))))
 
-(defmethod store-object-relaxed-object-reference-p ((object store-object) slot-name)
-  (let ((slot (find slot-name (class-slots (class-of object)) :key #'slot-definition-name)))
-    (when slot
-      (relaxed-object-reference-slot-p slot))))
-
 (defmacro define-persistent-class (class (&rest superclasses) slots &rest class-options)
   (let ((superclasses (or superclasses '(store-object)))
         (metaclass (cadr (assoc :metaclass class-options))))
@@ -529,13 +524,14 @@ transaction log."))
                          :class class
                          :slots slots))))
 
-(defun %read-slots (stream object slots)
+(defun %read-slots (stream object class-layout)
   "Read the OBJECT from STREAM.  The individual slots of the object
 are expected in the order of the list SLOTS.  If the OBJECT is NIL,
 the slots are read from the snapshot and ignored."
   (declare (optimize (speed 3)))
-  (dolist (slot-name slots)
-    (let ((value (decode stream)))
+  (dolist (slot-info (class-layout-slot-infos class-layout))
+    (let ((slot-name (slot-info-slot slot-info))
+          (value (decode stream)))
       (cond
         ((consp slot-name)
          (assert (eq 'convert-slot-values (car slot-name)))
@@ -547,7 +543,7 @@ the slots are read from the snapshot and ignored."
          (restart-case
              (let ((*current-object-slot* (list object slot-name))
                    (*current-slot-relaxed-p* (or (null object)
-                                                 (store-object-relaxed-object-reference-p object slot-name))))
+                                                 (slot-info-relaxed-object-reference-p slot-info))))
                (when object
                  (let ((bknr.indices::*indices-remove-p* nil))
                    (if (eq value 'unbound)
@@ -581,7 +577,7 @@ the slots are read from the snapshot and ignored."
          (object-id (%decode-integer stream))
          (object (store-object-with-id object-id)))
     (restart-case
-        (%read-slots stream object (class-layout-slots (gethash layout-id layouts)))
+        (%read-slots stream object (gethash layout-id layouts))
       (skip-object-initialization ()
         :report "Skip object initialization.")
       (delete-object ()
