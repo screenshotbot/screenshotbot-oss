@@ -429,6 +429,7 @@ transaction log."))
       (setf layout
             (make-instance 'class-layout
                            :id (hash-table-count class-layouts)
+                           :class class ;; Not really used while writing
                            ;; XXX layout muss konstant sein
                            :slots (sort
                                    (remove 'id
@@ -691,7 +692,11 @@ the slots are read from the snapshot and ignored."
 
 (defclass class-layout ()
   ((id :initarg :id
-       :reader class-layout-id)
+       :reader class-layout-id
+       :documentation "Typically only used while writing a snapshot")
+   (class :initarg :class
+          :reader class-layout-class
+          :documentation "Typically only used while reading a snapshot")
    (slots :initarg :slots
           :reader class-layout-slots)))
 
