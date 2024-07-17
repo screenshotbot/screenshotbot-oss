@@ -414,9 +414,10 @@ transaction log."))
     (%encode-symbol slot stream)))
 
 (defun %encode-set-slots (class-layout object stream)
-  (dolist (slot (class-layout-slots class-layout))
-    (let ((*current-object-slot* (list object slot))
-          (*current-slot-relaxed-p* (store-object-relaxed-object-reference-p object slot)))
+  (dolist (slot-info (class-layout-slot-infos class-layout))
+    (let* ((slot (slot-info-slot slot-info))
+           (*current-object-slot* (list object slot))
+           (*current-slot-relaxed-p* (slot-info-relaxed-object-reference-p slot-info)))
       (encode (if (slot-boundp object slot)
                   (slot-value object slot)
                   'unbound)
@@ -693,6 +694,15 @@ the slots are read from the snapshot and ignored."
 (defmethod snapshot-subsystem ((store store) (subsystem store-object-subsystem))
   (error "Unimplemented: call snapshot-subsystem-async instead!"))
 
+(defclass class-layout-slot-info ()
+  ((slot :initarg :slot
+         :reader slot-info-slot)
+   (class :initarg :class
+          :reader slot-info-class)
+   (relaxed-object-reference-p
+    :initarg :relaxed-object-reference-p
+    :reader slot-info-relaxed-object-reference-p)))
+
 (defclass class-layout ()
   ((id :initarg :id
        :reader class-layout-id
@@ -701,7 +711,21 @@ the slots are read from the snapshot and ignored."
           :reader class-layout-class
           :documentation "Typically only used while reading a snapshot")
    (slots :initarg :slots
-          :reader class-layout-slots)))
+          :reader class-layout-slots)
+   (slot-infos :reader class-layout-slot-infos)))
+
+(defmethod initialize-instance :after ((self class-layout) &key slots class id)
+  (setf
+   (slot-value self 'slot-infos)
+   (loop for slot in slots
+         collect (make-instance
+                  'class-layout-slot-info
+                  :slot slot
+                  :class class
+                  :relaxed-object-reference-p
+                  (let ((slot (find slot (class-slots class) :key #'slot-definition-name)))
+                    (when slot
+                      (relaxed-object-reference-slot-p slot)))))))
 
 (defun snapshot-subsystem-helper (subsystem snapshot-pathname
                                   &key (map-store-objects #'map-store-objects))
