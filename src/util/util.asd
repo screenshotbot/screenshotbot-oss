@@ -99,7 +99,8 @@
   :defsystem-depends-on (:trivial-features)
   :depends-on (:uiop
                #-lispworks
-               :util/fake-fli)
+               :util/fake-fli
+               :util/posix)
   :components ((:file "copy-file")))
 
 (defsystem :util/timeago

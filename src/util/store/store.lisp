@@ -63,6 +63,9 @@
                 #:safe-ensure-directories-exist)
   (:import-from #:util/events
                 #:with-tracing)
+  #+bknr.cluster
+  (:import-from #:util/store/clone-logs-store
+                #:clone-logs-store)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -158,7 +161,8 @@ to the directory that was just snapshotted.")
   ((transaction-log-lock :initform nil)))
 
 #+bknr.cluster
-(defclass base-raft-store (util/store/elb-store:elb-store-mixin)
+(defclass base-raft-store (util/store/elb-store:elb-store-mixin
+                           clone-logs-store)
   ())
 
 #+bknr.cluster

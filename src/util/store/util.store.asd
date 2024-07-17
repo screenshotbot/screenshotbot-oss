@@ -11,6 +11,7 @@
                :easy-macros
                :auto-restart
                :util/threading
+               :util/copy-file
                :util/events
                :local-time
                :atomics
@@ -24,6 +25,7 @@
                :cffi
                :cl-cron)
   :components ((:file "elb-store" :if-feature (:and :lispworks :linux))
+               (:file "clone-logs-store" :if-feature (:and :lispworks :linux))
                (:file "store")
                (:file "store-version")
                (:file "object-id")
