@@ -3,6 +3,8 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:bknr.datastore
+                #:class-layout-slots
+                #:class-layout
                 #:encode-create-object
                 #:%log-crash))
 (in-package :bknr.datastore.tests)
@@ -407,6 +409,11 @@
       (assert-that
        (alexandria:hash-table-keys class-layouts)
        (contains (find-class 'object-with-init)))
-      (assert-that
-       (alexandria:hash-table-values class-layouts)
-       (contains '(0 arg bknr.datastore::last-change))))))
+      (let ((layouts (alexandria:hash-table-values class-layouts)))
+        (assert-that
+         layouts
+         (contains
+          (has-typep 'class-layout)))
+        (assert-that
+         (class-layout-slots (first layouts))
+         (contains 'arg 'bknr.datastore::last-change))))))

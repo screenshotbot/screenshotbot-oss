@@ -405,16 +405,16 @@ transaction log."))
 (defvar *current-object-slot* nil)
 (defvar *current-slot-relaxed-p* nil)
 
-(defun encode-layout (id class slots stream)
+(defun encode-layout (class-layout class stream)
   (%write-tag #\L stream)
-  (%encode-integer id stream)
+  (%encode-integer (class-layout-id class-layout) stream)
   (%encode-symbol (class-name class) stream)
-  (%encode-integer (length slots) stream)
-  (dolist (slot slots)
+  (%encode-integer (length (class-layout-slots class-layout)) stream)
+  (dolist (slot (class-layout-slots class-layout))
     (%encode-symbol slot stream)))
 
-(defun %encode-set-slots (slots object stream)
-  (dolist (slot slots)
+(defun %encode-set-slots (class-layout object stream)
+  (dolist (slot (class-layout-slots class-layout))
     (let ((*current-object-slot* (list object slot))
           (*current-slot-relaxed-p* (store-object-relaxed-object-reference-p object slot)))
       (encode (if (slot-boundp object slot)
@@ -427,25 +427,26 @@ transaction log."))
          (layout (gethash class class-layouts)))
     (unless layout
       (setf layout
-            (cons (hash-table-count class-layouts)
-                  ;; XXX layout muss konstant sein
-                  (sort (remove 'id (store-object-persistent-slots object))
-                        #'string< :key #'symbol-name)))
-      (encode-layout (car layout) class (cdr layout) stream)
+            (make-instance 'class-layout
+                           :id (hash-table-count class-layouts)
+                           ;; XXX layout muss konstant sein
+                           :slots (sort
+                                   (remove 'id
+                                           (copy-seq
+                                            (store-object-persistent-slots object)))
+                                   #'string< :key #'symbol-name)))
+      (encode-layout layout class stream)
       (setf (gethash class class-layouts) layout))
-    (destructuring-bind (layout-id &rest slots) layout
-      (declare (ignore slots))
-      (%write-tag #\O stream)
-      (%encode-integer layout-id stream)
-      (%encode-integer (store-object-id object) stream))))
+    (%write-tag #\O stream)
+    (%encode-integer (class-layout-id layout) stream)
+    (%encode-integer (store-object-id object) stream)))
 
 (defun encode-set-slots (class-layouts object stream)
-  (destructuring-bind (layout-id &rest slots)
-      (gethash (class-of object) class-layouts)
+  (let ((class-layout (gethash (class-of object) class-layouts)))
     (%write-tag #\S stream)
-    (%encode-integer layout-id stream)
+    (%encode-integer (class-layout-id class-layout) stream)
     (%encode-integer (store-object-id object) stream)
-    (%encode-set-slots slots object stream)))
+    (%encode-set-slots class-layout object stream)))
 
 (defun find-class-with-interactive-renaming (class-name)
   (loop until (or (null class-name)
@@ -687,6 +688,12 @@ the slots are read from the snapshot and ignored."
 
 (defmethod snapshot-subsystem ((store store) (subsystem store-object-subsystem))
   (error "Unimplemented: call snapshot-subsystem-async instead!"))
+
+(defclass class-layout ()
+  ((id :initarg :id
+       :reader class-layout-id)
+   (slots :initarg :slots
+          :reader class-layout-slots)))
 
 (defun snapshot-subsystem-helper (subsystem snapshot-pathname
                                   &key (map-store-objects #'map-store-objects))
