@@ -417,3 +417,25 @@
         (assert-that
          (class-layout-slots (first layouts))
          (contains 'arg 'bknr.datastore::last-change))))))
+
+(defclass object-with-relaxed-slot (store-object)
+  ((reference :initarg :reference
+              :relaxed-object-reference t)
+   (other-reference :initarg :other-reference))
+  (:metaclass persistent-class))
+
+(defdstest can-save-when-reference-is-killed ()
+  (let ((inner (make-instance 'object-with-init)))
+    (make-instance 'object-with-relaxed-slot
+                   :reference inner)
+    (delete-object inner)
+    (finishes
+      (snapshot))))
+
+(defdstest but-cannot-save-when-other-reference-is-killed ()
+  (let ((inner (make-instance 'object-with-init)))
+    (make-instance 'object-with-relaxed-slot
+                   :other-reference inner)
+    (delete-object inner)
+    (signals error
+      (snapshot))))
