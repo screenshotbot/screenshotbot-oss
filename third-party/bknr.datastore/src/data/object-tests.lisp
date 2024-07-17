@@ -3,6 +3,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:bknr.datastore
+                #:encode-create-object
                 #:%log-crash))
 (in-package :bknr.datastore.tests)
 
@@ -394,3 +395,18 @@
   (signals fake-error ;; as opposed to any errors from log-crash
    (handler-bind ((error #'%log-crash))
      (error 'fake-error))))
+
+
+(defdstest encode-create-object-updates-the-class-layouts ()
+  (let ((class-layouts (make-hash-table)))
+    (let ((stream (flex:make-in-memory-output-stream)))
+      (encode-create-object class-layouts
+                            ;; the class-name doesn't matter here
+                            (make-instance 'object-with-init)
+                            stream)
+      (assert-that
+       (alexandria:hash-table-keys class-layouts)
+       (contains (find-class 'object-with-init)))
+      (assert-that
+       (alexandria:hash-table-values class-layouts)
+       (contains '(0 arg bknr.datastore::last-change))))))

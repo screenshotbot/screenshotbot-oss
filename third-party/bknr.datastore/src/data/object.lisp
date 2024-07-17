@@ -690,7 +690,11 @@ the slots are read from the snapshot and ignored."
 
 (defun snapshot-subsystem-helper (subsystem snapshot-pathname
                                   &key (map-store-objects #'map-store-objects))
-  (let ((class-layouts (make-hash-table)))
+  (let ((class-layouts
+          ;; class-layouts is a map from the class object to the
+          ;; layout, which currently is (list* id ...slots)
+          ;; See the corresponding test.
+          (make-hash-table)))
     (with-open-file (stream snapshot-pathname
                             :direction :output
                             :element-type '(unsigned-byte 8)
