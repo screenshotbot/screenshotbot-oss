@@ -38,7 +38,8 @@
                 #:mdi)
   (:export
    #:batch-handler
-   #:sort-items))
+   #:sort-items)
+  (:local-nicknames (#:batch #:screenshotbot/model/batch)))
 (in-package :screenshotbot/dashboard/batch)
 
 (named-readtables:in-readtable markup:syntax)
@@ -116,10 +117,11 @@
                  (channel-name (batch-item-channel b))))))))
 
 (defmethod render-batch (batch)
-  (let ((items (fset:convert 'list (sort-items (fset:convert 'list (batch-items batch))))))
-    <app-template>
-      ,(taskie-list :empty-message "No runs in this batch yet"
-                    :items items
-                    :headers (list "Channel")
-                    :row-generator #'render-batch-item)
-    </app-template>))
+  (bt:with-lock-held ((batch:lock batch))
+    (let ((items (fset:convert 'list (sort-items (fset:convert 'list (batch-items batch))))))
+      <app-template>
+        ,(taskie-list :empty-message "No runs in this batch yet"
+                      :items items
+                      :headers (list "Channel")
+                      :row-generator #'render-batch-item)
+      </app-template>)))
