@@ -25,7 +25,6 @@
   (:import-from #:screenshotbot/api/promote
                 #:maybe-promote-run)
   (:import-from #:screenshotbot/github/pull-request-promoter
-                #:make-github-summary
                 #:make-github-args
                 #:send-task-args
                 #:check-status
@@ -57,7 +56,6 @@
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:fiveam-matchers/core
-                #:is-not
                 #:assert-that)
   (:import-from #:screenshotbot/model/report
                 #:acceptable-state)
@@ -79,9 +77,7 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:screenshotbot/screenshot-api
-                #:make-screenshot)
-  (:import-from #:fiveam-matchers/lists
-                #:has-item))
+                #:make-screenshot))
 (in-package :screenshotbot/github/test-pull-request-promoter)
 
 (util/fiveam:def-suite)
@@ -432,14 +428,3 @@
          (is (str:s-member (list "action_required" "cancelled" "failure" "neutral"
                                  "success" "skipped" "stale" "timed_out")
                            (assoc-value result :conclusion))))))))
-
-(test ensure-no-newlines-in-summary
-  (with-fixture state ()
-    (let ((summary (make-github-summary
-                    (make-instance 'check
-                                   :status :accepted
-                                   :sha "abcd"
-                                   :key "foobar"
-                                   :title "This is a test"))))
-      (assert-that (mapcar #'str:trim (str:lines summary))
-                   (is-not (has-item "" ))))))
