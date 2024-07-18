@@ -280,10 +280,14 @@
     (with-lparallel-kernel ()
       (maybe-with-control-socket (:enable-store enable-store)
         (with-slynk ()
+          #+lispworks
+          (when jvm
+            ;; Note: The jvm-init overrides SIGTERM. So it must be
+            ;; called before UNWIND-ON-INTERRUPT, which sets its own
+            ;; SIGTERM.
+            (jvm:jvm-init))
+
           (unwind-on-interrupt ()
-            #+lispworks
-            (when jvm
-              (jvm:jvm-init))
             (fn))))
       ;; unwind if an interrupt happens
       (log:config :sane :immediate-flush t)
