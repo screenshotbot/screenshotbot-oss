@@ -45,6 +45,8 @@
                 #:def-store-migration)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:screenshotbot/cdn
+                #:make-image-cdn-url)
   (:export
    #:handle-resized-image))
 (in-package :screenshotbot/dashboard/image)
@@ -202,11 +204,13 @@
           (t
            ;; No type argument provided, let's figure it out and redirect
            (hex:safe-redirect
-            'image-blob-get-original
-            :eoid (format nil "~a.~a"
-                          eoid
-                          (str:downcase
-                           (image-format image))))))))))
+            (make-image-cdn-url
+             (hex:make-url
+              'image-blob-get-original
+              :eoid (format nil "~a.~a"
+                            eoid
+                            (str:downcase
+                             (image-format image))))))))))))
 
 (def-store-migration ("Move image-cache to nested directories" :version 6)
   (dolist (image (bknr.datastore:class-instances 'image))
