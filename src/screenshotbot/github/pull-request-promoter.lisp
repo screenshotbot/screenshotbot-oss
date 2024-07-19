@@ -69,16 +69,11 @@
                 #:recorder-run-work-branch)
   (:import-from #:util/logger
                 #:format-log)
-  (:import-from #:screenshotbot/batch-promoter
-                #:emoticon-for-status)
   (:export
    #:pull-request-promoter
    #:pr-acceptable
-   #:format-updated-summary)
-  (:local-nicknames (#:batch #:screenshotbot/model/batch)))
+   #:format-updated-summary))
 (in-package :screenshotbot/github/pull-request-promoter)
-
-(named-readtables:in-readtable markup:syntax)
 
 (with-class-validation
  (defclass pr-acceptable (abstract-pr-acceptable)
@@ -164,31 +159,24 @@
                              run)
   (pull-request-url run))
 
+#+nil
+(let ((run (util:find-by-oid "650302af54ad3a486b5186b4")))
+  (push-remote-check (make-instance 'pull-request-promoter)
+                     run (make-instance 'check
+                                        :sha "54430240bce3d760ad23a447fb9cd1297b9695f5"
+                                        :key "foobar"
+                                        :status :action-required
+                                        :summary "<div>
+<h3>hello </h3>
+<table>
+<tr><td>:white_check_mark:</td><td>:bangbang:</td><td>two</td>
+<td><img src=\"https://d2cxb6o1z81w2k.cloudfront.net/image/blob/MJiFUDdZsU714BAEUSP9AwAB/default.webp?type=webp&size=small&cache-key=si-3\" /></td></tr>
+</table>
 
-(defmethod %make-github-summary ((run recorder-run) check)
-  (markup:write-html
-   ;; CAUTION: EMPTY LINES MATTER IN THIS CODE, else GitHub won't parse
-   ;; the table correctly.
-   <table>
-     <tr>
-       <td>
-         ,(emoticon-for-status (check-status check))
-       </td>
-       <td>
-         <a href= (details-url check) >
-           ,(check-key check)
-         </a>
-       </td>
-       <td>
-         ,(check-title check)
-       </td>
-     </tr>
-   </table>))
 
-(defmethod %make-github-summary ((batch batch:batch) check)
-  "If it's already a batch, don't tweak the summary. Currently batches
-generate a GitHub markdown summary."
-  (check-summary check))
+</div>
+"
+                                        :title "doing stuff")))
 
 (defun make-github-args (run check)
   (let* ((repo-url (recorder-run-repo-url run))
@@ -200,7 +188,7 @@ generate a GitHub markdown summary."
           :check-name (format nil "Screenshotbot Changes: ~a "
                               (check-key check))
           :output `(("title" . ,(check-title check))
-                    ("summary" . ,(%make-github-summary run check)))
+                    ("summary" . ,(check-summary check)))
           :details-url (details-url check)
           :status (if (eql (check-status check) :pending)
                       :in-progress
