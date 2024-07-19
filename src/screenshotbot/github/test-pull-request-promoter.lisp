@@ -77,7 +77,16 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:screenshotbot/screenshot-api
-                #:make-screenshot))
+                #:make-screenshot)
+  (:import-from #:fiveam-matchers/lists
+                #:has-item)
+  (:import-from #:screenshotbot/model/batch
+                #:batch-item
+                #:batch)
+  (:import-from #:fiveam-matchers/strings
+                #:matches-regex)
+  (:import-from #:fiveam-matchers/described-as
+                #:described-as))
 (in-package :screenshotbot/github/test-pull-request-promoter)
 
 (util/fiveam:def-suite)
@@ -127,7 +136,8 @@
                          :app-id "dummy-app-id"
                          :private-key "dummy-private-key"))
         (cl-mock:if-called 'github-update-pull-request
-                           (lambda (&rest args)))
+                           (lambda (&rest args)
+                             (values)))
         (let ((auto-restart:*global-enable-auto-retries-p* nil)
               (company (make-instance 'company))
               (promoter (make-instance 'pull-request-promoter
@@ -406,6 +416,59 @@
             (assert-that calls
                          (has-length 1))))))))
 
+(test we-dont-overwrite-the-check-summary-for-batch--integration-test
+  ;; Does this test belong in test-pull-request-promoter, or here?
+  (with-fixture state ()
+    (with-test-user (:logged-in-p t)
+      (let ((*base-run* (make-recorder-run
+                        :company company
+                        :channel (make-instance 'dummy-channel)
+                        :commit-hash "car")))
+        (let ((calls))
+          (cl-mock:if-called 'github-update-pull-request
+                             (lambda (&rest args)
+                               (push args calls))
+                             :at-start t)
+          (let* ((channel (make-instance 'dummy-channel))
+                 (batch (make-instance 'batch
+                                       :repo "https://github.com/tdrhq/fast-example"
+                                       :commit "foo"
+                                       :pull-request-url "https://github.com/tdrhq/fast-example/pull/2"
+                                       :name "batchName"
+                                       :company company))
+                 (last-run))
+            (dotimes (i 5)
+              (let ((run (make-recorder-run
+                          :channel (make-instance 'dummy-channel :name (format nil "Foobar~a" i))
+                          :company company
+                          :batch batch
+                          :github-repo "https://github.com/tdrhq/fast-example"
+                          :pull-request "https://github.com/tdrhq/fast-example/pull/2"
+                          :screenshots (list (make-instance 'screenshot :name "foobar"))
+                          :merge-base "car"
+                          :commit-hash "foo")))
+                (setf last-run run)
+                (make-instance 'batch-item
+                               :batch batch
+                               :run run
+                               :channel channel
+                               :title "Foobar"
+                               :status :rejected)))
+            (maybe-promote promoter last-run)
+            ;; The first one is "waiting for screenshots to be available.."
+            (assert-that calls
+                         (has-length 2))
+
+            ;; Both outputs should have the channel name listed five times!
+            (loop for args in calls do
+              (let ((summary
+                      (assoc-value
+                       (getf args :output)
+                       "summary" :test #'equal)))
+                (assert-that
+                 (str:join "" (str:lines summary))
+                 (described-as "We expect to see a table with five rows"
+                   (matches-regex ".*Foobar.*Foobar.*Foobar.*Foobar.*Foobar.*")))))))))))
 
 (test make-github-for-every-version-of-state
   (with-fixture state ()
