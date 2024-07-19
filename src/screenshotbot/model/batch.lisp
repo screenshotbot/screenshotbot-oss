@@ -46,7 +46,8 @@
    #:lock
    #:push-lock
    #:state-invalidated-p
-   #:finalize-batch))
+   #:finalize-batch
+   #:batch))
 (in-package :screenshotbot/model/batch)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
