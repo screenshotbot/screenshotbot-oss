@@ -161,19 +161,15 @@
                         "Please review the changes to make sure they look reasonable")))))
 
 (defun build-check-summary (batch)
+  ;; CAUTION: EMPTY LINES MATTER IN THIS CODE, else GitHub won't parse
+  ;; the table correctly.
   (markup:write-html
    (let ((items (sort-items (fset:convert 'list (batch-items batch)))))
      <table>
      ,@ (loop for item in items collect
               <tr>
                 <td>
-                  ,(ecase (batch-item-status item)
-                     (:accepted ":white_check_mark:")
-                     (:rejected ":x:")
-                     (:success ":white_check_mark:")
-                     (:failure ":x:")
-                     (:pending ":eyes:")
-                     (:action-required ":x:"))
+                  ,(emoticon-for-status (batch-item-status item))
                 </td>
                 <td>
                   <a href= (quri:render-uri (quri:merge-uris
@@ -184,3 +180,12 @@
                 <td>,(batch-item-title item) </td>
               </tr>)
      </table>)))
+
+(defun emoticon-for-status (status)
+  (ecase status
+    (:accepted ":white_check_mark:")
+    (:rejected ":x:")
+    (:success ":white_check_mark:")
+    (:failure ":x:")
+    (:pending ":eyes:")
+    (:action-required ":x:")))
