@@ -204,7 +204,7 @@
                         (bknr.datastore:blob-pathname existing)))))
       (cond
         ((> (run-size run)
-            (* (if (gk:check :allow-large-run-downloads)
+            (* (if (gk:check :allow-large-run-downloads (auth:current-company))
                    300
                    100) 1024))
          <simple-card-page>
