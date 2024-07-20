@@ -53,6 +53,13 @@
       <li>Slynk port: ,(safe-symbol-value "*ACTUAL-SLYNK-PORT*"   "SERVER/SLYNK-PREPARER" )</li>
       <li>Hostname: ,(uiop:hostname)</li>
       <li>Nginx downstream: ,(hunchentoot:remote-addr*)</li>
+      <li>Leader term:
+        ,(progn
+           #+:bknr.cluster
+           (bknr.cluster/server:leader-term bknr.datastore:*store*))
+      </li>
+
+      TODO: Show current cluster config here
     </ul>
   </admin-app-template>)
 
