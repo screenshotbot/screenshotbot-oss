@@ -59,7 +59,12 @@
            (bknr.cluster/server:leader-term bknr.datastore:*store*))
       </li>
 
-      TODO: Show current cluster config here
+      <li>Cluster config:
+        ,(progn
+           #+bknr.cluster
+           (str:join ","
+            (bknr.cluster/server:list-peers bknr.datastore:*store*)))
+      </li>
     </ul>
   </admin-app-template>)
 
