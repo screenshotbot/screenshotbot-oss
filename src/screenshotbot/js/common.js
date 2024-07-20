@@ -66,7 +66,7 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
         scheduleDraw();
     }));
 
-    var $canvas = $("<canvas draggable='false' style='touch-action:none; '/>");
+    var $canvas = $("<canvas draggable='false' class='load-into-canvas' style='touch-action:none; '/>");
     var canvasEl = $canvas.get(0);
 
     $(canvasContainer).empty();

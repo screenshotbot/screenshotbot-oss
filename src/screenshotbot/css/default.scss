@@ -983,8 +983,6 @@ table.git-graph {
         background: url("/assets/images/img-background.png");
         background-repeat: repeat;
         width: 100%;
-        object-fit: none;
-        object-position: 0 0;
         max-height: 100%;
     }
 
@@ -1001,6 +999,11 @@ table.git-graph {
             flex: 1 1 auto;
         }
     }
+}
+
+canvas.load-into-canvas {
+    object-fit: none;
+    object-position: 0 0;
 }
 
 .canvas-container {
