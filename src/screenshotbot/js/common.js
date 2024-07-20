@@ -80,6 +80,11 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
 
     var transform = new DOMMatrix([1, 0, 0, 1, 0, 0]);
 
+    /* At time of writing these three variables are unused */
+    var dpr = devicePixelRatio || 1;
+    var dprTransform = new DOMMatrix([dpr, 0, 0, dpr, 0, 0]);
+    var dprInv = dprTransform.inverse();
+
     function setZoom(z) {
         transform.a = z;
         transform.d = z;
