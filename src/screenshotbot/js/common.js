@@ -130,10 +130,9 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
         clearCtx();
 
         function doDraw(image) {
-            /* We used to have ctx.imageSmoothingQuality =
-             * "high". Removed because of T1295, but I'm willing to
-             * change my mind again. */
-            ctx.imageSmoothingEnabled = false;
+            /* Disabling imageSmoothing is not great, I think. See T1295. */
+            //ctx.imageSmoothingEnabled = false;
+            ctx.imageSmoothingQuality = "high";
             ctx.drawImage(image, 0, 0);
         }
 
