@@ -223,13 +223,10 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
         let scrollWidth = rect.width;
         let scrollHeight = rect.height;
 
-        let newCanvasHeight = scrollHeight * devicePixelRatio;
-        let newCanvasWidth = scrollWidth * devicePixelRatio;
-
-        if (canvasEl.height != newCanvasWidth ||
-            canvasEl.width != newCanvasWidth) {
-            canvasEl.height = newCanvasHeight;
-            canvasEl.width = newCanvasWidth;
+        if (canvasEl.height != scrollHeight ||
+            canvasEl.width != scrollWidth) {
+            canvasEl.height = scrollHeight;
+            canvasEl.width = scrollWidth;
         }
 
         coreTranslation = calcCoreTransform(scrollWidth,
@@ -254,9 +251,7 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
         }
 
         var pointerId = e.pointerId;
-
-        dragStart[pointerId] = {x: e.clientX, y: e.clientY };
-
+        dragStart[pointerId] = getEventPositionOnCanvas(e);
         ds = dragStart[pointerId];
         ds.translateX = transform.e;
         ds.translateY = transform.f;
@@ -266,17 +261,11 @@ function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
     }
 
     function onMouseMove(e) {
+        var pos = getEventPositionOnCanvas(e);
         var ds = dragStart[e.pointerId]
         if (ds && ds.startTime < Date.now() - 100) {
-            // Remember the transform is just transforming it so that
-            // we're measured to the canvas size (by default), and the
-            // translation in the transform matrix are after
-            // scaling. So we don't need to work with Canvas
-            // coordinates and instead screen coordinates is good
-            // enough.
-
-            transform.e = (e.clientX - ds.x) + ds.translateX ;
-            transform.f = (e.clientY - ds.y) + ds.translateY ;
+            transform.e = pos.x - ds.x + ds.translateX;
+            transform.f = pos.y - ds.y + ds.translateY;
             scheduleDraw();
         }
 
