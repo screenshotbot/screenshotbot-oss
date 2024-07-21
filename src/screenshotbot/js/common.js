@@ -44,6 +44,7 @@ function callLiveOnAttach(nodes) {
 
 let _identity = new DOMMatrixReadOnly([1,0,0,1,0,0]);
 
+
 function updateResizeObserver(el, obs) {
     var key = "r-obs";
     var prevObserver = $(el).data(key);
@@ -54,355 +55,7 @@ function updateResizeObserver(el, obs) {
     obs.observe(el);
 }
 
-function loadIntoCanvas(canvasContainer, layers, masks, callbacks) {
-    console.log("loadIntoCanvas", canvasContainer, layers);
-    function callCallback(fn) {
-        if (fn) {
-            fn();
-        }
-    }
 
-    updateResizeObserver(canvasContainer, new ResizeObserver((entries) => {
-        scheduleDraw();
-    }));
-
-    var $canvas = $("<canvas draggable='false' class='load-into-canvas' style='touch-action:none; '/>");
-    var canvasEl = $canvas.get(0);
-
-    $(canvasContainer).empty();
-    canvasContainer.appendChild(canvasEl);
-
-    let imgSize = {};
-
-    /* If the window is resized, or image is reloated, this is the, first translation
-       that happens independently of mouse zooms etc. */
-    var coreTranslation = _identity;
-
-    var transform = new DOMMatrix([1, 0, 0, 1, 0, 0]);
-
-    /* At time of writing these three variables are unused */
-    var dpr = devicePixelRatio || 1;
-    var dprTransform = new DOMMatrix([dpr, 0, 0, dpr, 0, 0]);
-    var dprInv = dprTransform.inverse();
-
-    function setZoom(z) {
-        transform.a = z;
-        transform.d = z;
-    }
-
-    function getZoom() {
-        return transform.a;
-    }
-
-    function setTranslate(x, y) {
-        transform.e = x;
-        transform.f = y;
-    }
-
-    var images = [];
-    for (let layer of layers) {
-        var im = new Image();
-        im.src = layer.src;
-        images.push(im);
-    }
-
-    var ctx = canvasEl.getContext('2d');
-
-    var drawTimeout = null;
-    function scheduleDraw() {
-        if (!drawTimeout) {
-            drawTimeout = setTimeout(function () {
-                drawTimeout = null;
-                draw();
-            }, 16);
-        }
-    }
-    function updateTransform () {
-        var mat = transform;
-        var res = mat.multiply(coreTranslation);
-        //console.log("new transform", res);
-        ctx.setTransform(res);
-    }
-
-    function clearCtx() {
-        ctx.setTransform(_identity);
-        ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-        updateCoreTransform();
-        updateTransform();
-    }
-
-    function draw() {
-        clearCtx();
-
-        function doDraw(image) {
-            /* Disabling imageSmoothing is not great, I think. See T1295. */
-            //ctx.imageSmoothingEnabled = false;
-            ctx.imageSmoothingQuality = "high";
-            ctx.drawImage(image, 0, 0);
-        }
-
-        function drawMasks() {
-            ctx.globalAlpha = 1;
-            for (var mask of masks) {
-                ctx.beginPath();
-
-                ctx.rect(mask.left,
-                         mask.top,
-                         mask.width,
-                         mask.height);
-                ctx.fillStyle = "rgba(255, 255, 0, 0.8)";
-                ctx.fill();
-            }
-        }
-
-
-        updateTransform();
-        for(let i in layers) {
-
-            function getAlpha(layer) {
-                var alpha = layer.alpha;
-                if (alpha === 0) {
-                    return 0;
-                } else if (!alpha) {
-                    return 1;
-                } else if ((typeof alpha) === "number") {
-                    return alpha;
-                } else {
-                    return alpha();
-                }
-            }
-
-            ctx.globalAlpha = getAlpha(layers[i]);
-            if (ctx.globalAlpha > 0) {
-                doDraw(images[i]);
-            }
-        }
-
-        drawMasks();
-    }
-
-    function fixMaxTranslation () {
-        var rect = canvasEl.getBoundingClientRect();
-        var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
-
-        if (transform.e >  rect.width * scale / 2) {
-            transform.e = rect.width * scale / 2;
-        }
-
-        if (transform.f > rect.height * scale / 2) {
-            transform.f = rect.height * scale / 2;
-        }
-
-        if (transform.e + canvasEl.width < rect.width * scale / 2) {
-            transform.e = rect.width * scale / 2 - canvasEl.width;
-        }
-
-        if (transform.f + canvasEl.height < rect.height * scale / 2) {
-            transform.f = rect.height * scale / 2 - canvasEl.height;
-        }
-
-    }
-
-    var imageLoadCounter = 0;
-
-    function onEitherImageLoad() {
-        imageLoadCounter ++;
-        if (imageLoadCounter == images.length) {
-            callCallback(callbacks.onImagesLoaded);
-
-            // The last image determines the canvas size.
-            var image = images[images.length - 1];
-
-            imgSize = {
-                height: image.height,
-                width: image.width,
-            }
-            scheduleDraw();
-        }
-    }
-
-    function updateCoreTransform() {
-
-        let rect = canvasContainer.getBoundingClientRect();
-        let scrollWidth = rect.width;
-        let scrollHeight = rect.height;
-
-        if (canvasEl.height != scrollHeight ||
-            canvasEl.width != scrollWidth) {
-            canvasEl.height = scrollHeight;
-            canvasEl.width = scrollWidth;
-        }
-
-        coreTranslation = calcCoreTransform(scrollWidth,
-                                            scrollHeight,
-                                            imgSize.width,
-                                            imgSize.height);
-        /*console.log("got core translation", coreTranslation,
-                    " for ", scrollWidth, scrollHeight, canvasEl.width,
-                   canvasEl.height); */
-    }
-
-
-    for (let im of images) {
-        im.onload = onEitherImageLoad;
-    }
-    // Mapping from pointerId to { x: 0, y: 0, translateX: 0, translateY: 0 };
-    var dragStart = {};
-
-    function onMouseDown(e) {
-        if (e.which != 1) {
-            return;
-        }
-
-        var pointerId = e.pointerId;
-        dragStart[pointerId] = getEventPositionOnCanvas(e);
-        ds = dragStart[pointerId];
-        ds.translateX = transform.e;
-        ds.translateY = transform.f;
-        ds.startTime = Date.now();
-
-        e.preventDefault();
-    }
-
-    function onMouseMove(e) {
-        var pos = getEventPositionOnCanvas(e);
-        var ds = dragStart[e.pointerId]
-        if (ds && ds.startTime < Date.now() - 100) {
-            transform.e = pos.x - ds.x + ds.translateX;
-            transform.f = pos.y - ds.y + ds.translateY;
-            scheduleDraw();
-        }
-
-        if (ds) {
-            e.preventDefault();
-        }
-    }
-
-    function onMouseEnd(e) {
-        if (dragStart[e.pointerId]) {
-            delete dragStart[e.pointerId];
-            e.preventDefault();
-        }
-    }
-
-    document.addEventListener("pointermove", onMouseMove);
-    document.addEventListener("pointerup", onMouseEnd);
-    document.addEventListener("pointercancel", onMouseEnd);
-    $(canvasEl).on("pointerdown", onMouseDown);
-
-    $(canvasEl).on("remove", function () {
-        console.log("removing listeners");
-        document.removeEventListener("pointermove", onMouseMove);
-        document.removeEventListener("pointerup", onMouseEnd);
-        document.removeEventListener("pointercancel", onMouseEnd);
-    });
-
-    $(canvasContainer).on("sb:refresh", scheduleDraw);
-
-    function getEventPositionOnCanvas(e) {
-        var rect = canvasEl.getBoundingClientRect();
-        // Since we're using `cover` as object-fit, the scale
-        // will be the higher of these two
-        var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
-
-        var thisX = (e.clientX - rect.left) * scale;
-        var thisY = (e.clientY - rect.top) * scale;
-
-        return new DOMPoint(thisX, thisY);
-    }
-
-    function getEventPositionOnImage(e) {
-        var canvasPos = getEventPositionOnCanvas(e);
-        return canvasPos.matrixTransform(ctx.getTransform().inverse());
-    }
-
-    function onZoomWheel(e) {
-        var change = e.originalEvent.deltaY * 0.0005;
-        var zoom0 = getZoom();
-
-        setZoom(getZoom() - change);
-
-        if (getZoom() > 5) {
-            setZoom(5);
-        }
-
-        if (getZoom() < 0.1) {
-            setZoom(0.1);
-        }
-        //console.log("new zoom is", zoom);
-
-        // But I want the mouse to be on the same location
-        // that we started with. For this we need to move translate.x
-
-
-
-        var canvasPos = getEventPositionOnCanvas(e);
-
-        var zoom = getZoom();
-        var translate = {
-            x: canvasPos.x - (zoom/zoom0) * (canvasPos.x - transform.e),
-            y: canvasPos.y - (zoom/zoom0) * (canvasPos.y - transform.f)
-        }
-
-        setTranslate(translate.x, translate.y);
-
-        scheduleDraw();
-        e.preventDefault();
-
-    }
-
-    $(canvasEl).on("wheel", function (e) {
-        onZoomWheel(e);
-    });
-
-    $(canvasEl).dblclick(function (e) {
-        var imPos = getEventPositionOnImage(e);
-        zoomToImagePx(imPos);
-        e.preventDefault();
-    });
-
-    function animateTo(newTransform, callback) {
-        console.log("animating to: ", newTransform);
-        var oldTransform = transform;
-        $(canvasEl).animate(
-            {fake:100},
-            {
-                duration: 1000,
-                complete: callback,
-                progress: function (animation, progress) {
-                    transform = animateTransform(oldTransform, newTransform, progress);
-                    scheduleDraw();
-                },
-            });
-    }
-
-    function zoomToImagePx(data) {
-        console.log("data", data);
-        var rect = canvasEl.getBoundingClientRect();
-        var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
-
-        var newTransform = calcTransformForCenter(
-            rect.width,
-            rect.height,
-            imgSize.width,
-            imgSize.height,
-            data.x,
-            data.y,
-            4 /* new zoom */);
-
-        animateTo(newTransform, function () {
-            console.log("animation done");
-            callCallback(callbacks.onZoomComplete);
-        });
-    }
-
-    $(canvasEl).on("zoomToChange", function (e) {
-        console.log("zoomToChange", e);
-        var data = e.originalEvent.detail;
-
-        zoomToImagePx(data);
-    });
-}
 
 
 function prepareReportJs () {
@@ -546,28 +199,29 @@ function prepareReportJs () {
                 $(".metrics-link", modal).attr("href", metricsLink);
 
                 console.log("Loading into canvas", data);
-                loadIntoCanvas(canvasContainer.get(0),
-                               [{
-                                   alpha: () => beforeAlpha,
-                                   src: data.background,
-                               },
-                                {
-                                    alpha: () => diffAlpha,
-                                    src: data.src,
-                                },
-                                {
-                                    alpha: () => afterAlpha,
-                                    src: data.afterImage,
-                                }
-                               ],
-                               data.masks, {
-                    onImagesLoaded: function () {
-                        zoomToChange.prop("disabled", false);
+                new SbImageCanvas(
+                    canvasContainer.get(0),
+                    [{
+                        alpha: () => beforeAlpha,
+                        src: data.background,
                     },
-                    onZoomComplete: function () {
-                        zoomToChange.prop("disabled", false);
-                    },
-                });
+                     {
+                         alpha: () => diffAlpha,
+                         src: data.src,
+                     },
+                     {
+                         alpha: () => afterAlpha,
+                         src: data.afterImage,
+                     }
+                    ],
+                    data.masks, {
+                        onImagesLoaded: function () {
+                            zoomToChange.prop("disabled", false);
+                        },
+                        onZoomComplete: function () {
+                            zoomToChange.prop("disabled", false);
+                        },
+                    }).load();
 
             },
             error: function () {
@@ -664,12 +318,12 @@ $(document).on("show.bs.modal", ".single-screenshot-modal", function () {
 
     function updateData(data) {
         $(title).text(data.title);
-        loadIntoCanvas(canvas.get(0),
-                       [{
-                           alpha: 1,
-                           src: data.src,
-                       }],
-                       [], {});
+        new SbImageCanvas(canvas.get(0),
+                          [{
+                              alpha: 1,
+                              src: data.src,
+                          }],
+                          [], {}).load();
     }
 
     function setEnabled(link, enabled) {

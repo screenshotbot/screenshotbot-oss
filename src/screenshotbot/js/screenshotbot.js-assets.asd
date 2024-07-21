@@ -52,6 +52,7 @@
                ("build-utils:js-file" "js-stubs")
                ("build-utils:ps-file" "common-ps")
                ("build-utils:js-file" "common")
+               ("build-utils:js-file" "image-canvas")
                ("build-utils:js-file" "runs")
                ("build-utils:js-file" "mask-editor")
                ("build-utils:js-file" "websocket-logs")
