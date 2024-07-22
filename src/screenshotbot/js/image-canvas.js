@@ -206,6 +206,75 @@ class SbImageCanvas {
         }
     }
 
+    getEventPositionOnCanvas(e) {
+        var self = this;
+        var rect = self.canvasEl.getBoundingClientRect();
+        // Since we're using `cover` as object-fit, the scale
+        // will be the higher of these two
+        var scale = Math.min(self.canvasEl.width / rect.width, self.canvasEl.height / rect.height);
+
+        var thisX = (e.clientX - rect.left) * scale;
+        var thisY = (e.clientY - rect.top) * scale;
+
+        return new DOMPoint(thisX, thisY);
+    }
+
+    setupDragging() {
+        var self = this;
+        // Mapping from pointerId to { x: 0, y: 0, translateX: 0, translateY: 0 };
+        var dragStart = {};
+
+        function onMouseDown(e) {
+            if (e.which != 1) {
+                return;
+            }
+
+            var pointerId = e.pointerId;
+            dragStart[pointerId] = self.getEventPositionOnCanvas(e);
+            var ds = dragStart[pointerId];
+            ds.translateX = self.transform.e;
+            ds.translateY = self.transform.f;
+            ds.startTime = Date.now();
+
+            e.preventDefault();
+        }
+
+        function onMouseMove(e) {
+            var pos = self.getEventPositionOnCanvas(e);
+            var ds = dragStart[e.pointerId]
+            if (ds && ds.startTime < Date.now() - 100) {
+                self.transform.e = pos.x - ds.x + ds.translateX;
+                self.transform.f = pos.y - ds.y + ds.translateY;
+                self.scheduleDraw();
+            }
+
+            if (ds) {
+                e.preventDefault();
+            }
+        }
+
+        function onMouseEnd(e) {
+            if (dragStart[e.pointerId]) {
+                delete dragStart[e.pointerId];
+                e.preventDefault();
+            }
+        }
+
+        document.addEventListener("pointermove", onMouseMove);
+        document.addEventListener("pointerup", onMouseEnd);
+        document.addEventListener("pointercancel", onMouseEnd);
+        $(self.canvasEl).on("pointerdown", onMouseDown);
+
+        $(self.canvasEl).on("remove", function () {
+            console.log("removing listeners");
+            document.removeEventListener("pointermove", onMouseMove);
+            document.removeEventListener("pointerup", onMouseEnd);
+            document.removeEventListener("pointercancel", onMouseEnd);
+        });
+
+    }
+
+
     load() {
         var self = this;
 
@@ -243,75 +312,13 @@ class SbImageCanvas {
         self.ctx = ctx;
 
         this.waitForImages();
-
-        // Mapping from pointerId to { x: 0, y: 0, translateX: 0, translateY: 0 };
-        var dragStart = {};
-
-        function onMouseDown(e) {
-            if (e.which != 1) {
-                return;
-            }
-
-            var pointerId = e.pointerId;
-            dragStart[pointerId] = getEventPositionOnCanvas(e);
-            var ds = dragStart[pointerId];
-            ds.translateX = self.transform.e;
-            ds.translateY = self.transform.f;
-            ds.startTime = Date.now();
-
-            e.preventDefault();
-        }
-
-        function onMouseMove(e) {
-            var pos = getEventPositionOnCanvas(e);
-            var ds = dragStart[e.pointerId]
-            if (ds && ds.startTime < Date.now() - 100) {
-                self.transform.e = pos.x - ds.x + ds.translateX;
-                self.transform.f = pos.y - ds.y + ds.translateY;
-                self.scheduleDraw();
-            }
-
-            if (ds) {
-                e.preventDefault();
-            }
-        }
-
-        function onMouseEnd(e) {
-            if (dragStart[e.pointerId]) {
-                delete dragStart[e.pointerId];
-                e.preventDefault();
-            }
-        }
-
-        document.addEventListener("pointermove", onMouseMove);
-        document.addEventListener("pointerup", onMouseEnd);
-        document.addEventListener("pointercancel", onMouseEnd);
-        $(self.canvasEl).on("pointerdown", onMouseDown);
-
-        $(self.canvasEl).on("remove", function () {
-            console.log("removing listeners");
-            document.removeEventListener("pointermove", onMouseMove);
-            document.removeEventListener("pointerup", onMouseEnd);
-            document.removeEventListener("pointercancel", onMouseEnd);
-        });
+        this.setupDragging();
 
         $(self.canvasContainer).on("sb:refresh",
                                    () => self.scheduleDraw());
 
-        function getEventPositionOnCanvas(e) {
-            var rect = self.canvasEl.getBoundingClientRect();
-            // Since we're using `cover` as object-fit, the scale
-            // will be the higher of these two
-            var scale = Math.min(self.canvasEl.width / rect.width, self.canvasEl.height / rect.height);
-
-            var thisX = (e.clientX - rect.left) * scale;
-            var thisY = (e.clientY - rect.top) * scale;
-
-            return new DOMPoint(thisX, thisY);
-        }
-
         function getEventPositionOnImage(e) {
-            var canvasPos = getEventPositionOnCanvas(e);
+            var canvasPos = self.getEventPositionOnCanvas(e);
             return canvasPos.matrixTransform(ctx.getTransform().inverse());
         }
 
@@ -335,7 +342,7 @@ class SbImageCanvas {
 
 
 
-            var canvasPos = getEventPositionOnCanvas(e);
+            var canvasPos = self.getEventPositionOnCanvas(e);
 
             var zoom = self.getZoom();
             var translate = {
