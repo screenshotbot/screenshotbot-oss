@@ -20,6 +20,12 @@ class SbImageCanvas {
         this.drawTimeout = null;
 
         $(canvasContainer).data("image-canvas", this);
+
+        /* constants?  At time of writing, unused. */
+
+        var dpr = devicePixelRatio || 1;
+        this.dprTransform = new DOMMatrix([dpr, 0, 0, dpr, 0, 0]);
+        this.dprInv = this.dprTransform.inverse();
     }
 
     callCallback(fn) {
@@ -333,11 +339,6 @@ class SbImageCanvas {
         this.coreTranslation = _identity;
 
         self.transform = new DOMMatrix([1, 0, 0, 1, 0, 0]);
-
-        /* At time of writing these three variables are unused */
-        var dpr = devicePixelRatio || 1;
-        var dprTransform = new DOMMatrix([dpr, 0, 0, dpr, 0, 0]);
-        var dprInv = dprTransform.inverse();
 
         self.images = [];
 
