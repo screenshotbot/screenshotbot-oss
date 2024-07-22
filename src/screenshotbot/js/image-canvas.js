@@ -64,6 +64,45 @@ class SbImageCanvas {
         this.ctx.setTransform(res);
     }
 
+    animateTo(newTransform, callback) {
+        var self = this;
+        console.log("animating to: ", newTransform);
+        var oldTransform = self.transform;
+        $(self.canvasEl).animate(
+            {fake:100},
+            {
+                duration: 1000,
+                complete: callback,
+                progress: function (animation, progress) {
+                    self.transform = animateTransform(oldTransform, newTransform, progress);
+                    self.scheduleDraw();
+                },
+            });
+    }
+
+    zoomToImagePx(data) {
+        var self = this;
+        console.log("data", data);
+        var rect = self.canvasEl.getBoundingClientRect();
+        var scale = Math.min(self.canvasEl.width / rect.width, self.canvasEl.height / rect.height);
+
+        var newTransform = calcTransformForCenter(
+            rect.width,
+            rect.height,
+            self.imgSize.width,
+            self.imgSize.height,
+            data.x,
+            data.y,
+            4 /* new zoom */);
+
+        self.animateTo(newTransform, function () {
+            console.log("animation done");
+            self.callCallback(self.callbacks.onZoomComplete);
+        });
+    }
+
+
+
     updateCoreTransform() {
 
         let rect = this.canvasContainer.getBoundingClientRect();
@@ -317,50 +356,15 @@ class SbImageCanvas {
 
         $(self.canvasEl).dblclick(function (e) {
             var imPos = getEventPositionOnImage(e);
-            zoomToImagePx(imPos);
+            self.zoomToImagePx(imPos);
             e.preventDefault();
         });
-
-        function animateTo(newTransform, callback) {
-            console.log("animating to: ", newTransform);
-            var oldTransform = self.transform;
-            $(self.canvasEl).animate(
-                {fake:100},
-                {
-                    duration: 1000,
-                    complete: callback,
-                    progress: function (animation, progress) {
-                        self.transform = animateTransform(oldTransform, newTransform, progress);
-                        self.scheduleDraw();
-                    },
-                });
-        }
-
-        function zoomToImagePx(data) {
-            console.log("data", data);
-            var rect = self.canvasEl.getBoundingClientRect();
-            var scale = Math.min(self.canvasEl.width / rect.width, self.canvasEl.height / rect.height);
-
-            var newTransform = calcTransformForCenter(
-                rect.width,
-                rect.height,
-                self.imgSize.width,
-                self.imgSize.height,
-                data.x,
-                data.y,
-                4 /* new zoom */);
-
-            animateTo(newTransform, function () {
-                console.log("animation done");
-                self.callCallback(self.callbacks.onZoomComplete);
-            });
-        }
 
         $(self.canvasEl).on("zoomToChange", function (e) {
             console.log("zoomToChange", e);
             var data = e.originalEvent.detail;
 
-            zoomToImagePx(data);
+            self.zoomToImagePx(data);
         });
     }
 }
