@@ -18,6 +18,8 @@ class SbImageCanvas {
         this.images = null;
 
         this.drawTimeout = null;
+
+        $(canvasContainer).data("image-canvas", this);
     }
 
     callCallback(fn) {
