@@ -14,6 +14,8 @@ class SbImageCanvas {
         this.coreTranslation = null;
         this.canvasEl = null;
         this.imgSize = {}
+
+        this.images = null;
     }
 
     callCallback(fn) {
@@ -87,6 +89,46 @@ class SbImageCanvas {
         this.updateTransform();
     }
 
+    draw() {
+        var self = this;
+        self.clearCtx();
+        var ctx = self.ctx;
+
+        function doDraw(image) {
+            /* Disabling imageSmoothing is not great, I think. See T1295. */
+            //ctx.imageSmoothingEnabled = false;
+            ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(image, 0, 0);
+        }
+
+
+
+        self.updateTransform();
+        for(let i in self.layers) {
+
+            function getAlpha(layer) {
+                var alpha = layer.alpha;
+                if (alpha === 0) {
+                    return 0;
+                } else if (!alpha) {
+                    return 1;
+                } else if ((typeof alpha) === "number") {
+                    return alpha;
+                } else {
+                    return alpha();
+                }
+            }
+
+            ctx.globalAlpha = getAlpha(self.layers[i]);
+            if (ctx.globalAlpha > 0) {
+                doDraw(self.images[i]);
+            }
+        }
+
+        self.drawMasks();
+    }
+
+
     load() {
         var self = this;
 
@@ -113,11 +155,11 @@ class SbImageCanvas {
         var dprTransform = new DOMMatrix([dpr, 0, 0, dpr, 0, 0]);
         var dprInv = dprTransform.inverse();
 
-        var images = [];
+        self.images = [];
         for (let layer of this.layers) {
             var im = new Image();
             im.src = layer.src;
-            images.push(im);
+            self.images.push(im);
         }
 
         var ctx = self.canvasEl.getContext('2d');
@@ -128,56 +170,20 @@ class SbImageCanvas {
             if (!drawTimeout) {
                 drawTimeout = setTimeout(function () {
                     drawTimeout = null;
-                    draw();
+                    self.draw();
                 }, 16);
             }
-        }
-        function draw() {
-            self.clearCtx();
-
-            function doDraw(image) {
-                /* Disabling imageSmoothing is not great, I think. See T1295. */
-                //ctx.imageSmoothingEnabled = false;
-                ctx.imageSmoothingQuality = "high";
-                ctx.drawImage(image, 0, 0);
-            }
-
-
-
-            self.updateTransform();
-            for(let i in self.layers) {
-
-                function getAlpha(layer) {
-                    var alpha = layer.alpha;
-                    if (alpha === 0) {
-                        return 0;
-                    } else if (!alpha) {
-                        return 1;
-                    } else if ((typeof alpha) === "number") {
-                        return alpha;
-                    } else {
-                        return alpha();
-                    }
-                }
-
-                ctx.globalAlpha = getAlpha(self.layers[i]);
-                if (ctx.globalAlpha > 0) {
-                    doDraw(images[i]);
-                }
-            }
-
-            self.drawMasks();
         }
 
         var imageLoadCounter = 0;
 
         function onEitherImageLoad() {
             imageLoadCounter ++;
-            if (imageLoadCounter == images.length) {
+            if (imageLoadCounter == self.images.length) {
                 self.callCallback(self.callbacks.onImagesLoaded);
 
                 // The last image determines the canvas size.
-                var image = images[images.length - 1];
+                var image = self.images[self.images.length - 1];
 
                 self.imgSize = {
                     height: image.height,
@@ -189,7 +195,7 @@ class SbImageCanvas {
 
 
 
-        for (let im of images) {
+        for (let im of self.images) {
             im.onload = onEitherImageLoad;
         }
         // Mapping from pointerId to { x: 0, y: 0, translateX: 0, translateY: 0 };
