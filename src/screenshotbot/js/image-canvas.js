@@ -16,6 +16,8 @@ class SbImageCanvas {
         this.imgSize = {}
 
         this.images = null;
+
+        this.drawTimeout = null;
     }
 
     callCallback(fn) {
@@ -128,6 +130,40 @@ class SbImageCanvas {
         self.drawMasks();
     }
 
+    scheduleDraw () {
+        var self = this;
+        if (!self.drawTimeout) {
+            self.drawTimeout = setTimeout(function () {
+                self.drawTimeout = null;
+                self.draw();
+            }, 16);
+        }
+    }
+
+    waitForImages() {
+        var self = this;
+        var imageLoadCounter = 0;
+
+        function onEitherImageLoad() {
+            imageLoadCounter ++;
+            if (imageLoadCounter == self.images.length) {
+                self.callCallback(self.callbacks.onImagesLoaded);
+
+                // The last image determines the canvas size.
+                var image = self.images[self.images.length - 1];
+
+                self.imgSize = {
+                    height: image.height,
+                    width: image.width,
+                }
+                self.scheduleDraw();
+            }
+        }
+
+        for (let im of self.images) {
+            im.onload = onEitherImageLoad;
+        }
+    }
 
     load() {
         var self = this;
@@ -135,7 +171,7 @@ class SbImageCanvas {
         console.log("loadIntoCanvas", self.canvasContainer, this.layers);
 
         updateResizeObserver(self.canvasContainer, new ResizeObserver((entries) => {
-            scheduleDraw();
+            self.scheduleDraw();
         }));
 
         var $canvas = $("<canvas draggable='false' class='load-into-canvas' style='touch-action:none; '/>");
@@ -165,39 +201,8 @@ class SbImageCanvas {
         var ctx = self.canvasEl.getContext('2d');
         self.ctx = ctx;
 
-        var drawTimeout = null;
-        function scheduleDraw() {
-            if (!drawTimeout) {
-                drawTimeout = setTimeout(function () {
-                    drawTimeout = null;
-                    self.draw();
-                }, 16);
-            }
-        }
+        this.waitForImages();
 
-        var imageLoadCounter = 0;
-
-        function onEitherImageLoad() {
-            imageLoadCounter ++;
-            if (imageLoadCounter == self.images.length) {
-                self.callCallback(self.callbacks.onImagesLoaded);
-
-                // The last image determines the canvas size.
-                var image = self.images[self.images.length - 1];
-
-                self.imgSize = {
-                    height: image.height,
-                    width: image.width,
-                }
-                scheduleDraw();
-            }
-        }
-
-
-
-        for (let im of self.images) {
-            im.onload = onEitherImageLoad;
-        }
         // Mapping from pointerId to { x: 0, y: 0, translateX: 0, translateY: 0 };
         var dragStart = {};
 
@@ -222,7 +227,7 @@ class SbImageCanvas {
             if (ds && ds.startTime < Date.now() - 100) {
                 self.transform.e = pos.x - ds.x + ds.translateX;
                 self.transform.f = pos.y - ds.y + ds.translateY;
-                scheduleDraw();
+                self.scheduleDraw();
             }
 
             if (ds) {
@@ -249,7 +254,8 @@ class SbImageCanvas {
             document.removeEventListener("pointercancel", onMouseEnd);
         });
 
-        $(self.canvasContainer).on("sb:refresh", scheduleDraw);
+        $(self.canvasContainer).on("sb:refresh",
+                                   () => self.scheduleDraw());
 
         function getEventPositionOnCanvas(e) {
             var rect = self.canvasEl.getBoundingClientRect();
@@ -298,7 +304,7 @@ class SbImageCanvas {
 
             self.setTranslate(translate.x, translate.y);
 
-            scheduleDraw();
+            self.scheduleDraw();
             e.preventDefault();
 
         }
@@ -323,7 +329,7 @@ class SbImageCanvas {
                     complete: callback,
                     progress: function (animation, progress) {
                         self.transform = animateTransform(oldTransform, newTransform, progress);
-                        scheduleDraw();
+                        self.scheduleDraw();
                     },
                 });
         }
