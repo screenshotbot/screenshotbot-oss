@@ -13,6 +13,7 @@ class SbImageCanvas {
         this.transform = null;
         this.coreTranslation = null;
         this.canvasEl = null;
+        this.imgSize = {}
     }
 
     callCallback(fn) {
@@ -57,6 +58,35 @@ class SbImageCanvas {
         this.ctx.setTransform(res);
     }
 
+    updateCoreTransform() {
+
+        let rect = this.canvasContainer.getBoundingClientRect();
+        let scrollWidth = rect.width;
+        let scrollHeight = rect.height;
+
+        var canvasEl = this.canvasEl;
+        if (canvasEl.height != scrollHeight ||
+            canvasEl.width != scrollWidth) {
+            canvasEl.height = scrollHeight;
+            canvasEl.width = scrollWidth;
+        }
+
+        this.coreTranslation = calcCoreTransform(scrollWidth,
+                                                 scrollHeight,
+                                                 this.imgSize.width,
+                                                 this.imgSize.height);
+        /*console.log("got core translation", this.coreTranslation,
+          " for ", scrollWidth, scrollHeight, this.canvasEl.width,
+          this.canvasEl.height); */
+    }
+
+    clearCtx() {
+        this.ctx.setTransform(_identity);
+        this.ctx.clearRect(0, 0, this.canvasEl.width, this.canvasEl.height);
+        this.updateCoreTransform();
+        this.updateTransform();
+    }
+
     load() {
         var self = this;
 
@@ -71,8 +101,6 @@ class SbImageCanvas {
 
         $(self.canvasContainer).empty();
         self.canvasContainer.appendChild(self.canvasEl);
-
-        let imgSize = {};
 
         /* If the window is resized, or image is reloated, this is the, first translation
            that happens independently of mouse zooms etc. */
@@ -104,15 +132,8 @@ class SbImageCanvas {
                 }, 16);
             }
         }
-        function clearCtx() {
-            ctx.setTransform(_identity);
-            ctx.clearRect(0, 0, self.canvasEl.width, self.canvasEl.height);
-            updateCoreTransform();
-            self.updateTransform();
-        }
-
         function draw() {
-            clearCtx();
+            self.clearCtx();
 
             function doDraw(image) {
                 /* Disabling imageSmoothing is not great, I think. See T1295. */
@@ -158,7 +179,7 @@ class SbImageCanvas {
                 // The last image determines the canvas size.
                 var image = images[images.length - 1];
 
-                imgSize = {
+                self.imgSize = {
                     height: image.height,
                     width: image.width,
                 }
@@ -166,27 +187,6 @@ class SbImageCanvas {
             }
         }
 
-        function updateCoreTransform() {
-
-            let rect = self.canvasContainer.getBoundingClientRect();
-            let scrollWidth = rect.width;
-            let scrollHeight = rect.height;
-
-            var canvasEl = self.canvasEl;
-            if (canvasEl.height != scrollHeight ||
-                canvasEl.width != scrollWidth) {
-                canvasEl.height = scrollHeight;
-                canvasEl.width = scrollWidth;
-            }
-
-            self.coreTranslation = calcCoreTransform(scrollWidth,
-                                                scrollHeight,
-                                                imgSize.width,
-                                                imgSize.height);
-            /*console.log("got core translation", self.coreTranslation,
-              " for ", scrollWidth, scrollHeight, self.canvasEl.width,
-              self.canvasEl.height); */
-        }
 
 
         for (let im of images) {
@@ -330,8 +330,8 @@ class SbImageCanvas {
             var newTransform = calcTransformForCenter(
                 rect.width,
                 rect.height,
-                imgSize.width,
-                imgSize.height,
+                self.imgSize.width,
+                self.imgSize.height,
                 data.x,
                 data.y,
                 4 /* new zoom */);
