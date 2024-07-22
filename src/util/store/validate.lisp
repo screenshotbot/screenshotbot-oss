@@ -14,6 +14,7 @@
   (:import-from #:util/lists
                 #:head)
   (:import-from #:bknr.indices
+                #:index-direct-slot-definition-index
                 #:slot-index)
   (:import-from #:util/store/store
                 #:validate-indices ;; To make it easier to deploy
@@ -45,6 +46,12 @@
 
 (defun find-effective-slot (class slot-name)
   (loop for slot in (closer-mop:class-slots class)
+        if (eql slot-name (closer-mop:slot-definition-name slot))
+          return slot
+        finally (error "could not find slot")))
+
+(defun find-direct-slot (class slot-name)
+  (loop for slot in (closer-mop:class-direct-slots class)
         if (eql slot-name (closer-mop:slot-definition-name slot))
           return slot
         finally (error "could not find slot")))
@@ -154,17 +161,23 @@
     (format t "Testing ~a, ~a~%" class-name slot-name)
     (restart-case
         (let* ((class (find-class class-name))
+               (direct-slot (find-direct-slot class slot-name))
                (slot (find-effective-slot class slot-name))
                (indices (bknr.indices::index-effective-slot-definition-indices slot)))
-          (dolist (index indices)
-            (let ((all-elts (store-objects-with-class class-name)))
-              (handler-bind ((error (lambda (e)
-                                      (declare (ignore e))
-                                      (format t "Errors while processing index for ~a ~a ~a~%" class slot indices))))
-                (restart-case
-                    (validate-index-values index all-elts slot-name)
-                  (continue-testing-other-indices ()
-                    (values)))))))
+          (unless (and
+                   ;; If there's only one index, and that index use a
+                   ;; def-index, then we don't need to validate it.
+                   (= (length indices) 1)
+                   (index-direct-slot-definition-index direct-slot))
+           (dolist (index indices)
+             (let ((all-elts (store-objects-with-class class-name)))
+               (handler-bind ((error (lambda (e)
+                                       (declare (ignore e))
+                                       (format t "Errors while processing index for ~a ~a ~a~%" class slot indices))))
+                 (restart-case
+                     (validate-index-values index all-elts slot-name)
+                   (continue-testing-other-indices ()
+                     (values))))))))
       (retry--validate-class-index ()
         (validate-class-index class-name slot-name)))))
 

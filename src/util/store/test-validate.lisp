@@ -36,13 +36,11 @@
 
 (util/fiveam:def-suite)
 
-(defindex +my-object-index+
-  'fset-set-index
-  :slot-name 'key)
 
 (defclass my-object (store-object)
   ((key :initarg :key
-        :index +my-object-index+
+        :index-type fset-set-index
+        :index-var +my-object-index+
         :accessor key))
   (:metaclass persistent-class))
 
