@@ -313,20 +313,20 @@
     (can-view! remote-run)
     (remote-run-logs remote-run)))
 
-(defun make-cancel-nibble (run)
+(defun make-cancel-nibble (run &key (redirect (hunchentoot:script-name hunchentoot:*request*)))
   (nibble (:name :interrupt-web-project)
-    (let ((back "/web-projects"))
-      (confirmation-modal
-       :yes
-       (nibble (:name :interrupt-web-project-confirm)
-         #+lispworks
-         (multiple-value-bind (thread-id thread)
-             (run-thread-id run)
-           (declare (ignore thread-id))
-           (when thread
-             (safe-interrupt thread)))
-         (hex:safe-redirect back))
-       <span>Interrupt job?</span>))))
+    (confirmation-modal
+     :yes
+     (nibble (:name :interrupt-web-project-confirm)
+       (setf (remote-run-status run) :cancelled)
+       #+lispworks
+       (multiple-value-bind (thread-id thread)
+           (run-thread-id run)
+         (declare (ignore thread-id))
+         (when thread
+           (safe-interrupt thread)))
+       (hex:safe-redirect redirect))
+     <span>Interrupt job?</span>)))
 
 (markup:deftag render-runs (&key runs)
   <markup:merge-tag>
@@ -354,14 +354,23 @@
                                "Finished")
                               (:user-aborted
                                "Aborted by user")
+                              (:cancelled
+                               "Cancelled")
                               (otherwise
                                "Unknown error")))
                            (t
                             (case (remote-run-status run)
                               (:unknown
                                "Unknown state")
+                              (:cancelled
+                               "Cancelled")
                               (:queued
-                               "Queued")
+                               <span>
+                                 Queue
+                                 <a href= "#" class= "modal-link" data-href= (make-cancel-nibble run) >
+                                   Cancel
+                                 </a>
+                               </span>)
                               (otherwise
                                <span>
                                  Running
