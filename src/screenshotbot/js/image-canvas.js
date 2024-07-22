@@ -148,31 +148,6 @@ class SbImageCanvas {
             self.drawMasks();
         }
 
-        function fixMaxTranslation () {
-            var canvasEl = self.canvasEl;
-            var rect = canvasEl.getBoundingClientRect();
-            var scale = Math.min(canvasEl.width / rect.width, canvasEl.height / rect.height);
-
-            var transform = self.transform;
-
-            if (transform.e >  rect.width * scale / 2) {
-                transform.e = rect.width * scale / 2;
-            }
-
-            if (transform.f > rect.height * scale / 2) {
-                transform.f = rect.height * scale / 2;
-            }
-
-            if (transform.e + canvasEl.width < rect.width * scale / 2) {
-                transform.e = rect.width * scale / 2 - canvasEl.width;
-            }
-
-            if (transform.f + canvasEl.height < rect.height * scale / 2) {
-                transform.f = rect.height * scale / 2 - canvasEl.height;
-            }
-
-        }
-
         var imageLoadCounter = 0;
 
         function onEitherImageLoad() {
