@@ -275,53 +275,8 @@ class SbImageCanvas {
     }
 
 
-    load() {
+    setupZoomWheel() {
         var self = this;
-
-        console.log("loadIntoCanvas", self.canvasContainer, this.layers);
-
-        updateResizeObserver(self.canvasContainer, new ResizeObserver((entries) => {
-            self.scheduleDraw();
-        }));
-
-        var $canvas = $("<canvas draggable='false' class='load-into-canvas' style='touch-action:none; '/>");
-        this.canvasEl = $canvas.get(0);
-
-        $(self.canvasContainer).empty();
-        self.canvasContainer.appendChild(self.canvasEl);
-
-        /* If the window is resized, or image is reloated, this is the, first translation
-           that happens independently of mouse zooms etc. */
-        this.coreTranslation = _identity;
-
-        self.transform = new DOMMatrix([1, 0, 0, 1, 0, 0]);
-
-        /* At time of writing these three variables are unused */
-        var dpr = devicePixelRatio || 1;
-        var dprTransform = new DOMMatrix([dpr, 0, 0, dpr, 0, 0]);
-        var dprInv = dprTransform.inverse();
-
-        self.images = [];
-        for (let layer of this.layers) {
-            var im = new Image();
-            im.src = layer.src;
-            self.images.push(im);
-        }
-
-        var ctx = self.canvasEl.getContext('2d');
-        self.ctx = ctx;
-
-        this.waitForImages();
-        this.setupDragging();
-
-        $(self.canvasContainer).on("sb:refresh",
-                                   () => self.scheduleDraw());
-
-        function getEventPositionOnImage(e) {
-            var canvasPos = self.getEventPositionOnCanvas(e);
-            return canvasPos.matrixTransform(ctx.getTransform().inverse());
-        }
-
         function onZoomWheel(e) {
             var change = e.originalEvent.deltaY * 0.0005;
             var zoom0 = self.getZoom();
@@ -360,6 +315,56 @@ class SbImageCanvas {
         $(self.canvasEl).on("wheel", function (e) {
             onZoomWheel(e);
         });
+    }
+
+    load() {
+        var self = this;
+
+        console.log("loadIntoCanvas", self.canvasContainer, this.layers);
+
+        updateResizeObserver(self.canvasContainer, new ResizeObserver((entries) => {
+            self.scheduleDraw();
+        }));
+
+        var $canvas = $("<canvas draggable='false' class='load-into-canvas' style='touch-action:none; '/>");
+        this.canvasEl = $canvas.get(0);
+
+        $(self.canvasContainer).empty();
+        self.canvasContainer.appendChild(self.canvasEl);
+
+        /* If the window is resized, or image is reloated, this is the, first translation
+           that happens independently of mouse zooms etc. */
+        this.coreTranslation = _identity;
+
+        self.transform = new DOMMatrix([1, 0, 0, 1, 0, 0]);
+
+        /* At time of writing these three variables are unused */
+        var dpr = devicePixelRatio || 1;
+        var dprTransform = new DOMMatrix([dpr, 0, 0, dpr, 0, 0]);
+        var dprInv = dprTransform.inverse();
+
+        self.images = [];
+        for (let layer of this.layers) {
+            var im = new Image();
+            im.src = layer.src;
+            self.images.push(im);
+        }
+
+        var ctx = self.canvasEl.getContext('2d');
+        self.ctx = ctx;
+
+        this.waitForImages();
+        this.setupDragging();
+        this.setupZoomWheel();
+
+        $(self.canvasContainer).on("sb:refresh",
+                                   () => self.scheduleDraw());
+
+        function getEventPositionOnImage(e) {
+            var canvasPos = self.getEventPositionOnCanvas(e);
+            return canvasPos.matrixTransform(ctx.getTransform().inverse());
+        }
+
 
         $(self.canvasEl).dblclick(function (e) {
             var imPos = getEventPositionOnImage(e);
