@@ -611,8 +611,7 @@
                            (json:encode-json-to-string
                             `((:src . ,(image-public-url
                                         (screenshot-image screenshot)
-                                        ;; todo: full-page
-                                        :type :webp))
+                                        :originalp t))
                               (:title . ,(screenshot-name screenshot))))))))
     <div class= "modal fade single-screenshot-modal" id= (modal-id self) tabindex= "-1" role= "dialog"
          aria-hidden= "true" >
