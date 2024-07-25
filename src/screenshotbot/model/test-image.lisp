@@ -65,6 +65,10 @@
   (:import-from #:screenshotbot/magick/magick-lw
                 #:with-wand
                 #:save-wand-to-file)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/strings
+                #:matches-regex)
   (:export))
 
 (util/fiveam:def-suite)
@@ -178,6 +182,13 @@ uses the base-image-comparer."
 
 (test image-public-url
   (is (equal "/image/blob/bar/default.webp" (util:make-url 'image-blob-get :oid "bar"))))
+
+(test image-public-url-originalp
+  (with-fixture state ()
+    (assert-that (image-public-url img)
+                 (matches-regex "/image/blob/.*/default.webp"))
+    (assert-that (image-public-url img :originalp t)
+                 (matches-regex "/image/original/.*\\.png"))))
 
 (test image-dimensions
   (with-fixture state ()

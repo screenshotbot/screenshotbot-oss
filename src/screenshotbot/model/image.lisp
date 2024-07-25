@@ -570,7 +570,7 @@
         (originalp
          (make-image-cdn-url
           (make-url "/image/original/:oid"
-                    :oid eoid)))
+                    :oid (format nil "~a.~a" eoid (str:downcase (image-format image))))))
         (type
          (make-image-cdn-url url))
         (t
