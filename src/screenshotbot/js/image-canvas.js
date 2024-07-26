@@ -380,3 +380,8 @@ class SbImageCanvas {
         });
     }
 }
+
+// convenience for debugging()
+function getSbCanvas() {
+    return $("canvas").parent().data("image-canvas");
+}
