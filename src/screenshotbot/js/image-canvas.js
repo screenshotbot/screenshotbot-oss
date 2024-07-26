@@ -133,6 +133,10 @@ class SbImageCanvas {
     }
 
     draw() {
+        if (!this.images) {
+            return;
+        }
+
         var self = this;
         self.clearCtx();
         var ctx = self.ctx;
@@ -181,30 +185,20 @@ class SbImageCanvas {
         }
     }
 
-    waitForImages() {
+    onImagesLoaded() {
         var self = this;
-        var imageLoadCounter = 0;
+        self.callCallback(self.callbacks.onImagesLoaded);
 
-        function onEitherImageLoad() {
-            imageLoadCounter ++;
-            if (imageLoadCounter == self.images.length) {
-                self.callCallback(self.callbacks.onImagesLoaded);
+        // The last image determines the canvas size.
+        var image = self.images[self.images.length - 1];
 
-                // The last image determines the canvas size.
-                var image = self.images[self.images.length - 1];
-
-                self.imgSize = {
-                    height: image.height,
-                    width: image.width,
-                }
-                self.scheduleDraw();
-            }
+        self.imgSize = {
+            height: image.height,
+            width: image.width,
         }
-
-        for (let im of self.images) {
-            im.onload = onEitherImageLoad;
-        }
+        self.scheduleDraw();
     }
+
 
     getEventPositionOnCanvas(e) {
         var self = this;
@@ -344,16 +338,20 @@ class SbImageCanvas {
         var dprInv = dprTransform.inverse();
 
         self.images = [];
-        for (let layer of this.layers) {
-            var im = new Image();
-            im.src = layer.src;
-            self.images.push(im);
-        }
+
+        self.image_promises = Promise.all(this.layers.map((layer) => {
+            return fetch(layer.src)
+                .then((response) => response.blob())
+                .then(blob => createImageBitmap(blob));
+        })).then((images) => {
+            self.images = images;
+            self.onImagesLoaded();
+        });
+
 
         var ctx = self.canvasEl.getContext('2d');
         self.ctx = ctx;
 
-        this.waitForImages();
         this.setupDragging();
         this.setupZoomWheel();
 
