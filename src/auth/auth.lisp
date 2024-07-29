@@ -162,10 +162,6 @@ session-value, and until there there might be no session available."
 (defun set-session (session &optional domain)
   (set-session-cookie (car (session-key session)) domain))
 
-(defun set-session-user-id (user-id &optional domain)
-  (assert user-id)
-  (setf (session-value :user-id) user-id))
-
 (defun generate-session-token ()
   (push-counter-event :session-generated)
   ;; TODO: We don't need lock since OpenSSL RAND_bytes is thread-safe:
