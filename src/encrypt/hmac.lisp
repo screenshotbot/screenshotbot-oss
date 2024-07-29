@@ -7,7 +7,10 @@
 (defpackage :encrypt/hmac
   (:use #:cl)
   (:import-from #:encrypt
-                #:key-from-disk))
+                #:key-from-disk)
+  (:export
+   #:sign-hmac
+   #:verify-hmac))
 (in-package :encrypt/hmac)
 
 (defvar *hmac-key* nil)
