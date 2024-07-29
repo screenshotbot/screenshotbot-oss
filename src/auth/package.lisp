@@ -40,7 +40,6 @@
            #:session-created-p
            #:ensure-session-created
            #:session-key
-           #:has-session?
            #:drop-session
            #:*current-session*
            #:password-hash

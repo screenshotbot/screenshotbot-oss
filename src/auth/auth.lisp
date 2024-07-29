@@ -141,10 +141,6 @@ session-value, and until there there might be no session available."
                                     "https"
                                     (hunchentoot:header-in* :x-forwarded-proto))))))
 
-(defun has-session? ()
-  (let ((s (cookie-in (cookie-name))))
-    (and s (not (equal s "")))))
-
 (defun drop-session (&optional domain)
   (set-session-cookie "" domain))
 
@@ -176,7 +172,6 @@ session-value, and until there there might be no session available."
       (cl-intbytes:int32->octets (mod (get-universal-time) (ash 1 31)))
       (secure-random:bytes 26 secure-random:*generator*))
      :uri t)))
-
 (defvar *current-session*)
 
 (defparameter *iterations* 2000)
