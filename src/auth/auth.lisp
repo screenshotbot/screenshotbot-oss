@@ -300,3 +300,8 @@ value."
 
 (def-cron clean-session-values (:minute 5 :step-hour 1)
   (clean-session-values))
+
+(defun auth:reset-session ()
+  (setf (%session-token *current-session*)
+        (generate-session-token))
+  (set-session *current-session*))

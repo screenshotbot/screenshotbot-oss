@@ -178,5 +178,8 @@
 
 (test reset-session
   (with-fixture state ()
-    (flet ((cookies-out ()
-             )))))
+    (auth:with-sessions ()
+      (setf (auth:session-value :foo) "22")
+      (is (equal "22" (auth:session-value :foo)))
+      (auth:reset-session)
+      (is (eql nil (auth:session-value :foo))))))

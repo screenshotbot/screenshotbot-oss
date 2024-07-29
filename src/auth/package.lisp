@@ -93,7 +93,8 @@
            #:can-view-with-normal-viewer-context
            #:can-edit-with-normal-viewer-context
            #:user-full-name
-           #:user-first-name))
+           #:user-first-name
+           #:reset-session))
 (in-package :auth)
 
 (util/store/migrations:ensure-symbol-in-package
