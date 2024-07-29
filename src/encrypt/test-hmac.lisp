@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:encrypt/hmac
+                #:verify-hmac
                 #:sign-hmac
                 #:hmac-key)
   (:import-from #:fiveam-matchers/core
@@ -38,3 +39,11 @@
   (with-fixture state ()
     (assert-that (sign-hmac "foobar")
                  (has-length 32))))
+
+
+(test verification
+  (with-fixture state ()
+    (let ((signature (sign-hmac "foobar"))
+          (sign2 (sign-hmac "bar")))
+      (is-true (verify-hmac "foobar" signature))
+      (is-false (verify-hmac "foobar" sign2)))))

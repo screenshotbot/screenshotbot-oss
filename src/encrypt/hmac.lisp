@@ -27,3 +27,7 @@
 
 (defmethod sign-hmac ((str string))
   (sign-hmac (flex:string-to-octets str)))
+
+(defmethod verify-hmac (input hmac)
+  (let ((sign (sign-hmac input)))
+    (equalp sign hmac)))
