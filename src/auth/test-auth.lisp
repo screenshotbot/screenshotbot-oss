@@ -175,3 +175,8 @@
                      (contains "s2" (has-typep t))))
 
        (is (eql 22 (auth:session-value :foo)))))))
+
+(test reset-session
+  (with-fixture state ()
+    (flet ((cookies-out ()
+             )))))

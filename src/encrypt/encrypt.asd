@@ -6,7 +6,8 @@
                :cl-intbytes
                :util/misc
                :cl-base64)
-  :components ((:file "encrypt")))
+  :components ((:file "encrypt")
+               (:file "hmac")))
 
 (defsystem encrypt/tests
   :serial t
@@ -15,4 +16,5 @@
                :fiveam-matchers
                :tmpdir
                :cl-mongo-id)
-  :components ((:file "test-encrypt")))
+  :components ((:file "test-encrypt")
+               (:file "test-hmac")))
