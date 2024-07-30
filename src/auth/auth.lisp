@@ -140,7 +140,7 @@ session-value, and until there there might be no session available."
 (defun set-session-cookie (token &optional domain)
   (let ((domain (or domain (host-without-port))))
     (set-cookie (cookie-name)
-                :value token :domain domain :expires (+ (get-universal-time) (* 365 2600 24))
+                :value token :domain domain :expires (+ (get-universal-time) (* 30 3600 24))
                 :path "/" :secure (and
                                    *secure-cookie-p*
                                    (string=
