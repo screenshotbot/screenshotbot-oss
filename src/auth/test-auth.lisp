@@ -10,6 +10,9 @@
   (:import-from :util/testing
                 :with-fake-request)
   (:import-from :auth
+                #:%session-token
+                #:user-session-transient
+                #:copy-session
                 #:+session-reset-index+
                 #:session-reset
                 #:cookie-name
@@ -38,6 +41,7 @@
                 #:installation
                 #:installation-domain)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
                 #:has-typep
                 #:is-not
                 #:assert-that)
@@ -46,6 +50,8 @@
                 #:has-item)
   (:import-from #:fiveam-matchers/strings
                 #:is-string)
+  (:import-from #:fiveam-matchers/described-as
+                #:described-as)
   (:export))
 (in-package :auth/test-auth)
 
@@ -201,4 +207,48 @@
                        'auth::session-key)
       (auth:reset-session)
       (assert-that (auth::all-session-resets)
-       (has-length 0)))))
+                   (has-length 0)))))
+
+(test is-same-session-disregarding-resets-p
+  (with-fixture state ()
+    (auth:with-sessions ()
+      (let ((old-session (copy-session (auth:current-session))))
+        (is-true (auth:is-same-session-disregarding-resets-p old-session (auth:current-session)))
+        (auth:reset-session)
+        (is-true (auth:is-same-session-disregarding-resets-p old-session (auth:current-session)))
+        (is-false (auth:is-same-session-disregarding-resets-p
+                   old-session
+                   (make-instance 'user-session-transient
+                                  :token "foobar"
+                                  :domain (session-domain (auth:current-session)))))
+        (is-false (auth:is-same-session-disregarding-resets-p
+                   old-session
+                   (make-instance 'user-session-transient
+                                  :token (%session-token (auth:current-session))
+                                  :domain "another.example.com")))))))
+
+(test two-resets-is-will-not-be-the-same-session
+  "This is just documenting current behavior. It might make sense to
+increase this in the future."
+  (with-fixture state ()
+    (auth:with-sessions ()
+      (let ((old-session (copy-session (auth:current-session))))
+        (is-true (auth:is-same-session-disregarding-resets-p old-session (auth:current-session)))
+        (auth:reset-session)
+        (is-true (auth:is-same-session-disregarding-resets-p old-session (auth:current-session)))
+        (auth:reset-session)
+        (assert-that
+         (auth:is-same-session-disregarding-resets-p old-session (auth:current-session))
+         (described-as "We currently expect two resets to break the session chain"
+           (is-equal-to nil)))))))
+
+(test we-dont-look-at-a-reset-that-was-done-long-ago
+  (with-fixture state ()
+    (auth:with-sessions ()
+      (let ((old-session (copy-session (auth:current-session))))
+        (auth:reset-session)
+        (is-true (auth:is-same-session-disregarding-resets-p old-session (auth:current-session)))
+        (setf (slot-value (car (bknr.datastore:class-instances 'session-reset))
+                          'auth::ts)
+              10)
+        (is-false (auth:is-same-session-disregarding-resets-p old-session (auth:current-session)))))))

@@ -93,8 +93,14 @@
     :accessor %session-token
     :initarg :token)
    (domain
+    :initarg :domain
     :reader session-domain
     :initform (host-without-port))))
+
+(defun copy-session (user-session)
+  (make-instance 'user-session-transient
+                 :token (%session-token user-session)
+                 :domain (session-domain user-session)))
 
 (defmethod %session-token :before ((self user-session-transient))
   (unless (session-created-p self)
@@ -310,7 +316,8 @@ value."
             :reader session-reset-domain)
    (new-token :initarg :new-token
               :reader session-reset-new-token)
-   (ts :initarg :ts))
+   (ts :initarg :ts
+       :reader session-reset-ts))
   (:metaclass persistent-class)
   (:default-initargs :ts (get-universal-time)))
 
@@ -329,4 +336,16 @@ value."
 
 (defun auth:is-same-session-disregarding-resets-p (from-session to-session)
   "TODO: currently it only tests if the two sessions are the same."
-  (auth:session= from-session to-session))
+  (or
+   (auth:session= from-session to-session)
+   (let ((old-sessions (session-reset-by-old-token (%session-token from-session))))
+     (let ((ts (get-universal-time)))
+      (fset:do-set (possibility old-sessions)
+        (when (and
+               (equal (session-reset-new-token possibility)
+                      (%session-token to-session))
+               (equal (session-reset-domain possibility)
+                      (session-domain to-session))
+               (> (session-reset-ts possibility)
+                  (- ts 7200)))
+          (return t)))))))
