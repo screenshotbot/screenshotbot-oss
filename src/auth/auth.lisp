@@ -330,3 +330,8 @@ value."
           new-token))
 
   (set-session *current-session*))
+
+
+(defun auth:is-same-session-disregarding-resets-p (from-session to-session)
+  "TODO: currently it only tests if the two sessions are the same."
+  (auth:session= from-session to-session))

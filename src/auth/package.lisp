@@ -96,6 +96,7 @@
            #:can-edit-with-normal-viewer-context
            #:user-full-name
            #:user-first-name
+           #:is-same-session-disregarding-resets-p
            #:reset-session))
 (in-package :auth)
 
