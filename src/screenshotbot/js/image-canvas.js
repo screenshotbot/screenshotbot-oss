@@ -145,7 +145,9 @@ class SbImageCanvas {
             /* Disabling imageSmoothing is not great, I think. See T1295. */
             //ctx.imageSmoothingEnabled = false;
             ctx.imageSmoothingQuality = "high";
-            ctx.drawImage(image, 0, 0);
+            if (image) { // The image might not have been loaded yet.
+                ctx.drawImage(image, 0, 0);
+            }
         }
 
 
