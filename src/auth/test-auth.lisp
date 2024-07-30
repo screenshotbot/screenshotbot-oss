@@ -10,6 +10,8 @@
   (:import-from :util/testing
                 :with-fake-request)
   (:import-from :auth
+                #:+session-reset-index+
+                #:session-reset
                 #:cookie-name
                 #:clean-session-values
                 #:expiry-ts
@@ -51,10 +53,10 @@
 
 (def-fixture state ()
   (let ((*installation* (make-instance 'abstract-installation)))
-   (cl-mock:with-mocks ()
-     (with-test-store ()
-       (with-fake-request ()
-         (&body))))))
+    (cl-mock:with-mocks ()
+      (with-test-store ()
+        (with-fake-request ()
+          (&body))))))
 
 (test auth-simple-test
   (with-fixture state ()
@@ -183,3 +185,20 @@
       (is (equal "22" (auth:session-value :foo)))
       (auth:reset-session)
       (is (eql nil (auth:session-value :foo))))))
+
+(test reset-session-logs-reset
+  (with-fixture state ()
+    (auth:with-sessions ()
+      (setf (auth:session-value :foo) "22")
+      (auth:reset-session)
+      (assert-that (auth::all-session-resets)
+                   (has-length 1)))))
+
+(test if-session-token-wasnt-generated-we-dont-log-index
+  (with-fixture state ()
+    (auth:with-sessions ()
+      (slot-makunbound (auth:current-session)
+                       'auth::session-key)
+      (auth:reset-session)
+      (assert-that (auth::all-session-resets)
+       (has-length 0)))))

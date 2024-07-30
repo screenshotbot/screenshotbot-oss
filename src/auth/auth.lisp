@@ -301,7 +301,29 @@ value."
 (def-cron clean-session-values (:minute 5 :step-hour 1)
   (clean-session-values))
 
+(defindex +session-reset-index+
+  'fset-set-index
+  :slot-name 'old-token)
+
+
+(defclass session-reset (store-object)
+  ((old-token :initarg :old-token
+              :index +session-reset-index+
+              :index-reader session-reset-by-old-token
+              :index-values all-session-resets)
+   (new-token :initarg :new-token
+              :reader session-reset-new-token)
+   (ts :initarg :ts))
+  (:metaclass persistent-class)
+  (:default-initargs :ts (get-universal-time)))
+
 (defun auth:reset-session ()
-  (setf (%session-token *current-session*)
-        (generate-session-token))
+  (let ((new-token (generate-session-token)))
+    (when (session-created-p *current-session*)
+      (make-instance 'session-reset
+                     :old-token (%session-token *current-session*)
+                     :new-token new-token))
+    (setf (%session-token *current-session*)
+          new-token))
+
   (set-session *current-session*))

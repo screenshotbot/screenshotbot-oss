@@ -33,6 +33,8 @@
                 #:installation-domain)
   (:import-from #:util/events
                 #:push-counter-event)
+  (:import-from #:bknr.indices
+                #:indexed-class)
   (:export #:user-session
            #:session-value
            #:session-created-p
