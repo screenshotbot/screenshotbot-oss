@@ -311,6 +311,8 @@ value."
               :index +session-reset-index+
               :index-reader session-reset-by-old-token
               :index-values all-session-resets)
+   (%domain :initarg :domain
+            :reader session-reset-domain)
    (new-token :initarg :new-token
               :reader session-reset-new-token)
    (ts :initarg :ts))
@@ -322,6 +324,7 @@ value."
     (when (session-created-p *current-session*)
       (make-instance 'session-reset
                      :old-token (%session-token *current-session*)
+                     :domain (host-without-port)
                      :new-token new-token))
     (setf (%session-token *current-session*)
           new-token))
