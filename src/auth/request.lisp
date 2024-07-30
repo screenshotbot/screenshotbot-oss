@@ -70,6 +70,7 @@
 
 (defun (setf current-user) (user &key expires-in
                                    viewer-context)
+  (auth:reset-session)
   (setf (auth:session-value :user :expires-in expires-in) user)
   (setf (auth:request-user hunchentoot:*request*) user)
   (setf (auth:viewer-context hunchentoot:*request*)
