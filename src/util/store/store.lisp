@@ -48,6 +48,7 @@
                 #:backward-compatibility-mixin)
   #+bknr.cluster
   (:import-from #:bknr.cluster/server
+                #:on-snapshot-load
                 #:log-transaction-error
                 #:data-path
                 #:leaderp
@@ -182,6 +183,12 @@ to the directory that was just snapshotted.")
   ()
   (:documentation "The final raft store we'll be using"))
 
+(defmethod on-snapshot-load :after ((store base-raft-store) snapshot-reader)
+  #+lispworks
+  (progn
+    (log:info "Running GC :coalesce")
+    (hcl:gc-generation 4 :coalesce t)))
+
 
 #+bknr.cluster
 (defmethod log-transaction-error ((sm base-raft-store) trans e)
@@ -218,15 +225,10 @@ to the directory that was just snapshotted.")
           (values)))
       (setf transaction-log-lock nil))))
 
-(defmethod maybe-gc-coalesce ((store safe-mp-store))
-  #+lispworks
-  (hcl:gc-generation 4 :coalesce t))
-
 (defmethod restore-transaction-log :before ((store safe-mp-store)
                                             transaction-log
                                             &key until)
   (declare (ignore until))
-  (maybe-gc-coalesce store)
   (ensure-transaction-log-lock store))
 
 
