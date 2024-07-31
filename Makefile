@@ -45,6 +45,10 @@ LW=build/lw-console-$(LW_VERSION)$(ARCH)
 LW_CORE=lispworks-unknown-location
 SRC_DIRS=src local-projects third-party scripts quicklisp
 LISP_FILES=$(call wild_src, '*.lisp') $(call wild_src, '*.asd') $(call will_src,'*.c') $(call wild_src,'*.cpp')
+
+JS_FILES=$(call wild_src, '*.js')
+CSS_FILES=$(call wild_src, '*.css') $(call wild_src, '*.scss')
+
 LW_SCRIPT=$(call timeout,15m) $(LW) -quiet -build
 SBCL_SCRIPT=$(sbcl) --script
 TMPFILE=$(shell mktemp)
