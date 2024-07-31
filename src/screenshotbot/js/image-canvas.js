@@ -26,6 +26,7 @@ class SbImageCanvas {
         var dpr = devicePixelRatio || 1;
         this.dprTransform = new DOMMatrix([dpr, 0, 0, dpr, 0, 0]);
         this.dprInv = this.dprTransform.inverse();
+        this.forceTransform = null;
     }
 
     callCallback(fn) {
@@ -67,7 +68,12 @@ class SbImageCanvas {
         var mat = this.transform;
         var res = mat.multiply(this.coreTranslation);
         //console.log("new transform", res);
-        this.ctx.setTransform(res);
+        this.ctx.setTransform(this.forceTransform || res);
+    }
+
+    setForceTransform(z, x, y) {
+        this.forceTransform = new DOMMatrix([z, 0, 0, z, x, y]);
+        this.draw();
     }
 
     animateTo(newTransform, callback) {
