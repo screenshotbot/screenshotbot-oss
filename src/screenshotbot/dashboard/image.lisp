@@ -181,10 +181,13 @@
     (no-image-uploaded-yet ()
       (send-404 "No image uploaded yet for this image"))))
 
+(defun set-cors-header ()
+  (setf (hunchentoot:header-out :access-control-allow-origin)  "*"))
+
 (defhandler (image-blob-get :uri "/image/blob/:oid/default.webp") (oid size type)
   (with-access-checked-image (image oid)
     (setf (hunchentoot:header-out :content-type) "image/png")
-    (setf (hunchentoot:header-out :access-control-allow-origin)  "*")
+    (set-cors-header)
     (cond
       (size
        (handle-resized-image image size :type type))
@@ -196,6 +199,7 @@
   (destructuring-bind (oid &optional type) (str:split "." eoid)
     (with-access-checked-image (image oid)
       (with-local-image (file image)
+        (set-cors-header)
         (cond
           (type
            (assert (str:s-member '("png" "webp" "jpeg")
