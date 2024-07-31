@@ -24,7 +24,6 @@ class SbImageCanvas {
         /* constants?  At time of writing, unused. */
 
         var dpr = devicePixelRatio || 1;
-        this.dpr = dpr;
         this.dprTransform = new DOMMatrix([dpr, 0, 0, dpr, 0, 0]);
         this.dprInv = this.dprTransform.inverse();
     }
@@ -117,15 +116,10 @@ class SbImageCanvas {
         let scrollHeight = rect.height;
 
         var canvasEl = this.canvasEl;
-        var dpr = this.dpr;
-
-        if (canvasEl.height != scrollHeight * dpr ||
-            canvasEl.width != scrollWidth * dpr) {
-            canvasEl.height = scrollHeight * dpr;
-            canvasEl.width = scrollWidth * dpr;
-
-            canvasEl.style.width = scrollWidth + 'px';
-            canvasEl.style.height = scrollHeight + 'px';
+        if (canvasEl.height != scrollHeight ||
+            canvasEl.width != scrollWidth) {
+            canvasEl.height = scrollHeight;
+            canvasEl.width = scrollWidth;
         }
 
         this.coreTranslation = calcCoreTransform(scrollWidth,
@@ -157,10 +151,8 @@ class SbImageCanvas {
             /* Disabling imageSmoothing is not great, I think. See T1295. */
             //ctx.imageSmoothingEnabled = false;
             ctx.imageSmoothingQuality = "high";
-            if (image) {
-                ctx.drawImage(image, 0, 0,
-                              self.imgSize.width,
-                              self.imgSize.height);
+            if (image) { // The image might not have been loaded yet.
+                ctx.drawImage(image, 0, 0);
             }
         }
 
@@ -209,8 +201,8 @@ class SbImageCanvas {
         var image = self.images[self.images.length - 1];
 
         self.imgSize = {
-            height: image.height * self.dpr,
-            width: image.width * self.dpr,
+            height: image.height,
+            width: image.width,
         }
         self.scheduleDraw();
     }
@@ -222,19 +214,11 @@ class SbImageCanvas {
         // Since we're using `cover` as object-fit, the scale
         // will be the higher of these two
         var scale = Math.min(self.canvasEl.width / rect.width, self.canvasEl.height / rect.height);
-        console.log(e.clientX - rect.left, e.clientY - rect.top);
+
         var thisX = (e.clientX - rect.left) * scale;
         var thisY = (e.clientY - rect.top) * scale;
 
-        //console.log(thisX, thisY);
-
         return new DOMPoint(thisX, thisY);
-    }
-
-    // subtract two points
-    _subtract(a, b){
-        return new DOMPoint(a.x - b.x,
-                            a.y - b.y);
     }
 
     setupDragging() {
@@ -248,27 +232,21 @@ class SbImageCanvas {
             }
 
             var pointerId = e.pointerId;
-            dragStart[pointerId] = {
-                x0: self.getEventPositionOnCanvas(e),
-                M0: DOMMatrix.fromMatrix(self.transform),
-                startTime: Date.now(),
-            }
+            dragStart[pointerId] = self.getEventPositionOnCanvas(e);
+            var ds = dragStart[pointerId];
+            ds.translateX = self.transform.e;
+            ds.translateY = self.transform.f;
+            ds.startTime = Date.now();
 
             e.preventDefault();
         }
 
         function onMouseMove(e) {
-            // See F215508 and F215510  for how we derived these equations.
             var pos = self.getEventPositionOnCanvas(e);
             var ds = dragStart[e.pointerId]
             if (ds && ds.startTime < Date.now() - 100) {
-
-                var delta = self.dprInv.transformPoint(self._subtract(pos, ds.x0));
-
-                //console.log("got delta: ", delta);
-                self.transform.e = ds.M0.e + delta.x;
-                self.transform.f = ds.M0.f + delta.y;
-
+                self.transform.e = pos.x - ds.x + ds.translateX;
+                self.transform.f = pos.y - ds.y + ds.translateY;
                 self.scheduleDraw();
             }
 
@@ -304,16 +282,15 @@ class SbImageCanvas {
         function onZoomWheel(e) {
             var change = e.originalEvent.deltaY * 0.0005;
             var zoom0 = self.getZoom();
-            var M0 = DOMMatrix.fromMatrix(self.transform);
 
-            var zoom = zoom0 - change;
+            self.setZoom(self.getZoom() - change);
 
-            if (zoom > 5) {
-                zoom = 5;
+            if (self.getZoom() > 5) {
+                self.setZoom(5);
             }
 
-            if (zoom < 0.1) {
-                zoom = 0.1;
+            if (self.getZoom() < 0.1) {
+                self.setZoom(0.1);
             }
             //console.log("new zoom is", zoom);
 
@@ -322,17 +299,15 @@ class SbImageCanvas {
 
 
 
-            var x0 = self.getEventPositionOnCanvas(e);
+            var canvasPos = self.getEventPositionOnCanvas(e);
 
-            var Z = new DOMMatrix([zoom, 0, 0, zoom, 0, 0]);
-            var delta = self._subtract(
-                self.dprInv.transformPoint(x0),
-                Z.multiply(M0.inverse()).multiply(self.dprInv).transformPoint(x0));
+            var zoom = self.getZoom();
+            var translate = {
+                x: canvasPos.x - (zoom/zoom0) * (canvasPos.x - self.transform.e),
+                y: canvasPos.y - (zoom/zoom0) * (canvasPos.y - self.transform.f)
+            }
 
-            self.transform = Z;
-            self.transform.e = delta.x;
-            self.transform.f = delta.y;
-
+            self.setTranslate(translate.x, translate.y);
 
             self.scheduleDraw();
             e.preventDefault();
