@@ -476,3 +476,7 @@ URL for the company, if there is one."
               t))
            (installation))))
     (ensure-slot-boundp 'company '%emails-enabled-by-default-p :value default-value)))
+
+(def-store-migration ("Set invites slot to nil" :version 22)
+  (loop for company in (bknr.datastore:class-instances 'company)
+        do (setf (slot-value company 'invites) nil)))
