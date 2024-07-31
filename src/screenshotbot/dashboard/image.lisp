@@ -184,6 +184,7 @@
 (defhandler (image-blob-get :uri "/image/blob/:oid/default.webp") (oid size type)
   (with-access-checked-image (image oid)
     (setf (hunchentoot:header-out :content-type) "image/png")
+    (setf (hunchentoot:header-out :access-control-allow-origin)  "*")
     (cond
       (size
        (handle-resized-image image size :type type))
