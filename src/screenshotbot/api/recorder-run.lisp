@@ -183,10 +183,12 @@
                                    :small :warmup t)))
   (log:info "Warming up full-page screenshots for ~s" run)
   (loop for screenshot in (recorder-run-screenshots run)
+        for i from 0
         do
-           (progn
-             (handle-resized-image (screenshot-image screenshot)
-                                   :full-page :warmup t))))
+           (when (> i 100)
+             (sleep 1))
+           (handle-resized-image (screenshot-image screenshot)
+                                 :full-page :warmup t)))
 
 (defmethod warmup-image-caches ((run unchanged-run))
   (values))
