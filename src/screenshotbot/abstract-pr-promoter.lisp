@@ -16,6 +16,7 @@
                 #:report-acceptable
                 #:report)
   (:import-from #:screenshotbot/model/channel
+                #:channel-deleted-p
                 #:channel-company
                 #:production-run-for)
   (:import-from #:screenshotbot/user-api
@@ -196,6 +197,7 @@
   (labels ((failover ()
              (immediate-promise (find-last-green-run channel base-commit)))
            (produce (base-commit retries)
+             (assert (not (channel-deleted-p channel)))
              (anaphora:acond
                ((null base-commit)
                 (immediate-promise nil))
@@ -390,6 +392,7 @@ reviewable.)"
                            promoter
                            run
                            base-run)))))
+           (assert (not (channel-deleted-p (recorder-run-channel run))))
            (push-remote-check promoter run check)))))))
 
 (defmethod warn-if-not-merge-base ((promoter abstract-pr-promoter)

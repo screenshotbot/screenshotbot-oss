@@ -164,7 +164,7 @@
            (run (make-recorder-run
                  :company company
                  :github-repo "https://github.com/tdrhq/fast-example"
-                 :channel (make-instance 'dummy-channel)
+                 :channel (make-instance 'dummy-channel :company company)
                  :merge-base "car"
                  :commit-hash "foo")))
       (maybe-promote promoter run)
@@ -209,7 +209,7 @@
   (with-fixture state ()
     (let ((*base-run* (make-recorder-run
                         :company company
-                        :channel (make-instance 'dummy-channel)
+                        :channel (make-instance 'dummy-channel :company company)
                         :merge-base "dfdfdf"
                         :commit-hash "car"))
           (check))
@@ -219,7 +219,7 @@
                            (setf check %check)))
       (let ((run (make-recorder-run
                   :company company
-                  :channel (make-instance 'dummy-channel)
+                  :channel (make-instance 'dummy-channel :company company)
                   :pull-request "https://github.com/tdrhq/fast-example/pull/2"
                   :merge-base "car"
                   :commit-hash "foo")))
@@ -286,7 +286,7 @@
                           :image image
                           :name "foobar"))
              (run (make-recorder-run
-                   :channel (make-instance 'dummy-channel)
+                   :channel (make-instance 'dummy-channel :company company)
                    :company company
                    :screenshots (list screenshot)
                    :pull-request "https://github.com/tdrhq/fast-example/pull/2"
@@ -308,6 +308,7 @@
    (with-test-store ()
      (let* ((company (make-instance 'company))
             (channel (make-instance 'channel
+                                    :company company
                                     :name "github-test-channel"))
             (empty-run (make-recorder-run :company company
                                           :channel channel))
@@ -356,10 +357,10 @@
   (with-fixture state ()
     (let ((*base-run* (make-recorder-run
                         :company company
-                        :channel (make-instance 'dummy-channel)
+                        :channel (make-instance 'dummy-channel :company company)
                         :commit-hash "car")))
      (let ((run (make-recorder-run
-                  :channel (make-instance 'dummy-channel)
+                  :channel (make-instance 'dummy-channel :company company)
                   :company company
                   :github-repo "https://github.com/tdrhq/fast-example"
                   :pull-request "https://github.com/tdrhq/fast-example/pull/2"
@@ -424,14 +425,14 @@
     (with-test-user (:logged-in-p t)
       (let ((*base-run* (make-recorder-run
                         :company company
-                        :channel (make-instance 'dummy-channel)
+                        :channel (make-instance 'dummy-channel :company company)
                         :commit-hash "car")))
         (let ((calls))
           (cl-mock:if-called 'github-update-pull-request
                              (lambda (&rest args)
                                (push args calls))
                              :at-start t)
-          (let* ((channel (make-instance 'dummy-channel))
+          (let* ((channel (make-instance 'dummy-channel :company company))
                  (batch (make-instance 'batch
                                        :repo "https://github.com/tdrhq/fast-example"
                                        :commit "foo"
@@ -441,7 +442,8 @@
                  (last-run))
             (dotimes (i 5)
               (let ((run (make-recorder-run
-                          :channel (make-instance 'dummy-channel :name (format nil "Foobar~a" i))
+                          :channel (make-instance 'dummy-channel :name (format nil "Foobar~a" i)
+                                                  :company company)
                           :company company
                           :batch batch
                           :github-repo "https://github.com/tdrhq/fast-example"
@@ -474,9 +476,9 @@
 
 (test make-github-for-every-version-of-state
   (with-fixture state ()
-
     (dolist (state (list :accepted :rejected :success :failure :action-required))
       (let* ((channel (make-instance 'channel
+                                     :company company
                                      :name "test-channel"
                                      :github-repo "https://github.com/tdrhq/fast-example"))
              (run (make-recorder-run

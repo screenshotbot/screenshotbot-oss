@@ -70,7 +70,8 @@
    #:channel-subscribers
    #:commit-to-run-map
    #:channel-slack-channels
-   #:review-policy-name)
+   #:review-policy-name
+   #:channel-deleted-p)
 
   ;; forward decls
   (:export
@@ -351,3 +352,6 @@
 
 (def-store-migration ("Ensure allow-public-badge-p is bound" :version 20)
   (ensure-slot-boundp 'channel '%allow-public-badge-p))
+
+(defmethod channel-deleted-p ((channel channel))
+  (not (company channel)))
