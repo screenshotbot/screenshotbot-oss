@@ -422,6 +422,9 @@
                                                           :after-image after)
                 do
                    (progn
+                     (when (> i 100)
+                       ;; Throttle
+                       (sleep 1))
                      (log:info "Warming up compare image ~d of ~d (~a)" i (length changes)
                                (screenshot-name after))
                      (restart-case
