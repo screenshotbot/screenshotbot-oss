@@ -74,6 +74,8 @@
                 #:all-subsystem-objects)
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
+  (:import-from #:util/events
+                #:with-tracing)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -146,13 +148,14 @@
   "Compares before-screenshot and after-screenshot, and saves the result image to P.
 
 If the images are identical, we return t, else we return NIL."
-  (with-local-image (before-file before-image)
-    (with-local-image (after-file after-image)
-      (with-wand (before :file before-file)
-        (with-wand (after :file after-file)
-          (let ((same-p (compare-wands before after p
-                                       :in-place-p t)))
-            same-p))))))
+  (with-tracing (:image-comparison)
+    (with-local-image (before-file before-image)
+      (with-local-image (after-file after-image)
+        (with-wand (before :file before-file)
+          (with-wand (after :file after-file)
+            (let ((same-p (compare-wands before after p
+                                         :in-place-p t)))
+              same-p)))))))
 
 (defmethod find-image-comparison-on-images ((before image)
                                             (after image))

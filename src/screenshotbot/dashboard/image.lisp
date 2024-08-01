@@ -47,6 +47,8 @@
                 #:def-easy-macro)
   (:import-from #:screenshotbot/cdn
                 #:make-image-cdn-url)
+  (:import-from #:util/events
+                #:with-tracing)
   (:export
    #:handle-resized-image))
 (in-package :screenshotbot/dashboard/image)
@@ -152,7 +154,8 @@
      (cond
        (warmup
         (with-semaphore ()
-          (%build-resized-image image size)))
+          (with-tracing (:image-warmup-resize)
+            (%build-resized-image image size))))
        (t
         (let ((output-file
                 (with-semaphore ()
