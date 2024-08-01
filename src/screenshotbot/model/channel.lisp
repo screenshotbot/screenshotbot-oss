@@ -90,7 +90,8 @@
     (company
      :initarg :company
      :initform nil
-     :accessor company)
+     :accessor company
+     :documentation "This slot might be NIL if the channel was deleted, which can indirectly lead to background promotion threads crashing, but in general will be safe.")
     (active-runs
      :initform nil
      :accessor all-active-runs
