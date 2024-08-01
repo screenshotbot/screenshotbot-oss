@@ -145,31 +145,32 @@
          :report report
          args))
 
-(defun post-build-status (&key
-                            company
-                            project-path
-                            sha
-                            state
-                            (name
-                             "Screenshotbot")
-                            target-url
-                            description)
-  (assert
-   (str:s-member (str:split ", " "pending, running, success, failed, canceled")
-                 state))
-  (with-audit-log (audit-log (make-instance 'update-status-audit-log
-                                            :company company
-                                            :commit sha))
-    (declare (ignore audit-log))
-    (gitlab-request company
-                    (format nil "/projects/~a/statuses/~a"
-                            (urlencode:urlencode project-path)
-                            sha)
-                    :method :post
-                    :content `(("name" . ,name)
-                               ("target_url" . ,target-url)
-                               ("state" . ,state)
-                               ("description" . ,description)))))
+(auto-restart:with-auto-restart (:retries 4)
+  (defun post-build-status (&key
+                              company
+                              project-path
+                              sha
+                              state
+                              (name
+                               "Screenshotbot")
+                              target-url
+                              description)
+    (assert
+     (str:s-member (str:split ", " "pending, running, success, failed, canceled")
+                   state))
+    (with-audit-log (audit-log (make-instance 'update-status-audit-log
+                                              :company company
+                                              :commit sha))
+      (declare (ignore audit-log))
+      (gitlab-request company
+                      (format nil "/projects/~a/statuses/~a"
+                              (urlencode:urlencode project-path)
+                              sha)
+                      :method :post
+                      :content `(("name" . ,name)
+                                 ("target_url" . ,target-url)
+                                 ("state" . ,state)
+                                 ("description" . ,description))))))
 
 (defmethod make-promoter-for-acceptable ((self gitlab-acceptable))
   (make-instance 'merge-request-promoter))
