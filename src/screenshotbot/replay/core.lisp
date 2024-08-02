@@ -362,6 +362,11 @@
    response-headers
    :key #'car))
 
+(defun blacklisted-domain-p (domain)
+  (or
+   (cl-ppcre:scan "\\d*\\.\\d*\\.\\d*\\d*" domain)
+   (cl-ppcre:scan ".*\\.screenshotbot.io" domain)))
+
 (defmethod http-request-impl ((engine request-engine)
                               url &rest args)
   (let* ((url (fix-malformed-url url))
@@ -390,6 +395,8 @@
                  (remove-unwanted-headers response-headers)))
            (push `(:x-original-url . ,(quri:render-uri url)) response-headers)
            (values remote-stream status response-headers))))
+      ((blacklisted-domain-p (quri:uri-domain url))
+       (error "This domain is blacklisted: ~a" ))
       (t
        (error "unsupported scheme: ~a" scheme)))))
 

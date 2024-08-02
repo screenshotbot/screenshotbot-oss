@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:blacklisted-domain-p
                 #:snapshot-request
                 #:http-header-value
                 #:http-header-name
@@ -400,3 +401,11 @@ background: url(shttps://google.com?f=1)
                                                          :mobile-emulation "foobar"))
                                          :channel-name "bleh")))
     (finishes (encode-json snapshot-request))))
+
+(test blacklisted-domain-p
+  (is-false (blacklisted-domain-p "example.com"))
+  (is-true (blacklisted-domain-p "169.254.169.254"))
+  (is-true (blacklisted-domain-p "foo1.screenshotbot.io"))
+  ;; To maintain current behavior, since we use this logic to test
+  ;; Screenshotbot itself.
+  (is-false (blacklisted-domain-p "screenshotbot.io")))
