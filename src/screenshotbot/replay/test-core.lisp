@@ -9,6 +9,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:*request-engine*
+                #:blacklisted-domain
                 #:blacklisted-domain-p
                 #:snapshot-request
                 #:http-header-value
@@ -357,7 +359,7 @@ background: url(shttps://google.com?f=1)
 
 (test http-get-ignores-invalid-url
   (with-fixture state ()
-    (multiple-value-bind (stream ret) (http-get "http://127.0.0.1/????invalid")
+    (multiple-value-bind (stream ret) (http-get "http://example.com/????invalid")
       (close stream)
       (is (equal
            500
@@ -409,3 +411,8 @@ background: url(shttps://google.com?f=1)
   ;; To maintain current behavior, since we use this logic to test
   ;; Screenshotbot itself.
   (is-false (blacklisted-domain-p "screenshotbot.io")))
+
+(test domain-is-actually-blacklisted
+  (signals blacklisted-domain
+    (util/request:http-request "http://foo1.screenshotbot.io"
+                               :engine *request-engine*)))

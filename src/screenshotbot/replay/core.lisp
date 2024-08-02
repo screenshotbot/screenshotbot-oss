@@ -367,6 +367,9 @@
    (cl-ppcre:scan "\\d*\\.\\d*\\.\\d*\\d*" domain)
    (cl-ppcre:scan ".*\\.screenshotbot.io" domain)))
 
+(define-condition blacklisted-domain (error)
+  ())
+
 (defmethod http-request-impl ((engine request-engine)
                               url &rest args)
   (let* ((url (fix-malformed-url url))
@@ -375,6 +378,8 @@
     (cond
       ((equal "file" scheme)
        (error "file:// urls are not supported"))
+      ((blacklisted-domain-p (quri:uri-host url))
+       (error 'blacklisted-domain))
       ((member scheme (list "chrome-extension") :test #'string-equal)
        ;; respond with an empty file
        (values
@@ -383,7 +388,6 @@
         +empty-headers+))
       ((or (equal "https" scheme)
            (equal "http" scheme))
-
        (log:info "Fetching: ~a" url)
        (write-replay-log "Fetching: ~a" url)
 
@@ -395,8 +399,6 @@
                  (remove-unwanted-headers response-headers)))
            (push `(:x-original-url . ,(quri:render-uri url)) response-headers)
            (values remote-stream status response-headers))))
-      ((blacklisted-domain-p (quri:uri-domain url))
-       (error "This domain is blacklisted: ~a" ))
       (t
        (error "unsupported scheme: ~a" scheme)))))
 
