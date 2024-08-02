@@ -10,6 +10,9 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:encrypt/hmac
+                #:invalid-signature-error
+                #:encode-signed-string
+                #:decode-signed-string
                 #:verify-hmac
                 #:sign-hmac
                 #:hmac-key)
@@ -47,3 +50,12 @@
           (sign2 (sign-hmac "bar")))
       (is-true (verify-hmac "foobar" signature))
       (is-false (verify-hmac "foobar" sign2)))))
+
+
+(test encode-signed-string
+  (with-fixture state ()
+    (is (equal "foobar"
+               (decode-signed-string (encode-signed-string "foobar"))))
+    (let ((obj (str:replace-all "bar" "car" (encode-signed-string "foobar"))))
+      (signals invalid-signature-error
+        (decode-signed-string obj)))))

@@ -8,6 +8,8 @@
   (:use #:cl)
   (:import-from #:encrypt
                 #:key-from-disk)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:export
    #:sign-hmac
    #:verify-hmac))
@@ -34,3 +36,31 @@
 (defmethod verify-hmac (input hmac)
   (let ((sign (sign-hmac input)))
     (equalp sign hmac)))
+
+
+(defmethod encode-signed-string ((str string))
+  "Returns a string that is signed and timestamped"
+  (let* ((ts (get-universal-time))
+         (sign (sign-hmac (format nil "~a.~a" str ts))))
+    (json:encode-json-to-string
+     `((:input . ,str)
+       (:ts . ,ts)
+       (:sign . ,(ironclad:byte-array-to-hex-string sign))))))
+
+(define-condition invalid-signature-error (error)
+  ())
+
+(define-condition invalid-signature-timestamp (error)
+  ())
+
+(defmethod decode-signed-string ((str string))
+  (let ((obj (json:decode-json-from-string str)))
+    (let ((ts (get-universal-time)))
+      (unless (< (abs (- ts (assoc-value obj :ts))) 300)
+        (error 'invalid-signature-timestamp)))
+    (unless (verify-hmac (format nil "~a.~a" (assoc-value obj :input)
+                                 (assoc-value obj :ts))
+                         (ironclad:hex-string-to-byte-array
+                          (assoc-value obj :sign)))
+      (error 'invalid-signature-error))
+    (assoc-value obj :input)))
