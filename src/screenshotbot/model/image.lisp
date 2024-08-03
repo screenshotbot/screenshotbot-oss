@@ -93,6 +93,8 @@
                 #:store-object)
   (:import-from #:util/threading
                 #:with-extras)
+  (:import-from #:util/store/simple-object-snapshot
+                #:simple-object-snapshot)
   ;; classes
   (:export
    #:image
@@ -767,3 +769,7 @@ recognized the file, we'll return nil."
        0))))
 
 ;;(length (all-soft-expired-images))
+
+(defmethod bknr.datastore:make-object-snapshot ((self image))
+  (make-instance 'simple-object-snapshot
+                 :object self))

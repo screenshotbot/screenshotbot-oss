@@ -69,6 +69,8 @@
                 #:assert-that)
   (:import-from #:fiveam-matchers/strings
                 #:matches-regex)
+  (:import-from #:screenshotbot/model/company
+                #:company)
   (:export))
 
 (util/fiveam:def-suite)
@@ -114,10 +116,10 @@ uses the base-image-comparer."
                                                                    :dir fake-s3-store-dir))))
      (funcall fn))))
 
-(def-fixture state ()
+(def-fixture state (&key dir)
   (with-base-fixture ()
    (let ((file #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png")))
-     (with-test-store ()
+     (with-test-store (:dir dir)
        (let* ((img (make-image
                     :pathname (static-asset "assets/images/old-example-view-right.png")))
               (img2 (make-image
@@ -320,3 +322,15 @@ uses the base-image-comparer."
     (setf (%image-state img) nil)
     (signals no-image-uploaded-yet
       (with-local-image (file img)))))
+
+
+(test simple-image-snapshots
+  (tmpdir:with-tmpdir (dir)
+   (with-fixture state (:dir dir)
+     (make-image :pathname file)
+     (let ((other-image (make-image :pathname file)))
+       (slot-makunbound other-image 'company))
+     (finishes
+       (bknr.datastore:snapshot)))
+    (with-fixture state (:dir dir)
+      (pass))))

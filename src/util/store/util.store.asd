@@ -32,6 +32,7 @@
                (:file "single")
                (:file "migrations")
                (:file "delayed-accessors")
+               (:file "simple-object-snapshot")
                (:file "checksums")
                (:file "export")
                (:file "fset")
