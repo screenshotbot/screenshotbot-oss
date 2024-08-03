@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:unchanged-run-other-commit
+                #:unchanged-run
                 #:runs-for-channel
                 #:delete-run
                 #:runs-for-company
@@ -28,6 +30,7 @@
                 #:has-typep
                 #:assert-that)
   (:import-from #:bknr.datastore
+                #:class-instances
                 #:with-transaction)
   (:import-from #:bknr.datastore
                 #:blob-pathname)
@@ -43,6 +46,7 @@
   (:import-from #:screenshotbot/model/channel
                 #:production-run-for)
   (:import-from #:screenshotbot/model/company
+                #:find-or-create-channel
                 #:company)
 
   (:local-nicknames (#:a #:alexandria)))
@@ -157,3 +161,17 @@
                    (contains))
       (finishes
         (delete-run run)))))
+
+
+(test can-save-and-restore-unchanged-runs
+  (tmpdir:with-tmpdir (dir)
+    (with-test-store (:dir dir)
+      (make-instance 'unchanged-run
+                     :commit "foo"
+                     :other-commit "bar"
+                     :channel (find-or-create-channel (make-instance 'company) "bleh" ))
+      (bknr.datastore:snapshot))
+    (with-test-store (:dir dir)
+      (is (equal "bar"
+                 (unchanged-run-other-commit (car
+                                              (class-instances 'unchanged-run))))))))
