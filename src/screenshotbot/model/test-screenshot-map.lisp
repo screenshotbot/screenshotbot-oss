@@ -57,7 +57,10 @@
   (:import-from #:fiveam-matchers/misc
                 #:is-null)
   (:import-from #:bknr.datastore
-                #:deftransaction))
+                #:class-instances
+                #:deftransaction)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length))
 (in-package :screenshotbot/model/test-screenshot-map)
 
 
@@ -70,9 +73,9 @@
       "fixture/")
    name))
 
-(def-fixture state ()
+(def-fixture state (&key dir)
   (with-installation ()
-   (with-test-store ()
+   (with-test-store (:dir dir)
      (let* ((channel (make-instance 'channel))
             (im-1 (make-image :pathname (image-file "wizard.png")))
             (im-2 (make-image :pathname (image-file "rose.png")))
@@ -481,3 +484,12 @@ delete this test in the future, it might be okay."
                  (car items)
                  0
                  'chain-cost)))))))
+
+(test save-and-restore-screenshot-map
+  (tmpdir:with-tmpdir (dir)
+    (with-fixture state (:dir dir)
+      (let ((map (make-screenshot-map channel
+                                      (list screenshot-1 screenshot-2))))))
+    (with-fixture state (:dir dir)
+      (assert-that (class-instances 'screenshot-map)
+                   (has-length 1)))))
