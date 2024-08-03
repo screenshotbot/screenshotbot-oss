@@ -288,6 +288,12 @@ associated report is rendered.")
                        :author nil
                        :tags nil)))
 
+(defmethod bknr.datastore:make-object-snapshot ((self recorder-run))
+  (make-instance 'simple-object-snapshot
+                 :object self
+                 :except-slots '(promotion-complete-p
+                                 %warnings)))
+
 (defmethod recorder-run-author :around ((run recorder-run))
   (handler-case
       (call-next-method)

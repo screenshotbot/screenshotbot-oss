@@ -175,3 +175,16 @@
       (is (equal "bar"
                  (unchanged-run-other-commit (car
                                               (class-instances 'unchanged-run))))))))
+
+
+(test can-save-and-restore-recorder-runs
+  (tmpdir:with-tmpdir (dir)
+    (with-test-store (:dir dir)
+      (make-recorder-run
+       :commit-hash "foo"
+       :channel (find-or-create-channel (make-instance 'company) "bleh"))
+      (bknr.datastore:snapshot))
+    (with-test-store (:dir dir)
+      (is (equal "foo"
+                 (recorder-run-commit (car
+                                       (class-instances 'recorder-run))))))))
