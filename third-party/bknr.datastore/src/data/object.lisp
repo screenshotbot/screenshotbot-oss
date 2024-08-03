@@ -408,7 +408,7 @@ transaction log."))
   (dolist (slot (class-layout-slots class-layout))
     (%encode-symbol slot stream)))
 
-(defmethod encode-slots-for-object (class-layout object stream)
+(defun %encode-set-slots (class-layout object stream)
   "Given an object (or snapshot), encode each of the slots in the stream
 in the order established by class-layout. If a specific slot is not
 bound, encode 'bknr.datastore::unbound."
@@ -450,7 +450,11 @@ bound, encode 'bknr.datastore::unbound."
     (%write-tag #\S stream)
     (%encode-integer (class-layout-id class-layout) stream)
     (%encode-integer (store-object-id object) stream)
-    (encode-slots-for-object class-layout object stream)))
+    (%encode-set-slots class-layout object stream)))
+
+(defmethod encode-set-slots-for-object (class-layout snapshot stream)
+  ;; TODO: get rid of this method
+  (error "Override this"))
 
 (defun encode-set-slots-for-snapshot (class-layouts object-snapshot-pair stream)
   (let* ((object (object-snapshot-pair-object object-snapshot-pair))
