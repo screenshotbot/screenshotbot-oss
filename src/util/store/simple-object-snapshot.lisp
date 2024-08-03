@@ -15,15 +15,29 @@
 
 (defclass simple-object-snapshot ()
   ((object :initarg :object
-           :reader %object))
+           :reader %object)
+   (except-slots :initarg :except-slots
+                 :initform nil
+                 :reader except-slots
+                 :documentation "The except slots must be bound. If it's unbound it will crash.")
+   (slot-values :accessor %slot-values))
   (:documentation "We assume that the object is immutable, or if it did mutate, that the mutations are reasonable. If a reference is deleted, then the snapshot will crash"))
+
+(defmethod initialize-instance :after ((self simple-object-snapshot) &key except-slots object)
+  (setf (%slot-values self)
+        (loop for slot in except-slots
+              collect (cons slot (slot-value (%object self) slot)))))
 
 ;; Some of the tests for this are in test-image :/
 (defmethod bknr.datastore:encode-slots-for-object (class-layout (self simple-object-snapshot) stream)
   (let ((object (%object self)))
     (loop for slot in (class-layout-slots class-layout)
           do (encode
-              (if (slot-boundp object slot)
-                  (slot-value object slot)
-                  'bknr.datastore::unbound)
+              (cond
+                ((member slot (except-slots self))
+                 (alexandria:assoc-value (%slot-values self) slot))
+                ((slot-boundp object slot)
+                 (slot-value object slot))
+                (t
+                 'bknr.datastore::unbound))
               stream))))

@@ -57,6 +57,7 @@
                (:file "test-store")
                (:file "test-objectid")
                (:file "test-migrations")
+               (:file "test-simple-object-snapshot")
                (:file "test-delayed-accessors")
                (:file "test-raft-state-http" :if-feature (:and :lispworks :linux))
                (:file "test-checksums")
