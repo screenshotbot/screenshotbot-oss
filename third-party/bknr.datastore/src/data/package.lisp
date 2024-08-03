@@ -127,4 +127,7 @@
 
            ;; JSON serialization
            #:with-json-ignore-slots
-           #:*json-ignore-slots*))
+           #:*json-ignore-slots*)
+  (:export
+   #:make-object-snapshot
+   #:encode-slots-for-object))
