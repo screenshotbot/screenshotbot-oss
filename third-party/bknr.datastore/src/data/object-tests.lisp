@@ -3,6 +3,11 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:bknr.datastore
+                #:encode
+                #:%encode-string
+                #:%encode-integer
+                #:encode-slots-for-object
+                #:make-object-snapshot
                 #:class-layout-slots
                 #:class-layout
                 #:encode-create-object
@@ -439,3 +444,32 @@
     (delete-object inner)
     (signals error
       (snapshot))))
+
+(defclass async-object-with-slot (store-object)
+  ((slot1 :initarg :slot1)
+   (slot2 :initarg :slot2))
+  (:metaclass persistent-class))
+
+(defclass async-object-snapshot ()
+  ((original :initarg :original)))
+
+(defmethod make-object-snapshot ((self async-object-with-slot))
+  (make-instance 'async-object-snapshot :original self))
+
+(defmethod encode-slots-for-object (class-layout (self async-object-snapshot)
+                                    stream)
+  (assert (equal '(bknr.datastore::last-change slot1 slot2)
+                 (class-layout-slots class-layout)))
+  (encode 20 stream)
+  (encode "bar" stream)
+  (encode 45 stream))
+
+(defdstest asynchronously-save-object ()
+  (make-instance 'async-object-with-slot
+                 :slot1 "foo"
+                 :slot2 22)
+  (snapshot)
+  (restore)
+  (let ((result (first (bknr.datastore:class-instances 'async-object-with-slot))))
+    (is (equal "bar" (slot-value result 'slot1)))
+    (is (equal 45 (slot-value result 'slot2)))))

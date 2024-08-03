@@ -408,7 +408,10 @@ transaction log."))
   (dolist (slot (class-layout-slots class-layout))
     (%encode-symbol slot stream)))
 
-(defun %encode-set-slots (class-layout object stream)
+(defmethod encode-slots-for-object (class-layout object stream)
+  "Given an object (or snapshot), encode each of the slots in the stream
+in the order established by class-layout. If a specific slot is not
+bound, encode 'bknr.datastore::unbound."
   (dolist (slot-info (class-layout-slot-infos class-layout))
     (let* ((slot (slot-info-slot slot-info))
            (*current-object-slot* (list object slot))
@@ -438,12 +441,26 @@ transaction log."))
     (%encode-integer (class-layout-id layout) stream)
     (%encode-integer (store-object-id object) stream)))
 
+(defstruct object-snapshot-pair
+  object
+  snapshot)
+
 (defun encode-set-slots (class-layouts object stream)
   (let ((class-layout (gethash (class-of object) class-layouts)))
     (%write-tag #\S stream)
     (%encode-integer (class-layout-id class-layout) stream)
     (%encode-integer (store-object-id object) stream)
-    (%encode-set-slots class-layout object stream)))
+    (encode-slots-for-object class-layout object stream)))
+
+(defun encode-set-slots-for-snapshot (class-layouts object-snapshot-pair stream)
+  (let* ((object (object-snapshot-pair-object object-snapshot-pair))
+         (class-layout (gethash (class-of object)
+                               class-layouts)))
+    (%write-tag #\S stream)
+    (%encode-integer (class-layout-id class-layout) stream)
+    (%encode-integer (store-object-id object) stream)
+    (encode-slots-for-object class-layout (object-snapshot-pair-snapshot object-snapshot-pair)
+                             stream)))
 
 (defun find-class-with-interactive-renaming (class-name)
   (loop until (or (null class-name)
@@ -766,6 +783,22 @@ the slots are read from the snapshot and ignored."
       (handler-bind ((error #'%log-crash))
         (funcall fn))))))
 
+(defmethod make-object-snapshot (object)
+  nil)
+
+(defun split-objects-into-snapshots (objects)
+  (loop for obj in objects
+        for snapshot = (make-object-snapshot obj)
+        if (not snapshot)
+          collect obj into objs
+        else
+          collect  (make-object-snapshot-pair
+                    :object obj
+                    :snapshot snapshot)
+            into snaps
+        finally
+           (return (values objs snaps))))
+
 (defun encode-object-slots (subsystem class-layouts objects snapshot-pathname)
   (labels ((make-batches (objects batch-size)
              (if (<= (length objects) batch-size)
@@ -775,50 +808,59 @@ the slots are read from the snapshot and ignored."
                   (make-batches
                    (subseq objects batch-size)
                    batch-size)))))
-    (let* ((batch-size (ceiling (length objects) (snapshot-threads subsystem)))
-           (batches (make-batches objects batch-size))
-           (streams (loop for nil in batches
-                          collect (uiop:with-temporary-file (:pathname p)
-                                    (open p :direction :io
-                                            :if-exists :supersede
-                                            :element-type '(unsigned-byte 8)))))
-           (lock (bt:make-lock))
-           (count 0))
+    (multiple-value-bind
+          (objects snapshots)
+        (split-objects-into-snapshots objects)
+      (let* ((batch-size (ceiling (length objects) (snapshot-threads subsystem)))
+             (batches (make-batches objects batch-size))
+             (streams (loop for nil in batches
+                            collect (uiop:with-temporary-file (:pathname p)
+                                      (open p :direction :io
+                                              :if-exists :supersede
+                                              :element-type '(unsigned-byte 8)))))
+             (lock (bt:make-lock))
+             (count 0))
 
-      (flet ((close-streams ()
-               "Close all the temporary streams that we've opened"
-               (mapc #'close streams)))
-        (unwind-protect
-             (let ((threads
-                     (loop for batch in batches
-                           for s in streams
-                           collect
-                           (let ((s s)
-                                 (batch batch))
-                             (safe-make-thread
-                              (lambda ()
-                                (loop for object in batch
-                                     do (encode-set-slots class-layouts object s))
-                                (bt:with-lock-held (lock)
-                                  (incf count))))))))
-               (mapc #'bt:join-thread threads)
+        (flet ((close-streams ()
+                 "Close all the temporary streams that we've opened"
+                 (mapc #'close streams)))
+          (unwind-protect
+               (let ((threads
+                       (loop for batch in batches
+                             for s in streams
+                             collect
+                             (let ((s s)
+                                   (batch batch))
+                               (safe-make-thread
+                                (lambda ()
+                                  (loop for object in batch
+                                        do (encode-set-slots class-layouts object s))
+                                  (bt:with-lock-held (lock)
+                                    (incf count))))))))
+                 (mapc #'bt:join-thread threads)
 
-               (unless (= count (length threads))
-                 (close-streams)
-                 (error "Some threads failed to complete"))
+                 (unless (= count (length threads))
+                   (close-streams)
+                   (error "Some threads failed to complete"))
 
-               ;; Finally combine all the streams together
-               (lambda ()
-                 (unwind-protect
-                      (with-open-file (stream snapshot-pathname
-                                              :direction :output
-                                              :element-type '(unsigned-byte 8)
-                                              :if-exists :append)
-                        (loop for s in streams do
-                          (file-position s 0)
-                          (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
-                        (finish-output stream))
-                   (close-streams)))))))))
+                 ;; Finally combine all the streams together
+                 (lambda ()
+                   (unwind-protect
+                        (with-open-file (stream snapshot-pathname
+                                                :direction :output
+                                                :element-type '(unsigned-byte 8)
+                                                :if-exists :append)
+                          (loop for s in streams do
+                            (file-position s 0)
+                            (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
+
+                          ;; Encode the background snapshots
+                          (loop for object-snapshot-pair in snapshots
+                                do (encode-set-slots-for-snapshot class-layouts object-snapshot-pair
+                                                                  stream))
+
+                          (finish-output stream))
+                     (close-streams))))))))))
 
 (defmethod close-subsystem ((store store) (subsystem store-object-subsystem))
   (dolist (class-name (all-store-classes))
