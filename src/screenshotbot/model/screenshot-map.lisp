@@ -34,6 +34,8 @@
                 #:def-cron)
   (:import-from #:util/events
                 #:with-tracing)
+  (:import-from #:util/store/simple-object-snapshot
+                #:simple-object-snapshot)
   (:export
    #:screenshot-map
    #:screenshot-map-as-list
@@ -268,3 +270,7 @@ will not consider it as a possibility.")
 
 (def-cron push-usage-map (:minute 0 :step-hour 1)
   (push-usage-map))
+
+(defmethod bknr.datastore:make-object-snapshot ((self screenshot-map))
+  (make-instance 'simple-object-snapshot
+                 :object self))

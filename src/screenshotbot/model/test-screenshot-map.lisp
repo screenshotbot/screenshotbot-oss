@@ -489,7 +489,8 @@ delete this test in the future, it might be okay."
   (tmpdir:with-tmpdir (dir)
     (with-fixture state (:dir dir)
       (let ((map (make-screenshot-map channel
-                                      (list screenshot-1 screenshot-2))))))
+                                      (list screenshot-1 screenshot-2)))))
+      (bknr.datastore:snapshot))
     (with-fixture state (:dir dir)
       (assert-that (class-instances 'screenshot-map)
                    (has-length 1)))))
