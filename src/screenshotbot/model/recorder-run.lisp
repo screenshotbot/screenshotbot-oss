@@ -56,6 +56,8 @@
                 #:normal-viewer-context
                 #:logged-in-viewer-context
                 #:viewer-context)
+  (:import-from #:util/store/simple-object-snapshot
+                #:simple-object-snapshot)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -356,6 +358,11 @@ associated report is rendered.")
       (when (eql channel (unchanged-run-channel ur))
         (return-from unchanged-run-for-commit ur))))
   nil)
+
+(defmethod bknr.datastore:make-object-snapshot ((self unchanged-run))
+  (make-instance 'simple-object-snapshot
+                 :object self
+                 :except-slots '(promotion-complete-p)))
 
 (defun make-recorder-run (&rest args &key screenshots channel &allow-other-keys)
   (apply #'make-instance 'recorder-run
