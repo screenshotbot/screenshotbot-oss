@@ -858,6 +858,7 @@ the slots are read from the snapshot and ignored."
                             (file-position s 0)
                             (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
 
+                          (format t "Encoding background snapshots~%")
                           ;; Encode the background snapshots
                           (loop for object-snapshot-pair in snapshots
                                 do (encode-set-slots-for-snapshot class-layouts object-snapshot-pair
