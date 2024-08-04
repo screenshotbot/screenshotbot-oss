@@ -363,9 +363,11 @@
    :key #'car))
 
 (defun blacklisted-domain-p (domain)
-  (or
-   (cl-ppcre:scan "\\d*\\.\\d*\\.\\d*\\d*" domain)
-   (cl-ppcre:scan ".*\\.screenshotbot.io" domain)))
+  (and
+   (not (equal "cdn.screenshotbot.io" domain))
+   (or
+    (cl-ppcre:scan "\\d*\\.\\d*\\.\\d*\\d*" domain)
+    (cl-ppcre:scan ".*\\.screenshotbot.io" domain))))
 
 (define-condition blacklisted-domain (error)
   ())
