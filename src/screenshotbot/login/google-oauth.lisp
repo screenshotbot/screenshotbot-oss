@@ -19,6 +19,8 @@
                 #:identifier
                 #:oidc-provider
                 #:oidc-user)
+  (:import-from #:util/threading
+                #:with-extras)
   (:export
    #:google-access-token
    #:google-oauth-provider
@@ -68,5 +70,9 @@
 
 (defmethod verify-userinfo ((self google-oauth-provider) user-info)
   (when (google-domain self)
-    (assert (equal (assoc-value user-info :hd)
-                   (google-domain self)))))
+    (let ((expected-domain (assoc-value user-info :hd))
+          (actual-domain (google-domain self)))
+      (with-extras (("expected-domain" expected-domain)
+                    ("actual-domain" actual-domain))
+       (assert (equal expected-domain
+                      actual-domain))))))
