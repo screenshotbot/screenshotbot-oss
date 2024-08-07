@@ -751,7 +751,7 @@ body.dashboard {
             }
 
             ul.nav {
-                display:inline-block;
+                display:none;
             }
 
             li.nav-item {
@@ -1132,4 +1132,13 @@ input.number-to-text::-webkit-inner-spin-button {
 
 input[type=number].number-to-text {
     -moz-appearance: textfield;
+}
+
+
+.nav-item.github {
+    img {
+        max-width: 1.5em;
+        height: 1em;
+        padding-right: 0.5em;
+    }
 }

@@ -108,7 +108,7 @@
     </ul>
     <hr />
 
-    <ul class="nav nav-pills flex-column mb-auto ps-3 pe-3">
+    <ul class="nav nav-pills flex-column ps-3 pe-3">
       <left-nav-item href= (documentation-url (installation)) image-class= "menu_book" target= "_blank"
                      script-name=script-name >
         Documentation
@@ -138,6 +138,18 @@
                         script-name=script-name >
                         Report Issue
          </left-nav-item>)
+    </ul>
+
+    <hr />
+
+    <ul class="nav nav-pills flex-column mb-auto ps-3 pe-3">
+      <li class= "nav-item github"  >
+         <a href= "https://github.com/screenshotbot/screenshotbot-oss" class= (format nil "nav-link text-white" ) title= "Screenshotbot is Open-Source. Support our work on GitHub!"
+           target= "_blank" >
+          <img src= "/assets/images/github-mark-white.svg" />
+          <span class= "text">Source Code</span>
+        </a>
+      </li>
     </ul>
 
     <hr class= "mb-0" />
