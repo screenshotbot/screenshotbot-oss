@@ -158,7 +158,15 @@ class SbImageCanvas {
             //ctx.imageSmoothingEnabled = false;
             ctx.imageSmoothingQuality = "high";
             if (image) { // The image might not have been loaded yet.
-                ctx.drawImage(image, 0, 0);
+                var matrix = ctx.getTransform();
+                ctx.setTransform(_identity);
+                var start = matrix.transformPoint(new DOMPoint(0, 0));
+                var size = matrix.transformPoint(new DOMPoint(image.width, image.height));
+
+                ctx.drawImage(image, Math.floor(start.x), Math.floor(start.y),
+                              size.x - start.x, size.y - start.y)
+
+                ctx.setTransform(matrix);
             }
         }
 
