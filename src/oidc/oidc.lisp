@@ -194,13 +194,14 @@
                             error-description
                             (error-redirect "/"))
   (flet ((error-authenticating (message)
-           (nibble ()
-             <html>
-               <body>
-                 There was an error authenticating: ,(progn message)
-                 <a href= error-redirect >Go Back</a>
-               </body>
-             </html>)))
+           (hex:safe-redirect
+            (nibble ()
+              <html>
+                <body>
+                  There was an error authenticating: ,(progn message)
+                  <a href= error-redirect >Go Back</a>
+                </body>
+              </html>))))
    (cond
      (code
       (let ((token (oauth-get-access-token
@@ -223,7 +224,7 @@
                :full-name (assoc-value user-info :name)
                :avatar (assoc-value user-info :picture))
             (authentication-error (e)
-              (hex:safe-redirect (error-authenticating (authentication-error-message e))))))))
+              (error-authenticating (authentication-error-message e)))))))
      (t
       ;; error the OAuth flow, most likely
       (let ((message (format nil "~a: ~a"
