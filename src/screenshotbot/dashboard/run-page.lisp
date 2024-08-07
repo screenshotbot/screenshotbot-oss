@@ -632,6 +632,7 @@
                  </div>)
               <div class= "canvas-container "
                    data-length= (safe-length (filtered-screenshots self))
+                   data-transparency= "true"
                    data-src=get-ith-image >
               </div>
             </div>

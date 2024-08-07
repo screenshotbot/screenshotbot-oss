@@ -27,6 +27,8 @@ class SbImageCanvas {
         this.dprTransform = new DOMMatrix([dpr, 0, 0, dpr, 0, 0]);
         this.dprInv = this.dprTransform.inverse();
         this.forceTransform = null;
+
+        this.background = null;
     }
 
     callCallback(fn) {
@@ -141,16 +143,33 @@ class SbImageCanvas {
         this.ctx.setTransform(_identity);
         this.ctx.clearRect(0, 0, this.canvasEl.width, this.canvasEl.height);
         this.updateCoreTransform();
+        this.drawBackground();
         this.updateTransform();
     }
 
+    drawBackground() {
+        var ctx = this.ctx;
+
+        ctx.fillStyle="rgba(255, 255, 255, 1)";
+
+        if (this.background) {
+            const pattern = ctx.createPattern(this.background, "repeat");
+            ctx.fillStyle = pattern;
+        }
+
+        ctx.rect(0, 0, this.canvasEl.width,
+                 this.canvasEl.height);
+
+        ctx.fill();
+    }
+
     draw() {
+        var self = this;
+        self.clearCtx();
         if (!this.images) {
             return;
         }
 
-        var self = this;
-        self.clearCtx();
         var ctx = self.ctx;
 
         function doDraw(image) {
@@ -356,17 +375,30 @@ class SbImageCanvas {
 
         self.images = [];
 
+        if ($(this.canvasContainer).data("transparency")) {
+            self.backgroundPromise = fetch("/assets/images/img-background.png")
+                .then((response) => response.blob())
+                .then(blob => createImageBitmap(blob));
+        } else {
+            self.backgroundPromise = Promise.resolve(null);
+        }
+
         self.image_promises = Promise.all(this.layers.map((layer) => {
             return fetch(layer.src)
                 .then((response) => response.blob())
                 .then(blob => createImageBitmap(blob));
         })).then((images) => {
-            self.images = images;
-            self.onImagesLoaded();
+            this.backgroundPromise.then((background) => {
+                self.background = background;
+                self.images = images;
+                self.onImagesLoaded();
+            });
         });
 
 
-        var ctx = self.canvasEl.getContext('2d');
+        var ctx = self.canvasEl.getContext('2d', {
+            alpha: false,
+        });
         self.ctx = ctx;
 
         this.setupDragging();
