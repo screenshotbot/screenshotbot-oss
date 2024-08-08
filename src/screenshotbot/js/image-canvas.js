@@ -179,11 +179,28 @@ class SbImageCanvas {
             if (image) { // The image might not have been loaded yet.
                 var matrix = ctx.getTransform();
                 ctx.setTransform(_identity);
-                var start = matrix.transformPoint(new DOMPoint(0, 0));
-                var size = matrix.transformPoint(new DOMPoint(image.width, image.height));
+                var sStart = new DOMPoint(0, 0);
+                var sEnd = new DOMPoint(image.width, image.height)
+                var dStart = matrix.transformPoint(sStart);
+                var dEnd = matrix.transformPoint(sEnd);
 
-                ctx.drawImage(image, Math.floor(start.x), Math.floor(start.y),
-                              size.x - start.x, size.y - start.y)
+                if (dStart.x < 0) dStart.x = 0;
+                if (dStart.y < 0) dStart.y = 0;
+                if (dEnd.x >= self.canvasEl.width) dEnd.x = self.canvasEl.width;
+                if (dEnd.y >= self.canvasEl.height) dEnd.y = self.canvasEl.height;
+
+                // Now fix sStart and sEnd againt
+                sStart = matrix.inverse().transformPoint(dStart);
+                sEnd = matrix.inverse().transformPoint(dEnd);
+
+                ctx.drawImage(image,
+                              // src:
+                              sStart.x, sStart.y,
+                              sEnd.x - sStart.x,
+                              sEnd.y - sStart.y,
+                              // dest:
+                              dStart.x, dStart.y,
+                              dEnd.x - dStart.x, dEnd.y - dStart.y)
 
                 ctx.setTransform(matrix);
             }
