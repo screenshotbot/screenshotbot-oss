@@ -452,9 +452,8 @@ bound, encode 'bknr.datastore::unbound."
     (%encode-integer (store-object-id object) stream)
     (%encode-set-slots class-layout object stream)))
 
-(defmethod encode-set-slots-for-object (class-layout snapshot stream)
-  ;; TODO: get rid of this method
-  (error "Override this"))
+(defgeneric encode-slots-for-object (class-layout snapshot stream)
+  (:documentation "Only used for encoding slots from Snapshot"))
 
 (defun encode-set-slots-for-snapshot (class-layouts object-snapshot-pair stream)
   (let* ((object (object-snapshot-pair-object object-snapshot-pair))
