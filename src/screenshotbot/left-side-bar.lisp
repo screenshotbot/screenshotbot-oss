@@ -150,6 +150,12 @@
           <span class= "text">Source Code</span>
         </a>
       </li>
+
+      <left-nav-item href= "https://testimonial.to/screenshotbot" image-class= "thumb_up"
+                     script-name=script-name >
+        Testimonials
+      </left-nav-item>
+
     </ul>
 
     <hr class= "mb-0" />
