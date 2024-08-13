@@ -33,6 +33,10 @@
                 #:recorder-run-company)
   (:import-from #:auth/viewer-context
                 #:logged-in-viewer-context)
+  (:import-from #:screenshotbot/model/core
+                #:ensure-slot-boundp)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
   (:export
    #:find-or-create-batch
    #:batch-items
@@ -116,16 +120,19 @@
             :index +batch-item-index+
             :index-reader batch-items)
      (%status :initarg :status
+              :initform nil
               :accessor batch-item-status)
      (%channel :initarg :channel
                :initform nil
                :accessor batch-item-channel)
      (%acceptable :initarg :acceptable
+                  :initform nil
                   :accessor acceptable)
      (%title :initarg :title
              :initform ""
              :accessor batch-item-title)
      (%run :initarg :run
+           :initform nil
            :accessor batch-item-run)
      (%report :initarg :report
               :initform nil
@@ -182,3 +189,8 @@
 (defmethod promotion-log ((batch batch))
   (make-instance 'transient-promotion-log
                  :oid-array (oid-array batch)))
+
+(def-store-migration ("Ensure some slots are bound" :version 23)
+  (ensure-slot-boundp 'batch-item '%status)
+  (ensure-slot-boundp 'batch-item '%acceptable)
+  (ensure-slot-boundp 'batch-item '%run))

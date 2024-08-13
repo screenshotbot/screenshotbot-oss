@@ -28,7 +28,7 @@
                 #:defsubsystem))
 (in-package :util/store-version)
 
-(defparameter *store-version* 22
+(defparameter *store-version* 23
   "The current version of the store being used.")
 
 (defvar *snapshot-store-version* *store-version*
