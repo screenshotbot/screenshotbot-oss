@@ -37,6 +37,10 @@
                 #:ensure-slot-boundp)
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
+  (:import-from #:util/store/simple-object-snapshot
+                #:simple-object-snapshot)
+  (:import-from #:util/store/store-version
+                #:*snapshot-store-version*)
   (:export
    #:find-or-create-batch
    #:batch-items
@@ -142,6 +146,16 @@
      (lock :transient t)
      (push-lock :transient t))
     (:metaclass persistent-class)))
+
+(defmethod bknr.datastore:make-object-snapshot ((self batch-item))
+  (when (>= *snapshot-store-version* 23)
+    (make-instance 'simple-object-snapshot
+                   :object self
+                   :except-slots '(%acceptable
+                                   %status
+                                   %title
+                                   %run
+                                   %report))))
 
 (defvar *lock* (bt:make-lock))
 

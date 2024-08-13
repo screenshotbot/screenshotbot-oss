@@ -124,3 +124,13 @@
       (is (pathnamep
            (blob-pathname
             (promotion-log batch)))))))
+
+
+(test saving-batch-items
+  (tmpdir:with-tmpdir (dir)
+    (with-test-store (:dir dir)
+      (make-instance 'batch-item :batch "foo"
+                                 :title "bar")
+      (finishes (bknr.datastore:snapshot)))
+    (with-test-store (:dir dir)
+      (pass))))
