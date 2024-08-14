@@ -151,8 +151,7 @@
   (when (>= *snapshot-store-version* 23)
     (make-instance 'simple-object-snapshot
                    :object self
-                   :except-slots '(%acceptable
-                                   %status
+                   :except-slots '(%status
                                    %title
                                    %run
                                    %report))))
@@ -206,5 +205,4 @@
 
 (def-store-migration ("Ensure some slots are bound" :version 23)
   (ensure-slot-boundp 'batch-item '%status)
-  (ensure-slot-boundp 'batch-item '%acceptable)
   (ensure-slot-boundp 'batch-item '%run))
