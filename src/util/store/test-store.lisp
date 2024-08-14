@@ -334,4 +334,15 @@
   (assert-that
    (object-neighbors '(1 2 3))
    (contains-in-any-order
-     1 2 3)))
+    1 2 3)))
+
+(defclass some-object (store-object)
+  ((a) (b) (c) (d) (e) (f) (g) (h))
+  (:metaclass persistent-class))
+
+(test benchmark-snapshots
+  (with-test-store ()
+    (loop for i from 0 to 10 ;; increase
+          do (make-instance 'some-object))
+    (progn ;; time or hcl:profile
+     (bknr.datastore:snapshot))))
