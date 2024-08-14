@@ -27,12 +27,14 @@
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:core/ui/simple-card-page
+                #:simple-card-page
                 #:confirmation-page)
   (:import-from #:core/ui/taskie
                 #:taskie-list
                 #:taskie-row
                 #:taskie-page-title)
   (:import-from #:screenshotbot/template
+                #:app-template
                 #:mdi)
   (:import-from #:auth/model/invite
                 #:all-unused-invites)
@@ -67,6 +69,55 @@
     </button>
   </form>)
 
+(defun can-change-user-role-p (company user)
+  (and
+   (not (eql user (auth:current-user)))
+   (roles:has-role-p company (auth:current-user) 'roles:admin)
+   (not (roles:has-role-p company user 'roles:owner))))
+
+(defvar *allowed-roles*
+  (list
+   'roles:admin
+   'roles:standard-member
+   'roles:external-member))
+
+(defun %save-role (&key user company role)
+  (assert (can-change-user-role-p company user))
+  (let ((role (loop for r in *allowed-roles*
+                    if (string-equal r role)
+                      return r)))
+    (assert role)
+    (setf (roles:user-role company user)
+          role)
+    (hex:safe-redirect "/settings/members")))
+
+(defun %edit-role (&key user company)
+  (assert (can-change-user-role-p company user))
+  (let ((submit (nibble (role :method :post) (%save-role
+                                              :company company
+                                              :user user
+                                              :role role))))
+    <simple-card-page  form-action= submit  >
+      <div class= "card-body">
+        <label for= "role-selector" class= "form-label">Choose role for ,(auth:user-email user):</label>
+        <select class= "form-select mb-2" id= "role-selector" name= "role" >
+          ,@ (loop for role in *allowed-roles*
+                   for selected = (typep (roles:user-role company user) role)
+                   collect
+                   <option value= (string role)
+                           selected= (when selected "selected") >
+                     ,(roles:role-friendly-name (make-instance role))
+                   </option>)
+        </select>
+
+      </div>
+
+      <div class= "card-footer">
+        <input type= "submit" class= "btn btn-primary" value= "Change role" />
+        <a href= "/settings/members" class= "btn btn-secondary" >Cancel</a>
+      </div>
+    </simple-card-page>))
+
 (defun render-user-row (user company)
   (let* ((adminp (company-admin-p company user))
          (can-delete-p
@@ -83,6 +134,10 @@
       <span>,(mailto (user-email user)) </span>
       <span>
         ,(roles:role-friendly-name role)
+        ,(when (can-change-user-role-p company user)
+           <a href= (nibble () (%edit-role :user user :company company)) title= "Edit role">
+             <mdi name= "edit" class= "ps-1" />
+           </a>)
       </span>
       <span>
         ,(when can-delete-p
