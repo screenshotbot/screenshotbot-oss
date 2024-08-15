@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/login/test-github-oauth
   (:use :cl)
   (:import-from #:auth
+                #:oauth-user-user
                 #:user-email
                 #:user-full-name)
   (:import-from #:bknr.datastore
@@ -53,6 +54,11 @@
    (let ((*installation* (make-instance 'installation)))
      (prepare-singleton-company)
      (&body))))
+
+(test slot-access-issue
+  (with-fixture state ()
+    (let ((obj (make-instance 'github-user :gh-user-id "foo")))
+      (is (equal (oauth-user-user obj) nil)))))
 
 (test create-new-user
   (with-fixture state ()

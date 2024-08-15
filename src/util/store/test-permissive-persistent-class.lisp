@@ -15,6 +15,7 @@
                 #:delete-object
                 #:store-object)
   (:import-from #:util/store/store
+                #:defindex
                 #:with-test-store)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
@@ -189,7 +190,7 @@
         :initform (progn
                     (incf *counter*))
         :accessor arg))
-  (:metaclass persistent-class))
+  (:metaclass permissive-persistent-class))
 
 (test* old-obj-with-initform ()
   "This is just making sure that the standard persistent-class only
@@ -204,3 +205,25 @@ permissive-persistent-class showing the initform twice.)"
   (let ((obj (make-instance 'my-object)))
     (signals unbound-slot
       (arg obj))))
+
+(defclass obj-with-nil-initform (store-object)
+  ((arg :initarg :arg
+        :initform nil
+        :accessor arg)
+   (arg2 :initarg :arg2
+         :initform nil
+         :accessor arg2))
+  (:metaclass permissive-persistent-class))
+
+(test* obj-with-nil-initform ()
+  (let ((obj (make-instance 'obj-with-nil-initform)))
+    (is (eql nil (arg obj))))
+  (let ((obj (make-instance 'obj-with-nil-initform
+                            :arg "foo")))
+    (is (equal "foo" (arg obj))))
+  (let ((obj (make-instance 'obj-with-nil-initform
+                            :arg2 "foo")))
+    (is (eql nil (arg obj))))
+  (let ((obj (make-instance 'obj-with-nil-initform
+                            :arg "foo")))
+    (is (eql nil (arg2 obj)))))
