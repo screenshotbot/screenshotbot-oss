@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/store/permissive-persistent-class
+                #:base-permissive-persistent-object
                 #:value-map
                 #:permissive-persistent-class)
   (:import-from #:bknr.datastore
@@ -20,6 +21,7 @@
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:fiveam-matchers/core
+                #:has-typep
                 #:is-equal-to
                 #:assert-that)
   (:import-from #:bknr.indices
@@ -244,3 +246,8 @@ permissive-persistent-class showing the initform twice.)"
                   return slot)))
     (is-true destroyedp-slot)
     (is (eql 0 (closer-mop:slot-definition-location destroyedp-slot)))))
+
+(test instance-type
+  (with-test-store ()
+   (assert-that (make-instance 'obj-with-nil-initform)
+                (has-typep 'base-permissive-persistent-object))))

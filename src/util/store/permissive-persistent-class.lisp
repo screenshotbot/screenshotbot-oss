@@ -23,6 +23,9 @@
    #:value-map))
 (in-package :util/store/permissive-persistent-class)
 
+(defclass base-permissive-persistent-object ()
+  ())
+
 (defclass permissive-persistent-class (persistent-class)
   ()
   (:documentation "A persistent-class, where the slots aren't stored in the :instance
@@ -30,6 +33,11 @@ storage. Instead the slot values are stored in a hash-map, where the
 keys are (symbol-name symbol). This is 'permissive' in the sense that
 you can change the name of the slot, and everything will still just
 work."))
+
+(defmethod closer-mop:compute-class-precedence-list ((class permissive-persistent-class))
+  (let ((classes (reverse (call-next-method))))
+    (pushnew (find-class 'base-permissive-persistent-object) classes)
+    (reverse classes)))
 
 (defclass value-map-slot (clos:standard-effective-slot-definition)
   ((original-slots :initarg :original-slots
