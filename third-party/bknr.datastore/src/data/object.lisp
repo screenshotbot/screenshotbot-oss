@@ -58,6 +58,19 @@
 
 (defvar *suppress-schema-warnings* nil)
 
+(define-condition must-inherit-store-object (error)
+  ()
+  (:report "A persistent-class must inherit STORE-OBJECT"))
+
+(defmethod closer-mop:finalize-inheritance :before ((obj persistent-class))
+  (let ((class-precedence-list (closer-mop:compute-class-precedence-list obj)))
+    (loop for class in class-precedence-list
+          if (eql 'store-object (class-name class))
+            return t
+          finally
+             (error 'must-inherit-store-object))))
+
+
 (defun update-instances-for-changed-class (class)
   (let ((instance-count (length (class-instances class))))
     (when (plusp instance-count)

@@ -179,7 +179,7 @@
 (define-persistent-class child ()
                          ())
 
-(defclass child-with-index ()
+(defclass child-with-index (store-object)
   ((foo :initarg :foo
         :index-type unique-index
         :index-reader child-by-foo))
@@ -473,3 +473,11 @@
   (let ((result (first (bknr.datastore:class-instances 'async-object-with-slot))))
     (is (equal "bar" (slot-value result 'slot1)))
     (is (equal 45 (slot-value result 'slot2)))))
+
+
+(defdstest cant-finalize-class-without-store-object ()
+  (signals bknr.datastore::must-inherit-store-object
+    (eval
+     `(defclass foo-dfwersfsdfds ()
+        ()
+        (:metaclass persistent-class)))))
