@@ -227,3 +227,20 @@ permissive-persistent-class showing the initform twice.)"
   (let ((obj (make-instance 'obj-with-nil-initform
                             :arg "foo")))
     (is (eql nil (arg2 obj)))))
+
+
+(test slot-location-for-destroyed-p
+  (let ((destroyedp-slot
+          (loop for slot in (closer-mop:class-slots (find-class 'obj-with-nil-initform))
+                if (eql (closer-mop:slot-definition-name slot) 'bknr.indices::destroyed-p)
+                  return slot)))
+    (is-true destroyedp-slot)
+    (is (eql 0 (closer-mop:slot-definition-location destroyedp-slot)))))
+
+(test slot-location-for-destroyed-p-for-store-object
+  (let ((destroyedp-slot
+          (loop for slot in (closer-mop:class-slots (find-class 'store-object))
+                if (eql (closer-mop:slot-definition-name slot) 'bknr.indices::destroyed-p)
+                  return slot)))
+    (is-true destroyedp-slot)
+    (is (eql 0 (closer-mop:slot-definition-location destroyedp-slot)))))

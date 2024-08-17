@@ -32,7 +32,8 @@ you can change the name of the slot, and everything will still just
 work."))
 
 (defclass value-map-slot (clos:standard-effective-slot-definition)
-  ())
+  ((original-slots :initarg :original-slots
+                   :reader original-slots)))
 
 (defun ignorable-slot-p (slot)
   "Slots for which we should just use the underlying non-virtual allocation"
@@ -59,14 +60,19 @@ work."))
    (typep slot 'persistent-effective-slot-definition)
    (not (ignorable-slot-p slot))))
 
+(defun find-value-map-slot (obj)
+  (loop for slotd in (closer-mop:class-slots (class-of obj))
+        if (typep slotd 'value-map-slot)
+          return slotd))
+
+(defun maybe-initialize-value-map (obj)
+  (unless (slot-boundp obj 'value-map)
+    (setf (slot-value obj 'value-map)
+          (initialize-hash-table (original-slots (find-value-map-slot obj))))))
+
 (defmethod clos:compute-slots ((class permissive-persistent-class))
   (let ((original-slots (call-next-method)))
-    (list*
-     (make-instance 'value-map-slot
-                    :name 'value-map
-                    :initform nil
-                    :initfunction (lambda ()
-                                    (initialize-hash-table original-slots)))
+    (append
      (loop for slot in original-slots
            if (should-original-slot-be-virtual-p slot)
              collect
@@ -75,7 +81,11 @@ work."))
                         :initform nil
                         :initfunction nil)
            else
-             collect slot))))
+             collect slot)
+     (list
+      (make-instance 'value-map-slot
+                     :name 'value-map
+                     :original-slots original-slots)))))
 
 (defun initialize-hash-table (slots)
   (let ((res (make-hash-table :test #'equal)))
@@ -137,10 +147,8 @@ work."))
                  :instance obj)))))))
 
 (defmethod value-map (self)
-  (if (slot-boundp self 'value-map)
-      (slot-value self 'value-map)
-      (setf (slot-value self 'value-map)
-            (make-hash-table :test #'equal))))
+  (maybe-initialize-value-map self)
+  (slot-value self 'value-map))
 
 (defmethod clos:slot-boundp-using-class ((class permissive-persistent-class)
                                          obj
