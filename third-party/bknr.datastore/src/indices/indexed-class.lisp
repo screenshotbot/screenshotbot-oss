@@ -16,7 +16,10 @@
    (old-indices :initarg :old-indices :initform nil
 		:accessor indexed-class-old-indices)
    (index-definitions :initarg :class-indices :initform nil
-		      :accessor indexed-class-index-definitions)))
+                      :accessor indexed-class-index-definitions)))
+
+(defclass base-indexed-object ()
+  ())
 
 (defstruct index-holder
   class slots name index index-subclasses)
@@ -26,6 +29,14 @@
 			    :key #'index-holder-name)))
     (when index-holder
       (index-holder-index index-holder))))
+
+(defmethod closer-mop:compute-class-precedence-list ((class indexed-class))
+  (let ((classes (call-next-method)))
+    (loop for class in classes
+          if (eql 'base-indexed-object (class-name class))
+            return classes
+          finally
+            (return (append classes (list (find-class 'base-indexed-object)))))))
 
 (defmethod validate-superclass ((sub indexed-class) (super standard-class))
   t)

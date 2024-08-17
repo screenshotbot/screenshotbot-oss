@@ -474,3 +474,14 @@
 			    ("Rock" "Metal" "Heavy") ("Reggae") ("Reggae" "Dub"))
 			  (all-track-categories) :test #'equal))
     (test-equal nil (tracks-with-category '("Rock" "Metal" "Trash")))))
+
+(defclass another-indexed-object (gorilla)
+  (dfdfdf)
+  (:metaclass indexed-class))
+
+
+(define-indexed-class-test test-class-has-proper-type ()
+  (let ((obj (make-instance 'another-indexed-object)))
+    (is (typep obj 'bknr.indices::base-indexed-object)))
+  (let ((obj (make-instance 'gorilla)))
+    (is (typep obj 'bknr.indices::base-indexed-object))))
