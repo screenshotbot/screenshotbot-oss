@@ -761,10 +761,18 @@ this variable in LET forms, but you can SETF it if you like."
 
 (defgeneric validate-index-values (index all-elts slot-name))
 
+(defvar *profilep* nil)
+
 (defmethod on-snapshot-save-impl :around ((store base-raft-store) snapshot-writer done)
   "Add timing for snapshots"
   (with-tracing (:snapshot)
-    (call-next-method)))
+    (cond
+      #+lispworks
+      (*profilep*
+       (hcl:profile
+        (call-next-method)))
+      (t
+       (call-next-method)))))
 
 (defun find-deleted-references ()
   (let ((seen (make-hash-table))
