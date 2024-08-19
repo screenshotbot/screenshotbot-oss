@@ -55,8 +55,8 @@
 
 (markup:enable-reader)
 
-(defvar *throttler* (make-instance 'ip-throttler
-                                   :tokens 1200))
+(defparameter *throttler* (make-instance 'ip-throttler
+                                         :tokens 120))
 
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/login") ()
   (hex:safe-redirect "/signin"))
