@@ -183,6 +183,36 @@ to the directory that was just snapshotted.")
   ()
   (:documentation "The final raft store we'll be using"))
 
+(defclass ec2-store (raft-store-final)
+  ()
+  (:documentation "A store that's just configured with hostnames and group names, and
+uses sane defaults."))
+
+(defun ec2-get-local-ipv4 ()
+  (str:trim
+   (uiop:run-program "ec2metadata --local-ipv4"
+                     :output 'string)))
+
+(defmethod initialize-instance :around ((self ec2-store) &rest args &key ips group port &allow-other-keys)
+  (apply
+   #'call-next-method
+   self
+   :data-path (format nil "/home/~a/raft-data/" group)
+   :ip (ec2-get-local-ipv4)
+   :priority
+   (cond
+     ((equal (first ips) (ec2-get-local-ipv4))
+      1)
+     (t
+      0))
+   :config (str:join ","
+                     (loop for ip in ips
+                           collect (format nil "~a:~a:0" ip port)))
+   :group group
+   :port port
+   args))
+
+
 (defmethod on-snapshot-load :after ((store base-raft-store) snapshot-reader)
   #+lispworks
   (progn

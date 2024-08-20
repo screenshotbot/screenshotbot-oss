@@ -375,15 +375,22 @@ parent organization.")))
 
 (defun prepare-singleton-company ()
   (when-let (installation (ignore-errors (installation)))
-   (prepare-singleton-company-for-installation installation)))
+    (prepare-singleton-company-for-installation installation)))
+
+(defvar *singleton-lock* (bt:make-lock))
 
 (defmethod get-singleton-company ((installation installation))
-  (company-with-singletonp t))
+  (or
+   (company-with-singletonp t)
+   (bt:with-lock-held (*singleton-lock*)
+     (or
+      (company-with-singletonp t)
+      (progn
+        (prepare-singleton-company)
+        (company-with-singletonp t))))))
 
 (defmethod get-singleton-company ((installation multi-org-feature))
   (error "singleton company doesn't make sense in a multi-org mode"))
-
-(util:add-datastore-hook 'prepare-singleton-company)
 
 (deftransaction
     add-company-run (company run)
