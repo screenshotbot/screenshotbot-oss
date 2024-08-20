@@ -357,6 +357,7 @@
                :util/request
                :util/fake-clingon
                :util/fiveam
+               :util/benchmark
                :util/fset
                :serapeum)
   :defsystem-depends-on (:trivial-features)
@@ -399,7 +400,8 @@
                              #+ (and lispworks linux)
                              (:file "test-memory")
                              (:file "test-make-instance-with-accessors")
-                             (:file "test-digests")))
+                             (:file "test-digests")
+                             (:file "test-benchmark")))
                (:module "phabricator"
                 :components ((:file "test-conduit")
                              (:file "test-harbormaster")))))
@@ -454,3 +456,8 @@
   :depends-on (:util/request
                :auto-restart)
   :components ((:file "recaptcha")))
+
+(defsystem :util/benchmark
+  :serial t
+  :depends-on (:alexandria)
+  :components ((:file "benchmark")))
