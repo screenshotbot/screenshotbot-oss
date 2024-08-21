@@ -78,3 +78,10 @@
   :depends-on (:util.store
                :hunchentoot)
   :components ((:file "raft-state-http" :if-feature (:and :lispworks :linux))))
+
+
+(defsystem :util.store/benchmarks
+  :serial t
+  :depends-on (:util.store
+               :util/benchmarks)
+  :components ((:file "benchmarks")))
