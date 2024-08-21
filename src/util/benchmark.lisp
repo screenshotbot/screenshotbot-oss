@@ -25,6 +25,12 @@ upto nanoseconds though."
 
 (defvar *in-benchmark-p* nil)
 
+(defvar *benchmark-output* *trace-output*)
+
+(defclass measurement ()
+  ((time :initarg :time
+         :reader measurement-ns)))
+
 (defmacro measure (&body body)
   (let ((iter (gensym "iter"))
         (i (gensym "i")))
@@ -51,7 +57,10 @@ upto nanoseconds though."
       (setf next-count (* 2 next-count))
       (let ((time-spent (- (clock-ns) start-time)))
         (when (> time-spent *min-benchmark-time*)
-          (return (ceiling time-spent iterations)))))))
+          (let ((time (ceiling time-spent iterations)))
+            (return
+              (values time (make-instance 'measurement
+                                          :time time)))))))))
 
 (defvar *benchmarks* nil)
 
@@ -69,9 +78,28 @@ upto nanoseconds though."
                    :impl (lambda ()
                            ,@body))))
 
+(defun format-time (ns)
+  (cond
+    ((< ns 5000)
+     (format nil "~ans" ns))
+    ((< ns 1000000)
+     (format nil "~$us" (/ ns 1000.0)))
+    ((< ns 1000000000)
+     (format nil "~$ms" (/ ns 1000000.0)))
+    (t
+     (format nil "~$s " (/ ns 1000000000.0)))))
+
+(defmethod print-result ((self benchmark) measurement)
+  (format *benchmark-output*
+          "~40a ~a" (benchmark-name self)
+          (format-time (measurement-ns measurement))))
+
 (defmethod run ((self benchmark))
   (let ((*in-benchmark-p* t))
-    (funcall (benchmark-impl self))))
+    (multiple-value-bind (time measurement)
+        (funcall (benchmark-impl self))
+      (print-result self measurement)
+      (values time measurement))))
 
 (defmethod run ((name symbol))
   (let ((benchmark (assoc-value *benchmarks* name)))

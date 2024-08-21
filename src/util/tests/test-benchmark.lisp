@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/benchmark
+                #:format-time
                 #:*min-benchmark-time*
                 #:benchmark)
   (:import-from #:easy-macros
@@ -16,6 +17,7 @@
 
 (def-easy-macro make-benchmark (&fn fn)
   (make-instance 'benchmark
+                 :name 'foo
                  :impl (lambda ()
                          (funcall fn))))
 
@@ -40,3 +42,10 @@
   (let ((*min-benchmark-time* 1000))
     (is (numberp
          (benchmark:run 'foobar)))))
+
+
+(test format-time ()
+  (is (equal "5ns" (format-time 5)))
+  (is (equal "5.23us" (format-time  5231)))
+  (is (equal "5.23ms" (format-time  5231000)))
+  (is (equal "5.23s " (format-time  5231000000))))
