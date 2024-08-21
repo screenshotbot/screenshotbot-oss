@@ -51,7 +51,9 @@
                 #:with-snapshot-lock
                 #:with-test-store)
   (:import-from #:fiveam-matchers/lists
-                #:contains-in-any-order))
+                #:contains-in-any-order)
+  (:import-from #:util/benchmark
+                #:def-benchmark))
 (in-package :util/store/test-store)
 
 
@@ -340,9 +342,9 @@
   ((a) (b) (c) (d) (e) (f) (g) (h))
   (:metaclass persistent-class))
 
-(test benchmark-snapshots
+(benchmark:def-benchmark benchmark-snapshots
   (with-test-store ()
-    (loop for i from 0 to 10 ;; increase
+    (loop for i from 0 to 10000
           do (make-instance 'some-object))
-    (progn ;; time or hcl:profile
+    (benchmark:measure
      (bknr.datastore:snapshot))))
