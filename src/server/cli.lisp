@@ -240,6 +240,19 @@
     :initial-value 4005
     :key :slynk-port)))
 
+(defun benchmarks/command ()
+  (clingon:make-command :name "benchmarks"
+                        :handler (lambda (cmd)
+                                   (uiop:with-temporary-file (:stream s :pathname p :direction :output :keep t)
+                                     (delete-file p)
+                                     (log:config :warn)
+                                     (setf *standard-output* s)
+                                     (setf *trace-output* s)
+                                     (setf *error-output* s)
+                                     (setf *terminal-io* s)
+                                     (benchmark:run-all)
+                                     (uiop:quit 0)))))
+
 
 (defun main/command (&key enable-store jvm acceptor
                        (config-loader (error "must provide :config-loader")))
@@ -258,6 +271,7 @@
                             (uiop:call-function
                              "screenshotbot/pro/installation:gen-config/command"))
                           (save-passphrases/command)
+                          (benchmarks/command)
                           (run/command :enable-store enable-store
                                        :config-loader config-loader
                                        :jvm jvm

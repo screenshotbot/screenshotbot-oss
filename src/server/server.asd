@@ -18,6 +18,7 @@
 (defsystem "server"
     :depends-on ("cl-cli"
                  "util.store"
+                 "util.store/benchmarks"
                  "cl-cron"
                  "server/interrupts"
                  #+ (or ccl lispworks)
