@@ -11,7 +11,8 @@
                 #:assoc-value)
   (:export #:def-benchmark
            #:measure
-           #:run))
+           #:run
+           #:run-all))
 (in-package :util/benchmark)
 
 (defun clock-ns ()
@@ -107,3 +108,7 @@ upto nanoseconds though."
       (error "could not find benchmark named: ~a" name))
     (run
      benchmark)))
+
+(defun run-all ()
+  (loop for (nil . benchmark) in *benchmarks*
+        do (run benchmark)))
