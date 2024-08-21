@@ -52,6 +52,7 @@
                :fiveam-matchers
                :util.store/aws
                :util.store/raft-state
+               :util.store/benchmarks
                :util/fiveam)
   :components ((:file "test-store-version")
                (:file "test-store")
@@ -83,5 +84,5 @@
 (defsystem :util.store/benchmarks
   :serial t
   :depends-on (:util.store
-               :util/benchmarks)
+               :util/benchmark)
   :components ((:file "benchmarks")))

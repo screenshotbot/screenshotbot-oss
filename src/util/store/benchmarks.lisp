@@ -10,8 +10,6 @@
                 #:def-benchmark)
   (:import-from #:util/store/store
                 #:with-test-store)
-  (:import-from #:util/store/validate
-                #:store-object)
   (:import-from #:bknr.datastore
                 #:store-object
                 #:persistent-class))
