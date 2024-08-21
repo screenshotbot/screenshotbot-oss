@@ -45,7 +45,8 @@
 
 
 (test format-time ()
-  (is (equal "5ns" (format-time 5)))
-  (is (equal "5.23us" (format-time  5231)))
-  (is (equal "5.23ms" (format-time  5231000)))
-  (is (equal "5.23s " (format-time  5231000000))))
+  (is (equal "   5ns" (format-time 5)))
+  (is (equal "   5.23us" (format-time  5231)))
+  (is (equal "  15.00us" (format-time  15000)))
+  (is (equal "   5.23ms" (format-time  5231000)))
+  (is (equal "   5.23s " (format-time  5231000000))))

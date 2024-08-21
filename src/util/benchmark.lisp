@@ -82,18 +82,20 @@ upto nanoseconds though."
 (defun format-time (ns)
   (cond
     ((< ns 5000)
-     (format nil "~ans" ns))
+     (format nil "~4dns" ns))
     ((< ns 1000000)
-     (format nil "~$us" (/ ns 1000.0)))
+     (format nil "~7,2fus" (/ ns 1000.0)))
     ((< ns 1000000000)
-     (format nil "~$ms" (/ ns 1000000.0)))
+     (format nil "~7,2fms" (/ ns 1000000.0)))
     (t
-     (format nil "~$s " (/ ns 1000000000.0)))))
+     (format nil "~7,2fs " (/ ns 1000000000.0)))))
 
 (defmethod print-result ((self benchmark) measurement)
   (format *benchmark-output*
-          "~40a ~a" (benchmark-name self)
-          (format-time (measurement-ns measurement))))
+          "~40a ~a~%" (benchmark-name self)
+          (format-time (measurement-ns measurement)))
+  (format *benchmark-output*
+          "===============================================~%"))
 
 (defmethod run ((self benchmark))
   (let ((*in-benchmark-p* t))
