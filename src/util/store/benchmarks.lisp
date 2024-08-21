@@ -45,3 +45,14 @@
     (let ((num 0))
      (benchmark:measure
        (incf num (g obj))))))
+
+(defclass some-object (store-object)
+  ((a) (b) (c) (d) (e) (f) (g) (h))
+  (:metaclass persistent-class))
+
+(benchmark:def-benchmark benchmark-snapshots
+  (with-test-store ()
+    (loop for i from 0 to 10000
+          do (make-instance 'some-object))
+    (benchmark:measure
+     (bknr.datastore:snapshot))))
