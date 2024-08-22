@@ -34,7 +34,8 @@
                 #:ext-json-serializable-class)
   (:import-from #:screenshotbot/replay/browser-config
                 #:browser-config)
-  (:local-nicknames (#:a #:alexandria))
+  (:local-nicknames (#:a #:alexandria)
+                    (#:dns-client #:org.shirakumo.dns-client))
   (:export
    #:rewrite-css-urls
    #:*replay-logs*
@@ -367,10 +368,29 @@
    (not (equal "cdn.screenshotbot.io" domain))
    (or
     (cl-ppcre:scan "\\d*\\.\\d*\\.\\d*\\d*" domain)
-    (cl-ppcre:scan ".*\\.screenshotbot.io" domain))))
+    (cl-ppcre:scan ".*\\.screenshotbot.io" domain)
+    (cl-ppcre:scan ".*localhost.*" domain))))
 
 (define-condition blacklisted-domain (error)
   ())
+
+(define-condition blacklisted-ip (error)
+  ())
+
+(defun blacklisted-ip-p (host)
+  (block nil
+    (let ((ip (dns-client:resolve host :type :a)))
+      (when (equal ip "127.0.0.1")
+        (return t))
+      ;; This is hard-coded for now, but this is our internal IP
+      ;; range.
+      (when (str:starts-with-p "172.30." ip)
+        (return t)))
+    (let ((ip (dns-client:resolve host :type :aaaa)))
+      (when ip
+        (return
+          (or
+           (equal "::1" ip)))))))
 
 (defmethod http-request-impl ((engine request-engine)
                               url &rest args)
@@ -382,6 +402,8 @@
        (error "file:// urls are not supported"))
       ((blacklisted-domain-p (quri:uri-host url))
        (error 'blacklisted-domain))
+      ((blacklisted-ip-p (quri:uri-host url))
+       (error 'blacklisted-ip))
       ((not (member (quri:uri-port url)
                     '(80 443 nil)))
        (error 'blacklisted-domain))

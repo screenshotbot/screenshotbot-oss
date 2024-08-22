@@ -495,6 +495,7 @@
                :hunchentoot-extensions
                :util/digests
                :util/cron
+               :dns-client
                :screenshotbot/hub
                :http-proxy
                :auto-restart

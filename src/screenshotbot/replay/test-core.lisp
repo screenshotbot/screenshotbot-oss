@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:blacklisted-ip
                 #:*request-engine*
                 #:blacklisted-domain
                 #:blacklisted-domain-p
@@ -56,7 +57,8 @@
   (:import-from #:screenshotbot/replay/browser-config
                 #:dimensions
                 #:browser-config)
-  (:local-nicknames (#:a #:alexandria)))
+  (:local-nicknames (#:a #:alexandria)
+                    (#:dns-client #:org.shirakumo.dns-client)))
 (in-package :screenshotbot/replay/test-core)
 
 (util/fiveam:def-suite)
@@ -404,6 +406,9 @@ background: url(shttps://google.com?f=1)
                                          :channel-name "bleh")))
     (finishes (encode-json snapshot-request))))
 
+
+;; TODO: these tests all hit the network!
+
 (test blacklisted-domain-p
   (is-false (blacklisted-domain-p "example.com"))
   (is-true (blacklisted-domain-p "169.254.169.254"))
@@ -420,4 +425,14 @@ background: url(shttps://google.com?f=1)
 (test ports-are-blacklisted
   (signals blacklisted-domain
     (util/request:http-request "http://example.com:34"
+                               :engine *request-engine*)))
+
+(test bad-redirects
+  (signals blacklisted-domain
+    (util/request:http-request "http://localhost"
+                               :engine *request-engine*)))
+
+(test bad-ip
+  (signals blacklisted-ip
+    (util/request:http-request "http://lcl.tdrhq.com"
                                :engine *request-engine*)))
