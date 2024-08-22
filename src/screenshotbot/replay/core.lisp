@@ -380,7 +380,7 @@
 (defun blacklisted-ip-p (host)
   (block nil
     (let ((ip (dns-client:resolve host :type :a)))
-      (when (equal ip "127.0.0.1")
+      (when (str:starts-with-p "127." ip)
         (return t))
       ;; This is hard-coded for now, but this is our internal IP
       ;; range.
