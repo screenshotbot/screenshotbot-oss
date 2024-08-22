@@ -25,6 +25,7 @@
   (:import-from #:alexandria
                 #:assoc-value)
   (:import-from #:util/request
+                #:proxy-engine
                 #:http-success-response?
                 #:http-request-impl
                 #:engine)
@@ -222,6 +223,7 @@
 (defvar *request-counter-lock* (bt:make-lock "request-counter-lock"))
 
 (defclass request-engine (handle-misbehaving-engine
+                          proxy-engine
                           engine)
   ())
 

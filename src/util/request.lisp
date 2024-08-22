@@ -8,7 +8,8 @@
   (:export
    #:http-request
    #:http-success-response?
-   #:engine))
+   #:engine
+   #:proxy-engine))
 (in-package :util/request)
 
 (defun http-success-response? (response-code)
@@ -183,3 +184,19 @@ use stream pools.")
     (loop for (key . value) in headers
           do (setf (gethash (string-downcase key) ret) value))
     ret))
+
+(defclass proxy-engine ()
+  ((proxy :initarg :proxy
+          :initform nil
+          :reader proxy-url
+          :documentation "A list with two values, an IP address and a port, which designates the HTTP proxy, or NIL if no proxy should be used")))
+
+(defmethod http-request-impl ((self proxy-engine) url &rest args)
+  (cond
+    ((proxy-url self)
+     (apply #'call-next-method
+            self
+            :proxy (proxy-url self)
+            args))
+    (t
+     (call-next-method))))
