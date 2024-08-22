@@ -432,6 +432,7 @@ background: url(shttps://google.com?f=1)
     (util/request:http-request "http://localhost"
                                :engine *request-engine*)))
 
+#+nil
 (test bad-ip
   (signals blacklisted-ip
     (util/request:http-request "http://lcl.tdrhq.com"

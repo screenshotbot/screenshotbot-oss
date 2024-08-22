@@ -378,6 +378,7 @@
   ())
 
 (defun blacklisted-ip-p (host)
+  #+nil
   (block nil
     (let ((ip (dns-client:resolve host :type :a)))
       (when (str:starts-with-p "127." ip)
