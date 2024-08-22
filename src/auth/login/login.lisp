@@ -58,6 +58,9 @@
 (defparameter *throttler* (make-instance 'ip-throttler
                                          :tokens 120))
 
+(defvar *signin-step1-throttler* (make-instance 'ip-throttler
+                                                :tokens 120))
+
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/login") ()
   (hex:safe-redirect "/signin"))
 
@@ -137,6 +140,7 @@
     </auth-template>))
 
 (defmethod sign-in-step1-post ((auth-provider standard-auth-provider) &key email redirect)
+  (throttle! *signin-step1-throttler*)
   (with-error-builder (:check check :errors errors
                        :form-builder (signin-get)
                        :success (hex:safe-redirect
