@@ -416,3 +416,8 @@ background: url(shttps://google.com?f=1)
   (signals blacklisted-domain
     (util/request:http-request "http://foo1.screenshotbot.io"
                                :engine *request-engine*)))
+
+(test ports-are-blacklisted
+  (signals blacklisted-domain
+    (util/request:http-request "http://example.com:34"
+                               :engine *request-engine*)))

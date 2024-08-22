@@ -382,6 +382,9 @@
        (error "file:// urls are not supported"))
       ((blacklisted-domain-p (quri:uri-host url))
        (error 'blacklisted-domain))
+      ((not (member (quri:uri-port url)
+                    '(80 443 nil)))
+       (error 'blacklisted-domain))
       ((member scheme (list "chrome-extension") :test #'string-equal)
        ;; respond with an empty file
        (values
