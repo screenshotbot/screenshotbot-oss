@@ -407,9 +407,12 @@ accessing the urls or sitemap slot."
        :hosted-url hosted-url
        :driver driver
        :logger (lambda (url actual-url)
-                 (write-replay-log "[~a/~a] Running url: ~a / ~a"
+                 ;; We used to log the actual-url here, but we need to
+                 ;; remove it for now to solve T902. We should have a
+                 ;; separate internal log where we can put this though.
+                 (write-replay-log "[~a/~a] Running url: ~a"
                                    (incf idx)
-                                   url-count  url actual-url))
+                                   url-count  url))
        :config config
        :run run
        :tmpdir tmpdir
