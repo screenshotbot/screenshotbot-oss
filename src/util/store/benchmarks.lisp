@@ -61,3 +61,9 @@
   (uiop:with-temporary-file (:stream s :element-type '(unsigned-byte 8))
     (benchmark:measure
       (bknr.datastore::%encode-integer 51 s))))
+
+
+(def-benchmark encode-nil ()
+  (uiop:with-temporary-file (:stream s :element-type '(unsigned-byte 8))
+    (benchmark:measure
+     (bknr.datastore::encode-symbol 'nil s))))
