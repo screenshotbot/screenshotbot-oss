@@ -196,6 +196,7 @@ use stream pools.")
     ((proxy-url self)
      (apply #'call-next-method
             self
+            url
             :proxy (proxy-url self)
             args))
     (t
