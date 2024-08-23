@@ -71,7 +71,8 @@
    #:write-replay-log
    #:context
    #:asset-file-name
-   #:parse-max-age))
+   #:parse-max-age
+   #:request-engine))
 (in-package :screenshotbot/replay/core)
 
 (defconstant +empty-headers+ nil)
