@@ -55,4 +55,9 @@
     (loop for i from 0 to 10000
           do (make-instance 'some-object))
     (benchmark:measure
-     (bknr.datastore:snapshot))))
+      (bknr.datastore:snapshot))))
+
+(def-benchmark encode-integer ()
+  (uiop:with-temporary-file (:stream s :element-type '(unsigned-byte 8))
+    (benchmark:measure
+      (bknr.datastore::%encode-integer 51 s))))
