@@ -9,8 +9,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:replay-external-request-engine
                 #:blacklisted-ip
-                #:*request-engine*
                 #:blacklisted-domain
                 #:blacklisted-domain-p
                 #:snapshot-request
@@ -57,6 +57,8 @@
   (:import-from #:screenshotbot/replay/browser-config
                 #:dimensions
                 #:browser-config)
+  (:import-from #:screenshotbot/testing
+                #:with-installation)
   (:local-nicknames (#:a #:alexandria)
                     (#:dns-client #:org.shirakumo.dns-client)))
 (in-package :screenshotbot/replay/test-core)
@@ -64,12 +66,13 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (tmpdir:with-tmpdir (tmpdir)
-    (let ((*cache* (make-instance 'lru-cache
-                                   :dir tmpdir))
-          (context (make-instance 'context)))
-      (cl-mock:with-mocks ()
-       (&body)))))
+  (with-installation ()
+    (tmpdir:with-tmpdir (tmpdir)
+      (let ((*cache* (make-instance 'lru-cache
+                                    :dir tmpdir))
+            (context (make-instance 'context)))
+        (cl-mock:with-mocks ()
+          (&body))))))
 
 
 (test url-rewriting
@@ -420,17 +423,17 @@ background: url(shttps://google.com?f=1)
 (test domain-is-actually-blacklisted
   (signals blacklisted-domain
     (util/request:http-request "http://foo1.screenshotbot.io"
-                               :engine *request-engine*)))
+                               :engine (replay-external-request-engine :installation))))
 
 (test ports-are-blacklisted
   (signals blacklisted-domain
     (util/request:http-request "http://example.com:34"
-                               :engine *request-engine*)))
+                               :engine (replay-external-request-engine :installation))))
 
 (test bad-redirects
   (signals blacklisted-domain
     (util/request:http-request "http://localhost"
-                               :engine *request-engine*)))
+                               :engine (replay-external-request-engine :installation))))
 
 #+nil
 (test bad-ip

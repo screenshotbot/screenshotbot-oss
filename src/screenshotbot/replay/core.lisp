@@ -35,6 +35,8 @@
                 #:ext-json-serializable-class)
   (:import-from #:screenshotbot/replay/browser-config
                 #:browser-config)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:local-nicknames (#:a #:alexandria)
                     (#:dns-client #:org.shirakumo.dns-client))
   (:export
@@ -227,7 +229,13 @@
                           engine)
   ())
 
-(defvar *request-engine* (make-instance 'request-engine))
+
+(defgeneric replay-external-request-engine (installation)
+  (:method (installation)
+    (make-instance 'request-engine))
+  (:documentation "The engine to use for making requests to external websites. In
+particular, we plan to use a Squid proxy for prod. (and is probably
+shipped by the time you're reading this.)"))
 
 (defmethod call-with-request-counter ((snapshot snapshot) fn)
   (unwind-protect
@@ -441,7 +449,7 @@
                              :read-timeout *timeout*
                              :accept "image/webp,*/*"
                              :connection-timeout *timeout*
-                             :engine *request-engine*))
+                             :engine (replay-external-request-engine *installation*)))
 
 (defvar *cache* nil)
 

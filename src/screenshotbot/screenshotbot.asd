@@ -501,6 +501,7 @@
                :auto-restart
                :drakma
                :json-mop
+               :core.installation
                :alexandria)
   :components ((:module "replay"
                 :serial t
