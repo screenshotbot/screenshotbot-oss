@@ -138,12 +138,24 @@ node-id is a valid full node on the graph."
   "This is modified from GRAPH. Sadly that library uses recursion for
 some of their graph algorithms, which doesn't work nicely for a 'deep'
 tree. This version uses the Kahn's algorithm instead of DFS"
-  (declare (optimize (speed 3) (debug 0)))
-  (let* ((digraph (digraph dag))
-         (rL nil)
-         (out-degrees (make-hash-table)))
-    (loop for x in (graph::nodes digraph) do
-          (setf (gethash x out-degrees) (length (graph::neighbors digraph x))))
+  ;;(declare (optimize (speed 3) (debug 0)))
+  (let* ((rL nil)
+         (out-degrees (make-hash-table :test #'equal))
+         (children (make-hash-table :test #'equal)))
+
+    (loop for commit being the hash-values of (commit-map dag)
+          do
+             (setf (gethash (sha commit) out-degrees)
+                   (length (parents commit)))
+             (loop for parent in (parents commit) do
+               ;; Ensure that parent nodes are present in here too
+               (symbol-macrolet ((slot (gethash parent out-degrees)))
+                 (unless slot
+                   (setf slot 0)))
+
+               ;; build precedents map
+               (push (sha commit)
+                     (gethash parent children nil))))
 
     (let ((S (loop for x being the hash-keys of out-degrees
                    if (eql 0 (gethash x out-degrees))
@@ -152,13 +164,13 @@ tree. This version uses the Kahn's algorithm instead of DFS"
         (progn
           (let ((n (pop S)))
             (push n rL)
-            (dolist (m (graph::precedents digraph n))
+            (dolist (m (gethash n children))
               (decf (gethash m out-degrees))
               (assert (>= (gethash m out-degrees) 0))
               (when (eql (gethash m out-degrees) 0)
                 (push m S)))))))
     (remove-if-not (curry #'full-commit-on-graph-p dag)
-                   rL)))
+                   (mapcar #'commit-node-id rL))))
 
 (defmethod write-to-stream ((dag dag) stream &key (format :json))
   (let ((sorted-nodes (reverse (safe-topological-sort dag)))
