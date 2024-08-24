@@ -44,7 +44,8 @@
   ((digraph :initform (make-instance 'graph:digraph)
             :accessor digraph)
    (commits :initform (make-hash-table :test 'equal)
-            :accessor commit-map)
+            :accessor commit-map
+            :documentation "A map from COMMIT-NODE-ID (number) to COMMIT. We eventually plan to replace this with sha to COMMIT.")
    (pathname :initarg :pathname
              :documentation "For debugging only")
    (reachable-cache :initform (make-hash-table))))
