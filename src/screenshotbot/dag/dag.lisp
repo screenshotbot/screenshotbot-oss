@@ -47,8 +47,7 @@
             :accessor commit-map
             :documentation "A map from COMMIT-NODE-ID (number) to COMMIT. We eventually plan to replace this with sha to COMMIT.")
    (pathname :initarg :pathname
-             :documentation "For debugging only")
-   (reachable-cache :initform (make-hash-table))))
+             :documentation "For debugging only")))
 
 (defmethod all-commits ((dag dag))
   (loop for commit being the hash-values of (commit-map dag)
