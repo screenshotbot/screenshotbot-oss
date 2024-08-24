@@ -23,7 +23,6 @@
   (:import-from #:util
                 #:oid)
   (:import-from #:screenshotbot/model/image
-                #:convert-all-images-to-webp
                 #:%image-state
                 #:+image-state-filesystem+
                 #:with-local-image
@@ -232,18 +231,6 @@ uses the base-image-comparer."
        (with-local-image (file image)
          (is (equalp hash
                      (md5-file file))))))))
-
-(test convert-all-images-to-webp
-  (with-fixture state ()
-    (flet ((types ()
-             (loop for im in (class-instances 'image)
-                   collect
-                   (image-format im))))
-      (is (equal '(:png :png :png)
-                 (types)))
-      (convert-all-images-to-webp)
-      (is (equal '(:webp :webp :webp)
-                 (types))))))
 
 (test with-local-image-when-theres-no-local-image
   (with-fixture state ()

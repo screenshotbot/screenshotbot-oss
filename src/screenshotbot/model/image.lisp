@@ -658,47 +658,6 @@ type. Example output could be either :PNG or :WEBP. If we can't
 recognized the file, we'll return nil."
   (metadata-image-format (image-metadata image)))
 
-(defun convert-all-images-to-webp ()
-  "Converts all the images to lossless webp, while maintaining the
-  original hashes. This way, any jobs referencing the old hashes will
-  still not send a new image, and we can recover a lot of disk
-  space."
-  (loop for image in (reverse (bknr.datastore:store-objects-with-class 'image))
-        for i from 0
-        do
-           (log:info "Converting image: ~a / ~a" i image)
-           (restart-case
-               (convert-image-to-webp image)
-             (ignore-image ()
-               (values)))))
-
-(with-auto-restart ()
-  (defun convert-image-to-webp (image)
-   (let ((+limit+ 16383))
-     (when (and
-            (uiop:file-exists-p (image-filesystem-pathname image))
-            (eql :png (image-format image))
-            (let ((dim (image-dimensions image)))
-              (and (< (dimension-height dim) +limit+)
-                   (< (dimension-width dim) +limit+))))
-       (flet ((%rename-file (from to)
-                (log:info "Renaming file from ~a to ~a" from to)
-                (rename-file from to)))
-         (let ((path (make-pathname :type :unspecific
-                                    :defaults (image-filesystem-pathname image))))
-           (log:info "will switch image: ~a" path)
-           (let ((tmp (make-pathname :type "webp"
-                                     :defaults path))
-                 (png (make-pathname :type "png"
-                                     :defaults path)))
-             (sleep 1)
-             (invalidate-image-metadata image)
-             (convert-to-lossless-webp
-              (magick)
-              path tmp)
-             (invalidate-image-metadata image)
-             (uiop:rename-file-overwriting-target tmp path)
-             (assert (uiop:file-exists-p path)))))))))
 
 (defun ensure-images-have-hash ()
   "Used as a migration to fix an issue with images having no hash"
