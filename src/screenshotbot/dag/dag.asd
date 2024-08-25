@@ -6,8 +6,7 @@
 
 (defsystem :dag
   :serial t
-  :depends-on (:graph
-               :pkg
+  :depends-on (:pkg
                :util/simple-queue
                :bknr.datastore
                :ironclad)

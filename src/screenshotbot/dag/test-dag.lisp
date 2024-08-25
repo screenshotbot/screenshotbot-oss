@@ -16,7 +16,6 @@
                 #:assert-commit
                 #:ordered-commits
                 #:commit-map
-                #:digraph
                 #:commit-node-id
                 #:node-id
                 #:safe-topological-sort
@@ -172,11 +171,6 @@
                                        :commits)
                              collect (assoc-value x :sha))))
       (is (equal final-order commits)))))
-
-(test add-edge-directly-from-graph
-  (with-fixture state ()
-    (is (equal '((#xaa #xbb))
-                (gethash #xaa (graph::node-h (dag::digraph dag)))))))
 
 (test merge-existing-commits
   (with-fixture state ()

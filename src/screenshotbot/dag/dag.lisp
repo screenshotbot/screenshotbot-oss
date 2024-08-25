@@ -41,9 +41,7 @@
       ret)))
 
 (defclass dag ()
-  ((digraph :initform (make-instance 'graph:digraph)
-            :accessor digraph)
-   (commits :initform (make-hash-table :test 'equal)
+  ((commits :initform (make-hash-table :test 'equal)
             :accessor commit-map
             :documentation "A map from COMMIT-NODE-ID (number) to COMMIT. We eventually plan to replace this with sha to COMMIT.")
    (pathname :initarg :pathname
@@ -117,16 +115,12 @@ changes."
        (setf
         (gethash node-id map)
         commit)
-       (graph:add-node (digraph dag) node-id)
        (loop for p in (parents commit) do
          (progn
            #+nil(log:info "adding edge from: ~S to ~S" node-id
                           (commit-node-id p))
            (assert (numberp node-id))
-           (assert (numberp (commit-node-id p)))
-           (graph:add-edge (digraph dag) (list
-                                          node-id
-                                          (commit-node-id p)))))))))
+           (assert (numberp (commit-node-id p)))))))))
 
 (defmethod full-commit-on-graph-p ((dag dag) node-id)
   "Not all nodes in the graph are \"complete\". Some nodes are referenced
