@@ -450,7 +450,9 @@ shipped by the time you're reading this.)"))
                              :read-timeout *timeout*
                              :accept "image/webp,*/*"
                              :connection-timeout *timeout*
-                             :engine (replay-external-request-engine *installation*)))
+                             :engine (replay-external-request-engine
+                                      ;; See test http-get-works-without-installation
+                                      (ignore-errors *installation*))))
 
 (defvar *cache* nil)
 

@@ -65,14 +65,20 @@
 
 (util/fiveam:def-suite)
 
-(def-fixture state ()
-  (with-installation ()
-    (tmpdir:with-tmpdir (tmpdir)
-      (let ((*cache* (make-instance 'lru-cache
-                                    :dir tmpdir))
-            (context (make-instance 'context)))
-        (cl-mock:with-mocks ()
-          (&body))))))
+(def-fixture state (&key (setup-installation-p t))
+  (flet ((body ()
+           (tmpdir:with-tmpdir (tmpdir)
+             (let ((*cache* (make-instance 'lru-cache
+                                           :dir tmpdir))
+                   (context (make-instance 'context)))
+               (cl-mock:with-mocks ()
+                 (&body))))))
+    (cond
+      (setup-installation-p
+       (with-installation ()
+         (body)))
+      (t
+       (body)))))
 
 
 (test url-rewriting
@@ -293,6 +299,7 @@ background: url(shttps://google.com?f=1)
                   (plump:serialize html s))))
       (pass))))
 
+
 (test utf-8
   (with-fixture state ()
    (tmpdir:with-tmpdir (tmpdir)
@@ -312,6 +319,24 @@ background: url(shttps://google.com?f=1)
      (with-open-stream (content (http-get "https://example.com" :force-string t
                                                                 :force-binary nil))
        (is (equal "<html><body>©</body></html>" (uiop:slurp-input-stream :string content)))))))
+
+(test http-get-works-without-installation
+  "In particular, the SDK will call this without an installation."
+  (with-fixture state (:setup-installation-p nil)
+   (tmpdir:with-tmpdir (tmpdir)
+     (cl-mock:if-called 'util/request:http-request
+                        (lambda (url &rest args)
+                          (values
+                           (flexi-streams:make-in-memory-input-stream
+                            (flexi-streams:string-to-octets
+                             "<html><body>foo</body></html>"
+                             :external-format :utf-8))
+                           200
+                           `((:content-type . "text/html; charset=utf-8")))))
+
+     (with-open-stream (content (http-get "https://example.com" :force-string t
+                                                                :force-binary nil))
+       (is (equal "<html><body>foo</body></html>" (uiop:slurp-input-stream :string content)))))))
 
 (test guess-external-format
   (uiop:with-temporary-file (:pathname p)
