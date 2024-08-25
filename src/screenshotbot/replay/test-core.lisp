@@ -445,20 +445,27 @@ background: url(shttps://google.com?f=1)
   ;; Screenshotbot itself.
   (is-false (blacklisted-domain-p "screenshotbot.io")))
 
+(def-fixture blacklisting ()
+  (with-installation ()
+    (&body)))
+
 (test domain-is-actually-blacklisted
-  (signals blacklisted-domain
-    (util/request:http-request "http://foo1.screenshotbot.io"
-                               :engine (replay-external-request-engine :installation))))
+  (with-fixture blacklisting ()
+    (signals blacklisted-domain
+      (util/request:http-request "http://foo1.screenshotbot.io"
+                                 :engine (replay-external-request-engine :installation)))))
 
 (test ports-are-blacklisted
-  (signals blacklisted-domain
-    (util/request:http-request "http://example.com:34"
-                               :engine (replay-external-request-engine :installation))))
+  (with-fixture blacklisting ()
+    (signals blacklisted-domain
+      (util/request:http-request "http://example.com:34"
+                                :engine (replay-external-request-engine :installation)))))
 
 (test bad-redirects
-  (signals blacklisted-domain
-    (util/request:http-request "http://localhost"
-                               :engine (replay-external-request-engine :installation))))
+  (with-fixture blacklisting ()
+    (signals blacklisted-domain
+      (util/request:http-request "http://localhost"
+                                 :engine (replay-external-request-engine :installation)))))
 
 #+nil
 (test bad-ip

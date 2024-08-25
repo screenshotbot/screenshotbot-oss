@@ -404,6 +404,9 @@ shipped by the time you're reading this.)"))
           (or
            (equal "::1" ip)))))))
 
+(defun running-in-sdk-p ()
+  (not (boundp '*installation*)))
+
 (defmethod http-request-impl ((engine request-engine)
                               url &rest args)
   (let* ((url (fix-malformed-url url))
@@ -412,12 +415,16 @@ shipped by the time you're reading this.)"))
     (cond
       ((equal "file" scheme)
        (error "file:// urls are not supported"))
-      ((blacklisted-domain-p (quri:uri-host url))
+      ((and
+        (not (running-in-sdk-p))
+        (blacklisted-domain-p (quri:uri-host url)))
        (error 'blacklisted-domain))
       ((blacklisted-ip-p (quri:uri-host url))
        (error 'blacklisted-ip))
-      ((not (member (quri:uri-port url)
-                    '(80 443 nil)))
+      ((and
+        (not (running-in-sdk-p))
+        (not (member (quri:uri-port url)
+                     '(80 443 nil))))
        (error 'blacklisted-domain))
       ((member scheme (list "chrome-extension") :test #'string-equal)
        ;; respond with an empty file
