@@ -259,6 +259,14 @@ developer, just send us an email and we'll make sure you have a plan
 you can afford. Most of our code is open-source, so by paying us
 you're directly supporting our open-source contributions.
 
+## Security
+
+We take security at Screenshotbot very seriously. We partner with an
+external security research firm, [Pensive
+Security](https://pensivesecurity.io) to perform annual penetration
+tests. The latest Penetration Test reports can be requested on our
+[Trust and Security](https://trust.screenshotbot.io) dashboard.
+
 
 ## Authors
 
