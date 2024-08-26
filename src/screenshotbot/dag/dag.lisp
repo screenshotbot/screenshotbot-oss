@@ -42,10 +42,17 @@
 
 (defclass dag ()
   ((commits :initform (make-hash-table :test 'equal)
+            :initarg :commit-map
             :accessor commit-map
             :documentation "A map from COMMIT-NODE-ID (number) to COMMIT. We eventually plan to replace this with sha to COMMIT.")
    (pathname :initarg :pathname
              :documentation "For debugging only")))
+
+(defmethod clone-dag ((dag dag))
+  "This is not bad in terms of performance! But obviously, we can optimize this in future with either FSET of CoW."
+  (make-instance
+   'dag
+   :commit-map (alexandria:copy-hash-table (commit-map dag))))
 
 (defmethod all-commits ((dag dag))
   (loop for commit being the hash-values of (commit-map dag)
