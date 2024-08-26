@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/image
+                #:with-cropped-and-resized
                 #:with-access-checked-image
                 #:send-404
                 #:%build-resized-image
@@ -42,6 +43,10 @@
   (:import-from #:util/store/object-id
                 #:oid-array
                 #:oid)
+  (:import-from #:screenshotbot/magick/magick-lw
+                #:with-wand
+                #:magick-get-image-width
+                #:magick-get-image-height)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-image)
 
@@ -124,3 +129,10 @@
       (with-access-checked-image (image (encrypt:encrypt-mongoid (oid-array im)))
         (setf result-im image))
       (is (eql im result-im)))))
+
+(test |/image/resized.webp happy path|
+  (with-fixture state ()
+    (with-cropped-and-resized (im 3 3 10 15 2 :output p)
+      (with-wand (wand :file p)
+        (is (eql 20 (magick-get-image-width wand)))
+        (is (eql 30 (magick-get-image-height wand) ))))))

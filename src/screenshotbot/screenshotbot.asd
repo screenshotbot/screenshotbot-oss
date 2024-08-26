@@ -24,6 +24,7 @@
                :auth.login
                :markup
                :gravatar
+               :parse-float
                :trivial-garbage
                :core.active-users
                :util/posix

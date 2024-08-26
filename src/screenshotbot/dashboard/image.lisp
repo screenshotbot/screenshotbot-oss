@@ -35,6 +35,8 @@
   (:import-from #:screenshotbot/user-api
                 #:current-company)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:screenshotbot-resize
+                #:magick-crop-image
                 #:save-wand-to-file
                 #:magick-write-image
                 #:with-wand
@@ -49,6 +51,9 @@
                 #:make-image-cdn-url)
   (:import-from #:util/events
                 #:with-tracing)
+  (:import-from #:util/throttler
+                #:throttle!
+                #:ip-throttler)
   (:export
    #:handle-resized-image))
 (in-package :screenshotbot/dashboard/image)
@@ -197,6 +202,59 @@
       (t
        (with-local-image (file image)
          (handle-static-file file))))))
+
+(defvar *resize-throttler* (make-instance 'ip-throttler
+                                          :tokens 100))
+
+(def-easy-macro with-cropped-and-resized (image x0 y0 w0 h0 z &key &binding output &fn fn)
+  (throttle! *resize-throttler*)
+
+  ;; Sanity check, even though MagickWand should check this too.
+  (assert (< (* z w0) 16000))
+  (assert (< (* z h0) 16000))
+
+  (uiop:with-temporary-file (:pathname p :type "webp")
+    (with-semaphore ()
+      (with-local-image (file image)
+        (with-wand (wand :file file)
+          ;; TODO: sanity check input?
+          (unless (magick-crop-image wand
+                                     w0
+                                     h0
+                                     x0
+                                     y0)
+            (error "Could not crop image"))
+          (unless (screenshotbot-resize wand
+                                        (ceiling (* z w0))
+                                        (ceiling (* z h0)))
+            (error "Could not resize image"))
+          (save-wand-to-file wand p))))
+    (fn p)))
+
+(defhandler (image-resized-blob :uri "/image/resized.webp")
+    (eoid (x0 :parameter-type 'integer)
+          (y0 :parameter-type 'integer)
+          (w0 :parameter-type 'integer)
+          (h0 :parameter-type 'integer)
+          z)
+  "Given an image (EOID), an initial coordate [x0 y0] and a height and
+ width [w0 h0], return the region corresponding to that [x0 y0] and
+ [w0 h0] zoomed to a scale z.
+
+It is expected that the client will call this via a CDN, and will be
+careful about not making multiple requests. One such strategy will be
+that if we want the image for [x0 y0 w0 h0], we would instead request
+the image for [x0-(x0 % 2w0) y0 - (y0 % 2h0) 2w0 2h0] and retrieve the
+right region within that.
+"
+
+  (let ((z (#+lispworks hcl:parse-float #-lispworks parse-float:parse-float z)))
+    (with-access-checked-image (image eoid)
+     (with-cropped-and-resized (image x0 y0 w0 h0 z :output p)
+       (setf (hunchentoot:header-out :content-type) "image/webp")
+       (handle-static-file p)))))
+
+
 
 (defhandler (image-blob-get-original :uri "/image/original/:eoid") (eoid)
   (destructuring-bind (oid &optional type) (str:split "." eoid)

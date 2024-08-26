@@ -383,6 +383,14 @@
     ((version (:reference-return #-lispworks :uint64 #+lispworks :size-t)))
   :result-type (:pointer :char))
 
+(fli:define-foreign-function (magick-crop-image "MagickCropImage")
+    ((wand (:pointer wand))
+     (width :size-t)
+     (height :size-t)
+     (x :size-t)
+     (y :size-t))
+  :result-type :boolean)
+
 (defvar *magick-wand-inited* nil)
 
 (defun mb (x)
@@ -459,6 +467,7 @@
     ((dest (:pointer wand))
      (src (:pointer wand)))
   :result-type :int)
+
 
 (fli:define-foreign-function screenshotbot-inplace-compare-v2
     ((dest (:pointer wand))
