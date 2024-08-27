@@ -8,6 +8,8 @@
   (:use #:cl)
   (:import-from #:util/request
                 #:http-request)
+  (:import-from #:util/store/store
+                #:ec2-get-local-ipv4)
   (:export
    #:make-aws-store))
 (in-package :util/store/aws-store)
@@ -15,16 +17,12 @@
 ;; This isn't meant to be used outside of Modern Interpreters. This is
 ;; highly tied to our deployment infrastructure.
 
-(defun get-current-ip ()
-  (http-request "http://169.254.169.254/latest/meta-data/local-ipv4"
-                :want-string t))
-
 (defun make-aws-store (&key private-ips
                          (group (error "must provide group, and it must be equal to the name of the current USER."))
                          port)
   (assert (not (equal "root" (uiop:getenv "USER"))))
   (assert (equal group (uiop:getenv "USER")))
-  (let ((current-ip (get-current-ip)))
+  (let ((current-ip (ec2-get-local-ipv4)))
     (util/store/store:make-default-store
      'util/store/store:raft-store-final
      :data-path (path:catdir
