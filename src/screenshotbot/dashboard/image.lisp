@@ -52,6 +52,7 @@
   (:import-from #:util/events
                 #:with-tracing)
   (:import-from #:util/throttler
+                #:throttler
                 #:throttle!
                 #:ip-throttler)
   (:export
@@ -204,7 +205,11 @@
          (handle-static-file file))))))
 
 (defvar *resize-throttler* (make-instance 'ip-throttler
-                                          :tokens 100))
+                                          :tokens 100
+                                          :period 120))
+
+(defvar *resize-per-company-throttler* (make-instance 'throttler
+                                                      :tokens 1000))
 
 (def-easy-macro with-cropped-and-resized (image x0 y0 w0 h0 z &key &binding output &fn fn)
   (throttle! *resize-throttler*)
@@ -213,9 +218,11 @@
   (assert (< (* z w0) 16000))
   (assert (< (* z h0) 16000))
 
+  (throttle! *resize-per-company-throttler* :key (screenshotbot/model/company:company image))
+
   (uiop:with-temporary-file (:pathname p :type "webp")
-    (with-semaphore ()
-      (with-local-image (file image)
+    (with-local-image (file image)
+      (with-semaphore ()
         (with-wand (wand :file file)
           ;; TODO: sanity check input?
           (unless (magick-crop-image wand
