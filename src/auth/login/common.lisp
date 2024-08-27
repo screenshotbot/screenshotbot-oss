@@ -165,7 +165,12 @@
 
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/account/oauth-callback") (code state)
   (declare (ignore code)) ;; will be read from the nibble
-  (nibble:render-nibble self state))
+  (cond
+    ((str:emptyp state)
+     (warn "State not present in oauth-callback")
+     "Invalid OpenID Connect response, missing state field.")
+    (t
+     (nibble:render-nibble self state))))
 
 (defmacro with-oauth-state-and-redirect ((state) &body body)
   `(flet ((body () ,@body))
