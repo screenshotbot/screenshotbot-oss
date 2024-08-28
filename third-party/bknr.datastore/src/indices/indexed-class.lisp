@@ -30,13 +30,16 @@
     (when index-holder
       (index-holder-index index-holder))))
 
+(define-condition base-indexed-object-required ()
+  ()
+  (:report "indexed-class objects must inherit BASE-INDEXED-OBJET"))
+
 (defmethod closer-mop:compute-class-precedence-list ((class indexed-class))
   (let ((classes (call-next-method)))
-    (loop for class in classes
-          if (eql 'base-indexed-object (class-name class))
-            return classes
-          finally
-            (return (append classes (list (find-class 'base-indexed-object)))))))
+    (unless (find (find-class 'base-indexed-object)
+                  classes)
+      (error 'base-indexed-object-required))
+    (call-next-method)))
 
 (defmethod validate-superclass ((sub indexed-class) (super standard-class))
   t)

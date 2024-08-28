@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:bknr.indices
+                #:base-indexed-object
                 #:index-remove
                 #:indexed-class)
   (:import-from #:util/store/fset-index
@@ -43,7 +44,7 @@
 
 (util/fiveam:def-suite)
 
-(defclass test-object ()
+(defclass test-object (base-indexed-object)
   ((arg :initarg :arg
         :accessor %arg
         :index-type fset-unique-index
@@ -51,14 +52,14 @@
         :index-values first-index-values))
   (:metaclass indexed-class))
 
-(defclass test-object-2 ()
+(defclass test-object-2 (base-indexed-object)
   ((arg :initarg :arg
         :index-type fset-set-index
         :index-reader second-by-arg
         :index-values second-index-values))
   (:metaclass indexed-class))
 
-(defclass test-object-3 ()
+(defclass test-object-3 (base-indexed-object)
   ((tags :initarg :tags
          :index-type fset-many-to-many-index
          :index-reader object-by-tag

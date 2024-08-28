@@ -9,6 +9,8 @@
           #:alexandria)
     (:import-from #:bknr.impex
                   #:parse-xml-file)
+    (:import-from #:bknr.indices
+                  #:base-indexed-object)
   (:export #:defsecret
            #:secret))
 (in-package :screenshotbot/secret)
@@ -21,7 +23,7 @@
 
 (defvar *secret-file* (asdf:system-relative-pathname :screenshotbot "../../.secrets/secrets.xml"))
 
-(defclass secret ()
+(defclass secret (base-indexed-object)
   ((name :initarg :name
          :element "name"
          :reader secret-name)

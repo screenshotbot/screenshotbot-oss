@@ -5,6 +5,9 @@
         :bknr.utils :cl-interpol :cl-ppcre
         :bknr.indices :bknr.statistics
         :alexandria)
+  (:import-from #:bknr.indices
+                #:base-indexed-object-required
+                #:base-indexed-object)
   #+cmu
   (:shadowing-import-from :common-lisp #:subtypep #:typep)
   (:shadowing-import-from :cl-interpol quote-meta-chars)

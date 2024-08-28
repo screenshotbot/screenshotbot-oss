@@ -11,7 +11,9 @@
                 #:class-layout-slots
                 #:class-layout
                 #:encode-create-object
-                #:%log-crash))
+                #:%log-crash)
+  (:import-from #:bknr.indices
+                #:base-indexed-object))
 (in-package :bknr.datastore.tests)
 
 (def-suite* :bknr.datastore.tests)
@@ -51,7 +53,7 @@
            (&body))
       (close-store)
       (if error
-          (format output ";; store directory ~A not deleted~%" directory)
+          (format t ";; store directory ~A not deleted~%" directory)
           (delete-directory directory)))))
 
 (defvar *tests* (make-hash-table))
@@ -478,6 +480,16 @@
 (defdstest cant-finalize-class-without-store-object ()
   (signals bknr.datastore::must-inherit-store-object
     (eval
-     `(defclass foo-dfwersfsdfds ()
+     `(defclass foo-dfwersfsdfds (base-indexed-object)
+        ()
+        (:metaclass persistent-class)))))
+
+;; This test causes SBCL to crash and burn
+#+nil
+(defdstest cant-finalize-class-without-any-base-class-at-all ()
+  (sleep 2)
+  (signals bknr.datastore::must-inherit-store-object
+    (eval
+     `(defclass foo-dfwersfsdfdsdfdf ()
         ()
         (:metaclass persistent-class)))))

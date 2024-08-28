@@ -15,6 +15,7 @@ very fantastic bknr.datastore.
   - WITH-TRANSACTION is generally complicated, difficult for a n00b to understand, and has a lot of rough edges (for instance, it does not rollback changes to indices)
   - But, it also enabled an easy way to batch multiple IO requests. Without WITH-TRANSACTION, the only way to batch IO requests is to create an explicit named transaction.
   - Removing the ability of rollbacks also allows us to implement things like Raft consensus protocol for High Availability situations.
+* indexed-class now requires a superclass of base-indexed-object
 * There are probably bunch of other small changes in here that have accumulated over time.
 
 # Planned changes from OG version

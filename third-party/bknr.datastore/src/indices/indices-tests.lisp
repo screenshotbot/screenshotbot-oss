@@ -1,7 +1,9 @@
 (defpackage :bknr.indices.tests
   (:use :cl :bknr.indices
         :fiveam-matchers
-        :fiveam))
+        :fiveam)
+  (:import-from #:bknr.indices
+                #:base-indexed-object))
 (in-package :bknr.indices.tests)
 
 (def-suite* :bknr.indices)
@@ -127,7 +129,7 @@
      (with-fixture indexed-class-test-class (',classes)
        ,@body)))
 
-(defclass gorilla ()
+(defclass gorilla (base-indexed-object)
   ((name :initarg :name :reader gorilla-name
 	 :index-type unique-index :index-initargs (:test #'equal)
 	 :index-reader gorilla-with-name :index-values all-gorillas)
@@ -200,7 +202,7 @@
 
     (test-condition (gorilla-name lucy) 'error)))
 
-(defclass gorilla2 ()
+(defclass gorilla2 (base-indexed-object)
   ((name :initarg :name :reader gorilla2-name)
    (description :initarg :description :reader gorilla2-description)
    (x :initarg :x :reader gorilla2-x)
@@ -228,7 +230,7 @@
     (destroy-object john)
     (test-equal (gorilla2-with-coords '(5 8)) nil)))
 
-(defclass test-slot ()
+(defclass test-slot (base-indexed-object)
   ((a :initarg :a :index-type unique-index
       :reader test-slot-a
       :index-reader test-slot-with-a
@@ -265,7 +267,7 @@
   (defvar *existing-unique-index*
     (index-create 'unique-index :slots '(a))))
 
-(defclass test-slot3 ()
+(defclass test-slot3 (base-indexed-object)
   ((a :initarg :a :index *existing-unique-index*))
   (:metaclass indexed-class))
 
@@ -299,7 +301,7 @@
       (test-assert (subsetp (list t1 t2 t3 t4 t5 t6) (all-test-slots)))
       (test-equal (all-test-slot4s) (list t6)))))
 
-(defclass test-class ()
+(defclass test-class (base-indexed-object)
   ((x :initarg :x :reader test-class-x)
    (y :initarg :y :reader test-class-y)
    (z :initarg :z :reader test-class-z))
@@ -323,7 +325,7 @@
   (defvar *class-index*
     (index-create 'class-index)))
 
-(defclass base-object ()
+(defclass base-object (base-indexed-object)
   ()
   (:metaclass indexed-class)
   (:class-indices (class :index *class-index*
@@ -376,7 +378,7 @@
     (is (member 'child1 (all-class-names)))
     (is (member 'child2 (all-class-names)))))
 
-(defclass var-test ()
+(defclass var-test (base-indexed-object)
   ((blorg :index-type string-unique-index
 	  :initarg :blorg
 	  :index-var *var-test-blorg-index*))
@@ -386,7 +388,7 @@
   (let ((c1 (make-instance  'var-test :blorg "blorg")))
     (test-equal c1 (index-get *var-test-blorg-index* "blorg"))))
 
-(defclass category-image ()
+(defclass category-image (base-indexed-object)
   ((category :index-type category-index
 	     :index-reader images-with-category
 	     :index-keys all-image-categories
@@ -394,7 +396,7 @@
 	     :reader image-category))
   (:metaclass indexed-class))
 
-(defclass category-track ()
+(defclass category-track (base-indexed-object)
   ((category :index-type category-index
 	     :index-initargs (:tree-test #'equal)
 	     :index-reader tracks-with-category
@@ -485,3 +487,13 @@
     (is (typep obj 'bknr.indices::base-indexed-object)))
   (let ((obj (make-instance 'gorilla)))
     (is (typep obj 'bknr.indices::base-indexed-object))))
+
+(defmethod special-fn ((x t))
+  :one)
+
+(defmethod special-fn ((x base-indexed-object))
+  :two)
+
+(define-indexed-class-test ensure-that-we-can-specialize-on-base-indexed-object
+    ()
+    (is (eql :two (special-fn (make-instance 'another-indexed-object)))))

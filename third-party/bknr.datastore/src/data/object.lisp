@@ -63,12 +63,15 @@
   (:report "A persistent-class must inherit STORE-OBJECT"))
 
 (defmethod closer-mop:finalize-inheritance :before ((obj persistent-class))
-  (let ((class-precedence-list (closer-mop:compute-class-precedence-list obj)))
-    (loop for class in class-precedence-list
-          if (eql 'store-object (class-name class))
-            return t
-          finally
-             (error 'must-inherit-store-object))))
+  (handler-case
+      (let ((class-precedence-list (closer-mop:compute-class-precedence-list obj)))
+        (loop for class in class-precedence-list
+              if (eql 'store-object (class-name class))
+                return t
+              finally
+                 (error 'must-inherit-store-object)))
+    (bknr.indices::base-indexed-object-required (e)
+      (error 'must-inherit-store-object))))
 
 
 (defun update-instances-for-changed-class (class)
@@ -196,7 +199,7 @@ reads will return nil.")))
 (defmethod class-persistent-slots ((class standard-class))
   (remove-if #'transient-slot-p (class-slots class)))
 
-(defclass store-object ()
+(defclass store-object (base-indexed-object)
   ((id :initarg :id
        :reader store-object-id
        :type integer
