@@ -511,6 +511,12 @@ also index subclasses of the class to which the slot belongs, default is T")
   (destroy-object-with-class (class-of object) object))
 
 (defmethod object-destroyed-p ((object t))
-  (and object
-       (slot-boundp object 'destroyed-p)
-       (slot-value object 'destroyed-p)))
+  nil)
+
+(defmethod object-destroyed-p ((object null))
+  nil)
+
+(defmethod object-destroyed-p ((object base-indexed-object))
+  (and
+   (slot-boundp object 'destroyed-p)
+   (slot-value object 'destroyed-p)))

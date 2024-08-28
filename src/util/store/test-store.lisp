@@ -15,6 +15,8 @@
                 #:store-object
                 #:truncate-log)
   (:import-from #:bknr.indices
+                #:base-indexed-object
+                #:object-destroyed-p
                 #:hash-index)
   (:import-from #:fiveam-matchers/core
                 #:assert-that
@@ -88,6 +90,7 @@
          :index-initargs (:test #'equal)
          :index-reader dummy-class-for-name))
   (:metaclass persistent-class))
+
 
 (test with-test-store
   (with-test-store ()
@@ -235,14 +238,18 @@
   (with-test-store ()
     (let ((obj (make-instance 'dummy-class :name "foo")))
       (is (equal "foo" (slot-value obj 'name)))
+      (is-false (object-destroyed-p obj))
       (delete-object obj)
-      (handler-case
-          (progn
-           (slot-value obj 'name)
-           (fail "expected error"))
-        (error (e)
-          (is (str:containsp "Can not get slot NAME of destroyed"
-                             (format nil "~a" e))))))))
+      (is (typep obj 'base-indexed-object))
+      (is-true (object-destroyed-p obj))
+      (block nil
+        (handler-case
+            (slot-value obj 'name)
+          (error (e)
+            (is (str:containsp "Can not get slot NAME of destroyed"
+                               (format nil "~a" e)))
+            (return nil)))
+        (fail "expected error")))))
 
 (test dispatch-snapshot-hooks
   (with-test-store ()
