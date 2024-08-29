@@ -26,6 +26,7 @@
                :gravatar
                :parse-float
                :core.rpc
+               :util.store/sync
                :trivial-garbage
                :core.active-users
                :util/posix
