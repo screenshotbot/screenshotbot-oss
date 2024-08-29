@@ -95,4 +95,39 @@
     :method :post
     :content (encode-bknr-object rpc))))
 
+(defun %servers ()
+  #+bknr.cluster
+  (loop for conf in (bknr.cluster/server:list-peers bknr.datastore:*store*)
+        collect (first (str:rsplit ":" conf :limit 3)))
+  #-bknr.cluster
+  (list "127.0.0.1"))
+
+(defun %port ()
+  (hunchentoot:acceptor-port server::*multi-acceptor*))
+
+(defun map-rpc (rpc)
+  "Map the RPC across all the peers in the cluster (including the current-one)"
+  (let* ((servers (%servers))
+         (results (make-array (length servers))))
+    (mapc
+     #'bt:join-thread
+     (loop for server in servers
+           for i from 0
+           collect
+           (let ((i i)
+                 (server server))
+             (util/threading:make-thread
+              (lambda ()
+                (setf
+                 (aref results i)
+                 (send-rpc
+                  (format nil "http://~a:~a/intern/rpc"
+                          server
+                          (%port))
+                  rpc)))))))
+    (loop for result across results
+          collect result)))
+
+;; (map-rpc (make-instance 'hello-world-rpc))
+
 ;;(send-rpc "http://localhost:4001/intern/rpc" (make-instance 'hello-world-rpc))
