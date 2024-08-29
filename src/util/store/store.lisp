@@ -785,7 +785,8 @@ this variable in LET forms, but you can SETF it if you like."
   (dolist (obj (sort (copy-list (all-store-objects)) #'< :key #'store-object-id))
     (format output "~a " obj)
     (generate-sync-test-for-object obj output)
-    (format output "~%")))
+    (format output "~%"))
+  (format output "~a~%" (bknr.datastore:class-instances 'bknr.datastore:store-object)))
 
 (defmethod generate-sync-test-for-object (obj output))
 
