@@ -7,12 +7,21 @@
 (defpackage :core/rpc/rpc
   (:use #:cl)
   (:import-from #:bknr.datastore
+                #:encode
+                #:decode
                 #:persistent-class
                 #:store-object)
   (:import-from #:screenshotbot/model/api-key
                 #:generate-api-secret)
   (:import-from #:util/store/store
                 #:with-class-validation)
+  (:import-from #:encrypt/hmac
+                #:encode-signed-string
+                #:decode-signed-string)
+  (:import-from #:util/store/encodable
+                #:encodable)
+  (:import-from #:util/request
+                #:http-request)
   (:export
    #:authenticate-rpc-request))
 (in-package :core/rpc/rpc)
@@ -32,7 +41,9 @@
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor rpc-acceptor-mixin)
                                                   request)
   (cond
-    ((equal "/intern/rpc" (hunchentoot:script-name request))
+    ((and
+      (eql :post (hunchentoot:request-method request))
+      (equal "/intern/rpc" (hunchentoot:script-name request)))
      (perform-rpc request))
     (t
      (call-next-method))))
@@ -51,5 +62,39 @@
         (unless (equal secret (secret auth-id))
           (error 'rpc-authentication-failed))))))
 
+(defun encode-bknr-object (obj)
+  (let ((stream (flex:make-in-memory-output-stream)))
+    (encode obj stream)
+    (let* ((base64 (base64:usb8-array-to-base64-string
+                    (flex:get-output-stream-sequence stream)))
+           (content (encode-signed-string base64)))
+      content)))
+
+(defun decode-bknr-object (body)
+  (let ((base64 (decode-signed-string body)))
+    (let ((arr (base64:base64-string-to-usb8-array base64)))
+      (decode (flex:make-in-memory-input-stream arr)))))
+
 (defmethod perform-rpc (request)
-  (authenticate-rpc-request request))
+  (let ((body (hunchentoot:raw-post-data :force-text t)))
+    (log:info "Delegating request: ~a" request)
+    (let ((result
+            (call-rpc
+             (decode-bknr-object body))))q
+      (encode-bknr-object result))))
+
+(defclass hello-world-rpc (encodable)
+  ())
+
+(defmethod call-rpc ((self hello-world-rpc))
+  (log:info "hello world!!")
+  "123")
+
+(defun send-rpc (url rpc)
+  (decode-bknr-object
+   (http-request
+    url
+    :method :post
+    :content (encode-bknr-object rpc))))
+
+;;(send-rpc "https://staging.screenshotbot.io/intern/rpc" (make-instance 'hello-world-rpc))

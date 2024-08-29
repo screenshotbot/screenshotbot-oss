@@ -6,7 +6,8 @@
 
 (defsystem :core.rpc
   :serial t
-  :depends-on (:core.api)
+  :depends-on (:core.api
+               :encrypt)
   :components ((:file "rpc")))
 
 (defsystem :core.rpc/tests

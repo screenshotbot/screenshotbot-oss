@@ -25,6 +25,7 @@
                :markup
                :gravatar
                :parse-float
+               :core.rpc
                :trivial-garbage
                :core.active-users
                :util/posix
