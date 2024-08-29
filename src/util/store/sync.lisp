@@ -11,7 +11,11 @@
   (:import-from #:core/rpc/rpc
                 #:call-rpc)
   (:import-from #:util/store/store
-                #:generate-sync-test))
+                #:generate-sync-test)
+  (:import-from #:util/cron
+                #:def-cron)
+  (:import-from #:util/events
+                #:push-event))
 (in-package :util/store/sync)
 
 (defclass sync-sha-request (encodable)
@@ -24,3 +28,10 @@
     (file-position s 0)
     (ironclad:byte-array-to-hex-string
      (ironclad:digest-file :sha256 p))))
+
+(def-cron test-sync (:minute 0 :step-hour 6)
+  (let ((shas (core/rpc/rpc::map-rpc (make-instance 'sync-sha-request))))
+    (push-event
+     :sync-state
+     :count (length (remove-duplicates shas :test #'equal))
+     :shas shas)))

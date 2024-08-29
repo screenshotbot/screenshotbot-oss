@@ -93,7 +93,7 @@
    (http-request
     url
     :method :post
-    :read-timeout 120
+    :read-timeout 300
     :content (encode-bknr-object rpc))))
 
 (defun %servers ()
