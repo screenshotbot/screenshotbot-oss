@@ -75,7 +75,13 @@
     (let ((arr (base64:base64-string-to-usb8-array base64)))
       (decode (flex:make-in-memory-input-stream arr)))))
 
+(defun assert-direct-request (request)
+  "RPC requests shouldn't go through LB or Nginx."
+  (assert (not (hunchentoot:header-in :x-forwarded-for request)))
+  (assert (not (hunchentoot:header-in :x-real-ip request))))
+
 (defmethod perform-rpc (request)
+  (assert-direct-request request)
   (let ((body (hunchentoot:raw-post-data :force-text t)))
     (log:info "Delegating request: ~a" request)
     (let ((result
