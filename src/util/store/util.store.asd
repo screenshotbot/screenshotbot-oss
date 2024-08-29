@@ -41,6 +41,12 @@
                (:file "store-migrations")
                (:file "validate")))
 
+(defsystem :util.store/sync
+  :serial t
+  :depends-on (:core.rpc
+               :util.store)
+  :components ((:file "sync")))
+
 (defsystem :util.store/encodable
   :serial t
   :depends-on (:bknr.datastore)
@@ -52,6 +58,7 @@
                :fiveam-matchers
                :util.store/aws
                :util.store/raft-state
+               :util.store/sync
                :util.store/benchmarks
                :util/fiveam)
   :components ((:file "test-store-version")
@@ -64,6 +71,7 @@
                (:file "test-checksums")
                (:file "test-fset")
                (:file "test-validate")
+               (:file "test-sync")
                (:file "test-fset-index")
                (:file "test-encodable")
                (:file "test-permissive-persistent-class")))
