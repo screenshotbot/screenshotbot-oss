@@ -193,6 +193,11 @@ uses sane defaults."))
    (uiop:run-program "ec2metadata --local-ipv4"
                      :output 'string)))
 
+(defmethod bknr.datastore::snapshot-store :around ((store base-raft-store))
+  (let ((start-time (local-time:now)))
+    (with-extras (("snapshot-start-time" start-time))
+      (call-next-method))))
+
 (defmethod initialize-instance :around ((self ec2-store) &rest args &key ips group port &allow-other-keys)
   (apply
    #'call-next-method
