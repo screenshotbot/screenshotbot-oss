@@ -26,9 +26,6 @@
    #:authenticate-rpc-request))
 (in-package :core/rpc/rpc)
 
-(defclass rpc-acceptor-mixin ()
-  ())
-
 (with-class-validation
   (defclass rpc-auth-id (store-object)
     ((%secret :initarg :secret
@@ -38,15 +35,9 @@
     (:default-initargs :secret (generate-api-secret)
                       :created-at (get-universal-time))))
 
-(defmethod hunchentoot:acceptor-dispatch-request ((acceptor rpc-acceptor-mixin)
-                                                  request)
-  (cond
-    ((and
-      (eql :post (hunchentoot:request-method request))
-      (equal "/intern/rpc" (hunchentoot:script-name request)))
-     (perform-rpc request))
-    (t
-     (call-next-method))))
+(hunchentoot:define-easy-handler (rpc-handler :uri "/intern/rpc") ()
+  (perform-rpc hunchentoot:*request*))
+
 
 (define-condition rpc-authentication-failed (error)
   ())
@@ -77,6 +68,7 @@
 
 (defun assert-direct-request (request)
   "RPC requests shouldn't go through LB or Nginx."
+  (assert (eql :post (hunchentoot:request-method request)))
   (assert (not (hunchentoot:header-in :x-forwarded-for request)))
   (assert (not (hunchentoot:header-in :x-real-ip request))))
 
@@ -103,4 +95,4 @@
     :method :post
     :content (encode-bknr-object rpc))))
 
-;;(send-rpc "https://staging.screenshotbot.io/intern/rpc" (make-instance 'hello-world-rpc))
+;;(send-rpc "http://localhost:4001/intern/rpc" (make-instance 'hello-world-rpc))

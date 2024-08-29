@@ -49,8 +49,6 @@
                 #:push-event)
   (:import-from #:core/installation/request
                 #:with-installation-for-request)
-  (:import-from #:core/rpc/rpc
-                #:rpc-acceptor-mixin)
   (:export
    #:defhandler
    #:with-login
@@ -108,7 +106,6 @@
 (defclass acceptor (#+lispworks acceptor-with-existing-socket
                     nibble:nibble-acceptor-mixin
                     auth:auth-acceptor-mixin
-                    rpc-acceptor-mixin
                     api-acceptor-mixin
                     hex:clos-dispatcher
                     util:base-acceptor
