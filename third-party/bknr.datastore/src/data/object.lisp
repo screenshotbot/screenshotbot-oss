@@ -199,18 +199,26 @@ reads will return nil.")))
 (defmethod class-persistent-slots ((class standard-class))
   (remove-if #'transient-slot-p (class-slots class)))
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *id-index*
+    (make-instance 'unique-index :test #'eql
+                                 :slot-name 'id))
+  (defvar *class-skip-index*
+    (make-instance 'class-skip-index
+                   :index-superclasses t
+                   :slots '(id))))
+
 (defclass store-object (base-indexed-object)
   ((id :initarg :id
        :reader store-object-id
        :type integer
-       :index-type unique-index
-       :index-initargs (:test #'eql)
+       :index *id-index*
        :index-reader store-object-with-id :index-values all-store-objects
        :index-mapvalues map-store-objects)
    (last-change :initform (get-universal-time)
                 :initarg :last-change))
   (:metaclass persistent-class)
-  (:class-indices (all-class :index-type class-skip-index
+  (:class-indices (all-class :index *class-skip-index*
                              :index-subclasses t
                              :index-initargs (:index-superclasses t)
                              :index-keys all-store-classes
