@@ -80,7 +80,7 @@
     (log:info "Delegating request: ~a" request)
     (let ((result
             (call-rpc
-             (decode-bknr-object body))))q
+             (decode-bknr-object body))))
       (encode-bknr-object result))))
 
 (defclass hello-world-rpc (encodable)
