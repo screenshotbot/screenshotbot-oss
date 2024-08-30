@@ -27,12 +27,24 @@
   (:import-from #:lparallel
                 #:future
                 #:force)
+  (:import-from #:bknr.datastore
+                #:store-object
+                #:persistent-class)
+  (:import-from #:util/store/store
+                #:with-class-validation
+                #:defindex)
+  (:import-from #:bknr.indices
+                #:unique-index)
   (:local-nicknames (#:recorder-run #:screenshotbot/model/recorder-run))
   (:export
    #:make-image-comparer))
 (in-package :screenshotbot/model/image-comparer)
 
-(defclass threshold-comparer (base-image-comparer)
+(defclass cached-comparer ()
+  ())
+
+(defclass threshold-comparer (cached-comparer
+                              base-image-comparer)
   ((threshold :initarg :threshold
               :reader compare-threshold)
    (tolerance :initarg :tolerance
@@ -101,3 +113,44 @@
                                     :masks masks)))
                    (let ((bad-pixel-count (first (array-dimensions bad-pixels))))
                      (<= bad-pixel-count limit))))))))))))
+
+(defindex *image-equal-cache*
+  'unique-index
+  :test #'equal
+  :slot-name '%key)
+
+
+(with-class-validation
+ (defclass image-equal-cache (store-object)
+   ((%key :initarg :key
+          :index *image-equal-cache*
+          :index-reader image-equal-cache-for-key)
+    (%result :initarg :result
+             :reader image-equal-cache-result))
+   (:metaclass persistent-class)))
+
+
+(defvar *lock* (bt:make-lock))
+
+(defmethod image= :around ((self cached-comparer)
+                           image1
+                           image2
+                           masks)
+  (let* ((key (list
+               (type-of self)
+               image1
+               image2
+               masks))
+         (cache (image-equal-cache-for-key key)))
+    (cond
+      (cache
+       (image-equal-cache-result cache))
+      (t
+       (let ((res (call-next-method)))
+         (bt:with-lock-held (*lock*)
+           (or
+            (image-equal-cache-for-key key)
+            (make-instance 'image-equal-cache
+                           :key key
+                           :result res)))
+         res)))))

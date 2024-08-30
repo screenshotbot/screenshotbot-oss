@@ -10,6 +10,7 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:get-non-alpha-pixels
                 #:save-as-webp
                 #:with-pixel
                 #:screenshotbot-set-pixel
@@ -18,10 +19,12 @@
                 #:pixel-set-color
                 #:new-pixel-wand)
   (:import-from #:screenshotbot/model/image
+                #:image-hash
                 #:base-image-comparer
                 #:make-image
                 #:image=)
   (:import-from #:screenshotbot/model/image-comparer
+                #:image-equal-cache
                 #:compare-threshold
                 #:make-image-comparer
                 #:threshold-comparer)
@@ -37,7 +40,13 @@
   (:import-from #:fiveam-matchers/core
                 #:is-equal-to
                 #:has-typep
-                #:assert-that))
+                #:assert-that)
+  (:import-from #:fiveam-matchers/described-as
+                #:described-as)
+  (:import-from #:bknr.datastore
+                #:class-instances)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length))
 (in-package :screenshotbot/model/test-image-comparer)
 
 (util/fiveam:def-suite)
@@ -158,3 +167,32 @@
       (assert-that
        (compare-threshold comparer)
        (is-equal-to 0.001)))))
+
+(test threshold-image-comparison-is-cached
+  (with-fixture state ()
+    (with-test-image (file1)
+      (with-test-image (file2 :pixels '((5 5)))
+        (let ((im1 (make-image :pathname file1))
+              (im2 (make-image :pathname file2))
+              (comparer (make-image-comparer (make-recorder-run
+                                              :compare-threshold 0.001)))
+              (counter 0))
+          (is (not (eql im1 im2)))
+          (is (not (equalp (image-hash im1) (image-hash im2))))
+          (is-false (image= (make-instance 'base-image-comparer)
+                            im1 im2 nil))
+          (cl-mock:with-mocks ()
+            (cl-mock:if-called 'get-non-alpha-pixels
+                               (lambda (&rest args)
+                                 (incf counter)
+                                 (make-array '(2 2))))
+            (image= comparer im1 im2 nil)
+            (is (eql 1 counter))
+            (image= comparer im1 im2 nil)
+            (assert-that
+             counter
+             (described-as "The image processing must be cached the second time"
+               (is-equal-to 1)))
+            (assert-that
+             (class-instances 'image-equal-cache)
+             (has-length 1))))))))
