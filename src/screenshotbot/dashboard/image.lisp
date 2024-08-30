@@ -160,8 +160,7 @@
      (cond
        (warmup
         (with-semaphore ()
-          (with-tracing (:image-warmup-resize)
-            (%build-resized-image image size))))
+          (%build-resized-image image size)))
        (t
         (let ((output-file
                 (with-semaphore ()
