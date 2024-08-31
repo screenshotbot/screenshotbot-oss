@@ -7,4 +7,5 @@
 (defsystem :screenshotbot.analytics-dashboard
   :serial t
   :depends-on (:screenshotbot)
-  :components ((:file "dashboard")))
+  :components ((:file "runs")
+               (:file "dashboard")))
