@@ -99,8 +99,11 @@
 (defun last-60-days ()
   (last-30-days :n 60))
 
-(defun weekly-active-users (company)
-  "There are certainly more efficient ways of doing this, but doesn't matter"
+(defun weekly-active-users (company &key (trail-size 7 #| week by default |#))
+  "There are certainly more efficient ways of doing this, but doesn't
+matter. The code was initially hard-coded for trail-size=7,
+i.e. weekly-active, hence the name, but it can also be used for
+monthly-active."
   (let ((active-users (active-users-for-company company))
         (day-map
           ;; A map from day to list of users (not active-user objs)
@@ -112,7 +115,7 @@
           (ans (make-hash-table :test #'equal)))
       (loop for day in (last-60-days)
             for 7-days-ago  in (append
-                                (loop for i from 0 upto 7 collect nil)
+                                (loop for i from 0 upto trail-size collect nil)
                                 (last-60-days))
 
             do
@@ -126,6 +129,9 @@
                (setf (gethash day ans) (hash-table-count current-users)))
       ans)))
 
+(defun monthly-active-users (company)
+  (weekly-active-users company :trail-size 30))
+
 (defun generate-daily-active-users (company id)
   (let ((data (daily-active-users company)))
     (generate-chart-on-canvas id
@@ -138,7 +144,10 @@
                                               :data data)
                                (make-instance 'dataset
                                               :label "Weekly Active (trailing)"
-                                              :data (weekly-active-users company))))))
+                                              :data (weekly-active-users company))
+                               (make-instance 'dataset
+                                              :label "Monthly Active (trailing)"
+                                              :data (monthly-active-users company))))))
 
 (defun script-daily-active-users (company id)
   <script type= "text/javascript" src=
