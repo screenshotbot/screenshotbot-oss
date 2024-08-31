@@ -138,6 +138,8 @@
                            masks)
   (let* ((key (list
                (type-of self)
+               (compare-threshold self)
+               (ignore-errors (compare-tolerance self))
                image1
                image2
                masks))
