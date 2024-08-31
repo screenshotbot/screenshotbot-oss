@@ -19,39 +19,54 @@
   (:import-from #:screenshotbot/login/common
                 #:with-login)
   (:import-from #:screenshotbot/user-api
-                #:company-name))
+                #:company-name)
+  (:import-from #:util/json-mop
+                #:ext-json-serializable-class))
 (in-package :screenshotbot/analytics-dashboard/dashboard)
 
 (named-readtables:in-readtable markup:syntax)
 
+(defclass dataset ()
+  ((label :initarg :label
+          :reader dataset-label)
+   (data :initarg :data
+         :reader dataset-data
+         :documentation "A hash-table. The keys are the keys provided to generate-chart."))
+  (:metaclass ext-json-serializable-class))
 
 
 (defun generate-chart-on-canvas (canvas-name &key keys
                                                (default-value 0)
                                                (title "No title")
                                                (type "line")
-                                               data #| hash table |#)
+                                               datasets)
   "DEFAULT-VALUE is the value used if the data for the key is not present in data."
   (ps:ps
     (funcall
      (lambda ()
-       (let ((ctx ((@ document get-element-by-id)  (ps:lisp canvas-name))))
+       (let* ((ctx ((@ document get-element-by-id)  (ps:lisp canvas-name)))
+              (datasets ((@ -J-S-O-N parse) (ps:lisp
+                                             (json:encode-json-to-string datasets))))
+              (labels (ps:lisp `(list ,@keys)))
+              (parsed-datasets (loop for dataset in datasets
+                                   collect
+                                   (ps:create
+                                    :label (@ dataset label)
+                                    :data (loop for x in labels
+                                                collect
+                                                (or (aref (@ dataset data) x)
+                                                    (ps:lisp default-value)))
+                                    :cubic-interpolation-mode "monotone"
+                                    :tension 0.2
+                                    :border-width 1))))
          (ps:new
           (-Chart
            ctx
            (ps:create
             :type (ps:lisp type)
             :data (ps:create
-                   :labels (ps:lisp `(list ,@keys))
-                   :datasets (list
-                              (ps:create
-                               :label "# of votes"
-                               :data (ps:lisp
-                                      `(list ,@(loop for key in keys
-                                                     collect (gethash key data default-value))))
-                               :cubic-interpolation-mode "monotone"
-                               :tension 0.2
-                               :border-width 1)))
+                   :labels labels
+                   :datasets parsed-datasets)
             :options (ps:create
                       :responsive t
                       :plugins (ps:create
@@ -82,7 +97,11 @@
     (generate-chart-on-canvas id
                               :keys (last-30-days)
                               :title (format nil "Active Users on ~a" (company-name company))
-                              :data data)))
+                              :datasets
+                              (list
+                               (make-instance 'dataset
+                                              :label "Daily Active"
+                                              :data data)))))
 
 (defun render-analytics (company)
   (auth:can-view! company)
@@ -94,7 +113,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script>,(generate-daily-active-users company "myChart")</script>
+    <script type= "text/javascript" >
+      ,(markup:unescaped (generate-daily-active-users company "myChart"))
+    </script>
   </app-template>)
 
 (defhandler (nil :uri "/analytics") ()
