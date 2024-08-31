@@ -13,6 +13,7 @@
   (:import-from #:ps
                 #:@)
   (:import-from #:core/active-users/active-users
+                #:format-date
                 #:active-user-date
                 #:active-users-for-company)
   (:import-from #:screenshotbot/login/common
@@ -24,7 +25,9 @@
 
 
 (defun generate-chart-on-canvas (canvas-name &key keys
+                                               (default-value 0)
                                                data #| hash table |#)
+  "DEFAULT-VALUE is the value used if the data for the key is not present in data."
   (ps:ps
     (funcall
      (lambda ()
@@ -41,7 +44,7 @@
                                :label "# of votes"
                                :data (ps:lisp
                                       `(list ,@(loop for key in keys
-                                                     collect (gethash key data))))
+                                                     collect (gethash key data default-value))))
                                :border-width 1)))
             :options (ps:create
                       :responsive t
@@ -58,13 +61,16 @@
           do (incf (gethash (active-user-date active-user) map 0)))
     map))
 
+(defun last-30-days ()
+  (let ((now (get-universal-time)))
+    (reverse
+     (loop for i from 0 to 30
+           collect (format-date (- now (* i 24 3600)))))))
+
 (defun generate-daily-active-users (company id)
   (let ((data (daily-active-users company)))
     (generate-chart-on-canvas id
-                              :keys (sort
-                                     (loop for key being the hash-keys of data
-                                           collect key)
-                                     #'string<)
+                              :keys (last-30-days)
                               :data data)))
 
 (defun render-analytics (company)
