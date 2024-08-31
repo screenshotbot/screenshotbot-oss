@@ -9,10 +9,37 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/template
-                #:app-template))
+                #:app-template)
+  (:import-from #:ps
+                #:@))
 (in-package :screenshotbot/analytics-dashboard/dashboard)
 
 (named-readtables:in-readtable markup:syntax)
+
+(defun generate-chart-on-canvas (canvas-name)
+  (ps:ps
+    (funcall
+     (lambda ()
+       (let ((ctx ((@ document get-element-by-id)  (ps:lisp canvas-name))))
+         (ps:new
+          (-Chart
+           ctx
+           (ps:create
+            :type "bar"
+            :data (ps:create
+                   :labels (list
+                            "Red" "Blue" "yello" "green" "purple" "orange")
+                   :datasets (list
+                              (ps:create
+                               :label "# of votes"
+                               :data (list 12 19 3 5 2 3)
+                               :border-width 1)))
+            :options (ps:create
+                      :scales (ps:create
+                               :y (ps:create
+                                   :begin-at-zero t)))))))))))
+
+;; (generate-chart-on-canvas "foo")
 
 (defhandler (nil :uri "/analytics") ()
   <app-template>
@@ -23,26 +50,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script>
-  const ctx = document.getElementById('myChart');
-
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-      datasets: [{
-        label: '# of Votes',
-        data: [12, 19, 3, 5, 2, 3],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
-    }
-  });
-</script>
+    <script>,(generate-chart-on-canvas "myChart")</script>
   </app-template>)
