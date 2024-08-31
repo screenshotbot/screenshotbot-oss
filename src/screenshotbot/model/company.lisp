@@ -491,7 +491,11 @@ URL for the company, if there is one."
 
 
 (defmethod has-root-company-p ((a sub-company) b)
-  (eql (company-parent a) b))
+  "Check if B is an ancestor of A. Yeah the name is currently incorrect
+and needs to be tidied up."
+  (or
+   (eql a b)
+   (eql (company-parent a) b)))
 
 (defmethod has-root-company-p (a b)
   (eql a b))
