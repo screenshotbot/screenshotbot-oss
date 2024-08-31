@@ -36,9 +36,14 @@
             (push next res)
             (setf all-runs (fset:less all-runs next)))))
 
-(defclass active-screenshot-key ()
-  ((date :initarg :date)
-   (screnshot-key :initarg :screenshot-key)))
+(defstruct active-screenshot-key
+  date screenshot-key)
+
+(defun fast-remove-duplicates (list)
+  (let ((hash-table (make-hash-table :test #'equalp)))
+    (loop for x in list
+          do (setf (gethash x hash-table) t))
+    (alexandria:hash-table-keys hash-table)))
 
 (defun active-screenshot-keys (company)
   (let ((res))
@@ -49,10 +54,10 @@
              (fset:do-map (k v (screenshot-map:to-map screenshot-map))
                (declare (ignore v))
                (push
-                (make-instance 'active-screenshot-key
-                               :date date
-                               :screenshot-key (screenshot-name k))
+                (make-active-screenshot-key
+                 :date date
+                 :screenshot-key (screenshot-name k))
                 res)))
-    res))
+    (fast-remove-duplicates res)))
 
 ;; (active-screenshot-keys (screenshotbot/model/company:company-with-name "Kickie10"))
