@@ -123,6 +123,11 @@
   (not (null (app-installation-id repo-id))))
 
 (defun app-installation-id (repo-id)
+  ;; TODO(T1328): in the future, we don't really need to get this
+  ;; information from the webhook. We can very easily retrieve this
+  ;; directly from GitHub. See attached task for how this is done. I
+  ;; believe after this we don't need to propagate webhooks to each of
+  ;; the machines.
   (block top
    (dolist (installation (class-instances 'app-installation))
      (dolist (installed-repo (app-installation-repos installation))
