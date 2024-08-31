@@ -21,7 +21,9 @@
   (:import-from #:screenshotbot/user-api
                 #:company-name)
   (:import-from #:util/json-mop
-                #:ext-json-serializable-class))
+                #:ext-json-serializable-class)
+  (:import-from #:nibble
+                #:nibble))
 (in-package :screenshotbot/analytics-dashboard/dashboard)
 
 (named-readtables:in-readtable markup:syntax)
@@ -103,19 +105,24 @@
                                               :label "Daily Active"
                                               :data data)))))
 
+(defun script-daily-active-users (company id)
+  <script type= "text/javascript" src=
+          (nibble ()
+                    (generate-daily-active-users company id))
+          />)
+
+
 (defun render-analytics (company)
   (auth:can-view! company)
   <app-template>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <div>
       <canvas id="myChart"></canvas>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <script type= "text/javascript" >
-      ,(markup:unescaped (generate-daily-active-users company "myChart"))
-    </script>
+    ,(script-daily-active-users company "myChart")
   </app-template>)
 
 (defhandler (nil :uri "/analytics") ()
