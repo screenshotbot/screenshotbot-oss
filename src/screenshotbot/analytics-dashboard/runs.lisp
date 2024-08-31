@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/analytics-dashboard/runs
   (:use #:cl)
   (:import-from #:screenshotbot/user-api
+                #:screenshot-name
                 #:created-at)
   (:import-from #:screenshotbot/model/recorder-run
                 #:run-screenshot-map
@@ -50,6 +51,8 @@
                (push
                 (make-instance 'active-screenshot-key
                                :date date
-                               :screenshot-key k)
+                               :screenshot-key (screenshot-name k))
                 res)))
     res))
+
+;; (active-screenshot-keys (screenshotbot/model/company:company-with-name "Kickie10"))
