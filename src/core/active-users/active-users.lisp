@@ -19,7 +19,8 @@
   (:import-from #:util/cron
                 #:def-cron)
   (:export
-   #:mark-active-user))
+   #:mark-active-user
+   #:active-users-for-company))
 (in-package :core/active-users/active-users)
 
 (defvar *lock* (bt:make-lock))
@@ -38,6 +39,17 @@
             :reader active-user-date))
     (:class-indices (3d-coords :index +lookup-index+))
     (:metaclass persistent-class)))
+
+(defun active-users-for-company (company &key (days-ago 60))
+  (let ((start-date (format-date
+                     (local-time:timestamp-to-universal
+                      (local-time:timestamp-
+                       (local-time:now)
+                       days-ago :day)))))
+    (loop for active-user in (bknr.datastore:class-instances 'active-user)
+          if (and (eql (company active-user) company)
+                  (string>= (active-user-date active-user) start-date))
+              collect active-user)))
 
 (defun format-date (ts)
   (let ((ts (local-time:universal-to-timestamp ts)))

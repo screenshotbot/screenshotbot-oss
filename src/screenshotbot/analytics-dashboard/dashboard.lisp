@@ -11,12 +11,18 @@
   (:import-from #:screenshotbot/template
                 #:app-template)
   (:import-from #:ps
-                #:@))
+                #:@)
+  (:import-from #:core/active-users/active-users
+                #:active-user-date
+                #:active-users-for-company))
 (in-package :screenshotbot/analytics-dashboard/dashboard)
 
 (named-readtables:in-readtable markup:syntax)
 
-(defun generate-chart-on-canvas (canvas-name)
+
+
+(defun generate-chart-on-canvas (canvas-name &key keys
+                                               data #| hash table |#)
   (ps:ps
     (funcall
      (lambda ()
@@ -27,19 +33,37 @@
            (ps:create
             :type "bar"
             :data (ps:create
-                   :labels (list
-                            "Red" "Blue" "yello" "green" "purple" "orange")
+                   :labels (ps:lisp `(list ,@keys))
                    :datasets (list
                               (ps:create
                                :label "# of votes"
-                               :data (list 12 19 3 5 2 3)
+                               :data (ps:lisp
+                                      `(list ,@(loop for key in keys
+                                                     collect (gethash key data))))
                                :border-width 1)))
             :options (ps:create
+                      :responsive t
                       :scales (ps:create
                                :y (ps:create
                                    :begin-at-zero t)))))))))))
 
 ;; (generate-chart-on-canvas "foo")
+
+(defun daily-active-users ()
+  (let ((active-users (active-users-for-company (auth:current-company)))
+        (map (make-hash-table :test #'equal)))
+    (loop for active-user in active-users
+          do (incf (gethash (active-user-date active-user) map 0)))
+    map))
+
+(defun generate-daily-active-users (id)
+  (let ((data (daily-active-users)))
+    (generate-chart-on-canvas id
+                              :keys (sort
+                                     (loop for key being the hash-keys of data
+                                           collect key)
+                                     #'string<)
+                              :data data)))
 
 (defhandler (nil :uri "/analytics") ()
   <app-template>
@@ -50,5 +74,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script>,(generate-chart-on-canvas "myChart")</script>
+    <script>,(generate-daily-active-users "myChart")</script>
   </app-template>)
