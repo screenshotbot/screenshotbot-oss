@@ -225,3 +225,14 @@
             (assert-that
              (class-instances 'image-equal-cache)
              (has-length 1))))))))
+
+(test images-that-are-same-are-not-cached
+  (with-fixture state ()
+    (with-test-image (file1)
+      (let ((im1 (make-image :pathname file1))
+            (comparer (make-image-comparer (make-recorder-run
+                                            :compare-threshold 0.1))))
+        (is-true (image= comparer im1 im1 nil))
+        (assert-that
+         (class-instances 'image-equal-cache)
+         (has-length 0))))))

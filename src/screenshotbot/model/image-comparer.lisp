@@ -145,6 +145,10 @@
                masks))
          (cache (image-equal-cache-for-key key)))
     (cond
+      ((eql image1 image2)
+       ;; We could most likely just return T here, but this might
+       ;; be less error prone
+       (call-next-method))
       (cache
        (image-equal-cache-result cache))
       (t
