@@ -17,7 +17,9 @@
                 #:active-user-date
                 #:active-users-for-company)
   (:import-from #:screenshotbot/login/common
-                #:with-login))
+                #:with-login)
+  (:import-from #:screenshotbot/user-api
+                #:company-name))
 (in-package :screenshotbot/analytics-dashboard/dashboard)
 
 (named-readtables:in-readtable markup:syntax)
@@ -26,6 +28,8 @@
 
 (defun generate-chart-on-canvas (canvas-name &key keys
                                                (default-value 0)
+                                               (title "No title")
+                                               (type "line")
                                                data #| hash table |#)
   "DEFAULT-VALUE is the value used if the data for the key is not present in data."
   (ps:ps
@@ -36,7 +40,7 @@
           (-Chart
            ctx
            (ps:create
-            :type "bar"
+            :type (ps:lisp type)
             :data (ps:create
                    :labels (ps:lisp `(list ,@keys))
                    :datasets (list
@@ -45,9 +49,15 @@
                                :data (ps:lisp
                                       `(list ,@(loop for key in keys
                                                      collect (gethash key data default-value))))
+                               :cubic-interpolation-mode "monotone"
+                               :tension 0.2
                                :border-width 1)))
             :options (ps:create
                       :responsive t
+                      :plugins (ps:create
+                                :title (ps:create
+                                        :display t
+                                        :text (ps:lisp title)))
                       :scales (ps:create
                                :y (ps:create
                                    :begin-at-zero t)))))))))))
@@ -71,6 +81,7 @@
   (let ((data (daily-active-users company)))
     (generate-chart-on-canvas id
                               :keys (last-30-days)
+                              :title (format nil "Active Users on ~a" (company-name company))
                               :data data)))
 
 (defun render-analytics (company)
