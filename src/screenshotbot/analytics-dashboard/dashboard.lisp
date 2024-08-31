@@ -23,7 +23,9 @@
   (:import-from #:util/json-mop
                 #:ext-json-serializable-class)
   (:import-from #:nibble
-                #:nibble))
+                #:nibble)
+  (:local-nicknames (#:active-users
+                     #:core/active-users/active-users)))
 (in-package :screenshotbot/analytics-dashboard/dashboard)
 
 (named-readtables:in-readtable markup:syntax)
@@ -88,11 +90,41 @@
           do (incf (gethash (active-user-date active-user) map 0)))
     map))
 
-(defun last-30-days ()
+(defun last-30-days (&key (n 30))
   (let ((now (get-universal-time)))
     (reverse
-     (loop for i from 0 to 30
+     (loop for i from 0 to n
            collect (format-date (- now (* i 24 3600)))))))
+
+(defun last-60-days ()
+  (last-30-days :n 60))
+
+(defun weekly-active-users (company)
+  "There are certainly more efficient ways of doing this, but doesn't matter"
+  (let ((active-users (active-users-for-company company))
+        (day-map
+          ;; A map from day to list of users (not active-user objs)
+          (make-hash-table :test #'equal)))
+    (loop for active-user in active-users
+          do (push (active-users::user active-user) (gethash (active-user-date active-user) day-map nil)))
+
+    (let ((current-users (make-hash-table))
+          (ans (make-hash-table :test #'equal)))
+      (loop for day in (last-60-days)
+            for 7-days-ago  in (append
+                                (loop for i from 0 upto 7 collect nil)
+                                (last-60-days))
+
+            do
+               (loop for user in (gethash day day-map)
+                     do (incf (gethash user current-users 0)))
+               (loop for user in (gethash 7-days-ago day-map)
+                     do
+                        (decf (gethash user current-users))
+                        (when (= 0 (gethash user current-users))
+                          (remhash user current-users)))
+               (setf (gethash day ans) (hash-table-count current-users)))
+      ans)))
 
 (defun generate-daily-active-users (company id)
   (let ((data (daily-active-users company)))
@@ -103,7 +135,10 @@
                               (list
                                (make-instance 'dataset
                                               :label "Daily Active"
-                                              :data data)))))
+                                              :data data)
+                               (make-instance 'dataset
+                                              :label "Weekly Active (trailing)"
+                                              :data (weekly-active-users company))))))
 
 (defun script-daily-active-users (company id)
   <script type= "text/javascript" src=
