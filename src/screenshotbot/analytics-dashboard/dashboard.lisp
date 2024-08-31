@@ -14,7 +14,9 @@
                 #:@)
   (:import-from #:core/active-users/active-users
                 #:active-user-date
-                #:active-users-for-company))
+                #:active-users-for-company)
+  (:import-from #:screenshotbot/login/common
+                #:with-login))
 (in-package :screenshotbot/analytics-dashboard/dashboard)
 
 (named-readtables:in-readtable markup:syntax)
@@ -49,15 +51,15 @@
 
 ;; (generate-chart-on-canvas "foo")
 
-(defun daily-active-users ()
-  (let ((active-users (active-users-for-company (auth:current-company)))
+(defun daily-active-users (company)
+  (let ((active-users (active-users-for-company company))
         (map (make-hash-table :test #'equal)))
     (loop for active-user in active-users
           do (incf (gethash (active-user-date active-user) map 0)))
     map))
 
-(defun generate-daily-active-users (id)
-  (let ((data (daily-active-users)))
+(defun generate-daily-active-users (company id)
+  (let ((data (daily-active-users company)))
     (generate-chart-on-canvas id
                               :keys (sort
                                      (loop for key being the hash-keys of data
@@ -65,7 +67,8 @@
                                      #'string<)
                               :data data)))
 
-(defhandler (nil :uri "/analytics") ()
+(defun render-analytics (company)
+  (auth:can-view! company)
   <app-template>
 
     <div>
@@ -74,5 +77,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script>,(generate-daily-active-users "myChart")</script>
+    <script>,(generate-daily-active-users company "myChart")</script>
   </app-template>)
+
+(defhandler (nil :uri "/analytics") ()
+  (with-login ()
+    (render-analytics (auth:current-company))))
