@@ -40,14 +40,18 @@
     (:class-indices (3d-coords :index +lookup-index+))
     (:metaclass persistent-class)))
 
-(defun active-users-for-company (company &key (days-ago 60))
+(defun active-users-for-company (company &key (days-ago 60)
+                                           (company-test #'eql))
+  "COMPANY-TEST is called on the company of the active-user and the
+company provided, in that order. In particular this is used to support
+sub-companies, which this code can't be aware of."
   (let ((start-date (format-date
                      (local-time:timestamp-to-universal
                       (local-time:timestamp-
                        (local-time:now)
                        days-ago :day)))))
     (loop for active-user in (bknr.datastore:class-instances 'active-user)
-          if (and (eql (company active-user) company)
+          if (and (funcall company-test (company active-user) company)
                   (string>= (active-user-date active-user) start-date))
               collect active-user)))
 

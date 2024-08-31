@@ -84,7 +84,8 @@
    #:company-owner
    #:add-company-report
    #:maybe-redirect-for-company
-   #:emails-enabled-by-default-p)
+   #:emails-enabled-by-default-p
+   #:has-root-company-p)
   (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/model/company)
 
@@ -487,3 +488,10 @@ URL for the company, if there is one."
 (def-store-migration ("Set invites slot to nil" :version 22)
   (loop for company in (bknr.datastore:class-instances 'company)
         do (setf (slot-value company 'invites) nil)))
+
+
+(defmethod has-root-company-p ((a sub-company) b)
+  (eql (company-parent a) b))
+
+(defmethod has-root-company-p (a b)
+  (eql a b))

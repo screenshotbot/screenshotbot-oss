@@ -24,6 +24,8 @@
                 #:ext-json-serializable-class)
   (:import-from #:nibble
                 #:nibble)
+  (:import-from #:screenshotbot/model/company
+                #:has-root-company-p)
   (:local-nicknames (#:active-users
                      #:core/active-users/active-users)))
 (in-package :screenshotbot/analytics-dashboard/dashboard)
@@ -83,9 +85,8 @@
 
 ;; (generate-chart-on-canvas "foo")
 
-(defun daily-active-users (company)
-  (let ((active-users (active-users-for-company company))
-        (map (make-hash-table :test #'equal)))
+(defun daily-active-users (active-users)
+  (let ((map (make-hash-table :test #'equal)))
     (loop for active-user in active-users
           do (incf (gethash (active-user-date active-user) map 0)))
     map))
@@ -99,13 +100,12 @@
 (defun last-60-days ()
   (last-30-days :n 60))
 
-(defun weekly-active-users (company &key (trail-size 7 #| week by default |#))
+(defun weekly-active-users (active-users &key (trail-size 7 #| week by default |#))
   "There are certainly more efficient ways of doing this, but doesn't
 matter. The code was initially hard-coded for trail-size=7,
 i.e. weekly-active, hence the name, but it can also be used for
 monthly-active."
-  (let ((active-users (active-users-for-company company))
-        (day-map
+  (let ((day-map
           ;; A map from day to list of users (not active-user objs)
           (make-hash-table :test #'equal)))
     (loop for active-user in active-users
@@ -129,11 +129,12 @@ monthly-active."
                (setf (gethash day ans) (hash-table-count current-users)))
       ans)))
 
-(defun monthly-active-users (company)
-  (weekly-active-users company :trail-size 30))
+(defun monthly-active-users (active-users)
+  (weekly-active-users active-users :trail-size 30))
 
 (defun generate-daily-active-users (company id)
-  (let ((data (daily-active-users company)))
+  (let* ((active-users (active-users-for-company company :company-test #'has-root-company-p))
+         (data (daily-active-users active-users)))
     (generate-chart-on-canvas id
                               :keys (last-30-days)
                               :title (format nil "Active Users on ~a" (company-name company))
@@ -144,10 +145,10 @@ monthly-active."
                                               :data data)
                                (make-instance 'dataset
                                               :label "Weekly Active (trailing)"
-                                              :data (weekly-active-users company))
+                                              :data (weekly-active-users active-users))
                                (make-instance 'dataset
                                               :label "Monthly Active (trailing)"
-                                              :data (monthly-active-users company))))))
+                                              :data (monthly-active-users active-users))))))
 
 (defun script-daily-active-users (company id)
   <script type= "text/javascript" src=
