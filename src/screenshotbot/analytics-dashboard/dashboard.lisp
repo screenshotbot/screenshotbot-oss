@@ -26,6 +26,10 @@
                 #:nibble)
   (:import-from #:screenshotbot/model/company
                 #:has-root-company-p)
+  (:import-from #:screenshotbot/analytics-dashboard/runs
+                #:active-screenshot-key-screenshot-key
+                #:active-screenshot-key-date
+                #:active-screenshot-keys)
   (:local-nicknames (#:active-users
                      #:core/active-users/active-users)))
 (in-package :screenshotbot/analytics-dashboard/dashboard)
@@ -159,10 +163,31 @@ monthly-active."
                                               :label "Monthly Active (trailing)"
                                               :data (monthly-active-users active-users))))))
 
+(defun generate-active-screenshots (company id)
+  (let* ((active-screenshots  (active-screenshot-keys company))
+         (data (n-day-active-count active-screenshots
+                                   :trail-size 30
+                                   :date-accessor #'active-screenshot-key-date
+                                   :value-accessor #'active-screenshot-key-screenshot-key)))
+    (generate-chart-on-canvas id
+                              :keys (last-30-days)
+                              :title (format nil "Active screenshots over the last 30 days")
+                              :datasets
+                              (list
+                               (make-instance 'dataset
+                                              :label "Screenshots"
+                                              :data data)))))
+
 (defun script-daily-active-users (company id)
   <script type= "text/javascript" src=
           (nibble ()
                     (generate-daily-active-users company id))
+          />)
+
+(defun script-active-screenshots (company id)
+  <script type= "text/javascript" src=
+          (nibble ()
+                    (generate-active-screenshots company id))
           />)
 
 
@@ -176,7 +201,12 @@ monthly-active."
       <canvas id="myChart"></canvas>
     </div>
 
+    <div>
+      <canvas id= "active-screenshots" />
+    </div>
+
     ,(script-daily-active-users company "myChart")
+    ,(script-active-screenshots company "active-screenshots")
   </app-template>)
 
 (defhandler (nil :uri "/analytics") ()
