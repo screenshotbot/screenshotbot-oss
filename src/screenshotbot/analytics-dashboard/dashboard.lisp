@@ -100,18 +100,17 @@
 (defun last-60-days ()
   (last-30-days :n 60))
 
-(defun weekly-active-users (active-users &key (trail-size 7 #| week by default |#))
-  "There are certainly more efficient ways of doing this, but doesn't
-matter. The code was initially hard-coded for trail-size=7,
-i.e. weekly-active, hence the name, but it can also be used for
-monthly-active."
-  (let ((day-map
+(defun n-day-active-count (active-objects ;; Should store <date> and the actual object
+                           &key trail-size
+                             value-accessor
+                             date-accessor)
+    (let ((day-map
           ;; A map from day to list of users (not active-user objs)
           (make-hash-table :test #'equal)))
-    (loop for active-user in active-users
-          do (push (active-users::user active-user) (gethash (active-user-date active-user) day-map nil)))
+    (loop for active-user in active-objects
+          do (push (funcall value-accessor active-user) (gethash (funcall date-accessor active-user) day-map nil)))
 
-    (let ((current-users (make-hash-table))
+    (let ((current-users (make-hash-table :test #'equal))
           (ans (make-hash-table :test #'equal)))
       (loop for day in (last-60-days)
             for 7-days-ago  in (append
@@ -128,6 +127,16 @@ monthly-active."
                           (remhash user current-users)))
                (setf (gethash day ans) (hash-table-count current-users)))
       ans)))
+
+(defun weekly-active-users (active-users &key (trail-size 7 #| week by default |#))
+  "There are certainly more efficient ways of doing this, but doesn't
+matter. The code was initially hard-coded for trail-size=7,
+i.e. weekly-active, hence the name, but it can also be used for
+monthly-active."
+  (n-day-active-count active-users
+                      :trail-size trail-size
+                      :value-accessor #'active-users::user
+                      :date-accessor #'active-user-date))
 
 (defun monthly-active-users (active-users)
   (weekly-active-users active-users :trail-size 30))
