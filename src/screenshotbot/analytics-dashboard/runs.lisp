@@ -99,9 +99,10 @@
                    :date date
                    :screenshot-key (list (screenshot-map-channel screenshot-map) (screenshot-name k)))
                   res))))
-    ;; There will be duplicates here. However, the N-DAY-ACTIVE-COUNT
-    ;; function can handle it reasonably efficiently.
-    res))
+    ;; The N-DAY-ACTIVE-COUNT duplicates, but it costs more. Since
+    ;; this function is cached, it makes sense to remove duplicates
+    ;; here.
+    (fast-remove-duplicates res :test #'equal)))
 
 (defvar *ans-cache* (make-hash-table))
 
@@ -114,6 +115,5 @@
 (def-cron clear-ans-cache ()
   (clrhash *ans-cache*))
 
-;; (compile 'active-screenshot-keys)
 
 ;; (hcl:profile (active-screenshot-keys (screenshotbot/model/company:company-with-name "Apadmi Ltd")))
