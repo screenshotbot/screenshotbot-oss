@@ -41,6 +41,10 @@
 (defclass dataset ()
   ((label :initarg :label
           :reader dataset-label)
+   (data-labels :initarg :data-labels
+                :reader dataset-data-labels
+                :documentation "A hash-table. The keys are the keys
+provided to generate-chart, and the value is the label we will show")
    (data :initarg :data
          :reader dataset-data
          :documentation "A hash-table. The keys are the keys provided to generate-chart."))
@@ -49,6 +53,7 @@
 
 (defun generate-chart-on-canvas (canvas-name &key keys
                                                (default-value 0)
+                                               (data-labels nil)
                                                (title "No title")
                                                (type "line")
                                                datasets)
@@ -79,12 +84,26 @@
             :data (ps:create
                    :labels labels
                    :datasets parsed-datasets)
+            :plugins (ps:lisp (if data-labels `(list -Chart-Data-Labels)))
             :options (ps:create
                       :responsive t
+                      :tooltips (ps:create
+                                 :enabled t)
                       :plugins (ps:create
                                 :title (ps:create
                                         :display t
-                                        :text (ps:lisp title)))
+                                        :text (ps:lisp title))
+                                :datalabels (ps:create
+                                             :formatter (lambda (value ctx)
+                                                          ((@ console log) "ctx is" ctx)
+                                                          (let ((key (aref labels (@ ctx data-index)))
+                                                                ;; Which dataset are we looking at? For a Pie chart this will typically be zero.
+                                                                (dataset-index (@ ctx dataset-index)))
+                                                            (let ((data-labels (@ (aref datasets dataset-index) data-labels)))
+                                                              ((@ console log) "data labels map is" data-labels)
+                                                             (aref
+                                                              data-labels
+                                                              (@ ctx data-index)))))))
                       :scales (ps:create
                                :y (ps:create
                                    :begin-at-zero t)))))))))))
@@ -102,6 +121,7 @@
 
 (defun last-60-days ()
   (last-30-days :n 60))
+
 
 (defun n-day-active-count (active-objects ;; Should store <date> and the actual object
                            &key trail-size
@@ -192,16 +212,27 @@ monthly-active."
                  (incf (gethash rejected data 0)))
                 (:none
                  (incf (gethash no-action data 0)))))
-     (generate-chart-on-canvas id
-                               :type "pie"
-                               :keys (list no-action
-                                           accepted
-                                           rejected)
-                               :datasets
-                               (list
-                                (make-instance 'dataset
-                                               :label "Number of PRs"
-                                               :data  data))))))
+     (flet ((pct (label)
+              (format nil "~,1f%" (* 100
+                                    (/ (gethash label data 0)
+                                       (max (loop for val being the hash-values of data
+                                                  summing val)
+                                            1))))))
+      (generate-chart-on-canvas id
+                                :type "pie"
+                                :keys (list no-action
+                                            accepted
+                                            rejected)
+                                :data-labels t
+                                :datasets
+                                (list
+                                 (make-instance 'dataset
+                                                :label "Number of PRs"
+                                                :data-labels (list
+                                                              (pct no-action)
+                                                              (pct accepted)
+                                                              (pct rejected))
+                                                :data  data)))))))
 (defun script-daily-active-users (company id)
   <script type= "text/javascript" src=
           (nibble ()
@@ -227,6 +258,7 @@ monthly-active."
   <app-template>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src= "https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2" />
 
     <div>
       <canvas id="myChart"></canvas>
