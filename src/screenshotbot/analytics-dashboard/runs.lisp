@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/analytics-dashboard/runs
   (:use #:cl)
   (:import-from #:screenshotbot/user-api
+                #:%created-at
                 #:recorder-run-channel
                 #:screenshot-name
                 #:created-at)
@@ -62,7 +63,7 @@
   "Return a list, with keys being date, and values being list of all distinct screenshot-maps"
   (let ((map (make-hash-table :test #'equal)))
     (loop for run in runs
-          for date = (format-date (local-time:timestamp-to-universal (created-at run)))
+          for date = (format-date (%created-at run))
           do
              (push (run-screenshot-map run)
                    (gethash date map)))
