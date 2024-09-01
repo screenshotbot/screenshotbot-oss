@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/analytics-dashboard/runs
   (:use #:cl)
   (:import-from #:screenshotbot/user-api
+                #:recorder-run-channel
                 #:screenshot-name
                 #:created-at)
   (:import-from #:screenshotbot/model/recorder-run
@@ -14,27 +15,34 @@
                 #:runs-for-company)
   (:import-from #:core/active-users/active-users
                 #:format-date)
+  (:import-from #:screenshotbot/model/company
+                #:sub-companies-of)
   (:local-nicknames (:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/analytics-dashboard/runs)
 
 (defun runs-for-last-60-days (company)
   "Find all the runs in the last 60 days for the given company"
 
-  ;; TODO: sub-companies
-  (let ((start-time (local-time:timestamp-
-                     (local-time:now)
-                     60 :day))
-        (all-runs (runs-for-company company))
-        (res nil))
-    (loop for next = (fset:greatest all-runs)
-          if (not next)
-            return res
-          else if (local-time:timestamp< (created-at next)
-                                         start-time)
-                 return res
-          else do
-            (push next res)
-            (setf all-runs (fset:less all-runs next)))))
+  (append
+
+   ;; Bring children too
+   (loop for company in (fset:convert 'list (sub-companies-of company))
+         appending (runs-for-last-60-days company))
+
+   (let ((start-time (local-time:timestamp-
+                      (local-time:now)
+                      60 :day))
+         (all-runs (runs-for-company company))
+         (res nil))
+     (loop for next = (fset:greatest all-runs)
+           if (not next)
+             return res
+           else if (local-time:timestamp< (created-at next)
+                                          start-time)
+                  return res
+           else do
+             (push next res)
+             (setf all-runs (fset:less all-runs next))))))
 
 (defstruct active-screenshot-key
   date screenshot-key)
@@ -56,7 +64,7 @@
                (push
                 (make-active-screenshot-key
                  :date date
-                 :screenshot-key (screenshot-name k))
+                 :screenshot-key (list (recorder-run-channel run) (screenshot-name k)))
                 res)))
     (fast-remove-duplicates res)))
 
