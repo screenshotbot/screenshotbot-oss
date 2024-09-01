@@ -90,10 +90,7 @@
 ;; (generate-chart-on-canvas "foo")
 
 (defun daily-active-users (active-users)
-  (let ((map (make-hash-table :test #'equal)))
-    (loop for active-user in active-users
-          do (incf (gethash (active-user-date active-user) map 0)))
-    map))
+  (weekly-active-users active-users :trail-size 1))
 
 (defun last-30-days (&key (n 30))
   (let ((now (get-universal-time)))
