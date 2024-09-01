@@ -20,6 +20,11 @@
                 #:sub-companies-of)
   (:import-from #:screenshotbot/model/screenshot-map
                 #:screenshot-map-channel)
+  (:import-from #:util/hash-lock
+                #:with-hash-lock-held
+                #:hash-lock)
+  (:import-from #:util/cron
+                #:def-cron)
   (:local-nicknames (:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/analytics-dashboard/runs)
 
@@ -67,6 +72,8 @@
    (gethash ts *format-date-cache*)
    (format-date ts)))
 
+(defvar *hash-lock* (make-instance 'hash-lock))
+
 (defun runs-to-date-map (runs)
   "Return a list, with keys being date, and values being list of all distinct screenshot-maps"
   (let ((map (make-hash-table :test #'equal)))
@@ -80,7 +87,7 @@
           collect
           (list date (fast-remove-duplicates screenshot-maps :test #'eql)))))
 
-(defun active-screenshot-keys (company)
+(defun %active-screenshot-keys (company)
   (let (res)
     (loop for (date screenshot-maps) in (runs-to-date-map (runs-for-last-60-days company)) do
       (loop for screenshot-map in screenshot-maps
@@ -95,6 +102,17 @@
     ;; There will be duplicates here. However, the N-DAY-ACTIVE-COUNT
     ;; function can handle it reasonably efficiently.
     res))
+
+(defvar *ans-cache* (make-hash-table))
+
+(defun active-screenshot-keys (company)
+  (with-hash-lock-held (company *hash-lock*)
+    (util:or-setf
+     (gethash company *ans-cache*)
+     (%active-screenshot-keys company))))
+
+(def-cron clear-ans-cache ()
+  (clrhash *ans-cache*))
 
 ;; (compile 'active-screenshot-keys)
 
