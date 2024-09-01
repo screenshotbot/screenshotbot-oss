@@ -56,9 +56,9 @@ sub-companies, which this code can't be aware of."
               collect active-user)))
 
 (defun format-date (ts)
-  (let ((ts (local-time:universal-to-timestamp ts)))
-    (local-time:format-timestring nil ts
-                                  :format `(:year "-" (:month 2) "-" (:day 2)))))
+  (multiple-value-bind (second minute hour date month year) (decode-universal-time ts)
+    (declare (ignore second minute hour))
+    (format nil "~4,'0d-~2,'0d-~2,'0d" year month date)))
 
 (defun mark-active-user-impl (&key user company (date (get-universal-time)))
   (when (and user company)
