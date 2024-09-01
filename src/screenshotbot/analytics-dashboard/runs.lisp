@@ -31,12 +31,15 @@
    (loop for company in (fset:convert 'list (sub-companies-of company))
          appending (runs-for-last-60-days company))
 
-   (let ((start-time (local-time:timestamp-
-                      (local-time:now)
-                      60 :day))
-         (all-runs (runs-for-company company))
-         (res nil))
-     (loop for next = (fset:greatest all-runs)
+   (let* ((start-time (local-time:timestamp-
+                       (local-time:now)
+                       60 :day))
+          (all-runs (runs-for-company company))
+          (next-rank (1- (fset:size all-runs)))
+          (res nil))
+     (loop for next = (and
+                       (>= next-rank 0)
+                       (fset:at-rank all-runs next-rank))
            if (not next)
              return res
            else if (local-time:timestamp< (created-at next)
@@ -44,7 +47,7 @@
                   return res
            else do
              (push next res)
-             (setf all-runs (fset:less all-runs next))))))
+             (decf next-rank)))))
 
 (defstruct active-screenshot-key
   date screenshot-key)
