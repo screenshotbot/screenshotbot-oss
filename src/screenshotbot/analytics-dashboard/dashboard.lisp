@@ -223,6 +223,7 @@ monthly-active."
                                 :keys (list no-action
                                             accepted
                                             rejected)
+                                :title "Percentage of PRs with activity on Screenshotbot"
                                 :data-labels t
                                 :datasets
                                 (list
