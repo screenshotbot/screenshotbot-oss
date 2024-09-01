@@ -69,27 +69,21 @@
           (list date (fast-remove-duplicates screenshot-maps :test #'eql)))))
 
 (defun active-screenshot-keys (company)
-  (let (res
-        ;; For each (date,channel), a union of all the screenshot maps
-        ;; on that day
-        (map-unions (make-hash-table :test #'equal)))
+  (let (res)
     (loop for (date screenshot-maps) in (runs-to-date-map (runs-for-last-60-days company)) do
       (loop for screenshot-map in screenshot-maps
-            for key = (list date (screenshot-map-channel screenshot-map))
             do
-               (setf
-                (gethash key map-unions)
-                (fset:map-union
-                 (gethash key map-unions (fset:empty-map))
-                 (screenshot-map:to-map screenshot-map)))))
-    (loop for (date channel) being the hash-keys of map-unions
-          using (hash-value screenshots)
-          do
-             (fset:do-map (k v screenshots)
-               (declare (ignore v))
-               (push
-                (make-active-screenshot-key
-                 :date date
-                 :screenshot-key (list channel (screenshot-name k)))
-                res)))
+               (fset:do-map (k v (screenshot-map:to-map screenshot-map))
+                 (declare (ignore v))
+                 (push
+                  (make-active-screenshot-key
+                   :date date
+                   :screenshot-key (list (screenshot-map-channel screenshot-map) (screenshot-name k)))
+                  res))))
+    ;; There will be duplicates here. However, the N-DAY-ACTIVE-COUNT
+    ;; function can handle it reasonably efficiently.
     res))
+
+;; (compile 'active-screenshot-keys)
+
+;; (hcl:profile (active-screenshot-keys (screenshotbot/model/company:company-with-name "Apadmi Ltd")))
