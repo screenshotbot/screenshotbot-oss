@@ -28,18 +28,18 @@
   (:local-nicknames (:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/analytics-dashboard/runs)
 
-(defun runs-for-last-60-days (company)
+(defun runs-for-last-60-days (company &key (num-days 60))
   "Find all the runs in the last 60 days for the given company"
 
   (append
 
    ;; Bring children too
    (loop for company in (fset:convert 'list (sub-companies-of company))
-         appending (runs-for-last-60-days company))
+         appending (runs-for-last-60-days company :num-days num-days))
 
    (let* ((start-time (local-time:timestamp-
                        (local-time:now)
-                       60 :day))
+                       num-days :day))
           (all-runs (runs-for-company company))
           (next-rank (1- (fset:size all-runs)))
           (res nil))

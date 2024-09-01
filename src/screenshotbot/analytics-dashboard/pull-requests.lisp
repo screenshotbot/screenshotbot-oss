@@ -31,7 +31,7 @@
 
 (defun pr-to-actions (company)
   (let ((actions (make-hash-table :test #'equal))
-        (runs (runs-for-last-60-days company)))
+        (runs (runs-for-last-60-days company :num-days 30)))
     (loop for run in runs
           do (setf (gethash (safe-pr run) actions)
                    :none))
