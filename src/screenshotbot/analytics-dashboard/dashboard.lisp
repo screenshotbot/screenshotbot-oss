@@ -32,6 +32,8 @@
                 #:active-screenshot-keys)
   (:import-from #:screenshotbot/analytics-dashboard/pull-requests
                 #:pr-to-actions)
+  (:import-from #:core/ui/taskie
+                #:taskie-page-title)
   (:local-nicknames (#:active-users
                      #:core/active-users/active-users)))
 (in-package :screenshotbot/analytics-dashboard/dashboard)
@@ -258,19 +260,26 @@ monthly-active."
   (auth:can-view! company)
   <app-template>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src= "https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2" />
+    <div class= "container">
 
-    <div>
-      <canvas id="myChart"></canvas>
-    </div>
+      ,(taskie-page-title :title "Analytics")
 
-    <div>
-      <canvas id= "active-screenshots" />
-    </div>
+      <p class= "ms-2" >We provide these metrics to help you quantify the impact of your screenshot tests.</p>
 
-    <div>
-      <canvas id= "pull-requests" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src= "https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2" />
+
+      <div class= "mb-3 mt-3" >
+        <canvas id="myChart"></canvas>
+      </div>
+
+      <div class= "mb-3 mt-3" >
+        <canvas id= "active-screenshots" />
+      </div>
+
+      <div class= "mb-3 mt-3" >
+        <canvas id= "pull-requests" />
+      </div>
     </div>
 
     ,(script-daily-active-users company "myChart")
