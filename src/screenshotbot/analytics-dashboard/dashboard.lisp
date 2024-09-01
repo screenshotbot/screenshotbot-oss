@@ -200,7 +200,7 @@ monthly-active."
                                :datasets
                                (list
                                 (make-instance 'dataset
-                                               :label "dfdfd"
+                                               :label "Number of PRs"
                                                :data  data))))))
 (defun script-daily-active-users (company id)
   <script type= "text/javascript" src=
