@@ -59,11 +59,19 @@
           do (setf (gethash x hash-table) t))
     (alexandria:hash-table-keys hash-table)))
 
+(defvar *format-date-cache* (make-hash-table))
+
+(defun fast-format-date (ts)
+  "format-date can be surprisingly slow, and is a bottleneck."
+  (util:or-setf
+   (gethash ts *format-date-cache*)
+   (format-date ts)))
+
 (defun runs-to-date-map (runs)
   "Return a list, with keys being date, and values being list of all distinct screenshot-maps"
   (let ((map (make-hash-table :test #'equal)))
     (loop for run in runs
-          for date = (format-date (%created-at run))
+          for date = (fast-format-date (%created-at run))
           do
              (push (run-screenshot-map run)
                    (gethash date map)))
