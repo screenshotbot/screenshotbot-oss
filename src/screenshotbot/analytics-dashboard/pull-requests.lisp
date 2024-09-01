@@ -33,6 +33,7 @@
   (let ((actions (make-hash-table :test #'equal))
         (runs (runs-for-last-60-days company :num-days 30)))
     (loop for run in runs
+          if (safe-pr run)
           do (setf (gethash (safe-pr run) actions)
                    :none))
     (loop for run in runs do
@@ -49,4 +50,4 @@
     actions))
 
 
-;; (pr-to-actions (screenshotbot/model/company:company-with-name "Modern Interpreters Inc"))
+;; (pr-to-actions (screenshotbot/model/company:company-with-name "Apadmi Ltd"))

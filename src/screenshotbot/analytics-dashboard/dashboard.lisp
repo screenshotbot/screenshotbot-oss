@@ -30,6 +30,8 @@
                 #:active-screenshot-key-screenshot-key
                 #:active-screenshot-key-date
                 #:active-screenshot-keys)
+  (:import-from #:screenshotbot/analytics-dashboard/pull-requests
+                #:pr-to-actions)
   (:local-nicknames (#:active-users
                      #:core/active-users/active-users)))
 (in-package :screenshotbot/analytics-dashboard/dashboard)
@@ -175,6 +177,31 @@ monthly-active."
                                               :label "Screenshots"
                                               :data data)))))
 
+
+(defun generate-pull-requests-chart (company id)
+  (let ((no-action "PRs with no action on Screenshot")
+        (rejected "PRs with at least one rejection")
+        (accepted "PRs with only accepted screenshots"))
+   (let ((data (make-hash-table :test #'equal)))
+     (loop for action being the hash-values of (pr-to-actions company)
+           do
+              (ecase action
+                (:accepted
+                 (incf (gethash accepted data 0)))
+                (:rejected
+                 (incf (gethash rejected data 0)))
+                (:none
+                 (incf (gethash no-action data 0)))))
+     (generate-chart-on-canvas id
+                               :type "pie"
+                               :keys (list no-action
+                                           accepted
+                                           rejected)
+                               :datasets
+                               (list
+                                (make-instance 'dataset
+                                               :label "dfdfd"
+                                               :data  data))))))
 (defun script-daily-active-users (company id)
   <script type= "text/javascript" src=
           (nibble ()
@@ -186,6 +213,13 @@ monthly-active."
           (nibble ()
                     (generate-active-screenshots company id))
           />)
+
+(defun script-pull-requests (company id)
+    <script type= "text/javascript" src=
+            (nibble ()
+                      (generate-pull-requests-chart company id))
+          />)
+
 
 
 (defun render-analytics (company)
@@ -202,8 +236,13 @@ monthly-active."
       <canvas id= "active-screenshots" />
     </div>
 
+    <div>
+      <canvas id= "pull-requests" />
+    </div>
+
     ,(script-daily-active-users company "myChart")
     ,(script-active-screenshots company "active-screenshots")
+    ,(script-pull-requests company "pull-requests")
   </app-template>)
 
 (defhandler (nil :uri "/analytics") ()
