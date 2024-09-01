@@ -8,4 +8,5 @@
   :serial t
   :depends-on (:screenshotbot)
   :components ((:file "runs")
+               (:file "pull-requests")
                (:file "dashboard")))
