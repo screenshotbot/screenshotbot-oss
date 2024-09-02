@@ -40,13 +40,17 @@
                    :none))
     (loop for run in runs do
       (loop for report in (reports-for-run run) do
+        (when (eql :none (gethash (safe-pr run) actions))
+          (setf (gethash (safe-pr run) actions)
+                :changed))
         (when-let ((acceptable (report-acceptable report)))
           (case (acceptable-state acceptable)
             (:rejected
              (setf (gethash (safe-pr run) actions)
                    :rejected))
             (:accepted
-             (when (eql :none (gethash (safe-pr run) actions))
+             (when (eql :changed #| should not be :none |#
+                        (gethash (safe-pr run) actions))
                (setf (gethash (safe-pr run) actions)
                      :accepted)))))))
     actions))

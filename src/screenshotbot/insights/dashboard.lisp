@@ -217,7 +217,8 @@ monthly-active."
 
 
 (defun generate-pull-requests-chart (company id)
-  (let ((no-action "PRs with no action on Screenshotbot")
+  (let ((none "PRs with no screenshot changes")
+        (changed "PRs with screenshot changes, but no actions on Screenshotbot")
         (rejected "PRs with at least one rejection")
         (accepted "PRs with only accepted screenshots"))
    (let ((data (make-hash-table :test #'equal)))
@@ -228,8 +229,10 @@ monthly-active."
                  (incf (gethash accepted data 0)))
                 (:rejected
                  (incf (gethash rejected data 0)))
+                (:changed
+                 (incf (gethash changed data 0)))
                 (:none
-                 (incf (gethash no-action data 0)))))
+                 (incf (gethash none data 0)))))
      (flet ((pct (label)
               (format nil "~,1f%" (* 100
                                     (/ (gethash label data 0)
@@ -238,22 +241,30 @@ monthly-active."
                                             1))))))
       (generate-chart-on-canvas id
                                 :type "pie"
-                                :keys (list no-action
-                                            rejected
-                                            accepted)
+                                :keys (list none
+                                            changed
+                                            accepted
+                                            rejected)
                                 :title "Percentage of PRs with activity on Screenshotbot"
                                 :data-labels t
 
-                                ;; ChartJS brand colors taken from: https://github.com/chartjs/Chart.js/blob/ea88dba68d41d4974c1fff5ce1c60f5d68279c13/docs/scripts/utils.js#L127
-                                :background-colors (list "rgb(54, 162, 235)" "rgb(255, 99, 132)" "rgb(75, 192, 192)" )
+                                ;; ChartJS brand colors taken from:
+                                ;; https://github.com/chartjs/Chart.js/blob/ea88dba68d41d4974c1fff5ce1c60f5d68279c13/docs/scripts/utils.js#L127
+                                :background-colors (list
+                                                    "rgb(201, 203, 207)" ;; grey
+                                                    "rgb(54, 162, 235)" ;; blue
+                                                    "rgb(75, 192, 192)" ;; green
+                                                    "rgb(255, 99, 132)" ;; red
+                                                    )
                                 :datasets
                                 (list
                                  (make-instance 'dataset
                                                 :label "Number of PRs"
                                                 :data-labels (list
-                                                              (pct no-action)
-                                                              (pct rejected)
-                                                              (pct accepted))
+                                                              (pct none)
+                                                              (pct changed)
+                                                              (pct accepted)
+                                                              (pct rejected))
                                                 :data  data)))))))
 
 (defun generate-top-users (company id)
