@@ -90,6 +90,8 @@ provided to generate-chart, and the value is the label we will show")
                    :datasets parsed-datasets)
             :plugins (ps:lisp (if data-labels `(list -Chart-Data-Labels)))
             :options (ps:create
+                      :layout (ps:create
+                               :padding 25)
                       :responsive t
                       :tooltips (ps:create
                                  :enabled t)
