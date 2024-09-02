@@ -56,6 +56,7 @@ provided to generate-chart, and the value is the label we will show")
 (defun generate-chart-on-canvas (canvas-name &key keys
                                                (default-value 0)
                                                (data-labels nil)
+                                               (background-colors nil)
                                                (title "No title")
                                                (type "line")
                                                datasets)
@@ -75,6 +76,7 @@ provided to generate-chart, and the value is the label we will show")
                                                 collect
                                                 (or (aref (@ dataset data) x)
                                                     (ps:lisp default-value)))
+                                    "backgroundColor" (ps:lisp (if background-colors `(list ,@background-colors)))
                                     :cubic-interpolation-mode "monotone"
                                     :tension 0.2
                                     :border-width 1))))
@@ -223,18 +225,21 @@ monthly-active."
       (generate-chart-on-canvas id
                                 :type "pie"
                                 :keys (list no-action
-                                            accepted
-                                            rejected)
+                                            rejected
+                                            accepted)
                                 :title "Percentage of PRs with activity on Screenshotbot"
                                 :data-labels t
+
+                                ;; ChartJS brand colors taken from: https://github.com/chartjs/Chart.js/blob/ea88dba68d41d4974c1fff5ce1c60f5d68279c13/docs/scripts/utils.js#L127
+                                :background-colors (list "rgb(54, 162, 235)" "rgb(255, 99, 132)" "rgb(75, 192, 192)" )
                                 :datasets
                                 (list
                                  (make-instance 'dataset
                                                 :label "Number of PRs"
                                                 :data-labels (list
                                                               (pct no-action)
-                                                              (pct accepted)
-                                                              (pct rejected))
+                                                              (pct rejected)
+                                                              (pct accepted))
                                                 :data  data)))))))
 (defun script-daily-active-users (company id)
   <script type= "text/javascript" src=
@@ -269,7 +274,7 @@ monthly-active."
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src= "https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2" />
 
-  <div class= "row analytics-row">
+  <div class= "row analytics-row mt-3 pt-3">
     <div class= "col-md-6">
       <div class= "chart-container" >
         <canvas id="myChart"></canvas>
