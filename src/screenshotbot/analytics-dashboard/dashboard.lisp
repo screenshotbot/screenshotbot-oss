@@ -108,9 +108,10 @@ provided to generate-chart, and the value is the label we will show")
                                                              (aref
                                                               data-labels
                                                               (@ ctx data-index)))))))
-                      :scales (ps:create
-                               :y (ps:create
-                                   :begin-at-zero t)))))))))))
+                      :scales (unless (equal "pie" (ps:lisp type))
+                                  (ps:create
+                                      :y (ps:create
+                                          "beginAtZero" t))))))))))))
 
 ;; (generate-chart-on-canvas "foo")
 
