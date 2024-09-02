@@ -182,11 +182,14 @@
     ((parent :initarg :parent
              :initform nil
              :index +parent-index+
-             :index-reader sub-companies-of
+             :index-reader %sub-companies-of
              :reader company-parent))
     (:metaclass persistent-class)
     (:documentation "A child organization, by default has all the permissions of the
 parent organization.")))
+
+(defmethod sub-companies-of (company)
+  (%sub-companies-of company))
 
 (defmethod emails-enabled-by-default-p ((self sub-company))
   (emails-enabled-by-default-p (company-parent self)))
