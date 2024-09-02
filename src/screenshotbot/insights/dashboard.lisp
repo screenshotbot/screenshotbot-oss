@@ -268,9 +268,9 @@ monthly-active."
 
     <div class= "container">
 
-      ,(taskie-page-title :title "Analytics")
+      ,(taskie-page-title :title "Insights")
       <div class= "main-content">
-        <p class= "" >We provide these metrics to help you quantify the impact of your screenshot tests. These metrics are computed in almost real time, with just a few minutes lag.</p>
+        <p class= "" >We provide these Insights to help you quantify the impact of your screenshot tests. These metrics are computed in near real time, with just a few minutes lag.</p>
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src= "https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2" />
@@ -303,6 +303,6 @@ monthly-active."
     ,(script-pull-requests company "pull-requests")
   </app-template>)
 
-(defhandler (nil :uri "/analytics") ()
+(defhandler (nil :uri "/insights") ()
   (with-login ()
     (render-analytics (auth:current-company))))
