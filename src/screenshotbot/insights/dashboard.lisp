@@ -101,6 +101,7 @@ provided to generate-chart, and the value is the label we will show")
                                :padding 25)
                       "indexAxis" (ps:lisp index-axis)
                       :responsive t
+                      "maintainAspectRatio" ps:false
                       :tooltips (ps:create
                                  :enabled t)
                       :plugins (ps:create
