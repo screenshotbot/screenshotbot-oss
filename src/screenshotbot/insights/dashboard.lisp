@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/analytics-dashboard/dashboard
+(defpackage :screenshotbot/insights/dashboard
   (:use #:cl)
   (:import-from #:screenshotbot/server
                 #:defhandler)
@@ -26,17 +26,17 @@
                 #:nibble)
   (:import-from #:screenshotbot/model/company
                 #:has-root-company-p)
-  (:import-from #:screenshotbot/analytics-dashboard/runs
+  (:import-from #:screenshotbot/insights/runs
                 #:active-screenshot-key-screenshot-key
                 #:active-screenshot-key-date
                 #:active-screenshot-keys)
-  (:import-from #:screenshotbot/analytics-dashboard/pull-requests
+  (:import-from #:screenshotbot/insights/pull-requests
                 #:pr-to-actions)
   (:import-from #:core/ui/taskie
                 #:taskie-page-title)
   (:local-nicknames (#:active-users
                      #:core/active-users/active-users)))
-(in-package :screenshotbot/analytics-dashboard/dashboard)
+(in-package :screenshotbot/insights/dashboard)
 
 (named-readtables:in-readtable markup:syntax)
 

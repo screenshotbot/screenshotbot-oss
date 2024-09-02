@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/analytics-dashboard/runs
+(defpackage :screenshotbot/insights/runs
   (:use #:cl)
   (:import-from #:screenshotbot/user-api
                 #:%created-at
@@ -26,7 +26,7 @@
   (:import-from #:util/cron
                 #:def-cron)
   (:local-nicknames (:screenshot-map #:screenshotbot/model/screenshot-map)))
-(in-package :screenshotbot/analytics-dashboard/runs)
+(in-package :screenshotbot/insights/runs)
 
 (defun runs-for-last-60-days (company &key (num-days 60))
   "Find all the runs in the last 60 days for the given company"

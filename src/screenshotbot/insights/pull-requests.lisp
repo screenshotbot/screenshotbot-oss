@@ -4,14 +4,14 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/analytics-dashboard/pull-requests
+(defpackage :screenshotbot/insights/pull-requests
   (:use #:cl)
   (:import-from #:screenshotbot/model/recorder-run
                 #:phabricator-diff-id
                 #:gitlab-merge-request-iid)
   (:import-from #:screenshotbot/user-api
                 #:pull-request-url)
-  (:import-from #:screenshotbot/analytics-dashboard/runs
+  (:import-from #:screenshotbot/insights/runs
                 #:runs-for-last-60-days)
   (:import-from #:screenshotbot/model/report
                 #:acceptable-state
@@ -20,7 +20,7 @@
                 #:when-let)
   (:import-from #:screenshotbot/report-api
                 #:report-acceptable))
-(in-package :screenshotbot/analytics-dashboard/pull-requests)
+(in-package :screenshotbot/insights/pull-requests)
 
 (defun safe-pr (run)
   (or
