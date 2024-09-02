@@ -275,7 +275,7 @@ monthly-active."
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src= "https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2" />
 
-        <div class= "row analytics-row mt-3 pt-3">
+        <div class= "row analytics-row mt-3 mb-3 pt-3 g-3">
           <div class= "col-md-6">
             <div class= "chart-container" >
               <canvas id="myChart"></canvas>
