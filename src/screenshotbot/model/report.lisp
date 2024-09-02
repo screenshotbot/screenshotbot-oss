@@ -190,7 +190,8 @@
     ((state :initarg :state
             :reader acceptable-history-item-state)
      (%user :initarg :user
-            :reader accepable-history-item-user)
+            :reader accepable-history-item-user ;; TODO: remove
+            :reader acceptable-history-item-user)
      (ts :accessor acceptable-history-item-ts
          :initarg :ts))
     (:metaclass persistent-class)

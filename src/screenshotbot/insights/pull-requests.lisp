@@ -14,6 +14,8 @@
   (:import-from #:screenshotbot/insights/runs
                 #:runs-for-last-60-days)
   (:import-from #:screenshotbot/model/report
+                #:acceptable-history-item-user
+                #:acceptable-history
                 #:acceptable-state
                 #:reports-for-run)
   (:import-from #:alexandria
@@ -49,5 +51,20 @@
                      :accepted)))))))
     actions))
 
-
-;; (pr-to-actions (screenshotbot/model/company:company-with-name "Apadmi Ltd"))
+(defun user-reviews-last-30-days (company)
+  (let ((runs (runs-for-last-60-days company :num-days 30))
+        (result (make-hash-table)))
+    (dolist (run runs)
+      (dolist (report (reports-for-run run))
+        (when-let ((acceptable (report-acceptable report)))
+          (dolist (user
+                   (remove-duplicates
+                    (loop for history-item in (acceptable-history acceptable)
+                          collect (acceptable-history-item-user history-item))))
+            (incf (gethash user result 0))))))
+    (sort
+     (loop for user being the hash-keys of result
+             using (hash-value count)
+           collect (list user count))
+     #'>
+     :key #'second)))
