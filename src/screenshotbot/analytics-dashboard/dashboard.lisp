@@ -269,32 +269,33 @@ monthly-active."
     <div class= "container">
 
       ,(taskie-page-title :title "Analytics")
+      <div class= "main-content">
+        <p class= "" >We provide these metrics to help you quantify the impact of your screenshot tests. These metrics are computed in almost real time, with just a few minutes lag.</p>
 
-      <p class= "" >We provide these metrics to help you quantify the impact of your screenshot tests. These metrics are computed in almost real time, with just a few minutes lag.</p>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src= "https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2" />
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src= "https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2" />
+        <div class= "row analytics-row mt-3 pt-3">
+          <div class= "col-md-6">
+            <div class= "chart-container" >
+              <canvas id="myChart"></canvas>
+            </div>
+          </div>
 
-  <div class= "row analytics-row mt-3 pt-3">
-    <div class= "col-md-6">
-      <div class= "chart-container" >
-        <canvas id="myChart"></canvas>
+          <div class= "col-md-6">
+            <div class= "chart-container" >
+              <canvas id= "active-screenshots" />
+            </div>
+          </div>
+
+
+          <div class= "col-md-6">
+            <div class= "chart-container" >
+              <canvas id= "pull-requests" />
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-
-    <div class= "col-md-6">
-      <div class= "chart-container" >
-        <canvas id= "active-screenshots" />
-      </div>
-    </div>
-
-
-    <div class= "col-md-6">
-      <div class= "chart-container" >
-        <canvas id= "pull-requests" />
-      </div>
-    </div>
-  </div>
     </div>
 
     ,(script-daily-active-users company "myChart")
