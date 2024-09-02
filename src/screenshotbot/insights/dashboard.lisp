@@ -31,9 +31,12 @@
                 #:active-screenshot-key-date
                 #:active-screenshot-keys)
   (:import-from #:screenshotbot/insights/pull-requests
+                #:user-reviews-last-30-days
                 #:pr-to-actions)
   (:import-from #:core/ui/taskie
                 #:taskie-page-title)
+  (:import-from #:auth
+                #:user-full-name)
   (:local-nicknames (#:active-users
                      #:core/active-users/active-users)))
 (in-package :screenshotbot/insights/dashboard)
@@ -54,6 +57,9 @@ provided to generate-chart, and the value is the label we will show")
 
 
 (defun generate-chart-on-canvas (canvas-name &key keys
+                                               (index-axis)
+                                               (legend t)
+                                               (mirror nil)
                                                (default-value 0)
                                                (data-labels nil)
                                                (background-colors nil)
@@ -80,6 +86,7 @@ provided to generate-chart, and the value is the label we will show")
                                     :cubic-interpolation-mode "monotone"
                                     :tension 0.2
                                     :border-width 1))))
+
          (ps:new
           (-Chart
            ctx
@@ -92,6 +99,7 @@ provided to generate-chart, and the value is the label we will show")
             :options (ps:create
                       :layout (ps:create
                                :padding 25)
+                      "indexAxis" (ps:lisp index-axis)
                       :responsive t
                       :tooltips (ps:create
                                  :enabled t)
@@ -99,6 +107,9 @@ provided to generate-chart, and the value is the label we will show")
                                 :title (ps:create
                                         :display t
                                         :text (ps:lisp title))
+                                :legend (ps:create
+                                         :display (ps:lisp legend))
+
                                 :datalabels (ps:create
                                              :formatter (lambda (value ctx)
                                                           ((@ console log) "ctx is" ctx)
@@ -245,6 +256,32 @@ monthly-active."
                                                               (pct accepted))
                                                 :data  data)))))))
 
+(defun generate-top-users (company id)
+  (let ((top-users (user-reviews-last-30-days company))
+        (data (make-hash-table :test #'equal)))
+    (loop for (user count) in top-users
+          for i below 10
+          do
+          (setf (gethash (user-full-name user) data) count))
+    (generate-chart-on-canvas id
+                              :type "bar"
+                              :mirror t
+                              :index-axis "y"
+                              :title "Top users by review count over last 30 days"
+                              :keys (loop for (user nil) in top-users
+                                          for i below 5
+                                          collect (user-full-name user))
+                              :data-labels t
+                              :legend nil
+                              :datasets
+                              (list
+                               (make-instance 'dataset
+                                              :label "hello"
+                                              :data-labels (loop for (nil count) in top-users
+                                                                 for i below 5
+                                                                 collect (format nil "~a" count))
+                                              :data data)))))
+
 (easy-macros:def-easy-macro script-tag (&fn fn)
   <script async= "async" type= "text/javascript" src=
           (nibble ()
@@ -283,6 +320,12 @@ monthly-active."
               <canvas id= "pull-requests" />
             </div>
           </div>
+
+          <div class= "col-md-6">
+            <div class= "chart-container" >
+              <canvas id= "top-users" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -296,6 +339,9 @@ monthly-active."
 
     ,(script-tag ()
        (generate-pull-requests-chart company "pull-requests"))
+
+    ,(script-tag ()
+       (generate-top-users company "top-users"))
   </app-template>)
 
 (defhandler (nil :uri "/insights") ()
