@@ -264,22 +264,31 @@ monthly-active."
 
       ,(taskie-page-title :title "Analytics")
 
-      <p class= "ms-2" >We provide these metrics to help you quantify the impact of your screenshot tests.</p>
+      <p class= "" >We provide these metrics to help you quantify the impact of your screenshot tests. These metrics are computed in almost real time, with just a few minutes lag.</p>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src= "https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2" />
 
-      <div class= "mb-3 mt-3" >
+  <div class= "row analytics-row">
+    <div class= "col-md-6">
+      <div class= "chart-container" >
         <canvas id="myChart"></canvas>
       </div>
+    </div>
 
-      <div class= "mb-3 mt-3" >
+    <div class= "col-md-6">
+      <div class= "chart-container" >
         <canvas id= "active-screenshots" />
       </div>
+    </div>
 
-      <div class= "mb-3 mt-3" >
+
+    <div class= "col-md-6">
+      <div class= "chart-container" >
         <canvas id= "pull-requests" />
       </div>
+    </div>
+  </div>
     </div>
 
     ,(script-daily-active-users company "myChart")

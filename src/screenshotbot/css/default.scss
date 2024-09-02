@@ -1135,3 +1135,9 @@ input[type=number].number-to-text {
         padding-right: 0.5em;
     }
 }
+
+.analytics-row {
+    .chart-container {
+        min-height: 30em;
+    }
+}
