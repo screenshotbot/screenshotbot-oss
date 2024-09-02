@@ -349,12 +349,15 @@ associated report is rendered.")
     (%batch :initarg :batch
             :accessor recorder-run-batch
             :documentation "The batch object associated with this run")
+    (%%created-at :initarg :created-at
+                 :accessor %created-at)
     (promotion-complete-p
      :initform nil
      :accessor promotion-complete-p))
    (:metaclass persistent-class)
    (:default-initargs :batch nil
                       :override-commit-hash nil
+                      :created-at (get-universal-time)
                       :merge-base nil)
    (:documentation "Annotates that this commit should have identical screenshots to the other commit")))
 
