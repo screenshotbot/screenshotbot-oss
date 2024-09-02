@@ -18,6 +18,8 @@
   (:import-from #:screenshotbot/login/common
                 #:with-login)
   (:import-from #:screenshotbot/model/company
+                #:company
+                #:has-root-company-p
                 #:sub-companies-of)
   (:import-from #:screenshotbot/insights/dashboard
                 #:render-analytics))
@@ -30,6 +32,11 @@
                   :reader sub-companies-of)
    (screenshotbot/model/company::name :initform "Acme Corporation")))
 
+(defmethod has-root-company-p ((a company) (self fake-company))
+  (or
+   (eql a self)
+   (member a (sub-companies-of self))))
+
 (defmethod personalp ((Self fake-company))
   nil)
 
@@ -40,6 +47,7 @@
   t)
 
 ;; use ids: 32046 to test on staging
+;; on prod: https://phabricator.tdrhq.com/P115
 (defhandler (nil :uri "/insights/fuzz") (ids)
   (with-login ()
     (assert (adminp (auth:current-user)))
