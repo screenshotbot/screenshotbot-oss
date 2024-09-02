@@ -243,19 +243,19 @@ monthly-active."
                                                               (pct accepted))
                                                 :data  data)))))))
 (defun script-daily-active-users (company id)
-  <script type= "text/javascript" src=
+  <script async= "async" type= "text/javascript" src=
           (nibble ()
                     (generate-daily-active-users company id))
           />)
 
 (defun script-active-screenshots (company id)
-  <script type= "text/javascript" src=
+  <script async= "async" type= "text/javascript" src=
           (nibble ()
                     (generate-active-screenshots company id))
           />)
 
 (defun script-pull-requests (company id)
-    <script type= "text/javascript" src=
+    <script async= "async" type= "text/javascript" src=
             (nibble ()
                       (generate-pull-requests-chart company id))
           />)
