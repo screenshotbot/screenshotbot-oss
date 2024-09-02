@@ -105,6 +105,12 @@
                      script-name=script-name >
                          Reports
         </left-nav-item>
+
+      <left-nav-item href= "/insights" image-class= "leaderboard"
+                     script-name=script-name >
+        Insights
+        </left-nav-item>
+
     </ul>
     <hr />
 
