@@ -23,7 +23,9 @@
                 #:is-equal-to
                 #:assert-that)
   (:import-from #:bknr.datastore
-                #:class-instances))
+                #:class-instances)
+  (:import-from #:util/testing
+                #:with-fake-request))
 (in-package :core/active-users/test-active-users)
 
 (util/fiveam:def-suite)
@@ -76,7 +78,8 @@
   (with-fixture state ()
     ;; The lock avoids a flush from happening in between
     (bt:with-lock-held (*lock*)
-      (mark-active-user :user :foo :company :bleh :date (get-universal-time))
+      (with-fake-request ()
+        (mark-active-user :user :foo :company :bleh :date (get-universal-time)))
       (assert-that (class-instances 'active-user)
                    (has-length 0)))
     (flush-events)

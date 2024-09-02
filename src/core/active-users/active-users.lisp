@@ -18,6 +18,9 @@
                 #:index-get)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:screenshotbot/impersonation
+                #:make-impersonation
+                #:impersonatedp)
   (:export
    #:mark-active-user
    #:active-users-for-company))
@@ -74,10 +77,13 @@ sub-companies, which this code can't be aware of."
 (defun mark-active-user (&rest args)
   "We don't want to wait on locks in the happy path, and we don't want
 reads to depend on writes."
-  (atomics:atomic-push
-   (lambda ()
-     (apply #'mark-active-user-impl args))
-   *events*))
+  (unless (and
+           (boundp 'hunchentoot:*request*)
+           (impersonatedp (make-impersonation)))
+    (atomics:atomic-push
+     (lambda ()
+       (apply #'mark-active-user-impl args))
+     *events*)))
 
 (defun flush-events ()
   (bt:with-lock-held (*lock*)
