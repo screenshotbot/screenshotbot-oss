@@ -189,8 +189,16 @@ monthly-active."
 (defun monthly-active-users (active-users)
   (weekly-active-users active-users :trail-size 30))
 
+(defun bad-active-user-p (active-user)
+  (let ((user (core/active-users/active-users::user active-user))
+        (company (core/active-users/active-users::company active-user)))
+    (roles:has-role-p company user 'roles:hidden-user)))
+
 (defun generate-daily-active-users (company id)
-  (let* ((active-users (active-users-for-company company :company-test #'has-root-company-p))
+  (let* ((active-users
+           (remove-if
+            #'bad-active-user-p
+            (active-users-for-company company :company-test #'has-root-company-p)))
          (data (daily-active-users active-users)))
     (generate-chart-on-canvas id
                               :keys (last-30-days)
