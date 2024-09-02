@@ -204,7 +204,7 @@ monthly-active."
 
 
 (defun generate-pull-requests-chart (company id)
-  (let ((no-action "PRs with no action on Screenshot")
+  (let ((no-action "PRs with no action on Screenshotbot")
         (rejected "PRs with at least one rejection")
         (accepted "PRs with only accepted screenshots"))
    (let ((data (make-hash-table :test #'equal)))
