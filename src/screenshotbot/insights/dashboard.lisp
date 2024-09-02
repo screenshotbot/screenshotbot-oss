@@ -37,6 +37,9 @@
                 #:taskie-page-title)
   (:import-from #:auth
                 #:user-full-name)
+  (:import-from #:util/throttler
+                #:throttle!
+                #:throttler)
   (:local-nicknames (#:active-users
                      #:core/active-users/active-users)))
 (in-package :screenshotbot/insights/dashboard)
@@ -54,6 +57,9 @@ provided to generate-chart, and the value is the label we will show")
          :reader dataset-data
          :documentation "A hash-table. The keys are the keys provided to generate-chart."))
   (:metaclass ext-json-serializable-class))
+
+(defvar *throttler* (make-instance 'throttler
+                                   :tokens 600))
 
 
 (defun generate-chart-on-canvas (canvas-name &key keys
@@ -295,6 +301,7 @@ monthly-active."
                                               :data data)))))
 
 (easy-macros:def-easy-macro script-tag (&fn fn)
+  (throttle! *throttler* :key (auth:current-company))
   <script async= "async" type= "text/javascript" src=
           (nibble ()
                     (fn))
