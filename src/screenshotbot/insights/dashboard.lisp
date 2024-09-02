@@ -244,25 +244,12 @@ monthly-active."
                                                               (pct rejected)
                                                               (pct accepted))
                                                 :data  data)))))))
-(defun script-daily-active-users (company id)
+
+(easy-macros:def-easy-macro script-tag (&fn fn)
   <script async= "async" type= "text/javascript" src=
           (nibble ()
-                    (generate-daily-active-users company id))
+                    (fn))
           />)
-
-(defun script-active-screenshots (company id)
-  <script async= "async" type= "text/javascript" src=
-          (nibble ()
-                    (generate-active-screenshots company id))
-          />)
-
-(defun script-pull-requests (company id)
-    <script async= "async" type= "text/javascript" src=
-            (nibble ()
-                      (generate-pull-requests-chart company id))
-          />)
-
-
 
 (defun render-analytics (company)
   (auth:can-view! company)
@@ -300,9 +287,15 @@ monthly-active."
       </div>
     </div>
 
-    ,(script-daily-active-users company "myChart")
-    ,(script-active-screenshots company "active-screenshots")
-    ,(script-pull-requests company "pull-requests")
+
+    ,(script-tag ()
+       (generate-daily-active-users company "myChart"))
+
+    ,(script-tag ()
+       (generate-active-screenshots company "active-screenshots"))
+
+    ,(script-tag ()
+       (generate-pull-requests-chart company "pull-requests"))
   </app-template>)
 
 (defhandler (nil :uri "/insights") ()
