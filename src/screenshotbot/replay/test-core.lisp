@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:*fetch-sleep-time*
                 #:replay-external-request-engine
                 #:blacklisted-ip
                 #:blacklisted-domain
@@ -66,19 +67,20 @@
 (util/fiveam:def-suite)
 
 (def-fixture state (&key (setup-installation-p t))
-  (flet ((body ()
-           (tmpdir:with-tmpdir (tmpdir)
-             (let ((*cache* (make-instance 'lru-cache
-                                           :dir tmpdir))
-                   (context (make-instance 'context)))
-               (cl-mock:with-mocks ()
-                 (&body))))))
-    (cond
-      (setup-installation-p
-       (with-installation ()
-         (body)))
-      (t
-       (body)))))
+  (let ((*fetch-sleep-time* 0))
+   (flet ((body ()
+            (tmpdir:with-tmpdir (tmpdir)
+              (let ((*cache* (make-instance 'lru-cache
+                                            :dir tmpdir))
+                    (context (make-instance 'context)))
+                (cl-mock:with-mocks ()
+                  (&body))))))
+     (cond
+       (setup-installation-p
+        (with-installation ()
+          (body)))
+       (t
+        (body))))))
 
 
 (test url-rewriting

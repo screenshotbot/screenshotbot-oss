@@ -81,6 +81,9 @@
 
 (defvar *timeout* 15)
 
+(defparameter *fetch-sleep-time* 0.1
+  "Time to sleep between actual requests, to throttle it.")
+
 (defvar *stack* nil)
 
 (defclass snapshot-request ()
@@ -434,6 +437,9 @@ shipped by the time you're reading this.)"))
         +empty-headers+))
       ((or (equal "https" scheme)
            (equal "http" scheme))
+
+       (maybe-sleep-before-fetch url)
+
        (log:info "Fetching: ~a" url)
        (write-replay-log "Fetching: ~a" url)
 
@@ -447,6 +453,9 @@ shipped by the time you're reading this.)"))
            (values remote-stream status response-headers))))
       (t
        (error "unsupported scheme: ~a" scheme)))))
+
+(defun maybe-sleep-before-fetch (url)
+  (sleep *fetch-sleep-time*))
 
 (defun http-get-without-cache (url &key (force-binary t)
                                      (force-string nil))
