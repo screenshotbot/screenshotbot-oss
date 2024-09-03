@@ -282,31 +282,43 @@ monthly-active."
                                                               (pct rejected))
                                                 :data  data)))))))
 
-(defun generate-top-users (company id)
+(defvar *random-names*
+  (list
+   "Oakley Berry"
+   "Adonis Powell"
+   "Vivian Carson"
+   "Ares Sandoval"
+   "Elsie Villalobos"))
+
+(defun generate-top-users (company id &key fuzz)
   (let ((top-users (user-reviews-last-30-days company))
         (data (make-hash-table :test #'equal)))
-    (loop for (user count) in top-users
-          for i below 10
-          do
-          (setf (gethash (user-full-name user) data) count))
-    (generate-chart-on-canvas id
-                              :type "bar"
-                              :mirror t
-                              :index-axis "y"
-                              :title "Top users by review count over last 30 days"
-                              :keys (loop for (user nil) in top-users
-                                          for i below 5
-                                          collect (user-full-name user))
-                              :data-labels t
-                              :legend nil
-                              :datasets
-                              (list
-                               (make-instance 'dataset
-                                              :label "hello"
-                                              :data-labels (loop for (nil count) in top-users
-                                                                 for i below 5
-                                                                 collect (format nil "~a" count))
-                                              :data data)))))
+    (flet ((user-name (idx)
+             (if fuzz
+                 (elt *random-names* (mod idx 5))
+                 (user-full-name (car (elt top-users idx))))))
+     (loop for (nil count) in top-users
+           for i below 5
+           do
+              (setf (gethash (user-name i) data) count))
+      (generate-chart-on-canvas id
+                                :type "bar"
+                                :mirror t
+                                :index-axis "y"
+                                :title "Top users by review count over last 30 days"
+                                :keys (loop
+                                        for i below (min 5 (length top-users))
+                                        collect (user-name i))
+                                :data-labels t
+                                :legend nil
+                                :datasets
+                                (list
+                                 (make-instance 'dataset
+                                                :label "hello"
+                                                :data-labels (loop for (nil count) in top-users
+                                                                   for i below 5
+                                                                   collect (format nil "~a" count))
+                                                :data data))))))
 
 (easy-macros:def-easy-macro script-tag (&fn fn)
   (throttle! *throttler* :key (auth:current-company))
@@ -315,7 +327,7 @@ monthly-active."
                     (fn))
           />)
 
-(defun render-analytics (company)
+(defun render-analytics (company &key fuzz)
   (auth:can-view! company)
   <app-template>
 
@@ -368,7 +380,7 @@ monthly-active."
        (generate-pull-requests-chart company "pull-requests"))
 
     ,(script-tag ()
-       (generate-top-users company "top-users"))
+       (generate-top-users company "top-users" :fuzz fuzz))
   </app-template>)
 
 (defhandler (nil :uri "/insights") ()

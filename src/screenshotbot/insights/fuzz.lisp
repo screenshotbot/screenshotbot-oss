@@ -54,4 +54,5 @@
     (let ((companies (mapcar #'bknr.datastore:store-object-with-id
                              (mapcar #'parse-integer (str:split "," ids)))))
       (render-analytics
-       (make-instance 'fake-company :sub-companies companies)))))
+       (make-instance 'fake-company :sub-companies companies)
+       :fuzz t))))
