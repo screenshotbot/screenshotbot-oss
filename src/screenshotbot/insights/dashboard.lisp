@@ -260,7 +260,7 @@ monthly-active."
                                             changed
                                             accepted
                                             rejected)
-                                :title "Percentage of PRs with activity on Screenshotbot"
+                                :title "Percentage of PRs with activity on Screenshotbot over last 30 days"
                                 :data-labels t
 
                                 ;; ChartJS brand colors taken from:
