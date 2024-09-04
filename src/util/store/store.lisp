@@ -835,3 +835,18 @@ this variable in LET forms, but you can SETF it if you like."
                                     (return))))
                                (t
                                 (vector-push-extend neighbor queue))))))))))
+
+(defvar *index-caches* (make-hash-table)
+  "See T1322. Don't use this for anything. The main goal for this is to
+hold on to a copy of the big indices in cases they get replaced, so
+that we don't lose data and can restore ourself to a state where
+snapshots can happen again")
+
+(defun backup-indices ()
+  (setf (gethash bknr.datastore::*id-index* *index-caches*) (get-universal-time))
+  (setf (gethash bknr.datastore::*class-skip-index* *index-caches*) (get-universal-time)))
+
+(cl-cron:make-cron-job
+ 'backup-indices
+ :step-min 5
+ :hash-key 'backup-indices)
