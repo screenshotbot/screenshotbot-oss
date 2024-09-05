@@ -36,6 +36,8 @@
   (:import-from #:core/installation/installation
                 #:*installation*
                 #:installation-domain)
+  (:import-from #:util/atomics
+                #:atomic-exchange)
   (:export
    #:%find-api-key
    #:api-key
@@ -189,6 +191,9 @@
    (company
     :initarg :company
     :reader api-key-company)
+   (%last-used
+    :accessor last-used
+    :documentation "This is just to be in sync with api-key for simplicity.")
    (created-at :initform (get-universal-time)))
   (:documentation "A transient key generated for communication between
   the replay service and this server."))
@@ -205,6 +210,14 @@
       *last-used-cache*
       (lambda (map)
         (fset:with map api-key ts))))))
+
+(defun flush-last-used-cache ()
+  (let ((last-used-cache (atomic-exchange *last-used-cache* (fset:empty-map))))
+    (fset:do-map (api-key ts last-used-cache)
+      (setf (last-used api-key) ts))))
+
+(def-cron flush-last-used-cache ()
+  (flush-last-used-cache))
 
 (defun %find-api-key (str)
   (let ((result (or

@@ -15,6 +15,8 @@
                 #:api-key-key
                 #:api-key)
   (:import-from #:screenshotbot/model/api-key
+                #:last-used
+                #:flush-last-used-cache
                 #:*last-used-cache*
                 #:mark-api-key-used
                 #:api-key-for-secret
@@ -149,3 +151,13 @@
       (mark-api-key-used api-key)
       (mark-api-key-used api-key)
       (is (eql 1 (fset:size *last-used-cache*))))))
+
+(test flush-last-used
+  (with-fixture state ()
+    (let ((api-key (make-instance 'api-key)))
+      (mark-api-key-used api-key)
+      (mark-api-key-used api-key)
+      (is (eql 1 (fset:size *last-used-cache*)))
+      (flush-last-used-cache)
+      (is (eql 0 (fset:size *last-used-cache*)))
+      (is (> (last-used api-key) 0)))))
