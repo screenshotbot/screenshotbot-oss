@@ -15,6 +15,8 @@
                 #:api-key-key
                 #:api-key)
   (:import-from #:screenshotbot/model/api-key
+                #:*last-used-cache*
+                #:mark-api-key-used
                 #:api-key-for-secret
                 #:generate-api-key
                 #:cleanup-expired-api-keys
@@ -139,3 +141,11 @@
         (run-migrations))
       (is-true (slot-boundp api-key-1 'api-key))
       (is-false (slot-boundp api-key-2 'api-key)))))
+
+
+(test mark-api-key-used
+  (with-fixture state ()
+    (let ((api-key (make-instance 'api-key)))
+      (mark-api-key-used api-key)
+      (mark-api-key-used api-key)
+      (is (eql 1 (fset:size *last-used-cache*))))))

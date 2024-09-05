@@ -192,9 +192,15 @@
 (defmethod expired-p ((self transient-api-key))
   nil)
 
+(defvar *last-used-cache* (fset:empty-map))
+
 (defun mark-api-key-used (api-key)
   ;; TODO
-  (values))
+  (let ((ts (get-universal-time)))
+    (atomics:atomic-update
+     *last-used-cache*
+     (lambda (map)
+       (fset:with map api-key ts)))))
 
 (defun %find-api-key (str)
   (let ((result (or
