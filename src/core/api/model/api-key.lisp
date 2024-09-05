@@ -199,12 +199,12 @@
 (defvar *last-used-cache* (fset:empty-map))
 
 (defun mark-api-key-used (api-key)
-  ;; TODO
-  (let ((ts (get-universal-time)))
-    (atomics:atomic-update
-     *last-used-cache*
-     (lambda (map)
-       (fset:with map api-key ts)))))
+  (when api-key
+   (let ((ts (get-universal-time)))
+     (atomics:atomic-update
+      *last-used-cache*
+      (lambda (map)
+        (fset:with map api-key ts))))))
 
 (defun %find-api-key (str)
   (let ((result (or
