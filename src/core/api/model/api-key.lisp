@@ -123,10 +123,14 @@
      (expired-p
       :type boolean
       :reader expired-p
-      :initform nil))
+      :initform nil)
+     (last-used
+      :initarg :last-used
+      :accessor last-used))
     (:metaclass persistent-class)
     (:default-initargs
      :api-key (generate-api-key)
+     :last-used (get-universal-time)
      :api-secret-key (generate-api-secret))))
 
 (defmethod api-hostname (installation)
