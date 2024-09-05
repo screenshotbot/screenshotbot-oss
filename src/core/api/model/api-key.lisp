@@ -192,6 +192,10 @@
 (defmethod expired-p ((self transient-api-key))
   nil)
 
+(defun mark-api-key-used (api-key)
+  ;; TODO
+  (values))
+
 (defun %find-api-key (str)
   (let ((result (or
                  (cond

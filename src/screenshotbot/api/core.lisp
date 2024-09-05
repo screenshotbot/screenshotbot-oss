@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/model/api-key
+                #:mark-api-key-used
                 #:%find-api-key
                 #:api-key-secret-key)
   (:import-from #:screenshotbot/user-api
@@ -74,6 +75,7 @@
                (equal api-secret-key (api-key-secret-key key)))
         (error 'api-error
                :message "API secret key doesn't match what we have on record"))
+      (mark-api-key-used key)
       (prog1
           (authenticate-request-from-key request key)
 
