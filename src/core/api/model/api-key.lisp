@@ -33,6 +33,9 @@
                 #:delete-api-key)
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
+  (:import-from #:core/installation/installation
+                #:*installation*
+                #:installation-domain)
   (:export
    #:%find-api-key
    #:api-key
@@ -125,6 +128,24 @@
     (:default-initargs
      :api-key (generate-api-key)
      :api-secret-key (generate-api-secret))))
+
+(defmethod api-hostname (installation)
+  (installation-domain installation))
+
+(defmethod encode-api-secret ((self api-key))
+  (base64:string-to-base64-string
+   (let ((result (json:encode-json-to-string
+                  ;; The order here helps to keep the "constant" part
+                  ;; of the key in the middle.
+                  `((:i . ,(bknr.datastore:store-object-id self))
+                    (:v . 1)
+                    (:h . ,(api-hostname *installation*))
+                    (:s . ,(api-key-secret-key self))))))
+     (concatenate
+      'string
+      result
+      (loop for i below (- 3 (mod (length result) 3))
+            collect #\Space)))))
 
 (defmethod expires-at ((self api-key))
   nil)
