@@ -30,6 +30,7 @@
   (:import-from #:screenshotbot/login/common
                 #:with-login)
   (:import-from #:screenshotbot/model/api-key
+                #:last-used
                 #:api-key-description
                 #:cli-api-key
                 #:expires-at
@@ -44,7 +45,9 @@
                 #:app-template)
   (:import-from #:core/api/acceptor
                 #:api-token-mode-p
-                #:api-acceptor-mixin))
+                #:api-acceptor-mixin)
+  (:import-from #:alexandria
+                #:when-let))
 (in-package :screenshotbot/dashboard/api-keys)
 
 (named-readtables:in-readtable markup:syntax)
@@ -138,7 +141,8 @@
                       ""  "API Key")
                   (if (api-token-mode-p hunchentoot:*acceptor*)
                       "Token" "Secret")
-                  "Description" "Expires" "Actions")
+                  "Description" "Expires"
+                  "Last used" "Actions")
         :empty-message "You haven't created an API Key yet"
         :checkboxes nil
         :row-generator (lambda (api-key)
@@ -166,6 +170,11 @@
                                        (timeago :timestamp expires))
                                       (t
                                        "Never")))
+                               </span>
+
+                               <span>
+                                 ,(when-let ((last-used (last-used api-key)))
+                                    (timeago :timestamp last-used))
                                </span>
 
                              <span>

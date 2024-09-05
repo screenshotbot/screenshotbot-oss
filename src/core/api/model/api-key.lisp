@@ -135,6 +135,10 @@
      :last-used (get-universal-time)
      :api-secret-key (generate-api-secret))))
 
+(defmethod last-used :around ((self api-key))
+  (ignore-errors
+   (call-next-method)))
+
 (defmethod api-hostname (installation)
   (installation-domain installation))
 

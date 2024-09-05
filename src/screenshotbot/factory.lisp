@@ -99,6 +99,8 @@
    (description :initarg :description
                 :initform nil
                 :accessor api-key-description)
+   (last-used :initform nil
+              :accessor core/api/model/api-key::last-used)
    (secret :initarg :secret
            :accessor api-key-secret-key)))
 
