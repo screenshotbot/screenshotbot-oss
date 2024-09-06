@@ -4,6 +4,8 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/github/app-installation
+                #:%app-installation-id
+                #:*app-installation-cache*
                 #:app-installation-repos
                 #:repos
                 #:app-installation-by-id
@@ -14,26 +16,41 @@
                 #:github-plugin)
   (:import-from #:screenshotbot/github/jwt-token
                 #:github-request)
+  (:import-from #:util/mock-recording
+                #:track-during-recording
+                #:with-recording)
+  (:import-from #:cl-mock
+                #:answer
+                #:if-called)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/github/test-app-installation)
 
 
 (util/fiveam:def-suite)
 
+(defparameter *private-key*
+  (uiop:read-file-string
+   (asdf:system-relative-pathname
+    :screenshotbot
+    "github/fixture/private-key-traditional.pem"))
+  "A fake private key generated just for this test. See
+private-key.README.md for how this was generated.")
+
 (def-fixture state ()
   (with-test-store ()
-    (cl-mock:with-mocks ()
-      (cl-mock:if-called 'github-plugin
-                          (lambda ()
-                            (make-instance 'github-plugin
+    (let ((*app-installation-cache* (make-hash-table :test #'equal)))
+      (cl-mock:with-mocks ()
+        (cl-mock:if-called 'github-plugin
+                           (lambda ()
+                             (make-instance 'github-plugin
                                             :app-id 4242
-                                            :private-key "foobar")))
-      (cl-mock:if-called 'github-get-access-token-for-installation
-                          (lambda (install-id
-                                   &key app-id
-                                     private-key)
-                            "dummy-token"))
-      (&body))))
+                                            :private-key *private-key*)))
+        (cl-mock:if-called 'github-get-access-token-for-installation
+                           (lambda (install-id
+                                    &key app-id
+                                      private-key)
+                             "dummy-token"))
+        (&body)))))
 
 (test delete-non-existent-app
   (with-fixture state ()
@@ -58,3 +75,14 @@
 
     (delete-app-installation 23)
     (is (null (app-installation-by-id 23)))))
+
+(test app-installation-id
+  (with-fixture state ()
+    (if-called 'github-request
+               (lambda (url &key jwt-token)
+                 (is (equal "/repos/tdrhq/fast-example/installation" url))
+                 `((:id . 222)
+                   ;; some other info
+                   (:installtion . nil))))
+    (is (eql 222
+             (%app-installation-id  "tdrhq/fast-example")))))

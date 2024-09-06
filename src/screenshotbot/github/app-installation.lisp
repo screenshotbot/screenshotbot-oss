@@ -22,6 +22,8 @@
                 #:with-transaction)
   (:import-from #:bknr.datastore
                 #:class-instances)
+  (:import-from #:util/cron
+                #:def-cron)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:github-get-access-token-for-installation
@@ -122,15 +124,38 @@
 (defun app-installed-p (repo-id)
   (not (null (app-installation-id repo-id))))
 
-(defun app-installation-id (repo-id)
-  ;; TODO(T1328): in the future, we don't really need to get this
-  ;; information from the webhook. We can very easily retrieve this
-  ;; directly from GitHub. See attached task for how this is done. I
-  ;; believe after this we don't need to propagate webhooks to each of
-  ;; the machines.
+(defvar *app-installation-cache* (make-hash-table :test #'equal))
+
+(defun %app-installation-id (repo-id)
+  (a:assoc-value
+   (util:or-setf
+    (gethash repo-id *app-installation-cache*)
+    (github-request
+     (format nil "/repos/~a/installation" repo-id)
+     :jwt-token (github-create-jwt-token
+                 :app-id (app-id (github-plugin))
+                 :private-key (private-key (github-plugin)))))
+   :id))
+
+
+(def-cron clr-cache (:step-min 5)
+  (clrhash *app-installation-cache*))
+
+(defun %old-app-installation-id (repo-id)
+  "The old way of getting the app installation id, which was to look
+through the information sent by webhooks.
+
+TODO: remove this once are sure that the behavior is correct."
   (block top
-   (dolist (installation (class-instances 'app-installation))
-     (dolist (installed-repo (app-installation-repos installation))
-       (when (string-equal installed-repo repo-id)
-         (return-from top (installation-id installation)))))
-   nil))
+    (dolist (installation (class-instances 'app-installation))
+      (dolist (installed-repo (app-installation-repos installation))
+        (when (string-equal installed-repo repo-id)
+          (return-from top (installation-id installation)))))
+    nil))
+
+(defun app-installation-id (repo-id)
+  (let ((old (%old-app-installation-id repo-id))
+        (new (%app-installation-id repo-id)))
+    (unless (equal old new)
+      (warn "Installation id doesn't match: ~a, ~a" old new))
+    old))

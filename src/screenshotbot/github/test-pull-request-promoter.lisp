@@ -47,6 +47,7 @@
                 #:make-diff-report
                 #:change)
   (:import-from #:screenshotbot/github/app-installation
+                #:app-installation-id
                 #:app-installed-p)
   (:import-from #:screenshotbot/github/settings
                 #:verified-repo-p)
@@ -160,6 +161,8 @@
 
 (test run-without-pr-does-not-create-report
   (with-fixture state ()
+    (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+      22)
     (let* ((*base-run* nil)
            (run (make-recorder-run
                  :company company
@@ -355,11 +358,14 @@
 
 (test report-has-acceptable
   (with-fixture state ()
+    (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+      22)
+
     (let ((*base-run* (make-recorder-run
-                        :company company
-                        :channel (make-instance 'dummy-channel :company company)
-                        :commit-hash "car")))
-     (let ((run (make-recorder-run
+                       :company company
+                       :channel (make-instance 'dummy-channel :company company)
+                       :commit-hash "car")))
+      (let ((run (make-recorder-run
                   :channel (make-instance 'dummy-channel :company company)
                   :company company
                   :github-repo "https://github.com/tdrhq/fast-example"
@@ -367,57 +373,59 @@
                   :screenshots (list (make-instance 'screenshot :name "foobar"))
                   :merge-base "car"
                   :commit-hash "foo")))
-       (maybe-promote promoter run)
-       (is-true (the-only-report))))))
+        (maybe-promote promoter run)
+        (is-true (the-only-report))))))
 
 (test maybe-send-tasks-happy-path
   (with-fixture state ()
-    (cl-mock:with-mocks ()
+    (let (calls)
+      (cl-mock:if-called 'github-update-pull-request
+                         (lambda (&rest args)
+                           (push args calls))
+                         :at-start t)
+      (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+        22)
+      (setf (send-task-args promoter) '(:dummy))
+      (let ((run (make-recorder-run
+                  :channel (make-instance 'dummy-channel)
+                  :company company
+                  :github-repo "https://github.com/tdrhq/fast-example"
+                  :pull-request "https://github.com/tdrhq/fast-example/pull/2"
+                  :screenshots (list (make-instance 'screenshot :name "foobar"))
+                  :merge-base "car"
+                  :commit-hash "foo")))
+        (push-remote-check promoter run (make-check run
+                                                    :status :accepted
+                                                    :title "foobar"))
+        (assert-that calls
+                     (has-length 1))))))
+
+(test setf-acceptable-state-happy-path
+  (with-fixture state ()
+    (with-test-user (:logged-in-p t)
       (let (calls)
         (cl-mock:if-called 'github-update-pull-request
                            (lambda (&rest args)
                              (push args calls))
                            :at-start t)
-        (setf (send-task-args promoter) '(:dummy))
-        (let ((run (make-recorder-run
-                    :channel (make-instance 'dummy-channel)
-                    :company company
-                    :github-repo "https://github.com/tdrhq/fast-example"
-                    :pull-request "https://github.com/tdrhq/fast-example/pull/2"
-                    :screenshots (list (make-instance 'screenshot :name "foobar"))
-                    :merge-base "car"
-                    :commit-hash "foo")))
-          (push-remote-check promoter run (make-check run
-                                                      :status :accepted
-                                                      :title "foobar"))
+        (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+          22)
+        (let* ((run (make-recorder-run
+                     :channel (make-instance 'dummy-channel)
+                     :company company
+                     :github-repo "https://github.com/tdrhq/fast-example"
+                     :pull-request "https://github.com/tdrhq/fast-example/pull/2"
+                     :screenshots (list (make-instance 'screenshot :name "foobar"))
+                     :merge-base "car"
+                     :commit-hash "foo"))
+               (report (make-instance 'report :run run
+                                              :previous-run (make-recorder-run)))
+               (acceptable (make-instance 'pr-acceptable
+                                          :send-task-args nil
+                                          :report report)))
+          (setf (acceptable-state acceptable) :accepted)
           (assert-that calls
                        (has-length 1)))))))
-
-(test setf-acceptable-state-happy-path
-  (with-fixture state ()
-    (with-test-user (:logged-in-p t)
-      (cl-mock:with-mocks ()
-        (let (calls)
-          (cl-mock:if-called 'github-update-pull-request
-                             (lambda (&rest args)
-                               (push args calls))
-                             :at-start t)
-          (let* ((run (make-recorder-run
-                       :channel (make-instance 'dummy-channel)
-                       :company company
-                       :github-repo "https://github.com/tdrhq/fast-example"
-                       :pull-request "https://github.com/tdrhq/fast-example/pull/2"
-                       :screenshots (list (make-instance 'screenshot :name "foobar"))
-                       :merge-base "car"
-                       :commit-hash "foo"))
-                 (report (make-instance 'report :run run
-                                        :previous-run (make-recorder-run)))
-                 (acceptable (make-instance 'pr-acceptable
-                                            :send-task-args nil
-                                            :report report)))
-            (setf (acceptable-state acceptable) :accepted)
-            (assert-that calls
-                         (has-length 1))))))))
 
 (test we-dont-overwrite-the-check-summary-for-batch--integration-test
   ;; Does this test belong in test-pull-request-promoter, or here?
@@ -428,6 +436,9 @@
                         :channel (make-instance 'dummy-channel :company company)
                         :commit-hash "car")))
         (let ((calls))
+          (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+            22)
+
           (cl-mock:if-called 'github-update-pull-request
                              (lambda (&rest args)
                                (push args calls))
@@ -476,25 +487,28 @@
 
 (test make-github-for-every-version-of-state
   (with-fixture state ()
+    (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+      22)
+
     (dolist (state (list :accepted :rejected :success :failure :action-required))
       (let* ((channel (make-instance 'channel
                                      :company company
                                      :name "test-channel"
                                      :github-repo "https://github.com/tdrhq/fast-example"))
              (run (make-recorder-run
-                  :github-repo "https://github.com/tdrhq/fast-example"
-                  :channel channel
-                  :commit-hash "zoidberg"))
-            (promoter (make-instance 'pull-request-promoter))
+                   :github-repo "https://github.com/tdrhq/fast-example"
+                   :channel channel
+                   :commit-hash "zoidberg"))
+             (promoter (make-instance 'pull-request-promoter))
              (check (make-check run
                                 :status state
                                 :title "foobar")))
-       (let ((result (plist-alist (make-github-args run check))))
-         (is (equal "zoidberg" (assoc-value result :head-sha)))
-         ;; See: https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28
-         (is (str:s-member (list "action_required" "cancelled" "failure" "neutral"
-                                 "success" "skipped" "stale" "timed_out")
-                           (assoc-value result :conclusion))))))))
+        (let ((result (plist-alist (make-github-args run check))))
+          (is (equal "zoidberg" (assoc-value result :head-sha)))
+          ;; See: https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28
+          (is (str:s-member (list "action_required" "cancelled" "failure" "neutral"
+                                  "success" "skipped" "stale" "timed_out")
+                            (assoc-value result :conclusion))))))))
 
 (test ensure-no-newlines-in-summary
   (with-fixture state ()
