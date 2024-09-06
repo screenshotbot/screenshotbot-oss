@@ -15,6 +15,7 @@
   (:import-from #:screenshotbot/github/plugin
                 #:github-plugin)
   (:import-from #:screenshotbot/github/jwt-token
+                #:github-api-error
                 #:github-request)
   (:import-from #:util/mock-recording
                 #:track-during-recording
@@ -86,3 +87,12 @@ private-key.README.md for how this was generated.")
                    (:installtion . nil))))
     (is (eql 222
              (%app-installation-id  "tdrhq/fast-example")))))
+
+(test app-installation-id-nil
+  (with-fixture state ()
+    (if-called 'github-request
+               (lambda (url &key jwt-token)
+                 (error 'github-api-error
+                        :code 404
+                        :message "foo")))
+    (is (eql nil (%app-installation-id "tdrhq/fast-example")))))

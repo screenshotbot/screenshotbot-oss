@@ -7,6 +7,8 @@
   (:import-from #:bknr.indices
                 #:unique-index)
   (:import-from #:screenshotbot/github/jwt-token
+                #:github-api-error-code
+                #:github-api-error
                 #:github-create-jwt-token
                 #:github-request)
   (:import-from #:screenshotbot/github/access-checks
@@ -130,13 +132,16 @@
   (a:assoc-value
    (util:or-setf
     (gethash repo-id *app-installation-cache*)
-    (github-request
-     (format nil "/repos/~a/installation" repo-id)
-     :jwt-token (github-create-jwt-token
-                 :app-id (app-id (github-plugin))
-                 :private-key (private-key (github-plugin)))))
+    (block inner
+      (handler-bind ((github-api-error (lambda (e)
+                                         (when (eql 404 (github-api-error-code e))
+                                           (return-from inner `((:id . nil)))))))
+        (github-request
+         (format nil "/repos/~a/installation" repo-id)
+         :jwt-token (github-create-jwt-token
+                     :app-id (app-id (github-plugin))
+                     :private-key (private-key (github-plugin)))))))
    :id))
-
 
 (def-cron clr-cache (:step-min 5)
   (clrhash *app-installation-cache*))

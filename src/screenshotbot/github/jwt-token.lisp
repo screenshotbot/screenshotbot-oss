@@ -41,6 +41,15 @@
                      ("iat" . ,ts)
                      ("exp" . ,(+ 300 ts)))))))
 
+(define-condition github-api-error ()
+  ((code :initarg :code
+         :reader github-api-error-code)
+   (message :initarg :message
+            :reader message))
+  (:report (lambda (e output)
+             (with-slots (code message) e
+               (format output "Got bad github error code: ~a (~S)"
+                       code message)))))
 
 (auto-restart:with-auto-restart (:retries 3)
   (defun github-request (url
@@ -70,6 +79,7 @@
                       (json:encode-json-to-string parameters)
                       parameters))
       (unless (or (eql res 200) (eql res 201))
-        (error "Got bad github error code: ~a (~S)" res
-               (ignore-errors (json:decode-json-from-string s))))
+        (error 'github-api-error
+               :code res
+               :message s))
       (json:decode-json-from-string s))))
