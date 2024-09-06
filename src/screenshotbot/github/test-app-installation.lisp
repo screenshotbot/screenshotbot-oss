@@ -33,7 +33,7 @@
   (uiop:read-file-string
    (asdf:system-relative-pathname
     :screenshotbot
-    "github/fixture/private-key-traditional.pem"))
+    "github/fixture/private-key.test-pem"))
   "A fake private key generated just for this test. See
 private-key.README.md for how this was generated.")
 
