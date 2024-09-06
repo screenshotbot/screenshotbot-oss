@@ -96,3 +96,13 @@ private-key.README.md for how this was generated.")
                         :code 404
                         :message "foo")))
     (is (eql nil (%app-installation-id "tdrhq/fast-example")))))
+
+(test app-installation-id-other-crashes
+  (with-fixture state ()
+    (if-called 'github-request
+               (lambda (url &key jwt-token)
+                 (error 'github-api-error
+                        :code 500
+                        :message "foo")))
+    (signals github-api-error
+      (%app-installation-id "tdrhq/fast-example"))))
