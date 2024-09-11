@@ -107,7 +107,12 @@
 the person who installed this repo on Screenshotbot. This is used later
 to verify by the GitHub app to verify that this user can access this repository.")
      (verified-p :initform nil
-                 :accessor verified-p)
+                 :accessor verified-p
+                 :documentation "Verified that we have access to this repo, or at
+least that we had access to this repo at some point in the past. The app could've been uninstalled at
+this point, but the verification will remain. (i.e. `verification` doesn't track
+whether the app is installed, use APP-INSTALLATION-ID to test that instead
+independetly)")
      (verification-failure-message :initform nil
                                    :accessor verification-failure-message))
     (:metaclass persistent-class)))
