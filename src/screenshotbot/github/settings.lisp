@@ -190,7 +190,7 @@
 
 (defmethod maybe-verify-repo ((self verified-repo))
   (log:info "Verifying: ~a" (repo-id self))
-  (a:when-let ((installation-id (app-installation-id (repo-id self))))
+  (a:when-let ((installation-id (app-installation-id (repo-id self) :force t)))
     (log:info "using installation-id: ~a" installation-id)
     (multiple-value-bind (can-edit-p message)
         (repo-collaborator-p (format nil "https://github.com/~a" (repo-id self))
