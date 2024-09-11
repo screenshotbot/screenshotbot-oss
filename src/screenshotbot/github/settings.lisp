@@ -236,12 +236,9 @@ might have verified-p=t. :/ We should consolidate this later."
 (defun verified-repo-p (repo company)
   (let ((repo-id (repo-string-identifier repo)))
     (loop for repo in (%verified-repos-for-company company)
-          if (equal repo-id (repo-id repo))
-            do
-               ;; TODO(T1364): only return T if verified-p is T.
-               (unless (verified-p repo)
-                 (warn "VERIFIED-P is set to T"))
-               (return t))))
+          if (and (equal repo-id (repo-id repo))
+                  (verified-p repo))
+            return t)))
 
 (defun remove-verification (verified-repo)
   (let ((redirect "/settings/github"))

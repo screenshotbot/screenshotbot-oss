@@ -31,14 +31,7 @@
                    :company company
                    :repo-id "tdrhq/web")
 
-    ;; I think we want this to be false, but I'm documenting current
-    ;; behavior. T1364
-    (is-true (verified-repo-p "https://github.com/tdrhq/web" company))
-
-    ;; This warning can be removed once we fix the above assertion
-    (signals simple-warning
-      (verified-repo-p "https://github.com/tdrhq/web" company))
-
+    (is-false (verified-repo-p "https://github.com/tdrhq/web" company))
     (is-false (verified-repo-p "https://github.com/tdrhq/web" company-2))))
 
 (test verified-repo-p-really-good-path
