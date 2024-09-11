@@ -413,6 +413,7 @@
                              (:file "test-read-repos")
                              (:file "test-plugin")
                              (:file "test-access-checks")
+                             (:file "test-settings")
                              (:file "test-pull-request-promoter")
                              (:file "test-review-link")
                              (:file "test-webhook")))
