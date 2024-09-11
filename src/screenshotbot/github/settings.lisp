@@ -103,8 +103,9 @@
               :reader repo-id)
      (installer-login :initarg :installer-login
                       :reader installer-login
-                      :documentation "The github login (e.g. tdrhq) of the person who installed this repo on
- Screenshotbot. This is used later to verify that the app is installed by this person.")
+                      :documentation "The github login (e.g. tdrhq) of
+the person who installed this repo on Screenshotbot. This is used later
+to verify by the GitHub app to verify that this user can access this repository.")
      (verified-p :initform nil
                  :accessor verified-p)
      (verification-failure-message :initform nil
