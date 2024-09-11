@@ -13,6 +13,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/company
+                #:verified-p
                 #:company))
 (in-package :screenshotbot/github/test-settings)
 
@@ -31,7 +32,27 @@
                    :repo-id "tdrhq/web")
 
     ;; I think we want this to be false, but I'm documenting current
-    ;; behavior.
+    ;; behavior. T1364
     (is-true (verified-repo-p "https://github.com/tdrhq/web" company))
+
+    ;; This warning can be removed once we fix the above assertion
+    (signals simple-warning
+      (verified-repo-p "https://github.com/tdrhq/web" company))
+
+    (is-false (verified-repo-p "https://github.com/tdrhq/web" company-2))))
+
+(test verified-repo-p-really-good-path
+  (with-fixture state ()
+    (let ((obj (make-instance 'verified-repo
+                              :company company
+                              :repo-id "tdrhq/web")))
+      (setf (verified-p obj) t))
+
+    (is-true (verified-repo-p "https://github.com/tdrhq/web" company))
+
+    (handler-case
+        (verified-repo-p "https://github.com/tdrhq/web" company)
+      (simple-warning ()
+        (fail "should not have got warning")))
 
     (is-false (verified-repo-p "https://github.com/tdrhq/web" company-2))))

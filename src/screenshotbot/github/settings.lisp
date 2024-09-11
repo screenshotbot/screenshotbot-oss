@@ -224,6 +224,8 @@ independetly)")
          (values))))))
 
 (defun verified-repos (company)
+  "Returns all tracked repos, but importantly, not all the repos here
+might have verified-p=t. :/ We should consolidate this later."
   (let ((repos (%verified-repos-for-company company)))
     (let ((table (make-hash-table :test #'equal)))
       (loop for repo in repos do
@@ -232,8 +234,14 @@ independetly)")
        #'string<))))
 
 (defun verified-repo-p (repo company)
-  (str:s-member (verified-repos company)
-                (repo-string-identifier repo)))
+  (let ((repo-id (repo-string-identifier repo)))
+    (loop for repo in (%verified-repos-for-company company)
+          if (equal repo-id (repo-id repo))
+            do
+               ;; TODO(T1364): only return T if verified-p is T.
+               (unless (verified-p repo)
+                 (warn "VERIFIED-P is set to T"))
+               (return t))))
 
 (defun remove-verification (verified-repo)
   (let ((redirect "/settings/github"))
