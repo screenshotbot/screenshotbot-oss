@@ -50,6 +50,7 @@
   (:import-from #:screenshotbot/dashboard/run-page
                 #:run-link)
   (:import-from #:core/installation/installation
+                #:*installation*
                 #:installation-domain)
   (:import-from #:screenshotbot/installation
                 #:installation)
@@ -64,6 +65,12 @@
   (:import-from #:util/events
                 #:push-event
                 #:with-tracing)
+  (:import-from #:screenshotbot/screenshot-api
+                #:image-public-url)
+  (:import-from #:hunchentoot-extensions
+                #:make-full-url)
+  (:import-from #:util.cdn
+                #:*cdn-domain*)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -159,7 +166,15 @@
                                     collect
                                     (make-instance 'dto:screenshot
                                                    :name (screenshot-name screenshot)
-                                                   :image-id (?. util:oid (screenshot-image screenshot))))
+                                                   :url
+                                                   (let ((*cdn-domain*
+                                                           (or *cdn-domain*
+                                                               (installation-domain *installation*))))
+                                                    (util.cdn:make-cdn
+                                                     (image-public-url
+                                                      (screenshot-image screenshot)
+                                                      :originalp t)))
+                                                   :image-id (util:oid (screenshot-image screenshot))))
                  :main-branch-hash (recorder-run-branch run)
                  :commit-hash (recorder-run-commit run)
                  :author (recorder-run-author run)

@@ -242,6 +242,11 @@
              :json-key "imageId"
              :reader screenshot-image-id
              :documentation "The ID of the image associated with this screenshot")
+   (url :initarg :url
+        :json-type :string
+        :json-key "url"
+        :reader screenshot-url
+        :documentation "The URL to download the original image from")
    (lang :initarg :lang
          :initform nil
          :json-type (or null :string)
