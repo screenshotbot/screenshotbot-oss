@@ -1,6 +1,7 @@
 
 Version
 
+* 13: Added GET /api/run/:oid, and url field to screnshot
 * 12: Added /api/analytics-event
 * 11: Add batch model and POST /api/batch
 * 10: Add author field to run
