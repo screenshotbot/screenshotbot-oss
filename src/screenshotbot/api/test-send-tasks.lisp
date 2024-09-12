@@ -35,7 +35,9 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:make-recorder-run)
   (:import-from #:screenshotbot/model/screenshot-map
-                #:make-screenshot-map))
+                #:make-screenshot-map)
+  (:import-from #:screenshotbot/model/image
+                #:make-image))
 
 (util/fiveam:def-suite)
 
@@ -72,8 +74,8 @@
                          :cleanp t
                          :trunkp t))
                   (screenshot (make-instance 'screenshot
-                                              :run nil
-                                              :name "foo"))
+                                             :run nil
+                                             :name "foo"))
                   (run2 (make-recorder-run
                          :channel channel
                          :commit-hash "car2"

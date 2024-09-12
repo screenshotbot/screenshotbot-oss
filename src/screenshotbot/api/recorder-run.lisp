@@ -154,6 +154,12 @@
                        (quri:merge-uris
                         (run-link run)
                         (installation-domain (installation))))
+                 :screenshots (loop for screenshot in (recorder-run-screenshots run)
+                                    if (screenshot-image screenshot) ;; only for testing convenience
+                                    collect
+                                    (make-instance 'dto:screenshot
+                                                   :name (screenshot-name screenshot)
+                                                   :image-id (?. util:oid (screenshot-image screenshot))))
                  :main-branch-hash (recorder-run-branch run)
                  :commit-hash (recorder-run-commit run)
                  :author (recorder-run-author run)
