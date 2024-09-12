@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/fetch-run
+                #:Safe-name-p
+                #:unsafe-screenshot-name
                 #:*download-engine*
                 #:%save-run)
   (:import-from #:util/request
@@ -24,14 +26,14 @@
   (flex:make-in-memory-input-stream
    (flex:string-to-octets "foobar")))
 
-(def-fixture state ()
+(def-fixture state (&key (screenshot-name "foo"))
   (cl-mock:with-mocks ()
     (let ((*download-engine* (make-instance 'fake-engine)))
      (let ((run (make-instance 'dto:run
                                :screenshots
                                (list
                                 (make-instance 'dto:screenshot
-                                               :name "foo"
+                                               :name screenshot-name
                                                :url "https://example.com")))))
        (&body)))))
 
@@ -41,4 +43,17 @@
       (%save-run run :output dir)
       (is (uiop:file-exists-p (path:catfile  dir "foo.png")))
       (is (equal "foobar" (uiop:read-file-string (path:catfile  dir "foo.png")))))))
+
+(test crashes-on-trying-to-write-to-different-directory
+  (with-fixture state (:screenshot-name "/bar")
+    (tmpdir:with-tmpdir (dir)
+      (signals unsafe-screenshot-name
+        (%save-run run :output dir)))))
+
+(test safe-name-p-on-some-options
+  (with-fixture state ()
+    (is-true (Safe-name-p "foobar"))
+    (is-false (safe-name-p "/bar/car"))
+    (is-false (Safe-name-p "../car/bar"))))
+
 

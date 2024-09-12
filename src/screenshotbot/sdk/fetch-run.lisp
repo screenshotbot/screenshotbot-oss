@@ -37,8 +37,19 @@
                'fetch-run-response)))
     (run fetch-run-response)))
 
-(defun safe-name-p (screnshot-name)
-  t)
+(define-condition unsafe-screenshot-name (error)
+  ())
+
+(defun safe-name-p (screenshot-name)
+  (let ((path (pathname screenshot-name)))
+    (and
+     (not (eql :absolute (car (pathname-directory path))))
+     (loop for directory in (pathname-directory path)
+           if (or (equal ".." directory) ;; it's actually just :up, but keeping it here in case
+                  (equal :up directory))
+             return nil
+           finally
+              (return t)))))
 
 (defun save-run (api-context oid &key output)
   (let ((run (get-run api-context oid)))
@@ -59,7 +70,8 @@
 (defun %save-run (run &key output)
   (loop for screenshot in (dto:run-screenshots run)
         do
-           (assert (safe-name-p (dto:screenshot-name screenshot)))
+           (unless (safe-name-p (dto:screenshot-name screenshot))
+             (error 'unsafe-screenshot-name))
            (log:info "Saving: ~a" (dto:screenshot-url screenshot))
            (let ((output
                    (make-pathname
