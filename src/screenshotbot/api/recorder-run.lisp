@@ -152,29 +152,31 @@
     (throttle! *fetch-throttler* :key (auth:current-company))
 
     (auth:can-view! run)
-    (run-to-dto run)))
+    (run-to-dto run :include-screenshots t)))
 
-(defun run-to-dto (run)
+(defun run-to-dto (run &key include-screenshots)
   (make-instance 'dto:run
                  :id (oid run)
                  :url (quri:render-uri
                        (quri:merge-uris
                         (run-link run)
                         (installation-domain (installation))))
-                 :screenshots (loop for screenshot in (recorder-run-screenshots run)
-                                    if (screenshot-image screenshot) ;; only for testing convenience
-                                    collect
-                                    (make-instance 'dto:screenshot
-                                                   :name (screenshot-name screenshot)
-                                                   :url
-                                                   (let ((*cdn-domain*
-                                                           (or *cdn-domain*
-                                                               (installation-domain *installation*))))
-                                                    (util.cdn:make-cdn
-                                                     (image-public-url
-                                                      (screenshot-image screenshot)
-                                                      :originalp t)))
-                                                   :image-id (util:oid (screenshot-image screenshot))))
+                 :screenshots
+                 (when include-screenshots
+                  (loop for screenshot in (recorder-run-screenshots run)
+                        if (screenshot-image screenshot) ;; only for testing convenience
+                          collect
+                          (make-instance 'dto:screenshot
+                                         :name (screenshot-name screenshot)
+                                         :url
+                                         (let ((*cdn-domain*
+                                                 (or *cdn-domain*
+                                                     (installation-domain *installation*))))
+                                           (util.cdn:make-cdn
+                                            (image-public-url
+                                             (screenshot-image screenshot)
+                                             :originalp t)))
+                                         :image-id (util:oid (screenshot-image screenshot)))))
                  :main-branch-hash (recorder-run-branch run)
                  :commit-hash (recorder-run-commit run)
                  :author (recorder-run-author run)
