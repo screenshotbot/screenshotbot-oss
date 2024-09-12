@@ -57,6 +57,7 @@
                (:file "sentry")
                (:file "install")
                (:file "cli-common")
+               (:file "fetch-run")
                (:file "dev")
                (:file "failed-run")
                (:file "unchanged-run")

@@ -58,6 +58,7 @@
   (:import-from #:screenshotbot/model/batch
                 #:find-or-create-batch)
   (:import-from #:util/throttler
+                #:throttler
                 #:throttle!
                 #:keyed-throttler)
   (:import-from #:util/events
@@ -134,6 +135,17 @@
                 (list field (hunchentoot:parameter (str:downcase (string field)))))))
       (after-run-created recorder-run)
       resp)))
+
+(defvar *fetch-throttler* (make-instance 'throttler
+                                         :tokens 100))
+
+(defapi (api-run-get :uri "/api/run/:oid" :method :get) (oid)
+  (let ((run (util:find-by-oid oid)))
+    ;; If someone has an API key, prevent them from guessing object IDs.
+    (throttle! *fetch-throttler* :key (auth:current-company))
+
+    (auth:can-view! run)
+    (run-to-dto run)))
 
 (defun run-to-dto (run)
   (make-instance 'dto:run
