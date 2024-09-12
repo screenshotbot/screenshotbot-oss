@@ -111,6 +111,7 @@
                (:file "test-run-context")
                (:file "test-flags")
                (:file "test-git")
+               (:file "test-fetch-run")
                (:file "test-env")
                (:file "test-dev")
                (:file "test-sentry")

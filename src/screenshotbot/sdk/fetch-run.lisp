@@ -12,8 +12,14 @@
                 #:request)
   (:import-from #:util/json-mop
                 #:ext-json-serializable-class)
+  (:import-from #:util/request
+                #:engine
+                #:http-request)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/fetch-run)
+
+(defvar *download-engine*
+  (make-instance 'engine))
 
 (defclass fetch-run-response ()
   ((run :json-type dto:run
@@ -32,13 +38,35 @@
     (run fetch-run-response)))
 
 (defun safe-name-p (screnshot-name)
-  (values))
+  t)
 
 (defun save-run (api-context oid &key output)
   (let ((run (get-run api-context oid)))
-    (loop for screenshot in (dto:run-screenshots run)
-          do
-             (assert (safe-name-p (dto:screenshot-name screenshot)))
-             (log:info "Saving: ~a" (dto:screenshot-url screenshot)))))
+    (%save-run run :output output)))
+
+(defun download-url (url file)
+  (with-open-file (output file :direction :output
+                               :element-type '(unsigned-byte 8))
+    (with-open-stream (input (http-request
+                         url
+                         :want-stream t
+                         :engine *download-engine*))
+      (uiop:copy-stream-to-stream
+       input
+       output
+       :element-type '(unsigned-byte 8)))))
+
+(defun %save-run (run &key output)
+  (loop for screenshot in (dto:run-screenshots run)
+        do
+           (assert (safe-name-p (dto:screenshot-name screenshot)))
+           (log:info "Saving: ~a" (dto:screenshot-url screenshot))
+           (let ((output
+                   (make-pathname
+                    :type "png"
+                    :defaults (path:catfile output (dto:screenshot-name screenshot)))))
+             (download-url
+              (dto:screenshot-url screenshot)
+              output))))
 
 
