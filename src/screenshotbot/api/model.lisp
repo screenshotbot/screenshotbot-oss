@@ -63,7 +63,8 @@
              #:batch
              #:batch-repo
              #:batch-commit
-             #:batch-name))
+             #:batch-name
+             #:screenshot-url))
 
 (in-package :screenshotbot/api/model)
 

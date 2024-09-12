@@ -169,6 +169,7 @@
 (defmethod request ((api-context api-context:api-context)
                     api &key (method :post)
                           parameters
+                          (decode-response t)
                           content)
   (log:debug "Making API request: ~S" api)
   (when (and (eql method :get) parameters)
@@ -186,12 +187,16 @@
                                        ((and (eql method :post)
                                              content)
                                         content)))))
-    (handler-case
-        (let ((result (json:decode-json-from-string json)))
-          (ensure-api-success result))
-      (json:json-syntax-error (e)
-        (error "Could not parse json:"
-               json)))))
+    (cond
+      (decode-response
+       (handler-case
+           (let ((result (json:decode-json-from-string json)))
+             (ensure-api-success result))
+         (json:json-syntax-error (e)
+           (error "Could not parse json:"
+                  json))))
+      (t
+       json))))
 
 (defun call-with-file-stream (non-file-stream fn)
   "See doc for with-file-stream"
