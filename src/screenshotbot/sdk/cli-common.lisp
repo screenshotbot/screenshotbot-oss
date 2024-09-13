@@ -119,7 +119,9 @@
                  api-context
                  (getopt cmd :run-id)
                  :output
-                 (format nil "~a/" (getopt cmd :output)))))
+                 (format nil "~a/" (or
+                                    (getopt cmd :output)
+                                    (format nil "./~a" (getopt cmd :run-id)))))))
    :description "Use this to download a run and all of its images locally."
    :options (list
              (make-option
