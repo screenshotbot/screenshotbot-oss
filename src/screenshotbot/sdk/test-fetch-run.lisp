@@ -45,7 +45,7 @@
       (is (equal "foobar" (uiop:read-file-string (path:catfile  dir "foo.png")))))))
 
 (test crashes-on-trying-to-write-to-different-directory
-  (with-fixture state (:screenshot-name "/bar")
+  (with-fixture state (:screenshot-name "/../car/bar")
     (tmpdir:with-tmpdir (dir)
       (signals unsafe-screenshot-name
         (%save-run run :output dir)))))

@@ -65,19 +65,23 @@
        output
        :element-type '(unsigned-byte 8)))))
 
+(defun trim-/ (name)
+  (cl-ppcre:regex-replace "^/*" name ""))
+
 (defun %save-run (run &key output)
   (loop for screenshot in (dto:run-screenshots run)
         do
-           (unless (safe-name-p (dto:screenshot-name screenshot))
-             (error 'unsafe-screenshot-name))
-           (let ((output
-                   (make-pathname
-                    :type "png"
-                    :defaults (path:catfile output (dto:screenshot-name screenshot)))))
-             (log:info "Saving: ~a" output)
-             (download-url
-              (dto:screenshot-url screenshot)
-              output))))
+           (let ((screenshot-name (trim-/ (dto:screenshot-name screenshot))))
+             (unless (safe-name-p screenshot-name)
+               (error 'unsafe-screenshot-name))
+             (let ((output
+                     (make-pathname
+                      :type "png"
+                      :defaults (path:catfile output screenshot-name))))
+               (log:info "Saving: ~a" output)
+               (download-url
+                (dto:screenshot-url screenshot)
+                output)))))
 
 
 
