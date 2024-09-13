@@ -14,9 +14,17 @@
   (:import-from #:auth
                 #:authenticated-request)
   (:import-from #:auth/viewer-context
+                #:anonymous-viewer-context
                 #:normal-viewer-context)
   (:import-from #:auth/request
-                #:abstract-authenticated-request))
+                #:abstract-authenticated-request)
+  (:import-from #:util/events
+                #:push-event
+                #:*events*)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that))
 (in-package :auth/test-view)
 
 (util/fiveam:def-suite)
@@ -32,6 +40,11 @@
 
 (defmethod auth:can-edit ((obj (eql :one)) (user my-user))
   t)
+
+(def-fixture state ()
+  (cl-mock:with-mocks ()
+    (let ((events))
+     (&body))))
 
 (test happy-path-can-edit-view
   (cl-mock:with-mocks ()
@@ -72,3 +85,31 @@
   (is-false (auth:can-viewer-view
              (make-instance 'normal-viewer-context :user :fake-user)
              nil)))
+
+(test event-gets-notified-once
+  (with-fixture state ()
+    (if-called 'push-event
+               (lambda (name &rest args)
+                 (push name events)))
+    (is-false (auth:can-viewer-view
+               (make-instance 'normal-viewer-context :user :fake-user)
+               nil))
+    (assert-that events
+                 (has-length 1))))
+
+(defmethod auth:can-viewer-view (vc (obj (eql :run-1)))
+  (auth:can-viewer-view vc :channel-1))
+
+(defmethod auth:can-viewer-view (vc (obj (eql :channel-1)))
+  nil)
+
+(test nested-invocation-only-gets-notified-once
+  (with-fixture state ()
+    (if-called 'push-event
+               (lambda (name &rest args)
+                 (push name events)))
+    (is-false (auth:can-viewer-view
+               :vc
+               :run-1))
+    (assert-that events
+                 (has-length 1))))

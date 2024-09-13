@@ -95,14 +95,22 @@ CAN-EDIT to CAN-VIEWER-EDIT."
    (auth:can-viewer-view vc obj)
    (call-next-method)))
 
+(defvar *nesting-count* 0)
+
 (defmethod can-viewer-view :around (vc obj)
-  (let ((res (call-next-method)))
+  ;; All of this logic is just for the simple push-event. I wonder if
+  ;; it would make sense to get rid of this push-event altogether at
+  ;; some point.
+  (let ((res
+          (let ((*nesting-count* (1+ *nesting-count*)))
+            (call-next-method))))
     (unless res
       ;; We are track failures so that a spike can indicate bugs in
       ;; the authorization logic, or a potential attacker.
-      (push-event :can-viewer-view-failed
-                  :object (format nil "~a" obj)
-                  :vc (format nil "~a" vc)))
+      (when (eql *nesting-count* 0)
+        (push-event :can-viewer-view-failed
+                    :object (format nil "~a" obj)
+                    :vc (format nil "~a" vc))))
     res))
 
 (defgeneric can-edit (obj user)
