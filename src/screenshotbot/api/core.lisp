@@ -91,8 +91,8 @@
     (setf
      (auth:viewer-context hunchentoot:*request*)
      (make-instance 'api-viewer-context
-                    :user user)))
-
+                    :user user
+                    :api-key key)))
   (let ((company (api-key-company key)))
     (when (redirect-url company)
       (hex:forward-request (redirect-url company)))
