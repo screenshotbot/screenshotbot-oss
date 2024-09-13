@@ -23,6 +23,8 @@
 (hunchentoot:define-easy-handler (my-handler :uri "/hello" :acceptor-names '(foobar)) ()
   "OK")
 
+;; TODO(T1368) This test is currently broken on our AWS ARM64 machine.
+#-(and linux arm64)
 (test happy-path-random-port
   (let ((acceptor (make-instance 'test-acc :name 'foobar)))
     (is-false (hunchentoot:started-p acceptor))
