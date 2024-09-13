@@ -75,9 +75,8 @@
              (unless (safe-name-p screenshot-name)
                (error 'unsafe-screenshot-name))
              (let ((output
-                     (make-pathname
-                      :type "png"
-                      :defaults (path:catfile output screenshot-name))))
+                     (format nil "~a.png"
+                             (path:catfile output screenshot-name))))
                (log:info "Saving: ~a" output)
                (download-url
                 (dto:screenshot-url screenshot)
