@@ -19,6 +19,8 @@
                 #:credential-file)
   (:import-from #:screenshotbot/api/model
                 #:decode-json)
+  (:import-from #:screenshotbot/sdk/fetch-run
+                #:save-run)
   (:export
    #:with-clingon-api-context
    #:common-run-options
@@ -107,6 +109,33 @@
     :key :verbose
     :long-name "verbose"
     :description "Verbose logging")))
+
+(defun download-run/command ()
+  (clingon:make-command
+   :name "download-run"
+   :handler (lambda (cmd)
+              (with-clingon-api-context (api-context cmd)
+                (save-run
+                 api-context
+                 (getopt cmd :run-id)
+                 :output
+                 (format nil "~a/" (getopt cmd :output)))))
+   :description "Use this to download a run and all of its images locally."
+   :options (list
+             (make-option
+              :string
+              :long-name "id"
+              :initial-value nil
+              :description "The ID of the run, this is the ID you see in https://screenshotbot.io/runs/<ID>. Be aware that you cannot use a report ID here."
+              :key :run-id)
+             (make-option
+              :string
+              :long-name "output"
+              :initial-value nil
+              :description "The output directory to save the images. If not present it will default to  ./<id>"
+              :key :output))))
+
+
 (defun root/command ()
   (make-instance
    'root-command
@@ -123,7 +152,8 @@ as opposed to `recorder help`."
    (list
     (self-test/command)
     (ci/command)
-    (dev/command))))
+    (dev/command)
+    (download-run/command))))
 
 
 (defun ci/command ()

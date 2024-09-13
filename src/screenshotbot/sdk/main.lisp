@@ -173,6 +173,7 @@
            (not (str:emptyp (uiop:getenv "SCREENSHOTBOT_CLI_V2")))
            (str:s-member argv "dev")
            (str:s-member argv "ci")
+           (str:s-member argv "download-run")
            #+nil ;; References "ci record" which doesn't exit
            (str:s-member argv "help"))
           (log:debug "Enabling V2 of Screenshotbot CLI interface")

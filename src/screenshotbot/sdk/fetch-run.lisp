@@ -72,13 +72,15 @@
         do
            (unless (safe-name-p (dto:screenshot-name screenshot))
              (error 'unsafe-screenshot-name))
-           (log:info "Saving: ~a" (dto:screenshot-url screenshot))
            (let ((output
                    (make-pathname
                     :type "png"
                     :defaults (path:catfile output (dto:screenshot-name screenshot)))))
+             (log:info "Saving: ~a" output)
              (download-url
               (dto:screenshot-url screenshot)
               output))))
+
+
 
 
