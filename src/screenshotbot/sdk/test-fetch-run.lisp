@@ -56,4 +56,9 @@
     (is-false (safe-name-p "/bar/car"))
     (is-false (Safe-name-p "../car/bar"))))
 
-
+(test nested-directory
+  (with-fixture state (:screenshot-name "foo/bar")
+    (tmpdir:with-tmpdir (dir)
+      (%save-run run :output dir)
+      (is (uiop:file-exists-p (path:catfile  dir "foo/bar.png")))
+      (is (equal "foobar" (uiop:read-file-string (path:catfile  dir "foo/bar.png")))))))

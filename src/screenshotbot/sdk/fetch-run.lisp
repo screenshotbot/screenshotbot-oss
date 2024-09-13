@@ -56,7 +56,7 @@
     (%save-run run :output output)))
 
 (defun download-url (url file)
-  (with-open-file (output file :direction :output
+  (with-open-file (output (ensure-directories-exist file) :direction :output
                                :element-type '(unsigned-byte 8))
     (with-open-stream (input (http-request
                          url
