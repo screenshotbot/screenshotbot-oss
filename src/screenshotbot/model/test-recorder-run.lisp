@@ -38,6 +38,7 @@
                 #:has-item
                 #:contains)
   (:import-from #:screenshotbot/user-api
+                #:user
                 #:recorder-previous-run
                 #:recorder-run-commit
                 #:channel)
@@ -48,7 +49,12 @@
   (:import-from #:screenshotbot/model/company
                 #:find-or-create-channel
                 #:company)
-
+  (:import-from #:screenshotbot/model/api-key
+                #:api-key)
+  (:import-from #:auth/viewer-context
+                #:api-viewer-context)
+  (:import-from #:fiveam-matchers/described-as
+                #:described-as)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-recorder-run)
 
@@ -56,10 +62,10 @@
 
 (def-fixture state ()
   (with-test-store ()
-    (let ((run (make-recorder-run))
-          (company (make-instance 'company))
-          (promotion-log (make-instance 'promotion-log)))
-     (&body))))
+    (let* ((run (make-recorder-run))
+           (company (make-instance 'company))
+           (promotion-log (make-instance 'promotion-log)))
+      (&body))))
 
 
 (test promotion-log-for-new
@@ -188,3 +194,43 @@
       (is (equal "foo"
                  (recorder-run-commit (car
                                        (class-instances 'recorder-run))))))))
+
+(test api-viewer-context-can-only-see-runs-in-the-company
+  (with-fixture state ()
+    (let* ((other-company (make-instance 'company))
+           (user (make-instance 'user))
+           (api-key (make-instance 'api-key
+                                  :user user
+                                  :company other-company))
+           (other-channel (make-instance 'channel
+                                         :company other-company))
+           (other-run (make-recorder-run
+                       :channel other-channel
+                       :company other-company))
+           (channel (make-instance 'channel
+                                         :company company))
+           (run (make-recorder-run
+                       :channel channel
+                       :company company)))
+      (roles:ensure-has-role company user 'roles:standard-member)
+      (roles:ensure-has-role other-company user 'roles:standard-member)
+      (assert-that
+       (auth:can-viewer-view
+        (make-instance
+         'api-viewer-context
+         :user user
+         :api-key (make-instance 'api-key
+                                 :user user
+                                 :company other-company))
+        other-run)
+       (described-as "Can view runs in the same company"
+         (is-equal-to t)))
+      (assert-that
+       (auth:can-viewer-view
+        (make-instance
+         'api-viewer-context
+         :user user
+         :api-key api-key)
+        run)
+       (described-as "Cannot view runs in the other company"
+         (is-equal-to nil))))))

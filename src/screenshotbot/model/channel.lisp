@@ -52,6 +52,11 @@
                 #:anyone-can-review)
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
+  (:import-from #:auth/viewer-context
+                #:viewer-context-api-key
+                #:api-viewer-context)
+  (:import-from #:screenshotbot/model/api-key
+                #:api-key-company)
   (:export
    #:channel
    #:set-channel-screenshot-mask
@@ -292,6 +297,13 @@
   (or
    (publicp channel)
    (auth:can-viewer-view vc (company channel))))
+
+(defmethod auth:can-viewer-view ((vc api-viewer-context)
+                                 (channel channel))
+  (or
+   (publicp channel)
+   (eql (api-key-company (viewer-context-api-key vc))
+        (company channel))))
 
 (defmethod production-run-for ((channel channel)
                                &key commit
