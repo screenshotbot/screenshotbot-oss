@@ -164,7 +164,9 @@
       ;; should signal an error
 
       (with-open-stream (stream stream)
-        (uiop:slurp-input-stream 'string stream)))))
+        (values
+         (uiop:slurp-input-stream 'string stream)
+         response-code)))))
 
 (defmethod request ((api-context api-context:api-context)
                     api &key (method :post)
@@ -174,29 +176,30 @@
   (log:debug "Making API request: ~S" api)
   (when (and (eql method :get) parameters)
     (error "Can't use :get with parameters"))
-  (let ((json (%request api-context
-                        api :method method
-                            :parameters parameters
-                            :content (cond
-                                       ((or
-                                         (eql :put method)
-                                         (typep (class-of content)
-                                                'ext-json-serializable-class))
-                                        (json-mop-to-string
-                                         content))
-                                       ((and (eql method :post)
-                                             content)
-                                        content)))))
-    (cond
-      (decode-response
-       (handler-case
-           (let ((result (json:decode-json-from-string json)))
-             (ensure-api-success result))
-         (json:json-syntax-error (e)
-           (error "Could not parse json:"
-                  json))))
-      (t
-       json))))
+  (multiple-value-bind (json code)
+      (%request api-context
+                api :method method
+                    :parameters parameters
+                    :content (cond
+                               ((or
+                                 (eql :put method)
+                                 (typep (class-of content)
+                                        'ext-json-serializable-class))
+                                (json-mop-to-string
+                                 content))
+                               ((and (eql method :post)
+                                     content)
+                                content)))
+   (cond
+     (decode-response
+      (handler-case
+          (let ((result (json:decode-json-from-string json)))
+            (ensure-api-success result))
+        (json:json-syntax-error (e)
+          (error "Could not parse json:"
+                 json))))
+     (t
+      (values json code)))))
 
 (defun call-with-file-stream (non-file-stream fn)
   "See doc for with-file-stream"

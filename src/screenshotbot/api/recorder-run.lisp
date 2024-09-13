@@ -146,7 +146,7 @@
 (defvar *fetch-throttler* (make-instance 'throttler
                                          :tokens 100))
 
-(defapi (api-run-get :uri "/api/run/:oid" :method :get) (oid)
+(defapi (api-run-get :uri "/api/run/:oid" :method :get :wrap-success nil) (oid)
   (let ((run (util:find-by-oid oid)))
     ;; If someone has an API key, prevent them from guessing object IDs.
     (throttle! *fetch-throttler* :key (auth:current-company))

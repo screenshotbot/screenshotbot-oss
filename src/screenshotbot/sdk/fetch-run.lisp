@@ -21,11 +21,6 @@
 (defvar *download-engine*
   (make-instance 'engine))
 
-(defclass fetch-run-response ()
-  ((run :json-type dto:run
-        :json-key "response"
-        :reader run))
-  (:metaclass ext-json-serializable-class))
 
 (defun get-run (api-context oid)
   (multiple-value-bind (body code)
@@ -35,11 +30,10 @@
                :decode-response nil)
     ;; TODO: sync this with ENSURE-API-SUCCESS.
     (unless (eql code 200)
-      (error "Could not fetch run: ~a" body))
-    (let* ((fetch-run-response (json-mop:json-to-clos
-                                body
-                                'fetch-run-response)))
-     (run fetch-run-response))))
+      (error "Could not fetch run: ~a, ~a" code body))
+    (json-mop:json-to-clos
+     body
+     'dto:run)))
 
 (define-condition unsafe-screenshot-name (error)
   ())

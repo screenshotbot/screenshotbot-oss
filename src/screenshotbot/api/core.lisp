@@ -111,7 +111,7 @@
   (let ((*api-key* (authenticate-api-request hunchentoot:*request*)))
     (funcall fn)))
 
-(def-easy-macro with-error-handling (&fn fn)
+(def-easy-macro with-error-handling (&key wrap-success &fn fn)
   "Converts internal errors into a JSON renderable object.
 
 It should be safe to mock call-with-error-handling to just call
@@ -138,14 +138,19 @@ function fn for the purpose of tests."
                                                :error (format nil
                                                               "Internal error, please contact support@screenshotbot.io: ~a"
                                                               (princ-to-string e)))))))
-       (make-instance 'result
-                      :success t
-                      :response
-                      (fn))))))
+       (cond
+         (wrap-success
+          (make-instance 'result
+                         :success t
+                         :response
+                         (fn)))
+         (t
+          (fn)))))))
 
 (defmacro defapi ((name &key uri method intern
                           (type :v1)
                           (use-yason nil)
+                          (wrap-success t)
                           (listp nil))
                   params &body body)
   (declare (ignore type))
@@ -178,7 +183,7 @@ function fn for the purpose of tests."
                   'json-mop-to-string)
                  (t
                   'json:encode-json-to-string))
-              (with-error-handling ()
+              (with-error-handling (:wrap-success ,wrap-success)
                 (let ((obj (ret)))
                   (or
                    obj
