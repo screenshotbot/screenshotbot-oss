@@ -28,14 +28,18 @@
   (:metaclass ext-json-serializable-class))
 
 (defun get-run (api-context oid)
-  (let* ((body (request api-context
-                        (format nil "/api/run/~a" oid)
-                        :method :get
-                        :decode-response nil))
-         (fetch-run-response (json-mop:json-to-clos
-               body
-               'fetch-run-response)))
-    (run fetch-run-response)))
+  (multiple-value-bind (body code)
+      (request api-context
+               (format nil "/api/run/~a" oid)
+               :method :get
+               :decode-response nil)
+    ;; TODO: sync this with ENSURE-API-SUCCESS.
+    (unless (eql code 200)
+      (error "Could not fetch run: ~a" body))
+    (let* ((fetch-run-response (json-mop:json-to-clos
+                                body
+                                'fetch-run-response)))
+     (run fetch-run-response))))
 
 (define-condition unsafe-screenshot-name (error)
   ())
