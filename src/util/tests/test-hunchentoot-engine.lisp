@@ -27,6 +27,11 @@
   (setf (hunchentoot:header-out :x-blah)  "22")
   "foobar")
 
+(define-easy-handler (test-handler-2 :uri "/dummy/test-auth" :acceptor-names '(foo)) ()
+  (multiple-value-bind (user pass) (hunchentoot:authorization)
+   (format nil "~a/~a"
+           user pass)))
+
 (def-fixture state ()
   (let* ((acceptor (make-instance 'hunchentoot:easy-acceptor
                                   :name 'foo))
@@ -55,3 +60,12 @@
        (is-equal-to "foobar"))
       (is (eql 200 code))
       (is (equal "22" (assoc-value headers :x-blah))))))
+
+(test authentication
+  (with-fixture state ()
+    (let ((result (http-request
+                   "/dummy/test-auth"
+                   :want-string t
+                   :engine engine
+                   :basic-authorization '("foo" "bar"))))
+      (is (equal "foo/bar" result)))))

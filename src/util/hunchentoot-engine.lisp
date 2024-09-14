@@ -18,9 +18,18 @@
              :reader acceptor))
   (:documentation "A request engine that dispatches to a hunchentoot acceptor instead."))
 
+(defun compute-headers-in (&key basic-authorization)
+  (remove-if
+   #'null
+   `(,(when basic-authorization
+        `(:authorization . ,(format nil "Basic ~a"
+                                    (base64:string-to-base64-string
+                                     (format nil "~a:~a"
+                                             (first basic-authorization)
+                                             (second basic-authorization)))))))))
 
 (defmethod http-request-impl ((self hunchentoot-engine)
-                              url &key method &allow-other-keys)
+                              url &key method basic-authorization &allow-other-keys)
   (let* ((acceptor (acceptor self))
          (hunchentoot:*acceptor* acceptor)
          (request (make-instance (acceptor-request-class acceptor)
@@ -29,7 +38,8 @@
                                  :local-port 9999
                                  :remote-addr "127.0.0.1"
                                  :remote-port 9998
-                                 :headers-in nil
+                                 :headers-in (compute-headers-in
+                                              :basic-authorization basic-authorization)
                                  :content-stream
                                  (flex:make-in-memory-input-stream
                                   (make-array 0 :element-type 'flex:octet))
