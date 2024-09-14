@@ -253,6 +253,12 @@
                (:file "request")
                (:file "engines")))
 
+(defsystem :util/hunchentoot-engine
+  :depends-on (:util
+               :hunchentoot)
+  :serial t
+  :components ((:file "hunchentoot-engine")))
+
 (defsystem :util/disk-size
   :depends-on (:util/sizeof)
   :components ((:file "disk-size")))
@@ -337,6 +343,7 @@
 (defsystem :util/tests
   :depends-on (:util
                :util/simple-queue
+               :util/hunchentoot-engine
                :util/hash-lock
                :util/lparallel
                :util/health-check
@@ -367,6 +374,7 @@
                              (:static-file "test-file-compressed" :type "txt.gz")
                              (:file "test-ret-let")
                              (:file "test-mail")
+                             (:file "test-hunchentoot-engine")
                              (:file "test-fset")
                              (:file "test-fake-clingon")
                              (:file "test-throttler")
