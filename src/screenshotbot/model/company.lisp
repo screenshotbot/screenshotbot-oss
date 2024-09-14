@@ -321,11 +321,14 @@ parent organization.")))
 
 (defgeneric find-image-by-id (company id))
 
+(defmethod find-channel ((company company) name)
+  (loop for channel in (company-channels company)
+        if (equal (channel-name channel) name)
+          return channel))
+
 (defmethod find-or-create-channel ((company company) name)
   (or
-   (loop for channel in (company-channels company)
-         if (equal (channel-name channel) name)
-           return channel)
+   (find-channel company name)
    (let ((channel (make-instance 'channel :name name :company company)))
      (with-transaction ()
       (pushnew channel (company-channels company)))

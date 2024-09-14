@@ -240,6 +240,7 @@
                  (:file "failed-run")
                  (:file "finalized-commit")
                  (:file "batch")
+                 (:file "active-runs")
                  (:file "image")
                  (:file "api-key")
                  (:file "promote")
