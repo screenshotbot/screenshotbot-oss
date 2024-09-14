@@ -69,3 +69,30 @@
                    :engine engine
                    :basic-authorization '("foo" "bar"))))
       (is (equal "foo/bar" result)))))
+
+
+(test want-stream
+  (with-fixture state ()
+    (let ((result (http-request
+                   "/dummy/test-h-e"
+                   :want-stream t
+                   :engine engine)))
+      (let ((sequence (make-array 6)))
+        (read-sequence sequence result)
+        (is (equalp
+             "foobar"
+             sequence))))))
+
+
+(test want-stream-binary
+  (with-fixture state ()
+    (let ((result (http-request
+                   "/dummy/test-h-e"
+                   :want-stream t
+                   :force-binary t
+                   :engine engine)))
+      (let ((sequence (make-array 6)))
+        (read-sequence sequence result)
+        (is (equalp
+              #(102 111 111 98 97 114)
+              sequence))))))

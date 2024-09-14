@@ -29,7 +29,9 @@
                                              (second basic-authorization)))))))))
 
 (defmethod http-request-impl ((self hunchentoot-engine)
-                              url &key method basic-authorization &allow-other-keys)
+                              url &key method basic-authorization want-stream
+                                    force-binary
+                              &allow-other-keys)
   (let* ((acceptor (acceptor self))
          (hunchentoot:*acceptor* acceptor)
          (request (make-instance (acceptor-request-class acceptor)
@@ -49,9 +51,19 @@
          (hunchentoot:*request* request)
          (reply (make-instance (acceptor-reply-class acceptor)))
          (hunchentoot:*reply* reply))
-    (values
-     (hunchentoot:acceptor-dispatch-request acceptor request)
-     (hunchentoot:return-code reply)
-     (hunchentoot:headers-out* reply))))
+    (let ((body (hunchentoot:acceptor-dispatch-request acceptor request)))
+      (values
+       (cond
+         ((and want-stream
+               force-binary)
+          (flex:make-in-memory-input-stream
+           (flex:string-to-octets body)))
+         (want-stream
+          (make-string-input-stream
+           body))
+         (t
+          body))
+       (hunchentoot:return-code reply)
+       (hunchentoot:headers-out* reply)))))
 
 
