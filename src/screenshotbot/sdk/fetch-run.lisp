@@ -61,15 +61,25 @@
   (let ((run (get-run api-context oid)))
     (%save-run run :output output)))
 
+#+lispworks
+(defvar *semaphore* (mp:make-semaphore :count 2)
+  "We don't want all three threads being blocked on latency at the same time.")
+
 (defun download-url (url file &key engine)
   (with-open-file (output (bt:with-lock-held (*lock*)
                             (ensure-directories-exist file))
                           :direction :output
                           :element-type '(unsigned-byte 8))
-    (with-open-stream (input (http-request
-                         url
-                         :want-stream t
-                         :engine engine))
+    #+lispworks
+    (mp:semaphore-acquire *semaphore*)
+
+    (with-open-stream (input (unwind-protect
+                                  (http-request
+                                   url
+                                   :want-stream t
+                                   :engine engine)
+                               #+lispworks
+                               (mp:semaphore-release *semaphore*)))
       (uiop:copy-stream-to-stream
        input
        output
