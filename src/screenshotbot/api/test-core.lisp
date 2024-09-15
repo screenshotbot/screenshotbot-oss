@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/api/core
+                #:*wrap-internal-errors*
                 #:authenticate-request-from-key
                 #:authenticate-api-request
                 #:result
@@ -103,6 +104,15 @@
                      (described-as
                          "capture-exception should've been called"
                        (equal-to t)))))))
+
+(define-condition my-simple-error-1 (error)
+  ())
+
+(test flag-to-wrap-internal-errors
+  (let ((*wrap-internal-errors* nil))
+    (signals my-simple-error-1
+      (with-error-handling ()
+        (error 'my-simple-error-1)))))
 
 
 (test api-error-is-propagated-but-not-logged

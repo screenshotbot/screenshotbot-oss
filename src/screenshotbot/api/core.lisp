@@ -51,6 +51,10 @@
 (defvar *api-key* nil
   "The current API key being used")
 
+(defvar *wrap-internal-errors* t
+  "Wrap internal errors in a way that can be presented better to the
+user. The intention of this flag is to set to NIL for some tests.")
+
 (def-easy-macro with-api-key (&binding api-key &binding api-secret &fn fn)
   (multiple-value-bind (key secret) (hunchentoot:authorization)
     (cond
@@ -122,22 +126,25 @@ function fn for the purpose of tests."
                #+lispworks
                (dbg:output-backtrace :brief out))))
      (handler-bind ((api-error (lambda (e)
-                                 (log:warn "API error: ~a" (api-error-msg e))
-                                 (return-from error-handling
-                                   (make-instance 'error-result
-                                                  :success nil
-                                                  :stacktrace (%trace)
-                                                  :error (princ-to-string e)))))
+                                 (when *wrap-internal-errors*
+                                   (log:warn "API error: ~a" (api-error-msg e))
+                                   (return-from error-handling
+                                     (make-instance 'error-result
+                                                    :success nil
+                                                    :stacktrace (%trace)
+                                                    :error (princ-to-string e))))))
                     (error  (lambda (e)
-                              (log:warn "Error: ~a" e)
-                              (sentry-client:capture-exception e)
-                              (return-from error-handling
-                                (make-instance 'error-result
-                                               :success nil
-                                               :stacktrace (%trace)
-                                               :error (format nil
-                                                              "Internal error, please contact support@screenshotbot.io: ~a"
-                                                              (princ-to-string e)))))))
+                              (when *wrap-internal-errors*
+                                (log:warn "Error: ~a" e)
+                                (sentry-client:capture-exception e)
+                                (return-from error-handling
+                                  (make-instance 'error-result
+                                                 :success nil
+                                                 :stacktrace (%trace)
+                                                 :error (format nil
+                                                                "Internal error, please contact support@screenshotbot.io: ~a"
+                                                                (princ-to-string e)))))
+)))
        (cond
          (wrap-success
           (make-instance 'result
