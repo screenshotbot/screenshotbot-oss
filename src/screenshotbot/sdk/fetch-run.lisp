@@ -78,9 +78,11 @@
                      (format nil "~a.png"
                              (path:catfile output screenshot-name))))
                (log:info "Saving: ~a" output)
-               (download-url
-                (dto:screenshot-url screenshot)
-                output)))))
+               (let ((url (dto:screenshot-url screenshot)))
+                 (log:debug "URL is: ~a" url)
+                 (download-url
+                  url
+                  output))))))
 
 
 
