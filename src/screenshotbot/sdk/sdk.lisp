@@ -147,6 +147,7 @@
          :content content
          :external-format-out :utf-8
          :read-timeout 45
+         :engine (api-context:engine api-context)
          :parameters (cond
                        ((remote-supports-basic-auth-p api-context)
                         parameters)

@@ -10,6 +10,7 @@
   (:import-from #:screenshotbot/sdk/version-check
                 #:bad-version-p)
   (:import-from #:util/request
+                #:*engine*
                 #:http-request)
   (:import-from #:cl-mock
                 #:if-called
@@ -35,7 +36,8 @@
 (test get-version
   (with-fixture state ()
     (answer (http-request "https://api.screenshotbot.io/api/version"
-                          :want-string t)
+                          :want-string t
+                          :engine *engine*)
       (values "{\"version\":1}" 200))
     (is (eql 1 (fetch-version
                 (make-instance 'api-context
@@ -47,7 +49,8 @@
 (test get-version-404
   (with-fixture state ()
     (answer (http-request "https://www.google.com/api/version"
-                          :want-string t)
+                          :want-string t
+                          :engine *engine*)
       (values "" 404))
     (is (eql 1 (fetch-version
                 (make-instance 'api-context

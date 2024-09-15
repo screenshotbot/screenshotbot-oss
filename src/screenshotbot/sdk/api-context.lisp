@@ -10,6 +10,8 @@
                 #:*api-version*)
   (:import-from #:util/json-mop
                 #:ext-json-serializable-class)
+  (:import-from #:util/request
+                #:*engine*)
   (:export
    #:api-context
    #:key
@@ -18,7 +20,8 @@
    #:desktop-api-context
    #:desktop-p
    #:remote-version
-   #:fetch-version))
+   #:fetch-version
+   #:engine))
 (in-package :screenshotbot/sdk/api-context)
 
 (defgeneric fetch-version (api-context)
@@ -43,7 +46,10 @@
            :reader secret)
    (hostname :initarg :hostname
              :reader hostname
-             :documentation "A URL like https://screenshotbot.io")))
+             :documentation "A URL like https://screenshotbot.io")
+   (engine :initarg :engine
+           :reader engine
+           :initform *engine*)))
 
 (defclass desktop-api-context (base-api-context)
   ((hostname :reader hostname

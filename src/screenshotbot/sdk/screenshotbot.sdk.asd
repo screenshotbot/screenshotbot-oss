@@ -53,6 +53,7 @@
                (:file "env")
                (:file "run-context")
                (:file "sdk")
+               (:file "active-run")
                (:file "health-checks")
                (:file "sentry")
                (:file "install")
@@ -102,12 +103,15 @@
                :fiveam
                :fiveam-matchers
                :screenshotbot
+               :screenshotbot/testing-lib
+               :util/hunchentoot-engine
                :util/fake-clingon
                :util/fiveam)
   :components ((:file "test-bundle")
                (:file "test-unchanged-run")
                (:file "test-version-check")
                (:file "test-main")
+               (:file "test-active-run")
                (:file "test-run-context")
                (:file "test-flags")
                (:file "test-git")

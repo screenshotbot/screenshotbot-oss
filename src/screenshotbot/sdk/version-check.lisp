@@ -24,7 +24,8 @@
   (:import-from #:screenshotbot/sdk/api-context
                 #:fetch-version
                 #:remote-version)
-  (:local-nicknames (#:a #:alexandria))
+  (:local-nicknames (#:a #:alexandria)
+                    (#:api-context #:screenshotbot/sdk/api-context))
   (:export
    #:*client-version*
    #:remote-supports-put-run
@@ -53,7 +54,8 @@ might get logged in the webserver logs."
      (multiple-value-bind (body ret)
          (http-request
           (format-api-url api-context "/api/version")
-          :want-string t)
+          :want-string t
+          :engine (api-context:engine api-context))
        (let ((version (cond
                         ((eql 200 ret)
                          (decode-json body 'version))
