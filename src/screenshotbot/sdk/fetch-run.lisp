@@ -79,6 +79,9 @@
                              (path:catfile output screenshot-name))))
                (log:info "Saving: ~a" output)
                (let ((url (dto:screenshot-url screenshot)))
+                 (unless (str:emptyp (uiop:getenv "SCREENSHOTBOT_DEBUG_IGNORE_CDN"))
+                   (log:warn "Ignoring CDN!")
+                   (setf url (str:replace-all "cdn.screenshotbot.io" "screenshotbot.io" url)))
                  (log:debug "URL is: ~a" url)
                  (download-url
                   url
