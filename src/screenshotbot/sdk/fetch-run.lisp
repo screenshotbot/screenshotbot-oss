@@ -15,6 +15,12 @@
   (:import-from #:util/request
                 #:engine
                 #:http-request)
+  (:import-from #:util/threading
+                #:make-thread
+                #:max-pool)
+  (:import-from #:util/lists
+                #:make-batches
+                #:with-batches)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/fetch-run)
 
@@ -35,6 +41,8 @@
      body
      'dto:run)))
 
+(defvar *lock* (bt:make-lock))
+
 (define-condition unsafe-screenshot-name (error)
   ())
 
@@ -53,13 +61,15 @@
   (let ((run (get-run api-context oid)))
     (%save-run run :output output)))
 
-(defun download-url (url file)
-  (with-open-file (output (ensure-directories-exist file) :direction :output
-                               :element-type '(unsigned-byte 8))
+(defun download-url (url file &key engine)
+  (with-open-file (output (bt:with-lock-held (*lock*)
+                            (ensure-directories-exist file))
+                          :direction :output
+                          :element-type '(unsigned-byte 8))
     (with-open-stream (input (http-request
                          url
                          :want-stream t
-                         :engine *download-engine*))
+                         :engine engine))
       (uiop:copy-stream-to-stream
        input
        output
@@ -68,8 +78,8 @@
 (defun trim-/ (name)
   (cl-ppcre:regex-replace "^/*" name ""))
 
-(defun %save-run (run &key output)
-  (loop for screenshot in (dto:run-screenshots run)
+(defun download-batch-of-screenshots (screenshots &key output engine)
+  (loop for screenshot in screenshots
         do
            (let ((screenshot-name (trim-/ (dto:screenshot-name screenshot))))
              (unless (safe-name-p screenshot-name)
@@ -85,7 +95,33 @@
                  (log:debug "URL is: ~a" url)
                  (download-url
                   url
-                  output))))))
+                  output
+                  :engine engine))))))
+
+(defun %save-run (run &key output)
+  (let ((screenshots (dto:run-screenshots run)))
+    (let* ((batches (make-batches screenshots :batch-size (ceiling (length screenshots) 3)))
+           (engine *download-engine*)
+           (finish-count 0)
+           (e nil)
+           (threads (loop for batch in batches
+                          collect
+                          (let ((batch batch))
+                            (make-thread
+                             (lambda ()
+                               (handler-bind ((error (lambda (%e)
+                                                       (setf e %e))))
+                                 (download-batch-of-screenshots batch :output output
+                                                                      :engine engine))
+                               (bt:with-lock-held (*lock*)
+                                 (incf finish-count))))))))
+     (mapc #'bt:join-thread threads)
+      (unless (eql finish-count (length threads))
+        (cond
+          (e
+           (error e))
+          (t
+           (error "Some threads failed to complete and we don't know why")))))))
 
 
 
