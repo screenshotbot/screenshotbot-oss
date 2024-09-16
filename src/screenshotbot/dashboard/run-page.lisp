@@ -646,7 +646,7 @@
   (let ((screenshots-viewer (make-instance 'screenshots-viewer
                                            :screenshots screenshot-map
                                            :filter filter)))
-   <div id= (make-id) >
+   <div id= (make-id) data-company-name= (?. company-name (recorder-run-company run)) >
      ,(render-modal screenshots-viewer)
      ,(paginated
        (lambda (pair i)
