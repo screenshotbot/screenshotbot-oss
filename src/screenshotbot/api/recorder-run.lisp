@@ -180,6 +180,7 @@
                  :main-branch-hash (recorder-run-branch run)
                  :commit-hash (recorder-run-commit run)
                  :author (recorder-run-author run)
+                 :main-branch (recorder-run-branch run)
                  :merge-base (recorder-run-merge-base run)
                  :channel (?. channel-name (recorder-run-channel run))
                  :tags (recorder-run-tags run)
