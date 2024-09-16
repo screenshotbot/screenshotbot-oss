@@ -26,4 +26,16 @@
 (defun find-active-run (api-context
                         &key channel
                           branch)
-  (error "unimpl"))
+  (let ((runs (%get-active-runs api-context :channel channel)))
+    (log:debug "Branches are: ~S"
+               (mapcar #'dto:main-branch runs))
+    (cond
+      ((and (str:emptyp branch)
+            (= 1 (length runs)))
+       (car runs))
+      ((not (str:emptyp branch))
+       (loop for run in runs
+             if (equal (dto:main-branch run) branch)
+               return run))
+      (t
+       (error "Could not disambiguate branch name, pass the --branch argument")))))

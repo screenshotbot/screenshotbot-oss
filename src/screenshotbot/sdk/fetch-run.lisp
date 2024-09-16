@@ -21,6 +21,8 @@
   (:import-from #:util/lists
                 #:make-batches
                 #:with-batches)
+  (:import-from #:screenshotbot/sdk/active-run
+                #:find-active-run)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/fetch-run)
 
@@ -57,9 +59,18 @@
            finally
               (return t)))))
 
-(defun save-run (api-context oid &key output)
-  (let ((run (get-run api-context oid)))
-    (%save-run run :output output)))
+(defun save-run (api-context oid &key output channel branch)
+  (cond
+    (oid
+     (let ((run (get-run api-context oid)))
+       (%save-run run :output output)))
+    (t
+     (log:debug "Looking up active run for ~a, ~a" channel branch)
+     (let ((run (find-active-run api-context :channel channel :branch branch)))
+       (unless run
+         (error "Could not find active run for that combination of channel and branch"))
+       (log:info "Figured out the run as ~a" (dto:run-id run))
+       (save-run api-context (dto:run-id run) :output output)))))
 
 #+lispworks
 (defvar *semaphore* (mp:make-semaphore :count 2)
