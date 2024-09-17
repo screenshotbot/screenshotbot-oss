@@ -144,7 +144,7 @@
            ;; old style, most likely not being hit
            (not (can-invite-more-users-p (current-company)
                                          (plan))))
-
+        (warn "Invite limit reached for ~a [not a crash, just a warning to go upsell now]" (current-company))
         (push
          <span>
            You have reached the limit of users and invites on this account.
