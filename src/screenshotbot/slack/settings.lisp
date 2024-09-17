@@ -22,6 +22,7 @@
                 #:client-id
                 #:slack-plugin)
   (:import-from #:screenshotbot/slack/core
+                #:slack-app-redirect-uri
                 #:slack-tokens-for-company
                 #:audit-log
                 #:audit-log-error
@@ -50,14 +51,13 @@
     (setf (access-token slack-config) nil)))
 
 (defun slack-install-url (slack-plugin)
-  (quri:make-uri
-   :query `(("user_scope" . "")
-            ("client_id" . ,(client-id slack-plugin))
-            ("redirect_uri" . ,(hex:make-full-url
-                                hunchentoot:*request*
-                                "/slack-app-redirect"))
-            ("scope" . "chat:write.public,chat:write"))
-   :defaults (quri:uri "https://slack.com/oauth/v2/authorize")))
+  (quri:render-uri
+   (quri:make-uri
+    :query `(("user_scope" . "")
+             ("client_id" . ,(client-id slack-plugin))
+             ("scope" . "chat:write.public,chat:write")
+             ("redirect_uri" . ,(slack-app-redirect-uri)))
+    :defaults (quri:uri "https://slack.com/oauth/v2/authorize"))))
 
 
 (deftag add-to-slack (&key company)

@@ -36,6 +36,9 @@
                 #:with-class-validation)
   (:import-from #:util/store/store
                 #:defindex)
+  (:import-from #:core/installation/installation
+                #:installation-domain
+                #:*installation*)
   (:export
    #:slack-token
    #:latest-slack-token
@@ -181,6 +184,11 @@
                                              `("blocks" . ,(json:encode-json-to-string blocks))))))))
        (check-slack-ok response audit-log)))))
 
+(defun slack-app-redirect-uri ()
+  (format nil 
+          "~a/slack-app-redirect"
+          (installation-domain *installation*)))
+
 (defhandler (nil :uri "/slack-app-redirect") (code state)
   (declare (ignore state))
   (with-plugin (slack-plugin)
@@ -193,7 +201,8 @@
            :url "/api/oauth.v2.access"
            :parameters `(("client_id" . ,(client-id slack-plugin))
                          ("client_secret" . ,(client-secret slack-plugin))
-                         ("code" . ,code)))
+                         ("code" . ,code)
+                         ("redirect_uri" . ,(slack-app-redirect-uri))))
         (check-slack-ok response)
         (let ((access-token (assoc-value response :access--token)))
           (assert access-token)
