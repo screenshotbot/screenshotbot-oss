@@ -55,3 +55,24 @@
                            :type :allow
                            :objects (list obj)))))
     (is (eql t (gk:check :bleh obj :default nil)))))
+
+(defmethod gk:compute-default-value ((name (eql 'test-gk))
+                                     obj)
+  (= 0 (mod (length obj) 2)))
+
+(test default-value
+  (with-fixture state ()
+    (is (eql t (gk:check 'test-gk "foobar")))
+    (is (eql nil (gk:check 'test-gk "foo")))
+    ;; but is overridden with :default
+    (is (eql nil (gk:check 'test-gk "foobar" :default nil)))
+    (is (eql t (gk:check 'test-gk "foo" :default t)))))
+
+(test default-value-when-gk-is-defined
+  (with-fixture state ()
+    (gk:create 'test-gk :default nil)
+    (is (eql t (gk:check 'test-gk "foobar")))
+    (is (eql nil (gk:check 'test-gk "foo")))
+    ;; and is overridden with :default
+    (is (eql t (gk:check 'test-gk "foobar" :default nil)))
+    (is (eql nil (gk:check 'test-gk "foo" :default t)))))

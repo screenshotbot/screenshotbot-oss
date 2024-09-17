@@ -33,7 +33,8 @@
    #:normalize-object
    #:allow
    #:deny
-   #:show-all))
+   #:show-all
+   #:compute-default-value))
 (in-package :gatekeeper/gatekeeper)
 
 (defindex +name-index+
@@ -62,6 +63,11 @@
     (assert ret)
     ret))
 
+(defmethod compute-default-value (name object)
+  (let ((gk (gk-with-name name)))
+    (when gk
+      (gk-default-value gk))))
+
 (with-class-validation
   (defclass access-control (store-object)
     ((type :initarg :type
@@ -72,7 +78,7 @@
               :documentation "All the objects on which this ACL applies"))
     (:metaclass persistent-class)))
 
-(defun check (name object &key default)
+(defun check (name object &key (default nil default-provided-p))
   (let ((gk (gk-with-name name)))
     (cond
       (gk
@@ -80,9 +86,11 @@
              if (member object (access-control-objects acl))
                return (eql :allow (acl-type acl))
              finally
-                (return (gk-default-value gk))))
+                (return (compute-default-value name object))))
+      (default-provided-p
+       default)
       (t
-       default))))
+       (compute-default-value name object)))))
 
 (defun create (name &key default)
   (make-instance
