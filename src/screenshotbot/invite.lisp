@@ -49,6 +49,8 @@
                 #:nibble)
   (:import-from #:screenshotbot/plan
                 #:plan)
+  (:import-from #:auth/model/invite
+                #:all-invites)
   (:local-nicknames (#:roles #:auth/model/roles))
   (:export
    #:invite-page
@@ -106,6 +108,13 @@
 (defmethod can-invite-more-users-p (company plan)
   t)
 
+(defun %user-count (company)
+  (+
+   (length
+    (roles:users-for-company company))
+   (length
+    (all-invites :company company))))
+
 (defhandler (invite-post :uri "/invite" :method :post) (email)
   (when (personalp (current-company))
     (hex:safe-redirect 'invite-page))
@@ -126,8 +135,16 @@
                                             :company (current-company)))
              ;; todo: resend anyway
              "There's already a pending invite to that email address")
-      (unless (can-invite-more-users-p (current-company)
-                                       (plan))
+      (when
+          (or
+           ;; new style:
+           (and
+            (gk:check :limit-invites (auth:current-company))
+            (>= (%user-count (auth:current-company)) 5))
+           ;; old style, most likely not being hit
+           (not (can-invite-more-users-p (current-company)
+                                         (plan))))
+
         (push
          <span>
            You have reached the limit of users and invites on this account.

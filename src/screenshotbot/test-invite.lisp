@@ -129,3 +129,29 @@
             (markup:write-html page)
             (contains-string "You do not have permission"))
            page))))))
+
+(screenshot-test validate-limit-on-number-of-invites
+  (with-fixture state ()
+    (cl-mock:with-mocks ()
+      (with-installation ()
+        (with-test-user (:user user :company company :logged-in-p t)
+          (roles:ensure-has-role company user
+                                 'roles:owner)
+          (finishes
+            ;; Essentiall test that no checks failed here
+            (catch 'hunchentoot::handler-done
+              (invite-post :email "foo@example.com")))
+          
+          (dotimes (i 5)
+            (make-instance 'invite
+                           :email "dfdfd@gmail.com"
+                           :company company))
+
+          (gk:create :limit-invites)
+          (gk:allow :limit-invites company)
+          
+          (let ((page (invite-post :email "foo@example.com")))
+            (assert-that
+             (markup:write-html page)
+             (contains-string "You have reached the limit"))
+            page))))))
