@@ -13,4 +13,5 @@
 (defsystem :gatekeeper/tests
   :serial t
   :depends-on (:util/fiveam
-               :gatekeeper))
+               :gatekeeper)
+  :components ((:file "test-gatekeeper")))
