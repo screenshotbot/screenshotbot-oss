@@ -49,6 +49,17 @@
     (mapc #'delete-object (slack-tokens-for-company company))
     (setf (access-token slack-config) nil)))
 
+(defun slack-install-url (slack-plugin)
+  (quri:make-uri
+   :query `(("user_scope" . "")
+            ("client_id" . ,(client-id slack-plugin))
+            ("redirect_uri" . ,(hex:make-full-url
+                                hunchentoot:*request*
+                                "/slack-app-redirect"))
+            ("scope" . "chat:write.public,chat:write"))
+   :defaults (quri:uri "https://slack.com/oauth/v2/authorize")))
+
+
 (deftag add-to-slack (&key company)
   (with-plugin (slack-plugin)
    (let* ((slack-config (find-or-create-slack-config company))
@@ -72,7 +83,7 @@
         </div>)
        (t
         <div class= "form-group mb-3">
-          <a href= (format nil "https://slack.com/oauth/v2/authorize?client_id=~a&scope=chat:write.public,chat:write&user_scope=" (client-id slack-plugin)) ><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
+          <a href= (slack-install-url slack-plugin) ><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
           <input type= "hidden" name= "slack-token"
                  value= "unused" class= "form-control" />
         </div>)))))
