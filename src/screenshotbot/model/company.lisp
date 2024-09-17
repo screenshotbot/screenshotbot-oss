@@ -9,6 +9,7 @@
         #:alexandria
         #:screenshotbot/user-api
         #:screenshotbot/screenshot-api)
+  (:nicknames #:%c)
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:unique-index

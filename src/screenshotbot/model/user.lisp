@@ -6,6 +6,7 @@
 
 (defpackage :screenshotbot/model/user
   (:use :cl)
+  (:nicknames #:%u)
   (:import-from #:auth
                 #:current-user
                 #:oauth-user-avatar
