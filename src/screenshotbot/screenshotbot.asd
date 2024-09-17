@@ -438,6 +438,7 @@
                              (:file "test-replay-acceptor")))
                (:module "slack"
                 :components ((:file "test-settings")
+                             (:file "test-core")
                              (:file "test-task-integration")))
                (:file "test-analytics" :if-feature (:not :windows))
                (:module "email-tasks"

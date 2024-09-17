@@ -185,9 +185,10 @@
        (check-slack-ok response audit-log)))))
 
 (defun slack-app-redirect-uri ()
-  (format nil 
-          "~a/slack-app-redirect"
-          (installation-domain *installation*)))
+  (quri:render-uri
+   (quri:make-uri
+    :path "/slack-app-redirect"
+    :defaults (quri:uri (installation-domain *installation*)))))
 
 (defhandler (nil :uri "/slack-app-redirect") (code state)
   (declare (ignore state))
