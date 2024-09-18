@@ -50,10 +50,6 @@
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:*installation*)
-  (:import-from #:screenshotbot/s3/core
-                #:base-store
-                #:s3-store-fetch-remote
-                #:s3-store-update-remote)
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:util/object-id
@@ -87,33 +83,10 @@ uses the base-image-comparer."
                                       "static/")
      file))
 
-(defclass fake-s3-store (base-store)
-  ((dir :initarg :dir
-        :reader store-dir)))
-
-(defmethod s3-store-update-remote ((store fake-s3-store) file key)
-  (uiop:copy-file
-   file
-   (ensure-directories-exist
-    (path:catfile
-     (store-dir store)
-     key))))
-
-(defmethod s3-store-fetch-remote ((store fake-s3-store)
-                                  file
-                                  key)
-  (uiop:copy-file
-   (ensure-directories-exist
-    (path:catfile (store-dir store)
-                  key))
-   file))
 
 (def-easy-macro with-base-fixture (&fn fn)
-  (tmpdir:with-tmpdir (fake-s3-store-dir)
-   (let ((*installation* (make-instance 'installation
-                                         :s3-store (make-instance 'fake-s3-store
-                                                                   :dir fake-s3-store-dir))))
-     (funcall fn))))
+  (let ((*installation* (make-instance 'installation)))
+    (funcall fn)))
 
 (def-fixture state (&key dir)
   (with-base-fixture ()
@@ -238,22 +211,8 @@ uses the base-image-comparer."
       (is (path:-e local-file))
       (delete-file local-file)
       (with-local-image (local-file img)
-        (is (path:-e local-file))))))
-
-(test with-local-image-when-theres-not-even-a-directory
-  (with-fixture state ()
-    (let ((dir (make-pathname
-                :type nil
-                :name nil
-                :defaults (image-filesystem-pathname img))))
-      (fad:delete-directory-and-files
-       dir)
-      (is (not (path:-d dir))))
-
-    (is (not (path:-e (image-filesystem-pathname img))))
-
-    (with-local-image (local-file img)
-      (is (path:-e local-file)))))
+        ;; This is a legacy test from when we used to do S3.
+        (is (not (path:-e local-file)))))))
 
 (test find-image-by-oid
   (with-fixture state ()

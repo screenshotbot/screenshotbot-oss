@@ -75,12 +75,6 @@
                 #:with-transient-copy)
   (:import-from #:util/misc
                 #:?.)
-  (:import-from #:screenshotbot/installation
-                #:installation
-                #:installation-s3-store)
-  (:import-from #:screenshotbot/s3/core
-                #:s3-store-fetch-remote
-                #:s3-store-update-remote)
   (:import-from #:util/copy-file
                 #:copy-file-fast)
   (:import-from #:easy-macros
@@ -95,6 +89,8 @@
                 #:with-extras)
   (:import-from #:util/store/simple-object-snapshot
                 #:simple-object-snapshot)
+  (:import-from #:util/store/store
+                #:fast-ensure-directories-exist)
   ;; classes
   (:export
    #:image
@@ -108,7 +104,6 @@
    #:image-public-url
    #:image-hash
    #:image-blob-get
-   #:s3-key
    #:image-blob
    #:verified-p
    #:mask-rect-left
@@ -231,12 +226,6 @@
        (assert (eql company (company obj)))
        obj))))
 
-#|
-
-(loop for im in (bknr.datastore:class-instances 's3-blob)
-
-       do (bknr.datastore:delete-object im))
-|#
 
 (defmethod make-transient-clone ((image image))
   (make-instance 'transient-image
@@ -354,17 +343,8 @@
     ((image-not-uploaded-yet-p image)
      (error 'no-image-uploaded-yet :image image))
     (t
-     (multiple-value-bind (file key) (image-filesystem-pathname image)
-       (cond
-         ((path:-e file)
-          (funcall fn file))
-         (t
-          (s3-store-fetch-remote
-           (installation-s3-store
-            (installation))
-           file
-           key)
-          (funcall fn file)))))))
+     (multiple-value-bind (file) (image-filesystem-pathname image)
+       (funcall fn file)))))
 
 ;; todo: remove
 (defmethod %with-local-image ((image image) fn)
@@ -420,17 +400,12 @@
                   (ironclad:hex-string-to-byte-array hash))
                  (t
                   hash))))
-    (multiple-value-bind (image-file s3-key) (local-location-for-oid oid)
+    (multiple-value-bind (image-file) (local-location-for-oid oid)
       ;; TODO: copy-overwriting-target could be a lot more efficient in
       ;; many cases.
       (when pathname
         (assert (path:-e pathname))
-        (copy-file-fast pathname image-file)
-        (unless for-tests ;; todo: refactor better
-         (s3-store-update-remote
-          (installation-s3-store (installation))
-          image-file
-          s3-key)))
+        (copy-file-fast pathname image-file))
 
       (apply #'make-instance 'image
                :oid oid
@@ -449,14 +424,8 @@
   (with-transaction ()
     (setf (%image-state image)
           +image-state-filesystem+))
-  (multiple-value-bind (dest key) (image-filesystem-pathname image)
+  (multiple-value-bind (dest) (image-filesystem-pathname image)
     (uiop:copy-file pathname dest)
-    (when key
-      (s3-store-update-remote
-       (installation-s3-store
-        (installation))
-       dest
-       key))
     dest))
 
 (with-class-validation
@@ -720,8 +689,6 @@ recognized the file, we'll return nil."
        (with-local-image (file image)
          (trivial-file-size:file-size-in-octets file))
      (no-image-uploaded-yet ()
-       0)
-     (zs3::xml-binding-error ()
        0))))
 
 ;;(length (all-soft-expired-images))
