@@ -639,9 +639,6 @@
                                        :height height
                                        :width width)))))))
 
-(defmethod invalidate-image-metadata ((image abstract-image))
-  (remhash image *metadata-cache*))
-
 (defmethod image-dimensions (image)
   (metadata-image-dimensions (image-metadata image)))
 
