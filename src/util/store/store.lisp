@@ -181,7 +181,8 @@ to the directory that was just snapshotted.")
                              bknr.datastore:store
                              base-raft-store)
   ()
-  (:documentation "The final raft store we'll be using"))
+  (:documentation "The final raft store we'll be using")
+  (:default-initargs :election-timeout-ms 2000))
 
 (defclass ec2-store (raft-store-final)
   ()

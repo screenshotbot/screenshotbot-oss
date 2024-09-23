@@ -38,5 +38,4 @@
      :config (str:join ","
                        (loop for ip in private-ips
                              collect (format nil "~a:~a:0" ip port)))
-     :group group
-     :election-timeout-ms 1000)))
+     :group group)))
