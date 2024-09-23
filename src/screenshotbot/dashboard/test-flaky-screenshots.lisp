@@ -79,5 +79,6 @@
                                                 :image im2)
                                (make-screenshot :name "bar"
                                                 :image im2)))))
-      (let ((result (screenshot-variant-map (list run))))
-        (is (equal "foo" (car (first result))))))))
+      (let ((result (screenshot-variant-map (list run run2))))
+        (is (equal "foo" (car (first result))))
+        (is (equal 2 (hash-table-count (cdr (first result)))))))))

@@ -66,7 +66,7 @@
                 t))))
     (sort
      (hash-table-alist map)
-     #'<
+     #'>
      :key (lambda (pair)
                         (hash-table-count (cdr pair))))))
 
