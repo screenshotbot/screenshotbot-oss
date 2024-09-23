@@ -68,7 +68,7 @@
      (hash-table-alist map)
      #'<
      :key (lambda (pair)
-                        (hash-table-count (second pair))))))
+                        (hash-table-count (cdr pair))))))
 
 
 

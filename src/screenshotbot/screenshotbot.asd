@@ -364,6 +364,7 @@
                              (:file "test-batch")
                              (:file "test-image")
                              (:file "test-channels")
+                             (:file "test-flaky-screenshots")
                              (:file "test-history")
                              (:file "test-bisect")
                              (:file "test-notices")))
