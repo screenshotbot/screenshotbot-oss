@@ -144,6 +144,7 @@
                  (:file "screenshot-key")
                  (:file "screenshot-map")
                  (:file "recorder-run")
+                 (:file "pr-rollout-rule")
                  (:file "downloadable-run")
                  (:file "batch")
                  (:file "report" :depends-on ("recorder-run"))

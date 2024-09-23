@@ -53,6 +53,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
                 #:is-not
                 #:has-typep
                 #:assert-that)
@@ -95,7 +96,13 @@
   (:import-from #:screenshotbot/model/user
                 #:make-user)
   (:import-from #:alexandria
-                #:remove-from-plist))
+                #:remove-from-plist)
+  (:import-from #:screenshotbot/model/pr-rollout-rule
+                #:pr-rollout-rule-for-company
+                #:disable-pull-request-checks-p
+                #:pr-rollout-rule)
+  (:import-from #:bknr.datastore
+                #:persistent-class))
 (in-package :screenshotbot/test-abstract-pr-promoter)
 
 
@@ -549,3 +556,38 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
                               "foo"))
 
          (is (eql acceptable (previous-review promoter run3))))))))
+
+(defclass always-blocked-pr-rollout-rule (pr-rollout-rule)
+  ()
+  (:metaclass persistent-class))
+
+(defmethod disable-pull-request-checks-p ((self always-blocked-pr-rollout-rule)
+                                          run)
+  t)
+
+
+(test pr-rollout-rule-blocks-a-request
+  (with-fixture state ()
+    (let ((checks)
+          (run (make-recorder-run
+                :company company
+                :channel channel
+                :work-branch "master"
+                :branch "master"
+                :merge-base "foo"
+                :commit-hash "foo")))
+
+      (make-instance 'always-blocked-pr-rollout-rule
+                     :company company)
+
+      (is-true (pr-rollout-rule-for-company
+                company))
+
+      (cl-mock:if-called 'push-remote-check
+                         (lambda (promoter run check)
+                           (push check checks)))
+      (maybe-promote promoter run)
+      (assert-that checks
+                   (is-equal-to nil)))))
+
+
