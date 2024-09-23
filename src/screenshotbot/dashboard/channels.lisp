@@ -76,7 +76,9 @@
   (:import-from #:screenshotbot/dashboard/recent-runs
                 #:render-recent-runs)
   (:import-from #:core/ui/mdi
-                #:mdi))
+                #:mdi)
+  (:import-from #:screenshotbot/dashboard/flaky-screenshots
+                #:view-flaky-screenshots))
 (in-package :screenshotbot/dashboard/channels)
 
 (named-readtables:in-readtable markup:syntax)
@@ -277,6 +279,13 @@
                      View recent runs
                    </a>
                  </li>
+
+                 <li>
+                   <a href= (nibble () (view-flaky-screenshots channel)) >
+                     <mdi name= "flaky" />
+                     Debug flaky screenshots
+                   </a>
+                 </li>                 
                           
               </ul>
             </p>

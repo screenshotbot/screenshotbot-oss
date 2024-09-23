@@ -1056,12 +1056,16 @@
         :empty-view (no-screenshots))
     </div>))
 
-(Deftag screenshot-box (&key screenshot title)
-  (let ((dimensions (ignore-errors (image-dimensions (screenshot-image screenshot)))))
+(Deftag screenshot-box (&key screenshot title
+                        (image nil))
+  (let ((dimensions (ignore-errors (image-dimensions
+                                    (or image
+                                        (screenshot-image screenshot))))))
     <div class= "mt-1" >
       <picture-with-img
         class= "mt-2"
-        image= (screenshot-image screenshot)
+        image= (or image
+                (screenshot-image screenshot))
         dimensions=dimensions
         alt=title />
     </div>))

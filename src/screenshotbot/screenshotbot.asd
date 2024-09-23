@@ -175,6 +175,7 @@
                  (:file "recent-runs")
                  (:file "notices")
                  (:file "new-compare")
+                 (:file "flaky-screenshots")
                  (:file "channels")
                  (:file "reports")
                  (:file "bisect")
