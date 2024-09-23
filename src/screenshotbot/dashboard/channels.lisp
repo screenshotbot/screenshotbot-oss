@@ -223,27 +223,41 @@
 
 (defun single-channel-view (channel)
   <app-template >
-    <div class= "main-content">
+    <div class= "main-content channel-view">
       <div class= "card-page-container mt-3 mx-auto" style= "max-width: 60em" >
         <div class= "card">
           <div class= "card-header d-flex justify-content-between">
             <h3>,(safe-channel-name channel)</h3>
             <div>
-              <a href= (nibble () (view-channel-runs channel)) >View Runs</a>
               <a href= (nibble () (confirm-delete channel)) class= "btn btn-danger ms-2"  >Delete</a>
             </div>
           </div>
           <div class= "card-body">
             <p>First seen: <timeago timestamp= (created-at channel) />
             </p>
-            <p>Active run:
-              ,@ (or
-                  (loop for (branch . run) in (all-active-runs channel)
-                        collect
-                        <a href=(hex:make-url 'run-page :id (oid run)) >
-                          Run on ,(progn branch)
-                        </a>)
-                  (list "None"))
+            <p>
+              <ul class= "channel-links" >
+                ,@ (or
+                    (loop for (branch . run) in (all-active-runs channel)
+                          collect
+                          <li>
+                            <a href=(hex:make-url 'run-page :id (oid run)) >
+                              <mdi name= "image" />
+                              View promoted screenshots on <tt>,(progn branch)</tt>
+                            </a>
+                          </li>)
+                    (list <li>
+                            <mdi name= "image" />
+                            No promoted screenshots
+                          </li>))
+                 <li>
+                   <a href= (nibble () (view-channel-runs channel)) >
+                     <mdi name= "view_list" />
+                     View recent runs
+                   </a>
+                 </li>
+                          
+              </ul>
             </p>
           </div>
         </div>
