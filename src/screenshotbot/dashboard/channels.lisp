@@ -221,6 +221,24 @@
   (render-recent-runs (runs-for-channel channel)
                       :title (format nil "Runs for ~a" (channel-name channel))))
 
+(defhandler (channel-static-handler :uri "/active-run") (org channel branch)
+  (let ((run (run-for-channel
+              :channel channel
+              :company (or org (current-company))
+              :branch branch)))
+    (cond
+      ((not run)
+       <simple-card-page>
+         <div class= "card-body">
+           No such channel or no active runs for this channel.
+         </div>
+       </simple-card-page>)
+      (t
+       (can-view! run)
+       (hex:safe-redirect 'run-page :id (oid run))))))
+
+
+
 (defun single-channel-view (channel)
   <app-template >
     <div class= "main-content channel-view">
@@ -238,10 +256,13 @@
             <p>
               <ul class= "channel-links" >
                 ,@ (or
-                    (loop for (branch . run) in (all-active-runs channel)
+                    (loop for (branch . nil) in (all-active-runs channel)
                           collect
                           <li>
-                            <a href=(hex:make-url 'run-page :id (oid run)) >
+                            <a href=(hex:make-url 'channel-static-handler
+                                                  :org (oid (company channel))
+                                                  :channel (channel-name channel)
+                                                  :branch branch) >
                               <mdi name= "image" />
                               View promoted screenshots on <tt>,(progn branch)</tt>
                             </a>
@@ -443,22 +464,6 @@
 
 (defhandler (badge-handler-svg :uri "/badge.svg") (org channel branch)
   (badge-handler :org org :channel channel :branch branch))
-
-(defhandler (channel-static-handler :uri "/active-run") (org channel branch)
-  (let ((run (run-for-channel
-              :channel channel
-              :company (or org (current-company))
-              :branch branch)))
-    (cond
-      ((not run)
-       <simple-card-page>
-         <div class= "card-body">
-           No such channel or no active runs for this channel.
-         </div>
-       </simple-card-page>)
-      (t
-       (can-view! run)
-       (hex:safe-redirect 'run-page :id (oid run))))))
 
 (defun %render-channels-as-taskie (channels &key next-link prev-link)
   (taskie-list :empty-message "No projects to show! Projects are
