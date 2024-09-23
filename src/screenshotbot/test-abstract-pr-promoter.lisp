@@ -572,7 +572,7 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
           (run (make-recorder-run
                 :company company
                 :channel channel
-                :work-branch "master"
+                :work-branch "some-work"
                 :branch "master"
                 :merge-base "foo"
                 :commit-hash "foo")))

@@ -343,8 +343,6 @@ reviewable.)"
        (format-log run :info "Plugin is not installed for this company/repository"))
       ((not (pr-merge-base promoter run))
        (format-log run :info "No merge base on run, this is probably a bug on the CI job (Usually missing a `git fetch origin main`"))
-      ((disable-pull-request-checks-p (pr-rollout-rule-for-company company) run)
-       (format-log run :info "A rollout rule is preventing us from sending notifications"))
       ((unreviewable-run-p promoter run)
        ;; TODO(T1096): do we have to worry about overwriting a
        ;; previously reviewable report? This might happen if a commit
@@ -360,6 +358,9 @@ reviewable.)"
       ((equal (pr-merge-base promoter run)
               (actual-sha run))
        (format-log run :info "Ignoring since the merge-base is same as the commit-hash"))
+      ((disable-pull-request-checks-p (pr-rollout-rule-for-company company) run)
+       (push-event :rollout-blocked-pr-request :run (oid run))
+       (format-log run :info "A rollout rule is preventing us from sending notifications"))
       (t
        (format-log run :info "Base commit is: ~S" (pr-merge-base promoter run))
        (let ((base-run-promise (retrieve-run
