@@ -23,6 +23,8 @@
                 #:hash-table-alist)
   (:import-from #:screenshotbot/dashboard/compare
                 #:screenshot-box)
+  (:import-from #:core/ui/paginated
+                #:paginated)
   (:export
    #:view-flaky-screenshots))
 (in-package :screenshotbot/dashboard/flaky-screenshots)
@@ -44,12 +46,15 @@
           each variant will get counted here even if changes were in a masked area.
         </div>
         <div>
-          ,@ (loop for (name . screenshots) in map
-                   collect
-                   <div>
-                     ,(progn name) (variants: ,(hash-table-count screenshots))
-                     <screenshot-box image= (car (hash-table-keys screenshots)) />
-                   </div>)
+          ,(paginated
+            (lambda (pair)
+              (destructuring-bind (name . screenshots) pair
+                <div>
+                  ,(progn name) (variants: ,(hash-table-count screenshots))
+                  <screenshot-box image= (car (hash-table-keys screenshots)) />
+                </div>))
+            :items map)
+
         </div>
       </div>
     </app-template>))
