@@ -155,3 +155,25 @@
              (markup:write-html page)
              (contains-string "You have reached the limit"))
             page))))))
+
+(screenshot-test if-gk-is-off-then-no-limit-on-invites
+  (with-fixture state ()
+    (cl-mock:with-mocks ()
+      (with-installation ()
+        (with-test-user (:user user :company company :logged-in-p t)
+          (roles:ensure-has-role company user
+                                 'roles:owner)
+          (finishes
+            ;; Essentiall test that no checks failed here
+            (catch 'hunchentoot::handler-done
+              (invite-post :email "foo@example.com")))
+          
+          (dotimes (i 5)
+            (make-instance 'invite
+                           :email "dfdfd@gmail.com"
+                           :company company))
+
+          (finishes
+            ;; Essentiall test that no checks failed here
+            (catch 'hunchentoot::handler-done
+              (invite-post :email "foo@example.com"))))))))
