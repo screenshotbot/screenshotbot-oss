@@ -69,11 +69,14 @@
           (setf (gethash (screenshot-image screenshot)
                          (gethash name map))
                 t))))
-    (sort
-     (hash-table-alist map)
-     #'>
-     :key (lambda (pair)
-                        (hash-table-count (cdr pair))))))
+    (remove-if
+     (lambda (pair)
+       (= 1 (hash-table-count (cdr pair))))
+     (sort
+      (hash-table-alist map)
+      #'>
+      :key (lambda (pair)
+             (hash-table-count (cdr pair)))))))
 
 
 
