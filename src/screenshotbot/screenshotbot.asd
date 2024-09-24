@@ -393,6 +393,7 @@
                              (:file "test-transient-object")
                              (:file "test-recorder-run")
                              (:file "test-downloadable-run")
+                             (:file "test-pr-rollout-rule")
                              (:file "test-batch")
                              (:file "test-finalized-commit")
                              (:file "test-screenshot")

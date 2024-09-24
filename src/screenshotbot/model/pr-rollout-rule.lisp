@@ -14,6 +14,11 @@
   (:import-from #:bknr.datastore
                 #:persistent-class
                 #:store-object)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-author
+                #:recorder-run-work-branch)
+  (:import-from #:alexandria
+                #:when-let)
   (:export
    #:disable-pull-request-checks-p))
 (in-package :screenshotbot/model/pr-rollout-rule)
@@ -29,7 +34,24 @@
               :index-reader pr-rollout-rule-for-company))
    (:metaclass persistent-class)))
 
+(with-class-validation
+  (defclass whitelist-rule (pr-rollout-rule)
+    ((emails :initarg :emails
+             :initform nil
+             :reader whitelist-rule-emails))
+    (:metaclass persistent-class)))
+
 (defmethod disable-pull-request-checks-p (self
                                           run)
   nil)
+
+(defmethod disable-pull-request-checks-p ((self whitelist-rule)
+                                          run)
+  (not
+   (or
+    (str:containsp "screenshotbot" (recorder-run-work-branch run)
+                   :ignore-case t)
+    (when-let ((author (recorder-run-author run)))
+     (str:s-member (whitelist-rule-emails self)
+                   author)))))
 
