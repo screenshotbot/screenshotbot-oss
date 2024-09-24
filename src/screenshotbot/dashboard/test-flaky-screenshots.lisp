@@ -81,4 +81,4 @@
                                                 :image im2)))))
       (let ((result (screenshot-variant-map (list run run2))))
         (is (equal "foo" (car (first result))))
-        (is (equal 2 (hash-table-count (cdr (first result)))))))))
+        (is (equal 2 (length (cdr (first result)))))))))

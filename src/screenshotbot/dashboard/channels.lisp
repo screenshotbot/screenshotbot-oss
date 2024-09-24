@@ -78,6 +78,7 @@
   (:import-from #:core/ui/mdi
                 #:mdi)
   (:import-from #:screenshotbot/dashboard/flaky-screenshots
+                #:view-noisy-screenshots
                 #:view-flaky-screenshots))
 (in-package :screenshotbot/dashboard/channels)
 
@@ -281,7 +282,7 @@
                  </li>
 
                  <li>
-                   <a href= (nibble () (view-flaky-screenshots channel)) >
+                   <a href= (nibble () (view-noisy-screenshots channel)) >
                      <mdi name= "flaky" />
                      Debug flaky screenshots
                    </a>
