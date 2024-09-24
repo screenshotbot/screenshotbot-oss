@@ -38,7 +38,7 @@
   (defclass whitelist-rule (pr-rollout-rule)
     ((emails :initarg :emails
              :initform nil
-             :reader whitelist-rule-emails))
+             :accessor whitelist-rule-emails))
     (:metaclass persistent-class)))
 
 (defmethod disable-pull-request-checks-p (self
