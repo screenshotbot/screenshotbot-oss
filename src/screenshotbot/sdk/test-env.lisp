@@ -189,3 +189,8 @@
     (is (equal "https://github.com/tdrhq/fast-example.git"
                (read-java-property input "vcsroot.url")))
     (is (eql nil (read-java-property input "does.not.exist")))))
+
+(test happy-path-when-vcsroot.url-is-not-present
+  (let ((env-reader (make-instance 'teamcity-env-reader)))
+    (is (equal nil
+               (repo-url env-reader)))))

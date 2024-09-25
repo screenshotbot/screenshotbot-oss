@@ -432,7 +432,10 @@ running in Docker."))
   (getenv self "BUILD_URL"))
 
 (defmethod repo-url ((self teamcity-env-reader))
-  (teamcity-config-prop self "vcsroot.url"))
+  (let ((result (teamcity-config-prop self "vcsroot.url")))
+    (when (str:emptyp result)
+      (log:warn "Could not find vcsroot.url, this might be because of multiple VCS roots. Pass the --repo-url to disambiguate"))
+    result))
 
 (defmethod work-branch ((self teamcity-env-reader))
   (teamcity-config-prop self "teamcity.build.branch"))
