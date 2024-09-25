@@ -88,6 +88,8 @@
                 #:all-active-runs)
   (:import-from #:screenshotbot/model/company
                 #:company-admin-p)
+  (:import-from #:screenshotbot/model/batch
+                #:batch-name)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -318,7 +320,10 @@
             <li>Total run size: ,(run-size run)kB</li>
             <li>Comparison threshold: ,(compare-threshold run)</li>
             <li>Batch: ,(when-let ((batch (recorder-run-batch run)))
-                          <a href= (format nil "/batch/~a" (oid batch)) >link</a>)
+                          <span>
+                            ,(batch-name batch)
+                            <a href= (format nil "/batch/~a" (oid batch)) >link</a>
+                          </span>)
             </li>
 
             <li>Screenshots that are above 16k dimensions:
