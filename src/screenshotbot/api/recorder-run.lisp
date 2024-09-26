@@ -200,8 +200,8 @@
            (declare (optimize (debug 3) (speed 0)))
            (log:info "Being promotion logic")
            (start-promotion-thread recorder-run)
-           (time
-            (warmup-image-caches recorder-run))))
+           (with-tracing (:warmup-image-caches)
+             (warmup-image-caches recorder-run))))
     (cond
       (*synchronous-promotion*
        (promotion))
