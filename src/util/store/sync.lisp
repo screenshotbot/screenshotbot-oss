@@ -15,6 +15,7 @@
   (:import-from #:util/cron
                 #:def-cron)
   (:import-from #:util/events
+                #:with-tracing
                 #:push-event))
 (in-package :util/store/sync)
 
@@ -22,12 +23,13 @@
   ())
 
 (defmethod call-rpc ((self sync-sha-request))
-  (uiop:with-temporary-file (:stream s :pathname p :direction :io)
-    (generate-sync-test s)
-    (finish-output s)
-    (file-position s 0)
-    (ironclad:byte-array-to-hex-string
-     (ironclad:digest-file :sha256 p))))
+  (with-tracing (:sync-sha-request)
+    (uiop:with-temporary-file (:stream s :pathname p :direction :io)
+      (generate-sync-test s)
+      (finish-output s)
+      (file-position s 0)
+      (ironclad:byte-array-to-hex-string
+       (ironclad:digest-file :sha256 p)))))
 
 (def-cron test-sync (:minute 0 :step-hour 6)
   (let ((shas (core/rpc/rpc::map-rpc (make-instance 'sync-sha-request))))
