@@ -58,13 +58,33 @@
 (def-easy-macro with-description (&binding final-description &key description (action "Create Key") &fn fn)
   <simple-card-page form-action= (nibble (description) (fn description)) >
     <div class= "card-header">
-      <h3>Describe this key</h3>
+      <h3>API-Key Options</h3>
     </div>
 
-      <label class= "form-label" for= "#description">
-        This human-readable description let's you distinguish keys on the API keys dashboard.
-      </label>
-      <textarea name= "description" class= "form-control" placeholder= "Enter text here" id= "description" >,(progn description)</textarea>
+    <div class= "mb-3">
+         <label class= "form-label" for= "#description">
+           This human-readable description let's you distinguish keys on the API keys dashboard.
+         </label>
+         <textarea name= "description" class= "form-control" placeholder= "Enter text here" id= "description" >,(progn description)</textarea>
+    </div>
+
+      ,(when (gk:check :api-key-roles (auth:current-company))
+         <div>
+           <div class= "form-check mb-2" >
+             <input type= "checkbox" class= "form-check-input" value= "" checked= "checked" id= "ci-access" />
+             <label class= "form-check-label" for= "#ci-access">
+               CI Access<br/>
+               <span class= "text-muted">Upload screenshots from CI jobs</span>
+             </label>
+           </div>
+           <div class= "form-check" >
+             <input type= "checkbox" class= "form-check-input" value= "" id= "ci-access" />
+             <label class= "form-check-label" for= "#ci-access">
+               Full access<br/>
+               <span class= "text-muted">Suitable for custom scripts using the API</span>
+             </label>
+           </div>           
+         </div>)
 
     <div class= "card-footer">
       <input type= "submit" class= "btn btn-primary" value= action />
