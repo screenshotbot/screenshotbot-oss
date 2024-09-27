@@ -4,9 +4,9 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/model/api-key
+(defpackage :core/api/model/api-key
   (:use :cl)
-  (:nicknames :core/api/model/api-key)
+  (:nicknames :screenshotbot/model/api-key)
   (:import-from #:bknr.datastore
                 #:deftransaction
                 #:persistent-class
@@ -50,7 +50,7 @@
    #:make-transient-key
    #:render-api-token
    #:api-key-for-secret))
-(in-package :screenshotbot/model/api-key)
+(in-package :core/api/model/api-key)
 
 (defvar *lock* (bt:make-lock "random-string"))
 
