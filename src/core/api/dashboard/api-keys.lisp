@@ -47,13 +47,27 @@
                 #:api-token-mode-p
                 #:api-acceptor-mixin)
   (:import-from #:alexandria
-                #:when-let))
+                #:when-let)
+  (:import-from #:core/installation/installation
+                #:*installation*))
 (in-package :screenshotbot/dashboard/api-keys)
 
 (named-readtables:in-readtable markup:syntax)
 
 (defvar *throttler* (make-instance 'throttler
                                    :tokens 100))
+
+(defclass permission ()
+  ((name :initarg :name
+         :reader permission-name)
+   (label :initarg :label
+          :reader permission-label)))
+
+(defmethod permission-input-name ((self permission))
+  (format nil "permission--~a" (permission-name self)))
+
+(defmethod api-key-available-permissions (installation)
+  nil)
 
 (def-easy-macro with-description (&binding final-description &key description (action "Create Key") &fn fn)
   <simple-card-page form-action= (nibble (description) (fn description)) >
@@ -70,20 +84,12 @@
 
       ,(when (gk:check :api-key-roles (auth:current-company))
          <div>
-           <div class= "form-check mb-2" >
-             <input type= "checkbox" class= "form-check-input" value= "" checked= "checked" id= "ci-access" />
-             <label class= "form-check-label" for= "#ci-access">
-               CI Access<br/>
-               <span class= "text-muted">Upload screenshots from CI jobs</span>
-             </label>
-           </div>
-           <div class= "form-check" >
-             <input type= "checkbox" class= "form-check-input" value= "" id= "ci-access" />
-             <label class= "form-check-label" for= "#ci-access">
-               Full access<br/>
-               <span class= "text-muted">Suitable for custom scripts using the API</span>
-             </label>
-           </div>           
+           ,@ (loop for permission in (api-key-available-permissions *installation*)
+                    collect
+                    <div class= "form-check mb-2" >
+                      <input type= "checkbox" class= "form-check-input" value= "" checked= "checked" id= "ci-access" name= (permission-input-name permission) />
+                      ,(permission-label permission)
+                    </div>)
          </div>)
 
     <div class= "card-footer">

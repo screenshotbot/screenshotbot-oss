@@ -177,6 +177,7 @@
                  (:file "notices")
                  (:file "new-compare")
                  (:file "flaky-screenshots")
+                 (:file "api-key-impl")
                  (:file "channels")
                  (:file "reports")
                  (:file "bisect")
