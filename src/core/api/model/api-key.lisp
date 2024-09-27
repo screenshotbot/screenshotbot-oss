@@ -126,6 +126,9 @@
       :type boolean
       :reader expired-p
       :initform nil)
+     (%permissions
+      :initarg :permissions
+      :accessor api-key-permissions)
      (last-used
       :initarg :last-used
       :accessor last-used))
@@ -133,7 +136,8 @@
     (:default-initargs
      :api-key (generate-api-key)
      :last-used (get-universal-time)
-     :api-secret-key (generate-api-secret))))
+     :api-secret-key (generate-api-secret)
+     :permissions nil)))
 
 (defmethod last-used :around ((self api-key))
   (ignore-errors
