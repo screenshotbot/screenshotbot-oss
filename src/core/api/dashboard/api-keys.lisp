@@ -60,6 +60,9 @@
 (defclass permission ()
   ((name :initarg :name
          :reader permission-name)
+   (default :initarg :default
+            :initform nil
+            :reader permission-default-value)
    (label :initarg :label
           :reader permission-label)))
 
@@ -87,7 +90,7 @@
            ,@ (loop for permission in (api-key-available-permissions *installation*)
                     collect
                     <div class= "form-check mb-2" >
-                      <input type= "checkbox" class= "form-check-input" value= "" checked= "checked" id= "ci-access" name= (permission-input-name permission) />
+                      <input type= "checkbox" class= "form-check-input" value= "" checked= (if (permission-default-value permission) "checked") id= "ci-access" name= (permission-input-name permission) />
                       ,(permission-label permission)
                     </div>)
          </div>)

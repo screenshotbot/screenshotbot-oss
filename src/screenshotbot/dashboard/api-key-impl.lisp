@@ -20,6 +20,7 @@
    (make-instance
     'permission
     :name :ci
+    :default t
     :label
     <label class= "form-check-label" for= "#ci-access">
       CI Access<br/>
