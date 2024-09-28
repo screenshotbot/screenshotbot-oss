@@ -49,7 +49,9 @@
   (:import-from #:alexandria
                 #:when-let)
   (:import-from #:core/installation/installation
-                #:*installation*))
+                #:*installation*)
+  (:import-from #:core/api/model/api-key
+                #:api-key-permissions))
 (in-package :screenshotbot/dashboard/api-keys)
 
 (named-readtables:in-readtable markup:syntax)
@@ -72,8 +74,14 @@
 (defmethod api-key-available-permissions (installation)
   nil)
 
-(def-easy-macro with-description (&binding final-description &key description (action "Create Key") &fn fn)
-  <simple-card-page form-action= (nibble (description) (fn description)) >
+
+(defun %read-permissions ()
+  (loop for permission in (api-key-available-permissions *installation*)
+        if (hunchentoot:parameter (permission-input-name permission))
+          collect (permission-name permission)))
+
+(def-easy-macro with-description (&binding final-description &key &binding permissions description (action "Create Key")  &fn fn)
+  <simple-card-page form-action= (nibble (description) (fn description (%read-permissions))) >
     <div class= "card-header">
       <h3>API-Key Options</h3>
     </div>
@@ -102,12 +110,13 @@
   </simple-card-page>)
 
 (defun %create-api-key (user company)
-  (with-description (description)
-   (let ((api-key (make-instance 'api-key
-                                 :user user
-                                 :description description
-                                 :company company)))
-     <simple-card-page max-width= "80em" >
+  (with-description (description :permissions permissions)
+    (let ((api-key (make-instance 'api-key
+                                  :user user
+                                  :description description
+                                  :permissions permissions
+                                  :company company)))
+      <simple-card-page max-width= "80em" >
      <div class= "card-header">
      <h3>New API Key</h3>
      </div>
@@ -143,8 +152,10 @@
 
 (defun edit-api-key (api-key)
   (with-description (description :description (api-key-description api-key)
+                                 :permissions permissions
                      :action "Update description")
     (setf (api-key-description api-key) description)
+    (setf (api-key-permissions api-key) permissions)
     (hex:safe-redirect "/api-keys")))
 
 (defun %api-key-page (&key (user (current-user))
