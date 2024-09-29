@@ -292,3 +292,11 @@ need a better deletion model in the future."
   (dolist (api-key (bknr.datastore:class-instances 'api-key))
     (unless (slot-boundp api-key 'api-key)
       (delete-api-key api-key))))
+
+(def-store-migration ("Add default permissions" :version 24)
+  "See T1388"
+  (let ((defaults (uiop:call-function "core/api/dashboard/api-keys::%default-permissions")))
+    (dolist (api-key (bknr.datastore:class-instances 'api-key))
+      (unless (slot-boundp api-key '%permissions)
+        (setf (api-key-permissions api-key)
+              defaults)))))

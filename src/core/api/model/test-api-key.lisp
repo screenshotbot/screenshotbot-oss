@@ -36,7 +36,13 @@
                 #:*snapshot-store-version*
                 #:*store-version*)
   (:import-from #:util/store/store-migrations
-                #:run-migrations))
+                #:run-migrations)
+  (:import-from #:core/api/model/api-key
+                #:api-key-permissions
+                #:%permissions)
+  (:import-from #:core/installation/installation
+                #:abstract-installation
+                #:*installation*))
 (in-package :core/api/model/test-api-key)
 
 
@@ -161,3 +167,13 @@
       (flush-last-used-cache)
       (is (eql 0 (fset:size *last-used-cache*)))
       (is (> (last-used api-key) 0)))))
+
+(test migration-for-api-key-permissions
+  (with-fixture state ()
+    (let ((*installation* (make-instance 'abstract-installation))
+          (api-key (make-instance 'api-key)))
+      (slot-makunbound api-key '%permissions)
+      (let ((*store-version* 24)
+            (*snapshot-store-version* 23))
+        (run-migrations))
+      (is (eql nil (api-key-permissions api-key))))))

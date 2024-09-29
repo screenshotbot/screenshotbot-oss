@@ -6,6 +6,7 @@
 
 (defpackage :screenshotbot/dashboard/api-keys
   (:use :cl)
+  (:nicknames :core/api/dashboard/api-keys)
   (:import-from #:auth
                 #:current-company
                 #:current-user)
