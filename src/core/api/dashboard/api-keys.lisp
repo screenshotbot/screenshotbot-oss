@@ -158,7 +158,7 @@
   (with-description (description :description (api-key-description api-key)
                                  :permissions (api-key-permissions api-key)
                                  :final-permissions final-permissions
-                     :action "Update description")
+                     :action "Update")
     (setf (api-key-description api-key) description)
     (setf (api-key-permissions api-key) final-permissions)
     (hex:safe-redirect "/api-keys")))
