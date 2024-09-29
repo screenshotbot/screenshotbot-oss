@@ -76,9 +76,11 @@
 
 
 (defun %read-permissions ()
-  (loop for permission in (api-key-available-permissions *installation*)
-        if (hunchentoot:parameter (permission-input-name permission))
-          collect (permission-name permission)))
+  (if (gk:check :api-key-roles (auth:current-company))
+      (loop for permission in (api-key-available-permissions *installation*)
+            if (hunchentoot:parameter (permission-input-name permission))
+              collect (permission-name permission))
+      (%default-permissions)))
 
 (def-easy-macro with-description (&binding final-description &key &binding final-permissions description
                                            permissions (action "Create Key")  &fn fn)
@@ -110,11 +112,14 @@
     </div>
   </simple-card-page>)
 
+(defun %default-permissions ()
+  (loop for permission in (api-key-available-permissions *installation*)
+        if (permission-default-value permission)
+          collect (permission-name permission)))
+
 (defun %create-api-key (user company)
   (with-description (description :final-permissions final-permissions
-                                 :permissions (loop for permission in (api-key-available-permissions *installation*)
-                                                    if (permission-default-value permission)
-                                                      collect (permission-name permission)))
+                                 :permissions (%default-permissions))
     (let ((api-key (make-instance 'api-key
                                   :user user
                                   :description description

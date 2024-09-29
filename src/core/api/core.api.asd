@@ -22,4 +22,6 @@
                :util/fiveam
                :fiveam-matchers)
   :components ((:module "model"
-                :components ((:file "test-api-key")))))
+                :components ((:file "test-api-key")))
+               (:module "dashboard"
+                :components ((:file "test-api-keys")))))
