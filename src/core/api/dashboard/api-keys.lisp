@@ -80,7 +80,8 @@
         if (hunchentoot:parameter (permission-input-name permission))
           collect (permission-name permission)))
 
-(def-easy-macro with-description (&binding final-description &key &binding permissions description (action "Create Key")  &fn fn)
+(def-easy-macro with-description (&binding final-description &key &binding final-permissions description
+                                           permissions (action "Create Key")  &fn fn)
   <simple-card-page form-action= (nibble (description) (fn description (%read-permissions))) >
     <div class= "card-header">
       <h3>API-Key Options</h3>
@@ -98,7 +99,7 @@
            ,@ (loop for permission in (api-key-available-permissions *installation*)
                     collect
                     <div class= "form-check mb-2" >
-                      <input type= "checkbox" class= "form-check-input" value= "" checked= (if (permission-default-value permission) "checked") id= "ci-access" name= (permission-input-name permission) />
+                      <input type= "checkbox" class= "form-check-input" value= "" checked= (if (member (permission-name permission) permissions) "checked") id= "ci-access" name= (permission-input-name permission) />
                       ,(permission-label permission)
                     </div>)
          </div>)
@@ -110,11 +111,14 @@
   </simple-card-page>)
 
 (defun %create-api-key (user company)
-  (with-description (description :permissions permissions)
+  (with-description (description :final-permissions final-permissions
+                                 :permissions (loop for permission in (api-key-available-permissions *installation*)
+                                                    if (permission-default-value permission)
+                                                      collect (permission-name permission)))
     (let ((api-key (make-instance 'api-key
                                   :user user
                                   :description description
-                                  :permissions permissions
+                                  :permissions final-permissions
                                   :company company)))
       <simple-card-page max-width= "80em" >
      <div class= "card-header">
@@ -152,10 +156,11 @@
 
 (defun edit-api-key (api-key)
   (with-description (description :description (api-key-description api-key)
-                                 :permissions permissions
+                                 :permissions (api-key-permissions api-key)
+                                 :final-permissions final-permissions
                      :action "Update description")
     (setf (api-key-description api-key) description)
-    (setf (api-key-permissions api-key) permissions)
+    (setf (api-key-permissions api-key) final-permissions)
     (hex:safe-redirect "/api-keys")))
 
 (defun %api-key-page (&key (user (current-user))
