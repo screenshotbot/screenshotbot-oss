@@ -314,7 +314,7 @@ monthly-active."
                                 :datasets
                                 (list
                                  (make-instance 'dataset
-                                                :label "hello"
+                                                :label "Number of reviews"
                                                 :data-labels (loop for (nil count) in top-users
                                                                    for i below 5
                                                                    collect (format nil "~a" count))
