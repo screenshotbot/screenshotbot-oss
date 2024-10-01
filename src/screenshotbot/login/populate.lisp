@@ -12,6 +12,7 @@
                 #:store-object-with-id
                 #:with-transaction)
   (:import-from #:screenshotbot/api/recorder-run
+                #:%put-run
                 #:%recorder-run-post
                 #:run-response-id)
   (:import-from #:screenshotbot/dashboard/ensure-company
@@ -64,23 +65,24 @@
                                                                path))
                           :url (str:concat "/" (namestring path))))
          (create-run (&key image commit)
-           (let ((response (%recorder-run-post
-                            :channel "demo-project"
-                            :company company
-                            :github-repo nil
-                            :screenshot-records (list
-                                                 (make-instance
-                                                  'dto:screenshot
-                                                  :name "image1"
-                                                  :image-id (oid image)))
-                            :commit commit
-                            :branch "master"
-                            :is-trunk t
-                            :is-clean t)))
-             (let ((id (run-response-id response)))
-               (let ((run (store-object-with-id id)))
-                 (check-type run recorder-run)
-                 run)))))
+           (destructuring-bind (create-run-response run channel)
+               (%put-run
+                company
+                (make-instance 'dto:run
+                               :channel "demo-project"
+                               :github-repo nil
+                               :screenshots (list
+                                             (make-instance
+                                              'dto:screenshot
+                                              :name "image1"
+                                              :image-id (oid image)))
+                               :commit-hash commit
+                               :main-branch "master"
+                               :trunkp t
+                               :cleanp t))
+             (declare (ignore create-run-response channel))
+             (check-type run recorder-run)
+             run)))
     (let ((image1 (make-image "assets/images/example-view-square.svg.png"))
           (image2 (make-image "assets/images/example-view.svg.png")))
 
