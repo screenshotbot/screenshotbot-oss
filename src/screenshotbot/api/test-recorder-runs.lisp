@@ -53,6 +53,7 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:screenshotbot/model/recorder-run
+                #:trunkp
                 #:recorder-run-batch
                 #:make-recorder-run
                 #:recorder-run)
@@ -68,6 +69,8 @@
   (:import-from #:screenshotbot/model/batch
                 #:batch-commit
                 #:batch)
+  (:import-from #:auth/viewer-context
+                #:api-viewer-context)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 
 (util/fiveam:def-suite)
@@ -85,20 +88,27 @@
 (def-fixture state ()
   (let ((*installation* (make-instance 'my-installation)))
    (with-test-store ()
-     (with-fake-request ()
-       (cl-mock:with-mocks ()
-        (auth:with-sessions ()
-          (with-test-user (:company company
-                           :user user)
-            (let* ((*synchronous-promotion* t)
-                   (api-key (make-instance 'api-key :user user :company company))
-                   (img1 (make-image :company company :pathname (fix "rose.png")))
-                   (img2 (make-image :company company :pathname (fix "wizard.png"))))
-              (setf (current-user) user)
-              (setf (current-company) company)
-              (assert (logged-in-p))
-              (assert (current-user))
-              (&body)))))))))
+     (cl-mock:with-mocks ()
+       (with-test-user (:company company
+                        :user user)
+         (let* ((api-key (make-instance 'api-key
+                                        :user user
+                                        :company company))
+                (*synchronous-promotion* t)
+                (api-key (make-instance 'api-key :user user :company company))
+                (img1 (make-image :company company :pathname (fix "rose.png")))
+                (img2 (make-image :company company :pathname (fix "wizard.png")))
+                (vc (make-instance 'api-viewer-context
+                                   :api-key api-key)))
+           (with-fake-request ()
+             (auth:with-sessions ()
+               (setf (current-user) user)
+               (setf (current-company) company)
+               (setf (auth:viewer-context hunchentoot:*request*)
+                     vc)
+               (assert (logged-in-p))
+               (assert (current-user))
+               (&body)))))))))
 
 (defun serial-recorder-run-post (&rest args)
   (multiple-value-bind (val verify)
@@ -179,6 +189,23 @@
                                  (make-screenshot :image img1 :name "foo")))))
      (starts-with "https://example.com/runs/"))))
 
+(test api-key-can-be-nil-for-populate
+  "populate calls into %put-run but provides a NIL :api-key"
+  (with-fixture state ()
+    (assert company)
+    (%put-run company
+              (make-instance 'dto:run
+                             :channel "foo"
+                             :commit-hash "deadbeef"
+                             :trunkp t
+                             :screenshots (list
+                                           (make-instance 'dto:screenshot
+                                                          :name "foo"
+                                                          :image-id (oid img1))))
+              :api-key nil)
+    (let ((run (car (last (class-instances 'recorder-run)))))
+      (is-true (trunkp run)))))
+
 (test batch-is-added
   (with-fixture state ()
     (assert company)
@@ -248,7 +275,8 @@
                              :screenshots (list
                                            (make-instance 'dto:screenshot
                                                           :name "foo"
-                                                          :image-id (oid img1)))))
+                                                          :image-id (oid img1))))
+              :api-key api-key)
     (let ((run (car (last (class-instances 'recorder-run)))))
       (is-true run)
       (assert-that (recorder-run-batch run)

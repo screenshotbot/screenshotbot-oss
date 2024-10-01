@@ -79,7 +79,8 @@
                                :commit-hash commit
                                :main-branch "master"
                                :trunkp t
-                               :cleanp t))
+                               :cleanp t)
+                :api-key nil)
              (declare (ignore create-run-response channel))
              (check-type run recorder-run)
              run)))

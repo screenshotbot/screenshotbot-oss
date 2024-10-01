@@ -71,6 +71,8 @@
                 #:make-full-url)
   (:import-from #:util.cdn
                 #:*cdn-domain*)
+  (:import-from #:auth/viewer-context
+                #:viewer-context-api-key)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -293,7 +295,11 @@
      :pull-request-url (dto:pull-request-url run)
      :phabricator-diff-id (dto:phabricator-diff-id run))))
 
-(defmethod %put-run (company (run dto:run))
+(defmethod %put-run (company (run dto:run) &key (api-key
+                                                 (viewer-context-api-key
+                                                  (auth:viewer-context
+                                                   hunchentoot:*request*))))
+  (declare (ignore api-key)) ;; temporary
   (unless (dto:trunkp run)
     (throttle! *non-production-throttler* :key (not-null! (current-user))))
 
