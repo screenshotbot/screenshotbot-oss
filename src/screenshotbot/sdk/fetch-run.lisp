@@ -36,6 +36,7 @@
                (format nil "/api/run/~a" oid)
                :method :get
                :decode-response nil)
+    (log:debug "Got /api/run/... result: ~s" body)
     ;; TODO: sync this with ENSURE-API-SUCCESS.
     (unless (eql code 200)
       (error "Could not fetch run: ~a, ~a" code body))
