@@ -1,6 +1,8 @@
 
 Version
 
+* 14: When an API request fails, we set error code to 400 or 500
+  (Previously, we would return 200 with a JSON body).
 * 13: Added GET /api/run/:oid, and url field to screnshot
 * 12: Added /api/analytics-event
 * 11: Add batch model and POST /api/batch

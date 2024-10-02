@@ -115,6 +115,12 @@ user. The intention of this flag is to set to NIL for some tests.")
   (let ((*api-key* (authenticate-api-request hunchentoot:*request*)))
     (funcall fn)))
 
+(defun %set-error-code (e)
+  ;; For api-version < 14, or SDK version <= 2.8.14, we would always
+  ;; return error code 200.
+  (setf (hunchentoot:return-code*) (api-error-code e))
+  (setf (hunchentoot:content-type*) "application/json"))
+
 (def-easy-macro with-error-handling (&key wrap-success &fn fn)
   "Converts internal errors into a JSON renderable object.
 
@@ -125,25 +131,27 @@ function fn for the purpose of tests."
              (with-output-to-string (out)
                #+lispworks
                (dbg:output-backtrace :brief out))))
-     (handler-bind ((api-error (lambda (e)
-                                 (when *wrap-internal-errors*
-                                   (log:warn "API error: ~a" (api-error-msg e))
-                                   (return-from error-handling
-                                     (make-instance 'error-result
-                                                    :success nil
-                                                    :stacktrace (%trace)
-                                                    :error (princ-to-string e))))))
-                    (error  (lambda (e)
-                              (when *wrap-internal-errors*
-                                (log:warn "Error: ~a" e)
-                                (sentry-client:capture-exception e)
-                                (return-from error-handling
-                                  (make-instance 'error-result
-                                                 :success nil
-                                                 :stacktrace (%trace)
-                                                 :error (format nil
-                                                                "Internal error, please contact support@screenshotbot.io: ~a"
-                                                                (princ-to-string e)))))
+      (handler-bind ((api-error (lambda (e)
+                                  (when *wrap-internal-errors*
+                                    (%set-error-code e)
+                                    (log:warn "API error: ~a" (api-error-msg e))
+                                    (return-from error-handling
+                                      (make-instance 'error-result
+                                                     :success nil
+                                                     :stacktrace (%trace)
+                                                     :error (princ-to-string e))))))
+                     (error  (lambda (e)
+                               (when *wrap-internal-errors*
+                                 (%set-error-code e)
+                                 (log:warn "Error: ~a" e)
+                                 (sentry-client:capture-exception e)
+                                 (return-from error-handling
+                                   (make-instance 'error-result
+                                                  :success nil
+                                                  :stacktrace (%trace)
+                                                  :error (format nil
+                                                                 "Internal error, please contact support@screenshotbot.io: ~a"
+                                                                 (princ-to-string e)))))
 )))
        (cond
          (wrap-success
@@ -226,10 +234,15 @@ function fn for the purpose of tests."
 
 (define-condition api-error (error)
   ((message :initarg :message
-            :reader api-error-msg))
+            :reader api-error-msg)
+   (code :initarg :code
+         :initform 400
+         :reader api-error-code))
   (:report (lambda (e out)
              (format out "~a" (api-error-msg e)))))
 
+(defmethod api-error-code (error)
+  500)
 
 (defapi (nil :uri "/api/test") ()
   3)

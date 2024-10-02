@@ -49,6 +49,7 @@
   (:import-from #:util/health-check
                 #:def-health-check)
   (:import-from #:screenshotbot/api/model
+                #:*api-version*
                 #:encode-json)
   (:import-from #:util/json-mop
                 #:ext-json-serializable-class
@@ -143,7 +144,8 @@
          :method method
          :basic-authorization (when (remote-supports-basic-auth-p api-context)
                                 (%make-basic-auth api-context))
-         :additional-headers `(("X-client-version" . ,*client-version*))
+         :additional-headers `(("X-client-version" . ,*client-version*)
+                               ("X-client-api-version" . ,*api-version*))
          :content content
          :external-format-out :utf-8
          :read-timeout 45
