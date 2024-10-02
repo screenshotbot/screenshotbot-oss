@@ -74,6 +74,7 @@
   (:import-from #:auth/viewer-context
                 #:viewer-context-api-key)
   (:import-from #:core/api/model/api-key
+                #:cli-api-key
                 #:api-key-permissions)
   (:import-from #:screenshotbot/api/core
                 #:api-error)
@@ -303,6 +304,12 @@
   ()
   (:report "Trying to create a CI run with a key that does not have the CI permission."))
 
+(defmethod has-ci-permission-p (api-key)
+  (member :ci (api-key-permissions api-key)))
+
+(defmethod has-ci-permission-p ((self cli-api-key))
+  nil)
+
 (defmethod %put-run (company (run dto:run) &key (api-key
                                                  (viewer-context-api-key
                                                   (auth:viewer-context
@@ -316,7 +323,7 @@
          (gk:check :api-key-roles company)
          (dto:trunkp run)
          api-key)
-    (unless (member :ci (api-key-permissions api-key))
+    (unless (has-ci-permission-p api-key)
       (error 'production-run-without-ci-permission)))
 
   (let* ((channel (find-or-create-channel company (dto:run-channel run)))
