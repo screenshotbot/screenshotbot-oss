@@ -86,29 +86,32 @@
    name))
 
 (def-fixture state ()
-  (let ((*installation* (make-instance 'my-installation)))
-   (with-test-store ()
-     (cl-mock:with-mocks ()
-       (with-test-user (:company company
-                        :user user)
-         (let* ((api-key (make-instance 'api-key
-                                        :user user
-                                        :company company))
-                (*synchronous-promotion* t)
-                (api-key (make-instance 'api-key :user user :company company))
-                (img1 (make-image :company company :pathname (fix "rose.png")))
-                (img2 (make-image :company company :pathname (fix "wizard.png")))
-                (vc (make-instance 'api-viewer-context
-                                   :api-key api-key)))
-           (with-fake-request ()
-             (auth:with-sessions ()
-               (setf (current-user) user)
-               (setf (current-company) company)
-               (setf (auth:viewer-context hunchentoot:*request*)
-                     vc)
-               (assert (logged-in-p))
-               (assert (current-user))
-               (&body)))))))))
+  (dolist (api-key-roles '(gk:enable gk:disable))
+    (let ((*installation* (make-instance 'my-installation)))
+      (with-test-store ()
+        (gk:create :api-key-roles)
+        (funcall api-key-roles :api-key-roles)
+        (cl-mock:with-mocks ()
+          (with-test-user (:company company
+                           :user user)
+            (let* ((api-key (make-instance 'api-key
+                                           :user user
+                                           :company company))
+                   (*synchronous-promotion* t)
+                   (api-key (make-instance 'api-key :user user :company company))
+                   (img1 (make-image :company company :pathname (fix "rose.png")))
+                   (img2 (make-image :company company :pathname (fix "wizard.png")))
+                   (vc (make-instance 'api-viewer-context
+                                      :api-key api-key)))
+              (with-fake-request ()
+                (auth:with-sessions ()
+                  (setf (current-user) user)
+                  (setf (current-company) company)
+                  (setf (auth:viewer-context hunchentoot:*request*)
+                        vc)
+                  (assert (logged-in-p))
+                  (assert (current-user))
+                  (&body))))))))))
 
 (defun serial-recorder-run-post (&rest args)
   (multiple-value-bind (val verify)
