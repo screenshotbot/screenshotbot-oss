@@ -73,6 +73,10 @@
                 #:*cdn-domain*)
   (:import-from #:auth/viewer-context
                 #:viewer-context-api-key)
+  (:import-from #:core/api/model/api-key
+                #:api-key-permissions)
+  (:import-from #:screenshotbot/api/core
+                #:api-error)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -295,15 +299,25 @@
      :pull-request-url (dto:pull-request-url run)
      :phabricator-diff-id (dto:phabricator-diff-id run))))
 
+(define-condition production-run-without-ci-permission (api-error)
+  ()
+  (:report "Trying to create a CI run with a key that does not have the CI permission."))
+
 (defmethod %put-run (company (run dto:run) &key (api-key
                                                  (viewer-context-api-key
                                                   (auth:viewer-context
                                                    hunchentoot:*request*))))
-  (declare (ignore api-key)) ;; temporary
   (unless (dto:trunkp run)
     (throttle! *non-production-throttler* :key (not-null! (current-user))))
 
   (validate-dto run)
+
+  (when (and
+         (gk:check :api-key-roles company)
+         (dto:trunkp run)
+         api-key)
+    (unless (member :ci (api-key-permissions api-key))
+      (error 'production-run-without-ci-permission)))
 
   (let* ((channel (find-or-create-channel company (dto:run-channel run)))
          (screenshots (with-tracing ("screenshot-records-api-to-internal")

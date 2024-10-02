@@ -18,6 +18,7 @@
   (:import-from #:screenshotbot/server
                 #:logged-in-p)
   (:import-from #:screenshotbot/api/recorder-run
+                #:production-run-without-ci-permission
                 #:validation-error
                 #:validate-dto
                 #:%put-run
@@ -71,6 +72,10 @@
                 #:batch)
   (:import-from #:auth/viewer-context
                 #:api-viewer-context)
+  (:import-from #:core/api/model/api-key
+                #:api-key-permissions)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 
 (util/fiveam:def-suite)
@@ -85,8 +90,15 @@
                                     "fixture/")
    name))
 
-(def-fixture state ()
-  (dolist (api-key-roles '(gk:enable gk:disable))
+(def-fixture state (&key (api-key-roles :both))
+  (dolist (api-key-roles
+           (ecase api-key-roles
+             (:both
+              '(gk:enable gk:disable))
+             (:disable
+              '(gk:disable))
+             (:enable
+              '(gk:enable))))
     (let ((*installation* (make-instance 'my-installation)))
       (with-test-store ()
         (gk:create :api-key-roles)
@@ -98,7 +110,8 @@
                                            :user user
                                            :company company))
                    (*synchronous-promotion* t)
-                   (api-key (make-instance 'api-key :user user :company company))
+                   (api-key (make-instance 'api-key :user user :company company
+                                                    :permissions '(:ci)))
                    (img1 (make-image :company company :pathname (fix "rose.png")))
                    (img2 (make-image :company company :pathname (fix "wizard.png")))
                    (vc (make-instance 'api-viewer-context
@@ -209,6 +222,58 @@
     (let ((run (car (last (class-instances 'recorder-run)))))
       (is-true (trunkp run)))))
 
+(test run-with-trunkp-as-t
+  (with-fixture state ()
+    (assert company)
+    (%put-run company
+              (make-instance 'dto:run
+                             :channel "foo"
+                             :commit-hash "deadbeef"
+                             :trunkp t
+                             :screenshots (list
+                                           (make-instance 'dto:screenshot
+                                                          :name "foo"
+                                                          :image-id (oid img1))))
+              :api-key api-key)
+    (let ((run (car (last (class-instances 'recorder-run)))))
+      (is-true (trunkp run)))))
+
+(test run-with-trunkp-as-t-but-no-ci-permission
+  (with-fixture state (:api-key-roles :enable)
+    (assert company)
+    (setf (api-key-permissions api-key) '(:full))
+    (signals production-run-without-ci-permission
+      (%put-run company
+                (make-instance 'dto:run
+                               :channel "foo"
+                               :commit-hash "deadbeef"
+                               :trunkp t
+                               :screenshots (list
+                                            (make-instance 'dto:screenshot
+                                                           :name "foo"
+                                                           :image-id (oid img1))))
+                :api-key api-key))
+    (assert-that (class-instances 'recorder-run)
+                 (has-length 0))))
+
+(test run-with-trunkp-as-t-but-no-ci-permission-with-gk-disabled
+  (with-fixture state (:api-key-roles :disable)
+    (assert company)
+    (setf (api-key-permissions api-key) '(:full))
+    (finishes
+      (%put-run company
+                (make-instance 'dto:run
+                               :channel "foo"
+                               :commit-hash "deadbeef"
+                               :trunkp t
+                               :screenshots (list
+                                            (make-instance 'dto:screenshot
+                                                           :name "foo"
+                                                           :image-id (oid img1))))
+                :api-key api-key))
+    (assert-that (class-instances 'recorder-run)
+                 (has-length 1))))
+
 (test batch-is-added
   (with-fixture state ()
     (assert company)
@@ -300,3 +365,4 @@
                      :tags (list
                             (make-array 500 :element-type 'character
                                             :initial-element #\a)))))))
+
