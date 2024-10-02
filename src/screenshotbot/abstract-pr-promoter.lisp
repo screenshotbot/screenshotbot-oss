@@ -245,13 +245,12 @@
 (defmethod pr-merge-base ((promoter abstract-pr-promoter) run)
   (or
    (recorder-run-merge-base run)
-   (when (gk:check :server-merge-base (recorder-run-company run) :default t)
-    (when-let ((repo (channel-repo (recorder-run-channel run)))
-               (master-commit (recorder-run-branch-hash run))
-               (this-commit (recorder-run-commit run)))
-      (compute-merge-base repo
-                          master-commit
-                          this-commit)))))
+   (when-let ((repo (channel-repo (recorder-run-channel run)))
+              (master-commit (recorder-run-branch-hash run))
+              (this-commit (recorder-run-commit run)))
+     (compute-merge-base repo
+                         master-commit
+                         this-commit))))
 
 (defun make-details-url (&rest args)
   (format nil
