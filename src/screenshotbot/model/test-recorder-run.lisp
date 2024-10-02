@@ -60,12 +60,22 @@
 
 (util/fiveam:def-suite)
 
-(def-fixture state ()
-  (with-test-store ()
-    (let* ((run (make-recorder-run))
-           (company (make-instance 'company))
-           (promotion-log (make-instance 'promotion-log)))
-      (&body))))
+(def-fixture state (&key (api-key-roles :both))
+  (dolist (api-key-roles
+           (ecase api-key-roles
+             (:both
+              '(gk:enable gk:disable))
+             (:disable
+              '(gk:disable))
+             (:enable
+              '(gk:enable))))
+    (with-test-store ()
+      (gk:create :api-key-roles)
+      (funcall api-key-roles :api-key-roles)
+      (let* ((run (make-recorder-run))
+             (company (make-instance 'company))
+             (promotion-log (make-instance 'promotion-log)))
+        (&body)))))
 
 
 (test promotion-log-for-new
@@ -200,8 +210,9 @@
     (let* ((other-company (make-instance 'company))
            (user (make-instance 'user))
            (api-key (make-instance 'api-key
-                                  :user user
-                                  :company other-company))
+                                   :user user
+                                   :permissions '(:full)
+                                   :company other-company))
            (other-channel (make-instance 'channel
                                          :company other-company))
            (other-run (make-recorder-run
@@ -221,6 +232,7 @@
          :user user
          :api-key (make-instance 'api-key
                                  :user user
+                                 :permissions '(:full)
                                  :company other-company))
         other-run)
        (described-as "Can view runs in the same company"
@@ -234,3 +246,55 @@
         run)
        (described-as "Cannot view runs in the other company"
          (is-equal-to nil))))))
+
+(def-fixture can-viewer-view-fixture (&key (permissions '(:ci)))
+  (let* ((channel (make-instance 'channel :company company))
+           (user (make-instance 'user))
+           (run (make-recorder-run
+                 :channel channel
+                 :company company))
+           (api-key (make-instance 'api-key
+                                   :permissions permissions
+                                   :user user
+                                   :company company)))
+      (roles:ensure-has-role company user 'roles:standard-member)
+    (&body)))
+
+(test api-viewer-context-cant-view-run-if-only-ci-permissions
+  (with-fixture state (:api-key-roles :enable)
+    (with-fixture can-viewer-view-fixture ()
+      (assert-that
+       (auth:can-viewer-view
+        (make-instance
+         'api-viewer-context
+         :user user
+         :api-key api-key)
+        run)
+       (is-equal-to nil)))))
+
+(test api-viewer-context-can-view-if-full-permissions
+  (with-fixture state (:api-key-roles :enable)
+    (with-fixture can-viewer-view-fixture (:permissions '(:full))
+      (assert-that
+       (auth:can-viewer-view
+        (make-instance
+         'api-viewer-context
+         :user user
+         :api-key api-key)
+        run)
+       (is-equal-to t)))))
+
+
+(test api-viewer-context-can-view-if-gk-is-disabled
+  (with-fixture state (:api-key-roles :disable)
+    (with-fixture can-viewer-view-fixture ()
+      (assert-that
+       (auth:can-viewer-view
+        (make-instance
+         'api-viewer-context
+         :user user
+         :api-key api-key)
+        run)
+       (is-equal-to t)))))
+
+

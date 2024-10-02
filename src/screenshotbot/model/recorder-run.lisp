@@ -52,12 +52,16 @@
   (:import-from #:util/misc
                 #:?.)
   (:import-from #:auth/viewer-context
+                #:viewer-context-api-key
+                #:api-viewer-context
                 #:viewer-context-user
                 #:normal-viewer-context
                 #:logged-in-viewer-context
                 #:viewer-context)
   (:import-from #:util/store/simple-object-snapshot
                 #:simple-object-snapshot)
+  (:import-from #:core/api/model/api-key
+                #:api-key-permissions)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -418,6 +422,13 @@ associated report is rendered.")
   (or
    (publicp (recorder-run-channel run))
    (auth:can-viewer-view vc (recorder-run-channel run))))
+
+(defmethod auth:can-viewer-view :around ((vc api-viewer-context) (run recorder-run))
+  (and
+   (or
+    (not (gk:check :api-key-roles (recorder-run-company run)))
+    (member :full (api-key-permissions (viewer-context-api-key vc))))
+   (call-next-method)))
 
 (defmethod can-public-view ((run recorder-run))
   (publicp (recorder-run-channel run)))
