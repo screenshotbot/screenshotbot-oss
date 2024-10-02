@@ -61,6 +61,8 @@
   (:import-from #:util/store/simple-object-snapshot
                 #:simple-object-snapshot)
   (:import-from #:core/api/model/api-key
+                #:api-key-user
+                #:cli-api-key
                 #:api-key-permissions)
   ;; classes
   (:export #:promotion-log
@@ -423,11 +425,20 @@ associated report is rendered.")
    (publicp (recorder-run-channel run))
    (auth:can-viewer-view vc (recorder-run-channel run))))
 
+(defmethod can-api-key-view-run-p (api-key run)
+  (member :full (api-key-permissions api-key)))
+
+(defmethod can-api-key-view-run-p ((api-key cli-api-key) run)
+  "from a cli-api-key, we need to be able to access our runs... but we
+might also want to build a feature to check against our current main
+branch runs."
+  t)
+
 (defmethod auth:can-viewer-view :around ((vc api-viewer-context) (run recorder-run))
   (and
    (or
     (not (gk:check :api-key-roles (recorder-run-company run)))
-    (member :full (api-key-permissions (viewer-context-api-key vc))))
+    (can-api-key-view-run-p (viewer-context-api-key vc) run))
    (call-next-method)))
 
 (defmethod can-public-view ((run recorder-run))

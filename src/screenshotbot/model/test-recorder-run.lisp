@@ -55,6 +55,8 @@
                 #:api-viewer-context)
   (:import-from #:fiveam-matchers/described-as
                 #:described-as)
+  (:import-from #:core/api/model/api-key
+                #:cli-api-key)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-recorder-run)
 
@@ -296,5 +298,20 @@
          :api-key api-key)
         run)
        (is-equal-to t)))))
+
+(test api-viewer-context-can-view-runs-from-cli-api-key
+  (with-fixture state (:api-key-roles :enable)
+    (with-fixture can-viewer-view-fixture ()
+      (let ((api-key (make-instance 'cli-api-key
+                                    :user user
+                                    :company company)))
+        (assert-that
+         (auth:can-viewer-view
+          (make-instance
+           'api-viewer-context
+           :user user
+           :api-key api-key)
+          run)
+         (is-equal-to t))))))
 
 
