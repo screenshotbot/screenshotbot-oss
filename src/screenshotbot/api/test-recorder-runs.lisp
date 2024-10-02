@@ -73,6 +73,7 @@
   (:import-from #:auth/viewer-context
                 #:api-viewer-context)
   (:import-from #:core/api/model/api-key
+                #:transient-api-key
                 #:cli-api-key
                 #:api-key-permissions)
   (:import-from #:fiveam-matchers/has-length
@@ -277,6 +278,25 @@
                   :api-key api-key)))
     (assert-that (class-instances 'recorder-run)
                  (has-length 0))))
+
+(test run-with-trunkp-as-t-for-transient-api-key
+  (with-fixture state ()
+    (assert company)
+    (let ((api-key (make-instance 'transient-api-key
+                                  :user user
+                                  :company company)))
+      (%put-run company
+                (make-instance 'dto:run
+                               :channel "foo"
+                               :commit-hash "deadbeef"
+                               :trunkp t
+                               :screenshots (list
+                                             (make-instance 'dto:screenshot
+                                                            :name "foo"
+                                                            :image-id (oid img1))))
+                :api-key api-key))
+    (assert-that (class-instances 'recorder-run)
+                 (has-length 1))))
 
 (test run-with-trunkp-as-t-but-no-ci-permission-with-gk-disabled
   (with-fixture state (:api-key-roles :disable)

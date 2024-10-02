@@ -74,6 +74,7 @@
   (:import-from #:auth/viewer-context
                 #:viewer-context-api-key)
   (:import-from #:core/api/model/api-key
+                #:transient-api-key
                 #:cli-api-key
                 #:api-key-permissions)
   (:import-from #:screenshotbot/api/core
@@ -309,6 +310,9 @@
 
 (defmethod has-ci-permission-p ((self cli-api-key))
   nil)
+
+(defmethod has-ci-permission-p ((self transient-api-key))
+  t)
 
 (defmethod %put-run (company (run dto:run) &key (api-key
                                                  (viewer-context-api-key
