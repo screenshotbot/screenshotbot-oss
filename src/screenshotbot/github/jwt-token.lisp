@@ -41,7 +41,7 @@
                      ("iat" . ,ts)
                      ("exp" . ,(+ 300 ts)))))))
 
-(define-condition github-api-error ()
+(define-condition github-api-error (error)
   ((code :initarg :code
          :reader github-api-error-code)
    (message :initarg :message
