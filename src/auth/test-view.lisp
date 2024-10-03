@@ -14,6 +14,7 @@
   (:import-from #:auth
                 #:authenticated-request)
   (:import-from #:auth/viewer-context
+                #:api-viewer-context
                 #:anonymous-viewer-context
                 #:normal-viewer-context)
   (:import-from #:auth/request
@@ -24,13 +25,21 @@
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:fiveam-matchers/core
-                #:assert-that))
+                #:assert-that)
+  (:import-from #:core/api/model/api-key
+                #:api-key)
+  (:import-from #:util/store/store
+                #:with-test-store)
+  (:import-from #:bknr.datastore
+                #:store-object
+                #:persistent-class))
 (in-package :auth/test-view)
 
 (util/fiveam:def-suite)
 
-(defclass my-user ()
-  ())
+(defclass my-user (store-object)
+  ()
+  (:metaclass persistent-class))
 
 (defmethod auth:can-view ((obj (eql :one)) (user my-user))
   t)
@@ -42,12 +51,13 @@
   t)
 
 (def-fixture state ()
-  (cl-mock:with-mocks ()
-    (let ((events))
-     (&body))))
+  (with-test-store ()
+   (cl-mock:with-mocks ()
+     (let ((events))
+       (&body)))))
 
 (test happy-path-can-edit-view
-  (cl-mock:with-mocks ()
+  (with-fixture state ()
     (let ((user (make-instance 'my-user)))
      (let ((hunchentoot:*request*
              (make-instance 'abstract-authenticated-request
@@ -58,12 +68,29 @@
        (finishes (auth:can-edit! :one))))))
 
 (test happy-path-cannot-edit-view
-  (cl-mock:with-mocks ()
+  (with-fixture state ()
     (let ((user (make-instance 'my-user)))
       (let ((hunchentoot:*request*
               (make-instance 'abstract-authenticated-request
                              :viewer-context
                              (make-instance 'normal-viewer-context :user user))))
+        (is-false (auth:can-view :two user))
+        (signals auth:no-access-error
+          (auth:can-view! :two))
+        (signals auth:no-access-error
+          (auth:can-edit! :two))))))
+
+(test no-access-error-with-api-viewer-context
+  (with-fixture state ()
+    (let ((user (make-instance 'my-user)))
+      (let ((hunchentoot:*request*
+              (make-instance 'abstract-authenticated-request
+                             :viewer-context
+                             (make-instance 'api-viewer-context
+                                            :api-key
+                                            (make-instance 'api-key
+                                                           :user user)
+                                            :user user))))
         (is-false (auth:can-view :two user))
         (signals auth:no-access-error
           (auth:can-view! :two))

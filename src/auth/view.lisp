@@ -8,6 +8,8 @@
   (:use #:cl
         #:auth)
   (:import-from #:auth/viewer-context
+                #:viewer-context-api-key
+                #:api-viewer-context
                 #:anonymous-viewer-context
                 #:logged-in-viewer-context
                 #:viewer-context-user
@@ -23,7 +25,7 @@
         :accessor error-obj)))
 
 (defmethod print-object ((e no-access-error) out)
-  (format out "User ~S can't access ~S" (error-user e) (error-obj e)))
+  (format out "~S can't access ~S" (error-user e) (error-obj e)))
 
 (defgeneric can-view (obj user)
   (:documentation "Can the USER view object OBJ?"))
@@ -53,15 +55,18 @@
     (and user
          (can-view obj user))))
 
+(defmethod no-access-error (vc obj)
+  (error 'no-access-error
+         :user (ignore-errors ;; may not have a user
+                (viewer-context-user vc))
+         :obj obj))
+
 (defun can-view! (&rest objects)
   (let ((vc (auth:viewer-context hunchentoot:*request*)))
     (dolist (obj objects)
       (unless (can-viewer-view vc obj)
         (restart-case
-            (error 'no-access-error
-                   :user (ignore-errors ;; may not have a user
-                          (viewer-context-user vc))
-                    :obj obj)
+            (no-access-error vc obj)
           (give-access-anyway ()
             nil))))))
 
