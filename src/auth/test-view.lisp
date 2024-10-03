@@ -32,7 +32,9 @@
                 #:with-test-store)
   (:import-from #:bknr.datastore
                 #:store-object
-                #:persistent-class))
+                #:persistent-class)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string))
 (in-package :auth/test-view)
 
 (util/fiveam:def-suite)
@@ -89,13 +91,20 @@
                              (make-instance 'api-viewer-context
                                             :api-key
                                             (make-instance 'api-key
+                                                           :api-key "bleh"
                                                            :user user)
                                             :user user))))
         (is-false (auth:can-view :two user))
         (signals auth:no-access-error
           (auth:can-view! :two))
         (signals auth:no-access-error
-          (auth:can-edit! :two))))))
+          (auth:can-edit! :two))
+
+        (handler-case
+            (auth:can-view! :two)
+          (auth:no-access-error (e)
+            (assert-that (format nil "~a" e)
+                         (contains-string "API-KEY"))))))))
 
 (defmethod auth:can-viewer-view (vc (obj (eql :one)))
   t)

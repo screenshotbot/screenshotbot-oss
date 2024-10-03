@@ -21,11 +21,20 @@
 (define-condition no-access-error (error)
   ((user :initarg :user
          :accessor error-user)
+   (api-key :initarg :api-key
+            :initform nil
+            :accessor %api-key)
    (obj :initarg :obj
         :accessor error-obj)))
 
 (defmethod print-object ((e no-access-error) out)
-  (format out "~S can't access ~S" (error-user e) (error-obj e)))
+  (cond
+    ((%api-key e)
+     (format out "The API key ~a does not have access to ~S"
+             (%api-key e)
+             out))
+    (t
+     (format out "~S can't access ~S" (error-user e) (error-obj e)))))
 
 (defgeneric can-view (obj user)
   (:documentation "Can the USER view object OBJ?"))
@@ -59,6 +68,13 @@
   (error 'no-access-error
          :user (ignore-errors ;; may not have a user
                 (viewer-context-user vc))
+         :obj obj))
+
+(defmethod no-access-error ((vc api-viewer-context) obj)
+  (error 'no-access-error
+         :user (ignore-errors ;; may not have a user
+                (viewer-context-user vc))         
+         :api-key (viewer-context-api-key vc)
          :obj obj))
 
 (defun can-view! (&rest objects)
