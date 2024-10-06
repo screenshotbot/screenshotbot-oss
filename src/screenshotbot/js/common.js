@@ -261,12 +261,42 @@ function prepareReportJs () {
             zoomToChange.off("click");
         });
 
-    }
 
+        function actuallyToggleCompareView(e) {
+            var views = ['.view-previous', '.view-updated'];
+            for (var view of views) {
+                var $view = $(view, $(modal));
+                if ($view.length > 1) {
+                    console.log("There's more than one of these menu items to click", $view);
+                }
+                if (!$view.hasClass('fw-bold')) {
+                    console.log("clicking", view);
+                    $view.click();
+                    return;
+                }
+            }
+        }
+
+        function toggleCompareView(e) {
+            if (e.key === 'v') {
+                actuallyToggleCompareView(e);
+            }
+        }
+
+        $(".view-toggle", modal).click(actuallyToggleCompareView);
+        
+        function removeToggleCompareView() {
+            $(document).off("keyup", toggleCompareView);
+        }
+
+        $(document).on("keyup", toggleCompareView);
+        $(this).on("hide.bs.modal", removeToggleCompareView);
+    }
 
     setupLiveOnAttach(".image-comparison-modal", function () {
         $(this).on("show.bs.modal", setupImageComparison);
     });
+
     setupLiveOnAttach(
         ".image-comparison-wrapper",
         function () {
@@ -422,3 +452,4 @@ function setUrlParameter(key, value) {
     url.searchParams.set(key, value);
     history.replaceState(null, null, url.href);
 }
+

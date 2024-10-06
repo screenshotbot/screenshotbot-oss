@@ -473,7 +473,7 @@
   </div>
     <div class= "loading">
       <div class="spinner-border" role="status">
-        <!-- <span class="sr-only">Loading...</span> -->
+        <!-- < class="sr-only">Loading...</span> -->
       </div>
       Loading (this could take upto 30s in some cases)
     </div>
@@ -683,6 +683,11 @@
               <li>
                 <a class= "dropdown-item view-item view-updated">
                   Show Updated Image
+                </a>
+              </li>
+              <li>
+                <a class= "dropdown-item view-toggle">
+                  Toggle View <div class= "text-muted float-end">V</div>
                 </a>
               </li>
               <li>
