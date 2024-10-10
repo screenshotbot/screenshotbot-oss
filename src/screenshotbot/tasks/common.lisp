@@ -39,6 +39,8 @@
                 #:send-webhook)
   (:import-from #:screenshotbot/model/report
                 #:report-to-dto)
+  (:import-from #:util/misc
+                #:?.)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/tasks/common)
 
@@ -94,8 +96,8 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
         :json-type dto:run
         :documentation "The run that triggered this event")
    (previous-run :initarg :previous-run
-                :json-key "previousRun"
-                 :json-type dto:run
+                 :json-key "previousRun"
+                 :json-type (or null dto:run)
                  :documentation "The previous promoted run")
    (report :initarg :report
            :json-key "report"
@@ -113,46 +115,47 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
       (let* ((previous-run (recorder-previous-run run))
              (channel (recorder-run-channel run))
              (company (recorder-run-company run)))
-        (when previous-run
-          (let ((diff-report (make-diff-report run previous-run)))
-            (cond
-              ((not previous-run) ;; todo: assert `WAS-ACTIVE-P`?
-               (log:info "Doesn't look like master run"))
-              ((diff-report-empty-p diff-report)
-               (log:info "Diff report is empty, not sending any tasks"))
-              (t
-               (log:info "Screenshotbot is ready to send out a task, fingers crossed")
-               (let* ((report (let ((report (make-instance 'report
-                                                           :run run
-                                                           :promotion-report-p t
-                                                           :channel channel
-                                                           :num-changes (length (diff-report-changes diff-report))
-                                                           :previous-run previous-run
-                                                           :title (diff-report-title diff-report))))
-                                (add-company-report
-                                 (recorder-run-company run)
-                                 report)
-                                report)))
-                 ;; This is only used by the frontend when viewed
-                 ;; by the user, it's not used in the promotion
-                 ;; flows.
-                 (warmup-comparison-images run previous-run)
-                 (send-webhook company
-                               (make-instance 'channel-promoted-payload
-                                              :channel (channel-name channel)
-                                              :branch (recorder-run-branch run)
-                                              :run (run-to-dto run)
-                                              :previous-run (run-to-dto previous-run)
-                                              :report (report-to-dto report)))
-                 (dolist (task-integration (get-enabled-task-integrations company channel))
-                   (let ((task-integration task-integration))
-                     (labels ((thread ()
-                                (restart-case
-                                    (send-task task-integration report)
-                                  (retry-task-integration ()
-                                    (thread))
-                                  (ignore-task-integation ()
-                                    nil))))
-                       (util:make-thread #'thread))))))))))
+        (let ((diff-report (make-diff-report run previous-run)))
+          (cond
+            ((not (was-promoted-p run))
+             (log:info "This run wasn't promoted, so we're not sending notifications for it"))
+            ((diff-report-empty-p diff-report)
+             (log:info "Diff report is empty, not sending any tasks"))
+            (t
+             ;; Note that previous-run might be NIL!
+             (log:info "Screenshotbot is ready to send out a task, fingers crossed")
+             (let* ((report (let ((report (make-instance 'report
+                                                         :run run
+                                                         :promotion-report-p t
+                                                         :channel channel
+                                                         :num-changes (length (diff-report-changes diff-report))
+                                                         :previous-run previous-run
+                                                         :title (diff-report-title diff-report))))
+                              (add-company-report
+                               (recorder-run-company run)
+                               report)
+                              report)))
+               ;; This is only used by the frontend when viewed
+               ;; by the user, it's not used in the promotion
+               ;; flows.
+               (when previous-run
+                 (warmup-comparison-images run previous-run))
+               (send-webhook company
+                             (make-instance 'channel-promoted-payload
+                                            :channel (channel-name channel)
+                                            :branch (recorder-run-branch run)
+                                            :run (run-to-dto run)
+                                            :previous-run (?. run-to-dto previous-run)
+                                            :report (report-to-dto report)))
+               (dolist (task-integration (get-enabled-task-integrations company channel))
+                 (let ((task-integration task-integration))
+                   (labels ((thread ()
+                              (restart-case
+                                  (send-task task-integration report)
+                                (retry-task-integration ()
+                                  (thread))
+                                (ignore-task-integation ()
+                                  nil))))
+                     (util:make-thread #'thread)))))))))
       (dangerous-retry-full-send-task-flow ()
         (%maybe-send-tasks run))))

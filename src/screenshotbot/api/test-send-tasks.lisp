@@ -51,7 +51,7 @@
    (make-instance 'noop-task-integration
                   :company company)))
 
-(def-fixture state ()
+(def-fixture state (&key run1-screenshots)
   (with-test-store ()
    (with-fake-request ()
      (auth:with-sessions ()
@@ -68,8 +68,12 @@
                                            :github-repo "https://github.com/tdrhq/screenshotbot-example"
                                            :branch "master"))
                   (run1 (make-recorder-run
+                         :was-promoted-p t
                          :channel channel
                          :company company
+                         :screenshots (loop for name in run1-screenshots
+                                            collect
+                                            (make-instance 'screenshot :name name))
                          :commit-hash "car"
                          :cleanp t
                          :trunkp t))
@@ -79,6 +83,7 @@
                   (run2 (make-recorder-run
                          :channel channel
                          :commit-hash "car2"
+                         :was-promoted-p t
                          :cleanp t
                          :screenshots (list screenshot)
                          :previous-run run1
@@ -110,4 +115,12 @@
 
 (test happy-path-for-first-task
   (with-fixture state ()
-    (maybe-send-tasks promoter run1)))
+    (maybe-send-tasks promoter run1)
+    ;; Since there were no screenshots in run1 
+    (is-false (company-reports company))))
+
+(test we-send-a-report-for-the-first-run
+  (with-fixture state (:run1-screenshots '("bar"))
+    (maybe-send-tasks promoter run1)
+    ;; Since there were no screenshots in run1 
+    (is-true (company-reports company))))
