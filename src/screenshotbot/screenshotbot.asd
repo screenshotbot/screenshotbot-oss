@@ -348,6 +348,8 @@
                (:file "test-audit-log")
                (:file "test-abstract-pr-promoter")
                (:file "test-batch-promoter")
+               (:module "tasks"
+                :components ((:file "test-common")))
                (:module "company"
                 :components ((:file "test-request")
                              (:file "test-rename")))
