@@ -37,16 +37,16 @@
 
 (def-fixture state ()
   (with-test-store ()
-    (&body)))
+    (let* ((channel (make-instance 'channel))
+           (run (make-recorder-run
+                 :channel channel)))
+      (&body))))
 
 (test active-runs
   (with-fixture state ()
-   (let* ((channel (make-instance 'channel))
-          (run (make-recorder-run
-                :channel channel)))
-     (is (equal nil (active-run channel "foo")))
-     (setf (active-run channel "foo") run)
-     (is (eql run (active-run channel "foo"))))))
+   (is (equal nil (active-run channel "foo")))
+    (setf (active-run channel "foo") run)
+    (is (eql run (active-run channel "foo")))))
 
 (test production-run-for
   (with-fixture state ()
@@ -130,3 +130,12 @@
       (setf (review-policy-name channel) :disallow-author)
       (assert-that (review-policy channel)
                    (has-typep 'disallow-author-review-policy)))))
+
+(test sets-was-promoted-p
+  (with-fixture state ()
+    (is-false (was-promoted-p run))
+    (setf (active-run channel "master") run)
+    (is-true (was-promoted-p run))
+    (setf (active-run channel "master") (make-recorder-run :channel channel
+                                                           :screenshots nil))
+    (is-true (was-promoted-p run))))

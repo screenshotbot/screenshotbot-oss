@@ -27,6 +27,7 @@
   (:import-from #:screenshotbot/model/image
                 #:masks)
   (:import-from #:screenshotbot/model/recorder-run
+                #:was-promoted-p
                 #:unchanged-run-other-commit
                 #:unchanged-run-for-commit
                 #:unchanged-runs-for-commit
@@ -262,6 +263,7 @@
           mask))
 
 (defmethod (setf active-run) ((run recorder-run) (channel channel) (branch string))
+  (setf (was-promoted-p run) t)
   (%set-active-run channel branch run))
 
 (defmethod (setf active-run) ((run recorder-run) (channel channel) (branch null))

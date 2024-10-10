@@ -115,7 +115,8 @@
    #:group-separator
    #:recorder-run-author
    #:abstract-run
-   #:delete-run)
+   #:delete-run
+   #:was-promoted-p)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
