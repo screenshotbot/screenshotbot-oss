@@ -285,6 +285,9 @@ associated report is rendered.")
             :documentation "The batch object associated with this run")
      (%group-separator :initarg :group-separator
                        :reader group-separator)
+     (%was-promoted-p :initarg :was-promoted-p
+                      :accessor was-promoted-p
+                      :documentation "Whether this was ever set as an active run for the run's channel,branch.")
      (%author :initarg :author
               :reader recorder-run-author
               :documentation "The author, or owner of this run. This will be used for logic to ensure that authors cannot review their own runs. See T1056."))
@@ -292,7 +295,8 @@ associated report is rendered.")
     (:default-initargs :screenshot-map (error "need screenshot-map")
                        :compare-tolerance nil
                        :author nil
-                       :tags nil)))
+                       :tags nil
+                       :was-promoted-p nil)))
 
 (defmethod bknr.datastore:make-object-snapshot ((self recorder-run))
   (make-instance 'simple-object-snapshot
@@ -579,3 +583,6 @@ compare against the actual merge base.")))
 company as a way of deleting."
   (push-event :delete-run :run (oid run) :company (?. oid (recorder-run-company run)))
   (setf (recorder-run-company run) nil))
+
+(def-store-migration ("Ensure :was-promoted-p is bound" :Version 25)
+  (ensure-slot-boundp 'recorder-run '%was-promoted-p))
