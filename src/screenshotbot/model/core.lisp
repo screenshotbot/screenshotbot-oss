@@ -39,6 +39,7 @@
     (set-created-at res (get-universal-time))
     res))
 
+
 (defun ensure-slot-boundp (item slot &key value)
   (let ((items (cond
                  ((listp item)
