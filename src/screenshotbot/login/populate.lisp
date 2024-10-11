@@ -28,6 +28,7 @@
                 #:image
                 #:make-image)
   (:import-from #:screenshotbot/model/recorder-run
+                #:was-promoted-p
                 #:active-run
                 #:recorder-run)
   (:import-from #:screenshotbot/model/user
@@ -91,6 +92,8 @@
              (run-2 (create-run :image image2 :commit "abcdef2")))
         (with-transaction ()
           (setf (recorder-previous-run run-2) run)
+          (setf (was-promoted-p run) t
+                (was-promoted-p run-2) t)
           (setf (active-run (recorder-run-channel run-2) "master") run-2))
         (let ((report
                (make-instance 'report

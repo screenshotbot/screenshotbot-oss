@@ -587,3 +587,4 @@ company as a way of deleting."
 
 (def-store-migration ("Ensure :was-promoted-p is bound" :Version 25)
   (ensure-slot-boundp 'recorder-run '%was-promoted-p))
+

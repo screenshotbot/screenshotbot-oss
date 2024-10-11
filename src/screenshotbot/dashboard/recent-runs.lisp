@@ -33,13 +33,14 @@
   (:import-from #:screenshotbot/dashboard/review-link
                 #:review-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:was-promoted-p
                 #:recorder-run-tags
                 #:runs-for-tag
                 #:runs-for-company)
   (:export #:recent-runs))
 (in-package :screenshotbot/dashboard/recent-runs)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (hex:declare-handler 'run-page)
 
@@ -88,7 +89,10 @@
                     <conditional-commit repo= (channel-repo (recorder-run-channel run))
                     hash= (recorder-run-commit run) />
                     </span>)
-                   ((recorder-previous-run run)
+                   ((or
+                     (was-promoted-p run)
+                     ;; legacy: we could probably remove this in the future
+                     (recorder-previous-run run))
                     <span>Previously promoted run
                     <conditional-commit repo= (channel-repo (recorder-run-channel run))
                     hash= (recorder-run-commit run) />
