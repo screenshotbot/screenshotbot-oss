@@ -16,6 +16,8 @@
   (:import-from #:screenshotbot/model/api-key
                 #:generate-api-key
                 #:generate-api-secret)
+  (:import-from #:util/lists
+                #:with-batches)
   (:export
    #:has-created-at
    #:ensure-slot-boundp
@@ -39,6 +41,10 @@
     (set-created-at res (get-universal-time))
     res))
 
+(deftransaction tx-ensure-slot-boundp (items slot value)
+  (loop for item in items do
+      (unless (slot-boundp item slot)
+        (setf (slot-value item slot) value))))
 
 (defun ensure-slot-boundp (item slot &key value)
   (let ((items (cond
@@ -48,10 +54,8 @@
                   (bknr.datastore:class-instances item))
                  (t
                   (list item)))))
-    (loop for item in items do
-      (unless (slot-boundp item slot)
-        (with-transaction ()
-          (setf (slot-value item slot) value))))))
+    (with-batches (items items :batch-size 1000)
+      (tx-ensure-slot-boundp items slot value))))
 
 
 
