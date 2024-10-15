@@ -10,6 +10,7 @@
         #:screenshotbot/model/core
         #:screenshotbot/model/view)
   (:import-from #:bknr.datastore
+                #:class-instances
                 #:persistent-class
                 #:with-transaction
                 #:store-object-id
@@ -64,6 +65,8 @@
                 #:api-key-user
                 #:cli-api-key
                 #:api-key-permissions)
+  (:import-from #:util/cron
+                #:def-cron)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -154,7 +157,8 @@
      (%key :initarg :key)
      (%number :initarg :number)
      (%count :initarg :count)
-     (%ts :initarg :ts))
+     (%ts :initarg :ts
+          :reader shard-ts))
     (:metaclass persistent-class)
     (:default-initargs :ts (get-universal-time))))
 
@@ -599,3 +603,11 @@ company as a way of deleting."
 (def-store-migration ("Ensure :was-promoted-p is bound" :Version 25)
   (ensure-slot-boundp 'recorder-run '%was-promoted-p))
 
+(defun clean-up-old-shards ()
+  (let ((cut-off (- (get-universal-time) (* 24 3600 2))))
+    (loop for shard in (class-instances 'shard)
+          if (< (shard-ts shard) cut-off)
+          do (bknr.datastore:delete-object shard))))
+
+(def-cron clean-up-old-shards (:minute 0 :hour 1)
+  (clean-up-old-shards))

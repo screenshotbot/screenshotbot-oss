@@ -54,6 +54,7 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:screenshotbot/model/recorder-run
+                #:clean-up-old-shards
                 #:shard
                 #:trunkp
                 #:recorder-run-batch
@@ -79,6 +80,10 @@
                 #:api-key-permissions)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
+  (:import-from #:fiveam-matchers/lists
+                #:contains)
+  (:import-from #:bknr.datastore
+                #:class-instances)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 
 (util/fiveam:def-suite)
@@ -448,3 +453,12 @@
                                                :key (make-long-string)
                                                :number 0
                                                :count 20)))))
+
+(test clean-up-old-shards
+  (with-fixture state ()
+   (let ((shard1 (make-instance 'shard
+                                :ts 100))
+         (shard2 (make-instance 'shard)))
+     (clean-up-old-shards)
+     (assert-that (class-instances 'shard)
+                  (contains shard2)))))
