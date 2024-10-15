@@ -394,6 +394,8 @@
       (assert-that (recorder-run-batch run)
                    (is-null)))))
 
+(defun make-long-string (&key (length 1000))
+  (make-string length :initial-element #\a))
 
 (test validate-tag-name-too-long
   (with-fixture state ()
@@ -430,3 +432,19 @@
                  (has-length 0))
     (assert-that (class-instances 'shard)
                  (has-length 1))))
+
+(test validation-failure-for-long-shard-key-name
+  (finishes
+    (validate-dto
+     (make-instance 'dto:run
+                    :shard-spec (make-instance 'dto:shard-spec
+                                               :key "shard-key"
+                                               :number 0
+                                               :count 20))))
+  (signals validation-error
+    (validate-dto
+     (make-instance 'dto:run
+                    :shard-spec (make-instance 'dto:shard-spec
+                                               :key (make-long-string)
+                                               :number 0
+                                               :count 20)))))

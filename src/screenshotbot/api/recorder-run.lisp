@@ -288,7 +288,14 @@
               "Tag too long: ~a" tag))
     (when (dto:run-author run)
       (verify (< (length (dto:run-author run)) 100)
-              "Author name too long"))))
+              "Author name too long"))
+    (when-let ((shard (dto:shard-spec run)))
+      (verify (< (length (dto:shard-spec-key shard)) 200)
+              "Shard key too long")
+      (verify (and
+               (integerp (dto:shard-spec-number shard))
+               (integerp (dto:shard-spec-count shard)))
+              "Shard number and count must be present"))))
 
 (defmethod batch-for-run (company run)
   (when-let ((batch (dto:run-batch run)))
