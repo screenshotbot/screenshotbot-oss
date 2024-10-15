@@ -40,6 +40,7 @@
   (:import-from #:screenshotbot/model/screenshot-map
                 #:make-screenshot-map)
   (:import-from #:screenshotbot/model/recorder-run
+                #:shard
                 #:unchanged-run
                 #:recorder-run-author
                 #:recorder-run-tags
@@ -332,55 +333,67 @@
 
   (let* ((channel (find-or-create-channel company (dto:run-channel run)))
          (screenshots (with-tracing ("screenshot-records-api-to-internal")
-                        (screenshot-records-api-to-internal
-                         company
-                         channel
-                         (dto:run-screenshots run))))
-         (batch (batch-for-run company run))
-         (recorder-run (make-recorder-run
+                       (screenshot-records-api-to-internal
+                        company
+                        channel
+                        (dto:run-screenshots run)))))
+    (cond
+      ((dto:shard-spec run)
+       (let ((shard (dto:shard-spec run)))
+         (make-instance 'shard
                         :company company
-                        :channel channel
-                        :batch batch
-                        :screenshots screenshots
-                        :commit-hash (dto:run-commit run)
-                        :author (dto:run-author run)
-                        :create-github-issue-p (dto:should-create-github-issue-p run)
-                        :trunkp (dto:trunkp run)
-                        :periodic-job-p (dto:periodic-job-p run)
-                        :cleanp (dto:cleanp run)
-                        :pull-request (dto:pull-request-url run)
-                        :branch (dto:main-branch run)
-                        :work-branch (dto:work-branch run)
-                        :branch-hash (dto:main-branch-hash run)
-                        :override-commit-hash (dto:override-commit-hash run)
-                        :build-url (dto:build-url run)
-                        :merge-base (dto:merge-base run)
-                        :phabricator-diff-id (dto:phabricator-diff-id run)
-                        :gitlab-merge-request-iid (dto:gitlab-merge-request-iid run)
-                        :github-repo (dto:run-repo run)
-                        :tags (dto:run-tags run)
-                        :compare-threshold (dto:compare-threshold run))))
+                        :key (dto:shard-spec-key shard)
+                        :number (dto:shard-spec-number shard)
+                        :count (dto:shard-spec-count shard)
+                        :screenshots screenshots))
+       ;; TODO: if the shard is complete actually create a run
+       (values))
+      (t
+       (let* ((batch (batch-for-run company run))
+              (recorder-run (make-recorder-run
+                             :company company
+                             :channel channel
+                             :batch batch
+                             :screenshots screenshots
+                             :commit-hash (dto:run-commit run)
+                             :author (dto:run-author run)
+                             :create-github-issue-p (dto:should-create-github-issue-p run)
+                             :trunkp (dto:trunkp run)
+                             :periodic-job-p (dto:periodic-job-p run)
+                             :cleanp (dto:cleanp run)
+                             :pull-request (dto:pull-request-url run)
+                             :branch (dto:main-branch run)
+                             :work-branch (dto:work-branch run)
+                             :branch-hash (dto:main-branch-hash run)
+                             :override-commit-hash (dto:override-commit-hash run)
+                             :build-url (dto:build-url run)
+                             :merge-base (dto:merge-base run)
+                             :phabricator-diff-id (dto:phabricator-diff-id run)
+                             :gitlab-merge-request-iid (dto:gitlab-merge-request-iid run)
+                             :github-repo (dto:run-repo run)
+                             :tags (dto:run-tags run)
+                             :compare-threshold (dto:compare-threshold run))))
 
-    (with-transaction ()
-      (setf (channel-branch channel) (dto:main-branch run)))
-    (with-transaction ()
-      (setf (github-repo channel)
-            (dto:run-repo run)))
-    (push-event :run-created
-                :oid (oid recorder-run)
-                :company (oid company)
-                ;; This let's us monitor that a specific company is
-                ;; using the right domain name. See T1124.
-                :api-hostname (when (boundp 'hunchentoot:*request*)
-                                (or
-                                 (hunchentoot:header-in* :x-forwarded-host)
-                                 (hunchentoot:host))))
-    (prepare-recorder-run :run recorder-run)
-    (list
-     (make-instance 'create-run-response
-                    :id (store-object-id recorder-run))
-     recorder-run
-     channel)))
+         (with-transaction ()
+           (setf (channel-branch channel) (dto:main-branch run)))
+         (with-transaction ()
+           (setf (github-repo channel)
+                 (dto:run-repo run)))
+         (push-event :run-created
+                     :oid (oid recorder-run)
+                     :company (oid company)
+                     ;; This let's us monitor that a specific company is
+                     ;; using the right domain name. See T1124.
+                     :api-hostname (when (boundp 'hunchentoot:*request*)
+                                     (or
+                                      (hunchentoot:header-in* :x-forwarded-host)
+                                      (hunchentoot:host))))
+         (prepare-recorder-run :run recorder-run)
+         (list
+          (make-instance 'create-run-response
+                         :id (store-object-id recorder-run))
+          recorder-run
+          channel))))))
 
 (defun prepare-recorder-run (&key (run (error "must provide run")))
   "Common preparation steps for a recorder-run, even before the

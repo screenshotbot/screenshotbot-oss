@@ -265,7 +265,7 @@
   (:metaclass ext-json-serializable-class))
 
 (defclass shard-spec ()
-  ((key :initarg :id
+  ((key :initarg :key
         :json-type :string
         :json-key "key"
         :reader shard-spec-key

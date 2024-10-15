@@ -148,6 +148,17 @@
   (:metaclass persistent-class))
 
 (with-class-validation
+  (defclass shard (store-object)
+    ((%screenshots :initarg :screenshots)
+     (%company :initarg :company)
+     (%key :initarg :key)
+     (%number :initarg :number)
+     (%count :initarg :count)
+     (%ts :initarg :ts))
+    (:metaclass persistent-class)
+    (:default-initargs :ts (get-universal-time))))
+
+(with-class-validation
   (defclass recorder-run (object-with-oid abstract-run)
     ((channel
       :initarg :channel

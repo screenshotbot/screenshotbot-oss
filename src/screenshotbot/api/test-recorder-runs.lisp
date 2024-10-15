@@ -54,6 +54,7 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:screenshotbot/model/recorder-run
+                #:shard
                 #:trunkp
                 #:recorder-run-batch
                 #:make-recorder-run
@@ -409,3 +410,23 @@
                             (make-array 500 :element-type 'character
                                             :initial-element #\a)))))))
 
+(test if-a-shard-spec-is-present-we-dont-create-a-run-immediately
+  (with-fixture state ()
+    (assert company)
+    (%put-run company
+              (make-instance 'dto:run
+                             :channel "foo"
+                             :batch nil
+                             :shard-spec (make-instance 'dto:shard-spec
+                                                        :key "shard-key"
+                                                        :number 0
+                                                        :count 10)
+                             :screenshots (list
+                                           (make-instance 'dto:screenshot
+                                                          :name "foo"
+                                                          :image-id (oid img1))))
+              :api-key api-key)
+    (assert-that (class-instances 'recorder-run)
+                 (has-length 0))
+    (assert-that (class-instances 'shard)
+                 (has-length 1))))
