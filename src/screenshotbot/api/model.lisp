@@ -64,12 +64,16 @@
              #:batch-repo
              #:batch-commit
              #:batch-name
-             #:screenshot-url))
+             #:screenshot-url
+             #:shard-spec-count
+             #:shard-spec-number
+             #:shard-spec-key
+             #:shard-spec))
 
 (in-package :screenshotbot/api/model)
 
 ;; Please update CHANGELOG.md
-(defparameter *api-version* 14)
+(defparameter *api-version* 15)
 
 (defclass version ()
   ((version :initarg :version
@@ -260,6 +264,27 @@
            :reader screenshot-device))
   (:metaclass ext-json-serializable-class))
 
+(defclass shard-spec ()
+  ((key :initarg :id
+        :json-type :string
+        :json-key "key"
+        :reader shard-spec-key
+        :documentation "A unique, but arbitrary, identifier that identifies all
+the shards. For instance this might be the CircleCI root build id.")
+   (number :initarg :number
+           :json-type :number
+           :json-key "number"
+           :reader shard-spec-number
+           :documentation "The number of the shard, 0-indexed.")
+   (count :initarg :count
+          :json-type :count
+          :json-key "count"
+          :reader shard-spec-count
+          :documentation "The total count of shards"))
+  (:documentation "If we're sending a run in multiple shards, this specifies the current
+shard.")
+  (:metaclass ext-json-serializable-class))
+
 (defclass run (abstract-run-dto)
   ((id :initarg :id
        :json-key "id"
@@ -350,7 +375,13 @@
            :json-key "author"
            :initform nil
            :json-type (or null :string)
-           :documentation "The author of this run. This is used when implementing policies around reviews."))
+           :documentation "The author of this run. This is used when implementing policies around reviews.")
+   (shard-spec :initarg :shard-spec
+               :reader shard-spec
+               :json-key "shard"
+               :initform nil
+               :json-type (or null shard-spec)
+               :documentation "An optional shard-spec. This information is not present when reading a run. When creating a run, the presence of a shard-spec might delay the actual creation until all of the shards are available."))
   (:metaclass ext-json-serializable-class))
 
 (defclass report ()

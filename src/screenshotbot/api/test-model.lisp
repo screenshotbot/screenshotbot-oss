@@ -16,6 +16,8 @@
                 #:assert-that)
   (:import-from #:fiveam-matchers/strings
                 #:contains-string)
+  (:import-from #:fiveam-matchers/described-as
+                #:described-as)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/test-model)
 
@@ -120,3 +122,14 @@
   (let ((run (make-instance 'dto:run :batch "foo")))
     (assert-that (encode-json run)
                  (contains-string "\"batch\":\"foo\""))))
+
+(test shard-spec-doesnt-need-to-be-present
+  (let ((run (decode-json "{\"batch\": \"foo\"} "
+                          'dto:run)))
+    (is (equal nil (dto:shard-spec run))))
+  (let ((run (decode-json "{\"batch\": \"foo\", \"shard\":{}} "
+                          'dto:run)))
+    (assert-that (dto:shard-spec run)
+                 (has-typep 'dto:shard-spec))))
+
+
