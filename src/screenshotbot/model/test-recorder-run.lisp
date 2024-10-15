@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:find-shards
+                #:shard
                 #:unchanged-run-other-commit
                 #:unchanged-run
                 #:runs-for-channel
@@ -313,5 +315,23 @@
            :api-key api-key)
           run)
          (is-equal-to t))))))
+
+(test lookup-shards
+  (with-fixture state ()
+    (let ((company-2 (make-instance 'company)))
+      (make-instance 'shard
+                     :company company-2
+                     :key "foo")
+      (make-instance 'shard
+                     :company company
+                     :key "foo")
+      (make-instance 'shard
+                     :company company
+                     :key "foo")
+      (make-instance 'shard
+                     :company company
+                     :key "bar"))
+    (assert-that (find-shards company "foo")
+                 (has-length 2))))
 
 

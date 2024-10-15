@@ -119,7 +119,8 @@
    #:recorder-run-author
    #:abstract-run
    #:delete-run
-   #:was-promoted-p)
+   #:was-promoted-p
+   #:find-shards)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -150,17 +151,29 @@
   ()
   (:metaclass persistent-class))
 
+(defindex +shard-key-index+
+  'fset-set-index
+  :slot-name '%key)
+
 (with-class-validation
   (defclass shard (store-object)
     ((%screenshots :initarg :screenshots)
-     (%company :initarg :company)
-     (%key :initarg :key)
+     (%company :initarg :company
+               :reader shard-company)
+     (%key :initarg :key
+           :index +shard-key-index+
+           :index-reader %shards-for-key)
      (%number :initarg :number)
      (%count :initarg :count)
      (%ts :initarg :ts
           :reader shard-ts))
     (:metaclass persistent-class)
     (:default-initargs :ts (get-universal-time))))
+
+(defun find-shards (company key)
+  (loop for shard in (fset:convert 'list (%shards-for-key key))
+        if (eql company (shard-company shard))
+          collect shard))
 
 (with-class-validation
   (defclass recorder-run (object-with-oid abstract-run)
