@@ -325,7 +325,8 @@
 (defmethod %put-run (company (run dto:run) &key (api-key
                                                  (viewer-context-api-key
                                                   (auth:viewer-context
-                                                   hunchentoot:*request*))))
+                                                   hunchentoot:*request*)))
+                                             )
   (unless (dto:trunkp run)
     (throttle! *non-production-throttler* :key (not-null! (current-user))))
 
@@ -356,51 +357,62 @@
        ;; TODO: if the shard is complete actually create a run
        (values))
       (t
-       (let* ((batch (batch-for-run company run))
-              (recorder-run (make-recorder-run
-                             :company company
-                             :channel channel
-                             :batch batch
-                             :screenshots screenshots
-                             :commit-hash (dto:run-commit run)
-                             :author (dto:run-author run)
-                             :create-github-issue-p (dto:should-create-github-issue-p run)
-                             :trunkp (dto:trunkp run)
-                             :periodic-job-p (dto:periodic-job-p run)
-                             :cleanp (dto:cleanp run)
-                             :pull-request (dto:pull-request-url run)
-                             :branch (dto:main-branch run)
-                             :work-branch (dto:work-branch run)
-                             :branch-hash (dto:main-branch-hash run)
-                             :override-commit-hash (dto:override-commit-hash run)
-                             :build-url (dto:build-url run)
-                             :merge-base (dto:merge-base run)
-                             :phabricator-diff-id (dto:phabricator-diff-id run)
-                             :gitlab-merge-request-iid (dto:gitlab-merge-request-iid run)
-                             :github-repo (dto:run-repo run)
-                             :tags (dto:run-tags run)
-                             :compare-threshold (dto:compare-threshold run))))
+       (%put-run-helper run :company company
+                            :channel channel
+                            :screenshots screenshots)))))
 
-         (with-transaction ()
-           (setf (channel-branch channel) (dto:main-branch run)))
-         (with-transaction ()
-           (setf (github-repo channel)
-                 (dto:run-repo run)))
-         (push-event :run-created
-                     :oid (oid recorder-run)
-                     :company (oid company)
-                     ;; This let's us monitor that a specific company is
-                     ;; using the right domain name. See T1124.
-                     :api-hostname (when (boundp 'hunchentoot:*request*)
-                                     (or
-                                      (hunchentoot:header-in* :x-forwarded-host)
-                                      (hunchentoot:host))))
-         (prepare-recorder-run :run recorder-run)
-         (list
-          (make-instance 'create-run-response
-                         :id (store-object-id recorder-run))
-          recorder-run
-          channel))))))
+(defun %put-run-helper (run &key
+                              (company (error "provide :company"))
+                              (channel (error "provide :channel"))
+                              (screenshots (error "provide :screenshots")))
+  "Step two of %put-run, after validations and after we've processed
+somethings like SCREENSHOTS. In particular SCREENSHOTS might be
+computed differently if we're using sharding."
+  (let* ((batch (batch-for-run company run))
+         (recorder-run (make-recorder-run
+                        :company company
+                        :channel channel
+                        :batch batch
+                        :screenshots screenshots
+                        :commit-hash (dto:run-commit run)
+                        :author (dto:run-author run)
+                        :create-github-issue-p (dto:should-create-github-issue-p run)
+                        :trunkp (dto:trunkp run)
+                        :periodic-job-p (dto:periodic-job-p run)
+                        :cleanp (dto:cleanp run)
+                        :pull-request (dto:pull-request-url run)
+                        :branch (dto:main-branch run)
+                        :work-branch (dto:work-branch run)
+                        :branch-hash (dto:main-branch-hash run)
+                        :override-commit-hash (dto:override-commit-hash run)
+                        :build-url (dto:build-url run)
+                        :merge-base (dto:merge-base run)
+                        :phabricator-diff-id (dto:phabricator-diff-id run)
+                        :gitlab-merge-request-iid (dto:gitlab-merge-request-iid run)
+                        :github-repo (dto:run-repo run)
+                        :tags (dto:run-tags run)
+                        :compare-threshold (dto:compare-threshold run))))
+
+    (with-transaction ()
+      (setf (channel-branch channel) (dto:main-branch run)))
+    (with-transaction ()
+      (setf (github-repo channel)
+            (dto:run-repo run)))
+    (push-event :run-created
+                :oid (oid recorder-run)
+                :company (oid company)
+                ;; This let's us monitor that a specific company is
+                ;; using the right domain name. See T1124.
+                :api-hostname (when (boundp 'hunchentoot:*request*)
+                                (or
+                                 (hunchentoot:header-in* :x-forwarded-host)
+                                 (hunchentoot:host))))
+    (prepare-recorder-run :run recorder-run)
+    (list
+     (make-instance 'create-run-response
+                    :id (store-object-id recorder-run))
+     recorder-run
+     channel)))
 
 (defun prepare-recorder-run (&key (run (error "must provide run")))
   "Common preparation steps for a recorder-run, even before the
