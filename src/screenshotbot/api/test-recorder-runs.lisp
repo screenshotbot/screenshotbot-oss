@@ -452,19 +452,24 @@
                             :company company
                             :number i
                             :count 10))
-    (%put-run company
-              (make-instance 'dto:run
-                             :channel "foo"
-                             :batch nil
-                             :shard-spec (make-instance 'dto:shard-spec
-                                                        :key "shard-key"
-                                                        :number 0
-                                                        :count 10)
-                             :screenshots (list
-                                           (make-instance 'dto:screenshot
-                                                          :name "foo"
-                                                          :image-id (oid img1))))
-              :api-key api-key)
+    (assert-that
+     (%put-run company
+               (make-instance 'dto:run
+                              :channel "foo"
+                              :batch nil
+                              :shard-spec (make-instance 'dto:shard-spec
+                                                         :key "shard-key"
+                                                         :number 0
+                                                         :count 10)
+                              :screenshots (list
+                                            (make-instance 'dto:screenshot
+                                                           :name "foo"
+                                                           :image-id (oid img1))))
+               :api-key api-key)
+     (contains
+      (has-typep t)
+      (has-typep 'recorder-run)
+      (has-typep t)))
     (assert-that (class-instances 'recorder-run)
                  (has-length 1))
     (let ((run (car (class-instances 'recorder-run))))

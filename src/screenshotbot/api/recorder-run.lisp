@@ -367,14 +367,15 @@
                         :screenshots screenshots)
            
            (when (shard-complete-p company (dto:shard-spec-key shard))
-             (%put-run-helper run
-                              :company company
-                              :channel channel
-                              :screenshots (build-shard-screenshots
-                                            company
-                                            (dto:shard-spec-key shard)))
-             (mapcar #'bknr.datastore:delete-object (find-shards company
-                                                                 (dto:shard-spec-key shard)))))))
+             (prog1
+                 (%put-run-helper run
+                                  :company company
+                                  :channel channel
+                                  :screenshots (build-shard-screenshots
+                                                company
+                                                (dto:shard-spec-key shard)))
+               (mapcar #'bknr.datastore:delete-object (find-shards company
+                                                                   (dto:shard-spec-key shard))))))))
       (t
        (%put-run-helper run :company company
                             :channel channel
