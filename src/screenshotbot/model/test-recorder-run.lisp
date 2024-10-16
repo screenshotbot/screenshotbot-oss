@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:clean-up-old-shards
                 #:find-shards
                 #:shard
                 #:unchanged-run-other-commit
@@ -333,5 +334,14 @@
                      :key "bar"))
     (assert-that (find-shards company "foo")
                  (has-length 2))))
+
+(test clean-up-old-shards
+  (with-fixture state ()
+   (let ((shard1 (make-instance 'shard
+                                :ts 100))
+         (shard2 (make-instance 'shard)))
+     (clean-up-old-shards)
+     (assert-that (class-instances 'shard)
+                  (contains shard2)))))
 
 

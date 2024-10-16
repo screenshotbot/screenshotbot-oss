@@ -54,7 +54,6 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:screenshotbot/model/recorder-run
-                #:clean-up-old-shards
                 #:shard
                 #:trunkp
                 #:recorder-run-batch
@@ -454,11 +453,5 @@
                                                :number 0
                                                :count 20)))))
 
-(test clean-up-old-shards
-  (with-fixture state ()
-   (let ((shard1 (make-instance 'shard
-                                :ts 100))
-         (shard2 (make-instance 'shard)))
-     (clean-up-old-shards)
-     (assert-that (class-instances 'shard)
-                  (contains shard2)))))
+
+
