@@ -437,6 +437,103 @@
     (assert-that (class-instances 'shard)
                  (has-length 1))))
 
+
+(test for-the-last-shard-create-the-run-immediately
+  (with-fixture state ()
+    (assert company)
+    (loop for i from 1 below 10
+          do
+             (make-instance 'shard
+                            :key "shard-key"
+                            :screenshots (list
+                                          (make-screenshot
+                                           :name (format nil "img~a" i)
+                                           :image img1))
+                            :company company
+                            :number i
+                            :count 10))
+    (%put-run company
+              (make-instance 'dto:run
+                             :channel "foo"
+                             :batch nil
+                             :shard-spec (make-instance 'dto:shard-spec
+                                                        :key "shard-key"
+                                                        :number 0
+                                                        :count 10)
+                             :screenshots (list
+                                           (make-instance 'dto:screenshot
+                                                          :name "foo"
+                                                          :image-id (oid img1))))
+              :api-key api-key)
+    (assert-that (class-instances 'recorder-run)
+                 (has-length 1))
+    (let ((run (car (class-instances 'recorder-run))))
+      (assert-that (recorder-run-screenshots run)
+                   (has-length 10)))))
+
+(test we-dont-create-the-run-if-a-shard-was-repeated
+  (with-fixture state ()
+    (assert company)
+    (loop for i from 1 below 10
+          do
+             (make-instance 'shard
+                            :key "shard-key"
+                            :screenshots (list
+                                          (make-screenshot
+                                           :name (format nil "img~a" i)
+                                           :image img1))
+                            :company company
+                            :number i
+                            :count 10))
+    (%put-run company
+              (make-instance 'dto:run
+                             :channel "foo"
+                             :batch nil
+                             :shard-spec (make-instance 'dto:shard-spec
+                                                        :key "shard-key"
+                                                        :number 1
+                                                        :count 10)
+                             :screenshots (list
+                                           (make-instance 'dto:screenshot
+                                                          :name "foo"
+                                                          :image-id (oid img1))))
+              :api-key api-key)
+    (assert-that (class-instances 'recorder-run)
+                 (has-length 0))))
+
+(test once-the-run-is-created-we-dont-create-more-runs-for-the-shard
+  (with-fixture state ()
+    (loop for i from 1 below 10
+          do
+             (make-instance 'shard
+                            :key "shard-key"
+                            :screenshots (list
+                                          (make-screenshot
+                                           :name (format nil "img~a" i)
+                                           :image img1))
+                            :company company
+                            :number i
+                            :count 10))
+    (dotimes (i 2)
+     (%put-run company
+               (make-instance 'dto:run
+                              :channel "foo"
+                              :batch nil
+                              :shard-spec (make-instance 'dto:shard-spec
+                                                         :key "shard-key"
+                                                         :number 0
+                                                         :count 10)
+                              :screenshots (list
+                                            (make-instance 'dto:screenshot
+                                                           :name "foo"
+                                                           :image-id (oid img1))))
+               :api-key api-key))
+    (assert-that (class-instances 'recorder-run)
+                 (has-length 1))
+    (let ((run (car (class-instances 'recorder-run))))
+      (assert-that (recorder-run-screenshots run)
+                   (has-length 10)))))
+
 (test validation-failure-for-long-shard-key-name
   (finishes
     (validate-dto

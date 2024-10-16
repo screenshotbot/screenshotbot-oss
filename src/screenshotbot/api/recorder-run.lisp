@@ -40,6 +40,10 @@
   (:import-from #:screenshotbot/model/screenshot-map
                 #:make-screenshot-map)
   (:import-from #:screenshotbot/model/recorder-run
+                #:shard-screenshots
+                #:shard-number
+                #:shard-count
+                #:find-shards
                 #:shard
                 #:unchanged-run
                 #:recorder-run-author
@@ -80,6 +84,9 @@
                 #:api-key-permissions)
   (:import-from #:screenshotbot/api/core
                 #:api-error)
+  (:import-from #:util/hash-lock
+                #:hash-lock
+                #:with-hash-lock-held)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -100,6 +107,9 @@
 (defvar *non-production-throttler* (make-instance 'keyed-throttler
                                                   :tokens 1200)
   "A throttler for non-production runs (i.e. `ci record` and `ci verify`)")
+
+(defvar *shard-hash-lock* (make-instance 'hash-lock
+                                         :test #'equal))
 
 
 (defun js-boolean (x)
@@ -325,8 +335,7 @@
 (defmethod %put-run (company (run dto:run) &key (api-key
                                                  (viewer-context-api-key
                                                   (auth:viewer-context
-                                                   hunchentoot:*request*)))
-                                             )
+                                                   hunchentoot:*request*))))
   (unless (dto:trunkp run)
     (throttle! *non-production-throttler* :key (not-null! (current-user))))
 
@@ -348,18 +357,51 @@
     (cond
       ((dto:shard-spec run)
        (let ((shard (dto:shard-spec run)))
-         (make-instance 'shard
+         (with-hash-lock-held ((list company (dto:shard-spec-key shard))
+                               *shard-hash-lock*)
+           (make-instance 'shard
                         :company company
                         :key (dto:shard-spec-key shard)
                         :number (dto:shard-spec-number shard)
                         :count (dto:shard-spec-count shard)
-                        :screenshots screenshots))
-       ;; TODO: if the shard is complete actually create a run
-       (values))
+                        :screenshots screenshots)
+           
+           (when (shard-complete-p company (dto:shard-spec-key shard))
+             (%put-run-helper run
+                              :company company
+                              :channel channel
+                              :screenshots (build-shard-screenshots
+                                            company
+                                            (dto:shard-spec-key shard)))
+             (mapcar #'bknr.datastore:delete-object (find-shards company
+                                                                 (dto:shard-spec-key shard)))))))
       (t
        (%put-run-helper run :company company
                             :channel channel
                             :screenshots screenshots)))))
+
+(defun  build-shard-screenshots (company shard-key &key only-check)
+  (when-let* ((shards (find-shards company shard-key))
+              (count (shard-count (car shards))))
+    (dolist (shard shards)
+      (assert (= count (shard-count shard))))
+    (let ((res (make-array count :initial-element nil)))
+      (dolist (shard shards)
+        (util:or-setf
+         (aref res (shard-number shard))
+         shard))
+      (cond
+        ((not (every #'identity (loop for shard across res
+                                      collect shard)))
+         (values nil nil))
+        (t
+         (values
+          (loop for shard across res
+                appending (shard-screenshots shard))
+          t))))))
+
+(defun shard-complete-p (company shard-key)
+  (nth-value 1 (build-shard-screenshots company shard-key)))
 
 (defun %put-run-helper (run &key
                               (company (error "provide :company"))
