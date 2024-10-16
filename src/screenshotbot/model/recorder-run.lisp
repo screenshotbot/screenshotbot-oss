@@ -123,7 +123,8 @@
    #:find-shards
    #:shard-number
    #:shard-count
-   #:shard-screenshots)
+   #:shard-screenshots
+   #:shard-key)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -165,6 +166,7 @@
      (%company :initarg :company
                :reader shard-company)
      (%key :initarg :key
+           :reader shard-key
            :index +shard-key-index+
            :index-reader %shards-for-key)
      (%number :initarg :number

@@ -40,6 +40,7 @@
   (:import-from #:screenshotbot/model/screenshot-map
                 #:make-screenshot-map)
   (:import-from #:screenshotbot/model/recorder-run
+                #:shard-key
                 #:shard-screenshots
                 #:shard-number
                 #:shard-count
@@ -211,8 +212,26 @@
       (destructuring-bind (resp run channel)
           (%put-run (current-company) dto)
         (declare (ignore resp channel))
-        (after-run-created run)
-        (run-to-dto run)))))
+        (process-created-run run)))))
+
+(defmethod process-created-run ((run recorder-run))
+  (after-run-created run)
+  (run-to-dto run))
+
+(defmethod process-created-run ((self shard))
+  "We only created a shard, not a run."
+  (make-instance 'dto:run
+                 :shard-spec (make-instance 'dto:shard-spec
+                                            :key (shard-key self)
+                                            :number (shard-number self)
+                                            :count (shard-count self))))
+
+(defmethod run-or-shard-to-dto (run)
+  (run-to-dto run))
+
+(defmethod run-or-shard-to-dto ((self shard))
+  (make-instance 'dto:run
+                 :shard-spec (make-instance 'dto:shard-spec)))
 
 (defun after-run-created (recorder-run)
   (flet ((promotion ()
@@ -359,23 +378,26 @@
        (let ((shard (dto:shard-spec run)))
          (with-hash-lock-held ((list company (dto:shard-spec-key shard))
                                *shard-hash-lock*)
-           (make-instance 'shard
-                        :company company
-                        :key (dto:shard-spec-key shard)
-                        :number (dto:shard-spec-number shard)
-                        :count (dto:shard-spec-count shard)
-                        :screenshots screenshots)
            
-           (when (shard-complete-p company (dto:shard-spec-key shard))
-             (prog1
-                 (%put-run-helper run
-                                  :company company
-                                  :channel channel
-                                  :screenshots (build-shard-screenshots
-                                                company
-                                                (dto:shard-spec-key shard)))
-               (mapcar #'bknr.datastore:delete-object (find-shards company
-                                                                   (dto:shard-spec-key shard))))))))
+           (let ((persisted-shard (make-instance 'shard
+                                                 :company company
+                                                 :key (dto:shard-spec-key shard)
+                                                 :number (dto:shard-spec-number shard)
+                                                 :count (dto:shard-spec-count shard)
+                                                 :screenshots screenshots)))
+             (cond
+              ((shard-complete-p company (dto:shard-spec-key shard))
+               (prog1
+                   (%put-run-helper run
+                                    :company company
+                                    :channel channel
+                                    :screenshots (build-shard-screenshots
+                                                  company
+                                                  (dto:shard-spec-key shard)))
+                 (mapcar #'bknr.datastore:delete-object (find-shards company
+                                                                     (dto:shard-spec-key shard)))))
+              (t
+               (list nil persisted-shard nil)))))))
       (t
        (%put-run-helper run :company company
                             :channel channel

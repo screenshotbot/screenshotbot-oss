@@ -175,6 +175,16 @@
   ;; properly between tests
   (test-adds-channel-mask))
 
+(defun call-api-put-run (company dto)
+  (if-called 'warmup-image-caches
+             (lambda (run) (declare (ignore run))))
+  (answer (hunchentoot:raw-post-data :force-text t)
+    (with-output-to-string (out)
+      (yason:encode dto out)))
+  (answer (current-company)
+    company)
+  (api-run-put))
+
 (test recorder-run-put-happy-path
   (with-fixture state ()
     (let ((dto (make-instance 'dto:run
@@ -184,15 +194,24 @@
                                             (make-instance 'dto:screenshot
                                                            :image-id (oid img1)
                                                            :name "bleh")))))
-      (if-called 'warmup-image-caches
-                 (lambda (run)))
-      (answer (hunchentoot:raw-post-data :force-text t)
-        (with-output-to-string (out)
-          (yason:encode dto out)))
-      (answer (current-company)
-        company)
       (finishes
-        (api-run-put)))))
+        (call-api-put-run company dto)))))
+
+(test recorder-run-put-only-shard
+  (with-fixture state ()
+    (let ((dto (make-instance 'dto:run
+                              :commit-hash "bleh"
+                              :channel "blah"
+                              :shard-spec (make-instance 'dto:shard-spec
+                                                         :key "foobar"
+                                                         :number 0
+                                                         :count 2)
+                              :screenshots (list
+                                            (make-instance 'dto:screenshot
+                                                           :image-id (oid img1)
+                                                           :name "bleh")))))
+      (finishes
+       (call-api-put-run company dto)))))
 
 (test run-to-dto
   (with-fixture state ()
