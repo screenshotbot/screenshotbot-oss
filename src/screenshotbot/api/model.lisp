@@ -277,7 +277,7 @@ the shards. For instance this might be the CircleCI root build id.")
            :reader shard-spec-number
            :documentation "The number of the shard, 0-indexed.")
    (count :initarg :count
-          :json-type :count
+          :json-type :number
           :json-key "count"
           :reader shard-spec-count
           :documentation "The total count of shards"))

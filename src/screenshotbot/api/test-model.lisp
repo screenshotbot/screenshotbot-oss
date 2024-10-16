@@ -133,3 +133,10 @@
                  (has-typep 'dto:shard-spec))))
 
 
+(test shard-spec-serialization
+  (finishes
+   (encode-json
+    (make-instance 'dto:shard-spec
+                   :key "foo"
+                   :number 0
+                   :count 10))))
