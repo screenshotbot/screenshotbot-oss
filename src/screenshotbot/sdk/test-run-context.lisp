@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/run-context
+                #:parse-shard-spec
                 #:with-flags-from-run-context
                 #:flags-run-context
                 #:run-context
@@ -23,6 +24,7 @@
                 #:if-called)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)
                     (#:git #:screenshotbot/sdk/git)
+                    (#:dto #:screenshotbot/api/model)
                     (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/test-run-context)
 
@@ -152,3 +154,10 @@
     (let ((flags:*work-branch* "foo"))
       (is (equal "foo"
                  (run-context:work-branch (make-instance 'flags-run-context)))))))
+
+(test parse-shard-spec
+  (with-fixture state ()
+    (let ((spec (parse-shard-spec "foo:1:3")))
+      (is (equal "foo" (dto:shard-spec-key spec)))
+      (is (equal 1 (dto:shard-spec-number spec)))
+      (is (equal 3 (dto:shard-spec-count spec))))))

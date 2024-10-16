@@ -338,6 +338,7 @@ error."
                                 :channel (run-context:channel run-context)
                                 :screenshots screenshots
                                 :main-branch branch
+                                :shard-spec (run-context:shard-spec run-context)
                                 :work-branch (run-context:work-branch run-context)
                                 :main-branch-hash branch-hash
                                 :github-repo github-repo
@@ -367,7 +368,12 @@ error."
     (let ((result (request api-context
                            "/api/run" :method :put
                                       :content run)))
-      (log:info "Created run: ~a" (assoc-value result :url))
+      (let ((run-url (assoc-value result :url)))
+        (cond
+          (run-url
+           (log:info "Created run: ~a" run-url))
+          (t
+           (log:info "Run wasn't created yet, probably because all shards weren't available"))))
       (make-instance 'dto:run
                      :id (assoc-value result :id)))))
 

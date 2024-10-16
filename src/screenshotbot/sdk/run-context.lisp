@@ -41,9 +41,11 @@
    #:with-flags-from-run-context
    #:tags
    #:author
-   #:default-flags-run-context)
+   #:default-flags-run-context
+   #:shard-spec)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:e #:screenshotbot/sdk/env)
+                    (#:dto #:screenshotbot/api/model)                    
                     (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/run-context)
 
@@ -102,6 +104,10 @@
    (batch :initarg :batch
           :initform nil
           :reader batch)
+   (shard-spec :initarg :shard-spec
+               :initform nil
+               :reader shard-spec
+               :documentation "A dto:shard-spec object indicating the shard")
    (tags :initarg :tags
          :initform nil
          :reader tags)))
@@ -242,6 +248,24 @@ pull-request looks incorrect."
   (when tags-str
     (str:split "," tags-str)))
 
+(defun parse-shard-spec (shard-spec)
+  "Parses a string of the form <buildId>:<index>:<count> into a dto:shard-spec"
+  ;; TODO: better error messages when this fails
+  (unless (str:emptyp shard-spec)
+    (destructuring-bind (key index count)
+        (str:rsplit ":" shard-spec :limit 3)
+      (make-instance 'dto:shard-spec
+                     :key key
+                     :number (parse-integer index)
+                     :count (parse-integer count)))))
+
+(defun format-shard-spec (shard-spec)
+  (when shard-spec
+   (format nil "~a:~a:~a"
+           (dto:shard-spec-key shard-spec)
+           (dto:shard-spec-number shard-spec)
+           (dto:shard-spec-count shard-spec))))
+
 (defclass default-flags-run-context ()
   ()
   (:default-initargs
@@ -261,6 +285,7 @@ pull-request looks incorrect."
    :author flags:*author*
    :compare-threshold flags:*compare-threshold*
    :batch flags:*batch*
+   :shard-spec (parse-shard-spec flags:*shard*)
    :tags (parse-tags flags:*tags*))
   (:documentation "Just uses the the flags as initargs"))
 
@@ -284,5 +309,6 @@ pull-request looks incorrect."
         (flags:*channel* (channel self))
         (flags:*override-commit-hash* (override-commit-hash self))
         (flags:*compare-threshold* (compare-threshold self))
-        (flags:*batch* (batch self)))
+        (flags:*batch* (batch self))
+        (flags:*shard* (format-shard-spec (shard-spec self))))
     (fn)))

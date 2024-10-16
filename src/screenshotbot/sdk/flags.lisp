@@ -55,7 +55,8 @@
    #:*main-branch-commit-hash*
    #:*tags*
    #:*author*
-   #:*merge-base-commit-hash*))
+   #:*merge-base-commit-hash*
+   #:*shard*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -302,6 +303,24 @@ the last green commit to make our screenshot report.")
   :type (or null string)
   :help "Notify Screenshotbot that the run for this commit will be identical
 to the run from the commit provided")
+
+(define-flag *shard*
+  :selector "shard"
+  :default-value nil
+  :type (or null string)
+
+;; TODO: 
+;; On CircleCI, you can also use the shard specifier as `auto`, which determines a suitable
+;; shard specifier based on CircleCI's test splits.
+  
+  :help "If the screenshots for a channel are being generated from multiple shards
+(or \"test splits\"), you can pass a shard specifier here. When provided, Screenshotbot will
+only create the screenshots for the last shard is uploaded.
+
+A shard specifier looks like <buildId>:<shardNum>:<shardCount>. Build ID can be any
+arbitrary identifier, but must be the same for the all the invocations. For example, it could
+be a build ID of the root CI job.")
+
 
 (define-flag *compare-threshold*
   :selector "compare-threshold"
