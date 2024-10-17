@@ -304,18 +304,19 @@ error."
                     create-github-issue
                     (metadata-provider  (make-instance 'metadata-provider))
                     is-trunk)
-   (unless images
-     (error 'empty-run-error))
    (let ((run-context (or
                        run-context
                        ;; TODO: move out of make-run:
                        (make-instance 'run-context:flags-run-context
-                                      :repo-url (repo-link repo)
+                                      :repo-url (?. repo-link repo)
                                       :channel channel
                                       :pull-request-url pull-request
                                       :productionp is-trunk
                                       :create-github-issue-p create-github-issue
                                       :env (e:make-env-reader)))))
+     (unless (or images (run-context:shard-spec run-context))
+       (error 'empty-run-error))
+     
      ;;(log:info "screenshot records: ~s" screenshots)
      (let* ((screenshots (build-screenshot-objects images metadata-provider))
             (branch-hash
