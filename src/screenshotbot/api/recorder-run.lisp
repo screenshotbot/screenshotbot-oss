@@ -381,20 +381,21 @@
            (push-event :create.shard :name (dto:shard-spec-key shard) :company company)
            (let ((persisted-shard (make-instance 'shard
                                                  :company company
+                                                 :channel channel
                                                  :key (dto:shard-spec-key shard)
                                                  :number (dto:shard-spec-number shard)
                                                  :count (dto:shard-spec-count shard)
                                                  :screenshots screenshots)))
              (cond
-              ((shard-complete-p company (dto:shard-spec-key shard))
+              ((shard-complete-p channel (dto:shard-spec-key shard))
                (prog1
                    (%put-run-helper run
                                     :company company
                                     :channel channel
                                     :screenshots (build-shard-screenshots
-                                                  company
+                                                  channel
                                                   (dto:shard-spec-key shard)))
-                 (mapcar #'bknr.datastore:delete-object (find-shards company
+                 (mapcar #'bknr.datastore:delete-object (find-shards channel
                                                                      (dto:shard-spec-key shard)))))
               (t
                (list nil persisted-shard nil)))))))
@@ -403,8 +404,9 @@
                             :channel channel
                             :screenshots screenshots)))))
 
-(defun  build-shard-screenshots (company shard-key &key only-check)
-  (when-let* ((shards (find-shards company shard-key))
+(defun build-shard-screenshots (channel shard-key)
+  (check-type channel channel)
+  (when-let* ((shards (find-shards channel shard-key))
               (count (shard-count (car shards))))
     (dolist (shard shards)
       (assert (= count (shard-count shard))))
@@ -423,8 +425,8 @@
                 appending (shard-screenshots shard))
           t))))))
 
-(defun shard-complete-p (company shard-key)
-  (nth-value 1 (build-shard-screenshots company shard-key)))
+(defun shard-complete-p (channel shard-key)
+  (nth-value 1 (build-shard-screenshots channel shard-key)))
 
 (defun %put-run-helper (run &key
                               (company (error "provide :company"))

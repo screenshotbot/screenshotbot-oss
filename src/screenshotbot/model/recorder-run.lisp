@@ -173,15 +173,19 @@
               :reader shard-number)
      (%count :initarg :count
              :reader shard-count)
+     (%channel :initarg :channel
+               :reader shard-channel)
      (%ts :initarg :ts
           :reader shard-ts))
     (:metaclass persistent-class)
-    (:default-initargs :ts (get-universal-time))))
+    (:default-initargs :ts (get-universal-time)
+                       :channel nil)))
 
-(defun find-shards (company key)
+(defun find-shards (channel key)
   (reverse ;; most recent first
    (loop for shard in (fset:convert 'list (%shards-for-key key))
-         if (eql company (shard-company shard))
+         if (and
+             (eql channel (shard-channel shard)))
            collect shard)))
 
 (with-class-validation

@@ -468,7 +468,7 @@
                                           (make-screenshot
                                            :name (format nil "img~a" i)
                                            :image img1))
-                            :company company
+                            :channel (find-or-create-channel company "foo")
                             :number i
                             :count 10))
     (assert-that
@@ -506,7 +506,7 @@
                                           (make-screenshot
                                            :name (format nil "img~a" i)
                                            :image img1))
-                            :company company
+                            :channel (find-or-create-channel company "foo")
                             :number i
                             :count 10))
     (%put-run company
@@ -535,7 +535,7 @@
                                           (make-screenshot
                                            :name (format nil "img~a" i)
                                            :image img1))
-                            :company company
+                            :channel (find-or-create-channel company "foo")
                             :number i
                             :count 10))
     (dotimes (i 2)

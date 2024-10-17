@@ -319,21 +319,25 @@
 
 (test lookup-shards
   (with-fixture state ()
-    (let ((company-2 (make-instance 'company)))
+    (let* ((company-2 (make-instance 'company))
+           (channel (make-instance 'channel
+                                   :company company))
+           (channel-2 (make-instance 'channel
+                                     :company company-2)))
       (make-instance 'shard
-                     :company company-2
+                     :channel channel-2
                      :key "foo")
       (make-instance 'shard
-                     :company company
+                     :channel channel
                      :key "foo")
       (make-instance 'shard
-                     :company company
+                     :channel channel
                      :key "foo")
       (make-instance 'shard
-                     :company company
-                     :key "bar"))
-    (assert-that (find-shards company "foo")
-                 (has-length 2))))
+                     :channel channel                     
+                     :key "bar")
+      (assert-that (find-shards channel "foo")
+                   (has-length 2)))))
 
 (test clean-up-old-shards
   (with-fixture state ()
