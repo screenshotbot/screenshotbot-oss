@@ -378,7 +378,7 @@
        (let ((shard (dto:shard-spec run)))
          (with-hash-lock-held ((list company (dto:shard-spec-key shard))
                                *shard-hash-lock*)
-           
+           (push-event :create.shard :name (dto:shard-spec-key shard) :company company)
            (let ((persisted-shard (make-instance 'shard
                                                  :company company
                                                  :key (dto:shard-spec-key shard)
