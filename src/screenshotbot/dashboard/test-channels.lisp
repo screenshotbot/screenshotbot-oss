@@ -10,6 +10,8 @@
           #:screenshotbot/user-api
           #:fiveam)
   (:import-from #:screenshotbot/dashboard/channels
+                #:badge-data
+                #:badge-handler
                 #:confirm-delete
                 #:channel-deleted-confirmation
                 #:perform-delete
@@ -49,6 +51,7 @@
                 #:fix-timestamps
                 #:screenshot-test)
   (:import-from #:cl-mock
+                #:if-called
                 #:answer)
   (:import-from #:screenshotbot/model/user
                 #:make-user))
@@ -122,3 +125,25 @@
 (screenshot-test list-of-channels
   (with-fixture state ()
     (%list-projects :user user :company company)))
+
+(test badge-handler-happy-path
+  (with-fixture state ()
+    (if-called
+     'badge-data (lambda (&key label message color)
+                   message))
+    (is
+     (equal "0 screenshots"
+      (badge-handler :org (oid company)
+                     :channel (channel-name channel)
+                     :branch "master")))))
+
+(test badge-handler-when-branch-doesnt-exist
+  (with-fixture state ()
+    (if-called
+     'badge-data (lambda (&key label message color)
+                   message))
+    (is
+     (equal "No active run for parameters"
+      (badge-handler :org (oid company)
+                     :channel (channel-name channel)
+                     :branch "fake-branch")))))

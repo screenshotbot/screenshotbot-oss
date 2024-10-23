@@ -460,7 +460,7 @@
               :channel channel
               :company (or org (current-company))
               :branch branch)))
-    (unless (allow-public-badge-p (recorder-run-channel run))
+    (unless (and run (allow-public-badge-p (recorder-run-channel run)))
       (auth:can-view! run))
 
     (let ((data (badge-data
