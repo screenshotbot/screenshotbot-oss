@@ -88,7 +88,7 @@
   (log:info "hello world!!")
   "123")
 
-(defun send-rpc (url rpc &key (read-timeout 300))
+(defun send-rpc (url rpc &key (read-timeout 600))
   (decode-bknr-object
    (http-request
     url
@@ -106,7 +106,7 @@
 (defun %port ()
   (hunchentoot:acceptor-port server::*multi-acceptor*))
 
-(defun map-rpc (rpc &key (read-timeout 300))
+(defun map-rpc (rpc &key (read-timeout 600))
   "Map the RPC across all the peers in the cluster (including the current-one)"
   (let* ((servers (%servers))
          (results (make-array (length servers))))
