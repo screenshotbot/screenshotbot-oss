@@ -35,9 +35,10 @@
            :accessor app-id)
    (private-key :initarg :private-key
                 :accessor private-key)
-   (verified-orgs :initarg :verified-orgs
-                  :reader verified-orgs
-                  :documentation "A list of orgs for which we don't have to do the manual OAuth verification.")
+   (%verified-orgs :initarg :verified-orgs
+                   :initform nil
+                   :reader verified-orgs
+                   :documentation "A list of orgs for which we don't have to do the manual OAuth verification.")
    (webhook-relays :initarg :webhook-relays
                    :initform nil
                    :accessor webhook-relays

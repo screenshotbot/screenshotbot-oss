@@ -13,6 +13,7 @@
         #:screenshotbot/user-api
         #:screenshotbot/settings-api)
   (:import-from #:screenshotbot/github/plugin
+                #:verified-orgs
                 #:verification-oauth-provider
                 #:private-key
                 #:app-id
@@ -235,10 +236,14 @@ might have verified-p=t. :/ We should consolidate this later."
 
 (defun verified-repo-p (repo company)
   (let ((repo-id (repo-string-identifier repo)))
-    (loop for repo in (%verified-repos-for-company company)
-          if (and (equal repo-id (repo-id repo))
-                  (verified-p repo))
-            return t)))
+    (destructuring-bind (org &rest project-args) (str:split "/" repo-id)
+      (declare (ignore project-args))
+      (or
+       (loop for repo in (%verified-repos-for-company company)
+             if (and (equal repo-id (repo-id repo))
+                     (verified-p repo))
+               return t)
+       (str:s-member (verified-orgs (github-plugin)) org)))))
 
 (defun remove-verification (verified-repo)
   (let ((redirect "/settings/github"))
