@@ -149,9 +149,16 @@
                                                   request)
   (cond
     ((str:starts-with-p (nibble-prefix self) (hunchentoot:script-name request))
-     (render-nibble self (parse-integer
-                          (third
-                           (str:split "/" (hunchentoot:script-name request))))))
+     (let ((id-str (third (str:split "/" (hunchentoot:script-name request)))))
+       (cond
+         ((equal "nnnnnnn" id-str)
+          ;; Weird case. A version of our blog post had a reference to
+          ;; /n/nnnnnnn, and for a short while Wordpress made it a
+          ;; link. This resulted in crawlers continuing to crawl this
+          ;; page, and it messes up our Sentry logs. Oh well. T1420.
+          "Invalid URL")
+         (t
+          (render-nibble self (parse-integer id-str))))))
     (t
      (call-next-method))))
 

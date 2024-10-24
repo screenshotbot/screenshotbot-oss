@@ -21,6 +21,8 @@
   (:import-from #:fiveam-matchers/strings
                 #:starts-with
                 #:contains-string)
+  (:import-from #:hunchentoot
+                #:acceptor-dispatch-request)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :nibble/test-nibble)
 
@@ -128,3 +130,9 @@
                                        :src "bleh"))
                (contains-string "foo")
                (contains-string "bleh")))
+
+(test nnnnnnn-gives-invalid-url
+  (assert-that
+   (util/testing:with-fake-request (:script-name "/n/nnnnnnn")
+     (acceptor-dispatch-request hunchentoot:*acceptor*
+                                hunchentoot:*request*))))
