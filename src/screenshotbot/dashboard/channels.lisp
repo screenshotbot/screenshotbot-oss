@@ -460,9 +460,10 @@
               :channel channel
               :company (or org (current-company))
               :branch branch)))
-    (unless (and run (allow-public-badge-p (recorder-run-channel run)))
-      (auth:can-view! run))
-
+    (when run
+     (unless (allow-public-badge-p (recorder-run-channel run))
+       (auth:can-view! run)))
+    
     (let ((data (badge-data
                  :label "Screenshotbot"
                  :message (if run (format nil "~a screenshots" (length (recorder-run-screenshots run)))
