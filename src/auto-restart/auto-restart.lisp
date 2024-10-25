@@ -40,8 +40,14 @@
         finally
            (return nil)))
 
+(defun %add-noise (time &key noise)
+  (*
+   time
+   (+ 1  (- (random (* 2 noise)) noise))))
+
 (defmacro with-auto-restart ((&key (retries 0)
                                 (sleep (exponential-backoff 2))
+                                (sleep-noise 0.1)
                                 (attempt (gensym "attempt"))
                                 (restart-name)
                                 (auto-restartable-errors ''(error)))
@@ -101,7 +107,8 @@ for which we're allowed to auto-restart. It defaults to `'(ERROR)`.
                               (cond
                                 ((and *global-enable-auto-retries-p* (< attempt ,retries)
                                       (%is-error-of-type e ',(eval auto-restartable-errors)))
-                                 (let ((sleep-time (funcall ,sleep-var attempt)))
+                                 (let ((sleep-time (%add-noise (funcall ,sleep-var attempt)
+                                                               :noise ,sleep-noise)))
                                    (unless (= 0 sleep-time)
                                      (sleep sleep-time)))
                                  (invoke-restart ',restart-name)))))

@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:auto-restart
+                #:%add-noise
+                #:exponential-backoff
                 #:*global-enable-auto-retries-p*
                 #:restart-already-defined
                 #:with-auto-restart))
@@ -347,3 +349,13 @@
 
 (test can-use-declarations
   (is (eql :foo (%%%can-use-declarations%%%))))
+
+(test exponential-backoff-happy-path
+  (let ((fn (eval (exponential-backoff 0.01))))
+    (finishes (funcall fn 1))))
+
+(test add-noise
+  (dotimes (i 10)
+    (let ((result (%add-noise 1000 :noise 0.1)))
+      (is (<= result 1100))
+      (is (>= result 900)))))
