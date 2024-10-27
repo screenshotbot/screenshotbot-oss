@@ -599,7 +599,8 @@
      (with-local-image (file image)
        (destructuring-bind (width height type)
            (ping-image-metadata (magick) file)
-         (assert (member type '("WEBP" "PNG" "JPEG")
+         (assert (member type '("WEBP" "PNG" "JPEG"
+                                "JXL" "HEIC")
                          :test #'string=))
          (make-instance 'metadata
                         :image-format (intern type "KEYWORD")
