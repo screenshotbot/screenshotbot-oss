@@ -24,9 +24,17 @@
      (asdf:system-source-directory system))))
 
 (defun %asdf-relpath (path)
-  (util/misc:relpath
-   (truename path)
-   (truename (path:catdir (asdf:system-source-directory :util) "../../"))))
+  (make-pathname
+   :name (pathname-name path)
+   :type (pathname-type path)
+   :device nil
+   :host nil
+   :version nil
+   :defaults
+   (util/misc:relpath
+    ;; The actual file may not exist at this point
+    (truename (ensure-directories-exist (cl-fad:pathname-directory-pathname path)))
+    (truename (path:catdir (asdf:system-source-directory :util) "../../")))))
 
 (defun relative-system-source-directory (system)
   (%asdf-relpath

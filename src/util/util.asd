@@ -376,6 +376,7 @@
                              (:file "test-mail")
                              (:file "test-hunchentoot-engine")
                              (:file "test-fset")
+                             (:file "test-asdf")
                              (:file "test-fake-clingon")
                              (:file "test-throttler")
                              (:file "test-logger")
