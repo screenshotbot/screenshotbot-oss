@@ -61,6 +61,10 @@
 (quick-patch:register "https://github.com/svetlyak40wt/cl-isaac"
                       "77a51b88d7d0e78f7517d744fff4a3135727b3b6")
 
+;; See https://github.com/xach/zpb-ttf/pull/25. Might be safe to
+;; remove if this has been merged by the next QL release.
+(register-tdrhq "zpb-ttf" "6e0eaec06c123f53b07d93200a8288d820487e0c")
+
 ;; TODO: automatically generate hashes
 #+(or screenshotbot-oss eaase-oss)
 (progn
