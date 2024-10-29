@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: cimg/base:2021.04
+      - image: cimg/base:2024.10
     steps:
       - checkout
       - run: &install_deps
