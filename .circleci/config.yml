@@ -8,7 +8,10 @@ jobs:
       - checkout
       - run: &install_deps
           name: Install Deps
-          command: sudo apt-get update && sudo apt-get install -y imagemagick build-essential openjdk-11-jdk-headless sbcl libmagickwand-dev libssh2-1-dev
+          command: sudo apt-get update && sudo apt-get install -y  build-essential openjdk-11-jdk-headless sbcl libssh2-1-dev wget
+      - run:
+          name: Install ImageMagick
+          command: wget https://screenshotbot-assets.s3.us-east-1.amazonaws.com/imagemagick7_7.1.1-39_amd64.deb && apt-get install -y ./imagemagick7*.deb
       - run:
           name: Install CCL
           command: |
