@@ -11,7 +11,6 @@
                 #:*object-store*
                 #:with-test-store)
   (:import-from #:util/store-version
-                #:store-version
                 #:version-subsystem
                 #:*store-version*)
   (:import-from #:bknr.datastore

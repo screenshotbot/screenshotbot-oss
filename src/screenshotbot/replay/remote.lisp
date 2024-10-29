@@ -8,7 +8,6 @@
   (:use #:cl)
   (:nicknames :screenshotbot/pro/replay/remote)
   (:import-from #:screenshotbot/replay/integration
-                #:api-key
                 #:schedule-replay-job
                 #:run)
   (:import-from #:util/object-id
