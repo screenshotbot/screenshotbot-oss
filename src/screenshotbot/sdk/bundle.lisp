@@ -59,6 +59,14 @@
                :initform (list "png")
                :reader file-types)))
 
+(defmethod initialize-instance :after ((self image-directory) &key file-types &allow-other-keys)
+  (assert (listp file-types))
+  (loop for type in file-types
+        if  (not (str:s-member '("png" "jpg" "jpeg" "heic" "jxl" "webp")
+                               type :ignore-case t))
+          do
+             (error "Invalid image file type: '~a'" type)))
+
 (defmethod override-image-pathname ((bundle image-directory)
                                     key pathname)
   pathname)

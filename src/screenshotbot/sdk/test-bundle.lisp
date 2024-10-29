@@ -13,7 +13,11 @@
    :image-directory-with-diff-dir
    :image-name
    :image-pathname
-   :list-images))
+   :list-images)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string))
 (in-package :screenshotbot/sdk/test-bundle)
 
 (util/fiveam:def-suite)
@@ -105,3 +109,27 @@ possible to compare the namestring directly"
                          (list (path:catfile dir "foo1.png")
                                (path:catfile diff-dir "failed_foo3.png")))
                  (mapcar 'true-namestring (mapcar 'image-pathname ims))))))))))
+
+(test invalid-file-type
+  (tmpdir:with-tmpdir (dir)
+    (finishes
+      (make-instance 'image-directory
+                     :directory dir
+                     :file-types (list "png")))
+    (signals simple-error
+      (make-instance 'image-directory
+                     :directory dir
+                     :file-types "png"))
+    (handler-case
+        (make-instance 'image-directory
+                       :directory dir
+                       :file-types (list "png" "pdf"))
+      (simple-error (e)
+        (assert-that (format nil "~a" e)
+                     (contains-string
+                      "Invalid")
+                     (contains-string
+                      "pdf")))
+      (:no-error (_)
+        (declare (ignore _))
+        (fail "Expected exception")))))
