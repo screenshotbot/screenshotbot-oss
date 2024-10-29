@@ -54,7 +54,10 @@
               :accessor bundle-directory)
    (recursivep :initarg :recursivep
                :initform nil
-               :reader recursivep)))
+               :reader recursivep)
+   (file-types :initarg :file-types
+               :initform (list "png")
+               :reader file-types)))
 
 (defmethod override-image-pathname ((bundle image-directory)
                                     key pathname)
@@ -68,7 +71,9 @@
                      append (parse-directory
                              im
                              (str:concat prefix (car (last (pathname-directory im))) "/"))
-                   if (equal "png" (pathname-type im))
+                   if (str:s-member (file-types bundle)
+                                    (pathname-type im)
+                                    :ignore-case t)
                      collect
                      (let ((key (str:concat prefix (pathname-name im))))
                        (let ((image (make-instance 'local-image

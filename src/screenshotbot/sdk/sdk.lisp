@@ -469,11 +469,12 @@ error."
     ((not (str:emptyp directory))
      (unless (path:-d directory)
        (error "Not a directory: ~a" directory))
-     (make-instance 'image-directory :directory directory
-                                     :recursivep recursivep))
+     (make-instance 'image-directory
+                    :directory directory
+                    :file-types (str:split "," flags:*image-file-types*)
+                    :recursivep recursivep))
     (t
      (error "Unknown run type, maybe you missed --directory?"))))
-
 
 (defun guess-master-branch (repo)
   (flet ((check (x)

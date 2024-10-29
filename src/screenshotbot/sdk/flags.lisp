@@ -56,7 +56,8 @@
    #:*tags*
    #:*author*
    #:*merge-base-commit-hash*
-   #:*shard*))
+   #:*shard*
+   #:*image-file-types*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -358,6 +359,16 @@ defaults to http://localhost:4095, and authentication is disabled.")
 commit are complete. This is not required to be called, but if
 used provides a better developer experience when later builds
  are waiting on this commit.")
+
+(define-flag *image-file-types*
+  :selector "image-file-types"
+  :default-value "png"
+  :type string
+  :help "When scanning a directory, this is the list of file extensions
+we consider as images. This defaults to `png`, but we support
+PNG, WEBP, HEIC, JXL, JPG. We do not
+recommend JPG or any other lossy formats. You can separate multiple
+extensions with a comma.")
 
 (define-flag *tags*
   :selector "tags"

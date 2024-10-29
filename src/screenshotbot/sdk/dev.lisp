@@ -73,12 +73,22 @@
     :short-name #\r
     :description "Whether to recursively parse the directory for screenshots"
     :initial-value nil
-    :key :recursivep)))
+    :key :recursivep)
+   (make-option
+    :string
+    :long-name "image-file-types"
+    :key :image-file-types
+    :initial-value "png"
+    :description "When scanning a directory, this is the list of file extensions
+we consider as images. This defaults to `png`, but we support PNG, WEBP, HEIC, JXL, JPG. We do not
+recommend JPG or any other lossy formats. You can separate multiple
+extensions with a comma.")))
 
 (defmethod productionp ((self dev-run-context))
   nil)
 
-(defun %make-run-and-get-id (api-ctx &key directory channel recursivep)
+(defun %make-run-and-get-id (api-ctx &key directory channel recursivep
+                                       (file-types (list "png")))
   (let ((ctx (make-instance 'dev-run-context
                             :productionp nil
                             :channel channel
@@ -88,7 +98,8 @@
        api-ctx
        (make-instance 'image-directory
                       :directory directory
-                      :recursivep recursivep)
+                      :recursivep recursivep
+                      :file-types file-types)
        :channel channel
        :repo (make-instance 'null-repo)))))
 
@@ -100,7 +111,8 @@
      api-ctx
      :channel (getopt cmd :channel)
      :directory (getopt cmd :directory)
-     :recursivep (getopt cmd :recursivep))))
+     :recursivep (getopt cmd :recursivep)
+     :file-types (str:split "," (getopt cmd :image-file-types)))))
 
 (defun homedir ()
   (path:-d (uiop:getenv "HOME")))
