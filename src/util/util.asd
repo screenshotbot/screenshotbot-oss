@@ -359,6 +359,7 @@
                :util/timeago
                :util/json-mop
                :util/throttler
+               :util/testing
                :util/events
                :util/request
                :util/fake-clingon
