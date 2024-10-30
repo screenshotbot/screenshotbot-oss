@@ -50,6 +50,7 @@
         (save-wand-to-file wand (namestring png))
         (assert-equal "PNG" (%image-format png))))))
 
+#-screenshotbot-oss
 (def-health-check load-heic-and-save-png ()
   (handler-bind ((error (lambda (e)
                           #+lispworks
@@ -67,6 +68,7 @@
     (error "failed: ~s is not equal to ~s"
            one two)))
 
+#-screenshotbot-oss
 (def-health-check load-webp-and-save-heic ()
   (handler-bind ((error (lambda (e)
                           #+lispworks
@@ -76,6 +78,7 @@
         (save-wand-to-file wand (namestring png))
         (assert-equal "HEIC" (%image-format png))))))
 
+#-screenshotbot-oss
 (def-health-check load-webp-and-save-jxl ()
   (handler-bind ((error (lambda (e)
                           (format t "error: ~a~%" e)
