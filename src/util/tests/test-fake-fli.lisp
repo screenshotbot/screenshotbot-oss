@@ -23,7 +23,8 @@
 
 (fake-fli:define-foreign-function memcpy
     ((dest :lisp-simple-1d-array)
-     (src :lisp-simple-1d-array))
+     (src (:pointer :uint8))
+     (n :size-t))
   :result-type :void)
 
 (test simple-foreign-function
@@ -37,16 +38,18 @@
       (is (equal 6 (strlen-v2 arr))))))
 
 (test modify-lisp-simple-1d-array
-  #+nil
-  (let ((arr (make-array 10
-                         :element-type '(unsigned-byte 8)
-                         :initial-contents #(2 3 4 5 5 6 0 1 1 1)))
+  (let ((arr (cffi:foreign-alloc
+              :uint8
+              :count 10
+              :initial-element 1))
         (arr2 (make-array 10
                           :element-type '(unsigned-byte 8)
                           :initial-element 9)))
-    (memcpy arr2 arr)
-    (is (equalp #(2 3 4 5 6 6 0 9 9 9)
-                arr2))))
+    (setf (cffi:mem-aref arr :uint8 6) 0)
+    (memcpy arr2 arr 10)
+    (is (equalp #(1 1 1 1 1 1 0 1 1 1)
+                arr2))
+    (cffi:foreign-free arr)))
 
 
 
