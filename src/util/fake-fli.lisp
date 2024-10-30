@@ -24,7 +24,11 @@
    #:with-coerced-pointer
    #:*null-pointer*
    #:make-pointer
-   #:copy-pointer))
+   #:copy-pointer
+   #:pointer-address
+   #:define-foreign-converter
+   #:disconnect-module
+   #:define-foreign-callable))
 (in-package :util/fake-fli)
 
 (defvar *type-map* (trivial-garbage:make-weak-hash-table :weakness :key
@@ -32,6 +36,15 @@
                                                                    :synchronized
                                                          #+sbcl
                                                          t))
+
+(defvar *funcall-cleanups* nil
+  "When we're calling a foreign function this is all the cleanups that
+have to be called just before returning.")
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *converters* (make-hash-table
+                        #+sbcl #+sbcl
+                        :synchronized t)))
 
 (defun make-typed-pointer (&key ptr type)
   (let ((ptr (cffi:make-pointer (cffi:pointer-address ptr))))
@@ -50,7 +63,7 @@
 
 (defun fix-type (x &key (allow-count t))
   "Returns two values the converted type, and the count, in case of an array"
-  #+nil(log:info "fixing type: ~S" x)
+  ;;(log:info "fixing type: ~S" x)
   (cond
     ((not x)
      (error "this looks like a bad type: ~a" x))
@@ -60,6 +73,8 @@
      :int64)
     ((eql :time-t x)
      :uint64)
+    ((gethash x *converters*)
+     (converter-foreign-type (gethash x *converters*)))
     ((not (listp x))
      x)
     ((equal '(:reference-pass :ef-mb-string) x)
@@ -81,7 +96,7 @@
     (assert (not count))
    `(cffi:defctype ,name ,type)))
 
-(defun register-module (name &key real-name file-name)
+(defun register-module (name &key real-name file-name connection-style)
   (declare (ignore name))
   (cffi:load-foreign-library (or file-name real-name)))
 
@@ -93,7 +108,39 @@
                                (when count
                                  (list :count count)))))))
 
-(defmacro define-foreign-function (name args &key result-type documentation)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+ (defclass converter ()
+   ((name :initarg :name)
+    (foreign-type :initarg :foreign-type
+                  :reader converter-foreign-type)
+    (foreign-to-lisp :initarg :foreign-to-lisp
+                     :reader converter-foreign-to-lisp)
+    (lisp-to-foreign :initarg :lisp-to-foreign
+                     :reader converter-lisp-to-foreign))))
+
+
+(defmacro define-foreign-converter (name () var &key foreign-type
+                                                  foreign-to-lisp
+                                                  lisp-to-foreign)
+  (let ((real-var (gensym (string name))))
+   `(eval-when (:compile-toplevel :load-toplevel :execute)
+      (setf (gethash ',name *converters*)
+            (make-instance 'converter
+                           :name ',name
+                           :foreign-type ,foreign-type
+                           :foreign-to-lisp
+                           (lambda (,real-var)
+                             ,(eval
+                               `(let ((,var ',real-var))
+                                  ,foreign-to-lisp)))
+                           :lisp-to-foreign
+                           (lambda (,real-var)
+                             ,(eval
+                               `(let ((,var ',real-var))
+                                 ,lisp-to-foreign))))))))
+
+(defmacro define-foreign-function (name args &key result-type documentation module)
+  (declare (ignore module))
   (assert result-type)
   (destructuring-bind (name-var name) (cond
                                         ((symbolp name)
@@ -117,10 +164,15 @@
                                    collect
                                    `(cffi:mem-ref ,(car x) ',(cadr (cadr x)))
                                    )))
-                `(let ((ret (,cffi-name ,@ (mapcar #'car args))))
-                   (values
-                    ret
-                    ,@ returns))))))))))
+                `(let ((*funcall-cleanups* nil))
+                   (let ((ret (,cffi-name
+                               ,@(loop for (name type) in args
+                                       collect `(funcall (%find-lisp-to-foreign-converter ',type)
+                                                         ,name)))))
+                     (mapcar #'funcall *funcall-cleanups*)
+                     (values
+                      ret
+                      ,@ returns)))))))))))
 
 (defun wrap-reference-returns (reference-returns content)
   (cond
@@ -217,3 +269,54 @@
                    :ptr (typed-pointer-ptr ,output)
                    :type ,type)))
      ,@body))
+
+(defun pointer-address (x)
+  (cffi:pointer-address x))
+
+(defun disconnect-module (name)
+  ;; TODO
+  nil)
+
+(defun %find-converter (type)
+  (or
+   (alexandria:when-let ((converter (gethash type *converters*)))
+     (converter-foreign-to-lisp converter))
+   #'identity))
+
+(defun %find-lisp-to-foreign-converter (type)
+  (or
+   (alexandria:when-let ((converter (gethash type *converters*)))
+     (converter-lisp-to-foreign converter))
+   #'identity))
+
+(defmacro define-foreign-callable ((name &key result-type) args &body body)
+  `(cffi:defcallback ,name
+       ,(fix-type result-type)
+       ,(loop for (name type) in args
+              collect `(,name ,(fix-type type)))
+     (let ,(loop for (name type) in args
+                 collect `(,name
+                           (funcall (%find-converter ',type)
+                                    ,name)))
+       ,@body)))
+
+
+(define-foreign-converter :lisp-simple-1d-array ()
+  h
+  :foreign-type '(:pointer :uint8)
+  :foreign-to-lisp `(progn
+                      (error " not supported for ~a" ,h))
+  :lisp-to-foreign `(let ((arr (make-typed-pointer
+                                :ptr (cffi:foreign-alloc :uint8 :count (+ 10 (length ,h))
+                                                                :initial-contents ,h)
+                                :type :uint8)))
+                      (format t "Addr: ~x~%" (pointer-address arr))
+                      (setf (cffi:Mem-aref arr (length ,h))
+                            0)
+                      (push (lambda ()
+                              (dotimes (i (length ,h))
+                                (setf (aref ,h i)
+                                      (cffi:mem-aref arr :uint8 i)))
+                              (free arr))
+                            *funcall-cleanups*)
+                      arr))

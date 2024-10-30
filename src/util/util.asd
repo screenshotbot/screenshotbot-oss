@@ -152,7 +152,7 @@
                :cl-mock
                :lparallel
                :easy-macros
-               :util)
+               :auth)
   :components ((:file "testing")))
 
 (defsystem :util/random-port
@@ -182,8 +182,7 @@
   :components ((:file "bknr-slynk")))
 
 (defsystem :util/fiveam
-  :depends-on (:util/testing
-               :fiveam
+  :depends-on (:fiveam
                :pkg
                :cl-mock
                :cl-store
