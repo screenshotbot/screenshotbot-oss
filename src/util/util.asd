@@ -379,6 +379,7 @@
                              (:file "test-asdf")
                              (:file "test-fake-clingon")
                              (:file "test-throttler")
+                             (:file "test-fake-fli" :if-feature (:not :lispworks))
                              (:file "test-logger")
                              (:file "test-misc")
                              (:file "test-copy-file")
