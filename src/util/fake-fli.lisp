@@ -150,7 +150,7 @@ have to be called just before returning.")
                                         (t
                                          name))
    (multiple-value-bind (args reference-returns) (parse-reference-returns args)
-     (let ((cffi-name (intern (format nil "%~a-native" name))))
+     (let ((cffi-name (intern (format nil "%~a-NATIVE" name-var))))
        `(progn
           (cffi:defcfun (,name ,cffi-name) ,(fix-type result-type :allow-count nil)
             ,@(loop for arg in args
