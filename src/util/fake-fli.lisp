@@ -134,10 +134,10 @@ have to be called just before returning.")
                                `(let ((,var ',real-var))
                                   ,foreign-to-lisp)))
                            :lisp-to-foreign
-                           (lambda (,real-var)
+                           '(lambda (,real-var)
                              ,(eval
                                `(let ((,var ',real-var))
-                                 ,lisp-to-foreign))))))))
+                                  ,lisp-to-foreign))))))))
 
 (defmacro define-foreign-function (name args &key result-type documentation module)
   (declare (ignore module))
@@ -167,8 +167,8 @@ have to be called just before returning.")
                 `(let ((*funcall-cleanups* nil))
                    (let ((ret (,cffi-name
                                ,@(loop for (name type) in args
-                                       collect `(funcall (%find-lisp-to-foreign-converter ',type)
-                                                         ,name)))))
+                                       collect `(,(%find-lisp-to-foreign-converter type)
+                                                 ,name)))))
                      (mapcar #'funcall *funcall-cleanups*)
                      (values
                       ret
@@ -287,7 +287,7 @@ have to be called just before returning.")
   (or
    (alexandria:when-let ((converter (gethash type *converters*)))
      (converter-lisp-to-foreign converter))
-   #'identity))
+   'identity))
 
 (defmacro define-foreign-callable ((name &key result-type) args &body body)
   `(cffi:defcallback ,name
@@ -307,12 +307,10 @@ have to be called just before returning.")
   :foreign-to-lisp `(progn
                       (error " not supported for ~a" ,h))
   :lisp-to-foreign `(let ((arr (make-typed-pointer
-                                :ptr (cffi:foreign-alloc :uint8 :count (+ 10 (length ,h))
-                                                                :initial-contents ,h)
+                                :ptr (cffi:foreign-alloc :uint8
+                                                         :count (+ 10 (length ,h))
+                                                         :initial-contents ,h)
                                 :type :uint8)))
-                      (format t "Addr: ~x~%" (pointer-address arr))
-                      (setf (cffi:Mem-aref arr :uint8 (length ,h))
-                            0)
                       (push (lambda ()
                               (dotimes (i (length ,h))
                                 (setf (aref ,h i)
