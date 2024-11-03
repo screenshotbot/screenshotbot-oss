@@ -305,6 +305,8 @@
   :components ((:module "phabricator"
                 :components ((:file "conduit")
                              (:file "harbormaster")
+                             (:file "project")
+                             (:file "maniphest")
                              (:file "passphrase")))))
 
 (defsystem :util/clsql

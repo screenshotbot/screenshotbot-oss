@@ -15,7 +15,8 @@
            #:call-conduit
            #:url
            #:api-key
-           #:make-phab-instance-from-arcrc))
+           #:make-phab-instance-from-arcrc
+           #:whoami))
 
 (defclass phab-instance ()
   ((url :initarg :url
@@ -40,6 +41,10 @@
        (make-instance 'phab-instance
                        :url url
                        :api-key token)))))
+
+(defun phab-test ()
+  ;; useful for testing things
+  (make-phab-instance-from-arcrc "https://phabricator.tdrhq.com"))
 
 
 (defmethod call-conduit ((phab phab-instance) name params)
@@ -70,3 +75,14 @@
        (when error-info
          (error "Got conduit error: ~A " (str:shorten 500 error-info)))
        res))))
+
+
+(defmethod whoami ((phab phab-instance))
+  (let ((body
+         (call-conduit
+          phab
+          "user.whoami"
+          nil)))
+    (assoc-value (assoc-value body :result) :phid)))
+
+;; (whoami (phab-test))
