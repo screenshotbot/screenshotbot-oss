@@ -35,61 +35,7 @@ have a script that will help you set it up in your cloud.
 
 See [this wiki page](https://github.com/screenshotbot/screenshotbot-oss/wiki/Quick-installation-in-the-cloud) for details.
 
-## More complicated Installation
-
-Screenshotbot is written in Common Lisp. Common Lisp has several
-commercial and open source implementations. We officially support
-SBCL, Clozure CL (CCL) and LispWorks, but the core features should work on
-any compliant Common Lisp.
-
-*Update Nov 2022: We're switching our primary docker images from CCL
-to SBCL. SBCL is more performant and more stable than CCL. See this
-[migration
-guide](https://github.com/screenshotbot/screenshotbot-oss/wiki/Porting-from-CCL-to-SBCL)
-if you have an existing store. Let us know if you have any issues with
-this migration.*
-
-### OS
-
-Currently we support Linux, Mac and Windows. We use Linux in our
-production environments so it gets tested the most, but please reach
-out if you have bugs in either of these platforms.
-
-### Dependencies
-
-Screenshotbot is built as a monolith service. It does not depend on
-any external service. It does not use an external database. There are
-a few command line tools (e.g. `imagemagic`) that we use,
-and we'll automatically pull in an Common Lisp dependencies with
-Quicklisp.
-
-*Update Nov 2022: As of this time both ImageMagick 6 and 7 will work
-with Screenshotbot. The default Docker image uses 6, but if you are
-working with large number of images, we recommend compiling IM7 with
-QuantumDepth 8 and HDRI disabled.*
-
-### Launch
-
-Once you've picked your implementation, you can use the implementation
-to load launch.lisp. For example, with SBCL that looks like:
-
-```
-$ sbcl --script launch.lisp
-```
-
-This should start up Screenshotbot on port 4091. You can access it as
-http://localhost:4091 from the browser. All the data will be stored in
-`~/.config/screenshotbot/object-store`. If you need to reset the
-state, you can just delete that directory and start over. But you must
-treat this directory as your database. We recommend keeping this on a
-device with high redundancy, such as RAID or Amazon EBS.
-
-This might be a good time to put Screenshotbot [behind an
-Nginx](https://github.com/screenshotbot/screenshotbot-oss/wiki/Configuring-Nginx)
-or Apache reverse-proxy, and enable HTTPS. (We highly recommend using
-Certbot for free certificates).
-
-### Configuration
+## Configuration
 
 Screenshotbot has integrations with various external tools,
 e.g. GitHub, Jira, SSO etc. Most of these platforms require some
