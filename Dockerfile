@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y libyaml-dev git-core libpng-dev zlib1g-
 
 ADD https://screenshotbot-assets.s3.us-east-1.amazonaws.com/imagemagick7_7.1.1-39_amd64.deb /root/imagemagick7_7.1.1-39_amd64.deb
 
-RUN apt-get install -y /root/imagemagick7_7.1.1-39_amd64.deb
+RUN apt-get update && apt-get install -y /root/imagemagick7_7.1.1-39_amd64.deb
 
 RUN apt-get update && apt-get install -y openjdk-17-jre-headless
 
