@@ -147,3 +147,8 @@ rm -f $INSTALLER
 
 
 (define-js acceptor "/assets/js/dashboard.js" :screenshotbot.js-assets)
+
+(defhandler (nil :uri "/setup-oss.sh") ()
+  (setf (hunchentoot:content-type*) "application/x-sh")
+  (hunchentoot:handle-static-file
+   (asdf:system-relative-pathname :screenshotbot "setup-oss.sh")))
