@@ -1,8 +1,10 @@
 #!/bin/sh
 
 apt-get update
-apt-get update && apt-get install -y libyaml-dev git-core libpng-dev zlib1g-dev libpng16-16  zlib1g gcc makeself exiftool build-essential logrotate imagemagick libmagickwand-dev sbcl nginx certbot python3-certbot-nginx
+apt-get update && apt-get install -y libyaml-dev git-core libpng-dev zlib1g-dev libpng16-16  zlib1g gcc makeself exiftool build-essential logrotate sbcl nginx certbot python3-certbot-nginx
 
+wget https://screenshotbot-assets.s3.us-east-1.amazonaws.com/imagemagick7_7.1.1-39_amd64.deb
+apt-get install -y ./imagemagick7_7.1.1-39_amd64.deb
 apt-get install -y openjdk-17-jre-headless
 
 adduser --disabled-password --gecos "" screenshotbot
@@ -27,7 +29,7 @@ RestartSec=5
 User=screenshotbot
 NotifyAccess=all
 WorkingDirectory=/home/screenshotbot/screenshotbot-oss
-ExecStart=/usr/bin/env sbcl --script launch.lisp
+ExecStart=/usr/bin/env sbcl --script launch.lisp --start-slynk --slynk-port 4005
 
 [Install]
 WantedBy=multi-user.target
