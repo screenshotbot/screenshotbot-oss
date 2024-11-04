@@ -81,11 +81,6 @@ different platforms (Linux, Mac or Windows; Intel vs ARM). You can
 download pre-built binaries for Linux and Mac from
 https://screenshotbot.io/recorder.sh.
 
-(As an alternative, Armed Bear Common Lisp, is a specific
-implementation of Common Lisp that can generate platform independent
-JAR files from Common Lisp code. We will officially support ABCL in a
-future release)
-
 To create a binary on a specific platform, call the script
 `scripts/build-cli.lisp`. For instance, if you're using SBCL to build the CLI,
 it will look like:
