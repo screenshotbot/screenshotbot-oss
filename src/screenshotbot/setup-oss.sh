@@ -112,5 +112,4 @@ certbot run --domains $DOMAIN
 
 echo
 echo
-echo "And we're done. You should be able to access https://$DOMAIN"
-
+echo "And we're done. You should soon be able to access https://$DOMAIN (it may take a few minutes for the the compilation to complete. You can use `journalctl -u screenshotbot -f` to track the progress.)"
