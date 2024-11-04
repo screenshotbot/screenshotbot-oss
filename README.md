@@ -28,6 +28,13 @@ If you need to modify the `config.lisp`, modify it before running this
 command. In the future we'll provide live reloading of config.lisp for
 docker, but at the moment that's only available when not using docker.
 
+## Quick Installation in the cloud
+
+If you want a publicly accessible instance, complete with HTTPS, we
+have a script that will help you set it up in your cloud.
+
+See [this wiki page](https://github.com/screenshotbot/screenshotbot-oss/wiki/Quick-installation-in-the-cloud) for details.
+
 ## More complicated Installation
 
 Screenshotbot is written in Common Lisp. Common Lisp has several
