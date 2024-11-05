@@ -238,6 +238,9 @@
       (remhash (funcall key x) table))
     (alexandria:hash-table-values table)))
 
+(defun sort-screenshots (list)
+  (sort (copy-list list) #'string< :key #'screenshot-name))
+
 (defun %make-diff-report (run to)
   (restart-case
       (let ((names (recorder-run-screenshots run))
@@ -245,16 +248,18 @@
                         (recorder-run-screenshots to))))
         (make-instance
          'diff-report
-          :added (hash-set-difference
+         :added (sort-screenshots
+                 (hash-set-difference
                   names to-names
                   :key #'screenshot-name
-                  :test #'equal)
-          :deleted (hash-set-difference
+                  :test #'equal))
+         :deleted (sort-screenshots
+                   (hash-set-difference
                     to-names names
                     :key #'screenshot-name
-                    :test #'equal)
-          :changes (%find-changes (make-image-comparer run) names to-names)
-          :group-separator (group-separator run)))
+                    :test #'equal))
+         :changes (%find-changes (make-image-comparer run) names to-names)
+         :group-separator (group-separator run)))
     (retry-make-diff-report ()
       (make-diff-report run to))))
 
