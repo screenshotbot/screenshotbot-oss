@@ -104,12 +104,9 @@ URL of your Screenshotbot installation.
 ## Setting up SSO
 
 Screenshotbot comes with an in-built email/password authentication
-system, and also supports OpenID Connect out of the box. For more
-complex setups, or for fine-grained user management tools or access
-logs, we recommend using [Keycloak](www.keycloak.org) (open source) as
-an intermediate identity management solution, and connect to Keycloak
-with OpenID Connect. You could also use commercial services such as
-Amazon Cognito, but we test our solutions against Keycloak.
+system, and also supports OpenID Connect out of the box. We also have
+in-built connectors for Google OAuth restricted to domains, which
+might be easier for smaller companies.
 
 See [Configuring
 SSO](https://github.com/screenshotbot/screenshotbot-oss/wiki/Configuring-SSO)
