@@ -72,6 +72,8 @@
 (defclass oidc-provider (abstract-oauth-provider
                          oidc)
   ((identifier :initarg :identifier
+               #+screenshotbot-oss #+screenshotbot-oss
+               :identifier 'default-oidc
                :accessor oidc-provider-identifier)
    (expiration-seconds :initarg :expiration-seconds
                        :initform nil
