@@ -166,15 +166,18 @@
     (loop for item in items
           do (push item
                    (gethash (funcall key item) res nil)))
-    (loop for key being the hash-keys of res
-          collect (make-instance type
-                                 :title key
-                                 :diff-report diff-report
-                                 :items
-                                 (loop for item in (gethash key res)
-                                       collect (make-instance 'group-item
-                                                              :subtitle (funcall subtitle item)
-                                                              :actual-item item))))))
+    (sort
+     (loop for key being the hash-keys of res
+           collect (make-instance type
+                                  :title key
+                                  :diff-report diff-report
+                                  :items
+                                  (loop for item in (gethash key res)
+                                        collect (make-instance 'group-item
+                                                               :subtitle (funcall subtitle item)
+                                                               :actual-item item))))
+     #'string<
+     :key #'group-title)))
 (defun get-only-screenshot-name (screenshot run)
   (car
    (str:split (group-separator run) (screenshot-name screenshot) :limit 2)))
