@@ -256,7 +256,7 @@
      (pull-request
       :initarg :pull-request
       :initform nil
-      :reader %pull-request-url)
+      :accessor %pull-request-url)
      (gitlab-merge-request-iid
       :initarg :gitlab-merge-request-iid
       :initform nil
@@ -646,3 +646,8 @@ company as a way of deleting."
 
 (def-cron clean-up-old-shards (:minute 0 :hour 1)
   (clean-up-old-shards))
+
+(def-store-migration ("Use constant-string for pull-request" :version 26)
+  (dolist (run (bknr.datastore:class-instances 'recorder-run))
+    (setf (%pull-request-url run)
+          (constant-string (%pull-request-url run)))))

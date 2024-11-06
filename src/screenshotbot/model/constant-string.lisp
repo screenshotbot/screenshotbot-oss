@@ -41,6 +41,9 @@
       (constant-string-with-str str)
       (make-instance 'constant-string :str str)))))
 
+(defmethod constant-string ((str constant-string))
+  str)
+
 (defmethod constant-string ((str null))
   nil)
 
