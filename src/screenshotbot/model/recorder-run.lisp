@@ -68,6 +68,7 @@
   (:import-from #:util/cron
                 #:def-cron)
   (:import-from #:screenshotbot/model/constant-string
+                #:ensure-slot-constant-string
                 #:constant-string
                 #:constant-string-string)
   ;; classes
@@ -656,3 +657,8 @@ company as a way of deleting."
   (ensure-slot-constant-string
    (bknr.datastore:class-instances 'recorder-run)
    'pull-request))
+
+(def-store-migration ("Use constant-string for build-url" :version 27)
+  (ensure-slot-constant-string
+   (bknr.datastore:class-instances 'recorder-run)
+   'build-url))
