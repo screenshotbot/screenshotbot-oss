@@ -49,3 +49,24 @@
   (print-object (constant-string-string str)
                 stream))
 
+
+(defmethod fset:compare ((self constant-string) two)
+  (fset:compare
+   (constant-string-string self)
+   two))
+
+(defmethod fset:compare ((one string) (two constant-string))
+  (fset:compare
+   one
+   (constant-string-string two)))
+
+(defmethod fset:compare ((one constant-string) (two constant-string))
+  (fset:compare
+   (constant-string-string one)
+   (constant-string-string two)))
+
+(defmethod fset:compare ((self constant-string) (two store-object))
+  :unequal)
+
+(defmethod fset:compare ((two store-object) (self constant-string))
+  :unequal)

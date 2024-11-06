@@ -41,4 +41,23 @@
   (with-fixture state ()
     (is (equal "foobar" (format nil "~a" (constant-string "foobar"))))))
 
+(test comparison
+  (with-fixture state ()
+    (is (eql
+         :less
+         (fset:compare "abc"
+                       "bar")))
+    (is (eql
+         :less
+         (fset:compare (constant-string "abc")
+                       "bar")))
+    (is (eql
+         :less
+         (fset:compare (constant-string "abc")
+                       (constant-string "bar"))))
+    (is (eql
+         :greater
+         (fset:compare (constant-string "bar")
+                       (constant-string "abc"))))))
+
 
