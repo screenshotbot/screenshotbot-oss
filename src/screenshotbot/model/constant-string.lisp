@@ -44,6 +44,13 @@
 (defmethod constant-string ((str null))
   nil)
 
+(defmethod constant-string-string ((str string))
+  "Convenience during migrations."
+  str)
+
+(defmethod constant-string-string ((str null))
+  str)
+
 (defmethod print-object ((str constant-string)
                          stream)
   (print-object (constant-string-string str)

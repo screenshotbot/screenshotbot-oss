@@ -67,6 +67,8 @@
                 #:api-key-permissions)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:screenshotbot/model/constant-string
+                #:constant-string-string)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -253,7 +255,7 @@
      (pull-request
       :initarg :pull-request
       :initform nil
-      :reader pull-request-url)
+      :reader %pull-request-url)
      (gitlab-merge-request-iid
       :initarg :gitlab-merge-request-iid
       :initform nil
@@ -339,6 +341,9 @@ associated report is rendered.")
                        :author nil
                        :tags nil
                        :was-promoted-p nil)))
+
+(defmethod pull-request-url ((self recorder-run))
+  (constant-string-string (%pull-request-url self)))
 
 (defmethod bknr.datastore:make-object-snapshot ((self recorder-run))
   (make-instance 'simple-object-snapshot
