@@ -686,3 +686,14 @@ company as a way of deleting."
   (ensure-slot-constant-string
    (bknr.datastore:class-instances 'recorder-run)
    'build-url))
+
+(def-store-migration ("Use constant-string for commits on run" :version 28)
+  (loop for slot in '(commit-hash
+                      branch-hash
+                      merge-base-hash
+                      override-commit-hash)
+        do
+           (ensure-slot-boundp 'recorder-run slot)
+           (ensure-slot-constant-string
+            (bknr.datastore:class-instances 'recorder-run)
+            slot)))
