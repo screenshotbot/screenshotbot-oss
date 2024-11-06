@@ -454,10 +454,18 @@ associated report is rendered.")
 (defun make-recorder-run (&rest args &key screenshots channel
                                        pull-request
                                        build-url
+                                       commit-hash
+                                       branch-hash
+                                       merge-base
+                                       override-commit-hash
                           &allow-other-keys)
   (apply #'make-instance 'recorder-run
          :pull-request (constant-string pull-request)
          :build-url (constant-string build-url)
+         :commit-hash (constant-string commit-hash)
+         :branch-hash (constant-string branch-hash)
+         :merge-base (constant-string merge-base)
+         :override-commit-hash (constant-string override-commit-hash)
          :screenshot-map (screenshot-map:make-screenshot-map channel screenshots)
          (remove-from-plist args :screenshots)))
 
