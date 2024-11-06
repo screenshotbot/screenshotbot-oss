@@ -58,6 +58,9 @@
     (is (eql
          :greater
          (fset:compare (constant-string "bar")
-                       (constant-string "abc"))))))
+                       (constant-string "abc"))))
+    (is (fset:equal?
+         (constant-string "car")
+         "car"))))
 
 
