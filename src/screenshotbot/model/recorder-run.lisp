@@ -216,7 +216,7 @@
      (build-url
       :initform nil
       :initarg :build-url
-      :accessor run-build-url)
+      :accessor %run-build-url)
      (github-repo
       :initform nil
       :initarg :github-repo
@@ -346,6 +346,9 @@ associated report is rendered.")
 (defmethod pull-request-url ((self recorder-run))
   (constant-string-string (%pull-request-url self)))
 
+(defmethod run-build-url ((self recorder-run))
+  (constant-string-string (%run-build-url self)))
+
 (defmethod bknr.datastore:make-object-snapshot ((self recorder-run))
   (make-instance 'simple-object-snapshot
                  :object self
@@ -433,9 +436,11 @@ associated report is rendered.")
 
 (defun make-recorder-run (&rest args &key screenshots channel
                                        pull-request
+                                       build-url
                           &allow-other-keys)
   (apply #'make-instance 'recorder-run
          :pull-request (constant-string pull-request)
+         :build-url (constant-string build-url)
          :screenshot-map (screenshot-map:make-screenshot-map channel screenshots)
          (remove-from-plist args :screenshots)))
 

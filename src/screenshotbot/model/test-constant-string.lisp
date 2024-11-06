@@ -25,7 +25,7 @@
   (with-fixture state ()
     (is (eql nil (constant-string nil)))
     (is (typep (constant-string "foobar") 'constant-string))
-    (is (eq
+    (is (eql
          (constant-string "foobar")
          (constant-string "foobar")))
     (is (not

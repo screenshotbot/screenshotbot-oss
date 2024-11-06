@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:%run-build-url
+                #:run-build-url
                 #:clean-up-old-shards
                 #:find-shards
                 #:shard
@@ -60,6 +62,8 @@
                 #:described-as)
   (:import-from #:core/api/model/api-key
                 #:cli-api-key)
+  (:import-from #:screenshotbot/model/constant-string
+                #:constant-string)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-recorder-run)
 
@@ -349,3 +353,14 @@
                   (contains shard2)))))
 
 
+(test build-url-for-recorder-run
+  (with-fixture state ()
+    (let* ((company (make-instance 'company))
+           (channel (make-instance 'channel
+                                   :company company))
+           (run (make-recorder-run
+                 :channel channel
+                 :screenshots nil
+                 :build-url "foobar")))
+      (is (equal "foobar" (run-build-url run)))
+      (is (typep (%run-build-url run) 'constant-string)))))
