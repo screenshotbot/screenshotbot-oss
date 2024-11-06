@@ -74,6 +74,11 @@
    #:abstract-screenshot))
 (in-package :screenshotbot/model/screenshot)
 
+(with-class-validation
+  (defclass constant-string (store-object)
+    ((str))
+    (:metaclass persistent-class)))
+
 (def-store-local *screenshot-cache-v2* (make-hash-table :test 'equal))
 
 (defclass abstract-screenshot ()
