@@ -68,6 +68,7 @@
   (:import-from #:util/cron
                 #:def-cron)
   (:import-from #:screenshotbot/model/constant-string
+                #:constant-string
                 #:constant-string-string)
   ;; classes
   (:export #:promotion-log
@@ -430,8 +431,11 @@ associated report is rendered.")
                  :object self
                  :except-slots '(promotion-complete-p)))
 
-(defun make-recorder-run (&rest args &key screenshots channel &allow-other-keys)
+(defun make-recorder-run (&rest args &key screenshots channel
+                                       pull-request
+                          &allow-other-keys)
   (apply #'make-instance 'recorder-run
+         :pull-request (constant-string pull-request)
          :screenshot-map (screenshot-map:make-screenshot-map channel screenshots)
          (remove-from-plist args :screenshots)))
 
