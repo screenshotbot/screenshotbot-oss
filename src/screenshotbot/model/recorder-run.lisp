@@ -210,7 +210,7 @@
      (commit-hash
       :initarg :commit-hash
       :initform nil
-      :accessor recorder-run-commit)
+      :accessor %recorder-run-commit)
      #+screenshotbot-oss
      (promotion-log
       :accessor %promotion-log)
@@ -244,7 +244,7 @@
      (branch-hash
       :initarg :branch-hash
       :initform nil
-      :accessor recorder-run-branch-hash
+      :accessor %recorder-run-branch-hash
       :documentation "If a --branch is provided, this is the sha of the
     specified branch at the time of run. This might be different from
     the COMMIT-HASH, because the COMMIT-HASH might on, say a Pull
@@ -252,7 +252,7 @@
      (merge-base-hash
       :initform nil
       :initarg :merge-base
-      :accessor recorder-run-merge-base
+      :accessor %recorder-run-merge-base
       :documentation "The merge base between branch-hash and commit-hash")
      (pull-request
       :initarg :pull-request
@@ -300,7 +300,7 @@
      (override-commit-hash
       :initform nil
       :initarg :override-commit-hash
-      :accessor override-commit-hash
+      :accessor %override-commit-hash
       :documentation "Override the pull request commit hash that will be
     used to update the Pull Request (either GitHub or Bitbucket)")
      (%compare-threshold
@@ -349,6 +349,22 @@ associated report is rendered.")
 
 (defmethod run-build-url ((self recorder-run))
   (constant-string-string (%run-build-url self)))
+
+(defmethod recorder-run-commit ((self recorder-run))
+  (constant-string-string (%recorder-run-commit self)))
+
+(defmethod (setf recorder-run-commit) (val (self recorder-run))
+  (setf (%recorder-run-commit self)
+        (constant-string val)))
+
+(defmethod recorder-run-branch-hash ((self recorder-run))
+  (constant-string-string (%recorder-run-branch-hash self)))
+
+(defmethod recorder-run-merge-base ((self recorder-run))
+  (constant-string-string (%recorder-run-merge-base self)))
+
+(defmethod override-commit-hash ((self recorder-run))
+  (constant-string-string (%override-commit-hash self)))
 
 (defmethod bknr.datastore:make-object-snapshot ((self recorder-run))
   (make-instance 'simple-object-snapshot
