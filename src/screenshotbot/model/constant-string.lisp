@@ -40,9 +40,12 @@
   (or
    (constant-string-with-str str)
    (bt:with-lock-held (*lock*)
-     (or
-      (constant-string-with-str str)
-      (make-instance 'constant-string :str str)))))
+     (%constant-string-without-lock str))))
+
+(defun %constant-string-without-lock (str)
+  (or
+   (constant-string-with-str str)
+   (make-instance 'constant-string :str str)))
 
 (defmethod constant-string ((str constant-string))
   str)
@@ -89,8 +92,10 @@
     (let ((val (slot-value obj slot-name)))
       (when (typep val 'string)
         (setf (slot-value obj slot-name)
-              (constant-string val))))))
+              (%constant-string-without-lock val))))))
 
 (defun ensure-slot-constant-string (objs slot-name)
   (with-batches (objs objs :batch-size 1000)
-    (tx-ensure-slot-constant-string objs slot-name)))
+    (bt:with-lock-held (*lock*)
+      (tx-ensure-slot-constant-string objs slot-name))))
+

@@ -10,8 +10,12 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/constant-string
+                #:ensure-slot-constant-string
                 #:constant-string-string
-                #:constant-string))
+                #:constant-string)
+  (:import-from #:bknr.datastore
+                #:persistent-class
+                #:store-object))
 (in-package :screenshotbot/model/test-constant-string)
 
 
@@ -63,4 +67,16 @@
          (constant-string "car")
          "car"))))
 
+(defclass foo (store-object)
+  ((bar :initarg :bar))
+  (:metaclass persistent-class))
 
+(test ensure-slot-constant-string
+  (with-fixture state ()
+   (let ((obj (make-instance 'foo
+                             :bar "car")))
+     (ensure-slot-constant-string
+      (list obj)
+      'bar)
+     (is (typep (slot-value obj 'bar)
+                'constant-string)))))
