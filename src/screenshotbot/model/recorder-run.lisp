@@ -648,8 +648,6 @@ company as a way of deleting."
   (clean-up-old-shards))
 
 (def-store-migration ("Use constant-string for pull-request" :version 26)
-  (dolist (run (bknr.datastore:class-instances 'recorder-run))
-    (let ((old (%pull-request-url run)))
-      (unless (typep old 'constant-string)
-        (setf (%pull-request-url run)
-              (constant-string old))))))
+  (ensure-slot-constant-string
+   (bknr.datastore:class-instances 'recorder-run)
+   'pull-request))

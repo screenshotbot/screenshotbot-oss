@@ -7,13 +7,16 @@
 (defpackage :screenshotbot/model/constant-string
   (:use #:cl)
   (:import-from #:bknr.datastore
+                #:deftransaction
                 #:persistent-class
                 #:store-object)
   (:import-from #:bknr.indices
                 #:unique-index)
   (:import-from #:util/store/store
                 #:defindex
-                #:with-class-validation))
+                #:with-class-validation)
+  (:import-from #:util/lists
+                #:with-batches))
 (in-package :screenshotbot/model/constant-string)
 
 (defvar *lock* (bt:make-lock))
@@ -80,3 +83,14 @@
 
 (defmethod fset:compare ((two store-object) (self constant-string))
   :unequal)
+
+(deftransaction tx-ensure-slot-constant-string (objs slot-name)
+  (dolist (obj objs)
+    (let ((val (slot-value obj slot-name)))
+      (when (typep val 'string)
+        (setf (slot-value obj slot-name)
+              (constant-string val))))))
+
+(defun ensure-slot-constant-string (objs slot-name)
+  (with-batches (objs objs :batch-size 1000)
+    (tx-ensure-slot-constant-string objs slot-name)))
