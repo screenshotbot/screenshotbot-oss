@@ -74,28 +74,6 @@
    #:abstract-screenshot))
 (in-package :screenshotbot/model/screenshot)
 
-
-;; after implementing this, I realized, it's probably not really
-;; needed. Most of my RAM usage is probably from the JVM. I had about
-;; 600k screenshot objects, so probably less than 60MB of it would be
-;; the names.
-(with-class-validation
-  (defclass constant-string (store-object)
-    ((str :type string
-          :initarg :str
-          :index-initargs (:test #'equal)
-          :index-type unique-index
-          :index-reader constant-string-with-str
-          :reader constant-string-string))
-    (:metaclass persistent-class)))
-
-(let ((lock (bt:make-lock)))
-  (defmethod get-constant ((str string))
-    (bt:with-lock-held (lock)
-     (or
-      (constant-string-with-str str)
-      (make-instance 'constant-string :str str)))))
-
 (def-store-local *screenshot-cache-v2* (make-hash-table :test 'equal))
 
 (defclass abstract-screenshot ()
@@ -248,10 +226,7 @@
 
 
 (defmethod screenshot-name ((screenshot abstract-screenshot))
-  (let ((name (%screenshot-name screenshot)))
-    (etypecase name
-      (constant-string (constant-string-string name))
-      (string name))))
+  (%screenshot-name screenshot))
 
 (defun make-screenshot (&rest args &key image key &allow-other-keys)
   (let ((screenshot-key

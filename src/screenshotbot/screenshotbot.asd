@@ -134,6 +134,7 @@
    (:module "model"
     :serial t
     :components ((:file "core")
+                 (:file "constant-string")
                  (:file "transient-object")
                  (:file "auto-cleanup")
                  (:file "company")
@@ -392,6 +393,7 @@
                (:file "test-invite")
                (:module "model"
                 :components ((:file "test-core")
+                             (:file "test-constant-string")
                              (:file "test-auto-cleanup")
                              (:file "test-transient-object")
                              (:file "test-recorder-run")
