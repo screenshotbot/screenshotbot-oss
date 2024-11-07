@@ -209,11 +209,12 @@
       (go-back channel))))
 
 (defhandler (single-channel-page :uri "/channels/:id") (id)
-  (let* ((id (parse-integer id))
-         (channel (store-object-with-id id)))
-    (check-type channel channel)
-    (can-view! channel)
-    (single-channel-view channel)))
+  (with-login ()
+    (let* ((id (parse-integer id))
+           (channel (store-object-with-id id)))
+      (check-type channel channel)
+      (can-view! channel)
+      (single-channel-view channel))))
 
 (defun go-back (channel)
   (hex:safe-redirect
