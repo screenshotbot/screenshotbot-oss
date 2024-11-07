@@ -38,7 +38,8 @@
    (%verified-orgs :initarg :verified-orgs
                    :initform nil
                    :reader verified-orgs
-                   :documentation "A list of orgs for which we don't have to do the manual OAuth verification.")
+                   :documentation "A list of orgs for which we don't have to do the manual OAuth verification. If T, then all orgs will be automatically verified. This is reasonable if you have control
+over the instance and it's only used by people you know.")
    (webhook-relays :initarg :webhook-relays
                    :initform nil
                    :accessor webhook-relays

@@ -243,6 +243,7 @@ might have verified-p=t. :/ We should consolidate this later."
              if (and (equal repo-id (repo-id repo))
                      (verified-p repo))
                return t)
+       (eql t (verified-orgs (github-plugin)))
        (str:s-member (verified-orgs (github-plugin)) org)))))
 
 (defun remove-verification (verified-repo)

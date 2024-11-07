@@ -69,6 +69,11 @@
     (is-true (verified-repo-p "https://github.com/tdrhq/fast-example" company))
     (is-false (verified-repo-p "https://github.com/screenshotbot/fast-example" company))))
 
+(test auto-verify-repo-with-verified-orgs-eql-t
+  (with-fixture state (:verified-orgs t)
+    (is-true (verified-repo-p "https://github.com/tdrhq/fast-example" company))
+    (is-true (verified-repo-p "https://github.com/screenshotbot/fast-example" company))))
+
 
 
 

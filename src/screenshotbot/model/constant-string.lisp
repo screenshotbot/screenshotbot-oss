@@ -26,6 +26,11 @@
   :slot-name '%str
   :test #'equal)
 
+;; WARNING: It is unsafe to use CONSTANT-STRING as a key in an
+;; fset-index.  When loading from disk, the object will not be ready
+;; and so the index will be invalid. Perhaps we can make it sort by
+;; index. ins
+
 (with-class-validation
   (defclass constant-string (store-object)
     ((%str :type string
