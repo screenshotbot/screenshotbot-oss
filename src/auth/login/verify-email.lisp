@@ -94,6 +94,7 @@ verified, redirects to the given redirect."
     </sales-pitch-template>))
 
 (defun enter-code-screen/post (state &key entered-code)
+  (throttle! *throttler*)
   (with-error-builder (:check check :errors errors
                        :form-builder (enter-code-screen state)
                        :success (hex:safe-redirect (%redirect state)))
