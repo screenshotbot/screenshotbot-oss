@@ -33,6 +33,7 @@
   (:import-from #:screenshotbot/dashboard/review-link
                 #:review-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-branch
                 #:was-promoted-p
                 #:recorder-run-tags
                 #:runs-for-tag
@@ -93,6 +94,10 @@
        (review-link
         <span>
           Run on ,(progn review-link)
+        </span>)
+       ((str:starts-with-p "gh-readonly-queue/" (recorder-run-branch run))
+        <span>
+          Run on <commit repo= (channel-repo (recorder-run-channel run)) hash= (recorder-run-commit run) /> from the merge queue
         </span>)
        (t
         <span>

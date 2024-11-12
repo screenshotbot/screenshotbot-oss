@@ -149,3 +149,14 @@
       (assert-that
        (%render-run-headline-to-str run)
        (matches-regex ".*Unpromoted run.*on.*abcd.*")))))
+
+(test render-run-headline-for-merge-queue
+  (with-fixture state ()
+    (let ((run (make-recorder-run
+                :channel channel
+                :branch "gh-readonly-queue/foo/dfdfd"
+                :commit-hash "abcd"
+                :screenshots nil)))
+      (assert-that
+       (%render-run-headline-to-str run)
+       (matches-regex ".*Run.*on.*abcd.*from the merge queue.*")))))
