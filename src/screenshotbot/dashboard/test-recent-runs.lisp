@@ -13,6 +13,7 @@
           #:screenshotbot/model/recorder-run
           #:screenshotbot/dashboard/recent-runs)
   (:import-from #:screenshotbot/dashboard/recent-runs
+                #:render-run-headline
                 #:recorder-run-row
                 #:render-recent-runs)
   (:import-from #:bknr.datastore
@@ -25,6 +26,7 @@
                 #:installation
                 #:*installation*)
   (:import-from #:screenshotbot/model/company
+                #:company
                 #:company-with-name)
   (:import-from #:screenshotbot/model/user
                 #:user-with-email)
@@ -43,7 +45,15 @@
                 #:gitlab-merge-request-iid
                 #:phabricator-diff-id)
   (:import-from #:screenshotbot/testing
-                #:fix-timestamps))
+                #:with-installation
+                #:fix-timestamps)
+  (:import-from #:util/store/store
+                #:with-test-store)
+  (:import-from #:fiveam-matchers/core
+                #:is-equal-to
+                #:assert-that)
+  (:import-from #:fiveam-matchers/strings
+                #:matches-regex))
 
 (util/fiveam:def-suite)
 
@@ -119,3 +129,23 @@
                                  :check-access-p nil
                                  :script-name "/runs"
                                  :company company)))))))))
+
+(def-fixture state ()
+  (with-installation ()
+   (with-test-store ()
+     (let* ((company (make-instance 'company))
+            (channel (make-instance 'channel :company company)))
+       (&body)))))
+
+(defun %render-run-headline-to-str (run)
+  (str:join "" (str:lines (markup:write-html (render-run-headline run)))))
+
+(test render-run-headline
+  (with-fixture state ()
+    (let ((run (make-recorder-run
+                :channel channel
+                :commit-hash "abcd"
+                :screenshots nil)))
+      (assert-that
+       (%render-run-headline-to-str run)
+       (matches-regex ".*Unpromoted run.*on.*abcd.*")))))
