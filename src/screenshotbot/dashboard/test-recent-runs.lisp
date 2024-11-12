@@ -154,7 +154,8 @@
   (with-fixture state ()
     (let ((run (make-recorder-run
                 :channel channel
-                :branch "gh-readonly-queue/foo/dfdfd"
+                :work-branch "gh-readonly-queue/foo/dfdfd"
+                :branch "main"
                 :commit-hash "abcd"
                 :screenshots nil)))
       (assert-that
