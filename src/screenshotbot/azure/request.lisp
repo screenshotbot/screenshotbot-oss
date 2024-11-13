@@ -64,6 +64,7 @@
 (define-condition azure-error (simple-error)
   ((headers :initarg :headers)))
 
+
 (defun azure-request (azure url &key
                                   method
                                   response-type
@@ -91,8 +92,8 @@
        ((<= 400 code 510)
         (error 'azure-error
                :headers headers
-               :format-control "Got failure: ~a"
-               :format-arguments (list response)))
+               :format-control "Azure returned code ~a with body ~a"
+               :format-arguments (list code response)))
        ((str:containsp "text/html" (assoc-value headers :content-type))
         (error 'azure-error
                :headers headers
