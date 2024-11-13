@@ -72,15 +72,16 @@
                                   content)
   (declare (optimize (speed 0) (debug 3)))
   (let ((content (with-output-to-string (out)
-                   (yason:encode content out))))
-    (log:info "Sending body: ~a" content)
-    (multiple-value-bind (response code headers)
-       (http-request
-        (format nil "https://~a/~a/~a/_apis/~a?api-version=7.0"
+                   (yason:encode content out)))
+        (url (format nil "https://~a/~a/~a/_apis/~a?api-version=7.0"
                 (hostname azure)
                 (organization azure)
                 (project azure)
-                url)
+                url)))
+    (log:info "Sending body: ~a to ~a" content url)
+    (multiple-value-bind (response code headers)
+       (http-request
+        url
         :content content
         :content-type "application/json"
         :basic-authorization (list "" (token azure))
