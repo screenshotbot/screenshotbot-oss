@@ -10,6 +10,7 @@
         #:fiveam
         #:screenshotbot/abstract-pr-promoter)
   (:import-from #:screenshotbot/azure/promoter
+                #:parse-org-and-project
                 #:azure-promoter)
   (:import-from #:screenshotbot/azure/plugin
                 #:azure-git-repo)
@@ -32,3 +33,12 @@
     (is-false (valid-repo? promoter
                            (make-instance 'generic-git-repo
                                           :link "foo")))))
+
+
+(test parse-org-and-project
+  (multiple-value-bind
+        (org project repo)
+      (parse-org-and-project "git@ssh.dev.azure.com:v3/foogroup/Foo%20app/foo-app-flutter" "dev.azure.com")
+    (is (equal org "foogroup"))
+    (is (equal project "Foo%20app"))
+    (is (equal repo "foo-app-flutter"))))
