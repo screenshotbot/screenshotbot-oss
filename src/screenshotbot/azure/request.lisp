@@ -64,6 +64,10 @@
 (define-condition azure-error (simple-error)
   ((headers :initarg :headers)))
 
+(define-condition azure-unauthorized-error (azure-error)
+  ()
+  (:report "Unauthorized: check your access token to make sure it hasn't expired, and it is valid for the given project."))
+
 
 (defun azure-request (azure url &key
                                   method
@@ -89,18 +93,21 @@
         :parameters parameters
         :method method
         :want-string t)
-     (cond
-       ((<= 400 code 510)
-        (error 'azure-error
-               :headers headers
-               :format-control "Azure returned code ~a with body ~a"
-               :format-arguments (list code response)))
-       ((str:containsp "text/html" (assoc-value headers :content-type))
-        (error 'azure-error
-               :headers headers
-               :format-control "API returned HTML, not JSON. This is likely because the Personal Access Token is incorrect."))
-       (t
-        (json-mop:json-to-clos response response-type))))))
+      (cond
+        ((eql 401 code)
+         (error 'azure-unauthorized-error
+                :headers headers))
+        ((<= 400 code 510)
+         (error 'azure-error
+                :headers headers
+                :format-control "Azure returned code ~a with body ~a"
+                :format-arguments (list code response)))
+        ((str:containsp "text/html" (assoc-value headers :content-type))
+         (error 'azure-error
+                :headers headers
+                :format-control "API returned HTML, not JSON. This is likely because the Personal Access Token is incorrect."))
+        (t
+         (json-mop:json-to-clos response response-type))))))
 
 (defmethod create-pull-request-status (azure status
                                        &key repository-id
