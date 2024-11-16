@@ -46,6 +46,7 @@
                 #:get-parent-commit
                 #:repo-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:push-run-warning
                 #:runs-for-channel
                 #:recorder-run-branch-hash
                 #:recorder-run-branch
@@ -55,7 +56,6 @@
                 #:override-commit-hash
                 #:recorder-run-batch
                 #:recorder-run
-                #:recorder-run-warnings
                 #:merge-base-failed-warning
                 #:recorder-run-merge-base
                 #:recorder-run-company)
@@ -406,10 +406,8 @@ reviewable.)"
   "If the base run we're using is not the merge-base, add a warning"
   (unless (equal (pr-merge-base promoter run)
                  (recorder-run-commit base-run))
-    (with-transaction ()
-      (push (make-instance 'merge-base-failed-warning
-                           :compared-against base-run)
-            (recorder-run-warnings run)))))
+    (push-run-warning run 'merge-base-failed-warning
+                      :compared-against base-run)))
 
 (defmethod warn-if-not-merge-base (promoter (run unchanged-run) base-run)
   (values))

@@ -35,9 +35,9 @@
   (:import-from #:bknr.datastore
                 #:blob-pathname)
   (:import-from #:screenshotbot/model/recorder-run
+                #:push-run-warning
                 #:gitlab-merge-request-iid
                 #:unchanged-run
-                #:recorder-run-warnings
                 #:not-fast-forward-promotion-warning
                 #:promotion-log)
   (:import-from #:screenshotbot/model/batch
@@ -297,9 +297,8 @@
                (call-finalize))))))))))
 
 (defun add-not-fast-forward-promotion-warning (run)
-  (with-transaction ()
-    (push (make-instance 'not-fast-forward-promotion-warning)
-          (recorder-run-warnings run))))
+  (push-run-warning run
+                    'not-fast-forward-promotion-warning))
 
 (defmethod wait-for-run ((channel channel) commit
                      &optional (amount 15) (unit :minute))

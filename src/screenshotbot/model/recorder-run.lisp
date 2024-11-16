@@ -143,6 +143,8 @@
 
 (defvar *lock* (bt:make-lock))
 
+(defvar *warning-lock* (bt:make-lock))
+
 (defindex +run-company-index+
   'fset-set-index
   :slot-name 'company)
@@ -697,3 +699,10 @@ company as a way of deleting."
            (ensure-slot-constant-string
             (bknr.datastore:class-instances 'recorder-run)
             slot)))
+
+(defun push-run-warning (run type &rest args)
+  "Create a run warning of type TYPE with args ARGS, and push it to the
+list of warnings for RUN."
+  (let ((warning (apply #'make-instance type args)))
+    (bt:with-lock-held (*warning-lock*)
+      (push warning (recorder-run-warnings run)))))
