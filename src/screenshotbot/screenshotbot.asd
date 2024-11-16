@@ -216,6 +216,7 @@
     :serial t
     :components ((:file "audit-log")
                  (:file "request")
+                 (:file "run-warnings")
                  (:file "plugin")
                  (:file "settings")
                  (:file "promoter")))
@@ -434,6 +435,7 @@
                (:module "azure"
                 :components ((:file "test-plugin")
                              (:file "test-request")
+                             (:file "test-run-warnings")
                              (:file "test-settings")
                              (:file "test-promoter")))
                (:module "phabricator"

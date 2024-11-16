@@ -437,9 +437,11 @@
                (equal filter (funcall (row-filter-key row-filter) x)))
              collect x))))
 
-(deftag warning-alert (children)
-  <div class= "alert alert-warning mt-2">
-    <strong class= "pe-1" >Caution!</strong>
+(deftag warning-alert (children &key (type "warning")
+                       (call-out "Caution!"))
+  <div class= (format nil "alert alert-~a mt-2" type) >
+    ,(unless (str:emptyp call-out)
+       <strong class= "pe-1" >,(progn call-out)</strong>)
     ,@children
   </div>)
 
