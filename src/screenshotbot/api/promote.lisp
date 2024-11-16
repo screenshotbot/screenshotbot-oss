@@ -45,6 +45,8 @@
                 #:batch)
   (:import-from #:screenshotbot/promote-api
                 #:maybe-send-tasks)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export
    #:with-promotion-log
    #:default-promoter)
@@ -148,12 +150,20 @@
 (defclass default-promoter (delegating-promoter)
   ((delegates :initform (list-promoters))))
 
+(def-easy-macro with-log-errors (run &fn fn)
+  "Logs any errors to the promotion log"
+  (handler-bind ((error (lambda (e)
+                          (format-log run :error "Promotion error: ~a" e))))
+    (fn)))
+
+
 (defmethod maybe-promote ((promoter delegating-promoter) run)
   (restart-case
       (dolist (delegate (delegates promoter))
         (format-log run :info "Delegating to promoter ~s" delegate)
         (ignore-and-log-errors ()
-          (maybe-promote delegate run)))
+          (with-log-errors (run)
+            (maybe-promote delegate run))))
     (dangerous-restart-all-promotions ()
       (maybe-promote promoter run))))
 

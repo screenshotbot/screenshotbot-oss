@@ -43,7 +43,14 @@
                 #:not-fast-forward-promotion-warning
                 #:recorder-run-warnings)
   (:import-from #:fiveam-matchers/lists
-                #:contains))
+                #:contains)
+  (:import-from #:screenshotbot/api/promote
+                #:with-log-errors
+                #:delegating-promoter)
+  (:import-from #:screenshotbot/promote-api
+                #:maybe-promote)
+  (:import-from #:util/logger
+                #:format-log))
 (in-package :screenshotbot/api/test-promote)
 
 (util/fiveam:def-suite)
@@ -228,3 +235,62 @@ the promotion history."
 
       (%maybe-promote-run run2 channel :wait-timeout 0)
       (assert-no-loops run2))))
+
+(defclass fake-promoter ()
+  ((invokedp :initform nil
+             :accessor invokedp)))
+
+(defmethod maybe-promote ((Self fake-promoter) run)
+  (setf (invokedp self)  t))
+
+(test delegating-promoter-delegates
+  (with-fixture state ()
+    (let* ((channel (make-instance 'channel))
+           (run (make-recorder-run :channel channel
+                                   :screenshots nil))
+           (delegate (make-instance 'fake-promoter))           
+           (dp (make-instance 'delegating-promoter
+                              :delegates (list
+                                          delegate))))
+      (finishes
+        (maybe-promote dp run))
+      (is-true (invokedp delegate)))))
+
+(defclass crashing-promoter ()
+  ((invokedp :initform nil
+             :accessor invokedp)))
+
+(defmethod maybe-promote ((Self crashing-promoter) run)
+  (error "should be logged"))
+
+(test delegating-promoter-logs-errors
+  (with-fixture state ()
+    (let* ((channel (make-instance 'channel))
+           (run (make-recorder-run :channel channel
+                                   :screenshots nil))
+           (delegate (make-instance 'crashing-promoter))           
+           (dp (make-instance 'delegating-promoter
+                              :delegates (list
+                                          delegate)))
+           (loggedp nil))
+      (cl-mock:with-mocks ()
+        (cl-mock:if-called 'format-log
+                           (lambda (logger level &rest args)
+                             (let ((str (apply #'format  nil args)))
+                               (if (Str:containsp "should be logged" str)
+                                   (Setf loggedp t)))))
+        (finishes
+          (maybe-promote dp run))
+        (is-true loggedp)))))
+
+(Define-condition logged-error (error)
+  ())
+
+(test with-log-errors-happy-integration-path
+  (with-fixture state ()
+    (let* ((channel (make-instance 'channel))
+           (run (make-recorder-run :channel channel
+                                   :screenshots nil)))
+      (signals logged-error
+        (with-log-errors (run)
+          (error 'logged-error))))))
