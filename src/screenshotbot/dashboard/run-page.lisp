@@ -443,6 +443,11 @@
     ,@children
   </div>)
 
+(defgeneric render-run-warning (run warning)
+  (:method (run warning)
+    (warn "render-run-warning not implemented")
+    nil))
+
 (defmethod render-run-warning (run (warning merge-base-failed-warning))
   (let ((repo (channel-repo (recorder-run-channel run))))
    (flet ((link (hash)

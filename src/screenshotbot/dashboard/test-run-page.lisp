@@ -28,6 +28,7 @@
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
   (:import-from #:screenshotbot/dashboard/run-page
+                #:render-run-warning
                 #:run-delete-page
                 #:run-page
                 #:render-run-page)
@@ -133,3 +134,8 @@
         (run-delete-page :id (oid run)))
       (assert-that (fset:convert 'list (runs-for-company company))
                    (is-not (has-item run))))))
+
+(test render-run-warning-has-default-value
+  (with-fixture state ()
+    (is (eql nil
+             (render-run-warning run :foo)))))
