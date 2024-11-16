@@ -99,6 +99,9 @@
           (with-form-errors (:errors ,errors
                              ,@form-args
                              :was-validated t)
-            ,form-builder))
+            (values
+             (progn ,form-builder)
+             ;; Pass errors for testing reasons
+             ,errors)))
          (t
           ,success)))))

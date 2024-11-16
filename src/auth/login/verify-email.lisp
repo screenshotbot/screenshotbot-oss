@@ -26,6 +26,8 @@
 
 (named-readtables:in-readtable markup:syntax)
 
+(defvar *lock* (bt:make-lock))
+
 (defvar *code-expiry* (* 20 60))
 
 (defvar *throttler* (make-instance 'ip-throttler
@@ -38,6 +40,8 @@
              :reader %redirect)
    (ts :initform (get-universal-time)
        :reader %ts)
+   (attempts :initform 0
+             :accessor %attempts)
    (email :initarg :email
           :reader %email)))
 
@@ -95,10 +99,19 @@ verified, redirects to the given redirect."
 
 (defun enter-code-screen/post (state &key entered-code)
   (throttle! *throttler*)
+  (bt:with-lock-held (*lock*)
+    (incf (%attempts state)))
   (with-error-builder (:check check :errors errors
                        :form-builder (enter-code-screen state)
                        :success (hex:safe-redirect (%redirect state)))
     (cond
+      ((bt:with-lock-held (*lock*)
+         (> (%attempts state) 20))
+       (warn "Too many attempts at guessing code for ~a"
+             (%email state))
+       (check :entered-code
+              nil
+              "Too many attempts, please try signing up again"))
       ((not (equal 6 (length entered-code)))
        (check :entered-code
               nil

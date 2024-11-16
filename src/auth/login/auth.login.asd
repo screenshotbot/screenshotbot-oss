@@ -28,4 +28,5 @@
   :depends-on (:auth.login
                :fiveam-matchers
                :util/fiveam)
-  :components ((:file "test-roles-auth-provider")))
+  :components ((:file "test-roles-auth-provider")
+               (:file "test-verify-email")))
