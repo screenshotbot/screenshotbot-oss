@@ -10,20 +10,35 @@
         #:fiveam
         #:screenshotbot/abstract-pr-promoter)
   (:import-from #:screenshotbot/azure/promoter
+                #:with-run-warnings
                 #:parse-org-and-project
                 #:azure-promoter)
   (:import-from #:screenshotbot/azure/plugin
                 #:azure-git-repo)
   (:import-from #:screenshotbot/git-repo
-                #:generic-git-repo))
+                #:generic-git-repo)
+  (:import-from #:screenshotbot/user-api
+                #:channel)
+  (:import-from #:util/store/store
+                #:with-test-store)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-warnings
+                #:make-recorder-run)
+  (:import-from #:screenshotbot/azure/request
+                #:azure-unauthorized-error)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length))
 (in-package :screenshotbot/azure/test-promoter)
 
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (let ((promoter (make-instance 'azure-promoter)))
-    (&body)))
+  (with-test-store ()
+   (let ((promoter (make-instance 'azure-promoter)))
+     (&body))))
 
 (test valid-repo-for-azure
   (with-fixture state ()
@@ -42,3 +57,20 @@
     (is (equal org "foogroup"))
     (is (equal project "Foo%20app"))
     (is (equal repo "foo-app-flutter"))))
+
+(test add-run-warnings
+  (with-fixture state ()
+    (let* ((channel (make-instance 'channel))
+           (run (make-recorder-run :channel channel
+                                   :screenshots nil)))
+      (is
+       (eql
+        :foobar
+        (with-run-warnings (run)
+          :Foobar)))
+      (signals azure-unauthorized-error
+        (with-run-warnings (run)
+          (error 'azure-unauthorized-error)))
+      (assert-that
+       (recorder-run-warnings run)
+       (has-length 1)))))

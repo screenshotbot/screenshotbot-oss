@@ -29,6 +29,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/model/recorder-run
+                #:push-run-warning
                 #:recorder-run-company
                 #:github-repo
                 #:pull-request-id
@@ -38,13 +39,18 @@
   (:import-from #:util/store
                 #:with-class-validation)
   (:import-from #:screenshotbot/azure/request
+                #:azure-unauthorized-error
                 #:git-status-context
                 #:pull-request-status
                 #:create-pull-request-status
                 #:azure)
   (:import-from #:screenshotbot/user-api
                 #:recorder-run-channel
-                #:channel-name))
+                #:channel-name)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
+  (:import-from #:screenshotbot/azure/run-warnings
+                #:azure-unauthorized-warning))
 (in-package :screenshotbot/azure/promoter)
 
 
@@ -97,6 +103,16 @@ Documentation here: https://learn.microsoft.com/en-us/rest/api/azure/devops/git/
 (defvar +failed+ "failed")
 (defvar +pending+ "pending")
 
+(def-easy-macro with-run-warnings (run &fn fn)
+  "A helper function to check for certain AZURE-ERRORs and convert them
+into run warnings"
+  (handler-bind ((azure-unauthorized-error (lambda (e)
+                                             (declare (ignore e))
+                                             (push-run-warning
+                                              run
+                                              'azure-unauthorized-warning))))
+   (fn)))
+
 (defmethod push-remote-check ((self azure-promoter)
                               run
                               (check check))
@@ -111,24 +127,25 @@ Documentation here: https://learn.microsoft.com/en-us/rest/api/azure/devops/git/
                                     :token (azure-access-token settings)
                                     :organization org
                                     :project project)))
-          (create-pull-request-status
-           azure
-           (make-instance 'pull-request-status
-                          :description (format nil "Screenshotbot: ~a"
-                                               (check-title check))
-                          :state (ecase (check-status check)
-                                   (:accepted +succeeded+)
-                                   (:pending +pending+)
-                                   (:rejected +failed+)
-                                   (:success +succeeded+)
-                                   (:failure +failed+)
-                                   (:action-required +failed+))
-                          :target-url (details-url check)
-                          :context (make-instance 'git-status-context
-                                                  :name (check-key check)))
-           :company (recorder-run-company run)
-           :repository-id repo
-           :pull-request-id (pull-request-id run)))))))
+          (with-run-warnings (run)
+            (create-pull-request-status
+             azure
+             (make-instance 'pull-request-status
+                            :description (format nil "Screenshotbot: ~a"
+                                                 (check-title check))
+                            :state (ecase (check-status check)
+                                     (:accepted +succeeded+)
+                                     (:pending +pending+)
+                                     (:rejected +failed+)
+                                     (:success +succeeded+)
+                                     (:failure +failed+)
+                                     (:action-required +failed+))
+                            :target-url (details-url check)
+                            :context (make-instance 'git-status-context
+                                                    :name (check-key check)))
+             :company (recorder-run-company run)
+             :repository-id repo
+             :pull-request-id (pull-request-id run))))))))
 
 (defmethod make-promoter-for-acceptable ((acceptable azure-acceptable))
   (make-instance 'azure-promoter))
