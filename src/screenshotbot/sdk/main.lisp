@@ -150,7 +150,9 @@
 
 (defun %main (&optional (argv #+lispworks system:*line-arguments-list*
                               #-lispworks (uiop:raw-command-line-arguments)))
-  (log:config :sane :immediate-flush t :pattern "[%D{%H:%M:%S}] %5p: %m%n")
+  ;; We used to do :immediate-flush, but it looks like that might be
+  ;; causing issues with Gradle. See T1514.
+  (log:config :sane :pattern "[%D{%H:%M:%S}] %5p: %m%n")
   (log:config :info)
 
   (log:info "Screenshotbot SDK v~a" *client-version*)
