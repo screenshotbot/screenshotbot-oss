@@ -469,6 +469,9 @@ computed differently if we're using sharding."
     (push-event :run-created
                 :oid (oid recorder-run)
                 :company (oid company)
+                ;; We're logging this in case we want to verify the
+                ;; screenshot-map is behaving correctly.
+                :num-screenshots (length screenshots)
                 ;; This let's us monitor that a specific company is
                 ;; using the right domain name. See T1124.
                 :api-hostname (when (boundp 'hunchentoot:*request*)
