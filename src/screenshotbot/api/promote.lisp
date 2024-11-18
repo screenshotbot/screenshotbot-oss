@@ -216,7 +216,11 @@
          (let ((run-branch (recorder-run-branch run)))
            (log :info "Branch on run: ~a" run-branch)
            (cond
-             ((pull-request-url run)
+             ((pull-request-id run)
+              ;; Note that we looked for pull-request-id, not
+              ;; pull-request-url. This is to handle the case of an
+              ;; invalid pull-request-url being provided because of
+              ;; custom CI scripts.
               (log :error "Looks like there's a Pull Request attached, not promoting"))
              ((gitlab-merge-request-iid run)
               (log :error "Looks like there's a GitLab Merge Request attached, not promoting"))

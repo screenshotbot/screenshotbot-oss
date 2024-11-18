@@ -165,13 +165,21 @@
 
 (test dont-promote-a-run-with-a-pull-request
   (with-fixture state ()
-    (setf (slot-value run2 'screenshotbot/model/recorder-run::pull-request) "foobar")
+    (setf (slot-value run2 'screenshotbot/model/recorder-run::pull-request) "https://github.com/tdrhq/fast-example/pull/2")
     (%maybe-promote-run run1 channel)
     (%maybe-promote-run run2 channel)
 
     (is-false (activep run2))
     (is-true (activep run1))))
 
+(test ignore-an-invalid-pull-request-url
+  (with-fixture state ()
+    (setf (slot-value run2 'screenshotbot/model/recorder-run::pull-request) "https://github.com/tdrhq/fast-example/pull/")
+    (%maybe-promote-run run1 channel)
+    (%maybe-promote-run run2 channel)
+
+    (is-true (activep run2))
+    (is-false (activep run1))))
 
 (test dont-promote-run-with-identical-hash
   (with-fixture state ()
