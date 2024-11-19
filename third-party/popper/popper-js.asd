@@ -3,13 +3,8 @@
    :asdf))
 (in-package :bootstrap-js-system)
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-   (unless (find-package 'build-utils)
-     (asdf:operate 'asdf:load-op 'build-utils)
-     (use-package :build-utils)))
-
 (defsystem :popper-js
-  :class build-utils:js-library
+  :class "build-utils:js-library"
   :depends-on (:jquery-js)
   :defsystem-depends-on (:build-utils)
-  :components ((build-utils:js-file "popper")))
+  :components (("build-utils:js-file" "popper")))
