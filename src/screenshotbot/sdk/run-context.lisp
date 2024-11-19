@@ -119,7 +119,7 @@
 (defmethod git-repo ((self env-reader-run-context))
   (cond
     ((git-root :errorp nil)
-     (make-instance 'git:git-repo))
+     (make-instance 'git:git-repo :link (repo-url self)))
     (t
      (log:warn "This is not running inside a Git repo. Please contact support@screenshotbot.io for advice, since the behavior in this case can be very different.")
      (make-instance 'git:null-repo))))

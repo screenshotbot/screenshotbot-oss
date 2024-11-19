@@ -23,6 +23,8 @@
                 #:save-run)
   (:import-from #:screenshotbot/sdk/clingon-api-context
                 #:with-clingon-api-context)
+  (:import-from #:screenshotbot/sdk/upload-commit-graph
+                #:upload-commit-graph/command)
   (:export
    #:with-clingon-api-context
    #:common-run-options
@@ -147,7 +149,7 @@ as opposed to `recorder help`."
               (clingon:print-usage-and-exit cmd t))
    :description "Collection of commands that are typically run during CI jobs. In particular, `ci record` might be what you're looking for."
    :sub-commands (list*
-                  
+                  (upload-commit-graph/command)
                   (mapcar #'funcall (mapcar #'cdr *root-commands*)))))
 
 (defun common-run-options ()
