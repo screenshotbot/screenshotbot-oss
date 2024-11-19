@@ -10,6 +10,8 @@
    :alexandria
         :fiveam)
   (:import-from #:screenshotbot/sdk/sdk
+                #:not-recent-file-warning
+                #:warn-if-not-recent-file
                 #:%request
                 #:format-api-url
                 #:invalid-pull-request
@@ -379,3 +381,24 @@
                                        :hostname "https://example.com")
                         "/api/test"
                         :backoff 0))))))
+
+(test warn-if-not-recent-file
+  (uiop:with-temporary-file (:stream s)
+    (handler-case
+        (warn-if-not-recent-file s)
+      (warning ()
+        (fail "expected exception"))
+      (:no-error (_)
+        (pass)))
+
+    #+linux ;; mostly for the `touch`
+    (uiop:with-temporary-file (:stream s :pathname p)
+      (uiop:run-program
+       (list "touch" "-d" "2 days ago" (namestring p)))
+      (signals not-recent-file-warning
+        (warn-if-not-recent-file s)))))
+
+(test format-not-recent-file-warning
+  (finishes
+   (format nil "~a"
+           (make-condition 'not-recent-file-warning :file "/tmp/foo"))))

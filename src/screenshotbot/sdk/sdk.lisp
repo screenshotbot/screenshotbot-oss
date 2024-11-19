@@ -437,6 +437,19 @@ error."
    (t
     (json:camel-case-to-lisp identifier))))
 
+(define-condition not-recent-file-warning (warning)
+  ((file :initarg :file))
+  (:report
+   (lambda (self output)
+     (with-slots (file) self
+      (format output "The file ~a is an old file, and might be a stale screenshot from a previous build"
+              file)))))
+
+(defun warn-if-not-recent-file (stream)
+  (when (< (file-write-date stream)
+           (- (get-universal-time) 7200))
+    (warn 'not-recent-file-warning :file (pathname stream))))
+
 (defmethod upload-image-directory (api-context bundle)
   (let ((images (list-images bundle)))
     (let ((hash-to-response
@@ -449,15 +462,15 @@ error."
       (log:debug "got full response: ~s" hash-to-response)
       (loop for im in images
             collect
-            (progn
-              (with-open-stream (s (image-stream im))
-                (unwind-protect
-                     (upload-image api-context
-                                   (image-name im) s
-                                   (md5-sum im)
-                                   (assoc-value hash-to-response (md5-sum im)
-                                                :test 'string=))
-                  (close-image im))))))))
+            (with-open-stream (s (image-stream im))
+              (warn-if-not-recent-file s)
+              (unwind-protect
+                   (upload-image api-context
+                                 (image-name im) s
+                                 (md5-sum im)
+                                 (assoc-value hash-to-response (md5-sum im)
+                                              :test 'string=))
+                (close-image im)))))))
 
 (defun make-bundle (&key (metadata flags:*metadata*)
                       (directory flags:*directory*)
