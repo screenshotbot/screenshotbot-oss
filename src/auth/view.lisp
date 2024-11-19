@@ -32,7 +32,7 @@
     ((%api-key e)
      (format out "The API key ~a does not have access to ~S"
              (%api-key e)
-             out))
+             (error-obj e)))
     (t
      (format out "~S can't access ~S" (error-user e) (error-obj e)))))
 
