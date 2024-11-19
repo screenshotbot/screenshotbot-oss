@@ -92,6 +92,15 @@ endif
 
 include scripts/lispworks-versions.mk
 
+# These two are used to have access to load.lisp as a
+# dependency. Calling it directly from /Applications is buggy because
+# Makefile doesn't handle spacing.
+build/private-patches: scripts/lispworks-versions.mk
+	ln -sf "$(PRIVATE_PATCHES)" $@
+
+build/private-patches/load.lisp: build/private-patches
+	true
+
 all:
 	true
 
@@ -156,7 +165,7 @@ test-lw: submodule $(LW) build/affected-files.txt
 	$(LW_SCRIPT) ./scripts/jenkins.lisp
 
 test-store: submodule $(LW)
-	$(LW_SCRIPT) ./run-store-tests.lisp
+	$(LW_SCRIPT) ./scripts/run-store-tests.lisp
 
 build/.keep: | build/cache-key $(DISTINFO)
 	$(TOUCH) $@
@@ -188,7 +197,7 @@ screenshotbot-tests: $(LW) .PHONY
 sdk-tests: $(LW) .PHONY
 	$(LW_SCRIPT) ./scripts/jenkins.lisp -system screenshotbot.sdk/tests -no-jvm
 
-$(LW): build/.keep $(IMAGE_DEPS) $(PRIVATE_PATCHES)
+$(LW): build/.keep $(IMAGE_DEPS) build/private-patches/load.lisp
 	echo in here
 # $$PWD is workaround over LW issue #42471
 	$(ARCH_CMD) $(LW_CORE) -build scripts/build-image.lisp
