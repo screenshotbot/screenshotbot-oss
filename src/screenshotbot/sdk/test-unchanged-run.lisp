@@ -23,7 +23,8 @@
   (:import-from #:screenshotbot/sdk/api-context
                 #:remote-version)
   (:import-from #:screenshotbot/sdk/cli-common
-                #:root-options
+                #:root-options)
+  (:import-from #:screenshotbot/sdk/clingon-api-context
                 #:make-api-context)
   (:local-nicknames (#:dto #:screenshotbot/api/model)
                     (#:run-context #:screenshotbot/sdk/run-context)))

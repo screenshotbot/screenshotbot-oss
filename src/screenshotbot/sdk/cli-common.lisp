@@ -21,6 +21,8 @@
                 #:decode-json)
   (:import-from #:screenshotbot/sdk/fetch-run
                 #:save-run)
+  (:import-from #:screenshotbot/sdk/clingon-api-context
+                #:with-clingon-api-context)
   (:export
    #:with-clingon-api-context
    #:common-run-options
@@ -29,40 +31,6 @@
 (in-package :screenshotbot/sdk/cli-common)
 
 (declaim (ftype (function) dev/command))
-
-(defun make-api-context (&key api-key
-                           api-secret
-                           hostname
-                           desktop)
-  (cond
-    (desktop
-     (make-instance 'desktop-api-context))
-    ((and (not (str:emptyp api-key))
-          (not (str:emptyp api-secret)))
-     (let ((key api-key)
-           (secret api-secret))
-       (when (str:emptyp key)
-         (error "No --api-key provided"))
-       (when(str:emptyp secret)
-         (error "No --api-secret provided"))
-       (let ((hostname (api-hostname
-                        :hostname hostname)))
-         (log:debug "Using hostname: ~a" hostname)
-         (make-instance 'api-context
-                        :key key
-                        :secret secret
-                        :hostname hostname))))
-    ((path:-e (credential-file))
-     (decode-json (uiop:read-file-string (credential-file))
-                  'json-api-context))
-    (t
-     (error "You must provide a --api-key and --api-secret. (Alternatively, run `~~screenshotbot/recorder dev install` and follow the instructions to install a key."))))
-
-(def-easy-macro with-clingon-api-context (&binding api-context cmd &fn fn)
-  (let ((api-context (apply #'make-api-context
-                            (loop for key in '(:api-key :api-secret :hostname :desktop)
-                                  append `(,key ,(getopt cmd key))))))
-    (funcall fn api-context)))
 
 (defvar *root-commands* nil)
 
@@ -178,7 +146,9 @@ as opposed to `recorder help`."
    :handler (lambda (cmd)
               (clingon:print-usage-and-exit cmd t))
    :description "Collection of commands that are typically run during CI jobs. In particular, `ci record` might be what you're looking for."
-   :sub-commands (mapcar #'funcall (mapcar #'cdr *root-commands*))))
+   :sub-commands (list*
+                  
+                  (mapcar #'funcall (mapcar #'cdr *root-commands*)))))
 
 (defun common-run-options ()
   "A list of run options that are common between directory runs and static-website runs."

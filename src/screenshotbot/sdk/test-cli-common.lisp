@@ -8,7 +8,6 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/cli-common
-                #:make-api-context
                 #:root/command)
   (:import-from #:cl-mock
                 #:if-called
@@ -18,7 +17,9 @@
   (:import-from #:screenshotbot/sdk/api-context
                 #:secret
                 #:key
-                #:hostname))
+                #:hostname)
+  (:import-from #:screenshotbot/sdk/clingon-api-context
+                #:make-api-context))
 (in-package :screenshotbot/sdk/test-cli-common)
 
 
@@ -33,16 +34,4 @@
   (with-fixture state ()
    (finishes (root/command))))
 
-(test make-api-context-reads-from-credential-file
-  (with-fixture state ()
-   (uiop:with-temporary-file (:pathname p :stream out)
-     (write-string "{\"hostname\":\"foo\",\"apiKey\":\"bar\",\"apiSecretKey\":\"car\"}" out)
-     (finish-output out)
 
-     (if-called 'credential-file
-                (lambda () p))
-     (let ((res (make-api-context :api-key nil
-                                  :api-secret nil)))
-       (is (equal "foo" (hostname res)))
-       (is (equal "bar" (key res)))
-       (is (equal "car" (secret res)))))))
