@@ -21,7 +21,6 @@ ifeq ($(ARCH),x86_64)
 	ARCH_CMD=arch -$(ARCH)
 endif
 
-LW_VERSION=8-0-0
 LW_PREFIX=/opt/software/lispworks
 
 ifeq ($(UNAME),Linux)
@@ -41,8 +40,6 @@ $(call FIND,$(SRC_DIRS), $(1))
 endef
 
 JIPR=../jippo
-LW=build/lw-console-$(LW_VERSION)$(ARCH)
-LW_CORE=lispworks-unknown-location
 SRC_DIRS=src local-projects third-party scripts quicklisp
 LISP_FILES=$(call wild_src, '*.lisp') $(call wild_src, '*.asd') $(call will_src,'*.c') $(call wild_src,'*.cpp')
 
@@ -55,10 +52,6 @@ TMPFILE=$(shell mktemp)
 JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/
 SBCL_SCRIPT=$(call timeout,5m) $(sbcl) --script
 CCL_SCRIPT=CCL_DEFAULT_DIRECTORY=$(CCL_DEFAULT_DIRECTORY) $(CCL_CORE) -b -I $(CCL_IMAGE)
-
-LW_LIB_DIR=/opt/software/lispworks
-PRIVATE_PATCH_DIR=$(LW_LIB_DIR)/lib/8-0-0-0/private-patches/
-PRIVATE_PATCHES=$(call FIND,$(PRIVATE_PATCH_DIR),*.lisp)
 
 QUICKLISP=quicklisp/dists/quicklisp/
 COPYBARA_CMD=java -jar scripts/copybara_deploy.jar
@@ -89,20 +82,6 @@ REVISION_ID=$(shell echo '{"ids":["$(DIFF_ID)"]}' | $(ARC) call-conduit differen
 QUICKLISP_DEPS=$(call FIND,quicklisp,'*.txt') $(call FIND,quicklisp,'*.lisp')
 IMAGE_DEPS=scripts/build-image.lisp scripts/asdf.lisp $(DISTINFO) scripts/prepare-image.lisp scripts/init.lisp scripts/asdf.lisp $(QUICKLISP_DEPS)
 
-ifeq ($(UNAME),Linux)
-
-	LW_CORE=$(LW_PREFIX)/lispworks-$(LW_VERSION)-*-linux
-endif
-
-ifeq ($(UNAME),Darwin)
-	LW_CORE=/Applications/LispWorks\ 8.0\ \(64-bit\)/LispWorks\ \(64-bit\).app/Contents/MacOS/lispworks-8-0-0-macos64-universal
-	LW_LIB_DIR=/Applications/LispWorks\ 8.0\ \(64-bit\)/Library
-endif
-
-ifeq ($(OS),Windows_NT)
-	LW_CORE="C:\Program Files\LispWorks\lispworks-8-0-0-x64-windows.exe"
-endif
-
 define ht_check_tests
 	TMP=$(TMPFILE) && $1 | tee  $$TMP &&  grep "all tests PASSED" $$TMP && rm $$TMP
 endef
@@ -110,6 +89,8 @@ endef
 ifneq ("$(wildcard scripts/common.mk)", "")
 	include scripts/common.mk
 endif
+
+include scripts/lispworks-versions.mk
 
 all:
 	true
