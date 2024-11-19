@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/testing
+                #:fix-timestamps
                 #:with-test-user
                 #:screenshot-test)
   (:import-from #:screenshotbot/dashboard/run-page
@@ -41,5 +42,6 @@
 (screenshot-test azure-unauthorized-warning
   (with-fixture state ()
     (push-run-warning run 'azure-unauthorized-warning)
-    (render-run-page run)))
+    (fix-timestamps
+     (render-run-page run))))
 
