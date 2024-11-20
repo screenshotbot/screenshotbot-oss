@@ -21,7 +21,8 @@
    #:cleanp
    #:git-message
    #:fetch-remote-branch
-   #:author)
+   #:author
+   #:get-remote-url)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/git)
 
@@ -154,7 +155,8 @@
   nil)
 
 (defmethod get-remote-url ((repo git-repo))
-  ($ (git-command) "get-url" (origin repo)))
+  (ignore-errors
+   ($ (git-command repo) "remote" "get-url" (origin repo))))
 
 (def-health-check verify-git-is-present ()
   (uiop:run-program (list "git" "--help")))

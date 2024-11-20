@@ -116,13 +116,17 @@
   ((env :initarg :env
         :reader env)))
 
-(defmethod git-repo ((self env-reader-run-context))
+(defmethod %git-repo ((self env-reader-run-context) &key repo-url)
+  "This function is here to break a cyclical dependency between git-repo and repo-url"
   (cond
     ((git-root :errorp nil)
-     (make-instance 'git:git-repo :link (repo-url self)))
+     (make-instance 'git:git-repo :link repo-url))
     (t
      (log:warn "This is not running inside a Git repo. Please contact support@screenshotbot.io for advice, since the behavior in this case can be very different.")
      (make-instance 'git:null-repo))))
+
+(defmethod git-repo ((self env-reader-run-context))
+  (%git-repo self :repo-url (repo-url self)))
 
 (defmethod author :around ((self env-reader-run-context))
   (or
@@ -137,7 +141,8 @@
 (defmethod repo-url :around ((self env-reader-run-context))
   (or
    (call-next-method)
-   (e:repo-url (env self))))
+   (e:repo-url (env self))
+   (git:get-remote-url (%git-repo self))))
 
 (defmethod work-branch :around ((self env-reader-run-context))
   (or

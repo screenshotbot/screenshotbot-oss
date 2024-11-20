@@ -9,6 +9,8 @@
             (:use #:cl
                   #:fiveam)
             (:import-from #:screenshotbot/sdk/git
+                          #:repo-link
+                          #:get-remote-url
                           #:author
                           #:fetch-remote-branch
                           #:git-root
@@ -99,23 +101,27 @@
     (is-true
      (rev-parse repo "car"))))
 
+(def-easy-macro with-clone (&binding clone repo &fn fn)
+  (with-tmpdir (clone-root)
+    (run-in-dir repo "git checkout -b master")
+    (make-commit repo "foobar")
+    (uiop:run-program (format nil "cd ~a && git clone ~a cloned-repo"
+                              clone-root
+                              (namestring (repo-dir repo)))
+                      :error-output *standard-output*)
+    (let ((clone (make-instance 'git-repo :dir (path:catdir clone-root "cloned-repo/"))))
+      (fn clone))))
+
 (test fetch-remote-branch
   (with-fixture git-repo ()
-    (with-tmpdir (clone-root)
-      (run-in-dir repo "git checkout -b master")
-      (make-commit repo "foobar")
-      (uiop:run-program (format nil "cd ~a && git clone ~a cloned-repo"
-                                clone-root
-                                (namestring dir))
-                        :error-output *standard-output*)
+    (with-clone (clone repo)
       (make-commit repo "new-commit")
       (let ((rev (str:trim (run-in-dir repo "git rev-parse HEAD"
                                        :output 'string))))
         (is (not (str:emptyp rev)))
-        (let ((clone (make-instance 'git-repo :dir (path:catdir clone-root "cloned-repo/"))))
-          (fetch-remote-branch clone "master")
-          (is (equal rev
-                     (rev-parse clone "master"))))))))
+        (fetch-remote-branch clone "master")
+        (is (equal rev
+                   (rev-parse clone "master")))))))
 
 (test read-dag-from-repo
   (with-fixture git-repo ()
@@ -154,3 +160,10 @@
     (make-commit repo "foobar")
     (make-commit repo "bleh")
     (is (equal "foo@example.com" (author repo)))))
+
+(test get-remote-url
+  (with-fixture git-repo ()
+    (is (equal nil (get-remote-url repo)))
+    (with-clone (clone repo)
+      (is (equal (namestring dir)
+                 (namestring (get-remote-url clone)))))))
