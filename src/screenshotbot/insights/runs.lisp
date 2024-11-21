@@ -63,7 +63,7 @@
 (defun run-matches-channel-filter-p (run channel-filter)
   (or
    (null channel-filter)
-   (str:containsp channel-filter (channel-name (recorder-run-channel run)))))
+   (str:starts-with-p channel-filter (channel-name (recorder-run-channel run)))))
 
 (defstruct active-screenshot-key
   date screenshot-key)
