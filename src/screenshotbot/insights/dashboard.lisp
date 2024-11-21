@@ -380,8 +380,8 @@ monthly-active."
 
     ,(script-tag ()
        (generate-daily-active-users company "myChart"
-                                    ;; We don't have more than 90 days of data here
-                                    :days (min 90 days)))
+                                    ;; We don't have more data than this
+                                    :days 30))
 
     ,(script-tag ()
        (generate-active-screenshots company "active-screenshots"
