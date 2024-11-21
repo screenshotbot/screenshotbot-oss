@@ -25,10 +25,12 @@
                 #:hash-lock)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:screenshotbot/insights/variables
+                #:*num-days*)
   (:local-nicknames (:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/insights/runs)
 
-(defun runs-for-last-60-days (company &key (num-days 60))
+(defun runs-for-last-60-days (company &key (num-days (+ 30 *num-days*)))
   "Find all the runs in the last 60 days for the given company"
 
   (append
@@ -104,12 +106,12 @@
     ;; here.
     (fast-remove-duplicates res :test #'equal)))
 
-(defvar *ans-cache* (make-hash-table))
+(defparameter *ans-cache* (make-hash-table :test #'equal))
 
 (defun active-screenshot-keys (company)
   (with-hash-lock-held (company *hash-lock*)
     (util:or-setf
-     (gethash company *ans-cache*)
+     (gethash (list company *num-days*) *ans-cache*)
      (%active-screenshot-keys company))))
 
 (def-cron clear-ans-cache ()

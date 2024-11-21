@@ -40,6 +40,8 @@
   (:import-from #:util/throttler
                 #:throttle!
                 #:throttler)
+  (:import-from #:screenshotbot/insights/variables
+                #:*num-days*)
   (:local-nicknames (#:active-users
                      #:core/active-users/active-users)))
 (in-package :screenshotbot/insights/dashboard)
@@ -138,14 +140,14 @@ provided to generate-chart, and the value is the label we will show")
 (defun daily-active-users (active-users)
   (weekly-active-users active-users :trail-size 1))
 
-(defun last-30-days (&key (n 30))
+(defun last-30-days (&key (n *num-days*))
   (let ((now (get-universal-time)))
     (reverse
      (loop for i from 0 to n
            collect (format-date (- now (* i 24 3600)))))))
 
 (defun last-60-days ()
-  (last-30-days :n 60))
+  (last-30-days :n (+ 30 *num-days*)))
 
 
 (defun n-day-active-count (active-objects ;; Should store <date> and the actual object
@@ -194,8 +196,9 @@ monthly-active."
         (company (core/active-users/active-users::company active-user)))
     (roles:has-role-p company user 'roles:hidden-user)))
 
-(defun generate-daily-active-users (company id)
-  (let* ((active-users
+(defun generate-daily-active-users (company id &key days)
+  (let* ((*num-days* days)
+         (active-users
            (remove-if
             #'bad-active-user-p
             (active-users-for-company company :company-test #'has-root-company-p)))
@@ -215,8 +218,9 @@ monthly-active."
                                               :label "Monthly Active (trailing)"
                                               :data (monthly-active-users active-users))))))
 
-(defun generate-active-screenshots (company id)
-  (let* ((active-screenshots  (active-screenshot-keys company))
+(defun generate-active-screenshots (company id &key days)
+  (let* ((*num-days* days)
+         (active-screenshots  (active-screenshot-keys company))
          (data (n-day-active-count active-screenshots
                                    :trail-size 30
                                    :date-accessor #'active-screenshot-key-date
@@ -231,8 +235,9 @@ monthly-active."
                                               :data data)))))
 
 
-(defun generate-pull-requests-chart (company id)
-  (let ((none "PRs with no screenshot changes")
+(defun generate-pull-requests-chart (company id &key days)
+  (let ((*num-days* days)
+        (none "PRs with no screenshot changes")
         (changed "PRs with screenshot changes, but no actions on Screenshotbot")
         (rejected "PRs with at least one rejection")
         (accepted "PRs with only accepted screenshots"))
@@ -260,7 +265,7 @@ monthly-active."
                                             changed
                                             accepted
                                             rejected)
-                                :title "Percentage of PRs with activity on Screenshotbot over last 30 days"
+                                :title (format nil "Percentage of PRs with activity on Screenshotbot over last ~a days" *num-days*)
                                 :data-labels t
 
                                 ;; ChartJS brand colors taken from:
@@ -290,8 +295,9 @@ monthly-active."
    "Ares Sandoval"
    "Elsie Villalobos"))
 
-(defun generate-top-users (company id &key fuzz)
-  (let ((top-users (user-reviews-last-30-days company))
+(defun generate-top-users (company id &key fuzz days)
+  (let ((*num-days* days)
+        (top-users (user-reviews-last-30-days company))
         (data (make-hash-table :test #'equal)))
     (flet ((user-name (idx)
              (if fuzz
@@ -305,7 +311,7 @@ monthly-active."
                                 :type "bar"
                                 :mirror t
                                 :index-axis "y"
-                                :title "Top users by review count over last 30 days"
+                                :title (format nil "Top users by review count over last ~a days" *num-days*)
                                 :keys (loop
                                         for i below (min 5 (length top-users))
                                         collect (user-name i))
@@ -327,7 +333,7 @@ monthly-active."
                     (fn))
           />)
 
-(defun render-analytics (company &key fuzz)
+(defun render-analytics (company &key fuzz days)
   (auth:can-view! company)
   <app-template>
 
@@ -371,18 +377,20 @@ monthly-active."
 
 
     ,(script-tag ()
-       (generate-daily-active-users company "myChart"))
+       (generate-daily-active-users company "myChart" :days days))
 
     ,(script-tag ()
-       (generate-active-screenshots company "active-screenshots"))
+       (generate-active-screenshots company "active-screenshots" :days days))
 
     ,(script-tag ()
-       (generate-pull-requests-chart company "pull-requests"))
+       (generate-pull-requests-chart company "pull-requests" :days days))
 
     ,(script-tag ()
-       (generate-top-users company "top-users" :fuzz fuzz))
+       (generate-top-users company "top-users" :fuzz fuzz :days days))
   </app-template>)
 
-(defhandler (nil :uri "/insights") ()
+(defhandler (nil :uri "/insights") ((days :parameter-type 'integer :init-form *num-days*))
+  (assert (< days 366))
   (with-login ()
-    (render-analytics (auth:current-company))))
+    (render-analytics (auth:current-company)
+                      :days days)))

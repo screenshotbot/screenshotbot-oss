@@ -21,7 +21,9 @@
   (:import-from #:alexandria
                 #:when-let)
   (:import-from #:screenshotbot/report-api
-                #:report-acceptable))
+                #:report-acceptable)
+  (:import-from #:screenshotbot/insights/variables
+                #:*num-days*))
 (in-package :screenshotbot/insights/pull-requests)
 
 (defun safe-pr (run)
@@ -80,7 +82,7 @@
 
 (defun user-reviews-last-30-days (company)
   (let ((result (make-hash-table)))
-    (do-run-report (run report company :num-days 30)
+    (do-run-report (run report company :num-days *num-days*)
       (when-let ((acceptable (report-acceptable report)))
         (dolist (user
                  (remove-duplicates
