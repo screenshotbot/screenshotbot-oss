@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/insights/runs
   (:use #:cl)
   (:import-from #:screenshotbot/user-api
+                #:channel-name
                 #:%created-at
                 #:recorder-run-channel
                 #:screenshot-name
@@ -30,7 +31,8 @@
   (:local-nicknames (:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/insights/runs)
 
-(defun runs-for-last-60-days (company &key (num-days (+ 30 *num-days*)))
+(defun runs-for-last-60-days (company &key (num-days (+ 30 *num-days*))
+                                        (channel-filter nil))
   "Find all the runs in the last 60 days for the given company"
 
   (append
@@ -54,8 +56,14 @@
                                           start-time)
                   return res
            else do
-             (push next res)
+             (when (run-matches-channel-filter-p next channel-filter)
+               (push next res))
              (decf next-rank)))))
+
+(defun run-matches-channel-filter-p (run channel-filter)
+  (or
+   (null channel-filter)
+   (str:containsp channel-filter (channel-name (recorder-run-channel run)))))
 
 (defstruct active-screenshot-key
   date screenshot-key)
@@ -89,9 +97,9 @@
           collect
           (list date (fast-remove-duplicates screenshot-maps :test #'eql)))))
 
-(defun %active-screenshot-keys (company)
+(defun %active-screenshot-keys (company &key channel-filter)
   (let (res)
-    (loop for (date screenshot-maps) in (runs-to-date-map (runs-for-last-60-days company)) do
+    (loop for (date screenshot-maps) in (runs-to-date-map (runs-for-last-60-days company :channel-filter channel-filter)) do
       (loop for screenshot-map in screenshot-maps
             do
                (fset:do-map (k v (screenshot-map:to-map screenshot-map))
@@ -108,11 +116,11 @@
 
 (defparameter *ans-cache* (make-hash-table :test #'equal))
 
-(defun active-screenshot-keys (company)
+(defun active-screenshot-keys (company &key channel-filter)
   (with-hash-lock-held (company *hash-lock*)
     (util:or-setf
-     (gethash (list company *num-days*) *ans-cache*)
-     (%active-screenshot-keys company))))
+     (gethash (list company *num-days* channel-filter) *ans-cache*)
+     (%active-screenshot-keys company :channel-filter channel-filter))))
 
 (def-cron clear-ans-cache ()
   (clrhash *ans-cache*))

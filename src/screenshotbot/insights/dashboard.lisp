@@ -218,9 +218,11 @@ monthly-active."
                                               :label "Monthly Active (trailing)"
                                               :data (monthly-active-users active-users))))))
 
-(defun generate-active-screenshots (company id &key days)
+(defun generate-active-screenshots (company id &key days
+                                                 channel-filter)
   (let* ((*num-days* days)
-         (active-screenshots  (active-screenshot-keys company))
+         (active-screenshots  (active-screenshot-keys company
+                                                      :channel-filter channel-filter))
          (data (n-day-active-count active-screenshots
                                    :trail-size 30
                                    :date-accessor #'active-screenshot-key-date
@@ -333,7 +335,7 @@ monthly-active."
                     (fn))
           />)
 
-(defun render-analytics (company &key fuzz days)
+(defun render-analytics (company &key fuzz days channel-filter)
   (auth:can-view! company)
   <app-template>
 
@@ -382,7 +384,9 @@ monthly-active."
                                     :days (min 90 days)))
 
     ,(script-tag ()
-       (generate-active-screenshots company "active-screenshots" :days days))
+       (generate-active-screenshots company "active-screenshots"
+                                    :days days
+                                    :channel-filter channel-filter))
 
     ,(script-tag ()
        (generate-pull-requests-chart company "pull-requests" :days days))
@@ -391,8 +395,10 @@ monthly-active."
        (generate-top-users company "top-users" :fuzz fuzz :days days))
   </app-template>)
 
-(defhandler (nil :uri "/insights") ((days :parameter-type 'integer :init-form *num-days*))
+(defhandler (nil :uri "/insights") ((days :parameter-type 'integer :init-form *num-days*)
+                                    (channel-filter :init-form ""))
   (assert (< days 366))
   (with-login ()
     (render-analytics (auth:current-company)
-                      :days days)))
+                      :days days
+                      :channel-filter channel-filter)))
