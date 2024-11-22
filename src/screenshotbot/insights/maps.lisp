@@ -21,9 +21,7 @@
                 #:pqueue-pop
                 #:pqueue-push
                 #:make-pqueue)
-  (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map))
-  (:export
-   #:screenshot-count-map))
+  (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/insights/maps)
 
 (defun %map-to-list (map)
@@ -126,5 +124,4 @@ won't be listed here."
            (incf size (gethash channel channel-size)))))
      (nreverse result))))
 
-(defun screenshot-count-map (runs)
-  (date-to-screenshots-count (date-channel-maxLength (date-channel-map (bknr.datastore:class-instances '%r:recorder-run)))))
+
