@@ -7,6 +7,8 @@
 (defpackage :screenshotbot/insights/maps
   (:use #:cl)
   (:import-from #:screenshotbot/insights/date
+                #:increment-date
+                #:list-dates
                 #:format-date)
   (:import-from #:screenshotbot/user-api
                 #:recorder-run-channel
@@ -57,5 +59,28 @@ won't be listed here."
   (loop for (date channel runs) in date-channel-map
         collect
         (list date channel (max-run-length runs))))
+
+(defun date-to-screenshots-count (date-channel-maxLength)
+  (let* ((date-channel-maxLength (sort (list*
+                                        (list "3034-01-01" :channel 0) ;; sentinal item
+                                        (copy-list date-channel-maxLength))
+                                       #'string<
+                                       :key #'first))
+         (result)
+
+         ;; TODO: expire channels after 30 days
+         (channel-size (make-hash-table))
+         (curr-date (first (first date-channel-maxLength)))
+         (size 0))
+    (loop for (date channel maxLength) in date-channel-maxLength do
+      (let ((last-size (or (gethash channel channel-size) 0)))
+        (loop while (string< curr-date date) do
+          (push (list curr-date size) result)
+          (setf curr-date (increment-date curr-date)))
+        
+        ;; At this point curr-date = date
+        (decf size last-size)
+        (incf size maxLength)))
+    (nreverse result)))
 
 
