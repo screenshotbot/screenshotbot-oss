@@ -221,12 +221,11 @@ monthly-active."
 (defun generate-active-screenshots (company id &key days
                                                  channel-filter)
   (let* ((*num-days* days)
-         (active-screenshots  (active-screenshot-keys company
-                                                      :channel-filter channel-filter))
-         (data (n-day-active-count active-screenshots
-                                   :trail-size 30
-                                   :date-accessor #'active-screenshot-key-date
-                                   :value-accessor #'active-screenshot-key-screenshot-key)))
+         (data-list  (active-screenshot-keys company
+                                             :channel-filter channel-filter))
+         (data (make-hash-table :test #'equal)))
+    (loop for (key value) in data-list
+          do (setf (gethash key data) value))
     (generate-chart-on-canvas id
                               :keys (last-30-days)
                               :title (format nil "Active screenshots over the last 30 days")
