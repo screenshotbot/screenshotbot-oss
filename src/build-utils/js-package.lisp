@@ -71,6 +71,13 @@
       (ps:ps-compile-file (car (asdf:input-files o p)))
       out))))
 
+(defun guess-java ()
+  (loop for path in (list
+                     "/opt/homebrew/opt/openjdk/bin/java"
+                     "/usr/bin/java")
+        if (probe-file path)
+          return path))
+
 (defmethod asdf:perform ((o compile-op) (j js-system))
   (restart-case
       (let ((input-files (remove-duplicates (js-input-files o j) :test 'equal :from-end t)))
@@ -84,7 +91,7 @@
              (append
               (list
                #-darwin "java"
-               #+darwin "/opt/homebrew/opt/openjdk/bin/java"
+               #+darwin (guess-java)
                "-jar"
                (namestring
                 (asdf:system-relative-pathname
