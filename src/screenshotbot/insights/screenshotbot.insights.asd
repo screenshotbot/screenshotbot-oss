@@ -6,7 +6,8 @@
 
 (defsystem :screenshotbot.insights
   :serial t
-  :depends-on (:screenshotbot)
+  :depends-on (:screenshotbot
+               :priority-queue)
   :components ((:file "variables")
                (:file "date")
                (:file "maps")

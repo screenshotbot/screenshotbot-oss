@@ -15,6 +15,12 @@
                 #:%created-at)
   (:import-from #:screenshotbot/model/recorder-run
                 #:run-screenshot-map)
+  (:import-from #:priority-queue
+                #:pqueue-empty-p
+                #:pqueue-front
+                #:pqueue-pop
+                #:pqueue-push
+                #:make-pqueue)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/insights/maps)
 
@@ -60,27 +66,62 @@ won't be listed here."
         collect
         (list date channel (max-run-length runs))))
 
-(defun date-to-screenshots-count (date-channel-maxLength)
-  (let* ((date-channel-maxLength (sort (list*
-                                        (list "3034-01-01" :channel 0) ;; sentinal item
-                                        (copy-list date-channel-maxLength))
-                                       #'string<
-                                       :key #'first))
-         (result)
+(defun %add-sentinal-date (list)
+  "Adds one fake date to the end of the list"
+  (let ((last-date (first (car (last list)))))
+    (let ((sentinel-item (list (increment-date last-date) :channel 0)))
+      (append
+       list
+       (list
+        sentinel-item)))))
 
-         ;; TODO: expire channels after 30 days
-         (channel-size (make-hash-table))
-         (curr-date (first (first date-channel-maxLength)))
-         (size 0))
-    (loop for (date channel maxLength) in date-channel-maxLength do
-      (let ((last-size (or (gethash channel channel-size) 0)))
-        (loop while (string< curr-date date) do
-          (push (list curr-date size) result)
-          (setf curr-date (increment-date curr-date)))
+(defun date-to-screenshots-count (date-channel-maxLength &key (channel-expiration-window 30))
+  (when date-channel-maxLength
+    (let* ((date-channel-maxLength (%add-sentinal-date
+                                    (sort
+                                     (copy-list date-channel-maxLength)
+                                     #'string<
+                                     :key #'first)))
+          (result)
+
+          (channel-size (make-hash-table))
+          ;; For every channel, track at what point we'll automatically
+          ;; delete it from the running count.
+          (channel-expiry (make-hash-table))
+          ;; The queue might have outdated entries, so beware!
+          (expiry-queue (make-pqueue #'string<))
+          (curr-date (first (first date-channel-maxLength)))
+          (size 0))
+     (labels ((bump-expiry (channel date)
+                ;;(log:debug "Bumping expiry for ~a to ~a" channel date)
+                (setf (gethash channel channel-expiry) date)
+                (pqueue-push channel date expiry-queue))
+              (expire-entries (date)
+                (unless (pqueue-empty-p expiry-queue)
+                  (multiple-value-bind (channel expiry-date)
+                      (pqueue-front expiry-queue)
+                    (when (string< expiry-date date)
+                      (pqueue-pop expiry-queue)
+                      (when (equal expiry-date (gethash channel channel-expiry))
+                        (let ((curr-size (gethash channel channel-size)))
+                          (unless curr-size
+                            (error "Hmm, expected to see a the channel-size since it's not expired yet"))
+                          (decf size curr-size))
+                        (remhash channel channel-expiry)
+                        (remhash channel channel-size))
+                      (expire-entries date))))))
+       (loop for (date channel maxLength) in date-channel-maxLength do
+         (bump-expiry channel (increment-date date channel-expiration-window))
+         (expire-entries date)
+         (let ((last-size (or (gethash channel channel-size) 0)))
+           (loop while (string< curr-date date) do
+             (push (list curr-date size) result)
+             (setf curr-date (increment-date curr-date)))
         
-        ;; At this point curr-date = date
-        (decf size last-size)
-        (incf size maxLength)))
-    (nreverse result)))
+           ;; At this point curr-date = date
+           (decf size last-size)
+           (setf (gethash channel channel-size) maxLength)
+           (incf size (gethash channel channel-size)))))
+     (nreverse result))))
 
 
