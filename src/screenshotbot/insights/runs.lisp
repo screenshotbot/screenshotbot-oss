@@ -28,6 +28,8 @@
                 #:*num-days*)
   (:import-from #:screenshotbot/insights/date
                 #:format-date)
+  (:import-from #:screenshotbot/insights/maps
+                #:screenshot-count-map)
   (:local-nicknames (:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/insights/runs)
 
@@ -92,21 +94,8 @@
           (list date (fast-remove-duplicates screenshot-maps :test #'eql)))))
 
 (defun %active-screenshot-keys (company &key channel-filter)
-  (let (res)
-    (loop for (date screenshot-maps) in (runs-to-date-map (runs-for-last-60-days company :channel-filter channel-filter)) do
-      (loop for screenshot-map in screenshot-maps
-            do
-               (fset:do-map (k v (screenshot-map:to-map screenshot-map))
-                 (declare (ignore v))
-                 (push
-                  (make-active-screenshot-key
-                   :date date
-                   :screenshot-key (list (screenshot-map-channel screenshot-map) (screenshot-name k)))
-                  res))))
-    ;; The N-DAY-ACTIVE-COUNT duplicates, but it costs more. Since
-    ;; this function is cached, it makes sense to remove duplicates
-    ;; here.
-    (fast-remove-duplicates res :test #'equal)))
+  (screenshot-count-map
+   (runs-for-last-60-days company :channel-filter channel-filter)))
 
 (defparameter *ans-cache* (make-hash-table :test #'equal))
 
