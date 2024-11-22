@@ -15,8 +15,6 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:run-screenshot-map
                 #:runs-for-company)
-  (:import-from #:core/active-users/active-users
-                #:format-date)
   (:import-from #:screenshotbot/model/company
                 #:sub-companies-of)
   (:import-from #:screenshotbot/model/screenshot-map
@@ -28,6 +26,8 @@
                 #:def-cron)
   (:import-from #:screenshotbot/insights/variables
                 #:*num-days*)
+  (:import-from #:screenshotbot/insights/date
+                #:format-date)
   (:local-nicknames (:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/insights/runs)
 
@@ -74,13 +74,7 @@
           do (setf (gethash x hash-table) t))
     (alexandria:hash-table-keys hash-table)))
 
-(defvar *format-date-cache* (make-hash-table))
 
-(defun fast-format-date (ts)
-  "format-date can be surprisingly slow, and is a bottleneck."
-  (util:or-setf
-   (gethash ts *format-date-cache*)
-   (format-date ts)))
 
 (defvar *hash-lock* (make-instance 'hash-lock))
 
@@ -88,7 +82,7 @@
   "Return a list, with keys being date, and values being list of all distinct screenshot-maps"
   (let ((map (make-hash-table :test #'equal)))
     (loop for run in runs
-          for date = (fast-format-date (%created-at run))
+          for date = (format-date (%created-at run))
           do
              (push (run-screenshot-map run)
                    (gethash date map)))

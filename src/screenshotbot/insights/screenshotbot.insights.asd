@@ -8,7 +8,14 @@
   :serial t
   :depends-on (:screenshotbot)
   :components ((:file "variables")
+               (:file "date")
                (:file "runs")
                (:file "pull-requests")
                (:file "dashboard")
                (:file "fuzz")))
+
+(defsystem :screenshotbot.insights/tests
+  :serial t
+  :depends-on (:screenshotbot.insights
+               :util/fiveam)
+  :components ((:file "test-date")))
