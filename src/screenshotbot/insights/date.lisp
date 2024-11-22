@@ -6,6 +6,8 @@
 
 (defpackage :screenshotbot/insights/date
   (:use #:cl)
+  (:import-from #:cl-utilities
+                #:collecting)
   (:export
    #:format-date))
 (in-package :screenshotbot/insights/date)
@@ -22,3 +24,23 @@
   (util:or-setf
    (gethash ts *format-date-cache*)
    (%format-date ts)))
+
+(defun %date-to-universal (date)
+  (destructuring-bind (yyyy mm dd)
+      (mapcar #'parse-integer (str:split "-" date))
+    (encode-universal-time 0 0 0 dd mm yyyy 0)))
+
+(defun increment-date (date)
+  (format-date
+   (+
+    (%date-to-universal date)
+    86400
+    ;; Factor in some leap seconds?
+    10)))
+
+(defun list-dates (&key from to)
+  "List all dates from FROM and to TO, both inclusive."
+  (collecting
+   (do ((date from (increment-date date)))
+       ((string> date to))
+     (cl-utilities:collect date))))
