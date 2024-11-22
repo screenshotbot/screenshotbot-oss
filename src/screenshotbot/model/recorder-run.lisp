@@ -9,6 +9,7 @@
         #:alexandria
         #:screenshotbot/model/core
         #:screenshotbot/model/view)
+  (:nicknames #:%r)
   (:import-from #:bknr.datastore
                 #:class-instances
                 #:persistent-class

@@ -9,6 +9,7 @@
   :depends-on (:screenshotbot)
   :components ((:file "variables")
                (:file "date")
+               (:file "maps")
                (:file "runs")
                (:file "pull-requests")
                (:file "dashboard")
