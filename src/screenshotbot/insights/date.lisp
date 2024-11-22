@@ -30,11 +30,11 @@
       (mapcar #'parse-integer (str:split "-" date))
     (encode-universal-time 0 0 0 dd mm yyyy 0)))
 
-(defun increment-date (date)
+(defun increment-date (date &optional (count 1))
   (format-date
    (+
     (%date-to-universal date)
-    86400
+    (* count 86400)
     ;; Factor in some leap seconds?
     10)))
 

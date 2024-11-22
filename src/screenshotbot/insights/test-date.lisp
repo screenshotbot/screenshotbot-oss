@@ -29,6 +29,9 @@
   (is (equal "1900-01-02" (increment-date "1900-01-01")))
   (is (equal "2024-02-01" (increment-date "2024-01-31"))))
 
+(test increment-date-by-multiple
+  (is (equal "2024-03-01" (increment-date "2024-01-31" 30))))
+
 (test list-dates
   (is (equal
        (list "2024-01-31"
