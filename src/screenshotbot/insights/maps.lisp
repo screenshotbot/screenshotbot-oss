@@ -11,9 +11,11 @@
                 #:list-dates
                 #:format-date)
   (:import-from #:screenshotbot/user-api
+                #:channel-name
                 #:recorder-run-channel
                 #:%created-at)
   (:import-from #:screenshotbot/model/recorder-run
+                #:runs-for-company
                 #:run-screenshot-map)
   (:import-from #:priority-queue
                 #:pqueue-empty-p
@@ -128,3 +130,20 @@ won't be listed here."
 
 (defun screenshot-count-map (runs)
   (date-to-screenshots-count (date-channel-maxLength (date-channel-map runs))))
+
+(defun screenshot-count-map-by-filter (company prefix &key file)
+  (let* ((runs (fset:convert 'list (runs-for-company company)))
+         (runs (loop for run in runs
+                     if (str:starts-with-p prefix (channel-name (recorder-run-channel run)))
+                       collect run)))
+    (let ((result (screenshot-count-map runs)))
+      (when file
+        (with-open-file (s file :direction :output)
+          (loop for (date count) in result
+                do (format s "~a,~a~%" date count))))
+      result)))
+
+
+
+
+
