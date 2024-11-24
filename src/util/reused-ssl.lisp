@@ -172,7 +172,6 @@
          (anaphora:acond
            ((find-connection (assoc-value *reuse-contexts* self)
                              (quri:uri-host (quri:uri url)))
-            (warn "reusing stream!")
             (let* ((connection anaphora:it))
               (log:debug "Reusing an existing stream ~a, ~a" (connection-stream connection)
                          args)
