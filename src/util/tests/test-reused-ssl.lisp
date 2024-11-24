@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/reused-ssl
+                #:tracked-stream-key
                 #:trim-old-connections
                 #:connection
                 #:connections
@@ -109,3 +110,8 @@ carbar" s)
               (close stream))
             (is-true (find-connection reuse-context "example.com"))
             (is-false (find-connection reuse-context "example.com"))))))))
+
+(test tracked-stream-key
+  (is (equal "https://example.com"
+             (tracked-stream-key
+              (puri:uri "https://example.com/dfdf/sdfd")))))

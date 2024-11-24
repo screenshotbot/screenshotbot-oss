@@ -185,7 +185,8 @@
                            should-close)
          (anaphora:acond
            ((find-connection (assoc-value *reuse-contexts* self)
-                             (quri:uri-host (quri:uri url)))
+                             (tracked-stream-key
+                              (puri:uri url)))
             (let* ((connection anaphora:it))
               (log:debug "Reusing an existing stream ~a, ~a" (connection-stream connection)
                          args)
@@ -214,10 +215,15 @@
                           :reuse-context (cdar *reuse-contexts*)
                           :bytes-left (parse-integer (assoc-value headers :content-length))
                           :reusable-stream underlying-stream
-                          :domain (puri:uri-host uri)
+                          :domain (tracked-stream-key uri)
                           :delegate stream)
            code
            headers)))))))
+
+(defun tracked-stream-key (uri)
+  (format nil "~a://~a"
+          (string-downcase (puri:uri-scheme uri))
+          (puri:uri-host uri)))
 
 #+nil
 (hcl:profile
