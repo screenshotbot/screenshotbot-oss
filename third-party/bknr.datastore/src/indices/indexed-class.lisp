@@ -323,9 +323,9 @@ also index subclasses of the class to which the slot belongs, default is T")
   #+lispworks
   (assert (symbolp slot-name))
   (let (#-lispworks (slot-name (slot-definition-name slot)))
-   (when (and (not (eql slot-name 'destroyed-p))
-	          (object-destroyed-p object)
-	          (not *indexed-class-override*))
+    (when (and (not *indexed-class-override*)
+               (not (eql slot-name 'destroyed-p))
+               (object-destroyed-p object))
      (error "Can not get slot ~A of destroyed object of class ~a."
 	        slot-name (class-name (class-of object))))))
 
