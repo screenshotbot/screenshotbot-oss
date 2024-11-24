@@ -89,3 +89,23 @@ carbar" s)
                   (http-request
                    "https://screenshotbot.io/raft-state"
                    :engine engine)))))))
+
+(test tracked-stream-is-only-closed-once
+  (with-fixture state ()
+    (with-reused-ssl (engine)
+      (uiop:with-temporary-file (:pathname p :stream s :direction :output)
+        (write-string "foobar
+carbar" s)
+        (close s)
+        (let ((reuse-context (assoc-value *reuse-contexts* engine)))
+          (with-open-file (input p)
+            (let ((stream (make-instance 'tracked-stream
+                                         :reuse-context reuse-context
+                                         :domain "example.com"
+                                         :delegate input
+                                         :reusable-stream input)))
+              (is (equal "foobar" (read-line input)))
+              (close stream)
+              (close stream))
+            (is-true (find-connection reuse-context "example.com"))
+            (is-false (find-connection reuse-context "example.com"))))))))

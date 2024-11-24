@@ -39,7 +39,11 @@
 
 (defmethod find-connection ((self reuse-context) domain)
   (trim-old-connections self)
-  (pop (gethash domain (connections self))))
+  (symbol-macrolet ((stack (gethash domain (connections self))))
+    (log:debug "hash-table is ~S" (connections self))
+    (prog1
+        (pop stack)
+      (log:debug "Length of connections is ~a" (length stack)))))
 
 (defmethod trim-old-connections ((self reuse-context))
   (let ((now (get-universal-time)))
@@ -84,6 +88,8 @@
              :reader delegate)
    (bytes-left :initarg :bytes-left
                :accessor bytes-left)
+   (closedp :initform nil
+            :accessor closedp)
    (reusable-stream :initarg :reusable-stream
                     :initform (error "must provide :reusable-stream")
                     :reader reuseable-stream
@@ -114,6 +120,8 @@
                                         #-lispworks #-lispworks
                                                     &key &allow-other-keys)
   (cond
+    ((closedp self)
+     (error "The stream is already closed"))
     ((= 0 (bytes-left self))
      start)
     (t
@@ -139,13 +147,19 @@
   (stream:stream-read-char-no-hang self))
 
 (defmethod close ((self tracked-stream) &key abort)
+  (declare (ignore abort))
   ;; Rather than really closing, push connection
-  (log:debug "Closing a stream")
-  (push
-   (make-instance 'connection
-                  :domain (domain self)
-                  :stream (delegate self))
-   (gethash (domain self) (connections (reuse-context self)))))
+  (cond
+    ((not (closedp self))
+     (log:debug "Closing a tracked-stream")
+     (setf (closedp self) t)
+     (push
+      (make-instance 'connection
+                     :domain (domain self)
+                     :stream (delegate self))
+      (gethash (domain self) (connections (reuse-context self)))))
+    (t
+     (log:debug "The tracked-stream is already closed"))))
 
 (defmethod stream:stream-finish-output ((self tracked-stream))
   (log:debug "finishing output")
