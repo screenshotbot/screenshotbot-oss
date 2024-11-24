@@ -15,7 +15,9 @@
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
   (:import-from #:fiveam-matchers/has-length
-                #:has-length))
+                #:has-length)
+  (:import-from #:util/request
+                #:http-request))
 (in-package :util/tests/test-reused-ssl)
 
 (util/fiveam:def-suite)
@@ -62,3 +64,28 @@ carbar" s)
         (assert-that
          (gethash "example.com" (connections reuse-context))
          (has-length 0))))))
+
+(defvar *enable-network-tests-p* nil)
+;; (setf *enable-network-tests-p* t)
+
+(def-fixture network-state ()
+  (when *enable-network-tests-p*
+    (let ((engine (make-instance 'reused-ssl-engine)))
+     (&body))))
+
+(test making-requests-without-reuse-uss
+  (with-fixture network-state ()
+    (dotimes (i 10)
+     (is (equal "leader"
+                (http-request
+                 "https://screenshotbot.io/raft-state"
+                 :engine engine))))))
+
+(test making-requests-with-reuse-ssl
+  (with-fixture network-state ()
+    (with-reused-ssl (engine)
+      (dotimes (i 10)
+       (is (equal "leader"
+                  (http-request
+                   "https://screenshotbot.io/raft-state"
+                   :engine engine)))))))
