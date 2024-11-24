@@ -403,12 +403,14 @@
         name)))
 
 (deftag channel-list-row (&key channel)
-  (taskie-row :object channel
-              (ui/a :href (hex:make-url
-                           'single-channel-page
-                           :id (store-object-id channel))
-                    (safe-channel-name channel))
-              (taskie-timestamp :timestamp (created-at channel))))
+  <taskie-row object=channel >
+    <a href=(hex:make-url
+             'single-channel-page
+             :id (store-object-id channel))>
+      ,(safe-channel-name channel)
+    </a>
+    ,(taskie-timestamp :timestamp (created-at channel))
+  </taskie-row>)
 
 (deftag explain-channels ()
   <div>
