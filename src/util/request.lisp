@@ -108,6 +108,13 @@ use stream pools.")
 (defmethod http-request-impl ((engine engine) url &key &allow-other-keys)
   (call-next-method))
 
+(defmethod low-level-request ((engine core-engine)
+                              url
+                              &rest args
+                                &key &allow-other-keys)
+  (apply #'drakma:http-request url
+         args))
+
 (defmethod http-request-impl ((engine core-engine)
                               url &rest args &key headers-as-hash-table
                                                want-string
@@ -139,11 +146,12 @@ use stream pools.")
                   (list*
                    (cons "application" "json")
                    drakma:*text-content-types*)))
-           (apply #'drakma:http-request url
-                  :want-stream want-stream
-                  :additional-headers additional-headers
-                  :verify verify
-                  args)))
+            (apply #'low-level-request engine
+                   url
+                   :want-stream want-stream
+                   :additional-headers additional-headers
+                   :verify verify
+                   args)))
       (flet ((maybe-ensure-success (&optional response)
                (declare (ignore response))
                (when (and ensure-success

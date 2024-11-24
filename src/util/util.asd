@@ -246,11 +246,15 @@
   :depends-on (:drakma
                :str
                :log4cl
+               :quri
+               :anaphora
+               :trivial-gray-streams
                :easy-macros)
   :serial t
   :components ((:file "http-cache")
                (:file "request")
-               (:file "engines")))
+               (:file "engines")
+               (:file "reused-ssl")))
 
 (defsystem :util/hunchentoot-engine
   :depends-on (:util
@@ -378,6 +382,7 @@
                              (:file "test-mail")
                              (:file "test-hunchentoot-engine")
                              (:file "test-fset")
+                             (:file "test-reused-ssl")
                              (:file "test-asdf")
                              (:file "test-fake-clingon")
                              (:file "test-throttler")
