@@ -24,6 +24,7 @@
 
 (defclass connection ()
   ((last-use-time :initarg :last-use-time
+                  :accessor last-use-time
                   :initform (get-universal-time))
    (stream :initarg :stream
            :reader connection-stream)
@@ -37,7 +38,19 @@
                 :initform (make-hash-table :test #'equal))))
 
 (defmethod find-connection ((self reuse-context) domain)
+  (trim-old-connections self)
   (pop (gethash domain (connections self))))
+
+(defmethod trim-old-connections ((self reuse-context))
+  (let ((now (get-universal-time)))
+   (loop for key being the hash-keys of (connections self)
+           using (hash-value connections)
+         do
+            (setf
+             (gethash key (connections self))
+             (delete-if (lambda (connection)
+                          (< (last-use-time connection) (- now *timeout*)))
+                        connections)))))
 
 (defmethod find-connection ((self null) domain)
   nil)
@@ -81,14 +94,14 @@
                   :reader reuse-context))
   (:documentation "A stream that once closed, we'll reuse the underlying stream"))
 
-(def-easy-macro with-reused-ssl (engine &fn fn)
+(def-easy-macro with-reused-ssl (engine &key &binding reuse-context &fn fn)
   (let ((reuse-context (make-instance 'reuse-context)))
     (unwind-protect
          (let ((*reuse-contexts*
                  (acons
                   engine reuse-context
                   *reuse-contexts*)))
-          (fn))
+          (fn reuse-context))
       (%cleanup reuse-context))))
 
 (defmethod stream::stream-element-type ((self tracked-stream))

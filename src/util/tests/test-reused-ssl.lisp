@@ -2,13 +2,20 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/reused-ssl
+                #:trim-old-connections
+                #:connection
+                #:connections
                 #:find-connection
                 #:*reuse-contexts*
                 #:tracked-stream
                 #:with-reused-ssl
                 #:reused-ssl-engine)
   (:import-from #:alexandria
-                #:assoc-value))
+                #:assoc-value)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length))
 (in-package :util/tests/test-reused-ssl)
 
 (util/fiveam:def-suite)
@@ -40,3 +47,18 @@ carbar" s)
             (close stream))
           (is-false (find-connection reuse-context "foobar.com"))
           (is-true (find-connection reuse-context "example.com"))))))))
+
+(test cleanup-old-connections
+  (with-fixture state ()
+    (with-reused-ssl (engine :reuse-context reuse-context)
+      (uiop:with-temporary-file (:stream s)
+        (push
+         (make-instance 'connection
+                        :last-use-time (- (get-universal-time) 30)
+                        :stream s
+                        :domain "example.com")
+         (gethash "example.com" (connections reuse-context)))
+        (trim-old-connections reuse-context)
+        (assert-that
+         (gethash "example.com" (connections reuse-context))
+         (has-length 0))))))
