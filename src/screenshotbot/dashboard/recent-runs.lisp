@@ -114,9 +114,9 @@
 (deftag recorder-run-row (&key run)
   (taskie-row :object run
               <span>
-                ,(ui/a :href
-                       (format nil "/runs/~a" (oid run))
-                       (channel-name (recorder-run-channel run)))
+                <a href=(format nil "/runs/~a" (oid run))>
+                  ,(channel-name (recorder-run-channel run))
+                </a>
                 <render-run-tags tags= (recorder-run-tags run) />
               </span>
               (render-run-headline run)
