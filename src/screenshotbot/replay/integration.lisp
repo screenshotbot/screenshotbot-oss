@@ -91,6 +91,10 @@
                 #:installation)
   (:import-from #:screenshotbot/sdk/api-context
                 #:api-context)
+  (:import-from #:util/reused-ssl
+                #:with-reused-ssl)
+  (:import-from #:util/request
+                #:engine)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
                     (#:integration #:screenshotbot/replay/integration)
@@ -240,21 +244,23 @@ accessing the urls or sitemap slot."
              (flags:*main-branch* (?. replay:main-branch request))
              (flags:*repo-url* (?. replay:repo-url request)))
         (with-sdk-flags (:flags (?. snapshot-request-sdk-flags request))
-          (make-directory-run
-           (make-instance 'api-context
-                          :key (api-key-key api-key)
-                          :secret (api-key-secret-key api-key)
-                          :hostname (host run))
-           results
-           :repo (make-instance 'null-repo)
-           :branch "master"
-           :commit (when request (replay:commit request))
-           :merge-base (when request (replay:merge-base request))
-           :branch-hash (when request (replay:branch-hash request))
-           :github-repo (when request (replay:repo-url request))
-           :periodic-job-p (or (not request) (str:emptyp (replay:commit request)))
-           :is-trunk t
-           :channel (channel run))))
+          (let ((api-context (make-instance 'api-context
+                                            :key (api-key-key api-key)
+                                            :secret (api-key-secret-key api-key)
+                                            :hostname (host run))))
+            (with-reused-ssl ((engine api-context))
+             (make-directory-run
+              api-context
+              results
+              :repo (make-instance 'null-repo)
+              :branch "master"
+              :commit (when request (replay:commit request))
+              :merge-base (when request (replay:merge-base request))
+              :branch-hash (when request (replay:branch-hash request))
+              :github-repo (when request (replay:repo-url request))
+              :periodic-job-p (or (not request) (str:emptyp (replay:commit request)))
+              :is-trunk t
+              :channel (channel run))))))
     (retry-process-results ()
       (process-results run results))))
 
