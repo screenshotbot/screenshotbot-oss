@@ -80,8 +80,9 @@ carbar" s)
      (is (equal "leader"
                 (http-request
                  "https://screenshotbot.io/raft-state"
+                 :want-string t
                  :engine engine))))))
-
+ 
 (test making-requests-with-reuse-ssl
   (with-fixture network-state ()
     (with-reused-ssl (engine)
@@ -89,6 +90,7 @@ carbar" s)
        (is (equal "leader"
                   (http-request
                    "https://screenshotbot.io/raft-state"
+                   :want-string t
                    :engine engine)))))))
 
 (test tracked-stream-is-only-closed-once

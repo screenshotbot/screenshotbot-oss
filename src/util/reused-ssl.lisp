@@ -173,52 +173,59 @@
                               url &rest args
                               &key want-stream
                               &allow-other-keys)
-  (cond
-    ((not want-stream)
-     ;; We don't have a way of wrapping this response for now
-     (warn "Don't know how to save this stream ~a" args)
-     (call-next-method))
-    (t
-     (multiple-value-bind (stream code headers
-                           uri
-                           underlying-stream
-                           should-close)
-         (anaphora:acond
-           ((find-connection (assoc-value *reuse-contexts* self)
-                             (tracked-stream-key
-                              (puri:uri url)))
-            (let* ((connection anaphora:it))
-              (log:debug "Reusing an existing stream ~a, ~a" (connection-stream connection)
-                         args)
-              (apply #'call-next-method
-                     self
-                     url
-                     :keep-alive t
-                     :close nil
-                     :stream (connection-stream connection)
-                     args)))
-           (t
-            (log:debug "Creating a new stream")
-            (apply #'call-next-method
-                   self
-                   url
-                   :keep-alive t
-                   :close nil
-                   args)))
-       (cond
-         (should-close
-          (warn "Server is making us close the stream")
-          (values stream code headers))
-         (t
-          (values
-           (make-instance 'tracked-stream
-                          :reuse-context (cdar *reuse-contexts*)
-                          :bytes-left (parse-integer (assoc-value headers :content-length))
-                          :reusable-stream underlying-stream
-                          :domain (tracked-stream-key uri)
-                          :delegate stream)
-           code
-           headers)))))))
+  (let ((reuse-context (assoc-value *reuse-contexts* self)))
+   (cond
+     ((not reuse-context)
+      (warn "no reuse-context available")
+      (call-next-method))
+     ((not want-stream)
+      ;; We don't have a way of wrapping this response for now
+      (warn "Don't know how to save this stream ~a" args)
+      (call-next-method))
+     (t
+      (multiple-value-bind (stream code headers
+                            uri
+                            underlying-stream
+                            should-close)
+          (anaphora:acond
+            ((find-connection (assoc-value *reuse-contexts* self)
+                              (tracked-stream-key
+                               (puri:uri url)))
+             (let* ((connection anaphora:it))
+               (log:debug "Reusing an existing stream ~a, ~a" (connection-stream connection)
+                          args)
+               (apply #'call-next-method
+                      self
+                      url
+                      :keep-alive t
+                      :close nil
+                      :stream (connection-stream connection)
+                      args)))
+            (t
+             (log:debug "Creating a new stream")
+             (apply #'call-next-method
+                    self
+                    url
+                    :keep-alive t
+                    :close nil
+                    args)))
+        (cond
+          (should-close
+           (warn "Server is making us close the stream")
+           (values stream code headers))
+          (t
+           (unless reuse-context
+             (error "Could not find reuse-context in ~s"
+                    *reuse-contexts*))
+           (values
+            (make-instance 'tracked-stream
+                           :reuse-context reuse-context
+                           :bytes-left (parse-integer (assoc-value headers :content-length))
+                           :reusable-stream underlying-stream
+                           :domain (tracked-stream-key uri)
+                           :delegate stream)
+            code
+            headers))))))))
 
 (defun tracked-stream-key (uri)
   (format nil "~a://~a"
