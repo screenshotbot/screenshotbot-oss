@@ -27,6 +27,10 @@
                 #:decode-json)
   (:import-from #:screenshotbot/sdk/fetch-run
                 #:save-run)
+  (:import-from #:util/request
+                #:engine)
+  (:import-from #:util/reused-ssl
+                #:with-reused-ssl)
   (:export
    #:with-clingon-api-context))
 (in-package :screenshotbot/sdk/clingon-api-context)
@@ -63,7 +67,8 @@
   (let ((api-context (apply #'make-api-context
                             (loop for key in '(:api-key :api-secret :hostname :desktop)
                                   append `(,key ,(getopt cmd key))))))
-    (funcall fn api-context)))
+    (with-reused-ssl ((engine api-context))
+     (funcall fn api-context))))
 
 
 

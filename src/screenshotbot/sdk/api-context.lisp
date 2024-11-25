@@ -11,7 +11,10 @@
   (:import-from #:util/json-mop
                 #:ext-json-serializable-class)
   (:import-from #:util/request
+                #:engine
                 #:*engine*)
+  (:import-from #:util/reused-ssl
+                #:reused-ssl-mixin)
   (:export
    #:api-context
    #:key
@@ -39,6 +42,11 @@
       (t
        (setf (remote-version self) (fetch-version self))))))
 
+(defclass api-engine (reused-ssl-mixin engine)
+  ())
+
+(defvar *api-engine* (make-instance 'api-engine))
+
 (defclass api-context (base-api-context)
   ((key :initarg :key
         :reader key)
@@ -49,7 +57,7 @@
              :documentation "A URL like https://screenshotbot.io")
    (engine :initarg :engine
            :reader engine
-           :initform *engine*)))
+           :initform *api-engine*)))
 
 (defclass desktop-api-context (base-api-context)
   ((hostname :reader hostname

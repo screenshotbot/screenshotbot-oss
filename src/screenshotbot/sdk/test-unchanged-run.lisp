@@ -21,6 +21,7 @@
   (:import-from #:screenshotbot/sdk/run-context
                 #:run-context)
   (:import-from #:screenshotbot/sdk/api-context
+                #:api-context
                 #:remote-version)
   (:import-from #:screenshotbot/sdk/cli-common
                 #:root-options)
@@ -32,16 +33,22 @@
 
 (util/fiveam:def-suite)
 
+(defclass fake-api-context (api-context)
+  ())
+
+(defvar *fake-api-context*
+  (make-instance 'fake-api-context))
+
 (def-fixture state ()
   (with-mocks ()
     (let ((called nil))
       (cl-mock:if-called 'make-api-context
                          (lambda (&rest args)
-                           :fake-api-context))
+                           *fake-api-context*))
       (cl-mock:if-called 'request
                          (lambda (api-ctx api &key method content)
                            (setf called content)))
-      (answer (remote-version :fake-api-context) 11)
+      (answer (remote-version *fake-api-context*) 11)
       (&body))))
 
 (test mark-unchanged-run-happy-path ()

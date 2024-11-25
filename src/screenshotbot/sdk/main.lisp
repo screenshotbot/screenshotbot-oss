@@ -58,6 +58,10 @@
                 #:root/command)
   (:import-from #:screenshotbot/sdk/sentry
                 #:with-sentry)
+  (:import-from #:util/request
+                #:engine)
+  (:import-from #:util/reused-ssl
+                #:with-reused-ssl)
   (:export
    #:main))
 
@@ -86,9 +90,10 @@
 (def-easy-macro with-defaults (&binding api-context &fn fn)
   (sdk:parse-org-defaults)
   (let ((api-context (make-api-context)))
-    (let ((version (remote-version api-context)))
-      (log:debug "Remote version is ~a" version))
-    (funcall fn api-context)))
+    (with-reused-ssl ((engine api-context))
+      (let ((version (remote-version api-context)))
+        (log:debug "Remote version is ~a" version))
+      (funcall fn api-context))))
 
 (defun emptify (s)
   "If the string is empty, return nil"

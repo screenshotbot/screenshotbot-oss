@@ -20,7 +20,7 @@
                     (#:stream #:trivial-gray-streams)))
 (in-package :util/reused-ssl)
 
-(defvar *timeout* 20)
+(defvar *timeout* 10)
 
 (defclass connection ()
   ((last-use-time :initarg :last-use-time
