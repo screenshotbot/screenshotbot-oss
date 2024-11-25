@@ -25,6 +25,7 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/invite
+                #:%user-count
                 #:invite-page
                 #:user-can-invite-p
                 #:invite-post
@@ -41,6 +42,7 @@
   (:import-from #:fiveam-matchers/strings
                 #:contains-string)
   (:import-from #:auth/model/invite
+                #:invite-used-p
                 #:invite-code)
   (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/test-invite)
@@ -177,3 +179,18 @@
             ;; Essentiall test that no checks failed here
             (catch 'hunchentoot::handler-done
               (invite-post :email "foo@example.com"))))))))
+
+(test user-count-doesnt-count-used-invites
+  (with-fixture state ()
+    (is (eql 0 (%user-count company)))
+    (let ((invites
+            (loop for i from 0 to 3
+                  collect
+                  (make-instance 'invite
+                                 :company company
+                                 :email "foobar"))))
+      (is (eql 4 (%user-count company)))
+      (setf (invite-used-p (elt invites 1)) t)
+      (is (eql 3 (%user-count company)))
+      (setf (invite-used-p (elt invites 2)) t)
+      (is (eql 2 (%user-count company))))))

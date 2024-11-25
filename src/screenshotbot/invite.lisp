@@ -113,7 +113,9 @@
    (length
     (roles:users-for-company company))
    (length
-    (all-invites :company company))))
+    (loop for invite in (all-invites :company company)
+          unless (invite-used-p invite)
+            collect invite))))
 
 (defhandler (invite-post :uri "/invite" :method :post) (email)
   (when (personalp (current-company))
