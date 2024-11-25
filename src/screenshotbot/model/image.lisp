@@ -419,12 +419,18 @@
                        (t (error "must provide hash or pathname")))
                args))))
 
+(define-condition image-reuploaded-warning (warning)
+  ()
+  (:report "An image was reuploaded"))
+
 (defmethod update-image ((image image) &key pathname)
   (assert pathname)
   (with-transaction ()
     (setf (%image-state image)
           +image-state-filesystem+))
   (multiple-value-bind (dest) (image-filesystem-pathname image)
+    (when (path:-e dest)
+      (warn 'image-reuploaded-warning))
     (uiop:copy-file pathname dest)
     dest))
 

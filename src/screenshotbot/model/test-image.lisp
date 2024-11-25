@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/model/image)
   (:import-from #:screenshotbot/model/image
+                #:image-reuploaded-warning
                 #:no-image-uploaded-yet
                 #:base-image-comparer
                 #:all-soft-expired-images
@@ -204,6 +205,22 @@ uses the base-image-comparer."
        (with-local-image (file image)
          (is (equalp hash
                      (md5-file file))))))))
+
+(test overwriting-existing-image-warns
+  (with-fixture state ()
+    (let ((hash #(145 184 144 188 213 44 215 112 157 4 202 64 212 94 93 133)))
+      (let ((image (make-image :hash hash)))
+        (handler-case
+            (update-image image :pathname file)
+          (image-reuploaded-warning ()
+            (fail "Did not expect to see image-reuploaded-warning")))
+
+        (signals image-reuploaded-warning
+          (update-image image :pathname file))
+        
+        (with-local-image (file image)
+          (is (equalp hash
+                      (md5-file file))))))))
 
 (test with-local-image-when-theres-no-local-image
   (with-fixture state ()
