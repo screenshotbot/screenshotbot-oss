@@ -23,11 +23,18 @@
                 #:with-batches)
   (:import-from #:screenshotbot/sdk/active-run
                 #:find-active-run)
+  (:import-from #:util/reused-ssl
+                #:reused-ssl-mixin
+                #:with-reused-ssl)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/fetch-run)
 
+(defclass download-engine (reused-ssl-mixin
+                           engine)
+  ())
+
 (defvar *download-engine*
-  (make-instance 'engine))
+  (make-instance 'download-engine))
 
 
 (defun get-run (api-context oid)
@@ -133,8 +140,9 @@
                              (lambda ()
                                (handler-bind ((error (lambda (%e)
                                                        (setf e %e))))
-                                 (download-batch-of-screenshots batch :output output
-                                                                      :engine engine))
+                                 (with-reused-ssl (engine)
+                                  (download-batch-of-screenshots batch :output output
+                                                                       :engine engine)))
                                (bt:with-lock-held (*lock*)
                                  (incf finish-count))))))))
      (mapc #'bt:join-thread threads)
