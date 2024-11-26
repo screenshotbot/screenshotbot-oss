@@ -65,7 +65,9 @@
   :default-value nil
   :selector "directory"
   :type (or null string)
-  :help "Directory of images")
+  :help "Directory with the images.
+
+By default we don't scan recursively, see the `--recursive` flag for that.")
 
 (define-flag *recursive*
   :default-value nil
