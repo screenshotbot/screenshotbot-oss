@@ -286,7 +286,7 @@ error."
 
 (define-condition empty-run-error (error)
   ()
-  (:report "No screenshots were detected in this this run"))
+  (:report "No screenshots were detected in this this run. Perhaps you wanted to use the --recursive flag?"))
 
 (auto-restart:with-auto-restart ()
  (defun make-run (api-context
