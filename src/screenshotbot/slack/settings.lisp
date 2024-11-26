@@ -77,15 +77,11 @@
      (cond
        ((access-token slack-config)
         <div class= "form-group mb-3">
-          <input type= "hidden" name= "slack-token"
-                 value= (access-token (access-token slack-config)) class= "form-control" />
           <a href= disconnect class= "btn btn-danger" >Disconnect from Slack</a>
         </div>)
        (t
         <div class= "form-group mb-3">
           <a href= (slack-install-url slack-plugin) ><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
-          <input type= "hidden" name= "slack-token"
-                 value= "unused" class= "form-control" />
         </div>)))))
 
 (defun slack-settings-test (&key slack-token channel)
@@ -140,15 +136,15 @@
            (hex:safe-redirect "/settings/slack")))))))
 
 (defun get-settings-slack ()
-    (let ((slack-config
-            (find-or-create-slack-config (current-company)))
-          (result (nibble (slack-token default-channel enabledp :method :post)
-                    (declare (ignore slack-token))
-                    (post-settings-slack default-channel enabledp)))
-          (test-nibble (nibble (slack-token default-channel :method :post)
-                         (slack-settings-test
-                          :slack-token slack-token
-                          :channel default-channel)) ))
+    (let* ((slack-config
+             (find-or-create-slack-config (current-company)))
+           (result (nibble (slack-token default-channel enabledp :method :post)
+                     (declare (ignore slack-token))
+                     (post-settings-slack default-channel enabledp)))
+           (test-nibble (nibble (default-channel :method :post)
+                          (slack-settings-test
+                           :slack-token (access-token (access-token slack-config))
+                           :channel default-channel)) ))
       <settings-template>
             <form action=result method= "POST">
 
