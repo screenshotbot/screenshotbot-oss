@@ -410,11 +410,13 @@ shipped by the time you're reading this.)"))
 (defun running-in-sdk-p ()
   (not (boundp '*installation*)))
 
-(defmethod http-request-impl ((engine request-engine)
-                              url &rest args)
-  (let* ((url (fix-malformed-url url))
-         (url (quri:uri url))
-         (scheme (quri:uri-scheme url)))
+(defmethod validate-url ((url puri:uri) &key for-redirect)
+  (validate-url
+   (quri:uri (puri:render-uri url nil))
+   :for-redirect for-redirect))
+
+(defmethod validate-url ((url quri:uri) &key for-redirect)
+  (let* ((scheme (quri:uri-scheme url)))
     (cond
       ((equal "file" scheme)
        (error "file:// urls are not supported"))
@@ -429,6 +431,18 @@ shipped by the time you're reading this.)"))
         (not (member (quri:uri-port url)
                      '(80 443 nil))))
        (error 'blacklisted-domain))
+      ((and
+        for-redirect
+        (not (str:s-member '("http" "https") scheme)))
+       (error "Unsupported schemed ~a during redirect" scheme)))))
+
+(defmethod http-request-impl ((engine request-engine)
+                              url &rest args)
+  (let* ((url (fix-malformed-url url))
+         (url (quri:uri url))
+         (scheme (quri:uri-scheme url)))
+    (validate-url url)
+    (cond
       ((member scheme (list "chrome-extension") :test #'string-equal)
        ;; respond with an empty file
        (values
@@ -443,14 +457,18 @@ shipped by the time you're reading this.)"))
        (log:info "Fetching: ~a" url)
        (write-replay-log "Fetching: ~a" url)
 
-       (multiple-value-bind (remote-stream status response-headers)
-           (call-next-method)
-         (unless (http-success-response? status)
-           (write-replay-log "Warning: request failed with ~a" status))
-         (let ((response-headers
-                 (remove-unwanted-headers response-headers)))
-           (push `(:x-original-url . ,(quri:render-uri url)) response-headers)
-           (values remote-stream status response-headers))))
+       (handler-bind ((drakma::http-redirecting (lambda (condition)
+                                                  (validate-url
+                                                   (drakma::http-redirect-location condition)
+                                                   :for-redirect t))))
+        (multiple-value-bind (remote-stream status response-headers)
+            (call-next-method)
+          (unless (http-success-response? status)
+            (write-replay-log "Warning: request failed with ~a" status))
+          (let ((response-headers
+                  (remove-unwanted-headers response-headers)))
+            (push `(:x-original-url . ,(quri:render-uri url)) response-headers)
+            (values remote-stream status response-headers)))))
       (t
        (error "unsupported scheme: ~a" scheme)))))
 

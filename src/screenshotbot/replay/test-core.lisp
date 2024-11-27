@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/replay/core
+                #:validate-url
                 #:*fetch-sleep-time*
                 #:replay-external-request-engine
                 #:blacklisted-ip
@@ -474,3 +475,7 @@ background: url(shttps://google.com?f=1)
   (signals blacklisted-ip
     (util/request:http-request "http://lcl.tdrhq.com"
                                :engine *request-engine*)))
+
+(test validate-url-happy-path
+  (validate-url (quri:uri "https://example.com"))
+  (validate-url (puri:uri "https://example.com")))
