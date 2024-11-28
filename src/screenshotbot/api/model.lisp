@@ -425,7 +425,7 @@ shard.")
            :json-key "md5sum"
            :json-type :string)
    (upload-url :initarg :upload-url
-               :reader image-upload-url
+               :accessor image-upload-url
                :json-key "uploadUrl"
                :json-type (or null :string)))
   (:metaclass ext-json-serializable-class)

@@ -455,6 +455,43 @@
           (upload-image-directory api-context
                                   bundle)))))))
 
+(test the-same-image-isnt-uploaded-twice
+  (with-fixture state ()
+    (with-sdk-integration (api-context)
+      (tmpdir:with-tmpdir (dir)
+        (write-string-to-file "foobar" (path:catfile dir "one.png"))
+        (write-string-to-file "foobar" (path:catfile dir "two.png"))
+        (let ((put-file-counter 0))
+         (cl-mock:with-mocks ()
+           (cl-mock:if-called 'put-file
+                              (lambda (api-context upload-url stream)
+                                (incf put-file-counter)))
+           (let ((bundle (make-instance 'image-directory
+                                        :directory dir)))
+             (finishes
+               (upload-image-directory api-context
+                                       bundle)))
+           (is (eql 1 put-file-counter))))))))
+
+(test the-same-image-isnt-uploaded-twice--more-complex
+  (with-fixture state ()
+    (with-sdk-integration (api-context)
+      (tmpdir:with-tmpdir (dir)
+        (write-string-to-file "foobar" (path:catfile dir "one.png"))
+        (write-string-to-file "foobar" (path:catfile dir "two.png"))
+        (write-string-to-file "foobar3" (path:catfile dir "three.png"))        
+        (let ((put-file-counter 0))
+         (cl-mock:with-mocks ()
+           (cl-mock:if-called 'put-file
+                              (lambda (api-context upload-url stream)
+                                (incf put-file-counter)))
+           (let ((bundle (make-instance 'image-directory
+                                        :directory dir)))
+             (finishes
+               (upload-image-directory api-context
+                                       bundle)))
+           (is (eql 2 put-file-counter))))))))
+
 (test simple-make-directory-run-happy-path
   (with-fixture state ()
     (with-sdk-integration (api-context)

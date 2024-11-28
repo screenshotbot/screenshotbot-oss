@@ -255,18 +255,6 @@ error."
            (error "Failed to upload image: code ~a" code))
          result)))))
 
-(defun upload-image (api-context key stream hash response)
-  (Assert hash)
-  (log:debug "Checking to see if we need to re-upload ~a, ~a" key hash)
-  (log:debug "/api/screenshot response: ~s" response)
-  (let ((upload-url (dto:image-upload-url response)))
-    (when upload-url
-      (log:info "Uploading image for `~a`" key)
-      (put-file api-context upload-url stream)))
-  (make-instance 'dto:screenshot
-                 :image-id (dto:image-id response)
-                 :name key))
-
 (defun build-screenshot-objects (images)
   (loop for im in images
         collect
@@ -490,15 +478,31 @@ error."
                        image-upload-response))
         (loop for im in images
               collect
-              (with-open-stream (s (image-stream im))
-                (warn-if-not-recent-file s)
-                (unwind-protect
-                     (upload-image api-context
-                                   (image-name im) s
-                                   (md5-sum im)
-                                   (gethash (str:downcase (md5-sum im))
-                                            md5-to-response))
-                  (close-image im))))))))
+              (%upload-single-image api-context im md5-to-response))))))
+
+(defun %upload-single-image (api-context im md5-to-response)
+  "This is a stateful function. In particular, as and when an upload URL
+is used up, we update md5-to-response to remove that upload URL."
+  (let* ((response (gethash (str:downcase (md5-sum im))
+                            md5-to-response))
+         (key (image-name im))
+         (upload-url (dto:image-upload-url response)))
+    (with-open-stream (stream (image-stream im))
+      (warn-if-not-recent-file stream)
+      (unwind-protect
+           (progn
+             (when upload-url
+               (log:info "Uploading image for `~a`" key)
+               (put-file api-context upload-url stream))
+
+             ;; This Upload-URL is used up, if there's another image
+             ;; with the same hash, we shouldn't upload it again
+             (setf (dto:image-upload-url response) nil)
+
+             (make-instance 'dto:screenshot
+                            :image-id (dto:image-id response)
+                            :name key))
+        (close-image im)))))
 
 (defun make-bundle (&key (metadata flags:*metadata*)
                       (directory flags:*directory*)
