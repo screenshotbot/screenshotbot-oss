@@ -450,15 +450,20 @@ error."
            (- (get-universal-time) 7200))
     (warn 'not-recent-file-warning :file (pathname stream))))
 
+(defmethod find-existing-images (api-context
+                                 hashes)
+  (let ((json:*json-identifier-name-to-lisp* 'keyword-except-md5))
+    (request
+     api-context
+     "/api/screenshot"
+     :parameters `(("hash-list"
+                    . ,(json:encode-json-to-string hashes))))))
+
 (defmethod upload-image-directory (api-context bundle)
   (let ((images (list-images bundle)))
-    (let ((hash-to-response
-           (let ((json:*json-identifier-name-to-lisp* 'keyword-except-md5))
-             (request
-              api-context
-              "/api/screenshot"
-              :parameters `(("hash-list"
-                             . ,(json:encode-json-to-string (mapcar 'md5-sum images))))))))
+    (let* ((hashes (mapcar 'md5-sum images))
+           (hash-to-response
+             (find-existing-images api-context hashes)))
       (log:debug "got full response: ~s" hash-to-response)
       (loop for im in images
             collect

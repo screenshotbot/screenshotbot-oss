@@ -28,8 +28,18 @@
                                              (first basic-authorization)
                                              (second basic-authorization)))))))))
 
+(defun %make-uri (uri &key parameters)
+  (let* ((uri (quri:uri uri))
+         (params (quri:uri-query-params uri)))
+    (setf (quri:uri-query-params uri)
+          (append
+           parameters
+           params))
+    (quri:render-uri uri)))
+
 (defmethod http-request-impl ((self hunchentoot-engine)
                               url &key method basic-authorization want-stream
+                                    parameters
                                     force-binary
                               &allow-other-keys)
   (let* ((acceptor (acceptor self))
@@ -45,7 +55,9 @@
                                  :content-stream
                                  (flex:make-in-memory-input-stream
                                   (make-array 0 :element-type 'flex:octet))
-                                 :uri url
+                                 :uri (%make-uri
+                                       url
+                                       :parameters parameters)
                                  :method method
                                  :server-protocol :http))
          (hunchentoot:*request* request)

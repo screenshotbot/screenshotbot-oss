@@ -10,6 +10,8 @@
    :alexandria
         :fiveam)
   (:import-from #:screenshotbot/sdk/sdk
+                #:find-existing-images
+                #:upload-image-directory
                 #:not-recent-file-warning
                 #:warn-if-not-recent-file
                 #:%request
@@ -65,10 +67,31 @@
                 #:api-context)
   (:import-from #:util/request
                 #:http-request)
+  (:import-from #:util/hunchentoot-engine
+                #:hunchentoot-engine)
+  (:import-from #:screenshotbot/server
+                #:*acceptor*)
+  (:import-from #:util/store/store
+                #:with-test-store)
+  (:import-from #:screenshotbot/model/company
+                #:company)
+  (:import-from #:screenshotbot/testing
+                #:with-installation)
+  (:import-from #:screenshotbot/user-api
+                #:user)
+  (:import-from #:screenshotbot/api/core
+                #:*wrap-internal-errors*)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
+  (:import-from #:fiveam-matchers/strings
+                #:is-not-empty)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:run-context #:screenshotbot/sdk/run-context)
                     (#:a #:alexandria)
-                    (#:dto #:screenshotbot/api/model)))
+                    (#:dto #:screenshotbot/api/model)
+                    (#:api-key #:core/api/model/api-key)))
 (in-package :screenshotbot/sdk/test-sdk)
 
 (util/fiveam:def-suite)
@@ -402,3 +425,61 @@
   (finishes
    (format nil "~a"
            (make-condition 'not-recent-file-warning :file "/tmp/foo"))))
+
+(defun write-string-to-file (str file)
+  (with-open-file (s file :direction :output)
+    (write-string str s)))
+
+(defclass fake-api-context (api-context)
+  ()
+  (:default-initargs :engine (make-instance 'hunchentoot-engine
+                                            :acceptor *acceptor*)))
+
+(test dont-upload-the-same-image-twice
+  (with-fixture state ()
+    (cl-mock:with-mocks ()
+     (tmpdir:with-tmpdir (dir)
+       (write-string-to-file "foobar" (path:catfile dir "one.png"))
+       (write-string-to-file "foobar" (path:catfile dir "two.png"))
+       (let ((bundle (make-instance 'image-directory
+                                    :directory dir))
+             (api-context (make-instance 'fake-api-context)))
+         (answer (find-existing-images api-context
+                                       (list "..."))
+           `(("..." . "...")))
+
+         ;;;;
+         ;;;; TODO: This test is not complete!
+         ;;;;
+         (upload-image-directory api-context
+                                 bundle))))))
+
+(def-fixture backend-state ()
+  (with-installation ()
+   (with-test-store ()
+     (let* ((company (make-instance 'company))
+            (user (make-instance 'user))
+            (api-key (make-instance 'api-key:api-key
+                                    :user user
+                                    :company company))
+            (api-context (make-instance 'fake-api-context
+                                        :key (api-key:api-key-key api-key)
+                                        :hostname "localhost"
+                                        :secret (api-key:api-key-secret-key api-key))))
+       (let ((*wrap-internal-errors* nil))
+        (&body))))))
+
+(test find-existing-images-happy-path
+  (with-fixture state ()
+    (with-fixture backend-state ()
+      (let ((result
+             (find-existing-images api-context
+                                   #("abcdef"))))
+        (assert-that result
+                     (has-length 1))
+        (assert-that
+         ;; just documenting the current behavior, I do think it's
+         ;; weird that it's returning keys of type :abcdef
+         (assoc-value (assoc-value result :abcdef) :upload-url)
+         (is-not-empty))))))
+
