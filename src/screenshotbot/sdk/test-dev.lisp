@@ -21,6 +21,8 @@
                 #:*api-version*)
   (:import-from #:screenshotbot/sdk/api-context
                 #:remote-version)
+  (:import-from #:screenshotbot/sdk/integration-fixture
+                #:with-sdk-integration)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/test-dev)
 
@@ -38,32 +40,14 @@
           (write-string "dummy" stream))
         (&body)))))
 
-(defclass fake-api-context ()
-  ())
-
-(defmethod request ((api-ctx fake-api-context)
-                    script &key &allow-other-keys)
-  (cond
-   ((equal "/api/screenshot" script)
-    nil)
-   (t
-    (error "unimpl"))))
-
-(defmethod remote-version ((api-ctx fake-api-context))
-  *api-version*)
-
-(defmethod put-run ((api-ctx fake-api-context)
-                    run)
-  (make-instance 'dto:run
-                 :id "foo"))
-
 (test record-happy-path
   (with-fixture state ()
-    (finishes
-      (record-run
-       (%make-run-and-get-id
-        (make-instance 'fake-api-context)
-        :directory dir
-        :channel "foo")
-       "foo"))
+    (with-sdk-integration (api-context)
+     (finishes
+       (record-run
+        (%make-run-and-get-id
+         api-context
+         :directory dir
+         :channel "foo")
+        "foo")))
     (is (path:-e (path:catfile %homedir ".config/screenshotbot/recordings/foo.json")))))
