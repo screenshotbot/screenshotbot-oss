@@ -32,6 +32,8 @@
                 #:maybe-redirect-for-company)
   (:import-from #:auth/viewer-context
                 #:api-viewer-context)
+  (:import-from #:util/threading
+                #:with-extras)
   (:export
    #:defapi
    #:result
@@ -126,41 +128,41 @@ user. The intention of this flag is to set to NIL for some tests.")
 
 It should be safe to mock call-with-error-handling to just call
 function fn for the purpose of tests."
-  (block error-handling
-    (flet ((%trace ()
-             (with-output-to-string (out)
-               #+lispworks
-               (dbg:output-backtrace :brief out))))
-      (handler-bind ((api-error (lambda (e)
+  (let ((stacktrace-id (random 1000000000)))
+    (with-extras (("stacktrace-id" stacktrace-id))
+     (block error-handling
+       (flet ((%trace ()
+                (format nil "Stacktrace ID: ~a. Please share this ID if contacting support." stacktrace-id)))
+         (handler-bind ((api-error (lambda (e)
+                                     (when *wrap-internal-errors*
+                                       (%set-error-code e)
+                                       (log:warn "API error: ~a" (api-error-msg e))
+                                       (return-from error-handling
+                                         (make-instance 'error-result
+                                                        :success nil
+                                                        :stacktrace (%trace)
+                                                        :error (princ-to-string e))))))
+                        (error  (lambda (e)
                                   (when *wrap-internal-errors*
                                     (%set-error-code e)
-                                    (log:warn "API error: ~a" (api-error-msg e))
+                                    (log:warn "Error: ~a" e)
+                                    (sentry-client:capture-exception e)
                                     (return-from error-handling
                                       (make-instance 'error-result
                                                      :success nil
                                                      :stacktrace (%trace)
-                                                     :error (princ-to-string e))))))
-                     (error  (lambda (e)
-                               (when *wrap-internal-errors*
-                                 (%set-error-code e)
-                                 (log:warn "Error: ~a" e)
-                                 (sentry-client:capture-exception e)
-                                 (return-from error-handling
-                                   (make-instance 'error-result
-                                                  :success nil
-                                                  :stacktrace (%trace)
-                                                  :error (format nil
-                                                                 "Internal error, please contact support@screenshotbot.io: ~a"
-                                                                 (princ-to-string e)))))
-)))
-       (cond
-         (wrap-success
-          (make-instance 'result
-                         :success t
-                         :response
-                         (fn)))
-         (t
-          (fn)))))))
+                                                     :error (format nil
+                                                                    "Internal error, please contact support@screenshotbot.io: ~a"
+                                                                    (princ-to-string e)))))
+                                  )))
+           (cond
+             (wrap-success
+              (make-instance 'result
+                             :success t
+                             :response
+                             (fn)))
+             (t
+              (fn)))))))))
 
 (defmacro defapi ((name &key uri method intern
                           (type :v1)

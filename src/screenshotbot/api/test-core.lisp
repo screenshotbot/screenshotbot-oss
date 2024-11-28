@@ -96,9 +96,8 @@
                (with-error-handling ()
                  (error 'my-error))))
 
-         #+lispworks
          (assert-that (error-result-stacktrace message)
-                      (contains-string "FIVEAM" ))
+                      (contains-string "Stacktrace ID" ))
          (assert-that (error-result-message message)
                       (contains-string "Internal error"))
          (assert-that calledp
@@ -127,9 +126,8 @@
                (with-error-handling ()
                  (error 'api-error :message "bleh bleh"))))
 
-         #+lispworks
          (assert-that (error-result-stacktrace message)
-                      (contains-string "FIVEAM" ))
+                      (contains-string "Stacktrace ID" ))
          (assert-that (error-result-message message)
                       (equal-to "bleh bleh"))
          (assert-that calledp
