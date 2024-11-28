@@ -109,7 +109,8 @@
                :util/hunchentoot-engine
                :util/fake-clingon
                :util/fiveam)
-  :components ((:file "test-bundle")
+  :components ((:file "integration-fixture")
+               (:file "test-bundle")
                (:file "test-unchanged-run")
                (:file "test-clingon-api-context")
                (:file "test-version-check")

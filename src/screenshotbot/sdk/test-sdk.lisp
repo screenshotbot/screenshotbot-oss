@@ -6,96 +6,80 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/sdk/test-sdk
-  (:use :cl
-   :alexandria
-        :fiveam)
-  (:import-from #:screenshotbot/sdk/sdk
-                #:make-directory-run
-                #:keyword-except-md5
-                #:find-existing-images
-                #:upload-image-directory
-                #:not-recent-file-warning
-                #:warn-if-not-recent-file
-                #:%request
-                #:format-api-url
-                #:invalid-pull-request
-                #:empty-run-error
-                #:make-run
-                #:request
-                #:validate-pull-request
-                #:backoff
-                #:parse-environment
-                #:make-bundle
-                #:*directory*
-                #:*metadata*
-                #:get-relative-path
-                #:*ios-diff-dir*
-                #:*metadata*
-                #:*ios-diff-dir*
-                #:put-file)
-  (:import-from #:screenshotbot/sdk/android
-                #:image-bundles
-                #:directory-image-bundle)
-  (:import-from #:screenshotbot/sdk/bundle
-                #:image-directory
-                #:image-directory-with-diff-dir)
-  (:import-from #:util/digests
-                #:md5-file)
-  (:import-from #:util/testing
-                #:with-local-acceptor)
+  (:use #:cl
+        #:fiveam)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:import-from #:cl-mock
                 #:answer
                 #:if-called)
-  (:import-from #:screenshotbot/sdk/git
-                #:null-repo
-                #:current-branch
-                #:cleanp
-                #:repo-link
-                #:merge-base
-                #:current-commit
-                #:rev-parse)
-  (:import-from #:screenshotbot/api/model
-                #:*api-version*
-                #:decode-json)
-  (:import-from #:util/json-mop
-                #:json-mop-to-string)
-  (:import-from #:screenshotbot/model/recorder-run
-                #:recorder-run-work-branch)
-  (:import-from #:hunchentoot
-                #:easy-acceptor
-                #:define-easy-handler)
-  (:import-from #:util/misc
-                #:with-global-binding)
-  (:import-from #:screenshotbot/sdk/api-context
-                #:api-context)
-  (:import-from #:util/request
-                #:http-request)
-  (:import-from #:util/hunchentoot-engine
-                #:hunchentoot-engine)
-  (:import-from #:screenshotbot/server
-                #:*acceptor*)
-  (:import-from #:util/store/store
-                #:with-test-store)
-  (:import-from #:screenshotbot/model/company
-                #:company)
-  (:import-from #:screenshotbot/testing
-                #:with-installation)
-  (:import-from #:screenshotbot/user-api
-                #:user)
-  (:import-from #:screenshotbot/api/core
-                #:*wrap-internal-errors*)
   (:import-from #:fiveam-matchers/core
-                #:is-equal-to
-                #:assert-that)
+                #:assert-that
+                #:is-equal-to)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:fiveam-matchers/strings
                 #:is-not-empty)
-  (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
-                    (#:run-context #:screenshotbot/sdk/run-context)
-                    (#:a #:alexandria)
+  (:import-from #:hunchentoot
+                #:define-easy-handler
+                #:easy-acceptor)
+  (:import-from #:screenshotbot/api/model
+                #:*api-version*
+                #:decode-json)
+  (:import-from #:screenshotbot/sdk/android
+                #:directory-image-bundle
+                #:image-bundles)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:api-context)
+  (:import-from #:screenshotbot/sdk/backoff
+                #:backoff)
+  (:import-from #:screenshotbot/sdk/bundle
+                #:image-directory)
+  (:import-from #:screenshotbot/sdk/flags
+                #:*directory*
+                #:*metadata*)
+  (:import-from #:screenshotbot/sdk/git
+                #:cleanp
+                #:current-branch
+                #:current-commit
+                #:merge-base
+                #:null-repo
+                #:repo-link
+                #:rev-parse)
+  (:import-from #:screenshotbot/sdk/hostname
+                #:format-api-url)
+  (:import-from #:screenshotbot/sdk/integration-fixture
+                #:with-sdk-integration)
+  (:import-from #:screenshotbot/sdk/sdk
+                #:%request
+                #:empty-run-error
+                #:find-existing-images
+                #:get-relative-path
+                #:invalid-pull-request
+                #:keyword-except-md5
+                #:make-bundle
+                #:make-directory-run
+                #:make-run
+                #:not-recent-file-warning
+                #:parse-environment
+                #:put-file
+                #:request
+                #:upload-image-directory
+                #:validate-pull-request
+                #:warn-if-not-recent-file)
+  (:import-from #:util/json-mop
+                #:json-mop-to-string)
+  (:import-from #:util/misc
+                #:with-global-binding)
+  (:import-from #:util/request
+                #:http-request)
+  (:import-from #:util/testing
+                #:with-local-acceptor)
+  (:local-nicknames (#:a #:alexandria)
+                    (#:api-key #:core/api/model/api-key)
                     (#:dto #:screenshotbot/api/model)
-                    (#:api-key #:core/api/model/api-key)))
+                    (#:flags #:screenshotbot/sdk/flags)
+                    (#:run-context #:screenshotbot/sdk/run-context)))
 (in-package :screenshotbot/sdk/test-sdk)
 
 (util/fiveam:def-suite)
@@ -439,29 +423,10 @@
     (write-string str s)
     (finish-output s)))
 
-(defclass fake-api-context (api-context)
-  ()
-  (:default-initargs :engine (make-instance 'hunchentoot-engine
-                                            :acceptor *acceptor*)))
-
-(def-fixture backend-state ()
-  (with-installation ()
-   (with-test-store ()
-     (let* ((company (make-instance 'company))
-            (user (make-instance 'user))
-            (api-key (make-instance 'api-key:api-key
-                                    :user user
-                                    :company company))
-            (api-context (make-instance 'fake-api-context
-                                        :key (api-key:api-key-key api-key)
-                                        :hostname "localhost"
-                                        :secret (api-key:api-key-secret-key api-key))))
-       (let ((*wrap-internal-errors* nil))
-        (&body))))))
 
 (test find-existing-images-happy-path
   (with-fixture state ()
-    (with-fixture backend-state ()
+    (with-sdk-integration (api-context)
       (let ((result
              (find-existing-images api-context
                                    #("82142ae81caba45bb76aa21fb6acf16d"))))
@@ -481,10 +446,10 @@
 
 (test simple-image-loading-happy-path
   (with-fixture state ()
-    (with-fixture backend-state ()
-     (tmpdir:with-tmpdir (dir)
-       (write-string-to-file "foobar" (path:catfile dir "one.png"))
-       (write-string-to-file "foobar2" (path:catfile dir "two.png"))
+    (with-sdk-integration (api-context)
+      (tmpdir:with-tmpdir (dir)
+        (write-string-to-file "foobar" (path:catfile dir "one.png"))
+        (write-string-to-file "foobar2" (path:catfile dir "two.png"))
        (let ((bundle (make-instance 'image-directory
                                     :directory dir)))
          (finishes
@@ -493,7 +458,7 @@
 
 (test simple-make-directory-run-happy-path
   (with-fixture state ()
-    (with-fixture backend-state ()
+    (with-sdk-integration (api-context)
      (tmpdir:with-tmpdir (dir)
        (write-string-to-file "foobar" (path:catfile dir "one.png"))
        (write-string-to-file "foobar2" (path:catfile dir "two.png"))
@@ -512,9 +477,3 @@
   ;; encoded differently.
   (is (equal "82142-AE-81-CABA-45-BB-76-AA-21-FB-6-ACF-16"
              (keyword-except-md5 "82142ae81caba45bb76aa21fb6acf16"))))
-
-
-
-
-
-
