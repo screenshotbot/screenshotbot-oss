@@ -40,6 +40,7 @@
 (defmethod http-request-impl ((self hunchentoot-engine)
                               url &key method basic-authorization want-stream
                                     parameters
+                                    content
                                     force-binary
                               &allow-other-keys)
   (let* ((acceptor (acceptor self))
@@ -53,8 +54,17 @@
                                  :headers-in (compute-headers-in
                                               :basic-authorization basic-authorization)
                                  :content-stream
-                                 (flex:make-in-memory-input-stream
-                                  (make-array 0 :element-type 'flex:octet))
+                                 (cond
+                                   ((and
+                                     (streamp content)
+                                     (equal '(unsigned-byte 8) (stream-element-type content)))
+                                    content)
+                                   (content
+                                    (error "Content of type ~a, not supported by hunchentoot-engine"
+                                           content))
+                                   (t
+                                   (flex:make-in-memory-input-stream
+                                    (make-array 0 :element-type 'flex:octet))))
                                  :uri (%make-uri
                                        url
                                        :parameters parameters)

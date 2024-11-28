@@ -428,31 +428,13 @@
 
 (defun write-string-to-file (str file)
   (with-open-file (s file :direction :output)
-    (write-string str s)))
+    (write-string str s)
+    (finish-output s)))
 
 (defclass fake-api-context (api-context)
   ()
   (:default-initargs :engine (make-instance 'hunchentoot-engine
                                             :acceptor *acceptor*)))
-
-(test dont-upload-the-same-image-twice
-  (with-fixture state ()
-    (cl-mock:with-mocks ()
-     (tmpdir:with-tmpdir (dir)
-       (write-string-to-file "foobar" (path:catfile dir "one.png"))
-       (write-string-to-file "foobar" (path:catfile dir "two.png"))
-       (let ((bundle (make-instance 'image-directory
-                                    :directory dir))
-             (api-context (make-instance 'fake-api-context)))
-         (answer (find-existing-images api-context
-                                       (list "..."))
-           `(("..." . "...")))
-
-         ;;;;
-         ;;;; TODO: This test is not complete!
-         ;;;;
-         (upload-image-directory api-context
-                                 bundle))))))
 
 (def-fixture backend-state ()
   (with-installation ()
@@ -482,4 +464,19 @@
          ;; weird that it's returning keys of type :abcdef
          (assoc-value (assoc-value result :abcdef) :upload-url)
          (is-not-empty))))))
+
+(test dont-upload-the-same-image-twice
+  (with-fixture state ()
+    (with-fixture backend-state ()
+     (tmpdir:with-tmpdir (dir)
+       (write-string-to-file "foobar" (path:catfile dir "one.png"))
+       (write-string-to-file "foobar" (path:catfile dir "two.png"))
+       (let ((bundle (make-instance 'image-directory
+                                    :directory dir)))
+         (finishes
+          (upload-image-directory api-context
+                                  bundle)))))))
+
+
+
 

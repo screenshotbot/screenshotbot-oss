@@ -157,7 +157,8 @@
           (error 'api-error
                  :message
                   (format nil
-                          "md5sum mismatch from what was uploaded for image: ~a vs ~a"
-                          etag
+                          "md5sum mismatch from what was uploaded for image: ~a was uploaded vs ~a was expected"
+                          (ironclad:byte-array-to-hex-string
+                           etag)
                           (ironclad:byte-array-to-hex-string
                            (image-hash image))))))))))

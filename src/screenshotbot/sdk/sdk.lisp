@@ -38,6 +38,7 @@
                 #:repo-link
                 #:merge-base)
   (:import-from #:util/request
+                #:engine
                 #:http-request)
   (:import-from #:util/misc
                 #:?.
@@ -245,6 +246,7 @@ error."
           :basic-authorization (%make-basic-auth api-context)
           :content-type "application/octet-stream"
           :content-length file-length
+          :engine (engine api-context)
           :content stream
           :read-timeout 40)
 
