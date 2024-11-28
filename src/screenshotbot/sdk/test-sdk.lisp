@@ -10,6 +10,7 @@
    :alexandria
         :fiveam)
   (:import-from #:screenshotbot/sdk/sdk
+                #:keyword-except-md5
                 #:find-existing-images
                 #:upload-image-directory
                 #:not-recent-file-warning
@@ -82,6 +83,7 @@
   (:import-from #:screenshotbot/api/core
                 #:*wrap-internal-errors*)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
                 #:assert-that)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
@@ -456,26 +458,43 @@
     (with-fixture backend-state ()
       (let ((result
              (find-existing-images api-context
-                                   #("abcdef"))))
+                                   #("82142ae81caba45bb76aa21fb6acf16d"))))
         (assert-that result
                      (has-length 1))
+
+        (assert-that (caar result)
+                     (is-equal-to :|82142ae81caba45bb76aa21fb6acf16d|))
         (assert-that
          ;; just documenting the current behavior, I do think it's
          ;; weird that it's returning keys of type :abcdef
-         (assoc-value (assoc-value result :abcdef) :upload-url)
+         (assoc-value (assoc-value result
+                                   :|82142ae81caba45bb76aa21fb6acf16d|
+                                   :test #'equal)
+                      :upload-url)
          (is-not-empty))))))
 
-(test dont-upload-the-same-image-twice
+(test simple-image-loading-happy-path
   (with-fixture state ()
     (with-fixture backend-state ()
      (tmpdir:with-tmpdir (dir)
        (write-string-to-file "foobar" (path:catfile dir "one.png"))
-       (write-string-to-file "foobar" (path:catfile dir "two.png"))
+       (write-string-to-file "foobar2" (path:catfile dir "two.png"))
        (let ((bundle (make-instance 'image-directory
                                     :directory dir)))
          (finishes
           (upload-image-directory api-context
                                   bundle)))))))
+
+(test keyword-except-md5
+  (is (eql 32 (length "82142ae81caba45bb76aa21fb6acf16d")))
+  (is (equal "82142ae81caba45bb76aa21fb6acf16d" 
+             (keyword-except-md5 "82142ae81caba45bb76aa21fb6acf16d")))
+  ;; Notice that if we don't use a 32-byte string, then it gets
+  ;; encoded differently.
+  (is (equal "82142-AE-81-CABA-45-BB-76-AA-21-FB-6-ACF-16"
+             (keyword-except-md5 "82142ae81caba45bb76aa21fb6acf16"))))
+
+
 
 
 

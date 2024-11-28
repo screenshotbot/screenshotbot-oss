@@ -431,8 +431,11 @@ error."
            args)))
 
 (defun keyword-except-md5 (identifier)
-  ;; this is bug prone, but I know for a fact we don't have
-  ;; 32 character long identifiers in the json :/
+  ;; See unit tests for this with the same name to understand why we
+  ;; need this.
+  ;;
+  ;; The implementation is bug prone, but I know for a fact we don't
+  ;; have 32 character long identifiers in the json :/
   (cond
    ((eql 32 (length identifier))
     (string identifier))
@@ -454,7 +457,7 @@ error."
 
 (defmethod find-existing-images (api-context
                                  hashes)
-  (let ((json:*json-identifier-name-to-lisp* 'keyword-except-md5))
+  (let ((json:*json-identifier-name-to-lisp* #'keyword-except-md5))
     (request
      api-context
      "/api/screenshot"
