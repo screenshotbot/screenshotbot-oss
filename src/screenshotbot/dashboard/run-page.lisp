@@ -113,8 +113,7 @@
   source it too.")
 
 (deftag commit (&key repo hash)
-  (ui/a :href (commit-link repo hash)
-    (str:substring 0 8 hash)))
+  <a href= (commit-link repo hash) >,(str:substring 0 8 hash)</a>)
 
 (defhandler (run-page :uri "/runs/:id" :method :get) (id name)
   (let* ((run (find-by-oid id 'recorder-run)))
