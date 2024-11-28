@@ -32,6 +32,12 @@
    (format nil "~a/~a"
            user pass)))
 
+(define-easy-handler (test-content-handler
+                      :uri "/dummy/test-content-handler"
+                      :acceptor-names '(foo))
+    ()
+  (format nil "~a" (hunchentoot:raw-post-data :force-text t)))
+
 (def-fixture state ()
   (let* ((acceptor (make-instance 'hunchentoot:easy-acceptor
                                   :name 'foo))
@@ -96,3 +102,14 @@
         (is (equalp
               #(102 111 111 98 97 114)
               sequence))))))
+
+(test content-as-string
+  (with-fixture state ()
+    (let ((result (http-request
+                   "/dummy/test-content-handler"
+                   :content "foobar"
+                   :content-type "application/text"
+                   :want-string t
+                   :engine engine)))
+      (is (equal "foobar" result)))))
+

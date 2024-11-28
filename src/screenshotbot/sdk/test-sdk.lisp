@@ -10,6 +10,7 @@
    :alexandria
         :fiveam)
   (:import-from #:screenshotbot/sdk/sdk
+                #:make-directory-run
                 #:keyword-except-md5
                 #:find-existing-images
                 #:upload-image-directory
@@ -46,6 +47,7 @@
                 #:answer
                 #:if-called)
   (:import-from #:screenshotbot/sdk/git
+                #:null-repo
                 #:current-branch
                 #:cleanp
                 #:repo-link
@@ -484,6 +486,19 @@
          (finishes
           (upload-image-directory api-context
                                   bundle)))))))
+
+(test simple-make-directory-run-happy-path
+  (with-fixture state ()
+    (with-fixture backend-state ()
+     (tmpdir:with-tmpdir (dir)
+       (write-string-to-file "foobar" (path:catfile dir "one.png"))
+       (write-string-to-file "foobar2" (path:catfile dir "two.png"))
+       (let ((bundle (make-instance 'image-directory
+                                    :directory dir)))
+         (finishes
+           (make-directory-run api-context bundle
+                               :repo (make-instance 'null-repo)
+                               :channel "bleh")))))))
 
 (test keyword-except-md5
   (is (eql 32 (length "82142ae81caba45bb76aa21fb6acf16d")))

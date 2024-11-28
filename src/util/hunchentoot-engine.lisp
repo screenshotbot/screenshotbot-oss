@@ -18,10 +18,12 @@
              :reader acceptor))
   (:documentation "A request engine that dispatches to a hunchentoot acceptor instead."))
 
-(defun compute-headers-in (&key basic-authorization)
+(defun compute-headers-in (&key basic-authorization content)
   (remove-if
    #'null
-   `(,(when basic-authorization
+   `(,(when (stringp content)
+        `(:content-length . ,(format nil "~a" (length content))))
+     ,(when basic-authorization
         `(:authorization . ,(format nil "Basic ~a"
                                     (base64:string-to-base64-string
                                      (format nil "~a:~a"
@@ -45,6 +47,21 @@
                               &allow-other-keys)
   (let* ((acceptor (acceptor self))
          (hunchentoot:*acceptor* acceptor)
+         (content-stream (cond
+                           ((and
+                             (streamp content)
+                             (equal '(unsigned-byte 8) (stream-element-type content)))
+                            content)
+                           ((stringp content)
+                            (flex:make-in-memory-input-stream
+                             (flex:string-to-octets content
+                                                    :external-format :utf-8)))
+                           (content
+                            (error "Content of type ~a, not supported by hunchentoot-engine"
+                                   content))
+                           (t
+                            (flex:make-in-memory-input-stream
+                             (make-array 0 :element-type 'flex:octet)))))
          (request (make-instance (acceptor-request-class acceptor)
                                  :acceptor acceptor
                                  :local-addr "127.0.0.1"
@@ -52,19 +69,9 @@
                                  :remote-addr "127.0.0.1"
                                  :remote-port 9998
                                  :headers-in (compute-headers-in
+                                              :content content
                                               :basic-authorization basic-authorization)
-                                 :content-stream
-                                 (cond
-                                   ((and
-                                     (streamp content)
-                                     (equal '(unsigned-byte 8) (stream-element-type content)))
-                                    content)
-                                   (content
-                                    (error "Content of type ~a, not supported by hunchentoot-engine"
-                                           content))
-                                   (t
-                                   (flex:make-in-memory-input-stream
-                                    (make-array 0 :element-type 'flex:octet))))
+                                 :content-stream content-stream
                                  :uri (%make-uri
                                        url
                                        :parameters parameters)
@@ -73,7 +80,9 @@
          (hunchentoot:*request* request)
          (reply (make-instance (acceptor-reply-class acceptor)))
          (hunchentoot:*reply* reply))
-    (let ((body (hunchentoot:acceptor-dispatch-request acceptor request)))
+    (let ((body
+            (let ((hunchentoot::*hunchentoot-stream* content-stream))
+             (hunchentoot:acceptor-dispatch-request acceptor request))))
       (values
        (cond
          ((and want-stream
