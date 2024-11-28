@@ -263,10 +263,11 @@ error."
     (when upload-url
       (log:info "Uploading image for `~a`" key)
       (put-file api-context upload-url stream)))
-  (setf (assoc-value response :name) key)
-  response)
+  (make-instance 'dto:screenshot
+                 :image-id (assoc-value response :id)
+                 :name key))
 
-(defun build-screenshot-objects (images metadata-provider)
+(defun build-screenshot-objects (images)
   (loop for im in images
         collect
         (let ((name (assoc-value im :name)))
@@ -292,7 +293,7 @@ error."
 
 (auto-restart:with-auto-restart ()
  (defun make-run (api-context
-                  images &rest args
+                  screenshots &rest args
                   &key repo
                     channel
                     run-context
@@ -306,6 +307,9 @@ error."
                     create-github-issue
                     (metadata-provider  (make-instance 'metadata-provider))
                     is-trunk)
+   (loop for screenshot in screenshots
+         ;; We expect it to be a dto:screenshot with name and image-id
+         do (check-type screenshot dto:screenshot))
    (let ((run-context (or
                        run-context
                        ;; TODO: move out of make-run:
@@ -316,12 +320,11 @@ error."
                                       :productionp is-trunk
                                       :create-github-issue-p create-github-issue
                                       :env (e:make-env-reader)))))
-     (unless (or images (run-context:shard-spec run-context))
+     (unless (or screenshots (run-context:shard-spec run-context))
        (error 'empty-run-error))
      
      ;;(log:info "screenshot records: ~s" screenshots)
-     (let* ((screenshots (build-screenshot-objects images metadata-provider))
-            (branch-hash
+     (let* ((branch-hash
               (if has-branch-hash-p branch-hash
                   (or
                    (run-context:main-branch-hash run-context)

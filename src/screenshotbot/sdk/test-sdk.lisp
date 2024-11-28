@@ -249,8 +249,10 @@
                                       :remote-version *api-version*)))
           (finishes
             (make-run context
-                      `(((:id . "foo")
-                         (:name . "car")))
+                      (list
+                       (make-instance 'dto:screenshot
+                                      :image-id "foo"
+                                      :name "car"))
                       :branch "main"
                       :repo repo))
           (is-true (typep %content 'dto:run))
@@ -279,8 +281,10 @@
                                       :remote-version *api-version*)))
           (finishes
             (make-run context
-                      `(((:id . "foo")
-                         (:name . "car")))
+                      (list
+                       (make-instance 'dto:screenshot
+                                      :image-id "foo"
+                                      :name "car"))
                       :branch "main"
                       :repo repo
                       :run-context (make-instance 'run-context:run-context

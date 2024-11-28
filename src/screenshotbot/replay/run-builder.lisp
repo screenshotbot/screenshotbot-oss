@@ -21,7 +21,8 @@
                 #:upload-image-directory)
   (:import-from #:util/object-id
                 #:oid)
-  (:local-nicknames (#:a #:alexandria))
+  (:local-nicknames (#:a #:alexandria)
+                    (#:dto #:screenshotbot/api/model))
   (:export
    #:recorder-run-builder
    #:all-screenshots
@@ -70,5 +71,7 @@
 (defmethod upload-image-directory (api-context (self all-screenshots))
   (declare (ignore api-context))
   (loop for im in (remove-duplicates (screenshots self) :test #'equal :key #'screenshot-title)
-        collect `((:id . ,(oid (screenshot-image im)))
-                  (:name . ,(screenshot-title im)))))
+        collect
+        (make-instance 'dto:screenshot
+                       :image-id (oid (screenshot-image im))
+                       :name (screenshot-title im))))
