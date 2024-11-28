@@ -68,7 +68,11 @@
              #:shard-spec-count
              #:shard-spec-number
              #:shard-spec-key
-             #:shard-spec))
+             #:shard-spec
+             #:image-upload-response
+             #:image-md5sum
+             #:image-upload-url
+             #:image-id))
 
 (in-package :screenshotbot/api/model)
 
@@ -410,3 +414,22 @@ shard.")
         :json-type (or null :string)
         :reader comparison-url))
   (:metaclass ext-json-serializable-class))
+
+(defclass image-upload-response ()
+  ((image-id :initarg :image-id
+             :reader image-id
+             :json-key "imageId"
+             :json-type :string)
+   (md5sum :initarg :md5sum
+           :reader image-md5sum
+           :json-key "md5sum"
+           :json-type :string)
+   (upload-url :initarg :upload-url
+               :reader image-upload-url
+               :json-key "uploadUrl"
+               :json-type (or null :string)))
+  (:metaclass ext-json-serializable-class)
+  (:documentation "TODO: at time of writing, we're not sending this over the API, and
+it's just being constructed in the SDK. This will be used to send a
+response back from /api/screenshot."))
+

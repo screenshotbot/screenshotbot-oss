@@ -433,15 +433,14 @@
         (assert-that result
                      (has-length 1))
 
-        (assert-that (caar result)
-                     (is-equal-to :|82142ae81caba45bb76aa21fb6acf16d|))
+        (assert-that (dto:image-md5sum (car result))
+                     (is-equal-to "82142ae81caba45bb76aa21fb6acf16d"))
+
         (assert-that
-         ;; just documenting the current behavior, I do think it's
-         ;; weird that it's returning keys of type :abcdef
-         (assoc-value (assoc-value result
-                                   :|82142ae81caba45bb76aa21fb6acf16d|
-                                   :test #'equal)
-                      :upload-url)
+         (dto:image-upload-url (car result))
+         (is-not-empty))
+        (assert-that
+         (dto:image-id (car result))
          (is-not-empty))))))
 
 (test simple-image-loading-happy-path

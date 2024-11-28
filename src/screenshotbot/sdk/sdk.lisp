@@ -259,12 +259,12 @@ error."
   (Assert hash)
   (log:debug "Checking to see if we need to re-upload ~a, ~a" key hash)
   (log:debug "/api/screenshot response: ~s" response)
-  (let ((upload-url (assoc-value response :upload-url)))
+  (let ((upload-url (dto:image-upload-url response)))
     (when upload-url
       (log:info "Uploading image for `~a`" key)
       (put-file api-context upload-url stream)))
   (make-instance 'dto:screenshot
-                 :image-id (assoc-value response :id)
+                 :image-id (dto:image-id response)
                  :name key))
 
 (defun build-screenshot-objects (images)
@@ -461,29 +461,44 @@ error."
 (defmethod find-existing-images (api-context
                                  hashes)
   (let ((json:*json-identifier-name-to-lisp* #'keyword-except-md5))
-    (request
-     api-context
-     "/api/screenshot"
-     :parameters `(("hash-list"
-                    . ,(json:encode-json-to-string hashes))))))
+    (let ((result
+            (request
+             api-context
+             "/api/screenshot"
+             :parameters `(("hash-list"
+                            . ,(json:encode-json-to-string hashes))))))
+      ;; The response looks like:
+      ;;(:|82142ae81caba45bb76aa21fb6acf16d| (:TYPE . "image") (:ID . "6748c0b00572379fe0c9d0d0") (:UPLOAD-URL . "http://NIL/api/image/blob?oid=6748c0b00572379fe0c9d0d0"))
+      (loop for (key . body) in result
+            collect
+            (make-instance 'dto:image-upload-response
+                           :md5sum (str:downcase (string key))
+                           :image-id (assoc-value body :id)
+                           :upload-url (assoc-value body :upload-url))))))
 
 (defmethod upload-image-directory (api-context bundle)
   (let ((images (list-images bundle)))
     (let* ((hashes (mapcar 'md5-sum images))
-           (hash-to-response
+           (image-upload-responses
              (find-existing-images api-context hashes)))
-      (log:debug "got full response: ~s" hash-to-response)
-      (loop for im in images
-            collect
-            (with-open-stream (s (image-stream im))
-              (warn-if-not-recent-file s)
-              (unwind-protect
-                   (upload-image api-context
-                                 (image-name im) s
-                                 (md5-sum im)
-                                 (assoc-value hash-to-response (md5-sum im)
-                                              :test 'string=))
-                (close-image im)))))))
+      (let ((md5-to-response (make-hash-table :test #'equal)))
+        ;; Create a map from from the md5sum to the the response
+        ;; object for quick lookup.
+        (loop for image-upload-response in image-upload-responses
+              do (setf (gethash (str:downcase (dto:image-md5sum image-upload-response))
+                                md5-to-response)
+                       image-upload-response))
+        (loop for im in images
+              collect
+              (with-open-stream (s (image-stream im))
+                (warn-if-not-recent-file s)
+                (unwind-protect
+                     (upload-image api-context
+                                   (image-name im) s
+                                   (md5-sum im)
+                                   (gethash (str:downcase (md5-sum im))
+                                            md5-to-response))
+                  (close-image im))))))))
 
 (defun make-bundle (&key (metadata flags:*metadata*)
                       (directory flags:*directory*)
