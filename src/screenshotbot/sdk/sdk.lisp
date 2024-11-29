@@ -248,6 +248,7 @@ error."
           :content-length file-length
           :engine (engine api-context)
           :content stream
+          :want-string t ;; Required for the engine to be able to reuse connections
           :read-timeout 40)
 
          (log:debug "Got image upload response: ~s" result)

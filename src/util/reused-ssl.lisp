@@ -173,17 +173,18 @@
                               url &rest args
                               &key want-stream
                               &allow-other-keys)
-  (let ((reuse-context (assoc-value *reuse-contexts* self)))
-   (cond
+  (let ((reuse-context (assoc-value *reuse-contexts* self))
+        (loggable-args (ignore-errors
+                        (alexandria:remove-from-plist args
+                                                      :basic-authorization))))
+    (cond
      ((not reuse-context)
       (warn "no reuse-context available")
       (call-next-method))
      ((not want-stream)
       ;; We don't have a way of wrapping this response for now
       (warn "Don't know how to save this stream ~a"
-            (ignore-errors
-             (alexandria:remove-from-plist args
-                                           :basic-authorization)))
+            loggable-args)
       (call-next-method))
      (t
       (multiple-value-bind (stream code headers
@@ -196,7 +197,7 @@
                                (puri:uri url)))
              (let* ((connection anaphora:it))
                (log:debug "Reusing an existing stream ~a, ~a" (connection-stream connection)
-                          args)
+                          loggable-args)
                (apply #'call-next-method
                       self
                       url
