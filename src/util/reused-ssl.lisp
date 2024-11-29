@@ -180,7 +180,10 @@
       (call-next-method))
      ((not want-stream)
       ;; We don't have a way of wrapping this response for now
-      (warn "Don't know how to save this stream ~a" args)
+      (warn "Don't know how to save this stream ~a"
+            (ignore-errors
+             (alexandria:remove-from-plist args
+                                           :basic-authorization)))
       (call-next-method))
      (t
       (multiple-value-bind (stream code headers
