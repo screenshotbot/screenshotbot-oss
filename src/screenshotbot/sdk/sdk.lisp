@@ -383,7 +383,7 @@ error."
            (put-run api-context run)
            (put-run-via-old-api api-context run))))))
 
-(auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
+(auto-restart:with-auto-restart ()
   (defmethod put-run ((api-context api-context) run)
     (let ((result (request api-context
                            "/api/run" :method :put
