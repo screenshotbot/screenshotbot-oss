@@ -136,12 +136,13 @@
   (when (and
          (member response-code '(429 502 503))
          (< attempt 5))
-    (let ((timeout (sleep (expt backoff attempt))))
+    (let ((timeout (expt backoff attempt)))
       (cond
         ((member response-code '(429 503))
          (log:warn "We're making too many requests, backing off for ~as" timeout))
         (t
-         (log:warn "The server is unavailable, backing off for ~as" timeout))))
+         (log:warn "The server is unavailable, backing off for ~as" timeout)))
+      (sleep timeout))
     (invoke-restart restart)))
 
 (auto-restart:with-auto-restart (:attempt attempt)
