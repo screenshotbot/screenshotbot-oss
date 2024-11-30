@@ -18,6 +18,7 @@
   (:import-from #:util/health-check
                 #:def-health-check)
   (:import-from #:screenshotbot/sdk/backoff
+                #:maybe-retry-request
                 #:backoff)
   (:import-from #:screenshotbot/sdk/hostname
                 #:format-api-url)
@@ -46,7 +47,7 @@ might get logged in the webserver logs."
   (>= (remote-version api-context) 4))
 
 (defvar *in-here* nil)
-(auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
+(auto-restart:with-auto-restart (:attempt attempt)
   (defmethod fetch-version (api-context)
     (log:info "Fetching remote version")
     (assert (not *in-here*))
@@ -56,6 +57,10 @@ might get logged in the webserver logs."
           (format-api-url api-context "/api/version")
           :want-string t
           :engine (api-context:engine api-context))
+       (maybe-retry-request
+        ret
+        :attempt attempt
+        :restart 'retry-fetch-version)
        (let ((version (cond
                         ((eql 200 ret)
                          (decode-json body 'version))

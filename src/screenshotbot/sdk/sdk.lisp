@@ -56,6 +56,7 @@
                 #:ext-json-serializable-class
                 #:json-mop-to-string)
   (:import-from #:screenshotbot/sdk/backoff
+                #:maybe-retry-request
                 #:backoff)
   (:import-from #:screenshotbot/sdk/api-context
                 #:desktop-api-context
@@ -128,28 +129,6 @@
 
 (defmethod %make-basic-auth ((self desktop-api-context))
   nil)
-
-(defun add-jitter (num)
-  (* num (+ 0.5 (random 1.0))))
-
-(defun maybe-retry-request (response-code &key
-                                            (attempt (error "must provide :attempt"))
-                                            (restart (error "must provide :restart"))
-                                            (backoff 2))
-  (assert (find-restart restart))
-  (when (and
-         (member response-code '(429 502 503))
-         (< attempt 5))
-    (let ((timeout (add-jitter (expt backoff attempt))))
-      (flet ((%warn (message)
-               (log:warn "~a, backing off for ~ds" message (ceiling timeout))))
-       (cond
-         ((member response-code '(429 503))
-          (%warn "We're making too many requests"))
-         (t
-          (%warn "The server is unavailable"))))
-      (sleep timeout))
-    (invoke-restart restart)))
 
 (auto-restart:with-auto-restart (:attempt attempt)
   (defun %request (api-context
