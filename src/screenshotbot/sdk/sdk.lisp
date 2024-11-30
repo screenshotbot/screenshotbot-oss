@@ -133,6 +133,7 @@
                                             (attempt (error "must provide :attempt"))
                                             (restart (error "must provide :restart"))
                                             (backoff 2))
+  (assert (find-restart restart))
   (when (and
          (member response-code '(429 502 503))
          (< attempt 5))
@@ -150,6 +151,7 @@
                    api &key (method :post)
                          parameters
                          content
+                         (auto-retry t)
                          (backoff 2))
     ;; TODO: we're losing the response code here, we need to do
     ;; something with it.
@@ -174,11 +176,12 @@
                            (cons "api-key" (api-context:key api-context))
                            (cons "api-secret-key" (api-context:secret api-context))
                            parameters))))
-      (maybe-retry-request
-       response-code
-       :attempt attempt
-       :restart 'retry-%request
-       :backoff backoff)
+      (when auto-retry
+        (maybe-retry-request
+         response-code
+         :attempt attempt
+         :restart 'retry-%request
+         :backoff backoff))
 
       ;; TODO: if the request has failed after multiple attempts, we
       ;; should signal an error
@@ -243,7 +246,7 @@ error."
     ,non-file-stream
     (lambda (,stream) ,@body)))
 
-(auto-restart:with-auto-restart (:retries 3 :sleep #'backoff)
+(auto-restart:with-auto-restart (:attempt attempt)
   (defun put-file (api-context upload-url stream &key parameters)
     ;; In case we're retrying put-file, let's make sure we reset the
     ;; stream
@@ -268,6 +271,12 @@ error."
           :read-timeout 40)
 
          (log:debug "Got image upload response: ~s" result)
+
+         (maybe-retry-request
+          code
+          :attempt attempt
+          :restart 'retry-put-file)
+
          (unless (eql 200 code)
            (error "Failed to upload image: code ~a" code))
          result)))))
