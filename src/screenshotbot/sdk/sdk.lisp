@@ -129,6 +129,9 @@
 (defmethod %make-basic-auth ((self desktop-api-context))
   nil)
 
+(defun add-jitter (num)
+  (* num (+ 0.5 (random 1.0))))
+
 (defun maybe-retry-request (response-code &key
                                             (attempt (error "must provide :attempt"))
                                             (restart (error "must provide :restart"))
@@ -137,12 +140,14 @@
   (when (and
          (member response-code '(429 502 503))
          (< attempt 5))
-    (let ((timeout (expt backoff attempt)))
-      (cond
-        ((member response-code '(429 503))
-         (log:warn "We're making too many requests, backing off for ~as" timeout))
-        (t
-         (log:warn "The server is unavailable, backing off for ~as" timeout)))
+    (let ((timeout (add-jitter (expt backoff attempt))))
+      (flet ((%warn (message)
+               (log:warn "~a, backing off for ~ds" message (ceiling timeout))))
+       (cond
+         ((member response-code '(429 503))
+          (%warn "We're making too many requests"))
+         (t
+          (%warn "The server is unavailable"))))
       (sleep timeout))
     (invoke-restart restart)))
 
