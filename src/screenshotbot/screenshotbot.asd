@@ -108,6 +108,7 @@
    (:file "plugin")
    (:file "async")
    (:file "installation")
+   (:file "throttler")
    (:file "server" :depends-on ("analytics"))
    (:module "s3"
     :serial t
@@ -335,6 +336,7 @@
                :screenshotbot)
   :components ((:file "factory")
                (:file "test-server")
+               (:file "test-throttler")
                (:file "test-testing")
                (:file "test-artifacts")
                (:file "test-email-template")
