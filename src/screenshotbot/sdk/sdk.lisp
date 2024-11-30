@@ -155,6 +155,11 @@
                          (backoff 2))
     ;; TODO: we're losing the response code here, we need to do
     ;; something with it.
+
+    (when (and auto-retry
+               (streamp content))
+      (warn "auto-retry won't work for stream content"))
+
     (multiple-value-bind (stream response-code)
         (http-request
          (format-api-url api-context api)
