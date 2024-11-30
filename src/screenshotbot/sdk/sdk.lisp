@@ -129,6 +129,21 @@
 (defmethod %make-basic-auth ((self desktop-api-context))
   nil)
 
+(defun maybe-retry-request (response-code &key
+                                            (attempt (error "must provide :attempt"))
+                                            (restart (error "must provide :restart"))
+                                            (backoff 2))
+  (when (and
+         (member response-code '(429 502 503))
+         (< attempt 5))
+    (let ((timeout (sleep (expt backoff attempt))))
+      (cond
+        ((member response-code '(429 503))
+         (log:warn "We're making too many requests, backing off for ~as" timeout))
+        (t
+         (log:warn "The server is unavailable, backing off for ~as" timeout))))
+    (invoke-restart restart)))
+
 (auto-restart:with-auto-restart (:attempt attempt)
   (defun %request (api-context
                    api &key (method :post)
@@ -158,11 +173,11 @@
                            (cons "api-key" (api-context:key api-context))
                            (cons "api-secret-key" (api-context:secret api-context))
                            parameters))))
-      (when (and
-             (member response-code '(502 503))
-             (< attempt 5))
-        (sleep (expt backoff attempt))
-        (invoke-restart 'retry-%request))
+      (maybe-retry-request
+       response-code
+       :attempt attempt
+       :restart 'retry-%request
+       :backoff backoff)
 
       ;; TODO: if the request has failed after multiple attempts, we
       ;; should signal an error

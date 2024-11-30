@@ -51,6 +51,7 @@
   (:import-from #:screenshotbot/sdk/integration-fixture
                 #:with-sdk-integration)
   (:import-from #:screenshotbot/sdk/sdk
+                #:maybe-retry-request
                 #:%request
                 #:empty-run-error
                 #:find-existing-images
@@ -374,6 +375,19 @@
                         "/api/test"
                         :backoff 0))))))
 
+(test maybe-retry-request-happy-path
+  "Just that for each of the codes, we correctly invoke the restart,
+since the logs might be different for each code."
+  (loop for code in '(429 502 503) do
+    (is
+     (eql :done
+          (restart-case
+              (maybe-retry-request code
+                                   :attempt 0
+                                   :backoff 0
+                                   :restart 'foobar)
+            (foobar ()
+              :done))))))
 
 (test retries-%request-will-finally-fail
   (with-fixture state ()
