@@ -16,7 +16,7 @@
 
 (defparameter *global-request-throttler*
   (make-instance 'ip-throttler
-                 :tokens 360000))
+                 :tokens 3600))
 
 (defvar *image-request-throttler*
   (make-instance 'ip-throttler
