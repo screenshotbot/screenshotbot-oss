@@ -15,6 +15,7 @@
   (:import-from #:core/installation/auth-provider
                 #:auth-providers)
   (:import-from #:core/installation/installation
+                #:installation-domain
                 #:*installation*)
   (:import-from #:hunchentoot-extensions
                 #:make-url)
@@ -61,7 +62,15 @@
   ((client-id :initarg :client-id
               :accessor client-id)
    (client-secret :initarg :client-secret
-                  :accessor client-secret))
+                  :accessor client-secret)
+   (redirect-domain :initarg :redirect-domain
+                    :accessor redirect-domain
+                    :initform nil
+                    :documentation "By default we redirect to the installation-domain.
+However, this can be insecure because GitHub OAuth apps by default allows redirect
+to any subdomain. We use an intermediate redirect-domain that might be more secure
+(e.g. 'auth.screenshotbot.io' instead of 'screenshotbot.io'), but that intermediate
+domain should still point to this server. Ex. https://example.com, not example.com"))
   (:default-initargs
    :oauth-name "GitHub"))
 
@@ -93,9 +102,15 @@
                       :client_id (client-id github-oauth)
                       :scope scope
                       :state (nibble:nibble-id redirect)
-                      :redirect_uri (hex:make-full-url
-                                     hunchentoot:*request*
-                                     "/account/oauth-callback")))))
+                      :redirect_uri
+                      (quri:render-uri
+                       (quri:merge-uris
+                        (quri:uri "/account/oauth-callback")
+                        (quri:uri
+                         (or
+                          (redirect-domain github-oauth)
+                          (installation-domain *installation*)))))))))
+
 
 (defun handle-github (event auth redirect)
   (nibble ()
