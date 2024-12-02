@@ -457,7 +457,8 @@ shipped by the time you're reading this.)"))
        (log:info "Fetching: ~a" url)
        (write-replay-log "Fetching: ~a" url)
 
-       (handler-bind ((drakma::http-redirecting (lambda (condition)
+       (handler-bind (#-screenshotbot-oss
+                      (drakma::http-redirecting (lambda (condition)
                                                   (validate-url
                                                    (drakma::http-redirect-location condition)
                                                    :for-redirect t))))
