@@ -43,6 +43,9 @@ If the request is throttled, then an error is signaled."))
 (define-condition throttled-error (error)
   ())
 
+(define-condition close-to-throttling-limit (warning)
+  ())
+
 (defclass keyed-throttler ()
   ((max-tokens :initarg :tokens
                :initform (error "must provide :tokens")
@@ -69,6 +72,8 @@ If the request is throttled, then an error is signaled."))
       (error 'throttled-error))
     (when (> (%tokens self) (max-tokens self))
       (setf (%tokens self) (max-tokens self)))
+    (when (< (%tokens self) (floor (max-tokens self) 2))
+      (warn 'close-to-throttling-limit))
     (decf (%tokens self))))
 
 (defmethod throttler-for-key ((self keyed-throttler) key &key now)

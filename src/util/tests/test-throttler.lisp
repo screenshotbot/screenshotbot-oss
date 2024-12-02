@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/throttler
+                #:close-to-throttling-limit
                 #:keyed-throttler
                 #:%tokens
                 #:throttled-error
@@ -100,6 +101,25 @@
       (throttled-funcall throttler (lambda ()
                                      (incf ctr))
                          :now 1102))))
+
+(test we-start-raising-a-warning-when-we-get-close-to-the-limit
+  (with-fixture state ()
+    (let ((throttler (make-instance 'my-throttler :tokens 10
+                                                  :period 1000
+                                                  :now 0))
+          (ctr 0)
+          (saw-warning-p nil))
+      (dotimes (i 6)
+        (throttled-funcall throttler (lambda ()
+                                       (incf ctr))
+                           :now (+ 1000 i)))
+      (handler-bind ((close-to-throttling-limit (lambda (w)
+                                                  (setf saw-warning-p t))))
+        (throttled-funcall throttler (lambda ()
+                                       (incf ctr))
+                           :now (+ 1000 8)))
+      (is-true saw-warning-p)
+      (is (eql 7 ctr)))))
 
 
 (test throttles-with-keyed-throttler
