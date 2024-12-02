@@ -32,6 +32,7 @@
   (:import-from #:screenshotbot/sdk/api-context
                 #:api-context)
   (:import-from #:screenshotbot/sdk/backoff
+                #:server-unavailable
                 #:backoff)
   (:import-from #:screenshotbot/sdk/bundle
                 #:image-directory)
@@ -51,7 +52,6 @@
   (:import-from #:screenshotbot/sdk/integration-fixture
                 #:with-sdk-integration)
   (:import-from #:screenshotbot/sdk/sdk
-                #:maybe-retry-request
                 #:%request
                 #:empty-run-error
                 #:find-existing-images
@@ -375,20 +375,6 @@
                         "/api/test"
                         :backoff 0))))))
 
-(test maybe-retry-request-happy-path
-  "Just that for each of the codes, we correctly invoke the restart,
-since the logs might be different for each code."
-  (loop for code in '(429 502 503) do
-    (is
-     (eql :done
-          (restart-case
-              (maybe-retry-request code
-                                   :attempt 0
-                                   :backoff 0
-                                   :restart 'foobar)
-            (foobar ()
-              :done))))))
-
 (test retries-%request-will-finally-fail
   (with-fixture state ()
     (let ((count 0))
@@ -400,16 +386,14 @@ since the logs might be different for each code."
                              (values (make-string-input-stream "Bad") 502))
                             (t
                              (values (make-string-input-stream "Good") 200)))))
-      (is
-       ;; See TODO in %request, this should probably signal an error
-       (equal "Bad"
-              (%request (make-instance 'api-context
-                                       :remote-version *api-version*
-                                       :key "foo"
-                                       :secret "bar"
-                                       :hostname "https://example.com")
-                        "/api/test"
-                        :backoff 0))))))
+      (signals server-unavailable
+       (%request (make-instance 'api-context
+                                :remote-version *api-version*
+                                :key "foo"
+                                :secret "bar"
+                                :hostname "https://example.com")
+                 "/api/test"
+                 :backoff 0)))))
 
 (test warn-if-not-recent-file
   (uiop:with-temporary-file (:stream s)

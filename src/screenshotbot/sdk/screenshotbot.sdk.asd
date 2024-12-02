@@ -111,6 +111,7 @@
                :util/fiveam)
   :components ((:file "integration-fixture")
                (:file "test-bundle")
+               (:file "test-backoff")
                (:file "test-unchanged-run")
                (:file "test-clingon-api-context")
                (:file "test-version-check")

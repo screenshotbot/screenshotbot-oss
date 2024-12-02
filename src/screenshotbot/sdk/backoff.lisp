@@ -17,22 +17,36 @@
 (defun add-jitter (num)
   (* num (+ 0.5 (random 1.0))))
 
+(define-condition too-many-requests (error)
+  ()
+  (:report "We're making too many requests"))
+
+(define-condition server-unavailable (error)
+  ()
+  (:report "The server is unavailable"))
+
 (defun maybe-retry-request (response-code &key
                                             (attempt (error "must provide :attempt"))
                                             (restart (error "must provide :restart"))
                                             (backoff 2))
   (assert (find-restart restart))
-  (when (and
-         (member response-code '(429 502 503))
-         (< attempt 5))
-    (let ((timeout (add-jitter (expt backoff attempt))))
-      (flet ((%warn (message)
-               (log:warn "~a, backing off for ~ds" message (ceiling timeout))))
+  (when (member response-code '(429 502 503))
+    (cond
+      ((< attempt 5)
+       (let ((timeout (add-jitter (expt backoff (1+ attempt)))))
+         (flet ((%warn (message)
+                  (log:warn "~a, backing off for ~ds" message (ceiling timeout))))
+           (cond
+             ((member response-code '(429 503))
+              (%warn "We're making too many requests"))
+             (t
+              (%warn "The server is unavailable"))))
+         (sleep timeout)
+         (invoke-restart restart)))
+      (t
        (cond
          ((member response-code '(429 503))
-          (%warn "We're making too many requests"))
+          (error 'too-many-requests))
          (t
-          (%warn "The server is unavailable"))))
-      (sleep timeout))
-    (invoke-restart restart)))
+          (error 'server-unavailable)))))))
 

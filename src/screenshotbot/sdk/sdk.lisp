@@ -172,9 +172,6 @@
          :restart 'retry-%request
          :backoff backoff))
 
-      ;; TODO: if the request has failed after multiple attempts, we
-      ;; should signal an error
-
       (with-open-stream (stream stream)
         (values
          (uiop:slurp-input-stream 'string stream)
