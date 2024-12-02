@@ -14,9 +14,9 @@
    #:global-throttler))
 (in-package :screenshotbot/throttler)
 
-(defvar *global-request-throttler*
+(defparameter *global-request-throttler*
   (make-instance 'ip-throttler
-                 :tokens 3600))
+                 :tokens 360000))
 
 (defvar *image-request-throttler*
   (make-instance 'ip-throttler
