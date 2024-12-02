@@ -97,11 +97,13 @@
     :content (encode-bknr-object rpc))))
 
 (defun %servers ()
-  #+bknr.cluster
-  (loop for conf in (bknr.cluster/server:list-peers bknr.datastore:*store*)
-        collect (first (str:rsplit ":" conf :limit 3)))
-  #-bknr.cluster
-  (list "127.0.0.1"))
+  (typecase bknr.datastore:*store*
+    #+bknr.cluster
+    (bknr.cluster/server::lisp-state-machine
+     (loop for conf in (bknr.cluster/server:list-peers bknr.datastore:*store*)
+           collect (first (str:rsplit ":" conf :limit 3))))
+    (t
+     (list "127.0.0.1"))))
 
 (defun %port ()
   (hunchentoot:acceptor-port server::*multi-acceptor*))
