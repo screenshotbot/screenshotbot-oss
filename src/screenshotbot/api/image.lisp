@@ -25,6 +25,7 @@
   (:import-from #:util/digests
                 #:md5-file)
   (:import-from #:screenshotbot/api/core
+                #:with-error-handling
                 #:authenticate-api-request)
   (:import-from #:screenshotbot/model/company
                 #:find-image-by-id)
@@ -134,10 +135,11 @@
   "Just a heads up, there are some integration tests from this in
 screenshotbot.sdk if you need to test it."
   (authenticate-api-request hunchentoot:*request*)
-  (with-tracing ("image-blob-put" :oid oid)
-    (let ((image (find-image-by-id (current-company) oid)))
-      (with-raw-post-data-as-tmp-file (p)
-        (verify-and-upload-from-path image p)))))
+  (with-error-handling (:wrap-success nil) 
+   (with-tracing ("image-blob-put" :oid oid)
+     (let ((image (find-image-by-id (current-company) oid)))
+       (with-raw-post-data-as-tmp-file (p)
+         (verify-and-upload-from-path image p))))))
 
 (defmethod verify-and-upload-from-path (image p)
   (verify-image-hash p (image-hash image))
