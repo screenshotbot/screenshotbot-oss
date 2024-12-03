@@ -43,7 +43,7 @@ installs."
           ((image-script-p script-name)
            (throttle! *image-request-throttler*))
           (t
-           (throttle! *global-request-throttler*)))
+           (throttle! (global-throttler installation))))
         nil)
     (throttled-error (e)
       (setf (hunchentoot:return-code*) 429)
