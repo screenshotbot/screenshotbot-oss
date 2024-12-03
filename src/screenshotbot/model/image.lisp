@@ -423,17 +423,22 @@
   ()
   (:report "An image was reuploaded"))
 
+(defvar *image-upload-hash-lock* (make-instance 'hash-lock))
+
 (defmethod update-image ((image image) &key pathname)
   (assert pathname)
   (with-transaction ()
     (setf (%image-state image)
           +image-state-filesystem+))
-  (multiple-value-bind (dest) (image-filesystem-pathname image)
-    (when (path:-e dest)
-      (warn 'image-reuploaded-warning))
-    (uiop:with-staging-pathname (dest dest)
-      (uiop:copy-file pathname dest))
-    dest))
+  ;; The UIOP:WITH-STAGING-PATHNAME only protects against program crashes,
+  ;; the lock protects against concurrent attempts.
+  (with-hash-lock-held (image *image-upload-hash-lock*)
+    (multiple-value-bind (dest) (image-filesystem-pathname image)
+      (when (path:-e dest)
+        (warn 'image-reuploaded-warning))
+      (uiop:with-staging-pathname (dest dest)
+        (uiop:copy-file pathname dest))
+      dest)))
 
 (with-class-validation
   (defclass content-equal-result (store-object)
