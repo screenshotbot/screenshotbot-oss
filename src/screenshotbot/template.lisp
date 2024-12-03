@@ -217,7 +217,7 @@
         <div class= "container mt-3">
 
           <a href= (home-url) ><img src= "/assets/images/logo-dark.svg" style=
-                            "max-height: 2em; width: auto; margin-bottom: 1em; margin-top: 2em; object-position: top 0 left -0.4rem" /></a>
+                            "max-height: 2em; width: auto; margin-bottom: 1em; margin-top: 2em" /></a>
           <h1>The page you're looking for doesn't exist.</h1>
 
           ,(progn
