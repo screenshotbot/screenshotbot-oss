@@ -129,7 +129,9 @@ user. The intention of this flag is to set to NIL for some tests.")
 It should be safe to mock call-with-error-handling to just call
 function fn for the purpose of tests."
   (let ((stacktrace-id (random 1000000000)))
-    (with-extras (("stacktrace-id" stacktrace-id))
+    (with-extras (("stacktrace-id" stacktrace-id)
+                  ("x-client-version" (hunchentoot:header-in* :x-client-version))
+                  ("x-client-api-version" (hunchentoot:header-in* :x-client-api-version)))
      (block error-handling
        (flet ((%trace ()
                 (format nil "Stacktrace ID: ~a. Please share this ID if contacting support." stacktrace-id)))
