@@ -131,34 +131,35 @@
   `(%with-raw-post-data-as-tmp-file (lambda (,tmpfile) ,@body)))
 
 (defhandler (api-upload-image-blob :uri "/api/image/blob" :method :put) (oid)
+  "Just a heads up, there are some integration tests from this in
+screenshotbot.sdk if you need to test it."
   (authenticate-api-request hunchentoot:*request*)
   (with-tracing ("image-blob-put" :oid oid)
     (let ((image (find-image-by-id (current-company) oid)))
       (with-raw-post-data-as-tmp-file (p)
-        (update-image image :pathname p)
-        (verify-image image)
-        "0"))))
+        (verify-and-upload-from-path image p)))))
 
-(defmethod verify-image ((image local-image))
-  "local-images don't need verification"
-  t)
+(defmethod verify-and-upload-from-path (image p)
+  (verify-image-hash p (image-hash image))
+  (update-image image :pathname p)
+  (setf (verified-p image) t)
+  "0")
 
-(defmethod verify-image (image)
-  (unless (screenshotbot/model/image:verified-p image)
-    ;; check again! could've been verified by now
-    (with-local-image (file image)
-     (let ((etag
-             (md5-file file)))
-       (cond
-         ((equalp etag (image-hash image))
-          (with-transaction ()
-            (setf (screenshotbot/model/image:verified-p image) t)))
-         (t
-          (error 'api-error
-                 :message
-                  (format nil
-                          "md5sum mismatch from what was uploaded for image: ~a was uploaded vs ~a was expected"
-                          (ironclad:byte-array-to-hex-string
-                           etag)
-                          (ironclad:byte-array-to-hex-string
-                           (image-hash image))))))))))
+
+(defun verify-image-hash (file hash)
+  (let ((etag
+          (md5-file file)))
+    (cond
+      ((equalp etag hash)
+       ;; We used to set verified-p from here, but no longer
+       (values))
+      (t
+       (error 'api-error
+              :message
+              (format nil
+                      "md5sum mismatch from what was uploaded for image: ~a was uploaded vs ~a was expected"
+                      (ironclad:byte-array-to-hex-string
+                       etag)
+                      (ironclad:byte-array-to-hex-string
+                       hash)))))))
+
