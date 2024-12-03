@@ -419,7 +419,9 @@ footer label {
 .leftside-menu .logo {
     margin-left: auto;
     margin-right: auto;
-
+    img {
+        max-width: 6em;
+    }
 }
 
 .leftside-menu .logo-lg img {
@@ -1034,6 +1036,7 @@ body.login-simple {
     .auth-small-logo {
         margin-top: 4rem;
 
+        max-width: 14em;
         height: 3em;
     }
 

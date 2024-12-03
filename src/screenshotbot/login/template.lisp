@@ -51,7 +51,7 @@
 
           <div class= "left-image">
             <a class= "navbar-brand" href= "/">
-              <img src= "/assets/images/logo-dark.png" />
+              <img src= "/assets/images/logo-dark.svg" />
             </a>
             <img class= "botty-image"  src= "/assets/images/auth/botty-left.png" />
 

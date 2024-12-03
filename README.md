@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://screenshotbot.io/assets/images/logo-dark.png" width="40%" />
+    <img src="https://screenshotbot.io/assets/images/logo-dark.svg" width="40%" />
 </p>
 
 # Screenshotbot: Screenshot Testing Service

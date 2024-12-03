@@ -88,7 +88,7 @@
 
 (markup:deftag auth-common-header (children)
   <div class="text-center">
-    <a href= "/"><img src= (make-cdn "/assets/images/logo-dark.webp") class= "auth-small-logo mb-3" /></a>
+    <a href= "/"><img src= (make-cdn "/assets/images/logo-dark.svg") class= "auth-small-logo mb-3" /></a>
     <p class="text-muted mt-3 font-weight-bold">,@(progn children) </p>
   </div>
 )

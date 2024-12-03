@@ -70,7 +70,7 @@
       <table border="0" cellpadding="0" cellspacing="0" width="100%">
         <tr>
           <td align="center">
-            <img src="https://cdn.screenshotbot.io/assets/images/logo-dark.png" alt="Screenshotbot" class="logo" />
+            <img src="https://cdn.screenshotbot.io/assets/images/logo-dark.svg" alt="Screenshotbot" class="logo" />
           </td>
         </tr>
       </table>

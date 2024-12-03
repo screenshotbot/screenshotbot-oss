@@ -44,14 +44,14 @@
 
 
         <span class="logo logo-lg fs-4">
-          <img-with-fallback src= logo-src
+          <img src= logo-src
                              alt= logo-alt
                              loading= "lazy" />
         </span>
         <span class="logo logo-sm fs-4">
-          <img-with-fallback src= logo-small-src
-                             alt= logo-alt
-                             loading= "lazy" />
+          <img src= logo-small-src
+               alt= logo-alt
+               loading= "lazy" />
         </span>
       </a>
     </div>

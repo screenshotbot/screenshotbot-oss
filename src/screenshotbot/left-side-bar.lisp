@@ -67,7 +67,7 @@
   (declare (optimize (speed 0) (debug 3)))
   <left-side-bar-container
     logo-small-src="/assets/images/logo-small-light-scaled.webp"
-    logo-src="/assets/images/logo-light-scaled.webp"
+    logo-src="/assets/images/logo-light.svg"
     logo-alt="Screenshotbot logo" >
     ,(render-menu-items (installation) :user user :company company :script-name script-name)
     ,(render-user-menu (installation) :user user :company company)
