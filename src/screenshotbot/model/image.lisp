@@ -431,7 +431,8 @@
   (multiple-value-bind (dest) (image-filesystem-pathname image)
     (when (path:-e dest)
       (warn 'image-reuploaded-warning))
-    (uiop:copy-file pathname dest)
+    (uiop:with-staging-pathname (dest dest)
+      (uiop:copy-file pathname dest))
     dest))
 
 (with-class-validation

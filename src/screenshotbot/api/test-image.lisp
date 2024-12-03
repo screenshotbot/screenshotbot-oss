@@ -25,6 +25,7 @@
   (:import-from #:screenshotbot/model/user
                 #:user)
   (:import-from #:screenshotbot/model/image
+                #:with-local-image
                 #:image)
   (:import-from #:screenshotbot/testing
                 #:with-test-user)
@@ -102,7 +103,10 @@
         (is
          (equal "0"
                 (verify-and-upload-from-path im p)))
-        (is-true (verified-p im))))))
+        (is-true (verified-p im))
+        (with-local-image (file im)
+          (is (equal "foobar"
+                     (uiop:read-file-string file))))))))
 
 (test verify-and-upload-from-path-when-file-doesnt-match
   (with-fixture state ()
