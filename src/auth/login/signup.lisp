@@ -163,6 +163,13 @@
               </form>
     </sales-pitch-template>))
 
+(markup:deftag legal ()
+  <div class= "row mt-3">
+    <div class= "col-12 text-center">
+      <a href= "/privacy">Privacy Policy</a> ,(progn "|") <a href= "/terms">Terms and Conditions</a>
+    </div>
+  </div>)
+
 (markup:deftag sales-pitch-template (children)
   <auth-template body-class= "signin-v2" simple=t full-width=t >
       <div class="account-pages mb-5">
@@ -332,12 +339,16 @@
                      if (and (eql idx 0) (> len 1))
                        collect  <or-divider />))
         </div>
+
       </div>
       <div class="row mt-3">
         <div class="col-12 text-center">
           <p class="">Already have account? <a href=login class="ml-1"><b>Log In</b></a></p>
         </div>
       </div>
+
+      <legal />
+      
     </sales-pitch-template>)))
 
 
