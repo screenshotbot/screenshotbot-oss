@@ -70,6 +70,12 @@
         if (typep auth-provider 'github-oauth-provider)
           return auth-provider))
 
+(defun redirect-uri (github-oauth)
+  (declare (ignore github-oauth))
+  (hex:make-full-url
+   hunchentoot:*request*
+   "/account/oauth-callback"))
+
 (defun make-gh-oauth-link (github-oauth redirect
                            &key
                              authorize-link
@@ -93,9 +99,7 @@
                       :client_id (client-id github-oauth)
                       :scope scope
                       :state (nibble:nibble-id redirect)
-                      :redirect_uri (hex:make-full-url
-                                     hunchentoot:*request*
-                                     "/account/oauth-callback")))))
+                      :redirect_uri (redirect-uri github-oauth)))))
 
 (defun handle-github (event auth redirect)
   (nibble ()
@@ -120,8 +124,7 @@
                              :client_id (client-id auth-provider)
                              :client_secret (client-secret auth-provider)
                              :code code
-                             :redirect_uri (hex:make-full-url hunchentoot:*request*
-                                                              'oauth-callback))))
+                             :redirect_uri (redirect-uri auth-provider))))
           (funcall access-token-callback access-token)
           (hex:safe-redirect redirect)))
     (retry-gh-oauth-callback ()
