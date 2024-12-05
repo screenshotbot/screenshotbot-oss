@@ -242,7 +242,7 @@
       <div class="form-group mb-3">
         <label for= "email" class= "form-label text-muted">Work email</label>
         <input name= "email" class="form-control" type="email" id="email" required= "required"
-               placeholder= "you@work-email.com"
+               placeholder= "Work email"
                value=invite-email
                />
       </div>
