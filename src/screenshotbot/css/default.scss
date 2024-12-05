@@ -1056,7 +1056,7 @@ body.login-simple {
         border-radius: 24px;
         padding: 3em 2em;
         color: white;
-
+        max-height: 60em;
         @media (max-height: 1000px) {
             height: 100%;
         }
