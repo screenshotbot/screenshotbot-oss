@@ -265,35 +265,35 @@
   <div class= "sales-pitch" >
     <ul>
       <li><i class="material-icons">smartphone</i>
-        <strong>Enterprise-Ready</strong>
-        <p>Automate screenshot tests at scale, from 10s of screenshots to 10s of thousands per commit.</p>
+        <strong>Automate</strong>
+        <p>Screenshot tests at scale from 10s to 10s of thousands</p>
       </li>
       <li>
         <i class="material-icons">merge</i>
-        <strong>Pull Request integrations</strong>
-        <p>See UI changes directly in pull requests.</p>
+        <strong>Integrations</strong>
+        <p>See UI changes directly in pull requests</p>
       </li>
       <li>
         <i class="material-icons">error</i>
-        <strong>Catch regressions</strong>
-        <p>Find UI regressions before your app ships.</p>
+        <strong>Alerts</strong>
+        <p>Spot UI regressions before your app ships</p>
       </li>
 
       <li>
         <i class="material-icons">people</i>
-        <strong>Collaborate across disciplines</strong>
-        <p>Get notified on Slack. Everyone loves screenshots!</p>
+        <strong>Collaborate</strong>
+        <p>Get notified on Slack, and share screenshots</p>
       </li>
       <li class= "" >
         <i class="material-icons">history</i>
-        <strong>Rewind History</strong>
-        <p>Bisect UI regressions with just a few clicks.</p>
+        <strong>Rewind</strong>
+        <p>Bisect UI regressions with just a few clicks</p>
       </li>
 
       <li>
         <i class="material-icons">code</i>
-        <strong>Use libraries of your choice</strong>
-        <p>Use your existing iOS, Android or Web screenshot testing libraries.</p>
+        <strong>Flexible</strong>
+        <p>Use your existing iOS, Android or Web screenshot testing libraries</p>
       </li>
 </ul>
 
