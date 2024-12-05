@@ -15,6 +15,7 @@
   (:import-from #:core/installation/auth-provider
                 #:auth-providers)
   (:import-from #:core/installation/installation
+                #:installation-domain
                 #:*installation*)
   (:import-from #:hunchentoot-extensions
                 #:make-url)
@@ -61,7 +62,15 @@
   ((client-id :initarg :client-id
               :accessor client-id)
    (client-secret :initarg :client-secret
-                  :accessor client-secret))
+                  :accessor client-secret)
+   (redirect-uri :initarg :redirect-uri
+                 :initform nil
+                 :accessor redirect-uri-override
+                 :documentation "For security reasons we don't want to redirect to
+screenshotbot.io/oauth-callback directly. Currently, GitHub doesn't really respect
+the redirect_uri parameter correctly. (i.e. it can be different in the access_token request
+and GitHub will still respond without failure.) Using an intermediate sub-domain for
+redirect reduces the chances that somebody gets access to a sub-domain."))
   (:default-initargs
    :oauth-name "GitHub"))
 
@@ -72,9 +81,13 @@
 
 (defun redirect-uri (github-oauth)
   (declare (ignore github-oauth))
-  (hex:make-full-url
-   hunchentoot:*request*
-   "/account/oauth-callback"))
+  (or
+   (redirect-uri-override github-oauth)
+   (quri:render-uri
+    (quri:merge-uris
+     (quri:uri "/account/oauth-callback")
+     (quri:uri
+      (installation-domain *installation*))))))
 
 (defun make-gh-oauth-link (github-oauth redirect
                            &key
