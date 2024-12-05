@@ -165,3 +165,5 @@ screenshotbot.sdk if you need to test it."
                       (ironclad:byte-array-to-hex-string
                        hash)))))))
 
+(defun verify-image (image)
+  (values))
