@@ -18,6 +18,8 @@
                 #:test
                 #:with-fixture)
   (:import-from #:screenshotbot/dashboard/api-keys
+                #:%render-api-key
+                #:%create-api-key
                 #:%api-key-page
                 #:api-key-cli-generate
                 #:with-description)
@@ -42,7 +44,12 @@
                 #:screenshot-static-page
                 #:with-fake-request)
   (:import-from #:core/api/acceptor
-                #:api-acceptor-mixin))
+                #:api-token-mode-p
+                #:api-acceptor-mixin)
+  (:import-from #:screenshotbot/api-key-api
+                #:api-key
+                #:api-key-secret-key
+                #:api-key-key))
 (in-package :screenshotbot/dashboard/test-api-keys)
 
 
@@ -108,3 +115,17 @@
                         (lambda (key)
                           "cli-0000:xyzd"))
              (api-key-cli-generate))))))))
+
+
+(screenshot-test api-key-rendered-page
+  (with-installation ()
+    (with-test-store ()
+      (cl-mock:with-mocks ()
+       (with-fake-request ()
+         (cl-mock:if-called 'api-token-mode-p
+                            (lambda (acceptor)
+                              nil))
+         (let ((api-key (make-instance 'api-key
+                                       :api-key "asdfsdfdsfdsf"
+                                       :api-secret-key "df23rsdf23rsdfsdfsdfdsfsdfsdfsd")))
+           (%render-api-key api-key)))))))

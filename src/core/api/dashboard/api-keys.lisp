@@ -126,6 +126,10 @@
                                   :description description
                                   :permissions final-permissions
                                   :company company)))
+      (%render-api-key api-key))))
+
+(defun %render-api-key (api-key)
+  
       <simple-card-page max-width= "80em" >
      <div class= "card-header">
      <h3>New API Key</h3>
@@ -149,7 +153,8 @@
      <a href= "/api-keys">Go back</a>
      </div>
 
-     </simple-card-page>)))
+     </simple-card-page>)
+
 
 (defun %confirm-delete (api-key)
   (confirmation-page
