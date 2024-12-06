@@ -129,7 +129,8 @@
       (%render-api-key api-key))))
 
 (defun %render-api-key (api-key)
-  
+  (let ((result-api-key (api-key-key api-key))
+        (result-api-key-secret (api-key-secret-key api-key)))
       <simple-card-page max-width= "80em" >
      <div class= "card-header">
      <h3>New API Key</h3>
@@ -144,16 +145,25 @@
          </div>)
         (t
          <div>
-           <b>API Key</b>: ,(api-key-key api-key)<br />
-           <b>API Secret</b>: ,(api-key-secret-key api-key)
+           <b>API Key</b>: ,(progn result-api-key)<br />
+           <b>API Secret</b>: ,(progn result-api-key-secret)<br/>
+           <br>
+           <div class="code-sample">
+             <div class="code-sample-header">
+               <div class="code-sample-title">Example: use these variables on macOS or Linux</div>
+             </div>
+             <div class="code-sample-body">
+               <pre class="syntax-highlighter code-sample-pre"><code style="float: left; padding-right: 10px;"><span class="react-syntax-highlighter-line-number">1</span></code><span class="language-built_in">export</span><span> SCREENSHOTBOT_API_KEY=</span><span class="language-string">,(progn result-api-key)</span>
+<code style="float: left; padding-right: 10px;"><span class="react-syntax-highlighter-line-number">2</span></code><span class="language-built_in">export</span><span> SCREENSHOTBOT_API_SECRET=</span><span class="language-string">,(progn result-api-key-secret)</span></pre>
+             </div>
+           </div>
          </div>))
-
-
+  
      <div class= "card-footer">
      <a href= "/api-keys">Go back</a>
      </div>
 
-     </simple-card-page>)
+     </simple-card-page>))
 
 
 (defun %confirm-delete (api-key)
