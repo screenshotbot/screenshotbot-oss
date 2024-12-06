@@ -24,7 +24,9 @@
            :reader period
            :initform 3600
            :documentation "interval in seconds")
-
+   (name :initform "unnamed-throttler"
+         :initarg :name
+         :reader name)
    ;; Internal
    (tokens :initarg :tokens
            :accessor %tokens
@@ -44,7 +46,12 @@ If the request is throttled, then an error is signaled."))
   ())
 
 (define-condition close-to-throttling-limit (warning)
-  ())
+  ((name :initarg :name
+         :initform nil
+         :reader name))
+  (:report (lambda (e out)
+             (format out "Close to throttling limit in throttler: ~a" (name e)))))
+
 
 (defclass keyed-throttler ()
   ((max-tokens :initarg :tokens
@@ -73,7 +80,7 @@ If the request is throttled, then an error is signaled."))
     (when (> (%tokens self) (max-tokens self))
       (setf (%tokens self) (max-tokens self)))
     (when (< (%tokens self) (floor (max-tokens self) 2))
-      (warn 'close-to-throttling-limit))
+      (warn 'close-to-throttling-limit :name (name self)))
     (decf (%tokens self))))
 
 (defmethod throttler-for-key ((self keyed-throttler) key &key now)

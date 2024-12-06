@@ -114,6 +114,8 @@
                                        (incf ctr))
                            :now (+ 1000 i)))
       (handler-bind ((close-to-throttling-limit (lambda (w)
+                                                  (finishes
+                                                    (format nil "~a" w))
                                                   (setf saw-warning-p t))))
         (throttled-funcall throttler (lambda ()
                                        (incf ctr))
