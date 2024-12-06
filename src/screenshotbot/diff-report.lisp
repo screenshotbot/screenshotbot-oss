@@ -47,7 +47,9 @@
    #:diff-report-empty-p
    #:deleted-hashes-set
    #:added-hashes-set
-   #:group-renamed-p))
+   #:group-renamed-p
+   #:group
+   #:group-item))
 
 
 (in-package :screenshotbot/diff-report)

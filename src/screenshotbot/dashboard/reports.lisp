@@ -57,16 +57,32 @@
   (:import-from #:screenshotbot/dashboard/run-page
                 #:render-warnings)
   (:import-from #:screenshotbot/user-api
+                #:screenshot-name
                 #:user-full-name)
   (:import-from #:util/timeago
                 #:timeago)
   (:import-from #:screenshotbot/model/company
                 #:maybe-redirect-for-company)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
+  (:import-from #:screenshotbot/model/screenshot-key
+                #:screenshot-key)
+  (:import-from #:screenshotbot/dashboard/compare
+                #:render-change-group)
   (:export #:report-page #:report-link
-           #:shared-report-page))
+           #:shared-report-page)
+  (:local-nicknames (#:diff-report #:screenshotbot/diff-report)))
 (in-package :screenshotbot/dashboard/reports)
 
 (named-readtables:in-readtable markup:syntax)
+
+(def-easy-macro with-report-login (report &fn fn)
+  (maybe-redirect-for-company (report-company report))
+  (with-login (:needs-login (not (can-public-view report))
+               :allow-url-redirect t
+                       :company (report-company report))
+    (auth:can-view! report)
+    (fn)))
 
 (defhandler (report-page :uri "/report/:id" :method :get) (id)
   (cond
@@ -91,10 +107,7 @@
             </div>
           </simple-card-page>)
          (t
-          (maybe-redirect-for-company (report-company report))
-          (with-login (:needs-login (not (can-public-view report))
-                       :allow-url-redirect t
-                       :company (report-company report))
+          (with-report-login (report)
             (render-report-page report))))))))
 
 (defun expired-report ()
@@ -357,3 +370,31 @@
                              <div class= "alert alert-warning mt-3">
                              <b>Caution!</b> This is a publicly shared URL of a private report. Some actions on this page will require an authorized logged-in user. <a href= (report-link report)>Click here to view the private report.</a>
                              </div>))))))
+
+
+(defhandler (single-image-page :uri "/report/:oid/image/:key-id") (oid
+                                                                key-id)
+  (let ((report (util:find-by-oid oid))
+        (key-id (parse-integer key-id)))
+    (with-report-login (report)
+      (let ((diff-report (diff-report:make-diff-report
+                          (report-run report)
+                          (report-previous-run report)))
+            )
+        <app-template>
+        ,(loop for change in (diff-report:diff-report-changes diff-report)
+              for key = (screenshot-key (diff-report:before change))
+              if (eql
+                  key-id
+                  (bknr.datastore:store-object-id key))
+                return
+              (render-change-group
+               (make-instance 'diff-report:group
+                              :title "foobar"
+                              :items (list
+                                      (make-instance 'diff-report:group-item
+                                                     :subtitle "foobarcarbar"
+                                                     :actual-item change)))
+               (report-run report)
+               "dfdfd"))
+        </app-template>))))

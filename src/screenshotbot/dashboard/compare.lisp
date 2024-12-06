@@ -123,6 +123,8 @@
                 #:review-policy)
   (:import-from #:screenshotbot/model/report
                 #:report-channel)
+  (:import-from #:screenshotbot/model/screenshot-key
+                #:screenshot-key)
   (:export
    #:render-acceptable
    #:render-diff-report
@@ -598,6 +600,14 @@
               Edit Masks
             </a>
           </li>
+
+          ,(when (gk:check :image-permalink (auth:current-company))
+             <li>
+               <a href= (format nil "~a/image/~a" script-name (bknr.datastore:store-object-id
+                  (screenshot-key s ))) >
+                 Permalink
+               </a>
+             </li>)
 
           ,(let ((id (format nil "a~a" (random 10000000000))))
              <li>
@@ -1079,3 +1089,4 @@
   <div class= "text-muted text-center">
     No changes match filters
   </div>)
+
