@@ -1105,6 +1105,12 @@
      (setf (hunchentoot:return-code*) 404)
      (hunchentoot:abort-request-handler))))
 
+(deftag single-change-header (children &key report-link)
+  <div class= "page-title-box mb-3">
+    <div class= "mb-2" ><a href= report-link >Back to report</a></div>
+    <h4 class= "page-title" >,@ (progn children)</h4>
+  </div>)
+
 (defun %find-single-added-or-removed (list key-id report-link
                                       &key diff-report)
   (loop for screenshot in list
@@ -1112,6 +1118,9 @@
         if (eql key-id (store-object-id key))
            return
         <app-template body-class= "dashboard bg-white">
+          <single-change-header report-link=report-link >
+            Newly added screenshot
+          </single-change-header>
           ,(render-single-group-list
             (list
              (make-instance 'diff-report::added-group
@@ -1132,11 +1141,10 @@
             (bknr.datastore:store-object-id key))
           return
         <app-template body-class= "dashboard bg-white" >
-        <div class= "page-title-box mb-3">
-        <div class= "mb-2" ><a href= report-link >Back to report</a></div>
-        <h4 class= "page-title" >Change for ,(screenshot-name key) in report</h4>
-        </div>
-        ,(render-change-group
+          <single-change-header report-link=report-link >
+            Change for ,(screenshot-name key) in report
+          </single-change-header>
+          ,(render-change-group
           (make-instance 'diff-report:group
                          :title (screenshot-name key)
                          :items (list
