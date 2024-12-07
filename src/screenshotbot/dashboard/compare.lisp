@@ -125,6 +125,8 @@
                 #:report-channel)
   (:import-from #:screenshotbot/model/screenshot-key
                 #:screenshot-key)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export
    #:render-acceptable
    #:render-diff-report
@@ -212,19 +214,25 @@
               </div>)))
       </markup:merge-tag>)))
 
-(defhandler (compare-page :uri "/runs/:id/compare/:to") (id to)
-  (when (string= "254" id)
-    (hex:safe-redirect "/report/5fd16bcf4f4b3822fd000146"))
+(def-easy-macro with-runs-for-comparison (&binding run &binding to
+                                                   &key run-id to-id
+                                                   &fn fn)
   (flet ((find-run (id)
            (let ((ret (find-by-oid id 'recorder-run)))
              (assert ret)
              ret)))
-   (let* ((run (find-run id))
-          (to (find-run to)))
-     (can-view! run to)
-     <app-template body-class= "dashboard bg-white" >
-     ,(async-diff-report :run run :to to)
-     </app-template>)))
+    (let* ((run (find-run run-id))
+           (to (find-run to-id)))
+      (can-view! run to)
+      (fn run to))))
+
+(defhandler (compare-page :uri "/runs/:id/compare/:to") (id to)
+  (when (string= "254" id)
+    (hex:safe-redirect "/report/5fd16bcf4f4b3822fd000146"))
+  (with-runs-for-comparison (run to :run-id id :to-id to)
+    <app-template body-class= "dashboard bg-white" >
+      ,(async-diff-report :run run :to to)
+    </app-template>))
 
 (deftag picture-with-img (&key image dimensions alt class)
   <picture>
@@ -1165,3 +1173,12 @@ WHY is either \"added\" or \"deleted\", and just describes why we're showing thi
           run
           report-link)
         </app-template>))
+
+(defhandler (compare-single-image :uri "/runs/:run/compare/:to/image/:key-id")
+    (run to key-id)
+  (with-runs-for-comparison (run to :run-id run :to-id to)
+    (render-single-change-permalink
+     (make-diff-report  run to)
+     (parse-integer key-id)
+     (format nil "/runs/~a/compare/~a" (oid run) (oid to))
+     :run run)))
