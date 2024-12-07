@@ -126,7 +126,9 @@
                                   :description description
                                   :permissions final-permissions
                                   :company company)))
-      (%render-api-key api-key))))
+      (hex:safe-redirect
+       (nibble ()
+         (%render-api-key api-key))))))
 
 (defun %render-api-key (api-key)
   (let ((result-api-key (api-key-key api-key))
