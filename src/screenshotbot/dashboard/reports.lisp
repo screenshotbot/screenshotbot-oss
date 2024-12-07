@@ -380,21 +380,26 @@
       (let ((diff-report (diff-report:make-diff-report
                           (report-run report)
                           (report-previous-run report)))
-            )
-        <app-template>
-        ,(loop for change in (diff-report:diff-report-changes diff-report)
+            (report-link (format nil "/report/~a" oid)))
+        (loop for change in (diff-report:diff-report-changes diff-report)
               for key = (screenshot-key (diff-report:before change))
               if (eql
                   key-id
                   (bknr.datastore:store-object-id key))
                 return
-              (render-change-group
-               (make-instance 'diff-report:group
-                              :title "foobar"
-                              :items (list
-                                      (make-instance 'diff-report:group-item
-                                                     :subtitle "foobarcarbar"
-                                                     :actual-item change)))
-               (report-run report)
-               "dfdfd"))
-        </app-template>))))
+              <app-template body-class= "dashboard bg-white" >
+                <div class= "page-title-box mb-3">
+                  <div class= "mb-2" ><a href= report-link >Back to report</a></div>
+                  <h4 class= "page-title" >Change for ,(screenshot-name key) in report</h4>
+                </div>
+                ,(render-change-group
+                  (make-instance 'diff-report:group
+                                 :title "foobar"
+                                 :items (list
+                                         (make-instance 'diff-report:group-item
+                                                        :subtitle "foobarcarbar"
+                                                        :actual-item change)))
+                  (report-run report)
+                  report-link)
+              </app-template>)))))
+
